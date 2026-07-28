@@ -1,0 +1,140 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+
+class Service {
+  final String id;
+  final String category;
+  final String name;
+  final String description;
+
+  final double totalAmount;
+  final double totalPaid;
+
+  final String? clientId;
+  final String? clientName;
+  final DateTime? serviceDate;
+  final String? providedByName;
+  final DateTime? updatedAt;
+
+  final List<Map<String, dynamic>> itemsUsed;
+
+  // Stored in Firestore for reporting
+  final double totalServiceProfit;
+
+  Service({
+    required this.id,
+    required this.category,
+    required this.name,
+    required this.description,
+    required this.totalAmount,
+    required this.totalPaid,
+    this.clientId,
+    this.clientName,
+    this.serviceDate,
+    this.providedByName,
+    this.updatedAt,
+    this.itemsUsed = const [],
+    this.totalServiceProfit = 0.0,
+  });
+
+  /// ---------- FROM FIRESTORE ----------
+  factory Service.fromFirestore(Map<String, dynamic> data, String id) {
+    final List<Map<String, dynamic>> parsedItems =
+        (data['itemsUsed'] as List?)
+                ?.map((e) => Map<String, dynamic>.from(e))
+                .toList() ??
+            [];
+
+    return Service(
+      id: id,
+      category: data['category'] ?? '',
+      name: data['name'] ?? '',
+      description: data['description'] ?? '',
+      totalAmount: (data['totalAmount'] ?? 0).toDouble(),
+      totalPaid: (data['totalPaid'] ?? 0).toDouble(),
+      clientId: data['clientId'],
+      clientName: data['clientName'],
+      serviceDate: data['serviceDate'] != null
+          ? (data['serviceDate'] as Timestamp).toDate()
+          : null,
+      providedByName: data['providedByName'],
+      updatedAt: data['updatedAt'] != null
+          ? (data['updatedAt'] as Timestamp).toDate()
+          : null,
+      itemsUsed: parsedItems,
+      totalServiceProfit:
+          (data['totalServiceProfit'] ?? 0).toDouble(),
+    );
+  }
+
+  /// ---------- TO FIRESTORE ----------
+  Map<String, dynamic> toMap() {
+    return {
+      'category': category,
+      'name': name,
+      'description': description,
+      'totalAmount': totalAmount,
+      'totalPaid': totalPaid,
+      'clientId': clientId,
+      'clientName': clientName,
+      'serviceDate':
+          serviceDate != null ? Timestamp.fromDate(serviceDate!) : null,
+      'providedByName': providedByName,
+      'updatedAt': updatedAt != null
+          ? Timestamp.fromDate(updatedAt!)
+          : FieldValue.serverTimestamp(),
+      'itemsUsed': itemsUsed,
+      'totalServiceProfit': totalServiceProfit,
+    };
+  }
+
+  /// ---------- EXPENSES ----------
+  double get totalExpenses {
+    return itemsUsed.fold(0.0, (sum, item) {
+      final p = item['price'] ?? 0.0;
+      return sum + (p is int ? p.toDouble() : p);
+    });
+  }
+
+  /// ---------- LIVE PROFIT (UI) ----------
+  double get computedServiceProfit => totalPaid - totalExpenses;
+
+  /// ---------- COPY ----------
+  Service copyWith({
+    String? id,
+    String? category,
+    String? name,
+    String? description,
+    double? totalAmount,
+    double? totalPaid,
+    String? clientId,
+    String? clientName,
+    DateTime? serviceDate,
+    String? providedByName,
+    DateTime? updatedAt,
+    List<Map<String, dynamic>>? itemsUsed,
+  }) {
+    final newPaid = totalPaid ?? this.totalPaid;
+    final newItems = itemsUsed ?? this.itemsUsed;
+
+    final newExpenses = newItems.fold(0.0, (sum, item) {
+      final p = item['price'] ?? 0.0;
+      return sum + (p is int ? p.toDouble() : p);
+    });
+
+    return Service(
+      id: id ?? this.id,
+      category: category ?? this.category,
+      name: name ?? this.name,
+      description: description ?? this.description,
+      totalAmount: totalAmount ?? this.totalAmount,
+      totalPaid: newPaid,
+      clientId: clientId ?? this.clientId,
+      clientName: clientName ?? this.clientName,
+      serviceDate: serviceDate ?? this.serviceDate,
+      providedByName: providedByName ?? this.providedByName,
+      updatedAt: updatedAt ?? this.updatedAt,
+      itemsUsed: newItems,
+      totalServiceProfit: newPaid - newExpenses, // ALWAYS recomputed
+    );
+  }
+}

@@ -1,0 +1,42 @@
+// File: android/app/build.gradle
+
+plugins {
+    id 'com.android.application'
+}
+
+android {
+    namespace "com.example.vetbiz_pro"   // ✅ Your package name
+    compileSdkVersion 34
+
+    defaultConfig {
+        applicationId "com.example.vetbiz_pro"   // ✅ Same as your Firebase Android package name
+        minSdkVersion 21
+        targetSdkVersion 34
+        versionCode 1
+        versionName "1.0"
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile(
+                'proguard-android-optimize.txt'
+            ), 'proguard-rules.pro'
+        }
+    }
+}
+
+dependencies {
+    // Firebase BoM to manage versions
+    implementation platform('com.google.firebase:firebase-bom:32.7.3')
+
+    // Example Firebase services
+    implementation 'com.google.firebase:firebase-analytics'
+    implementation 'com.google.firebase:firebase-auth'
+    implementation 'com.google.firebase:firebase-firestore'
+
+    // Add other dependencies here (if needed)
+}
+
+// ✅ This must be at the very bottom:
+apply plugin: 'com.google.gms.google-services'
