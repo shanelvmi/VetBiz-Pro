@@ -66,7 +66,7 @@ class InviteCodeService {
       'createdAt': FieldValue.serverTimestamp(),
       'expiresAt': Timestamp.fromDate(DateTime.now().add(validityDuration)),
       'usedAt': null,
-      'usedByUserId': null,
+      'usedByEmail': null,
     });
 
     return code;
@@ -95,11 +95,18 @@ class InviteCodeService {
   /// Marks an invite code as consumed - call only after the new
   /// assistant's account has genuinely been created successfully, so a
   /// failed registration attempt doesn't burn the invite for nothing.
-  Future<void> markInviteCodeUsed(String enteredCode, String usedByUserId) async {
+  /// Marks an invite code as consumed - call only after the new
+  /// assistant's account has genuinely been created successfully, so a
+  /// failed registration attempt doesn't burn the invite for nothing.
+  /// Records the email rather than a UID purely for audit purposes -
+  /// the email is what's reliably on hand at the registration call
+  /// site, without needing the assistant registration flow to expose a
+  /// new user ID it doesn't currently return.
+  Future<void> markInviteCodeUsed(String enteredCode, String usedByEmail) async {
     final normalized = _normalizeInput(enteredCode);
     await _firestore.collection('inviteCodes').doc(normalized).update({
       'usedAt': FieldValue.serverTimestamp(),
-      'usedByUserId': usedByUserId,
+      'usedByEmail': usedByEmail,
     });
   }
 

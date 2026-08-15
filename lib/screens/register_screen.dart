@@ -8,6 +8,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:provider/provider.dart';
 import '../services/auth_service.dart';
+import '../services/invite_code_service.dart';
 import '../providers/facility_provider.dart';
 import '../utils/facility_activation.dart';
 import 'facilities/facility_picker_screen.dart';
@@ -24,6 +25,7 @@ class RegisterScreen extends StatefulWidget {
 
 class _RegisterScreenState extends State<RegisterScreen> {
   final AuthService _authService = AuthService();
+  final InviteCodeService _inviteCodeService = InviteCodeService();
 
   // Controllers
   final TextEditingController nameController = TextEditingController();
@@ -34,11 +36,12 @@ class _RegisterScreenState extends State<RegisterScreen> {
   final TextEditingController assistantFacilityNameController = TextEditingController();
   final TextEditingController assistantFacilityCodeController = TextEditingController();
 
-  // Live lookup as the code is typed - shows the real facility name and
-  // type looked up from Firestore, instead of also asking for the name
-  // as separate free text (which could be typed wrong, or made up
-  // entirely, while the code alone is already enough to identify the
-  // facility uniquely).
+  // Live lookup as the invite code is typed - shows the real facility
+  // name and type once a valid, unused, unexpired invite is found.
+  // Previously this queried the facilities collection directly by its
+  // own permanent code - now it validates against the short-lived
+  // invite code system instead, so the facility's permanent code can
+  // no longer be used to join at all, only these one-time invites can.
   Map<String, dynamic>? _foundFacility;
   bool _isLookingUpFacility = false;
   String? _facilityLookupError;
@@ -61,28 +64,47 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
     _facilityLookupDebounce = Timer(const Duration(milliseconds: 500), () async {
       try {
-        final query = await FirebaseFirestore.instance
+        final facilityId = await _inviteCodeService.validateInviteCode(code);
+
+        if (!mounted) return;
+
+        if (facilityId == null) {
+          setState(() {
+            _isLookingUpFacility = false;
+            _foundFacility = null;
+            _facilityLookupError = 'Invalid, expired, or already-used invite code';
+          });
+          return;
+        }
+
+        // The invite code only carries the facilityId - fetch the
+        // actual facility document for its name/type to show what
+        // this invite is actually joining.
+        final facilityDoc = await FirebaseFirestore.instance
             .collection('facilities')
-            .where('code', isEqualTo: code)
-            .limit(1)
+            .doc(facilityId)
             .get();
 
         if (!mounted) return;
+
+        if (!facilityDoc.exists) {
+          setState(() {
+            _isLookingUpFacility = false;
+            _foundFacility = null;
+            _facilityLookupError = 'This invite points to a facility that no longer exists';
+          });
+          return;
+        }
+
         setState(() {
           _isLookingUpFacility = false;
-          if (query.docs.isEmpty) {
-            _foundFacility = null;
-            _facilityLookupError = 'No facility found with this code';
-          } else {
-            final doc = query.docs.first;
-            _foundFacility = {
-              'facilityId': doc.id,
-              'name': doc.data()['name'] ?? '',
-              'type': doc.data()['type'] ?? '',
-              'code': code,
-            };
-            _facilityLookupError = null;
-          }
+          _foundFacility = {
+            'facilityId': facilityId,
+            'name': facilityDoc.data()?['name'] ?? '',
+            'type': facilityDoc.data()?['type'] ?? '',
+            'code': code, // the invite code itself, kept for markInviteCodeUsed at submit time
+          };
+          _facilityLookupError = null;
         });
       } catch (e) {
         if (!mounted) return;
@@ -296,7 +318,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
     if (selectedRole == 'Assistant' && !widget.isUpdating) {
       if (_foundFacility == null) {
-        setState(() => error = "Enter a valid facility code");
+        setState(() => error = "Enter a valid invite code");
         return;
       }
     }
@@ -410,13 +432,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
       }
     } else {
       // ---------------- Assistant Registration ----------------
-      // _foundFacility was already verified via the live lookup as the
-      // code was typed - no need to query again, and this can no
-      // longer crash on an empty result the way the old query-then-
-      // .first approach could if the facility somehow wasn't found by
-      // this point.
+      // _foundFacility was already verified via the live invite-code
+      // lookup as it was typed - no need to re-validate here.
       if (_foundFacility == null) {
-        setState(() => error = 'Enter a valid facility code first');
+        setState(() => error = 'Enter a valid invite code first');
         return;
       }
       final facility = _foundFacility!;
@@ -436,6 +455,20 @@ class _RegisterScreenState extends State<RegisterScreen> {
         ],
         avatarBytes: _imageBytes,
       );
+
+      // Only marked as used now that registration has actually
+      // succeeded - a failed attempt above (e.g. a duplicate email)
+      // returns via the catch blocks below without ever reaching this,
+      // so the invite stays valid for a genuine retry.
+      try {
+        await _inviteCodeService.markInviteCodeUsed(facility['code'] as String, email);
+      } catch (e) {
+        // The account was already created successfully at this point -
+        // failing to mark the invite as used is a minor bookkeeping
+        // miss, not a reason to show the user an error about their own
+        // registration, which already succeeded.
+        debugPrint('Could not mark invite code as used: $e');
+      }
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -614,7 +647,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 Align(
                   alignment: Alignment.centerLeft,
                   child: Text(
-                    "Ask your facility Admin for the Facility Name and Code to join their team.",
+                    "Ask your facility Admin for an invite code to join their team.",
                     style: TextStyle(
                       fontSize: 12,
                       color: deepTealGreen,
@@ -627,7 +660,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   controller: assistantFacilityCodeController,
                   onChanged: _onFacilityCodeChanged,
                   decoration: InputDecoration(
-                    labelText: 'Facility Code',
+                    labelText: 'Invite Code',
                     enabledBorder: blackBorder,
                     focusedBorder: blackBorder,
                     suffixIcon: _isLookingUpFacility
