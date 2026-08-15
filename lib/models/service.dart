@@ -95,6 +95,20 @@ class Service {
     });
   }
 
+  /// Of totalExpenses, only the portion that should actually become a new
+  /// cash expense transaction - items matched to a real product (via
+  /// `productId`) came out of stock you already paid for when it was
+  /// purchased, so recording them again here would double-count the cost.
+  /// Only externally-bought items / plain costs (fare, etc. - no
+  /// productId) count as a new expense.
+  double get externalExpenseTotal {
+    return itemsUsed.fold(0.0, (sum, item) {
+      if (item['productId'] != null) return sum;
+      final p = item['price'] ?? 0.0;
+      return sum + (p is int ? p.toDouble() : p);
+    });
+  }
+
   /// ---------- LIVE PROFIT (UI) ----------
   double get computedServiceProfit => totalPaid - totalExpenses;
 

@@ -3,6 +3,8 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 class Debt {
   final String id;
   final String clientId;
+  final String? clientName;
+  final String? clientPhone;
   final String? saleId;       // sale reference
   final String? serviceId;    // service reference
   final String source;        // 'Sale' or 'Service'
@@ -14,6 +16,8 @@ class Debt {
   Debt({
     required this.id,
     required this.clientId,
+    this.clientName,
+    this.clientPhone,
     this.saleId,
     this.serviceId,
     required this.source,
@@ -27,6 +31,8 @@ class Debt {
   Map<String, dynamic> toMap() {
     return {
       'clientId': clientId,
+      'clientName': clientName,
+      'clientPhone': clientPhone,
       'saleId': saleId,
       'serviceId': serviceId,
       'source': source,
@@ -55,6 +61,8 @@ class Debt {
     return Debt(
       id: id,
       clientId: map['clientId'] ?? '',
+      clientName: map['clientName'] as String?,
+      clientPhone: map['clientPhone'] as String?,
       saleId: map['saleId'],
       serviceId: map['serviceId'],
       source: map['source'] ?? 'Sale',
@@ -68,6 +76,8 @@ class Debt {
   Debt copyWith({
     String? id,
     String? clientId,
+    String? clientName,
+    String? clientPhone,
     String? saleId,
     String? serviceId,
     String? source,
@@ -79,6 +89,8 @@ class Debt {
     return Debt(
       id: id ?? this.id,
       clientId: clientId ?? this.clientId,
+      clientName: clientName ?? this.clientName,
+      clientPhone: clientPhone ?? this.clientPhone,
       saleId: saleId ?? this.saleId,
       serviceId: serviceId ?? this.serviceId,
       source: source ?? this.source,

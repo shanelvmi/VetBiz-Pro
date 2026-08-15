@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -7,9 +8,49 @@ class FacilityProvider with ChangeNotifier {
   String? _facilityName;
   String? _facilityType;
   String? _logoUrl;
+  StreamSubscription<DocumentSnapshot>? _facilitySub;
 
   FacilityProvider() {
     _loadFromPrefs(); // auto-load facility on provider init
+  }
+
+  // ==================== LIVE LISTENER ====================
+  // Keeps name/type/logo in sync automatically with whatever's actually
+  // in Firestore - previously this provider was purely a one-time
+  // snapshot set at login (via setFacility below), with no way for a
+  // change made elsewhere (e.g. updating the logo from Settings) to
+  // ever reach it except by logging out and back in. Even then it
+  // didn't work, since the login flow itself never passed logoUrl to
+  // setFacility in the first place - it only had the denormalized
+  // {facilityId, name, type} from the user's own document, which never
+  // included the logo at all.
+  void listenToFacility(String facilityId) {
+    _facilitySub?.cancel();
+    _facilitySub = FirebaseFirestore.instance
+        .collection('facilities')
+        .doc(facilityId)
+        .snapshots()
+        .listen((doc) async {
+      if (!doc.exists) return;
+      final data = doc.data()!;
+      _facilityId = doc.id;
+      _facilityName = data['name'] ?? _facilityName;
+      _facilityType = data['type'] ?? _facilityType;
+      _logoUrl = data['logoUrl'];
+      notifyListeners();
+
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString('facilityId', _facilityId!);
+      if (_facilityName != null) await prefs.setString('facilityName', _facilityName!);
+      if (_facilityType != null) await prefs.setString('facilityType', _facilityType!);
+      if (_logoUrl != null) {
+        await prefs.setString('facilityLogoUrl', _logoUrl!);
+      } else {
+        await prefs.remove('facilityLogoUrl');
+      }
+    }, onError: (e) {
+      debugPrint('FacilityProvider listen error: $e');
+    });
   }
 
   // ==================== SET FACILITY ====================
@@ -35,6 +76,7 @@ class FacilityProvider with ChangeNotifier {
 
   // ==================== CLEAR FACILITY ====================
   Future<void> clearFacility() async {
+    _facilitySub?.cancel();
     _facilityId = null;
     _facilityName = null;
     _facilityType = null;
@@ -70,7 +112,8 @@ class FacilityProvider with ChangeNotifier {
       final doc = await FirebaseFirestore.instance
           .collection('facilities')
           .doc(facilityId)
-          .get();
+          .get()
+          .timeout(const Duration(seconds: 15));
 
       if (doc.exists) {
         final data = doc.data()!;

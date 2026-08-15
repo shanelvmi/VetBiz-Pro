@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -10,6 +11,9 @@ import '../../providers/client_provider.dart';
 import '../../providers/service_provider.dart';
 import '../../providers/transaction_provider.dart';
 import '../../providers/debt_provider.dart';
+import '../../providers/subscription_provider.dart';
+import '../../providers/user_role_provider.dart';
+import '../../utils/provider_reset.dart';
 
 
 class AppColors {
@@ -29,6 +33,7 @@ class _SelectFacilityScreenState extends State<SelectFacilityScreen> {
   List<Map<String, dynamic>> facilities = [];
   String? selectedFacilityId;
   bool isLoading = true;
+  String? loadError;
   String? role;
   bool _initialized = false;
 
@@ -42,7 +47,10 @@ class _SelectFacilityScreenState extends State<SelectFacilityScreen> {
   }
 
   Future<void> _loadFacilities() async {
-    setState(() => isLoading = true);
+    setState(() {
+      isLoading = true;
+      loadError = null;
+    });
 
     try {
       final args = ModalRoute.of(context)?.settings.arguments as Map<String, dynamic>?;
@@ -54,7 +62,11 @@ class _SelectFacilityScreenState extends State<SelectFacilityScreen> {
       } else {
         final uid = FirebaseAuth.instance.currentUser?.uid;
         if (uid != null) {
-          final userDoc = await FirebaseFirestore.instance.collection('users').doc(uid).get();
+          final userDoc = await FirebaseFirestore.instance
+              .collection('users')
+              .doc(uid)
+              .get()
+              .timeout(const Duration(seconds: 15));
           role = userDoc.data()?['role'] ?? role;
 
           facilities = (userDoc.data()?['facilities'] as List<dynamic>?)
@@ -74,6 +86,9 @@ class _SelectFacilityScreenState extends State<SelectFacilityScreen> {
       }
     } catch (e) {
       debugPrint("Error loading facilities: $e");
+      loadError = e is TimeoutException
+          ? 'This is taking longer than expected. Check your connection and try again.'
+          : 'Could not load your facilities: $e';
     } finally {
       if (mounted) setState(() => isLoading = false);
     }
@@ -87,14 +102,13 @@ class _SelectFacilityScreenState extends State<SelectFacilityScreen> {
     final serviceProvider = context.read<ServiceProvider>();
     final transactionProvider = context.read<TransactionProvider>();
     final debtProvider = context.read<DebtProvider>();
+    final subscriptionProvider = context.read<SubscriptionProvider>();
 
-    // Clear all previous data
-    productProvider.clear();
-    saleProvider.clear();
-    clientProvider.clear(); 
-    serviceProvider.clear();
-    transactionProvider.clear();
-    debtProvider.clear();
+    // Clear all previous data - one shared, complete list (see
+    // provider_reset.dart) instead of a separately-maintained partial
+    // one here, so this can never again miss resetting something like
+    // UserRoleProvider or SubscriptionProvider.
+    resetAllUserProviders(context);
 
     // Set selected facility
     facilityProvider.setFacility(
@@ -110,6 +124,8 @@ class _SelectFacilityScreenState extends State<SelectFacilityScreen> {
     serviceProvider.listenToServices(facility['facilityId']); // needed
     transactionProvider.listenToTransactions(facility['facilityId']);
     debtProvider.listenToDebts(facility['facilityId']);
+    subscriptionProvider.listenToFacility(facility['facilityId']);
+    context.read<UserRoleProvider>().listenToCurrentUser();
 
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -142,7 +158,27 @@ class _SelectFacilityScreenState extends State<SelectFacilityScreen> {
         backgroundColor: AppColors.deepGreen,
         foregroundColor: AppColors.offWhite,
       ),
-      body: facilities.isEmpty
+      body: loadError != null
+          ? Center(
+              child: Padding(
+                padding: const EdgeInsets.all(24),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(Icons.error_outline, color: Colors.redAccent, size: 40),
+                    const SizedBox(height: 12),
+                    Text(loadError!, textAlign: TextAlign.center),
+                    const SizedBox(height: 16),
+                    ElevatedButton(
+                      onPressed: _loadFacilities,
+                      style: ElevatedButton.styleFrom(backgroundColor: AppColors.deepGreen, foregroundColor: Colors.white),
+                      child: const Text('Try Again'),
+                    ),
+                  ],
+                ),
+              ),
+            )
+          : facilities.isEmpty
           ? const Center(child: Text('No facilities found.'))
           : ListView.builder(
               padding: const EdgeInsets.all(24),

@@ -1,14 +1,16 @@
 // AddEditServiceScreen.dart
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_typeahead/flutter_typeahead.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 
 import '../../models/service.dart';
+import '../../constants/service_categories.dart';
 import '../../models/client.dart';
+import '../../models/product.dart';
 import '../../providers/client_provider.dart';
 import '../../providers/service_provider.dart';
+import '../../providers/product_provider.dart';
 import '../../providers/facility_provider.dart';
 import '../clients/add_client_screen.dart';
 
@@ -34,15 +36,7 @@ class _AddEditServiceScreenState extends State<AddEditServiceScreen> {
   String? _selectedCategory;
   DateTime? _serviceDate;
 
-  final List<String> _categories = [
-    'Surgical',
-    'Treatment',
-    'Management',
-    'Consultation',
-    'Diagnostics',
-    'Vaccination',
-    'Other'
-  ];
+  final List<String> _categories = kServiceCategories;
 
   // THEME COLORS
   final Color primaryDeepGreen = const Color(0xFF2F5D62);
@@ -56,10 +50,30 @@ class _AddEditServiceScreenState extends State<AddEditServiceScreen> {
   bool _isLoading = false;
 
   final List<Map<String, TextEditingController>> _itemsUsedControllers = [];
+  // Parallel to _itemsUsedControllers - null unless that row's name field
+  // matched a real product from the catalog. Set on selection, cleared
+  // the moment the vet edits the name field afterward (typing breaks the
+  // match, so it correctly falls back to a plain expense line).
+  final List<String?> _itemsUsedProductIds = [];
+  // Which item row (by index) currently has its suggestion list open -
+  // only one at a time, since only one field can be actively typed into.
+  int? _activeSuggestionRow;
+  // Same idea as the item-row suggestions, for the client search field.
+  bool _showClientSuggestions = false;
 
   @override
   void initState() {
     super.initState();
+
+    // Defensive: makes sure the item-name autocomplete below has real
+    // product data even if this screen is somehow reached before
+    // Products/Stock Store have been visited. Safe to call repeatedly -
+    // ProductProvider no-ops if already listening to this facility.
+    final facilityId =
+        Provider.of<FacilityProvider>(context, listen: false).selectedFacilityId;
+    if (facilityId != null && facilityId.isNotEmpty) {
+      Provider.of<ProductProvider>(context, listen: false).listenToProducts(facilityId);
+    }
 
     _nameController = TextEditingController(text: widget.service?.name ?? '');
     _descriptionController =
@@ -100,6 +114,7 @@ class _AddEditServiceScreenState extends State<AddEditServiceScreen> {
           'name': nameCtrl,
           'price': priceCtrl,
         });
+        _itemsUsedProductIds.add(item['productId'] as String?);
       }
     }
   }
@@ -166,6 +181,7 @@ class _AddEditServiceScreenState extends State<AddEditServiceScreen> {
         'name': nameCtrl,
         'price': priceCtrl,
       });
+      _itemsUsedProductIds.add(null);
     });
   }
 
@@ -174,14 +190,21 @@ class _AddEditServiceScreenState extends State<AddEditServiceScreen> {
       _itemsUsedControllers[index]['name']!.dispose();
       _itemsUsedControllers[index]['price']!.dispose();
       _itemsUsedControllers.removeAt(index);
+      _itemsUsedProductIds.removeAt(index);
     });
   }
 
   List<Map<String, dynamic>> _collectItemsUsed() {
-    return _itemsUsedControllers.map((item) {
+    return _itemsUsedControllers.asMap().entries.map((entry) {
+      final index = entry.key;
+      final item = entry.value;
       return {
         'itemName': item['name']!.text.trim(),
         'price': _parseAmount(item['price']!.text),
+        // Present only when this line was matched to a real product -
+        // this is what ServiceProvider uses to decide "deduct from
+        // stock, no new expense" vs "just a plain expense line".
+        'productId': _itemsUsedProductIds[index],
       };
     }).toList();
   }
@@ -224,36 +247,28 @@ class _AddEditServiceScreenState extends State<AddEditServiceScreen> {
             primary: true,
             children: [
               // CLIENT FIELD
-              TypeAheadFormField<Client>(
-                textFieldConfiguration: TextFieldConfiguration(
-                  controller: _clientTextController,
-                  decoration: InputDecoration(
-                    hintText: 'Select Client',
-                    border: const OutlineInputBorder(),
-                    focusedBorder: OutlineInputBorder(
-                      borderSide: BorderSide(color: darkTeal, width: 2),
-                    ),
-                    suffixIcon: IconButton(
-                      icon: const Icon(Icons.add),
-                      onPressed: () => _addNewClient(context),
-                    ),
+              TextFormField(
+                controller: _clientTextController,
+                decoration: InputDecoration(
+                  hintText: 'Select Client',
+                  border: const OutlineInputBorder(),
+                  focusedBorder: OutlineInputBorder(
+                    borderSide: BorderSide(color: darkTeal, width: 2),
                   ),
-                  style: TextStyle(color: darkTeal),
+                  suffixIcon: IconButton(
+                    icon: const Icon(Icons.add),
+                    onPressed: () => _addNewClient(context),
+                  ),
                 ),
-                suggestionsCallback: (pattern) {
-                  if (pattern.isEmpty) return [];
-                  return clientProvider.clients.where((client) =>
-                      client.name.toLowerCase().contains(pattern.toLowerCase()));
-                },
-                itemBuilder: (_, Client suggestion) {
-                  return ListTile(
-                    title: Text(suggestion.name),
-                    subtitle: Text(suggestion.phone),
-                  );
-                },
-                onSuggestionSelected: (Client suggestion) {
-                  _selectedClient = suggestion;
-                  _clientTextController.text = suggestion.name;
+                style: TextStyle(color: darkTeal),
+                onTap: () => setState(() {
+                  _showClientSuggestions = _clientTextController.text.trim().isNotEmpty;
+                }),
+                onChanged: (val) {
+                  setState(() {
+                    _selectedClient = null; // typing clears any prior selection
+                    _showClientSuggestions = val.trim().isNotEmpty;
+                  });
                 },
                 validator: (value) {
                   if (_selectedClient == null) {
@@ -261,14 +276,49 @@ class _AddEditServiceScreenState extends State<AddEditServiceScreen> {
                   }
                   return null;
                 },
-                noItemsFoundBuilder: (_) => ListTile(
-                  title: const Text('No client found'),
-                  trailing: IconButton(
-                    icon: const Icon(Icons.add),
-                    onPressed: () => _addNewClient(context),
-                  ),
-                ),
               ),
+              if (_showClientSuggestions && _clientTextController.text.trim().isNotEmpty)
+                Builder(builder: (context) {
+                  final query = _clientTextController.text.toLowerCase();
+                  final matches = clientProvider.clients
+                      .where((c) => c.name.toLowerCase().contains(query))
+                      .take(6)
+                      .toList();
+
+                  if (matches.isEmpty) {
+                    return ListTile(
+                      title: const Text('No client found'),
+                      trailing: IconButton(
+                        icon: const Icon(Icons.add),
+                        onPressed: () => _addNewClient(context),
+                      ),
+                    );
+                  }
+
+                  return Container(
+                    margin: const EdgeInsets.only(top: 4),
+                    decoration: BoxDecoration(
+                      border: Border.all(color: Colors.grey[300]!),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: matches.map((client) {
+                        return ListTile(
+                          title: Text(client.name),
+                          subtitle: Text(client.phone),
+                          onTap: () {
+                            setState(() {
+                              _selectedClient = client;
+                              _clientTextController.text = client.name;
+                              _showClientSuggestions = false;
+                            });
+                          },
+                        );
+                      }).toList(),
+                    ),
+                  );
+                }),
 
               const SizedBox(height: 20),
 
@@ -393,18 +443,103 @@ class _AddEditServiceScreenState extends State<AddEditServiceScreen> {
               ..._itemsUsedControllers.asMap().entries.map((entry) {
                 int index = entry.key;
                 var item = entry.value;
+                final matchedProductId = _itemsUsedProductIds[index];
 
                 return Padding(
                   padding: const EdgeInsets.symmetric(vertical: 4),
                   child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Expanded(
                         flex: 2,
-                        child: TextFormField(
-                          controller: item['name'],
-                          decoration: _inputDecoration('Item Name'),
-                          validator: (v) =>
-                              v == null || v.isEmpty ? 'Enter name' : null,
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            TextFormField(
+                              controller: item['name'],
+                              decoration: _inputDecoration('Item Name'),
+                              validator: (v) =>
+                                  v == null || v.isEmpty ? 'Enter name' : null,
+                              onTap: () => setState(() => _activeSuggestionRow = index),
+                              onChanged: (val) {
+                                setState(() {
+                                  // Typing after a match means the vet
+                                  // changed their mind / made a typo -
+                                  // falls back to a plain expense line.
+                                  if (matchedProductId != null) {
+                                    _itemsUsedProductIds[index] = null;
+                                  }
+                                  _activeSuggestionRow = val.trim().isEmpty ? null : index;
+                                });
+                              },
+                            ),
+                            if (_activeSuggestionRow == index &&
+                                item['name']!.text.trim().isNotEmpty)
+                              Builder(builder: (context) {
+                                final query = item['name']!.text.toLowerCase();
+                                final matches = Provider.of<ProductProvider>(context,
+                                        listen: false)
+                                    .products
+                                    .where((p) => p.name.toLowerCase().contains(query))
+                                    .take(5)
+                                    .toList();
+
+                                if (matches.isEmpty) {
+                                  return Padding(
+                                    padding: const EdgeInsets.only(top: 4, left: 4),
+                                    child: Text(
+                                      'No matching product - will be recorded as a plain expense.',
+                                      style: TextStyle(fontSize: 11, color: Colors.grey[600]),
+                                    ),
+                                  );
+                                }
+
+                                return Container(
+                                  margin: const EdgeInsets.only(top: 4),
+                                  decoration: BoxDecoration(
+                                    border: Border.all(color: Colors.grey[300]!),
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
+                                  child: Column(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: matches.map((product) {
+                                      return ListTile(
+                                        dense: true,
+                                        title: Text(product.name),
+                                        subtitle: Text(
+                                          'Sellable: ${product.sellableQty} ${product.unit}',
+                                          style: const TextStyle(fontSize: 11),
+                                        ),
+                                        onTap: () {
+                                          item['name']!.text = product.name;
+                                          item['price']!.text =
+                                              _tshFormat.format(product.sellPrice);
+                                          setState(() {
+                                            _itemsUsedProductIds[index] = product.id;
+                                            _activeSuggestionRow = null;
+                                          });
+                                        },
+                                      );
+                                    }).toList(),
+                                  ),
+                                );
+                              }),
+                            if (matchedProductId != null)
+                              Padding(
+                                padding: const EdgeInsets.only(top: 2, left: 4),
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Icon(Icons.check_circle, size: 13, color: Colors.green[700]),
+                                    const SizedBox(width: 4),
+                                    Text(
+                                      'In stock - will deduct, no expense recorded',
+                                      style: TextStyle(fontSize: 11, color: Colors.green[700]),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                          ],
                         ),
                       ),
                       const SizedBox(width: 6),
@@ -469,6 +604,7 @@ class _AddEditServiceScreenState extends State<AddEditServiceScreen> {
                           ),
                         ),
                         onPressed: () async {
+                          if (_isLoading) return; // guards against a double-tap firing two saves at once
                           if (!_formKey.currentState!.validate()) return;
 
                           setState(() => _isLoading = true);

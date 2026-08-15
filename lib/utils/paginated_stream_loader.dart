@@ -9,6 +9,14 @@ mixin PaginatedStreamLoader<T> on ChangeNotifier {
   DocumentSnapshot? _lastDocument;
   StreamSubscription<QuerySnapshot>? _subscription;
 
+  // Set when the live stream itself fails (most commonly a missing
+  // Firestore composite index for whatever query was passed in) -
+  // previously this failed completely silently, leaving the screen
+  // stuck on a loading spinner forever with nothing to tell the user,
+  // or the developer, that anything had gone wrong.
+  Object? _streamError;
+  Object? get streamError => _streamError;
+
   List<T> get items => List.unmodifiable(_items);
   bool get hasMore => _hasMore;
   bool get isLoading => _isLoading;
@@ -25,6 +33,7 @@ mixin PaginatedStreamLoader<T> on ChangeNotifier {
     _items.clear();
     _lastDocument = null;
     _hasMore = true;
+    _streamError = null;
 
     _subscription = query.limit(limit).snapshots().listen((snapshot) {
       _items.clear();
@@ -34,6 +43,16 @@ mixin PaginatedStreamLoader<T> on ChangeNotifier {
       if (snapshot.docs.isNotEmpty) {
         _lastDocument = snapshot.docs.last;
       }
+      // If Firestore handed back fewer docs than the requested limit,
+      // that's genuinely everything there is - no further page to load.
+      // Previously this only ever got set inside loadMore(), so the very
+      // first page (however small) always showed a Load More control
+      // regardless of whether there was actually anything more to load.
+      _hasMore = snapshot.docs.length >= limit;
+      _streamError = null;
+      notifyListeners();
+    }, onError: (error) {
+      _streamError = error;
       notifyListeners();
     });
   }
@@ -48,22 +67,27 @@ mixin PaginatedStreamLoader<T> on ChangeNotifier {
     _isLoading = true;
     notifyListeners();
 
-    final snapshot = await query
-        .startAfterDocument(_lastDocument!)
-        .limit(limit)
-        .get();
+    try {
+      final snapshot = await query
+          .startAfterDocument(_lastDocument!)
+          .limit(limit)
+          .get();
 
-    if (snapshot.docs.isEmpty) {
-      _hasMore = false;
-    } else {
-      for (var doc in snapshot.docs) {
-        _items.add(fromDoc(doc));
+      if (snapshot.docs.isEmpty) {
+        _hasMore = false;
+      } else {
+        for (var doc in snapshot.docs) {
+          _items.add(fromDoc(doc));
+        }
+        _lastDocument = snapshot.docs.last;
+        _hasMore = snapshot.docs.length >= limit;
       }
-      _lastDocument = snapshot.docs.last;
+    } catch (e) {
+      _streamError = e;
+    } finally {
+      _isLoading = false;
+      notifyListeners();
     }
-
-    _isLoading = false;
-    notifyListeners();
   }
 
   @override

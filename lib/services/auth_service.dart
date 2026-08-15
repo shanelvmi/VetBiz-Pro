@@ -26,6 +26,15 @@ class AuthService {
       password: password,
     );
 
+    try {
+      await userCred.user!.sendEmailVerification();
+    } catch (e) {
+      // Registration itself already succeeded - a failed verification
+      // email (network hiccup, rate limit) shouldn't block the account
+      // from being created. They can resend it later from the
+      // dashboard reminder.
+    }
+
     await _saveUserToFirestore(
       uid: userCred.user!.uid,
       fullName: fullName,
@@ -61,6 +70,13 @@ class AuthService {
       email: email,
       password: password,
     );
+
+    try {
+      await userCred.user!.sendEmailVerification();
+    } catch (e) {
+      // Same reasoning as the admin path - don't let a failed
+      // verification email block the registration itself.
+    }
 
     final String newUid = userCred.user!.uid;
     String avatarUrl = '';
@@ -143,6 +159,23 @@ class AuthService {
   // ✅ Get current user
   User? getCurrentUser() {
     return _auth.currentUser;
+  }
+
+  // 🔹 Resend the verification email - used by the dashboard reminder
+  Future<void> resendEmailVerification() async {
+    final user = getCurrentUser();
+    if (user == null) throw Exception('No user logged in');
+    await user.sendEmailVerification();
+  }
+
+  // 🔹 Refresh the cached emailVerified flag - Firebase doesn't update
+  // this automatically once the user clicks the link in their email,
+  // it has to be explicitly re-fetched.
+  Future<bool> refreshEmailVerifiedStatus() async {
+    final user = getCurrentUser();
+    if (user == null) return false;
+    await user.reload();
+    return _auth.currentUser?.emailVerified ?? false;
   }
 
   // 🔹 Deactivate account

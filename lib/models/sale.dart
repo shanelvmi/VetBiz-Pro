@@ -12,6 +12,13 @@ class SaleItem {
   final double realizedProfit; // profit received from payment
   final double unrealizedProfit; // profit tied up in credit
 
+  // Which batch(es) this line's quantity was actually deducted from, and
+  // how much from each (FIFO - soonest expiry first) - recorded at sale
+  // time so deleting the sale later can restore exactly those amounts to
+  // exactly those batches, not just bump a generic total. Empty for
+  // sales made before batch tracking existed.
+  final List<Map<String, dynamic>> batchAllocations;
+
   const SaleItem({
     required this.productId,
     required this.name,
@@ -22,6 +29,7 @@ class SaleItem {
     this.unit = '',
     this.realizedProfit = 0.0,
     double? unrealizedProfit,
+    this.batchAllocations = const [],
   }) : unrealizedProfit =
             unrealizedProfit ?? ((unitPrice - costPrice) * quantity - discount);
 
@@ -38,6 +46,7 @@ class SaleItem {
       'unit': unit,
       'realizedProfit': realizedProfit,
       'unrealizedProfit': unrealizedProfit,
+      'batchAllocations': batchAllocations,
     };
   }
 
@@ -48,6 +57,7 @@ class SaleItem {
     final unitPrice = (map['unitPrice'] as num?)?.toDouble() ?? 0.0;
     final costPrice = (map['costPrice'] as num?)?.toDouble() ?? 0.0;
     final discount = (map['discount'] as num?)?.toDouble() ?? 0.0;
+    final rawAllocations = map['batchAllocations'] as List<dynamic>? ?? [];
 
     return SaleItem(
       productId: map['productId'] as String? ?? '',
@@ -57,6 +67,10 @@ class SaleItem {
       discount: discount,
       costPrice: costPrice,
       unit: map['unit'] as String? ?? '',
+      batchAllocations: rawAllocations
+          .whereType<Map>()
+          .map((e) => Map<String, dynamic>.from(e))
+          .toList(),
       realizedProfit: (map['realizedProfit'] as num?)?.toDouble() ?? 0.0,
       unrealizedProfit: (map['unrealizedProfit'] as num?)?.toDouble() ??
           ((unitPrice - costPrice) * quantity - discount),
@@ -73,6 +87,7 @@ class SaleItem {
     String? unit,
     double? realizedProfit,
     double? unrealizedProfit,
+    List<Map<String, dynamic>>? batchAllocations,
   }) {
     return SaleItem(
       productId: productId ?? this.productId,
@@ -84,6 +99,7 @@ class SaleItem {
       unit: unit ?? this.unit,
       realizedProfit: realizedProfit ?? this.realizedProfit,
       unrealizedProfit: unrealizedProfit ?? this.unrealizedProfit,
+      batchAllocations: batchAllocations ?? this.batchAllocations,
     );
   }
 }

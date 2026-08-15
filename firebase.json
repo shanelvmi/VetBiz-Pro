@@ -1,1 +1,38 @@
-{"flutter":{"platforms":{"android":{"default":{"projectId":"vetbiz-pro","appId":"1:1037378405744:android:f1e571da606d3a5a1cbbb5","fileOutput":"android/app/google-services.json"}},"dart":{"lib/firebase_options.dart":{"projectId":"vetbiz-pro","configurations":{"android":"1:1037378405744:android:f1e571da606d3a5a1cbbb5","ios":"1:1037378405744:ios:e14a1ee2725c4fd71cbbb5","web":"1:1037378405744:web:1da5ab5b83372fa31cbbb5"}}}}}}
+{
+  "flutter": {
+    "platforms": {
+      "android": {
+        "default": {
+          "projectId": "vetbiz-pro",
+          "appId": "1:1037378405744:android:f1e571da606d3a5a1cbbb5",
+          "fileOutput": "android/app/google-services.json"
+        }
+      },
+      "dart": {
+        "lib/firebase_options.dart": {
+          "projectId": "vetbiz-pro",
+          "configurations": {
+            "android": "1:1037378405744:android:f1e571da606d3a5a1cbbb5",
+            "ios": "1:1037378405744:ios:e14a1ee2725c4fd71cbbb5",
+            "web": "1:1037378405744:web:1da5ab5b83372fa31cbbb5"
+          }
+        }
+      }
+    }
+  },
+  "firestore": {
+    "rules": "firestore.rules"
+  },
+  "functions": [
+    {
+      "source": "functions",
+      "codebase": "default",
+      "ignore": [
+        "node_modules",
+        ".git",
+        "firebase-debug.log",
+        "firebase-debug.*.log"
+      ]
+    }
+  ]
+}

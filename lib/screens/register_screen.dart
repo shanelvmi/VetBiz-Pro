@@ -1,13 +1,16 @@
 import 'dart:typed_data';
 import 'dart:math';
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:firebase_storage/firebase_storage.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:provider/provider.dart';
-import 'login_screen.dart';
 import '../services/auth_service.dart';
 import '../providers/facility_provider.dart';
+import '../utils/facility_activation.dart';
+import 'facilities/facility_picker_screen.dart';
 
 class RegisterScreen extends StatefulWidget {
   final bool isUpdating;
@@ -30,8 +33,81 @@ class _RegisterScreenState extends State<RegisterScreen> {
   final TextEditingController confirmPasswordController = TextEditingController();
   final TextEditingController assistantFacilityNameController = TextEditingController();
   final TextEditingController assistantFacilityCodeController = TextEditingController();
+
+  // Live lookup as the code is typed - shows the real facility name and
+  // type looked up from Firestore, instead of also asking for the name
+  // as separate free text (which could be typed wrong, or made up
+  // entirely, while the code alone is already enough to identify the
+  // facility uniquely).
+  Map<String, dynamic>? _foundFacility;
+  bool _isLookingUpFacility = false;
+  String? _facilityLookupError;
+  Timer? _facilityLookupDebounce;
+
+  void _onFacilityCodeChanged(String value) {
+    _facilityLookupDebounce?.cancel();
+    final code = value.trim();
+
+    if (code.isEmpty) {
+      setState(() {
+        _foundFacility = null;
+        _facilityLookupError = null;
+        _isLookingUpFacility = false;
+      });
+      return;
+    }
+
+    setState(() => _isLookingUpFacility = true);
+
+    _facilityLookupDebounce = Timer(const Duration(milliseconds: 500), () async {
+      try {
+        final query = await FirebaseFirestore.instance
+            .collection('facilities')
+            .where('code', isEqualTo: code)
+            .limit(1)
+            .get();
+
+        if (!mounted) return;
+        setState(() {
+          _isLookingUpFacility = false;
+          if (query.docs.isEmpty) {
+            _foundFacility = null;
+            _facilityLookupError = 'No facility found with this code';
+          } else {
+            final doc = query.docs.first;
+            _foundFacility = {
+              'facilityId': doc.id,
+              'name': doc.data()['name'] ?? '',
+              'type': doc.data()['type'] ?? '',
+              'code': code,
+            };
+            _facilityLookupError = null;
+          }
+        });
+      } catch (e) {
+        if (!mounted) return;
+        setState(() {
+          _isLookingUpFacility = false;
+          _foundFacility = null;
+          _facilityLookupError = 'Could not check this code - try again';
+        });
+      }
+    });
+  }
   final TextEditingController facilityNameController = TextEditingController();
-  final TextEditingController facilityTypeController = TextEditingController();
+  // Free text here previously meant every admin typed their own variant
+  // ("Vet Shop", "Veterinary Store", "agrovet"...), making the field
+  // useless for anything beyond display. A fixed set keeps it
+  // meaningful and consistent, with "Other" as an honest fallback for
+  // anything genuinely outside these.
+  static const List<String> kFacilityTypes = [
+    'Agrovet',
+    'Vet Clinic',
+    'Vet Hospital',
+    'Ambulatory Vet',
+    'Other',
+  ];
+  String? _selectedFacilityType;
 
   // Dropdowns
   final List<String> prefixes = ['Mr.', 'Mrs.', 'Ms.', 'Dr.'];
@@ -55,12 +131,41 @@ class _RegisterScreenState extends State<RegisterScreen> {
   // Facilities
   List<Map<String, dynamic>> facilities = [];
 
-  String generateFacilityCode({int length = 8}) {
+  String _randomCode({int length = 8}) {
     const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
     final rnd = Random.secure();
     return String.fromCharCodes(
       Iterable.generate(length, (_) => chars.codeUnitAt(rnd.nextInt(chars.length))),
     );
+  }
+
+  /// Generates a facility code and verifies it's not already in use
+  /// before returning it - the random generator alone (2.8 trillion
+  /// possible 8-character codes) makes a collision extremely unlikely,
+  /// but "extremely unlikely" isn't "never." This makes it actually
+  /// guaranteed rather than just statistically safe, at the cost of one
+  /// quick query per attempt.
+  Future<String> generateUniqueFacilityCode({int length = 8, int maxAttempts = 5}) async {
+    for (var attempt = 0; attempt < maxAttempts; attempt++) {
+      final candidate = _randomCode(length: length);
+      final existing = await FirebaseFirestore.instance
+          .collection('facilities')
+          .where('code', isEqualTo: candidate)
+          .limit(1)
+          .get();
+      if (existing.docs.isEmpty) return candidate;
+      // Collision (astronomically rare) - loop and try a fresh one.
+    }
+    // maxAttempts exhausted (should never realistically happen) - fall
+    // back to a longer code, which shrinks the collision odds further
+    // still rather than silently reusing something.
+    return _randomCode(length: length + 4);
+  }
+
+  @override
+  void dispose() {
+    _facilityLookupDebounce?.cancel();
+    super.dispose();
   }
 
   @override
@@ -117,19 +222,48 @@ class _RegisterScreenState extends State<RegisterScreen> {
     return await ref.getDownloadURL();
   }
 
-  void addFacility() {
+  bool _isAddingFacility = false;
+
+  Future<void> addFacility() async {
     final name = facilityNameController.text.trim();
-    final type = facilityTypeController.text.trim();
-    if (name.isNotEmpty && type.isNotEmpty) {
+    final type = _selectedFacilityType;
+    if (name.isEmpty || type == null || _isAddingFacility) return;
+
+    setState(() => _isAddingFacility = true);
+    try {
+      final code = await generateUniqueFacilityCode();
+      if (!mounted) return;
       setState(() {
-        facilities.add({'name': name, 'type': type, 'code': generateFacilityCode(), 'facilityId': ''});
+        facilities.add({'name': name, 'type': type, 'code': code, 'facilityId': ''});
         facilityNameController.clear();
-        facilityTypeController.clear();
+        _selectedFacilityType = null;
       });
+    } finally {
+      if (mounted) setState(() => _isAddingFacility = false);
     }
   }
 
   void removeFacility(int index) => setState(() => facilities.removeAt(index));
+
+  // A small, deliberately short denylist of the most common weak
+  // passwords - not a full breach-database check (overkill for this
+  // app), just a floor against the most obvious ones.
+  static const Set<String> _commonWeakPasswords = {
+    'password', 'password1', 'password123', '12345678', '123456789',
+    'qwerty123', 'letmein', 'admin123', 'welcome1', '87654321',
+  };
+
+  /// Returns null if the password is acceptable, or a short reason why
+  /// it isn't. Deliberately moderate for this audience - length plus a
+  /// letter and a number, not special-character requirements that tend
+  /// to frustrate more than they protect.
+  String? _passwordIssue(String password) {
+    if (password.length < 8) return 'At least 8 characters';
+    if (!RegExp(r'[A-Za-z]').hasMatch(password)) return 'Add at least one letter';
+    if (!RegExp(r'[0-9]').hasMatch(password)) return 'Add at least one number';
+    if (_commonWeakPasswords.contains(password.toLowerCase())) return 'This password is too common - choose another';
+    return null;
+  }
 
   Future<void> _submit() async {
   setState(() => error = null);
@@ -142,6 +276,14 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
   try {
     // ---------------- Validation ----------------
+    if (!widget.isUpdating) {
+      final passwordIssue = _passwordIssue(password);
+      if (passwordIssue != null) {
+        setState(() => error = passwordIssue);
+        return;
+      }
+    }
+
     if (!widget.isUpdating && password != confirmPassword) {
       setState(() => error = "Passwords do not match");
       return;
@@ -152,21 +294,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
       return;
     }
 
-    if (selectedRole == 'Assistant') {
-      final enteredName = assistantFacilityNameController.text.trim();
-      final enteredCode = assistantFacilityCodeController.text.trim();
-      if (enteredName.isEmpty || enteredCode.isEmpty) {
-        setState(() => error = "Please enter Facility Name and Facility Code");
-        return;
-      }
-      final query = await FirebaseFirestore.instance
-          .collection('facilities')
-          .where('name', isEqualTo: enteredName)
-          .where('code', isEqualTo: enteredCode)
-          .limit(1)
-          .get();
-      if (query.docs.isEmpty) {
-        setState(() => error = "Invalid Facility Name or Code");
+    if (selectedRole == 'Assistant' && !widget.isUpdating) {
+      if (_foundFacility == null) {
+        setState(() => error = "Enter a valid facility code");
         return;
       }
     }
@@ -244,17 +374,24 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text("Account registered successfully!")),
+          const SnackBar(
+            content: Text(
+                "Account registered successfully! We've sent a verification link to your email - check your Spam folder if it doesn't appear within a few minutes."),
+            duration: Duration(seconds: 6),
+          ),
         );
 
         if (facilitiesWithId.length == 1) {
           final selected = facilitiesWithId.first;
-          Provider.of<FacilityProvider>(context, listen: false).setFacility(
-            id: selected['facilityId'],
-            name: selected['name'],
-            type: selected['type'],
+          await activateFacilityAndGoToDashboard(
+            context: context,
+            facility: {
+              'facilityId': selected['facilityId'],
+              'facilityName': selected['name'],
+              'facilityType': selected['type'],
+            },
+            role: 'admin',
           );
-          Navigator.pushReplacementNamed(context, '/dashboard');
         } else {
           final facilityList = facilitiesWithId.map((f) {
             return {
@@ -263,24 +400,26 @@ class _RegisterScreenState extends State<RegisterScreen> {
               'facilityType': f['type']
             };
           }).toList();
-          Navigator.pushReplacementNamed(
+          Navigator.pushReplacement(
             context,
-            '/selectFacility',
-            arguments: {'role': 'admin', 'facilities': facilityList},
+            MaterialPageRoute(
+              builder: (_) => FacilityPickerScreen(facilities: facilityList, role: 'admin'),
+            ),
           );
         }
       }
     } else {
       // ---------------- Assistant Registration ----------------
-      final enteredName = assistantFacilityNameController.text.trim();
-      final enteredCode = assistantFacilityCodeController.text.trim();
-      final query = await FirebaseFirestore.instance
-          .collection('facilities')
-          .where('name', isEqualTo: enteredName)
-          .where('code', isEqualTo: enteredCode)
-          .limit(1)
-          .get();
-      final facilityDoc = query.docs.first;
+      // _foundFacility was already verified via the live lookup as the
+      // code was typed - no need to query again, and this can no
+      // longer crash on an empty result the way the old query-then-
+      // .first approach could if the facility somehow wasn't found by
+      // this point.
+      if (_foundFacility == null) {
+        setState(() => error = 'Enter a valid facility code first');
+        return;
+      }
+      final facility = _foundFacility!;
 
       await _authService.registerAssistantSilently(
         email: email,
@@ -289,10 +428,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
         phone: phone,
         facilities: [
           {
-            'facilityId': facilityDoc.id,
-            'name': enteredName,
-            'type': facilityDoc['type'] ?? '',
-            'code': enteredCode,
+            'facilityId': facility['facilityId'],
+            'name': facility['name'],
+            'type': facility['type'] ?? '',
+            'code': facility['code'],
           }
         ],
         avatarBytes: _imageBytes,
@@ -301,11 +440,21 @@ class _RegisterScreenState extends State<RegisterScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
+              duration: Duration(seconds: 6),
               content: Text(
-                  "Assistant registered successfully! Waiting for admin approval.")),
+                  "Assistant registered successfully! Waiting for admin approval. We've also sent a verification link to your email - check your Spam folder if it doesn't appear.")),
         );
         Navigator.pushReplacementNamed(context, '/login');
       }
+    }
+  } on FirebaseAuthException catch (e) {
+    if (e.code == 'email-already-in-use') {
+      setState(() => error =
+          'An account with this email already exists. If you\'re switching '
+          'facilities, this email can\'t register a second time - ask your '
+          'Platform Admin to add you to the new facility instead.');
+    } else {
+      setState(() => error = e.message ?? 'Registration failed. Please try again.');
     }
   } catch (e, stackTrace) {
     print('🔥 Error: $e\n📌 Stack: $stackTrace');
@@ -325,12 +474,19 @@ class _RegisterScreenState extends State<RegisterScreen> {
         onPressed: () {
           if (widget.isUpdating) {
             Navigator.pushReplacementNamed(context, '/dashboard');
+          } else if (Navigator.canPop(context)) {
+            // Pops back to whatever was underneath (AppEntryPoint,
+            // still showing LoginScreen reactively) instead of
+            // destroying it - the previous pushAndRemoveUntil(...,
+            // (route) => false) removed every route including
+            // AppEntryPoint itself, which is exactly why the URL stuck
+            // at #/register and a subsequent login attempt had nothing
+            // left listening for it to ever spin down.
+            Navigator.pop(context);
           } else {
-            Navigator.pushAndRemoveUntil(
-              context,
-              MaterialPageRoute(builder: (_) => const LoginScreen()),
-              (route) => false,
-            );
+            // Edge case: registration was reached directly (e.g. a
+            // bookmarked /register URL) with nothing to pop back to.
+            Navigator.pushReplacementNamed(context, '/login');
           }
         },
       ),
@@ -468,22 +624,45 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 ),
                 const SizedBox(height: 8),
                 TextField(
-                  controller: assistantFacilityNameController,
-                  decoration: InputDecoration(
-                    labelText: 'Facility Name',
-                    enabledBorder: blackBorder,
-                    focusedBorder: blackBorder,
-                  ),
-                ),
-                const SizedBox(height: 12),
-                TextField(
                   controller: assistantFacilityCodeController,
+                  onChanged: _onFacilityCodeChanged,
                   decoration: InputDecoration(
                     labelText: 'Facility Code',
                     enabledBorder: blackBorder,
                     focusedBorder: blackBorder,
+                    suffixIcon: _isLookingUpFacility
+                        ? const Padding(
+                            padding: EdgeInsets.all(12),
+                            child: SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2)),
+                          )
+                        : (_foundFacility != null ? const Icon(Icons.check_circle, color: Colors.green) : null),
                   ),
                 ),
+                const SizedBox(height: 8),
+                if (_foundFacility != null)
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.all(10),
+                    decoration: BoxDecoration(
+                      color: Colors.green.withValues(alpha: 0.08),
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(color: Colors.green.withValues(alpha: 0.3)),
+                    ),
+                    child: Row(
+                      children: [
+                        const Icon(Icons.storefront_outlined, color: Colors.green, size: 18),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Text(
+                            'Joining: ${_foundFacility!['name']} (${_foundFacility!['type']})',
+                            style: const TextStyle(color: Colors.green, fontWeight: FontWeight.w600, fontSize: 13),
+                          ),
+                        ),
+                      ],
+                    ),
+                  )
+                else if (_facilityLookupError != null)
+                  Text(_facilityLookupError!, style: const TextStyle(color: Colors.redAccent, fontSize: 12.5)),
                 const SizedBox(height: 16),
               ] else ...[
                 // ---------------- ADMIN FACILITIES ----------------
@@ -536,18 +715,34 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     const SizedBox(width: 8),
                     Expanded(
                       flex: 2,
-                      child: TextField(
-                        controller: facilityTypeController,
+                      child: DropdownButtonFormField<String>(
+                        initialValue: _selectedFacilityType,
                         decoration: InputDecoration(
                           labelText: 'Type',
                           enabledBorder: blackBorder,
                           focusedBorder: blackBorder,
                         ),
+                        items: kFacilityTypes
+                            .map((t) => DropdownMenuItem(value: t, child: Text(t)))
+                            .toList(),
+                        onChanged: (value) => setState(() => _selectedFacilityType = value),
                       ),
                     ),
                     IconButton(
-                      icon: Icon(Icons.add_circle, color: warmAmber),
-                      onPressed: addFacility,
+                      icon: _isAddingFacility
+                          ? const SizedBox(
+                              width: 20,
+                              height: 20,
+                              child: CircularProgressIndicator(strokeWidth: 2),
+                            )
+                          : const Icon(Icons.add_circle),
+                      style: ButtonStyle(
+                        foregroundColor: WidgetStateProperty.resolveWith<Color>((states) {
+                          if (states.contains(WidgetState.hovered)) return deepTealGreen;
+                          return warmAmber;
+                        }),
+                      ),
+                      onPressed: _isAddingFacility ? null : addFacility,
                     ),
                   ],
                 ),
@@ -559,10 +754,19 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 TextField(
                   controller: passwordController,
                   obscureText: true,
+                  onChanged: (_) => setState(() {}),
                   decoration: InputDecoration(
                     labelText: 'Password',
                     enabledBorder: blackBorder,
                     focusedBorder: blackBorder,
+                    helperText: passwordController.text.isEmpty
+                        ? 'At least 8 characters, with a letter and a number'
+                        : (_passwordIssue(passwordController.text) ?? 'Looks good'),
+                    helperStyle: TextStyle(
+                      color: passwordController.text.isEmpty
+                          ? Colors.grey
+                          : (_passwordIssue(passwordController.text) == null ? Colors.green : Colors.redAccent),
+                    ),
                   ),
                 ),
                 const SizedBox(height: 16),
@@ -570,10 +774,31 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 TextField(
                   controller: confirmPasswordController,
                   obscureText: true,
+                  onChanged: (_) => setState(() {}),
                   decoration: InputDecoration(
                     labelText: 'Confirm Password',
                     enabledBorder: blackBorder,
                     focusedBorder: blackBorder,
+                    suffixIcon: confirmPasswordController.text.isEmpty
+                        ? null
+                        : Icon(
+                            passwordController.text == confirmPasswordController.text
+                                ? Icons.check_circle
+                                : Icons.error_outline,
+                            color: passwordController.text == confirmPasswordController.text
+                                ? Colors.green
+                                : Colors.redAccent,
+                          ),
+                    helperText: confirmPasswordController.text.isEmpty
+                        ? null
+                        : (passwordController.text == confirmPasswordController.text
+                            ? 'Passwords match'
+                            : 'Passwords do not match'),
+                    helperStyle: TextStyle(
+                      color: passwordController.text == confirmPasswordController.text
+                          ? Colors.green
+                          : Colors.redAccent,
+                    ),
                   ),
                 ),
                 const SizedBox(height: 16),
@@ -590,7 +815,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 width: double.infinity,
                 child: ElevatedButton(
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: deepTealGreen,
                     foregroundColor: offWhite,
                     padding: const EdgeInsets.symmetric(vertical: 14),
                     shape: RoundedRectangleBorder(
@@ -598,9 +822,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     ),
                     elevation: 3,
                   ).copyWith(
-                    overlayColor: WidgetStateProperty.all(
-                      Colors.teal.shade700,
-                    ),
+                    backgroundColor: WidgetStateProperty.resolveWith<Color>((states) {
+                      if (states.contains(WidgetState.hovered)) return warmAmber;
+                      return deepTealGreen;
+                    }),
                   ),
                   onPressed: _submit,
                   child: Text(

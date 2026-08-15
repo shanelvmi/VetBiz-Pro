@@ -9,13 +9,16 @@ import '../../models/transaction.dart';
 import '../../services/auth_service.dart';
 
 class AddTransactionScreen extends StatefulWidget {
-  const AddTransactionScreen({super.key});
+  final TransactionModel? transaction;
+
+  const AddTransactionScreen({super.key, this.transaction});
 
   @override
   State<AddTransactionScreen> createState() => _AddTransactionScreenState();
 }
 
 class _AddTransactionScreenState extends State<AddTransactionScreen> {
+  bool _isSaving = false;
   final TextEditingController descriptionController = TextEditingController();
   final TextEditingController amountController = TextEditingController();
   final TextEditingController categoryController = TextEditingController();
@@ -70,6 +73,8 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
   }
 
   void _saveTransaction(BuildContext context) async {
+    if (_isSaving) return; // guards against a double-tap firing two saves at once
+
     final description = descriptionController.text.trim();
 
     // Remove commas to parse
@@ -81,6 +86,37 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Please fill all required fields correctly')),
       );
+      return;
+    }
+
+    setState(() => _isSaving = true);
+
+    final provider = Provider.of<TransactionProvider>(context, listen: false);
+
+    if (widget.transaction != null) {
+      // Editing - keep the original date and who recorded it; only the
+      // fields the user can actually change here get updated.
+      final updated = widget.transaction!.copyWith(
+        description: description,
+        amount: amount,
+        type: type!,
+        category: category,
+      );
+      try {
+        await provider.updateTransaction(updated, context);
+        if (!context.mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Transaction updated successfully')),
+        );
+        Navigator.pop(context);
+      } catch (e) {
+        if (!context.mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Could not update: $e'), backgroundColor: Colors.redAccent),
+        );
+      } finally {
+        if (mounted) setState(() => _isSaving = false);
+      }
       return;
     }
 
@@ -99,19 +135,36 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
       recordedBy: userName,
     );
 
-    final provider = Provider.of<TransactionProvider>(context, listen: false);
-    await provider.addTransaction(newTx, context);
+    try {
+      await provider.addTransaction(newTx, context);
+      if (!context.mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Transaction saved successfully')),
+      );
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Transaction saved successfully')),
-    );
-
-    Navigator.pop(context);
+      Navigator.pop(context);
+    } catch (e) {
+      if (!context.mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Could not save transaction: $e'), backgroundColor: Colors.redAccent),
+      );
+    } finally {
+      if (mounted) setState(() => _isSaving = false);
+    }
   }
 
   @override
   void initState() {
     super.initState();
+
+    if (widget.transaction != null) {
+      final tx = widget.transaction!;
+      type = tx.type;
+      descriptionController.text = tx.description;
+      categoryController.text = tx.category;
+      amountController.text = formatter.format(tx.amount.round());
+    }
+
     amountController.addListener(() {
       // Only format if user input differs from formatted text
       String currentText = amountController.text;
@@ -152,7 +205,7 @@ Widget build(BuildContext context) {
   return Scaffold(
     backgroundColor: offWhite,
     appBar: AppBar(
-      title: const Text('Add Transaction'),
+      title: Text(widget.transaction != null ? 'Edit Transaction' : 'Add Transaction'),
       backgroundColor: primaryDeepGreen,
       foregroundColor: offWhite,
     ),
@@ -219,7 +272,7 @@ Widget build(BuildContext context) {
           SizedBox(
             width: double.infinity,
             child: ElevatedButton(
-              onPressed: () => _saveTransaction(context),
+              onPressed: _isSaving ? null : () => _saveTransaction(context),
               style: ElevatedButton.styleFrom(
                 backgroundColor: warmAmber,
                 foregroundColor: Colors.black,
@@ -228,10 +281,16 @@ Widget build(BuildContext context) {
                   borderRadius: BorderRadius.circular(8),
                 ),
               ),
-              child: const Text(
-                'Save Transaction',
-                style: TextStyle(fontWeight: FontWeight.bold),
-              ),
+              child: _isSaving
+                  ? const SizedBox(
+                      width: 20,
+                      height: 20,
+                      child: CircularProgressIndicator(strokeWidth: 2, color: Colors.black),
+                    )
+                  : Text(
+                      widget.transaction != null ? 'Update Transaction' : 'Save Transaction',
+                      style: const TextStyle(fontWeight: FontWeight.bold),
+                    ),
             ),
           ),
         ],

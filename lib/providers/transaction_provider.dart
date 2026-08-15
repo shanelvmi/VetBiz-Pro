@@ -5,15 +5,30 @@ import 'package:provider/provider.dart';
 
 import '../models/transaction.dart';
 import 'facility_provider.dart';
+import '../utils/activity_logger.dart';
 
 class TransactionProvider with ChangeNotifier {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
-  List<TransactionModel> _transactions = [];
-  List<TransactionModel> get transactions => [..._transactions];
+  /// Same fix as Sales/Services: only stream the most recent [pageSize]
+  /// transactions live; older ones page in on demand via
+  /// [loadMoreTransactions] instead of loading a facility's entire
+  /// transaction history every time.
+  static const int pageSize = 25;
+
+  List<TransactionModel> _liveTransactions = [];
+  final List<TransactionModel> _olderTransactions = [];
+  List<TransactionModel> get transactions => [..._liveTransactions, ..._olderTransactions];
 
   StreamSubscription<QuerySnapshot<Map<String, dynamic>>>? _subscription;
   String? _facilityId;
+
+  DocumentSnapshot<Map<String, dynamic>>? _lastDocument;
+  bool _hasMore = true;
+  bool get hasMore => _hasMore;
+
+  bool _isLoadingMore = false;
+  bool get isLoadingMore => _isLoadingMore;
 
   /// ---------------------------------------------------
   /// CLEAR ALL DATA WHEN FACILITY CHANGES
@@ -22,35 +37,49 @@ class TransactionProvider with ChangeNotifier {
     _subscription?.cancel();
     _subscription = null;
     _facilityId = null;
-    _transactions.clear();
+    _liveTransactions.clear();
+    _olderTransactions.clear();
+    _lastDocument = null;
+    _hasMore = true;
     notifyListeners();
   }
 
+  Query<Map<String, dynamic>> _baseQuery(String facilityId) => _firestore
+      .collection('facilities')
+      .doc(facilityId)
+      .collection('transactions')
+      .orderBy('date', descending: true);
+
   /// ---------------------------------------------------
-  /// REAL-TIME LISTENER
+  /// REAL-TIME LISTENER (paginated - most recent page only)
   /// ---------------------------------------------------
   void listenToTransactions(String facilityId) {
     if (_facilityId == facilityId) return; // already listening
 
     _facilityId = facilityId;
+    _liveTransactions = [];
+    _olderTransactions.clear();
+    _lastDocument = null;
+    _hasMore = true;
     _subscription?.cancel();
 
     if (facilityId.isEmpty) return;
 
-    _subscription = _firestore
-        .collection('facilities')
-        .doc(facilityId)
-        .collection('transactions')
-        .orderBy('date', descending: true)
+    _subscription = _baseQuery(facilityId)
+        .limit(pageSize)
         .snapshots()
         .listen((snapshot) {
-      _transactions = snapshot.docs
-          .map((doc) =>
-              TransactionModel.fromFirestore(doc.data(), doc.id))
+      _liveTransactions = snapshot.docs
+          .map((doc) => TransactionModel.fromFirestore(doc.data(), doc.id))
           .toList();
 
+      if (_olderTransactions.isEmpty) {
+        _lastDocument = snapshot.docs.isNotEmpty ? snapshot.docs.last : null;
+        _hasMore = snapshot.docs.length >= pageSize;
+      }
+
       debugPrint(
-          "TransactionProvider: Loaded ${_transactions.length} transactions for $facilityId");
+          "TransactionProvider: Loaded ${_liveTransactions.length} live transactions for $facilityId");
 
       notifyListeners();
     }, onError: (error) {
@@ -58,21 +87,49 @@ class TransactionProvider with ChangeNotifier {
     });
   }
 
+  /// Fetch the next page of older transactions (one-time read, not live).
+  Future<void> loadMoreTransactions() async {
+    final facilityId = _facilityId;
+    if (_isLoadingMore || !_hasMore || facilityId == null || _lastDocument == null) {
+      return;
+    }
+
+    _isLoadingMore = true;
+    notifyListeners();
+
+    try {
+      final snapshot = await _baseQuery(facilityId)
+          .startAfterDocument(_lastDocument!)
+          .limit(pageSize)
+          .get();
+
+      final more = snapshot.docs
+          .map((doc) => TransactionModel.fromFirestore(doc.data(), doc.id))
+          .toList();
+      _olderTransactions.addAll(more);
+
+      if (snapshot.docs.isNotEmpty) {
+        _lastDocument = snapshot.docs.last;
+      }
+      _hasMore = snapshot.docs.length >= pageSize;
+    } catch (e) {
+      debugPrint('Error loading more transactions: $e');
+    } finally {
+      _isLoadingMore = false;
+      notifyListeners();
+    }
+  }
+
   /// ---------------------------------------------------
-  /// ONE-TIME FETCH (optional, still available)
+  /// ONE-TIME FETCH (optional, still available) - unchanged, used
+  /// elsewhere for a full one-off fetch outside the live pagination.
   /// ---------------------------------------------------
   Future<void> fetchTransactions(String facilityId) async {
     try {
-      final snapshot = await _firestore
-          .collection('facilities')
-          .doc(facilityId)
-          .collection('transactions')
-          .orderBy('date', descending: true)
-          .get();
+      final snapshot = await _baseQuery(facilityId).get();
 
-      _transactions = snapshot.docs
-          .map((doc) =>
-              TransactionModel.fromFirestore(doc.data(), doc.id))
+      _liveTransactions = snapshot.docs
+          .map((doc) => TransactionModel.fromFirestore(doc.data(), doc.id))
           .toList();
 
       notifyListeners();
@@ -122,12 +179,22 @@ class TransactionProvider with ChangeNotifier {
 
       // No manual add needed if real-time listener is active
       if (_subscription == null) {
-        _transactions.add(newTransaction);
+        _liveTransactions.add(newTransaction);
         notifyListeners();
       }
 
+      final userInfo = await ActivityLogger.getCurrentUserInfo();
+      await ActivityLogger.logActivity(
+        facilityId: facilityId,
+        userId: userInfo['userId']!,
+        userName: userInfo['userName'],
+        actionType: 'Transactions',
+        description: 'Added ${newTransaction.type}: ${newTransaction.description} - Tsh ${newTransaction.amount.toStringAsFixed(0)}',
+      );
+
     } catch (e) {
       debugPrint('Error adding transaction: $e');
+      rethrow;
     }
   }
 
@@ -155,15 +222,25 @@ class TransactionProvider with ChangeNotifier {
 
       // Update local list only if not listening in realtime
       if (_subscription == null) {
-        final index = _transactions.indexWhere(
+        final index = _liveTransactions.indexWhere(
             (t) => t.id == updatedTransaction.id);
         if (index != -1) {
-          _transactions[index] = updatedTransaction;
+          _liveTransactions[index] = updatedTransaction;
           notifyListeners();
         }
       }
+
+      final userInfo = await ActivityLogger.getCurrentUserInfo();
+      await ActivityLogger.logActivity(
+        facilityId: facilityId,
+        userId: userInfo['userId']!,
+        userName: userInfo['userName'],
+        actionType: 'Transactions',
+        description: 'Updated ${updatedTransaction.type}: ${updatedTransaction.description} - Tsh ${updatedTransaction.amount.toStringAsFixed(0)}',
+      );
     } catch (e) {
       debugPrint('Error updating transaction: $e');
+      rethrow;
     }
   }
 
@@ -176,6 +253,11 @@ class TransactionProvider with ChangeNotifier {
       final facilityId =
           Provider.of<FacilityProvider>(context, listen: false)
               .selectedFacilityId;
+
+      final existingIndex = _liveTransactions.indexWhere((t) => t.id == transactionId);
+      final deletedDescription = existingIndex != -1
+          ? _liveTransactions[existingIndex].description
+          : transactionId;
 
       if (facilityId == null || facilityId.isEmpty) {
         debugPrint('Facility ID missing, cannot delete transaction.');
@@ -190,26 +272,38 @@ class TransactionProvider with ChangeNotifier {
           .delete();
 
       if (_subscription == null) {
-        _transactions.removeWhere((t) => t.id == transactionId);
+        _liveTransactions.removeWhere((t) => t.id == transactionId);
         notifyListeners();
       }
+
+      final userInfo = await ActivityLogger.getCurrentUserInfo();
+      await ActivityLogger.logActivity(
+        facilityId: facilityId,
+        userId: userInfo['userId']!,
+        userName: userInfo['userName'],
+        actionType: 'Transactions',
+        description: 'Deleted transaction: $deletedDescription',
+      );
     } catch (e) {
       debugPrint('Error deleting transaction: $e');
+      rethrow;
     }
   }
 
   /// ---------------------------------------------------
-  /// CALCULATIONS
+  /// CALCULATIONS - reflect only what's currently loaded (live window +
+  /// paged-through history). For period totals (Today/This Week/etc.) use
+  /// DashboardSummaryService, which reads precomputed daily aggregates.
   /// ---------------------------------------------------
-  double get subProfit => _transactions
+  double get subProfit => transactions
       .where((t) => t.type.toLowerCase() == 'profit')
       .fold(0.0, (sum, t) => sum + t.amount);
 
-  double get totalExpenses => _transactions
+  double get totalExpenses => transactions
       .where((t) => t.type.toLowerCase() == 'expense')
       .fold(0.0, (sum, t) => sum + t.amount);
 
-  double get totalOtherIncome => _transactions
+  double get totalOtherIncome => transactions
       .where((t) => t.type.toLowerCase() == 'other income')
       .fold(0.0, (sum, t) => sum + t.amount);
 

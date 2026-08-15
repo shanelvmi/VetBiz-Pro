@@ -5,16 +5,19 @@ class Client {
   final String name;
   final String phone;
   final String address;
-  final double balance; 
-  final String type; 
-  final String? farmerSubType; 
-  final List<String> crops; 
-  final List<String> animalSpecies; 
-  final String? farmLocation; 
-  final double? farmSize; 
-  final String? businessName; 
-  final String? licenseNumber; 
-  final String? vetPracticeType; 
+  final double balance;
+  // A client can genuinely be more than one thing at once - a vet who
+  // also farms, a retailer who also buys wholesale - so this is a list,
+  // not a single exclusive category.
+  final List<String> types;
+  final String? farmerSubType;
+  final List<String> crops;
+  final List<String> animalSpecies;
+  final String? farmLocation;
+  final double? farmSize;
+  final String? businessName;
+  final String? licenseNumber;
+  final String? vetPracticeType;
   final DateTime? createdAt;
   final DateTime? updatedAt;
 
@@ -24,7 +27,7 @@ class Client {
     required this.phone,
     required this.address,
     this.balance = 0.0,
-    required this.type,
+    List<String>? types,
     this.farmerSubType,
     List<String>? crops,
     List<String>? animalSpecies,
@@ -35,17 +38,33 @@ class Client {
     this.vetPracticeType,
     this.createdAt,
     this.updatedAt,
-  })  : crops = crops ?? [],
+  })  : types = types ?? [],
+        crops = crops ?? [],
         animalSpecies = animalSpecies ?? [];
 
   factory Client.fromMap(String id, Map<String, dynamic> data) {
+    // New documents store 'types' as a list. Older documents only have
+    // the legacy single 'type' string - read-time migration wraps that
+    // into a single-item list automatically, so every existing client
+    // keeps working the moment this ships, with no separate batch
+    // migration needed. The next time that client is edited and saved,
+    // it's written back in the new format via toMap() below.
+    List<String> resolvedTypes;
+    if (data['types'] != null) {
+      resolvedTypes = List<String>.from(data['types']);
+    } else if (data['type'] != null && (data['type'] as String).isNotEmpty) {
+      resolvedTypes = [data['type'] as String];
+    } else {
+      resolvedTypes = [];
+    }
+
     return Client(
       id: id,
       name: data['name'] ?? '',
       phone: data['phone'] ?? '',
       address: data['address'] ?? '',
       balance: (data['balance'] is num) ? (data['balance'] as num).toDouble() : 0.0,
-      type: data['type'] ?? 'Farmer',
+      types: resolvedTypes,
       farmerSubType: data['farmerSubType'],
       crops: data['crops'] != null ? List<String>.from(data['crops']) : [],
       animalSpecies: data['animalSpecies'] != null ? List<String>.from(data['animalSpecies']) : [],
@@ -66,10 +85,19 @@ class Client {
   Map<String, dynamic> toMap() {
     return {
       'name': name,
+      // Stored purely so Firestore can do a case-insensitive prefix
+      // search server-side - queries can't call toLowerCase() on the
+      // fly, so this needs to physically exist as its own field.
+      'nameLower': name.toLowerCase(),
       'phone': phone,
       'address': address,
       'balance': balance,
-      'type': type,
+      'types': types,
+      // Also kept in the legacy single-string field, best-effort (first
+      // selected type) - in case anything outside this codebase (an
+      // export, a report not covered by this project) still reads it.
+      // Everything checked in this app itself reads 'types' now.
+      'type': types.isNotEmpty ? types.first : '',
       'farmerSubType': farmerSubType,
       'crops': crops,
       'animalSpecies': animalSpecies,
@@ -89,7 +117,7 @@ class Client {
     String? phone,
     String? address,
     double? balance,
-    String? type,
+    List<String>? types,
     String? farmerSubType,
     List<String>? crops,
     List<String>? animalSpecies,
@@ -107,7 +135,7 @@ class Client {
       phone: phone ?? this.phone,
       address: address ?? this.address,
       balance: balance ?? this.balance,
-      type: type ?? this.type,
+      types: types ?? this.types,
       farmerSubType: farmerSubType ?? this.farmerSubType,
       crops: crops ?? this.crops,
       animalSpecies: animalSpecies ?? this.animalSpecies,

@@ -3,9 +3,13 @@ import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import '../../providers/sale_provider.dart';
 import '../../providers/facility_provider.dart';
+import '../../services/sales_summary_service.dart';
 import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
 import 'add_sale_screen.dart';
 import 'sales_archive_screen.dart';
+import '../../utils/subscription_guard.dart';
+import '../../providers/user_role_provider.dart';
+import 'receipt_preview_screen.dart';
 
 class SalesScreen extends StatefulWidget {
   const SalesScreen({super.key});
@@ -30,13 +34,66 @@ class _SalesScreenState extends State<SalesScreen> {
   bool _isSearchExpanded = false;
   final TextEditingController _searchController = TextEditingController();
 
+  // Summary card totals - deliberately NOT derived from whatever sales
+  // happen to be loaded in the paginated list below. Those only ever
+  // reflect "however far the user has scrolled/paged", which isn't a
+  // meaningful number to headline. This instead reads the precomputed
+  // daily summaries for a fixed, statable period (Last 30 Days), so the
+  // figure means something concrete regardless of pagination or archiving.
+  final SalesSummaryService _summaryService = SalesSummaryService();
+  String? _facilityId;
+  Map<String, double>? _rangeSummary;
+  bool _isSummaryLoading = false;
+
   @override
   void initState() {
     super.initState();
     final facilityId =
         Provider.of<FacilityProvider>(context, listen: false).selectedFacilityId;
     if (facilityId != null && facilityId.isNotEmpty) {
+      _facilityId = facilityId;
       Provider.of<SaleProvider>(context, listen: false).init(facilityId);
+      _loadRangeSummary();
+    }
+  }
+
+  Future<void> _loadRangeSummary() async {
+    final facilityId = _facilityId;
+    if (facilityId == null) return;
+
+    setState(() => _isSummaryLoading = true);
+
+    final now = DateTime.now();
+    final start = now.subtract(const Duration(days: 30));
+
+    try {
+      final results = await Future.wait([
+        _summaryService.getRangeTotals(
+          facilityId: facilityId,
+          start: start,
+          end: now,
+        ),
+        _summaryService.getTotalCollected(
+          facilityId: facilityId,
+          start: start,
+          end: now,
+        ),
+      ]);
+
+      final totals = results[0] as Map<String, double>;
+      final collected = results[1] as double;
+
+      if (mounted) {
+        setState(() {
+          _rangeSummary = {...totals, 'totalCollected': collected};
+          _isSummaryLoading = false;
+        });
+      }
+    } catch (e) {
+      debugPrint('Error loading range summary: $e');
+      if (mounted) {
+        setState(() => _isSummaryLoading = false);
+      }
     }
   }
 
@@ -90,19 +147,12 @@ class _SalesScreenState extends State<SalesScreen> {
       return matchesSearch && matchesStatus;
     }).toList();
 
-    final totalSales = filteredSales.fold<double>(
-        0, (sum, sale) => sum + sale.totalAmount);
-    final totalPaid = filteredSales.fold<double>(
-        0, (sum, sale) => sum + sale.totalPaid);
-    final totalPending = totalSales - totalPaid;
-
     return Scaffold(
       backgroundColor: offWhite,
       appBar: _buildProAppBar(context),
       body: Column(
         children: [
-          _buildStatsCard(
-              filteredSales.length, totalSales, totalPaid, totalPending),
+          _buildStatsCard(),
           Expanded(
             child: filteredSales.isEmpty
                 ? Center(
@@ -138,8 +188,11 @@ class _SalesScreenState extends State<SalesScreen> {
                               crossAxisCount: 2,
                               crossAxisSpacing: 12,
                               mainAxisSpacing: 12,
-                              itemCount: filteredSales.length,
+                              itemCount: filteredSales.length + 1,
                               itemBuilder: (context, index) {
+                                if (index == filteredSales.length) {
+                                  return _buildLoadMoreFooter(saleProvider);
+                                }
                                 return _buildSaleCard(
                                   filteredSales[index],
                                   saleProvider,
@@ -155,8 +208,11 @@ class _SalesScreenState extends State<SalesScreen> {
                             child: ListView.builder(
                               primary: true, // allows arrow key scrolling
                               padding: const EdgeInsets.all(12),
-                              itemCount: filteredSales.length,
+                              itemCount: filteredSales.length + 1,
                               itemBuilder: (context, index) {
+                                if (index == filteredSales.length) {
+                                  return _buildLoadMoreFooter(saleProvider);
+                                }
                                 return _buildSaleCard(
                                   filteredSales[index],
                                   saleProvider,
@@ -174,10 +230,7 @@ class _SalesScreenState extends State<SalesScreen> {
       ),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () async {
-          await Navigator.push(
-            context,
-            MaterialPageRoute(builder: (_) => const AddSaleScreen()),
-          );
+          await navigateOrShowLockedDialog(context, const AddSaleScreen());
         },
         backgroundColor: primaryDeepGreen,
         foregroundColor: offWhite,
@@ -303,7 +356,19 @@ class _SalesScreenState extends State<SalesScreen> {
     );
   }
 
-  Widget _buildStatsCard(int count, double total, double paid, double pending) {
+  Widget _buildStatsCard() {
+    final summary = _rangeSummary;
+    final count = summary?['saleCount']?.toInt() ?? 0;
+    final total = summary?['totalAmount'] ?? 0.0;
+    // "Of the sales made this period, how much is still unpaid as of now" -
+    // this one legitimately stays tied to the sale's own record.
+    final paidOnPeriodSales = summary?['totalPaid'] ?? 0.0;
+    final pending = total - paidOnPeriodSales;
+    // "How much actual cash came in during this period" - sourced from
+    // dailyCollections, so a payment collected today on an old credit sale
+    // counts here today, not silently filed under the sale's original date.
+    final collected = summary?['totalCollected'] ?? 0.0;
+
     return Container(
       margin: const EdgeInsets.all(12),
       padding: const EdgeInsets.all(16),
@@ -326,15 +391,42 @@ class _SalesScreenState extends State<SalesScreen> {
             children: [
               Icon(Icons.analytics, color: offWhite, size: 24),
               const SizedBox(width: 8),
-              Text(
-                'Sales Summary',
-                style: TextStyle(
-                  color: offWhite,
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                ),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Sales Summary',
+                    style: TextStyle(
+                      color: offWhite,
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  Text(
+                    'Last 30 Days',
+                    style: TextStyle(
+                      color: offWhite.withValues(alpha: 0.75),
+                      fontSize: 11,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ],
               ),
               const Spacer(),
+              IconButton(
+                icon: _isSummaryLoading
+                    ? SizedBox(
+                        height: 16,
+                        width: 16,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          color: offWhite,
+                        ),
+                      )
+                    : Icon(Icons.refresh, color: offWhite, size: 20),
+                tooltip: 'Refresh summary',
+                onPressed: _isSummaryLoading ? null : _loadRangeSummary,
+              ),
               TextButton.icon(
                 style: TextButton.styleFrom(
                   foregroundColor: offWhite,
@@ -367,8 +459,24 @@ class _SalesScreenState extends State<SalesScreen> {
             children: [
               _statChip('Total Sales', count.toString(), Icons.receipt_long),
               _statChip('Revenue', _moneyFormat.format(total), Icons.payments),
-              _statChip('Paid', _moneyFormat.format(paid), Icons.check_circle),
+              _statChip('Collected', _moneyFormat.format(collected), Icons.check_circle),
               _statChip('Pending', _moneyFormat.format(pending), Icons.pending),
+            ],
+          ),
+          const SizedBox(height: 10),
+          Row(
+            children: [
+              Icon(Icons.info_outline, size: 13, color: offWhite.withValues(alpha: 0.7)),
+              const SizedBox(width: 6),
+              Expanded(
+                child: Text(
+                  'Sales inactive for 180+ days move to Sales Archive.',
+                  style: TextStyle(
+                    fontSize: 11,
+                    color: offWhite.withValues(alpha: 0.7),
+                  ),
+                ),
+              ),
             ],
           ),
         ],
@@ -411,6 +519,57 @@ class _SalesScreenState extends State<SalesScreen> {
             ],
           ),
         ],
+      ),
+    );
+  }
+
+  // Footer shown at the end of the list: lets the user page in older sales
+  // instead of the app ever loading a facility's entire sales history at
+  // once. Note: the search/filter above only searches sales already loaded
+  // (this page + any pages fetched so far) - for searching across a
+  // facility's full history, use the Sales Archive screen's date search.
+  Widget _buildLoadMoreFooter(SaleProvider saleProvider) {
+    if (saleProvider.isLoadingMore) {
+      return Padding(
+        padding: const EdgeInsets.symmetric(vertical: 20),
+        child: Center(
+          child: SizedBox(
+            height: 24,
+            width: 24,
+            child: CircularProgressIndicator(
+              strokeWidth: 2.5,
+              color: primaryDeepGreen,
+            ),
+          ),
+        ),
+      );
+    }
+
+    if (!saleProvider.hasMore) {
+      return Padding(
+        padding: const EdgeInsets.symmetric(vertical: 20),
+        child: Center(
+          child: Text(
+            'Showing all recent sales · use Sales Archive for older history',
+            style: TextStyle(fontSize: 12, color: Colors.grey[500]),
+            textAlign: TextAlign.center,
+          ),
+        ),
+      );
+    }
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 12),
+      child: Center(
+        child: OutlinedButton.icon(
+          onPressed: () => saleProvider.loadMoreSales(),
+          style: OutlinedButton.styleFrom(
+            foregroundColor: primaryDeepGreen,
+            side: BorderSide(color: primaryDeepGreen),
+          ),
+          icon: const Icon(Icons.expand_more),
+          label: const Text('Load more sales'),
+        ),
       ),
     );
   }
@@ -549,9 +708,22 @@ class _SalesScreenState extends State<SalesScreen> {
             ],
           ),
           const SizedBox(height: 12),
-          Align(
-            alignment: Alignment.centerRight,
-            child: TextButton.icon(
+          Row(
+            mainAxisAlignment: MainAxisAlignment.end,
+            children: [
+              TextButton.icon(
+                icon: Icon(Icons.print, size: 18, color: primaryDeepGreen),
+                label: Text('Print', style: TextStyle(color: primaryDeepGreen)),
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (_) => ReceiptPreviewScreen(sale: sale)),
+                  );
+                },
+              ),
+              const SizedBox(width: 4),
+              if (Provider.of<UserRoleProvider>(context).isAdmin)
+              TextButton.icon(
               icon: Icon(Icons.delete, size: 18, color: Colors.red[400]),
               label: Text('Delete', style: TextStyle(color: Colors.red[400])),
               onPressed: () async {
@@ -586,17 +758,28 @@ class _SalesScreenState extends State<SalesScreen> {
                 );
 
                 if (confirm == true) {
-                  saleProvider.deleteSale(sale.id, sale.facilityId);
-                  if (!mounted) return;
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('Sale deleted successfully'),
-                      backgroundColor: Colors.green,
-                    ),
-                  );
+                  try {
+                    await saleProvider.deleteSale(sale.id, sale.facilityId);
+                    if (!mounted) return;
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text('Sale deleted successfully'),
+                        backgroundColor: Colors.green,
+                      ),
+                    );
+                  } catch (e) {
+                    if (!mounted) return;
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text('Could not delete sale: $e'),
+                        backgroundColor: Colors.redAccent,
+                      ),
+                    );
+                  }
                 }
               },
             ),
+            ],
           ),
         ],
       ),

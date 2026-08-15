@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'invite_assistant_dialog.dart';
 
 class ManageAssistantsScreen extends StatefulWidget {
   const ManageAssistantsScreen({super.key});
@@ -125,6 +126,34 @@ class _ManageAssistantsScreenState extends State<ManageAssistantsScreen> {
     );
   }
 
+  Future<void> _startInviteFlow() async {
+    if (adminFacilityIds.isEmpty) return;
+
+    if (adminFacilityIds.length == 1) {
+      await showInviteAssistantDialog(context, adminFacilityIds.first);
+      return;
+    }
+
+    // More than one facility - ask which one this invite is for, since
+    // there's no way to infer that otherwise.
+    final chosen = await showDialog<String>(
+      context: context,
+      builder: (context) => SimpleDialog(
+        title: const Text('Invite Assistant To...'),
+        children: adminFacilityIds.map((id) {
+          return SimpleDialogOption(
+            onPressed: () => Navigator.pop(context, id),
+            child: Text(facilityNames[id] ?? 'Unknown facility'),
+          );
+        }).toList(),
+      ),
+    );
+
+    if (chosen != null && mounted) {
+      await showInviteAssistantDialog(context, chosen);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     if (adminUid.isEmpty) {
@@ -147,6 +176,11 @@ class _ManageAssistantsScreenState extends State<ManageAssistantsScreen> {
         title: const Text('My Assistants', style: TextStyle(color: Colors.white)),
         centerTitle: true,
         actions: [
+          IconButton(
+            icon: const Icon(Icons.person_add_alt),
+            tooltip: 'Invite Assistant',
+            onPressed: _startInviteFlow,
+          ),
           IconButton(
             icon: const Icon(Icons.refresh),
             tooltip: 'Refresh Assistants',

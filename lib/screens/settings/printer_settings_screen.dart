@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:print_bluetooth_thermal/print_bluetooth_thermal.dart';
+
+import '../../services/receipt_printer_service.dart';
 
 class PrinterSettingsScreen extends StatefulWidget {
   const PrinterSettingsScreen({super.key});
@@ -9,208 +12,341 @@ class PrinterSettingsScreen extends StatefulWidget {
 
 class _PrinterSettingsScreenState extends State<PrinterSettingsScreen> {
   final Color primaryColor = const Color(0xFF2F5D62);
+  final Color warmAmber = const Color(0xFFFFB200);
   final Color backgroundColor = const Color(0xFFFDFDF9);
 
-  // Configuration States
-  bool _autoPrintReceipts = false;
-  String _selectedPaperSize = '58mm'; // Default common thermal size
+  final ReceiptPrinterService _printerService = ReceiptPrinterService();
 
-  // Bluetooth Discovery States
-  bool _isScanning = false;
-  String? _connectedDeviceAddress;
+  List<BluetoothInfo> _pairedDevices = [];
+  Map<String, String>? _lastPrinter;
+  bool _isConnected = false;
+  bool _isLoadingDevices = false;
+  bool _isConnecting = false;
+  bool _isTestPrinting = false;
+  String _paperSize = '58';
+  bool _autoPrint = false;
 
-  // Dummy list to mimic nearby discovered thermal devices
-  final List<Map<String, String>> _discoveredPrinters = [
-    {'name': 'MTP-II (Thermal Belt Printer)', 'address': '00:11:22:33:44:55'},
-    {'name': 'RP80 Ultra POS Printer', 'address': '66:77:88:99:AA:BB'},
-  ];
+  // If a real Bluetooth call fails outright (e.g. this platform has no
+  // Bluetooth support at all - which is the case running in Chrome right
+  // now), this holds a plain-language explanation instead of crashing
+  // the screen or pretending everything's fine.
+  String? _platformError;
 
-  void _startScan() async {
-    setState(() => _isScanning = true);
-    // Simulate searching for nearby hardware over the air
-    await Future.delayed(const Duration(seconds: 2));
-    if (!mounted) return;
-    setState(() => _isScanning = false);
+  @override
+  void initState() {
+    super.initState();
+    _loadInitialState();
   }
 
-  void _testPrint() {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: const Text('Sending diagnostic layout test page to printer...'),
-        backgroundColor: primaryColor,
-      ),
-    );
+  Future<void> _loadInitialState() async {
+    final lastPrinter = await _printerService.getLastPrinter();
+    final paperSize = await _printerService.getPaperSize();
+    final autoPrint = await _printerService.getAutoPrint();
+
+    if (mounted) {
+      setState(() {
+        _lastPrinter = lastPrinter;
+        _paperSize = paperSize;
+        _autoPrint = autoPrint;
+      });
+    }
+
+    await _checkConnection();
+    await _refreshPairedDevices();
+  }
+
+  Future<void> _checkConnection() async {
+    try {
+      final connected = await _printerService.isConnected;
+      if (mounted) setState(() => _isConnected = connected);
+    } catch (e) {
+      if (mounted) {
+        setState(() => _platformError =
+            'Bluetooth printing isn\'t available on this platform. This screen needs a real Android or iOS build with Bluetooth hardware - it can\'t connect to a printer from a web browser.');
+      }
+    }
+  }
+
+  Future<void> _refreshPairedDevices() async {
+    setState(() {
+      _isLoadingDevices = true;
+      _platformError = null;
+    });
+
+    try {
+      final devices = await _printerService.getPairedDevices();
+      if (mounted) {
+        setState(() {
+          _pairedDevices = devices;
+          _isLoadingDevices = false;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _isLoadingDevices = false;
+          _platformError =
+              'Bluetooth printing isn\'t available on this platform. This screen needs a real Android or iOS build with Bluetooth hardware - it can\'t list paired devices from a web browser.';
+        });
+      }
+    }
+  }
+
+  Future<void> _connectTo(BluetoothInfo device) async {
+    setState(() => _isConnecting = true);
+
+    try {
+      final success = await _printerService.connect(device.macAdress);
+
+      if (success) {
+        await _printerService.saveLastPrinter(mac: device.macAdress, name: device.name);
+        if (!mounted) return;
+        setState(() {
+          _isConnected = true;
+          _lastPrinter = {'mac': device.macAdress, 'name': device.name};
+        });
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Connected to ${device.name}'), backgroundColor: Colors.green),
+        );
+      } else {
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Could not connect to ${device.name}'), backgroundColor: Colors.redAccent),
+        );
+      }
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Connection failed: $e'), backgroundColor: Colors.redAccent),
+      );
+    } finally {
+      if (mounted) setState(() => _isConnecting = false);
+    }
+  }
+
+  Future<void> _disconnect() async {
+    try {
+      await _printerService.disconnect();
+      if (!mounted) return;
+      setState(() => _isConnected = false);
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Disconnect failed: $e'), backgroundColor: Colors.redAccent),
+      );
+    }
+  }
+
+  Future<void> _forgetPrinter() async {
+    await _printerService.clearSavedPrinter();
+    if (mounted) setState(() => _lastPrinter = null);
+  }
+
+  Future<void> _testPrint() async {
+    setState(() => _isTestPrinting = true);
+    try {
+      final success = await _printerService.printTestPage();
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(success ? 'Test page sent to printer' : 'Printer did not accept the test page'),
+          backgroundColor: success ? Colors.green : Colors.redAccent,
+        ),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Test print failed: $e'), backgroundColor: Colors.redAccent),
+      );
+    } finally {
+      if (mounted) setState(() => _isTestPrinting = false);
+    }
   }
 
   @override
   Widget build(BuildContext context) {
-    const double cardElevation = 2.0;
-
     return Scaffold(
       backgroundColor: backgroundColor,
       appBar: AppBar(
-        title: const Text(
-          'Printer Settings',
-          style: TextStyle(fontWeight: FontWeight.w600, fontSize: 20),
-        ),
+        title: const Text('Printer & Receipt Settings'),
         backgroundColor: primaryColor,
         foregroundColor: Colors.white,
-        elevation: 0,
+        centerTitle: true,
       ),
-      body: ListView(
-        padding: const EdgeInsets.all(16),
-        children: [
-          _buildSectionTitle('Preferences'),
-          const SizedBox(height: 6),
-          Card(
-            elevation: cardElevation,
-            margin: EdgeInsets.zero,
-            child: Column(
-              children: [
-                // Auto-print configuration switch
-                SwitchListTile(
-                  activeColor: primaryColor,
-                  contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-                  secondary: Icon(Icons.print_sharp, color: primaryColor.withOpacity(0.85)),
-                  title: const Text(
-                    'Auto-Print Receipts',
-                    style: TextStyle(color: Colors.black87, fontSize: 15, fontWeight: FontWeight.w500),
+      body: Center(
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 700),
+          child: ListView(
+            padding: const EdgeInsets.all(16),
+            children: [
+              if (_platformError != null)
+                Container(
+                  margin: const EdgeInsets.only(bottom: 16),
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: Colors.orange.withValues(alpha: 0.1),
+                    border: Border.all(color: Colors.orange),
+                    borderRadius: BorderRadius.circular(8),
                   ),
-                  subtitle: const Text('Instantly issue a receipt upon completing a transaction'),
-                  value: _autoPrintReceipts,
-                  onChanged: (bool value) {
-                    setState(() => _autoPrintReceipts = value);
-                  },
-                ),
-                Divider(height: 1, thickness: 0.5, color: Colors.grey.shade200, indent: 56),
-                
-                // Paper width dropdown configuration
-                ListTile(
-                  contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-                  leading: Icon(Icons.insert_drive_file_outlined, color: primaryColor.withOpacity(0.85)),
-                  title: const Text(
-                    'Receipt Paper Width',
-                    style: TextStyle(color: Colors.black87, fontSize: 15, fontWeight: FontWeight.w500),
-                  ),
-                  subtitle: const Text('Select layout column sizing width'),
-                  trailing: DropdownButton<String>(
-                    value: _selectedPaperSize,
-                    underline: const SizedBox(),
-                    icon: Icon(Icons.arrow_drop_down, color: primaryColor),
-                    items: <String>['58mm', '80mm'].map((String value) {
-                      return DropdownMenuItem<String>(
-                        value: value,
-                        child: Text(value, style: const TextStyle(fontWeight: FontWeight.w500)),
-                      );
-                    }).toList(),
-                    onChanged: (newValue) {
-                      if (newValue != null) {
-                        setState(() => _selectedPaperSize = newValue);
-                      }
-                    },
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Icon(Icons.info_outline, color: Colors.orange),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(_platformError!, style: const TextStyle(fontSize: 13)),
+                      ),
+                    ],
                   ),
                 ),
-              ],
-            ),
-          ),
-          const SizedBox(height: 24),
 
-          _buildSectionTitle('Hardware Pairing'),
-          const SizedBox(height: 6),
-          Card(
-            elevation: cardElevation,
-            margin: EdgeInsets.zero,
-            child: Padding(
-              padding: const EdgeInsets.symmetric(vertical: 8.0),
-              child: Column(
-                children: [
-                  ListTile(
-                    title: const Text(
-                      'Nearby Hardware Devices',
-                      style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: Colors.black54),
+              if (_lastPrinter != null) ...[
+                Card(
+                  elevation: 2,
+                  child: ListTile(
+                    leading: Icon(
+                      _isConnected ? Icons.bluetooth_connected : Icons.bluetooth_disabled,
+                      color: _isConnected ? Colors.green : Colors.grey,
                     ),
-                    trailing: _isScanning
+                    title: Text(_lastPrinter!['name'] ?? 'Saved printer'),
+                    subtitle: Text(_isConnected ? 'Connected' : 'Not connected'),
+                    trailing: Wrap(
+                      spacing: 4,
+                      children: [
+                        if (_isConnected)
+                          TextButton(onPressed: _disconnect, child: const Text('Disconnect')),
+                        IconButton(
+                          icon: const Icon(Icons.close, size: 18),
+                          tooltip: 'Forget this printer',
+                          onPressed: _forgetPrinter,
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 16),
+              ],
+
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text('Paired Devices', style: TextStyle(fontWeight: FontWeight.bold, color: primaryColor)),
+                  TextButton.icon(
+                    onPressed: _isLoadingDevices ? null : _refreshPairedDevices,
+                    icon: _isLoadingDevices
                         ? SizedBox(
-                            width: 20,
-                            height: 20,
+                            width: 14,
+                            height: 14,
                             child: CircularProgressIndicator(strokeWidth: 2, color: primaryColor),
                           )
-                        : TextButton.icon(
-                            onPressed: _startScan,
-                            icon: const Icon(Icons.refresh, size: 18),
-                            label: const Text('Scan'),
-                            style: TextButton.styleFrom(foregroundColor: primaryColor),
-                          ),
+                        : const Icon(Icons.refresh, size: 18),
+                    label: const Text('Refresh'),
                   ),
-                  const Divider(height: 1),
-                  
-                  // Iterating through available local hardware devices
-                  ..._discoveredPrinters.map((printer) {
-                    final bool isConnected = _connectedDeviceAddress == printer['address'];
-                    return ListTile(
-                      leading: Icon(
-                        Icons.print_rounded,
-                        color: isConnected ? Colors.green : Colors.grey.shade400,
-                      ),
-                      title: Text(
-                        printer['name']!,
-                        style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
-                      ),
-                      subtitle: Text(printer['address']!, style: const TextStyle(fontSize: 12)),
-                      trailing: isConnected
-                          ? const Icon(Icons.check_circle, color: Colors.green, size: 20)
-                          : OutlinedButton(
-                              onPressed: () {
-                                setState(() => _connectedDeviceAddress = printer['address']);
-                              },
-                              style: OutlinedButton.styleFrom(
-                                side: BorderSide(color: primaryColor),
-                                padding: const EdgeInsets.symmetric(horizontal: 12),
-                              ),
-                              child: Text('Connect', style: TextStyle(color: primaryColor, fontSize: 12)),
-                            ),
-                    );
-                  }),
                 ],
               ),
-            ),
-          ),
-          
-          // Show diagnostic panel only if a printer is paired actively
-          if (_connectedDeviceAddress != null) ...[
-            const SizedBox(height: 24),
-            _buildSectionTitle('Diagnostics'),
-            const SizedBox(height: 6),
-            Card(
-              elevation: cardElevation,
-              margin: EdgeInsets.zero,
-              child: ListTile(
-                leading: const Icon(Icons.assignment_turned_in_outlined, color: Colors.green),
-                title: const Text(
-                  'Test Connection Pipeline',
-                  style: TextStyle(color: Colors.black87, fontSize: 15, fontWeight: FontWeight.w500),
+              Padding(
+                padding: const EdgeInsets.only(bottom: 8),
+                child: Text(
+                  'Pair your printer in your device\'s Bluetooth settings first - this list only shows devices already paired there.',
+                  style: TextStyle(fontSize: 12, color: Colors.grey[600]),
                 ),
-                subtitle: const Text('Spool and print a sample layout configuration layout'),
-                trailing: const Icon(Icons.chevron_right_rounded, color: Colors.grey),
-                onTap: _testPrint,
               ),
-            ),
-          ],
-        ],
-      ),
-    );
-  }
 
-  Widget _buildSectionTitle(String title) {
-    return Padding(
-      padding: const EdgeInsets.only(left: 4, bottom: 4),
-      child: Text(
-        title.toUpperCase(),
-        style: TextStyle(
-          fontWeight: FontWeight.bold,
-          fontSize: 11,
-          color: primaryColor.withOpacity(0.75),
-          letterSpacing: 1.1,
+              if (_pairedDevices.isEmpty && _platformError == null)
+                Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 12),
+                  child: Text('No paired devices found.', style: TextStyle(color: Colors.grey[600])),
+                )
+              else
+                ..._pairedDevices.map((device) {
+                  final isThisConnected = _isConnected && _lastPrinter?['mac'] == device.macAdress;
+                  return Card(
+                    elevation: 1,
+                    child: ListTile(
+                      leading: Icon(
+                        isThisConnected ? Icons.bluetooth_connected : Icons.print_outlined,
+                        color: isThisConnected ? Colors.green : primaryColor,
+                      ),
+                      title: Text(device.name),
+                      subtitle: Text(device.macAdress),
+                      trailing: _isConnecting
+                          ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2))
+                          : (isThisConnected
+                              ? const Icon(Icons.check_circle, color: Colors.green)
+                              : TextButton(
+                                  onPressed: () => _connectTo(device),
+                                  child: const Text('Connect'),
+                                )),
+                    ),
+                  );
+                }),
+
+              const SizedBox(height: 20),
+              Text('Print Options', style: TextStyle(fontWeight: FontWeight.bold, color: primaryColor)),
+              const SizedBox(height: 8),
+              Card(
+                elevation: 2,
+                child: Column(
+                  children: [
+                    ListTile(
+                      title: const Text('Paper Size'),
+                      trailing: DropdownButton<String>(
+                        value: _paperSize,
+                        items: const [
+                          DropdownMenuItem(value: '58', child: Text('58mm')),
+                          DropdownMenuItem(value: '80', child: Text('80mm')),
+                        ],
+                        onChanged: (value) async {
+                          if (value == null) return;
+                          await _printerService.setPaperSize(value);
+                          if (mounted) setState(() => _paperSize = value);
+                        },
+                      ),
+                    ),
+                    const Divider(height: 1),
+                    SwitchListTile(
+                      title: const Text('Auto-print receipt after each sale'),
+                      value: _autoPrint,
+                      activeColor: primaryColor,
+                      onChanged: (value) async {
+                        await _printerService.setAutoPrint(value);
+                        if (mounted) setState(() => _autoPrint = value);
+                      },
+                    ),
+                  ],
+                ),
+              ),
+
+              const SizedBox(height: 20),
+              SizedBox(
+                height: 48,
+                child: ElevatedButton.icon(
+                  onPressed: (_isConnected && !_isTestPrinting) ? _testPrint : null,
+                  icon: _isTestPrinting
+                      ? const SizedBox(
+                          width: 18, height: 18,
+                          child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                        )
+                      : const Icon(Icons.print),
+                  label: Text(_isTestPrinting ? 'Sending...' : 'Send Test Print'),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: primaryColor,
+                    foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  ),
+                ),
+              ),
+              if (!_isConnected)
+                Padding(
+                  padding: const EdgeInsets.only(top: 8),
+                  child: Text(
+                    'Connect a printer above before testing.',
+                    style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+                    textAlign: TextAlign.center,
+                  ),
+                ),
+            ],
+          ),
         ),
       ),
     );

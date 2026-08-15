@@ -1,6 +1,19 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:cloud_functions/cloud_functions.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../services/auth_service.dart';
+import '../../providers/facility_provider.dart';
+import '../../providers/sale_provider.dart';
+import '../../providers/product_provider.dart';
+import '../../providers/client_provider.dart';
+import '../../providers/service_provider.dart';
+import '../../providers/transaction_provider.dart';
+import '../../providers/debt_provider.dart';
+import '../../providers/user_role_provider.dart';
+import '../../utils/activity_logger.dart';
+import '../../utils/force_logout.dart';
 
 class ManageAccountScreen extends StatefulWidget {
   const ManageAccountScreen({super.key});
@@ -13,6 +26,32 @@ class _ManageAccountScreenState extends State<ManageAccountScreen> {
   final Color primaryColor = const Color(0xFF2F5D62);
   final Color dangerColor = Colors.redAccent;
   final Color backgroundColor = const Color(0xFFFDFDF9);
+  final Color warmAmber = const Color(0xFFFFB200);
+
+  // Comfortably wide on desktop, but never wider than the actual screen
+  // on a phone - AlertDialog otherwise defaults to a fairly narrow,
+  // cramped width regardless of how much room is available. Used by
+  // every dialog in this file for a consistent feel across all of them,
+  // and across screen sizes.
+  double _dialogWidth(BuildContext context) {
+    final screenWidth = MediaQuery.of(context).size.width;
+    return screenWidth > 700 ? 440.0 : screenWidth * 0.88;
+  }
+
+  // Same amber-on-hover shift used throughout the rest of the app
+  // (Platform Admin's dialogs, for one) - applied here too so hovering
+  // any action button anywhere in this file feels identical to hovering
+  // one anywhere else in the app, not just consistent within this
+  // screen alone.
+  ButtonStyle _actionButtonStyle(Color baseColor) {
+    return ButtonStyle(
+      backgroundColor: WidgetStateProperty.resolveWith<Color>((states) {
+        if (states.contains(WidgetState.hovered)) return warmAmber;
+        return baseColor;
+      }),
+      foregroundColor: WidgetStateProperty.all(Colors.white),
+    );
+  }
 
   final _deleteEmailController = TextEditingController();
   final _deletePasswordController = TextEditingController();
@@ -35,8 +74,11 @@ class _ManageAccountScreenState extends State<ManageAccountScreen> {
       builder: (_) => AlertDialog(
         backgroundColor: backgroundColor,
         title: Text('Log Out of All Devices?', style: TextStyle(color: primaryColor, fontWeight: FontWeight.bold)),
-        content: const Text(
-            'This will clear active sessions and log you out on all other phones, tablets, or computers currently signed into your account.'),
+        content: SizedBox(
+          width: _dialogWidth(context),
+          child: const Text(
+              'This will clear active sessions and log you out on all other phones, tablets, or computers currently signed into your account.'),
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
@@ -44,7 +86,7 @@ class _ManageAccountScreenState extends State<ManageAccountScreen> {
           ),
           ElevatedButton(
             onPressed: () => Navigator.pop(context, true),
-            style: ElevatedButton.styleFrom(backgroundColor: primaryColor),
+            style: _actionButtonStyle(primaryColor),
             child: const Text('Log Out Everywhere'),
           ),
         ],
@@ -56,20 +98,27 @@ class _ManageAccountScreenState extends State<ManageAccountScreen> {
     setState(() => _isLoggingOutAll = true);
 
     try {
+      final callable = FirebaseFunctions.instance.httpsCallable('revokeAllSessions');
+      await callable.call();
+
+      // "Log out everywhere" should include this device too - otherwise
+      // this session would keep working until its cached token naturally
+      // expires, which doesn't match what the button says it does.
       final authService = Provider.of<AuthService>(context, listen: false);
-      // TODO: Implement logoutAllDevices() inside your AuthService
-      // await authService.logoutAllDevices();
-      
-      await Future.delayed(const Duration(seconds: 1)); // Placeholder for smooth UX
-      
+      await authService.logout();
+
+      if (!mounted) return;
+      Navigator.of(context).pushNamedAndRemoveUntil('/login', (route) => false);
+    } on FirebaseFunctionsException catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Successfully logged out of all other sessions.'),
-          backgroundColor: Colors.green,
+        SnackBar(
+          content: Text('Failed to clear other sessions: ${e.message}'),
+          backgroundColor: dangerColor,
         ),
       );
     } catch (e) {
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('Failed to clear other sessions: $e'),
@@ -77,7 +126,7 @@ class _ManageAccountScreenState extends State<ManageAccountScreen> {
         ),
       );
     } finally {
-      setState(() => _isLoggingOutAll = false);
+      if (mounted) setState(() => _isLoggingOutAll = false);
     }
   }
 
@@ -88,8 +137,11 @@ class _ManageAccountScreenState extends State<ManageAccountScreen> {
       builder: (_) => AlertDialog(
         backgroundColor: backgroundColor,
         title: Text('Wipe All Data?', style: TextStyle(color: primaryColor, fontWeight: FontWeight.bold)),
-        content: const Text(
-            'This will permanently delete all records of sales, products, clients, and transactions. Your login credentials will remain unaffected.'),
+        content: SizedBox(
+          width: _dialogWidth(context),
+          child: const Text(
+              'This will permanently delete all records of sales, products, clients, and transactions. Your login credentials will remain unaffected.'),
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
@@ -97,7 +149,7 @@ class _ManageAccountScreenState extends State<ManageAccountScreen> {
           ),
           ElevatedButton(
             onPressed: () => Navigator.pop(context, true),
-            style: ElevatedButton.styleFrom(backgroundColor: dangerColor),
+            style: _actionButtonStyle(dangerColor),
             child: const Text('Wipe Data'),
           ),
         ],
@@ -113,7 +165,9 @@ class _ManageAccountScreenState extends State<ManageAccountScreen> {
         return AlertDialog(
           backgroundColor: backgroundColor,
           title: Text('Confirm Action', style: TextStyle(color: primaryColor, fontWeight: FontWeight.bold)),
-          content: Column(
+          content: SizedBox(
+            width: _dialogWidth(context),
+            child: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -128,6 +182,7 @@ class _ManageAccountScreenState extends State<ManageAccountScreen> {
                 ),
               ),
             ],
+            ),
           ),
           actions: [
             TextButton(
@@ -136,7 +191,7 @@ class _ManageAccountScreenState extends State<ManageAccountScreen> {
             ),
             ElevatedButton(
               onPressed: () => Navigator.pop(context, controller.text.trim()),
-              style: ElevatedButton.styleFrom(backgroundColor: primaryColor),
+              style: _actionButtonStyle(primaryColor),
               child: const Text('Confirm'),
             ),
           ],
@@ -149,17 +204,52 @@ class _ManageAccountScreenState extends State<ManageAccountScreen> {
     setState(() => _isWipingData = true);
 
     try {
-      // TODO: Call your provider deletion functions here
-      await Future.delayed(const Duration(seconds: 2)); // Placeholder
-      
+      final facilityId =
+          Provider.of<FacilityProvider>(context, listen: false).selectedFacilityId;
+
+      if (facilityId == null || facilityId.isEmpty) {
+        throw Exception('No facility selected.');
+      }
+
+      final callable = FirebaseFunctions.instance.httpsCallable('wipeFacilityData');
+      await callable.call({'facilityId': facilityId});
+
       if (!mounted) return;
+
+      // Clear every provider's in-memory cache so the UI doesn't keep
+      // showing data that no longer exists server-side.
+      Provider.of<SaleProvider>(context, listen: false).clear();
+      Provider.of<ProductProvider>(context, listen: false).clear();
+      Provider.of<ClientProvider>(context, listen: false).clear();
+      Provider.of<ServiceProvider>(context, listen: false).clear();
+      Provider.of<TransactionProvider>(context, listen: false).clear();
+      Provider.of<DebtProvider>(context, listen: false).clear();
+
+      final userInfo = await ActivityLogger.getCurrentUserInfo();
+      await ActivityLogger.logActivity(
+        facilityId: facilityId,
+        userId: userInfo['userId']!,
+        userName: userInfo['userName'],
+        actionType: 'Account',
+        description: 'Wiped all business data for this facility',
+      );
+
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('All data has been successfully wiped.'),
+          content: Text('All business data has been permanently wiped.'),
           backgroundColor: Colors.green,
         ),
       );
+    } on FirebaseFunctionsException catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Failed to clear records: ${e.message}'),
+          backgroundColor: dangerColor,
+        ),
+      );
     } catch (e) {
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('Failed to clear records: $e'),
@@ -167,7 +257,7 @@ class _ManageAccountScreenState extends State<ManageAccountScreen> {
         ),
       );
     } finally {
-      setState(() => _isWipingData = false);
+      if (mounted) setState(() => _isWipingData = false);
     }
   }
 
@@ -175,20 +265,57 @@ class _ManageAccountScreenState extends State<ManageAccountScreen> {
   void _deactivateAccount() async {
     final authService = Provider.of<AuthService>(context, listen: false);
 
+    final currentUid = FirebaseAuth.instance.currentUser?.uid;
+    if (currentUid != null) {
+      final platformAdminDoc =
+          await FirebaseFirestore.instance.collection('platform_admins').doc(currentUid).get();
+      if (platformAdminDoc.exists) {
+        if (!mounted) return;
+        await showDialog<void>(
+          context: context,
+          builder: (_) => AlertDialog(
+            backgroundColor: backgroundColor,
+            title: Text('Cannot Deactivate', style: TextStyle(color: primaryColor, fontWeight: FontWeight.bold)),
+            content: SizedBox(
+              width: _dialogWidth(context),
+              child: const Text(
+                  'This account has Platform Admin access, so it can\'t be deactivated - '
+                  'not by you, and not by anyone else. This keeps the platform from ever '
+                  'being locked out of its own oversight tools.'),
+            ),
+            actions: [
+              ElevatedButton(
+                onPressed: () => Navigator.pop(context),
+                style: _actionButtonStyle(primaryColor),
+                child: const Text('OK'),
+              ),
+            ],
+          ),
+        );
+        return;
+      }
+    }
+
     final confirm = await showDialog<bool>(
       context: context,
       builder: (_) => AlertDialog(
-        title: const Text('Deactivate Account'),
-        content: const Text(
-            'Are you sure you want to deactivate your account? You can reactivate it later.'),
+        backgroundColor: backgroundColor,
+        title: Text('Deactivate Account', style: TextStyle(color: primaryColor, fontWeight: FontWeight.bold)),
+        content: SizedBox(
+          width: _dialogWidth(context),
+          child: const Text(
+              'Are you sure you want to deactivate your account? You\'ll be signed out '
+              'immediately, and will need your facility admin (or Platform Admin) to '
+              'reactivate it before you can sign back in.'),
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: const Text('Cancel'),
+            child: Text('Cancel', style: TextStyle(color: primaryColor)),
           ),
           ElevatedButton(
             onPressed: () => Navigator.pop(context, true),
-            style: ElevatedButton.styleFrom(backgroundColor: primaryColor),
+            style: _actionButtonStyle(primaryColor),
             child: const Text('Deactivate'),
           ),
         ],
@@ -197,14 +324,71 @@ class _ManageAccountScreenState extends State<ManageAccountScreen> {
 
     if (confirm != true) return;
 
+    // Second layer, matching the weight given to Wipe Data - deactivation
+    // is reversible, but it still ends your current session immediately,
+    // so a single tap was too little friction for something grouped with
+    // the other Danger Zone actions.
+    final doubleCheck = await showDialog<String>(
+      context: context,
+      builder: (context) {
+        final controller = TextEditingController();
+        return AlertDialog(
+          backgroundColor: backgroundColor,
+          title: Text('Confirm Deactivation', style: TextStyle(color: primaryColor, fontWeight: FontWeight.bold)),
+          content: SizedBox(
+            width: _dialogWidth(context),
+            child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text('Type "DEACTIVATE" to confirm:'),
+              const SizedBox(height: 12),
+              TextField(
+                controller: controller,
+                autofocus: true,
+                decoration: InputDecoration(
+                  focusedBorder: UnderlineInputBorder(borderSide: BorderSide(color: primaryColor)),
+                  hintText: 'DEACTIVATE',
+                ),
+              ),
+            ],
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context, ''),
+              child: Text('Cancel', style: TextStyle(color: primaryColor)),
+            ),
+            ElevatedButton(
+              onPressed: () => Navigator.pop(context, controller.text.trim()),
+              style: _actionButtonStyle(primaryColor),
+              child: const Text('Confirm'),
+            ),
+          ],
+        );
+      },
+    );
+
+    if (doubleCheck != 'DEACTIVATE') return;
+
     try {
+      final facilityId = Provider.of<FacilityProvider>(context, listen: false).selectedFacilityId;
+      if (facilityId != null) {
+        final userInfo = await ActivityLogger.getCurrentUserInfo();
+        await ActivityLogger.logActivity(
+          facilityId: facilityId,
+          userId: userInfo['userId']!,
+          userName: userInfo['userName'],
+          actionType: 'Account',
+          description: 'Deactivated their own account',
+        );
+      }
+
       await authService.deactivateAccount();
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Your account has been deactivated.'),
-          backgroundColor: Colors.orange,
-        ),
+
+      await forceLogoutAndShowLogin(
+        message: 'Your account has been deactivated.',
       );
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -222,8 +406,11 @@ class _ManageAccountScreenState extends State<ManageAccountScreen> {
       context: context,
       barrierDismissible: false,
       builder: (_) => AlertDialog(
-        title: const Text('Delete Account'),
-        content: Column(
+        backgroundColor: backgroundColor,
+        title: Text('Delete Account', style: TextStyle(color: primaryColor, fontWeight: FontWeight.bold)),
+        content: SizedBox(
+          width: _dialogWidth(context),
+          child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             const Text(
@@ -246,6 +433,7 @@ class _ManageAccountScreenState extends State<ManageAccountScreen> {
               obscureText: true,
             ),
           ],
+          ),
         ),
         actions: [
           TextButton(
@@ -254,10 +442,10 @@ class _ManageAccountScreenState extends State<ManageAccountScreen> {
               _deletePasswordController.clear();
               Navigator.pop(context);
             },
-            child: const Text('Cancel'),
+            child: Text('Cancel', style: TextStyle(color: primaryColor)),
           ),
           ElevatedButton(
-            style: ElevatedButton.styleFrom(backgroundColor: dangerColor),
+            style: _actionButtonStyle(dangerColor),
             onPressed: _isDeleting
                 ? null
                 : () async {
@@ -265,6 +453,18 @@ class _ManageAccountScreenState extends State<ManageAccountScreen> {
                     final authService =
                         Provider.of<AuthService>(context, listen: false);
                     try {
+                      final facilityId = Provider.of<FacilityProvider>(context, listen: false).selectedFacilityId;
+                      if (facilityId != null) {
+                        final userInfo = await ActivityLogger.getCurrentUserInfo();
+                        await ActivityLogger.logActivity(
+                          facilityId: facilityId,
+                          userId: userInfo['userId']!,
+                          userName: userInfo['userName'],
+                          actionType: 'Account',
+                          description: 'Deleted their own account',
+                        );
+                      }
+
                       await authService.deleteAccount(
                         email: _deleteEmailController.text.trim(),
                         password: _deletePasswordController.text.trim(),
@@ -314,11 +514,41 @@ class _ManageAccountScreenState extends State<ManageAccountScreen> {
         title: const Text('Manage Account'),
         backgroundColor: primaryColor,
         foregroundColor: Colors.white,
+        centerTitle: true,
       ),
-      body: ListView(
+      body: Center(
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 700),
+          child: ListView(
         padding: const EdgeInsets.all(16),
         children: [
-          Card(
+          Container(
+            padding: const EdgeInsets.all(14),
+            decoration: BoxDecoration(
+              border: Border.all(color: dangerColor, width: 1.5),
+              borderRadius: BorderRadius.circular(12),
+              color: dangerColor.withValues(alpha: 0.04),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Icon(Icons.warning_amber_rounded, color: dangerColor, size: 20),
+                    const SizedBox(width: 8),
+                    Text(
+                      'Danger Zone',
+                      style: TextStyle(color: dangerColor, fontWeight: FontWeight.bold, fontSize: 15),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  'These actions affect your account and business data. Review carefully before proceeding.',
+                  style: TextStyle(fontSize: 12, color: Colors.grey[700]),
+                ),
+                const SizedBox(height: 12),
+                Card(
             elevation: 2,
             child: ListTile(
               leading: Icon(Icons.devices_other, color: primaryColor),
@@ -339,6 +569,7 @@ class _ManageAccountScreenState extends State<ManageAccountScreen> {
             ),
           ),
           const SizedBox(height: 12),
+          if (Provider.of<UserRoleProvider>(context).isAdmin)
           Card(
             elevation: 2,
             child: ListTile(
@@ -371,7 +602,12 @@ class _ManageAccountScreenState extends State<ManageAccountScreen> {
               onTap: inputDisabled ? null : _deleteAccount,
             ),
           ),
+              ],
+            ),
+          ),
         ],
+          ),
+        ),
       ),
     );
   }

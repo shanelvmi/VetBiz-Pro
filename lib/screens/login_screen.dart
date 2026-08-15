@@ -1,15 +1,18 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:provider/provider.dart';
 import 'package:smooth_page_indicator/smooth_page_indicator.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../services/auth_service.dart';
 import '../providers/facility_provider.dart';
 import '../providers/product_provider.dart';
 
 class LoginScreen extends StatefulWidget {
-  const LoginScreen({super.key});
+  final String? errorMessage;
+  const LoginScreen({super.key, this.errorMessage});
 
   @override
   State<LoginScreen> createState() => _LoginScreenState();
@@ -22,6 +25,8 @@ class _LoginScreenState extends State<LoginScreen> {
 
   bool rememberMe = false;
   bool obscurePassword = true;
+  bool isLoggingIn = false;
+  final FocusNode passwordFocusNode = FocusNode();
   String? error;
   bool isForgotHovered = false;
   bool isRegisterHovered = false;
@@ -37,134 +42,127 @@ class _LoginScreenState extends State<LoginScreen> {
       OutlineInputBorder(borderSide: BorderSide(color: neutralBlack));
 
   @override
+  void initState() {
+    super.initState();
+    _loadRememberedEmail();
+    if (widget.errorMessage != null) {
+      // Deferred to after the first frame - setState during initState
+      // itself is unsafe.
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) setState(() => error = widget.errorMessage);
+      });
+    }
+  }
+
+  Future<void> _loadRememberedEmail() async {
+    final prefs = await SharedPreferences.getInstance();
+    final savedEmail = prefs.getString('remembered_email');
+    if (savedEmail != null && savedEmail.isNotEmpty && mounted) {
+      setState(() {
+        emailController.text = savedEmail;
+        rememberMe = true;
+      });
+    }
+  }
+
+  @override
   void dispose() {
     emailController.dispose();
     passwordController.dispose();
+    passwordFocusNode.dispose();
     _announcementTimer?.cancel();
     super.dispose();
   }
 
   // ==================== LOGIN LOGIC ====================
+  // Deliberately does nothing after a successful sign-in beyond that -
+  // no Firestore fetch, no status check, no navigation. The moment
+  // sign-in succeeds, Firebase's own auth-state stream fires and
+  // AppEntryPoint (in main.dart) reacts to it independently - if this
+  // method also tried to navigate here, the two would race: this
+  // screen can get torn down and replaced by AppEntryPoint's own
+  // rebuild while this method is still mid-flight (fetching Firestore,
+  // checking status), and its result gets silently discarded once that
+  // happens. That race was the actual cause of login intermittently
+  // "doing nothing" after a login/logout cycle - not a Firebase error,
+  // two separate pieces of code deciding what screen to show next.
   Future<void> _login() async {
-  setState(() => error = null);
+  if (isLoggingIn) return; // guards against a double-tap firing two logins at once
+  setState(() {
+    error = null;
+    isLoggingIn = true;
+  });
 
   if (emailController.text.isEmpty || passwordController.text.length < 6) {
-    setState(() => error = "Enter valid email and password (min 6 chars).");
+    setState(() {
+      error = "Enter valid email and password (min 6 chars).";
+      isLoggingIn = false;
+    });
     return;
   }
 
   try {
-    // Clear previous provider data
-    final facilityProvider = Provider.of<FacilityProvider>(context, listen: false);
-    Provider.of<ProductProvider>(context, listen: false).clear();
-    facilityProvider.clearFacility();
+    // Remember Me only ever stores the email, never the password - just
+    // a convenience so it's pre-filled next time, not a session/login
+    // bypass of any kind. Done before the sign-in attempt itself so it
+    // never depends on anything that could race with AppEntryPoint.
+    final prefs = await SharedPreferences.getInstance();
+    if (rememberMe) {
+      await prefs.setString('remembered_email', emailController.text.trim());
+    } else {
+      await prefs.remove('remembered_email');
+    }
 
-    // Authenticate user
-    final userCredential = await _authService.login(
+    await _authService.login(
       emailController.text.trim(),
       passwordController.text.trim(),
     );
 
-    final user = userCredential.user;
-    if (user == null) throw Exception('User authentication failed');
-
-    // Load user profile from Firestore
-    final doc = await FirebaseFirestore.instance.collection('users').doc(user.uid).get();
-    if (!doc.exists) throw Exception('User profile not found');
-
-    final data = doc.data()!;
-    final role = (data['role'] ?? '').toString().toLowerCase();
-
-    if (role == 'assistant') {
-      // Ensure account is active
-      final status = (data['status'] ?? '').toString().toLowerCase();
-      if (status != 'active') {
-        throw Exception('Your account is not active yet. Please wait for admin approval.');
-      }
-
-      final facilitiesRaw = data['facilities'];
-      if (facilitiesRaw == null || facilitiesRaw is! List || facilitiesRaw.isEmpty) {
-        throw Exception('Assistant has no facility assigned');
-      }
-
-      final facilityMap = facilitiesRaw.first;
-      if (facilityMap is! Map || facilityMap['facilityId'] == null) {
-        throw Exception('Assistant facility data is invalid');
-      }
-
-      final facilityId = facilityMap['facilityId'];
-      final facilityName = facilityMap['name'] ?? '';
-      final facilityType = facilityMap['type'] ?? '';
-
-      // Await provider to finish async set
-      await facilityProvider.setFacility(
-        id: facilityId,
-        name: facilityName,
-        type: facilityType,
-      );
-
-      Navigator.pushReplacementNamed(context, '/dashboard', arguments: {
-        'role': 'assistant',
-        'facilityId': facilityId,
-        'facilityName': facilityName,
-        'facilityType': facilityType,
-      });
-
-    } else if (role == 'admin') {
-      final facilitiesRaw = data['facilities'];
-      if (facilitiesRaw == null || facilitiesRaw is! List) {
-        throw Exception('Admin has no registered facilities');
-      }
-
-      final facilities = facilitiesRaw
-          .map<Map<String, dynamic>?>((f) {
-            if (f is Map && f.containsKey('facilityId')) {
-              return {
-                'facilityId': f['facilityId'],
-                'facilityName': f['name'] ?? '',
-                'facilityType': f['type'] ?? '',
-              };
-            }
-            return null;
-          })
-          .whereType<Map<String, dynamic>>()
-          .toList();
-
-      if (facilities.isEmpty) throw Exception('Admin has no valid facility data');
-
-      final facilityProvider = Provider.of<FacilityProvider>(context, listen: false);
-
-      if (facilities.length == 1) {
-        final f = facilities.first;
-
-        // Await provider to finish async set
-        await facilityProvider.setFacility(
-          id: f['facilityId'],
-          name: f['facilityName'],
-          type: f['facilityType'],
-        );
-
-        Navigator.pushReplacementNamed(context, '/dashboard', arguments: {
-          'role': 'admin',
-          'facilityId': f['facilityId'],
-          'facilityName': f['facilityName'],
-          'facilityType': f['facilityType'],
-        });
-
-      } else {
-        // Multiple facilities -> select facility screen
-        Navigator.pushReplacementNamed(context, '/selectFacility', arguments: {
-          'role': 'admin',
-          'facilities': facilities,
-        });
-      }
-    } else {
-      throw Exception('Unrecognized user role');
-    }
+    // No navigation here - see the note above. AppEntryPoint takes it
+    // from here the moment this succeeds. isLoggingIn intentionally
+    // stays true; this whole widget is about to be torn down anyway.
+  } on FirebaseAuthException catch (e) {
+    if (!mounted) return;
+    setState(() {
+      error = _friendlyAuthError(e);
+      isLoggingIn = false;
+    });
   } catch (e) {
-    setState(() => error = e.toString().replaceAll('Exception:', '').trim());
+    if (!mounted) return;
+    setState(() {
+      error = e.toString().replaceAll('Exception:', '').trim();
+      isLoggingIn = false;
+    });
   }
 }
+
+  // Firebase's own exception messages are technical and inconsistent in
+  // tone - this maps the common cases to something a shop owner would
+  // actually understand, without guessing at ones not explicitly
+  // handled (those fall through to Firebase's own message).
+  String _friendlyAuthError(FirebaseAuthException e) {
+    switch (e.code) {
+      case 'user-not-found':
+      case 'invalid-email':
+        return 'No account found with that email address.';
+      case 'wrong-password':
+        return 'Incorrect password. Please try again.';
+      case 'invalid-credential':
+        // Recent Firebase SDKs report both "wrong password" and
+        // "no such user" under this one unified code, for security
+        // reasons (so a login form can't be used to check which emails
+        // are registered).
+        return 'Incorrect email or password.';
+      case 'user-disabled':
+        return 'This account has been disabled. Contact your admin.';
+      case 'too-many-requests':
+        return 'Too many attempts. Please wait a moment and try again.';
+      case 'network-request-failed':
+        return 'Network error - check your connection and try again.';
+      default:
+        return e.message ?? 'Login failed. Please try again.';
+    }
+  }
 
   Future<void> _forgotPassword() async {
     final email = emailController.text.trim();
@@ -181,8 +179,10 @@ class _LoginScreenState extends State<LoginScreen> {
           backgroundColor: primaryDeepGreen,
         ));
       }
+    } on FirebaseAuthException catch (e) {
+      setState(() => error = _friendlyAuthError(e));
     } catch (e) {
-      setState(() => error = "Error: ${e.toString()}");
+      setState(() => error = "Could not send reset email: $e");
     }
   }
 
@@ -203,7 +203,29 @@ class _LoginScreenState extends State<LoginScreen> {
           );
         }
 
-        final docs = snapshot.data!.docs;
+        final allDocs = snapshot.data!.docs.where((doc) {
+          final data = doc.data() as Map<String, dynamic>;
+          return data['hidden'] != true;
+        }).toList();
+
+        final urgentDocs = allDocs.where((doc) {
+          final data = doc.data() as Map<String, dynamic>;
+          return data['urgent'] == true;
+        }).toList();
+
+        // While at least one urgent announcement is active, it takes
+        // over completely - every other announcement is automatically
+        // paused rather than needing to be hidden one by one.
+        final docs = urgentDocs.isNotEmpty ? urgentDocs : allDocs;
+
+        if (docs.isEmpty) {
+          return SizedBox(
+            height: 250,
+            child: Center(
+                child: Text('No announcements',
+                    style: TextStyle(color: neutralBlack))),
+          );
+        }
         final PageController controller = PageController();
         int currentIndex = 0;
 
@@ -229,7 +251,12 @@ class _LoginScreenState extends State<LoginScreen> {
                   itemBuilder: (context, index) {
                     final data = docs[index].data() as Map<String, dynamic>;
                     final title = data['title'] ?? 'Notice';
-                    final message = data['message'] ?? '';
+                    final rawMessage = (data['message'] ?? '').toString();
+                    final isBold = data['bold'] == true;
+                    final isItalic = data['italic'] == true;
+                    final isUppercase = data['uppercase'] == true;
+                    final colorValue = data['color'] as int?;
+                    final message = isUppercase ? rawMessage.toUpperCase() : rawMessage;
                     final ts = data['timestamp'] as Timestamp?;
                     final bool isNew = ts != null &&
                         DateTime.now().difference(ts.toDate()).inHours < 48;
@@ -266,7 +293,10 @@ class _LoginScreenState extends State<LoginScreen> {
                               child: Text(
                                 message,
                                 style: TextStyle(
-                                    fontSize: 14, color: neutralBlack),
+                                    fontSize: 14,
+                                    color: colorValue != null ? Color(colorValue) : neutralBlack,
+                                    fontWeight: isBold ? FontWeight.bold : FontWeight.normal,
+                                    fontStyle: isItalic ? FontStyle.italic : FontStyle.normal),
                               ),
                             ),
                           ),
@@ -325,6 +355,9 @@ class _LoginScreenState extends State<LoginScreen> {
           TextField(
             controller: emailController,
             style: TextStyle(color: neutralBlack),
+            autofocus: true,
+            textInputAction: TextInputAction.next,
+            onSubmitted: (_) => passwordFocusNode.requestFocus(),
             decoration: InputDecoration(
               labelText: 'Email',
               labelStyle: TextStyle(color: neutralBlack),
@@ -337,8 +370,11 @@ class _LoginScreenState extends State<LoginScreen> {
             children: [
               TextField(
                 controller: passwordController,
+                focusNode: passwordFocusNode,
                 obscureText: obscurePassword,
                 style: TextStyle(color: neutralBlack),
+                textInputAction: TextInputAction.done,
+                onSubmitted: (_) => _login(),
                 decoration: InputDecoration(
                   labelText: 'Password',
                   labelStyle: TextStyle(color: neutralBlack),
@@ -353,12 +389,10 @@ class _LoginScreenState extends State<LoginScreen> {
                 child: GestureDetector(
                   onTap: () =>
                       setState(() => obscurePassword = !obscurePassword),
-                  child: Text(
-                    obscurePassword ? 'Show' : 'Hide',
-                    style: TextStyle(
-                        color: neutralBlack,
-                        fontWeight: FontWeight.bold,
-                        fontSize: 12),
+                  child: Icon(
+                    obscurePassword ? Icons.visibility_outlined : Icons.visibility_off_outlined,
+                    color: neutralBlack,
+                    size: 20,
                   ),
                 ),
               ),
@@ -396,25 +430,47 @@ class _LoginScreenState extends State<LoginScreen> {
           ),
           const SizedBox(height: 24),
           ElevatedButton(
-            onPressed: _login,
+            onPressed: isLoggingIn ? null : _login,
             style: ElevatedButton.styleFrom(
               backgroundColor: primaryDeepGreen,
               foregroundColor: Colors.white,
+              disabledBackgroundColor: primaryDeepGreen.withValues(alpha: 0.6),
             ).copyWith(
               overlayColor: WidgetStateProperty.resolveWith((states) =>
                   states.contains(WidgetState.hovered)
                       ? warmAmber
                       : null),
             ),
-            child: const Padding(
-              padding: EdgeInsets.symmetric(vertical: 12),
-              child: Text('Login'),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(vertical: 12),
+              child: isLoggingIn
+                  ? const SizedBox(
+                      width: 20,
+                      height: 20,
+                      child: CircularProgressIndicator(strokeWidth: 2.5, color: Colors.white),
+                    )
+                  : const Text('Login'),
             ),
           ),
           if (error != null)
-            Padding(
-              padding: const EdgeInsets.only(top: 12),
-              child: Text(error!, style: const TextStyle(color: Colors.red)),
+            Container(
+              margin: const EdgeInsets.only(top: 12),
+              padding: const EdgeInsets.all(10),
+              decoration: BoxDecoration(
+                color: Colors.red.withValues(alpha: 0.08),
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: Colors.red.withValues(alpha: 0.3)),
+              ),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Icon(Icons.error_outline, color: Colors.red, size: 18),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(error!, style: const TextStyle(color: Colors.red, fontSize: 13)),
+                  ),
+                ],
+              ),
             ),
           const SizedBox(height: 16),
           MouseRegion(
@@ -518,7 +574,9 @@ class _LoginScreenState extends State<LoginScreen> {
                       ),
                     ),
 
-                    // Center: Illustration
+                    // Center: Poster (admin-uploaded, via Platform Admin >
+                    // Announcements) - falls back to the default local
+                    // illustration if no poster has been set.
                     Expanded(
                       flex: 4,
                       child: Container(
@@ -530,14 +588,38 @@ class _LoginScreenState extends State<LoginScreen> {
                                 color: Colors.grey.shade300, width: 1),
                           ),
                         ),
-                        child: Align(
-                          alignment: Alignment.topCenter,
-                          child: Image.asset(
-                            'assets/vetbizpro_illustration.png',
-                            height: cardHeight * 0.9,
-                            fit: BoxFit.contain,
-                            errorBuilder: (_, __, ___) => const SizedBox(),
-                          ),
+                        child: StreamBuilder<DocumentSnapshot>(
+                          stream: FirebaseFirestore.instance
+                              .collection('app_config')
+                              .doc('login_poster')
+                              .snapshots(),
+                          builder: (context, snapshot) {
+                            final posterUrl = snapshot.data?.data() != null
+                                ? (snapshot.data!.data() as Map<String, dynamic>)['posterUrl'] as String?
+                                : null;
+
+                            return Align(
+                              alignment: Alignment.topCenter,
+                              child: posterUrl != null
+                                  ? Image.network(
+                                      posterUrl,
+                                      height: cardHeight * 0.9,
+                                      fit: BoxFit.contain,
+                                      errorBuilder: (_, __, ___) => Image.asset(
+                                        'assets/vetbizpro_illustration.png',
+                                        height: cardHeight * 0.9,
+                                        fit: BoxFit.contain,
+                                        errorBuilder: (_, __, ___) => const SizedBox(),
+                                      ),
+                                    )
+                                  : Image.asset(
+                                      'assets/vetbizpro_illustration.png',
+                                      height: cardHeight * 0.9,
+                                      fit: BoxFit.contain,
+                                      errorBuilder: (_, __, ___) => const SizedBox(),
+                                    ),
+                            );
+                          },
                         ),
                       ),
                     ),
@@ -558,7 +640,20 @@ class _LoginScreenState extends State<LoginScreen> {
           : Center(
               child: SingleChildScrollView(
                 padding: const EdgeInsets.all(24),
-                child: _buildLoginForm(),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(Icons.pets, size: 44, color: primaryDeepGreen),
+                    const SizedBox(height: 8),
+                    Text(
+                      'VetBiz Pro',
+                      style: TextStyle(
+                          fontSize: 24, fontWeight: FontWeight.bold, color: primaryDeepGreen),
+                    ),
+                    const SizedBox(height: 24),
+                    _buildLoginForm(),
+                  ],
+                ),
               ),
             ),
     );

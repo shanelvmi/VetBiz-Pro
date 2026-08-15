@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:provider/provider.dart';
+import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
 import '../../providers/facility_provider.dart';
 
 class SalesArchiveScreen extends StatefulWidget {
@@ -22,24 +23,42 @@ class _SalesArchiveScreenState extends State<SalesArchiveScreen> {
     decimalDigits: 0,
   );
 
+  static const int _pageSize = 30;
+
+  // Must match ARCHIVE_AFTER_DAYS in functions/index.js - anything newer
+  // than this hasn't reached the archive yet.
+  static const int _archiveCutoffDays = 180;
+  // Default initial window shown on open: the most recently archived 90
+  // days, ending right at the cutoff. Lets the screen show something
+  // immediately instead of forcing a dialog before any data appears - the
+  // Search button still lets the user widen or change the range anytime.
+  static const int _defaultWindowDays = 90;
+
   List<Map<String, dynamic>> _archivedSales = [];
   bool _isLoading = false;
-  String _searchType = '';
   DateTime? _searchStart;
   DateTime? _searchEnd;
+
+  DocumentSnapshot? _lastDoc;
+  bool _hasMore = true;
+  bool _isLoadingMore = false;
 
   @override
   void initState() {
     super.initState();
+    final cutoff =
+        DateTime.now().subtract(const Duration(days: _archiveCutoffDays));
+    _searchEnd = cutoff;
+    _searchStart = cutoff.subtract(const Duration(days: _defaultWindowDays));
+
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      _showSearchDialog();
+      _loadArchivedSales();
     });
   }
 
   Future<void> _showSearchDialog() async {
     final result = await showDialog<Map<String, dynamic>>(
       context: context,
-      barrierDismissible: false,
       builder: (context) => _SearchArchiveDialog(
         primaryDeepGreen: primaryDeepGreen,
         warmAmber: warmAmber,
@@ -47,13 +66,11 @@ class _SalesArchiveScreenState extends State<SalesArchiveScreen> {
       ),
     );
 
-    if (result == null) {
-      if (mounted) Navigator.pop(context);
-      return;
-    }
+    // Cancelling just dismisses the dialog now - the screen already has
+    // data showing, there's nothing to navigate away from.
+    if (result == null) return;
 
     setState(() {
-      _searchType = result['type'] ?? 'All';
       _searchStart = result['startDate'];
       _searchEnd = result['endDate'];
     });
@@ -61,8 +78,14 @@ class _SalesArchiveScreenState extends State<SalesArchiveScreen> {
     await _loadArchivedSales();
   }
 
+  /// First page of a fresh search - resets pagination state.
   Future<void> _loadArchivedSales() async {
-    setState(() => _isLoading = true);
+    setState(() {
+      _isLoading = true;
+      _archivedSales = [];
+      _lastDoc = null;
+      _hasMore = true;
+    });
 
     final facilityId =
         Provider.of<FacilityProvider>(context, listen: false).selectedFacilityId;
@@ -72,6 +95,18 @@ class _SalesArchiveScreenState extends State<SalesArchiveScreen> {
       return;
     }
 
+    await _fetchArchivedSalesPage(facilityId);
+
+    if (mounted) {
+      setState(() => _isLoading = false);
+    }
+  }
+
+  /// Fetch one page (the next [_pageSize] docs after [_lastDoc], or the
+  /// first page if [_lastDoc] is null) and append it to [_archivedSales].
+  /// This is what keeps a scroll through months of archived sales from
+  /// pulling everything in one shot.
+  Future<void> _fetchArchivedSalesPage(String facilityId) async {
     try {
       Query query = FirebaseFirestore.instance
           .collection('facilities')
@@ -88,37 +123,53 @@ class _SalesArchiveScreenState extends State<SalesArchiveScreen> {
                 Timestamp.fromDate(_searchEnd!.add(const Duration(days: 1))));
       }
 
-      query = query.orderBy('timestamp', descending: true).limit(100);
+      query = query.orderBy('timestamp', descending: true);
+
+      if (_lastDoc != null) {
+        query = query.startAfterDocument(_lastDoc!);
+      }
+
+      query = query.limit(_pageSize);
 
       final snapshot = await query.get();
 
-      List<Map<String, dynamic>> sales = [];
-      for (var doc in snapshot.docs) {
+      final newSales = snapshot.docs.map((doc) {
         final data = doc.data() as Map<String, dynamic>;
         data['id'] = doc.id;
-        sales.add(data);
-      }
+        return data;
+      }).toList();
 
-      if (_searchType != 'All' && _searchType.isNotEmpty) {
-        sales = sales.where((sale) {
-          final paid = (sale['totalPaid'] ?? 0.0).toDouble();
-          final total = (sale['totalAmount'] ?? 0.0).toDouble();
-          final status = _getPaymentStatus(paid, total);
-          return status == _searchType;
-        }).toList();
+      if (snapshot.docs.isNotEmpty) {
+        _lastDoc = snapshot.docs.last;
       }
+      _hasMore = snapshot.docs.length >= _pageSize;
 
       if (mounted) {
         setState(() {
-          _archivedSales = sales;
-          _isLoading = false;
+          _archivedSales = [..._archivedSales, ...newSales];
         });
       }
     } catch (e) {
       debugPrint('Error loading archived sales: $e');
       if (mounted) {
-        setState(() => _isLoading = false);
+        setState(() => _hasMore = false);
       }
+    }
+  }
+
+  /// Load the next page for the current search (called from the
+  /// "Load more" footer at the bottom of the list).
+  Future<void> _loadMoreArchivedSales() async {
+    if (_isLoadingMore || !_hasMore) return;
+
+    final facilityId =
+        Provider.of<FacilityProvider>(context, listen: false).selectedFacilityId;
+    if (facilityId == null) return;
+
+    setState(() => _isLoadingMore = true);
+    await _fetchArchivedSalesPage(facilityId);
+    if (mounted) {
+      setState(() => _isLoadingMore = false);
     }
   }
 
@@ -144,9 +195,11 @@ class _SalesArchiveScreenState extends State<SalesArchiveScreen> {
   Widget build(BuildContext context) {
     final dateFormatter = DateFormat('dd MMM yyyy, hh:mm a');
     
-    final totalAmount = _archivedSales.fold<double>(
+    final displayedSales = _archivedSales;
+
+    final totalAmount = displayedSales.fold<double>(
         0, (sum, sale) => sum + ((sale['totalAmount'] ?? 0.0) as num).toDouble());
-    final totalPaid = _archivedSales.fold<double>(
+    final totalPaid = displayedSales.fold<double>(
         0, (sum, sale) => sum + ((sale['totalPaid'] ?? 0.0) as num).toDouble());
 
     return Scaffold(
@@ -156,10 +209,24 @@ class _SalesArchiveScreenState extends State<SalesArchiveScreen> {
         foregroundColor: offWhite,
         title: const Text('Sales Archive'),
         actions: [
-          IconButton(
-            icon: const Icon(Icons.search),
-            tooltip: 'New Search',
-            onPressed: _showSearchDialog,
+          Padding(
+            padding: const EdgeInsets.only(right: 12),
+            child: TextButton.icon(
+              style: TextButton.styleFrom(
+                foregroundColor: offWhite,
+                backgroundColor: offWhite.withValues(alpha: 0.15),
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(20),
+                ),
+              ),
+              icon: const Icon(Icons.search, size: 18),
+              label: const Text(
+                'Search',
+                style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
+              ),
+              onPressed: _showSearchDialog,
+            ),
           ),
         ],
       ),
@@ -185,7 +252,7 @@ class _SalesArchiveScreenState extends State<SalesArchiveScreen> {
                           Icon(Icons.info_outline, color: primaryDeepGreen),
                           const SizedBox(width: 8),
                           Text(
-                            'Search Results',
+                            'Archived Sales',
                             style: TextStyle(
                               color: primaryDeepGreen,
                               fontWeight: FontWeight.bold,
@@ -195,7 +262,6 @@ class _SalesArchiveScreenState extends State<SalesArchiveScreen> {
                         ],
                       ),
                       const SizedBox(height: 8),
-                      Text('Type: $_searchType', style: const TextStyle(fontSize: 13)),
                       if (_searchStart != null && _searchEnd != null)
                         Text(
                           'Period: ${DateFormat('dd MMM yyyy').format(_searchStart!)} - ${DateFormat('dd MMM yyyy').format(_searchEnd!)}',
@@ -206,7 +272,7 @@ class _SalesArchiveScreenState extends State<SalesArchiveScreen> {
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
                           Text(
-                            'Found: ${_archivedSales.length} sales',
+                            'Found: ${displayedSales.length} sales',
                             style: TextStyle(
                               fontWeight: FontWeight.bold,
                               color: primaryDeepGreen,
@@ -225,7 +291,7 @@ class _SalesArchiveScreenState extends State<SalesArchiveScreen> {
                   ),
                 ),
                 Expanded(
-                  child: _archivedSales.isEmpty
+                  child: displayedSales.isEmpty
                       ? Center(
                           child: Column(
                             mainAxisAlignment: MainAxisAlignment.center,
@@ -247,17 +313,104 @@ class _SalesArchiveScreenState extends State<SalesArchiveScreen> {
                             ],
                           ),
                         )
-                      : ListView.builder(
-                          padding: const EdgeInsets.all(12),
-                          itemCount: _archivedSales.length,
-                          itemBuilder: (context, index) {
-                            return _buildArchiveCard(
-                                _archivedSales[index], dateFormatter);
-                          },
+                      : Focus(
+                          autofocus: true,
+                          child: LayoutBuilder(
+                            builder: (context, constraints) {
+                              final isLargeScreen = constraints.maxWidth >= 1024;
+
+                              if (isLargeScreen) {
+                                return ScrollConfiguration(
+                                  behavior: const ScrollBehavior()
+                                      .copyWith(overscroll: false),
+                                  child: MasonryGridView.count(
+                                    primary: true,
+                                    padding: const EdgeInsets.all(12),
+                                    crossAxisCount: 2,
+                                    crossAxisSpacing: 12,
+                                    mainAxisSpacing: 12,
+                                    itemCount: displayedSales.length + 1,
+                                    itemBuilder: (context, index) {
+                                      if (index == displayedSales.length) {
+                                        return _buildLoadMoreFooter();
+                                      }
+                                      return _buildArchiveCard(
+                                          displayedSales[index], dateFormatter);
+                                    },
+                                  ),
+                                );
+                              } else {
+                                return ScrollConfiguration(
+                                  behavior: const ScrollBehavior()
+                                      .copyWith(overscroll: false),
+                                  child: ListView.builder(
+                                    primary: true,
+                                    padding: const EdgeInsets.all(12),
+                                    itemCount: displayedSales.length + 1,
+                                    itemBuilder: (context, index) {
+                                      if (index == displayedSales.length) {
+                                        return _buildLoadMoreFooter();
+                                      }
+                                      return _buildArchiveCard(
+                                          displayedSales[index], dateFormatter);
+                                    },
+                                  ),
+                                );
+                              }
+                            },
+                          ),
                         ),
                 ),
               ],
             ),
+    );
+  }
+
+  // Footer at the end of the archived-sales list - lets the user page in
+  // older archived sales instead of ever fetching a facility's whole
+  // archive at once.
+  Widget _buildLoadMoreFooter() {
+    if (_isLoadingMore) {
+      return Padding(
+        padding: const EdgeInsets.symmetric(vertical: 20),
+        child: Center(
+          child: SizedBox(
+            height: 24,
+            width: 24,
+            child: CircularProgressIndicator(
+              strokeWidth: 2.5,
+              color: primaryDeepGreen,
+            ),
+          ),
+        ),
+      );
+    }
+
+    if (!_hasMore) {
+      return Padding(
+        padding: const EdgeInsets.symmetric(vertical: 20),
+        child: Center(
+          child: Text(
+            'End of archived sales for this search',
+            style: TextStyle(fontSize: 12, color: Colors.grey[500]),
+          ),
+        ),
+      );
+    }
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 12),
+      child: Center(
+        child: OutlinedButton.icon(
+          onPressed: _loadMoreArchivedSales,
+          style: OutlinedButton.styleFrom(
+            foregroundColor: primaryDeepGreen,
+            side: BorderSide(color: primaryDeepGreen),
+          ),
+          icon: const Icon(Icons.expand_more),
+          label: const Text('Load more archived sales'),
+        ),
+      ),
     );
   }
 
@@ -386,265 +539,278 @@ class _SearchArchiveDialog extends StatefulWidget {
     State<_SearchArchiveDialog> createState() => _SearchArchiveDialogState();
     }
 
-    class _SearchArchiveDialogState extends State<_SearchArchiveDialog> {
-    String _selectedType = 'All';
-    String _dateMode = 'month';
-    DateTime _selectedMonth = DateTime.now();
-    DateTime _startDate = DateTime.now().subtract(const Duration(days: 30));
-    DateTime _endDate = DateTime.now();
+class _SearchArchiveDialogState extends State<_SearchArchiveDialog> {
+  // Archived sales only ever contain fully-paid sales older than this many
+  // days (see ARCHIVE_AFTER_DAYS in functions/index.js). Bounding the date
+  // pickers to that cutoff stops someone picking "this month" and always
+  // getting zero results, since nothing that recent has been archived yet.
+  static const int _archiveCutoffDays = 180;
+  final DateTime _archiveCutoff =
+      DateTime.now().subtract(const Duration(days: _archiveCutoffDays));
 
-    @override
-    Widget build(BuildContext context) {
+  String _dateMode = 'month';
+  late DateTime _selectedMonth;
+  late DateTime _startDate;
+  late DateTime _endDate;
+
+  @override
+  void initState() {
+    super.initState();
+    _selectedMonth = DateTime(_archiveCutoff.year, _archiveCutoff.month);
+    _startDate = _archiveCutoff.subtract(const Duration(days: 30));
+    _endDate = _archiveCutoff;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final cutoffLabel = DateFormat('dd MMM yyyy').format(_archiveCutoff);
+
     return AlertDialog(
-        title: Text(
+      title: Text(
         'Search Archived Sales',
         style: TextStyle(color: widget.primaryDeepGreen),
-        ),
-        content: SingleChildScrollView(
+      ),
+      content: SingleChildScrollView(
         child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-            const Text(
-                'Payment Status:',
-                style: TextStyle(fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 8),
-            DropdownButtonFormField<String>(
-                initialValue: _selectedType,
-                decoration: InputDecoration(
-                border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(8),
-                ),
-                contentPadding:
-                    const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                ),
-                items: const ['All', 'Paid', 'Partial', 'Unpaid']
-                    .map(
-                    (type) => DropdownMenuItem(
-                        value: type,
-                        child: Text(type),
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Replaces the old Payment Status dropdown: archived sales are
+            // always fully paid (that's the only kind that ever gets
+            // archived), so a Paid/Partial/Unpaid filter here could only
+            // ever return everything or nothing - it wasn't a real filter.
+            Container(
+              padding: const EdgeInsets.all(10),
+              decoration: BoxDecoration(
+                color: widget.primaryDeepGreen.withValues(alpha: 0.08),
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(
+                    color: widget.primaryDeepGreen.withValues(alpha: 0.25)),
+              ),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Icon(Icons.info_outline,
+                      size: 18, color: widget.primaryDeepGreen),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      'Archived sales are always fully paid - sales still '
+                      'owing money stay in your active Sales tab regardless '
+                      'of age.',
+                      style: TextStyle(
+                          fontSize: 12, color: widget.primaryDeepGreen),
                     ),
-                    )
-                    .toList(),
-                onChanged: (val) {
-                if (val != null) {
-                    setState(() => _selectedType = val);
-                }
-                },
+                  ),
+                ],
+              ),
             ),
             const SizedBox(height: 16),
             const Text(
-                'Search By:',
-                style: TextStyle(fontWeight: FontWeight.bold),
+              'Search By:',
+              style: TextStyle(fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 8),
             Row(
-                children: [
+              children: [
                 Expanded(
-                    child: ChoiceChip(
+                  child: ChoiceChip(
                     label: const Text('Specific Month'),
                     selected: _dateMode == 'month',
                     onSelected: (selected) {
-                        if (selected) {
+                      if (selected) {
                         setState(() => _dateMode = 'month');
-                        }
+                      }
                     },
                     selectedColor:
                         widget.primaryDeepGreen.withValues(alpha: 0.2),
-                    ),
+                  ),
                 ),
                 const SizedBox(width: 8),
                 Expanded(
-                    child: ChoiceChip(
+                  child: ChoiceChip(
                     label: const Text('Date Range'),
                     selected: _dateMode == 'range',
                     onSelected: (selected) {
-                        if (selected) {
+                      if (selected) {
                         setState(() => _dateMode = 'range');
-                        }
+                      }
                     },
                     selectedColor:
                         widget.primaryDeepGreen.withValues(alpha: 0.2),
-                    ),
+                  ),
                 ),
-                ],
+              ],
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'Only sales before $cutoffLabel have reached the archive - '
+              'anything newer is still in your active Sales list.',
+              style: TextStyle(fontSize: 11, color: Colors.grey[600]),
             ),
             const SizedBox(height: 16),
 
             // ───────────── Month mode ─────────────
             if (_dateMode == 'month') ...[
-                const Text(
+              const Text(
                 'Select Month:',
                 style: TextStyle(fontWeight: FontWeight.bold),
-                ),
-                const SizedBox(height: 8),
-                InkWell(
+              ),
+              const SizedBox(height: 8),
+              InkWell(
                 onTap: () async {
-                    final picked = await showDatePicker(
+                  final picked = await showDatePicker(
                     context: context,
                     initialDate: _selectedMonth,
                     firstDate: DateTime(2020),
-                    lastDate: DateTime.now(),
-                    );
-                    if (picked != null) {
+                    lastDate: _archiveCutoff,
+                  );
+                  if (picked != null) {
                     setState(() => _selectedMonth = picked);
-                    }
+                  }
                 },
                 child: Container(
-                    padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
                     border: Border.all(color: Colors.grey[400]!),
                     borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: Row(
+                  ),
+                  child: Row(
                     children: [
-                        Icon(Icons.calendar_today,
-                            color: widget.primaryDeepGreen),
-                        const SizedBox(width: 12),
-                        Text(
-                        DateFormat('MMMM yyyy')
-                            .format(_selectedMonth),
-                        ),
+                      Icon(Icons.calendar_today,
+                          color: widget.primaryDeepGreen),
+                      const SizedBox(width: 12),
+                      Text(DateFormat('MMMM yyyy').format(_selectedMonth)),
                     ],
-                    ),
+                  ),
                 ),
-                ),
+              ),
             ]
 
             // ───────────── Range mode ─────────────
             else ...[
-                const Text(
+              const Text(
                 'Start Date:',
                 style: TextStyle(fontWeight: FontWeight.bold),
-                ),
-                const SizedBox(height: 8),
-                InkWell(
+              ),
+              const SizedBox(height: 8),
+              InkWell(
                 onTap: () async {
-                    final picked = await showDatePicker(
+                  final picked = await showDatePicker(
                     context: context,
                     initialDate: _startDate,
                     firstDate: DateTime(2020),
                     lastDate: _endDate,
-                    );
-                    if (picked != null) {
+                  );
+                  if (picked != null) {
                     setState(() => _startDate = picked);
-                    }
+                  }
                 },
                 child: Container(
-                    padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
                     border: Border.all(color: Colors.grey[400]!),
                     borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: Row(
+                  ),
+                  child: Row(
                     children: [
-                        Icon(Icons.calendar_today,
-                            color: widget.primaryDeepGreen),
-                        const SizedBox(width: 12),
-                        Text(
-                        DateFormat('dd MMM yyyy')
-                            .format(_startDate),
-                        ),
+                      Icon(Icons.calendar_today,
+                          color: widget.primaryDeepGreen),
+                      const SizedBox(width: 12),
+                      Text(DateFormat('dd MMM yyyy').format(_startDate)),
                     ],
-                    ),
+                  ),
                 ),
-                ),
-                const SizedBox(height: 12),
-                const Text(
+              ),
+              const SizedBox(height: 12),
+              const Text(
                 'End Date:',
                 style: TextStyle(fontWeight: FontWeight.bold),
-                ),
-                const SizedBox(height: 8),
-                InkWell(
+              ),
+              const SizedBox(height: 8),
+              InkWell(
                 onTap: () async {
-                    final picked = await showDatePicker(
+                  final picked = await showDatePicker(
                     context: context,
                     initialDate: _endDate,
                     firstDate: _startDate,
-                    lastDate: DateTime.now(),
-                    );
-                    if (picked != null) {
+                    lastDate: _archiveCutoff,
+                  );
+                  if (picked != null) {
                     setState(() => _endDate = picked);
-                    }
+                  }
                 },
                 child: Container(
-                    padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
                     border: Border.all(color: Colors.grey[400]!),
                     borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: Row(
+                  ),
+                  child: Row(
                     children: [
-                        Icon(Icons.calendar_today,
-                            color: widget.primaryDeepGreen),
-                        const SizedBox(width: 12),
-                        Text(
-                        DateFormat('dd MMM yyyy')
-                            .format(_endDate),
-                        ),
+                      Icon(Icons.calendar_today,
+                          color: widget.primaryDeepGreen),
+                      const SizedBox(width: 12),
+                      Text(DateFormat('dd MMM yyyy').format(_endDate)),
                     ],
-                    ),
+                  ),
                 ),
-                ),
+              ),
             ],
-            ],
+          ],
         ),
-        ),
-        actions: [
+      ),
+      actions: [
         TextButton(
-            onPressed: () => Navigator.pop(context, null),
-            style: TextButton.styleFrom(
+          onPressed: () => Navigator.pop(context, null),
+          style: TextButton.styleFrom(
             foregroundColor: widget.primaryDeepGreen,
-            ),
-            child: const Text('Cancel'),
+          ),
+          child: const Text('Cancel'),
         ),
         ElevatedButton(
-            onPressed: () {
+          onPressed: () {
             DateTime start;
             DateTime end;
 
             if (_dateMode == 'month') {
-                start = DateTime(
+              start = DateTime(
                 _selectedMonth.year,
                 _selectedMonth.month,
                 1,
-                );
-                end = DateTime(
+              );
+              end = DateTime(
                 _selectedMonth.year,
                 _selectedMonth.month + 1,
                 0,
                 23,
                 59,
                 59,
-                );
+              );
             } else {
-                start = _startDate;
-                end = _endDate;
+              start = _startDate;
+              end = _endDate;
             }
 
             Navigator.pop(context, {
-                'type': _selectedType,
-                'startDate': start,
-                'endDate': end,
+              'startDate': start,
+              'endDate': end,
             });
-            },
-            style: ButtonStyle(
-            backgroundColor:
-                WidgetStateProperty.resolveWith<Color>(
-                (states) {
+          },
+          style: ButtonStyle(
+            backgroundColor: WidgetStateProperty.resolveWith<Color>(
+              (states) {
                 if (states.contains(WidgetState.hovered)) {
-                    return widget.warmAmber;
+                  return widget.warmAmber;
                 }
                 return widget.primaryDeepGreen;
-                },
+              },
             ),
-            foregroundColor:
-                WidgetStateProperty.all(widget.offWhite),
-            ),
-            child: const Text('Search'),
+            foregroundColor: WidgetStateProperty.all(widget.offWhite),
+          ),
+          child: const Text('Search'),
         ),
-        ],
+      ],
     );
-    }
+  }
 }

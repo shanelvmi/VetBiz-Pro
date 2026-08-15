@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:typed_data';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -5,18 +6,17 @@ import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:intl/intl.dart';
 import 'package:flutter_speed_dial/flutter_speed_dial.dart';
 
 import '../../providers/product_provider.dart';
 import '../../providers/client_provider.dart';
-import '../../providers/service_provider.dart';
-import '../../providers/sale_provider.dart';
-import '../../providers/transaction_provider.dart';
 import '../../providers/facility_provider.dart';
 import '../../providers/debt_provider.dart';
 
 import '../../services/auth_service.dart';
+import '../../services/dashboard_summary_service.dart';
 
 import '../../widgets/summary_card.dart';
 
@@ -29,6 +29,15 @@ import '../facilities/facility_screen.dart';
 import '../settings/settings_screen.dart';
 import '../activity/activity_log_screen.dart';
 import '../debtors/debtors_screen.dart';
+import '../payments/payments_screen.dart';
+import '../../providers/subscription_provider.dart';
+import '../../providers/user_role_provider.dart';
+import '../subscription/subscription_screen.dart';
+import 'stock_alerts_screen.dart';
+import 'insights_screen.dart';
+import '../../utils/subscription_guard.dart';
+import '../../utils/force_logout.dart';
+import '../../utils/notification_seen_tracker.dart';
 import '../store/stockstore_screen.dart';
 import '../admin/manage_assistants_screen.dart';
 import '../sales/add_sale_screen.dart';
@@ -40,12 +49,14 @@ class DrawerHoverItem extends StatefulWidget {
   final IconData icon;
   final String title;
   final VoidCallback onTap;
+  final bool isCollapsed;
 
   const DrawerHoverItem({
     super.key,
     required this.icon,
     required this.title,
     required this.onTap,
+    this.isCollapsed = false,
   });
 
   @override
@@ -57,8 +68,28 @@ class _DrawerHoverItemState extends State<DrawerHoverItem> {
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 8),
+    final row = Row(
+      mainAxisAlignment: widget.isCollapsed ? MainAxisAlignment.center : MainAxisAlignment.start,
+      children: [
+        Icon(widget.icon, color: offWhite),
+        if (!widget.isCollapsed) ...[
+          const SizedBox(width: 16),
+          Expanded(
+            child: Text(
+              widget.title,
+              style: TextStyle(
+                color: offWhite,
+                fontWeight: FontWeight.w500,
+              ),
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
+        ],
+      ],
+    );
+
+    final content = Padding(
+      padding: EdgeInsets.symmetric(horizontal: widget.isCollapsed ? 4 : 8),
       child: MouseRegion(
         cursor: SystemMouseCursors.click,
         onEnter: (_) => setState(() => _hovered = true),
@@ -68,25 +99,106 @@ class _DrawerHoverItemState extends State<DrawerHoverItem> {
           onTap: widget.onTap,
           child: AnimatedContainer(
             duration: const Duration(milliseconds: 120),
-            padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 16),
+            padding: EdgeInsets.symmetric(vertical: 10, horizontal: widget.isCollapsed ? 12 : 16),
             decoration: BoxDecoration(
               color: _hovered ? Colors.teal.shade700 : Colors.transparent,
               borderRadius: BorderRadius.circular(8),
             ),
-            child: Row(
-              children: [
-                Icon(widget.icon, color: offWhite),
-                const SizedBox(width: 16),
-                Text(
-                  widget.title,
-                  style: TextStyle(
-                    color: offWhite,
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
-              ],
+            child: row,
+          ),
+        ),
+      ),
+    );
+
+    // Tooltip only when collapsed - the label is already visible
+    // otherwise, so a tooltip on top of visible text would be
+    // redundant.
+    if (!widget.isCollapsed) return content;
+    return Tooltip(
+      message: widget.title,
+      waitDuration: const Duration(milliseconds: 300),
+      child: content,
+    );
+  }
+}
+
+/// A small pulsing dot - used on the notifications bell specifically for
+/// something genuinely new since it was last opened (a fresh urgent
+/// announcement, a newly-registered pending assistant), distinct from
+/// the plain steady dot used for ongoing conditions like low stock.
+/// Stops blinking the moment Notifications is opened, since that marks
+/// everything as viewed.
+class _BlinkingDot extends StatefulWidget {
+  const _BlinkingDot();
+
+  @override
+  State<_BlinkingDot> createState() => _BlinkingDotState();
+}
+
+class _BlinkingDotState extends State<_BlinkingDot> with SingleTickerProviderStateMixin {
+  late final AnimationController _controller = AnimationController(
+    vsync: this,
+    duration: const Duration(milliseconds: 700),
+  )..repeat(reverse: true);
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return FadeTransition(
+      opacity: Tween<double>(begin: 0.35, end: 1.0).animate(
+        CurvedAnimation(parent: _controller, curve: Curves.easeInOut),
+      ),
+      child: Container(
+        width: 9,
+        height: 9,
+        decoration: const BoxDecoration(color: Colors.redAccent, shape: BoxShape.circle),
+      ),
+    );
+  }
+}
+
+/// Wraps the profile avatar with hover feedback (a ring, matching the
+/// amber-on-hover convention used throughout the app) - a background
+/// fill wouldn't read well on a circular avatar the way it does on a
+/// button, so this uses a border instead.
+class _HoverableProfileIcon extends StatefulWidget {
+  final VoidCallback onTap;
+  final Widget child;
+
+  const _HoverableProfileIcon({required this.onTap, required this.child});
+
+  @override
+  State<_HoverableProfileIcon> createState() => _HoverableProfileIconState();
+}
+
+class _HoverableProfileIconState extends State<_HoverableProfileIcon> {
+  bool _hovered = false;
+  static const Color warmAmber = Color(0xFFFFB200);
+
+  @override
+  Widget build(BuildContext context) {
+    return MouseRegion(
+      cursor: SystemMouseCursors.click,
+      onEnter: (_) => setState(() => _hovered = true),
+      onExit: (_) => setState(() => _hovered = false),
+      child: GestureDetector(
+        onTap: widget.onTap,
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 150),
+          padding: const EdgeInsets.all(2),
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            border: Border.all(
+              color: _hovered ? warmAmber : Colors.transparent,
+              width: 2,
             ),
           ),
+          child: widget.child,
         ),
       ),
     );
@@ -157,11 +269,187 @@ class _DashboardScreenState extends State<DashboardScreen> {
   final user = FirebaseAuth.instance.currentUser;
   late final userDoc = FirebaseFirestore.instance.collection('users').doc(user?.uid);
 
-  Uint8List? _logoBytes; // Facility logo in memory
   Uint8List? _profileBytes; // Profile picture in memory
   final ImagePicker _picker = ImagePicker();
 
   String selectedFilter = 'Today';
+
+  // null while checking, then true/false once known - starts null
+  // rather than defaulting to true so the reminder banner doesn't
+  // flash in incorrectly before the actual status is known, and
+  // doesn't flash in a false positive before it's checked either.
+  bool? _isEmailVerified;
+
+  // Whether there's something genuinely new since Notifications was
+  // last opened on this device (a fresh urgent announcement, or a
+  // newly-registered pending assistant) - drives the bell's blink,
+  // separate from hasStockAlerts/hasUrgentAnnouncement (which drive its
+  // steady dot, since those reflect ongoing conditions rather than
+  // one-off new arrivals).
+  DateTime? _lastNotificationsViewedAt;
+  bool _hasNewUrgentSinceViewed = false;
+  bool _hasNewPendingAssistantSinceViewed = false;
+  StreamSubscription<QuerySnapshot>? _urgentWatchSub;
+  StreamSubscription<QuerySnapshot>? _pendingWatchSub;
+
+  // Persisted per device (not synced) so the collapsed/expanded choice
+  // survives between sessions, same reasoning as the notification
+  // "last viewed" tracker - this is purely a personal display
+  // preference, not something that needs to follow the account
+  // anywhere else.
+  bool _isDrawerCollapsed = false;
+
+  Future<void> _loadDrawerCollapsedState() async {
+    final prefs = await SharedPreferences.getInstance();
+    if (mounted) {
+      setState(() => _isDrawerCollapsed = prefs.getBool('drawer_collapsed') ?? false);
+    }
+  }
+
+  Future<void> _toggleDrawerCollapsed() async {
+    final newValue = !_isDrawerCollapsed;
+    setState(() => _isDrawerCollapsed = newValue);
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool('drawer_collapsed', newValue);
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _loadDrawerCollapsedState();
+    // Firebase caches emailVerified and doesn't update it automatically
+    // once someone clicks the link in their email - has to be
+    // explicitly refreshed to find out if it changed since last login.
+    _isEmailVerified = user?.emailVerified;
+    Provider.of<AuthService>(context, listen: false)
+        .refreshEmailVerifiedStatus()
+        .then((verified) {
+      if (mounted) setState(() => _isEmailVerified = verified);
+    });
+    _watchForNewNotifications();
+  }
+
+  Future<void> _watchForNewNotifications() async {
+    final lastViewed = await NotificationSeenTracker.getLastViewedAt();
+    if (!mounted) return;
+    setState(() => _lastNotificationsViewedAt = lastViewed);
+
+    _urgentWatchSub = FirebaseFirestore.instance
+        .collection('public_announcements')
+        .where('urgent', isEqualTo: true)
+        .snapshots()
+        .listen((snapshot) {
+      final isNew = _lastNotificationsViewedAt != null &&
+          snapshot.docs.any((doc) {
+            final data = doc.data();
+            if (data['hidden'] == true) return false;
+            final ts = data['timestamp'];
+            return ts is Timestamp && ts.toDate().isAfter(_lastNotificationsViewedAt!);
+          });
+      if (mounted) setState(() => _hasNewUrgentSinceViewed = isNew);
+    });
+
+    final isAdmin = Provider.of<UserRoleProvider>(context, listen: false).isAdmin;
+    final facilityId = Provider.of<FacilityProvider>(context, listen: false).selectedFacilityId;
+    if (isAdmin && facilityId != null) {
+      _pendingWatchSub = FirebaseFirestore.instance
+          .collection('users')
+          .where('role', isEqualTo: 'assistant')
+          .where('status', isEqualTo: 'pending')
+          .where('facilityIds', arrayContains: facilityId)
+          .snapshots()
+          .listen((snapshot) {
+        final isNew = _lastNotificationsViewedAt != null &&
+            snapshot.docs.any((doc) {
+              final ts = doc.data()['createdAt'];
+              return ts is Timestamp && ts.toDate().isAfter(_lastNotificationsViewedAt!);
+            });
+        if (mounted) setState(() => _hasNewPendingAssistantSinceViewed = isNew);
+      });
+    }
+  }
+
+  // Called when returning from Notifications, since opening it marks
+  // "viewed now" on that screen - re-fetching here lets the blink stop
+  // immediately on return, instead of waiting for the next full
+  // dashboard reload to notice the update.
+  Future<void> _refreshNotificationsViewedState() async {
+    final lastViewed = await NotificationSeenTracker.getLastViewedAt();
+    if (mounted) {
+      setState(() {
+        _lastNotificationsViewedAt = lastViewed;
+        _hasNewUrgentSinceViewed = false;
+        _hasNewPendingAssistantSinceViewed = false;
+      });
+    }
+  }
+
+  @override
+  void dispose() {
+    _urgentWatchSub?.cancel();
+    _pendingWatchSub?.cancel();
+    _periodTotalsSub?.cancel();
+    super.dispose();
+  }
+
+  // Period-aware dashboard figures (Total Sales, Earnings, Profit,
+  // Expenses, Completed Services) - fetched from precomputed daily
+  // aggregates via DashboardSummaryService, not derived from whatever
+  // happens to be loaded in each provider's paginated list.
+  final DashboardSummaryService _dashboardSummaryService = DashboardSummaryService();
+  DashboardPeriodTotals _periodTotals = DashboardPeriodTotals.empty;
+  bool _isPeriodLoading = false;
+  String? _lastLoadedFacilityId;
+  String? _lastLoadedFilter;
+  StreamSubscription<DashboardPeriodTotals>? _periodTotalsSub;
+
+  /// Turns the selected chip ('Today'/'This Week'/'This Month'/'This Year')
+  /// into a concrete (start, end) date range.
+  (DateTime, DateTime) _dateRangeForFilter(String filter) {
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+
+    switch (filter) {
+      case 'Today':
+        return (today, now);
+      case 'This Week':
+        // Monday as the start of the week.
+        final startOfWeek = today.subtract(Duration(days: now.weekday - 1));
+        return (startOfWeek, now);
+      case 'This Month':
+        return (DateTime(now.year, now.month, 1), now);
+      case 'This Year':
+        return (DateTime(now.year, 1, 1), now);
+      default:
+        return (today, now);
+    }
+  }
+
+  void _loadPeriodTotals(String facilityId) {
+    setState(() => _isPeriodLoading = true);
+
+    final (start, end) = _dateRangeForFilter(selectedFilter);
+
+    // Cancel whatever was watching before - a stale subscription from
+    // the previous facility/filter would otherwise keep emitting into
+    // this same state alongside the new one.
+    _periodTotalsSub?.cancel();
+    _periodTotalsSub = _dashboardSummaryService
+        .watchDashboardTotals(facilityId: facilityId, start: start, end: end)
+        .listen((totals) {
+      if (mounted) {
+        setState(() {
+          _periodTotals = totals;
+          _isPeriodLoading = false;
+        });
+      }
+    }, onError: (e) {
+      debugPrint('Error watching dashboard period totals: $e');
+      if (mounted) {
+        setState(() => _isPeriodLoading = false);
+      }
+    });
+  }
 
   String greetingTime() {
     final hour = DateTime.now().hour;
@@ -173,28 +461,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
   String _capitalize(String s) {
     if (s.isEmpty) return s;
     return s[0].toUpperCase() + s.substring(1).toLowerCase();
-  }
-
-  // PICK & SAVE FACILITY LOGO
-  Future<void> pickLogoImage() async {
-    final pickedFile = await _picker.pickImage(source: ImageSource.gallery);
-    if (pickedFile == null) return;
-
-    final bytes = await pickedFile.readAsBytes();
-    setState(() => _logoBytes = bytes);
-
-    final facilityProvider = Provider.of<FacilityProvider>(context, listen: false);
-    final facilityId = facilityProvider.selectedFacility?['id'];
-    if (facilityId == null) return;
-
-    final storageRef = FirebaseStorage.instance.ref().child('facility_logos/$facilityId.png');
-    await storageRef.putData(bytes);
-    final downloadUrl = await storageRef.getDownloadURL();
-
-    await FirebaseFirestore.instance
-        .collection('facilities')
-        .doc(facilityId)
-        .set({'logoUrl': downloadUrl}, SetOptions(merge: true));
   }
 
   // PICK & SAVE USER PROFILE
@@ -302,14 +568,25 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
     // Facility is loaded, we can safely access its fields
     final facilityName = selectedFacility['name'] ?? 'Facility';
+    final facilityType = selectedFacility['type'] as String? ?? '';
+    final currentFacilityId = selectedFacility['id'] as String?;
+
+    // Kick off a period-totals fetch whenever the facility or the
+    // selected filter chip changes (guarded so it doesn't refire on every
+    // unrelated rebuild).
+    if (currentFacilityId != null &&
+        (_lastLoadedFacilityId != currentFacilityId || _lastLoadedFilter != selectedFilter)) {
+      _lastLoadedFacilityId = currentFacilityId;
+      _lastLoadedFilter = selectedFilter;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _loadPeriodTotals(currentFacilityId);
+      });
+    }
 
     // Providers
     final productProvider = Provider.of<ProductProvider>(context);
     final clientProvider = Provider.of<ClientProvider>(context);
-    final serviceProvider = Provider.of<ServiceProvider>(context);
-    final saleProvider = Provider.of<SaleProvider>(context);
     final debtProvider = Provider.of<DebtProvider>(context);
-    final transactionProvider = Provider.of<TransactionProvider>(context);
 
     // Total product value
     double totalProductValue = productProvider.products.fold(
@@ -330,10 +607,14 @@ class _DashboardScreenState extends State<DashboardScreen> {
             elevation: 4,
             centerTitle: true,
             iconTheme: IconThemeData(color: offWhite),
-            leadingWidth: isLargeScreen ? 220 : null,
+            leadingWidth: isLargeScreen ? 280 : null,
             leading: isLargeScreen
-                ? Padding(
-                    padding: const EdgeInsets.only(left: 16),
+                ? Row(
+                    children: [
+                      const SizedBox(width: 8),
+                      _buildAlertsBell(context),
+                      Padding(
+                    padding: const EdgeInsets.only(left: 4),
                     child: StreamBuilder(
                       stream: Stream.periodic(const Duration(seconds: 1)),
                       builder: (context, snapshot) {
@@ -364,6 +645,18 @@ class _DashboardScreenState extends State<DashboardScreen> {
                         );
                       },
                     ),
+                  ),
+                      const Spacer(),
+                      IconButton(
+                        icon: Icon(
+                          _isDrawerCollapsed ? Icons.menu_open : Icons.menu,
+                          color: offWhite,
+                          size: 20,
+                        ),
+                        tooltip: _isDrawerCollapsed ? 'Expand menu' : 'Collapse menu',
+                        onPressed: _toggleDrawerCollapsed,
+                      ),
+                    ],
                   )
                 : null,
             title: StreamBuilder<DocumentSnapshot>(
@@ -379,7 +672,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     Text(
-                      '$facilityName Dashboard',
+                      facilityType.isNotEmpty && facilityType != 'Other'
+                          ? '$facilityName $facilityType Dashboard'
+                          : '$facilityName Dashboard',
                       style: TextStyle(color: offWhite),
                     ),
                     const SizedBox(height: 4),
@@ -392,10 +687,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
               },
             ),
             actions: [
+              if (!isLargeScreen) _buildAlertsBell(context),
               Padding(
                 padding: const EdgeInsets.only(right: 12),
                 child: Builder(
-                  builder: (context) => GestureDetector(
+                  builder: (context) => _HoverableProfileIcon(
                     onTap: () => Scaffold.of(context).openEndDrawer(),
                     child: StreamBuilder<DocumentSnapshot>(
                       stream: userDoc.snapshots(),
@@ -430,99 +726,181 @@ class _DashboardScreenState extends State<DashboardScreen> {
           endDrawer: Drawer(child: _buildEndDrawerContent()),
           body: Column(
             children: [
+              _buildSubscriptionBanner(context),
               Container(height: 1.2, width: double.infinity, color: Colors.grey.shade400),
               Expanded(
                 child: Row(
                   children: [
-                    if (isLargeScreen) SizedBox(width: 250, child: _buildDrawerContent()),
+                    if (isLargeScreen) _buildDrawerContent(),
                     Expanded(
                       child: Padding(
                         padding: const EdgeInsets.all(16),
                         child: Column(
                           children: [
-                            Wrap(
-                              spacing: 8,
-                              children: ['Today', 'This Week', 'This Month', 'This Year']
-                                  .map((filter) => ChoiceChip(
-                                        label: Text(filter),
-                                        selected: selectedFilter == filter,
-                                        onSelected: (val) {
-                                          setState(() {
-                                            selectedFilter = filter;
-                                          });
-                                        },
-                                        selectedColor: warmAmber,
-                                      ))
-                                  .toList(),
-                            ),
-                            const SizedBox(height: 16),
-                            Expanded(
-                              child: GridView.count(
-                                crossAxisCount:
-                                    MediaQuery.of(context).size.width > 1200 ? 4 : 2,
-                                childAspectRatio: 1.5,
-                                crossAxisSpacing: 12,
-                                mainAxisSpacing: 12,
+                            if (isLargeScreen)
+                              Row(
                                 children: [
-                                  SummaryCard(
-                                    title: 'Total Product Value',
-                                    value: 'Tsh ${formatter.format(productProvider.totalProductValue)}',
-                                    icon: Icons.inventory,
-                                    color: primaryDeepGreen,
-                                    shadow: true,
+                                  Expanded(
+                                    child: Center(
+                                      child: Wrap(
+                                        spacing: 8,
+                                        children: ['Today', 'This Week', 'This Month', 'This Year']
+                                            .map((filter) => ChoiceChip(
+                                                  label: Text(filter),
+                                                  selected: selectedFilter == filter,
+                                                  onSelected: (val) {
+                                                    setState(() {
+                                                      selectedFilter = filter;
+                                                    });
+                                                  },
+                                                  selectedColor: warmAmber,
+                                                ))
+                                            .toList(),
+                                      ),
+                                    ),
                                   ),
-                                  SummaryCard(
-                                    title: 'Total Sales ($selectedFilter)',
-                                    value: 'Tsh ${formatter.format(saleProvider.totalSales)}',
-                                    icon: Icons.shopping_cart,
-                                    color: warmAmber,
-                                    shadow: true,
-                                  ),
-                                  SummaryCard(
-                                    title: 'Total Earnings',
-                                    value:
-                                        'Tsh ${formatter.format(saleProvider.totalEarnings + transactionProvider.totalOtherIncome + serviceProvider.totalPaid)}',
-                                    icon: Icons.attach_money,
-                                    color: primaryDeepGreen,
-                                    shadow: true,
-                                  ),
-                                  SummaryCard(
-                                    title: 'Total Profit',
-                                    value: 
-                                        'Tsh ${formatter.format(saleProvider.realizedProfit + serviceProvider.totalServiceProfit + transactionProvider.subProfit)}',
-                                    icon: Icons.trending_up,
-                                    color: primaryDeepGreen,
-                                    shadow: true,
-                                  ),
-                                  SummaryCard(
-                                    title: 'Total Expenses',
-                                    value: 'Tsh ${formatter.format(transactionProvider.totalExpenses)}',
-                                    icon: Icons.trending_down,
-                                    color: Colors.red,
-                                    shadow: true,
-                                  ),
-                                  SummaryCard(
-                                    title: 'Outstanding Payment',
-                                    value: 'Tsh ${formatter.format(debtProvider.totalOutstanding())}',
-                                    icon: Icons.account_balance_wallet,
-                                    color: warmAmber,
-                                    shadow: true,
-                                  ),
-                                  SummaryCard(
-                                    title: 'Total Clients',
-                                    value: '${clientProvider.clients.length}',
-                                    icon: Icons.people,
-                                    color: warmAmber,
-                                    shadow: true,
-                                  ),
-                                  SummaryCard(
-                                    title: 'Completed Services',
-                                    value: '${serviceProvider.services.length}',
-                                    icon: Icons.design_services,
-                                    color: Colors.purple,
-                                    shadow: true,
+                                  OutlinedButton.icon(
+                                    onPressed: () {
+                                      Navigator.push(
+                                        context,
+                                        MaterialPageRoute(builder: (_) => const InsightsScreen()),
+                                      );
+                                    },
+                                    icon: Icon(Icons.insights, color: primaryDeepGreen),
+                                    label: Text('Insights', style: TextStyle(color: primaryDeepGreen)),
+                                    style: OutlinedButton.styleFrom(side: BorderSide(color: primaryDeepGreen)),
                                   ),
                                 ],
+                              )
+                            else ...[
+                              Wrap(
+                                spacing: 8,
+                                children: ['Today', 'This Week', 'This Month', 'This Year']
+                                    .map((filter) => ChoiceChip(
+                                          label: Text(filter),
+                                          selected: selectedFilter == filter,
+                                          onSelected: (val) {
+                                            setState(() {
+                                              selectedFilter = filter;
+                                            });
+                                          },
+                                          selectedColor: warmAmber,
+                                        ))
+                                    .toList(),
+                              ),
+                              const SizedBox(height: 12),
+                              Align(
+                                alignment: Alignment.centerRight,
+                                child: OutlinedButton.icon(
+                                  onPressed: () {
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(builder: (_) => const InsightsScreen()),
+                                    );
+                                  },
+                                  icon: Icon(Icons.insights, color: primaryDeepGreen),
+                                  label: Text('Insights', style: TextStyle(color: primaryDeepGreen)),
+                                  style: OutlinedButton.styleFrom(side: BorderSide(color: primaryDeepGreen)),
+                                ),
+                              ),
+                            ],
+                            const SizedBox(height: 16),
+                            Expanded(
+                              child: LayoutBuilder(
+                                builder: (context, gridConstraints) {
+                                  final gridWidth = gridConstraints.maxWidth;
+                                  // More columns on wide screens; a taller
+                                  // (lower) aspect ratio on narrow ones so
+                                  // card content has room to breathe -
+                                  // SummaryCard itself also self-scales,
+                                  // this just picks a sensible starting
+                                  // shape per screen size.
+                                  final crossAxisCount = gridWidth > 1200
+                                      ? 4
+                                      : gridWidth > 700
+                                          ? 3
+                                          : 2;
+                                  final childAspectRatio = gridWidth > 1200
+                                      ? 1.5
+                                      : gridWidth > 400
+                                          ? 1.3
+                                          : 1.05;
+
+                                  return GridView.count(
+                                    crossAxisCount: crossAxisCount,
+                                    childAspectRatio: childAspectRatio,
+                                    crossAxisSpacing: 12,
+                                    mainAxisSpacing: 12,
+                                    children: [
+                                      SummaryCard(
+                                        title: 'Total Product Value',
+                                        value: 'Tsh ${formatter.format(productProvider.totalProductValue)}',
+                                        icon: Icons.inventory,
+                                        color: primaryDeepGreen,
+                                        shadow: true,
+                                        subtitle: 'as of now',
+                                      ),
+                                      SummaryCard(
+                                        title: 'Total Sales ($selectedFilter)',
+                                        value: 'Tsh ${formatter.format(_periodTotals.totalSales)}',
+                                        icon: Icons.shopping_cart,
+                                        color: warmAmber,
+                                        shadow: true,
+                                        isLoading: _isPeriodLoading,
+                                      ),
+                                      SummaryCard(
+                                        title: 'Total Earnings ($selectedFilter)',
+                                        value: 'Tsh ${formatter.format(_periodTotals.totalEarnings)}',
+                                        icon: Icons.attach_money,
+                                        color: primaryDeepGreen,
+                                        shadow: true,
+                                        isLoading: _isPeriodLoading,
+                                      ),
+                                      SummaryCard(
+                                        title: 'Total Profit ($selectedFilter)',
+                                        value: Provider.of<UserRoleProvider>(context).isAdmin
+                                            ? 'Tsh ${formatter.format(_periodTotals.totalProfit)}'
+                                            : '*****',
+                                        icon: Icons.trending_up,
+                                        color: primaryDeepGreen,
+                                        shadow: true,
+                                        isLoading: _isPeriodLoading,
+                                      ),
+                                      SummaryCard(
+                                        title: 'Total Expenses ($selectedFilter)',
+                                        value: 'Tsh ${formatter.format(_periodTotals.totalExpenses)}',
+                                        icon: Icons.trending_down,
+                                        color: Colors.red,
+                                        shadow: true,
+                                        isLoading: _isPeriodLoading,
+                                      ),
+                                      SummaryCard(
+                                        title: 'Outstanding Payment',
+                                        value: 'Tsh ${formatter.format(debtProvider.totalOutstanding())}',
+                                        icon: Icons.account_balance_wallet,
+                                        color: warmAmber,
+                                        shadow: true,
+                                        subtitle: 'as of now',
+                                      ),
+                                      SummaryCard(
+                                        title: 'Total Clients',
+                                        value: '${clientProvider.clients.length}',
+                                        icon: Icons.people,
+                                        color: warmAmber,
+                                        shadow: true,
+                                        subtitle: 'as of now',
+                                      ),
+                                      SummaryCard(
+                                        title: 'Completed Services ($selectedFilter)',
+                                        value: '${_periodTotals.completedServicesCount}',
+                                        icon: Icons.design_services,
+                                        color: const Color(0xFF3D5A80),
+                                        shadow: true,
+                                        isLoading: _isPeriodLoading,
+                                      ),
+                                    ],
+                                  );
+                                },
                               ),
                             ),
                           ],
@@ -540,62 +918,156 @@ class _DashboardScreenState extends State<DashboardScreen> {
     );
   }
 
+  // Shown at the very top of the dashboard whenever the current
+  // account's email hasn't been verified yet - a gentle, persistent
+  // nudge rather than a hard block, since forcing verification before
+  // allowing any use of the app risks locking out a busy shop owner
+  // over spotty email delivery, when the real risk it protects against
+  // (a typo'd email breaking password recovery later) is adequately
+  // covered by a visible reminder instead.
+  // Shown at the very top of the dashboard, every time it opens - trial
+  // (no subscription set up yet) shows nothing, since that's the normal
+  // unrestricted state, not something to warn about.
+  Widget _buildSubscriptionBanner(BuildContext context) {
+    final sub = Provider.of<SubscriptionProvider>(context);
+
+    if (sub.status == SubscriptionStatus.trial) return const SizedBox.shrink();
+    if (sub.status == SubscriptionStatus.active &&
+        (sub.daysRemaining == null || sub.daysRemaining! > 7)) {
+      return const SizedBox.shrink();
+    }
+
+    final isLocked = sub.status == SubscriptionStatus.locked;
+    final isGrace = sub.status == SubscriptionStatus.grace;
+    final color = isLocked ? Colors.redAccent : Colors.orange;
+
+    String message;
+    if (isLocked) {
+      message = 'Your subscription has expired. The app is in read-only mode - submit a payment to restore full access.';
+    } else if (isGrace) {
+      message = 'Your subscription expired - you have a few days of grace before read-only mode begins.';
+    } else {
+      message = 'Your subscription expires in ${sub.daysRemaining} day${sub.daysRemaining == 1 ? '' : 's'}.';
+    }
+
+    return Container(
+      width: double.infinity,
+      color: color.withValues(alpha: 0.12),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+      child: Row(
+        children: [
+          Icon(isLocked ? Icons.lock_outline : Icons.warning_amber_rounded, color: color, size: 20),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Text(message, style: TextStyle(color: color, fontSize: 12.5, fontWeight: FontWeight.w600)),
+          ),
+          if (Provider.of<UserRoleProvider>(context).isAdmin)
+            TextButton(
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const SubscriptionScreen()),
+                );
+              },
+              style: TextButton.styleFrom(foregroundColor: color),
+              child: const Text('Renew'),
+            )
+          else
+            Text('Ask your admin', style: TextStyle(color: color, fontSize: 11.5, fontStyle: FontStyle.italic)),
+        ],
+      ),
+    );
+  }
+
+  // Compact bell icon with a red dot when there's a low-stock or
+  // expiring-item alert - replaces the old full-width banner. Tapping it
+  // goes straight to the same screen Settings > Notifications leads to.
+  Widget _buildAlertsBell(BuildContext context) {
+    final products = Provider.of<ProductProvider>(context).products;
+    final hasStockAlerts = StockAlertsScreen.hasAnyAlert(products);
+
+    return StreamBuilder<QuerySnapshot>(
+      stream: FirebaseFirestore.instance
+          .collection('public_announcements')
+          .where('urgent', isEqualTo: true)
+          .snapshots(),
+      builder: (context, snapshot) {
+        final hasUrgentAnnouncement = (snapshot.data?.docs ?? []).any((doc) {
+          final data = doc.data() as Map<String, dynamic>;
+          return data['hidden'] != true;
+        });
+        final hasAlerts = hasStockAlerts || hasUrgentAnnouncement || _isEmailVerified == false;
+        final hasNew = _hasNewUrgentSinceViewed || _hasNewPendingAssistantSinceViewed;
+
+        return Stack(
+          clipBehavior: Clip.none,
+          children: [
+            IconButton(
+              icon: const Icon(Icons.notifications_outlined),
+              tooltip: 'Notifications',
+              onPressed: () async {
+                await Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const StockAlertsScreen()),
+                );
+                // Notifications marks itself "viewed" on open - re-check
+                // here so the blink stops immediately on return, rather
+                // than waiting for some other reason to rebuild.
+                _refreshNotificationsViewedState();
+              },
+            ),
+            if (hasNew)
+              const Positioned(
+                right: 8,
+                top: 8,
+                child: _BlinkingDot(),
+              )
+            else if (hasAlerts)
+              Positioned(
+                right: 8,
+                top: 8,
+                child: Container(
+                  width: 9,
+                  height: 9,
+                  decoration: const BoxDecoration(color: Colors.redAccent, shape: BoxShape.circle),
+                ),
+              ),
+          ],
+        );
+      },
+    );
+  }
+
 // DRAWER CONTENTS
 Widget _buildDrawerContent() {
   final facilityProvider = Provider.of<FacilityProvider>(context);
   final selectedFacility = facilityProvider.selectedFacility;
+  final bool collapsed = _isDrawerCollapsed;
 
   final bool isSmallScreen =
       MediaQuery.of(context).size.height < 600 ||
       MediaQuery.of(context).size.width < 1024;
+  // Never collapse on a small screen - the drawer there is already a
+  // slide-in overlay, not a permanent column, so there's no space to
+  // reclaim by shrinking it.
+  final bool effectivelyCollapsed = collapsed && !isSmallScreen;
 
   // ---------- LOGO ----------
+  // Display only now - logo management lives in Settings > Business
+  // Profile, so this no longer needs to be tappable, and correctly
+  // reflects whatever's actually saved (via FacilityProvider's live
+  // listener) rather than a locally-picked image that was never wired
+  // to that update path.
   Widget logoSection = Container(
     width: double.infinity,
     padding: const EdgeInsets.only(top: 18, bottom: 12),
     alignment: Alignment.center,
-    child: Tooltip(
-      message: 'Click to replace logo',
-      waitDuration: const Duration(milliseconds: 150),
-      showDuration: const Duration(seconds: 2),
-      decoration: BoxDecoration(
-        color: Colors.black87,
-        borderRadius: BorderRadius.circular(6),
-      ),
-      textStyle: const TextStyle(color: Colors.white, fontSize: 12),
-      child: GestureDetector(
-        onTap: pickLogoImage,
-        child: Stack(
-          alignment: Alignment.bottomRight,
-          children: [
-            CircleAvatar(
-              radius: 30,
-              backgroundColor: offWhite,
-              backgroundImage: _logoBytes != null
-                  ? MemoryImage(_logoBytes!)
-                  : (selectedFacility != null &&
-                          selectedFacility['logoUrl'] != null
-                      ? NetworkImage(selectedFacility['logoUrl'] as String)
-                      : const AssetImage(
-                          'assets/vetbiz_pro_logo.png',
-                        ) as ImageProvider),
-            ),
-            Container(
-              padding: const EdgeInsets.all(4),
-              decoration: BoxDecoration(
-                color: warmAmber,
-                shape: BoxShape.circle,
-                border: Border.all(color: offWhite, width: 1.5),
-              ),
-              child: const Icon(
-                Icons.camera_alt,
-                size: 12,
-                color: Colors.white,
-              ),
-            ),
-          ],
-        ),
-      ),
+    child: CircleAvatar(
+      radius: effectivelyCollapsed ? 18 : 30,
+      backgroundColor: offWhite,
+      backgroundImage: (selectedFacility != null && selectedFacility['logoUrl'] != null)
+          ? NetworkImage(selectedFacility['logoUrl'] as String)
+          : const AssetImage('assets/vetbiz_pro_logo.png') as ImageProvider,
     ),
   );
 
@@ -603,59 +1075,75 @@ Widget _buildDrawerContent() {
   Widget items = Column(
     children: [
       DrawerHoverItem(
+        icon: Icons.store,
+        title: 'Stock Store',
+        isCollapsed: effectivelyCollapsed,
+        onTap: () => Navigator.push(
+          context,
+          MaterialPageRoute(builder: (_) => StockStoreScreen()),
+        ),
+      ),
+      DrawerHoverItem(
         icon: Icons.inventory,
         title: 'Products',
+        isCollapsed: effectivelyCollapsed,
         onTap: () => Navigator.push(
           context,
           MaterialPageRoute(builder: (_) => ProductsScreen()),
         ),
       ),
       DrawerHoverItem(
-        icon: Icons.people,
-        title: 'Clients',
-        onTap: () => Navigator.push(
-          context,
-          MaterialPageRoute(builder: (_) => ClientsScreen()),
-        ),
-      ),
-      DrawerHoverItem(
-        icon: Icons.design_services,
-        title: 'Services',
-        onTap: () => Navigator.push(
-          context,
-          MaterialPageRoute(builder: (_) => ServicesScreen()),
-        ),
-      ),
-      DrawerHoverItem(
         icon: Icons.attach_money,
         title: 'Sales',
+        isCollapsed: effectivelyCollapsed,
         onTap: () => Navigator.push(
           context,
           MaterialPageRoute(builder: (_) => SalesScreen()),
         ),
       ),
       DrawerHoverItem(
-        icon: Icons.receipt_long,
-        title: 'Transactions',
+        icon: Icons.design_services,
+        title: 'Services',
+        isCollapsed: effectivelyCollapsed,
         onTap: () => Navigator.push(
           context,
-          MaterialPageRoute(builder: (_) => TransactionScreen()),
+          MaterialPageRoute(builder: (_) => ServicesScreen()),
         ),
       ),
       DrawerHoverItem(
-        icon: Icons.people_alt,
+        icon: Icons.payments,
+        title: 'Payments',
+        isCollapsed: effectivelyCollapsed,
+        onTap: () => Navigator.push(
+          context,
+          MaterialPageRoute(builder: (_) => const PaymentsScreen()),
+        ),
+      ),
+      DrawerHoverItem(
+        icon: Icons.money_off,
         title: 'Debtors',
+        isCollapsed: effectivelyCollapsed,
         onTap: () => Navigator.push(
           context,
           MaterialPageRoute(builder: (_) => DebtorsScreen()),
         ),
       ),
       DrawerHoverItem(
-        icon: Icons.store,
-        title: 'Stock Store',
+        icon: Icons.receipt_long,
+        title: 'Transactions',
+        isCollapsed: effectivelyCollapsed,
         onTap: () => Navigator.push(
           context,
-          MaterialPageRoute(builder: (_) => StockStoreScreen()),
+          MaterialPageRoute(builder: (_) => TransactionScreen()),
+        ),
+      ),
+      DrawerHoverItem(
+        icon: Icons.people,
+        title: 'Clients',
+        isCollapsed: effectivelyCollapsed,
+        onTap: () => Navigator.push(
+          context,
+          MaterialPageRoute(builder: (_) => ClientsScreen()),
         ),
       ),
     ],
@@ -665,6 +1153,7 @@ Widget _buildDrawerContent() {
   Widget settings = DrawerHoverItem(
     icon: Icons.settings,
     title: 'Settings',
+    isCollapsed: effectivelyCollapsed,
     onTap: () => Navigator.push(
       context,
       MaterialPageRoute(builder: (_) => SettingsScreen()),
@@ -674,10 +1163,12 @@ Widget _buildDrawerContent() {
   // ---------- FOOTER ----------
   Widget footer = Padding(
     padding: const EdgeInsets.symmetric(vertical: 8),
-    child: Text(
-      '@VetBiz Pro',
-      style: TextStyle(fontSize: 12, color: offWhite),
-    ),
+    child: effectivelyCollapsed
+        ? const SizedBox.shrink()
+        : Text(
+            '@VetBiz Pro',
+            style: TextStyle(fontSize: 12, color: offWhite),
+          ),
   );
 
   // ---------- FINAL LAYOUT ----------
@@ -691,8 +1182,10 @@ Widget _buildDrawerContent() {
     ],
   );
 
-  return Container(
-    width: 250,
+  return AnimatedContainer(
+    duration: const Duration(milliseconds: 200),
+    curve: Curves.easeInOut,
+    width: effectivelyCollapsed ? 72 : 250,
     color: primaryDeepGreen,
     child: Column(
       children: [
@@ -850,7 +1343,7 @@ Widget _buildDrawerContent() {
                 ),
                 const SizedBox(height: 12),
 
-                if (role == 'admin') ...[
+                if (Provider.of<UserRoleProvider>(context).isAdmin) ...[
                   ElevatedButton(
                     style: buttonStyle,
                     child: const Text('Manage Assistants'),
@@ -881,16 +1374,18 @@ Widget _buildDrawerContent() {
                     if (email != null) _showChangePasswordDialog(email);
                   },
                 ),
-                const SizedBox(height: 12),
-                ElevatedButton(
-                  style: buttonStyle,
-                  child: const Text('Activity Log'),
-                  onPressed: () {
-                    Navigator.of(context).push(
-                      MaterialPageRoute(builder: (_) => ActivityLogScreen()),
-                    );
-                  },
-                ),
+                if (Provider.of<UserRoleProvider>(context).isAdmin) ...[
+                  const SizedBox(height: 12),
+                  ElevatedButton(
+                    style: buttonStyle,
+                    child: const Text('Activity Log'),
+                    onPressed: () {
+                      Navigator.of(context).push(
+                        MaterialPageRoute(builder: (_) => ActivityLogScreen()),
+                      );
+                    },
+                  ),
+                ],
                 const SizedBox(height: 12),
                 Divider(thickness: 1.2, color: Colors.grey.shade400),
                 const SizedBox(height: 80),
@@ -934,11 +1429,7 @@ Widget _buildDrawerContent() {
                           TextButton(
                             onPressed: () async {
                               Navigator.of(ctx).pop();
-                              Provider.of<FacilityProvider>(context, listen: false).clearFacility();
-                              Provider.of<ProductProvider>(context, listen: false).clear();
-                              await FirebaseAuth.instance.signOut();
-                              if (!context.mounted) return;
-                              Navigator.pushReplacementNamed(context, '/login');
+                              await forceLogoutAndShowLogin();
                             },
                             child: const Text('Logout', style: TextStyle(color: Colors.red)),
                           ),
@@ -988,10 +1479,7 @@ Widget _buildDrawerContent() {
         label: 'Add Sale',
         color: warmAmber,
         hoverColor: const Color(0xFFFFC400),
-        onPressed: () => Navigator.push(
-          context,
-          MaterialPageRoute(builder: (_) => AddSaleScreen()),
-        ),
+        onPressed: () => navigateOrShowLockedDialog(context, AddSaleScreen()),
       ),
       const SizedBox(width: 12),
       HoverFab(
@@ -1010,12 +1498,9 @@ Widget _buildDrawerContent() {
         heroTag: 'add_service',
         icon: Icons.design_services,
         label: 'Add Service',
-        color: Colors.purple,
-        hoverColor: const Color(0xFF800080),
-        onPressed: () => Navigator.push(
-          context,
-          MaterialPageRoute(builder: (_) => AddEditServiceScreen()),
-        ),
+        color: const Color(0xFF3D5A80),
+        hoverColor: const Color(0xFF4A6B94),
+        onPressed: () => navigateOrShowLockedDialog(context, AddEditServiceScreen()),
       ),
     ],
   );
@@ -1034,10 +1519,7 @@ Widget _buildDrawerContent() {
         backgroundColor: warmAmber,
         child: const Icon(Icons.add_shopping_cart, color: Colors.white),
         label: 'Add Sale',
-        onTap: () => Navigator.push(
-          context,
-          MaterialPageRoute(builder: (_) => AddSaleScreen()),
-        ),
+        onTap: () => navigateOrShowLockedDialog(context, AddSaleScreen()),
       ),
       SpeedDialChild(
         backgroundColor: primaryDeepGreen,
@@ -1049,13 +1531,10 @@ Widget _buildDrawerContent() {
         ),
       ),
       SpeedDialChild(
-        backgroundColor: Colors.purple,
+        backgroundColor: const Color(0xFF3D5A80),
         child: const Icon(Icons.design_services, color: Colors.white),
         label: 'Add Service',
-        onTap: () => Navigator.push(
-          context,
-          MaterialPageRoute(builder: (_) => AddEditServiceScreen()),
-        ),
+        onTap: () => navigateOrShowLockedDialog(context, AddEditServiceScreen()),
       ),
     ],
   );

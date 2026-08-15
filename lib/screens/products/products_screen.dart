@@ -1,11 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
+import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
 
 import '../../providers/product_provider.dart';
 import '../../models/product.dart';
 import '../../providers/facility_provider.dart';
+import '../../providers/user_role_provider.dart';
+import '../../constants/product_categories.dart';
+import '../../widgets/product_category_filter_bar.dart';
 import 'add_edit_product_screen.dart';
+import 'add_batch_screen.dart';
+import 'view_batches_screen.dart';
+import '../sales/add_sale_screen.dart';
 
 class ProductsScreen extends StatefulWidget {
   const ProductsScreen({super.key});
@@ -25,31 +32,40 @@ class _ProductsScreenState extends State<ProductsScreen> {
     decimalDigits: 0,
   );
 
-  bool _loading = true;
   String _searchQuery = '';
+  bool _isSearchExpanded = false;
+  final TextEditingController _searchController = TextEditingController();
 
-  final Map<String, bool> _categoryExpanded = {};
+  // Replaces the old expand/collapse-per-category state with a single
+  // selected filter chip - "All" or one specific category at a time.
+  String _selectedCategory = 'All';
+  String _selectedGroup = 'All';
 
   @override
   void initState() {
     super.initState();
-    _fetchProducts();
-  }
-
-  Future<void> _fetchProducts() async {
-    setState(() => _loading = true);
-
     final facilityId =
-        Provider.of<FacilityProvider>(context, listen: false)
-            .selectedFacilityId;
-
-    if (facilityId != null) {
-      await Provider.of<ProductProvider>(context, listen: false)
-          .fetchProducts(facilityId);
+        Provider.of<FacilityProvider>(context, listen: false).selectedFacilityId;
+    if (facilityId != null && facilityId.isNotEmpty) {
+      Provider.of<ProductProvider>(context, listen: false).listenToProducts(facilityId);
     }
-
-    setState(() => _loading = false);
   }
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _manualRefresh() async {
+    final facilityId =
+        Provider.of<FacilityProvider>(context, listen: false).selectedFacilityId;
+    if (facilityId != null) {
+      await Provider.of<ProductProvider>(context, listen: false).fetchProducts(facilityId);
+    }
+  }
+
+  String _categoryOf(Product p) => p.category.isNotEmpty ? p.category : 'Uncategorized';
 
   // Get product status based on expiry date
   Map<String, dynamic> _getProductStatus(Product product) {
@@ -112,15 +128,20 @@ class _ProductsScreenState extends State<ProductsScreen> {
 
     if (confirm != true) return;
 
-    await Provider.of<ProductProvider>(context, listen: false)
-        .deleteProduct(context, p.id);
+    try {
+      await Provider.of<ProductProvider>(context, listen: false)
+          .deleteProduct(context, p.id);
 
-    if (!mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Product deleted')),
-    );
-
-    _fetchProducts();
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Product deleted')),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Could not delete: $e'), backgroundColor: Colors.redAccent),
+      );
+    }
   }
 
   @override
@@ -132,120 +153,75 @@ class _ProductsScreenState extends State<ProductsScreen> {
         .where((p) => p.sellableQty > 0)
         .toList();
 
+    // Every category actually in use right now, passed to the filter bar
+    // so a legacy/unmapped category value still shows up somewhere,
+    // instead of being invisible under every group.
+    final categoriesInData = <String>{for (final p in sellableProducts) _categoryOf(p)};
+
     final filteredProducts = sellableProducts.where((p) {
-      return _searchQuery.isEmpty ||
+      final matchesSearch = _searchQuery.isEmpty ||
           p.name.toLowerCase().contains(_searchQuery.toLowerCase()) ||
           (p.description ?? '')
               .toLowerCase()
               .contains(_searchQuery.toLowerCase());
+
+      final category = _categoryOf(p);
+      final matchesCategory = _selectedCategory == 'All' || category == _selectedCategory;
+      final matchesGroup = _selectedGroup == 'All' || groupOfCategory(category) == _selectedGroup;
+
+      return matchesSearch && matchesCategory && matchesGroup;
     }).toList();
 
-    final Map<String, List<Product>> categoryMap = {};
-    if (_searchQuery.isEmpty) {
-      for (final p in filteredProducts) {
-        final category = p.category.isNotEmpty ? p.category : 'Uncategorized';
-        categoryMap.putIfAbsent(category, () => []).add(p);
-        _categoryExpanded.putIfAbsent(category, () => false);
-      }
-    }
-
     return Scaffold(
-      appBar: AppBar(
-        backgroundColor: primaryDeepGreen,
-        foregroundColor: offWhite,
-        title: const Text('Sellable Products'),
-        actions: [
-          Container(
-            width: 180,
-            margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 8),
-            child: TextField(
-              cursorColor: primaryDeepGreen,
-              onChanged: (val) => setState(() => _searchQuery = val.trim()),
-              decoration: InputDecoration(
-                hintText: 'Search...',
-                filled: true,
-                fillColor: offWhite,
-                prefixIcon: const Icon(Icons.search, size: 20),
-                contentPadding: const EdgeInsets.symmetric(horizontal: 12),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(24),
-                  borderSide: BorderSide.none,
-                ),
-              ),
+      appBar: _buildAppBar(),
+      body: Column(
+        children: [
+          Padding(
+            padding: const EdgeInsets.fromLTRB(12, 12, 12, 0),
+            child: ProductCategoryFilterBar(
+              selectedGroup: _selectedGroup,
+              selectedCategory: _selectedCategory,
+              extraCategoriesInData: categoriesInData,
+              primaryColor: primaryDeepGreen,
+              accentColor: warmAmber,
+              onGroupChanged: (group) => setState(() {
+                _selectedGroup = group;
+                _selectedCategory = 'All'; // reset - a category from the old group may not exist in the new one
+              }),
+              onCategoryChanged: (category) => setState(() => _selectedCategory = category),
             ),
           ),
-          IconButton(
-            icon: const Icon(Icons.refresh),
-            onPressed: _fetchProducts,
+          Expanded(
+            child: filteredProducts.isEmpty
+                ? Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(Icons.shopping_bag, size: 64, color: Colors.grey[400]),
+                        const SizedBox(height: 16),
+                        Text(
+                          _searchQuery.isEmpty && _selectedCategory == 'All'
+                              ? 'No sellable products'
+                              : 'No products match your filters',
+                          style: TextStyle(fontSize: 18, color: Colors.grey[600]),
+                        ),
+                        const SizedBox(height: 8),
+                        if (_searchQuery.isEmpty && _selectedCategory == 'All')
+                          Text(
+                            'Release products from Stock Store',
+                            style: TextStyle(fontSize: 14, color: Colors.grey[500]),
+                          ),
+                      ],
+                    ),
+                  )
+                : RefreshIndicator(
+                    color: primaryDeepGreen,
+                    onRefresh: _manualRefresh,
+                    child: _buildProductsGrid(filteredProducts),
+                  ),
           ),
         ],
       ),
-      body: _loading
-          ? Center(
-              child: CircularProgressIndicator(color: primaryDeepGreen),
-            )
-          : filteredProducts.isEmpty
-              ? Center(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(Icons.shopping_bag, size: 64, color: Colors.grey[400]),
-                      const SizedBox(height: 16),
-                      Text(
-                        'No sellable products',
-                        style: TextStyle(fontSize: 18, color: Colors.grey[600]),
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        'Release products from Stock Store',
-                        style: TextStyle(fontSize: 14, color: Colors.grey[500]),
-                      ),
-                    ],
-                  ),
-                )
-              : RefreshIndicator(
-                  color: primaryDeepGreen,
-                  onRefresh: _fetchProducts,
-                  child: ListView(
-                    padding: const EdgeInsets.all(16),
-                    children: _searchQuery.isNotEmpty
-                        ? filteredProducts.map(_buildProductCard).toList()
-                        : categoryMap.entries.map((entry) {
-                            final category = entry.key;
-                            final products = entry.value;
-
-                            return Card(
-                              elevation: 2,
-                              margin: const EdgeInsets.only(bottom: 12),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(12),
-                                side: BorderSide(
-                                  color: Colors.grey.shade300,
-                                ),
-                              ),
-                              child: ExpansionTile(
-                                initiallyExpanded:
-                                    _categoryExpanded[category] ?? false,
-                                onExpansionChanged: (expanded) {
-                                  setState(() {
-                                    _categoryExpanded[category] = expanded;
-                                  });
-                                },
-                                title: Text(
-                                  category,
-                                  style: TextStyle(
-                                    fontWeight: FontWeight.bold,
-                                    color: primaryDeepGreen,
-                                  ),
-                                ),
-                                children:
-                                    products.map(_buildProductCard).toList(),
-                              ),
-                            );
-                          }).toList(),
-                  ),
-                ),
-      // Improved FAB with consistent styling
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () async {
           await Navigator.push(
@@ -254,7 +230,6 @@ class _ProductsScreenState extends State<ProductsScreen> {
               builder: (_) => const AddEditProductScreen(),
             ),
           );
-          _fetchProducts();
         },
         backgroundColor: primaryDeepGreen,
         foregroundColor: offWhite,
@@ -262,6 +237,78 @@ class _ProductsScreenState extends State<ProductsScreen> {
         icon: const Icon(Icons.add),
         label: const Text('Add Product'),
       ),
+    );
+  }
+
+  // One flat, responsive grid for every view - no expand/collapse. 2
+  // columns on wide screens, 1 on phones; same pattern as Sales/Archive.
+  Widget _buildProductsGrid(List<Product> products) {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final isLargeScreen = constraints.maxWidth >= 1024;
+
+        if (isLargeScreen) {
+          return MasonryGridView.count(
+            padding: const EdgeInsets.all(16),
+            crossAxisCount: 2,
+            crossAxisSpacing: 12,
+            mainAxisSpacing: 12,
+            itemCount: products.length,
+            itemBuilder: (context, index) => _buildProductCard(products[index]),
+          );
+        }
+
+        return ListView(
+          padding: const EdgeInsets.all(16),
+          children: products.map(_buildProductCard).toList(),
+        );
+      },
+    );
+  }
+
+  PreferredSizeWidget _buildAppBar() {
+    return AppBar(
+      backgroundColor: primaryDeepGreen,
+      foregroundColor: offWhite,
+      centerTitle: true,
+      title: _isSearchExpanded
+          ? TextField(
+              controller: _searchController,
+              autofocus: true,
+              cursorColor: offWhite,
+              style: TextStyle(color: offWhite),
+              decoration: InputDecoration(
+                hintText: 'Search products...',
+                hintStyle: TextStyle(color: offWhite.withValues(alpha: 0.7)),
+                border: InputBorder.none,
+                suffixIcon: IconButton(
+                  icon: Icon(Icons.clear, color: offWhite),
+                  onPressed: () {
+                    setState(() {
+                      _searchController.clear();
+                      _searchQuery = '';
+                      _isSearchExpanded = false;
+                    });
+                  },
+                ),
+              ),
+              onChanged: (val) => setState(() => _searchQuery = val.trim()),
+            )
+          : const Text('Sellable Products'),
+      actions: [
+        if (!_isSearchExpanded)
+          IconButton(
+            icon: const Icon(Icons.search),
+            tooltip: 'Search',
+            onPressed: () => setState(() => _isSearchExpanded = true),
+          ),
+        if (!_isSearchExpanded)
+          IconButton(
+            icon: const Icon(Icons.refresh),
+            tooltip: 'Refresh',
+            onPressed: _manualRefresh,
+          ),
+      ],
     );
   }
 
@@ -276,7 +323,6 @@ class _ProductsScreenState extends State<ProductsScreen> {
             builder: (_) => AddEditProductScreen(product: p),
           ),
         );
-        _fetchProducts();
       },
       child: Container(
         margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
@@ -343,7 +389,7 @@ class _ProductsScreenState extends State<ProductsScreen> {
                 ),
               ],
             ),
-            
+
             // Description
             if (p.description != null && p.description!.isNotEmpty)
               Padding(
@@ -355,60 +401,80 @@ class _ProductsScreenState extends State<ProductsScreen> {
                   overflow: TextOverflow.ellipsis,
                 ),
               ),
-            
+
             const SizedBox(height: 4),
-            
+
             // Batch and Type
             Text(
               'Batch: ${p.batchNo ?? "-"} | Type: ${p.type} | Category: ${p.category}',
               style: const TextStyle(fontSize: 13),
             ),
-            
+
             // Stock quantities
             Text(
               'Stock: ${p.stockQty} ${p.unit} | Sellable: ${p.sellableQty} ${p.unit}',
               style: const TextStyle(fontSize: 13),
             ),
-            
+
             const SizedBox(height: 2),
-            
+
             // Prices
             Text(
               'Buy: ${_moneyFormat.format(p.buyPrice)} | Sell: ${_moneyFormat.format(p.sellPrice)}',
               style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w500),
             ),
-            
+
             // Expiry date
             if (p.expiry != null)
               Text(
                 'Expiry: ${DateFormat('dd MMM yyyy').format(p.expiry!)}',
                 style: const TextStyle(fontSize: 13),
               ),
-            
+
             const SizedBox(height: 8),
-            
+
             // Action buttons
             Row(
               mainAxisAlignment: MainAxisAlignment.end,
               children: [
-                // Delete button
-                TextButton.icon(
-                  onPressed: () => _deleteProduct(p),
-                  icon: Icon(Icons.delete, size: 16, color: Colors.red[400]),
-                  label: Text('Delete', style: TextStyle(color: Colors.red[400])),
+                PopupMenuButton<String>(
+                  icon: Icon(Icons.layers_outlined, color: primaryDeepGreen, size: 20),
+                  tooltip: 'Batches',
+                  onSelected: (value) {
+                    if (value == 'add') {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (_) => AddBatchScreen(product: p)),
+                      );
+                    } else if (value == 'view') {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (_) => ViewBatchesScreen(product: p)),
+                      );
+                    }
+                  },
+                  itemBuilder: (context) => const [
+                    PopupMenuItem(value: 'add', child: Text('Add New Batch')),
+                    PopupMenuItem(value: 'view', child: Text('View Batches')),
+                  ],
                 ),
-                
+
+                // Delete button - admin only
+                if (Provider.of<UserRoleProvider>(context).isAdmin)
+                  TextButton.icon(
+                    onPressed: () => _deleteProduct(p),
+                    icon: Icon(Icons.delete, size: 16, color: Colors.red[400]),
+                    label: Text('Delete', style: TextStyle(color: Colors.red[400])),
+                  ),
+
                 const SizedBox(width: 8),
-                
-                // Sell button with hover effect
+
+                // Sell button - takes you into the real Add Sale flow.
                 ElevatedButton.icon(
                   onPressed: () {
-                    // 🔜 integrate sale flow
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text('Sale flow coming soon...'),
-                        duration: Duration(seconds: 1),
-                      ),
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (_) => const AddSaleScreen()),
                     );
                   },
                   icon: const Icon(Icons.sell, size: 16),

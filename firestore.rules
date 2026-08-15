@@ -1,0 +1,213 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // ========== 🔒 Helper Functions ==========
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    // Deliberately does NOT check deactivation status here - that was
+    // tried (checking status inside these two functions specifically),
+    // but they're called on nearly every rule in this whole file, so
+    // the extra lookup added real, noticeable delay across every
+    // listener the app opens on login. Reverted in favor of a fast
+    // client-side check instead: UserRoleProvider watches the current
+    // user's own status in real time and force-signs-out within a
+    // second or two of being deactivated. That's a deliberate,
+    // accepted tradeoff - near-instant rather than rules-level-
+    // absolute, in exchange for login and every other operation
+    // staying fast. See UserRoleProvider.listenToCurrentUser().
+    function isAdmin() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
+    }
+    function isInFacility(facilityId) {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data.facilityIds.hasAny([facilityId]);
+    }
+    function isPlatformAdmin() {
+      return exists(/databases/$(database)/documents/platform_admins/$(request.auth.uid));
+    }
+    // Must match kGracePeriodDays in lib/constants/subscription_plans.dart.
+    // No subscriptionExpiresAt set at all means this facility has never
+    // had a subscription cycle yet (new signup, or rolled out before this
+    // existed) - treated as an open trial, never locked, so this never
+    // silently locks out a facility the moment it ships.
+    function isSubscriptionLocked(facilityId) {
+      let expiresAt = get(/databases/$(database)/documents/facilities/$(facilityId))
+        .data.get('subscriptionExpiresAt', null);
+      return expiresAt != null && request.time > expiresAt + duration.value(3, 'd');
+    }
+    // True only if the fields being changed are stock/batch-related -
+    // lets an assistant adjust quantity/expiry/batch info on a product
+    // (via Add Batch, Adjust Quantity, Move to Sellable) without opening
+    // the door to changing its price or category, which stays admin-only.
+    function isOnlyChangingStockFields() {
+      let affected = request.resource.data.diff(resource.data).affectedKeys();
+      return affected.hasOnly(['stockQty', 'sellableQty', 'expiry', 'batchNo', 'updatedAt']);
+    }
+    // A user editing their own account (Edit Profile) can change their
+    // name, phone, avatar, etc. freely, but never their own role or
+    // status - promoting yourself to admin or reactivating your own
+    // deactivated account has to go through an actual admin. The Edit
+    // Profile screen already disables the Role field in the UI for
+    // this, but that's not real protection on its own - this is.
+    function isNotChangingRoleOrStatus() {
+      let affected = request.resource.data.diff(resource.data).affectedKeys();
+      return !affected.hasAny(['role', 'status']);
+    }
+    // Deactivating your own account is fine (voluntary, reduces your
+    // own access) - reactivating yourself or changing your own role is
+    // not (that's an admin decision, not a self-service one). Only
+    // allowed when 'status' is the only thing changing and the new
+    // value is specifically 'deactivated'.
+    function isSelfDeactivatingOnly() {
+      let affected = request.resource.data.diff(resource.data).affectedKeys();
+      return affected.hasOnly(['status', 'updatedAt']) &&
+        request.resource.data.status == 'deactivated';
+    }
+    // A Platform Admin's account can never be deactivated by anyone -
+    // not themselves, not a facility admin, not even another Platform
+    // Admin by mistake. Checked directly against the target account
+    // (userId), not the requester, so it applies no matter who's
+    // attempting the write.
+    function isTryingToDeactivatePlatformAdmin(userId) {
+      return exists(/databases/$(database)/documents/platform_admins/$(userId)) &&
+        request.resource.data.get('status', 'active') == 'deactivated';
+    }
+    // ========== 👤 Users Collection ==========
+    match /users/{userId} {
+      allow read: if isAuthenticated() && (request.auth.uid == userId || isAdmin() || isPlatformAdmin());
+      allow create: if isAuthenticated() && (request.auth.uid == userId || isAdmin());
+      allow update: if isAuthenticated() && !isTryingToDeactivatePlatformAdmin(userId) && (
+        (request.auth.uid == userId && (isNotChangingRoleOrStatus() || isSelfDeactivatingOnly())) || isAdmin() || isPlatformAdmin()
+      );
+      allow delete: if isAuthenticated() && (isAdmin() || isPlatformAdmin());
+    }
+    // ========== 🏢 Facilities Collection ==========
+    match /facilities/{facilityId} {
+      allow read: if true;
+      allow create, update, delete: if isAuthenticated() && (isAdmin() || isPlatformAdmin());
+      // ========== 📦 Products ==========
+      match /products/{productId} {
+        allow read: if isAuthenticated() && isInFacility(facilityId);
+        allow create: if isAuthenticated() && isInFacility(facilityId);
+        allow update: if isAuthenticated() && isInFacility(facilityId) && (isAdmin() || isOnlyChangingStockFields());
+        allow delete: if isAuthenticated() && isInFacility(facilityId) && isAdmin();
+        match /batches/{batchId} {
+          allow read, write: if isAuthenticated() && isInFacility(facilityId);
+        }
+      }
+      // ========== 💵 Sales ==========
+      match /sales/{saleId} {
+        allow read: if isAuthenticated() && isInFacility(facilityId);
+        allow update: if isAuthenticated() && isInFacility(facilityId);
+        allow delete: if isAuthenticated() && isInFacility(facilityId) && isAdmin();
+        // New sales are blocked once locked - existing sales can still be
+        // paid down or edited (collecting money you're owed shouldn't
+        // stop just because your own subscription lapsed).
+        allow create: if isAuthenticated() && isInFacility(facilityId) && !isSubscriptionLocked(facilityId);
+      }
+      // ========== 🛠️ Services ==========
+      match /services/{serviceId} {
+        allow read: if isAuthenticated() && isInFacility(facilityId);
+        allow update: if isAuthenticated() && isInFacility(facilityId);
+        allow delete: if isAuthenticated() && isInFacility(facilityId) && isAdmin();
+        allow create: if isAuthenticated() && isInFacility(facilityId) && !isSubscriptionLocked(facilityId);
+      }
+      // ========== 🛠️ Transactions ==========
+      match /transactions/{transactionId} {
+        allow read, create, update: if isAuthenticated() && isInFacility(facilityId);
+        allow delete: if isAuthenticated() && isInFacility(facilityId) && isAdmin();
+      }
+      // ========== 👥 Clients ==========
+      match /clients/{clientId} {
+        allow read, create, update: if isAuthenticated() && isInFacility(facilityId);
+        allow delete: if isAuthenticated() && isInFacility(facilityId) && isAdmin();
+      }
+      // ========== 💰 Debts ==========
+      match /debts/{debtId} {
+        allow read, write: if isAuthenticated() && isInFacility(facilityId);
+      }
+      // ========== 🗄️ Archived Sales (read-only for clients) ==========
+      match /archived_sales/{saleId} {
+        allow read: if isAuthenticated() && isInFacility(facilityId);
+        allow write: if false; // only written by Cloud Functions (Admin SDK)
+      }
+      // ========== 📊 Daily Sales Summaries (read-only for clients) ==========
+      match /dailySummaries/{summaryId} {
+        allow read: if isAuthenticated() && isInFacility(facilityId);
+        allow write: if false; // only written by Cloud Functions (Admin SDK)
+      }
+      match /dailyCollections/{dayId} {
+        allow read: if isAuthenticated() && isInFacility(facilityId);
+        allow write: if false;
+      }
+      match /dailyServiceSummaries/{dayId} {
+        allow read: if isAuthenticated() && isInFacility(facilityId);
+        allow write: if false;
+      }
+      match /dailyTransactionSummaries/{dayId} {
+        allow read: if isAuthenticated() && isInFacility(facilityId);
+        allow write: if false;
+      }
+      match /trash_products/{productId} {
+        allow read, write: if isAuthenticated() && isInFacility(facilityId) && isAdmin();
+      }
+      match /trash_clients/{clientId} {
+        allow read, write: if isAuthenticated() && isInFacility(facilityId) && isAdmin();
+      }
+      match /trash_services/{serviceId} {
+        allow read, write: if isAuthenticated() && isInFacility(facilityId) && isAdmin();
+      }
+      match /trash_sales/{saleId} {
+        allow read, write: if isAuthenticated() && isInFacility(facilityId) && isAdmin();
+      }
+      match /payment_submissions/{submissionId} {
+        allow read: if isAuthenticated() && (isInFacility(facilityId) || isPlatformAdmin());
+        allow create: if isAuthenticated() && isInFacility(facilityId);
+        allow update: if isAuthenticated() && isPlatformAdmin();
+        allow delete: if false;
+      }
+      // ========== 💵 Payments ==========
+      match /payments/{paymentId} {
+        allow read: if isAuthenticated() && isInFacility(facilityId);
+        allow create: if isAuthenticated() && isInFacility(facilityId)
+          && (request.resource.data.clientId is string || request.resource.data.clientId == null)
+          && request.resource.data.amount is number
+          && request.resource.data.amount > 0
+          && request.resource.data.timestamp is timestamp
+          && request.resource.data.paidById == request.auth.uid;
+        allow update, delete: if isAuthenticated() && isAdmin();
+      }
+      // ========== 📝 Activity Logs (Nested) ==========
+      match /activity_logs/{logId} {
+        // Any authenticated user can create logs
+        allow create: if isAuthenticated();
+        // Admins or users belonging to this facility can read logs
+        allow read: if isAuthenticated() && isInFacility(facilityId);
+        // Logs are immutable
+        allow update, delete: if false;
+      }
+    }
+    // ========== 🌐 Collection-group access for platform admin subscription review ==========
+    match /{path=**}/payment_submissions/{submissionId} {
+      allow read: if isAuthenticated() && isPlatformAdmin();
+    }
+    // ========== 👑 Platform Admins ==========
+    match /platform_admins/{uid} {
+      allow read: if isAuthenticated() && (request.auth.uid == uid || isPlatformAdmin());
+      allow write: if isAuthenticated() && isPlatformAdmin();
+    }
+    // ========== 📢 Public Announcements ==========
+    match /public_announcements/{docId} {
+      allow read: if true;
+      allow create, update, delete: if isAuthenticated() && isPlatformAdmin();
+    }
+
+    // Login screen poster - readable by anyone (including the login
+    // screen itself, before anyone is authenticated), writable only by
+    // a Platform Admin via the Announcements tab.
+    match /app_config/{docId} {
+      allow read: if true;
+      allow create, update, delete: if isAuthenticated() && isPlatformAdmin();
+    }
+  }
+}

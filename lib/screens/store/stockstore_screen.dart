@@ -1,10 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
+import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
 import '../../models/product.dart';
 import '../../providers/product_provider.dart';
 import '../../providers/facility_provider.dart';
+import '../../providers/user_role_provider.dart';
+import '../../constants/product_categories.dart';
+import '../../widgets/product_category_filter_bar.dart';
 import '../products/add_edit_product_screen.dart';
+import '../products/add_batch_screen.dart';
+import '../products/view_batches_screen.dart';
 
 class StockStoreScreen extends StatefulWidget {
   const StockStoreScreen({super.key});
@@ -14,10 +20,14 @@ class StockStoreScreen extends StatefulWidget {
 }
 
 class _StockStoreScreenState extends State<StockStoreScreen> {
-  bool _loading = true;
   String _searchQuery = '';
+  bool _isSearchExpanded = false;
+  final TextEditingController _searchController = TextEditingController();
 
-  final Map<String, bool> _categoryExpanded = {};
+  // Same filter-chip pattern as Sellable Products - one selected category
+  // at a time, instead of expand/collapse-per-category tiles.
+  String _selectedCategory = 'All';
+  String _selectedGroup = 'All';
 
   final Color primaryDeepTealGreen = const Color(0xFF2F5D62);
   final Color warmAmber = const Color(0xFFFFB200);
@@ -33,22 +43,28 @@ class _StockStoreScreenState extends State<StockStoreScreen> {
   @override
   void initState() {
     super.initState();
-    _fetchProducts();
-  }
-
-  Future<void> _fetchProducts() async {
-    setState(() => _loading = true);
-
     final facilityId =
         Provider.of<FacilityProvider>(context, listen: false).selectedFacilityId;
-
-    if (facilityId != null) {
-      await Provider.of<ProductProvider>(context, listen: false)
-          .fetchProducts(facilityId);
+    if (facilityId != null && facilityId.isNotEmpty) {
+      Provider.of<ProductProvider>(context, listen: false).listenToProducts(facilityId);
     }
-
-    setState(() => _loading = false);
   }
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _manualRefresh() async {
+    final facilityId =
+        Provider.of<FacilityProvider>(context, listen: false).selectedFacilityId;
+    if (facilityId != null) {
+      await Provider.of<ProductProvider>(context, listen: false).fetchProducts(facilityId);
+    }
+  }
+
+  String _categoryOf(Product p) => p.category.isNotEmpty ? p.category : 'Uncategorized';
 
   // Get product status based on expiry date
   Map<String, dynamic> _getProductStatus(Product product) {
@@ -114,13 +130,18 @@ class _StockStoreScreenState extends State<StockStoreScreen> {
 
     if (confirmed != true) return;
 
-    await provider.deleteProduct(context, productId);
-
-    if (!mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Product deleted')),
-    );
-    _fetchProducts();
+    try {
+      await provider.deleteProduct(context, productId);
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Product deleted')),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Could not delete: $e'), backgroundColor: Colors.redAccent),
+      );
+    }
   }
 
   Future<void> _releaseToShop(Product product) async {
@@ -227,13 +248,13 @@ class _StockStoreScreenState extends State<StockStoreScreen> {
             product,
             qty,
             context,
-            notes: notesController.text.trim().isNotEmpty 
-                ? notesController.text.trim() 
+            notes: notesController.text.trim().isNotEmpty
+                ? notesController.text.trim()
                 : null,
           );
 
       if (!mounted) return;
-      
+
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
@@ -242,8 +263,6 @@ class _StockStoreScreenState extends State<StockStoreScreen> {
           backgroundColor: Colors.green,
         ),
       );
-
-      _fetchProducts();
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
@@ -263,116 +282,157 @@ class _StockStoreScreenState extends State<StockStoreScreen> {
     final stockProducts =
         provider.products.where((p) => p.stockQty > 0).toList();
 
+    // Every category actually in use right now, passed to the filter bar
+    // so a legacy/unmapped category value still shows up somewhere.
+    final categoriesInData = <String>{for (final p in stockProducts) _categoryOf(p)};
+
     final filteredProducts = stockProducts.where((p) {
-      return _searchQuery.isEmpty ||
-          p.name.toLowerCase().contains(_searchQuery.toLowerCase());
+      final matchesSearch =
+          _searchQuery.isEmpty || p.name.toLowerCase().contains(_searchQuery.toLowerCase());
+      final category = _categoryOf(p);
+      final matchesCategory = _selectedCategory == 'All' || category == _selectedCategory;
+      final matchesGroup = _selectedGroup == 'All' || groupOfCategory(category) == _selectedGroup;
+      return matchesSearch && matchesCategory && matchesGroup;
     }).toList();
 
-    final Map<String, List<Product>> categoryMap = {};
-    if (_searchQuery.isEmpty) {
-      for (final p in filteredProducts) {
-        categoryMap.putIfAbsent(p.category, () => []).add(p);
-        _categoryExpanded.putIfAbsent(p.category, () => false);
-      }
-    }
-
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Stock Store'),
-        backgroundColor: primaryDeepTealGreen,
-        foregroundColor: offWhite,
-        actions: [
-          Container(
-            width: 180,
-            margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 8),
-            child: TextField(
-              cursorColor: primaryDeepTealGreen,
-              decoration: InputDecoration(
-                hintText: 'Search...',
-                filled: true,
-                fillColor: offWhite,
-                prefixIcon: const Icon(Icons.search, size: 20),
-                contentPadding: const EdgeInsets.symmetric(horizontal: 12),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(24),
-                  borderSide: BorderSide.none,
-                ),
-              ),
-              onChanged: (val) => setState(() => _searchQuery = val),
-            ),
-          ),
-        ],
-      ),
-      // Floating Action Button
+      appBar: _buildAppBar(),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () => Navigator.push(
           context,
           MaterialPageRoute(
             builder: (_) => const AddEditProductScreen(),
           ),
-        ).then((_) => _fetchProducts()),
+        ),
         backgroundColor: primaryDeepTealGreen,
         foregroundColor: offWhite,
         hoverColor: warmAmber,
         icon: const Icon(Icons.add),
         label: const Text('Add Product'),
       ),
-      body: _loading
-          ? Center(
-              child: CircularProgressIndicator(color: primaryDeepTealGreen),
-            )
-          : filteredProducts.isEmpty
-              ? Center(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(Icons.inventory_2, size: 64, color: Colors.grey[400]),
-                      const SizedBox(height: 16),
-                      Text(
-                        'No products in stock store',
-                        style: TextStyle(fontSize: 18, color: Colors.grey[600]),
-                      ),
-                    ],
+      body: Column(
+        children: [
+          Padding(
+            padding: const EdgeInsets.fromLTRB(12, 12, 12, 0),
+            child: ProductCategoryFilterBar(
+              selectedGroup: _selectedGroup,
+              selectedCategory: _selectedCategory,
+              extraCategoriesInData: categoriesInData,
+              primaryColor: primaryDeepTealGreen,
+              accentColor: warmAmber,
+              onGroupChanged: (group) => setState(() {
+                _selectedGroup = group;
+                _selectedCategory = 'All';
+              }),
+              onCategoryChanged: (category) => setState(() => _selectedCategory = category),
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 6, 16, 0),
+            child: Align(
+              alignment: Alignment.centerRight,
+              child: Text(
+                '${filteredProducts.length} product${filteredProducts.length == 1 ? '' : 's'} in stock',
+                style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+              ),
+            ),
+          ),
+          Expanded(
+            child: filteredProducts.isEmpty
+                ? Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(Icons.inventory_2, size: 64, color: Colors.grey[400]),
+                        const SizedBox(height: 16),
+                        Text(
+                          _searchQuery.isEmpty && _selectedCategory == 'All'
+                              ? 'No products in stock store'
+                              : 'No products match your filters',
+                          style: TextStyle(fontSize: 18, color: Colors.grey[600]),
+                        ),
+                      ],
+                    ),
+                  )
+                : RefreshIndicator(
+                    color: primaryDeepTealGreen,
+                    onRefresh: _manualRefresh,
+                    child: _buildProductsGrid(filteredProducts),
                   ),
-                )
-              : RefreshIndicator(
-                  color: primaryDeepTealGreen,
-                  onRefresh: _fetchProducts,
-                  child: ListView(
-                    padding: const EdgeInsets.all(16),
-                    children: _searchQuery.isNotEmpty
-                        ? filteredProducts.map(_buildProductCard).toList()
-                        : categoryMap.entries.map((entry) {
-                            final category = entry.key;
-                            final products = entry.value;
+          ),
+        ],
+      ),
+    );
+  }
 
-                            return Card(
-                              elevation: 2,
-                              margin: const EdgeInsets.only(bottom: 12),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                              child: ExpansionTile(
-                                initiallyExpanded:
-                                    _categoryExpanded[category] ?? false,
-                                onExpansionChanged: (expanded) {
-                                  setState(() {
-                                    _categoryExpanded[category] = expanded;
-                                  });
-                                },
-                                title: Text(
-                                  category,
-                                  style: TextStyle(
-                                    fontWeight: FontWeight.bold,
-                                    color: primaryDeepTealGreen,
-                                  ),
-                                ),
-                                children: products.map(_buildProductCard).toList(),
-                              ),
-                            );
-                          }).toList(),
-                  ),
+  // Same flat, responsive grid as Sellable Products - no expand/collapse.
+  Widget _buildProductsGrid(List<Product> products) {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final isLargeScreen = constraints.maxWidth >= 1024;
+
+        if (isLargeScreen) {
+          return MasonryGridView.count(
+            padding: const EdgeInsets.all(16),
+            crossAxisCount: 2,
+            crossAxisSpacing: 12,
+            mainAxisSpacing: 12,
+            itemCount: products.length,
+            itemBuilder: (context, index) => _buildProductCard(products[index]),
+          );
+        }
+
+        return ListView(
+          padding: const EdgeInsets.all(16),
+          children: products.map(_buildProductCard).toList(),
+        );
+      },
+    );
+  }
+
+  PreferredSizeWidget _buildAppBar() {
+    return AppBar(
+      centerTitle: true,
+      title: _isSearchExpanded
+          ? TextField(
+              controller: _searchController,
+              autofocus: true,
+              cursorColor: offWhite,
+              style: TextStyle(color: offWhite),
+              decoration: InputDecoration(
+                hintText: 'Search stock...',
+                hintStyle: TextStyle(color: offWhite.withValues(alpha: 0.7)),
+                border: InputBorder.none,
+                suffixIcon: IconButton(
+                  icon: Icon(Icons.clear, color: offWhite),
+                  onPressed: () {
+                    setState(() {
+                      _searchController.clear();
+                      _searchQuery = '';
+                      _isSearchExpanded = false;
+                    });
+                  },
                 ),
+              ),
+              onChanged: (val) => setState(() => _searchQuery = val.trim()),
+            )
+          : const Text('Stock Store'),
+      backgroundColor: primaryDeepTealGreen,
+      foregroundColor: offWhite,
+      actions: [
+        if (!_isSearchExpanded)
+          IconButton(
+            icon: const Icon(Icons.search),
+            tooltip: 'Search',
+            onPressed: () => setState(() => _isSearchExpanded = true),
+          ),
+        if (!_isSearchExpanded)
+          IconButton(
+            icon: const Icon(Icons.refresh),
+            tooltip: 'Refresh',
+            onPressed: _manualRefresh,
+          ),
+      ],
     );
   }
 
@@ -386,7 +446,7 @@ class _StockStoreScreenState extends State<StockStoreScreen> {
           MaterialPageRoute(
             builder: (_) => AddEditProductScreen(product: p),
           ),
-        ).then((_) => _fetchProducts());
+        );
       },
       child: Container(
         margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
@@ -475,6 +535,28 @@ class _StockStoreScreenState extends State<StockStoreScreen> {
             Row(
               mainAxisAlignment: MainAxisAlignment.end,
               children: [
+                PopupMenuButton<String>(
+                  icon: Icon(Icons.layers_outlined, color: primaryDeepTealGreen, size: 20),
+                  tooltip: 'Batches',
+                  onSelected: (value) {
+                    if (value == 'add') {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (_) => AddBatchScreen(product: p)),
+                      );
+                    } else if (value == 'view') {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (_) => ViewBatchesScreen(product: p)),
+                      );
+                    }
+                  },
+                  itemBuilder: (context) => const [
+                    PopupMenuItem(value: 'add', child: Text('Add New Batch')),
+                    PopupMenuItem(value: 'view', child: Text('View Batches')),
+                  ],
+                ),
+                if (Provider.of<UserRoleProvider>(context).isAdmin)
                 TextButton.icon(
                   icon: Icon(Icons.delete, size: 16, color: Colors.red[400]),
                   label: Text('Delete', style: TextStyle(color: Colors.red[400])),

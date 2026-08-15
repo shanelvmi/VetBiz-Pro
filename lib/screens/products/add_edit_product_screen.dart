@@ -1,12 +1,20 @@
 import 'package:flutter/material.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:provider/provider.dart';
 import 'package:uuid/uuid.dart';
 import 'package:intl/intl.dart';
 
 import '../../utils/activity_logger.dart';
 import '../../models/product.dart';
+import '../../models/product_batch.dart';
 import '../../providers/product_provider.dart';
 import '../../providers/facility_provider.dart';
+import '../../providers/user_role_provider.dart';
+import 'view_batches_screen.dart';
+import 'add_batch_screen.dart';
+import '../../constants/product_categories.dart';
+import '../../constants/product_units.dart';
+import '../../constants/product_types.dart';
 
 import '../store/stockstore_screen.dart';
 
@@ -31,6 +39,7 @@ class AddEditProductScreen extends StatefulWidget {
 
 class _AddEditProductScreenState extends State<AddEditProductScreen> {
   final _formKey = GlobalKey<FormState>();
+  bool _isSaving = false;
 
   late TextEditingController _nameController;
   late TextEditingController _supplierController;
@@ -47,32 +56,11 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
   String _type = 'Injectable';
   String _category = '';
 
-  final List<String> _types = [
-    'Injectable',
-    'Oral Liquid',
-    'Powder',
-    'Topical',
-    'Feed',
-    'Equipment',
-  ];
+  final List<String> _types = kProductTypes;
 
-  final List<String> _units = ['pcs', 'kg', 'litres', 'others'];
+  final List<String> _units = kProductUnits;
 
-  final List<String> _categories = [
-    'Antibiotic',
-    'Anthelmintics',
-    'Vitamin & Supplements',
-    'Hormones & Reproductive',
-    'Vaccines',
-    'Disinfectant',
-    'Feeds',
-    'Anti-inflammatory',
-    'Actoparasiticides',
-    'Wound Management',
-    'Surgical Supplies',
-    'Farm Tools & Equipment',
-    'Miscellaneous',
-  ];
+  final List<String> _categories = kProductCategories;
 
   final NumberFormat _moneyFormat = NumberFormat.currency(
     locale: 'en_US',
@@ -115,6 +103,57 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
     _unit = widget.product?.unit ?? 'pcs';
     _type = widget.product?.type ?? 'Injectable';
     _category = widget.product?.category ?? '';
+
+    if (widget.product != null) {
+      _loadBatchesForQuantityEditor();
+    }
+  }
+
+  // Simple, single quantity editor shown right on this screen - covers
+  // the common case (one batch, or no batch yet on a legacy product)
+  // without sending the user to a separate screen. Only when a product
+  // genuinely has more than one batch does this hand off to the more
+  // detailed batch management screen, since a single "quantity" number
+  // wouldn't mean anything clear at that point.
+  List<ProductBatch> _batches = [];
+  bool _loadingBatches = false;
+  late final TextEditingController _warehouseQtyController =
+      TextEditingController(text: widget.product?.stockQty.toString() ?? '0');
+  late final TextEditingController _shelfQtyController =
+      TextEditingController(text: widget.product?.sellableQty.toString() ?? '0');
+
+  Future<void> _loadBatchesForQuantityEditor() async {
+    final facilityId =
+        Provider.of<FacilityProvider>(context, listen: false).selectedFacilityId;
+    if (facilityId == null || widget.product == null) return;
+
+    setState(() => _loadingBatches = true);
+    try {
+      final snap = await FirebaseFirestore.instance
+          .collection('facilities')
+          .doc(facilityId)
+          .collection('products')
+          .doc(widget.product!.id)
+          .collection('batches')
+          .get();
+
+      final batches = snap.docs
+          .map((doc) => ProductBatch.fromFirestore(doc.data(), doc.id, widget.product!.id))
+          .toList();
+
+      if (mounted) {
+        setState(() {
+          _batches = batches;
+          _loadingBatches = false;
+          if (batches.length == 1) {
+            _warehouseQtyController.text = batches.first.stockQty.toString();
+            _shelfQtyController.text = batches.first.sellableQty.toString();
+          }
+        });
+      }
+    } catch (e) {
+      if (mounted) setState(() => _loadingBatches = false);
+    }
   }
 
   @override
@@ -127,6 +166,8 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
     _buyPriceController.dispose();
     _sellPriceController.dispose();
     _stockController.dispose();
+    _warehouseQtyController.dispose();
+    _shelfQtyController.dispose();
     super.dispose();
   }
 
@@ -285,70 +326,83 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
   }
 
   Future<void> _saveProduct() async {
+    if (_isSaving) return; // guards against a double-tap firing two saves at once
     if (!_formKey.currentState!.validate()) return;
 
-    final provider = Provider.of<ProductProvider>(context, listen: false);
-    final existingNames =
-        provider.products.map((p) => p.name.toLowerCase()).toList();
-
-    // Prevent duplicate names (new product only)
-    if (widget.product == null &&
-        existingNames.contains(_nameController.text.trim().toLowerCase())) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('⚠ Product name already exists!')),
-      );
-      return;
-    }
-
-    // Get destination
-    final destination = await _chooseDestination();
-    if (destination == null) return; // user cancelled
-
-    final facilityId =
-        Provider.of<FacilityProvider>(context, listen: false)
-            .selectedFacilityId;
-
-    if (facilityId == null || facilityId.isEmpty) {
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('No facility selected. Please select a facility first.'),
-        ),
-      );
-      return;
-    }
-
-    final now = DateTime.now();
-
-    final newProduct = Product(
-      id: widget.product?.id ?? const Uuid().v4(),
-      name: _nameController.text.trim(),
-      supplier: _supplierController.text.trim(),
-      batchNo: _batchController.text.trim(),
-      expiry: _selectedExpiry,
-      description: _descriptionController.text.trim(),
-      buyPrice:
-          double.tryParse(_buyPriceController.text.replaceAll(',', '')) ?? 0,
-      sellPrice:
-          double.tryParse(_sellPriceController.text.replaceAll(',', '')) ?? 0,
-      stockQty: destination == ProductDestination.stockStore
-          ? int.tryParse(_stockController.text.trim()) ?? 0
-          : 0,
-      sellableQty: destination == ProductDestination.sellable
-          ? int.tryParse(_stockController.text.trim()) ?? 0
-          : 0,
-      unit: _unit,
-      type: _type,
-      category: _category,
-      facilityId: facilityId,
-      target: destination == ProductDestination.sellable
-          ? ProductTarget.sellable
-          : ProductTarget.stockStore,
-      createdAt: widget.product?.createdAt ?? now,
-      updatedAt: now,
-    );
+    setState(() => _isSaving = true);
 
     try {
+      final provider = Provider.of<ProductProvider>(context, listen: false);
+      final existingNames =
+          provider.products.map((p) => p.name.toLowerCase()).toList();
+
+      // Prevent duplicate names (new product only)
+      if (widget.product == null &&
+          existingNames.contains(_nameController.text.trim().toLowerCase())) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('⚠ Product name already exists!')),
+        );
+        return;
+      }
+
+      // Get destination
+      final destination = await _chooseDestination();
+      if (destination == null) return; // user cancelled
+
+      final facilityId =
+          Provider.of<FacilityProvider>(context, listen: false)
+              .selectedFacilityId;
+
+      if (facilityId == null || facilityId.isEmpty) {
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('No facility selected. Please select a facility first.'),
+          ),
+        );
+        return;
+      }
+
+      final now = DateTime.now();
+      final isEditingProduct = widget.product != null;
+
+      final newProduct = Product(
+        id: widget.product?.id ?? const Uuid().v4(),
+        name: _nameController.text.trim(),
+        supplier: _supplierController.text.trim(),
+        // Batch number, expiry, and quantity are only set here when adding
+        // a brand-new product - editing an existing one never touches
+        // these, since that's exactly the "new batch overwrites old
+        // expiry" bug this whole restructure fixes. Use "Add New Batch"
+        // instead to record new stock.
+        batchNo: isEditingProduct ? widget.product!.batchNo : _batchController.text.trim(),
+        expiry: isEditingProduct ? widget.product!.expiry : _selectedExpiry,
+        description: _descriptionController.text.trim(),
+        buyPrice:
+            double.tryParse(_buyPriceController.text.replaceAll(',', '')) ?? 0,
+        sellPrice:
+            double.tryParse(_sellPriceController.text.replaceAll(',', '')) ?? 0,
+        stockQty: isEditingProduct
+            ? widget.product!.stockQty
+            : (destination == ProductDestination.stockStore
+                ? int.tryParse(_stockController.text.trim()) ?? 0
+                : 0),
+        sellableQty: isEditingProduct
+            ? widget.product!.sellableQty
+            : (destination == ProductDestination.sellable
+                ? int.tryParse(_stockController.text.trim()) ?? 0
+                : 0),
+        unit: _unit,
+        type: _type,
+        category: _category,
+        facilityId: facilityId,
+        target: destination == ProductDestination.sellable
+            ? ProductTarget.sellable
+            : ProductTarget.stockStore,
+        createdAt: widget.product?.createdAt ?? now,
+        updatedAt: now,
+      );
+
       final userInfo = await ActivityLogger.getCurrentUserInfo();
       final userId = userInfo['userId']!;
       final userName = userInfo['userName']!;
@@ -364,6 +418,37 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
         );
       } else {
         await provider.updateProduct(newProduct, context);
+
+        // Persist the quantity fields from the simple editor above -
+        // only meaningful for the common case (no batch yet, or exactly
+        // one). Multiple batches are handled through "Manage Batches"
+        // instead, since a single number wouldn't mean anything clear.
+        if (_batches.length <= 1) {
+          final newWarehouseQty = int.tryParse(_warehouseQtyController.text.trim()) ?? 0;
+          final newShelfQty = int.tryParse(_shelfQtyController.text.trim()) ?? 0;
+
+          if (_batches.length == 1) {
+            await provider.adjustExistingBatch(
+              facilityId: facilityId,
+              productId: widget.product!.id,
+              batchId: _batches.first.id,
+              mode: 'set',
+              stockQty: newWarehouseQty,
+              sellableQty: newShelfQty,
+            );
+          } else {
+            // Legacy product, no batch on file yet - a direct, simple
+            // update, same as how this worked before batch tracking
+            // existed.
+            await FirebaseFirestore.instance
+                .collection('facilities')
+                .doc(facilityId)
+                .collection('products')
+                .doc(widget.product!.id)
+                .update({'stockQty': newWarehouseQty, 'sellableQty': newShelfQty});
+          }
+        }
+
         await ActivityLogger.logActivity(
           facilityId: facilityId,
           userId: userId,
@@ -395,16 +480,22 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('❌ Failed to save product: $e')),
       );
+    } finally {
+      if (mounted) setState(() => _isSaving = false);
     }
   }
 
   @override
   Widget build(BuildContext context) {
     final provider = Provider.of<ProductProvider>(context, listen: false);
-    final productNames = provider.products.map((p) => p.name).toList();
 
     // 🆕 Dynamic AppBar title
     final isEditing = widget.product != null;
+    // Assistants can freely adjust quantity/batches on an existing
+    // product, but editing its price, category, or other core details
+    // is admin-only - the Quantity section below is never affected by
+    // this, only the fields handled here.
+    final fieldsLocked = isEditing && Provider.of<UserRoleProvider>(context).isAssistant;
     final appBarTitle = isEditing ? 'Edit Product' : 'Add Product';
     final buttonText = isEditing ? 'Update Product' : 'Save Product';
 
@@ -420,37 +511,123 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
           key: _formKey,
           child: ListView(
             children: [
-              // Product Name with autocomplete
-              Autocomplete<String>(
-                optionsBuilder: (TextEditingValue textEditingValue) {
-                  if (textEditingValue.text == '') {
-                    return const Iterable<String>.empty();
-                  }
-                  return productNames.where((name) => name
-                      .toLowerCase()
-                      .contains(textEditingValue.text.toLowerCase()));
-                },
-                fieldViewBuilder:
-                    (context, controller, focusNode, onFieldSubmitted) {
-                  controller.text = _nameController.text;
-                  controller.selection = _nameController.selection;
-                  controller.addListener(() {
-                    _nameController.text = controller.text;
-                    _nameController.selection = controller.selection;
-                  });
-                  return TextFormField(
-                    controller: controller,
-                    focusNode: focusNode,
-                    decoration: _inputDecoration('Product Name'),
-                    validator: (value) =>
-                        value == null || value.isEmpty ? 'Required' : null,
-                    cursorColor: primaryDeepTealGreen,
-                  );
-                },
-                onSelected: (selection) {
-                  _nameController.text = selection;
-                },
+              // Product Name - with live duplicate detection. Typing a
+              // name that matches an existing product shows a clear
+              // notice with a direct path to "Add New Batch" instead of
+              // letting a genuine duplicate slip through as a brand-new,
+              // disconnected product record.
+              TextFormField(
+                controller: _nameController,
+                decoration: _inputDecoration('Product Name'),
+                validator: (value) =>
+                    value == null || value.isEmpty ? 'Required' : null,
+                cursorColor: primaryDeepTealGreen,
+                enabled: !fieldsLocked,
+                autofillHints: const [],
+                onChanged: (_) => setState(() {}),
               ),
+              if (!isEditing && _nameController.text.trim().length >= 2)
+                Builder(builder: (context) {
+                  final query = _nameController.text.trim().toLowerCase();
+                  final exactMatch = provider.products
+                      .where((p) => p.name.toLowerCase() == query)
+                      .toList();
+                  final similar = provider.products
+                      .where((p) =>
+                          p.name.toLowerCase() != query &&
+                          p.name.toLowerCase().contains(query))
+                      .take(4)
+                      .toList();
+
+                  if (exactMatch.isEmpty && similar.isEmpty) {
+                    return const SizedBox.shrink();
+                  }
+
+                  final match = exactMatch.isNotEmpty ? exactMatch.first : null;
+
+                  return Container(
+                    margin: const EdgeInsets.only(top: 10),
+                    padding: const EdgeInsets.all(14),
+                    decoration: BoxDecoration(
+                      color: warmAmber.withValues(alpha: 0.10),
+                      borderRadius: BorderRadius.circular(10),
+                      border: Border(left: BorderSide(color: warmAmber, width: 4)),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        if (match != null) ...[
+                          Row(
+                            children: [
+                              Icon(Icons.info_outline, size: 18, color: Colors.orange[800]),
+                              const SizedBox(width: 6),
+                              Expanded(
+                                child: Text(
+                                  '"${match.name}" already exists',
+                                  style: TextStyle(fontWeight: FontWeight.bold, color: Colors.orange[900]),
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            'Adding new stock for it, or updating its quantity? Open it below - '
+                            'you can edit its details and quantity right there.',
+                            style: TextStyle(fontSize: 12.5, color: Colors.grey[700]),
+                          ),
+                          const SizedBox(height: 10),
+                          SizedBox(
+                            width: double.infinity,
+                            child: ElevatedButton.icon(
+                              onPressed: () {
+                                Navigator.pushReplacement(
+                                  context,
+                                  MaterialPageRoute(builder: (_) => AddEditProductScreen(product: match)),
+                                );
+                              },
+                              icon: const Icon(Icons.edit_outlined, size: 18),
+                              label: const Text('Open This Product'),
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: primaryDeepTealGreen,
+                                foregroundColor: offWhite,
+                              ),
+                            ),
+                          ),
+                        ] else ...[
+                          Row(
+                            children: [
+                              Icon(Icons.search, size: 18, color: Colors.orange[800]),
+                              const SizedBox(width: 6),
+                              Text(
+                                'Similar products already exist',
+                                style: TextStyle(fontWeight: FontWeight.bold, color: Colors.orange[900], fontSize: 13),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 6),
+                          ...similar.map((p) => Padding(
+                                padding: const EdgeInsets.symmetric(vertical: 3),
+                                child: Row(
+                                  children: [
+                                    Expanded(child: Text(p.name, style: const TextStyle(fontSize: 13))),
+                                    TextButton(
+                                      style: TextButton.styleFrom(padding: EdgeInsets.zero, minimumSize: const Size(0, 0)),
+                                      onPressed: () {
+                                        Navigator.pushReplacement(
+                                          context,
+                                          MaterialPageRoute(builder: (_) => AddEditProductScreen(product: p)),
+                                        );
+                                      },
+                                      child: const Text('Open', style: TextStyle(fontSize: 12)),
+                                    ),
+                                  ],
+                                ),
+                              )),
+                        ],
+                      ],
+                    ),
+                  );
+                }),
               const SizedBox(height: 12),
 
               // Type
@@ -460,7 +637,7 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
                     .map((t) => DropdownMenuItem(value: t, child: Text(t)))
                     .toList(),
                 decoration: _inputDecoration('Type'),
-                onChanged: (value) => setState(() => _type = value!),
+                onChanged: fieldsLocked ? null : (String? value) => setState(() => _type = value!),
               ),
               const SizedBox(height: 12),
 
@@ -480,7 +657,14 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
                           color: primaryDeepTealGreen,
                         )),
                     const SizedBox(height: 8),
-                    Row(
+                    isEditing
+                        ? TextFormField(
+                            controller: _supplierController,
+                            decoration: _inputDecoration('Supplier'),
+                            cursorColor: primaryDeepTealGreen,
+                            enabled: !fieldsLocked,
+                          )
+                        : Row(
                       children: [
                         Expanded(
                           child: TextFormField(
@@ -511,12 +695,90 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
                         ),
                       ],
                     ),
+                    if (isEditing) ...[
+                      const SizedBox(height: 14),
+                      const Text('Current Quantity', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
+                      const SizedBox(height: 8),
+                      if (_loadingBatches)
+                        const Padding(
+                          padding: EdgeInsets.symmetric(vertical: 8),
+                          child: Center(child: CircularProgressIndicator(strokeWidth: 2)),
+                        )
+                      else if (_batches.length <= 1) ...[
+                        Row(
+                          children: [
+                            Expanded(
+                              child: TextFormField(
+                                controller: _warehouseQtyController,
+                                decoration: _inputDecoration('Warehouse Qty'),
+                                keyboardType: TextInputType.number,
+                                cursorColor: primaryDeepTealGreen,
+                              ),
+                            ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: TextFormField(
+                                controller: _shelfQtyController,
+                                decoration: _inputDecoration('Shelf Qty'),
+                                keyboardType: TextInputType.number,
+                                cursorColor: primaryDeepTealGreen,
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 6),
+                        Text(
+                          'Editing these corrects the actual quantity on hand right now.',
+                          style: TextStyle(fontSize: 11.5, color: Colors.grey[600]),
+                        ),
+                      ] else ...[
+                        Container(
+                          padding: const EdgeInsets.all(12),
+                          decoration: BoxDecoration(
+                            color: Colors.grey.shade100,
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: Row(
+                            children: [
+                              Expanded(
+                                child: Text(
+                                  'This product has ${_batches.length} separate batches - manage them individually for accuracy.',
+                                  style: const TextStyle(fontSize: 12.5),
+                                ),
+                              ),
+                              TextButton(
+                                onPressed: () {
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(builder: (_) => ViewBatchesScreen(product: widget.product!)),
+                                  );
+                                },
+                                child: const Text('Manage Batches'),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                      const SizedBox(height: 10),
+                      OutlinedButton.icon(
+                        onPressed: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(builder: (_) => AddBatchScreen(product: widget.product!)),
+                          );
+                        },
+                        icon: const Icon(Icons.add, size: 18),
+                        label: const Text('Add New Batch (new delivery, different expiry)'),
+                        style: OutlinedButton.styleFrom(foregroundColor: primaryDeepTealGreen),
+                      ),
+                    ],
                     const SizedBox(height: 12),
                     TextFormField(
                       controller: _descriptionController,
                       decoration: _inputDecoration('Description'),
                       maxLines: 2,
                       cursorColor: primaryDeepTealGreen,
+                      enabled: !fieldsLocked,
                     ),
                   ],
                 ),
@@ -533,6 +795,7 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
                       decoration: _inputDecoration('Buying Price (Tsh)'),
                       keyboardType: TextInputType.number,
                       cursorColor: primaryDeepTealGreen,
+                      enabled: !fieldsLocked,
                     ),
                   ),
                   const SizedBox(width: 12),
@@ -542,6 +805,7 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
                       decoration: _inputDecoration('Selling Price (Tsh)'),
                       keyboardType: TextInputType.number,
                       cursorColor: primaryDeepTealGreen,
+                      enabled: !fieldsLocked,
                     ),
                   ),
                 ],
@@ -551,6 +815,7 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
               // Stock & Unit
               Row(
                 children: [
+                  if (!isEditing) ...[
                   Expanded(
                     child: TextFormField(
                       controller: _stockController,
@@ -560,6 +825,7 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
                     ),
                   ),
                   const SizedBox(width: 12),
+                  ],
                   Expanded(
                     child: DropdownButtonFormField(
                       initialValue: _unit,
@@ -568,7 +834,7 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
                               value: unit, child: Text(unit)))
                           .toList(),
                       decoration: _inputDecoration('Unit'),
-                      onChanged: (value) => setState(() => _unit = value!),
+                      onChanged: fieldsLocked ? null : (String? value) => setState(() => _unit = value!),
                     ),
                   ),
                 ],
@@ -578,13 +844,13 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
 
               // Category
               InkWell(
-                onTap: _selectCategoryDialog,
+                onTap: fieldsLocked ? null : _selectCategoryDialog,
                 child: InputDecorator(
                   decoration: _inputDecoration('Category'),
                   child: Text(
                     _category.isEmpty ? 'Select Category' : _category,
                     style: TextStyle(
-                        color: _category.isEmpty ? Colors.grey : Colors.black87),
+                        color: _category.isEmpty ? Colors.grey : (fieldsLocked ? Colors.grey[600] : Colors.black87)),
                   ),
                 ),
               ),
@@ -593,9 +859,15 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
 
               // Save/Update Button
               ElevatedButton.icon(
-                onPressed: _saveProduct,
-                icon: Icon(isEditing ? Icons.update : Icons.save),
-                label: Text(buttonText),
+                onPressed: _isSaving ? null : _saveProduct,
+                icon: _isSaving
+                    ? const SizedBox(
+                        width: 18,
+                        height: 18,
+                        child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                      )
+                    : Icon(isEditing ? Icons.update : Icons.save),
+                label: Text(_isSaving ? 'Saving...' : buttonText),
                 style: ButtonStyle(
                   padding: WidgetStateProperty.all(
                     const EdgeInsets.symmetric(vertical: 16),

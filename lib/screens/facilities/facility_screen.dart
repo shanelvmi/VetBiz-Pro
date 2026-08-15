@@ -5,6 +5,7 @@ import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 
 import '../../providers/facility_provider.dart';
+import '../../utils/provider_reset.dart';
 import '../login_screen.dart';
 
 const Color deepGreen = Color(0xFF2F5D62);
@@ -77,6 +78,7 @@ class _FacilityScreenState extends State<FacilityScreen> {
             TextButton(onPressed: () => Navigator.of(ctx).pop(), child: const Text("Cancel")),
             TextButton(
               onPressed: () async {
+                resetAllUserProviders(context);
                 await _auth.signOut();
                 Navigator.of(context).pushAndRemoveUntil(
                   MaterialPageRoute(builder: (_) => const LoginScreen()),
@@ -130,10 +132,13 @@ class _FacilityScreenState extends State<FacilityScreen> {
         final assistants = snapshot.data ?? [];
 
         return Card(
-          color: isActive ? deepGreen.withValues(alpha: 0.05) : Colors.white,
+          color: Colors.white,
           elevation: 4,
           margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+            side: isActive ? const BorderSide(color: warmAmber, width: 2.5) : BorderSide.none,
+          ),
           child: Padding(
             padding: const EdgeInsets.all(16),
             child: Column(
@@ -153,12 +158,12 @@ class _FacilityScreenState extends State<FacilityScreen> {
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                         decoration: BoxDecoration(
-                          color: deepGreen.withValues(alpha: 0.2),
+                          color: warmAmber,
                           borderRadius: BorderRadius.circular(8),
                         ),
                         child: const Text(
                           'Opened',
-                          style: TextStyle(color: deepGreen, fontWeight: FontWeight.w600),
+                          style: TextStyle(color: Colors.black87, fontWeight: FontWeight.w700),
                         ),
                       ),
                   ],

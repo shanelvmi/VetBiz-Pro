@@ -3,7 +3,6 @@ import 'package:provider/provider.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:intl/intl.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_typeahead/flutter_typeahead.dart';
 
 import '../../models/client.dart';
 import '../../models/product.dart';
@@ -48,7 +47,9 @@ class AddSaleScreen extends StatefulWidget {
 }
 
 class _AddSaleScreenState extends State<AddSaleScreen> {
+  bool _isSaving = false;
   final TextEditingController clientController = TextEditingController();
+  bool _showClientSuggestions = false;
   final TextEditingController totalPaidController = TextEditingController();
 
   Client? selectedClient;
@@ -265,18 +266,24 @@ class _AddSaleScreenState extends State<AddSaleScreen> {
             actions: [
               TextButton(
                 onPressed: () => Navigator.pop(context),
-                style: TextButton.styleFrom(
-                  foregroundColor: Colors.black,
-                  backgroundColor: Colors.white,
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                style: ButtonStyle(
+                  foregroundColor: WidgetStateProperty.all(Colors.black),
+                  backgroundColor: WidgetStateProperty.resolveWith<Color>((states) {
+                    if (states.contains(WidgetState.hovered)) return Colors.grey.shade200;
+                    return Colors.white;
+                  }),
+                  shape: WidgetStateProperty.all(RoundedRectangleBorder(borderRadius: BorderRadius.circular(12))),
                 ),
                 child: const Text('Cancel'),
               ),
               ElevatedButton(
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: primaryDeepGreen,
-                  foregroundColor: offWhite,
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                style: ButtonStyle(
+                  backgroundColor: WidgetStateProperty.resolveWith<Color>((states) {
+                    if (states.contains(WidgetState.hovered)) return warmAmber;
+                    return primaryDeepGreen;
+                  }),
+                  foregroundColor: WidgetStateProperty.all(offWhite),
+                  shape: WidgetStateProperty.all(RoundedRectangleBorder(borderRadius: BorderRadius.circular(12))),
                 ),
                 onPressed: () {
                   if (selectedProduct == null) {
@@ -336,6 +343,8 @@ class _AddSaleScreenState extends State<AddSaleScreen> {
 
   // --- Save Sale ---
   Future<void> _saveSale() async {
+    if (_isSaving) return; // guards against a double-tap firing two saves at once
+
     if (items.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Add at least one item before saving')),
@@ -358,74 +367,76 @@ class _AddSaleScreenState extends State<AddSaleScreen> {
       return;
     }
 
-    // For cash sale, totalPaid equals totalAmount
-    if (!saleOnCredit) totalPaid = totalAmount;
-
-    final facilityProvider = Provider.of<FacilityProvider>(context, listen: false);
-    final authService = Provider.of<AuthService>(context, listen: false);
-    final saleProvider = Provider.of<SaleProvider>(context, listen: false);
-    final debtProvider = Provider.of<DebtProvider>(context, listen: false);
-
-    final facility = facilityProvider.selectedFacility;
-    if (facility == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('No facility selected')),
-      );
-      return;
-    }
-
-    final facilityId = facility['id'] ?? '';
-    final user = authService.getCurrentUser();
-    final soldById = user?.uid ?? '';
-    String soldByName = 'Unknown';
-    if (user != null) {
-      try {
-        final userDoc =
-            await FirebaseFirestore.instance.collection('users').doc(user.uid).get();
-        if (userDoc.exists) {
-          soldByName = userDoc.data()?['fullName'] ?? 'Unknown';
-        }
-      } catch (_) {}
-    }
-
-    // --- Compute per-item realized/unrealized profit ---
-    final List<SaleItem> updatedItems = items.map((item) {
-      double paymentRatio = 0.0;
-      if (totalAmount > 0) paymentRatio = (totalPaid / totalAmount).clamp(0.0, 1.0);
-      final realized = item.profit * paymentRatio;
-      final unrealized = item.profit - realized;
-      return item.copyWith(
-        realizedProfit: realized,
-        unrealizedProfit: unrealized,
-      );
-    }).toList();
-
-    final totalProfit =
-        updatedItems.fold(0.0, (sum, item) => sum + item.profit);
-    final realizedProfit =
-        updatedItems.fold(0.0, (sum, item) => sum + item.realizedProfit);
-    final unrealizedProfit =
-        updatedItems.fold(0.0, (sum, item) => sum + item.unrealizedProfit);
-
-    final sale = Sale(
-      id: '',
-      clientId: selectedClient?.id,
-      clientName: selectedClient?.name,
-      timestamp: DateTime.now(),
-      updatedAt: DateTime.now(),
-      items: updatedItems,
-      totalAmount: totalAmount,
-      totalPaid: totalPaid,
-      facilityId: facilityId,
-      soldById: soldById,
-      soldByName: soldByName,
-      saleOnCredit: saleOnCredit,
-      totalProfit: totalProfit,
-      realizedProfit: realizedProfit,
-      unrealizedProfit: unrealizedProfit,
-    );
+    setState(() => _isSaving = true);
 
     try {
+      // For cash sale, totalPaid equals totalAmount
+      if (!saleOnCredit) totalPaid = totalAmount;
+
+      final facilityProvider = Provider.of<FacilityProvider>(context, listen: false);
+      final authService = Provider.of<AuthService>(context, listen: false);
+      final saleProvider = Provider.of<SaleProvider>(context, listen: false);
+      final debtProvider = Provider.of<DebtProvider>(context, listen: false);
+
+      final facility = facilityProvider.selectedFacility;
+      if (facility == null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('No facility selected')),
+        );
+        return;
+      }
+
+      final facilityId = facility['id'] ?? '';
+      final user = authService.getCurrentUser();
+      final soldById = user?.uid ?? '';
+      String soldByName = 'Unknown';
+      if (user != null) {
+        try {
+          final userDoc =
+              await FirebaseFirestore.instance.collection('users').doc(user.uid).get();
+          if (userDoc.exists) {
+            soldByName = userDoc.data()?['fullName'] ?? 'Unknown';
+          }
+        } catch (_) {}
+      }
+
+      // --- Compute per-item realized/unrealized profit ---
+      final List<SaleItem> updatedItems = items.map((item) {
+        double paymentRatio = 0.0;
+        if (totalAmount > 0) paymentRatio = (totalPaid / totalAmount).clamp(0.0, 1.0);
+        final realized = item.profit * paymentRatio;
+        final unrealized = item.profit - realized;
+        return item.copyWith(
+          realizedProfit: realized,
+          unrealizedProfit: unrealized,
+        );
+      }).toList();
+
+      final totalProfit =
+          updatedItems.fold(0.0, (sum, item) => sum + item.profit);
+      final realizedProfit =
+          updatedItems.fold(0.0, (sum, item) => sum + item.realizedProfit);
+      final unrealizedProfit =
+          updatedItems.fold(0.0, (sum, item) => sum + item.unrealizedProfit);
+
+      final sale = Sale(
+        id: '',
+        clientId: selectedClient?.id,
+        clientName: selectedClient?.name,
+        timestamp: DateTime.now(),
+        updatedAt: DateTime.now(),
+        items: updatedItems,
+        totalAmount: totalAmount,
+        totalPaid: totalPaid,
+        facilityId: facilityId,
+        soldById: soldById,
+        soldByName: soldByName,
+        saleOnCredit: saleOnCredit,
+        totalProfit: totalProfit,
+        realizedProfit: realizedProfit,
+        unrealizedProfit: unrealizedProfit,
+      );
+
       final saleId = await saleProvider.addSale(sale, facilityId);
       if (saleId == null) throw Exception('Sale could not be saved.');
 
@@ -434,6 +445,8 @@ class _AddSaleScreenState extends State<AddSaleScreen> {
         final debt = Debt(
           id: '',
           clientId: selectedClient!.id,
+          clientName: selectedClient!.name,
+          clientPhone: selectedClient!.phone,
           saleId: saleId,
           amountOwed: unpaidAmount,
           items: items.map((i) => i.toMap()).toList(), // <-- FIXED
@@ -484,6 +497,8 @@ class _AddSaleScreenState extends State<AddSaleScreen> {
           backgroundColor: Colors.red,
         ),
       );
+    } finally {
+      if (mounted) setState(() => _isSaving = false);
     }
   }
 
@@ -511,6 +526,7 @@ class _AddSaleScreenState extends State<AddSaleScreen> {
                       saleOnCredit = val ?? false;
                       if (!saleOnCredit) {
                         selectedClient = null;
+                        clientController.clear();
                         totalPaid = totalAmount;
                         totalPaidController.text = _thousandsFormat.format(totalPaid);
                       } else {
@@ -527,38 +543,77 @@ class _AddSaleScreenState extends State<AddSaleScreen> {
             Row(
               children: [
                 Expanded(
-                  child: TypeAheadFormField<Client>(
-                    textFieldConfiguration: TextFieldConfiguration(
-                      controller: clientController..text = selectedClient?.name ?? '',
-                      onChanged: (_) {},
-                      decoration: InputDecoration(
-                        labelText:
-                            saleOnCredit ? 'Select Client (required)' : 'Select Client (optional)',
-                        filled: true,
-                        fillColor: deepTeal.withValues(alpha: 0.1),
-                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-                        prefixIcon: const Icon(Icons.person, color: Colors.black54),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      TextField(
+                        controller: clientController,
+                        decoration: InputDecoration(
+                          labelText: saleOnCredit
+                              ? 'Select Client (required)'
+                              : 'Select Client (optional)',
+                          filled: true,
+                          fillColor: deepTeal.withValues(alpha: 0.1),
+                          border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                          prefixIcon: const Icon(Icons.person, color: Colors.black54),
+                        ),
+                        onTap: () => setState(() {
+                          _showClientSuggestions = clientController.text.trim().isNotEmpty;
+                        }),
+                        onChanged: (val) {
+                          setState(() {
+                            selectedClient = null; // typing clears any prior selection
+                            _showClientSuggestions = val.trim().isNotEmpty;
+                          });
+                        },
                       ),
-                    ),
-                    suggestionsCallback: (pattern) {
-                      if (pattern.isEmpty) return [];
-                      return clientProvider.clients
-                          .where((c) => c.name.toLowerCase().contains(pattern.toLowerCase()));
-                    },
-                    itemBuilder: (context, Client suggestion) {
-                      return ListTile(title: Text(suggestion.name));
-                    },
-                    onSuggestionSelected: (Client suggestion) {
-                      setState(() {
-                        selectedClient = suggestion;
-                      });
-                    },
+                      if (_showClientSuggestions && clientController.text.trim().isNotEmpty)
+                        Builder(builder: (context) {
+                          final query = clientController.text.toLowerCase();
+                          final matches = clientProvider.clients
+                              .where((c) => c.name.toLowerCase().contains(query))
+                              .take(6)
+                              .toList();
+
+                          if (matches.isEmpty) return const SizedBox.shrink();
+
+                          return Container(
+                            margin: const EdgeInsets.only(top: 4),
+                            decoration: BoxDecoration(
+                              border: Border.all(color: Colors.grey[300]!),
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              children: matches.map((client) {
+                                return ListTile(
+                                  title: Text(client.name),
+                                  hoverColor: warmAmber.withValues(alpha: 0.15),
+                                  onTap: () {
+                                    setState(() {
+                                      selectedClient = client;
+                                      clientController.text = client.name;
+                                      _showClientSuggestions = false;
+                                    });
+                                  },
+                                );
+                              }).toList(),
+                            ),
+                          );
+                        }),
+                    ],
                   ),
                 ),
                 const SizedBox(width: 8),
                 IconButton(
-                  icon: Icon(Icons.add, color: primaryDeepGreen),
+                  icon: const Icon(Icons.add),
                   tooltip: 'Add New Client',
+                  style: ButtonStyle(
+                    foregroundColor: WidgetStateProperty.resolveWith<Color>((states) {
+                      if (states.contains(WidgetState.hovered)) return warmAmber;
+                      return primaryDeepGreen;
+                    }),
+                  ),
                   onPressed: () {
                     Navigator.push(
                       context,
@@ -572,10 +627,13 @@ class _AddSaleScreenState extends State<AddSaleScreen> {
             ElevatedButton.icon(
               icon: const Icon(Icons.add_shopping_cart),
               label: const Text('Add Item'),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: warmAmber,
-                foregroundColor: Colors.black,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              style: ButtonStyle(
+                backgroundColor: WidgetStateProperty.resolveWith<Color>((states) {
+                  if (states.contains(WidgetState.hovered)) return const Color(0xFFFFC400);
+                  return warmAmber;
+                }),
+                foregroundColor: WidgetStateProperty.all(Colors.black),
+                shape: WidgetStateProperty.all(RoundedRectangleBorder(borderRadius: BorderRadius.circular(12))),
               ),
               onPressed: _showAddItemDialog,
             ),
@@ -600,7 +658,13 @@ class _AddSaleScreenState extends State<AddSaleScreen> {
                                 'Profit: Tsh ${_thousandsFormat.format(item.profit)}',
                                 style: const TextStyle(color: Colors.black87)),
                             trailing: IconButton(
-                              icon: const Icon(Icons.delete, color: Colors.red),
+                              icon: const Icon(Icons.delete),
+                              style: ButtonStyle(
+                                foregroundColor: WidgetStateProperty.resolveWith<Color>((states) {
+                                  if (states.contains(WidgetState.hovered)) return Colors.red.shade900;
+                                  return Colors.red;
+                                }),
+                              ),
                               onPressed: () {
                                 setState(() {
                                   items.removeAt(index);
@@ -649,14 +713,23 @@ class _AddSaleScreenState extends State<AddSaleScreen> {
             SizedBox(
               width: double.infinity,
               child: ElevatedButton(
-                onPressed: _saveSale,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: primaryDeepGreen,
-                  foregroundColor: offWhite,
-                  padding: const EdgeInsets.symmetric(vertical: 14),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                onPressed: _isSaving ? null : _saveSale,
+                style: ButtonStyle(
+                  backgroundColor: WidgetStateProperty.resolveWith<Color>((states) {
+                    if (states.contains(WidgetState.hovered)) return warmAmber;
+                    return primaryDeepGreen;
+                  }),
+                  foregroundColor: WidgetStateProperty.all(offWhite),
+                  padding: WidgetStateProperty.all(const EdgeInsets.symmetric(vertical: 14)),
+                  shape: WidgetStateProperty.all(RoundedRectangleBorder(borderRadius: BorderRadius.circular(12))),
                 ),
-                child: const Text('Save Sale', style: TextStyle(fontSize: 16)),
+                child: _isSaving
+                    ? const SizedBox(
+                        width: 20,
+                        height: 20,
+                        child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                      )
+                    : const Text('Save Sale', style: TextStyle(fontSize: 16)),
               ),
             ),
           ],
