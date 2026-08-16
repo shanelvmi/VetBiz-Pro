@@ -1,5 +1,4 @@
 import 'dart:typed_data';
-import 'dart:math';
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
@@ -11,6 +10,8 @@ import '../services/auth_service.dart';
 import '../services/invite_code_service.dart';
 import '../providers/facility_provider.dart';
 import '../utils/facility_activation.dart';
+import '../utils/facility_code_generator.dart';
+import '../constants/facility_types.dart';
 import 'facilities/facility_picker_screen.dart';
 
 class RegisterScreen extends StatefulWidget {
@@ -117,18 +118,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
     });
   }
   final TextEditingController facilityNameController = TextEditingController();
-  // Free text here previously meant every admin typed their own variant
-  // ("Vet Shop", "Veterinary Store", "agrovet"...), making the field
-  // useless for anything beyond display. A fixed set keeps it
-  // meaningful and consistent, with "Other" as an honest fallback for
-  // anything genuinely outside these.
-  static const List<String> kFacilityTypes = [
-    'Agrovet',
-    'Vet Clinic',
-    'Vet Hospital',
-    'Ambulatory Vet',
-    'Other',
-  ];
   String? _selectedFacilityType;
 
   // Dropdowns
@@ -152,37 +141,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
   // Facilities
   List<Map<String, dynamic>> facilities = [];
-
-  String _randomCode({int length = 8}) {
-    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
-    final rnd = Random.secure();
-    return String.fromCharCodes(
-      Iterable.generate(length, (_) => chars.codeUnitAt(rnd.nextInt(chars.length))),
-    );
-  }
-
-  /// Generates a facility code and verifies it's not already in use
-  /// before returning it - the random generator alone (2.8 trillion
-  /// possible 8-character codes) makes a collision extremely unlikely,
-  /// but "extremely unlikely" isn't "never." This makes it actually
-  /// guaranteed rather than just statistically safe, at the cost of one
-  /// quick query per attempt.
-  Future<String> generateUniqueFacilityCode({int length = 8, int maxAttempts = 5}) async {
-    for (var attempt = 0; attempt < maxAttempts; attempt++) {
-      final candidate = _randomCode(length: length);
-      final existing = await FirebaseFirestore.instance
-          .collection('facilities')
-          .where('code', isEqualTo: candidate)
-          .limit(1)
-          .get();
-      if (existing.docs.isEmpty) return candidate;
-      // Collision (astronomically rare) - loop and try a fresh one.
-    }
-    // maxAttempts exhausted (should never realistically happen) - fall
-    // back to a longer code, which shrinks the collision odds further
-    // still rather than silently reusing something.
-    return _randomCode(length: length + 4);
-  }
 
   @override
   void dispose() {
@@ -618,7 +576,18 @@ class _RegisterScreenState extends State<RegisterScreen> {
               // ---------------- ROLE ----------------
               DropdownButtonFormField<String>(
                 initialValue: selectedRole,
-                onChanged: isAssistantUpdating
+                // Role changes for your own account go through an
+                // actual admin managing someone else's account, not
+                // self-service Edit Profile - this now applies
+                // regardless of which role is doing the editing.
+                // Previously only Assistants were blocked here; an
+                // Admin could freely demote themselves, and if they
+                // were a facility's only Admin, that left nobody able
+                // to promote anyone back. Matches the Firestore rule,
+                // which enforces this the same way at the data layer -
+                // this is the corresponding, honest UI, not the only
+                // protection.
+                onChanged: widget.isUpdating
                     ? null
                     : (val) => setState(() {
                           selectedRole = val!;
@@ -637,13 +606,52 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   focusedBorder: blackBorder,
                 ),
                 style: TextStyle(
-                  color: isAssistantUpdating ? Colors.grey : Colors.black,
+                  color: widget.isUpdating ? Colors.grey : Colors.black,
                 ),
               ),
               const SizedBox(height: 16),
 
               // ---------------- ASSISTANT FIELDS ----------------
               if (selectedRole == 'Assistant') ...[
+                if (isAssistantUpdating) ...[
+                  // Already a member - the invite code that got them
+                  // here was already consumed the moment they
+                  // registered, so there's nothing left to look up or
+                  // re-enter here. Shown read-only, purely for
+                  // reference, not as an editable field.
+                  Align(
+                    alignment: Alignment.centerLeft,
+                    child: Text(
+                      'Facility',
+                      style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: deepTealGreen),
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: Colors.grey[100],
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(color: Colors.grey[300]!),
+                    ),
+                    child: Row(
+                      children: [
+                        Icon(Icons.storefront_outlined, color: Colors.grey[600], size: 18),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Text(
+                            facilities.isNotEmpty
+                                ? '${facilities.first['name'] ?? ''} (${facilities.first['type'] ?? ''})'
+                                : 'Unknown facility',
+                            style: TextStyle(color: Colors.grey[700], fontWeight: FontWeight.w600, fontSize: 13),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                ] else ...[
                 Align(
                   alignment: Alignment.centerLeft,
                   child: Text(
@@ -697,6 +705,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 else if (_facilityLookupError != null)
                   Text(_facilityLookupError!, style: const TextStyle(color: Colors.redAccent, fontSize: 12.5)),
                 const SizedBox(height: 16),
+                ],
               ] else ...[
                 // ---------------- ADMIN FACILITIES ----------------
                 Align(
@@ -720,18 +729,32 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       final f = facilities[index];
                       return Card(
                         margin: const EdgeInsets.symmetric(vertical: 4),
+                        color: widget.isUpdating ? Colors.grey[100] : null,
                         child: ListTile(
-                          title: Text(f['name'] ?? ''),
-                          subtitle: Text(
-                              'Type: ${f['type'] ?? ''} - Code: ${f['code'] ?? ''}'),
-                          trailing: IconButton(
-                            icon: const Icon(Icons.delete, color: Colors.red),
-                            onPressed: () => removeFacility(index),
+                          title: Text(
+                            f['name'] ?? '',
+                            style: TextStyle(color: widget.isUpdating ? Colors.grey[600] : null),
                           ),
+                          subtitle: Text(
+                            'Type: ${f['type'] ?? ''} - Code: ${f['code'] ?? ''}',
+                            style: TextStyle(color: widget.isUpdating ? Colors.grey[500] : null),
+                          ),
+                          // Facilities aren't managed from here - this
+                          // screen edits personal profile info, not
+                          // facility membership, so there's no delete
+                          // action to accidentally trigger while
+                          // updating a name or phone number.
+                          trailing: widget.isUpdating
+                              ? null
+                              : IconButton(
+                                  icon: const Icon(Icons.delete, color: Colors.red),
+                                  onPressed: () => removeFacility(index),
+                                ),
                         ),
                       );
                     },
                   ),
+                if (!widget.isUpdating) ...[
                 Row(
                   children: [
                     Expanded(
@@ -779,6 +802,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     ),
                   ],
                 ),
+                ],
                 const SizedBox(height: 16),
               ],
 

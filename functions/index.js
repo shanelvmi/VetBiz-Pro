@@ -515,10 +515,20 @@ exports.revokeAllSessions = functions.https.onCall(async (data, context) => {
 /**
  * Wipe All Business Data - permanently deletes every business record for
  * one facility (sales, products, clients, services, transactions, debts,
- * payments, and all the archived/daily-summary collections that go with
- * them). Deliberately does NOT touch the facility document itself (name,
- * logo, settings) or the `users` collection (login credentials), matching
- * exactly what the confirmation dialog promises.
+ * payments, trash, pending payment submissions, and all the
+ * archived/daily-summary collections that go with them). Deliberately
+ * does NOT touch the facility document itself (name, logo, settings) or
+ * the `users` collection (login credentials), matching exactly what the
+ * confirmation dialog promises.
+ *
+ * The subcollection list below was previously missing trash_products,
+ * trash_clients, trash_services, trash_sales, and payment_submissions -
+ * all real subcollections (confirmed against firestore.rules) that would
+ * have silently survived a "wipe everything" action untouched. Fixed
+ * here by adding them explicitly, since this function - unlike
+ * deleteFacility below - deliberately keeps the facility document alive,
+ * so it can't simply recursiveDelete the whole document the way
+ * deleteFacility now does.
  *
  * Restricted to admins of that facility - this is irreversible, so it
  * should never be reachable by a regular staff account.
@@ -577,6 +587,11 @@ exports.wipeFacilityData = functions.https.onCall(async (data, context) => {
     "dailyServiceSummaries",
     "dailyTransactionSummaries",
     "activity_logs",
+    "trash_products",
+    "trash_clients",
+    "trash_services",
+    "trash_sales",
+    "payment_submissions",
   ];
 
   for (const sub of subcollections) {
@@ -655,10 +670,20 @@ exports.purgeOldTrash = onSchedule("every 24 hours", async () => {
 
 /**
  * Delete Facility - a Platform Admin action, not a facility-admin one.
- * Wipes every business record for the facility (same subcollections as
- * wipeFacilityData), removes the facility's reference from every user
- * who has it (not just the caller - any admin or assistant assigned to
- * this facility), then deletes the facility document itself.
+ * Deletes every business record for the facility AND the facility
+ * document itself, removes the facility's reference from every user who
+ * has it (not just the caller - any admin or assistant assigned to this
+ * facility), and deletes the facility's logo from Storage if it has one.
+ *
+ * Now uses a single recursiveDelete on the facility document itself
+ * rather than looping through a manually maintained subcollection list -
+ * that list previously missed trash_products, trash_clients,
+ * trash_services, trash_sales, and payment_submissions (all real
+ * subcollections, confirmed against firestore.rules), which would have
+ * silently survived this function untouched. recursiveDelete on the
+ * whole document closes that gap completely, and stays complete even if
+ * a new subcollection is added later and nobody remembers to update a
+ * list for it.
  *
  * This is what a manual Firestore deletion can't safely do on its own:
  * a client can delete the facility document, but it can't reach into
@@ -667,7 +692,11 @@ exports.purgeOldTrash = onSchedule("every 24 hours", async () => {
  * every document one by one. Restricted to Platform Admins - this is
  * irreversible and affects accounts beyond the caller's own, so it's a
  * platform-level action, not something a facility admin should be able
- * to trigger themselves.
+ * to trigger themselves. See deleteOwnFacility below for the
+ * facility-admin equivalent, which additionally blocks on assigned
+ * assistants - a restriction that doesn't apply here, since a Platform
+ * Admin cleaning up a facility isn't blocked by staff still being
+ * assigned to it.
  */
 exports.deleteFacility = functions.https.onCall(async (data, context) => {
   if (!context.auth) {
@@ -715,34 +744,14 @@ exports.deleteFacility = functions.https.onCall(async (data, context) => {
   // - but this makes the common case visible without needing to go
   // looking for it.
   try {
-    // Same subcollection list as wipeFacilityData - kept identical
-    // deliberately, so this never quietly diverges from what that
-    // function already knows how to clean up.
-    const subcollections = [
-      "sales",
-      "archived_sales",
-      "products",
-      "clients",
-      "services",
-      "archived_services",
-      "transactions",
-      "debts",
-      "payments",
-      "dailySummaries",
-      "dailyCollections",
-      "dailyServiceSummaries",
-      "dailyTransactionSummaries",
-      "activity_logs",
-    ];
-
-    for (const sub of subcollections) {
-      try {
-        await db.recursiveDelete(facilityRef.collection(sub));
-      } catch (error) {
-        console.error(`Error deleting ${sub} for facility ${facilityId}:`, error);
-        // Continue deleting the rest rather than leaving everything else
-        // half-cleaned because one subcollection had trouble.
-      }
+    // The facility's logo isn't touched by deleting the Firestore
+    // document - cleaned up here explicitly so it doesn't become an
+    // orphaned file in Storage. Not every facility has one, so a
+    // missing-file error here is expected and fine, not a real failure.
+    try {
+      await admin.storage().bucket().file(`facility_logos/${facilityId}.png`).delete();
+    } catch (storageError) {
+      // No logo existed for this facility - nothing to clean up.
     }
 
     // Remove this facility from every user who has it - not just the
@@ -772,11 +781,142 @@ exports.deleteFacility = functions.https.onCall(async (data, context) => {
       await batch.commit();
     }
 
-    await facilityRef.delete();
+    // Recursively deletes the facility document AND every subcollection
+    // beneath it in one call - replaces the previous manual loop through
+    // a hardcoded subcollection list (which missed several real
+    // subcollections - see the comment above this function) with
+    // something that's inherently complete, not dependent on a list
+    // staying accurate over time.
+    await admin.firestore().recursiveDelete(facilityRef);
 
     return { success: true, usersUpdated: affectedUsers.size };
   } catch (error) {
     console.error(`deleteFacility failed for ${facilityId}:`, error);
+    throw new functions.https.HttpsError(
+      "internal",
+      `Could not delete this facility: ${error.message || error}`
+    );
+  }
+});
+
+/**
+ * Delete Own Facility - a facility Admin deleting a facility they
+ * themselves created, from the View Facilities screen. Distinct from
+ * deleteFacility above (which is a Platform Admin action with no
+ * assistant restriction) in two ways: restricted to the facility's own
+ * creator rather than a Platform Admin, and blocks entirely if any
+ * assistant is still assigned - removing someone's access out from under
+ * them as a side effect of an unrelated delete isn't something a regular
+ * facility Admin should be able to do silently, the way a Platform Admin
+ * cleanup action reasonably can.
+ *
+ * Uses recursiveDelete on the whole facility document, same reasoning as
+ * deleteFacility above - inherently complete, not dependent on a
+ * manually maintained subcollection list ever falling out of date.
+ */
+exports.deleteOwnFacility = functions.https.onCall(async (data, context) => {
+  if (!context.auth) {
+    throw new functions.https.HttpsError(
+      "unauthenticated",
+      "You must be signed in to do this."
+    );
+  }
+
+  const facilityId = data && data.facilityId;
+  if (!facilityId || typeof facilityId !== "string") {
+    throw new functions.https.HttpsError(
+      "invalid-argument",
+      "facilityId is required."
+    );
+  }
+
+  const callerUid = context.auth.uid;
+  const facilityRef = db.collection("facilities").doc(facilityId);
+  const facilityDoc = await facilityRef.get();
+
+  if (!facilityDoc.exists) {
+    throw new functions.https.HttpsError("not-found", "Facility not found.");
+  }
+
+  // Only this facility's own creator can delete it this way - checked
+  // here server-side, not just assumed from whatever the client claims.
+  const facilityData = facilityDoc.data();
+  if (facilityData.createdBy !== callerUid) {
+    throw new functions.https.HttpsError(
+      "permission-denied",
+      "Only this facility's admin can delete it."
+    );
+  }
+
+  // Re-checked here too, not just in the client's UI - a client-side
+  // check alone can always be bypassed by calling this function
+  // directly.
+  const assistantsSnap = await db
+    .collection("users")
+    .where("role", "==", "assistant")
+    .where("facilityIds", "array-contains", facilityId)
+    .limit(1)
+    .get();
+
+  if (!assistantsSnap.empty) {
+    throw new functions.https.HttpsError(
+      "failed-precondition",
+      "Remove or reassign all assistants before deleting this facility."
+    );
+  }
+
+  try {
+    // The logo file in Storage isn't touched by deleting the Firestore
+    // document - cleaned up here explicitly so it doesn't become an
+    // orphaned file. Not every facility has one, so a missing-file
+    // error here is expected and fine, not a real failure.
+    try {
+      await admin.storage().bucket().file(`facility_logos/${facilityId}.png`).delete();
+    } catch (storageError) {
+      // No logo existed for this facility - nothing to clean up.
+    }
+
+    // Remove this facility from every user who has it - not just the
+    // caller. Mirrors deleteFacility above: an assistant left with a
+    // reference to a now-deleted facility is exactly the
+    // dangling-reference problem a manual client-side update can't
+    // reliably fix (assistants aren't in the caller's own account, so
+    // the caller updating only themselves would leave every assistant's
+    // account still pointing at a facility that's gone).
+    const affectedUsers = await db
+      .collection("users")
+      .where("facilityIds", "array-contains", facilityId)
+      .get();
+
+    if (!affectedUsers.empty) {
+      const batch = db.batch();
+      affectedUsers.forEach((userDoc) => {
+        const userData = userDoc.data();
+        const remainingFacilities = (userData.facilities || []).filter(
+          (f) => f && f.facilityId !== facilityId
+        );
+        const remainingFacilityIds = (userData.facilityIds || []).filter(
+          (id) => id !== facilityId
+        );
+        batch.update(userDoc.ref, {
+          facilities: remainingFacilities,
+          facilityIds: remainingFacilityIds,
+        });
+      });
+      await batch.commit();
+    }
+
+    // Recursively deletes the facility document and every subcollection
+    // beneath it - products (and each product's own batches
+    // sub-subcollection), sales, clients, debts, payments, activity
+    // logs, every precomputed summary collection, trash, pending
+    // payment submissions, all of it - in one call, inherently
+    // complete rather than dependent on a hardcoded list.
+    await admin.firestore().recursiveDelete(facilityRef);
+
+    return { success: true, usersUpdated: affectedUsers.size };
+  } catch (error) {
+    console.error(`deleteOwnFacility failed for ${facilityId}:`, error);
     throw new functions.https.HttpsError(
       "internal",
       `Could not delete this facility: ${error.message || error}`

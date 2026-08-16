@@ -1,21 +1,14 @@
-import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:intl/intl.dart';
 
 import '../../providers/product_provider.dart';
 import '../../providers/facility_provider.dart';
 import '../../providers/subscription_provider.dart';
 import '../../providers/user_role_provider.dart';
-import '../../providers/debt_provider.dart';
 import '../../models/product.dart';
-import '../../models/debt.dart';
 import '../subscription/subscription_screen.dart';
-import '../admin/manage_assistants_screen.dart';
-import '../debtors/debtors_screen.dart';
-import '../../utils/notification_seen_tracker.dart';
 
 /// One alert row - either a whole product (legacy, no batches recorded
 /// yet) or one specific batch of a product. Kept generic so both cases
@@ -51,7 +44,6 @@ class StockAlertsScreen extends StatefulWidget {
   static const Color primaryColor = Color(0xFF2F5D62);
   static const int lowStockThreshold = 5;
   static const int expiryWarningDays = 30;
-  static const int overdueDebtDays = 30;
 
   /// Cheap, aggregate-only check for the Dashboard bell's red dot - a
   /// quick yes/no signal doesn't need per-batch precision, just "is
@@ -77,96 +69,10 @@ class _StockAlertsScreenState extends State<StockAlertsScreen> {
   List<_AlertRow> _lowWarehouse = [];
   List<_AlertRow> _expiring = [];
 
-  // Tracked separately (not via _load, which only covers stock) purely
-  // so the "all caught up" empty state can never contradict a genuinely
-  // active urgent announcement, pending approval, or overdue debtor -
-  // the sections themselves still render via their own StreamBuilder
-  // below; these just feed the one combined "is there really nothing"
-  // check.
-  int _urgentCount = 0;
-  int _pendingAssistantCount = 0;
-  int _overdueDebtorCount = 0;
-  bool _isEmailVerified = true; // starts true so it never flashes in before the real check completes
-  StreamSubscription<QuerySnapshot>? _urgentSub;
-  StreamSubscription<QuerySnapshot>? _pendingSub;
-  StreamSubscription<QuerySnapshot>? _debtsSub;
-
   @override
   void initState() {
     super.initState();
     _load();
-    _watchLiveCounts();
-    _checkEmailVerified();
-    NotificationSeenTracker.markViewedNow();
-  }
-
-  Future<void> _checkEmailVerified() async {
-    final user = FirebaseAuth.instance.currentUser;
-    if (user == null) return;
-    try {
-      await user.reload();
-      if (mounted) {
-        setState(() => _isEmailVerified = FirebaseAuth.instance.currentUser?.emailVerified ?? true);
-      }
-    } catch (e) {
-      debugPrint('Could not refresh email verification status: $e');
-    }
-  }
-
-  void _watchLiveCounts() {
-    final facilityId = Provider.of<FacilityProvider>(context, listen: false).selectedFacilityId;
-    final isAdmin = Provider.of<UserRoleProvider>(context, listen: false).isAdmin;
-
-    _urgentSub = FirebaseFirestore.instance
-        .collection('public_announcements')
-        .where('urgent', isEqualTo: true)
-        .snapshots()
-        .listen((snapshot) {
-      final count = snapshot.docs.where((doc) => (doc.data())['hidden'] != true).length;
-      if (mounted) setState(() => _urgentCount = count);
-    });
-
-    if (facilityId != null && isAdmin) {
-      // Only admins can even read other users' documents (Firestore
-      // rules only allow reading your own, or reading anyone's if
-      // you're an admin) - a non-admin's version of this query would
-      // just fail with a permission error, so it's never attempted.
-      _pendingSub = FirebaseFirestore.instance
-          .collection('users')
-          .where('role', isEqualTo: 'assistant')
-          .where('status', isEqualTo: 'pending')
-          .where('facilityIds', arrayContains: facilityId)
-          .snapshots()
-          .listen((snapshot) {
-        if (mounted) setState(() => _pendingAssistantCount = snapshot.docs.length);
-      });
-    }
-
-    if (facilityId != null) {
-      _debtsSub = FirebaseFirestore.instance
-          .collection('facilities')
-          .doc(facilityId)
-          .collection('debts')
-          .snapshots()
-          .listen((snapshot) {
-        final cutoff = DateTime.now().subtract(const Duration(days: StockAlertsScreen.overdueDebtDays));
-        final count = snapshot.docs.where((doc) {
-          final data = doc.data() as Map<String, dynamic>;
-          final ts = data['timestamp'];
-          if (ts is! Timestamp) return false;
-          return ts.toDate().isBefore(cutoff);
-        }).length;
-        if (mounted) setState(() => _overdueDebtorCount = count);
-      });
-    }
-  }
-
-  @override
-  void dispose() {
-    _urgentSub?.cancel();
-    _pendingSub?.cancel();
-    _debtsSub?.cancel();
-    super.dispose();
   }
 
   Future<void> _load() async {
@@ -300,10 +206,6 @@ class _StockAlertsScreenState extends State<StockAlertsScreen> {
     final nothingToShow = !_isLoading &&
         _error == null &&
         !subNeedsAttention &&
-        _isEmailVerified &&
-        _urgentCount == 0 &&
-        _pendingAssistantCount == 0 &&
-        _overdueDebtorCount == 0 &&
         _critical.isEmpty &&
         _lowShelf.isEmpty &&
         _lowWarehouse.isEmpty &&
@@ -342,12 +244,6 @@ class _StockAlertsScreenState extends State<StockAlertsScreen> {
                                   _buildSubscriptionCard(context, sub, isAdmin),
                                   const SizedBox(height: 20),
                                 ],
-                                if (!_isEmailVerified) ...[
-                                  _buildEmailVerificationCard(context),
-                                  const SizedBox(height: 20),
-                                ],
-                                if (isAdmin) _buildPendingAssistants(),
-                                _buildOverdueDebtors(),
                                 _buildUrgentAnnouncements(),
                                 _buildSection(
                                   icon: Icons.error_outline,
@@ -460,166 +356,6 @@ class _StockAlertsScreenState extends State<StockAlertsScreen> {
             Text('Ask your admin', style: TextStyle(color: color, fontSize: 11.5, fontStyle: FontStyle.italic)),
         ],
       ),
-    );
-  }
-
-  Widget _buildEmailVerificationCard(BuildContext context) {
-    return _AccentCard(
-      color: Colors.orange,
-      icon: Icons.mark_email_unread_outlined,
-      title: 'Verify Your Email',
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Expanded(
-            child: Text(
-              'Check your inbox for the verification link (and your Spam folder - it '
-              'often ends up there) - this protects your ability to reset your '
-              'password later.',
-              style: TextStyle(color: Colors.orange, fontSize: 13, fontWeight: FontWeight.w600),
-            ),
-          ),
-          const SizedBox(width: 8),
-          TextButton(
-            onPressed: () async {
-              try {
-                await FirebaseAuth.instance.currentUser?.sendEmailVerification();
-                if (context.mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Verification email sent'), backgroundColor: Colors.green),
-                  );
-                }
-              } catch (e) {
-                if (context.mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text('Could not send email: $e'), backgroundColor: Colors.redAccent),
-                  );
-                }
-              }
-            },
-            style: TextButton.styleFrom(foregroundColor: Colors.orange, padding: EdgeInsets.zero),
-            child: const Text('Resend'),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildPendingAssistants() {
-    final facilityId = Provider.of<FacilityProvider>(context, listen: false).selectedFacilityId;
-    if (facilityId == null) return const SizedBox.shrink();
-
-    return StreamBuilder<QuerySnapshot>(
-      stream: FirebaseFirestore.instance
-          .collection('users')
-          .where('role', isEqualTo: 'assistant')
-          .where('status', isEqualTo: 'pending')
-          .where('facilityIds', arrayContains: facilityId)
-          .snapshots(),
-      builder: (context, snapshot) {
-        final docs = snapshot.data?.docs ?? [];
-        if (docs.isEmpty) return const SizedBox.shrink();
-
-        return Padding(
-          padding: const EdgeInsets.only(bottom: 20),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              _sectionHeader(Icons.person_add_alt_1_outlined, 'Waiting for Approval', docs.length, Colors.blue),
-              const SizedBox(height: 8),
-              ...docs.map((doc) {
-                final data = doc.data() as Map<String, dynamic>;
-                return _AccentCard(
-                  color: Colors.blue,
-                  icon: Icons.person_outline,
-                  title: data['fullName'] ?? 'New assistant',
-                  margin: const EdgeInsets.only(bottom: 8),
-                  child: Text(
-                    '${data['email'] ?? ''} - registered, waiting for you to approve their account',
-                    style: const TextStyle(color: Colors.blue, fontWeight: FontWeight.w600, fontSize: 12.5),
-                  ),
-                );
-              }),
-              Align(
-                alignment: Alignment.centerRight,
-                child: TextButton(
-                  onPressed: () {
-                    Navigator.push(context, MaterialPageRoute(builder: (_) => ManageAssistantsScreen()));
-                  },
-                  child: const Text('Review in Manage Assistants'),
-                ),
-              ),
-            ],
-          ),
-        );
-      },
-    );
-  }
-
-  Widget _buildOverdueDebtors() {
-    final facilityId = Provider.of<FacilityProvider>(context, listen: false).selectedFacilityId;
-    if (facilityId == null) return const SizedBox.shrink();
-
-    return StreamBuilder<QuerySnapshot>(
-      stream: FirebaseFirestore.instance
-          .collection('facilities')
-          .doc(facilityId)
-          .collection('debts')
-          .snapshots(),
-      builder: (context, snapshot) {
-        final now = DateTime.now();
-        final cutoff = now.subtract(const Duration(days: StockAlertsScreen.overdueDebtDays));
-
-        final overdueDocs = (snapshot.data?.docs ?? []).where((doc) {
-          final data = doc.data() as Map<String, dynamic>;
-          final ts = data['timestamp'];
-          if (ts is! Timestamp) return false;
-          return ts.toDate().isBefore(cutoff);
-        }).toList()
-          ..sort((a, b) {
-            final tsA = ((a.data() as Map<String, dynamic>)['timestamp'] as Timestamp).toDate();
-            final tsB = ((b.data() as Map<String, dynamic>)['timestamp'] as Timestamp).toDate();
-            return tsA.compareTo(tsB); // oldest first - most overdue at the top
-          });
-
-        if (overdueDocs.isEmpty) return const SizedBox.shrink();
-
-        return Padding(
-          padding: const EdgeInsets.only(bottom: 20),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              _sectionHeader(Icons.hourglass_bottom, 'Overdue Debtors (${StockAlertsScreen.overdueDebtDays}+ days)', overdueDocs.length, Colors.deepOrange),
-              const SizedBox(height: 8),
-              ...overdueDocs.map((doc) {
-                final data = doc.data() as Map<String, dynamic>;
-                final ts = (data['timestamp'] as Timestamp).toDate();
-                final daysOwed = now.difference(ts).inDays;
-                final amount = (data['amountOwed'] ?? 0).toDouble();
-                return _AccentCard(
-                  color: Colors.deepOrange,
-                  icon: Icons.hourglass_bottom,
-                  title: data['clientName'] ?? 'Unknown client',
-                  margin: const EdgeInsets.only(bottom: 8),
-                  child: Text(
-                    'Owes Tsh ${amount.toStringAsFixed(0)} - $daysOwed days overdue',
-                    style: const TextStyle(color: Colors.deepOrange, fontWeight: FontWeight.w600, fontSize: 12.5),
-                  ),
-                );
-              }),
-              Align(
-                alignment: Alignment.centerRight,
-                child: TextButton(
-                  onPressed: () {
-                    Navigator.push(context, MaterialPageRoute(builder: (_) => const DebtorsScreen()));
-                  },
-                  child: const Text('Open Debtors'),
-                ),
-              ),
-            ],
-          ),
-        );
-      },
     );
   }
 

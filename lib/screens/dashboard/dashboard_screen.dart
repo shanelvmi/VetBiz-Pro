@@ -313,10 +313,36 @@ class _DashboardScreenState extends State<DashboardScreen> {
     await prefs.setBool('drawer_collapsed', newValue);
   }
 
+  // Dismissing the subscription notice snoozes it rather than hiding it
+  // permanently - this is still a real warning that access is about to
+  // change, so a one-time "X" that never comes back could mean someone
+  // forgets entirely and gets locked out with no further reminder.
+  // Deliberately kept in-memory only, not persisted to
+  // SharedPreferences - a fresh login creates a brand-new
+  // DashboardScreen instance (the old one is disposed on logout), so
+  // this naturally resets and reappears on every new login, on top of
+  // the 2-hour timer resurfacing it within a single continuous session.
+  static const Duration _subscriptionSnoozeDuration = Duration(hours: 2);
+  DateTime? _subscriptionSnoozedUntil;
+
+  void _snoozeSubscriptionBanner() {
+    setState(() => _subscriptionSnoozedUntil = DateTime.now().add(_subscriptionSnoozeDuration));
+  }
+
+  // The pill deliberately doesn't appear the instant Dashboard loads,
+  // even if the subscription already needs attention - it waits a
+  // beat first, so its entrance is something someone actually notices
+  // happening, rather than one more thing appearing simultaneously
+  // with everything else on the page.
+  bool _subscriptionPillDelayPassed = false;
+
   @override
   void initState() {
     super.initState();
     _loadDrawerCollapsedState();
+    Future.delayed(const Duration(milliseconds: 900), () {
+      if (mounted) setState(() => _subscriptionPillDelayPassed = true);
+    });
     // Firebase caches emailVerified and doesn't update it automatically
     // once someone clicks the link in their email - has to be
     // explicitly refreshed to find out if it changed since last login.
@@ -726,21 +752,22 @@ class _DashboardScreenState extends State<DashboardScreen> {
           endDrawer: Drawer(child: _buildEndDrawerContent()),
           body: Column(
             children: [
-              _buildSubscriptionBanner(context),
               Container(height: 1.2, width: double.infinity, color: Colors.grey.shade400),
               Expanded(
-                child: Row(
+                child: Stack(
                   children: [
-                    if (isLargeScreen) _buildDrawerContent(),
-                    Expanded(
-                      child: Padding(
-                        padding: const EdgeInsets.all(16),
-                        child: Column(
-                          children: [
-                            if (isLargeScreen)
-                              Row(
-                                children: [
-                                  Expanded(
+                    Row(
+                      children: [
+                        if (isLargeScreen) _buildDrawerContent(),
+                        Expanded(
+                          child: Padding(
+                            padding: const EdgeInsets.all(16),
+                            child: Column(
+                              children: [
+                                if (isLargeScreen)
+                                  Row(
+                                    children: [
+                                      Expanded(
                                     child: Center(
                                       child: Wrap(
                                         spacing: 8,
@@ -909,6 +936,14 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     ),
                   ],
                 ),
+                Positioned(
+                      top: 56,
+                      left: 0,
+                      right: 0,
+                      child: Center(child: _buildSubscriptionBanner(context)),
+                    ),
+                  ],
+                ),
               ),
             ],
           ),
@@ -928,56 +963,125 @@ class _DashboardScreenState extends State<DashboardScreen> {
   // Shown at the very top of the dashboard, every time it opens - trial
   // (no subscription set up yet) shows nothing, since that's the normal
   // unrestricted state, not something to warn about.
+  // Always present in the tree (never conditionally omitted) so the
+  // AnimatedAlign/AnimatedOpacity below can actually animate between
+  // shown and hidden - returning a completely different widget
+  // (SizedBox.shrink() vs. the full banner) would just snap instantly,
+  // since Flutter has nothing to animate between two unrelated trees.
+  // A compact, cream pill rather than a full-width strip - the warning
+  // comes through the icon color and text, not a loud background fill,
+  // so it sits comfortably alongside the app's otherwise soft, muted
+  // palette instead of being the one loud element on the screen. Lives
+  // inline in the Today/This Week/.../Insights row now, vertically
+  // centered with those chips rather than occupying its own separate
+  // strip across the screen.
   Widget _buildSubscriptionBanner(BuildContext context) {
     final sub = Provider.of<SubscriptionProvider>(context);
 
-    if (sub.status == SubscriptionStatus.trial) return const SizedBox.shrink();
-    if (sub.status == SubscriptionStatus.active &&
-        (sub.daysRemaining == null || sub.daysRemaining! > 7)) {
-      return const SizedBox.shrink();
-    }
+    final needsAttention = sub.status != SubscriptionStatus.trial &&
+        !(sub.status == SubscriptionStatus.active &&
+            (sub.daysRemaining == null || sub.daysRemaining! > 7));
+
+    final isSnoozed = _subscriptionSnoozedUntil != null &&
+        DateTime.now().isBefore(_subscriptionSnoozedUntil!);
+    final shouldShow = needsAttention && !isSnoozed && _subscriptionPillDelayPassed;
 
     final isLocked = sub.status == SubscriptionStatus.locked;
     final isGrace = sub.status == SubscriptionStatus.grace;
-    final color = isLocked ? Colors.redAccent : Colors.orange;
+    // The accent - carried by the icon, the text, and a thin border -
+    // rather than a full background fill. Same deepened, burnt-amber
+    // reasoning as before: the brand's own warmAmber is too close to
+    // yellow to read cleanly as an accent on a cream background.
+    const Color deepAmber = Color(0xFFC77800);
+    final accent = isLocked ? Colors.redAccent : deepAmber;
+    const Color cream = Color(0xFFFFF6E7);
 
+    // Full sentence now that this sits in its own row above the filter
+    // chips, rather than the shortened version needed when it was
+    // squeezed inline next to Insights.
     String message;
     if (isLocked) {
-      message = 'Your subscription has expired. The app is in read-only mode - submit a payment to restore full access.';
+      message = 'Your subscription has expired. The app is in read-only mode.';
     } else if (isGrace) {
-      message = 'Your subscription expired - you have a few days of grace before read-only mode begins.';
+      message = 'Your subscription has expired. You have a few days of grace before read-only mode begins.';
     } else {
       message = 'Your subscription expires in ${sub.daysRemaining} day${sub.daysRemaining == 1 ? '' : 's'}.';
     }
 
-    return Container(
-      width: double.infinity,
-      color: color.withValues(alpha: 0.12),
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-      child: Row(
-        children: [
-          Icon(isLocked ? Icons.lock_outline : Icons.warning_amber_rounded, color: color, size: 20),
-          const SizedBox(width: 8),
-          Expanded(
-            child: Text(message, style: TextStyle(color: color, fontSize: 12.5, fontWeight: FontWeight.w600)),
-          ),
-          if (Provider.of<UserRoleProvider>(context).isAdmin)
-            TextButton(
-              onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (_) => const SubscriptionScreen()),
-                );
-              },
-              style: TextButton.styleFrom(foregroundColor: color),
-              child: const Text('Renew'),
-            )
-          else
-            Text('Ask your admin', style: TextStyle(color: color, fontSize: 11.5, fontStyle: FontStyle.italic)),
-        ],
+    final isAdmin = Provider.of<UserRoleProvider>(context).isAdmin;
+
+    return AnimatedSwitcher(
+      duration: const Duration(milliseconds: 550),
+      transitionBuilder: (child, animation) => FadeTransition(
+        opacity: CurvedAnimation(parent: animation, curve: const Interval(0, 0.5, curve: Curves.easeOut)),
+        child: ScaleTransition(
+          scale: CurvedAnimation(parent: animation, curve: Curves.easeOutBack),
+          child: child,
+        ),
       ),
+      child: !shouldShow
+          ? const SizedBox.shrink(key: ValueKey('sub-banner-hidden'))
+          : Container(
+              key: const ValueKey('sub-banner-shown'),
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+              decoration: BoxDecoration(
+                color: cream.withValues(alpha: 0.92),
+                borderRadius: BorderRadius.circular(24),
+                border: Border.all(color: accent.withValues(alpha: 0.35)),
+                boxShadow: [
+                  BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 6, offset: const Offset(0, 2)),
+                ],
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(isLocked ? Icons.lock_outline : Icons.warning_amber_rounded, color: accent, size: 16),
+                  const SizedBox(width: 6),
+                  Text(
+                    message,
+                    style: const TextStyle(color: Colors.black87, fontSize: 12.5, fontWeight: FontWeight.w600),
+                  ),
+                  if (isAdmin) ...[
+                    const SizedBox(width: 16),
+                    GestureDetector(
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(builder: (_) => const SubscriptionScreen()),
+                        );
+                      },
+                      child: Text(
+                        'Renew',
+                        style: TextStyle(
+                          color: accent,
+                          fontSize: 12.5,
+                          fontWeight: FontWeight.bold,
+                          decoration: TextDecoration.underline,
+                        ),
+                      ),
+                    ),
+                  ] else ...[
+                    const SizedBox(width: 8),
+                    Text('· Ask your admin',
+                        style: TextStyle(color: Colors.grey[600], fontSize: 11.5, fontStyle: FontStyle.italic)),
+                  ],
+                  // Snoozes rather than dismisses permanently - see the
+                  // note on _subscriptionSnoozeDuration above for why.
+                  const SizedBox(width: 4),
+                  InkWell(
+                    borderRadius: BorderRadius.circular(12),
+                    onTap: _snoozeSubscriptionBanner,
+                    child: Padding(
+                      padding: const EdgeInsets.all(4),
+                      child: Icon(Icons.close, size: 15, color: Colors.grey[500]),
+                    ),
+                  ),
+                ],
+              ),
+            ),
     );
   }
+
 
   // Compact bell icon with a red dot when there's a low-stock or
   // expiring-item alert - replaces the old full-width banner. Tapping it
@@ -985,6 +1089,13 @@ class _DashboardScreenState extends State<DashboardScreen> {
   Widget _buildAlertsBell(BuildContext context) {
     final products = Provider.of<ProductProvider>(context).products;
     final hasStockAlerts = StockAlertsScreen.hasAnyAlert(products);
+
+    final sub = Provider.of<SubscriptionProvider>(context);
+    // Same thresholds as the pill/Notifications screen, so all three
+    // never disagree about whether the subscription needs attention.
+    final subscriptionNeedsAttention = sub.status != SubscriptionStatus.trial &&
+        !(sub.status == SubscriptionStatus.active &&
+            (sub.daysRemaining == null || sub.daysRemaining! > 7));
 
     return StreamBuilder<QuerySnapshot>(
       stream: FirebaseFirestore.instance
@@ -997,7 +1108,14 @@ class _DashboardScreenState extends State<DashboardScreen> {
           return data['hidden'] != true;
         });
         final hasAlerts = hasStockAlerts || hasUrgentAnnouncement || _isEmailVerified == false;
-        final hasNew = _hasNewUrgentSinceViewed || _hasNewPendingAssistantSinceViewed;
+        // Subscription deliberately blinks rather than joining the
+        // steady hasAlerts group, and deliberately isn't gated by
+        // "since Notifications was last viewed" the way the other two
+        // are - it's not a one-off event to acknowledge, it's an
+        // ongoing problem that should keep drawing the eye for as long
+        // as it's actually true, independent of the floating pill's
+        // own snooze state (dismissing that pill never silences this).
+        final hasNew = _hasNewUrgentSinceViewed || _hasNewPendingAssistantSinceViewed || subscriptionNeedsAttention;
 
         return Stack(
           clipBehavior: Clip.none,

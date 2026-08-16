@@ -2,11 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
 import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../../models/client.dart';
 import '../../providers/facility_provider.dart';
 import '../../providers/debt_provider.dart';
-import '../../providers/client_provider.dart';
 import 'add_payment_screen.dart';
 import '../payments/payments_screen.dart';
 
@@ -36,17 +36,6 @@ class _DebtorsScreenState extends State<DebtorsScreen> {
 
     if (facilityId.isNotEmpty) {
       Provider.of<DebtProvider>(context, listen: false).listenToDebts(facilityId);
-      // A debt's own clientName/clientPhone are only ever a snapshot from
-      // the moment it was created - if that client's details are later
-      // edited (a corrected phone number, a name change), this screen
-      // used to have no way of finding out, since it never listened to
-      // the clients collection at all. That's a real problem here
-      // specifically, unlike a receipt or a past sale record, because
-      // this represents an active, ongoing relationship - someone might
-      // be reading this exact phone number to call and collect what's
-      // owed, so it needs to be current, not whatever it was when the
-      // debt was first recorded.
-      Provider.of<ClientProvider>(context, listen: false).listenToClients(facilityId);
     }
   }
 
@@ -59,7 +48,6 @@ class _DebtorsScreenState extends State<DebtorsScreen> {
   @override
   Widget build(BuildContext context) {
     final debtProvider = Provider.of<DebtProvider>(context);
-    final clientProvider = Provider.of<ClientProvider>(context);
     final debts = debtProvider.debts;
 
     // Group debts by clientId
@@ -76,33 +64,48 @@ class _DebtorsScreenState extends State<DebtorsScreen> {
         return totalB.compareTo(totalA);
       });
 
-    // Filter out clients with zero debt, then apply the name search. Name
-    // and phone are now resolved live against ClientProvider (falling
-    // back to the debt's own denormalized copy only if that client
-    // record can't be found - e.g. it was since deleted), rather than
-    // trusting whatever was frozen onto the debt at creation time.
+    // Filter out clients with zero debt, then apply the name search - both
+    // clientName and clientPhone now come straight off the Debt record
+    // itself (denormalized at creation time), instead of a live Firestore
+    // lookup per client on every render.
     final visibleClients = sortedClients.where((entry) {
       final totalOwed = entry.value.fold<double>(0, (sum, d) => sum + d.amountOwed);
       if (totalOwed <= 0) return false;
 
       if (_searchQuery.isEmpty) return true;
-      final liveClient = clientProvider.getClientById(entry.key);
-      final clientName =
-          (liveClient?.name ?? entry.value.first.clientName ?? '').toLowerCase();
+      final clientName = (entry.value.first.clientName ?? '').toLowerCase();
       return clientName.contains(_searchQuery.toLowerCase());
     }).toList();
 
     return Scaffold(
       backgroundColor: offWhite,
       appBar: _buildAppBar(),
-      body: visibleClients.isEmpty
-          ? Center(
+      body: Column(
+        children: [
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 6, 16, 0),
+            child: Align(
+              alignment: Alignment.centerRight,
               child: Text(
-                _searchQuery.isEmpty ? 'No debtors found.' : 'No debtors match your search.',
-                style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
+                '${visibleClients.length} debtor${visibleClients.length == 1 ? '' : 's'}',
+                style: TextStyle(fontSize: 12, color: Colors.grey[600]),
               ),
-            )
-          : _buildDebtorsGrid(visibleClients, clientProvider),
+            ),
+          ),
+          Expanded(
+            child: visibleClients.isEmpty
+                ? Center(
+                    child: Text(
+                      _searchQuery.isEmpty
+                          ? 'No debtors found.'
+                          : 'No debtors match your search.',
+                      style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
+                    ),
+                  )
+                : _buildDebtorsGrid(visibleClients),
+          ),
+        ],
+      ),
     );
   }
 
@@ -146,7 +149,9 @@ class _DebtorsScreenState extends State<DebtorsScreen> {
     );
   }
 
-  Widget _buildDebtorsGrid(List<MapEntry<String, List>> visibleClients, ClientProvider clientProvider) {
+  // Same responsive pattern used across the app: 1 column on phones, 2 on
+  // wide screens.
+  Widget _buildDebtorsGrid(List<MapEntry<String, List>> visibleClients) {
     return LayoutBuilder(
       builder: (context, constraints) {
         final isLargeScreen = constraints.maxWidth >= 1024;
@@ -158,32 +163,85 @@ class _DebtorsScreenState extends State<DebtorsScreen> {
             crossAxisSpacing: 12,
             mainAxisSpacing: 12,
             itemCount: visibleClients.length,
-            itemBuilder: (context, index) => _buildClientCard(visibleClients[index], clientProvider),
+            itemBuilder: (context, index) => _buildClientCard(visibleClients[index]),
           );
         }
 
         return ListView.builder(
           padding: const EdgeInsets.all(12),
           itemCount: visibleClients.length,
-          itemBuilder: (context, index) => _buildClientCard(visibleClients[index], clientProvider),
+          itemBuilder: (context, index) => _buildClientCard(visibleClients[index]),
         );
       },
     );
   }
 
-  Widget _buildClientCard(MapEntry<String, List> entry, ClientProvider clientProvider) {
+  /// One-tap reminder, not automated bulk sending - opens WhatsApp or
+  /// SMS with a pre-filled message ready to review and send. There's no
+  /// backend here to send these on a schedule; this is a daily-follow-up
+  /// convenience, one debtor at a time.
+  Future<void> _showReminderOptions(
+      BuildContext context, String clientName, String phone, double amountOwed) async {
+    final facilityName =
+        Provider.of<FacilityProvider>(context, listen: false).selectedFacilityName ?? 'us';
+    final formatter = NumberFormat('#,##0', 'en_US');
+    final message =
+        'Hi $clientName, this is a reminder from $facilityName that you have an outstanding '
+        'balance of Tsh ${formatter.format(amountOwed)}. Kindly settle at your earliest '
+        'convenience. Thank you!';
+
+    final choice = await showDialog<String>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Send Reminder'),
+        content: Text('Remind $clientName about their Tsh ${formatter.format(amountOwed)} balance via:'),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(context, null), child: const Text('Cancel')),
+          TextButton(
+            onPressed: () => Navigator.pop(context, 'sms'),
+            child: const Text('SMS'),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(context, 'whatsapp'),
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.green, foregroundColor: Colors.white),
+            child: const Text('WhatsApp'),
+          ),
+        ],
+      ),
+    );
+
+    if (choice == null) return;
+
+    final digitsOnly = phone.replaceAll(RegExp(r'[^0-9+]'), '');
+    final encodedMessage = Uri.encodeComponent(message);
+
+    final uri = choice == 'whatsapp'
+        ? Uri.parse('https://wa.me/${digitsOnly.replaceAll('+', '')}?text=$encodedMessage')
+        : Uri.parse('sms:$digitsOnly?body=$encodedMessage');
+
+    try {
+      final launched = await launchUrl(uri, mode: LaunchMode.externalApplication);
+      if (!launched && context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Could not open ${choice == 'whatsapp' ? 'WhatsApp' : 'Messages'}')),
+        );
+      }
+    } catch (e) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Could not send reminder: $e')),
+        );
+      }
+    }
+  }
+
+  Widget _buildClientCard(MapEntry<String, List> entry) {
     final clientId = entry.key;
     final clientDebts = entry.value;
 
     final totalOwed = clientDebts.fold<double>(0.0, (sum, d) => sum + d.amountOwed);
-
-    // Live client record takes priority - only falls back to the debt's
-    // own frozen-at-creation copy if that client can no longer be found
-    // (e.g. deleted while still owing money, an edge case worth
-    // tolerating gracefully rather than crashing or showing nothing).
-    final liveClient = clientProvider.getClientById(clientId);
-    final clientName = liveClient?.name ?? clientDebts.first.clientName ?? 'Unknown';
-    final clientPhone = liveClient?.phone ?? clientDebts.first.clientPhone ?? '';
+    final clientName = clientDebts.first.clientName ?? 'Unknown';
+    final clientPhone = clientDebts.first.clientPhone ?? '';
 
     // Latest debt date
     clientDebts.sort((a, b) => b.timestamp.compareTo(a.timestamp));
@@ -201,6 +259,13 @@ class _DebtorsScreenState extends State<DebtorsScreen> {
                 clientName,
                 style: const TextStyle(fontWeight: FontWeight.bold),
               ),
+            ),
+            IconButton(
+              icon: Icon(Icons.notifications_active_outlined, size: 20, color: Colors.orange[700]),
+              tooltip: 'Send Reminder',
+              onPressed: clientPhone.isEmpty
+                  ? null
+                  : () => _showReminderOptions(context, clientName, clientPhone, totalOwed),
             ),
             IconButton(
               icon: Icon(Icons.history, size: 20, color: primaryDeepGreen),
@@ -305,12 +370,9 @@ class _DebtorsScreenState extends State<DebtorsScreen> {
           Align(
             alignment: Alignment.centerRight,
             child: ElevatedButton(
-              style: ButtonStyle(
-                backgroundColor: WidgetStateProperty.resolveWith<Color>((states) {
-                  if (states.contains(WidgetState.hovered)) return const Color(0xFFFFC400);
-                  return warmAmber;
-                }),
-                foregroundColor: WidgetStateProperty.all(Colors.black),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: warmAmber,
+                foregroundColor: Colors.black,
               ),
               onPressed: () async {
                 final selectedClient = Client(
@@ -318,7 +380,7 @@ class _DebtorsScreenState extends State<DebtorsScreen> {
                   name: clientName,
                   phone: clientPhone,
                   address: '',
-                  balance: 0.0,
+                  balance: 0.0,       // optional
                   types: const [],
                 );
                 final result = await Navigator.push(

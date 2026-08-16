@@ -20,14 +20,6 @@ class _FacilityDetailScreenState extends State<FacilityDetailScreen> {
   static const Color warmAmber = Color(0xFFFFB200);
   final NumberFormat _moneyFormat = NumberFormat('#,##0', 'en_US');
 
-  // Comfortably wide on desktop, but never wider than the actual screen
-  // on a phone - AlertDialog otherwise defaults to a fairly narrow,
-  // cramped width regardless of how much room is available.
-  double _dialogWidth(BuildContext context) {
-    final screenWidth = MediaQuery.of(context).size.width;
-    return screenWidth > 700 ? 460.0 : screenWidth * 0.88;
-  }
-
   ButtonStyle get _accentButtonStyle => ButtonStyle(
         backgroundColor: WidgetStateProperty.resolveWith<Color>((states) {
           if (states.contains(WidgetState.hovered)) return warmAmber;
@@ -53,9 +45,7 @@ class _FacilityDetailScreenState extends State<FacilityDetailScreen> {
       builder: (context) => StatefulBuilder(
         builder: (context, setDialogState) => AlertDialog(
           title: const Text('Manual Subscription Update'),
-          content: SizedBox(
-            width: _dialogWidth(context),
-            child: SingleChildScrollView(
+          content: SingleChildScrollView(
             child: Column(
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -100,7 +90,6 @@ class _FacilityDetailScreenState extends State<FacilityDetailScreen> {
                     ),
                   ),
               ],
-            ),
             ),
           ),
           actions: [
@@ -192,9 +181,7 @@ class _FacilityDetailScreenState extends State<FacilityDetailScreen> {
           final matches = controller.text.trim() == facilityName;
           return AlertDialog(
             title: const Text('Delete Facility'),
-            content: SizedBox(
-              width: _dialogWidth(dialogContext),
-              child: SingleChildScrollView(
+            content: SingleChildScrollView(
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -218,7 +205,6 @@ class _FacilityDetailScreenState extends State<FacilityDetailScreen> {
                     ),
                   ),
                 ],
-              ),
               ),
             ),
             actions: [
