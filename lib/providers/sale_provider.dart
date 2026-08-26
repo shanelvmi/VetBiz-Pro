@@ -5,6 +5,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import '../models/sale.dart';
 import 'product_provider.dart';
 import '../utils/activity_logger.dart';
+import '../utils/receipt_numbering.dart';
 
 class SaleProvider extends ChangeNotifier {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
@@ -206,6 +207,7 @@ class SaleProvider extends ChangeNotifier {
 
       saleToSave = saleToSave.copyWith(items: updatedItems);
       saleToSave = _computeProfits(saleToSave);
+      saleToSave = saleToSave.copyWith(receiptNumber: await nextReceiptNumber(facilityId));
 
       final docRef = await _firestore
           .collection('facilities')
@@ -244,6 +246,7 @@ class SaleProvider extends ChangeNotifier {
           'timestamp': FieldValue.serverTimestamp(),
           'paidById': saleToSave.soldById,
           'source': 'sale',
+          'paymentMethod': saleToSave.paymentMethod,
         });
       }
 

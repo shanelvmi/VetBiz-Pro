@@ -259,10 +259,7 @@ class _ClientsScreenState extends State<ClientsScreen> {
         icon: const Icon(Icons.add),
         label: const Text('Add Client'),
         onPressed: () async {
-          await Navigator.push(
-            context,
-            MaterialPageRoute(builder: (_) => const AddClientScreen()),
-          );
+          await showAddClientScreen(context);
         },
       ),
     );
@@ -417,15 +414,8 @@ class _ClientsScreenState extends State<ClientsScreen> {
   Widget _buildClientCard(Client client) {
     final types = client.types.isNotEmpty ? client.types : ['Other'];
 
-    return GestureDetector(
-      onTap: () async {
-        await Navigator.push(
-          context,
-          MaterialPageRoute(builder: (_) => AddClientScreen(client: client)),
-        );
-      },
-      child: Container(
-        margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
         padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
           color: offWhite,
@@ -501,10 +491,7 @@ class _ClientsScreenState extends State<ClientsScreen> {
                 const SizedBox(width: 8),
                 ElevatedButton.icon(
                   onPressed: () async {
-                    await Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (_) => AddClientScreen(client: client)),
-                    );
+                    await showAddClientScreen(context, client: client);
                   },
                   icon: const Icon(Icons.edit, size: 16),
                   label: const Text('Edit'),
@@ -520,7 +507,6 @@ class _ClientsScreenState extends State<ClientsScreen> {
             ),
           ],
         ),
-      ),
     );
   }
 

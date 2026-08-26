@@ -7,11 +7,13 @@ import 'package:intl/intl.dart'; // For formatting
 import '../../providers/transaction_provider.dart';
 import '../../models/transaction.dart';
 import '../../services/auth_service.dart';
+import '../../widgets/payment_method_selector.dart';
 
 class AddTransactionScreen extends StatefulWidget {
   final TransactionModel? transaction;
+  final bool isModal;
 
-  const AddTransactionScreen({super.key, this.transaction});
+  const AddTransactionScreen({super.key, this.transaction, this.isModal = false});
 
   @override
   State<AddTransactionScreen> createState() => _AddTransactionScreenState();
@@ -23,6 +25,7 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
   final TextEditingController amountController = TextEditingController();
   final TextEditingController categoryController = TextEditingController();
   String? type = 'other income';
+  String? paymentMethod;
 
   final Color primaryDeepGreen = const Color(0xFF2F5D62);
   final Color warmAmber = const Color(0xFFFFB200);
@@ -89,18 +92,33 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
       return;
     }
 
+    if (type == 'other income' && paymentMethod == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Select how this income was received')),
+      );
+      return;
+    }
+
     setState(() => _isSaving = true);
 
     final provider = Provider.of<TransactionProvider>(context, listen: false);
 
     if (widget.transaction != null) {
-      // Editing - keep the original date and who recorded it; only the
-      // fields the user can actually change here get updated.
-      final updated = widget.transaction!.copyWith(
+      // Editing - keep the original id, date, and who recorded it; only
+      // the fields the user can actually change here get updated. Built
+      // directly rather than via copyWith, since copyWith's standard
+      // null-coalescing can't actually clear paymentMethod back to null
+      // when switching from other income to expense - it would just
+      // silently keep the stale value instead.
+      final updated = TransactionModel(
+        id: widget.transaction!.id,
+        date: widget.transaction!.date,
         description: description,
         amount: amount,
         type: type!,
         category: category,
+        recordedBy: widget.transaction!.recordedBy,
+        paymentMethod: type == 'other income' ? paymentMethod : null,
       );
       try {
         await provider.updateTransaction(updated, context);
@@ -133,6 +151,7 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
       type: type!, // stored lowercase
       category: category,
       recordedBy: userName,
+      paymentMethod: type == 'other income' ? paymentMethod : null,
     );
 
     try {
@@ -163,6 +182,7 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
       descriptionController.text = tx.description;
       categoryController.text = tx.category;
       amountController.text = formatter.format(tx.amount.round());
+      paymentMethod = tx.paymentMethod;
     }
 
     amountController.addListener(() {
@@ -208,11 +228,25 @@ Widget build(BuildContext context) {
       title: Text(widget.transaction != null ? 'Edit Transaction' : 'Add Transaction'),
       backgroundColor: primaryDeepGreen,
       foregroundColor: offWhite,
+      centerTitle: true,
+      automaticallyImplyLeading: !widget.isModal,
+      leading: widget.isModal
+          ? IconButton(
+              icon: const Icon(Icons.close),
+              tooltip: 'Close',
+              onPressed: () => Navigator.of(context).pop(),
+            )
+          : null,
     ),
-    body: Padding(
-      padding: const EdgeInsets.all(16),
-      child: Column(
-        children: [
+    body: LayoutBuilder(
+      builder: (context, constraints) {
+        return Center(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 700),
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                children: [
           DropdownButtonFormField<String>(
             initialValue: type,
             items: dropdownOptions.map((val) {
@@ -233,6 +267,14 @@ Widget build(BuildContext context) {
             ),
             dropdownColor: offWhite,
           ),
+          if (type == 'other income') ...[
+            const SizedBox(height: 16),
+            PaymentMethodSelector(
+              value: paymentMethod,
+              activeColor: primaryDeepGreen,
+              onChanged: (method) => setState(() => paymentMethod = method),
+            ),
+          ],
           const SizedBox(height: 12),
           TextField(
             controller: descriptionController,
@@ -273,19 +315,22 @@ Widget build(BuildContext context) {
             width: double.infinity,
             child: ElevatedButton(
               onPressed: _isSaving ? null : () => _saveTransaction(context),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: warmAmber,
-                foregroundColor: Colors.black,
-                padding: const EdgeInsets.symmetric(vertical: 16),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8),
+              style: ButtonStyle(
+                backgroundColor: WidgetStateProperty.resolveWith<Color>((states) {
+                  if (states.contains(WidgetState.hovered)) return warmAmber;
+                  return primaryDeepGreen;
+                }),
+                foregroundColor: WidgetStateProperty.all(offWhite),
+                padding: WidgetStateProperty.all(const EdgeInsets.symmetric(vertical: 16)),
+                shape: WidgetStateProperty.all(
+                  RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
                 ),
               ),
               child: _isSaving
                   ? const SizedBox(
                       width: 20,
                       height: 20,
-                      child: CircularProgressIndicator(strokeWidth: 2, color: Colors.black),
+                      child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
                     )
                   : Text(
                       widget.transaction != null ? 'Update Transaction' : 'Save Transaction',
@@ -293,9 +338,64 @@ Widget build(BuildContext context) {
                     ),
             ),
           ),
-        ],
-      ),
+                ],
+              ),
+            ),
+          ),
+        );
+      },
     ),
   );
  }
+}
+
+/// The one entry point for opening Add/Edit Transaction - same
+/// reasoning and threshold as showAddSaleScreen elsewhere in this app:
+/// a full-screen push on mobile, a large, centered, dismissable modal
+/// on desktop/tablet-width screens.
+Future<void> showAddTransactionScreen(BuildContext context, {TransactionModel? transaction}) async {
+  final isWideScreen = MediaQuery.of(context).size.width >= 900;
+
+  if (!isWideScreen) {
+    await Navigator.of(context).push(
+      MaterialPageRoute(builder: (_) => AddTransactionScreen(transaction: transaction)),
+    );
+    return;
+  }
+
+  await showGeneralDialog(
+    context: context,
+    barrierDismissible: true,
+    barrierLabel: transaction != null ? 'Edit Transaction' : 'Add Transaction',
+    barrierColor: Colors.black54,
+    transitionDuration: const Duration(milliseconds: 220),
+    pageBuilder: (context, animation, secondaryAnimation) {
+      final screenSize = MediaQuery.of(context).size;
+      return Center(
+        child: SizedBox(
+          width: screenSize.width * 0.8,
+          height: screenSize.height * 0.85,
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(16),
+            child: Material(
+              child: AddTransactionScreen(transaction: transaction, isModal: true),
+            ),
+          ),
+        ),
+      );
+    },
+    transitionBuilder: (context, animation, secondaryAnimation, child) {
+      final curved = CurvedAnimation(parent: animation, curve: Curves.easeOutCubic);
+      return FadeTransition(
+        opacity: curved,
+        child: SlideTransition(
+          position: Tween<Offset>(begin: const Offset(0, 0.03), end: Offset.zero).animate(curved),
+          child: ScaleTransition(
+            scale: Tween<double>(begin: 0.96, end: 1.0).animate(curved),
+            child: child,
+          ),
+        ),
+      );
+    },
+  );
 }

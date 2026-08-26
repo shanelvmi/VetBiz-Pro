@@ -12,6 +12,8 @@ import '../providers/facility_provider.dart';
 import '../utils/facility_activation.dart';
 import '../utils/facility_code_generator.dart';
 import '../constants/facility_types.dart';
+import '../utils/trial_period_helper.dart';
+import '../utils/facility_limit_helper.dart';
 import 'facilities/facility_picker_screen.dart';
 
 class RegisterScreen extends StatefulWidget {
@@ -142,15 +144,56 @@ class _RegisterScreenState extends State<RegisterScreen> {
   // Facilities
   List<Map<String, dynamic>> facilities = [];
 
+  // Live listener for Edit Profile mode only - a person's facility
+  // list can change while this screen is open (an admin assigns them
+  // to a new one, or they add one themselves via View Facilities), so
+  // the read-only display here shouldn't stay frozen on whatever
+  // snapshot was passed in when this screen first opened. Not used
+  // during fresh registration - there's no existing account yet to
+  // listen to, and the facilities list there is the user's own
+  // locally-built list of what they're about to create.
+  StreamSubscription<DocumentSnapshot>? _facilitiesSub;
+
+  void _startLiveFacilitiesListener() {
+    final uid = FirebaseAuth.instance.currentUser?.uid;
+    if (uid == null) return;
+
+    _facilitiesSub = FirebaseFirestore.instance
+        .collection('users')
+        .doc(uid)
+        .snapshots()
+        .listen((snapshot) {
+      final data = snapshot.data();
+      if (data == null || !mounted) return;
+      final updatedFacilities = data['facilities'];
+      if (updatedFacilities is! List) return;
+
+      setState(() {
+        facilities = List<Map<String, dynamic>>.from(updatedFacilities);
+        if (selectedRole == 'Assistant' && facilities.isNotEmpty) {
+          assistantFacilityNameController.text = facilities.first['name'] ?? '';
+          assistantFacilityCodeController.text = facilities.first['code'] ?? '';
+        }
+      });
+    }, onError: (e) {
+      debugPrint('RegisterScreen facilities listener error: $e');
+    });
+  }
+
   @override
   void dispose() {
     _facilityLookupDebounce?.cancel();
+    _facilitiesSub?.cancel();
+    _maxFacilitiesSubscription?.cancel();
     super.dispose();
   }
 
   @override
   void initState() {
     super.initState();
+    _maxFacilitiesSubscription = streamMaxFacilitiesPerAdmin().listen((limit) {
+      if (mounted) setState(() => _maxFacilities = limit);
+    });
     final data = widget.userData;
 
     if (widget.isUpdating && data != null) {
@@ -183,6 +226,11 @@ class _RegisterScreenState extends State<RegisterScreen> {
           assistantFacilityCodeController.text = facilities.first['code'] ?? '';
         }
       }
+
+      // The above is just the initial value, from whatever snapshot
+      // was passed in when this screen opened - this keeps it current
+      // for as long as the screen stays open.
+      _startLiveFacilitiesListener();
     }
   }
 
@@ -203,11 +251,20 @@ class _RegisterScreenState extends State<RegisterScreen> {
   }
 
   bool _isAddingFacility = false;
+  int _maxFacilities = kDefaultMaxFacilitiesPerAdmin;
+  StreamSubscription<int>? _maxFacilitiesSubscription;
 
   Future<void> addFacility() async {
     final name = facilityNameController.text.trim();
     final type = _selectedFacilityType;
     if (name.isEmpty || type == null || _isAddingFacility) return;
+
+    if (facilities.length >= _maxFacilities) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("You've reached the limit of $_maxFacilities facilities per account.")),
+      );
+      return;
+    }
 
     setState(() => _isAddingFacility = true);
     try {
@@ -328,6 +385,12 @@ class _RegisterScreenState extends State<RegisterScreen> {
       List<Map<String, dynamic>> facilitiesWithId = [];
       List<String> facilityIds = [];
 
+      // Looked up once, not per-facility inside the loop below - the
+      // configured trial length can't change mid-registration, so
+      // there's no reason to re-fetch it for every facility being
+      // created in this one registration.
+      final trialExpiresAt = await computeNewFacilityTrialExpiry();
+
       // Add facilities to Firestore
       for (var f in facilities) {
         final docRef = await FirebaseFirestore.instance.collection('facilities').add({
@@ -336,11 +399,22 @@ class _RegisterScreenState extends State<RegisterScreen> {
           'code': f['code'],
           'createdBy': uid,
           'createdAt': FieldValue.serverTimestamp(),
+          'trialExpiresAt': Timestamp.fromDate(trialExpiresAt),
         });
 
         // FIXED: Ensure facilityId is set correctly
         facilitiesWithId.add({...f, 'facilityId': docRef.id});
         facilityIds.add(docRef.id);
+
+        // Written immediately, not just accumulated in the local list
+        // above and saved once after the loop - the facility-limit
+        // rule (isUnderFacilityLimit in firestore.rules) reads this
+        // field live on every facility create, so it needs to reflect
+        // the real, growing count as each one is created in this same
+        // registration, not just the count from before it started.
+        await FirebaseFirestore.instance.collection('users').doc(uid).update({
+          'facilityIds': FieldValue.arrayUnion([docRef.id]),
+        });
       }
 
       final imageUrl = await uploadImage(uid);
@@ -755,6 +829,13 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     },
                   ),
                 if (!widget.isUpdating) ...[
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 6),
+                  child: Text(
+                    '${facilities.length} of $_maxFacilities facilities added',
+                    style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+                  ),
+                ),
                 Row(
                   children: [
                     Expanded(
@@ -792,13 +873,17 @@ class _RegisterScreenState extends State<RegisterScreen> {
                               child: CircularProgressIndicator(strokeWidth: 2),
                             )
                           : const Icon(Icons.add_circle),
+                      tooltip: facilities.length >= _maxFacilities
+                          ? 'Maximum of $_maxFacilities facilities reached'
+                          : null,
                       style: ButtonStyle(
                         foregroundColor: WidgetStateProperty.resolveWith<Color>((states) {
+                          if (states.contains(WidgetState.disabled)) return Colors.grey.shade400;
                           if (states.contains(WidgetState.hovered)) return deepTealGreen;
                           return warmAmber;
                         }),
                       ),
-                      onPressed: _isAddingFacility ? null : addFacility,
+                      onPressed: (_isAddingFacility || facilities.length >= _maxFacilities) ? null : addFacility,
                     ),
                   ],
                 ),

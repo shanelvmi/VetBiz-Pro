@@ -2,10 +2,17 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
+import 'package:cloud_functions/cloud_functions.dart';
 import 'invite_assistant_dialog.dart';
+import '../../widgets/hover_elevate_card.dart';
 
 class ManageAssistantsScreen extends StatefulWidget {
-  const ManageAssistantsScreen({super.key});
+  // Set when opened as a deep link from a specific facility's card in
+  // View Facilities - pre-fills and expands the search so it's
+  // immediately filtered to that facility's team, rather than the
+  // full, unfiltered list of every assistant across every facility.
+  final String? initialSearchQuery;
+  const ManageAssistantsScreen({super.key, this.initialSearchQuery});
 
   @override
   State<ManageAssistantsScreen> createState() => _ManageAssistantsScreenState();
@@ -24,16 +31,14 @@ class _ManageAssistantsScreenState extends State<ManageAssistantsScreen> {
   bool _isSearchExpanded = false;
   final TextEditingController _searchController = TextEditingController();
 
-  // This week's activity count per assistant, keyed by their uid -
-  // fetched once per facility refresh rather than per-card inside
-  // build(), same reasoning as the assistants-per-facility fix on the
-  // Facilities screen: a fresh query inside every card's build would
-  // mean a flicker and a redundant read every single rebuild.
-  final Map<String, int> _weeklyActivityCount = {};
-
   @override
   void initState() {
     super.initState();
+    if (widget.initialSearchQuery != null && widget.initialSearchQuery!.isNotEmpty) {
+      _searchQuery = widget.initialSearchQuery!.trim().toLowerCase();
+      _searchController.text = widget.initialSearchQuery!.trim();
+      _isSearchExpanded = true;
+    }
     final user = FirebaseAuth.instance.currentUser;
     if (user != null) {
       adminUid = user.uid;
@@ -67,35 +72,6 @@ class _ManageAssistantsScreenState extends State<ManageAssistantsScreen> {
     }
   }
 
-  /// One week's worth of activity_logs entries for a single assistant,
-  /// within one specific facility. A simple count, not a breakdown by
-  /// action type - "how active has this person actually been" is the
-  /// real question, and a count answers it honestly without guessing at
-  /// dollar figures activity_logs was never built to store.
-  Future<int> _fetchWeeklyActivityCount(String facilityId, String assistantUid) async {
-    final weekAgo = DateTime.now().subtract(const Duration(days: 7));
-    final snap = await FirebaseFirestore.instance
-        .collection('facilities')
-        .doc(facilityId)
-        .collection('activity_logs')
-        .where('userId', isEqualTo: assistantUid)
-        .where('timestamp', isGreaterThanOrEqualTo: Timestamp.fromDate(weekAgo))
-        .count()
-        .get();
-    return snap.count ?? 0;
-  }
-
-  Future<void> _loadWeeklyActivity(List<QueryDocumentSnapshot> assistants) async {
-    for (final doc in assistants) {
-      final data = doc.data() as Map<String, dynamic>;
-      final facilityId = (data['facilityIds'] as List?)?.first as String?;
-      if (facilityId == null) continue;
-      final count = await _fetchWeeklyActivityCount(facilityId, doc.id);
-      if (!mounted) return;
-      setState(() => _weeklyActivityCount[doc.id] = count);
-    }
-  }
-
   Future<void> updateAssistantStatus(String userId, String newStatus) async {
     try {
       await FirebaseFirestore.instance.collection('users').doc(userId).update({
@@ -116,8 +92,28 @@ class _ManageAssistantsScreenState extends State<ManageAssistantsScreen> {
 
   Future<void> reassignAssistant(String userId, String newFacilityId) async {
     try {
+      // facilityIds is what every Firestore rule's isInFacility() check
+      // relies on, but facilities is the separate, denormalized array
+      // this app's UI actually reads for display (this screen, the
+      // Dashboard drawer, the facility picker). Updating only
+      // facilityIds left facilities still pointing at the old
+      // facility - the assistant would keep seeing the old facility's
+      // name/details everywhere, even though access to its actual data
+      // was already revoked.
+      final newFacilityDoc =
+          await FirebaseFirestore.instance.collection('facilities').doc(newFacilityId).get();
+      final newFacilityData = newFacilityDoc.data();
+
       await FirebaseFirestore.instance.collection('users').doc(userId).update({
         'facilityIds': [newFacilityId],
+        'facilities': [
+          {
+            'facilityId': newFacilityId,
+            'name': newFacilityData?['name'] ?? '',
+            'type': newFacilityData?['type'] ?? '',
+            'code': newFacilityData?['code'] ?? '',
+          },
+        ],
       });
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
@@ -238,14 +234,13 @@ class _ManageAssistantsScreenState extends State<ManageAssistantsScreen> {
     final facilityId = (data['facilityIds'] as List?)?.first ?? '';
     final facilityName = facilityNames[facilityId] ?? 'Unknown';
     final avatarUrl = data['avatarUrl'] as String?;
-    final weeklyCount = _weeklyActivityCount[doc.id];
     final statusColor = status == 'active'
         ? Colors.green
         : status == 'pending'
             ? Colors.orange
             : Colors.red;
 
-    return Card(
+    return HoverElevateCard(
       margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
       child: Padding(
         padding: const EdgeInsets.all(12),
@@ -296,26 +291,6 @@ class _ManageAssistantsScreenState extends State<ManageAssistantsScreen> {
                       ),
                       const SizedBox(height: 2),
                       Text('Facility: $facilityName', style: const TextStyle(fontSize: 13)),
-                      // How active this person has actually been, not
-                      // just whether their account exists - an honest
-                      // count of logged actions, not a guessed-at
-                      // dollar figure activity_logs was never built to
-                      // store reliably.
-                      if (status == 'active') ...[
-                        const SizedBox(height: 2),
-                        Row(
-                          children: [
-                            Icon(Icons.bolt, size: 14, color: Colors.grey[600]),
-                            const SizedBox(width: 4),
-                            Text(
-                              weeklyCount == null
-                                  ? 'Loading activity...'
-                                  : '$weeklyCount action${weeklyCount == 1 ? '' : 's'} this week',
-                              style: TextStyle(fontSize: 12, color: Colors.grey[600]),
-                            ),
-                          ],
-                        ),
-                      ],
                     ],
                   ),
                 ),
@@ -338,9 +313,9 @@ class _ManageAssistantsScreenState extends State<ManageAssistantsScreen> {
                     label: 'Deactivate',
                     icon: Icons.cancel_outlined,
                     color: Colors.red,
-                    onPressed: () => updateAssistantStatus(doc.id, 'inactive'),
+                    onPressed: () => updateAssistantStatus(doc.id, 'deactivated'),
                   ),
-                if (status == 'inactive')
+                if (status == 'deactivated')
                   _actionButton(
                     label: 'Reactivate',
                     icon: Icons.refresh,
@@ -364,7 +339,8 @@ class _ManageAssistantsScreenState extends State<ManageAssistantsScreen> {
                         context: context,
                         builder: (context) => AlertDialog(
                           title: const Text('Remove Assistant'),
-                          content: const Text('Are you sure you want to remove this assistant?',
+                          content: const Text(
+                              'Are you sure you want to remove this assistant? This also fully deletes their login - the same email can be used to register again elsewhere.',
                               style: TextStyle(fontSize: 13, color: Colors.redAccent)),
                           actions: [
                             TextButton(
@@ -380,11 +356,35 @@ class _ManageAssistantsScreenState extends State<ManageAssistantsScreen> {
                         ),
                       );
                       if (confirm == true) {
-                        await FirebaseFirestore.instance.collection('users').doc(doc.id).delete();
-                        if (!mounted) return;
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text('Assistant removed')),
+                        // A dedicated Cloud Function, not a direct
+                        // client-side Firestore delete - it also
+                        // deletes the actual Firebase Auth account,
+                        // which a client can never do for someone
+                        // else's account. Without that, the removed
+                        // assistant's login would silently fail
+                        // forever (no Firestore profile to route from)
+                        // and their email couldn't be used to register
+                        // anywhere else either.
+                        showDialog(
+                          context: context,
+                          barrierDismissible: false,
+                          builder: (context) => const Center(child: CircularProgressIndicator()),
                         );
+                        try {
+                          final callable = FirebaseFunctions.instance.httpsCallable('removeAssistant');
+                          await callable.call({'assistantUid': doc.id});
+                          if (!mounted) return;
+                          Navigator.pop(context); // close the loading indicator
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(content: Text('Assistant removed')),
+                          );
+                        } catch (e) {
+                          if (!mounted) return;
+                          Navigator.pop(context); // close the loading indicator
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(content: Text('Could not remove assistant: $e')),
+                          );
+                        }
                       }
                     },
                   ),
@@ -399,14 +399,18 @@ class _ManageAssistantsScreenState extends State<ManageAssistantsScreen> {
   Widget _buildAssistantsList(List<QueryDocumentSnapshot> assistants) {
     return LayoutBuilder(
       builder: (context, constraints) {
-        final isLargeScreen = constraints.maxWidth >= 1024;
+        // Smoothly scales to available width rather than one fixed
+        // breakpoint - same reasoning as View Facilities' grid, just a
+        // narrower ideal width since these cards carry less content.
+        const idealCardWidth = 400.0;
+        final crossAxisCount = (constraints.maxWidth / idealCardWidth).floor().clamp(1, 4);
 
-        if (isLargeScreen) {
+        if (crossAxisCount > 1) {
           return MasonryGridView.count(
             padding: const EdgeInsets.symmetric(vertical: 8),
-            crossAxisCount: 2,
-            crossAxisSpacing: 4,
-            mainAxisSpacing: 4,
+            crossAxisCount: crossAxisCount,
+            crossAxisSpacing: 12,
+            mainAxisSpacing: 12,
             itemCount: assistants.length,
             itemBuilder: (context, index) => _buildAssistantCard(assistants[index]),
           );
@@ -498,19 +502,6 @@ class _ManageAssistantsScreenState extends State<ManageAssistantsScreen> {
                   }
 
                   final allAssistants = snapshot.data!.docs;
-
-                  // Kick off activity counts for any assistant not yet
-                  // loaded - deliberately not awaited here (build()
-                  // can't be async); each one fills in via setState as
-                  // its own count arrives.
-                  final missing = allAssistants
-                      .where((d) => !_weeklyActivityCount.containsKey(d.id))
-                      .toList();
-                  if (missing.isNotEmpty) {
-                    WidgetsBinding.instance.addPostFrameCallback((_) {
-                      _loadWeeklyActivity(missing);
-                    });
-                  }
 
                   final filtered = _searchQuery.isEmpty
                       ? allAssistants

@@ -1,6 +1,7 @@
 import 'dart:typed_data';
 import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/rendering.dart';
 import 'package:provider/provider.dart';
 import 'package:share_plus/share_plus.dart';
@@ -10,6 +11,7 @@ import '../../models/sale.dart';
 import '../../providers/facility_provider.dart';
 import '../../services/receipt_printer_service.dart';
 import '../settings/printer_settings_screen.dart';
+import '../../utils/web_download.dart';
 
 /// Shows the receipt as it will actually look before doing anything with
 /// it - a real preview, not a blind print. From here it can be shared or
@@ -65,8 +67,9 @@ class _ReceiptPreviewScreenState extends State<ReceiptPreviewScreen> {
 
   Future<void> _shareOrSave() async {
     setState(() => _isSharing = true);
+    Uint8List? bytes;
     try {
-      final bytes = await _captureReceiptImage();
+      bytes = await _captureReceiptImage();
       if (bytes == null) throw Exception('Could not capture the receipt image.');
 
       final xfile = XFile.fromData(
@@ -75,11 +78,29 @@ class _ReceiptPreviewScreenState extends State<ReceiptPreviewScreen> {
         mimeType: 'image/png',
       );
 
+      debugPrint('Receipt captured: ${bytes.length} bytes. Opening share sheet...');
       await Share.shareXFiles([xfile], text: 'Receipt');
-    } catch (e) {
+      debugPrint('Share sheet closed normally.');
+    } catch (e, stack) {
       if (!mounted) return;
+      // Confirmed via testing: this is desktop browsers' well-known
+      // unreliable support for file-sharing through the Web Share API
+      // (the API exists, but sharing files specifically often just
+      // fails there, unlike on mobile) - not a benign cancellation, and
+      // not something worth showing as a scary error when there's a
+      // reliable fallback that still gets the file onto the user's
+      // device.
+      if (kIsWeb && bytes != null) {
+        downloadFileWeb(bytes, 'receipt_${widget.sale.id}.png');
+        return;
+      }
+      debugPrint('Share receipt failed: ${e.runtimeType} - $e\n$stack');
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Could not share receipt: $e'), backgroundColor: Colors.redAccent),
+        SnackBar(
+          content: SelectableText('Could not share receipt: $e', style: const TextStyle(color: Colors.white)),
+          backgroundColor: Colors.redAccent,
+          duration: const Duration(seconds: 10),
+        ),
       );
     } finally {
       if (mounted) setState(() => _isSharing = false);
@@ -145,6 +166,8 @@ class _ReceiptPreviewScreenState extends State<ReceiptPreviewScreen> {
     final facilityName = facilityProvider.selectedFacility?['name'] as String? ?? 'Facility';
     final facilityType = facilityProvider.selectedFacility?['type'] as String?;
     final logoUrl = facilityProvider.selectedFacility?['logoUrl'] as String?;
+    final facilityEmail = facilityProvider.selectedFacility?['email'] as String?;
+    final facilityPhone = facilityProvider.selectedFacility?['phone'] as String?;
 
     return Scaffold(
       backgroundColor: const Color(0xFFEDEDED),
@@ -169,26 +192,57 @@ class _ReceiptPreviewScreenState extends State<ReceiptPreviewScreen> {
           return Column(
             children: [
               Expanded(
-                child: Center(
-                  child: SingleChildScrollView(
-                    padding: const EdgeInsets.all(20),
-                    child: RepaintBoundary(
-                      key: _receiptKey,
+                child: Container(
+                  decoration: const BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.topCenter,
+                      end: Alignment.bottomCenter,
+                      colors: [Color(0xFFE4E4E4), Color(0xFFEFEFEF)],
+                    ),
+                  ),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      if (constraints.maxWidth >= 900)
+                        _buildSummaryPanel(sale, balance, facilityName),
+                      Expanded(
+                        child: Center(
+                    child: SingleChildScrollView(
+                      padding: const EdgeInsets.all(20),
                       child: Container(
-                        width: cardWidth,
-                        padding: const EdgeInsets.all(24),
-                        color: Colors.white,
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.stretch,
-                          children: [
+                        decoration: BoxDecoration(
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withValues(alpha: 0.18),
+                            blurRadius: 24,
+                            offset: const Offset(0, 10),
+                          ),
+                          BoxShadow(
+                            color: Colors.black.withValues(alpha: 0.06),
+                            blurRadius: 4,
+                            offset: const Offset(0, 2),
+                          ),
+                        ],
+                      ),
+                      child: RepaintBoundary(
+                        key: _receiptKey,
+                        child: Container(
+                          width: cardWidth,
+                          padding: const EdgeInsets.all(24),
+                          color: Colors.white,
+                          child: DefaultTextStyle.merge(
+                            style: const TextStyle(fontFamily: 'RobotoMono'),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.stretch,
+                              children: [
                         if (logoUrl != null && logoUrl.isNotEmpty) ...[
                           Center(
-                            child: ClipOval(
+                            child: SizedBox(
+                              width: 56,
+                              height: 56,
                               child: Image.network(
                                 logoUrl,
-                                width: 56,
-                                height: 56,
-                                fit: BoxFit.cover,
+                                fit: BoxFit.contain,
                                 // If the logo genuinely fails to load
                                 // (bad connection, deleted file), the
                                 // receipt still renders cleanly without
@@ -212,16 +266,36 @@ class _ReceiptPreviewScreenState extends State<ReceiptPreviewScreen> {
                           textAlign: TextAlign.center,
                           style: const TextStyle(fontSize: 13),
                         ),
+                        if ((facilityPhone != null && facilityPhone.isNotEmpty) ||
+                            (facilityEmail != null && facilityEmail.isNotEmpty)) ...[
+                          const SizedBox(height: 4),
+                          if (facilityPhone != null && facilityPhone.isNotEmpty)
+                            Text(
+                              facilityPhone,
+                              textAlign: TextAlign.center,
+                              style: const TextStyle(fontSize: 11, color: Colors.black87),
+                            ),
+                          if (facilityEmail != null && facilityEmail.isNotEmpty)
+                            Text(
+                              facilityEmail,
+                              textAlign: TextAlign.center,
+                              style: const TextStyle(fontSize: 11, color: Colors.black87),
+                            ),
+                        ],
                         const SizedBox(height: 14),
-                        const Divider(),
+                        const Text('- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -', maxLines: 1, overflow: TextOverflow.clip, style: TextStyle(letterSpacing: 1, height: 1)),
                         const SizedBox(height: 4),
+                        if (sale.receiptNumber != null) ...[
+                          Text('Receipt #: ${sale.receiptNumber}'),
+                          const SizedBox(height: 2),
+                        ],
                         Text('Client: ${sale.clientName ?? 'Walk-in'}'),
                         const SizedBox(height: 2),
                         Text('Sold by: ${sale.soldByName}'),
                         const SizedBox(height: 2),
                         Text('Date: ${DateFormat('dd MMM yyyy, HH:mm').format(sale.timestamp)}'),
                         const SizedBox(height: 4),
-                        const Divider(),
+                        const Text('- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -', maxLines: 1, overflow: TextOverflow.clip, style: TextStyle(letterSpacing: 1, height: 1)),
                         ...sale.items.map((item) {
                           final lineTotal = item.quantity * item.unitPrice - item.discount;
                           return Padding(
@@ -241,7 +315,7 @@ class _ReceiptPreviewScreenState extends State<ReceiptPreviewScreen> {
                             ),
                           );
                         }),
-                        const Divider(),
+                        const Text('- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -', maxLines: 1, overflow: TextOverflow.clip, style: TextStyle(letterSpacing: 1, height: 1)),
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
@@ -280,17 +354,23 @@ class _ReceiptPreviewScreenState extends State<ReceiptPreviewScreen> {
                             style: TextStyle(fontSize: 9, color: Colors.grey[500])),
                       ],
                     ),
+                    ),
                   ),
                 ),
               ),
             ),
           ),
-          Container(
+                      ),
+                    ],
+                  ),
+        ),
+        ),
+        Container(
             padding: const EdgeInsets.all(16),
             color: Colors.white,
             child: Center(
               child: ConstrainedBox(
-                constraints: BoxConstraints(maxWidth: cardWidth),
+                constraints: const BoxConstraints(maxWidth: 480),
                 child: Row(
                   children: [
                     Expanded(
@@ -325,6 +405,82 @@ class _ReceiptPreviewScreenState extends State<ReceiptPreviewScreen> {
             ],
           );
         },
+      ),
+    );
+  }
+
+  /// A readable, desktop-sized summary shown beside the receipt on wide
+  /// screens - the receipt's own text is deliberately tiny to match
+  /// actual thermal-printer output, which is correct for the receipt
+  /// but not great for someone reviewing it on a desktop monitor. This
+  /// surfaces the same key facts at a normal reading size rather than
+  /// duplicating the full line-item breakdown, which the receipt
+  /// itself already shows right beside it.
+  Widget _buildSummaryPanel(Sale sale, double balance, String facilityName) {
+    final statusColor = balance > 0 ? Colors.red : Colors.green;
+    final statusText = balance > 0
+        ? (sale.totalPaid > 0 ? 'Partially Paid' : 'Balance Due')
+        : 'Paid in Full';
+
+    Widget row(String label, String value, {Color? valueColor, bool bold = false}) {
+      return Padding(
+        padding: const EdgeInsets.only(bottom: 10),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(label, style: TextStyle(fontSize: 12, color: Colors.grey[600])),
+            const SizedBox(height: 2),
+            Text(
+              value,
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: bold ? FontWeight.bold : FontWeight.normal,
+                color: valueColor ?? Colors.black87,
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
+    return Container(
+      width: 260,
+      margin: const EdgeInsets.only(right: 24),
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        boxShadow: [
+          BoxShadow(color: Colors.black.withValues(alpha: 0.06), blurRadius: 8, offset: const Offset(0, 3)),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+            decoration: BoxDecoration(
+              color: statusColor.withValues(alpha: 0.1),
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(color: statusColor.withValues(alpha: 0.4)),
+            ),
+            child: Text(
+              statusText,
+              style: TextStyle(color: statusColor, fontWeight: FontWeight.bold, fontSize: 13),
+            ),
+          ),
+          const SizedBox(height: 18),
+          if (sale.receiptNumber != null) row('Receipt Number', '#${sale.receiptNumber}'),
+          row('Facility', facilityName),
+          row('Client', sale.clientName ?? 'Walk-in'),
+          row('Sold By', sale.soldByName),
+          row('Date', DateFormat('dd MMM yyyy, HH:mm').format(sale.timestamp)),
+          const Divider(height: 24),
+          row('Total Amount', 'Tsh ${_moneyFormat.format(sale.totalAmount)}', bold: true),
+          row('Total Paid', 'Tsh ${_moneyFormat.format(sale.totalPaid)}'),
+          if (balance > 0) row('Balance Due', 'Tsh ${_moneyFormat.format(balance)}', valueColor: Colors.red, bold: true),
+          if (sale.paymentMethod != null) row('Payment Method', sale.paymentMethod!),
+        ],
       ),
     );
   }

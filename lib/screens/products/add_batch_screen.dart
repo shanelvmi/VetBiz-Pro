@@ -13,7 +13,8 @@ import '../../providers/facility_provider.dart';
 /// the expiry of stock already there".
 class AddBatchScreen extends StatefulWidget {
   final Product product;
-  const AddBatchScreen({super.key, required this.product});
+  final bool isModal;
+  const AddBatchScreen({super.key, required this.product, this.isModal = false});
 
   @override
   State<AddBatchScreen> createState() => _AddBatchScreenState();
@@ -117,6 +118,14 @@ class _AddBatchScreenState extends State<AddBatchScreen> {
         centerTitle: true,
         backgroundColor: primaryColor,
         foregroundColor: Colors.white,
+        automaticallyImplyLeading: !widget.isModal,
+        leading: widget.isModal
+            ? IconButton(
+                icon: const Icon(Icons.close),
+                tooltip: 'Close',
+                onPressed: () => Navigator.of(context).pop(),
+              )
+            : null,
       ),
       body: Center(
         child: ConstrainedBox(
@@ -206,4 +215,55 @@ class _AddBatchScreenState extends State<AddBatchScreen> {
       ),
     );
   }
+}
+
+/// The one entry point for opening Add Batch - same reasoning and
+/// threshold as showAddSaleScreen elsewhere in this app: a full-screen
+/// push on mobile, a large, centered, dismissable modal on
+/// desktop/tablet-width screens.
+Future<void> showAddBatchScreen(BuildContext context, {required Product product}) async {
+  final isWideScreen = MediaQuery.of(context).size.width >= 900;
+
+  if (!isWideScreen) {
+    await Navigator.of(context).push(
+      MaterialPageRoute(builder: (_) => AddBatchScreen(product: product)),
+    );
+    return;
+  }
+
+  await showGeneralDialog(
+    context: context,
+    barrierDismissible: true,
+    barrierLabel: 'Add Batch',
+    barrierColor: Colors.black54,
+    transitionDuration: const Duration(milliseconds: 220),
+    pageBuilder: (context, animation, secondaryAnimation) {
+      final screenSize = MediaQuery.of(context).size;
+      return Center(
+        child: SizedBox(
+          width: screenSize.width * 0.8,
+          height: screenSize.height * 0.85,
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(16),
+            child: Material(
+              child: AddBatchScreen(product: product, isModal: true),
+            ),
+          ),
+        ),
+      );
+    },
+    transitionBuilder: (context, animation, secondaryAnimation, child) {
+      final curved = CurvedAnimation(parent: animation, curve: Curves.easeOutCubic);
+      return FadeTransition(
+        opacity: curved,
+        child: SlideTransition(
+          position: Tween<Offset>(begin: const Offset(0, 0.03), end: Offset.zero).animate(curved),
+          child: ScaleTransition(
+            scale: Tween<double>(begin: 0.96, end: 1.0).animate(curved),
+            child: child,
+          ),
+        ),
+      );
+    },
+  );
 }

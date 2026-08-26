@@ -9,6 +9,7 @@ import '../../models/transaction.dart';
 import '../../services/dashboard_summary_service.dart';
 import '../../widgets/date_range_dialog.dart';
 import '../../providers/user_role_provider.dart';
+import '../../widgets/payment_method_selector.dart';
 import 'add_transaction_screen.dart';
 
 class TransactionScreen extends StatefulWidget {
@@ -245,10 +246,7 @@ class _TransactionScreenState extends State<TransactionScreen> {
         icon: const Icon(Icons.add),
         label: const Text('Add Transaction'),
         onPressed: () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(builder: (_) => const AddTransactionScreen()),
-          );
+          showAddTransactionScreen(context);
         },
       ),
     );
@@ -389,15 +387,8 @@ class _TransactionScreenState extends State<TransactionScreen> {
       TransactionProvider transactionProvider, NumberFormat formatter) {
     final isIncome = tx.type.toLowerCase() == 'other income';
 
-    return GestureDetector(
-      onTap: () {
-        Navigator.push(
-          context,
-          MaterialPageRoute(builder: (_) => AddTransactionScreen(transaction: tx)),
-        );
-      },
-      child: Container(
-        margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
         padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
           color: TransactionScreen.offWhite,
@@ -448,6 +439,17 @@ class _TransactionScreenState extends State<TransactionScreen> {
             const SizedBox(height: 4),
             Text('Recorded By: ${tx.recordedBy.isEmpty ? 'Unknown' : tx.recordedBy}',
                 style: const TextStyle(fontSize: 13)),
+            if (tx.paymentMethod != null) ...[
+              const SizedBox(height: 4),
+              Row(
+                children: [
+                  const Text('Payment Method: ', style: TextStyle(fontSize: 13)),
+                  Icon(iconForPaymentMethod(tx.paymentMethod!), size: 14, color: Colors.grey[700]),
+                  const SizedBox(width: 3),
+                  Text(tx.paymentMethod!, style: const TextStyle(fontSize: 13)),
+                ],
+              ),
+            ],
             const SizedBox(height: 8),
             Row(
               mainAxisAlignment: MainAxisAlignment.end,
@@ -474,10 +476,7 @@ class _TransactionScreenState extends State<TransactionScreen> {
                 const SizedBox(width: 8),
                 ElevatedButton.icon(
                   onPressed: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (_) => AddTransactionScreen(transaction: tx)),
-                    );
+                    showAddTransactionScreen(context, transaction: tx);
                   },
                   icon: const Icon(Icons.edit, size: 16),
                   label: const Text('Edit'),
@@ -495,9 +494,8 @@ class _TransactionScreenState extends State<TransactionScreen> {
             ),
           ],
         ),
-      ),
-    );
-  }
+      );
+    }
 }
 
 class _SummaryCard extends StatelessWidget {

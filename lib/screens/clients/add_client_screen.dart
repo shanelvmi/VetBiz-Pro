@@ -6,8 +6,9 @@ import '../../models/client.dart';
 
 class AddClientScreen extends StatefulWidget {
   final Client? client; // null = add, not null = edit
+  final bool isModal;
 
-  const AddClientScreen({super.key, this.client});
+  const AddClientScreen({super.key, this.client, this.isModal = false});
 
   @override
   State<AddClientScreen> createState() => _AddClientScreenState();
@@ -209,6 +210,14 @@ class _AddClientScreenState extends State<AddClientScreen> {
         backgroundColor: primaryDeepGreen,
         foregroundColor: offWhite,
         centerTitle: true,
+        automaticallyImplyLeading: !widget.isModal,
+        leading: widget.isModal
+            ? IconButton(
+                icon: const Icon(Icons.close),
+                tooltip: 'Close',
+                onPressed: () => Navigator.of(context).pop(),
+              )
+            : null,
       ),
       body: Center(
         child: ConstrainedBox(
@@ -466,4 +475,57 @@ class _AddClientScreenState extends State<AddClientScreen> {
       ],
     );
   }
+}
+
+/// The one entry point for opening Add/Edit Client - same reasoning
+/// and threshold as showAddSaleScreen elsewhere in this app: a
+/// full-screen push on mobile, a large, centered, dismissable modal on
+/// desktop/tablet-width screens. Returns whatever the screen itself
+/// popped with (true on a successful save), same as calling
+/// Navigator.push directly - existing callers that check that value
+/// (e.g. add_edit_service_screen.dart) keep working unchanged.
+Future<bool?> showAddClientScreen(BuildContext context, {Client? client}) async {
+  final isWideScreen = MediaQuery.of(context).size.width >= 900;
+
+  if (!isWideScreen) {
+    return Navigator.of(context).push<bool>(
+      MaterialPageRoute(builder: (_) => AddClientScreen(client: client)),
+    );
+  }
+
+  return showGeneralDialog<bool>(
+    context: context,
+    barrierDismissible: true,
+    barrierLabel: client == null ? 'Add Client' : 'Edit Client',
+    barrierColor: Colors.black54,
+    transitionDuration: const Duration(milliseconds: 220),
+    pageBuilder: (context, animation, secondaryAnimation) {
+      final screenSize = MediaQuery.of(context).size;
+      return Center(
+        child: SizedBox(
+          width: screenSize.width * 0.8,
+          height: screenSize.height * 0.85,
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(16),
+            child: Material(
+              child: AddClientScreen(client: client, isModal: true),
+            ),
+          ),
+        ),
+      );
+    },
+    transitionBuilder: (context, animation, secondaryAnimation, child) {
+      final curved = CurvedAnimation(parent: animation, curve: Curves.easeOutCubic);
+      return FadeTransition(
+        opacity: curved,
+        child: SlideTransition(
+          position: Tween<Offset>(begin: const Offset(0, 0.03), end: Offset.zero).animate(curved),
+          child: ScaleTransition(
+            scale: Tween<double>(begin: 0.96, end: 1.0).animate(curved),
+            child: child,
+          ),
+        ),
+      );
+    },
+  );
 }

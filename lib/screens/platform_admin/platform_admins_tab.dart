@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:intl/intl.dart';
+
+import '../../widgets/hover_elevate_card.dart';
 
 /// Manage who else has platform admin access - previously the only way
 /// to grant this was manually creating a document in Firebase Console.
@@ -113,33 +116,41 @@ class _PlatformAdminsTabState extends State<PlatformAdminsTab> {
       children: [
         Padding(
           padding: const EdgeInsets.all(16),
-          child: Row(
-            children: [
-              Expanded(
-                child: TextField(
-                  controller: _emailController,
-                  decoration: const InputDecoration(
-                    labelText: 'Add admin by email',
-                    border: OutlineInputBorder(),
-                    isDense: true,
+          child: Card(
+            elevation: 1,
+            child: Padding(
+              padding: const EdgeInsets.all(12),
+              child: Row(
+                children: [
+                  Icon(Icons.person_add_alt_1, color: primaryColor, size: 22),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: TextField(
+                      controller: _emailController,
+                      decoration: const InputDecoration(
+                        labelText: 'Add admin by email',
+                        border: OutlineInputBorder(),
+                        isDense: true,
+                      ),
+                    ),
                   ),
-                ),
+                  const SizedBox(width: 8),
+                  ElevatedButton(
+                    onPressed: _isSearching ? null : _addAdminByEmail,
+                    style: ButtonStyle(
+                      backgroundColor: WidgetStateProperty.resolveWith<Color>((states) {
+                        if (states.contains(WidgetState.hovered)) return const Color(0xFFFFB200);
+                        return primaryColor;
+                      }),
+                      foregroundColor: WidgetStateProperty.all(Colors.white),
+                    ),
+                    child: _isSearching
+                        ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
+                        : const Text('Add'),
+                  ),
+                ],
               ),
-              const SizedBox(width: 8),
-              ElevatedButton(
-                onPressed: _isSearching ? null : _addAdminByEmail,
-                style: ButtonStyle(
-                  backgroundColor: WidgetStateProperty.resolveWith<Color>((states) {
-                    if (states.contains(WidgetState.hovered)) return const Color(0xFFFFB200);
-                    return primaryColor;
-                  }),
-                  foregroundColor: WidgetStateProperty.all(Colors.white),
-                ),
-                child: _isSearching
-                    ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
-                    : const Text('Add'),
-              ),
-            ],
+            ),
           ),
         ),
         Expanded(
@@ -181,19 +192,75 @@ class _PlatformAdminsTabState extends State<PlatformAdminsTab> {
                       final title = fullName?.isNotEmpty == true
                           ? fullName!
                           : (email ?? doc.id);
+                      final addedAtField = data['addedAt'];
+                      final addedAt = addedAtField is Timestamp ? addedAtField.toDate() : null;
+                      final addedBy = data['addedBy'] as String?;
 
-                      return Card(
+                      return HoverElevateCard(
                         margin: const EdgeInsets.only(bottom: 8),
-                        child: ListTile(
-                          leading: Icon(Icons.admin_panel_settings, color: primaryColor),
-                          title: Text(isYou ? '$title (You)' : title, style: const TextStyle(fontWeight: FontWeight.bold)),
-                          subtitle: Text(email ?? 'No email on record'),
-                          trailing: isYou
-                              ? null
-                              : IconButton(
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                          child: Row(
+                            children: [
+                              CircleAvatar(
+                                backgroundColor: primaryColor,
+                                child: Text(
+                                  title.isNotEmpty ? title[0].toUpperCase() : '?',
+                                  style: const TextStyle(color: Colors.white),
+                                ),
+                              ),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Row(
+                                      children: [
+                                        Flexible(
+                                          child: Text(
+                                            title,
+                                            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
+                                            overflow: TextOverflow.ellipsis,
+                                          ),
+                                        ),
+                                        if (isYou) ...[
+                                          const SizedBox(width: 6),
+                                          Container(
+                                            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                            decoration: BoxDecoration(
+                                              color: primaryColor.withValues(alpha: 0.12),
+                                              borderRadius: BorderRadius.circular(8),
+                                            ),
+                                            child: Text('You', style: TextStyle(fontSize: 10.5, color: primaryColor, fontWeight: FontWeight.w600)),
+                                          ),
+                                        ],
+                                      ],
+                                    ),
+                                    const SizedBox(height: 2),
+                                    Text(
+                                      email ?? 'No email on record',
+                                      style: TextStyle(fontSize: 12.5, color: Colors.grey[600]),
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                    if (addedAt != null) ...[
+                                      const SizedBox(height: 2),
+                                      Text(
+                                        'Added ${DateFormat('d MMM yyyy').format(addedAt)}${addedBy != null ? ' by $addedBy' : ''}',
+                                        style: TextStyle(fontSize: 11, color: Colors.grey[500]),
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
+                                    ],
+                                  ],
+                                ),
+                              ),
+                              if (!isYou)
+                                IconButton(
                                   icon: const Icon(Icons.remove_circle_outline, color: Colors.redAccent),
+                                  tooltip: 'Remove admin access',
                                   onPressed: () => _removeAdmin(doc.id, email),
                                 ),
+                            ],
+                          ),
                         ),
                       );
                     },

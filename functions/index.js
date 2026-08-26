@@ -923,3 +923,217 @@ exports.deleteOwnFacility = functions.https.onCall(async (data, context) => {
     );
   }
 });
+
+/**
+ * Remove Assistant - a facility Admin removing an assistant from their
+ * facility. Deletes both the Firestore users/{uid} document AND the
+ * actual Firebase Auth account - a client can only ever delete its own
+ * signed-in Auth account, never someone else's, so without this
+ * server-side step the assistant's email/password stayed valid in Auth
+ * forever even after their Firestore profile was gone. That silently
+ * broke two things: logging in succeeded at the Auth layer but found no
+ * profile to route from, and the same email couldn't be used to
+ * register anywhere else either, since Firebase Auth enforces unique
+ * emails project-wide, not per-facility.
+ */
+exports.removeAssistant = functions.https.onCall(async (data, context) => {
+  if (!context.auth) {
+    throw new functions.https.HttpsError(
+      "unauthenticated",
+      "You must be signed in to do this."
+    );
+  }
+
+  const assistantUid = data && data.assistantUid;
+  if (!assistantUid || typeof assistantUid !== "string") {
+    throw new functions.https.HttpsError(
+      "invalid-argument",
+      "assistantUid is required."
+    );
+  }
+
+  const callerUid = context.auth.uid;
+
+  const assistantDoc = await db.collection("users").doc(assistantUid).get();
+
+  if (!assistantDoc.exists) {
+    // Firestore doc already gone - still attempt the Auth cleanup in
+    // case that's the part that's actually left dangling (e.g. a
+    // previous removal that used the old, direct-delete client path,
+    // from before this function existed). Nothing left to check
+    // permissions against at that point, so this is deliberately
+    // best-effort rather than blocking.
+    try {
+      await admin.auth().deleteUser(assistantUid);
+    } catch (error) {
+      // Already gone from Auth too, or never existed - either way,
+      // there's genuinely nothing left to remove.
+    }
+    return { success: true };
+  }
+
+  const assistantData = assistantDoc.data();
+  if (assistantData.role !== "assistant") {
+    throw new functions.https.HttpsError(
+      "failed-precondition",
+      "This account is not an assistant."
+    );
+  }
+
+  // Caller must be an admin of a facility this assistant actually
+  // belongs to - checked here server-side, not just assumed from the
+  // client, since deleting a Firebase Auth account is irreversible.
+  const callerDoc = await db.collection("users").doc(callerUid).get();
+  const callerData = callerDoc.data();
+  if (!callerData || callerData.role !== "admin") {
+    throw new functions.https.HttpsError(
+      "permission-denied",
+      "Only an admin can remove an assistant."
+    );
+  }
+
+  const callerFacilityIds = callerData.facilityIds || [];
+  const assistantFacilityIds = assistantData.facilityIds || [];
+  const sharesAFacility = assistantFacilityIds.some((id) =>
+    callerFacilityIds.includes(id)
+  );
+  if (!sharesAFacility) {
+    throw new functions.https.HttpsError(
+      "permission-denied",
+      "This assistant is not assigned to any facility you administer."
+    );
+  }
+
+  try {
+    await db.collection("users").doc(assistantUid).delete();
+  } catch (error) {
+    console.error(
+      `removeAssistant: failed to delete Firestore doc for ${assistantUid}:`,
+      error
+    );
+    throw new functions.https.HttpsError(
+      "internal",
+      `Could not remove this assistant's profile: ${error.message || error}`
+    );
+  }
+
+  try {
+    await admin.auth().deleteUser(assistantUid);
+  } catch (error) {
+    // The Firestore profile is already gone at this point - the part
+    // that actually caused the silent-login-failure and
+    // can't-re-register symptoms. A failure here is logged but doesn't
+    // roll back or fail the whole operation, since the assistant's
+    // access to this facility is already fully revoked either way.
+    console.error(
+      `removeAssistant: failed to delete Auth account for ${assistantUid}:`,
+      error
+    );
+  }
+
+  return { success: true };
+});
+
+/**
+ * Remove User (Platform Admin) - permanently deletes a deactivated
+ * user's account (Firestore profile + Firebase Auth), platform-wide -
+ * not scoped to sharing a facility with the caller, since a Platform
+ * Admin oversees every facility, not just some of them. Deliberately
+ * restricted to accounts already status === 'deactivated', mirroring
+ * the same safety gate already used in the client UI for facility
+ * Admins removing their own assistants - even a fully trusted Platform
+ * Admin shouldn't be able to permanently delete a currently-active
+ * account in one click without deactivating it first. A Platform
+ * Admin's own account can never be removed this way, regardless of
+ * status, for the same reason it can never be deactivated at all.
+ */
+exports.platformRemoveUser = functions.https.onCall(async (data, context) => {
+  if (!context.auth) {
+    throw new functions.https.HttpsError(
+      "unauthenticated",
+      "You must be signed in to do this."
+    );
+  }
+
+  const targetUid = data && data.userId;
+  if (!targetUid || typeof targetUid !== "string") {
+    throw new functions.https.HttpsError(
+      "invalid-argument",
+      "userId is required."
+    );
+  }
+
+  const callerUid = context.auth.uid;
+  const callerPlatformAdminDoc = await db
+    .collection("platform_admins")
+    .doc(callerUid)
+    .get();
+  if (!callerPlatformAdminDoc.exists) {
+    throw new functions.https.HttpsError(
+      "permission-denied",
+      "Only a Platform Admin can remove a user this way."
+    );
+  }
+
+  const targetDoc = await db.collection("users").doc(targetUid).get();
+
+  if (!targetDoc.exists) {
+    // Firestore doc already gone - still attempt the Auth cleanup in
+    // case that's the part left dangling, same reasoning as
+    // removeAssistant above.
+    try {
+      await admin.auth().deleteUser(targetUid);
+    } catch (error) {
+      // Already gone from Auth too, or never existed.
+    }
+    return { success: true };
+  }
+
+  const targetIsPlatformAdmin = await db
+    .collection("platform_admins")
+    .doc(targetUid)
+    .get();
+  if (targetIsPlatformAdmin.exists) {
+    throw new functions.https.HttpsError(
+      "failed-precondition",
+      "A Platform Admin's own account can't be removed this way."
+    );
+  }
+
+  const targetData = targetDoc.data();
+  const targetStatus = (targetData.status || "active").toString();
+  if (targetStatus !== "deactivated") {
+    throw new functions.https.HttpsError(
+      "failed-precondition",
+      "Deactivate this account first before removing it."
+    );
+  }
+
+  try {
+    await db.collection("users").doc(targetUid).delete();
+  } catch (error) {
+    console.error(
+      `platformRemoveUser: failed to delete Firestore doc for ${targetUid}:`,
+      error
+    );
+    throw new functions.https.HttpsError(
+      "internal",
+      `Could not remove this user's profile: ${error.message || error}`
+    );
+  }
+
+  try {
+    await admin.auth().deleteUser(targetUid);
+  } catch (error) {
+    // The Firestore profile is already gone at this point - a failure
+    // here is logged but doesn't roll back or fail the whole
+    // operation, since the account's access is already fully revoked
+    // either way.
+    console.error(
+      `platformRemoveUser: failed to delete Auth account for ${targetUid}:`,
+      error
+    );
+  }
+
+  return { success: true };
+});

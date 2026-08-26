@@ -224,12 +224,7 @@ class _ProductsScreenState extends State<ProductsScreen> {
       ),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () async {
-          await Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (_) => const AddEditProductScreen(),
-            ),
-          );
+          await showAddEditProductScreen(context);
         },
         backgroundColor: primaryDeepGreen,
         foregroundColor: offWhite,
@@ -315,17 +310,8 @@ class _ProductsScreenState extends State<ProductsScreen> {
   Widget _buildProductCard(Product p) {
     final status = _getProductStatus(p);
 
-    return GestureDetector(
-      onTap: () async {
-        await Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (_) => AddEditProductScreen(product: p),
-          ),
-        );
-      },
-      child: Container(
-        margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
         padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
           color: offWhite,
@@ -433,24 +419,36 @@ class _ProductsScreenState extends State<ProductsScreen> {
 
             const SizedBox(height: 8),
 
-            // Action buttons
-            Row(
-              mainAxisAlignment: MainAxisAlignment.end,
+            // Action buttons - Wrap rather than Row, since up to four
+            // items (Edit, Batches menu, Delete, Sell) side by side
+            // could overflow a narrow phone screen; this drops
+            // gracefully to a second line instead.
+            Wrap(
+              alignment: WrapAlignment.end,
+              crossAxisAlignment: WrapCrossAlignment.center,
+              spacing: 4,
+              runSpacing: 4,
               children: [
+                // Edit button - the only way to reach the edit screen
+                // now; the card itself is no longer tappable, since a
+                // whole-card tap-to-edit made it too easy to open
+                // editing by accident while just browsing the list.
+                TextButton.icon(
+                  onPressed: () async {
+                    await showAddEditProductScreen(context, product: p);
+                  },
+                  icon: Icon(Icons.edit, size: 16, color: primaryDeepGreen),
+                  label: Text('Edit', style: TextStyle(color: primaryDeepGreen)),
+                ),
+
                 PopupMenuButton<String>(
                   icon: Icon(Icons.layers_outlined, color: primaryDeepGreen, size: 20),
                   tooltip: 'Batches',
                   onSelected: (value) {
                     if (value == 'add') {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(builder: (_) => AddBatchScreen(product: p)),
-                      );
+                      showAddBatchScreen(context, product: p);
                     } else if (value == 'view') {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(builder: (_) => ViewBatchesScreen(product: p)),
-                      );
+                      showViewBatchesScreen(context, product: p);
                     }
                   },
                   itemBuilder: (context) => const [
@@ -472,10 +470,7 @@ class _ProductsScreenState extends State<ProductsScreen> {
                 // Sell button - takes you into the real Add Sale flow.
                 ElevatedButton.icon(
                   onPressed: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (_) => const AddSaleScreen()),
-                    );
+                    showAddSaleScreen(context);
                   },
                   icon: const Icon(Icons.sell, size: 16),
                   label: const Text('Sell'),
@@ -495,7 +490,6 @@ class _ProductsScreenState extends State<ProductsScreen> {
             ),
           ],
         ),
-      ),
-    );
+      );
   }
 }

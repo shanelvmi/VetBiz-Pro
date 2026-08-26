@@ -10,13 +10,15 @@ import '../../models/client.dart';
 import '../../models/product.dart';
 import '../../providers/client_provider.dart';
 import '../../providers/service_provider.dart';
+import '../../widgets/payment_method_selector.dart';
 import '../../providers/product_provider.dart';
 import '../../providers/facility_provider.dart';
 import '../clients/add_client_screen.dart';
 
 class AddEditServiceScreen extends StatefulWidget {
   final Service? service;
-  const AddEditServiceScreen({super.key, this.service});
+  final bool isModal;
+  const AddEditServiceScreen({super.key, this.service, this.isModal = false});
 
   @override
   State<AddEditServiceScreen> createState() => _AddEditServiceScreenState();
@@ -31,6 +33,7 @@ class _AddEditServiceScreenState extends State<AddEditServiceScreen> {
   late TextEditingController _totalPaidController;
   late TextEditingController _providedByController;
   late TextEditingController _clientTextController;
+  String? _paymentMethod;
 
   Client? _selectedClient;
   String? _selectedCategory;
@@ -61,6 +64,13 @@ class _AddEditServiceScreenState extends State<AddEditServiceScreen> {
   // Same idea as the item-row suggestions, for the client search field.
   bool _showClientSuggestions = false;
 
+  // Used to measure the client field's actual on-screen position, so
+  // the suggestions overlay below can be placed precisely under it
+  // rather than guessing a fixed pixel offset - same pattern as Add
+  // Sale's client field overlay.
+  final GlobalKey _clientFieldKey = GlobalKey();
+  final GlobalKey _stackKey = GlobalKey();
+
   @override
   void initState() {
     super.initState();
@@ -87,6 +97,7 @@ class _AddEditServiceScreenState extends State<AddEditServiceScreen> {
 
     // Prefill date: today if new, original if editing
     _serviceDate = widget.service?.serviceDate ?? DateTime.now();
+    _paymentMethod = widget.service?.paymentMethod;
 
     double totalAmount = widget.service?.totalAmount ?? 0.0;
 
@@ -98,6 +109,7 @@ class _AddEditServiceScreenState extends State<AddEditServiceScreen> {
           ? _tshFormat.format(widget.service!.totalPaid)
           : _tshFormat.format(totalAmount),
     );
+    _totalPaidController.addListener(() => setState(() {}));
 
     // Load items if editing
     if (widget.service?.itemsUsed.isNotEmpty ?? false) {
@@ -151,10 +163,7 @@ class _AddEditServiceScreenState extends State<AddEditServiceScreen> {
   }
 
   Future<void> _addNewClient(BuildContext context) async {
-    final added = await Navigator.push<bool>(
-      context,
-      MaterialPageRoute(builder: (_) => const AddClientScreen()),
-    );
+    final added = await showAddClientScreen(context);
     if (added == true) setState(() {});
   }
 
@@ -238,87 +247,79 @@ class _AddEditServiceScreenState extends State<AddEditServiceScreen> {
             style: TextStyle(color: offWhite)),
         backgroundColor: primaryDeepGreen,
         iconTheme: IconThemeData(color: offWhite),
+        centerTitle: true,
+        automaticallyImplyLeading: !widget.isModal,
+        leading: widget.isModal
+            ? IconButton(
+                icon: Icon(Icons.close, color: offWhite),
+                tooltip: 'Close',
+                onPressed: () => Navigator.of(context).pop(),
+              )
+            : null,
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Form(
+      body: LayoutBuilder(
+        builder: (context, constraints) {
+          final isNarrow = constraints.maxWidth < 480;
+          return Stack(
+            key: _stackKey,
+            children: [
+              Center(
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: 700),
+                  child: SingleChildScrollView(
+                    padding: const EdgeInsets.all(16),
+                    child: Form(
           key: _formKey,
-          child: ListView(
-            primary: true,
+          child: Column(
             children: [
               // CLIENT FIELD
-              TextFormField(
-                controller: _clientTextController,
-                decoration: InputDecoration(
-                  hintText: 'Select Client',
-                  border: const OutlineInputBorder(),
-                  focusedBorder: OutlineInputBorder(
-                    borderSide: BorderSide(color: darkTeal, width: 2),
+              Row(
+                key: _clientFieldKey,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Expanded(
+                    child: TextFormField(
+                      controller: _clientTextController,
+                      decoration: InputDecoration(
+                        hintText: 'Select Client',
+                        border: const OutlineInputBorder(),
+                        focusedBorder: OutlineInputBorder(
+                          borderSide: BorderSide(color: darkTeal, width: 2),
+                        ),
+                      ),
+                      style: TextStyle(color: darkTeal),
+                      onTap: () => setState(() {
+                        _showClientSuggestions = _clientTextController.text.trim().isNotEmpty;
+                      }),
+                      onChanged: (val) {
+                        setState(() {
+                          _selectedClient = null; // typing clears any prior selection
+                          _showClientSuggestions = val.trim().isNotEmpty;
+                        });
+                      },
+                      validator: (value) {
+                        if (_selectedClient == null) {
+                          return 'Please select a client';
+                        }
+                        return null;
+                      },
+                    ),
                   ),
-                  suffixIcon: IconButton(
-                    icon: const Icon(Icons.add),
+                  const SizedBox(width: 8),
+                  IconButton(
+                    icon: const Icon(Icons.add, color: Colors.white),
+                    tooltip: 'Add New Client',
+                    style: ButtonStyle(
+                      shape: WidgetStateProperty.all(const CircleBorder()),
+                      backgroundColor: WidgetStateProperty.resolveWith<Color>((states) {
+                        if (states.contains(WidgetState.hovered)) return warmAmber;
+                        return primaryDeepGreen;
+                      }),
+                    ),
                     onPressed: () => _addNewClient(context),
                   ),
-                ),
-                style: TextStyle(color: darkTeal),
-                onTap: () => setState(() {
-                  _showClientSuggestions = _clientTextController.text.trim().isNotEmpty;
-                }),
-                onChanged: (val) {
-                  setState(() {
-                    _selectedClient = null; // typing clears any prior selection
-                    _showClientSuggestions = val.trim().isNotEmpty;
-                  });
-                },
-                validator: (value) {
-                  if (_selectedClient == null) {
-                    return 'Please select a client';
-                  }
-                  return null;
-                },
+                ],
               ),
-              if (_showClientSuggestions && _clientTextController.text.trim().isNotEmpty)
-                Builder(builder: (context) {
-                  final query = _clientTextController.text.toLowerCase();
-                  final matches = clientProvider.clients
-                      .where((c) => c.name.toLowerCase().contains(query))
-                      .take(6)
-                      .toList();
-
-                  if (matches.isEmpty) {
-                    return ListTile(
-                      title: const Text('No client found'),
-                      trailing: IconButton(
-                        icon: const Icon(Icons.add),
-                        onPressed: () => _addNewClient(context),
-                      ),
-                    );
-                  }
-
-                  return Container(
-                    margin: const EdgeInsets.only(top: 4),
-                    decoration: BoxDecoration(
-                      border: Border.all(color: Colors.grey[300]!),
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: matches.map((client) {
-                        return ListTile(
-                          title: Text(client.name),
-                          subtitle: Text(client.phone),
-                          onTap: () {
-                            setState(() {
-                              _selectedClient = client;
-                              _clientTextController.text = client.name;
-                              _showClientSuggestions = false;
-                            });
-                          },
-                        );
-                      }).toList(),
-                    ),
-                  );
-                }),
 
               const SizedBox(height: 20),
 
@@ -417,6 +418,14 @@ class _AddEditServiceScreenState extends State<AddEditServiceScreen> {
                   ),
                 ],
               ),
+              if (_parseAmount(_totalPaidController.text) > 0) ...[
+                const SizedBox(height: 16),
+                PaymentMethodSelector(
+                  value: _paymentMethod,
+                  activeColor: primaryDeepGreen,
+                  onChanged: (method) => setState(() => _paymentMethod = method),
+                ),
+              ],
 
               const SizedBox(height: 20),
 
@@ -587,10 +596,12 @@ class _AddEditServiceScreenState extends State<AddEditServiceScreen> {
               // ---- SUBMIT BUTTON ----
               _isLoading
                   ? const Center(child: CircularProgressIndicator())
-                  : MouseRegion(
-                      cursor: SystemMouseCursors.click,
-                      child: ElevatedButton(
-                        style: ButtonStyle(
+                  : SizedBox(
+                      width: double.infinity,
+                      child: MouseRegion(
+                        cursor: SystemMouseCursors.click,
+                        child: ElevatedButton(
+                          style: ButtonStyle(
                           backgroundColor:
                               WidgetStateProperty.resolveWith<Color>(
                             (states) => states.contains(WidgetState.hovered)
@@ -625,6 +636,16 @@ class _AddEditServiceScreenState extends State<AddEditServiceScreen> {
                             return;
                           }
 
+                          if (totalPaid > 0 && _paymentMethod == null) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                content: Text('Select how this payment was made'),
+                              ),
+                            );
+                            setState(() => _isLoading = false);
+                            return;
+                          }
+
                           final service = Service(
                             id: widget.service?.id ?? '',
                             category: _selectedCategory ?? 'Other',
@@ -639,6 +660,7 @@ class _AddEditServiceScreenState extends State<AddEditServiceScreen> {
                                 _providedByController.text.trim(),
                             updatedAt: DateTime.now(),
                             itemsUsed: _collectItemsUsed(),
+                            paymentMethod: totalPaid > 0 ? _paymentMethod : null,
                           );
 
                           try {
@@ -686,15 +708,152 @@ class _AddEditServiceScreenState extends State<AddEditServiceScreen> {
                           }
                         },
                         child: Text(isEditing ? 'Update' : 'Add'),
+                        ),
                       ),
                     ),
             ],
           ),
         ),
+                  ),
+                ),
+              ),
+              _buildClientSuggestionsOverlay(clientProvider, isNarrow),
+            ],
+          );
+        },
       ),
-     )
+    )
     );
   }
+
+  /// The client-name suggestions, shown as a genuine overlay positioned
+  /// just under the client field - rather than sitting inline in the
+  /// form's own layout flow, where it would push everything below it
+  /// (including the item rows and Add Item button) down every time it
+  /// appeared. Measures the client field's actual on-screen position
+  /// via its GlobalKey, rather than assuming a fixed pixel offset.
+  Widget _buildClientSuggestionsOverlay(ClientProvider clientProvider, bool isNarrow) {
+    if (!_showClientSuggestions || _clientTextController.text.trim().isEmpty) {
+      return const SizedBox.shrink();
+    }
+
+    final renderBox = _clientFieldKey.currentContext?.findRenderObject() as RenderBox?;
+    if (renderBox == null) return const SizedBox.shrink();
+
+    final fieldPosition = renderBox.localToGlobal(Offset.zero);
+    final fieldSize = renderBox.size;
+
+    final stackBox = _stackKey.currentContext?.findRenderObject() as RenderBox?;
+    final localTop = stackBox != null
+        ? stackBox.globalToLocal(fieldPosition).dy
+        : fieldPosition.dy;
+
+    final query = _clientTextController.text.toLowerCase();
+    final matches = clientProvider.clients
+        .where((c) => c.name.toLowerCase().contains(query))
+        .take(6)
+        .toList();
+
+    final horizontalInset = isNarrow
+        ? 16.0
+        : (MediaQuery.of(context).size.width - 700).clamp(0, double.infinity) / 2 + 16;
+
+    return Positioned(
+      top: localTop + fieldSize.height + 4,
+      left: horizontalInset,
+      right: horizontalInset,
+      child: Material(
+        elevation: 6,
+        borderRadius: BorderRadius.circular(8),
+        child: Container(
+          constraints: const BoxConstraints(maxHeight: 260),
+          decoration: BoxDecoration(
+            border: Border.all(color: Colors.grey[300]!),
+            borderRadius: BorderRadius.circular(8),
+            color: offWhite,
+          ),
+          child: matches.isEmpty
+              ? ListTile(
+                  title: const Text('No client found'),
+                  trailing: IconButton(
+                    icon: const Icon(Icons.add),
+                    onPressed: () => _addNewClient(context),
+                  ),
+                )
+              : ListView(
+                  shrinkWrap: true,
+                  padding: EdgeInsets.zero,
+                  children: matches.map((client) {
+                    return ListTile(
+                      title: Text(client.name),
+                      subtitle: Text(client.phone),
+                      hoverColor: warmAmber.withValues(alpha: 0.15),
+                      onTap: () {
+                        setState(() {
+                          _selectedClient = client;
+                          _clientTextController.text = client.name;
+                          _showClientSuggestions = false;
+                        });
+                      },
+                    );
+                  }).toList(),
+                ),
+        ),
+      ),
+    );
+  }
+}
+
+/// The one entry point for opening Add/Edit Service - a full-screen
+/// push on mobile, a large, centered, dismissable modal on
+/// desktop/tablet-width screens. Same reasoning as showAddSaleScreen -
+/// a quick, frequent action shouldn't need a full page navigation away
+/// from wherever it was triggered.
+Future<void> showAddEditServiceScreen(BuildContext context, {Service? service}) async {
+  final isWideScreen = MediaQuery.of(context).size.width >= 900;
+
+  if (!isWideScreen) {
+    await Navigator.of(context).push(
+      MaterialPageRoute(builder: (_) => AddEditServiceScreen(service: service)),
+    );
+    return;
+  }
+
+  await showGeneralDialog(
+    context: context,
+    barrierDismissible: true,
+    barrierLabel: service != null ? 'Edit Service' : 'Add Service',
+    barrierColor: Colors.black54,
+    transitionDuration: const Duration(milliseconds: 220),
+    pageBuilder: (context, animation, secondaryAnimation) {
+      final screenSize = MediaQuery.of(context).size;
+      return Center(
+        child: SizedBox(
+          width: screenSize.width * 0.8,
+          height: screenSize.height * 0.85,
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(16),
+            child: Material(
+              child: AddEditServiceScreen(service: service, isModal: true),
+            ),
+          ),
+        ),
+      );
+    },
+    transitionBuilder: (context, animation, secondaryAnimation, child) {
+      final curved = CurvedAnimation(parent: animation, curve: Curves.easeOutCubic);
+      return FadeTransition(
+        opacity: curved,
+        child: SlideTransition(
+          position: Tween<Offset>(begin: const Offset(0, 0.03), end: Offset.zero).animate(curved),
+          child: ScaleTransition(
+            scale: Tween<double>(begin: 0.96, end: 1.0).animate(curved),
+            child: child,
+          ),
+        ),
+      );
+    },
+  );
 }
 
 // Thousand separator formatting

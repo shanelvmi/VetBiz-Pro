@@ -1,0 +1,603 @@
+import 'package:flutter/material.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+
+import '../../constants/subscription_plans.dart';
+import '../../widgets/hover_elevate_card.dart';
+import '../../utils/facility_limit_helper.dart';
+import 'promotions_screen.dart';
+
+/// Platform-wide configuration - currently new-facility trial length and
+/// subscription pricing. Deliberately separate from Overview: Overview
+/// answers "how's the business doing right now" (stats you glance at),
+/// this answers "how are the business rules configured" (forms you fill
+/// in rarely) - two different things that don't belong on the same
+/// screen. Reached via the gear icon next to Logout, not a tab, since
+/// it's not content to browse alongside Facilities/Users/Requests/etc -
+/// it should feel reachable from anywhere, not like one of the sections.
+class PlatformSettingsScreen extends StatelessWidget {
+  final bool isModal;
+  const PlatformSettingsScreen({super.key, this.isModal = false});
+
+  static const Color primaryColor = Color(0xFF2F5D62);
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: const Color(0xFFFDFDF9),
+      appBar: AppBar(
+        title: const Text('Platform Settings'),
+        centerTitle: true,
+        backgroundColor: primaryColor,
+        foregroundColor: Colors.white,
+        automaticallyImplyLeading: !isModal,
+        leading: isModal
+            ? IconButton(
+                icon: const Icon(Icons.close),
+                tooltip: 'Close',
+                onPressed: () => Navigator.of(context).pop(),
+              )
+            : null,
+      ),
+      body: Center(
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 700),
+          child: ListView(
+            padding: const EdgeInsets.all(16),
+            children: [
+              const _TrialSettingsCard(),
+              const SizedBox(height: 16),
+              const _PricingSettingsCard(),
+              const SizedBox(height: 16),
+              const _FacilityLimitSettingsCard(),
+              const SizedBox(height: 16),
+              HoverElevateCard(
+                child: InkWell(
+                  borderRadius: BorderRadius.circular(12),
+                  onTap: () => showPromotionsScreen(context),
+                  child: const Padding(
+                    padding: EdgeInsets.all(14),
+                    child: Row(
+                      children: [
+                        Icon(Icons.local_offer_outlined, color: primaryColor, size: 22),
+                        SizedBox(width: 12),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text('Promotions', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
+                              SizedBox(height: 2),
+                              Text(
+                                'Create seasonal sales or renewal offers for expiring facilities.',
+                                style: TextStyle(fontSize: 12, color: Colors.grey),
+                              ),
+                            ],
+                          ),
+                        ),
+                        Icon(Icons.chevron_right, color: Colors.grey),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Lets a Platform Admin configure how many days a brand-new
+/// facility's trial lasts. Deliberately only ever read at
+/// facility-creation time (see computeNewFacilityTrialExpiry) - a
+/// change here only affects facilities created after that change,
+/// never retroactively changing one already mid-trial.
+class _TrialSettingsCard extends StatefulWidget {
+  const _TrialSettingsCard();
+
+  @override
+  State<_TrialSettingsCard> createState() => _TrialSettingsCardState();
+}
+
+class _TrialSettingsCardState extends State<_TrialSettingsCard> {
+  static const Color primaryColor = Color(0xFF2F5D62);
+  static const Color warmAmber = Color(0xFFFFB200);
+
+  final TextEditingController _controller = TextEditingController();
+  bool _isLoading = true;
+  bool _isSaving = false;
+  int _currentDays = kDefaultTrialDays;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadCurrentValue();
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  Future<void> _loadCurrentValue() async {
+    try {
+      final doc =
+          await FirebaseFirestore.instance.collection('platform_config').doc('settings').get();
+      final configured = (doc.data()?['trialDays'] as num?)?.toInt();
+      if (mounted) {
+        setState(() {
+          _currentDays = (configured != null && configured > 0) ? configured : kDefaultTrialDays;
+          _controller.text = _currentDays.toString();
+          _isLoading = false;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _controller.text = _currentDays.toString();
+          _isLoading = false;
+        });
+      }
+    }
+  }
+
+  Future<void> _save() async {
+    final parsed = int.tryParse(_controller.text.trim());
+    if (parsed == null || parsed <= 0) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Enter a whole number of days, greater than 0')),
+      );
+      return;
+    }
+
+    setState(() => _isSaving = true);
+    try {
+      await FirebaseFirestore.instance
+          .collection('platform_config')
+          .doc('settings')
+          .set({'trialDays': parsed}, SetOptions(merge: true));
+      if (!mounted) return;
+      setState(() {
+        _currentDays = parsed;
+        _isSaving = false;
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Trial length set to $parsed day${parsed == 1 ? '' : 's'} - applies to facilities created from now on.'),
+          backgroundColor: Colors.green,
+        ),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      setState(() => _isSaving = false);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Could not save: $e'), backgroundColor: Colors.redAccent),
+      );
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return HoverElevateCard(
+      child: Padding(
+        padding: const EdgeInsets.all(14),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Icon(Icons.hourglass_empty, color: primaryColor, size: 20),
+                const SizedBox(width: 8),
+                const Text('New Facility Trial Length',
+                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
+              ],
+            ),
+            const SizedBox(height: 4),
+            Text(
+              'Only applies to facilities created from now on - never changes one already mid-trial.',
+              style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+            ),
+            const SizedBox(height: 12),
+            if (_isLoading)
+              const Center(child: Padding(padding: EdgeInsets.all(8), child: CircularProgressIndicator()))
+            else
+              Row(
+                children: [
+                  SizedBox(
+                    width: 90,
+                    child: TextField(
+                      controller: _controller,
+                      keyboardType: TextInputType.number,
+                      decoration: const InputDecoration(
+                        border: OutlineInputBorder(),
+                        isDense: true,
+                        suffixText: 'days',
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  ElevatedButton(
+                    onPressed: _isSaving ? null : _save,
+                    style: ButtonStyle(
+                      backgroundColor: WidgetStateProperty.resolveWith<Color>((states) {
+                        if (states.contains(WidgetState.hovered)) return warmAmber;
+                        return primaryColor;
+                      }),
+                      foregroundColor: WidgetStateProperty.all(Colors.white),
+                    ),
+                    child: _isSaving
+                        ? const SizedBox(
+                            width: 16, height: 16,
+                            child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                          )
+                        : const Text('Save'),
+                  ),
+                  const SizedBox(width: 12),
+                  Text('Currently: $_currentDays days', style: TextStyle(fontSize: 12, color: Colors.grey[600])),
+                ],
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// Lets a Platform Admin set real prices for all four plans, replacing
+/// what were previously hardcoded placeholder values in
+/// subscription_plans.dart requiring a code deploy to change - now a
+/// straightforward Firestore write, same platform_config/settings
+/// document the trial length uses.
+class _PricingSettingsCard extends StatefulWidget {
+  const _PricingSettingsCard();
+
+  @override
+  State<_PricingSettingsCard> createState() => _PricingSettingsCardState();
+}
+
+class _PricingSettingsCardState extends State<_PricingSettingsCard> {
+  static const Color primaryColor = Color(0xFF2F5D62);
+  static const Color warmAmber = Color(0xFFFFB200);
+
+  final Map<String, TextEditingController> _controllers = {
+    for (final plan in kSubscriptionPlans) plan.id: TextEditingController(),
+  };
+  bool _isLoading = true;
+  bool _isSaving = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadCurrentValues();
+  }
+
+  @override
+  void dispose() {
+    for (final controller in _controllers.values) {
+      controller.dispose();
+    }
+    super.dispose();
+  }
+
+  Future<void> _loadCurrentValues() async {
+    // Falls back to the static defaults on any read failure (e.g.
+    // offline), same reasoning as loadSubscriptionPlans() itself -
+    // the fields should never be left blank.
+    final plans = await loadSubscriptionPlans();
+    if (!mounted) return;
+    setState(() {
+      for (final plan in plans) {
+        _controllers[plan.id]?.text = plan.priceTsh.toStringAsFixed(0);
+      }
+      _isLoading = false;
+    });
+  }
+
+  Future<void> _save() async {
+    final updates = <String, double>{};
+    for (final plan in kSubscriptionPlans) {
+      final raw = _controllers[plan.id]?.text.trim() ?? '';
+      final parsed = double.tryParse(raw);
+      if (parsed == null || parsed < 0) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Enter a valid price for ${plan.label}')),
+        );
+        return;
+      }
+      updates['${plan.id}PriceTsh'] = parsed;
+    }
+
+    setState(() => _isSaving = true);
+    try {
+      await FirebaseFirestore.instance
+          .collection('platform_config')
+          .doc('settings')
+          .set(updates, SetOptions(merge: true));
+      if (!mounted) return;
+      setState(() => _isSaving = false);
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Prices updated - applies to new payment submissions from now on.'),
+          backgroundColor: Colors.green,
+        ),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      setState(() => _isSaving = false);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Could not save: $e'), backgroundColor: Colors.redAccent),
+      );
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return HoverElevateCard(
+      child: Padding(
+        padding: const EdgeInsets.all(14),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Icon(Icons.sell_outlined, color: primaryColor, size: 20),
+                const SizedBox(width: 8),
+                const Text('Subscription Pricing',
+                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
+              ],
+            ),
+            const SizedBox(height: 4),
+            Text(
+              'Applies to new payment submissions from now on - never changes what a facility already paid.',
+              style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+            ),
+            const SizedBox(height: 12),
+            if (_isLoading)
+              const Center(child: Padding(padding: EdgeInsets.all(8), child: CircularProgressIndicator()))
+            else
+              Wrap(
+                spacing: 12,
+                runSpacing: 12,
+                children: kSubscriptionPlans.map((plan) {
+                  return SizedBox(
+                    width: 150,
+                    child: TextField(
+                      controller: _controllers[plan.id],
+                      keyboardType: TextInputType.number,
+                      decoration: InputDecoration(
+                        labelText: plan.label,
+                        border: const OutlineInputBorder(),
+                        isDense: true,
+                        prefixText: 'Tsh ',
+                      ),
+                    ),
+                  );
+                }).toList(),
+              ),
+            const SizedBox(height: 12),
+            if (!_isLoading)
+              ElevatedButton(
+                onPressed: _isSaving ? null : _save,
+                style: ButtonStyle(
+                  backgroundColor: WidgetStateProperty.resolveWith<Color>((states) {
+                    if (states.contains(WidgetState.hovered)) return warmAmber;
+                    return primaryColor;
+                  }),
+                  foregroundColor: WidgetStateProperty.all(Colors.white),
+                ),
+                child: _isSaving
+                    ? const SizedBox(
+                        width: 16,
+                        height: 16,
+                        child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                      )
+                    : const Text('Save All Prices'),
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// Lets a Platform Admin configure how many facilities a single Admin
+/// account can create - primarily to prevent one account from
+/// spinning up endless facilities purely to keep generating fresh
+/// trial periods on each new one. Enforced in firestore.rules'
+/// isUnderFacilityLimit(), not just here - this card only controls
+/// the configured number, the actual enforcement lives at the data
+/// layer.
+class _FacilityLimitSettingsCard extends StatefulWidget {
+  const _FacilityLimitSettingsCard();
+
+  @override
+  State<_FacilityLimitSettingsCard> createState() => _FacilityLimitSettingsCardState();
+}
+
+class _FacilityLimitSettingsCardState extends State<_FacilityLimitSettingsCard> {
+  static const Color primaryColor = Color(0xFF2F5D62);
+  static const Color warmAmber = Color(0xFFFFB200);
+
+  final TextEditingController _controller = TextEditingController();
+  bool _isLoading = true;
+  bool _isSaving = false;
+  int _currentLimit = kDefaultMaxFacilitiesPerAdmin;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadCurrentValue();
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  Future<void> _loadCurrentValue() async {
+    final limit = await loadMaxFacilitiesPerAdmin();
+    if (mounted) {
+      setState(() {
+        _currentLimit = limit;
+        _controller.text = limit.toString();
+        _isLoading = false;
+      });
+    }
+  }
+
+  Future<void> _save() async {
+    final parsed = int.tryParse(_controller.text.trim());
+    if (parsed == null || parsed <= 0) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Enter a whole number, greater than 0')),
+      );
+      return;
+    }
+
+    setState(() => _isSaving = true);
+    try {
+      await FirebaseFirestore.instance
+          .collection('platform_config')
+          .doc('settings')
+          .set({'maxFacilitiesPerAdmin': parsed}, SetOptions(merge: true));
+      if (!mounted) return;
+      setState(() {
+        _currentLimit = parsed;
+        _isSaving = false;
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Facility limit set to $parsed per Admin account.'),
+          backgroundColor: Colors.green,
+        ),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      setState(() => _isSaving = false);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Could not save: $e'), backgroundColor: Colors.redAccent),
+      );
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return HoverElevateCard(
+      child: Padding(
+        padding: const EdgeInsets.all(14),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Icon(Icons.storefront_outlined, color: primaryColor, size: 20),
+                const SizedBox(width: 8),
+                const Text('Facility Limit Per Admin',
+                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
+              ],
+            ),
+            const SizedBox(height: 4),
+            Text(
+              'Caps how many facilities a single Admin account can create - mainly to prevent trial abuse via endless new facilities.',
+              style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+            ),
+            const SizedBox(height: 12),
+            if (_isLoading)
+              const Center(child: Padding(padding: EdgeInsets.all(8), child: CircularProgressIndicator()))
+            else
+              Row(
+                children: [
+                  SizedBox(
+                    width: 90,
+                    child: TextField(
+                      controller: _controller,
+                      keyboardType: TextInputType.number,
+                      decoration: const InputDecoration(
+                        border: OutlineInputBorder(),
+                        isDense: true,
+                        suffixText: 'max',
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  ElevatedButton(
+                    onPressed: _isSaving ? null : _save,
+                    style: ButtonStyle(
+                      backgroundColor: WidgetStateProperty.resolveWith<Color>((states) {
+                        if (states.contains(WidgetState.hovered)) return warmAmber;
+                        return primaryColor;
+                      }),
+                      foregroundColor: WidgetStateProperty.all(Colors.white),
+                    ),
+                    child: _isSaving
+                        ? const SizedBox(
+                            width: 16, height: 16,
+                            child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                          )
+                        : const Text('Save'),
+                  ),
+                  const SizedBox(width: 12),
+                  Text('Currently: $_currentLimit', style: TextStyle(fontSize: 12, color: Colors.grey[600])),
+                ],
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// The one entry point for opening Platform Settings - same reasoning
+/// and threshold as showActivityLog/showSubscriptionScreen/
+/// showInsightsScreen: a full-screen push on mobile, a large, centered,
+/// dismissable modal on desktop/tablet-width screens. This is
+/// substantial form content (two real settings cards), so it gets the
+/// large-modal treatment rather than a small dropdown.
+Future<void> showPlatformSettingsScreen(BuildContext context) async {
+  final isWideScreen = MediaQuery.of(context).size.width >= 900;
+
+  if (!isWideScreen) {
+    await Navigator.of(context).push(
+      MaterialPageRoute(builder: (_) => const PlatformSettingsScreen()),
+    );
+    return;
+  }
+
+  await showGeneralDialog(
+    context: context,
+    barrierDismissible: true,
+    barrierLabel: 'Platform Settings',
+    barrierColor: Colors.black54,
+    transitionDuration: const Duration(milliseconds: 220),
+    pageBuilder: (context, animation, secondaryAnimation) {
+      final screenSize = MediaQuery.of(context).size;
+      return Center(
+        child: SizedBox(
+          width: screenSize.width * 0.8,
+          height: screenSize.height * 0.85,
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(16),
+            child: const Material(
+              child: PlatformSettingsScreen(isModal: true),
+            ),
+          ),
+        ),
+      );
+    },
+    transitionBuilder: (context, animation, secondaryAnimation, child) {
+      final curved = CurvedAnimation(parent: animation, curve: Curves.easeOutCubic);
+      return FadeTransition(
+        opacity: curved,
+        child: SlideTransition(
+          position: Tween<Offset>(begin: const Offset(0, 0.03), end: Offset.zero).animate(curved),
+          child: ScaleTransition(
+            scale: Tween<double>(begin: 0.96, end: 1.0).animate(curved),
+            child: child,
+          ),
+        ),
+      );
+    },
+  );
+}

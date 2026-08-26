@@ -8,6 +8,7 @@ import '../../models/client.dart';
 import '../../models/product.dart';
 import '../../models/sale.dart';
 import '../../models/debt.dart';
+import '../../widgets/payment_method_selector.dart';
 
 import '../../providers/client_provider.dart';
 import '../../providers/product_provider.dart';
@@ -40,7 +41,8 @@ class ThousandsSeparatorInputFormatter extends TextInputFormatter {
 
 // --- Add Sale Screen ---
 class AddSaleScreen extends StatefulWidget {
-  const AddSaleScreen({super.key});
+  final bool isModal;
+  const AddSaleScreen({super.key, this.isModal = false});
 
   @override
   State<AddSaleScreen> createState() => _AddSaleScreenState();
@@ -56,6 +58,17 @@ class _AddSaleScreenState extends State<AddSaleScreen> {
   List<SaleItem> items = [];
   double totalPaid = 0.0;
   bool saleOnCredit = false;
+  String? paymentMethod;
+
+  // Used to measure the client field's actual on-screen position, so
+  // the suggestions overlay below can be placed precisely under it
+  // rather than guessing a fixed pixel offset.
+  final GlobalKey _clientFieldRowKey = GlobalKey();
+  // The Stack the overlay is positioned within - used as the exact
+  // reference frame for converting the field's global position to a
+  // local one, rather than the whole Scaffold (which would also
+  // include the AppBar's own height in that conversion).
+  final GlobalKey _stackKey = GlobalKey();
 
   final Color primaryDeepGreen = const Color(0xFF2F5D62);
   final Color warmAmber = const Color(0xFFFFB200);
@@ -171,11 +184,19 @@ class _AddSaleScreenState extends State<AddSaleScreen> {
                                   ),
                                   child: ListTile(
                                     title: Text(prod.name),
-                                    subtitle: Text(
-                                        'Sell Price: Tsh ${_thousandsFormat.format(prod.sellPrice)}\n'
-                                        'Sellable: ${prod.sellableQty} ${prod.unit}',
-                                        style: TextStyle(color: Colors.black87),
-                                      ),
+                                    subtitle: Row(
+                                      children: [
+                                        Text(
+                                          'Tsh ${_thousandsFormat.format(prod.sellPrice)}',
+                                          style: const TextStyle(color: Colors.black87, fontWeight: FontWeight.w600),
+                                        ),
+                                        const SizedBox(width: 12),
+                                        Text(
+                                          '${prod.sellableQty} ${prod.unit} available',
+                                          style: TextStyle(color: Colors.grey[600], fontSize: 12.5),
+                                        ),
+                                      ],
+                                    ),
                                     onTap: () {
                                       dialogSetState(() {
                                         selectedProduct = prod;
@@ -367,6 +388,13 @@ class _AddSaleScreenState extends State<AddSaleScreen> {
       return;
     }
 
+    if (totalPaid > 0 && paymentMethod == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Select how this payment was made')),
+      );
+      return;
+    }
+
     setState(() => _isSaving = true);
 
     try {
@@ -435,6 +463,7 @@ class _AddSaleScreenState extends State<AddSaleScreen> {
         totalProfit: totalProfit,
         realizedProfit: realizedProfit,
         unrealizedProfit: unrealizedProfit,
+        paymentMethod: totalPaid > 0 ? paymentMethod : null,
       );
 
       final saleId = await saleProvider.addSale(sale, facilityId);
@@ -510,13 +539,31 @@ class _AddSaleScreenState extends State<AddSaleScreen> {
       backgroundColor: offWhite,
       appBar: AppBar(
         backgroundColor: primaryDeepGreen,
+        centerTitle: true,
         title: const Text('Add Sale', style: TextStyle(color: Colors.white)),
         iconTheme: const IconThemeData(color: Colors.white),
+        automaticallyImplyLeading: !widget.isModal,
+        leading: widget.isModal
+            ? IconButton(
+                icon: const Icon(Icons.close, color: Colors.white),
+                tooltip: 'Close',
+                onPressed: () => Navigator.of(context).pop(),
+              )
+            : null,
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          children: [
+      body: LayoutBuilder(
+        builder: (context, constraints) {
+          final isNarrow = constraints.maxWidth < 480;
+          return Stack(
+            key: _stackKey,
+            children: [
+              Center(
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: 700),
+                  child: SingleChildScrollView(
+                    padding: const EdgeInsets.all(16),
+                    child: Column(
+                      children: [
             Row(
               children: [
                 Checkbox(
@@ -541,84 +588,44 @@ class _AddSaleScreenState extends State<AddSaleScreen> {
             ),
             const SizedBox(height: 8),
             Row(
+              key: _clientFieldRowKey,
               children: [
                 Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      TextField(
-                        controller: clientController,
-                        decoration: InputDecoration(
-                          labelText: saleOnCredit
-                              ? 'Select Client (required)'
-                              : 'Select Client (optional)',
-                          filled: true,
-                          fillColor: deepTeal.withValues(alpha: 0.1),
-                          border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-                          prefixIcon: const Icon(Icons.person, color: Colors.black54),
-                        ),
-                        onTap: () => setState(() {
-                          _showClientSuggestions = clientController.text.trim().isNotEmpty;
-                        }),
-                        onChanged: (val) {
-                          setState(() {
-                            selectedClient = null; // typing clears any prior selection
-                            _showClientSuggestions = val.trim().isNotEmpty;
-                          });
-                        },
-                      ),
-                      if (_showClientSuggestions && clientController.text.trim().isNotEmpty)
-                        Builder(builder: (context) {
-                          final query = clientController.text.toLowerCase();
-                          final matches = clientProvider.clients
-                              .where((c) => c.name.toLowerCase().contains(query))
-                              .take(6)
-                              .toList();
-
-                          if (matches.isEmpty) return const SizedBox.shrink();
-
-                          return Container(
-                            margin: const EdgeInsets.only(top: 4),
-                            decoration: BoxDecoration(
-                              border: Border.all(color: Colors.grey[300]!),
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                            child: Column(
-                              mainAxisSize: MainAxisSize.min,
-                              children: matches.map((client) {
-                                return ListTile(
-                                  title: Text(client.name),
-                                  hoverColor: warmAmber.withValues(alpha: 0.15),
-                                  onTap: () {
-                                    setState(() {
-                                      selectedClient = client;
-                                      clientController.text = client.name;
-                                      _showClientSuggestions = false;
-                                    });
-                                  },
-                                );
-                              }).toList(),
-                            ),
-                          );
-                        }),
-                    ],
+                  child: TextField(
+                    controller: clientController,
+                    decoration: InputDecoration(
+                      labelText: saleOnCredit
+                          ? 'Select Client (required)'
+                          : 'Select Client (optional)',
+                      filled: true,
+                      fillColor: deepTeal.withValues(alpha: 0.1),
+                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                      prefixIcon: const Icon(Icons.person, color: Colors.black54),
+                    ),
+                    onTap: () => setState(() {
+                      _showClientSuggestions = clientController.text.trim().isNotEmpty;
+                    }),
+                    onChanged: (val) {
+                      setState(() {
+                        selectedClient = null; // typing clears any prior selection
+                        _showClientSuggestions = val.trim().isNotEmpty;
+                      });
+                    },
                   ),
                 ),
                 const SizedBox(width: 8),
                 IconButton(
-                  icon: const Icon(Icons.add),
+                  icon: const Icon(Icons.add, color: Colors.white),
                   tooltip: 'Add New Client',
                   style: ButtonStyle(
-                    foregroundColor: WidgetStateProperty.resolveWith<Color>((states) {
+                    shape: WidgetStateProperty.all(const CircleBorder()),
+                    backgroundColor: WidgetStateProperty.resolveWith<Color>((states) {
                       if (states.contains(WidgetState.hovered)) return warmAmber;
                       return primaryDeepGreen;
                     }),
                   ),
                   onPressed: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (context) => AddClientScreen()),
-                    );
+                    showAddClientScreen(context);
                   },
                 ),
               ],
@@ -638,49 +645,80 @@ class _AddSaleScreenState extends State<AddSaleScreen> {
               onPressed: _showAddItemDialog,
             ),
             const SizedBox(height: 16),
-            Expanded(
-              child: items.isEmpty
-                  ? const Center(child: Text('No items added'))
-                  : ListView.builder(
-                      itemCount: items.length,
-                      itemBuilder: (context, index) {
-                        final item = items[index];
-                        return Card(
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                          color: offWhite,
-                          margin: const EdgeInsets.symmetric(vertical: 4),
-                          child: ListTile(
-                            title: Text(item.name),
-                            subtitle: Text(
-                                'Qty: ${item.quantity} ${item.unit}\n'
-                                'Unit Price: Tsh ${_thousandsFormat.format(item.unitPrice)}\n'
-                                'Discount: Tsh ${_thousandsFormat.format(item.discount)}\n'
-                                'Profit: Tsh ${_thousandsFormat.format(item.profit)}',
-                                style: const TextStyle(color: Colors.black87)),
-                            trailing: IconButton(
-                              icon: const Icon(Icons.delete),
-                              style: ButtonStyle(
-                                foregroundColor: WidgetStateProperty.resolveWith<Color>((states) {
-                                  if (states.contains(WidgetState.hovered)) return Colors.red.shade900;
-                                  return Colors.red;
-                                }),
+            items.isEmpty
+                ? const Padding(
+                    padding: EdgeInsets.symmetric(vertical: 24),
+                    child: Center(child: Text('No items added')),
+                  )
+                : ListView.builder(
+                    shrinkWrap: true,
+                    physics: const NeverScrollableScrollPhysics(),
+                    itemCount: items.length,
+                    itemBuilder: (context, index) {
+                      final item = items[index];
+                      return Card(
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                        color: offWhite,
+                        margin: const EdgeInsets.symmetric(vertical: 4),
+                        child: Padding(
+                          padding: const EdgeInsets.fromLTRB(16, 12, 8, 12),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Row(
+                                children: [
+                                  Expanded(
+                                    child: Text(
+                                      item.name,
+                                      style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                  ),
+                                  IconButton(
+                                    icon: const Icon(Icons.delete_outline, size: 20),
+                                    style: ButtonStyle(
+                                      foregroundColor: WidgetStateProperty.resolveWith<Color>((states) {
+                                        if (states.contains(WidgetState.hovered)) return Colors.red.shade900;
+                                        return Colors.red;
+                                      }),
+                                    ),
+                                    onPressed: () {
+                                      setState(() {
+                                        items.removeAt(index);
+                                        if (!saleOnCredit) {
+                                          totalPaid = totalAmount;
+                                          totalPaidController.text =
+                                              _thousandsFormat.format(totalPaid);
+                                        }
+                                      });
+                                    },
+                                  ),
+                                ],
                               ),
-                              onPressed: () {
-                                setState(() {
-                                  items.removeAt(index);
-                                  if (!saleOnCredit) {
-                                    totalPaid = totalAmount;
-                                    totalPaidController.text =
-                                        _thousandsFormat.format(totalPaid);
-                                  }
-                                });
-                              },
-                            ),
+                              const SizedBox(height: 4),
+                              Wrap(
+                                spacing: 20,
+                                runSpacing: 6,
+                                children: [
+                                  _SaleItemStat(label: 'Qty', value: '${item.quantity} ${item.unit}'),
+                                  _SaleItemStat(
+                                      label: 'Unit Price', value: 'Tsh ${_thousandsFormat.format(item.unitPrice)}'),
+                                  if (item.discount > 0)
+                                    _SaleItemStat(
+                                        label: 'Discount', value: 'Tsh ${_thousandsFormat.format(item.discount)}'),
+                                  _SaleItemStat(
+                                    label: 'Profit',
+                                    value: 'Tsh ${_thousandsFormat.format(item.profit)}',
+                                    valueColor: Colors.green[700],
+                                  ),
+                                ],
+                              ),
+                            ],
                           ),
-                        );
-                      },
-                    ),
-            ),
+                        ),
+                      );
+                    },
+                  ),
             const SizedBox(height: 16),
             TextFormField(
               controller: totalPaidController,
@@ -699,6 +737,14 @@ class _AddSaleScreenState extends State<AddSaleScreen> {
                 });
               },
             ),
+            if (totalPaid > 0) ...[
+              const SizedBox(height: 16),
+              PaymentMethodSelector(
+                value: paymentMethod,
+                activeColor: primaryDeepGreen,
+                onChanged: (method) => setState(() => paymentMethod = method),
+              ),
+            ],
             const SizedBox(height: 16),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -734,7 +780,174 @@ class _AddSaleScreenState extends State<AddSaleScreen> {
             ),
           ],
         ),
+                    ),
+                  ),
+                ),
+              _buildClientSuggestionsOverlay(clientProvider, isNarrow),
+            ],
+          );
+        },
       ),
+    );
+  }
+
+  /// The client-name suggestions, shown as a genuine overlay positioned
+  /// just under the client field - rather than sitting inline in the
+  /// form's own layout flow, where it would push the Add Item button
+  /// and everything below it down every time it appeared. Measures the
+  /// client field's actual on-screen position via its GlobalKey, rather
+  /// than assuming a fixed pixel offset that could drift if anything
+  /// above it (like the Sale on Credit checkbox row) ever wraps to a
+  /// second line on a narrow screen.
+  Widget _buildClientSuggestionsOverlay(ClientProvider clientProvider, bool isNarrow) {
+    if (!_showClientSuggestions || clientController.text.trim().isEmpty) {
+      return const SizedBox.shrink();
+    }
+
+    final renderBox = _clientFieldRowKey.currentContext?.findRenderObject() as RenderBox?;
+    if (renderBox == null) return const SizedBox.shrink();
+
+    final fieldPosition = renderBox.localToGlobal(Offset.zero);
+    final fieldSize = renderBox.size;
+
+    // Convert the field's global position back to a position relative
+    // to the Stack it's being positioned within - not the whole
+    // Scaffold, which would also fold the AppBar's own height into
+    // this conversion and throw the overlay's position off.
+    final stackBox = _stackKey.currentContext?.findRenderObject() as RenderBox?;
+    final localTop = stackBox != null
+        ? stackBox.globalToLocal(fieldPosition).dy
+        : fieldPosition.dy;
+
+    final query = clientController.text.toLowerCase();
+    final matches = clientProvider.clients
+        .where((c) => c.name.toLowerCase().contains(query))
+        .take(6)
+        .toList();
+
+    if (matches.isEmpty) return const SizedBox.shrink();
+
+    // Same centering/max-width as the form itself, so the overlay
+    // lines up with the field beneath it instead of stretching to the
+    // full screen width on desktop.
+    final horizontalInset = isNarrow
+        ? 16.0
+        : (MediaQuery.of(context).size.width - 700).clamp(0, double.infinity) / 2 + 16;
+
+    return Positioned(
+      top: localTop + fieldSize.height + 4,
+      left: horizontalInset,
+      right: horizontalInset,
+      child: Material(
+        elevation: 6,
+        borderRadius: BorderRadius.circular(8),
+        child: Container(
+          constraints: const BoxConstraints(maxHeight: 260),
+          decoration: BoxDecoration(
+            border: Border.all(color: Colors.grey[300]!),
+            borderRadius: BorderRadius.circular(8),
+            color: offWhite,
+          ),
+          child: ListView(
+            shrinkWrap: true,
+            padding: EdgeInsets.zero,
+            children: matches.map((client) {
+              return ListTile(
+                title: Text(client.name),
+                hoverColor: warmAmber.withValues(alpha: 0.15),
+                onTap: () {
+                  setState(() {
+                    selectedClient = client;
+                    clientController.text = client.name;
+                    _showClientSuggestions = false;
+                  });
+                },
+              );
+            }).toList(),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// The one entry point for opening Add Sale - a full-screen push on
+/// mobile, a large, centered, dismissable modal on desktop/tablet-
+/// width screens. Same reasoning as showSubscriptionScreen/
+/// showPromotionsScreen elsewhere in this app: recording a sale is a
+/// quick, frequent, in-and-out action, and a full page navigation away
+/// from the Dashboard (and all the way back) doesn't fit that as well
+/// as a dismissable overlay does.
+Future<void> showAddSaleScreen(BuildContext context) async {
+  final isWideScreen = MediaQuery.of(context).size.width >= 900;
+
+  if (!isWideScreen) {
+    await Navigator.of(context).push(
+      MaterialPageRoute(builder: (_) => const AddSaleScreen()),
+    );
+    return;
+  }
+
+  await showGeneralDialog(
+    context: context,
+    barrierDismissible: true,
+    barrierLabel: 'Add Sale',
+    barrierColor: Colors.black54,
+    transitionDuration: const Duration(milliseconds: 220),
+    pageBuilder: (context, animation, secondaryAnimation) {
+      final screenSize = MediaQuery.of(context).size;
+      return Center(
+        child: SizedBox(
+          width: screenSize.width * 0.8,
+          height: screenSize.height * 0.85,
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(16),
+            child: const Material(
+              child: AddSaleScreen(isModal: true),
+            ),
+          ),
+        ),
+      );
+    },
+    transitionBuilder: (context, animation, secondaryAnimation, child) {
+      final curved = CurvedAnimation(parent: animation, curve: Curves.easeOutCubic);
+      return FadeTransition(
+        opacity: curved,
+        child: SlideTransition(
+          position: Tween<Offset>(begin: const Offset(0, 0.03), end: Offset.zero).animate(curved),
+          child: ScaleTransition(
+            scale: Tween<double>(begin: 0.96, end: 1.0).animate(curved),
+            child: child,
+          ),
+        ),
+      );
+    },
+  );
+}
+
+/// A single label+value stat within a sale item's card - a compact,
+/// scannable pair (small grey label above, bold value below) rather
+/// than a line of prose like "Qty: 3 pcs". Laid out in a Wrap so
+/// several sit side by side and read at a glance.
+class _SaleItemStat extends StatelessWidget {
+  final String label;
+  final String value;
+  final Color? valueColor;
+
+  const _SaleItemStat({required this.label, required this.value, this.valueColor});
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Text(label, style: TextStyle(fontSize: 11, color: Colors.grey[600])),
+        Text(
+          value,
+          style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: valueColor ?? Colors.black87),
+        ),
+      ],
     );
   }
 }

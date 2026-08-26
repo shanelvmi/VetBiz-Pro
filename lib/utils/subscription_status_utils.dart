@@ -8,16 +8,31 @@ enum SubscriptionStatusKind { trial, active, grace, locked }
 // isSubscriptionLocked() function in Firestore rules.
 const int kGracePeriodDaysUtil = 3;
 
-SubscriptionStatusKind computeSubscriptionStatus(DateTime? expiresAt) {
-  if (expiresAt == null) return SubscriptionStatusKind.trial;
+SubscriptionStatusKind computeSubscriptionStatus(DateTime? subscriptionExpiresAt, [DateTime? trialExpiresAt]) {
+  // A real, paid subscription cycle takes priority whenever it exists.
+  if (subscriptionExpiresAt != null) {
+    final now = DateTime.now();
+    if (now.isBefore(subscriptionExpiresAt)) return SubscriptionStatusKind.active;
+    final graceEnd = subscriptionExpiresAt.add(const Duration(days: kGracePeriodDaysUtil));
+    if (now.isBefore(graceEnd)) return SubscriptionStatusKind.grace;
+    return SubscriptionStatusKind.locked;
+  }
 
-  final now = DateTime.now();
-  if (now.isBefore(expiresAt)) return SubscriptionStatusKind.active;
+  // No paid subscription yet - a real, timed trial (only present on
+  // facilities created after this feature shipped) counts down the
+  // same way, reusing the same grace/locked flow once it runs out.
+  if (trialExpiresAt != null) {
+    final now = DateTime.now();
+    if (now.isBefore(trialExpiresAt)) return SubscriptionStatusKind.trial;
+    final graceEnd = trialExpiresAt.add(const Duration(days: kGracePeriodDaysUtil));
+    if (now.isBefore(graceEnd)) return SubscriptionStatusKind.grace;
+    return SubscriptionStatusKind.locked;
+  }
 
-  final graceEnd = expiresAt.add(const Duration(days: kGracePeriodDaysUtil));
-  if (now.isBefore(graceEnd)) return SubscriptionStatusKind.grace;
-
-  return SubscriptionStatusKind.locked;
+  // Neither set - a facility created before this feature existed.
+  // Same permanently-open trial behavior as before, never retroactively
+  // changed.
+  return SubscriptionStatusKind.trial;
 }
 
 String subscriptionStatusLabel(SubscriptionStatusKind status) {

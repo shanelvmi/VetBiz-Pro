@@ -16,6 +16,7 @@ class _LedgerEntry {
   final String? clientId;
   final String? clientName;
   final String description;
+  final String? paymentMethod;
 
   const _LedgerEntry({
     required this.type,
@@ -24,6 +25,7 @@ class _LedgerEntry {
     this.clientId,
     this.clientName,
     required this.description,
+    this.paymentMethod,
   });
 }
 
@@ -144,6 +146,7 @@ class _PaymentsScreenState extends State<PaymentsScreen> {
           clientId: data['clientId'] as String?,
           clientName: data['clientName'] as String?,
           description: _labelFor(source),
+          paymentMethod: data['paymentMethod'] as String?,
         ));
       }
 
@@ -174,6 +177,7 @@ class _PaymentsScreenState extends State<PaymentsScreen> {
             description: (data['description'] as String?)?.isNotEmpty == true
                 ? data['description'] as String
                 : 'Other income',
+            paymentMethod: data['paymentMethod'] as String?,
           ));
         }
       }
@@ -432,7 +436,8 @@ class _PaymentsScreenState extends State<PaymentsScreen> {
                   style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
                 ),
                 Text(
-                  '${e.clientName != null ? '${e.description} · ' : ''}${DateFormat('hh:mm a').format(e.timestamp)}',
+                  '${e.clientName != null ? '${e.description} · ' : ''}${DateFormat('hh:mm a').format(e.timestamp)}'
+                  '${e.paymentMethod != null ? ' · ${e.paymentMethod}' : ''}',
                   style: TextStyle(fontSize: 12, color: Colors.grey[600]),
                 ),
               ],

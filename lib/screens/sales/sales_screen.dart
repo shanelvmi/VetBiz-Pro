@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
@@ -8,6 +9,7 @@ import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
 import 'add_sale_screen.dart';
 import 'sales_archive_screen.dart';
 import '../../utils/subscription_guard.dart';
+import '../../widgets/payment_method_selector.dart';
 import '../../providers/user_role_provider.dart';
 import 'receipt_preview_screen.dart';
 
@@ -22,6 +24,31 @@ class _SalesScreenState extends State<SalesScreen> {
   final Color primaryDeepGreen = const Color(0xFF2F5D62);
   final Color warmAmber = const Color(0xFFFFB200);
   final Color offWhite = const Color(0xFFFDFDF9);
+
+  // Accordion behavior: only one sale card expanded at a time. A plain
+  // ExpansionTile has no "controlled" expanded state of its own
+  // (initiallyExpanded is read once, then ignored on rebuild), so this
+  // keeps one ExpansionTileController per card and explicitly collapses
+  // whichever was open before, rather than trying to force expansion
+  // state through a rebuild that wouldn't actually reach it.
+  final Map<String, ExpansionTileController> _expansionControllers = {};
+  String? _expandedSaleId;
+
+  ExpansionTileController _controllerFor(String id) {
+    return _expansionControllers.putIfAbsent(id, () => ExpansionTileController());
+  }
+
+  void _collapseIfStillExpanded(String? id) {
+    if (id == null) return;
+    final controller = _expansionControllers[id];
+    if (controller == null) return;
+    try {
+      controller.collapse();
+    } catch (_) {
+      // That card's ExpansionTile is no longer in the tree (e.g. the
+      // sale was deleted while expanded) - nothing to collapse.
+    }
+  }
 
   final NumberFormat _moneyFormat = NumberFormat.currency(
     locale: 'en_US',
@@ -45,6 +72,13 @@ class _SalesScreenState extends State<SalesScreen> {
   Map<String, double>? _rangeSummary;
   bool _isSummaryLoading = false;
 
+  // Auto-refreshes the summary shortly after a new sale appears in the
+  // live list below, instead of leaving it to go stale until the user
+  // manually hits Refresh or navigates away and back.
+  SaleProvider? _saleProvider;
+  int _lastKnownSaleCount = 0;
+  Timer? _pendingSummaryRefresh;
+
   @override
   void initState() {
     super.initState();
@@ -52,9 +86,31 @@ class _SalesScreenState extends State<SalesScreen> {
         Provider.of<FacilityProvider>(context, listen: false).selectedFacilityId;
     if (facilityId != null && facilityId.isNotEmpty) {
       _facilityId = facilityId;
-      Provider.of<SaleProvider>(context, listen: false).init(facilityId);
+      _saleProvider = Provider.of<SaleProvider>(context, listen: false);
+      _saleProvider!.init(facilityId);
+      _lastKnownSaleCount = _saleProvider!.sales.length;
+      _saleProvider!.addListener(_onSalesChanged);
       _loadRangeSummary();
     }
+  }
+
+  void _onSalesChanged() {
+    if (!mounted || _saleProvider == null) return;
+    final currentCount = _saleProvider!.sales.length;
+    if (currentCount == _lastKnownSaleCount) return;
+    _lastKnownSaleCount = currentCount;
+
+    // The summary card reads a precomputed daily aggregate, written by
+    // a Cloud Function shortly after each sale write - not the instant
+    // the sale document itself is created. A short delay here gives
+    // that function time to actually finish before re-fetching, so
+    // this reliably picks up the new total instead of re-reading the
+    // same still-stale aggregate the manual Refresh button could
+    // otherwise hit if pressed immediately.
+    _pendingSummaryRefresh?.cancel();
+    _pendingSummaryRefresh = Timer(const Duration(seconds: 2), () {
+      if (mounted) _loadRangeSummary();
+    });
   }
 
   Future<void> _loadRangeSummary() async {
@@ -99,6 +155,8 @@ class _SalesScreenState extends State<SalesScreen> {
 
   @override
   void dispose() {
+    _pendingSummaryRefresh?.cancel();
+    _saleProvider?.removeListener(_onSalesChanged);
     _searchController.dispose();
     super.dispose();
   }
@@ -230,7 +288,11 @@ class _SalesScreenState extends State<SalesScreen> {
       ),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () async {
-          await navigateOrShowLockedDialog(context, const AddSaleScreen());
+          await navigateOrShowLockedDialog(
+            context,
+            const AddSaleScreen(),
+            onNavigate: () => showAddSaleScreen(context),
+          );
         },
         backgroundColor: primaryDeepGreen,
         foregroundColor: offWhite,
@@ -248,6 +310,7 @@ class _SalesScreenState extends State<SalesScreen> {
       backgroundColor: primaryDeepGreen,
       foregroundColor: offWhite,
       elevation: 0,
+      centerTitle: true,
       title: _isSearchExpanded
           ? TextField(
               controller: _searchController,
@@ -595,6 +658,17 @@ class _SalesScreenState extends State<SalesScreen> {
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       elevation: 2,
       child: ExpansionTile(
+        controller: _controllerFor(sale.id),
+        onExpansionChanged: (expanded) {
+          if (expanded) {
+            if (_expandedSaleId != null && _expandedSaleId != sale.id) {
+              _collapseIfStillExpanded(_expandedSaleId);
+            }
+            _expandedSaleId = sale.id;
+          } else if (_expandedSaleId == sale.id) {
+            _expandedSaleId = null;
+          }
+        },
         tilePadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
         leading: CircleAvatar(
           backgroundColor: statusColor.withValues(alpha: 0.2),
@@ -634,13 +708,26 @@ class _SalesScreenState extends State<SalesScreen> {
               ],
             ),
             const SizedBox(height: 4),
-            Text(
-              "Paid: ${_moneyFormat.format(sale.totalPaid)} / ${_moneyFormat.format(sale.totalAmount)}",
-              style: TextStyle(
-                fontWeight: FontWeight.bold,
-                fontSize: 13,
-                color: primaryDeepGreen,
-              ),
+            Row(
+              children: [
+                Text(
+                  "Paid: ${_moneyFormat.format(sale.totalPaid)} / ${_moneyFormat.format(sale.totalAmount)}",
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 13,
+                    color: primaryDeepGreen,
+                  ),
+                ),
+                if (sale.paymentMethod != null) ...[
+                  const SizedBox(width: 8),
+                  Icon(iconForPaymentMethod(sale.paymentMethod as String), size: 13, color: Colors.grey[600]),
+                  const SizedBox(width: 3),
+                  Text(
+                    sale.paymentMethod as String,
+                    style: TextStyle(fontSize: 12, color: Colors.grey[600], fontWeight: FontWeight.w500),
+                  ),
+                ],
+              ],
             ),
           ],
         ),

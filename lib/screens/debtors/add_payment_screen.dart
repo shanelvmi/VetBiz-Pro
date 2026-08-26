@@ -10,6 +10,7 @@ import '../../providers/facility_provider.dart';
 import '../../providers/service_provider.dart';
 import '../../services/auth_service.dart';
 import '../../utils/activity_logger.dart';
+import '../../widgets/payment_method_selector.dart';
 
 class AddPaymentScreen extends StatefulWidget {
   final Client? preselectedClient;
@@ -33,6 +34,7 @@ class _AddPaymentScreenState extends State<AddPaymentScreen> {
   bool _isSaving = false;
   Client? selectedClient;
   double amount = 0.0;
+  String? paymentMethod;
   final _formKey = GlobalKey<FormState>();
   final NumberFormat currencyFormat = NumberFormat('#,##0', 'en_US');
 
@@ -49,6 +51,13 @@ class _AddPaymentScreenState extends State<AddPaymentScreen> {
     if (_isSaving) return; // guards against a double-tap firing two saves at once
     if (!_formKey.currentState!.validate()) return;
     _formKey.currentState!.save();
+
+    if (paymentMethod == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Select how this payment was made')),
+      );
+      return;
+    }
 
     setState(() => _isSaving = true);
 
@@ -179,6 +188,7 @@ class _AddPaymentScreenState extends State<AddPaymentScreen> {
         'timestamp': FieldValue.serverTimestamp(),
         'paidById': user.uid,
         'source': 'debt_repayment',
+        'paymentMethod': paymentMethod,
       });
 
       batch.update(clientRef, {
@@ -298,6 +308,12 @@ class _AddPaymentScreenState extends State<AddPaymentScreen> {
                   return null;
                 },
                 onSaved: (val) => amount = double.parse(val!.replaceAll(',', '')),
+              ),
+              const SizedBox(height: 20),
+              PaymentMethodSelector(
+                value: paymentMethod,
+                activeColor: primaryDeepGreen,
+                onChanged: (method) => setState(() => paymentMethod = method),
               ),
               const SizedBox(height: 30),
               MouseRegion(

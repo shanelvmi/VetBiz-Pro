@@ -120,6 +120,15 @@ class Sale {
   final double totalProfit;
   final double realizedProfit;
   final double unrealizedProfit;
+  // Nullable - a fully-on-credit sale (totalPaid == 0) has nothing
+  // paid yet, so no method to record. Set at the moment of the actual
+  // payment, whether that's the full amount at sale time or a partial
+  // one settled later via applyPayment.
+  final String? paymentMethod;
+  // Nullable - assigned by SaleProvider at creation time via the
+  // shared, atomic receipt-numbering counter, not set by callers
+  // directly. Sales made before this feature existed have none.
+  final int? receiptNumber;
 
   const Sale({
     required this.id,
@@ -137,6 +146,8 @@ class Sale {
     this.totalProfit = 0.0,
     this.realizedProfit = 0.0,
     this.unrealizedProfit = 0.0,
+    this.paymentMethod,
+    this.receiptNumber,
   });
 
   /// Apply a payment and recalc realized/unrealized profit
@@ -197,6 +208,8 @@ class Sale {
       'totalProfit': totalProfit,
       'realizedProfit': realizedProfit,
       'unrealizedProfit': unrealizedProfit,
+      if (paymentMethod != null) 'paymentMethod': paymentMethod,
+      if (receiptNumber != null) 'receiptNumber': receiptNumber,
     };
   }
 
@@ -252,6 +265,8 @@ class Sale {
           (map['realizedProfit'] as num?)?.toDouble() ?? realized,
       unrealizedProfit:
           (map['unrealizedProfit'] as num?)?.toDouble() ?? unrealized,
+      paymentMethod: map['paymentMethod'] as String?,
+      receiptNumber: (map['receiptNumber'] as num?)?.toInt(),
     );
   }
 
@@ -271,6 +286,8 @@ class Sale {
     double? totalProfit,
     double? realizedProfit,
     double? unrealizedProfit,
+    String? paymentMethod,
+    int? receiptNumber,
   }) {
     return Sale(
       id: id ?? this.id,
@@ -288,6 +305,8 @@ class Sale {
       totalProfit: totalProfit ?? this.totalProfit,
       realizedProfit: realizedProfit ?? this.realizedProfit,
       unrealizedProfit: unrealizedProfit ?? this.unrealizedProfit,
+      paymentMethod: paymentMethod ?? this.paymentMethod,
+      receiptNumber: receiptNumber ?? this.receiptNumber,
     );
   }
 }

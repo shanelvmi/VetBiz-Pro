@@ -132,6 +132,10 @@ class _ManageAccountScreenState extends State<ManageAccountScreen> {
 
   // 🔹 Wipe all transactional business data
   void _wipeAllData() async {
+    final facilityName = Provider.of<FacilityProvider>(context, listen: false)
+            .selectedFacility?['name'] ??
+        'this facility';
+
     final confirm = await showDialog<bool>(
       context: context,
       builder: (_) => AlertDialog(
@@ -139,8 +143,8 @@ class _ManageAccountScreenState extends State<ManageAccountScreen> {
         title: Text('Wipe All Data?', style: TextStyle(color: primaryColor, fontWeight: FontWeight.bold)),
         content: SizedBox(
           width: _dialogWidth(context),
-          child: const Text(
-              'This will permanently delete all records of sales, products, clients, and transactions. Your login credentials will remain unaffected.'),
+          child: Text(
+              'This will permanently delete all records of sales, products, clients, and transactions for "$facilityName" only. Your other facilities (if any) are not affected. Your login credentials will remain unaffected.'),
         ),
         actions: [
           TextButton(

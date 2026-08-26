@@ -16,6 +16,7 @@ import '../../providers/facility_provider.dart';
 import '../../providers/debt_provider.dart';
 
 import '../../services/auth_service.dart';
+import '../../services/session_validity_service.dart';
 import '../../services/dashboard_summary_service.dart';
 
 import '../../widgets/summary_card.dart';
@@ -31,6 +32,7 @@ import '../activity/activity_log_screen.dart';
 import '../debtors/debtors_screen.dart';
 import '../payments/payments_screen.dart';
 import '../../providers/subscription_provider.dart';
+import '../../models/promotion.dart';
 import '../../providers/user_role_provider.dart';
 import '../subscription/subscription_screen.dart';
 import 'stock_alerts_screen.dart';
@@ -68,24 +70,35 @@ class _DrawerHoverItemState extends State<DrawerHoverItem> {
 
   @override
   Widget build(BuildContext context) {
-    final row = Row(
-      mainAxisAlignment: widget.isCollapsed ? MainAxisAlignment.center : MainAxisAlignment.start,
-      children: [
-        Icon(widget.icon, color: offWhite),
-        if (!widget.isCollapsed) ...[
-          const SizedBox(width: 16),
-          Expanded(
-            child: Text(
-              widget.title,
-              style: TextStyle(
-                color: offWhite,
-                fontWeight: FontWeight.w500,
+    final row = LayoutBuilder(
+      builder: (context, constraints) {
+        // Icon (~24px) + its own horizontal padding (12-16px each
+        // side) + the label's SizedBox(16) leaves roughly this much
+        // as the real floor before a label can fit at all - below it,
+        // show icon-only regardless of what isCollapsed intends,
+        // since the container itself hasn't animated wide enough yet
+        // to actually hold it.
+        final canShowLabel = !widget.isCollapsed && constraints.maxWidth > 100;
+        return Row(
+          mainAxisAlignment: widget.isCollapsed ? MainAxisAlignment.center : MainAxisAlignment.start,
+          children: [
+            Icon(widget.icon, color: offWhite),
+            if (canShowLabel) ...[
+              const SizedBox(width: 16),
+              Expanded(
+                child: Text(
+                  widget.title,
+                  style: TextStyle(
+                    color: offWhite,
+                    fontWeight: FontWeight.w500,
+                  ),
+                  overflow: TextOverflow.ellipsis,
+                ),
               ),
-              overflow: TextOverflow.ellipsis,
-            ),
-          ),
-        ],
-      ],
+            ],
+          ],
+        );
+      },
     );
 
     final content = Padding(
@@ -129,7 +142,13 @@ class _DrawerHoverItemState extends State<DrawerHoverItem> {
 /// Stops blinking the moment Notifications is opened, since that marks
 /// everything as viewed.
 class _BlinkingDot extends StatefulWidget {
-  const _BlinkingDot();
+  // One color just blinks in place, unchanged from before. More than
+  // one cycles through them in sequence - red for something urgent,
+  // blue for "you're on a trial", amber for an active promotion -
+  // rather than only ever showing whichever one happened to be
+  // checked first.
+  final List<Color> colors;
+  const _BlinkingDot({this.colors = const [Colors.redAccent]});
 
   @override
   State<_BlinkingDot> createState() => _BlinkingDotState();
@@ -141,22 +160,36 @@ class _BlinkingDotState extends State<_BlinkingDot> with SingleTickerProviderSta
     duration: const Duration(milliseconds: 700),
   )..repeat(reverse: true);
 
+  Timer? _colorCycleTimer;
+  int _colorIndex = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    _colorCycleTimer = Timer.periodic(const Duration(milliseconds: 1400), (_) {
+      if (mounted) setState(() => _colorIndex = (_colorIndex + 1) % widget.colors.length);
+    });
+  }
+
   @override
   void dispose() {
     _controller.dispose();
+    _colorCycleTimer?.cancel();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
+    final currentColor = widget.colors[_colorIndex % widget.colors.length];
     return FadeTransition(
       opacity: Tween<double>(begin: 0.35, end: 1.0).animate(
         CurvedAnimation(parent: _controller, curve: Curves.easeInOut),
       ),
-      child: Container(
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 400),
         width: 9,
         height: 9,
-        decoration: const BoxDecoration(color: Colors.redAccent, shape: BoxShape.circle),
+        decoration: BoxDecoration(color: currentColor, shape: BoxShape.circle),
       ),
     );
   }
@@ -261,7 +294,7 @@ class DashboardScreen extends StatefulWidget {
   State<DashboardScreen> createState() => _DashboardScreenState();
 }
 
-class _DashboardScreenState extends State<DashboardScreen> {
+class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingObserver {
   final Color primaryDeepGreen = const Color(0xFF2F5D62);
   final Color warmAmber = const Color(0xFFFFB200);
   final Color offWhite = const Color(0xFFFDFDF9);
@@ -291,6 +324,18 @@ class _DashboardScreenState extends State<DashboardScreen> {
   bool _hasNewPendingAssistantSinceViewed = false;
   StreamSubscription<QuerySnapshot>? _urgentWatchSub;
   StreamSubscription<QuerySnapshot>? _pendingWatchSub;
+
+  // Detects a remote "Log Out of All Devices" - see
+  // SessionValidityService for why this needs an explicit periodic
+  // check rather than something that would just happen automatically.
+  Timer? _sessionCheckTimer;
+
+  // Measures the bell's actual on-screen position for the desktop
+  // dropdown - it sits in different places depending on screen size
+  // (AppBar leading on wide screens, actions on narrow ones), so a
+  // fixed/assumed position wouldn't anchor correctly in both.
+  final GlobalKey _bellKey = GlobalKey();
+  static const Duration _sessionCheckInterval = Duration(minutes: 10);
 
   // Persisted per device (not synced) so the collapsed/expanded choice
   // survives between sessions, same reasoning as the notification
@@ -339,6 +384,14 @@ class _DashboardScreenState extends State<DashboardScreen> {
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
+    _sessionCheckTimer = Timer.periodic(
+      _sessionCheckInterval,
+      (_) {
+        SessionValidityService.checkAndHandleRevocation();
+        _checkStillAssignedToActiveFacility();
+      },
+    );
     _loadDrawerCollapsedState();
     Future.delayed(const Duration(milliseconds: 900), () {
       if (mounted) setState(() => _subscriptionPillDelayPassed = true);
@@ -410,8 +463,52 @@ class _DashboardScreenState extends State<DashboardScreen> {
     }
   }
 
+  /// Detects a remote reassignment away from the facility this session
+  /// is currently viewing - e.g. a facility Admin reassigning this
+  /// assistant to a different facility via Manage Assistants, while
+  /// this device is still actively signed in and looking at the old
+  /// one. Firestore rules already correctly deny access to the old
+  /// facility's data at that point, but without this check the already
+  /// -loaded Provider state (products, clients, sales already fetched
+  /// before the reassignment) would keep showing on screen, stale and
+  /// silently inaccessible, until something else forced a refresh.
+  Future<void> _checkStillAssignedToActiveFacility() async {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) return;
+    if (!mounted) return;
+
+    final activeFacilityId =
+        Provider.of<FacilityProvider>(context, listen: false).selectedFacilityId;
+    if (activeFacilityId == null) return;
+
+    try {
+      final userDoc = await FirebaseFirestore.instance.collection('users').doc(user.uid).get();
+      final facilityIds = (userDoc.data()?['facilityIds'] as List?)?.cast<String>() ?? [];
+      if (!facilityIds.contains(activeFacilityId)) {
+        await forceLogoutAndShowLogin(
+          message: 'You\'ve been reassigned to a different facility. Please log back in.',
+        );
+      }
+    } catch (e) {
+      debugPrint('Facility assignment check failed: $e');
+    }
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    // Coming back to the app is a natural, low-cost moment to check -
+    // catches a revocation that happened while this device was
+    // backgrounded, without waiting for the next periodic tick.
+    if (state == AppLifecycleState.resumed) {
+      SessionValidityService.checkAndHandleRevocation();
+      _checkStillAssignedToActiveFacility();
+    }
+  }
+
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    _sessionCheckTimer?.cancel();
     _urgentWatchSub?.cancel();
     _pendingWatchSub?.cancel();
     _periodTotalsSub?.cancel();
@@ -633,9 +730,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
             elevation: 4,
             centerTitle: true,
             iconTheme: IconThemeData(color: offWhite),
-            leadingWidth: isLargeScreen ? 280 : null,
+            leadingWidth: isLargeScreen ? 300 : null,
             leading: isLargeScreen
-                ? Row(
+                ? Stack(
+                    children: [
+                      Row(
                     children: [
                       const SizedBox(width: 8),
                       _buildAlertsBell(context),
@@ -651,7 +750,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
                             DateFormat('HH:mm:ss').format(now);
 
                         return Center(
-                          child: Column(
+                          child: FittedBox(
+                            fit: BoxFit.scaleDown,
+                            child: Column(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
                               Text(
@@ -667,20 +768,39 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                 style: TextStyle(fontSize: 12, color: offWhite),
                               ),
                             ],
+                            ),
                           ),
                         );
                       },
                     ),
                   ),
-                      const Spacer(),
-                      IconButton(
-                        icon: Icon(
-                          _isDrawerCollapsed ? Icons.menu_open : Icons.menu,
-                          color: offWhite,
-                          size: 20,
+                        ],
+                      ),
+                      // Positioned independently of the Row above,
+                      // right at the drawer's own expanded width
+                      // (250px) - previously sat wherever Spacer()
+                      // pushed it within this whole 300px leading
+                      // area, well past the drawer's actual right
+                      // edge. This keeps it visually anchored to the
+                      // drawer's boundary regardless of how wide the
+                      // bell+clock content next to it happens to be.
+                      Positioned(
+                        left: 220,
+                        top: 0,
+                        bottom: 0,
+                        child: Center(
+                          child: IconButton(
+                            constraints: const BoxConstraints(),
+                            padding: const EdgeInsets.all(6),
+                            icon: Icon(
+                              _isDrawerCollapsed ? Icons.menu_open : Icons.menu,
+                              color: offWhite,
+                              size: 20,
+                            ),
+                            tooltip: _isDrawerCollapsed ? 'Expand menu' : 'Collapse menu',
+                            onPressed: _toggleDrawerCollapsed,
+                          ),
                         ),
-                        tooltip: _isDrawerCollapsed ? 'Expand menu' : 'Collapse menu',
-                        onPressed: _toggleDrawerCollapsed,
                       ),
                     ],
                   )
@@ -756,11 +876,14 @@ class _DashboardScreenState extends State<DashboardScreen> {
               Expanded(
                 child: Stack(
                   children: [
-                    Row(
+                    RepaintBoundary(
+                      child: Row(
                       children: [
                         if (isLargeScreen) _buildDrawerContent(),
                         Expanded(
-                          child: Padding(
+                          child: Container(
+                            color: offWhite,
+                            child: Padding(
                             padding: const EdgeInsets.all(16),
                             child: Column(
                               children: [
@@ -787,12 +910,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                     ),
                                   ),
                                   OutlinedButton.icon(
-                                    onPressed: () {
-                                      Navigator.push(
-                                        context,
-                                        MaterialPageRoute(builder: (_) => const InsightsScreen()),
-                                      );
-                                    },
+                                    onPressed: () => showInsightsScreen(context),
                                     icon: Icon(Icons.insights, color: primaryDeepGreen),
                                     label: Text('Insights', style: TextStyle(color: primaryDeepGreen)),
                                     style: OutlinedButton.styleFrom(side: BorderSide(color: primaryDeepGreen)),
@@ -819,12 +937,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                               Align(
                                 alignment: Alignment.centerRight,
                                 child: OutlinedButton.icon(
-                                  onPressed: () {
-                                    Navigator.push(
-                                      context,
-                                      MaterialPageRoute(builder: (_) => const InsightsScreen()),
-                                    );
-                                  },
+                                  onPressed: () => showInsightsScreen(context),
                                   icon: Icon(Icons.insights, color: primaryDeepGreen),
                                   label: Text('Insights', style: TextStyle(color: primaryDeepGreen)),
                                   style: OutlinedButton.styleFrom(side: BorderSide(color: primaryDeepGreen)),
@@ -934,8 +1047,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
                         ),
                       ),
                     ),
-                  ],
-                ),
+                    ),
+                        ],
+                      ),
+                    ),
                 Positioned(
                       top: 56,
                       left: 0,
@@ -978,22 +1093,30 @@ class _DashboardScreenState extends State<DashboardScreen> {
   Widget _buildSubscriptionBanner(BuildContext context) {
     final sub = Provider.of<SubscriptionProvider>(context);
 
-    final needsAttention = sub.status != SubscriptionStatus.trial &&
-        !(sub.status == SubscriptionStatus.active &&
-            (sub.daysRemaining == null || sub.daysRemaining! > 7));
+    final needsAttention = sub.status == SubscriptionStatus.grace ||
+        sub.status == SubscriptionStatus.locked ||
+        ((sub.status == SubscriptionStatus.trial || sub.status == SubscriptionStatus.active) &&
+            sub.daysRemaining != null &&
+            sub.daysRemaining! <= 7);
+
+    // Calm, informational - shown for the rest of the trial once the
+    // urgent <=7-day window above doesn't apply yet, rather than
+    // showing nothing at all until it's nearly over.
+    final isInTrialInfo = sub.status == SubscriptionStatus.trial && !needsAttention;
 
     final isSnoozed = _subscriptionSnoozedUntil != null &&
         DateTime.now().isBefore(_subscriptionSnoozedUntil!);
-    final shouldShow = needsAttention && !isSnoozed && _subscriptionPillDelayPassed;
+    final shouldShow = (needsAttention || isInTrialInfo) && !isSnoozed && _subscriptionPillDelayPassed;
 
     final isLocked = sub.status == SubscriptionStatus.locked;
     final isGrace = sub.status == SubscriptionStatus.grace;
+    final isTrial = sub.status == SubscriptionStatus.trial;
     // The accent - carried by the icon, the text, and a thin border -
     // rather than a full background fill. Same deepened, burnt-amber
     // reasoning as before: the brand's own warmAmber is too close to
     // yellow to read cleanly as an accent on a cream background.
     const Color deepAmber = Color(0xFFC77800);
-    final accent = isLocked ? Colors.redAccent : deepAmber;
+    final accent = isLocked ? Colors.redAccent : (isInTrialInfo ? Colors.blue : deepAmber);
     const Color cream = Color(0xFFFFF6E7);
 
     // Full sentence now that this sits in its own row above the filter
@@ -1001,9 +1124,17 @@ class _DashboardScreenState extends State<DashboardScreen> {
     // squeezed inline next to Insights.
     String message;
     if (isLocked) {
-      message = 'Your subscription has expired. The app is in read-only mode.';
+      message = isTrial
+          ? 'Your trial has ended. The app is in read-only mode.'
+          : 'Your subscription has expired. The app is in read-only mode.';
     } else if (isGrace) {
-      message = 'Your subscription has expired. You have a few days of grace before read-only mode begins.';
+      message = isTrial
+          ? 'Your trial has ended. You have a few days of grace before read-only mode begins.'
+          : 'Your subscription has expired. You have a few days of grace before read-only mode begins.';
+    } else if (isInTrialInfo) {
+      message = "You're on a free trial - ${sub.daysRemaining} day${sub.daysRemaining == 1 ? '' : 's'} left.";
+    } else if (isTrial) {
+      message = 'Your trial expires in ${sub.daysRemaining} day${sub.daysRemaining == 1 ? '' : 's'}.';
     } else {
       message = 'Your subscription expires in ${sub.daysRemaining} day${sub.daysRemaining == 1 ? '' : 's'}.';
     }
@@ -1035,7 +1166,13 @@ class _DashboardScreenState extends State<DashboardScreen> {
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Icon(isLocked ? Icons.lock_outline : Icons.warning_amber_rounded, color: accent, size: 16),
+                  Icon(
+                    isLocked
+                        ? Icons.lock_outline
+                        : (isInTrialInfo ? Icons.workspace_premium_outlined : Icons.warning_amber_rounded),
+                    color: accent,
+                    size: 16,
+                  ),
                   const SizedBox(width: 6),
                   Text(
                     message,
@@ -1044,14 +1181,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   if (isAdmin) ...[
                     const SizedBox(width: 16),
                     GestureDetector(
-                      onTap: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(builder: (_) => const SubscriptionScreen()),
-                        );
-                      },
+                      onTap: () => showSubscriptionScreen(context),
                       child: Text(
-                        'Renew',
+                        isInTrialInfo ? 'View Plans' : 'Renew',
                         style: TextStyle(
                           color: accent,
                           fontSize: 12.5,
@@ -1086,6 +1218,70 @@ class _DashboardScreenState extends State<DashboardScreen> {
   // Compact bell icon with a red dot when there's a low-stock or
   // expiring-item alert - replaces the old full-width banner. Tapping it
   // goes straight to the same screen Settings > Notifications leads to.
+  /// Anchors a compact notifications panel near the bell's actual
+  /// measured position - it sits in different places depending on
+  /// screen width (AppBar leading on wide screens, actions on
+  /// narrow), so this can't assume a fixed corner the way a generic
+  /// modal could. Transparent barrier rather than a dimmed one - this
+  /// should read as a dropdown anchored to the bell, not a modal
+  /// taking over the screen.
+  Future<void> _showNotificationsDropdown(BuildContext context) async {
+    final renderBox = _bellKey.currentContext?.findRenderObject() as RenderBox?;
+    if (renderBox == null) return;
+    final bellPosition = renderBox.localToGlobal(Offset.zero);
+    final bellSize = renderBox.size;
+    final screenSize = MediaQuery.of(context).size;
+
+    const panelWidth = 400.0;
+    // Keeps the panel on-screen if the bell sits close to the right
+    // edge - anchors to the bell's left edge by default, but shifts
+    // left just enough to stay within the viewport otherwise.
+    final left = (bellPosition.dx + panelWidth > screenSize.width - 16)
+        ? screenSize.width - panelWidth - 16
+        : bellPosition.dx;
+
+    await showGeneralDialog(
+      context: context,
+      barrierDismissible: true,
+      barrierLabel: 'Notifications',
+      barrierColor: Colors.transparent,
+      transitionDuration: const Duration(milliseconds: 180),
+      pageBuilder: (context, animation, secondaryAnimation) {
+        return Stack(
+          children: [
+            Positioned(
+              top: bellPosition.dy + bellSize.height + 8,
+              left: left,
+              child: Material(
+                elevation: 8,
+                borderRadius: BorderRadius.circular(12),
+                clipBehavior: Clip.antiAlias,
+                child: SizedBox(
+                  width: panelWidth,
+                  child: ConstrainedBox(
+                    constraints: BoxConstraints(maxHeight: screenSize.height * 0.75),
+                    child: const StockAlertsScreen(isDropdown: true),
+                  ),
+                ),
+              ),
+            ),
+          ],
+        );
+      },
+      transitionBuilder: (context, animation, secondaryAnimation, child) {
+        final curved = CurvedAnimation(parent: animation, curve: Curves.easeOutCubic);
+        return FadeTransition(
+          opacity: curved,
+          child: ScaleTransition(
+            scale: Tween<double>(begin: 0.95, end: 1.0).animate(curved),
+            alignment: Alignment.topLeft,
+            child: child,
+          ),
+        );
+      },
+    );
+  }
+
   Widget _buildAlertsBell(BuildContext context) {
     final products = Provider.of<ProductProvider>(context).products;
     final hasStockAlerts = StockAlertsScreen.hasAnyAlert(products);
@@ -1093,9 +1289,17 @@ class _DashboardScreenState extends State<DashboardScreen> {
     final sub = Provider.of<SubscriptionProvider>(context);
     // Same thresholds as the pill/Notifications screen, so all three
     // never disagree about whether the subscription needs attention.
-    final subscriptionNeedsAttention = sub.status != SubscriptionStatus.trial &&
-        !(sub.status == SubscriptionStatus.active &&
-            (sub.daysRemaining == null || sub.daysRemaining! > 7));
+    final subscriptionNeedsAttention = sub.status == SubscriptionStatus.grace ||
+        sub.status == SubscriptionStatus.locked ||
+        ((sub.status == SubscriptionStatus.trial || sub.status == SubscriptionStatus.active) &&
+            sub.daysRemaining != null &&
+            sub.daysRemaining! <= 7);
+
+    // Blue category - the same calm, non-urgent trial state shown on
+    // the Dashboard banner and in the Notifications dropdown; distinct
+    // from subscriptionNeedsAttention above, which only covers the
+    // urgent <=7-day window.
+    final isInTrialInfo = sub.status == SubscriptionStatus.trial && !subscriptionNeedsAttention;
 
     return StreamBuilder<QuerySnapshot>(
       stream: FirebaseFirestore.instance
@@ -1117,40 +1321,69 @@ class _DashboardScreenState extends State<DashboardScreen> {
         // own snooze state (dismissing that pill never silences this).
         final hasNew = _hasNewUrgentSinceViewed || _hasNewPendingAssistantSinceViewed || subscriptionNeedsAttention;
 
-        return Stack(
-          clipBehavior: Clip.none,
-          children: [
-            IconButton(
-              icon: const Icon(Icons.notifications_outlined),
-              tooltip: 'Notifications',
-              onPressed: () async {
-                await Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (_) => const StockAlertsScreen()),
-                );
-                // Notifications marks itself "viewed" on open - re-check
-                // here so the blink stops immediately on return, rather
-                // than waiting for some other reason to rebuild.
-                _refreshNotificationsViewedState();
-              },
-            ),
-            if (hasNew)
-              const Positioned(
-                right: 8,
-                top: 8,
-                child: _BlinkingDot(),
-              )
-            else if (hasAlerts)
-              Positioned(
-                right: 8,
-                top: 8,
-                child: Container(
-                  width: 9,
-                  height: 9,
-                  decoration: const BoxDecoration(color: Colors.redAccent, shape: BoxShape.circle),
+        // Amber category - reuses the exact same <=7-day definition
+        // (subscriptionNeedsAttention) as "expiring soon" for a
+        // targeted promotion, so this never disagrees with what the
+        // Subscription screen itself would show.
+        final facilityId = Provider.of<FacilityProvider>(context, listen: false).selectedFacilityId ?? '';
+
+        return StreamBuilder<Promotion?>(
+          stream: streamApplicablePromotion(facilityId: facilityId, isExpiringSoon: subscriptionNeedsAttention),
+          builder: (context, promoSnapshot) {
+            final hasActivePromotion = promoSnapshot.data != null;
+
+            // Cycles through whichever of the three actually apply -
+            // one just blinks in place, several cycle between them,
+            // so someone with an urgent issue AND an active promotion
+            // sees both rather than only whichever was checked first.
+            final activeCategories = <Color>[
+              if (hasNew) Colors.redAccent,
+              if (isInTrialInfo) Colors.blue,
+              if (hasActivePromotion) warmAmber,
+            ];
+
+            return Stack(
+              clipBehavior: Clip.none,
+              children: [
+                IconButton(
+                  key: _bellKey,
+                  icon: const Icon(Icons.notifications_outlined),
+                  tooltip: 'Notifications',
+                  onPressed: () async {
+                    final isWideScreen = MediaQuery.of(context).size.width >= 900;
+                    if (isWideScreen) {
+                      await _showNotificationsDropdown(context);
+                    } else {
+                      await Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (_) => const StockAlertsScreen()),
+                      );
+                    }
+                    // Notifications marks itself "viewed" on open - re-check
+                    // here so the blink stops immediately on return, rather
+                    // than waiting for some other reason to rebuild.
+                    _refreshNotificationsViewedState();
+                  },
                 ),
-              ),
-          ],
+                if (activeCategories.isNotEmpty)
+                  Positioned(
+                    right: 8,
+                    top: 8,
+                    child: _BlinkingDot(colors: activeCategories),
+                  )
+                else if (hasAlerts)
+                  Positioned(
+                    right: 8,
+                    top: 8,
+                    child: Container(
+                      width: 9,
+                      height: 9,
+                      decoration: const BoxDecoration(color: Colors.redAccent, shape: BoxShape.circle),
+                    ),
+                  ),
+              ],
+            );
+          },
         );
       },
     );
@@ -1171,21 +1404,63 @@ Widget _buildDrawerContent() {
   final bool effectivelyCollapsed = collapsed && !isSmallScreen;
 
   // ---------- LOGO ----------
-  // Display only now - logo management lives in Settings > Business
-  // Profile, so this no longer needs to be tappable, and correctly
+  // Display only here - logo management now lives in View Facilities
+  // (per-facility, since logo is a per-facility property, not a global
+  // one), so this no longer needs to be tappable, and correctly
   // reflects whatever's actually saved (via FacilityProvider's live
   // listener) rather than a locally-picked image that was never wired
   // to that update path.
+  final double _logoSize = effectivelyCollapsed ? 36 : 60;
   Widget logoSection = Container(
     width: double.infinity,
     padding: const EdgeInsets.only(top: 18, bottom: 12),
     alignment: Alignment.center,
-    child: CircleAvatar(
-      radius: effectivelyCollapsed ? 18 : 30,
-      backgroundColor: offWhite,
-      backgroundImage: (selectedFacility != null && selectedFacility['logoUrl'] != null)
-          ? NetworkImage(selectedFacility['logoUrl'] as String)
-          : const AssetImage('assets/vetbiz_pro_logo.png') as ImageProvider,
+    child: Container(
+      width: _logoSize,
+      height: _logoSize,
+      padding: const EdgeInsets.all(4),
+      decoration: BoxDecoration(
+        color: offWhite,
+        borderRadius: BorderRadius.circular(10),
+      ),
+      // BoxFit.contain rather than a forced circular crop, so a
+      // rectangular or text-wordmark logo isn't cropped or distorted.
+      child: (selectedFacility != null && selectedFacility['logoUrl'] != null)
+          ? Image.network(
+              selectedFacility['logoUrl'] as String,
+              fit: BoxFit.contain,
+              // _buildDrawerContent() runs on every rebuild, recreating
+              // this Image.network as a fresh widget instance each
+              // time - without this, Flutter shows nothing for at
+              // least one frame while its ImageStream resolves, even
+              // when the bytes are already cached (resolving is
+              // inherently async). wasSynchronouslyLoaded is true on
+              // a genuine cache hit, so this skips any transition then
+              // and shows it instantly - only a real first-time
+              // network load still gets a brief fade-in.
+              gaplessPlayback: true,
+              // Decodes directly at a small resolution rather than
+              // decoding the full source image (however large it
+              // actually is on Storage right now) and scaling down
+              // afterward - this helps immediately with an existing,
+              // already-uploaded large file, unlike the resize-on-
+              // upload fix which only applies to future uploads.
+              // 180px accounts for high-DPI screens showing this at
+              // ~60px logical size.
+              cacheWidth: 180,
+              cacheHeight: 180,
+              frameBuilder: (context, child, frame, wasSynchronouslyLoaded) {
+                if (wasSynchronouslyLoaded) return child;
+                return AnimatedOpacity(
+                  opacity: frame == null ? 0 : 1,
+                  duration: const Duration(milliseconds: 150),
+                  child: child,
+                );
+              },
+              errorBuilder: (context, error, stackTrace) =>
+                  Image.asset('assets/vetbiz_pro_logo.png', fit: BoxFit.contain),
+            )
+          : Image.asset('assets/vetbiz_pro_logo.png', fit: BoxFit.contain),
     ),
   );
 
@@ -1497,11 +1772,7 @@ Widget _buildDrawerContent() {
                   ElevatedButton(
                     style: buttonStyle,
                     child: const Text('Activity Log'),
-                    onPressed: () {
-                      Navigator.of(context).push(
-                        MaterialPageRoute(builder: (_) => ActivityLogScreen()),
-                      );
-                    },
+                    onPressed: () => showActivityLog(context),
                   ),
                 ],
                 const SizedBox(height: 12),
@@ -1597,7 +1868,11 @@ Widget _buildDrawerContent() {
         label: 'Add Sale',
         color: warmAmber,
         hoverColor: const Color(0xFFFFC400),
-        onPressed: () => navigateOrShowLockedDialog(context, AddSaleScreen()),
+        onPressed: () => navigateOrShowLockedDialog(
+          context,
+          const AddSaleScreen(),
+          onNavigate: () => showAddSaleScreen(context),
+        ),
       ),
       const SizedBox(width: 12),
       HoverFab(
@@ -1606,10 +1881,7 @@ Widget _buildDrawerContent() {
         label: 'Add Product',
         color: primaryDeepGreen,
         hoverColor: const Color(0xFF3B6B6E),
-        onPressed: () => Navigator.push(
-          context,
-          MaterialPageRoute(builder: (_) => AddEditProductScreen()),
-        ),
+        onPressed: () => showAddEditProductScreen(context),
       ),
       const SizedBox(width: 12),
       HoverFab(
@@ -1618,7 +1890,11 @@ Widget _buildDrawerContent() {
         label: 'Add Service',
         color: const Color(0xFF3D5A80),
         hoverColor: const Color(0xFF4A6B94),
-        onPressed: () => navigateOrShowLockedDialog(context, AddEditServiceScreen()),
+        onPressed: () => navigateOrShowLockedDialog(
+          context,
+          const AddEditServiceScreen(),
+          onNavigate: () => showAddEditServiceScreen(context),
+        ),
       ),
     ],
   );
@@ -1637,22 +1913,27 @@ Widget _buildDrawerContent() {
         backgroundColor: warmAmber,
         child: const Icon(Icons.add_shopping_cart, color: Colors.white),
         label: 'Add Sale',
-        onTap: () => navigateOrShowLockedDialog(context, AddSaleScreen()),
+        onTap: () => navigateOrShowLockedDialog(
+          context,
+          const AddSaleScreen(),
+          onNavigate: () => showAddSaleScreen(context),
+        ),
       ),
       SpeedDialChild(
         backgroundColor: primaryDeepGreen,
         child: const Icon(Icons.add_box, color: Colors.white),
         label: 'Add Product',
-        onTap: () => Navigator.push(
-          context,
-          MaterialPageRoute(builder: (_) => AddEditProductScreen()),
-        ),
+        onTap: () => showAddEditProductScreen(context),
       ),
       SpeedDialChild(
         backgroundColor: const Color(0xFF3D5A80),
         child: const Icon(Icons.design_services, color: Colors.white),
         label: 'Add Service',
-        onTap: () => navigateOrShowLockedDialog(context, AddEditServiceScreen()),
+        onTap: () => navigateOrShowLockedDialog(
+          context,
+          const AddEditServiceScreen(),
+          onNavigate: () => showAddEditServiceScreen(context),
+        ),
       ),
     ],
   );

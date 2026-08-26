@@ -20,6 +20,17 @@ class Service {
   // Stored in Firestore for reporting
   final double totalServiceProfit;
 
+  // Nullable - a service not yet paid at all has nothing to record a
+  // method for. Set at the moment of the actual payment, whether
+  // that's the full amount up front or a partial one settled later.
+  final String? paymentMethod;
+
+  // Nullable - assigned by ServiceProvider at creation time via the
+  // shared, atomic receipt-numbering counter (same sequence as sales),
+  // not set by callers directly. Services made before this feature
+  // existed have none.
+  final int? receiptNumber;
+
   Service({
     required this.id,
     required this.category,
@@ -34,6 +45,8 @@ class Service {
     this.updatedAt,
     this.itemsUsed = const [],
     this.totalServiceProfit = 0.0,
+    this.paymentMethod,
+    this.receiptNumber,
   });
 
   /// ---------- FROM FIRESTORE ----------
@@ -63,6 +76,8 @@ class Service {
       itemsUsed: parsedItems,
       totalServiceProfit:
           (data['totalServiceProfit'] ?? 0).toDouble(),
+      paymentMethod: data['paymentMethod'] as String?,
+      receiptNumber: (data['receiptNumber'] as num?)?.toInt(),
     );
   }
 
@@ -84,6 +99,8 @@ class Service {
           : FieldValue.serverTimestamp(),
       'itemsUsed': itemsUsed,
       'totalServiceProfit': totalServiceProfit,
+      'paymentMethod': paymentMethod,
+      'receiptNumber': receiptNumber,
     };
   }
 
@@ -126,6 +143,8 @@ class Service {
     String? providedByName,
     DateTime? updatedAt,
     List<Map<String, dynamic>>? itemsUsed,
+    String? paymentMethod,
+    int? receiptNumber,
   }) {
     final newPaid = totalPaid ?? this.totalPaid;
     final newItems = itemsUsed ?? this.itemsUsed;
@@ -149,6 +168,8 @@ class Service {
       updatedAt: updatedAt ?? this.updatedAt,
       itemsUsed: newItems,
       totalServiceProfit: newPaid - newExpenses, // ALWAYS recomputed
+      paymentMethod: paymentMethod ?? this.paymentMethod,
+      receiptNumber: receiptNumber ?? this.receiptNumber,
     );
   }
 }

@@ -12,6 +12,7 @@ class Payment {
   final String? paidById;
   final String? clientName;
   final String? clientPhone;
+  final String? paymentMethod;
 
   Payment({
     required this.id,
@@ -25,6 +26,7 @@ class Payment {
     this.paidById,
     this.clientName,
     this.clientPhone,
+    this.paymentMethod,
   });
 
   factory Payment.fromFirestore(Map<String, dynamic> data, String id,
@@ -43,6 +45,7 @@ class Payment {
       paidById: data['paidById'] as String?,
       clientName: clientName,
       clientPhone: clientPhone,
+      paymentMethod: data['paymentMethod'] as String?,
     );
   }
 }

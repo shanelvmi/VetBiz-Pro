@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -10,9 +11,11 @@ import 'package:intl/intl.dart';
 import '../../providers/facility_provider.dart';
 import '../../providers/subscription_provider.dart';
 import '../../constants/subscription_plans.dart';
+import '../../models/promotion.dart';
 
 class SubscriptionScreen extends StatefulWidget {
-  const SubscriptionScreen({super.key});
+  final bool isModal;
+  const SubscriptionScreen({super.key, this.isModal = false});
 
   @override
   State<SubscriptionScreen> createState() => _SubscriptionScreenState();
@@ -26,6 +29,10 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
   final NumberFormat _moneyFormat = NumberFormat('#,##0', 'en_US');
   final ImagePicker _picker = ImagePicker();
 
+  // Starts with the static defaults so the plan picker isn't blank
+  // while the real, Platform-Admin-configured prices load - _loadPlans
+  // below swaps these in as soon as they're available.
+  List<SubscriptionPlan> _plans = kSubscriptionPlans;
   SubscriptionPlan _selectedPlan = kSubscriptionPlans[2]; // Monthly default
   String _method = 'M-Pesa';
   final TextEditingController _referenceController = TextEditingController();
@@ -33,10 +40,69 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
   Uint8List? _proofBytes;
   bool _isSubmitting = false;
 
+  // Kept open for the screen's lifetime rather than a one-time fetch -
+  // a price change from a Platform Admin should show up immediately
+  // if this screen is already open, not require closing and reopening
+  // it. Cancelled in dispose().
+  StreamSubscription<List<SubscriptionPlan>>? _plansSubscription;
+
+  // Same live reasoning as the price stream above - an offer a
+  // Platform Admin activates should show up immediately here too.
+  Promotion? _activePromotion;
+  StreamSubscription<Promotion?>? _promoSubscription;
+
+  @override
+  void initState() {
+    super.initState();
+    _plansSubscription = streamSubscriptionPlans().listen((plans) {
+      if (!mounted) return;
+      setState(() {
+        _plans = plans;
+        // Keeps the same plan selected (by id, not list position) -
+        // each new stream event produces fresh SubscriptionPlan
+        // instances, so re-resolving by id (rather than keeping the
+        // stale object reference) is what keeps the radio selection
+        // from silently breaking every time a price updates.
+        _selectedPlan = plans.firstWhere(
+          (p) => p.id == _selectedPlan.id,
+          orElse: () => plans[2],
+        );
+      });
+    });
+
+    // Same <=7-day window used throughout the rest of the app (the
+    // urgent subscription banner, the notification cards) - a
+    // targeted offer honors the exact same definition of "expiring
+    // soon" everywhere, not a separate one just for promotions.
+    final sub = Provider.of<SubscriptionProvider>(context, listen: false);
+    final isExpiringSoon = (sub.status == SubscriptionStatus.trial || sub.status == SubscriptionStatus.active) &&
+        sub.daysRemaining != null &&
+        sub.daysRemaining! <= 7;
+    final facilityId = Provider.of<FacilityProvider>(context, listen: false).selectedFacilityId;
+    if (facilityId != null) {
+      _promoSubscription =
+          streamApplicablePromotion(facilityId: facilityId, isExpiringSoon: isExpiringSoon).listen((promo) {
+        if (!mounted) return;
+        setState(() => _activePromotion = promo);
+      });
+    }
+  }
+
   @override
   void dispose() {
+    _plansSubscription?.cancel();
+    _promoSubscription?.cancel();
     _referenceController.dispose();
     super.dispose();
+  }
+
+  // The price actually charged for a given plan right now - the
+  // promotion's discounted price if it applies to this specific plan,
+  // otherwise the plan's own regular price unchanged.
+  double _effectivePrice(SubscriptionPlan plan) {
+    final promo = _activePromotion;
+    if (promo == null || !promo.appliesToPlan(plan.id)) return plan.priceTsh;
+    return promo.discountedPrice(plan.priceTsh);
   }
 
   Future<void> _pickProofImage() async {
@@ -73,6 +139,10 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
       }
 
       final user = FirebaseAuth.instance.currentUser;
+      final effectivePrice = _effectivePrice(_selectedPlan);
+      final appliedPromo = (_activePromotion != null && _activePromotion!.appliesToPlan(_selectedPlan.id))
+          ? _activePromotion
+          : null;
 
       await FirebaseFirestore.instance
           .collection('facilities')
@@ -83,7 +153,9 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
         'facilityName': facilityName ?? 'Unknown',
         'planId': _selectedPlan.id,
         'planLabel': _selectedPlan.label,
-        'amount': _selectedPlan.priceTsh,
+        'amount': effectivePrice,
+        'promotionLabel': appliedPromo?.label,
+        'discountPercent': appliedPromo?.discountPercent,
         'method': _method,
         'reference': _referenceController.text.trim(),
         'proofImageUrl': proofUrl,
@@ -138,6 +210,14 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
         centerTitle: true,
         backgroundColor: primaryColor,
         foregroundColor: Colors.white,
+        automaticallyImplyLeading: !widget.isModal,
+        leading: widget.isModal
+            ? IconButton(
+                icon: const Icon(Icons.close),
+                tooltip: 'Close',
+                onPressed: () => Navigator.of(context).pop(),
+              )
+            : null,
       ),
       body: Center(
         child: ConstrainedBox(
@@ -174,7 +254,9 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
                       Text(
                         sub.status == SubscriptionStatus.locked
                             ? 'Expired on ${DateFormat('dd MMM yyyy').format(sub.expiresAt!)}'
-                            : 'Renews / expires on ${DateFormat('dd MMM yyyy').format(sub.expiresAt!)}',
+                            : sub.status == SubscriptionStatus.trial
+                                ? 'Trial expires on ${DateFormat('dd MMM yyyy').format(sub.expiresAt!)}'
+                                : 'Renews / expires on ${DateFormat('dd MMM yyyy').format(sub.expiresAt!)}',
                         style: const TextStyle(fontSize: 13),
                       ),
                     ],
@@ -192,9 +274,52 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
               ),
               const SizedBox(height: 24),
 
+              if (_activePromotion != null) ...[
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: [warmAmber, warmAmber.withValues(alpha: 0.75)],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                    ),
+                    borderRadius: BorderRadius.circular(14),
+                    boxShadow: [
+                      BoxShadow(color: warmAmber.withValues(alpha: 0.35), blurRadius: 14, offset: const Offset(0, 6)),
+                    ],
+                  ),
+                  child: Row(
+                    children: [
+                      const Icon(Icons.local_offer, color: Colors.white, size: 26),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              _activePromotion!.label,
+                              style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16),
+                            ),
+                            Text(
+                              '${_activePromotion!.discountPercent.toStringAsFixed(_activePromotion!.discountPercent % 1 == 0 ? 0 : 1)}% off'
+                              '${_activePromotion!.appliesToAllPlans ? ' every plan' : ' select plans'} - applied automatically below.',
+                              style: const TextStyle(color: Colors.white, fontSize: 12.5),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 20),
+              ],
+
               Text('Choose a Plan', style: TextStyle(fontWeight: FontWeight.bold, color: primaryColor)),
               const SizedBox(height: 8),
-              ...kSubscriptionPlans.map((plan) {
+              ..._plans.map((plan) {
+                final effectivePrice = _effectivePrice(plan);
+                final hasDiscount = effectivePrice < plan.priceTsh;
                 return Card(
                   margin: const EdgeInsets.only(bottom: 8),
                   child: RadioListTile<SubscriptionPlan>(
@@ -202,7 +327,29 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
                     groupValue: _selectedPlan,
                     activeColor: primaryColor,
                     title: Text(plan.label),
-                    subtitle: Text('Tsh ${_moneyFormat.format(plan.priceTsh)}'),
+                    subtitle: hasDiscount
+                        ? Row(
+                            children: [
+                              Text(
+                                'Tsh ${_moneyFormat.format(plan.priceTsh)}',
+                                style: TextStyle(
+                                  decoration: TextDecoration.lineThrough,
+                                  color: Colors.grey[500],
+                                  fontSize: 12.5,
+                                ),
+                              ),
+                              const SizedBox(width: 6),
+                              Text(
+                                'Tsh ${_moneyFormat.format(effectivePrice)}',
+                                style: const TextStyle(
+                                  color: Colors.green,
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 13.5,
+                                ),
+                              ),
+                            ],
+                          )
+                        : Text('Tsh ${_moneyFormat.format(plan.priceTsh)}'),
                     onChanged: (value) {
                       if (value != null) setState(() => _selectedPlan = value);
                     },
@@ -340,4 +487,63 @@ class _SubmissionHistory extends StatelessWidget {
       },
     );
   }
+}
+
+/// The one entry point for opening Subscription - same reasoning and
+/// threshold as showActivityLog: a full-screen push on mobile (no
+/// spare room for an overlay), a large, centered, dismissable modal
+/// on desktop/tablet-width screens, so it stays visually consistent
+/// with the rest of the "modern desktop" screens rather than the
+/// last one still doing an abrupt full-screen navigation.
+Future<void> showSubscriptionScreen(BuildContext context) async {
+  final isWideScreen = MediaQuery.of(context).size.width >= 900;
+
+  if (!isWideScreen) {
+    await Navigator.of(context).push(
+      MaterialPageRoute(builder: (_) => const SubscriptionScreen()),
+    );
+    return;
+  }
+
+  await showGeneralDialog(
+    context: context,
+    barrierDismissible: true,
+    barrierLabel: 'Subscription',
+    barrierColor: Colors.black54,
+    transitionDuration: const Duration(milliseconds: 220),
+    pageBuilder: (context, animation, secondaryAnimation) {
+      final screenSize = MediaQuery.of(context).size;
+      return Center(
+        child: ConstrainedBox(
+          constraints: BoxConstraints(
+            maxWidth: 900,
+            maxHeight: screenSize.height * 0.85,
+          ),
+          child: SizedBox(
+            width: screenSize.width * 0.8,
+            height: screenSize.height * 0.85,
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(16),
+              child: const Material(
+                child: SubscriptionScreen(isModal: true),
+              ),
+            ),
+          ),
+        ),
+      );
+    },
+    transitionBuilder: (context, animation, secondaryAnimation, child) {
+      final curved = CurvedAnimation(parent: animation, curve: Curves.easeOutCubic);
+      return FadeTransition(
+        opacity: curved,
+        child: SlideTransition(
+          position: Tween<Offset>(begin: const Offset(0, 0.03), end: Offset.zero).animate(curved),
+          child: ScaleTransition(
+            scale: Tween<double>(begin: 0.96, end: 1.0).animate(curved),
+            child: child,
+          ),
+        ),
+      );
+    },
+  );
 }

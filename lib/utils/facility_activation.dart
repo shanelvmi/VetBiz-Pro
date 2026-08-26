@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 import '../providers/facility_provider.dart';
 import '../providers/product_provider.dart';
@@ -68,6 +69,17 @@ Future<void> activateFacilityAndGoToDashboard({
   // route - pushing (not replacing) is what keeps that true.
   final navState = navigatorKey.currentState;
   if (navState != null) {
+    // A fixed delay, not a frame callback - addPostFrameCallback ties
+    // to the browser's own paint-frame scheduling on web, which can be
+    // throttled or simply never fire if nothing visually needs to
+    // change, leaving this navigation waiting indefinitely until some
+    // external event (like the browser's own back/forward buttons)
+    // forces a repaint. A timer-based delay fires regardless of that.
+    // 300ms also safely clears AppEntryPoint's own 220ms
+    // AnimatedSwitcher transition between its login/deciding states -
+    // pushing a new route while that's still mid-flight was a
+    // plausible separate source of the same symptom.
+    await Future.delayed(const Duration(milliseconds: 300));
     navState.pushNamed(
       '/dashboard',
       arguments: {

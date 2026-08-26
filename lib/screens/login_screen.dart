@@ -9,6 +9,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../services/auth_service.dart';
 import '../providers/facility_provider.dart';
 import '../providers/product_provider.dart';
+import '../widgets/announcement_message.dart';
 
 class LoginScreen extends StatefulWidget {
   final String? errorMessage;
@@ -170,17 +171,34 @@ class _LoginScreenState extends State<LoginScreen> {
       setState(() => error = "Enter your email first to reset password.");
       return;
     }
+    // Deliberately the same message whether this succeeds or the email
+    // doesn't exist - confirming or denying an account's existence here
+    // would let this form be used to build a list of every registered
+    // email on the platform. Handled at this level rather than relying
+    // solely on Firebase's own project-level email-enumeration-
+    // protection setting, which this code has no way to verify is
+    // actually turned on.
+    const vagueMessage = "If an account exists for this email, a reset link "
+        "has been sent. Check your inbox (and spam folder).";
     try {
       await _authService.sendPasswordReset(email);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-          content: const Text("Password reset link sent.",
-              style: TextStyle(color: Colors.white)),
+          content: const Text(vagueMessage, style: TextStyle(color: Colors.white)),
           backgroundColor: primaryDeepGreen,
         ));
       }
     } on FirebaseAuthException catch (e) {
-      setState(() => error = _friendlyAuthError(e));
+      if (e.code == 'user-not-found' || e.code == 'invalid-email') {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+            content: const Text(vagueMessage, style: TextStyle(color: Colors.white)),
+            backgroundColor: primaryDeepGreen,
+          ));
+        }
+      } else {
+        setState(() => error = _friendlyAuthError(e));
+      }
     } catch (e) {
       setState(() => error = "Could not send reset email: $e");
     }
@@ -251,12 +269,6 @@ class _LoginScreenState extends State<LoginScreen> {
                   itemBuilder: (context, index) {
                     final data = docs[index].data() as Map<String, dynamic>;
                     final title = data['title'] ?? 'Notice';
-                    final rawMessage = (data['message'] ?? '').toString();
-                    final isBold = data['bold'] == true;
-                    final isItalic = data['italic'] == true;
-                    final isUppercase = data['uppercase'] == true;
-                    final colorValue = data['color'] as int?;
-                    final message = isUppercase ? rawMessage.toUpperCase() : rawMessage;
                     final ts = data['timestamp'] as Timestamp?;
                     final bool isNew = ts != null &&
                         DateTime.now().difference(ts.toDate()).inHours < 48;
@@ -290,14 +302,7 @@ class _LoginScreenState extends State<LoginScreen> {
                           // Scrollable message
                           Expanded(
                             child: SingleChildScrollView(
-                              child: Text(
-                                message,
-                                style: TextStyle(
-                                    fontSize: 14,
-                                    color: colorValue != null ? Color(colorValue) : neutralBlack,
-                                    fontWeight: isBold ? FontWeight.bold : FontWeight.normal,
-                                    fontStyle: isItalic ? FontStyle.italic : FontStyle.normal),
-                              ),
+                              child: AnnouncementMessage(data: data),
                             ),
                           ),
                         ],
@@ -399,15 +404,18 @@ class _LoginScreenState extends State<LoginScreen> {
             ],
           ),
           const SizedBox(height: 12),
-          CheckboxListTile(
-            title: Text('Remember Me', style: TextStyle(color: neutralBlack)),
-            value: rememberMe,
-            onChanged: (value) =>
-                setState(() => rememberMe = value ?? false),
-            activeColor: primaryDeepGreen,
-            checkColor: Colors.white,
-            contentPadding: EdgeInsets.zero,
-            controlAffinity: ListTileControlAffinity.leading,
+          Material(
+            type: MaterialType.transparency,
+            child: CheckboxListTile(
+              title: Text('Remember Me', style: TextStyle(color: neutralBlack)),
+              value: rememberMe,
+              onChanged: (value) =>
+                  setState(() => rememberMe = value ?? false),
+              activeColor: primaryDeepGreen,
+              checkColor: Colors.white,
+              contentPadding: EdgeInsets.zero,
+              controlAffinity: ListTileControlAffinity.leading,
+            ),
           ),
           Align(
             alignment: Alignment.centerRight,
@@ -594,30 +602,44 @@ class _LoginScreenState extends State<LoginScreen> {
                               .doc('login_poster')
                               .snapshots(),
                           builder: (context, snapshot) {
+                            // Waiting for the very first snapshot - reserves
+                            // the same space rather than flashing the
+                            // fallback illustration only to swap it out
+                            // moments later once the real poster arrives.
+                            if (snapshot.connectionState == ConnectionState.waiting && !snapshot.hasData) {
+                              return SizedBox(height: cardHeight * 0.9);
+                            }
+
                             final posterUrl = snapshot.data?.data() != null
                                 ? (snapshot.data!.data() as Map<String, dynamic>)['posterUrl'] as String?
                                 : null;
 
                             return Align(
                               alignment: Alignment.topCenter,
-                              child: posterUrl != null
-                                  ? Image.network(
-                                      posterUrl,
-                                      height: cardHeight * 0.9,
-                                      fit: BoxFit.contain,
-                                      errorBuilder: (_, __, ___) => Image.asset(
-                                        'assets/vetbizpro_illustration.png',
-                                        height: cardHeight * 0.9,
-                                        fit: BoxFit.contain,
-                                        errorBuilder: (_, __, ___) => const SizedBox(),
-                                      ),
-                                    )
-                                  : Image.asset(
-                                      'assets/vetbizpro_illustration.png',
-                                      height: cardHeight * 0.9,
-                                      fit: BoxFit.contain,
-                                      errorBuilder: (_, __, ___) => const SizedBox(),
-                                    ),
+                              child: AnimatedSwitcher(
+                                duration: const Duration(milliseconds: 200),
+                                child: KeyedSubtree(
+                                  key: ValueKey(posterUrl ?? 'default'),
+                                  child: posterUrl != null
+                                      ? Image.network(
+                                          posterUrl,
+                                          height: cardHeight * 0.9,
+                                          fit: BoxFit.contain,
+                                          errorBuilder: (_, __, ___) => Image.asset(
+                                            'assets/vetbizpro_illustration.png',
+                                            height: cardHeight * 0.9,
+                                            fit: BoxFit.contain,
+                                            errorBuilder: (_, __, ___) => const SizedBox(),
+                                          ),
+                                        )
+                                      : Image.asset(
+                                          'assets/vetbizpro_illustration.png',
+                                          height: cardHeight * 0.9,
+                                          fit: BoxFit.contain,
+                                          errorBuilder: (_, __, ___) => const SizedBox(),
+                                        ),
+                                ),
+                              ),
                             );
                           },
                         ),
@@ -643,12 +665,56 @@ class _LoginScreenState extends State<LoginScreen> {
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Icon(Icons.pets, size: 44, color: primaryDeepGreen),
-                    const SizedBox(height: 8),
-                    Text(
-                      'VetBiz Pro',
-                      style: TextStyle(
-                          fontSize: 24, fontWeight: FontWeight.bold, color: primaryDeepGreen),
+                    // A dedicated upload (Platform Admin > Announcements
+                    // > "Login Screen Logo"), separate from the
+                    // wide-screen poster above - that one's sized and
+                    // intended for a much larger space, not a compact
+                    // phone-screen logo. Shown alone, no text label
+                    // alongside it - a cleaner, more modern mobile
+                    // presentation than icon-plus-wordmark.
+                    StreamBuilder<DocumentSnapshot>(
+                      stream: FirebaseFirestore.instance
+                          .collection('app_config')
+                          .doc('login_logo')
+                          .snapshots(),
+                      builder: (context, snapshot) {
+                        // Waiting for the very first snapshot - reserves
+                        // the same space rather than flashing the
+                        // fallback illustration only to swap it out
+                        // moments later once the real logo arrives.
+                        if (snapshot.connectionState == ConnectionState.waiting && !snapshot.hasData) {
+                          return const SizedBox(height: 72);
+                        }
+
+                        final logoUrl = snapshot.data?.data() != null
+                            ? (snapshot.data!.data() as Map<String, dynamic>)['logoUrl'] as String?
+                            : null;
+
+                        return AnimatedSwitcher(
+                          duration: const Duration(milliseconds: 200),
+                          child: KeyedSubtree(
+                            key: ValueKey(logoUrl ?? 'default'),
+                            child: logoUrl != null
+                                ? Image.network(
+                                    logoUrl,
+                                    height: 72,
+                                    fit: BoxFit.contain,
+                                    errorBuilder: (_, __, ___) => Image.asset(
+                                      'assets/vetbizpro_illustration.png',
+                                      height: 72,
+                                      fit: BoxFit.contain,
+                                      errorBuilder: (_, __, ___) => Icon(Icons.pets, size: 44, color: primaryDeepGreen),
+                                    ),
+                                  )
+                                : Image.asset(
+                                    'assets/vetbizpro_illustration.png',
+                                    height: 72,
+                                    fit: BoxFit.contain,
+                                    errorBuilder: (_, __, ___) => Icon(Icons.pets, size: 44, color: primaryDeepGreen),
+                                  ),
+                          ),
+                        );
+                      },
                     ),
                     const SizedBox(height: 24),
                     _buildLoginForm(),

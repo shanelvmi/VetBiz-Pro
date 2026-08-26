@@ -278,7 +278,9 @@ class _FacilityDetailScreenState extends State<FacilityDetailScreen> {
           final data = snapshot.data!.data() as Map<String, dynamic>;
           final expiresAtField = data['subscriptionExpiresAt'];
           final expiresAt = expiresAtField is Timestamp ? expiresAtField.toDate() : null;
-          final status = computeSubscriptionStatus(expiresAt);
+          final trialExpiresAtField = data['trialExpiresAt'];
+          final trialExpiresAt = trialExpiresAtField is Timestamp ? trialExpiresAtField.toDate() : null;
+          final status = computeSubscriptionStatus(expiresAt, trialExpiresAt);
           final createdAtField = data['createdAt'];
           final createdAt = createdAtField is Timestamp ? createdAtField.toDate() : null;
 

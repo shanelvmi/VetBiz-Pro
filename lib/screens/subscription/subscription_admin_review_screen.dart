@@ -33,7 +33,7 @@ class SubscriptionAdminReviewScreen extends StatelessWidget {
     final data = submissionDoc.data() as Map<String, dynamic>;
     final facilityId = data['facilityId'] as String?;
     final planId = data['planId'] as String?;
-    final plan = planId != null ? planById(planId) : null;
+    final plan = planId != null ? await loadPlanById(planId) : null;
 
     if (facilityId == null || plan == null) return;
 
@@ -60,7 +60,7 @@ class SubscriptionAdminReviewScreen extends StatelessWidget {
         'subscriptionPlan': plan.id,
         'subscriptionExpiresAt': Timestamp.fromDate(newExpiry),
         'lastPaymentAt': FieldValue.serverTimestamp(),
-        'lastPaymentAmount': plan.priceTsh,
+        'lastPaymentAmount': (data['amount'] as num?)?.toDouble() ?? plan.priceTsh,
       },
       SetOptions(merge: true),
     );

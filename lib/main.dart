@@ -12,6 +12,7 @@ import 'screens/dashboard/dashboard_screen.dart';
 import 'screens/facilities/facility_picker_screen.dart';
 import 'screens/platform_admin/platform_admin_home_screen.dart';
 import 'utils/facility_activation.dart';
+import 'utils/activity_signal.dart';
 
 import 'services/auth_service.dart';
 
@@ -145,6 +146,19 @@ class VetBizProApp extends StatelessWidget {
         '/dashboard': (context) => const DashboardScreen(),
       },
       home: const AppEntryPoint(),
+      // Wraps the whole app, including every dialog and overlay -
+      // this is the one place pointer activity can be caught
+      // app-wide, rather than each screen needing (and likely
+      // forgetting) its own Listener that would miss activity inside
+      // any dialog rendered above it. See activity_signal.dart.
+      builder: (context, child) {
+        return Listener(
+          onPointerDown: (_) => globalActivitySignal.add(null),
+          onPointerSignal: (_) => globalActivitySignal.add(null),
+          behavior: HitTestBehavior.translucent,
+          child: child,
+        );
+      },
     );
   }
 }

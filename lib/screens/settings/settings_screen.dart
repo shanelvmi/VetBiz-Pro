@@ -11,29 +11,55 @@ import 'printer_settings_screen.dart';
 import 'export_data_screen.dart';
 import 'trash_screen.dart';
 import '../subscription/subscription_screen.dart';
-import 'business_profile_screen.dart';
 import '../platform_admin/platform_admin_home_screen.dart';
 import '../dashboard/stock_alerts_screen.dart';
 
-class SettingsScreen extends StatelessWidget {
+class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
 
+  @override
+  State<SettingsScreen> createState() => _SettingsScreenState();
+}
+
+class _SettingsScreenState extends State<SettingsScreen> {
+  final Color primaryColor = const Color(0xFF2F5D62);
+  final Color backgroundColor = const Color(0xFFFDFDF9);
+  static const double cardElevation = 2.0;
+
+  // Master-detail (desktop/tablet-width) only - which navigable
+  // screen is currently shown in the content pane. Null means "show
+  // the empty state", but in practice this is set to a sensible
+  // default (see _defaultSelection) as soon as role/platform-admin
+  // status is known, so the pane is never blank on first load.
+  String? _selectedKey;
+
+  bool? _isPlatformAdminCache;
+
   Future<bool> _isPlatformAdmin() async {
+    if (_isPlatformAdminCache != null) return _isPlatformAdminCache!;
     final user = FirebaseAuth.instance.currentUser;
     if (user == null) return false;
     final doc = await FirebaseFirestore.instance.collection('platform_admins').doc(user.uid).get();
-    return doc.exists;
+    _isPlatformAdminCache = doc.exists;
+    return _isPlatformAdminCache!;
   }
 
   @override
   Widget build(BuildContext context) {
-    final Color primaryColor = const Color(0xFF2F5D62);
-    final Color backgroundColor = const Color(0xFFFDFDF9);
-    
-    // Listening to your established app provider
-    final settings = Provider.of<SettingsProvider>(context);
-    const double cardElevation = 2.0; 
+    final isWideScreen = MediaQuery.of(context).size.width >= 900;
 
+    if (!isWideScreen) {
+      return _buildMobileLayout(context);
+    }
+    return _buildDesktopLayout(context);
+  }
+
+  // Unchanged from before this rewrite - full drill-down list, every
+  // item pushes a full screen. Mobile has no spare room for a
+  // sidebar+pane layout, so this stays exactly as it always worked.
+  Widget _buildMobileLayout(BuildContext context) {
+    final settings = Provider.of<SettingsProvider>(context);
+    final isAdmin = Provider.of<UserRoleProvider>(context).isAdmin;
 
     final currentLanguageMap = settings.supportedLanguages.firstWhere(
       (element) => element['code'] == settings.selectedLanguage,
@@ -56,230 +82,430 @@ class SettingsScreen extends StatelessWidget {
         child: ConstrainedBox(
           constraints: const BoxConstraints(maxWidth: 700),
           child: ListView(
-        padding: const EdgeInsets.all(16),
-        children: [
-          if (Provider.of<UserRoleProvider>(context).isAdmin) ...[
-          _buildSectionTitle('Business Profile', primaryColor),
-          const SizedBox(height: 6),
-          Card(
-            elevation: cardElevation,
-            margin: EdgeInsets.zero,
-            child: _buildSettingsItem(
-              icon: Icons.storefront_outlined,
-              label: 'Logo & Business Details',
-              primaryColor: primaryColor,
-              isLast: true,
-              onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (_) => const BusinessProfileScreen()),
-                );
-              },
-            ),
-          ),
-          const SizedBox(height: 20),
-          _buildSectionTitle('Subscription', primaryColor),
-          const SizedBox(height: 6),
-          Card(
-            elevation: cardElevation,
-            margin: EdgeInsets.zero,
-            child: Column(
-              children: [
-                _buildSettingsItem(
-                  icon: Icons.workspace_premium_outlined,
-                  label: 'Subscription & Billing',
-                  primaryColor: primaryColor,
-                  isLast: false,
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (_) => const SubscriptionScreen()),
-                    );
-                  },
+            padding: const EdgeInsets.all(16),
+            children: [
+              if (isAdmin) ...[
+                _buildSectionTitle('Subscription'),
+                const SizedBox(height: 6),
+                Card(
+                  elevation: cardElevation,
+                  margin: EdgeInsets.zero,
+                  child: Column(
+                    children: [
+                      _buildSettingsItem(
+                        icon: Icons.workspace_premium_outlined,
+                        label: 'Subscription & Billing',
+                        isLast: false,
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(builder: (_) => const SubscriptionScreen()),
+                          );
+                        },
+                      ),
+                      FutureBuilder<bool>(
+                        future: _isPlatformAdmin(),
+                        builder: (context, snapshot) {
+                          if (snapshot.data != true) return const SizedBox.shrink();
+                          return _buildSettingsItem(
+                            icon: Icons.admin_panel_settings_outlined,
+                            label: 'Platform Admin',
+                            isLast: true,
+                            onTap: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(builder: (_) => const PlatformAdminHomeScreen()),
+                              );
+                            },
+                          );
+                        },
+                      ),
+                    ],
+                  ),
                 ),
-                FutureBuilder<bool>(
-                  future: _isPlatformAdmin(),
-                  builder: (context, snapshot) {
-                    // Only shown to platform admins - previously this menu
-                    // entry appeared for every facility's admin and assistant,
-                    // who would just hit "access denied" after tapping it.
-                    if (snapshot.data != true) return const SizedBox.shrink();
-
-                    return _buildSettingsItem(
-                      icon: Icons.admin_panel_settings_outlined,
-                      label: 'Platform Admin',
-                      primaryColor: primaryColor,
+              ],
+              const SizedBox(height: 20),
+              _buildSectionTitle('Account & Data'),
+              const SizedBox(height: 6),
+              Card(
+                elevation: cardElevation,
+                margin: EdgeInsets.zero,
+                child: Column(
+                  children: [
+                    if (isAdmin)
+                      _buildSettingsItem(
+                        icon: Icons.delete_outline,
+                        label: 'Trash / Deleted Items',
+                        isLast: false,
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(builder: (_) => const TrashScreen()),
+                          );
+                        },
+                      ),
+                    if (isAdmin)
+                      _buildSettingsItem(
+                        icon: Icons.import_export,
+                        label: 'Export Data',
+                        isLast: false,
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(builder: (_) => const ExportDataScreen()),
+                          );
+                        },
+                      ),
+                    _buildSettingsItem(
+                      icon: Icons.manage_accounts_outlined,
+                      label: 'Manage Account',
                       isLast: true,
                       onTap: () {
                         Navigator.push(
                           context,
-                          MaterialPageRoute(builder: (_) => const PlatformAdminHomeScreen()),
+                          MaterialPageRoute(builder: (_) => const ManageAccountScreen()),
                         );
                       },
-                    );
-                  },
+                    ),
+                  ],
                 ),
-              ],
-            ),
+              ),
+              const SizedBox(height: 16),
+              _buildSectionTitle('General'),
+              const SizedBox(height: 6),
+              Card(
+                elevation: cardElevation,
+                margin: EdgeInsets.zero,
+                child: Column(
+                  children: [
+                    _buildSettingsItem(
+                      icon: Icons.notifications_none,
+                      label: 'Notifications',
+                      isLast: false,
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(builder: (_) => const StockAlertsScreen()),
+                        );
+                      },
+                    ),
+                    _buildSettingsItem(
+                      icon: Icons.print_outlined,
+                      label: 'Printer & Receipt Settings',
+                      isLast: false,
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(builder: (_) => const PrinterSettingsScreen()),
+                        );
+                      },
+                    ),
+                    _buildSettingsItem(
+                      icon: Icons.help_outline,
+                      label: 'Help & Support',
+                      isLast: false,
+                      onTap: () => _showHelpSupportDialog(context),
+                    ),
+                    _buildSettingsItem(
+                      icon: Icons.info_outline,
+                      label: 'App Info',
+                      isLast: true,
+                      onTap: () => _showAppInfoDialog(context),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 16),
+              _buildSectionTitle('Preferences'),
+              const SizedBox(height: 6),
+              Card(
+                elevation: cardElevation,
+                margin: EdgeInsets.zero,
+                child: Column(
+                  children: [
+                    _buildSettingsItem(
+                      icon: Icons.color_lens_outlined,
+                      label: 'Theme Mode',
+                      trailingText: 'System Defaults',
+                      isLast: false,
+                      onTap: () {
+                        // TODO: Implement theme switch block smoothly later
+                      },
+                    ),
+                    _buildSettingsItem(
+                      icon: Icons.currency_exchange_outlined,
+                      label: 'Currency',
+                      trailingText: '🇹🇿 Tsh',
+                      isLast: false,
+                      onTap: () {}, // not a real choice - no picker to open
+                    ),
+                    _buildSettingsItem(
+                      icon: Icons.language_outlined,
+                      label: 'Language / Lugha',
+                      trailingText: currentLanguageMap['name'],
+                      isLast: true,
+                      onTap: () => _showLanguageSelection(context, settings),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 36),
+              const Center(
+                child: Text(
+                  'VetBiz Pro • v1.0.0',
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: Colors.grey,
+                    letterSpacing: 0.5,
+                  ),
+                ),
+              ),
+              const SizedBox(height: 20),
+            ],
           ),
-          ],
-          const SizedBox(height: 20),
-          _buildSectionTitle('General', primaryColor),
-          const SizedBox(height: 6),
-          Card(
-            elevation: cardElevation,
-            margin: EdgeInsets.zero,
-            child: Column(
-              children: [
-                _buildSettingsItem(
-                  icon: Icons.notifications_none,
-                  label: 'Notifications',
-                  primaryColor: primaryColor,
-                  isLast: false,
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (_) => const StockAlertsScreen()),
-                    );
-                  },
-                ),
-                _buildSettingsItem(
-                  icon: Icons.print_outlined,
-                  label: 'Printer & Receipt Settings',
-                  primaryColor: primaryColor,
-                  isLast: false,
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (_) => const PrinterSettingsScreen(),
-                      ),
-                    );
-                  },
-                ),
-                _buildSettingsItem(
-                  icon: Icons.help_outline,
-                  label: 'Help & Support',
-                  primaryColor: primaryColor,
-                  isLast: false,
-                  onTap: () => _showHelpSupportDialog(context, primaryColor, backgroundColor),
-                ),
-                _buildSettingsItem(
-                  icon: Icons.info_outline,
-                  label: 'App Info',
-                  primaryColor: primaryColor,
-                  isLast: true,
-                  onTap: () => _showAppInfoDialog(context, primaryColor, backgroundColor),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(height: 16),
+        ),
+      ),
+    );
+  }
 
-          _buildSectionTitle('Account & Data', primaryColor),
-          const SizedBox(height: 6),
-          Card(
-            elevation: cardElevation,
-            margin: EdgeInsets.zero,
-            child: Column(
-              children: [
-                if (Provider.of<UserRoleProvider>(context).isAdmin)
-                _buildSettingsItem(
-                  icon: Icons.delete_outline,
-                  label: 'Trash / Deleted Items',
-                  primaryColor: primaryColor,
-                  isLast: false,
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (_) => const TrashScreen()),
-                    );
-                  },
-                ),
-                if (Provider.of<UserRoleProvider>(context).isAdmin)
-                _buildSettingsItem(
-                  icon: Icons.import_export,
-                  label: 'Export Data',
-                  primaryColor: primaryColor,
-                  isLast: false,
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (_) => const ExportDataScreen(),
-                      ),
-                    );
-                  },
-                ),
-                _buildSettingsItem(
-                  icon: Icons.manage_accounts_outlined,
-                  label: 'Manage Account',
-                  primaryColor: primaryColor,
-                  isLast: true,
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (_) => const ManageAccountScreen(),
-                      ),
-                    );
-                  },
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(height: 16),
+  // Master-detail: a persistent sidebar of the same section groups
+  // and items as the mobile list, but tapping a navigable one swaps
+  // the content pane in-place instead of pushing a whole new screen -
+  // no navigation stack to climb back out of just to check a
+  // different setting next. Dialog/bottom-sheet items (Help &
+  // Support, App Info, Language) keep working exactly as they do on
+  // mobile - they're small, modal-appropriate content, not worth
+  // dedicating a whole pane to.
+  Widget _buildDesktopLayout(BuildContext context) {
+    final settings = Provider.of<SettingsProvider>(context);
+    final isAdmin = Provider.of<UserRoleProvider>(context).isAdmin;
 
-          _buildSectionTitle('Preferences', primaryColor),
-          const SizedBox(height: 6),
-          Card(
-            elevation: cardElevation,
-            margin: EdgeInsets.zero,
-            child: Column(
-              children: [
-                _buildSettingsItem(
-                  icon: Icons.color_lens_outlined,
-                  label: 'Theme Mode',
-                  trailingText: 'System Defaults',
-                  primaryColor: primaryColor,
-                  isLast: false,
-                  onTap: () {
-                    // TODO: Implement theme switch block smoothly later
-                  },
-                ),
-                _buildSettingsItem(
-                  icon: Icons.currency_exchange_outlined,
-                  label: 'Currency',
-                  trailingText: '🇹🇿 Tsh',
-                  primaryColor: primaryColor,
-                  isLast: false,
-                  onTap: () {}, // not a real choice - no picker to open
-                ),
-                _buildSettingsItem(
-                  icon: Icons.language_outlined,
-                  label: 'Language / Lugha',
-                  trailingText: currentLanguageMap['name'],
-                  primaryColor: primaryColor,
-                  isLast: true,
-                  onTap: () => _showLanguageSelection(context, settings, primaryColor, backgroundColor),
-                ),
-              ],
-            ),
-          ),
+    // Whatever's genuinely first in the sidebar for this role -
+    // Subscription for an Admin (top of the list), Notifications for
+    // an Assistant (who never sees the Subscription section at all).
+    _selectedKey ??= isAdmin ? 'subscription' : 'notifications';
 
-          const SizedBox(height: 36),
-          const Center(
-            child: Text(
-              'VetBiz Pro • v1.0.0',
-              style: TextStyle(
-                fontSize: 12, 
-                color: Colors.grey,
-                letterSpacing: 0.5,
+    final currentLanguageMap = settings.supportedLanguages.firstWhere(
+      (element) => element['code'] == settings.selectedLanguage,
+      orElse: () => {'code': 'en', 'name': 'English'},
+    );
+
+    return Scaffold(
+      backgroundColor: backgroundColor,
+      body: Row(
+        children: [
+          SizedBox(
+            width: 300,
+            child: Container(
+              color: Colors.white,
+              child: Column(
+                children: [
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.fromLTRB(20, 24, 20, 16),
+                    child: Text(
+                      'Settings',
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 22,
+                        color: primaryColor,
+                      ),
+                    ),
+                  ),
+                  Expanded(
+                    child: ListView(
+                      padding: const EdgeInsets.symmetric(horizontal: 12),
+                      children: [
+                        if (isAdmin) ...[
+                          _buildSectionTitle('Subscription'),
+                          const SizedBox(height: 4),
+                          _buildSidebarItem(
+                            icon: Icons.workspace_premium_outlined,
+                            label: 'Subscription & Billing',
+                            navigateKey: 'subscription',
+                          ),
+                          FutureBuilder<bool>(
+                            future: _isPlatformAdmin(),
+                            builder: (context, snapshot) {
+                              if (snapshot.data != true) return const SizedBox.shrink();
+                              return _buildSidebarItem(
+                                icon: Icons.admin_panel_settings_outlined,
+                                label: 'Platform Admin',
+                                navigateKey: 'platform_admin',
+                              );
+                            },
+                          ),
+                          const SizedBox(height: 16),
+                        ],
+                        _buildSectionTitle('Account & Data'),
+                        const SizedBox(height: 4),
+                        if (isAdmin)
+                          _buildSidebarItem(
+                            icon: Icons.delete_outline,
+                            label: 'Trash / Deleted Items',
+                            navigateKey: 'trash',
+                          ),
+                        if (isAdmin)
+                          _buildSidebarItem(
+                            icon: Icons.import_export,
+                            label: 'Export Data',
+                            navigateKey: 'export',
+                          ),
+                        _buildSidebarItem(
+                          icon: Icons.manage_accounts_outlined,
+                          label: 'Manage Account',
+                          navigateKey: 'manage_account',
+                        ),
+                        const SizedBox(height: 16),
+                        _buildSectionTitle('General'),
+                        const SizedBox(height: 4),
+                        _buildSidebarItem(
+                          icon: Icons.notifications_none,
+                          label: 'Notifications',
+                          navigateKey: 'notifications',
+                        ),
+                        _buildSidebarItem(
+                          icon: Icons.print_outlined,
+                          label: 'Printer & Receipt Settings',
+                          navigateKey: 'printer',
+                        ),
+                        _buildSidebarItem(
+                          icon: Icons.help_outline,
+                          label: 'Help & Support',
+                          onTapDialog: () => _showHelpSupportDialog(context),
+                        ),
+                        _buildSidebarItem(
+                          icon: Icons.info_outline,
+                          label: 'App Info',
+                          onTapDialog: () => _showAppInfoDialog(context),
+                        ),
+                        const SizedBox(height: 16),
+                        _buildSectionTitle('Preferences'),
+                        const SizedBox(height: 4),
+                        _buildSidebarItem(
+                          icon: Icons.color_lens_outlined,
+                          label: 'Theme Mode',
+                          trailingText: 'System Defaults',
+                          onTapDialog: () {
+                            // TODO: Implement theme switch block smoothly later
+                          },
+                        ),
+                        _buildSidebarItem(
+                          icon: Icons.currency_exchange_outlined,
+                          label: 'Currency',
+                          trailingText: '🇹🇿 Tsh',
+                          onTapDialog: () {}, // not a real choice - no picker to open
+                        ),
+                        _buildSidebarItem(
+                          icon: Icons.language_outlined,
+                          label: 'Language / Lugha',
+                          trailingText: currentLanguageMap['name'],
+                          onTapDialog: () => _showLanguageSelection(context, settings),
+                        ),
+                        const SizedBox(height: 20),
+                      ],
+                    ),
+                  ),
+                ],
               ),
             ),
           ),
-          const SizedBox(height: 20),
+          const VerticalDivider(width: 1),
+          Expanded(
+            child: _buildContentPane(isAdmin),
+          ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildContentPane(bool isAdmin) {
+    switch (_selectedKey) {
+      case 'subscription':
+        return isAdmin ? const SubscriptionScreen() : _buildEmptyPane();
+      case 'platform_admin':
+        return isAdmin ? const PlatformAdminHomeScreen() : _buildEmptyPane();
+      case 'notifications':
+        return const StockAlertsScreen();
+      case 'printer':
+        return const PrinterSettingsScreen();
+      case 'trash':
+        return isAdmin ? const TrashScreen() : _buildEmptyPane();
+      case 'export':
+        return isAdmin ? const ExportDataScreen() : _buildEmptyPane();
+      case 'manage_account':
+        return const ManageAccountScreen();
+      default:
+        return _buildEmptyPane();
+    }
+  }
+
+  Widget _buildEmptyPane() {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(Icons.settings_outlined, size: 56, color: Colors.grey.shade300),
+          const SizedBox(height: 12),
+          Text(
+            'Select a setting from the left',
+            style: TextStyle(color: Colors.grey.shade500, fontSize: 14),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // Sidebar row - visually distinct from _buildSettingsItem below:
+  // no chevron (nothing here "navigates away"), instead a selected-
+  // state tint for whichever navigable item is currently shown in
+  // the content pane. Dialog items (onTapDialog set) never show a
+  // selected state, since they don't change the pane at all.
+  Widget _buildSidebarItem({
+    required IconData icon,
+    required String label,
+    String? trailingText,
+    String? navigateKey,
+    VoidCallback? onTapDialog,
+  }) {
+    final isSelected = navigateKey != null && _selectedKey == navigateKey;
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 1),
+      child: Material(
+        color: isSelected ? primaryColor.withValues(alpha: 0.08) : Colors.transparent,
+        borderRadius: BorderRadius.circular(8),
+        child: InkWell(
+          borderRadius: BorderRadius.circular(8),
+          onTap: navigateKey != null
+              ? () => setState(() => _selectedKey = navigateKey)
+              : onTapDialog,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+            child: Row(
+              children: [
+                Icon(
+                  icon,
+                  size: 19,
+                  color: isSelected ? primaryColor : Colors.black54,
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    label,
+                    style: TextStyle(
+                      fontSize: 13.5,
+                      fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
+                      color: isSelected ? primaryColor : Colors.black87,
+                    ),
+                  ),
+                ),
+                if (trailingText != null)
+                  Text(
+                    trailingText,
+                    style: TextStyle(fontSize: 11.5, color: Colors.grey.shade600),
+                  ),
+              ],
+            ),
           ),
         ),
       ),
@@ -288,7 +514,7 @@ class SettingsScreen extends StatelessWidget {
 
   // --- Dynamic Bottom Sheets for Data Scalability ---
 
-  void _showLanguageSelection(BuildContext context, SettingsProvider settings, Color primaryColor, Color backgroundColor) {
+  void _showLanguageSelection(BuildContext context, SettingsProvider settings) {
     showModalBottomSheet(
       context: context,
       backgroundColor: backgroundColor,
@@ -344,7 +570,6 @@ class SettingsScreen extends StatelessWidget {
     required IconData icon,
     required String label,
     required VoidCallback onTap,
-    required Color primaryColor,
     required bool isLast,
     String? trailingText,
   }) {
@@ -355,7 +580,7 @@ class SettingsScreen extends StatelessWidget {
           contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 2),
           leading: Icon(icon, color: primaryColor.withValues(alpha: 0.85), size: 24),
           title: Text(
-            label, 
+            label,
             style: const TextStyle(
               color: Colors.black87,
               fontSize: 15,
@@ -373,8 +598,8 @@ class SettingsScreen extends StatelessWidget {
                 const SizedBox(width: 4),
               ],
               const Icon(
-                Icons.chevron_right_rounded, 
-                color: Colors.grey, 
+                Icons.chevron_right_rounded,
+                color: Colors.grey,
                 size: 20,
               ),
             ],
@@ -383,16 +608,16 @@ class SettingsScreen extends StatelessWidget {
         ),
         if (!isLast)
           Divider(
-            height: 1, 
-            thickness: 0.5, 
-            color: Colors.grey.shade200, 
+            height: 1,
+            thickness: 0.5,
+            color: Colors.grey.shade200,
             indent: 54,
           ),
       ],
     );
   }
 
-  Widget _buildSectionTitle(String title, Color primaryColor) {
+  Widget _buildSectionTitle(String title) {
     return Padding(
       padding: const EdgeInsets.only(left: 4, bottom: 2),
       child: Text(
@@ -407,7 +632,7 @@ class SettingsScreen extends StatelessWidget {
     );
   }
 
-  void _showAppInfoDialog(BuildContext context, Color primaryColor, Color backgroundColor) {
+  void _showAppInfoDialog(BuildContext context) {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
@@ -456,7 +681,7 @@ class SettingsScreen extends StatelessWidget {
   static const String _supportPhone = '+255719199916';
   static const String _supportEmail = 'shanelvmi@gmail.com';
 
-  void _showHelpSupportDialog(BuildContext context, Color primaryColor, Color backgroundColor) {
+  void _showHelpSupportDialog(BuildContext context) {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(

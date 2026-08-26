@@ -53,6 +53,8 @@ dependencies:
   cloud_functions: ^4.7.0
   share_plus: ^7.2.2
   url_launcher: ^6.2.5
+  flutter_markdown: ^0.7.4+3
+  markdown: ^7.0.0
   print_bluetooth_thermal: ^1.1.1
   esc_pos_utils_plus: ^2.0.4
   fl_chart: ^0.68.0
@@ -85,6 +87,21 @@ flutter:
     - assets/vetbizpro_illustration.png
     - assets/vetbiz_pro_logo.png
   #   - images/a_dot_ham.jpeg
+
+  # Bundled directly rather than relying on 'monospace' as a generic
+  # family name - that works on native Android (there's a real system
+  # font literally called that there) but silently fails on Flutter
+  # Web's CanvasKit renderer, which needs an actual, loaded font name
+  # to match against, not a CSS-style generic keyword. Bundling this
+  # also means the receipt renders identically everywhere regardless
+  # of what's installed on the viewing device - worth it given this
+  # gets printed and shared as an image, where consistency matters.
+  fonts:
+    - family: RobotoMono
+      fonts:
+        - asset: assets/fonts/RobotoMono-Regular.ttf
+        - asset: assets/fonts/RobotoMono-Regular.ttf
+          weight: 700
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images

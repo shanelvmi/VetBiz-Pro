@@ -298,12 +298,7 @@ class _StockStoreScreenState extends State<StockStoreScreen> {
     return Scaffold(
       appBar: _buildAppBar(),
       floatingActionButton: FloatingActionButton.extended(
-        onPressed: () => Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (_) => const AddEditProductScreen(),
-          ),
-        ),
+        onPressed: () => showAddEditProductScreen(context),
         backgroundColor: primaryDeepTealGreen,
         foregroundColor: offWhite,
         hoverColor: warmAmber,
@@ -439,17 +434,8 @@ class _StockStoreScreenState extends State<StockStoreScreen> {
   Widget _buildProductCard(Product p) {
     final status = _getProductStatus(p);
 
-    return GestureDetector(
-      onTap: () {
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (_) => AddEditProductScreen(product: p),
-          ),
-        );
-      },
-      child: Container(
-        margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
         padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
           color: offWhite,
@@ -532,23 +518,31 @@ class _StockStoreScreenState extends State<StockStoreScreen> {
                 style: const TextStyle(fontSize: 13),
               ),
             const SizedBox(height: 8),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.end,
+            Wrap(
+              alignment: WrapAlignment.end,
+              crossAxisAlignment: WrapCrossAlignment.center,
+              spacing: 4,
+              runSpacing: 4,
               children: [
+                // Edit button - the only way to reach the edit screen
+                // now; the card itself is no longer tappable, since a
+                // whole-card tap-to-edit made it too easy to open
+                // editing by accident while just browsing the list.
+                TextButton.icon(
+                  onPressed: () {
+                    showAddEditProductScreen(context, product: p);
+                  },
+                  icon: Icon(Icons.edit, size: 16, color: primaryDeepTealGreen),
+                  label: Text('Edit', style: TextStyle(color: primaryDeepTealGreen)),
+                ),
                 PopupMenuButton<String>(
                   icon: Icon(Icons.layers_outlined, color: primaryDeepTealGreen, size: 20),
                   tooltip: 'Batches',
                   onSelected: (value) {
                     if (value == 'add') {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(builder: (_) => AddBatchScreen(product: p)),
-                      );
+                      showAddBatchScreen(context, product: p);
                     } else if (value == 'view') {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(builder: (_) => ViewBatchesScreen(product: p)),
-                      );
+                      showViewBatchesScreen(context, product: p);
                     }
                   },
                   itemBuilder: (context) => const [
@@ -585,7 +579,6 @@ class _StockStoreScreenState extends State<StockStoreScreen> {
             ),
           ],
         ),
-      ),
-    );
-  }
+      );
+    }
 }

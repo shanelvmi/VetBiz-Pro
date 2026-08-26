@@ -18,12 +18,19 @@ class SubscriptionProvider with ChangeNotifier {
   String? _facilityId;
 
   DateTime? _expiresAt;
+  DateTime? _trialExpiresAt;
   String? _planId;
 
   SubscriptionStatus _status = SubscriptionStatus.trial;
   SubscriptionStatus get status => _status;
 
-  DateTime? get expiresAt => _expiresAt;
+  /// The date actually governing the current status - a real
+  /// subscription date takes priority whenever one exists, otherwise a
+  /// real timed trial's own end date. Null means this facility has
+  /// neither (created before the trial-length feature existed, or
+  /// deliberately left on the old, indefinite trial) - never
+  /// retroactively assigned one just to have something to show.
+  DateTime? get expiresAt => _expiresAt ?? _trialExpiresAt;
   String? get planId => _planId;
 
   bool get isLocked => _status == SubscriptionStatus.locked;
@@ -31,15 +38,15 @@ class SubscriptionProvider with ChangeNotifier {
   bool get isInGracePeriod => _status == SubscriptionStatus.grace;
 
   int? get daysRemaining {
-    if (_expiresAt == null) return null;
-    final diff = _expiresAt!.difference(DateTime.now());
+    if (expiresAt == null) return null;
+    final diff = expiresAt!.difference(DateTime.now());
     return diff.inHours >= 0 ? (diff.inHours / 24).ceil() : -((-diff.inHours) / 24).ceil();
   }
 
   String get statusLabel {
     switch (_status) {
       case SubscriptionStatus.trial:
-        return 'Trial - no subscription set up yet';
+        return _trialExpiresAt != null ? 'Trial' : 'Trial - no subscription set up yet';
       case SubscriptionStatus.active:
         return 'Active';
       case SubscriptionStatus.grace:
@@ -66,27 +73,41 @@ class SubscriptionProvider with ChangeNotifier {
       final expiresAtField = data?['subscriptionExpiresAt'];
       _expiresAt = expiresAtField is Timestamp ? expiresAtField.toDate() : null;
 
-      _status = _computeStatus(_expiresAt);
+      final trialExpiresAtField = data?['trialExpiresAt'];
+      _trialExpiresAt = trialExpiresAtField is Timestamp ? trialExpiresAtField.toDate() : null;
+
+      _status = _computeStatus();
       notifyListeners();
     }, onError: (e) {
       debugPrint('SubscriptionProvider listen error: $e');
     });
   }
 
-  /// No expiry set at all means this facility has never had a
-  /// subscription cycle yet (brand new, or rolled out before this
-  /// feature existed) - treated as an open trial, not locked, so this
-  /// never silently locks out an existing shop the moment it ships.
-  SubscriptionStatus _computeStatus(DateTime? expiresAt) {
-    if (expiresAt == null) return SubscriptionStatus.trial;
-
+  /// No paid subscription cycle takes priority whenever it exists. With
+  /// none, a real timed trial counts down the same way, reusing the
+  /// same grace/locked flow once it runs out. With neither set at all,
+  /// this facility has never had a subscription cycle and has no timed
+  /// trial either (created before this feature existed) - treated as
+  /// an open trial, not locked, so this never silently locks out an
+  /// existing shop, and never retroactively changes one either.
+  SubscriptionStatus _computeStatus() {
     final now = DateTime.now();
-    if (now.isBefore(expiresAt)) return SubscriptionStatus.active;
 
-    final graceEnd = expiresAt.add(const Duration(days: kGracePeriodDays));
-    if (now.isBefore(graceEnd)) return SubscriptionStatus.grace;
+    if (_expiresAt != null) {
+      if (now.isBefore(_expiresAt!)) return SubscriptionStatus.active;
+      final graceEnd = _expiresAt!.add(const Duration(days: kGracePeriodDays));
+      if (now.isBefore(graceEnd)) return SubscriptionStatus.grace;
+      return SubscriptionStatus.locked;
+    }
 
-    return SubscriptionStatus.locked;
+    if (_trialExpiresAt != null) {
+      if (now.isBefore(_trialExpiresAt!)) return SubscriptionStatus.trial;
+      final graceEnd = _trialExpiresAt!.add(const Duration(days: kGracePeriodDays));
+      if (now.isBefore(graceEnd)) return SubscriptionStatus.grace;
+      return SubscriptionStatus.locked;
+    }
+
+    return SubscriptionStatus.trial;
   }
 
   void clear() {
@@ -94,6 +115,7 @@ class SubscriptionProvider with ChangeNotifier {
     _subscription = null;
     _facilityId = null;
     _expiresAt = null;
+    _trialExpiresAt = null;
     _planId = null;
     _status = SubscriptionStatus.trial;
     notifyListeners();

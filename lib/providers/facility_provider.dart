@@ -8,6 +8,8 @@ class FacilityProvider with ChangeNotifier {
   String? _facilityName;
   String? _facilityType;
   String? _logoUrl;
+  String? _facilityEmail;
+  String? _facilityPhone;
   StreamSubscription<DocumentSnapshot>? _facilitySub;
 
   FacilityProvider() {
@@ -37,6 +39,8 @@ class FacilityProvider with ChangeNotifier {
       _facilityName = data['name'] ?? _facilityName;
       _facilityType = data['type'] ?? _facilityType;
       _logoUrl = data['logoUrl'];
+      _facilityEmail = data['email'];
+      _facilityPhone = data['phone'];
       notifyListeners();
 
       final prefs = await SharedPreferences.getInstance();
@@ -47,6 +51,16 @@ class FacilityProvider with ChangeNotifier {
         await prefs.setString('facilityLogoUrl', _logoUrl!);
       } else {
         await prefs.remove('facilityLogoUrl');
+      }
+      if (_facilityEmail != null) {
+        await prefs.setString('facilityEmail', _facilityEmail!);
+      } else {
+        await prefs.remove('facilityEmail');
+      }
+      if (_facilityPhone != null) {
+        await prefs.setString('facilityPhone', _facilityPhone!);
+      } else {
+        await prefs.remove('facilityPhone');
       }
     }, onError: (e) {
       debugPrint('FacilityProvider listen error: $e');
@@ -81,6 +95,8 @@ class FacilityProvider with ChangeNotifier {
     _facilityName = null;
     _facilityType = null;
     _logoUrl = null;
+    _facilityEmail = null;
+    _facilityPhone = null;
     notifyListeners();
 
     final prefs = await SharedPreferences.getInstance();
@@ -88,12 +104,16 @@ class FacilityProvider with ChangeNotifier {
     await prefs.remove('facilityName');
     await prefs.remove('facilityType');
     await prefs.remove('facilityLogoUrl');
+    await prefs.remove('facilityEmail');
+    await prefs.remove('facilityPhone');
   }
 
   // ==================== GETTERS ====================
   String? get selectedFacilityId => _facilityId;
   String? get selectedFacilityName => _facilityName;
   String? get selectedFacilityType => _facilityType;
+  String? get facilityEmail => _facilityEmail;
+  String? get facilityPhone => _facilityPhone;
   String? get logoUrl => _logoUrl;
 
   Map<String, String?>? get selectedFacility {
@@ -103,6 +123,8 @@ class FacilityProvider with ChangeNotifier {
       'name': _facilityName,
       'type': _facilityType,
       'logoUrl': _logoUrl,
+      'email': _facilityEmail,
+      'phone': _facilityPhone,
     };
   }
 
@@ -121,6 +143,8 @@ class FacilityProvider with ChangeNotifier {
         _facilityName = data['name'] ?? '';
         _facilityType = data['type'] ?? '';
         _logoUrl = data['logoUrl'];
+        _facilityEmail = data['email'];
+        _facilityPhone = data['phone'];
         notifyListeners();
 
         // persist loaded facility
@@ -129,6 +153,8 @@ class FacilityProvider with ChangeNotifier {
         await prefs.setString('facilityName', _facilityName!);
         await prefs.setString('facilityType', _facilityType!);
         if (_logoUrl != null) await prefs.setString('facilityLogoUrl', _logoUrl!);
+        if (_facilityEmail != null) await prefs.setString('facilityEmail', _facilityEmail!);
+        if (_facilityPhone != null) await prefs.setString('facilityPhone', _facilityPhone!);
       }
     } catch (e) {
       print('Error loading facility: $e');
@@ -144,6 +170,8 @@ class FacilityProvider with ChangeNotifier {
       _facilityName = prefs.getString('facilityName');
       _facilityType = prefs.getString('facilityType');
       _logoUrl = prefs.getString('facilityLogoUrl');
+      _facilityEmail = prefs.getString('facilityEmail');
+      _facilityPhone = prefs.getString('facilityPhone');
       notifyListeners();
     }
   }

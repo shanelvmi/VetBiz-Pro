@@ -1,3 +1,4 @@
+import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -5,6 +6,8 @@ import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
 import 'package:cloud_functions/cloud_functions.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:firebase_storage/firebase_storage.dart';
 
 import '../../providers/facility_provider.dart';
 import '../../utils/facility_code_generator.dart';
@@ -12,6 +15,10 @@ import '../../utils/facility_activation.dart';
 import '../../constants/facility_types.dart';
 import '../../services/sales_summary_service.dart';
 import '../../utils/force_logout.dart';
+import '../../utils/trial_period_helper.dart';
+import '../../utils/facility_limit_helper.dart';
+import '../../widgets/hover_elevate_card.dart';
+import '../admin/manage_assistants_screen.dart';
 
 const Color deepGreen = Color(0xFF2F5D62);
 const Color warmAmber = Color(0xFFFFB200);
@@ -32,6 +39,24 @@ class _FacilityScreenState extends State<FacilityScreen> {
   String? _adminFullName;
   bool isLoading = true;
 
+  // Search - same expandable-icon pattern used everywhere else this
+  // session (Manage Assistants, Sales, Products, Services). Matches
+  // on name and code, since those are the two things someone actually
+  // remembers about a specific facility.
+  bool _isSearchExpanded = false;
+  String _searchQuery = '';
+  final TextEditingController _searchController = TextEditingController();
+
+  // Same responsive dialog width already established in
+  // manage_account_screen.dart - capped at a comfortable reading width
+  // on desktop rather than stretching edge-to-edge, and a proportional
+  // width on narrower screens rather than a fixed size that could
+  // overflow.
+  double _dialogWidth(BuildContext context) {
+    final screenWidth = MediaQuery.of(context).size.width;
+    return screenWidth > 700 ? 440.0 : screenWidth * 0.88;
+  }
+
   // Assistants fetched once per facility list refresh, keyed by
   // facilityId, rather than re-querying inside a FutureBuilder every
   // time this widget rebuilds for any reason - the previous version's
@@ -43,8 +68,17 @@ class _FacilityScreenState extends State<FacilityScreen> {
   // facility - same reasoning as assistants above: fetched once per
   // refresh, not per-card inside build().
   final Map<String, String?> _logoByFacility = {};
+  // Email/phone - same reasoning as _logoByFacility above: the facility
+  // map passed around this screen is a denormalized {facilityId, name,
+  // type} copy that never included this either, so it needs its own
+  // fetch from the real facility document, same as the logo does.
+  final Map<String, Map<String, String?>> _contactByFacility = {};
   final Map<String, Map<String, dynamic>> _statsByFacility = {};
   final SalesSummaryService _salesSummaryService = SalesSummaryService();
+
+  // Logo upload - the ImagePicker instance is shared by both the Add
+  // and Edit Facility dialogs.
+  final ImagePicker _picker = ImagePicker();
 
   bool _isAddingFacility = false;
 
@@ -55,6 +89,12 @@ class _FacilityScreenState extends State<FacilityScreen> {
     fetchFacilities();
   }
 
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
+
   /// Fetches a facility's logo URL and this month's quick stats (sales
   /// count, revenue, client count) in one pass. Uses the precomputed
   /// dailySummaries aggregate rather than scanning every sale, and a
@@ -62,34 +102,58 @@ class _FacilityScreenState extends State<FacilityScreen> {
   /// client document just to count them.
   Future<void> _fetchFacilityExtras(String facilityId) async {
     try {
-      final facilityDoc = await FirebaseFirestore.instance
-          .collection('facilities')
-          .doc(facilityId)
-          .get();
-      final logoUrl = facilityDoc.data()?['logoUrl'] as String?;
-
       final now = DateTime.now();
       final monthStart = DateTime(now.year, now.month, 1);
-      final salesTotals = await _salesSummaryService.getRangeTotals(
+
+      // Started together rather than one at a time - none of these
+      // four depend on another's result, so there's no reason for
+      // each to wait on the previous one to finish before starting.
+      final facilityDocFuture =
+          FirebaseFirestore.instance.collection('facilities').doc(facilityId).get();
+      final salesTotalsFuture = _salesSummaryService.getRangeTotals(
         facilityId: facilityId,
         start: monthStart,
         end: now,
       );
-
-      final clientCountSnap = await FirebaseFirestore.instance
+      final clientCountFuture = FirebaseFirestore.instance
           .collection('facilities')
           .doc(facilityId)
           .collection('clients')
           .count()
           .get();
+      // Same calculation Dashboard's own "Total Product Value" card
+      // uses - read directly from raw product docs here rather than
+      // through ProductProvider, since that's scoped to whichever
+      // facility is currently active, not every facility a card in
+      // this list represents.
+      final productsFuture =
+          FirebaseFirestore.instance.collection('facilities').doc(facilityId).collection('products').get();
+
+      final facilityDoc = await facilityDocFuture;
+      final logoUrl = facilityDoc.data()?['logoUrl'] as String?;
+      final email = facilityDoc.data()?['email'] as String?;
+      final phone = facilityDoc.data()?['phone'] as String?;
+      final salesTotals = await salesTotalsFuture;
+      final clientCountSnap = await clientCountFuture;
+      final productsSnap = await productsFuture;
+
+      double totalProductValue = 0.0;
+      for (final doc in productsSnap.docs) {
+        final data = doc.data();
+        final sellPrice = (data['sellPrice'] as num?)?.toDouble() ?? 0.0;
+        final stockQty = (data['stockQty'] as num?)?.toDouble() ?? 0.0;
+        totalProductValue += sellPrice * stockQty;
+      }
 
       if (!mounted) return;
       setState(() {
         _logoByFacility[facilityId] = (logoUrl != null && logoUrl.isNotEmpty) ? logoUrl : null;
+        _contactByFacility[facilityId] = {'email': email, 'phone': phone};
         _statsByFacility[facilityId] = {
           'saleCount': salesTotals['saleCount']?.toInt() ?? 0,
           'totalAmount': salesTotals['totalAmount'] ?? 0.0,
           'clientCount': clientCountSnap.count ?? 0,
+          'totalProductValue': totalProductValue,
         };
       });
     } catch (e) {
@@ -109,13 +173,31 @@ class _FacilityScreenState extends State<FacilityScreen> {
 
         // Fetched once here, up front, instead of per-card inside
         // build() - see the _assistantsByFacility note above.
+        //
+        // Every facility's work starts at the same time, rather than
+        // waiting for the previous facility to fully finish first -
+        // with several facilities, each needing several of its own
+        // sequential reads (including a full products download for
+        // the stock-value total), doing this one facility at a time
+        // meant total load time grew roughly linearly with facility
+        // count. Now it's however long the single slowest fetch
+        // across everything takes, not the sum of all of them.
         final assistantsMap = <String, List<Map<String, dynamic>>>{};
+        final facilityFutures = <Future<void>>[];
         for (final f in facilityList) {
           final facilityId = f['facilityId'] as String?;
           if (facilityId == null) continue;
-          assistantsMap[facilityId] = await _fetchAssistantsForFacility(facilityId);
-          await _fetchFacilityExtras(facilityId);
+          facilityFutures.add(() async {
+            // Assistants and the extras (logo/stats/product value)
+            // don't depend on each other either - started together
+            // rather than one after the other.
+            final assistantsFuture = _fetchAssistantsForFacility(facilityId);
+            final extrasFuture = _fetchFacilityExtras(facilityId);
+            assistantsMap[facilityId] = await assistantsFuture;
+            await extrasFuture;
+          }());
         }
+        await Future.wait(facilityFutures);
 
         if (!mounted) return;
         setState(() {
@@ -167,35 +249,104 @@ class _FacilityScreenState extends State<FacilityScreen> {
   // ==================== ADD FACILITY ====================
 
   Future<void> _showAddFacilityDialog() async {
+    final maxFacilities = await loadMaxFacilitiesPerAdmin();
+    if (facilities.length >= maxFacilities) {
+      if (!mounted) return;
+      await showDialog(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: const Text('Facility Limit Reached'),
+          content: Text(
+            "You've reached the limit of $maxFacilities facilities per account. "
+            'Contact support if you need more.',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: Text('OK', style: TextStyle(color: deepGreen)),
+            ),
+          ],
+        ),
+      );
+      return;
+    }
+
     final nameController = TextEditingController();
     String? selectedType;
     String? dialogError;
+    Uint8List? pendingLogoBytes;
 
     await showDialog(
       context: context,
       builder: (dialogContext) => StatefulBuilder(
         builder: (dialogContext, setDialogState) => AlertDialog(
           title: const Text('Add Facility'),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              TextField(
-                controller: nameController,
-                decoration: const InputDecoration(labelText: 'Facility Name'),
-              ),
-              const SizedBox(height: 12),
-              DropdownButtonFormField<String>(
-                initialValue: selectedType,
-                decoration: const InputDecoration(labelText: 'Type'),
-                items: kFacilityTypes.map((t) => DropdownMenuItem(value: t, child: Text(t))).toList(),
-                onChanged: (val) => setDialogState(() => selectedType = val),
-              ),
-              if (dialogError != null) ...[
-                const SizedBox(height: 8),
-                Text(dialogError!, style: const TextStyle(color: Colors.redAccent, fontSize: 12.5)),
+          content: SingleChildScrollView(
+            child: SizedBox(
+              width: _dialogWidth(context),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Logo - optional at creation time, same picker as Edit
+                // Facility. Not every new facility has branding ready
+                // immediately; it can always be added later via Edit.
+                Center(
+                  child: GestureDetector(
+                    onTap: _isAddingFacility
+                        ? null
+                        : () async {
+                            final picked = await _picker.pickImage(
+                              source: ImageSource.gallery,
+                              maxWidth: 512,
+                              maxHeight: 512,
+                              imageQuality: 85,
+                            );
+                            if (picked == null) return;
+                            final bytes = await picked.readAsBytes();
+                            setDialogState(() => pendingLogoBytes = bytes);
+                          },
+                    child: Container(
+                      width: 72,
+                      height: 72,
+                      decoration: BoxDecoration(
+                        color: Colors.grey.shade100,
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: Colors.grey.shade300),
+                      ),
+                      padding: const EdgeInsets.all(6),
+                      child: pendingLogoBytes != null
+                          ? Image.memory(pendingLogoBytes!, fit: BoxFit.contain)
+                          : Icon(Icons.add_a_photo_outlined, color: Colors.grey[500], size: 26),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Center(
+                  child: Text(
+                    'Logo (optional)',
+                    style: TextStyle(fontSize: 11, color: Colors.grey[600]),
+                  ),
+                ),
+                const SizedBox(height: 16),
+                TextField(
+                  controller: nameController,
+                  decoration: const InputDecoration(labelText: 'Facility Name'),
+                ),
+                const SizedBox(height: 12),
+                DropdownButtonFormField<String>(
+                  initialValue: selectedType,
+                  decoration: const InputDecoration(labelText: 'Type'),
+                  items: kFacilityTypes.map((t) => DropdownMenuItem(value: t, child: Text(t))).toList(),
+                  onChanged: (val) => setDialogState(() => selectedType = val),
+                ),
+                if (dialogError != null) ...[
+                  const SizedBox(height: 8),
+                  Text(dialogError!, style: const TextStyle(color: Colors.redAccent, fontSize: 12.5)),
+                ],
               ],
-            ],
+            ),
+            ),
           ),
           actions: [
             TextButton(
@@ -221,10 +372,13 @@ class _FacilityScreenState extends State<FacilityScreen> {
                       setState(() => _isAddingFacility = true);
 
                       try {
-                        await _addFacility(name: name, type: selectedType!);
+                        await _addFacility(name: name, type: selectedType!, logoBytes: pendingLogoBytes);
                         if (dialogContext.mounted) Navigator.pop(dialogContext);
                       } catch (e) {
-                        setDialogState(() => dialogError = 'Could not add facility: $e');
+                        final message = e.toString().contains('permission-denied')
+                            ? "You've reached the facility limit for your account."
+                            : 'Could not add facility: $e';
+                        setDialogState(() => dialogError = message);
                       } finally {
                         if (mounted) setState(() => _isAddingFacility = false);
                       }
@@ -249,9 +403,10 @@ class _FacilityScreenState extends State<FacilityScreen> {
     );
   }
 
-  Future<void> _addFacility({required String name, required String type}) async {
+  Future<void> _addFacility({required String name, required String type, Uint8List? logoBytes}) async {
     final uid = currentUser!.uid;
     final code = await generateUniqueFacilityCode();
+    final trialExpiresAt = await computeNewFacilityTrialExpiry();
 
     final docRef = await FirebaseFirestore.instance.collection('facilities').add({
       'name': name,
@@ -259,7 +414,25 @@ class _FacilityScreenState extends State<FacilityScreen> {
       'code': code,
       'createdBy': uid,
       'createdAt': FieldValue.serverTimestamp(),
+      'trialExpiresAt': Timestamp.fromDate(trialExpiresAt),
     });
+
+    // Logo upload needs a facilityId to key the Storage path on, so it
+    // can only happen after the document above already exists.
+    if (logoBytes != null) {
+      try {
+        final storageRef = FirebaseStorage.instance.ref().child('facility_logos/${docRef.id}.png');
+        await storageRef.putData(logoBytes);
+        final rawDownloadUrl = await storageRef.getDownloadURL();
+        final downloadUrl = '$rawDownloadUrl&cb=${DateTime.now().millisecondsSinceEpoch}';
+        await docRef.set({'logoUrl': downloadUrl}, SetOptions(merge: true));
+      } catch (e) {
+        // The facility itself was created successfully - a failed logo
+        // upload shouldn't be treated as a failed facility creation.
+        // It can always be added afterward via Edit.
+        debugPrint('Logo upload failed for new facility ${docRef.id}: $e');
+      }
+    }
 
     final newFacilityEntry = {
       'facilityId': docRef.id,
@@ -290,35 +463,154 @@ class _FacilityScreenState extends State<FacilityScreen> {
 
   Future<void> _showEditFacilityDialog(Map<String, dynamic> facility) async {
     final nameController = TextEditingController(text: facility['name'] as String? ?? '');
+    final existingContact = _contactByFacility[facility['facilityId']];
+    final emailController = TextEditingController(text: existingContact?['email'] ?? '');
+    final phoneController = TextEditingController(text: existingContact?['phone'] ?? '');
     String? selectedType = facility['type'] as String?;
     String? dialogError;
     bool isSaving = false;
+    Uint8List? pendingLogoBytes;
+    // True once the user has explicitly chosen to remove the existing
+    // logo - kept separate from "no change made" so _editFacility
+    // knows to actually delete it, not just leave it untouched.
+    bool logoMarkedForRemoval = false;
+    final existingLogoUrl = _logoByFacility[facility['facilityId']];
 
     await showDialog(
       context: context,
       builder: (dialogContext) => StatefulBuilder(
         builder: (dialogContext, setDialogState) => AlertDialog(
           title: const Text('Edit Facility'),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              TextField(
-                controller: nameController,
-                decoration: const InputDecoration(labelText: 'Facility Name'),
-              ),
-              const SizedBox(height: 12),
-              DropdownButtonFormField<String>(
-                initialValue: selectedType,
-                decoration: const InputDecoration(labelText: 'Type'),
-                items: kFacilityTypes.map((t) => DropdownMenuItem(value: t, child: Text(t))).toList(),
-                onChanged: (val) => setDialogState(() => selectedType = val),
-              ),
-              if (dialogError != null) ...[
-                const SizedBox(height: 8),
-                Text(dialogError!, style: const TextStyle(color: Colors.redAccent, fontSize: 12.5)),
+          content: SingleChildScrollView(
+            child: SizedBox(
+              width: _dialogWidth(context),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                // Logo - shown and changed right alongside name/type,
+                // rather than a separate tap-the-card-logo interaction.
+                Center(
+                  child: GestureDetector(
+                    onTap: isSaving
+                        ? null
+                        : () async {
+                            final picked = await _picker.pickImage(
+                              source: ImageSource.gallery,
+                              maxWidth: 512,
+                              maxHeight: 512,
+                              imageQuality: 85,
+                            );
+                            if (picked == null) return;
+                            final bytes = await picked.readAsBytes();
+                            // Picking a new logo implicitly cancels any
+                            // pending removal - the user is replacing
+                            // it, not removing it.
+                            setDialogState(() {
+                              pendingLogoBytes = bytes;
+                              logoMarkedForRemoval = false;
+                            });
+                          },
+                    child: Stack(
+                      alignment: Alignment.bottomRight,
+                      children: [
+                        Container(
+                          width: 72,
+                          height: 72,
+                          decoration: BoxDecoration(
+                            color: Colors.grey.shade100,
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(color: Colors.grey.shade300),
+                          ),
+                          padding: const EdgeInsets.all(6),
+                          child: pendingLogoBytes != null
+                              ? Image.memory(pendingLogoBytes!, fit: BoxFit.contain)
+                              : (existingLogoUrl != null && !logoMarkedForRemoval
+                                  ? Image.network(
+                                      existingLogoUrl,
+                                      fit: BoxFit.contain,
+                                      errorBuilder: (context, error, stackTrace) =>
+                                          Icon(Icons.business, color: deepGreen, size: 32),
+                                    )
+                                  : Icon(Icons.business, color: deepGreen, size: 32)),
+                        ),
+                        Container(
+                          padding: const EdgeInsets.all(3),
+                          decoration: BoxDecoration(
+                            color: warmAmber,
+                            shape: BoxShape.circle,
+                            border: Border.all(color: Colors.white, width: 1.5),
+                          ),
+                          child: const Icon(Icons.camera_alt, size: 12, color: Colors.white),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Center(
+                  child: Text(
+                    'Tap to change logo',
+                    style: TextStyle(fontSize: 11, color: Colors.grey[600]),
+                  ),
+                ),
+                if ((pendingLogoBytes != null || existingLogoUrl != null) && !logoMarkedForRemoval) ...[
+                  const SizedBox(height: 2),
+                  Center(
+                    child: TextButton(
+                      style: TextButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                        minimumSize: Size.zero,
+                        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                      ),
+                      onPressed: isSaving
+                          ? null
+                          : () => setDialogState(() {
+                                pendingLogoBytes = null;
+                                logoMarkedForRemoval = true;
+                              }),
+                      child: const Text(
+                        'Remove logo',
+                        style: TextStyle(fontSize: 11, color: Colors.redAccent),
+                      ),
+                    ),
+                  ),
+                ],
+                const SizedBox(height: 16),
+                TextField(
+                  controller: nameController,
+                  decoration: const InputDecoration(labelText: 'Facility Name'),
+                ),
+                const SizedBox(height: 12),
+                DropdownButtonFormField<String>(
+                  initialValue: selectedType,
+                  decoration: const InputDecoration(labelText: 'Type'),
+                  items: kFacilityTypes.map((t) => DropdownMenuItem(value: t, child: Text(t))).toList(),
+                  onChanged: (val) => setDialogState(() => selectedType = val),
+                ),
+                const SizedBox(height: 12),
+                TextField(
+                  controller: emailController,
+                  keyboardType: TextInputType.emailAddress,
+                  decoration: const InputDecoration(
+                    labelText: 'Business Email (optional)',
+                  ),
+                ),
+                const SizedBox(height: 12),
+                TextField(
+                  controller: phoneController,
+                  keyboardType: TextInputType.phone,
+                  decoration: const InputDecoration(
+                    labelText: 'Business Phone (optional)',
+                  ),
+                ),
+                if (dialogError != null) ...[
+                  const SizedBox(height: 8),
+                  Text(dialogError!, style: const TextStyle(color: Colors.redAccent, fontSize: 12.5)),
+                ],
               ],
-            ],
+            ),
+            ),
           ),
           actions: [
             TextButton(
@@ -350,6 +642,10 @@ class _FacilityScreenState extends State<FacilityScreen> {
                           facilityId: facility['facilityId'] as String,
                           name: name,
                           type: selectedType!,
+                          logoBytes: pendingLogoBytes,
+                          removeLogo: logoMarkedForRemoval,
+                          email: emailController.text.trim().isEmpty ? null : emailController.text.trim(),
+                          phone: phoneController.text.trim().isEmpty ? null : phoneController.text.trim(),
                         );
                         if (dialogContext.mounted) Navigator.pop(dialogContext);
                       } catch (e) {
@@ -392,13 +688,50 @@ class _FacilityScreenState extends State<FacilityScreen> {
     required String facilityId,
     required String name,
     required String type,
+    Uint8List? logoBytes,
+    bool removeLogo = false,
+    String? email,
+    String? phone,
   }) async {
     final firestore = FirebaseFirestore.instance;
+
+    if (logoBytes != null) {
+      final storageRef = FirebaseStorage.instance.ref().child('facility_logos/$facilityId.png');
+      await storageRef.putData(logoBytes);
+      final rawDownloadUrl = await storageRef.getDownloadURL();
+      // Same cache-busting reasoning as before: Storage returns the
+      // same URL for repeat uploads to the same path, so without this,
+      // NetworkImage's own cache would keep showing the old logo.
+      final downloadUrl = '$rawDownloadUrl&cb=${DateTime.now().millisecondsSinceEpoch}';
+      await firestore.collection('facilities').doc(facilityId).set(
+        {'logoUrl': downloadUrl},
+        SetOptions(merge: true),
+      );
+      _logoByFacility[facilityId] = downloadUrl;
+    } else if (removeLogo) {
+      // Deletes the actual file from Storage too, not just the
+      // Firestore reference to it - otherwise the file sits there
+      // forever, orphaned, silently taking up storage space.
+      try {
+        await FirebaseStorage.instance.ref().child('facility_logos/$facilityId.png').delete();
+      } catch (e) {
+        // File may not exist (e.g. this facility never actually had
+        // a logo file, just a stale reference) - not fatal either
+        // way, since the Firestore field below is what actually
+        // controls what's shown.
+        debugPrint('Could not delete logo file (may already be gone): $e');
+      }
+      await firestore.collection('facilities').doc(facilityId).update({'logoUrl': FieldValue.delete()});
+      _logoByFacility[facilityId] = null;
+    }
 
     await firestore.collection('facilities').doc(facilityId).update({
       'name': name,
       'type': type,
+      'email': email,
+      'phone': phone,
     });
+    _contactByFacility[facilityId] = {'email': email, 'phone': phone};
 
     final batch = firestore.batch();
 
@@ -676,13 +1009,11 @@ class _FacilityScreenState extends State<FacilityScreen> {
     final logoUrl = _logoByFacility[facility['facilityId']];
     final stats = _statsByFacility[facility['facilityId']];
 
-    return Card(
-      color: Colors.white,
-      elevation: 4,
+    return HoverElevateCard(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
-      ),
+      baseElevation: 4,
+      hoverElevation: 10,
+      borderRadius: BorderRadius.circular(16),
       child: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
@@ -690,17 +1021,32 @@ class _FacilityScreenState extends State<FacilityScreen> {
           children: [
             Row(
               children: [
-                // The facility's own uploaded logo when it has one -
-                // ClipOval + Image.network with a graceful fallback to
-                // the generic building icon, both for facilities that
-                // never uploaded one and for a failed image load.
-                ClipOval(
+                // The facility's own uploaded logo when it has one - a
+                // bounded box with BoxFit.contain rather than forcing a
+                // circular crop, so a rectangular or text-wordmark logo
+                // isn't cropped or distorted. Editing happens via the
+                // Edit dialog (alongside name/type), not by tapping the
+                // logo directly here.
+                Container(
+                  width: 48,
+                  height: 48,
+                  decoration: BoxDecoration(
+                    color: Colors.grey.shade100,
+                    borderRadius: BorderRadius.circular(10),
+                    border: Border.all(color: Colors.grey.shade300),
+                  ),
+                  padding: const EdgeInsets.all(4),
                   child: logoUrl != null
                       ? Image.network(
                           logoUrl,
-                          width: 28,
-                          height: 28,
-                          fit: BoxFit.cover,
+                          fit: BoxFit.contain,
+                          // Same reasoning as Dashboard's drawer logo -
+                          // decodes directly at a small resolution
+                          // rather than the full source image, however
+                          // large it actually is on Storage right now.
+                          cacheWidth: 150,
+                          cacheHeight: 150,
+                          gaplessPlayback: true,
                           errorBuilder: (context, error, stackTrace) =>
                               Icon(Icons.business, color: deepGreen),
                         )
@@ -785,7 +1131,10 @@ class _FacilityScreenState extends State<FacilityScreen> {
             // multi-facility owner opening this screen is usually "how
             // are my shops doing right now", and previously answering
             // that meant switching into each one individually just to
-            // check.
+            // check. Laid out as a 2x2 grid rather than one row of
+            // four - four stats in a single row risked feeling
+            // cramped, especially with two cards side by side on a
+            // large screen.
             if (stats != null)
               Container(
                 width: double.infinity,
@@ -795,21 +1144,63 @@ class _FacilityScreenState extends State<FacilityScreen> {
                   color: deepGreen.withValues(alpha: 0.06),
                   borderRadius: BorderRadius.circular(10),
                 ),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceAround,
+                child: Column(
                   children: [
-                    _statColumn('${stats['saleCount']}', 'Sales this month'),
-                    _statColumn(
-                      'Tsh ${_formatCompact((stats['totalAmount'] as double?) ?? 0.0)}',
-                      'Revenue this month',
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceAround,
+                      children: [
+                        _statColumn('${stats['saleCount']}', 'Sales this month'),
+                        _statColumn(
+                          'Tsh ${_formatCompact((stats['totalAmount'] as double?) ?? 0.0)}',
+                          'Revenue this month',
+                        ),
+                      ],
                     ),
-                    _statColumn('${stats['clientCount']}', 'Clients'),
+                    const SizedBox(height: 10),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceAround,
+                      children: [
+                        _statColumn('${stats['clientCount']}', 'Clients'),
+                        _statColumn(
+                          'Tsh ${_formatCompact((stats['totalProductValue'] as double?) ?? 0.0)}',
+                          'Product value',
+                        ),
+                      ],
+                    ),
                   ],
                 ),
               ),
             Text("Admin: ${_adminFullName ?? 'You'}", style: const TextStyle(fontSize: 14)),
             const SizedBox(height: 10),
-            const Text("Assistants:", style: TextStyle(fontWeight: FontWeight.bold)),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                const Text("Assistants:", style: TextStyle(fontWeight: FontWeight.bold)),
+                // Jumps straight to Manage Assistants, pre-filtered to
+                // this facility - so acting on this facility's team
+                // specifically doesn't mean leaving here and
+                // re-searching for the same facility over there.
+                InkWell(
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => ManageAssistantsScreen(
+                          initialSearchQuery: facility['name'] as String?,
+                        ),
+                      ),
+                    );
+                  },
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text('Manage', style: TextStyle(fontSize: 12.5, color: deepGreen, fontWeight: FontWeight.w600)),
+                      Icon(Icons.arrow_forward, size: 13, color: deepGreen),
+                    ],
+                  ),
+                ),
+              ],
+            ),
             const SizedBox(height: 6),
             if (assistants.isEmpty)
               const Padding(
@@ -860,25 +1251,31 @@ class _FacilityScreenState extends State<FacilityScreen> {
     );
   }
 
-  Widget _buildFacilitiesList() {
+  Widget _buildFacilitiesList(List<Map<String, dynamic>> filteredFacilities) {
     return LayoutBuilder(
       builder: (context, constraints) {
-        final isLargeScreen = constraints.maxWidth >= 1024;
+        // Smoothly scales to available width rather than one fixed
+        // breakpoint - matches the old 2-column behavior at the same
+        // ~1024px width it used to kick in at, but keeps adding
+        // columns on wider monitors instead of just stretching 2
+        // columns further and further.
+        const idealCardWidth = 460.0;
+        final crossAxisCount = (constraints.maxWidth / idealCardWidth).floor().clamp(1, 4);
 
-        if (isLargeScreen) {
+        if (crossAxisCount > 1) {
           return MasonryGridView.count(
             padding: const EdgeInsets.symmetric(vertical: 8),
-            crossAxisCount: 2,
-            crossAxisSpacing: 4,
-            mainAxisSpacing: 4,
-            itemCount: facilities.length,
-            itemBuilder: (context, index) => buildFacilityCard(facilities[index]),
+            crossAxisCount: crossAxisCount,
+            crossAxisSpacing: 12,
+            mainAxisSpacing: 12,
+            itemCount: filteredFacilities.length,
+            itemBuilder: (context, index) => buildFacilityCard(filteredFacilities[index]),
           );
         }
 
         return ListView.builder(
-          itemCount: facilities.length,
-          itemBuilder: (context, index) => buildFacilityCard(facilities[index]),
+          itemCount: filteredFacilities.length,
+          itemBuilder: (context, index) => buildFacilityCard(filteredFacilities[index]),
         );
       },
     );
@@ -891,24 +1288,69 @@ class _FacilityScreenState extends State<FacilityScreen> {
       appBar: AppBar(
         backgroundColor: deepGreen,
         iconTheme: const IconThemeData(color: offWhite),
-        title: const Text(
-          'My Facilities',
-          style: TextStyle(color: offWhite),
-        ),
         centerTitle: true,
+        title: _isSearchExpanded
+            ? TextField(
+                controller: _searchController,
+                autofocus: true,
+                cursorColor: offWhite,
+                style: TextStyle(color: offWhite),
+                decoration: InputDecoration(
+                  hintText: 'Search by name or code...',
+                  hintStyle: TextStyle(color: offWhite.withValues(alpha: 0.7)),
+                  border: InputBorder.none,
+                  suffixIcon: IconButton(
+                    icon: Icon(Icons.clear, color: offWhite),
+                    onPressed: () {
+                      setState(() {
+                        _searchController.clear();
+                        _searchQuery = '';
+                        _isSearchExpanded = false;
+                      });
+                    },
+                  ),
+                ),
+                onChanged: (val) => setState(() => _searchQuery = val.trim().toLowerCase()),
+              )
+            : const Text(
+                'My Facilities',
+                style: TextStyle(color: offWhite),
+              ),
         actions: [
-          IconButton(
-            icon: const Icon(Icons.refresh, color: offWhite),
-            tooltip: 'Refresh Facilities',
-            onPressed: fetchFacilities,
-          ),
+          if (!_isSearchExpanded)
+            IconButton(
+              icon: const Icon(Icons.search, color: offWhite),
+              tooltip: 'Search',
+              onPressed: () => setState(() => _isSearchExpanded = true),
+            ),
+          if (!_isSearchExpanded)
+            IconButton(
+              icon: const Icon(Icons.refresh, color: offWhite),
+              tooltip: 'Refresh Facilities',
+              onPressed: fetchFacilities,
+            ),
         ],
       ),
-      body: isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : facilities.isEmpty
-              ? const Center(child: Text("No facilities found."))
-              : _buildFacilitiesList(),
+      body: Builder(
+        builder: (context) {
+          if (isLoading) return const Center(child: CircularProgressIndicator());
+          if (facilities.isEmpty) return const Center(child: Text("No facilities found."));
+
+          final filtered = _searchQuery.isEmpty
+              ? facilities
+              : facilities.where((f) {
+                  final name = (f['name'] ?? '').toString().toLowerCase();
+                  final code = (f['code'] ?? '').toString().toLowerCase();
+                  return name.contains(_searchQuery) || code.contains(_searchQuery);
+                }).toList();
+
+          if (filtered.isEmpty) {
+            return Center(child: Text('No facilities match "$_searchQuery".'));
+          }
+
+          return _buildFacilitiesList(filtered);
+        },
+      ),
       floatingActionButton: FloatingActionButton.extended(
         backgroundColor: deepGreen,
         foregroundColor: offWhite,

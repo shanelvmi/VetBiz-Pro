@@ -4,17 +4,62 @@ import 'package:intl/intl.dart';
 
 import '../../utils/subscription_status_utils.dart';
 import '../../widgets/firestore_error_view.dart';
+import '../../widgets/hover_elevate_card.dart';
 
 /// A snapshot of the whole business - how many facilities, in what state, and
 /// how much has actually been collected this month. Reads every facility
 /// directly, which is fine while you have a manageable number of facilities;
 /// worth revisiting (e.g. precomputed via a Cloud Function, same pattern
 /// as dailySummaries) if this ever grows into the hundreds.
-class OverviewTab extends StatelessWidget {
+///
+/// A one-time fetch on open, not a live listener - same reasoning as
+/// Facilities Directory's summary row: this needs the full picture to
+/// mean what it claims, and a live listener would re-read everything
+/// on any change anywhere. Refreshed via the button next to the
+/// heading, or automatically whenever this tab is opened.
+class OverviewTab extends StatefulWidget {
   const OverviewTab({super.key});
 
+  @override
+  State<OverviewTab> createState() => _OverviewTabState();
+}
+
+class _OverviewTabState extends State<OverviewTab> {
   static const Color primaryColor = Color(0xFF2F5D62);
-  static const Color warmAmber = Color(0xFFFFB200);
+  final NumberFormat _moneyFormat = NumberFormat('#,##0', 'en_US');
+
+  Map<String, dynamic>? _stats;
+  bool _isLoading = true;
+  Object? _error;
+  DateTime? _lastRefreshed;
+
+  @override
+  void initState() {
+    super.initState();
+    _refresh();
+  }
+
+  Future<void> _refresh() async {
+    setState(() {
+      _isLoading = true;
+      _error = null;
+    });
+    try {
+      final stats = await _loadStats();
+      if (!mounted) return;
+      setState(() {
+        _stats = stats;
+        _lastRefreshed = DateTime.now();
+        _isLoading = false;
+      });
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _error = e;
+        _isLoading = false;
+      });
+    }
+  }
 
   Future<Map<String, dynamic>> _loadStats() async {
     final facilitiesSnap = await FirebaseFirestore.instance.collection('facilities').get();
@@ -23,7 +68,9 @@ class OverviewTab extends StatelessWidget {
     for (final doc in facilitiesSnap.docs) {
       final expiresAtField = doc.data()['subscriptionExpiresAt'];
       final expiresAt = expiresAtField is Timestamp ? expiresAtField.toDate() : null;
-      switch (computeSubscriptionStatus(expiresAt)) {
+      final trialExpiresAtField = doc.data()['trialExpiresAt'];
+      final trialExpiresAt = trialExpiresAtField is Timestamp ? trialExpiresAtField.toDate() : null;
+      switch (computeSubscriptionStatus(expiresAt, trialExpiresAt)) {
         case SubscriptionStatusKind.trial:
           trial++;
           break;
@@ -80,76 +127,89 @@ class OverviewTab extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final moneyFormat = NumberFormat('#,##0', 'en_US');
+    if (_isLoading && _stats == null) {
+      return const Center(child: CircularProgressIndicator());
+    }
+    if (_error != null && _stats == null) {
+      return FirestoreErrorView(error: _error);
+    }
 
-    return FutureBuilder<Map<String, dynamic>>(
-      future: _loadStats(),
-      builder: (context, snapshot) {
-        if (snapshot.connectionState == ConnectionState.waiting) {
-          return const Center(child: CircularProgressIndicator());
-        }
-        if (snapshot.hasError) {
-          return FirestoreErrorView(error: snapshot.error);
-        }
+    final stats = _stats!;
 
-        final stats = snapshot.data!;
-
-        return ListView(
-          padding: const EdgeInsets.all(16),
+    return ListView(
+      padding: const EdgeInsets.all(16),
+      children: [
+        Row(
           children: [
-            Row(
-              children: [
-                Expanded(
-                  child: _StatCard(
-                    label: 'Total Facilities',
-                    value: '${stats['total']}',
-                    color: primaryColor,
-                    icon: Icons.store,
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: _StatCard(
-                    label: 'Revenue This Month',
-                    value: 'Tsh ${moneyFormat.format(stats['monthRevenue'])}',
-                    color: warmAmber,
-                    icon: Icons.payments,
-                  ),
-                ),
-              ],
+            const Expanded(
+              child: Text('Overview', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
             ),
-            const SizedBox(height: 12),
-            Row(
-              children: [
-                Expanded(
-                  child: _StatCard(
-                    label: 'Pending Requests',
-                    value: '${stats['pendingCount']}',
-                    color: Colors.orange,
-                    icon: Icons.pending_actions,
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: _StatCard(
-                    label: 'Payments This Month',
-                    value: '${stats['monthPayments']}',
-                    color: primaryColor,
-                    icon: Icons.receipt_long,
-                  ),
-                ),
-              ],
+            if (_lastRefreshed != null)
+              Text(
+                'Updated ${DateFormat('HH:mm').format(_lastRefreshed!)}',
+                style: TextStyle(fontSize: 11.5, color: Colors.grey[500]),
+              ),
+            IconButton(
+              icon: _isLoading
+                  ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2))
+                  : const Icon(Icons.refresh, size: 20),
+              tooltip: 'Refresh',
+              onPressed: _isLoading ? null : _refresh,
             ),
-            const SizedBox(height: 24),
-            const Text('Facilities by Status', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
-            const SizedBox(height: 8),
-            _StatusRow(label: 'Active', count: stats['active'], color: Colors.green),
-            _StatusRow(label: 'Trial', count: stats['trial'], color: primaryColor),
-            _StatusRow(label: 'Grace Period', count: stats['grace'], color: Colors.orange),
-            _StatusRow(label: 'Locked', count: stats['locked'], color: Colors.redAccent),
           ],
-        );
-      },
+        ),
+        const SizedBox(height: 8),
+        Row(
+          children: [
+            Expanded(
+              child: _StatCard(
+                label: 'Total Facilities',
+                value: '${stats['total']}',
+                color: primaryColor,
+                icon: Icons.store,
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: _StatCard(
+                label: 'Revenue This Month',
+                value: 'Tsh ${_moneyFormat.format(stats['monthRevenue'])}',
+                color: Colors.green,
+                icon: Icons.payments,
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 12),
+        Row(
+          children: [
+            Expanded(
+              child: _StatCard(
+                label: 'Pending Requests',
+                value: '${stats['pendingCount']}',
+                color: Colors.blue,
+                icon: Icons.pending_actions,
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: _StatCard(
+                label: 'Payments This Month',
+                value: '${stats['monthPayments']}',
+                color: primaryColor,
+                icon: Icons.receipt_long,
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 24),
+        const Text('Facilities by Status', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
+        const SizedBox(height: 8),
+        _StatusRow(label: 'Active', count: stats['active'], color: Colors.green),
+        _StatusRow(label: 'Trial', count: stats['trial'], color: primaryColor),
+        _StatusRow(label: 'Grace Period', count: stats['grace'], color: Colors.orange),
+        _StatusRow(label: 'Locked', count: stats['locked'], color: Colors.redAccent),
+      ],
     );
   }
 }
@@ -164,8 +224,8 @@ class _StatCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Card(
-      elevation: 2,
+    return HoverElevateCard(
+      baseElevation: 2,
       child: Padding(
         padding: const EdgeInsets.all(14),
         child: Column(

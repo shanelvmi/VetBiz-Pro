@@ -8,6 +8,7 @@ import '../models/debt.dart';
 import 'debt_provider.dart';
 import 'product_provider.dart';
 import '../utils/activity_logger.dart';
+import '../utils/receipt_numbering.dart';
 
 class ServiceProvider extends ChangeNotifier {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
@@ -162,6 +163,7 @@ class ServiceProvider extends ChangeNotifier {
       return null;
     }
     serviceToSave = serviceToSave.copyWith(itemsUsed: updatedItems);
+    serviceToSave = serviceToSave.copyWith(receiptNumber: await nextReceiptNumber(_facilityId!));
 
     try {
       await docRef.set({
@@ -195,6 +197,7 @@ class ServiceProvider extends ChangeNotifier {
           'timestamp': FieldValue.serverTimestamp(),
           'paidById': user?.uid ?? '',
           'source': 'service',
+          'paymentMethod': saved.paymentMethod,
         });
       }
 
@@ -445,14 +448,30 @@ class ServiceProvider extends ChangeNotifier {
     final expenseAmount = service.externalExpenseTotal;
     if (expenseAmount <= 0) return;
 
-    final user = FirebaseAuth.instance.currentUser;
-    final name = user?.displayName ?? 'System';
+    // Same real Firestore fullName lookup already used for activity
+    // logging above in this file - Firebase Auth's own displayName is
+    // never actually set anywhere in this app (it uses a separate
+    // fullName field in Firestore instead), so it was silently falling
+    // back to 'System' for every single service expense.
+    final userInfo = await ActivityLogger.getCurrentUserInfo();
+    final name = userInfo['userName']!;
+
+    // Same filter as Service.externalExpenseTotal - only the items that
+    // actually became this expense, not every item on the service, so
+    // an audit can see exactly what was expensed without opening the
+    // service record separately.
+    final externalItemNames = service.itemsUsed
+        .where((item) => item['productId'] == null)
+        .map((item) => (item['itemName'] ?? '').toString())
+        .where((itemName) => itemName.isNotEmpty)
+        .toList();
+    final itemsSummary = externalItemNames.isNotEmpty ? externalItemNames.join(', ') : 'N/A';
 
     await ref.add({
       'amount': expenseAmount,
       'category': 'Vet Service Expenses',
       'date': Timestamp.fromDate(DateTime.now()),
-      'description': 'Items used for: ${service.name}',
+      'description': 'Items used for ${service.name}: $itemsSummary',
       'recordedBy': name,
       'type': 'expense',
       'serviceId': serviceId,

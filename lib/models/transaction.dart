@@ -8,6 +8,9 @@ class TransactionModel {
   final String type;            // 'profit', 'expense', 'outstanding', etc.
   final String category;
   final String recordedBy;      // User ID or name who recorded the transaction
+  // Nullable - only meaningful for income (money actually received via
+  // some method); an expense has nothing to attach one to.
+  final String? paymentMethod;
 
   TransactionModel({
     required this.id,
@@ -17,6 +20,7 @@ class TransactionModel {
     required this.type,
     required this.category,
     required this.recordedBy,
+    this.paymentMethod,
   });
 
   /// Converts the TransactionModel instance to a Firestore compatible map
@@ -28,6 +32,7 @@ class TransactionModel {
       'type': type,
       'category': category,
       'recordedBy': recordedBy,
+      if (paymentMethod != null) 'paymentMethod': paymentMethod,
     };
   }
 
@@ -41,6 +46,7 @@ class TransactionModel {
       type: map['type'] ?? '',
       category: map['category'] ?? '',
       recordedBy: map['recordedBy'] ?? 'Unknown',
+      paymentMethod: map['paymentMethod'] as String?,
     );
   }
 
@@ -53,6 +59,7 @@ class TransactionModel {
     String? type,
     String? category,
     String? recordedBy,
+    String? paymentMethod,
   }) {
     return TransactionModel(
       id: id ?? this.id,
@@ -62,6 +69,7 @@ class TransactionModel {
       type: type ?? this.type,
       category: category ?? this.category,
       recordedBy: recordedBy ?? this.recordedBy,
+      paymentMethod: paymentMethod ?? this.paymentMethod,
     );
   }
 }

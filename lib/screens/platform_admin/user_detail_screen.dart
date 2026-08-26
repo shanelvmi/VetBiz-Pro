@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:cloud_functions/cloud_functions.dart';
 
 /// A single user's account, editable by the Platform Admin - the direct
 /// answer to "an assistant migrated to a new facility, and their old
@@ -41,7 +42,7 @@ class _UserDetailScreenState extends State<UserDetailScreen> {
           }).toList();
 
           return AlertDialog(
-            title: const Text('Add to Facility'),
+            title: Text((_userData['role'] ?? '') == 'assistant' ? 'Move to Facility' : 'Add to Facility'),
             content: SizedBox(
               width: 420,
               height: 420,
@@ -89,6 +90,7 @@ class _UserDetailScreenState extends State<UserDetailScreen> {
 
     if (selected == null) return;
 
+    final isAssistant = (_userData['role'] ?? '') == 'assistant';
     final currentFacilities = (_userData['facilities'] as List?)?.cast<dynamic>() ?? [];
     final alreadyThere = currentFacilities.any((f) => f is Map && f['facilityId'] == selected['facilityId']);
     if (alreadyThere) {
@@ -102,14 +104,28 @@ class _UserDetailScreenState extends State<UserDetailScreen> {
 
     setState(() => _isSaving = true);
     try {
-      await FirebaseFirestore.instance.collection('users').doc(widget.userId).update({
-        'facilities': FieldValue.arrayUnion([selected]),
-        'facilityIds': FieldValue.arrayUnion([selected['facilityId']]),
-      });
+      if (isAssistant) {
+        // Replaces rather than appends - an Assistant only ever
+        // belongs to one facility at a time everywhere else in the
+        // app (see Manage Assistants' Reassign). Appending here
+        // instead would leave them belonging to two facilities at
+        // once, which the rest of the app isn't built to handle -
+        // it would just silently use whichever one happens to be
+        // first in the array.
+        await FirebaseFirestore.instance.collection('users').doc(widget.userId).update({
+          'facilities': [selected],
+          'facilityIds': [selected['facilityId']],
+        });
+      } else {
+        await FirebaseFirestore.instance.collection('users').doc(widget.userId).update({
+          'facilities': FieldValue.arrayUnion([selected]),
+          'facilityIds': FieldValue.arrayUnion([selected['facilityId']]),
+        });
+      }
 
       if (!mounted) return;
       setState(() {
-        _userData['facilities'] = [...currentFacilities, selected];
+        _userData['facilities'] = isAssistant ? [selected] : [...currentFacilities, selected];
       });
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Added to ${selected['name']}'), backgroundColor: Colors.green),
@@ -130,7 +146,10 @@ class _UserDetailScreenState extends State<UserDetailScreen> {
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Remove from Facility?'),
-        content: Text('Remove this user from "${facility['name']}"? They\'ll no longer be able to access it.'),
+        content: SizedBox(
+          width: MediaQuery.of(context).size.width > 700 ? 360 : MediaQuery.of(context).size.width * 0.85,
+          child: Text('Remove this user from "${facility['name']}"? They\'ll no longer be able to access it.'),
+        ),
         actions: [
           TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Cancel')),
           ElevatedButton(
@@ -177,10 +196,13 @@ class _UserDetailScreenState extends State<UserDetailScreen> {
           context: context,
           builder: (context) => AlertDialog(
             title: const Text('Cannot Deactivate'),
-            content: const Text(
-                'This account has Platform Admin access, so it can\'t be deactivated from '
-                'here or anywhere else. Remove their Platform Admin access first (from the '
-                'Admins tab) if you genuinely need to deactivate this account.'),
+            content: SizedBox(
+              width: MediaQuery.of(context).size.width > 700 ? 360 : MediaQuery.of(context).size.width * 0.85,
+              child: const Text(
+                  'This account has Platform Admin access, so it can\'t be deactivated from '
+                  'here or anywhere else. Remove their Platform Admin access first (from the '
+                  'Admins tab) if you genuinely need to deactivate this account.'),
+            ),
             actions: [
               TextButton(onPressed: () => Navigator.pop(context), child: const Text('OK')),
             ],
@@ -194,9 +216,12 @@ class _UserDetailScreenState extends State<UserDetailScreen> {
       context: context,
       builder: (context) => AlertDialog(
         title: Text(newStatus == 'active' ? 'Reactivate Account?' : 'Deactivate Account?'),
-        content: Text(newStatus == 'active'
-            ? 'This user will be able to log in again.'
-            : 'This user will no longer be able to log in, at any facility.'),
+        content: SizedBox(
+          width: MediaQuery.of(context).size.width > 700 ? 360 : MediaQuery.of(context).size.width * 0.85,
+          child: Text(newStatus == 'active'
+              ? 'This user will be able to log in again.'
+              : 'This user will no longer be able to log in, at any facility.'),
+        ),
         actions: [
           TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Cancel')),
           ElevatedButton(
@@ -228,6 +253,88 @@ class _UserDetailScreenState extends State<UserDetailScreen> {
     }
   }
 
+  Future<void> _removeAccount() async {
+    final name = (_userData['fullName'] ?? 'this user').toString();
+    final confirmController = TextEditingController();
+    bool canConfirm = false;
+    bool isRemoving = false;
+    String? dialogError;
+
+    await showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (dialogContext) => StatefulBuilder(
+        builder: (dialogContext, setDialogState) => AlertDialog(
+          title: const Text('Remove Account'),
+          content: SizedBox(
+            width: 420,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'This permanently deletes "$name"\'s account and login. This cannot be undone, and the email becomes free to register again.',
+                  style: const TextStyle(fontSize: 13),
+                ),
+                const SizedBox(height: 16),
+                Text('Type "$name" to confirm:',
+                    style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600)),
+                const SizedBox(height: 8),
+                TextField(
+                  controller: confirmController,
+                  decoration: const InputDecoration(border: OutlineInputBorder(), isDense: true),
+                  onChanged: (val) => setDialogState(() => canConfirm = val.trim() == name),
+                ),
+                if (dialogError != null) ...[
+                  const SizedBox(height: 10),
+                  Text(dialogError!, style: const TextStyle(color: Colors.redAccent, fontSize: 12.5)),
+                ],
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: isRemoving ? null : () => Navigator.pop(dialogContext),
+              child: const Text('Cancel'),
+            ),
+            ElevatedButton(
+              onPressed: (!canConfirm || isRemoving)
+                  ? null
+                  : () async {
+                      setDialogState(() {
+                        isRemoving = true;
+                        dialogError = null;
+                      });
+                      try {
+                        final callable = FirebaseFunctions.instance.httpsCallable('platformRemoveUser');
+                        await callable.call({'userId': widget.userId});
+                        if (dialogContext.mounted) Navigator.pop(dialogContext);
+                        if (!mounted) return;
+                        Navigator.pop(context); // back to Users list - this account no longer exists
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(content: Text('Account removed'), backgroundColor: Colors.green),
+                        );
+                      } catch (e) {
+                        setDialogState(() {
+                          isRemoving = false;
+                          dialogError = 'Could not remove: $e';
+                        });
+                      }
+                    },
+              style: ElevatedButton.styleFrom(backgroundColor: Colors.red, foregroundColor: Colors.white),
+              child: isRemoving
+                  ? const SizedBox(
+                      width: 18, height: 18,
+                      child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                    )
+                  : const Text('Remove'),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final facilities = (_userData['facilities'] as List?)?.cast<dynamic>() ?? [];
@@ -236,6 +343,7 @@ class _UserDetailScreenState extends State<UserDetailScreen> {
     return Scaffold(
       appBar: AppBar(
         title: Text(_userData['fullName'] ?? 'User'),
+        centerTitle: true,
         backgroundColor: primaryColor,
         foregroundColor: Colors.white,
       ),
@@ -280,8 +388,8 @@ class _UserDetailScreenState extends State<UserDetailScreen> {
                   const Text('Facilities', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
                   TextButton.icon(
                     onPressed: _isSaving ? null : _addToFacility,
-                    icon: const Icon(Icons.add),
-                    label: const Text('Add to Facility'),
+                    icon: Icon((_userData['role'] ?? '') == 'assistant' ? Icons.swap_horiz : Icons.add),
+                    label: Text((_userData['role'] ?? '') == 'assistant' ? 'Move to Facility' : 'Add to Facility'),
                   ),
                 ],
               ),
@@ -316,6 +424,18 @@ class _UserDetailScreenState extends State<UserDetailScreen> {
                   foregroundColor: status == 'active' ? Colors.red : Colors.green,
                 ),
               ),
+              if (status == 'deactivated') ...[
+                const SizedBox(height: 12),
+                OutlinedButton.icon(
+                  onPressed: _removeAccount,
+                  icon: const Icon(Icons.delete_forever_outlined),
+                  label: const Text('Remove Account Permanently'),
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: Colors.red.shade900,
+                    side: BorderSide(color: Colors.red.shade900),
+                  ),
+                ),
+              ],
             ],
           ),
         ),

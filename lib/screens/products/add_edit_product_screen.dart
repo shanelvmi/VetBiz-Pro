@@ -5,6 +5,7 @@ import 'package:uuid/uuid.dart';
 import 'package:intl/intl.dart';
 
 import '../../utils/activity_logger.dart';
+import '../../utils/navigator_key.dart';
 import '../../models/product.dart';
 import '../../models/product_batch.dart';
 import '../../providers/product_provider.dart';
@@ -26,11 +27,13 @@ enum ProductDestination {
 class AddEditProductScreen extends StatefulWidget {
   final Product? product;
   final ProductDestination? presetDestination; // 🆕 NEW: Auto-destination
+  final bool isModal;
 
   const AddEditProductScreen({
     super.key,
     this.product,
     this.presetDestination, // 🆕 Pass from calling screen
+    this.isModal = false,
   });
 
   @override
@@ -171,9 +174,108 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
     super.dispose();
   }
 
-  InputDecoration _inputDecoration(String label) {
+  Widget _buildSupplierBatchExpiryFields(bool isNarrow) {
+    final supplierField = TextFormField(
+      controller: _supplierController,
+      decoration: _inputDecoration('Supplier'),
+      cursorColor: primaryDeepTealGreen,
+    );
+    final batchField = TextFormField(
+      controller: _batchController,
+      decoration: _inputDecoration('Batch No'),
+      cursorColor: primaryDeepTealGreen,
+    );
+    final expiryField = TextFormField(
+      controller: _expiryController,
+      readOnly: true,
+      decoration: _inputDecoration('Expiry').copyWith(
+          suffixIcon: Icon(Icons.calendar_today, color: primaryDeepTealGreen)),
+      onTap: _pickExpiryDate,
+      cursorColor: primaryDeepTealGreen,
+    );
+
+    if (isNarrow) {
+      return Column(
+        children: [
+          supplierField,
+          const SizedBox(height: 12),
+          batchField,
+          const SizedBox(height: 12),
+          expiryField,
+        ],
+      );
+    }
+
+    return Row(
+      children: [
+        Expanded(child: supplierField),
+        const SizedBox(width: 12),
+        Expanded(child: batchField),
+        const SizedBox(width: 12),
+        Expanded(child: expiryField),
+      ],
+    );
+  }
+
+  Widget _buyPriceField(bool fieldsLocked) {
+    return TextFormField(
+      controller: _buyPriceController,
+      decoration: _inputDecoration('Buying Price (Tsh)', required: true),
+      keyboardType: TextInputType.number,
+      cursorColor: primaryDeepTealGreen,
+      enabled: !fieldsLocked,
+      validator: (value) {
+        final parsed = double.tryParse((value ?? '').replaceAll(',', ''));
+        if (parsed == null) return 'Enter a valid buying price';
+        if (parsed <= 0) return 'Must be greater than 0';
+        return null;
+      },
+    );
+  }
+
+  Widget _sellPriceField(bool fieldsLocked) {
+    return TextFormField(
+      controller: _sellPriceController,
+      decoration: _inputDecoration('Selling Price (Tsh)', required: true),
+      keyboardType: TextInputType.number,
+      cursorColor: primaryDeepTealGreen,
+      enabled: !fieldsLocked,
+      validator: (value) {
+        final parsed = double.tryParse((value ?? '').replaceAll(',', ''));
+        if (parsed == null) return 'Enter a valid selling price';
+        if (parsed <= 0) return 'Must be greater than 0';
+        return null;
+      },
+    );
+  }
+
+  Widget _quantityField() {
+    return TextFormField(
+      controller: _stockController,
+      decoration: _inputDecoration('Quantity', required: true),
+      keyboardType: TextInputType.number,
+      cursorColor: primaryDeepTealGreen,
+      validator: (value) {
+        final parsed = int.tryParse((value ?? '').trim());
+        if (parsed == null) return 'Enter a valid quantity';
+        if (parsed < 0) return 'Cannot be negative';
+        return null;
+      },
+    );
+  }
+
+  Widget _unitDropdown(bool fieldsLocked) {
+    return DropdownButtonFormField(
+      initialValue: _unit,
+      items: _units.map((unit) => DropdownMenuItem(value: unit, child: Text(unit))).toList(),
+      decoration: _inputDecoration('Unit'),
+      onChanged: fieldsLocked ? null : (String? value) => setState(() => _unit = value!),
+    );
+  }
+
+  InputDecoration _inputDecoration(String label, {bool required = false}) {
     return InputDecoration(
-      labelText: label,
+      labelText: required ? '$label *' : label,
       labelStyle: TextStyle(color: Colors.grey[700]),
       floatingLabelStyle: TextStyle(color: primaryDeepTealGreen),
       border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
@@ -204,8 +306,8 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
     }
   }
 
-  void _selectCategoryDialog() {
-    showDialog(
+  Future<void> _selectCategoryDialog() {
+    return showDialog(
       context: context,
       builder: (context) => Dialog(
         backgroundColor: primaryDeepTealGreen.withValues(alpha: 0.95),
@@ -503,9 +605,24 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
       appBar: AppBar(
         backgroundColor: primaryDeepTealGreen,
         iconTheme: IconThemeData(color: offWhite),
+        centerTitle: true,
         title: Text(appBarTitle, style: TextStyle(color: offWhite)),
+        automaticallyImplyLeading: !widget.isModal,
+        leading: widget.isModal
+            ? IconButton(
+                icon: Icon(Icons.close, color: offWhite),
+                tooltip: 'Close',
+                onPressed: () => Navigator.of(context).pop(),
+              )
+            : null,
       ),
-      body: Padding(
+      body: LayoutBuilder(
+        builder: (context, constraints) {
+          final isNarrow = constraints.maxWidth < 480;
+          return Center(
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 700),
+              child: Padding(
         padding: const EdgeInsets.all(16),
         child: Form(
           key: _formKey,
@@ -518,9 +635,9 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
               // disconnected product record.
               TextFormField(
                 controller: _nameController,
-                decoration: _inputDecoration('Product Name'),
+                decoration: _inputDecoration('Product Name', required: true),
                 validator: (value) =>
-                    value == null || value.isEmpty ? 'Required' : null,
+                    value == null || value.trim().isEmpty ? 'Product name is required' : null,
                 cursorColor: primaryDeepTealGreen,
                 enabled: !fieldsLocked,
                 autofillHints: const [],
@@ -579,17 +696,22 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
                           SizedBox(
                             width: double.infinity,
                             child: ElevatedButton.icon(
-                              onPressed: () {
-                                Navigator.pushReplacement(
-                                  context,
-                                  MaterialPageRoute(builder: (_) => AddEditProductScreen(product: match)),
-                                );
+                              onPressed: () async {
+                                Navigator.pop(context);
+                                await Future.delayed(const Duration(milliseconds: 300));
+                                final rootContext = navigatorKey.currentContext;
+                                if (rootContext != null) {
+                                  showAddEditProductScreen(rootContext, product: match);
+                                }
                               },
                               icon: const Icon(Icons.edit_outlined, size: 18),
                               label: const Text('Open This Product'),
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: primaryDeepTealGreen,
-                                foregroundColor: offWhite,
+                              style: ButtonStyle(
+                                backgroundColor: WidgetStateProperty.resolveWith<Color>((states) {
+                                  if (states.contains(WidgetState.hovered)) return warmAmber;
+                                  return primaryDeepTealGreen;
+                                }),
+                                foregroundColor: WidgetStateProperty.all(offWhite),
                               ),
                             ),
                           ),
@@ -612,11 +734,13 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
                                     Expanded(child: Text(p.name, style: const TextStyle(fontSize: 13))),
                                     TextButton(
                                       style: TextButton.styleFrom(padding: EdgeInsets.zero, minimumSize: const Size(0, 0)),
-                                      onPressed: () {
-                                        Navigator.pushReplacement(
-                                          context,
-                                          MaterialPageRoute(builder: (_) => AddEditProductScreen(product: p)),
-                                        );
+                                      onPressed: () async {
+                                        Navigator.pop(context);
+                                        await Future.delayed(const Duration(milliseconds: 300));
+                                        final rootContext = navigatorKey.currentContext;
+                                        if (rootContext != null) {
+                                          showAddEditProductScreen(rootContext, product: p);
+                                        }
                                       },
                                       child: const Text('Open', style: TextStyle(fontSize: 12)),
                                     ),
@@ -664,37 +788,7 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
                             cursorColor: primaryDeepTealGreen,
                             enabled: !fieldsLocked,
                           )
-                        : Row(
-                      children: [
-                        Expanded(
-                          child: TextFormField(
-                            controller: _supplierController,
-                            decoration: _inputDecoration('Supplier'),
-                            cursorColor: primaryDeepTealGreen,
-                          ),
-                        ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: TextFormField(
-                            controller: _batchController,
-                            decoration: _inputDecoration('Batch No'),
-                            cursorColor: primaryDeepTealGreen,
-                          ),
-                        ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: TextFormField(
-                            controller: _expiryController,
-                            readOnly: true,
-                            decoration: _inputDecoration('Expiry').copyWith(
-                                suffixIcon: Icon(Icons.calendar_today,
-                                    color: primaryDeepTealGreen)),
-                            onTap: _pickExpiryDate,
-                            cursorColor: primaryDeepTealGreen,
-                          ),
-                        ),
-                      ],
-                    ),
+                        : _buildSupplierBatchExpiryFields(isNarrow),
                     if (isEditing) ...[
                       const SizedBox(height: 14),
                       const Text('Current Quantity', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
@@ -710,18 +804,30 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
                             Expanded(
                               child: TextFormField(
                                 controller: _warehouseQtyController,
-                                decoration: _inputDecoration('Warehouse Qty'),
+                                decoration: _inputDecoration('Warehouse Qty', required: true),
                                 keyboardType: TextInputType.number,
                                 cursorColor: primaryDeepTealGreen,
+                                validator: (value) {
+                                  final parsed = int.tryParse((value ?? '').trim());
+                                  if (parsed == null) return 'Invalid';
+                                  if (parsed < 0) return 'Cannot be negative';
+                                  return null;
+                                },
                               ),
                             ),
                             const SizedBox(width: 12),
                             Expanded(
                               child: TextFormField(
                                 controller: _shelfQtyController,
-                                decoration: _inputDecoration('Shelf Qty'),
+                                decoration: _inputDecoration('Shelf Qty', required: true),
                                 keyboardType: TextInputType.number,
                                 cursorColor: primaryDeepTealGreen,
+                                validator: (value) {
+                                  final parsed = int.tryParse((value ?? '').trim());
+                                  if (parsed == null) return 'Invalid';
+                                  if (parsed < 0) return 'Cannot be negative';
+                                  return null;
+                                },
                               ),
                             ),
                           ],
@@ -748,10 +854,7 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
                               ),
                               TextButton(
                                 onPressed: () {
-                                  Navigator.push(
-                                    context,
-                                    MaterialPageRoute(builder: (_) => ViewBatchesScreen(product: widget.product!)),
-                                  );
+                                  showViewBatchesScreen(context, product: widget.product!);
                                 },
                                 child: const Text('Manage Batches'),
                               ),
@@ -762,10 +865,7 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
                       const SizedBox(height: 10),
                       OutlinedButton.icon(
                         onPressed: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(builder: (_) => AddBatchScreen(product: widget.product!)),
-                          );
+                          showAddBatchScreen(context, product: widget.product!);
                         },
                         icon: const Icon(Icons.add, size: 18),
                         label: const Text('Add New Batch (new delivery, different expiry)'),
@@ -787,72 +887,67 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
               const SizedBox(height: 12),
 
               // Buy & Sell Price
-              Row(
-                children: [
-                  Expanded(
-                    child: TextFormField(
-                      controller: _buyPriceController,
-                      decoration: _inputDecoration('Buying Price (Tsh)'),
-                      keyboardType: TextInputType.number,
-                      cursorColor: primaryDeepTealGreen,
-                      enabled: !fieldsLocked,
+              isNarrow
+                  ? Column(
+                      children: [_buyPriceField(fieldsLocked), const SizedBox(height: 12), _sellPriceField(fieldsLocked)],
+                    )
+                  : Row(
+                      children: [
+                        Expanded(child: _buyPriceField(fieldsLocked)),
+                        const SizedBox(width: 12),
+                        Expanded(child: _sellPriceField(fieldsLocked)),
+                      ],
                     ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: TextFormField(
-                      controller: _sellPriceController,
-                      decoration: _inputDecoration('Selling Price (Tsh)'),
-                      keyboardType: TextInputType.number,
-                      cursorColor: primaryDeepTealGreen,
-                      enabled: !fieldsLocked,
-                    ),
-                  ),
-                ],
-              ),
               const SizedBox(height: 12),
 
               // Stock & Unit
-              Row(
-                children: [
-                  if (!isEditing) ...[
-                  Expanded(
-                    child: TextFormField(
-                      controller: _stockController,
-                      decoration: _inputDecoration('Quantity'),
-                      keyboardType: TextInputType.number,
-                      cursorColor: primaryDeepTealGreen,
+              isNarrow
+                  ? Column(
+                      children: [
+                        if (!isEditing) ...[
+                          _quantityField(),
+                          const SizedBox(height: 12),
+                        ],
+                        _unitDropdown(fieldsLocked),
+                      ],
+                    )
+                  : Row(
+                      children: [
+                        if (!isEditing) ...[
+                          Expanded(child: _quantityField()),
+                          const SizedBox(width: 12),
+                        ],
+                        Expanded(child: _unitDropdown(fieldsLocked)),
+                      ],
                     ),
-                  ),
-                  const SizedBox(width: 12),
-                  ],
-                  Expanded(
-                    child: DropdownButtonFormField(
-                      initialValue: _unit,
-                      items: _units
-                          .map((unit) => DropdownMenuItem(
-                              value: unit, child: Text(unit)))
-                          .toList(),
-                      decoration: _inputDecoration('Unit'),
-                      onChanged: fieldsLocked ? null : (String? value) => setState(() => _unit = value!),
-                    ),
-                  ),
-                ],
-              ),
 
               const SizedBox(height: 12),
 
               // Category
-              InkWell(
-                onTap: fieldsLocked ? null : _selectCategoryDialog,
-                child: InputDecorator(
-                  decoration: _inputDecoration('Category'),
-                  child: Text(
-                    _category.isEmpty ? 'Select Category' : _category,
-                    style: TextStyle(
-                        color: _category.isEmpty ? Colors.grey : (fieldsLocked ? Colors.grey[600] : Colors.black87)),
-                  ),
-                ),
+              FormField<String>(
+                initialValue: _category,
+                validator: (value) =>
+                    (value == null || value.isEmpty) ? 'Please select a category' : null,
+                builder: (formFieldState) {
+                  return InkWell(
+                    onTap: fieldsLocked
+                        ? null
+                        : () async {
+                            await _selectCategoryDialog();
+                            formFieldState.didChange(_category);
+                          },
+                    child: InputDecorator(
+                      decoration: _inputDecoration('Category', required: true).copyWith(
+                        errorText: formFieldState.errorText,
+                      ),
+                      child: Text(
+                        _category.isEmpty ? 'Select Category' : _category,
+                        style: TextStyle(
+                            color: _category.isEmpty ? Colors.grey : (fieldsLocked ? Colors.grey[600] : Colors.black87)),
+                      ),
+                    ),
+                  );
+                },
               ),
 
               const SizedBox(height: 24),
@@ -882,7 +977,72 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
             ],
           ),
         ),
+              ),
+            ),
+          );
+        },
       ),
     );
   }
+}
+/// The one entry point for opening Add/Edit Product - a full-screen
+/// push on mobile, a large, centered, dismissable modal on
+/// desktop/tablet-width screens. Same reasoning as showAddSaleScreen -
+/// a quick, frequent action shouldn't need a full page navigation away
+/// from wherever it was triggered.
+Future<void> showAddEditProductScreen(
+  BuildContext context, {
+  Product? product,
+  ProductDestination? presetDestination,
+}) async {
+  final isWideScreen = MediaQuery.of(context).size.width >= 900;
+
+  if (!isWideScreen) {
+    await Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => AddEditProductScreen(product: product, presetDestination: presetDestination),
+      ),
+    );
+    return;
+  }
+
+  await showGeneralDialog(
+    context: context,
+    barrierDismissible: true,
+    barrierLabel: product != null ? 'Edit Product' : 'Add Product',
+    barrierColor: Colors.black54,
+    transitionDuration: const Duration(milliseconds: 220),
+    pageBuilder: (context, animation, secondaryAnimation) {
+      final screenSize = MediaQuery.of(context).size;
+      return Center(
+        child: SizedBox(
+          width: screenSize.width * 0.8,
+          height: screenSize.height * 0.85,
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(16),
+            child: Material(
+              child: AddEditProductScreen(
+                product: product,
+                presetDestination: presetDestination,
+                isModal: true,
+              ),
+            ),
+          ),
+        ),
+      );
+    },
+    transitionBuilder: (context, animation, secondaryAnimation, child) {
+      final curved = CurvedAnimation(parent: animation, curve: Curves.easeOutCubic);
+      return FadeTransition(
+        opacity: curved,
+        child: SlideTransition(
+          position: Tween<Offset>(begin: const Offset(0, 0.03), end: Offset.zero).animate(curved),
+          child: ScaleTransition(
+            scale: Tween<double>(begin: 0.96, end: 1.0).animate(curved),
+            child: child,
+          ),
+        ),
+      );
+    },
+  );
 }

@@ -19,7 +19,8 @@ import 'add_batch_screen.dart';
 /// options) in one place instead of being dropped straight into a form.
 class ViewBatchesScreen extends StatelessWidget {
   final Product product;
-  const ViewBatchesScreen({super.key, required this.product});
+  final bool isModal;
+  const ViewBatchesScreen({super.key, required this.product, this.isModal = false});
 
   static const Color primaryColor = Color(0xFF2F5D62);
   static const Color warmAmber = Color(0xFFFFB200);
@@ -321,10 +322,18 @@ class ViewBatchesScreen extends StatelessWidget {
         centerTitle: true,
         backgroundColor: primaryColor,
         foregroundColor: Colors.white,
+        automaticallyImplyLeading: !isModal,
+        leading: isModal
+            ? IconButton(
+                icon: const Icon(Icons.close),
+                tooltip: 'Close',
+                onPressed: () => Navigator.of(context).pop(),
+              )
+            : null,
       ),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () {
-          Navigator.push(context, MaterialPageRoute(builder: (_) => AddBatchScreen(product: product)));
+          showAddBatchScreen(context, product: product);
         },
         backgroundColor: primaryColor,
         foregroundColor: Colors.white,
@@ -346,10 +355,7 @@ class ViewBatchesScreen extends StatelessWidget {
                         subtitle: Text('${product.category} · Tsh ${product.sellPrice.toStringAsFixed(0)}'),
                         trailing: TextButton(
                           onPressed: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(builder: (_) => AddEditProductScreen(product: product)),
-                            );
+                            showAddEditProductScreen(context, product: product);
                           },
                           style: ButtonStyle(
                             foregroundColor: WidgetStateProperty.resolveWith<Color>((states) {
@@ -448,4 +454,60 @@ class ViewBatchesScreen extends StatelessWidget {
             ),
     );
   }
+}
+
+/// The one entry point for opening View Batches - same reasoning and
+/// threshold as showAddSaleScreen elsewhere in this app: a full-screen
+/// push on mobile, a large, centered, dismissable modal on
+/// desktop/tablet-width screens. This is a focused, per-product
+/// drill-down reached from one specific row on the Products list, not
+/// an independent destination you'd browse on its own - the same
+/// category as Platform Admin's Activity Log or Promotions screens,
+/// both already modal on desktop despite also being list views rather
+/// than forms.
+Future<void> showViewBatchesScreen(BuildContext context, {required Product product}) async {
+  final isWideScreen = MediaQuery.of(context).size.width >= 900;
+
+  if (!isWideScreen) {
+    await Navigator.of(context).push(
+      MaterialPageRoute(builder: (_) => ViewBatchesScreen(product: product)),
+    );
+    return;
+  }
+
+  await showGeneralDialog(
+    context: context,
+    barrierDismissible: true,
+    barrierLabel: 'View Batches',
+    barrierColor: Colors.black54,
+    transitionDuration: const Duration(milliseconds: 220),
+    pageBuilder: (context, animation, secondaryAnimation) {
+      final screenSize = MediaQuery.of(context).size;
+      return Center(
+        child: SizedBox(
+          width: screenSize.width * 0.8,
+          height: screenSize.height * 0.85,
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(16),
+            child: Material(
+              child: ViewBatchesScreen(product: product, isModal: true),
+            ),
+          ),
+        ),
+      );
+    },
+    transitionBuilder: (context, animation, secondaryAnimation, child) {
+      final curved = CurvedAnimation(parent: animation, curve: Curves.easeOutCubic);
+      return FadeTransition(
+        opacity: curved,
+        child: SlideTransition(
+          position: Tween<Offset>(begin: const Offset(0, 0.03), end: Offset.zero).animate(curved),
+          child: ScaleTransition(
+            scale: Tween<double>(begin: 0.96, end: 1.0).animate(curved),
+            child: child,
+          ),
+        ),
+      );
+    },
+  );
 }

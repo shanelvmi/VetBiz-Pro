@@ -9,6 +9,8 @@ import '../../providers/service_provider.dart';
 import '../../providers/facility_provider.dart';
 import 'add_edit_service_screen.dart';
 import 'services_archive_screen.dart';
+import '../../widgets/payment_method_selector.dart';
+import 'service_receipt_preview_screen.dart';
 import '../../utils/subscription_guard.dart';
 import '../../providers/user_role_provider.dart';
 
@@ -23,6 +25,27 @@ class _ServicesScreenState extends State<ServicesScreen> {
   final Color primaryDeepGreen = const Color(0xFF2F5D62);
   final Color warmAmber = const Color(0xFFFFB200);
   final Color offWhite = const Color(0xFFFDFDF9);
+
+  // Accordion behavior: only one service card expanded at a time - same
+  // reasoning and pattern as Sales' own card list.
+  final Map<String, ExpansionTileController> _expansionControllers = {};
+  String? _expandedServiceId;
+
+  ExpansionTileController _controllerFor(String id) {
+    return _expansionControllers.putIfAbsent(id, () => ExpansionTileController());
+  }
+
+  void _collapseIfStillExpanded(String? id) {
+    if (id == null) return;
+    final controller = _expansionControllers[id];
+    if (controller == null) return;
+    try {
+      controller.collapse();
+    } catch (_) {
+      // That card's ExpansionTile is no longer in the tree (e.g. the
+      // service was deleted while expanded) - nothing to collapse.
+    }
+  }
 
   final NumberFormat _numberFormat = NumberFormat.decimalPattern('en_US');
 
@@ -48,10 +71,32 @@ class _ServicesScreenState extends State<ServicesScreen> {
     super.dispose();
   }
 
+  String _truncate(String text, int cutoff) =>
+      (text.length <= cutoff) ? text : '${text.substring(0, cutoff)}...';
+
+  String _getPaymentStatus(double paid, double total) {
+    if (paid >= total) return 'Paid';
+    if (paid > 0) return 'Partial';
+    return 'Unpaid';
+  }
+
+  Color _statusColor(double paid, double total) {
+    if (paid >= total) return Colors.green;
+    if (paid > 0) return Colors.orange;
+    return Colors.red;
+  }
+
+  IconData _statusIcon(double paid, double total) {
+    if (paid >= total) return Icons.check_circle;
+    if (paid > 0) return Icons.pending;
+    return Icons.cancel;
+  }
+
   @override
   Widget build(BuildContext context) {
     final serviceProvider = Provider.of<ServiceProvider>(context);
     final services = serviceProvider.services;
+    final dateFormatter = DateFormat('dd MMM yyyy, hh:mm a');
 
     // Always show every category from the Add Service dropdown, even ones
     // with zero services recorded yet - previously a category only
@@ -124,7 +169,7 @@ class _ServicesScreenState extends State<ServicesScreen> {
                           : 'No services match your filters.',
                     ),
                   )
-                : _buildServicesGrid(filteredServices, serviceProvider),
+                : _buildServicesGrid(filteredServices, serviceProvider, dateFormatter),
           ),
         ],
       ),
@@ -135,7 +180,11 @@ class _ServicesScreenState extends State<ServicesScreen> {
         icon: const Icon(Icons.add),
         label: const Text('Add Service'),
         onPressed: () async {
-          await navigateOrShowLockedDialog(context, const AddEditServiceScreen());
+          await navigateOrShowLockedDialog(
+            context,
+            const AddEditServiceScreen(),
+            onNavigate: () => showAddEditServiceScreen(context),
+          );
         },
       ),
     );
@@ -201,7 +250,8 @@ class _ServicesScreenState extends State<ServicesScreen> {
     );
   }
 
-  Widget _buildServicesGrid(List<Service> services, ServiceProvider serviceProvider) {
+  Widget _buildServicesGrid(
+      List<Service> services, ServiceProvider serviceProvider, DateFormat dateFormatter) {
     return LayoutBuilder(
       builder: (context, constraints) {
         final isLargeScreen = constraints.maxWidth >= 1024;
@@ -211,7 +261,7 @@ class _ServicesScreenState extends State<ServicesScreen> {
           if (index == services.length) {
             return _buildLoadMoreFooter(serviceProvider);
           }
-          return _buildServiceCard(services[index]);
+          return _buildServiceCard(services[index], serviceProvider, dateFormatter);
         }
 
         if (isLargeScreen) {
@@ -276,125 +326,210 @@ class _ServicesScreenState extends State<ServicesScreen> {
     );
   }
 
-  Widget _buildServiceCard(Service service) {
-    return GestureDetector(
-      onTap: () {
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (_) => AddEditServiceScreen(service: service),
-          ),
-        );
-      },
-      child: Container(
-        margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-        padding: const EdgeInsets.all(12),
-        decoration: BoxDecoration(
-          color: offWhite,
-          borderRadius: BorderRadius.circular(12),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.grey.shade300,
-              blurRadius: 2,
-              offset: const Offset(0, 1),
-            ),
-          ],
+  // Mimics Sales' ExpansionTile card - collapsed shows a quick summary,
+  // expanded shows full detail plus Print/Edit/Delete. No stats/summary
+  // card at the top of this screen (unlike Sales), by design.
+  Widget _buildServiceCard(Service service, ServiceProvider serviceProvider, DateFormat dateFormatter) {
+    final statusColor = _statusColor(service.totalPaid, service.totalAmount);
+    final statusIcon = _statusIcon(service.totalPaid, service.totalAmount);
+    final statusText = _getPaymentStatus(service.totalPaid, service.totalAmount);
+    final updatedDate = service.updatedAt != null
+        ? dateFormatter.format(service.updatedAt!)
+        : (service.serviceDate != null ? dateFormatter.format(service.serviceDate!) : '-');
+
+    return Card(
+      margin: const EdgeInsets.only(bottom: 6),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      elevation: 2,
+      child: ExpansionTile(
+        controller: _controllerFor(service.id),
+        onExpansionChanged: (expanded) {
+          if (expanded) {
+            if (_expandedServiceId != null && _expandedServiceId != service.id) {
+              _collapseIfStillExpanded(_expandedServiceId);
+            }
+            _expandedServiceId = service.id;
+          } else if (_expandedServiceId == service.id) {
+            _expandedServiceId = null;
+          }
+        },
+        tilePadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        leading: CircleAvatar(
+          backgroundColor: statusColor.withValues(alpha: 0.2),
+          child: Icon(statusIcon, color: statusColor, size: 20),
         ),
-        child: Column(
+        title: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Expanded(
                   child: Text(
-                    service.name,
-                    style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                    _truncate(service.name, 30),
+                    style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
+                    overflow: TextOverflow.ellipsis,
                   ),
                 ),
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                   decoration: BoxDecoration(
-                    color: primaryDeepGreen.withValues(alpha: 0.1),
+                    color: statusColor.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: primaryDeepGreen.withValues(alpha: 0.4)),
+                    border: Border.all(color: statusColor.withValues(alpha: 0.4)),
                   ),
                   child: Text(
-                    service.category.isEmpty ? 'Other' : service.category,
+                    statusText,
                     style: TextStyle(
-                      color: primaryDeepGreen,
-                      fontSize: 12,
+                      color: statusColor,
+                      fontSize: 11,
                       fontWeight: FontWeight.w600,
                     ),
                   ),
                 ),
               ],
             ),
-            if (service.description.isNotEmpty)
-              Padding(
-                padding: const EdgeInsets.only(top: 4),
-                child: Text(
-                  service.description,
-                  style: TextStyle(fontSize: 13, color: Colors.grey[700]),
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ),
             const SizedBox(height: 4),
-            Text(
-              'Client: ${service.clientName ?? 'N/A'}',
-              style: const TextStyle(fontSize: 13),
-            ),
-            Text(
-              'Provided By: ${service.providedByName ?? 'N/A'}',
-              style: const TextStyle(fontSize: 13),
-            ),
-            if (service.serviceDate != null)
-              Text(
-                'Date: ${DateFormat.yMMMd().format(service.serviceDate!)}',
-                style: const TextStyle(fontSize: 13),
-              ),
-            const SizedBox(height: 2),
-            Text(
-              'Total: Tsh ${_numberFormat.format(service.totalAmount)} | Paid: Tsh ${_numberFormat.format(service.totalPaid)}',
-              style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w500),
-            ),
-            const SizedBox(height: 8),
             Row(
-              mainAxisAlignment: MainAxisAlignment.end,
               children: [
-                if (Provider.of<UserRoleProvider>(context).isAdmin)
-                TextButton.icon(
-                  onPressed: () => _confirmDelete(service),
-                  icon: Icon(Icons.delete, size: 16, color: Colors.red[400]),
-                  label: Text('Delete', style: TextStyle(color: Colors.red[400])),
-                ),
-                const SizedBox(width: 8),
-                // Edit was previously missing entirely - tapping a service
-                // only expanded its details, with no way to change it.
-                ElevatedButton.icon(
-                  onPressed: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (_) => AddEditServiceScreen(service: service),
-                      ),
-                    );
-                  },
-                  icon: const Icon(Icons.edit, size: 16),
-                  label: const Text('Edit'),
-                  style: ButtonStyle(
-                    backgroundColor: WidgetStateProperty.resolveWith<Color>((states) {
-                      if (states.contains(WidgetState.hovered)) return warmAmber;
-                      return primaryDeepGreen;
-                    }),
-                    foregroundColor: WidgetStateProperty.all(offWhite),
+                Text(
+                  "Paid: Tsh ${_numberFormat.format(service.totalPaid)} / Tsh ${_numberFormat.format(service.totalAmount)}",
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 13,
+                    color: primaryDeepGreen,
                   ),
                 ),
+                if (service.paymentMethod != null) ...[
+                  const SizedBox(width: 8),
+                  Icon(iconForPaymentMethod(service.paymentMethod!), size: 13, color: Colors.grey[600]),
+                  const SizedBox(width: 3),
+                  Text(
+                    service.paymentMethod!,
+                    style: TextStyle(fontSize: 12, color: Colors.grey[600], fontWeight: FontWeight.w500),
+                  ),
+                ],
               ],
             ),
           ],
         ),
+        subtitle: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const SizedBox(height: 4),
+            Text(
+              "Updated: $updatedDate",
+              style: const TextStyle(fontSize: 11, color: Colors.grey),
+            ),
+          ],
+        ),
+        childrenPadding: const EdgeInsets.all(16),
+        children: [
+          _buildDetailRow("Category:", service.category.isEmpty ? 'Other' : service.category),
+          _buildDetailRow("Client:", service.clientName ?? 'N/A'),
+          _buildDetailRow("Provided By:", service.providedByName ?? 'N/A'),
+          if (service.serviceDate != null)
+            _buildDetailRow("Service Date:", DateFormat.yMMMd().format(service.serviceDate!)),
+          if (service.description.isNotEmpty)
+            _buildDetailRow("Notes:", service.description),
+          if (service.itemsUsed.isNotEmpty) ...[
+            const Divider(height: 16),
+            const Text(
+              "Items Used:",
+              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+            ),
+            const SizedBox(height: 8),
+            ...service.itemsUsed.map((item) {
+              final name = (item['itemName'] ?? '').toString();
+              final price = (item['price'] is num) ? (item['price'] as num).toDouble() : 0.0;
+              return Padding(
+                padding: const EdgeInsets.symmetric(vertical: 2),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Expanded(
+                      child: Text(name, style: const TextStyle(fontSize: 12)),
+                    ),
+                    Text(
+                      _numberFormat.format(price),
+                      style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w500),
+                    ),
+                  ],
+                ),
+              );
+            }),
+          ],
+          const Divider(height: 16),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              const Text(
+                "Total:",
+                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+              ),
+              Text(
+                'Tsh ${_numberFormat.format(service.totalAmount)}',
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 14,
+                  color: primaryDeepGreen,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Wrap(
+            alignment: WrapAlignment.end,
+            crossAxisAlignment: WrapCrossAlignment.center,
+            spacing: 4,
+            runSpacing: 4,
+            children: [
+              TextButton.icon(
+                icon: Icon(Icons.print, size: 18, color: primaryDeepGreen),
+                label: Text('Print', style: TextStyle(color: primaryDeepGreen)),
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (_) => ServiceReceiptPreviewScreen(service: service)),
+                  );
+                },
+              ),
+              TextButton.icon(
+                onPressed: () {
+                  showAddEditServiceScreen(context, service: service);
+                },
+                icon: Icon(Icons.edit, size: 18, color: primaryDeepGreen),
+                label: Text('Edit', style: TextStyle(color: primaryDeepGreen)),
+              ),
+              if (Provider.of<UserRoleProvider>(context).isAdmin)
+                TextButton.icon(
+                  icon: Icon(Icons.delete, size: 18, color: Colors.red[400]),
+                  label: Text('Delete', style: TextStyle(color: Colors.red[400])),
+                  onPressed: () => _confirmDelete(service),
+                ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildDetailRow(String label, String value) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 2),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(label,
+              style: const TextStyle(fontWeight: FontWeight.w500, fontSize: 12)),
+          const SizedBox(width: 6),
+          Expanded(
+            child: Text(
+              value,
+              style: const TextStyle(fontSize: 12),
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
+        ],
       ),
     );
   }

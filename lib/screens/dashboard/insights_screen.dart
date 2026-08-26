@@ -10,7 +10,8 @@ import '../../providers/facility_provider.dart';
 /// products by revenue over the last 30 days. Deliberately kept to two
 /// clear, genuinely useful charts rather than a dozen shallow ones.
 class InsightsScreen extends StatefulWidget {
-  const InsightsScreen({super.key});
+  final bool isModal;
+  const InsightsScreen({super.key, this.isModal = false});
 
   @override
   State<InsightsScreen> createState() => _InsightsScreenState();
@@ -107,6 +108,14 @@ class _InsightsScreenState extends State<InsightsScreen> {
         centerTitle: true,
         backgroundColor: primaryColor,
         foregroundColor: Colors.white,
+        automaticallyImplyLeading: !widget.isModal,
+        leading: widget.isModal
+            ? IconButton(
+                icon: const Icon(Icons.close),
+                tooltip: 'Close',
+                onPressed: () => Navigator.of(context).pop(),
+              )
+            : null,
       ),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
@@ -118,20 +127,74 @@ class _InsightsScreenState extends State<InsightsScreen> {
                     child: ListView(
                       padding: const EdgeInsets.all(16),
                       children: [
-                        const Text('Sales - Last 14 Days',
-                            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
-                        const SizedBox(height: 12),
-                        SizedBox(height: 220, child: _buildTrendChart()),
-                        const SizedBox(height: 32),
-                        const Text('Top 5 Products - Last 30 Days',
-                            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
-                        const SizedBox(height: 12),
-                        SizedBox(height: 240, child: _buildTopProductsChart()),
+                        _buildChartCard(
+                          title: 'Sales - Last 14 Days',
+                          summary: _trendSummary(),
+                          chartHeight: 220,
+                          chart: _buildTrendChart(),
+                        ),
+                        const SizedBox(height: 20),
+                        _buildChartCard(
+                          title: 'Top 5 Products - Last 30 Days',
+                          summary: _topProductSummary(),
+                          chartHeight: 260,
+                          chart: _buildTopProductsChart(),
+                        ),
                       ],
                     ),
                   ),
                 ),
     );
+  }
+
+  // A white, shadowed, rounded container around each chart - previously
+  // both charts sat directly on the page background with nothing to
+  // visually separate them from it, unlike every other card-based
+  // screen in this app.
+  Widget _buildChartCard({
+    required String title,
+    required String? summary,
+    required double chartHeight,
+    required Widget chart,
+  }) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.06),
+            blurRadius: 12,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(title, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+          if (summary != null) ...[
+            const SizedBox(height: 4),
+            Text(summary, style: TextStyle(fontSize: 13, color: primaryColor, fontWeight: FontWeight.w600)),
+          ],
+          const SizedBox(height: 16),
+          SizedBox(height: chartHeight, child: chart),
+        ],
+      ),
+    );
+  }
+
+  String? _trendSummary() {
+    if (_dailyTotals.every((v) => v == 0)) return null;
+    final total = _dailyTotals.reduce((a, b) => a + b);
+    return 'Total: Tsh ${_moneyFormat.format(total)} over 14 days';
+  }
+
+  String? _topProductSummary() {
+    if (_topProducts.isEmpty) return null;
+    final top = _topProducts.first;
+    return 'Top seller: ${top.key} · Tsh ${_moneyFormat.format(top.value)}';
   }
 
   Widget _buildTrendChart() {
@@ -143,6 +206,22 @@ class _InsightsScreenState extends State<InsightsScreen> {
       LineChartData(
         gridData: const FlGridData(show: true, drawVerticalLine: false),
         borderData: FlBorderData(show: true, border: Border.all(color: Colors.grey.shade300)),
+        // Hover/tap a point to see its exact date and amount - was
+        // entirely absent before, a genuinely expected desktop touch
+        // for a chart like this.
+        lineTouchData: LineTouchData(
+          touchTooltipData: LineTouchTooltipData(
+            getTooltipItems: (touchedSpots) {
+              return touchedSpots.map((spot) {
+                final day = _trendStart.add(Duration(days: spot.x.toInt()));
+                return LineTooltipItem(
+                  '${DateFormat('d MMM').format(day)}\nTsh ${_moneyFormat.format(spot.y)}',
+                  const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 12),
+                );
+              }).toList();
+            },
+          ),
+        ),
         titlesData: FlTitlesData(
           topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
           rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
@@ -192,11 +271,46 @@ class _InsightsScreenState extends State<InsightsScreen> {
     return BarChart(
       BarChartData(
         alignment: BarChartAlignment.spaceAround,
-        maxY: maxValue * 1.2,
+        // Extra headroom above the tallest bar so its value label
+        // (added via topTitles below) has room to actually show,
+        // rather than getting clipped at the chart's own top edge.
+        maxY: maxValue * 1.35,
         gridData: const FlGridData(show: true, drawVerticalLine: false),
         borderData: FlBorderData(show: false),
+        // Hover/tap a bar to see the exact product name and revenue.
+        barTouchData: BarTouchData(
+          touchTooltipData: BarTouchTooltipData(
+            getTooltipItem: (group, groupIndex, rod, rodIndex) {
+              final name = _topProducts[group.x.toInt()].key;
+              return BarTooltipItem(
+                '$name\nTsh ${_moneyFormat.format(rod.toY)}',
+                const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 12),
+              );
+            },
+          ),
+        ),
         titlesData: FlTitlesData(
-          topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+          // The actual Tsh figure shown above each bar directly,
+          // rather than only implied by bar height or only visible on
+          // hover - readable at a glance without needing to interact
+          // with the chart at all.
+          topTitles: AxisTitles(
+            sideTitles: SideTitles(
+              showTitles: true,
+              reservedSize: 24,
+              getTitlesWidget: (value, meta) {
+                final idx = value.toInt();
+                if (idx < 0 || idx >= _topProducts.length) return const SizedBox.shrink();
+                return Padding(
+                  padding: const EdgeInsets.only(bottom: 4),
+                  child: Text(
+                    _moneyFormat.format(_topProducts[idx].value),
+                    style: TextStyle(fontSize: 9, fontWeight: FontWeight.w600, color: primaryColor),
+                  ),
+                );
+              },
+            ),
+          ),
           rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
           leftTitles: AxisTitles(
             sideTitles: SideTitles(
@@ -237,4 +351,59 @@ class _InsightsScreenState extends State<InsightsScreen> {
       ),
     );
   }
+}
+
+/// The one entry point for opening Insights - same reasoning and
+/// threshold as showActivityLog/showSubscriptionScreen: a full-screen
+/// push on mobile, a large, centered, dismissable modal on
+/// desktop/tablet-width screens. Insights is genuinely lighter content
+/// than either of those (two charts, no forms, no filters) - "look at
+/// it, then leave" describes it even better than it describes Activity
+/// Log, so it belongs in the same modal category rather than staying a
+/// full-screen navigation.
+Future<void> showInsightsScreen(BuildContext context) async {
+  final isWideScreen = MediaQuery.of(context).size.width >= 900;
+
+  if (!isWideScreen) {
+    await Navigator.of(context).push(
+      MaterialPageRoute(builder: (_) => const InsightsScreen()),
+    );
+    return;
+  }
+
+  await showGeneralDialog(
+    context: context,
+    barrierDismissible: true,
+    barrierLabel: 'Insights',
+    barrierColor: Colors.black54,
+    transitionDuration: const Duration(milliseconds: 220),
+    pageBuilder: (context, animation, secondaryAnimation) {
+      final screenSize = MediaQuery.of(context).size;
+      return Center(
+        child: SizedBox(
+          width: screenSize.width * 0.8,
+          height: screenSize.height * 0.85,
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(16),
+            child: const Material(
+              child: InsightsScreen(isModal: true),
+            ),
+          ),
+        ),
+      );
+    },
+    transitionBuilder: (context, animation, secondaryAnimation, child) {
+      final curved = CurvedAnimation(parent: animation, curve: Curves.easeOutCubic);
+      return FadeTransition(
+        opacity: curved,
+        child: SlideTransition(
+          position: Tween<Offset>(begin: const Offset(0, 0.03), end: Offset.zero).animate(curved),
+          child: ScaleTransition(
+            scale: Tween<double>(begin: 0.96, end: 1.0).animate(curved),
+            child: child,
+          ),
+        ),
+      );
+    },
+  );
 }
