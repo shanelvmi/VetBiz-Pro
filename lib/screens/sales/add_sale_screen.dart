@@ -9,6 +9,7 @@ import '../../models/product.dart';
 import '../../models/sale.dart';
 import '../../models/debt.dart';
 import '../../widgets/payment_method_selector.dart';
+import '../../utils/thousands_input_formatter.dart';
 
 import '../../providers/client_provider.dart';
 import '../../providers/product_provider.dart';
@@ -20,25 +21,6 @@ import '../../services/auth_service.dart';
 import '../clients/add_client_screen.dart';
 
 // --- Custom Formatter ---
-class ThousandsSeparatorInputFormatter extends TextInputFormatter {
-  final NumberFormat _formatter = NumberFormat('#,##0.##');
-
-  @override
-  TextEditingValue formatEditUpdate(
-      TextEditingValue oldValue, TextEditingValue newValue) {
-    if (newValue.text.isEmpty) return newValue.copyWith(text: '');
-    String cleaned = newValue.text.replaceAll(',', '');
-    double? value = double.tryParse(cleaned);
-    if (value == null) return oldValue;
-    String newText = _formatter.format(value);
-    int offset = newText.length - (cleaned.length - newValue.selection.end);
-    return TextEditingValue(
-      text: newText,
-      selection: TextSelection.collapsed(offset: offset.clamp(0, newText.length)),
-    );
-  }
-}
-
 // --- Add Sale Screen ---
 class AddSaleScreen extends StatefulWidget {
   final bool isModal;
@@ -241,35 +223,33 @@ class _AddSaleScreenState extends State<AddSaleScreen> {
                     // Unit Price
                     TextFormField(
                       controller: unitPriceController,
-                      keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                      keyboardType: TextInputType.number,
+                      inputFormatters: [FilteringTextInputFormatter.digitsOnly, ThousandsSeparatorInputFormatter()],
                       decoration: fieldDecoration('Unit Price'),
                       onChanged: (val) {
-                        String cleaned = val.replaceAll(',', '');
-                        final p = double.tryParse(cleaned);
-                        if (p != null && p >= 0) {
-                          dialogSetState(() {
-                            unitPrice = p;
-                            updateProfit();
-                            formatController(unitPriceController, unitPrice);
-                          });
-                        }
+                        final p = parseThousands(val);
+                        dialogSetState(() {
+                          unitPrice = p;
+                          updateProfit();
+                        });
                       },
                     ),
                     const SizedBox(height: 12),
                     // Discount per item
                     TextFormField(
                       controller: discountController,
-                      keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                      keyboardType: TextInputType.number,
+                      inputFormatters: [FilteringTextInputFormatter.digitsOnly, ThousandsSeparatorInputFormatter()],
                       decoration: fieldDecoration('Discount'),
                       onChanged: (val) {
-                        String cleaned = val.replaceAll(',', '');
-                        final d = double.tryParse(cleaned);
-                        if (d != null && d >= 0) {
-                          dialogSetState(() {
-                            discount = d > unitPrice ? unitPrice : d;
-                            updateProfit();
-                            formatController(discountController, discount);
-                          });
+                        final d = parseThousands(val);
+                        final clamped = d > unitPrice ? unitPrice : d;
+                        dialogSetState(() {
+                          discount = clamped;
+                          updateProfit();
+                        });
+                        if (clamped != d) {
+                          formatController(discountController, clamped);
                         }
                       },
                     ),
@@ -540,7 +520,7 @@ class _AddSaleScreenState extends State<AddSaleScreen> {
       appBar: AppBar(
         backgroundColor: primaryDeepGreen,
         centerTitle: true,
-        title: const Text('Add Sale', style: TextStyle(color: Colors.white)),
+        title: const Text('Record Sale', style: TextStyle(color: Colors.white)),
         iconTheme: const IconThemeData(color: Colors.white),
         automaticallyImplyLeading: !widget.isModal,
         leading: widget.isModal
@@ -722,7 +702,8 @@ class _AddSaleScreenState extends State<AddSaleScreen> {
             const SizedBox(height: 16),
             TextFormField(
               controller: totalPaidController,
-              keyboardType: const TextInputType.numberWithOptions(decimal: true),
+              keyboardType: TextInputType.number,
+              inputFormatters: [FilteringTextInputFormatter.digitsOnly, ThousandsSeparatorInputFormatter()],
               decoration: InputDecoration(
                 labelText: 'Total Paid',
                 filled: true,
@@ -730,8 +711,7 @@ class _AddSaleScreenState extends State<AddSaleScreen> {
                 border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
               ),
               onChanged: (val) {
-                final cleaned = val.replaceAll(',', '');
-                final paid = double.tryParse(cleaned) ?? 0.0;
+                final paid = parseThousands(val);
                 setState(() {
                   totalPaid = paid;
                 });
@@ -891,7 +871,7 @@ Future<void> showAddSaleScreen(BuildContext context) async {
   await showGeneralDialog(
     context: context,
     barrierDismissible: true,
-    barrierLabel: 'Add Sale',
+    barrierLabel: 'Record Sale',
     barrierColor: Colors.black54,
     transitionDuration: const Duration(milliseconds: 220),
     pageBuilder: (context, animation, secondaryAnimation) {

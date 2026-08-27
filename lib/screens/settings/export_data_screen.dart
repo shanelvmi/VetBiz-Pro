@@ -1,12 +1,41 @@
 import 'dart:convert';
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:provider/provider.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:intl/intl.dart';
+import 'package:excel/excel.dart' as xl;
 
 import '../../providers/facility_provider.dart';
+import '../../utils/web_download.dart';
+
+/// One logical table of data - a title (shown as its own line in CSV,
+/// its own sheet/tab name in xlsx), a header row, and the data rows
+/// themselves. Both output formats are rendered from this same shared
+/// shape, so the actual data-fetching logic below (already carefully
+/// verified against each collection's real field names) exists in
+/// exactly one place, not duplicated once per format.
+class _ExportSection {
+  // Short and fixed - Excel sheet names are capped at 31 characters and
+  // forbid a handful of symbols, so this can never be a dynamically
+  // built string (e.g. one containing a record count that could grow
+  // past that limit).
+  final String sheetName;
+  // The descriptive line shown above the header row in both formats -
+  // this is where a record count like "(12 active, 3 archived)" goes,
+  // free of Excel's sheet-naming restrictions.
+  final String subtitle;
+  final List<String> headers;
+  final List<List<dynamic>> rows; // String, num, DateTime, or null
+  const _ExportSection({
+    required this.sheetName,
+    required this.subtitle,
+    required this.headers,
+    required this.rows,
+  });
+}
 
 class ExportDataScreen extends StatefulWidget {
   const ExportDataScreen({super.key});
@@ -17,13 +46,14 @@ class ExportDataScreen extends StatefulWidget {
 
 class _ExportDataScreenState extends State<ExportDataScreen> {
   final Color primaryColor = const Color(0xFF2F5D62);
+  final Color warmAmber = const Color(0xFFFFB200);
   final Color backgroundColor = const Color(0xFFFDFDF9);
 
   static const List<Map<String, String>> _dataTypes = [
     {'title': 'Sales & Transactions', 'subtitle': 'Sales (incl. archived) and transaction history'},
     {'title': 'Services', 'subtitle': 'Services performed (incl. archived), by client and category'},
     {'title': 'Product Inventory Catalog', 'subtitle': 'Current stock levels, costs, and SKU list'},
-    {'title': 'Client Ledger & Directory', 'subtitle': 'Client contacts and outstanding balances'},
+    {'title': 'Client Directory & Balances', 'subtitle': 'Client contacts and current outstanding balances'},
     {'title': 'Debtors / Outstanding Balances', 'subtitle': 'Itemized list of everything currently owed'},
     {'title': 'Payments Ledger', 'subtitle': 'Every payment collected - sales, services, debts, other income'},
     {'title': 'Activity Log', 'subtitle': 'Who did what, and when'},
@@ -37,11 +67,22 @@ class _ExportDataScreenState extends State<ExportDataScreen> {
   };
 
   String _selectedDataType = 'Sales & Transactions';
+  // Starts empty rather than defaulting to a silently-picked range -
+  // Generate stays disabled until the user explicitly chooses
+  // something, even if that choice is All Time. See _hasChosenDateRange
+  // below and the Generate button's onPressed logic.
   DateTimeRange? _selectedDateRange;
+  bool _hasChosenDateRange = false;
+
+  // xlsx is the default - real business software (QuickBooks, Xero,
+  // Stripe) defaults exports to a real spreadsheet format; CSV remains
+  // available for anyone who specifically wants plain, universal text.
+  String _selectedFormat = 'xlsx';
 
   bool _isExporting = false;
 
   String _csvField(dynamic value) {
+    if (value is DateTime) return DateFormat('yyyy-MM-dd HH:mm').format(value);
     final text = (value ?? '').toString();
     if (text.contains(',') || text.contains('"') || text.contains('\n')) {
       return '"${text.replaceAll('"', '""')}"';
@@ -54,8 +95,97 @@ class _ExportDataScreenState extends State<ExportDataScreen> {
   DateTime? _asDate(dynamic value) =>
       value is Timestamp ? value.toDate() : null;
 
+  /// Plain text - each section's title as its own line, then a header
+  /// row, then data rows, with a blank line between sections. CSV has
+  /// no notion of more than one table, so this is the closest it gets
+  /// to the multi-sheet structure xlsx supports natively.
+  String _renderCsv(List<_ExportSection> sections, String? dateRangeLabel) {
+    final buffer = StringBuffer();
+    if (dateRangeLabel != null) {
+      buffer.writeln('Export Period: $dateRangeLabel');
+      buffer.writeln();
+    }
+    for (var i = 0; i < sections.length; i++) {
+      final section = sections[i];
+      buffer.writeln(section.subtitle);
+      buffer.writeln(_csvRow(section.headers));
+      for (final row in section.rows) {
+        buffer.writeln(_csvRow(row));
+      }
+      if (i < sections.length - 1) buffer.writeln();
+    }
+    return buffer.toString();
+  }
+
+  xl.CellValue _toCellValue(dynamic value) {
+    if (value == null) return xl.TextCellValue('');
+    if (value is DateTime) {
+      return xl.DateTimeCellValue(
+          year: value.year, month: value.month, day: value.day, hour: value.hour, minute: value.minute);
+    }
+    if (value is int) return xl.IntCellValue(value);
+    if (value is double) return xl.DoubleCellValue(value);
+    if (value is num) return xl.DoubleCellValue(value.toDouble());
+    return xl.TextCellValue(value.toString());
+  }
+
+  /// A real workbook - one sheet per section (so "Sales" and
+  /// "Transactions" become two clean tabs instead of one file awkwardly
+  /// stacking two tables with blank lines), bolded header row, and a
+  /// merged title row up top stating the selected date range - all
+  /// things CSV has no way to represent at all.
+  Uint8List _renderXlsx(List<_ExportSection> sections, String? dateRangeLabel) {
+    final workbook = xl.Excel.createExcel();
+    final defaultSheetName = workbook.getDefaultSheet();
+
+    final headerStyle = xl.CellStyle(bold: true);
+
+    for (final section in sections) {
+      // The very first section reuses the workbook's own default sheet
+      // (renamed to match) rather than leaving an unwanted empty
+      // "Sheet1" tab alongside it.
+      if (section == sections.first && defaultSheetName != null) {
+        workbook.rename(defaultSheetName, section.sheetName);
+      }
+      final sheet = workbook[section.sheetName];
+
+      var rowIndex = 0;
+      if (dateRangeLabel != null) {
+        sheet.cell(xl.CellIndex.indexByColumnRow(columnIndex: 0, rowIndex: rowIndex)).value =
+            xl.TextCellValue('Export Period: $dateRangeLabel');
+        rowIndex++;
+        rowIndex++; // blank spacer row
+      }
+
+      sheet.cell(xl.CellIndex.indexByColumnRow(columnIndex: 0, rowIndex: rowIndex)).value =
+          xl.TextCellValue(section.subtitle);
+      rowIndex++;
+
+      for (var c = 0; c < section.headers.length; c++) {
+        final cell = sheet.cell(xl.CellIndex.indexByColumnRow(columnIndex: c, rowIndex: rowIndex));
+        cell.value = xl.TextCellValue(section.headers[c]);
+        cell.cellStyle = headerStyle;
+      }
+      rowIndex++;
+
+      for (final row in section.rows) {
+        for (var c = 0; c < row.length; c++) {
+          sheet.cell(xl.CellIndex.indexByColumnRow(columnIndex: c, rowIndex: rowIndex)).value =
+              _toCellValue(row[c]);
+        }
+        rowIndex++;
+      }
+    }
+
+    final bytes = workbook.encode();
+    if (bytes == null) throw Exception('Could not generate the spreadsheet.');
+    return Uint8List.fromList(bytes);
+  }
+
   Future<void> _triggerExportPipeline() async {
     setState(() => _isExporting = true);
+    Uint8List? bytes;
+    String? fileName;
 
     try {
       final facilityId =
@@ -65,39 +195,73 @@ class _ExportDataScreenState extends State<ExportDataScreen> {
         throw Exception('No facility selected.');
       }
 
-      final String csv;
+      final List<_ExportSection> sections;
       switch (_selectedDataType) {
         case 'Services':
-          csv = await _buildServicesCsv(facilityId);
+          sections = await _buildServicesData(facilityId);
           break;
         case 'Product Inventory Catalog':
-          csv = await _buildProductsCsv(facilityId);
+          sections = await _buildProductsData(facilityId);
           break;
-        case 'Client Ledger & Directory':
-          csv = await _buildClientsCsv(facilityId);
+        case 'Client Directory & Balances':
+          sections = await _buildClientsData(facilityId);
           break;
         case 'Debtors / Outstanding Balances':
-          csv = await _buildDebtorsCsv(facilityId);
+          sections = await _buildDebtorsData(facilityId);
           break;
         case 'Payments Ledger':
-          csv = await _buildPaymentsCsv(facilityId);
+          sections = await _buildPaymentsData(facilityId);
           break;
         case 'Activity Log':
-          csv = await _buildActivityLogCsv(facilityId);
+          sections = await _buildActivityLogData(facilityId);
           break;
         default:
-          csv = await _buildSalesAndTransactionsCsv(facilityId);
+          sections = await _buildSalesAndTransactionsData(facilityId);
       }
 
-      final fileName =
-          '${_selectedDataType.replaceAll(RegExp(r'[^A-Za-z0-9]+'), '_')}_${DateFormat('yyyyMMdd_HHmm').format(DateTime.now())}.csv';
+      final isSnapshot = _snapshotTypes.contains(_selectedDataType);
+      final dateRangeLabel = isSnapshot
+          ? null
+          : _selectedDateRange == null
+              ? 'All Records'
+              : '${DateFormat('yyyy-MM-dd').format(_selectedDateRange!.start)} to '
+                  '${DateFormat('yyyy-MM-dd').format(_selectedDateRange!.end)}';
 
-      // Share directly from in-memory bytes - never touches a
-      // filesystem, so this works identically on web and mobile.
-      final bytes = Uint8List.fromList(utf8.encode(csv));
-      final xfile = XFile.fromData(bytes, name: fileName, mimeType: 'text/csv');
+      final baseName = _selectedDataType.replaceAll(RegExp(r'[^A-Za-z0-9]+'), '_');
+      final timestamp = DateFormat('yyyyMMdd_HHmm').format(DateTime.now());
+
+      if (_selectedFormat == 'xlsx') {
+        bytes = _renderXlsx(sections, dateRangeLabel);
+        fileName = '${baseName}_$timestamp.xlsx';
+      } else {
+        bytes = Uint8List.fromList(utf8.encode(_renderCsv(sections, dateRangeLabel)));
+        fileName = '${baseName}_$timestamp.csv';
+      }
 
       if (!mounted) return;
+
+      final mimeType = _selectedFormat == 'xlsx'
+          ? 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+          : 'text/csv';
+
+      // The Web Share API is a mobile pattern - genuinely useful there,
+      // but well known to be unreliable for files on desktop browsers
+      // even though the API exists. Deciding this upfront, rather than
+      // trying it first and falling back on failure, avoids making the
+      // user wait out a doomed attempt before the fast download path
+      // ever runs.
+      final isDesktopWeb = kIsWeb && MediaQuery.of(context).size.width >= 900;
+
+      if (isDesktopWeb) {
+        downloadFileWeb(bytes, fileName, mimeType: mimeType);
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Exported $_selectedDataType'), backgroundColor: Colors.green),
+        );
+        return;
+      }
+
+      final xfile = XFile.fromData(bytes, name: fileName, mimeType: mimeType);
 
       await Share.shareXFiles([xfile], text: 'VetBiz Pro export: $_selectedDataType');
 
@@ -107,6 +271,17 @@ class _ExportDataScreenState extends State<ExportDataScreen> {
       );
     } catch (e) {
       if (!mounted) return;
+      // Confirmed on the receipt screens: desktop browsers' well-known
+      // unreliable support for file-sharing through the Web Share API
+      // - not worth showing as a scary error when there's a reliable
+      // fallback that still gets the file onto the user's device.
+      if (kIsWeb && bytes != null && fileName != null) {
+        final mimeType = _selectedFormat == 'xlsx'
+            ? 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+            : 'text/csv';
+        downloadFileWeb(bytes, fileName, mimeType: mimeType);
+        return;
+      }
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Export failed: $e'), backgroundColor: Colors.redAccent),
       );
@@ -147,10 +322,8 @@ class _ExportDataScreenState extends State<ExportDataScreen> {
   }
 
   /// Sales (live + archived, merged and sorted) followed by a Transactions
-  /// section.
-  Future<String> _buildSalesAndTransactionsCsv(String facilityId) async {
-    final buffer = StringBuffer();
-
+  /// section - two separate sheets/tabs in xlsx, two stacked tables in CSV.
+  Future<List<_ExportSection>> _buildSalesAndTransactionsData(String facilityId) async {
     final liveSales =
         await _fetchWithRange(facilityId: facilityId, collection: 'sales', dateField: 'timestamp');
     final archivedSales = await _fetchWithRange(
@@ -163,28 +336,19 @@ class _ExportDataScreenState extends State<ExportDataScreen> {
       return db.compareTo(da);
     });
 
-    buffer.writeln('SALES (${liveSales.length} active, ${archivedSales.length} archived)');
-    buffer.writeln(_csvRow(['Date', 'Client', 'Total Amount', 'Total Paid', 'Status', 'Profit']));
-
-    for (final data in allSales) {
+    final saleRows = allSales.map((data) {
       final totalAmount = (data['totalAmount'] as num?)?.toDouble() ?? 0.0;
       final totalPaid = (data['totalPaid'] as num?)?.toDouble() ?? 0.0;
-      final timestamp = _asDate(data['timestamp']);
       final status = totalPaid >= totalAmount ? 'Paid' : (totalPaid > 0 ? 'Partial' : 'Unpaid');
-
-      buffer.writeln(_csvRow([
-        timestamp != null ? DateFormat('yyyy-MM-dd HH:mm').format(timestamp) : '',
+      return [
+        _asDate(data['timestamp']),
         data['clientName'] ?? 'Walk-in',
         totalAmount,
         totalPaid,
         status,
         data['totalProfit'] ?? 0,
-      ]));
-    }
-
-    buffer.writeln();
-    buffer.writeln('TRANSACTIONS');
-    buffer.writeln(_csvRow(['Date', 'Type', 'Category', 'Description', 'Amount', 'Recorded By']));
+      ];
+    }).toList();
 
     final transactions =
         await _fetchWithRange(facilityId: facilityId, collection: 'transactions', dateField: 'date');
@@ -194,25 +358,35 @@ class _ExportDataScreenState extends State<ExportDataScreen> {
       return db.compareTo(da);
     });
 
-    for (final data in transactions) {
-      final date = _asDate(data['date']);
-      buffer.writeln(_csvRow([
-        date != null ? DateFormat('yyyy-MM-dd HH:mm').format(date) : '',
+    final transactionRows = transactions.map((data) {
+      return [
+        _asDate(data['date']),
         data['type'] ?? '',
         data['category'] ?? '',
         data['description'] ?? '',
         data['amount'] ?? 0,
         data['recordedBy'] ?? '',
-      ]));
-    }
+      ];
+    }).toList();
 
-    return buffer.toString();
+    return [
+      _ExportSection(
+        sheetName: 'Sales',
+        subtitle: 'Sales (${liveSales.length} active, ${archivedSales.length} archived)',
+        headers: ['Date', 'Client', 'Total Amount', 'Total Paid', 'Status', 'Profit'],
+        rows: saleRows,
+      ),
+      _ExportSection(
+        sheetName: 'Transactions',
+        subtitle: 'Transactions',
+        headers: ['Date', 'Type', 'Category', 'Description', 'Amount', 'Recorded By'],
+        rows: transactionRows,
+      ),
+    ];
   }
 
   /// Services (live + archived, merged and sorted by serviceDate).
-  Future<String> _buildServicesCsv(String facilityId) async {
-    final buffer = StringBuffer();
-
+  Future<List<_ExportSection>> _buildServicesData(String facilityId) async {
     final liveServices = await _fetchWithRange(
         facilityId: facilityId, collection: 'services', dateField: 'serviceDate');
     final archivedServices = await _fetchWithRange(
@@ -225,21 +399,12 @@ class _ExportDataScreenState extends State<ExportDataScreen> {
       return db.compareTo(da);
     });
 
-    buffer.writeln(
-        'SERVICES (${liveServices.length} active, ${archivedServices.length} archived)');
-    buffer.writeln(_csvRow([
-      'Date', 'Client', 'Service', 'Category', 'Provided By',
-      'Total Amount', 'Total Paid', 'Status',
-    ]));
-
-    for (final data in allServices) {
+    final rows = allServices.map((data) {
       final totalAmount = (data['totalAmount'] as num?)?.toDouble() ?? 0.0;
       final totalPaid = (data['totalPaid'] as num?)?.toDouble() ?? 0.0;
-      final date = _asDate(data['serviceDate']);
       final status = totalPaid >= totalAmount ? 'Paid' : (totalPaid > 0 ? 'Partial' : 'Unpaid');
-
-      buffer.writeln(_csvRow([
-        date != null ? DateFormat('yyyy-MM-dd').format(date) : '',
+      return [
+        _asDate(data['serviceDate']),
         data['clientName'] ?? 'N/A',
         data['name'] ?? '',
         (data['category'] as String?)?.isNotEmpty == true ? data['category'] : 'Other',
@@ -247,10 +412,17 @@ class _ExportDataScreenState extends State<ExportDataScreen> {
         totalAmount,
         totalPaid,
         status,
-      ]));
-    }
+      ];
+    }).toList();
 
-    return buffer.toString();
+    return [
+      _ExportSection(
+        sheetName: 'Services',
+        subtitle: 'Services (${liveServices.length} active, ${archivedServices.length} archived)',
+        headers: ['Date', 'Client', 'Service', 'Category', 'Provided By', 'Total Amount', 'Total Paid', 'Status'],
+        rows: rows,
+      ),
+    ];
   }
 
   /// Inventory is a current snapshot - no date range applies.
@@ -259,8 +431,7 @@ class _ExportDataScreenState extends State<ExportDataScreen> {
   /// blended row. Products with no batch records yet (created before
   /// batch tracking existed) fall back to a single row using their own
   /// aggregate fields, same as before this existed.
-  Future<String> _buildProductsCsv(String facilityId) async {
-    final buffer = StringBuffer();
+  Future<List<_ExportSection>> _buildProductsData(String facilityId) async {
     final snapshot = await FirebaseFirestore.instance
         .collection('facilities')
         .doc(facilityId)
@@ -268,10 +439,7 @@ class _ExportDataScreenState extends State<ExportDataScreen> {
         .orderBy('name')
         .get();
 
-    buffer.writeln(_csvRow([
-      'Name', 'Category', 'Type', 'Batch No', 'Stock Qty', 'Sellable Qty',
-      'Buy Price', 'Sell Price', 'Expiry',
-    ]));
+    final rows = <List<dynamic>>[];
 
     for (final doc in snapshot.docs) {
       final data = doc.data();
@@ -283,39 +451,43 @@ class _ExportDataScreenState extends State<ExportDataScreen> {
       final batchesSnap = await doc.reference.collection('batches').get();
 
       if (batchesSnap.docs.isEmpty) {
-        final expiry = _asDate(data['expiry']);
-        buffer.writeln(_csvRow([
+        rows.add([
           name, category, type,
           data['batchNo'] ?? '',
           data['stockQty'] ?? 0,
           data['sellableQty'] ?? 0,
           data['buyPrice'] ?? 0,
           sellPrice,
-          expiry != null ? DateFormat('yyyy-MM-dd').format(expiry) : '',
-        ]));
+          _asDate(data['expiry']),
+        ]);
         continue;
       }
 
       for (final batchDoc in batchesSnap.docs) {
         final batchData = batchDoc.data();
-        final expiry = _asDate(batchData['expiry']);
-        buffer.writeln(_csvRow([
+        rows.add([
           name, category, type,
           batchData['batchNo'] ?? '',
           batchData['stockQty'] ?? 0,
           batchData['sellableQty'] ?? 0,
           batchData['buyPrice'] ?? 0,
           sellPrice,
-          expiry != null ? DateFormat('yyyy-MM-dd').format(expiry) : '',
-        ]));
+          _asDate(batchData['expiry']),
+        ]);
       }
     }
 
-    return buffer.toString();
+    return [
+      _ExportSection(
+        sheetName: 'Products',
+        subtitle: 'Products (${rows.length} rows, one per batch)',
+        headers: ['Name', 'Category', 'Type', 'Batch No', 'Stock Qty', 'Sellable Qty', 'Buy Price', 'Sell Price', 'Expiry'],
+        rows: rows,
+      ),
+    ];
   }
 
-  Future<String> _buildClientsCsv(String facilityId) async {
-    final buffer = StringBuffer();
+  Future<List<_ExportSection>> _buildClientsData(String facilityId) async {
     final snapshot = await FirebaseFirestore.instance
         .collection('facilities')
         .doc(facilityId)
@@ -323,26 +495,30 @@ class _ExportDataScreenState extends State<ExportDataScreen> {
         .orderBy('name')
         .get();
 
-    buffer.writeln(_csvRow(['Name', 'Type', 'Phone', 'Address', 'Balance']));
-
-    for (final doc in snapshot.docs) {
+    final rows = snapshot.docs.map((doc) {
       final data = doc.data();
-      buffer.writeln(_csvRow([
+      return [
         data['name'] ?? '',
         data['type'] ?? '',
         data['phone'] ?? '',
         data['address'] ?? '',
         data['balance'] ?? 0,
-      ]));
-    }
+      ];
+    }).toList();
 
-    return buffer.toString();
+    return [
+      _ExportSection(
+        sheetName: 'Clients',
+        subtitle: 'Clients (${rows.length})',
+        headers: ['Name', 'Type', 'Phone', 'Address', 'Balance'],
+        rows: rows,
+      ),
+    ];
   }
 
   /// Every currently outstanding debt, itemized - a snapshot of "who owes
   /// what right now", not filtered by date.
-  Future<String> _buildDebtorsCsv(String facilityId) async {
-    final buffer = StringBuffer();
+  Future<List<_ExportSection>> _buildDebtorsData(String facilityId) async {
     final snapshot = await FirebaseFirestore.instance
         .collection('facilities')
         .doc(facilityId)
@@ -350,33 +526,32 @@ class _ExportDataScreenState extends State<ExportDataScreen> {
         .orderBy('timestamp', descending: true)
         .get();
 
-    buffer.writeln(_csvRow(
-        ['Client', 'Phone', 'Source', 'Amount Owed', 'Date Incurred', 'Last Updated']));
-
-    for (final doc in snapshot.docs) {
+    final rows = snapshot.docs.map((doc) {
       final data = doc.data();
-      final incurred = _asDate(data['timestamp']);
-      final updated = _asDate(data['updatedAt']);
-
-      buffer.writeln(_csvRow([
+      return [
         data['clientName'] ?? 'Unknown',
         data['clientPhone'] ?? '',
         data['source'] ?? '',
         data['amountOwed'] ?? 0,
-        incurred != null ? DateFormat('yyyy-MM-dd').format(incurred) : '',
-        updated != null ? DateFormat('yyyy-MM-dd').format(updated) : '',
-      ]));
-    }
+        _asDate(data['timestamp']),
+        _asDate(data['updatedAt']),
+      ];
+    }).toList();
 
-    return buffer.toString();
+    return [
+      _ExportSection(
+        sheetName: 'Debtors',
+        subtitle: 'Debtors (${rows.length} outstanding)',
+        headers: ['Client', 'Phone', 'Source', 'Amount Owed', 'Date Incurred', 'Last Updated'],
+        rows: rows,
+      ),
+    ];
   }
 
   /// Every payment collected - sale payments, service payments, debt
   /// repayments, plus Other Income transactions, merged - same sources as
   /// the in-app Payments screen.
-  Future<String> _buildPaymentsCsv(String facilityId) async {
-    final buffer = StringBuffer();
-
+  Future<List<_ExportSection>> _buildPaymentsData(String facilityId) async {
     final payments = await _fetchWithRange(
         facilityId: facilityId, collection: 'payments', dateField: 'timestamp');
 
@@ -414,22 +589,17 @@ class _ExportDataScreenState extends State<ExportDataScreen> {
       return db.compareTo(da);
     });
 
-    buffer.writeln(_csvRow(['Date', 'Type', 'Client / Description', 'Amount']));
-    for (final row in rows) {
-      final date = row['date'] as DateTime?;
-      buffer.writeln(_csvRow([
-        date != null ? DateFormat('yyyy-MM-dd HH:mm').format(date) : '',
-        row['type'],
-        row['client'],
-        row['amount'],
-      ]));
-    }
-
-    return buffer.toString();
+    return [
+      _ExportSection(
+        sheetName: 'Payments',
+        subtitle: 'Payments (${rows.length})',
+        headers: ['Date', 'Type', 'Client / Description', 'Amount'],
+        rows: rows.map((r) => [r['date'], r['type'], r['client'], r['amount']]).toList(),
+      ),
+    ];
   }
 
-  Future<String> _buildActivityLogCsv(String facilityId) async {
-    final buffer = StringBuffer();
+  Future<List<_ExportSection>> _buildActivityLogData(String facilityId) async {
     final logs = await _fetchWithRange(
         facilityId: facilityId, collection: 'activity_logs', dateField: 'timestamp');
     logs.sort((a, b) {
@@ -438,31 +608,117 @@ class _ExportDataScreenState extends State<ExportDataScreen> {
       return db.compareTo(da);
     });
 
-    buffer.writeln(_csvRow(['Date', 'User', 'Action Type', 'Description']));
-
-    for (final data in logs) {
-      final date = _asDate(data['timestamp']);
-      buffer.writeln(_csvRow([
-        date != null ? DateFormat('yyyy-MM-dd HH:mm').format(date) : '',
+    final rows = logs.map((data) {
+      return [
+        _asDate(data['timestamp']),
         data['userName'] ?? '',
         data['actionType'] ?? '',
         data['description'] ?? '',
-      ]));
-    }
+      ];
+    }).toList();
 
-    return buffer.toString();
+    return [
+      _ExportSection(
+        sheetName: 'Activity Log',
+        subtitle: 'Activity Log (${rows.length} entries)',
+        headers: ['Date', 'User', 'Action Type', 'Description'],
+        rows: rows,
+      ),
+    ];
   }
 
   Future<void> _pickDateRange() async {
-    final DateTimeRange? picked = await showDateRangePicker(
-      context: context,
-      firstDate: DateTime(2020),
-      lastDate: DateTime.now(),
-      currentDate: DateTime.now(),
-    );
-    if (picked != null) {
-      setState(() => _selectedDateRange = picked);
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+
+    Future<void> apply(DateTimeRange? range) async {
+      Navigator.pop(context);
+      setState(() {
+        _selectedDateRange = range;
+        _hasChosenDateRange = true;
+      });
     }
+
+    Future<void> pickCustomRange() async {
+      Navigator.pop(context);
+
+      final DateTime? start = await showDatePicker(
+        context: context,
+        firstDate: DateTime(2020),
+        lastDate: now,
+        initialDate: now,
+        helpText: 'Select Start Date',
+      );
+      if (start == null || !mounted) return;
+
+      final DateTime? end = await showDatePicker(
+        context: context,
+        firstDate: start,
+        lastDate: now,
+        initialDate: now.isBefore(start) ? start : now,
+        helpText: 'Select End Date',
+      );
+      if (end == null || !mounted) return;
+
+      setState(() {
+        _selectedDateRange = DateTimeRange(start: start, end: end);
+        _hasChosenDateRange = true;
+      });
+    }
+
+    await showDialog<void>(
+      context: context,
+      builder: (context) {
+        Widget presetTile(String label, DateTimeRange? Function() rangeBuilder, {IconData? icon}) {
+          return ListTile(
+            leading: icon != null ? Icon(icon, color: primaryColor, size: 20) : null,
+            title: Text(label),
+            hoverColor: warmAmber.withValues(alpha: 0.12),
+            onTap: () => apply(rangeBuilder()),
+          );
+        }
+
+        return AlertDialog(
+          title: const Text('Date Range'),
+          contentPadding: const EdgeInsets.symmetric(vertical: 12),
+          content: SizedBox(
+            width: 320,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                presetTile('Last 7 Days', () => DateTimeRange(
+                    start: today.subtract(const Duration(days: 6)), end: today)),
+                presetTile('Last 30 Days', () => DateTimeRange(
+                    start: today.subtract(const Duration(days: 29)), end: today)),
+                presetTile('This Month', () => DateTimeRange(
+                    start: DateTime(today.year, today.month, 1), end: today)),
+                presetTile('Last Month', () {
+                  final lastMonth = DateTime(today.year, today.month - 1, 1);
+                  final lastDayOfLastMonth = DateTime(today.year, today.month, 0);
+                  return DateTimeRange(start: lastMonth, end: lastDayOfLastMonth);
+                }),
+                presetTile('This Year', () => DateTimeRange(
+                    start: DateTime(today.year, 1, 1), end: today)),
+                presetTile('All Time', () => null),
+                const Divider(height: 16),
+                ListTile(
+                  leading: Icon(Icons.edit_calendar_outlined, color: primaryColor, size: 20),
+                  title: const Text('Custom Range...'),
+                  hoverColor: warmAmber.withValues(alpha: 0.12),
+                  onTap: pickCustomRange,
+                ),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: Text('Cancel', style: TextStyle(color: primaryColor)),
+            ),
+          ],
+        );
+      },
+    );
   }
 
   @override
@@ -472,9 +728,11 @@ class _ExportDataScreenState extends State<ExportDataScreen> {
 
     String dateRangeText = isSnapshot
         ? 'Not applicable - this is a current snapshot'
-        : _selectedDateRange == null
-            ? 'All Records (No Filters Applied)'
-            : '${DateFormat('yyyy-MM-dd').format(_selectedDateRange!.start)}  to  ${DateFormat('yyyy-MM-dd').format(_selectedDateRange!.end)}';
+        : !_hasChosenDateRange
+            ? 'Please select a date range below'
+            : _selectedDateRange == null
+                ? 'All Records (No Filters Applied)'
+                : '${DateFormat('yyyy-MM-dd').format(_selectedDateRange!.start)}  to  ${DateFormat('yyyy-MM-dd').format(_selectedDateRange!.end)}';
 
     return Scaffold(
       backgroundColor: backgroundColor,
@@ -520,7 +778,13 @@ class _ExportDataScreenState extends State<ExportDataScreen> {
                   ? null
                   : TextButton(
                       onPressed: _pickDateRange,
-                      child: Text('Modify', style: TextStyle(color: primaryColor, fontWeight: FontWeight.bold)),
+                      style: ButtonStyle(
+                        foregroundColor: WidgetStateProperty.resolveWith<Color>((states) {
+                          if (states.contains(WidgetState.hovered)) return warmAmber;
+                          return primaryColor;
+                        }),
+                      ),
+                      child: const Text('Modify', style: TextStyle(fontWeight: FontWeight.bold)),
                     ),
             ),
           ),
@@ -531,32 +795,57 @@ class _ExportDataScreenState extends State<ExportDataScreen> {
           Card(
             elevation: cardElevation,
             margin: EdgeInsets.zero,
-            child: ListTile(
-              leading: Icon(Icons.table_chart_outlined, color: primaryColor),
-              title: const Text('CSV (Spreadsheet)', style: TextStyle(fontWeight: FontWeight.w500, fontSize: 15)),
-              subtitle: const Text('Opens in Excel, Google Sheets, or similar'),
-              trailing: Icon(Icons.check_circle, color: primaryColor),
-            ),
-          ),
-          const SizedBox(height: 4),
-          Padding(
-            padding: const EdgeInsets.only(left: 4),
-            child: Text(
-              'PDF export isn\'t built yet - CSV is the only real, working format for now.',
-              style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+            child: Column(
+              children: [
+                _buildFormatTile(
+                  value: 'xlsx',
+                  title: 'Excel Workbook (.xlsx)',
+                  subtitle: 'Bolded headers, multiple sheets, real dates - opens clean, ready to keep',
+                ),
+                Divider(height: 1, color: Colors.grey.shade200, indent: 56),
+                _buildFormatTile(
+                  value: 'csv',
+                  title: 'CSV (Plain Text)',
+                  subtitle: 'Universal, simple text - opens in Excel, Sheets, or any editor',
+                ),
+              ],
             ),
           ),
           const SizedBox(height: 32),
 
+          if (!isSnapshot && !_hasChosenDateRange) ...[
+            Padding(
+              padding: const EdgeInsets.only(bottom: 8, left: 4),
+              child: Text(
+                'Select a date range above before exporting.',
+                style: TextStyle(fontSize: 12.5, color: Colors.grey[700]),
+              ),
+            ),
+          ],
           SizedBox(
             height: 48,
             child: ElevatedButton(
-              onPressed: _isExporting ? null : _triggerExportPipeline,
-              style: ElevatedButton.styleFrom(
-                backgroundColor: primaryColor,
-                foregroundColor: Colors.white,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                elevation: 1,
+              onPressed: _isExporting
+                  ? null
+                  : () {
+                      if (!isSnapshot && !_hasChosenDateRange) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text('Please select a date range before exporting.'),
+                          ),
+                        );
+                        return;
+                      }
+                      _triggerExportPipeline();
+                    },
+              style: ButtonStyle(
+                backgroundColor: WidgetStateProperty.resolveWith<Color>((states) {
+                  if (states.contains(WidgetState.hovered)) return warmAmber;
+                  return primaryColor;
+                }),
+                foregroundColor: WidgetStateProperty.all(Colors.white),
+                shape: WidgetStateProperty.all(RoundedRectangleBorder(borderRadius: BorderRadius.circular(12))),
+                elevation: WidgetStateProperty.all(1),
               ),
               child: _isExporting
                   ? const SizedBox(
@@ -584,6 +873,20 @@ class _ExportDataScreenState extends State<ExportDataScreen> {
       contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
       onChanged: (value) {
         if (value != null) setState(() => _selectedDataType = value);
+      },
+    );
+  }
+
+  Widget _buildFormatTile({required String value, required String title, required String subtitle}) {
+    return RadioListTile<String>(
+      title: Text(title, style: const TextStyle(fontWeight: FontWeight.w500, fontSize: 15)),
+      subtitle: Text(subtitle, style: const TextStyle(fontSize: 13)),
+      value: value,
+      groupValue: _selectedFormat,
+      activeColor: primaryColor,
+      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+      onChanged: (val) {
+        if (val != null) setState(() => _selectedFormat = val);
       },
     );
   }

@@ -64,24 +64,41 @@ class _ServiceReceiptPreviewScreenState extends State<ServiceReceiptPreviewScree
       bytes = await _captureReceiptImage();
       if (bytes == null) throw Exception('Could not capture the receipt image.');
 
-      final xfile = XFile.fromData(
-        bytes,
-        name: 'service_receipt_${widget.service.id}.png',
-        mimeType: 'image/png',
-      );
+      // A human-readable name using the receipt number (matching the
+      // Export Center's own naming style) rather than the raw Firestore
+      // document ID, which is a meaningless jumble of characters to
+      // anyone looking at a Downloads folder.
+      final fileName = widget.service.receiptNumber != null
+          ? 'Service_Receipt_${widget.service.receiptNumber}_${DateFormat('yyyyMMdd_HHmm').format(DateTime.now())}.png'
+          : 'Service_Receipt_${DateFormat('yyyyMMdd_HHmm').format(DateTime.now())}.png';
 
+      // The Web Share API is a mobile pattern - genuinely useful there,
+      // but well known to be unreliable for files on desktop browsers
+      // even though the API exists. Deciding this upfront, rather than
+      // trying it first and falling back on failure, avoids making the
+      // user wait out a doomed attempt before the fast download path
+      // ever runs.
+      final isDesktopWeb = kIsWeb && MediaQuery.of(context).size.width >= 900;
+
+      if (isDesktopWeb) {
+        downloadFileWeb(bytes, fileName);
+        return;
+      }
+
+      final xfile = XFile.fromData(bytes, name: fileName, mimeType: 'image/png');
       debugPrint('Receipt captured: ${bytes.length} bytes. Opening share sheet...');
       await Share.shareXFiles([xfile], text: 'Receipt');
       debugPrint('Share sheet closed normally.');
     } catch (e, stack) {
       if (!mounted) return;
-      // Confirmed via testing: this is desktop browsers' well-known
-      // unreliable support for file-sharing through the Web Share API
-      // - not a benign cancellation, and not worth showing as a scary
-      // error when there's a reliable fallback that still gets the
-      // file onto the user's device.
+      // Safety net for mobile web, if the share sheet fails there for
+      // some other reason - desktop web never reaches this point at
+      // all now, since it's decided upfront above.
       if (kIsWeb && bytes != null) {
-        downloadFileWeb(bytes, 'service_receipt_${widget.service.id}.png');
+        final fallbackName = widget.service.receiptNumber != null
+            ? 'Service_Receipt_${widget.service.receiptNumber}_${DateFormat('yyyyMMdd_HHmm').format(DateTime.now())}.png'
+            : 'Service_Receipt_${DateFormat('yyyyMMdd_HHmm').format(DateTime.now())}.png';
+        downloadFileWeb(bytes, fallbackName);
         return;
       }
       debugPrint('Share receipt failed: ${e.runtimeType} - $e\n$stack');

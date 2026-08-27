@@ -51,7 +51,7 @@ class _TrashScreenState extends State<TrashScreen> with SingleTickerProviderStat
           tabs: const [
             Tab(text: 'Products'),
             Tab(text: 'Clients'),
-            Tab(text: 'Services'),
+            Tab(text: 'Service Records'),
             Tab(text: 'Sales'),
           ],
         ),

@@ -158,12 +158,15 @@ class SubscriptionRequestsTab extends StatelessWidget {
           );
         }
 
-        return ListView.builder(
-          padding: const EdgeInsets.all(12),
-          itemCount: docs.length,
-          itemBuilder: (context, index) {
-            final doc = docs[index];
-            final data = doc.data() as Map<String, dynamic>;
+        return Center(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 700),
+            child: ListView.builder(
+              padding: const EdgeInsets.all(12),
+              itemCount: docs.length,
+              itemBuilder: (context, index) {
+                final doc = docs[index];
+                final data = doc.data() as Map<String, dynamic>;
             final submittedAt = data['submittedAt'] is Timestamp ? (data['submittedAt'] as Timestamp).toDate() : null;
             final proofUrl = data['proofImageUrl'] as String?;
 
@@ -332,6 +335,8 @@ class SubscriptionRequestsTab extends StatelessWidget {
               ),
             );
           },
+            ),
+          ),
         );
       },
     );

@@ -8,6 +8,7 @@ import '../../providers/transaction_provider.dart';
 import '../../models/transaction.dart';
 import '../../services/auth_service.dart';
 import '../../widgets/payment_method_selector.dart';
+import '../../utils/thousands_input_formatter.dart';
 
 class AddTransactionScreen extends StatefulWidget {
   final TransactionModel? transaction;
@@ -35,33 +36,6 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
 
   final formatter = NumberFormat('#,##0', 'en_US');
 
-  // For formatting input with thousand separators while typing
-  void _onAmountChanged(String value) {
-    String newValue = value.replaceAll(',', '');
-    if (newValue.isEmpty) {
-      amountController.value = TextEditingValue(
-        text: '',
-        selection: TextSelection.collapsed(offset: 0),
-      );
-      return;
-    }
-
-    final number = int.tryParse(newValue);
-    if (number == null) return;
-
-    final newText = formatter.format(number);
-
-    // Calculate new cursor position
-    int selectionIndex = newText.length - (value.length - amountController.selection.end);
-
-    if (selectionIndex < 0) selectionIndex = 0;
-
-    amountController.value = TextEditingValue(
-      text: newText,
-      selection: TextSelection.collapsed(offset: selectionIndex),
-    );
-  }
-
   Future<String?> _fetchCurrentUserFullName() async {
     final user = _authService.getCurrentUser();
     if (user == null) return null;
@@ -81,8 +55,7 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
     final description = descriptionController.text.trim();
 
     // Remove commas to parse
-    final rawAmount = amountController.text.trim().replaceAll(',', '');
-    final amount = double.tryParse(rawAmount) ?? 0.0;
+    final amount = parseThousands(amountController.text);
     final category = categoryController.text.trim();
 
     if (description.isEmpty || amount <= 0 || type == null) {
@@ -184,15 +157,6 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
       amountController.text = formatter.format(tx.amount.round());
       paymentMethod = tx.paymentMethod;
     }
-
-    amountController.addListener(() {
-      // Only format if user input differs from formatted text
-      String currentText = amountController.text;
-      String unformatted = currentText.replaceAll(',', '');
-      if (currentText != formatter.format(int.tryParse(unformatted) ?? 0)) {
-        _onAmountChanged(currentText);
-      }
-    });
   }
 
   @override
@@ -205,10 +169,22 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
 
   @override
 Widget build(BuildContext context) {
-  final inputBorder = OutlineInputBorder(
-    borderRadius: BorderRadius.circular(8),
-    borderSide: BorderSide(color: primaryDeepGreen),
-  );
+  InputDecoration fieldDecoration(String label) {
+    return InputDecoration(
+      labelText: label,
+      labelStyle: TextStyle(color: primaryDeepGreen),
+      filled: true,
+      fillColor: primaryDeepGreen.withValues(alpha: 0.05),
+      enabledBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(10),
+        borderSide: BorderSide(color: Colors.grey.shade300),
+      ),
+      focusedBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(10),
+        borderSide: BorderSide(color: primaryDeepGreen, width: 1.5),
+      ),
+    );
+  }
 
   final dropdownOptions = ['other income', 'expense'];
 
@@ -225,7 +201,7 @@ Widget build(BuildContext context) {
   return Scaffold(
     backgroundColor: offWhite,
     appBar: AppBar(
-      title: Text(widget.transaction != null ? 'Edit Transaction' : 'Add Transaction'),
+      title: Text(widget.transaction != null ? 'Edit Transaction' : 'Record Transaction'),
       backgroundColor: primaryDeepGreen,
       foregroundColor: offWhite,
       centerTitle: true,
@@ -245,8 +221,19 @@ Widget build(BuildContext context) {
             constraints: const BoxConstraints(maxWidth: 700),
             child: SingleChildScrollView(
               padding: const EdgeInsets.all(16),
-              child: Column(
-                children: [
+              child: Card(
+                elevation: 1,
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                child: Padding(
+                  padding: const EdgeInsets.all(20),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+          Text(
+            widget.transaction != null ? 'Edit Transaction Details' : 'Transaction Details',
+            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: primaryDeepGreen),
+          ),
+          const SizedBox(height: 16),
           DropdownButtonFormField<String>(
             initialValue: type,
             items: dropdownOptions.map((val) {
@@ -259,12 +246,7 @@ Widget build(BuildContext context) {
               );
             }).toList(),
             onChanged: (val) => setState(() => type = val),
-            decoration: InputDecoration(
-              labelText: 'Type',
-              labelStyle: TextStyle(color: primaryDeepGreen),
-              focusedBorder: inputBorder,
-              enabledBorder: inputBorder,
-            ),
+            decoration: fieldDecoration('Type'),
             dropdownColor: offWhite,
           ),
           if (type == 'other income') ...[
@@ -275,39 +257,24 @@ Widget build(BuildContext context) {
               onChanged: (method) => setState(() => paymentMethod = method),
             ),
           ],
-          const SizedBox(height: 12),
+          const SizedBox(height: 14),
           TextField(
             controller: descriptionController,
-            decoration: InputDecoration(
-              labelText: 'Description',
-              labelStyle: TextStyle(color: primaryDeepGreen),
-              focusedBorder: inputBorder,
-              enabledBorder: inputBorder,
-            ),
+            decoration: fieldDecoration('Description'),
             cursorColor: primaryDeepGreen,
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: 14),
           TextField(
             controller: amountController,
-            decoration: InputDecoration(
-              labelText: 'Amount (Tsh)',
-              labelStyle: TextStyle(color: primaryDeepGreen),
-              focusedBorder: inputBorder,
-              enabledBorder: inputBorder,
-            ),
+            decoration: fieldDecoration('Amount (Tsh)'),
             keyboardType: TextInputType.number,
             cursorColor: primaryDeepGreen,
-            inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+            inputFormatters: [FilteringTextInputFormatter.digitsOnly, ThousandsSeparatorInputFormatter()],
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: 14),
           TextField(
             controller: categoryController,
-            decoration: InputDecoration(
-              labelText: 'Category (optional)',
-              labelStyle: TextStyle(color: primaryDeepGreen),
-              focusedBorder: inputBorder,
-              enabledBorder: inputBorder,
-            ),
+            decoration: fieldDecoration('Category (optional)'),
             cursorColor: primaryDeepGreen,
           ),
           const SizedBox(height: 24),
@@ -323,7 +290,7 @@ Widget build(BuildContext context) {
                 foregroundColor: WidgetStateProperty.all(offWhite),
                 padding: WidgetStateProperty.all(const EdgeInsets.symmetric(vertical: 16)),
                 shape: WidgetStateProperty.all(
-                  RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                  RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                 ),
               ),
               child: _isSaving
@@ -338,7 +305,9 @@ Widget build(BuildContext context) {
                     ),
             ),
           ),
-                ],
+                    ],
+                  ),
+                ),
               ),
             ),
           ),
@@ -366,7 +335,7 @@ Future<void> showAddTransactionScreen(BuildContext context, {TransactionModel? t
   await showGeneralDialog(
     context: context,
     barrierDismissible: true,
-    barrierLabel: transaction != null ? 'Edit Transaction' : 'Add Transaction',
+    barrierLabel: transaction != null ? 'Edit Transaction' : 'Record Transaction',
     barrierColor: Colors.black54,
     transitionDuration: const Duration(milliseconds: 220),
     pageBuilder: (context, animation, secondaryAnimation) {

@@ -241,7 +241,7 @@ class _UsersTabState extends State<UsersTab> {
               return StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
                 stream: FirebaseFirestore.instance
                     .collection('users')
-                    .where(FieldPath.documentId, whereIn: platformAdminIds.take(10).toList())
+                    .where(FieldPath.documentId, whereIn: platformAdminIds.take(30).toList())
                     .snapshots(),
                 builder: (context, platformAdminDocsSnapshot) {
                   final platformAdminDocs = platformAdminDocsSnapshot.data?.docs ?? [];

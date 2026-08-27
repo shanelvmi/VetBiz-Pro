@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:provider/provider.dart';
 import 'package:uuid/uuid.dart';
@@ -6,6 +7,7 @@ import 'package:intl/intl.dart';
 
 import '../../utils/activity_logger.dart';
 import '../../utils/navigator_key.dart';
+import '../../utils/thousands_input_formatter.dart';
 import '../../models/product.dart';
 import '../../models/product_batch.dart';
 import '../../providers/product_provider.dart';
@@ -222,11 +224,11 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
       controller: _buyPriceController,
       decoration: _inputDecoration('Buying Price (Tsh)', required: true),
       keyboardType: TextInputType.number,
+      inputFormatters: [FilteringTextInputFormatter.digitsOnly, ThousandsSeparatorInputFormatter()],
       cursorColor: primaryDeepTealGreen,
       enabled: !fieldsLocked,
       validator: (value) {
-        final parsed = double.tryParse((value ?? '').replaceAll(',', ''));
-        if (parsed == null) return 'Enter a valid buying price';
+        final parsed = parseThousands(value ?? '');
         if (parsed <= 0) return 'Must be greater than 0';
         return null;
       },
@@ -238,11 +240,11 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
       controller: _sellPriceController,
       decoration: _inputDecoration('Selling Price (Tsh)', required: true),
       keyboardType: TextInputType.number,
+      inputFormatters: [FilteringTextInputFormatter.digitsOnly, ThousandsSeparatorInputFormatter()],
       cursorColor: primaryDeepTealGreen,
       enabled: !fieldsLocked,
       validator: (value) {
-        final parsed = double.tryParse((value ?? '').replaceAll(',', ''));
-        if (parsed == null) return 'Enter a valid selling price';
+        final parsed = parseThousands(value ?? '');
         if (parsed <= 0) return 'Must be greater than 0';
         return null;
       },
@@ -480,10 +482,8 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
         batchNo: isEditingProduct ? widget.product!.batchNo : _batchController.text.trim(),
         expiry: isEditingProduct ? widget.product!.expiry : _selectedExpiry,
         description: _descriptionController.text.trim(),
-        buyPrice:
-            double.tryParse(_buyPriceController.text.replaceAll(',', '')) ?? 0,
-        sellPrice:
-            double.tryParse(_sellPriceController.text.replaceAll(',', '')) ?? 0,
+        buyPrice: parseThousands(_buyPriceController.text),
+        sellPrice: parseThousands(_sellPriceController.text),
         stockQty: isEditingProduct
             ? widget.product!.stockQty
             : (destination == ProductDestination.stockStore

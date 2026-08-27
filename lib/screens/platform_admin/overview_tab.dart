@@ -136,80 +136,92 @@ class _OverviewTabState extends State<OverviewTab> {
 
     final stats = _stats!;
 
-    return ListView(
-      padding: const EdgeInsets.all(16),
-      children: [
-        Row(
+    return Center(
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 900),
+        child: ListView(
+          padding: const EdgeInsets.all(16),
           children: [
-            const Expanded(
-              child: Text('Overview', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
+            Row(
+              children: [
+                const Expanded(
+                  child: Text('Overview', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20)),
+                ),
+                if (_lastRefreshed != null)
+                  Text(
+                    'Updated ${DateFormat('HH:mm').format(_lastRefreshed!)}',
+                    style: TextStyle(fontSize: 11.5, color: Colors.grey[500]),
+                  ),
+                IconButton(
+                  icon: _isLoading
+                      ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2))
+                      : const Icon(Icons.refresh, size: 20),
+                  tooltip: 'Refresh',
+                  onPressed: _isLoading ? null : _refresh,
+                ),
+              ],
             ),
-            if (_lastRefreshed != null)
-              Text(
-                'Updated ${DateFormat('HH:mm').format(_lastRefreshed!)}',
-                style: TextStyle(fontSize: 11.5, color: Colors.grey[500]),
-              ),
-            IconButton(
-              icon: _isLoading
-                  ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2))
-                  : const Icon(Icons.refresh, size: 20),
-              tooltip: 'Refresh',
-              onPressed: _isLoading ? null : _refresh,
+            const SizedBox(height: 16),
+
+            // Responsive grid - 4 across on a wide desktop monitor, 2
+            // across on a tablet-width window, a single stacked column
+            // on a phone, rather than a fixed two-per-row pairing that
+            // never adapted to the screen it happened to be on.
+            LayoutBuilder(
+              builder: (context, constraints) {
+                final width = constraints.maxWidth;
+                final crossAxisCount = width >= 700 ? 4 : (width >= 420 ? 2 : 1);
+                final spacing = 12.0;
+                final cardWidth = (width - spacing * (crossAxisCount - 1)) / crossAxisCount;
+
+                final cards = [
+                  _StatCard(
+                    label: 'Total Facilities',
+                    value: '${stats['total']}',
+                    color: primaryColor,
+                    icon: Icons.store,
+                  ),
+                  _StatCard(
+                    label: 'Revenue This Month',
+                    value: 'Tsh ${_moneyFormat.format(stats['monthRevenue'])}',
+                    color: Colors.green,
+                    icon: Icons.payments,
+                  ),
+                  _StatCard(
+                    label: 'Pending Requests',
+                    value: '${stats['pendingCount']}',
+                    color: Colors.blue,
+                    icon: Icons.pending_actions,
+                  ),
+                  _StatCard(
+                    label: 'Payments This Month',
+                    value: '${stats['monthPayments']}',
+                    color: primaryColor,
+                    icon: Icons.receipt_long,
+                  ),
+                ];
+
+                return Wrap(
+                  spacing: spacing,
+                  runSpacing: spacing,
+                  children: cards.map((c) => SizedBox(width: cardWidth, child: c)).toList(),
+                );
+              },
+            ),
+
+            const SizedBox(height: 28),
+            const Text('Facilities by Status', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
+            const SizedBox(height: 12),
+            _StatusBar(
+              primaryColor: primaryColor,
+              active: stats['active'] as int,
+              trial: stats['trial'] as int,
+              grace: stats['grace'] as int,
+              locked: stats['locked'] as int,
             ),
           ],
         ),
-        const SizedBox(height: 8),
-        Row(
-          children: [
-            Expanded(
-              child: _StatCard(
-                label: 'Total Facilities',
-                value: '${stats['total']}',
-                color: primaryColor,
-                icon: Icons.store,
-              ),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: _StatCard(
-                label: 'Revenue This Month',
-                value: 'Tsh ${_moneyFormat.format(stats['monthRevenue'])}',
-                color: Colors.green,
-                icon: Icons.payments,
-              ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 12),
-        Row(
-          children: [
-            Expanded(
-              child: _StatCard(
-                label: 'Pending Requests',
-                value: '${stats['pendingCount']}',
-                color: Colors.blue,
-                icon: Icons.pending_actions,
-              ),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: _StatCard(
-                label: 'Payments This Month',
-                value: '${stats['monthPayments']}',
-                color: primaryColor,
-                icon: Icons.receipt_long,
-              ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 24),
-        const Text('Facilities by Status', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
-        const SizedBox(height: 8),
-        _StatusRow(label: 'Active', count: stats['active'], color: Colors.green),
-        _StatusRow(label: 'Trial', count: stats['trial'], color: primaryColor),
-        _StatusRow(label: 'Grace Period', count: stats['grace'], color: Colors.orange),
-        _StatusRow(label: 'Locked', count: stats['locked'], color: Colors.redAccent),
-      ],
+      ),
     );
   }
 }
@@ -225,20 +237,40 @@ class _StatCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return HoverElevateCard(
-      baseElevation: 2,
-      child: Padding(
-        padding: const EdgeInsets.all(14),
+      baseElevation: 1,
+      child: Container(
+        decoration: BoxDecoration(
+          // A subtle colored left accent, matching the icon - gives
+          // each card its own quiet identity at a glance, rather than
+          // four otherwise-identical plain white cards distinguished
+          // only by their text.
+          border: Border(left: BorderSide(color: color, width: 3)),
+          // Matches HoverElevateCard's own default border radius exactly -
+          // Card doesn't clip its child by default, so a mismatched
+          // radius here would show as a faint square corner peeking out
+          // from under the card's rounded one.
+          borderRadius: BorderRadius.circular(12),
+        ),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Icon(icon, color: color, size: 22),
-            const SizedBox(height: 8),
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: color.withValues(alpha: 0.10),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Icon(icon, color: color, size: 20),
+            ),
+            const SizedBox(height: 12),
             FittedBox(
               fit: BoxFit.scaleDown,
-              child: Text(value, style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18, color: color)),
+              alignment: Alignment.centerLeft,
+              child: Text(value, style: TextStyle(fontWeight: FontWeight.bold, fontSize: 22, color: color)),
             ),
-            const SizedBox(height: 2),
-            Text(label, style: TextStyle(fontSize: 12, color: Colors.grey[600])),
+            const SizedBox(height: 3),
+            Text(label, style: TextStyle(fontSize: 12.5, color: Colors.grey[600])),
           ],
         ),
       ),
@@ -246,25 +278,76 @@ class _StatCard extends StatelessWidget {
   }
 }
 
-class _StatusRow extends StatelessWidget {
-  final String label;
-  final int count;
-  final Color color;
+/// A horizontal stacked bar, proportional to each status's share of the
+/// whole facility base, plus a legend with the exact counts and
+/// percentages below it - a single glance at the shape of the business
+/// (mostly active? a worrying amount locked?) that four separate
+/// numbers in a plain list never gave as immediately.
+class _StatusBar extends StatelessWidget {
+  final Color primaryColor;
+  final int active;
+  final int trial;
+  final int grace;
+  final int locked;
 
-  const _StatusRow({required this.label, required this.count, required this.color});
+  const _StatusBar({
+    required this.primaryColor,
+    required this.active,
+    required this.trial,
+    required this.grace,
+    required this.locked,
+  });
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 4),
-      child: Row(
-        children: [
-          Container(width: 10, height: 10, decoration: BoxDecoration(color: color, shape: BoxShape.circle)),
-          const SizedBox(width: 10),
-          Expanded(child: Text(label)),
-          Text('$count', style: const TextStyle(fontWeight: FontWeight.bold)),
-        ],
-      ),
+    final total = active + trial + grace + locked;
+
+    final segments = [
+      (label: 'Active', count: active, color: Colors.green),
+      (label: 'Trial', count: trial, color: primaryColor),
+      (label: 'Grace Period', count: grace, color: Colors.orange),
+      (label: 'Locked', count: locked, color: Colors.redAccent),
+    ];
+
+    if (total == 0) {
+      return Text('No facilities yet.', style: TextStyle(color: Colors.grey[600]));
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        ClipRRect(
+          borderRadius: BorderRadius.circular(8),
+          child: SizedBox(
+            height: 16,
+            child: Row(
+              children: segments
+                  .where((s) => s.count > 0)
+                  .map((s) => Expanded(flex: s.count, child: Container(color: s.color)))
+                  .toList(),
+            ),
+          ),
+        ),
+        const SizedBox(height: 16),
+        Wrap(
+          spacing: 24,
+          runSpacing: 10,
+          children: segments.map((s) {
+            final pct = total > 0 ? (s.count / total * 100).round() : 0;
+            return Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(width: 10, height: 10, decoration: BoxDecoration(color: s.color, shape: BoxShape.circle)),
+                const SizedBox(width: 8),
+                Text(
+                  '${s.label}: ${s.count} ($pct%)',
+                  style: const TextStyle(fontSize: 13.5, fontWeight: FontWeight.w500),
+                ),
+              ],
+            );
+          }).toList(),
+        ),
+      ],
     );
   }
 }

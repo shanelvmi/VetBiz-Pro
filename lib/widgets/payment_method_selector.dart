@@ -10,7 +10,8 @@ import 'package:flutter/material.dart';
 const List<String> kPaymentMethods = [
   'Cash',
   'M-Pesa',
-  'Tigo Pesa',
+  'Mixx by Yas',
+  'HaloPesa',
   'Airtel Money',
   'Bank Transfer',
 ];
@@ -20,7 +21,8 @@ IconData iconForPaymentMethod(String method) {
     case 'Cash':
       return Icons.payments_outlined;
     case 'M-Pesa':
-    case 'Tigo Pesa':
+    case 'Mixx by Yas':
+    case 'HaloPesa':
     case 'Airtel Money':
       return Icons.phone_android;
     case 'Bank Transfer':

@@ -298,7 +298,7 @@ class _SalesScreenState extends State<SalesScreen> {
         foregroundColor: offWhite,
         hoverColor: warmAmber,
         icon: const Icon(Icons.add),
-        label: const Text('Add Sale'),
+        label: const Text('Record Sale'),
       ),
     );
   }

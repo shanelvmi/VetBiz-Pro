@@ -533,8 +533,7 @@ class _AnnouncementsTabState extends State<AnnouncementsTab> {
                 const Text('Login Screen Poster', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
                 const SizedBox(height: 4),
                 Text(
-                  'Shown in the center of the login screen for every facility. '
-                  'Falls back to the default illustration if none is set.',
+                  'Shown on the login screen for wide/desktop screens.',
                   style: TextStyle(fontSize: 12.5, color: Colors.grey[600]),
                 ),
                 const SizedBox(height: 12),
@@ -682,9 +681,7 @@ class _AnnouncementsTabState extends State<AnnouncementsTab> {
                 const Text('Login Screen Logo (Phone Screens)', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
                 const SizedBox(height: 4),
                 Text(
-                  'Shown alone above the login form on narrow/phone screens - a separate, '
-                  'compact upload from the poster above, which is for wide screens only. '
-                  'Falls back to the default illustration if none is set.',
+                  'Shown on narrow/phone screens instead of the poster above.',
                   style: TextStyle(fontSize: 12.5, color: Colors.grey[600]),
                 ),
                 const SizedBox(height: 12),

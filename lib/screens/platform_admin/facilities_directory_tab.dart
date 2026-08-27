@@ -57,6 +57,13 @@ class _FacilitiesDirectoryTabState extends State<FacilitiesDirectoryTab> {
   int _summaryTotal = 0;
   bool _isSummaryLoading = true;
 
+  // Keyed by owner UID, not facilityId - several facilities can share
+  // the same owner, so this avoids re-fetching the same Admin's name
+  // once per facility they own. A null value means the lookup was
+  // already tried and came back empty (e.g. a deleted account), so it
+  // isn't retried on every subsequent page load either.
+  final Map<String, String?> _ownerNameByUid = {};
+
   @override
   void initState() {
     super.initState();
@@ -124,6 +131,7 @@ class _FacilitiesDirectoryTabState extends State<FacilitiesDirectoryTab> {
         if (snap.docs.isNotEmpty) _lastDoc = snap.docs.last;
         _hasMore = snap.docs.length == _pageSize;
       });
+      await _loadOwnerNames(snap.docs);
     } catch (e) {
       if (mounted) setState(() => _loadError = '$e');
     } finally {
@@ -134,6 +142,50 @@ class _FacilitiesDirectoryTabState extends State<FacilitiesDirectoryTab> {
         });
       }
     }
+  }
+
+  /// Resolves each facility's owner (createdBy UID) into a displayable
+  /// name, batched via whereIn rather than one query per facility -
+  /// only for UIDs not already cached from an earlier page.
+  Future<void> _loadOwnerNames(List<QueryDocumentSnapshot<Map<String, dynamic>>> docs) async {
+    final uidsToFetch = <String>{};
+    for (final doc in docs) {
+      final createdBy = doc.data()['createdBy'] as String?;
+      if (createdBy != null && createdBy.isNotEmpty && !_ownerNameByUid.containsKey(createdBy)) {
+        uidsToFetch.add(createdBy);
+      }
+    }
+    if (uidsToFetch.isEmpty) return;
+
+    final uidList = uidsToFetch.toList();
+    final newNames = <String, String?>{};
+    // whereIn supports at most 30 values per query - chunk if this
+    // page's facilities happen to have more than 30 distinct owners.
+    for (var i = 0; i < uidList.length; i += 30) {
+      final chunk = uidList.sublist(i, i + 30 > uidList.length ? uidList.length : i + 30);
+      try {
+        final snap = await FirebaseFirestore.instance
+            .collection('users')
+            .where(FieldPath.documentId, whereIn: chunk)
+            .get();
+        for (final userDoc in snap.docs) {
+          newNames[userDoc.id] = userDoc.data()['fullName'] as String?;
+        }
+      } catch (_) {
+        // A failed lookup just means those owner names stay blank on
+        // the cards this pass - not worth failing the whole facility
+        // list over.
+      }
+    }
+    // Any UID that didn't come back (a deleted account, or a lookup
+    // that failed above) is still recorded as null, so it isn't
+    // silently re-queried on every subsequent page load.
+    for (final uid in uidList) {
+      newNames.putIfAbsent(uid, () => null);
+    }
+
+    if (!mounted) return;
+    setState(() => _ownerNameByUid.addAll(newNames));
   }
 
   Future<void> _loadForSearch() async {
@@ -152,6 +204,7 @@ class _FacilitiesDirectoryTabState extends State<FacilitiesDirectoryTab> {
         _docs = snap.docs;
         _hasMore = false;
       });
+      await _loadOwnerNames(snap.docs);
     } catch (e) {
       if (mounted) setState(() => _loadError = '$e');
     } finally {
@@ -316,6 +369,9 @@ class _FacilitiesDirectoryTabState extends State<FacilitiesDirectoryTab> {
     // subscriptionExpiresAt it may not even have yet.
     final relevantDate = status == SubscriptionStatusKind.trial ? trialExpiresAt : expiresAt;
 
+    final createdBy = data['createdBy'] as String?;
+    final ownerName = createdBy != null ? _ownerNameByUid[createdBy] : null;
+
     return HoverElevateCard(
       margin: const EdgeInsets.only(bottom: 8),
       child: InkWell(
@@ -349,6 +405,7 @@ class _FacilitiesDirectoryTabState extends State<FacilitiesDirectoryTab> {
                       [
                         if ((data['type'] as String?)?.isNotEmpty == true) data['type'],
                         if ((data['code'] as String?)?.isNotEmpty == true) data['code'],
+                        if (ownerName != null && ownerName.isNotEmpty) ownerName,
                       ].join(' · '),
                       style: TextStyle(fontSize: 12, color: Colors.grey[600]),
                       overflow: TextOverflow.ellipsis,

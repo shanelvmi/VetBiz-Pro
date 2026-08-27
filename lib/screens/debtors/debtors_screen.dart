@@ -383,18 +383,14 @@ class _DebtorsScreenState extends State<DebtorsScreen> {
                   balance: 0.0,       // optional
                   types: const [],
                 );
-                final result = await Navigator.push(
+                final result = await showAddPaymentScreen(
                   context,
-                  MaterialPageRoute(
-                    builder: (_) => AddPaymentScreen(
-                      preselectedClient: selectedClient,
-                      debtDocId: debtId,
-                      amountOwed: amount,
-                      facilityId:
-                          Provider.of<FacilityProvider>(context, listen: false)
-                              .selectedFacilityId,
-                    ),
-                  ),
+                  preselectedClient: selectedClient,
+                  debtDocId: debtId,
+                  amountOwed: amount,
+                  facilityId:
+                      Provider.of<FacilityProvider>(context, listen: false)
+                          .selectedFacilityId,
                 );
 
                 if (result == true) {

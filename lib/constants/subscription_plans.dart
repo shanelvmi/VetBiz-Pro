@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 /// Subscription plan definitions. Prices below are the fallback
@@ -20,15 +21,17 @@ class SubscriptionPlan {
   });
 }
 
-// Fallback defaults - only ever shown if a Platform Admin hasn't set
-// real prices yet via Overview > Pricing. Once they have, every
-// consumer reads their configured values instead, via
-// loadSubscriptionPlans()/loadPlanById() below.
+// A neutral shape template - id, label, and duration are fixed, but
+// price is deliberately 0 here. This is never meant to be shown as a
+// real, payable price; it only surfaces if a Platform Admin hasn't
+// configured a price yet, or the fetch genuinely fails - see
+// loadSubscriptionPlans()/streamSubscriptionPlans() below, both of
+// which are the actual source of truth for what a plan costs.
 const List<SubscriptionPlan> kSubscriptionPlans = [
-  SubscriptionPlan(id: 'daily', label: 'Daily', durationDays: 1, priceTsh: 1000),
-  SubscriptionPlan(id: 'weekly', label: 'Weekly', durationDays: 7, priceTsh: 6000),
-  SubscriptionPlan(id: 'monthly', label: 'Monthly', durationDays: 30, priceTsh: 20000),
-  SubscriptionPlan(id: 'yearly', label: 'Yearly', durationDays: 365, priceTsh: 200000),
+  SubscriptionPlan(id: 'daily', label: 'Daily', durationDays: 1, priceTsh: 0),
+  SubscriptionPlan(id: 'weekly', label: 'Weekly', durationDays: 7, priceTsh: 0),
+  SubscriptionPlan(id: 'monthly', label: 'Monthly', durationDays: 30, priceTsh: 0),
+  SubscriptionPlan(id: 'yearly', label: 'Yearly', durationDays: 365, priceTsh: 0),
 ];
 
 SubscriptionPlan? planById(String id) {
@@ -104,13 +107,20 @@ Stream<List<SubscriptionPlan>> streamSubscriptionPlans() {
         priceTsh: configured,
       );
     }).toList();
-  }).handleError((_) {
-    // Same reasoning as loadSubscriptionPlans()'s catch - a transient
-    // read error (e.g. a brief connectivity blip) shouldn't surface
-    // as a visible error in the UI. This just suppresses the error
-    // event; the stream stays quiet until the next successful
-    // snapshot comes through, rather than emitting a broken state.
-  });
+  }).transform(
+    StreamTransformer<List<SubscriptionPlan>, List<SubscriptionPlan>>.fromHandlers(
+      handleData: (data, sink) => sink.add(data),
+      // A genuine, possibly persistent read failure (not just a
+      // transient blip) still needs to actually reach the screen as a
+      // real data event - the 0-priced fallback plans - rather than
+      // being silently swallowed with no emission at all. Silently
+      // dropping the error here (as this used to do) left the
+      // screen's own listener callback never firing at all if the
+      // very first fetch attempt failed, which meant its loading
+      // spinner had nothing to ever turn off - it would spin forever.
+      handleError: (error, stackTrace, sink) => sink.add(kSubscriptionPlans),
+    ),
+  );
 }
 
 /// How long a facility stays usable after its subscription expires

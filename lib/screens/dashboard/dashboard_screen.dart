@@ -1496,7 +1496,7 @@ Widget _buildDrawerContent() {
       ),
       DrawerHoverItem(
         icon: Icons.design_services,
-        title: 'Services',
+        title: 'Service Records',
         isCollapsed: effectivelyCollapsed,
         onTap: () => Navigator.push(
           context,
@@ -1865,7 +1865,7 @@ Widget _buildDrawerContent() {
       HoverFab(
         heroTag: 'add_sale',
         icon: Icons.add_shopping_cart,
-        label: 'Add Sale',
+        label: 'Record Sale',
         color: warmAmber,
         hoverColor: const Color(0xFFFFC400),
         onPressed: () => navigateOrShowLockedDialog(
@@ -1887,7 +1887,7 @@ Widget _buildDrawerContent() {
       HoverFab(
         heroTag: 'add_service',
         icon: Icons.design_services,
-        label: 'Add Service',
+        label: 'Record Visit',
         color: const Color(0xFF3D5A80),
         hoverColor: const Color(0xFF4A6B94),
         onPressed: () => navigateOrShowLockedDialog(
@@ -1912,7 +1912,7 @@ Widget _buildDrawerContent() {
       SpeedDialChild(
         backgroundColor: warmAmber,
         child: const Icon(Icons.add_shopping_cart, color: Colors.white),
-        label: 'Add Sale',
+        label: 'Record Sale',
         onTap: () => navigateOrShowLockedDialog(
           context,
           const AddSaleScreen(),
@@ -1928,7 +1928,7 @@ Widget _buildDrawerContent() {
       SpeedDialChild(
         backgroundColor: const Color(0xFF3D5A80),
         child: const Icon(Icons.design_services, color: Colors.white),
-        label: 'Add Service',
+        label: 'Record Visit',
         onTap: () => navigateOrShowLockedDialog(
           context,
           const AddEditServiceScreen(),

@@ -178,7 +178,7 @@ class _ServicesScreenState extends State<ServicesScreen> {
         foregroundColor: offWhite,
         hoverColor: warmAmber,
         icon: const Icon(Icons.add),
-        label: const Text('Add Service'),
+        label: const Text('Record Visit'),
         onPressed: () async {
           await navigateOrShowLockedDialog(
             context,
@@ -218,7 +218,7 @@ class _ServicesScreenState extends State<ServicesScreen> {
               ),
               onChanged: (val) => setState(() => _searchQuery = val.trim()),
             )
-          : const Text('Attended Services', style: TextStyle(color: Color(0xFFFDFDF9))),
+          : const Text('Service Records', style: TextStyle(color: Color(0xFFFDFDF9))),
       actions: [
         if (!_isSearchExpanded)
           IconButton(

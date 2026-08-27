@@ -6,6 +6,7 @@ import 'package:provider/provider.dart';
 
 import '../../models/service.dart';
 import '../../constants/service_categories.dart';
+import '../../utils/thousands_input_formatter.dart';
 import '../../models/client.dart';
 import '../../models/product.dart';
 import '../../providers/client_provider.dart';
@@ -243,7 +244,7 @@ class _AddEditServiceScreenState extends State<AddEditServiceScreen> {
   child: Scaffold(
     backgroundColor: offWhite,
     appBar: AppBar(
-        title: Text(isEditing ? 'Edit Service' : 'Add Service',
+        title: Text(isEditing ? 'Edit Visit' : 'Record Visit',
             style: TextStyle(color: offWhite)),
         backgroundColor: primaryDeepGreen,
         iconTheme: IconThemeData(color: offWhite),
@@ -822,7 +823,7 @@ Future<void> showAddEditServiceScreen(BuildContext context, {Service? service}) 
   await showGeneralDialog(
     context: context,
     barrierDismissible: true,
-    barrierLabel: service != null ? 'Edit Service' : 'Add Service',
+    barrierLabel: service != null ? 'Edit Visit' : 'Record Visit',
     barrierColor: Colors.black54,
     transitionDuration: const Duration(milliseconds: 220),
     pageBuilder: (context, animation, secondaryAnimation) {
@@ -854,32 +855,4 @@ Future<void> showAddEditServiceScreen(BuildContext context, {Service? service}) 
       );
     },
   );
-}
-
-// Thousand separator formatting
-class ThousandsSeparatorInputFormatter extends TextInputFormatter {
-  final NumberFormat _formatter = NumberFormat.decimalPattern('en_US');
-
-  @override
-  TextEditingValue formatEditUpdate(
-      TextEditingValue oldValue, TextEditingValue newValue) {
-    String digitsOnly = newValue.text.replaceAll(RegExp(r'[^0-9]'), '');
-
-    if (digitsOnly.isEmpty) {
-      return newValue.copyWith(text: '');
-    }
-
-    final intValue = int.parse(digitsOnly);
-    final newText = _formatter.format(intValue);
-
-    int selectionIndex =
-        newText.length - (oldValue.text.length - oldValue.selection.end);
-    if (selectionIndex < 0) selectionIndex = 0;
-    if (selectionIndex > newText.length) selectionIndex = newText.length;
-
-    return TextEditingValue(
-      text: newText,
-      selection: TextSelection.collapsed(offset: selectionIndex),
-    );
-  }
 }

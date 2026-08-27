@@ -26,5 +26,6 @@ Future<DateTime> computeNewFacilityTrialExpiry() async {
     // Config lookup failed - proceed with the default rather than
     // blocking facility creation over it.
   }
-  return DateTime.now().add(Duration(days: days));
+  final expiryDate = DateTime.now().add(Duration(days: days));
+  return DateTime(expiryDate.year, expiryDate.month, expiryDate.day, 23, 59, 59);
 }

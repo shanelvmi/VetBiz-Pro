@@ -10,6 +10,7 @@ import '../../services/dashboard_summary_service.dart';
 import '../../widgets/date_range_dialog.dart';
 import '../../providers/user_role_provider.dart';
 import '../../widgets/payment_method_selector.dart';
+import '../../widgets/hover_elevate_card.dart';
 import 'add_transaction_screen.dart';
 
 class TransactionScreen extends StatefulWidget {
@@ -170,6 +171,7 @@ class _TransactionScreenState extends State<TransactionScreen> {
                   label: 'Other Income',
                   amount: _otherIncomeTotal,
                   color: TransactionScreen.warmAmber,
+                  icon: Icons.arrow_downward,
                   isSelected: _filterType == 'other income',
                   isLoading: _isSummaryLoading,
                   onTap: () {
@@ -179,10 +181,12 @@ class _TransactionScreenState extends State<TransactionScreen> {
                   },
                   formatter: formatter,
                 ),
+                const SizedBox(width: 10),
                 _SummaryCard(
                   label: 'Expenses',
                   amount: _expensesTotal,
                   color: Colors.red[400]!,
+                  icon: Icons.arrow_upward,
                   isSelected: _filterType == 'expense',
                   isLoading: _isSummaryLoading,
                   onTap: () {
@@ -192,10 +196,12 @@ class _TransactionScreenState extends State<TransactionScreen> {
                   },
                   formatter: formatter,
                 ),
+                const SizedBox(width: 10),
                 _SummaryCard(
                   label: 'Sub Profit',
                   amount: subProfit,
                   color: subProfit >= 0 ? Colors.green : Colors.red,
+                  icon: Icons.account_balance_wallet,
                   isSelected: false,
                   isLoading: _isSummaryLoading,
                   onTap: () {}, // No filtering on sub profit
@@ -244,7 +250,7 @@ class _TransactionScreenState extends State<TransactionScreen> {
         foregroundColor: TransactionScreen.offWhite,
         hoverColor: TransactionScreen.warmAmber,
         icon: const Icon(Icons.add),
-        label: const Text('Add Transaction'),
+        label: const Text('Record Transaction'),
         onPressed: () {
           showAddTransactionScreen(context);
         },
@@ -386,122 +392,172 @@ class _TransactionScreenState extends State<TransactionScreen> {
   Widget _buildTransactionCard(TransactionModel tx,
       TransactionProvider transactionProvider, NumberFormat formatter) {
     final isIncome = tx.type.toLowerCase() == 'other income';
+    final accentColor = isIncome ? TransactionScreen.warmAmber : Colors.redAccent;
 
-    return Container(
+    return HoverElevateCard(
       margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-        padding: const EdgeInsets.all(12),
-        decoration: BoxDecoration(
-          color: TransactionScreen.offWhite,
-          borderRadius: BorderRadius.circular(12),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.grey.shade300,
-              blurRadius: 2,
-              offset: const Offset(0, 1),
-            ),
-          ],
-        ),
+      child: Padding(
+        padding: const EdgeInsets.all(14),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                CircleAvatar(
-                  backgroundColor:
-                      isIncome ? TransactionScreen.warmAmber : Colors.redAccent,
+                Container(
+                  padding: const EdgeInsets.all(9),
+                  decoration: BoxDecoration(
+                    color: accentColor.withValues(alpha: 0.12),
+                    shape: BoxShape.circle,
+                  ),
                   child: Icon(
                     isIncome ? Icons.arrow_downward : Icons.arrow_upward,
-                    color: TransactionScreen.offWhite,
+                    color: accentColor,
+                    size: 18,
                   ),
                 ),
                 const SizedBox(width: 12),
                 Expanded(
                   child: Text(
-                    '${toTitleCase(tx.type)}: Tsh ${formatter.format(tx.amount)}',
-                    style: TextStyle(
-                      fontWeight: FontWeight.bold,
-                      color: isIncome
-                          ? TransactionScreen.primaryDeepGreen
-                          : Colors.redAccent,
-                    ),
+                    tx.description.isEmpty ? toTitleCase(tx.type) : tx.description,
+                    style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15.5),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
                   ),
+                ),
+                const SizedBox(width: 8),
+                Text(
+                  'Tsh ${formatter.format(tx.amount)}',
+                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15, color: accentColor),
                 ),
               ],
             ),
-            const SizedBox(height: 8),
-            Text('Description: ${tx.description}', style: const TextStyle(fontSize: 13)),
-            const SizedBox(height: 4),
-            Text('Category: ${tx.category.isEmpty ? 'N/A' : tx.category}',
-                style: const TextStyle(fontSize: 13)),
-            const SizedBox(height: 4),
-            Text('Date: ${tx.date.toLocal().toString().split('.')[0]}',
-                style: const TextStyle(fontSize: 13)),
-            const SizedBox(height: 4),
-            Text('Recorded By: ${tx.recordedBy.isEmpty ? 'Unknown' : tx.recordedBy}',
-                style: const TextStyle(fontSize: 13)),
+            const SizedBox(height: 10),
+            Wrap(
+              spacing: 8,
+              runSpacing: 6,
+              crossAxisAlignment: WrapCrossAlignment.center,
+              children: [
+                _MetaChip(label: toTitleCase(tx.type)),
+                if (tx.category.isNotEmpty) _MetaChip(label: tx.category),
+                Text(
+                  DateFormat('d MMM yyyy, HH:mm').format(tx.date.toLocal()),
+                  style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+                ),
+              ],
+            ),
             if (tx.paymentMethod != null) ...[
-              const SizedBox(height: 4),
+              const SizedBox(height: 8),
               Row(
                 children: [
-                  const Text('Payment Method: ', style: TextStyle(fontSize: 13)),
-                  Icon(iconForPaymentMethod(tx.paymentMethod!), size: 14, color: Colors.grey[700]),
-                  const SizedBox(width: 3),
-                  Text(tx.paymentMethod!, style: const TextStyle(fontSize: 13)),
+                  Icon(iconForPaymentMethod(tx.paymentMethod!), size: 14, color: Colors.grey[600]),
+                  const SizedBox(width: 5),
+                  Text(tx.paymentMethod!, style: TextStyle(fontSize: 12.5, color: Colors.grey[700])),
                 ],
               ),
             ],
-            const SizedBox(height: 8),
+            const Divider(height: 22),
             Row(
-              mainAxisAlignment: MainAxisAlignment.end,
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                if (Provider.of<UserRoleProvider>(context).isAdmin)
-                TextButton.icon(
-                  icon: const Icon(Icons.delete, size: 16, color: Colors.red),
-                  label: const Text('Delete', style: TextStyle(color: Colors.red)),
-                  onPressed: () async {
-                    try {
-                      await transactionProvider.deleteTransaction(context, tx.id);
-                      if (!context.mounted) return;
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Transaction deleted'), backgroundColor: Colors.green),
-                      );
-                    } catch (e) {
-                      if (!context.mounted) return;
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text('Could not delete: $e'), backgroundColor: Colors.redAccent),
-                      );
-                    }
-                  },
-                ),
-                const SizedBox(width: 8),
-                ElevatedButton.icon(
-                  onPressed: () {
-                    showAddTransactionScreen(context, transaction: tx);
-                  },
-                  icon: const Icon(Icons.edit, size: 16),
-                  label: const Text('Edit'),
-                  style: ButtonStyle(
-                    backgroundColor: WidgetStateProperty.resolveWith<Color>((states) {
-                      if (states.contains(WidgetState.hovered)) {
-                        return TransactionScreen.warmAmber;
-                      }
-                      return TransactionScreen.primaryDeepGreen;
-                    }),
-                    foregroundColor: WidgetStateProperty.all(TransactionScreen.offWhite),
+                Expanded(
+                  child: Text(
+                    'Recorded by ${tx.recordedBy.isEmpty ? 'Unknown' : tx.recordedBy}',
+                    style: TextStyle(fontSize: 11.5, color: Colors.grey[500]),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
                   ),
+                ),
+                Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    if (Provider.of<UserRoleProvider>(context).isAdmin)
+                      IconButton(
+                        icon: const Icon(Icons.delete_outline, size: 19, color: Colors.redAccent),
+                        tooltip: 'Delete',
+                        visualDensity: VisualDensity.compact,
+                        onPressed: () async {
+                          final confirmed = await showDialog<bool>(
+                            context: context,
+                            builder: (context) => AlertDialog(
+                              title: const Text('Delete this transaction?'),
+                              content: Text(
+                                '"${tx.description.isEmpty ? toTitleCase(tx.type) : tx.description}" - '
+                                'Tsh ${formatter.format(tx.amount)}\n\nThis cannot be undone.',
+                              ),
+                              actions: [
+                                TextButton(
+                                  onPressed: () => Navigator.pop(context, false),
+                                  child: const Text('Cancel'),
+                                ),
+                                TextButton(
+                                  onPressed: () => Navigator.pop(context, true),
+                                  child: const Text('Delete', style: TextStyle(color: Colors.red)),
+                                ),
+                              ],
+                            ),
+                          );
+                          if (confirmed != true) return;
+                          if (!context.mounted) return;
+
+                          try {
+                            await transactionProvider.deleteTransaction(context, tx.id);
+                            if (!context.mounted) return;
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(content: Text('Transaction deleted'), backgroundColor: Colors.green),
+                            );
+                          } catch (e) {
+                            if (!context.mounted) return;
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(content: Text('Could not delete: $e'), backgroundColor: Colors.redAccent),
+                            );
+                          }
+                        },
+                      ),
+                    IconButton(
+                      icon: Icon(Icons.edit_outlined, size: 19, color: TransactionScreen.primaryDeepGreen),
+                      tooltip: 'Edit',
+                      visualDensity: VisualDensity.compact,
+                      onPressed: () {
+                        showAddTransactionScreen(context, transaction: tx);
+                      },
+                    ),
+                  ],
                 ),
               ],
             ),
           ],
         ),
-      );
-    }
+      ),
+    );
+  }
+}
+
+/// A small, quiet label pill - used for the transaction's type and
+/// category, sitting inline with the date rather than each on its own
+/// separate labeled line as before.
+class _MetaChip extends StatelessWidget {
+  final String label;
+  const _MetaChip({required this.label});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+      decoration: BoxDecoration(
+        color: Colors.grey.shade100,
+        borderRadius: BorderRadius.circular(6),
+      ),
+      child: Text(label, style: TextStyle(fontSize: 11.5, color: Colors.grey[700], fontWeight: FontWeight.w500)),
+    );
+  }
 }
 
 class _SummaryCard extends StatelessWidget {
   final String label;
   final double amount;
   final Color color;
+  final IconData icon;
   final bool isSelected;
   final bool isLoading;
   final VoidCallback onTap;
@@ -511,6 +567,7 @@ class _SummaryCard extends StatelessWidget {
     required this.label,
     required this.amount,
     required this.color,
+    required this.icon,
     required this.isSelected,
     this.isLoading = false,
     required this.onTap,
@@ -519,49 +576,57 @@ class _SummaryCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Unselected: a quiet, light tint with a colored border and colored
-    // text - the card reads as "available to tap" without shouting.
-    // Selected: a solid, full-strength fill with white text, a shadow
-    // lifting it off the page, and a checkmark - unmistakably "this is
-    // the active filter", not just a slightly darker version of the same
-    // tint as before.
-    // Unselected: a very light, quiet tint with a thin colored border.
-    // Selected: a moderate (not solid/neon) tint, a thicker colored
-    // border, and bold checkmark + darker text - separation comes from
-    // border weight and a checkmark, not from a jarring full-brightness
-    // fill.
+    // A white card base with a real shadow and a colored icon, rather
+    // than a flat colored-tint box - matches the stat-card language
+    // used elsewhere in the app. Selected state adds a colored border
+    // and a light tint plus a checkmark, so "this is the active
+    // filter" reads clearly against the plain white unselected look.
     return Expanded(
       child: GestureDetector(
         onTap: onTap,
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 150),
-          padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 8),
+          curve: Curves.easeOut,
+          padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 10),
           decoration: BoxDecoration(
-            color: color.withValues(alpha: isSelected ? 0.22 : 0.08),
-            borderRadius: BorderRadius.circular(12),
+            color: isSelected ? color.withValues(alpha: 0.10) : Colors.white,
+            borderRadius: BorderRadius.circular(14),
             border: Border.all(
-              color: isSelected ? color.darken(0.05) : color.withValues(alpha: 0.35),
-              width: isSelected ? 2 : 1,
+              color: isSelected ? color.darken(0.05) : Colors.grey.shade200,
+              width: isSelected ? 1.6 : 1,
             ),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.05),
+                blurRadius: 6,
+                offset: const Offset(0, 2),
+              ),
+            ],
           ),
           child: Column(
             mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              if (isSelected)
-                Padding(
-                  padding: const EdgeInsets.only(bottom: 4),
-                  child: Icon(Icons.check_circle, size: 16, color: color.darken(0.15)),
-                ),
-              Text(
-                label,
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  color: color.darken(0.3),
-                  fontWeight: isSelected ? FontWeight.bold : FontWeight.w600,
-                  fontSize: 13,
-                ),
+              Row(
+                children: [
+                  Icon(icon, size: 13, color: color.darken(0.1)),
+                  const SizedBox(width: 5),
+                  Expanded(
+                    child: Text(
+                      label,
+                      style: TextStyle(
+                        color: Colors.grey[700],
+                        fontWeight: isSelected ? FontWeight.bold : FontWeight.w600,
+                        fontSize: 12.5,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                  if (isSelected) Icon(Icons.check_circle, size: 14, color: color.darken(0.15)),
+                ],
               ),
-              const SizedBox(height: 6),
+              const SizedBox(height: 4),
               if (isLoading)
                 SizedBox(
                   height: 16,
@@ -574,12 +639,13 @@ class _SummaryCard extends StatelessWidget {
               else
                 FittedBox(
                   fit: BoxFit.scaleDown,
+                  alignment: Alignment.centerLeft,
                   child: Text(
                     'Tsh ${formatter.format(amount)}',
                     style: TextStyle(
                       color: color.darken(0.3),
-                      fontWeight: FontWeight.w600,
-                      fontSize: 14,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 15,
                     ),
                   ),
                 ),

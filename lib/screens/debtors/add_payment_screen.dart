@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
@@ -10,6 +11,7 @@ import '../../providers/facility_provider.dart';
 import '../../providers/service_provider.dart';
 import '../../services/auth_service.dart';
 import '../../utils/activity_logger.dart';
+import '../../utils/thousands_input_formatter.dart';
 import '../../widgets/payment_method_selector.dart';
 
 class AddPaymentScreen extends StatefulWidget {
@@ -17,6 +19,7 @@ class AddPaymentScreen extends StatefulWidget {
   final String? debtDocId;
   final double? amountOwed;
   final String? facilityId;
+  final bool isModal;
 
   const AddPaymentScreen({
     super.key,
@@ -24,6 +27,7 @@ class AddPaymentScreen extends StatefulWidget {
     this.debtDocId,
     this.amountOwed,
     this.facilityId,
+    this.isModal = false,
   });
 
   @override
@@ -273,6 +277,14 @@ class _AddPaymentScreenState extends State<AddPaymentScreen> {
         centerTitle: true,
         backgroundColor: primaryDeepGreen,
         foregroundColor: Colors.white,
+        automaticallyImplyLeading: !widget.isModal,
+        leading: widget.isModal
+            ? IconButton(
+                icon: const Icon(Icons.close),
+                tooltip: 'Close',
+                onPressed: () => Navigator.of(context).pop(),
+              )
+            : null,
       ),
       body: Padding(
         padding: const EdgeInsets.all(16),
@@ -298,16 +310,17 @@ class _AddPaymentScreenState extends State<AddPaymentScreen> {
                   border: OutlineInputBorder(),
                 ),
                 keyboardType: TextInputType.number,
+                inputFormatters: [FilteringTextInputFormatter.digitsOnly, ThousandsSeparatorInputFormatter()],
                 validator: (val) {
                   if (val == null || val.trim().isEmpty) return 'Enter an amount';
-                  final parsed = double.tryParse(val.replaceAll(',', ''));
-                  if (parsed == null || parsed <= 0) return 'Enter a valid amount';
+                  final parsed = parseThousands(val);
+                  if (parsed <= 0) return 'Enter a valid amount';
                   if (widget.amountOwed != null && parsed > widget.amountOwed!) {
                     return 'Cannot pay more than owed';
                   }
                   return null;
                 },
-                onSaved: (val) => amount = double.parse(val!.replaceAll(',', '')),
+                onSaved: (val) => amount = parseThousands(val ?? ''),
               ),
               const SizedBox(height: 20),
               PaymentMethodSelector(
@@ -345,4 +358,74 @@ class _AddPaymentScreenState extends State<AddPaymentScreen> {
       ),
     );
   }
+}
+
+/// Shows AddPaymentScreen as a centered dialog on wide/desktop screens,
+/// or a full-screen push on narrow ones - same modal-on-desktop pattern
+/// as every other Add/Edit screen in the app. Returns the same bool?
+/// result AddPaymentScreen itself pops with, so callers can tell
+/// whether a payment was actually recorded.
+Future<bool?> showAddPaymentScreen(
+  BuildContext context, {
+  Client? preselectedClient,
+  String? debtDocId,
+  double? amountOwed,
+  String? facilityId,
+}) async {
+  final isWideScreen = MediaQuery.of(context).size.width >= 900;
+
+  if (!isWideScreen) {
+    return Navigator.of(context).push<bool>(
+      MaterialPageRoute(
+        builder: (_) => AddPaymentScreen(
+          preselectedClient: preselectedClient,
+          debtDocId: debtDocId,
+          amountOwed: amountOwed,
+          facilityId: facilityId,
+        ),
+      ),
+    );
+  }
+
+  return showGeneralDialog<bool>(
+    context: context,
+    barrierDismissible: true,
+    barrierLabel: 'Record Payment',
+    barrierColor: Colors.black54,
+    transitionDuration: const Duration(milliseconds: 220),
+    pageBuilder: (context, animation, secondaryAnimation) {
+      final screenSize = MediaQuery.of(context).size;
+      return Center(
+        child: SizedBox(
+          width: screenSize.width * 0.8,
+          height: screenSize.height * 0.85,
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(16),
+            child: Material(
+              child: AddPaymentScreen(
+                preselectedClient: preselectedClient,
+                debtDocId: debtDocId,
+                amountOwed: amountOwed,
+                facilityId: facilityId,
+                isModal: true,
+              ),
+            ),
+          ),
+        ),
+      );
+    },
+    transitionBuilder: (context, animation, secondaryAnimation, child) {
+      final curved = CurvedAnimation(parent: animation, curve: Curves.easeOutCubic);
+      return FadeTransition(
+        opacity: curved,
+        child: SlideTransition(
+          position: Tween<Offset>(begin: const Offset(0, 0.03), end: Offset.zero).animate(curved),
+          child: ScaleTransition(
+            scale: Tween<double>(begin: 0.96, end: 1.0).animate(curved),
+            child: child,
+          ),
+        ),
+      );
+    },
+  );
 }

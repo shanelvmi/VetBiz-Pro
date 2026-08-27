@@ -6,6 +6,7 @@ import 'package:intl/intl.dart';
 import '../../models/product.dart';
 import '../../providers/product_provider.dart';
 import '../../providers/facility_provider.dart';
+import '../../utils/thousands_input_formatter.dart';
 
 /// Records a new delivery of an existing product as its own batch - a
 /// separate batch number, expiry, and quantity, never overwriting an
@@ -40,7 +41,9 @@ class _AddBatchScreenState extends State<AddBatchScreen> {
     super.initState();
     _batchController = TextEditingController();
     _quantityController = TextEditingController();
-    _buyPriceController = TextEditingController(text: widget.product.buyPrice.toStringAsFixed(0));
+    _buyPriceController = TextEditingController(
+      text: NumberFormat.decimalPattern('en_US').format(widget.product.buyPrice.round()),
+    );
     _expiryController = TextEditingController();
   }
 
@@ -83,7 +86,9 @@ class _AddBatchScreenState extends State<AddBatchScreen> {
         productId: widget.product.id,
         batchNo: _batchController.text.trim().isEmpty ? null : _batchController.text.trim(),
         expiry: _selectedExpiry,
-        buyPrice: double.tryParse(_buyPriceController.text.replaceAll(',', '')) ?? widget.product.buyPrice,
+        buyPrice: _buyPriceController.text.trim().isEmpty
+            ? widget.product.buyPrice
+            : parseThousands(_buyPriceController.text),
         stockQty: int.tryParse(_quantityController.text.trim()) ?? 0,
         destination: _destination,
       );
@@ -195,6 +200,7 @@ class _AddBatchScreenState extends State<AddBatchScreen> {
                 TextFormField(
                   controller: _buyPriceController,
                   keyboardType: TextInputType.number,
+                  inputFormatters: [FilteringTextInputFormatter.digitsOnly, ThousandsSeparatorInputFormatter()],
                   decoration: const InputDecoration(labelText: 'Buy Price (Tsh)', border: OutlineInputBorder()),
                 ),
                 const SizedBox(height: 24),

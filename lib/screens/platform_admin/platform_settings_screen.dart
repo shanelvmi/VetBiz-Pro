@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:intl/intl.dart';
 
 import '../../constants/subscription_plans.dart';
 import '../../widgets/hover_elevate_card.dart';
 import '../../utils/facility_limit_helper.dart';
+import '../../utils/thousands_input_formatter.dart';
 import 'promotions_screen.dart';
 
 /// Platform-wide configuration - currently new-facility trial length and
@@ -288,7 +291,7 @@ class _PricingSettingsCardState extends State<_PricingSettingsCard> {
     if (!mounted) return;
     setState(() {
       for (final plan in plans) {
-        _controllers[plan.id]?.text = plan.priceTsh.toStringAsFixed(0);
+        _controllers[plan.id]?.text = NumberFormat.decimalPattern('en_US').format(plan.priceTsh.round());
       }
       _isLoading = false;
     });
@@ -298,14 +301,13 @@ class _PricingSettingsCardState extends State<_PricingSettingsCard> {
     final updates = <String, double>{};
     for (final plan in kSubscriptionPlans) {
       final raw = _controllers[plan.id]?.text.trim() ?? '';
-      final parsed = double.tryParse(raw);
-      if (parsed == null || parsed < 0) {
+      if (raw.isEmpty) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Enter a valid price for ${plan.label}')),
         );
         return;
       }
-      updates['${plan.id}PriceTsh'] = parsed;
+      updates['${plan.id}PriceTsh'] = parseThousands(raw);
     }
 
     setState(() => _isSaving = true);
@@ -365,6 +367,7 @@ class _PricingSettingsCardState extends State<_PricingSettingsCard> {
                     child: TextField(
                       controller: _controllers[plan.id],
                       keyboardType: TextInputType.number,
+                      inputFormatters: [FilteringTextInputFormatter.digitsOnly, ThousandsSeparatorInputFormatter()],
                       decoration: InputDecoration(
                         labelText: plan.label,
                         border: const OutlineInputBorder(),

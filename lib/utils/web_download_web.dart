@@ -7,8 +7,8 @@ import 'dart:typed_data';
 /// gets the receipt onto the user's device (their Downloads folder),
 /// just via a different, more universally-supported mechanism than
 /// the native share sheet.
-void downloadFileWeb(Uint8List bytes, String filename) {
-  final blob = html.Blob([bytes], 'image/png');
+void downloadFileWeb(Uint8List bytes, String filename, {String mimeType = 'image/png'}) {
+  final blob = html.Blob([bytes], mimeType);
   final url = html.Url.createObjectUrlFromBlob(blob);
   html.AnchorElement(href: url)
     ..setAttribute('download', filename)

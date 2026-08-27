@@ -36,7 +36,9 @@ class _FacilityDetailScreenState extends State<FacilityDetailScreen> {
   /// approval flow writes - nothing else in the app needs to know this
   /// didn't go through a submission.
   Future<void> _manualOverride(BuildContext context, Map<String, dynamic> facilityData) async {
-    SubscriptionPlan selectedPlan = kSubscriptionPlans[2];
+    final plans = await loadSubscriptionPlans();
+    if (!context.mounted) return;
+    SubscriptionPlan selectedPlan = plans[2];
     bool isFree = false;
     final freeDaysController = TextEditingController(text: '30');
 
@@ -52,7 +54,7 @@ class _FacilityDetailScreenState extends State<FacilityDetailScreen> {
               children: [
                 const Text('Use this for payments collected outside the app, or to grant free access.'),
                 const SizedBox(height: 12),
-                ...kSubscriptionPlans.map((plan) {
+                ...plans.map((plan) {
                   return RadioListTile<String>(
                     contentPadding: EdgeInsets.zero,
                     title: Text('${plan.label} - Tsh ${plan.priceTsh.toStringAsFixed(0)}'),
@@ -89,6 +91,14 @@ class _FacilityDetailScreenState extends State<FacilityDetailScreen> {
                       ),
                     ),
                   ),
+                if (!isFree && selectedPlan.priceTsh <= 0)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 8),
+                    child: Text(
+                      'Pricing for this plan is not available right now.',
+                      style: TextStyle(fontSize: 12.5, color: Colors.grey[700]),
+                    ),
+                  ),
               ],
             ),
           ),
@@ -99,7 +109,7 @@ class _FacilityDetailScreenState extends State<FacilityDetailScreen> {
               child: const Text('Cancel'),
             ),
             ElevatedButton(
-              onPressed: () => Navigator.pop(context, true),
+              onPressed: (!isFree && selectedPlan.priceTsh <= 0) ? null : () => Navigator.pop(context, true),
               style: _accentButtonStyle,
               child: const Text('Apply'),
             ),
@@ -139,7 +149,13 @@ class _FacilityDetailScreenState extends State<FacilityDetailScreen> {
     final currentExpiresDate = currentExpires is Timestamp ? currentExpires.toDate() : null;
     final now = DateTime.now();
     final base = (currentExpiresDate != null && currentExpiresDate.isAfter(now)) ? currentExpiresDate : now;
-    final newExpiry = base.add(Duration(days: durationDays));
+    final newExpiryDate = base.add(Duration(days: durationDays));
+    // Always the end of that day, not the exact time-of-day this
+    // manual update happened to be applied at - same rule as the
+    // automated approval flows, so a manually-granted period behaves
+    // identically to one that came through normal payment review.
+    final newExpiry =
+        DateTime(newExpiryDate.year, newExpiryDate.month, newExpiryDate.day, 23, 59, 59);
 
     final admin = FirebaseAuth.instance.currentUser;
 
@@ -292,6 +308,16 @@ class _FacilityDetailScreenState extends State<FacilityDetailScreen> {
                 children: [
                   Text(data['name'] ?? 'Unnamed facility', style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
                   Text(data['type'] ?? '', style: TextStyle(color: Colors.grey[600])),
+                  if (data['createdBy'] != null)
+                    FutureBuilder<DocumentSnapshot>(
+                      future: FirebaseFirestore.instance.collection('users').doc(data['createdBy'] as String).get(),
+                      builder: (context, ownerSnap) {
+                        final ownerData = ownerSnap.data?.data() as Map<String, dynamic>?;
+                        final ownerName = ownerData?['fullName'] as String?;
+                        if (ownerName == null || ownerName.isEmpty) return const SizedBox.shrink();
+                        return Text('Owner: $ownerName', style: TextStyle(color: Colors.grey[600]));
+                      },
+                    ),
                   const SizedBox(height: 16),
                   Card(
                     child: Padding(

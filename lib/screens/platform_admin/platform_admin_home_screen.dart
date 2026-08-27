@@ -38,7 +38,7 @@ class _PlatformAdminHomeScreenState extends State<PlatformAdminHomeScreen> {
     Tab(text: 'Facilities'),
     Tab(text: 'Users'),
     Tab(text: 'Requests'),
-    Tab(text: 'Announcements'),
+    Tab(text: 'Branding'),
     Tab(text: 'Admins'),
   ];
 

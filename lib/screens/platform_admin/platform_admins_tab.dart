@@ -169,13 +169,16 @@ class _PlatformAdminsTabState extends State<PlatformAdminsTab> {
                 return const Center(child: Text('No platform admins found.'));
               }
 
-              return ListView.builder(
-                padding: const EdgeInsets.symmetric(horizontal: 12),
-                itemCount: docs.length,
-                itemBuilder: (context, index) {
-                  final doc = docs[index];
-                  final data = doc.data() as Map<String, dynamic>;
-                  final isYou = doc.id == FirebaseAuth.instance.currentUser?.uid;
+              return Center(
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: 700),
+                  child: ListView.builder(
+                    padding: const EdgeInsets.symmetric(horizontal: 12),
+                    itemCount: docs.length,
+                    itemBuilder: (context, index) {
+                      final doc = docs[index];
+                      final data = doc.data() as Map<String, dynamic>;
+                      final isYou = doc.id == FirebaseAuth.instance.currentUser?.uid;
 
                   return FutureBuilder<DocumentSnapshot>(
                     // The authoritative source for who this actually is -
@@ -266,6 +269,8 @@ class _PlatformAdminsTabState extends State<PlatformAdminsTab> {
                     },
                   );
                 },
+              ),
+                ),
               );
             },
           ),

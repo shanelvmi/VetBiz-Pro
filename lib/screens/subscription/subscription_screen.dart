@@ -29,10 +29,14 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
   final NumberFormat _moneyFormat = NumberFormat('#,##0', 'en_US');
   final ImagePicker _picker = ImagePicker();
 
-  // Starts with the static defaults so the plan picker isn't blank
-  // while the real, Platform-Admin-configured prices load - _loadPlans
-  // below swaps these in as soon as they're available.
+  // Starts with the static defaults so _selectedPlan and _effectivePrice
+  // calculations have something valid to work with immediately, but
+  // the picker itself stays hidden behind _plansLoaded below until the
+  // real, Platform-Admin-configured prices actually arrive - showing
+  // these placeholder numbers even briefly, only to visibly swap them
+  // out moments later, looks like a bug rather than a loading state.
   List<SubscriptionPlan> _plans = kSubscriptionPlans;
+  bool _plansLoaded = false;
   SubscriptionPlan _selectedPlan = kSubscriptionPlans[2]; // Monthly default
   String _method = 'M-Pesa';
   final TextEditingController _referenceController = TextEditingController();
@@ -58,6 +62,7 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
       if (!mounted) return;
       setState(() {
         _plans = plans;
+        _plansLoaded = true;
         // Keeps the same plan selected (by id, not list position) -
         // each new stream event produces fresh SubscriptionPlan
         // instances, so re-resolving by id (rather than keeping the
@@ -253,10 +258,10 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
                       const SizedBox(height: 6),
                       Text(
                         sub.status == SubscriptionStatus.locked
-                            ? 'Expired on ${DateFormat('dd MMM yyyy').format(sub.expiresAt!)}'
+                            ? 'Expired on ${DateFormat('dd MMM yyyy, HH:mm').format(sub.expiresAt!)}'
                             : sub.status == SubscriptionStatus.trial
-                                ? 'Trial expires on ${DateFormat('dd MMM yyyy').format(sub.expiresAt!)}'
-                                : 'Renews / expires on ${DateFormat('dd MMM yyyy').format(sub.expiresAt!)}',
+                                ? 'Trial expires on ${DateFormat('dd MMM yyyy, HH:mm').format(sub.expiresAt!)}'
+                                : 'Renews / expires on ${DateFormat('dd MMM yyyy, HH:mm').format(sub.expiresAt!)}',
                         style: const TextStyle(fontSize: 13),
                       ),
                     ],
@@ -317,7 +322,13 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
 
               Text('Choose a Plan', style: TextStyle(fontWeight: FontWeight.bold, color: primaryColor)),
               const SizedBox(height: 8),
-              ..._plans.map((plan) {
+              if (!_plansLoaded)
+                const Padding(
+                  padding: EdgeInsets.symmetric(vertical: 24),
+                  child: Center(child: CircularProgressIndicator()),
+                )
+              else
+                ..._plans.map((plan) {
                 final effectivePrice = _effectivePrice(plan);
                 final hasDiscount = effectivePrice < plan.priceTsh;
                 return Card(
@@ -394,10 +405,18 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
               ),
 
               const SizedBox(height: 24),
+              if (_effectivePrice(_selectedPlan) <= 0)
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 8),
+                  child: Text(
+                    'Pricing is not available right now - please try again shortly.',
+                    style: TextStyle(fontSize: 12.5, color: Colors.grey[700]),
+                  ),
+                ),
               SizedBox(
                 height: 48,
                 child: ElevatedButton(
-                  onPressed: _isSubmitting ? null : _submitPayment,
+                  onPressed: (_isSubmitting || _effectivePrice(_selectedPlan) <= 0) ? null : _submitPayment,
                   style: ElevatedButton.styleFrom(
                     backgroundColor: primaryColor,
                     foregroundColor: Colors.white,

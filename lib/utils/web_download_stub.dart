@@ -6,4 +6,4 @@ import 'dart:typed_data';
 /// Native platforms (mobile, desktop apps) already share files
 /// reliably through Share.shareXFiles and the OS's own share sheet,
 /// so this is never actually reached there.
-void downloadFileWeb(Uint8List bytes, String filename) {}
+void downloadFileWeb(Uint8List bytes, String filename, {String mimeType = 'image/png'}) {}
