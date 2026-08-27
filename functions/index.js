@@ -591,6 +591,7 @@ exports.wipeFacilityData = functions.https.onCall(async (data, context) => {
     "trash_clients",
     "trash_services",
     "trash_sales",
+    "trash_transactions",
     "payment_submissions",
   ];
 
@@ -616,7 +617,7 @@ exports.wipeFacilityData = functions.https.onCall(async (data, context) => {
 // ---------------------------------------------------------------------------
 
 const TRASH_RETENTION_DAYS = 30;
-const TRASH_COLLECTIONS = ["trash_products", "trash_clients", "trash_services", "trash_sales"];
+const TRASH_COLLECTIONS = ["trash_products", "trash_clients", "trash_services", "trash_sales", "trash_transactions"];
 
 exports.purgeOldTrash = onSchedule("every 24 hours", async () => {
   const cutoff = admin.firestore.Timestamp.fromDate(

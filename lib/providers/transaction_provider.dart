@@ -264,19 +264,39 @@ class TransactionProvider with ChangeNotifier {
         return;
       }
 
-      await _firestore
+      final docRef = _firestore
           .collection('facilities')
           .doc(facilityId)
           .collection('transactions')
+          .doc(transactionId);
+
+      final snapshot = await docRef.get();
+      if (!snapshot.exists) return;
+
+      final userInfo = await ActivityLogger.getCurrentUserInfo();
+
+      // Moved to `trash_transactions` instead of erased permanently, so
+      // an accidental delete can be undone from the Trash screen - same
+      // pattern already used for products/clients/services/sales.
+      // Auto-purged after 30 days by a scheduled Cloud Function.
+      await _firestore
+          .collection('facilities')
+          .doc(facilityId)
+          .collection('trash_transactions')
           .doc(transactionId)
-          .delete();
+          .set({
+        ...snapshot.data()!,
+        'deletedAt': FieldValue.serverTimestamp(),
+        'deletedBy': userInfo['userName'],
+      });
+
+      await docRef.delete();
 
       if (_subscription == null) {
         _liveTransactions.removeWhere((t) => t.id == transactionId);
         notifyListeners();
       }
 
-      final userInfo = await ActivityLogger.getCurrentUserInfo();
       await ActivityLogger.logActivity(
         facilityId: facilityId,
         userId: userInfo['userId']!,

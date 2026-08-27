@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
 
 import '../../providers/facility_provider.dart';
+import '../../widgets/hover_elevate_card.dart';
 
 /// A single row in the merged payments ledger - could originate from a
 /// sale payment, a service payment, a debt repayment, or an "other
@@ -409,45 +410,41 @@ class _PaymentsScreenState extends State<PaymentsScreen> {
   }
 
   Widget _buildEntryTile(_LedgerEntry e) {
-    return Container(
+    return HoverElevateCard(
       margin: const EdgeInsets.symmetric(vertical: 3),
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-      decoration: BoxDecoration(
-        color: offWhite,
-        borderRadius: BorderRadius.circular(10),
-        boxShadow: [
-          BoxShadow(color: Colors.grey.shade300, blurRadius: 2, offset: const Offset(0, 1)),
-        ],
-      ),
-      child: Row(
-        children: [
-          CircleAvatar(
-            radius: 18,
-            backgroundColor: primaryDeepGreen.withValues(alpha: 0.1),
-            child: Icon(_iconFor(e.type), size: 18, color: primaryDeepGreen),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  e.clientName ?? e.description,
-                  style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
-                ),
-                Text(
-                  '${e.clientName != null ? '${e.description} · ' : ''}${DateFormat('hh:mm a').format(e.timestamp)}'
-                  '${e.paymentMethod != null ? ' · ${e.paymentMethod}' : ''}',
-                  style: TextStyle(fontSize: 12, color: Colors.grey[600]),
-                ),
-              ],
+      color: offWhite,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+        child: Row(
+          children: [
+            CircleAvatar(
+              radius: 18,
+              backgroundColor: primaryDeepGreen.withValues(alpha: 0.1),
+              child: Icon(_iconFor(e.type), size: 18, color: primaryDeepGreen),
             ),
-          ),
-          Text(
-            'Tsh ${_moneyFormat.format(e.amount)}',
-            style: TextStyle(fontWeight: FontWeight.bold, color: primaryDeepGreen),
-          ),
-        ],
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    e.clientName ?? e.description,
+                    style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
+                  ),
+                  Text(
+                    '${e.clientName != null ? '${e.description} · ' : ''}${DateFormat('HH:mm').format(e.timestamp)}'
+                    '${e.paymentMethod != null ? ' · ${e.paymentMethod}' : ''}',
+                    style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+                  ),
+                ],
+              ),
+            ),
+            Text(
+              'Tsh ${_moneyFormat.format(e.amount)}',
+              style: TextStyle(fontWeight: FontWeight.bold, color: primaryDeepGreen),
+            ),
+          ],
+        ),
       ),
     );
   }

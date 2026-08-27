@@ -135,7 +135,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     if (isAdmin)
                       _buildSettingsItem(
                         icon: Icons.delete_outline,
-                        label: 'Trash / Deleted Items',
+                        label: 'Trash',
                         isLast: false,
                         onTap: () {
                           Navigator.push(
@@ -342,7 +342,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         if (isAdmin)
                           _buildSidebarItem(
                             icon: Icons.delete_outline,
-                            label: 'Trash / Deleted Items',
+                            label: 'Trash',
                             navigateKey: 'trash',
                           ),
                         if (isAdmin)

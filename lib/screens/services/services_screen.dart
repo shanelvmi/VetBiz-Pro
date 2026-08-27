@@ -96,7 +96,7 @@ class _ServicesScreenState extends State<ServicesScreen> {
   Widget build(BuildContext context) {
     final serviceProvider = Provider.of<ServiceProvider>(context);
     final services = serviceProvider.services;
-    final dateFormatter = DateFormat('dd MMM yyyy, hh:mm a');
+    final dateFormatter = DateFormat('dd MMM yyyy, HH:mm');
 
     // Always show every category from the Add Service dropdown, even ones
     // with zero services recorded yet - previously a category only

@@ -33,6 +33,7 @@ import '../debtors/debtors_screen.dart';
 import '../payments/payments_screen.dart';
 import '../../providers/subscription_provider.dart';
 import '../../models/promotion.dart';
+import '../../models/notification_model.dart';
 import '../../providers/user_role_provider.dart';
 import '../subscription/subscription_screen.dart';
 import 'stock_alerts_screen.dart';
@@ -1332,17 +1333,33 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
           builder: (context, promoSnapshot) {
             final hasActivePromotion = promoSnapshot.data != null;
 
-            // Cycles through whichever of the three actually apply -
-            // one just blinks in place, several cycle between them,
-            // so someone with an urgent issue AND an active promotion
-            // sees both rather than only whichever was checked first.
-            final activeCategories = <Color>[
-              if (hasNew) Colors.redAccent,
-              if (isInTrialInfo) Colors.blue,
-              if (hasActivePromotion) warmAmber,
-            ];
+            return StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
+              stream: facilityId.isEmpty
+                  ? null
+                  : FirebaseFirestore.instance
+                      .collection('facilities')
+                      .doc(facilityId)
+                      .collection('notifications')
+                      .orderBy('createdAt', descending: true)
+                      .limit(50)
+                      .snapshots(),
+              builder: (context, notifSnapshot) {
+                final hasUnreadFacilityNotification = (notifSnapshot.data?.docs ?? [])
+                    .map(FacilityNotification.fromFirestore)
+                    .any((n) => !n.isRead && !n.isExpired);
 
-            return Stack(
+                // Cycles through whichever of the four actually apply -
+                // one just blinks in place, several cycle between them,
+                // so someone with an urgent issue AND an active
+                // promotion sees both rather than only whichever was
+                // checked first.
+                final activeCategories = <Color>[
+                  if (hasNew || hasUnreadFacilityNotification) Colors.redAccent,
+                  if (isInTrialInfo) Colors.blue,
+                  if (hasActivePromotion) warmAmber,
+                ];
+
+                return Stack(
               clipBehavior: Clip.none,
               children: [
                 IconButton(
@@ -1382,6 +1399,8 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
                     ),
                   ),
               ],
+            );
+              },
             );
           },
         );

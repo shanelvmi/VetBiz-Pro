@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -8,6 +9,7 @@ import '../../providers/facility_provider.dart';
 import '../../providers/subscription_provider.dart';
 import '../../providers/user_role_provider.dart';
 import '../../models/product.dart';
+import '../../models/notification_model.dart';
 import '../subscription/subscription_screen.dart';
 import '../../widgets/announcement_message.dart';
 
@@ -71,10 +73,60 @@ class _StockAlertsScreenState extends State<StockAlertsScreen> {
   List<_AlertRow> _lowWarehouse = [];
   List<_AlertRow> _expiring = [];
 
+  List<FacilityNotification> _visibleNotifications = [];
+  StreamSubscription<QuerySnapshot<Map<String, dynamic>>>? _notificationsSub;
+
   @override
   void initState() {
     super.initState();
     _load();
+    _watchNotifications();
+  }
+
+  @override
+  void dispose() {
+    _notificationsSub?.cancel();
+    super.dispose();
+  }
+
+  // A simple, single-field ordering with no where() clause at all -
+  // never needs a composite index, unlike a filtered query would.
+  // Ephemeral-vs-persistent visibility (and marking read) is decided
+  // client-side instead, against a bounded recent window.
+  void _watchNotifications() {
+    final facilityId = Provider.of<FacilityProvider>(context, listen: false).selectedFacilityId;
+    if (facilityId == null) return;
+
+    _notificationsSub = FirebaseFirestore.instance
+        .collection('facilities')
+        .doc(facilityId)
+        .collection('notifications')
+        .orderBy('createdAt', descending: true)
+        .limit(50)
+        .snapshots()
+        .listen((snapshot) {
+      final all = snapshot.docs.map(FacilityNotification.fromFirestore).toList();
+      final visible = all.where((n) => n.isCurrentlyVisible).toList();
+      if (mounted) setState(() => _visibleNotifications = visible);
+
+      // Viewing this screen with an unread, ephemeral notification on
+      // it counts as having read it - same "seeing it is
+      // acknowledging it" philosophy already used for the urgent-
+      // announcements dot elsewhere in this app. A persistent one
+      // (expiresAt set) is marked read too, but stays visible either
+      // way until it actually expires - readAt only affects whether
+      // it's still counted as new.
+      for (final notification in all) {
+        if (!notification.isRead && !notification.isExpired) {
+          FirebaseFirestore.instance
+              .collection('facilities')
+              .doc(facilityId)
+              .collection('notifications')
+              .doc(notification.id)
+              .update({'readAt': FieldValue.serverTimestamp()});
+        }
+      }
+    });
   }
 
   Future<void> _load() async {
@@ -219,6 +271,7 @@ class _StockAlertsScreenState extends State<StockAlertsScreen> {
         _error == null &&
         !subNeedsAttention &&
         !isInTrial &&
+        _visibleNotifications.isEmpty &&
         _critical.isEmpty &&
         _lowShelf.isEmpty &&
         _lowWarehouse.isEmpty &&
@@ -331,6 +384,7 @@ class _StockAlertsScreenState extends State<StockAlertsScreen> {
           _buildTrialInfoCard(context, sub, isAdmin),
           const SizedBox(height: 20),
         ],
+        _buildFacilityNotifications(),
         _buildUrgentAnnouncements(),
         _buildSection(
           icon: Icons.error_outline,
@@ -491,6 +545,36 @@ class _StockAlertsScreenState extends State<StockAlertsScreen> {
             )
           else
             Text('Ask your admin', style: TextStyle(color: color, fontSize: 11.5, fontStyle: FontStyle.italic)),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildFacilityNotifications() {
+    if (_visibleNotifications.isEmpty) return const SizedBox.shrink();
+
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 20),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _sectionHeader(
+            Icons.notifications_outlined,
+            'Notifications',
+            _visibleNotifications.length,
+            StockAlertsScreen.primaryColor,
+          ),
+          const SizedBox(height: 8),
+          ..._visibleNotifications.map((n) {
+            final color = n.isPersistent ? Colors.green : Colors.orange;
+            return _AccentCard(
+              color: color,
+              icon: n.isPersistent ? Icons.local_offer_outlined : Icons.info_outline,
+              title: n.title,
+              margin: const EdgeInsets.only(bottom: 8),
+              child: Text(n.message, style: TextStyle(color: color, fontWeight: FontWeight.w600, fontSize: 12.5)),
+            );
+          }),
         ],
       ),
     );

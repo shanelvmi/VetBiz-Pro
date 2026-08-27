@@ -22,7 +22,7 @@ class _TrashScreenState extends State<TrashScreen> with SingleTickerProviderStat
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 4, vsync: this);
+    _tabController = TabController(length: 5, vsync: this);
   }
 
   @override
@@ -53,6 +53,7 @@ class _TrashScreenState extends State<TrashScreen> with SingleTickerProviderStat
             Tab(text: 'Clients'),
             Tab(text: 'Service Records'),
             Tab(text: 'Sales'),
+            Tab(text: 'Transactions'),
           ],
         ),
       ),
@@ -91,6 +92,19 @@ class _TrashScreenState extends State<TrashScreen> with SingleTickerProviderStat
                         final client = (data['clientName'] as String?) ?? 'Walk-in';
                         final amount = (data['totalAmount'] as num?) ?? 0;
                         return 'Sale - $client - Tsh ${amount.toStringAsFixed(0)}';
+                      },
+                    ),
+                    _TrashList(
+                      facilityId: facilityId,
+                      trashCollection: 'trash_transactions',
+                      liveCollection: 'transactions',
+                      primaryColor: primaryColor,
+                      titleBuilder: (data) {
+                        final description = (data['description'] as String?) ?? '';
+                        final type = (data['type'] as String?) ?? '';
+                        final amount = (data['amount'] as num?) ?? 0;
+                        final label = description.isNotEmpty ? description : (type.isNotEmpty ? type : 'Transaction');
+                        return '$label - Tsh ${amount.toStringAsFixed(0)}';
                       },
                     ),
                   ],

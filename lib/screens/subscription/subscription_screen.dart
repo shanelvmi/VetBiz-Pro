@@ -29,14 +29,10 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
   final NumberFormat _moneyFormat = NumberFormat('#,##0', 'en_US');
   final ImagePicker _picker = ImagePicker();
 
-  // Starts with the static defaults so _selectedPlan and _effectivePrice
-  // calculations have something valid to work with immediately, but
-  // the picker itself stays hidden behind _plansLoaded below until the
-  // real, Platform-Admin-configured prices actually arrive - showing
-  // these placeholder numbers even briefly, only to visibly swap them
-  // out moments later, looks like a bug rather than a loading state.
+  // Starts with the static defaults so the plan picker isn't blank
+  // while the real, Platform-Admin-configured prices load - _loadPlans
+  // below swaps these in as soon as they're available.
   List<SubscriptionPlan> _plans = kSubscriptionPlans;
-  bool _plansLoaded = false;
   SubscriptionPlan _selectedPlan = kSubscriptionPlans[2]; // Monthly default
   String _method = 'M-Pesa';
   final TextEditingController _referenceController = TextEditingController();
@@ -55,6 +51,14 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
   Promotion? _activePromotion;
   StreamSubscription<Promotion?>? _promoSubscription;
 
+  // Blocks a second submission while one is already awaiting review -
+  // prevents duplicate/conflicting payment claims for a Platform
+  // Admin to untangle. Live for the same reason as the streams above:
+  // getting approved or rejected while this screen is open should
+  // unblock (or re-block) the button immediately, not just on reopen.
+  bool _hasPendingSubmission = false;
+  StreamSubscription<QuerySnapshot>? _pendingSubscription;
+
   @override
   void initState() {
     super.initState();
@@ -62,7 +66,6 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
       if (!mounted) return;
       setState(() {
         _plans = plans;
-        _plansLoaded = true;
         // Keeps the same plan selected (by id, not list position) -
         // each new stream event produces fresh SubscriptionPlan
         // instances, so re-resolving by id (rather than keeping the
@@ -90,6 +93,17 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
         if (!mounted) return;
         setState(() => _activePromotion = promo);
       });
+
+      _pendingSubscription = FirebaseFirestore.instance
+          .collection('facilities')
+          .doc(facilityId)
+          .collection('payment_submissions')
+          .where('status', isEqualTo: 'pending')
+          .snapshots()
+          .listen((snapshot) {
+        if (!mounted) return;
+        setState(() => _hasPendingSubmission = snapshot.docs.isNotEmpty);
+      });
     }
   }
 
@@ -97,6 +111,7 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
   void dispose() {
     _plansSubscription?.cancel();
     _promoSubscription?.cancel();
+    _pendingSubscription?.cancel();
     _referenceController.dispose();
     super.dispose();
   }
@@ -258,10 +273,10 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
                       const SizedBox(height: 6),
                       Text(
                         sub.status == SubscriptionStatus.locked
-                            ? 'Expired on ${DateFormat('dd MMM yyyy, HH:mm').format(sub.expiresAt!)}'
+                            ? 'Expired on ${DateFormat('dd MMM yyyy').format(sub.expiresAt!)}'
                             : sub.status == SubscriptionStatus.trial
-                                ? 'Trial expires on ${DateFormat('dd MMM yyyy, HH:mm').format(sub.expiresAt!)}'
-                                : 'Renews / expires on ${DateFormat('dd MMM yyyy, HH:mm').format(sub.expiresAt!)}',
+                                ? 'Trial expires on ${DateFormat('dd MMM yyyy').format(sub.expiresAt!)}'
+                                : 'Renews / expires on ${DateFormat('dd MMM yyyy').format(sub.expiresAt!)}',
                         style: const TextStyle(fontSize: 13),
                       ),
                     ],
@@ -322,13 +337,7 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
 
               Text('Choose a Plan', style: TextStyle(fontWeight: FontWeight.bold, color: primaryColor)),
               const SizedBox(height: 8),
-              if (!_plansLoaded)
-                const Padding(
-                  padding: EdgeInsets.symmetric(vertical: 24),
-                  child: Center(child: CircularProgressIndicator()),
-                )
-              else
-                ..._plans.map((plan) {
+              ..._plans.map((plan) {
                 final effectivePrice = _effectivePrice(plan);
                 final hasDiscount = effectivePrice < plan.priceTsh;
                 return Card(
@@ -405,29 +414,50 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
               ),
 
               const SizedBox(height: 24),
-              if (_effectivePrice(_selectedPlan) <= 0)
-                Padding(
-                  padding: const EdgeInsets.only(bottom: 8),
-                  child: Text(
-                    'Pricing is not available right now - please try again shortly.',
-                    style: TextStyle(fontSize: 12.5, color: Colors.grey[700]),
+              if (_hasPendingSubmission)
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  margin: const EdgeInsets.only(bottom: 12),
+                  decoration: BoxDecoration(
+                    color: Colors.orange.withValues(alpha: 0.08),
+                    borderRadius: BorderRadius.circular(10),
+                    border: Border.all(color: Colors.orange.withValues(alpha: 0.3)),
+                  ),
+                  child: Row(
+                    children: [
+                      const Icon(Icons.hourglass_top, size: 18, color: Colors.orange),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: Text(
+                          'Your last payment is still under review. Please wait for it to be '
+                          'approved or rejected before submitting another.',
+                          style: TextStyle(fontSize: 12.5, color: Colors.orange[800], fontWeight: FontWeight.w600),
+                        ),
+                      ),
+                    ],
                   ),
                 ),
               SizedBox(
                 height: 48,
-                child: ElevatedButton(
-                  onPressed: (_isSubmitting || _effectivePrice(_selectedPlan) <= 0) ? null : _submitPayment,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: primaryColor,
-                    foregroundColor: Colors.white,
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                child: Opacity(
+                  opacity: _hasPendingSubmission ? 0.5 : 1.0,
+                  child: ElevatedButton(
+                    onPressed: (_isSubmitting || _hasPendingSubmission) ? null : _submitPayment,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: primaryColor,
+                      foregroundColor: Colors.white,
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    ),
+                    child: _isSubmitting
+                        ? const SizedBox(
+                            width: 22, height: 22,
+                            child: CircularProgressIndicator(strokeWidth: 2.5, color: Colors.white),
+                          )
+                        : Text(
+                            _hasPendingSubmission ? 'Awaiting Review' : 'Submit Payment for Review',
+                            style: const TextStyle(fontWeight: FontWeight.bold),
+                          ),
                   ),
-                  child: _isSubmitting
-                      ? const SizedBox(
-                          width: 22, height: 22,
-                          child: CircularProgressIndicator(strokeWidth: 2.5, color: Colors.white),
-                        )
-                      : const Text('Submit Payment for Review', style: TextStyle(fontWeight: FontWeight.bold)),
                 ),
               ),
 
@@ -489,7 +519,7 @@ class _SubmissionHistory extends StatelessWidget {
                 title: Text('${data['planLabel'] ?? ''} - Tsh ${data['amount'] ?? 0}'),
                 subtitle: Text(
                   '${data['method'] ?? ''}'
-                  '${submittedAt != null ? ' • ${DateFormat('dd MMM yyyy').format(submittedAt)}' : ''}',
+                  '${submittedAt != null ? ' • ${DateFormat('dd MMM yyyy, HH:mm').format(submittedAt)}' : ''}',
                   style: const TextStyle(fontSize: 12),
                 ),
                 trailing: Chip(

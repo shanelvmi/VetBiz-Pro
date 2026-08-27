@@ -185,7 +185,7 @@ class _SalesScreenState extends State<SalesScreen> {
   @override
   Widget build(BuildContext context) {
     final saleProvider = Provider.of<SaleProvider>(context);
-    final dateFormatter = DateFormat('dd MMM yyyy, hh:mm a');
+    final dateFormatter = DateFormat('dd MMM yyyy, HH:mm');
 
     final sortedSales = [...saleProvider.sales];
     sortedSales.sort((a, b) => b.updatedAt.compareTo(a.updatedAt));

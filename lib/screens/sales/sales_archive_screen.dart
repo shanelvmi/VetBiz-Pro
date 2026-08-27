@@ -193,7 +193,7 @@ class _SalesArchiveScreenState extends State<SalesArchiveScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final dateFormatter = DateFormat('dd MMM yyyy, hh:mm a');
+    final dateFormatter = DateFormat('dd MMM yyyy, HH:mm');
     
     final displayedSales = _archivedSales;
 

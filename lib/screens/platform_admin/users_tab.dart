@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../../widgets/hover_elevate_card.dart';
+import '../../utils/presence_heartbeat.dart';
 import 'user_detail_screen.dart';
 
 /// Every registered user across the whole platform, not scoped to one
@@ -193,6 +195,36 @@ class _UsersTabState extends State<UsersTab> {
             onChanged: _onSearchChanged,
           ),
         ),
+        StreamBuilder<QuerySnapshot>(
+          stream: FirebaseFirestore.instance
+              .collection('users')
+              .where(
+                'lastActiveAt',
+                isGreaterThanOrEqualTo:
+                    Timestamp.fromDate(DateTime.now().subtract(PresenceHeartbeat.onlineWindow)),
+              )
+              .snapshots(),
+          builder: (context, onlineSnapshot) {
+            final onlineCount = onlineSnapshot.data?.docs.length ?? 0;
+            return Padding(
+              padding: const EdgeInsets.fromLTRB(12, 8, 12, 0),
+              child: Row(
+                children: [
+                  Container(
+                    width: 8,
+                    height: 8,
+                    decoration: const BoxDecoration(color: Colors.green, shape: BoxShape.circle),
+                  ),
+                  const SizedBox(width: 6),
+                  Text(
+                    '$onlineCount online',
+                    style: TextStyle(fontSize: 12.5, color: Colors.grey[700], fontWeight: FontWeight.w600),
+                  ),
+                ],
+              ),
+            );
+          },
+        ),
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
           child: Row(
@@ -255,6 +287,40 @@ class _UsersTabState extends State<UsersTab> {
     );
   }
 
+  Widget _buildErrorView(String error) {
+    final urlMatch = RegExp(r'https?://[^\s]+').firstMatch(error);
+    var url = urlMatch?.group(0);
+    // Trim trailing punctuation that might have been swept up if the
+    // URL sits at the end of a sentence.
+    if (url != null) {
+      url = url.replaceAll(RegExp(r'[.,;:\)\]]+$'), '');
+    }
+    final message = url != null ? error.replaceFirst(url, '').trim() : error;
+
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text('Could not load users: $message', textAlign: TextAlign.center),
+            if (url != null) ...[
+              const SizedBox(height: 12),
+              InkWell(
+                onTap: () => launchUrl(Uri.parse(url!), mode: LaunchMode.externalApplication),
+                child: Text(
+                  url,
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(color: Colors.blue, decoration: TextDecoration.underline),
+                ),
+              ),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+
   Widget _buildBody(
     List<QueryDocumentSnapshot<Map<String, dynamic>>> platformAdminDocsRaw,
     Set<String> platformAdminIds,
@@ -263,7 +329,7 @@ class _UsersTabState extends State<UsersTab> {
       return const Center(child: CircularProgressIndicator());
     }
     if (_loadError != null && _docs.isEmpty) {
-      return Center(child: Text('Could not load users: $_loadError'));
+      return _buildErrorView(_loadError!);
     }
 
     var platformAdminDocs = platformAdminDocsRaw.where((doc) {
@@ -303,8 +369,9 @@ class _UsersTabState extends State<UsersTab> {
           ...docs.map((doc) => _buildUserCard(doc, false)),
         ];
 
+        final Widget scrollable;
         if (crossAxisCount == 1) {
-          return ListView.builder(
+          scrollable = ListView.builder(
             controller: _scrollController,
             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
             itemCount: items.length + (_isLoadingMore ? 1 : 0),
@@ -318,19 +385,40 @@ class _UsersTabState extends State<UsersTab> {
               return items[index];
             },
           );
+        } else {
+          scrollable = GridView.builder(
+            controller: _scrollController,
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+            gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: crossAxisCount,
+              crossAxisSpacing: 8,
+              mainAxisSpacing: 8,
+              childAspectRatio: 4.2,
+            ),
+            itemCount: items.length,
+            itemBuilder: (context, index) => items[index],
+          );
         }
 
-        return GridView.builder(
-          controller: _scrollController,
-          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-            crossAxisCount: crossAxisCount,
-            crossAxisSpacing: 8,
-            mainAxisSpacing: 8,
-            childAspectRatio: 4.2,
-          ),
-          itemCount: items.length,
-          itemBuilder: (context, index) => items[index],
+        if (platformAdminDocs.isEmpty) return scrollable;
+
+        return Column(
+          children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(12, 8, 12, 4),
+              child: Row(
+                children: [
+                  const Icon(Icons.workspace_premium, size: 14, color: Colors.deepPurple),
+                  const SizedBox(width: 6),
+                  Text(
+                    'Platform Admins (${platformAdminDocs.length})',
+                    style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12.5, color: Colors.deepPurple),
+                  ),
+                ],
+              ),
+            ),
+            Expanded(child: scrollable),
+          ],
         );
       },
     );
@@ -344,9 +432,16 @@ class _UsersTabState extends State<UsersTab> {
     final name = (data['fullName'] ?? 'Unknown').toString();
     final roleColor = _roleColor(role);
 
+    final lastActiveField = data['lastActiveAt'];
+    final lastActiveAt = lastActiveField is Timestamp ? lastActiveField.toDate() : null;
+    final isOnline =
+        lastActiveAt != null && DateTime.now().difference(lastActiveAt) <= PresenceHeartbeat.onlineWindow;
+
     return HoverElevateCard(
       margin: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
-      child: InkWell(
+      child: Stack(
+        children: [
+          InkWell(
         borderRadius: BorderRadius.circular(12),
         onTap: () {
           Navigator.push(
@@ -440,6 +535,28 @@ class _UsersTabState extends State<UsersTab> {
             ],
           ),
         ),
+          ),
+          if (isOnline)
+            Positioned(
+              top: 6,
+              right: 8,
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Container(
+                    width: 6,
+                    height: 6,
+                    decoration: const BoxDecoration(color: Colors.green, shape: BoxShape.circle),
+                  ),
+                  const SizedBox(width: 3),
+                  Text(
+                    'Online',
+                    style: TextStyle(fontSize: 9, color: Colors.green[700], fontWeight: FontWeight.bold),
+                  ),
+                ],
+              ),
+            ),
+        ],
       ),
     );
   }

@@ -13,6 +13,8 @@ import 'screens/facilities/facility_picker_screen.dart';
 import 'screens/platform_admin/platform_admin_home_screen.dart';
 import 'utils/facility_activation.dart';
 import 'utils/activity_signal.dart';
+import 'utils/presence_heartbeat.dart';
+import 'widgets/maintenance_gate.dart';
 
 import 'services/auth_service.dart';
 
@@ -156,7 +158,7 @@ class VetBizProApp extends StatelessWidget {
           onPointerDown: (_) => globalActivitySignal.add(null),
           onPointerSignal: (_) => globalActivitySignal.add(null),
           behavior: HitTestBehavior.translucent,
-          child: child,
+          child: MaintenanceGate(child: child!),
         );
       },
     );
@@ -179,6 +181,7 @@ class _AppEntryPointState extends State<AppEntryPoint> {
   // faster than this can complete, it can never actually finish,
   // which looks exactly like an endless spinner/circling login.
   String? _decidedForUid;
+  String? _heartbeatStartedForUid;
   Future<Widget>? _decideScreenFuture;
 
   Future<Widget> _decideScreenMemoized(User user) {
@@ -297,11 +300,23 @@ class _AppEntryPointState extends State<AppEntryPoint> {
     }
   }
 
+  void _syncHeartbeat(String? uid) {
+    if (uid == _heartbeatStartedForUid) return;
+    _heartbeatStartedForUid = uid;
+    if (uid != null) {
+      PresenceHeartbeat.start();
+    } else {
+      PresenceHeartbeat.stop();
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return StreamBuilder<User?>(
       stream: FirebaseAuth.instance.authStateChanges(),
       builder: (context, snapshot) {
+        _syncHeartbeat(snapshot.data?.uid);
+
         Widget child;
         String key;
 

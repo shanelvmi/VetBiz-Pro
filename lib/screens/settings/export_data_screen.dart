@@ -51,7 +51,7 @@ class _ExportDataScreenState extends State<ExportDataScreen> {
 
   static const List<Map<String, String>> _dataTypes = [
     {'title': 'Sales & Transactions', 'subtitle': 'Sales (incl. archived) and transaction history'},
-    {'title': 'Services', 'subtitle': 'Services performed (incl. archived), by client and category'},
+    {'title': 'Service Records', 'subtitle': 'Services performed (incl. archived), by client and category'},
     {'title': 'Product Inventory Catalog', 'subtitle': 'Current stock levels, costs, and SKU list'},
     {'title': 'Client Directory & Balances', 'subtitle': 'Client contacts and current outstanding balances'},
     {'title': 'Debtors / Outstanding Balances', 'subtitle': 'Itemized list of everything currently owed'},
@@ -129,6 +129,34 @@ class _ExportDataScreenState extends State<ExportDataScreen> {
     return xl.TextCellValue(value.toString());
   }
 
+  /// A rough estimate of how wide a cell's content would print - used
+  /// only to size columns sensibly, not for the actual cell value.
+  int _cellDisplayLength(dynamic value) {
+    if (value == null) return 0;
+    if (value is DateTime) return 16; // "yyyy-MM-dd HH:mm" length
+    if (value is num) return NumberFormat('#,##0').format(value).length;
+    return value.toString().length;
+  }
+
+  /// Sizes each column to fit its longest value (header or data),
+  /// clamped to a sane range - wide enough to read without truncation,
+  /// capped so one unusually long outlier doesn't blow out the whole
+  /// sheet. Excel's default width leaves most text truncated until a
+  /// person manually widens every column themselves.
+  void _autoSizeColumns(xl.Sheet sheet, _ExportSection section) {
+    for (var c = 0; c < section.headers.length; c++) {
+      var maxLen = section.headers[c].length;
+      for (final row in section.rows) {
+        if (c < row.length) {
+          final len = _cellDisplayLength(row[c]);
+          if (len > maxLen) maxLen = len;
+        }
+      }
+      final width = (maxLen + 2).clamp(10, 40).toDouble();
+      sheet.setColumnWidth(c, width);
+    }
+  }
+
   /// A real workbook - one sheet per section (so "Sales" and
   /// "Transactions" become two clean tabs instead of one file awkwardly
   /// stacking two tables with blank lines), bolded header row, and a
@@ -138,7 +166,16 @@ class _ExportDataScreenState extends State<ExportDataScreen> {
     final workbook = xl.Excel.createExcel();
     final defaultSheetName = workbook.getDefaultSheet();
 
-    final headerStyle = xl.CellStyle(bold: true);
+    final headerStyle = xl.CellStyle(bold: true, horizontalAlign: xl.HorizontalAlign.Center);
+    final titleStyle = xl.CellStyle(bold: true, horizontalAlign: xl.HorizontalAlign.Center);
+    // Matches this app's own money-formatting convention (thousand
+    // separators, whole numbers) rather than leaving amounts as plain,
+    // unformatted digits once opened in Excel.
+    // A named constant rather than a custom-format constructor call -
+    // NumFormat.standard_3 is Excel's built-in format ID 3, which the
+    // OOXML spec defines as "#,##0" (thousand separators, no decimals),
+    // matching this app's own money-formatting convention.
+    final numberStyle = xl.CellStyle(numberFormat: xl.NumFormat.standard_3);
 
     for (final section in sections) {
       // The very first section reuses the workbook's own default sheet
@@ -148,17 +185,30 @@ class _ExportDataScreenState extends State<ExportDataScreen> {
         workbook.rename(defaultSheetName, section.sheetName);
       }
       final sheet = workbook[section.sheetName];
+      _autoSizeColumns(sheet, section);
+
+      // Every title row spans the full width of the table it sits
+      // above, not just column A - a real column count of at least 1
+      // even for a table with a single column, so merge is always
+      // well-defined.
+      final lastColumn = (section.headers.length - 1).clamp(0, section.headers.length);
 
       var rowIndex = 0;
       if (dateRangeLabel != null) {
-        sheet.cell(xl.CellIndex.indexByColumnRow(columnIndex: 0, rowIndex: rowIndex)).value =
-            xl.TextCellValue('Export Period: $dateRangeLabel');
+        final start = xl.CellIndex.indexByColumnRow(columnIndex: 0, rowIndex: rowIndex);
+        final end = xl.CellIndex.indexByColumnRow(columnIndex: lastColumn, rowIndex: rowIndex);
+        sheet.cell(start).value = xl.TextCellValue('Export Period: $dateRangeLabel');
+        sheet.cell(start).cellStyle = titleStyle;
+        sheet.merge(start, end);
         rowIndex++;
         rowIndex++; // blank spacer row
       }
 
-      sheet.cell(xl.CellIndex.indexByColumnRow(columnIndex: 0, rowIndex: rowIndex)).value =
-          xl.TextCellValue(section.subtitle);
+      final subtitleStart = xl.CellIndex.indexByColumnRow(columnIndex: 0, rowIndex: rowIndex);
+      final subtitleEnd = xl.CellIndex.indexByColumnRow(columnIndex: lastColumn, rowIndex: rowIndex);
+      sheet.cell(subtitleStart).value = xl.TextCellValue(section.subtitle);
+      sheet.cell(subtitleStart).cellStyle = titleStyle;
+      sheet.merge(subtitleStart, subtitleEnd);
       rowIndex++;
 
       for (var c = 0; c < section.headers.length; c++) {
@@ -170,8 +220,11 @@ class _ExportDataScreenState extends State<ExportDataScreen> {
 
       for (final row in section.rows) {
         for (var c = 0; c < row.length; c++) {
-          sheet.cell(xl.CellIndex.indexByColumnRow(columnIndex: c, rowIndex: rowIndex)).value =
-              _toCellValue(row[c]);
+          final cell = sheet.cell(xl.CellIndex.indexByColumnRow(columnIndex: c, rowIndex: rowIndex));
+          cell.value = _toCellValue(row[c]);
+          if (row[c] is num) {
+            cell.cellStyle = numberStyle;
+          }
         }
         rowIndex++;
       }
@@ -197,7 +250,7 @@ class _ExportDataScreenState extends State<ExportDataScreen> {
 
       final List<_ExportSection> sections;
       switch (_selectedDataType) {
-        case 'Services':
+        case 'Service Records':
           sections = await _buildServicesData(facilityId);
           break;
         case 'Product Inventory Catalog':
@@ -217,6 +270,11 @@ class _ExportDataScreenState extends State<ExportDataScreen> {
           break;
         default:
           sections = await _buildSalesAndTransactionsData(facilityId);
+      }
+
+      final totalRows = sections.fold<int>(0, (sum, s) => sum + s.rows.length);
+      if (totalRows == 0) {
+        throw Exception('No records found for this selection. Try a different date range or category.');
       }
 
       final isSnapshot = _snapshotTypes.contains(_selectedDataType);
@@ -417,7 +475,7 @@ class _ExportDataScreenState extends State<ExportDataScreen> {
 
     return [
       _ExportSection(
-        sheetName: 'Services',
+        sheetName: 'Service Records',
         subtitle: 'Services (${liveServices.length} active, ${archivedServices.length} archived)',
         headers: ['Date', 'Client', 'Service', 'Category', 'Provided By', 'Total Amount', 'Total Paid', 'Status'],
         rows: rows,
@@ -439,16 +497,25 @@ class _ExportDataScreenState extends State<ExportDataScreen> {
         .orderBy('name')
         .get();
 
+    // Every product's batches fetched concurrently, not one query per
+    // product waited on before starting the next - for a catalog of
+    // any real size this is the difference between a quick export and
+    // a genuinely slow one.
+    final batchSnapshots = await Future.wait(
+      snapshot.docs.map((doc) => doc.reference.collection('batches').get()),
+    );
+
     final rows = <List<dynamic>>[];
 
-    for (final doc in snapshot.docs) {
+    for (var i = 0; i < snapshot.docs.length; i++) {
+      final doc = snapshot.docs[i];
       final data = doc.data();
       final name = data['name'] ?? '';
       final category = data['category'] ?? '';
       final type = data['type'] ?? '';
       final sellPrice = data['sellPrice'] ?? 0;
 
-      final batchesSnap = await doc.reference.collection('batches').get();
+      final batchesSnap = batchSnapshots[i];
 
       if (batchesSnap.docs.isEmpty) {
         rows.add([

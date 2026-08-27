@@ -47,12 +47,6 @@ class PlatformSettingsScreen extends StatelessWidget {
           child: ListView(
             padding: const EdgeInsets.all(16),
             children: [
-              const _TrialSettingsCard(),
-              const SizedBox(height: 16),
-              const _PricingSettingsCard(),
-              const SizedBox(height: 16),
-              const _FacilityLimitSettingsCard(),
-              const SizedBox(height: 16),
               HoverElevateCard(
                 child: InkWell(
                   borderRadius: BorderRadius.circular(12),
@@ -82,8 +76,226 @@ class PlatformSettingsScreen extends StatelessWidget {
                   ),
                 ),
               ),
+              const SizedBox(height: 16),
+              const _PricingSettingsCard(),
+              const SizedBox(height: 16),
+              const _TrialSettingsCard(),
+              const SizedBox(height: 16),
+              const _FacilityLimitSettingsCard(),
+              const SizedBox(height: 16),
+              const _MaintenanceModeCard(),
             ],
           ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Lets a Platform Admin block every non-Platform-Admin user from
+/// using the app - see MaintenanceGate, which watches this live so an
+/// app already open reacts within seconds. The toggle itself saves
+/// immediately on change (no separate Save step, since a delayed
+/// effect here would be actively misleading during a real incident);
+/// turning it ON asks for confirmation first, given how disruptive it
+/// is, but turning it OFF never does, since restoring normal access
+/// is always safe.
+class _MaintenanceModeCard extends StatefulWidget {
+  const _MaintenanceModeCard();
+
+  @override
+  State<_MaintenanceModeCard> createState() => _MaintenanceModeCardState();
+}
+
+class _MaintenanceModeCardState extends State<_MaintenanceModeCard> {
+  static const Color primaryColor = Color(0xFF2F5D62);
+  static const Color warmAmber = Color(0xFFFFB200);
+
+  final TextEditingController _messageController = TextEditingController();
+  bool _isLoading = true;
+  bool _isTogglingMode = false;
+  bool _isSavingMessage = false;
+  bool _isMaintenanceMode = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadCurrentValue();
+  }
+
+  @override
+  void dispose() {
+    _messageController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _loadCurrentValue() async {
+    try {
+      final doc = await FirebaseFirestore.instance.collection('platform_config').doc('settings').get();
+      final data = doc.data();
+      if (mounted) {
+        setState(() {
+          _isMaintenanceMode = data?['maintenanceMode'] as bool? ?? false;
+          _messageController.text = (data?['maintenanceMessage'] as String?) ?? '';
+          _isLoading = false;
+        });
+      }
+    } catch (e) {
+      if (mounted) setState(() => _isLoading = false);
+    }
+  }
+
+  Future<void> _setMaintenanceMode(bool value) async {
+    if (value) {
+      final confirmed = await showDialog<bool>(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: const Text('Turn on maintenance mode?'),
+          content: const Text(
+            'Every user except Platform Admins will be immediately blocked from using '
+            'the app, everywhere, until this is turned back off.',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context, false),
+              child: const Text('Cancel'),
+            ),
+            TextButton(
+              onPressed: () => Navigator.pop(context, true),
+              child: const Text('Turn On', style: TextStyle(color: Colors.redAccent)),
+            ),
+          ],
+        ),
+      );
+      if (confirmed != true) return;
+    }
+
+    setState(() => _isTogglingMode = true);
+    try {
+      await FirebaseFirestore.instance
+          .collection('platform_config')
+          .doc('settings')
+          .set({'maintenanceMode': value}, SetOptions(merge: true));
+      if (!mounted) return;
+      setState(() {
+        _isMaintenanceMode = value;
+        _isTogglingMode = false;
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(value ? 'Maintenance mode is now ON.' : 'Maintenance mode is now OFF.'),
+          backgroundColor: value ? Colors.orange : Colors.green,
+        ),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      setState(() => _isTogglingMode = false);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Could not save: $e'), backgroundColor: Colors.redAccent),
+      );
+    }
+  }
+
+  Future<void> _saveMessage() async {
+    setState(() => _isSavingMessage = true);
+    try {
+      await FirebaseFirestore.instance
+          .collection('platform_config')
+          .doc('settings')
+          .set({'maintenanceMessage': _messageController.text.trim()}, SetOptions(merge: true));
+      if (!mounted) return;
+      setState(() => _isSavingMessage = false);
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Message saved.'), backgroundColor: Colors.green),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      setState(() => _isSavingMessage = false);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Could not save: $e'), backgroundColor: Colors.redAccent),
+      );
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return HoverElevateCard(
+      child: Padding(
+        padding: const EdgeInsets.all(14),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Icon(Icons.build_circle_outlined, color: _isMaintenanceMode ? Colors.orange : primaryColor, size: 20),
+                const SizedBox(width: 8),
+                const Text('Maintenance Mode', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
+              ],
+            ),
+            const SizedBox(height: 4),
+            Text(
+              'Blocks every user except Platform Admins from using the app until turned off.',
+              style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+            ),
+            const SizedBox(height: 12),
+            if (_isLoading)
+              const Center(child: Padding(padding: EdgeInsets.all(8), child: CircularProgressIndicator()))
+            else ...[
+              Row(
+                children: [
+                  Switch(
+                    value: _isMaintenanceMode,
+                    onChanged: _isTogglingMode ? null : _setMaintenanceMode,
+                    activeColor: Colors.orange,
+                  ),
+                  const SizedBox(width: 8),
+                  Text(
+                    _isMaintenanceMode ? 'Currently ON - users are blocked' : 'Currently OFF - app is live',
+                    style: TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w600,
+                      color: _isMaintenanceMode ? Colors.orange[800] : Colors.grey[600],
+                    ),
+                  ),
+                  if (_isTogglingMode) ...[
+                    const SizedBox(width: 8),
+                    const SizedBox(width: 14, height: 14, child: CircularProgressIndicator(strokeWidth: 2)),
+                  ],
+                ],
+              ),
+              const SizedBox(height: 12),
+              TextField(
+                controller: _messageController,
+                maxLines: 2,
+                decoration: const InputDecoration(
+                  labelText: 'Message shown to blocked users (optional)',
+                  hintText: "We're currently performing scheduled maintenance...",
+                  border: OutlineInputBorder(),
+                  isDense: true,
+                ),
+              ),
+              const SizedBox(height: 8),
+              Align(
+                alignment: Alignment.centerRight,
+                child: ElevatedButton(
+                  onPressed: _isSavingMessage ? null : _saveMessage,
+                  style: ButtonStyle(
+                    backgroundColor: WidgetStateProperty.resolveWith<Color>((states) {
+                      if (states.contains(WidgetState.hovered)) return warmAmber;
+                      return primaryColor;
+                    }),
+                    foregroundColor: WidgetStateProperty.all(Colors.white),
+                  ),
+                  child: _isSavingMessage
+                      ? const SizedBox(
+                          width: 16, height: 16,
+                          child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                        )
+                      : const Text('Save Message'),
+                ),
+              ),
+            ],
+          ],
         ),
       ),
     );

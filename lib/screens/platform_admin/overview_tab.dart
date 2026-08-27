@@ -5,6 +5,7 @@ import 'package:intl/intl.dart';
 import '../../utils/subscription_status_utils.dart';
 import '../../widgets/firestore_error_view.dart';
 import '../../widgets/hover_elevate_card.dart';
+import 'overview_details_screen.dart';
 
 /// A snapshot of the whole business - how many facilities, in what state, and
 /// how much has actually been collected this month. Reads every facility
@@ -218,6 +219,16 @@ class _OverviewTabState extends State<OverviewTab> {
               trial: stats['trial'] as int,
               grace: stats['grace'] as int,
               locked: stats['locked'] as int,
+            ),
+
+            const SizedBox(height: 24),
+            Center(
+              child: OutlinedButton.icon(
+                onPressed: () => showOverviewDetailsScreen(context),
+                icon: const Icon(Icons.bar_chart_outlined, size: 18),
+                label: const Text('View More'),
+                style: OutlinedButton.styleFrom(foregroundColor: primaryColor),
+              ),
             ),
           ],
         ),
