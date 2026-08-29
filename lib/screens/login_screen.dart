@@ -2,13 +2,10 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:provider/provider.dart';
 import 'package:smooth_page_indicator/smooth_page_indicator.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../services/auth_service.dart';
-import '../providers/facility_provider.dart';
-import '../providers/product_provider.dart';
 import '../widgets/announcement_message.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -33,14 +30,28 @@ class _LoginScreenState extends State<LoginScreen> {
   bool isRegisterHovered = false;
 
   Timer? _announcementTimer;
+  Timer? _posterTimer;
+  final PageController _posterController = PageController();
+  int _posterIndex = 0;
 
   final Color primaryDeepGreen = const Color(0xFF2F5D62);
+  final Color tealAccent = const Color(0xFF3E8E82);
   final Color warmAmber = const Color(0xFFFFB200);
   final Color offWhite = const Color(0xFFFDFDF9);
   final Color neutralBlack = Colors.black87;
 
-  OutlineInputBorder get _neutralBorder =>
-      OutlineInputBorder(borderSide: BorderSide(color: neutralBlack));
+  // Each a plain string - the brand mark, icon trio, and overall card
+  // stay identical across every slide; only this tagline alternates,
+  // which is what the dot indicators below the card track.
+  static const List<String> _taglines = [
+    'Better Care.\nStronger Business.\nHealthier Future.',
+    'One Platform.\nEvery Facility.\nTotal Control.',
+    'Smarter Records.\nFaster Service.\nHappier Clients.',
+    'Built for Vets.\nTrusted by Owners.\nReady to Grow.',
+  ];
+
+  OutlineInputBorder _fieldBorder(Color color) =>
+      OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: BorderSide(color: color));
 
   @override
   void initState() {
@@ -53,6 +64,18 @@ class _LoginScreenState extends State<LoginScreen> {
         if (mounted) setState(() => error = widget.errorMessage);
       });
     }
+    // Alternates the poster card's tagline on a fixed cycle -
+    // independent of the announcements carousel below, which runs on
+    // its own timer keyed to how many announcements actually exist.
+    _posterTimer = Timer.periodic(const Duration(seconds: 5), (_) {
+      if (!_posterController.hasClients) return;
+      _posterIndex = (_posterIndex + 1) % _taglines.length;
+      _posterController.animateToPage(
+        _posterIndex,
+        duration: const Duration(milliseconds: 500),
+        curve: Curves.easeInOut,
+      );
+    });
   }
 
   Future<void> _loadRememberedEmail() async {
@@ -72,6 +95,8 @@ class _LoginScreenState extends State<LoginScreen> {
     passwordController.dispose();
     passwordFocusNode.dispose();
     _announcementTimer?.cancel();
+    _posterTimer?.cancel();
+    _posterController.dispose();
     super.dispose();
   }
 
@@ -204,7 +229,162 @@ class _LoginScreenState extends State<LoginScreen> {
     }
   }
 
-  // ==================== ANNOUNCEMENTS ====================
+  // ==================== TOP HEADER ====================
+  Widget _buildHeader() {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [primaryDeepGreen, tealAccent],
+          begin: Alignment.centerLeft,
+          end: Alignment.centerRight,
+        ),
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: 44,
+            height: 44,
+            decoration: const BoxDecoration(color: Colors.white, shape: BoxShape.circle),
+            alignment: Alignment.center,
+            child: Text('VB.', style: TextStyle(color: primaryDeepGreen, fontWeight: FontWeight.bold, fontSize: 16)),
+          ),
+          const SizedBox(width: 12),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Text('VetBiz Pro System',
+                  style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16)),
+              Text('Smart Business & Vet Services Monitor',
+                  style: TextStyle(color: Colors.white.withValues(alpha: 0.75), fontSize: 11.5)),
+            ],
+          ),
+          const Spacer(),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+            decoration: BoxDecoration(
+              color: Colors.white.withValues(alpha: 0.15),
+              borderRadius: BorderRadius.circular(20),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  width: 8,
+                  height: 8,
+                  decoration: const BoxDecoration(color: Colors.greenAccent, shape: BoxShape.circle),
+                ),
+                const SizedBox(width: 6),
+                const Text('System Online', style: TextStyle(color: Colors.white, fontSize: 12.5, fontWeight: FontWeight.w600)),
+              ],
+            ),
+          ),
+          const SizedBox(width: 10),
+          Container(
+            width: 36,
+            height: 36,
+            decoration: BoxDecoration(color: Colors.white.withValues(alpha: 0.15), shape: BoxShape.circle),
+            child: const Icon(Icons.settings_outlined, color: Colors.white, size: 18),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // ==================== BOTTOM FOOTER ====================
+  Widget _buildFooter() {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+      color: primaryDeepGreen,
+      child: Row(
+        children: [
+          Icon(Icons.shield_outlined, color: Colors.white.withValues(alpha: 0.7), size: 16),
+          const SizedBox(width: 8),
+          Text('© 2026 VetBiz Pro System. All rights reserved.',
+              style: TextStyle(color: Colors.white.withValues(alpha: 0.7), fontSize: 12)),
+          const Spacer(),
+          Text('v2.0.0', style: TextStyle(color: Colors.white.withValues(alpha: 0.7), fontSize: 12)),
+          const SizedBox(width: 20),
+          Text('Privacy Policy', style: TextStyle(color: Colors.white.withValues(alpha: 0.7), fontSize: 12)),
+          const SizedBox(width: 20),
+          Text('Terms of Service', style: TextStyle(color: Colors.white.withValues(alpha: 0.7), fontSize: 12)),
+        ],
+      ),
+    );
+  }
+
+  // ==================== LEFT: WELCOME CARD ====================
+  Widget _buildWelcomeCard() {
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [primaryDeepGreen, tealAccent],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            width: 44,
+            height: 44,
+            decoration: BoxDecoration(
+              color: Colors.white.withValues(alpha: 0.15),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: const Icon(Icons.chat_bubble_outline, color: Colors.white, size: 20),
+          ),
+          const SizedBox(width: 14),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text('Welcome to', style: TextStyle(color: Colors.white.withValues(alpha: 0.85), fontSize: 13)),
+                const Text('VetBiz Pro System',
+                    style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 19)),
+                const SizedBox(height: 8),
+                Text('Stay updated with the latest news and system announcements.',
+                    style: TextStyle(color: Colors.white.withValues(alpha: 0.8), fontSize: 12.5)),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // ==================== LEFT: ANNOUNCEMENTS ====================
+  Widget _buildAnnouncementsCard() {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: const [BoxShadow(color: Colors.black12, blurRadius: 8, offset: Offset(0, 4))],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(Icons.campaign_outlined, color: neutralBlack, size: 18),
+              const SizedBox(width: 8),
+              Text('Announcements', style: TextStyle(fontWeight: FontWeight.bold, color: neutralBlack, fontSize: 15)),
+              const Spacer(),
+              Icon(Icons.chevron_right, color: Colors.grey.shade400, size: 18),
+            ],
+          ),
+          const Divider(height: 20),
+          _buildAnnouncementsScrollable(),
+        ],
+      ),
+    );
+  }
+
   Widget _buildAnnouncementsScrollable() {
     return StreamBuilder<QuerySnapshot>(
       stream: FirebaseFirestore.instance
@@ -213,12 +393,7 @@ class _LoginScreenState extends State<LoginScreen> {
           .snapshots(),
       builder: (context, snapshot) {
         if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
-          return SizedBox(
-            height: 250,
-            child: Center(
-                child: Text('No announcements',
-                    style: TextStyle(color: neutralBlack))),
-          );
+          return _buildAnnouncementsEmptyState();
         }
 
         final allDocs = snapshot.data!.docs.where((doc) {
@@ -237,12 +412,7 @@ class _LoginScreenState extends State<LoginScreen> {
         final docs = urgentDocs.isNotEmpty ? urgentDocs : allDocs;
 
         if (docs.isEmpty) {
-          return SizedBox(
-            height: 250,
-            child: Center(
-                child: Text('No announcements',
-                    style: TextStyle(color: neutralBlack))),
-          );
+          return _buildAnnouncementsEmptyState();
         }
         final PageController controller = PageController();
         int currentIndex = 0;
@@ -258,7 +428,7 @@ class _LoginScreenState extends State<LoginScreen> {
         });
 
         return SizedBox(
-          height: 250,
+          height: 210,
           child: Column(
             children: [
               // Announcements
@@ -330,33 +500,236 @@ class _LoginScreenState extends State<LoginScreen> {
     );
   }
 
-  // ==================== LOGIN FORM ====================
-  Widget _buildLoginForm() {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.95),
-        borderRadius: BorderRadius.circular(20),
-        boxShadow: const [
-          BoxShadow(color: Colors.black26, blurRadius: 20, offset: Offset(0, 12)),
-        ],
+  Widget _buildAnnouncementsEmptyState() {
+    return SizedBox(
+      height: 210,
+      child: Center(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(Icons.inbox_outlined, size: 44, color: Colors.grey.shade300),
+            const SizedBox(height: 10),
+            Text('No announcements', style: TextStyle(fontWeight: FontWeight.bold, color: neutralBlack, fontSize: 14)),
+            const SizedBox(height: 4),
+            Text("You're all caught up!", style: TextStyle(color: Colors.grey.shade500, fontSize: 12.5)),
+          ],
+        ),
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
+    );
+  }
+
+  // ==================== LEFT: TRUST FOOTER ====================
+  Widget _buildTrustFooter() {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Container(
+          width: 36,
+          height: 36,
+          decoration: BoxDecoration(color: primaryDeepGreen.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(10)),
+          child: Icon(Icons.verified_user_outlined, color: primaryDeepGreen, size: 18),
+        ),
+        const SizedBox(width: 12),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text('Secure. Reliable. Always Connected.',
+                  style: TextStyle(fontWeight: FontWeight.bold, color: neutralBlack, fontSize: 13)),
+              const SizedBox(height: 2),
+              Text('Your trusted partner in animal health and business growth.',
+                  style: TextStyle(color: Colors.grey.shade600, fontSize: 12)),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  // ==================== MIDDLE: POSTER CAROUSEL ====================
+  // Admin-uploaded poster (Platform Admin > Announcements) takes over
+  // entirely when set, replacing the alternating tagline slides below
+  // with that single static image - same upload mechanism as before,
+  // just given priority over the default branded carousel rather than
+  // being the only option.
+  Widget _buildPosterCarousel() {
+    return StreamBuilder<DocumentSnapshot>(
+      stream: FirebaseFirestore.instance.collection('app_config').doc('login_poster').snapshots(),
+      builder: (context, snapshot) {
+        final posterUrl = snapshot.data?.data() != null
+            ? (snapshot.data!.data() as Map<String, dynamic>)['posterUrl'] as String?
+            : null;
+
+        if (posterUrl != null) {
+          return ClipRRect(
+            borderRadius: BorderRadius.circular(20),
+            child: Image.network(
+              posterUrl,
+              fit: BoxFit.cover,
+              width: double.infinity,
+              height: double.infinity,
+              errorBuilder: (_, __, ___) => _buildDefaultPosterCarousel(),
+            ),
+          );
+        }
+        return _buildDefaultPosterCarousel();
+      },
+    );
+  }
+
+  Widget _buildDefaultPosterCarousel() {
+    return Container(
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [primaryDeepGreen, tealAccent],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(20),
+      ),
+      child: Stack(
         children: [
-          Container(
-            color: primaryDeepGreen,
-            padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
-            child: Text(
-              "Log into your facility",
-              style: const TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.normal,
-                  color: Colors.white),
-              textAlign: TextAlign.center,
+          // A faint dot-grid decoration in the corners - a small,
+          // consistent nod to this brand's other promotional material,
+          // rather than an empty gradient with nothing else going on.
+          Positioned(top: 20, left: 20, child: _buildDotGrid()),
+          Positioned(bottom: 90, right: 20, child: _buildDotGrid()),
+          Padding(
+            padding: const EdgeInsets.all(28),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Expanded(
+                  child: PageView.builder(
+                    controller: _posterController,
+                    itemCount: _taglines.length,
+                    itemBuilder: (context, index) => Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisAlignment: MainAxisAlignment.start,
+                      children: [
+                        Text(
+                          _taglines[index],
+                          style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 22, height: 1.3),
+                        ),
+                        const Spacer(),
+                        Center(
+                          child: Column(
+                            children: [
+                              Container(
+                                width: 110,
+                                height: 110,
+                                decoration: BoxDecoration(color: Colors.white.withValues(alpha: 0.15), shape: BoxShape.circle),
+                                alignment: Alignment.center,
+                                child: const Column(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Text('VB.', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 30)),
+                                    Text('VetBiz Pro', style: TextStyle(color: Colors.white, fontSize: 13)),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        const Spacer(),
+                      ],
+                    ),
+                  ),
+                ),
+                SmoothPageIndicator(
+                  controller: _posterController,
+                  count: _taglines.length,
+                  effect: WormEffect(
+                    dotHeight: 6,
+                    dotWidth: 6,
+                    activeDotColor: Colors.white,
+                    dotColor: Colors.white.withValues(alpha: 0.3),
+                  ),
+                ),
+                const SizedBox(height: 20),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  children: [
+                    _buildFeatureIcon(Icons.show_chart, 'Monitor', 'Track performance\nin real-time'),
+                    _buildFeatureIcon(Icons.assignment_outlined, 'Manage', 'Manage operations\nefficiently'),
+                    _buildFeatureIcon(Icons.trending_up, 'Grow', 'Grow your vet\nbusiness'),
+                  ],
+                ),
+              ],
             ),
           ),
-          const SizedBox(height: 16),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildDotGrid() {
+    return SizedBox(
+      width: 48,
+      height: 36,
+      child: GridView.count(
+        crossAxisCount: 4,
+        mainAxisSpacing: 6,
+        crossAxisSpacing: 6,
+        physics: const NeverScrollableScrollPhysics(),
+        children: List.generate(
+          12,
+          (_) => Container(
+            decoration: BoxDecoration(color: Colors.white.withValues(alpha: 0.25), shape: BoxShape.circle),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildFeatureIcon(IconData icon, String label, String caption) {
+    return Expanded(
+      child: Column(
+        children: [
+          Container(
+            width: 44,
+            height: 44,
+            decoration: BoxDecoration(color: Colors.white.withValues(alpha: 0.15), shape: BoxShape.circle),
+            child: Icon(icon, color: Colors.white, size: 20),
+          ),
+          const SizedBox(height: 8),
+          Text(label, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13)),
+          const SizedBox(height: 2),
+          Text(caption, textAlign: TextAlign.center, style: TextStyle(color: Colors.white.withValues(alpha: 0.75), fontSize: 10.5)),
+        ],
+      ),
+    );
+  }
+
+  // ==================== RIGHT: LOGIN FORM ====================
+  Widget _buildLoginForm() {
+    return Container(
+      padding: const EdgeInsets.all(24),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: const [BoxShadow(color: Colors.black12, blurRadius: 10, offset: Offset(0, 4))],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Row(
+            children: [
+              Container(
+                width: 36,
+                height: 36,
+                decoration: BoxDecoration(color: primaryDeepGreen.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(10)),
+                child: Icon(Icons.lock_outline, color: primaryDeepGreen, size: 18),
+              ),
+              const SizedBox(width: 12),
+              Text('Log into your facility',
+                  style: TextStyle(fontSize: 17, fontWeight: FontWeight.bold, color: neutralBlack)),
+            ],
+          ),
+          const SizedBox(height: 24),
+          Text('Email', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: neutralBlack)),
+          const SizedBox(height: 6),
           TextField(
             controller: emailController,
             style: TextStyle(color: neutralBlack),
@@ -364,137 +737,174 @@ class _LoginScreenState extends State<LoginScreen> {
             textInputAction: TextInputAction.next,
             onSubmitted: (_) => passwordFocusNode.requestFocus(),
             decoration: InputDecoration(
-              labelText: 'Email',
-              labelStyle: TextStyle(color: neutralBlack),
-              border: _neutralBorder,
+              hintText: 'Enter your email',
+              hintStyle: TextStyle(color: Colors.grey.shade400),
+              isDense: true,
+              contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+              border: _fieldBorder(Colors.grey.shade300),
+              enabledBorder: _fieldBorder(Colors.grey.shade300),
+              focusedBorder: _fieldBorder(primaryDeepGreen),
             ),
           ),
-          const SizedBox(height: 16),
-          Stack(
-            alignment: Alignment.centerRight,
-            children: [
-              TextField(
-                controller: passwordController,
-                focusNode: passwordFocusNode,
-                obscureText: obscurePassword,
-                style: TextStyle(color: neutralBlack),
-                textInputAction: TextInputAction.done,
-                onSubmitted: (_) => _login(),
-                decoration: InputDecoration(
-                  labelText: 'Password',
-                  labelStyle: TextStyle(color: neutralBlack),
-                  helperText: 'Minimum 6 characters',
-                  helperStyle:
-                      TextStyle(color: neutralBlack, fontSize: 12),
-                  border: _neutralBorder,
+          const SizedBox(height: 18),
+          Text('Password', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: neutralBlack)),
+          const SizedBox(height: 6),
+          TextField(
+            controller: passwordController,
+            focusNode: passwordFocusNode,
+            obscureText: obscurePassword,
+            style: TextStyle(color: neutralBlack),
+            textInputAction: TextInputAction.done,
+            onSubmitted: (_) => _login(),
+            decoration: InputDecoration(
+              hintText: 'Enter your password',
+              hintStyle: TextStyle(color: Colors.grey.shade400),
+              isDense: true,
+              contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+              border: _fieldBorder(Colors.grey.shade300),
+              enabledBorder: _fieldBorder(Colors.grey.shade300),
+              focusedBorder: _fieldBorder(primaryDeepGreen),
+              suffixIcon: GestureDetector(
+                onTap: () => setState(() => obscurePassword = !obscurePassword),
+                child: Icon(
+                  obscurePassword ? Icons.visibility_outlined : Icons.visibility_off_outlined,
+                  color: Colors.grey.shade500,
+                  size: 20,
                 ),
               ),
-              Padding(
-                padding: const EdgeInsets.only(right: 12),
+            ),
+          ),
+          const SizedBox(height: 4),
+          Padding(
+            padding: const EdgeInsets.only(left: 2),
+            child: Text('Minimum 6 characters', style: TextStyle(color: Colors.grey.shade500, fontSize: 11.5)),
+          ),
+          const SizedBox(height: 12),
+          Row(
+            children: [
+              SizedBox(
+                width: 20,
+                height: 20,
+                child: Checkbox(
+                  value: rememberMe,
+                  onChanged: (value) => setState(() => rememberMe = value ?? false),
+                  activeColor: primaryDeepGreen,
+                  checkColor: Colors.white,
+                  materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                ),
+              ),
+              const SizedBox(width: 8),
+              Text('Remember Me', style: TextStyle(color: neutralBlack, fontSize: 13)),
+              const Spacer(),
+              MouseRegion(
+                onEnter: (_) => setState(() => isForgotHovered = true),
+                onExit: (_) => setState(() => isForgotHovered = false),
+                cursor: SystemMouseCursors.click,
                 child: GestureDetector(
-                  onTap: () =>
-                      setState(() => obscurePassword = !obscurePassword),
-                  child: Icon(
-                    obscurePassword ? Icons.visibility_outlined : Icons.visibility_off_outlined,
-                    color: neutralBlack,
-                    size: 20,
+                  onTap: _forgotPassword,
+                  child: Text(
+                    'Forgot Password?',
+                    style: TextStyle(
+                      color: isForgotHovered ? warmAmber : tealAccent,
+                      fontSize: 13,
+                      fontWeight: FontWeight.w600,
+                    ),
                   ),
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 12),
-          Material(
-            type: MaterialType.transparency,
-            child: CheckboxListTile(
-              title: Text('Remember Me', style: TextStyle(color: neutralBlack)),
-              value: rememberMe,
-              onChanged: (value) =>
-                  setState(() => rememberMe = value ?? false),
-              activeColor: primaryDeepGreen,
-              checkColor: Colors.white,
-              contentPadding: EdgeInsets.zero,
-              controlAffinity: ListTileControlAffinity.leading,
-            ),
-          ),
-          Align(
-            alignment: Alignment.centerRight,
-            child: MouseRegion(
-              onEnter: (_) => setState(() => isForgotHovered = true),
-              onExit: (_) => setState(() => isForgotHovered = false),
-              cursor: SystemMouseCursors.click,
-              child: GestureDetector(
-                onTap: _forgotPassword,
-                child: Text(
-                  'Forgot Password?',
-                  style: TextStyle(
-                    color:
-                        isForgotHovered ? warmAmber : primaryDeepGreen,
-                    decoration: TextDecoration.underline,
-                  ),
+          const SizedBox(height: 20),
+          SizedBox(
+            width: double.infinity,
+            height: 48,
+            child: ElevatedButton(
+              onPressed: isLoggingIn ? null : _login,
+              style: ElevatedButton.styleFrom(
+                padding: EdgeInsets.zero,
+                backgroundColor: primaryDeepGreen,
+                disabledBackgroundColor: primaryDeepGreen.withValues(alpha: 0.6),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                elevation: 0,
+              ).copyWith(
+                overlayColor: WidgetStateProperty.resolveWith((states) =>
+                    states.contains(WidgetState.hovered) ? warmAmber : null),
+              ),
+              child: Ink(
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(colors: [primaryDeepGreen, tealAccent]),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Container(
+                  alignment: Alignment.center,
+                  child: isLoggingIn
+                      ? const SizedBox(
+                          width: 20,
+                          height: 20,
+                          child: CircularProgressIndicator(strokeWidth: 2.5, color: Colors.white),
+                        )
+                      : Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Container(
+                              width: 24,
+                              height: 24,
+                              decoration: BoxDecoration(color: Colors.white.withValues(alpha: 0.2), shape: BoxShape.circle),
+                              child: const Icon(Icons.arrow_forward, color: Colors.white, size: 14),
+                            ),
+                            const SizedBox(width: 10),
+                            const Text('Login', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600, fontSize: 15)),
+                            const SizedBox(width: 10),
+                            const Icon(Icons.arrow_forward, color: Colors.white, size: 16),
+                          ],
+                        ),
                 ),
               ),
             ),
           ),
-          const SizedBox(height: 24),
-          ElevatedButton(
-            onPressed: isLoggingIn ? null : _login,
-            style: ElevatedButton.styleFrom(
-              backgroundColor: primaryDeepGreen,
-              foregroundColor: Colors.white,
-              disabledBackgroundColor: primaryDeepGreen.withValues(alpha: 0.6),
-            ).copyWith(
-              overlayColor: WidgetStateProperty.resolveWith((states) =>
-                  states.contains(WidgetState.hovered)
-                      ? warmAmber
-                      : null),
-            ),
-            child: Padding(
-              padding: const EdgeInsets.symmetric(vertical: 12),
-              child: isLoggingIn
-                  ? const SizedBox(
-                      width: 20,
-                      height: 20,
-                      child: CircularProgressIndicator(strokeWidth: 2.5, color: Colors.white),
-                    )
-                  : const Text('Login'),
-            ),
-          ),
           if (error != null)
             Container(
-              margin: const EdgeInsets.only(top: 12),
-              padding: const EdgeInsets.all(10),
+              margin: const EdgeInsets.only(top: 16),
+              padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
                 color: Colors.red.withValues(alpha: 0.08),
-                borderRadius: BorderRadius.circular(8),
-                border: Border.all(color: Colors.red.withValues(alpha: 0.3)),
+                borderRadius: BorderRadius.circular(10),
               ),
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Icon(Icons.error_outline, color: Colors.red, size: 18),
+                  const Icon(Icons.error_outline, color: Colors.redAccent, size: 18),
                   const SizedBox(width: 8),
                   Expanded(
-                    child: Text(error!, style: const TextStyle(color: Colors.red, fontSize: 13)),
+                    child: Text(error!, style: const TextStyle(color: Colors.redAccent, fontSize: 12.5)),
                   ),
                 ],
               ),
             ),
-          const SizedBox(height: 16),
-          MouseRegion(
-            onEnter: (_) => setState(() => isRegisterHovered = true),
-            onExit: (_) => setState(() => isRegisterHovered = false),
-            cursor: SystemMouseCursors.click,
-            child: GestureDetector(
-              onTap: () {
-                Navigator.pushNamed(context, '/register');
-              },
-              child: Text(
-                'Don\'t have an account? Register',
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  color: isRegisterHovered ? warmAmber : primaryDeepGreen,
-                  decoration: TextDecoration.underline,
+          const SizedBox(height: 20),
+          Center(
+            child: MouseRegion(
+              onEnter: (_) => setState(() => isRegisterHovered = true),
+              onExit: (_) => setState(() => isRegisterHovered = false),
+              cursor: SystemMouseCursors.click,
+              child: GestureDetector(
+                onTap: () {
+                  Navigator.pushNamed(context, '/register');
+                },
+                child: RichText(
+                  text: TextSpan(
+                    style: TextStyle(fontSize: 13, color: neutralBlack),
+                    children: [
+                      const TextSpan(text: "Don't have an account? "),
+                      TextSpan(
+                        text: 'Register',
+                        style: TextStyle(
+                          color: isRegisterHovered ? warmAmber : tealAccent,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ),
             ),
@@ -511,217 +921,116 @@ class _LoginScreenState extends State<LoginScreen> {
 
     return Scaffold(
       backgroundColor: offWhite,
-      appBar: AppBar(
-        automaticallyImplyLeading: false, // 🚀 disables back button completely
-        title: Column(
-          children: [
-            Text('VetBiz Pro System',
-                style: TextStyle(fontSize: 20, color: offWhite)),
-            const SizedBox(height: 2),
-            Text('Smart Business & Vet Services Monitor',
-                style: TextStyle(fontSize: 12, color: offWhite)),
-          ],
-        ),
-        centerTitle: true,
-        backgroundColor: primaryDeepGreen,
-      ),
-      body: isWide
-          ? LayoutBuilder(
-              builder: (context, constraints) {
-                final cardHeight =
-                    constraints.maxHeight - 48; // leave some margin
-                return Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // Left: Welcome + Announcements
-                    Expanded(
-                      flex: 3,
-                      child: Container(
-                        height: cardHeight,
-                        padding: const EdgeInsets.all(16),
-                        decoration: BoxDecoration(
-                          border: Border(
-                            right: BorderSide(
-                                color: Colors.grey.shade300, width: 1),
-                          ),
-                        ),
-                        child: Column(
+      body: Column(
+        children: [
+          _buildHeader(),
+          Expanded(
+            child: isWide
+                ? LayoutBuilder(
+                    builder: (context, constraints) {
+                      return Padding(
+                        padding: const EdgeInsets.all(24),
+                        child: Row(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
                           children: [
-                            Container(
-                              color: primaryDeepGreen,
-                              width: double.infinity,
-                              padding: const EdgeInsets.all(12),
-                              child: Text(
-                                "Welcome to VetBiz Pro System",
-                                style: const TextStyle(
-                                    fontSize: 18,
-                                    fontWeight: FontWeight.normal,
-                                    color: Colors.white),
-                                textAlign: TextAlign.center,
+                            // Left: Welcome + Announcements + Trust footer
+                            Expanded(
+                              flex: 3,
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.stretch,
+                                children: [
+                                  _buildWelcomeCard(),
+                                  const SizedBox(height: 16),
+                                  Expanded(child: _buildAnnouncementsCard()),
+                                  const SizedBox(height: 16),
+                                  _buildTrustFooter(),
+                                ],
                               ),
                             ),
-                            const SizedBox(height: 8),
+                            const SizedBox(width: 20),
+
+                            // Center: Poster carousel (admin-uploaded, via
+                            // Platform Admin > Announcements, or the
+                            // default alternating branded slides).
                             Expanded(
-                              child: Container(
-                                padding: const EdgeInsets.all(12),
-                                decoration: BoxDecoration(
-                                  color: offWhite,
-                                  borderRadius: BorderRadius.circular(16),
-                                  boxShadow: const [
-                                    BoxShadow(
-                                        color: Colors.black12,
-                                        blurRadius: 8,
-                                        offset: Offset(0, 4)),
-                                  ],
-                                ),
-                                child: _buildAnnouncementsScrollable(),
-                              ),
+                              flex: 4,
+                              child: _buildPosterCarousel(),
+                            ),
+                            const SizedBox(width: 20),
+
+                            // Right: Login
+                            Expanded(
+                              flex: 3,
+                              child: Center(child: _buildLoginForm()),
                             ),
                           ],
                         ),
-                      ),
-                    ),
+                      );
+                    },
+                  )
+                : Center(
+                    child: SingleChildScrollView(
+                      padding: const EdgeInsets.all(24),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          // A dedicated upload (Platform Admin > Announcements
+                          // > "Login Screen Logo"), separate from the
+                          // wide-screen poster above - that one's sized and
+                          // intended for a much larger space, not a compact
+                          // phone-screen logo. Shown alone, no text label
+                          // alongside it - a cleaner, more modern mobile
+                          // presentation than icon-plus-wordmark.
+                          StreamBuilder<DocumentSnapshot>(
+                            stream: FirebaseFirestore.instance
+                                .collection('app_config')
+                                .doc('login_logo')
+                                .snapshots(),
+                            builder: (context, snapshot) {
+                              // Waiting for the very first snapshot - reserves
+                              // the same space rather than flashing the
+                              // fallback illustration only to swap it out
+                              // moments later once the real logo arrives.
+                              if (snapshot.connectionState == ConnectionState.waiting && !snapshot.hasData) {
+                                return const SizedBox(height: 72);
+                              }
 
-                    // Center: Poster (admin-uploaded, via Platform Admin >
-                    // Announcements) - falls back to the default local
-                    // illustration if no poster has been set.
-                    Expanded(
-                      flex: 4,
-                      child: Container(
-                        height: cardHeight,
-                        padding: const EdgeInsets.all(16),
-                        decoration: BoxDecoration(
-                          border: Border(
-                            right: BorderSide(
-                                color: Colors.grey.shade300, width: 1),
-                          ),
-                        ),
-                        child: StreamBuilder<DocumentSnapshot>(
-                          stream: FirebaseFirestore.instance
-                              .collection('app_config')
-                              .doc('login_poster')
-                              .snapshots(),
-                          builder: (context, snapshot) {
-                            // Waiting for the very first snapshot - reserves
-                            // the same space rather than flashing the
-                            // fallback illustration only to swap it out
-                            // moments later once the real poster arrives.
-                            if (snapshot.connectionState == ConnectionState.waiting && !snapshot.hasData) {
-                              return SizedBox(height: cardHeight * 0.9);
-                            }
+                              final logoUrl = snapshot.data?.data() != null
+                                  ? (snapshot.data!.data() as Map<String, dynamic>)['logoUrl'] as String?
+                                  : null;
 
-                            final posterUrl = snapshot.data?.data() != null
-                                ? (snapshot.data!.data() as Map<String, dynamic>)['posterUrl'] as String?
-                                : null;
-
-                            return Align(
-                              alignment: Alignment.topCenter,
-                              child: AnimatedSwitcher(
+                              return AnimatedSwitcher(
                                 duration: const Duration(milliseconds: 200),
                                 child: KeyedSubtree(
-                                  key: ValueKey(posterUrl ?? 'default'),
-                                  child: posterUrl != null
+                                  key: ValueKey(logoUrl ?? 'default'),
+                                  child: logoUrl != null
                                       ? Image.network(
-                                          posterUrl,
-                                          height: cardHeight * 0.9,
+                                          logoUrl,
+                                          height: 72,
                                           fit: BoxFit.contain,
-                                          errorBuilder: (_, __, ___) => Image.asset(
-                                            'assets/vetbizpro_illustration.png',
-                                            height: cardHeight * 0.9,
-                                            fit: BoxFit.contain,
-                                            errorBuilder: (_, __, ___) => const SizedBox(),
-                                          ),
+                                          errorBuilder: (_, __, ___) => Icon(Icons.pets, size: 44, color: primaryDeepGreen),
                                         )
-                                      : Image.asset(
-                                          'assets/vetbizpro_illustration.png',
-                                          height: cardHeight * 0.9,
-                                          fit: BoxFit.contain,
-                                          errorBuilder: (_, __, ___) => const SizedBox(),
+                                      : Container(
+                                          width: 72,
+                                          height: 72,
+                                          decoration: BoxDecoration(color: primaryDeepGreen, shape: BoxShape.circle),
+                                          alignment: Alignment.center,
+                                          child: const Text('VB.', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 22)),
                                         ),
                                 ),
-                              ),
-                            );
-                          },
-                        ),
-                      ),
-                    ),
-
-                    // Right: Login
-                    Expanded(
-                      flex: 3,
-                      child: Container(
-                        height: cardHeight,
-                        padding: const EdgeInsets.all(16),
-                        child: _buildLoginForm(),
-                      ),
-                    ),
-                  ],
-                );
-              },
-            )
-          : Center(
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.all(24),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    // A dedicated upload (Platform Admin > Announcements
-                    // > "Login Screen Logo"), separate from the
-                    // wide-screen poster above - that one's sized and
-                    // intended for a much larger space, not a compact
-                    // phone-screen logo. Shown alone, no text label
-                    // alongside it - a cleaner, more modern mobile
-                    // presentation than icon-plus-wordmark.
-                    StreamBuilder<DocumentSnapshot>(
-                      stream: FirebaseFirestore.instance
-                          .collection('app_config')
-                          .doc('login_logo')
-                          .snapshots(),
-                      builder: (context, snapshot) {
-                        // Waiting for the very first snapshot - reserves
-                        // the same space rather than flashing the
-                        // fallback illustration only to swap it out
-                        // moments later once the real logo arrives.
-                        if (snapshot.connectionState == ConnectionState.waiting && !snapshot.hasData) {
-                          return const SizedBox(height: 72);
-                        }
-
-                        final logoUrl = snapshot.data?.data() != null
-                            ? (snapshot.data!.data() as Map<String, dynamic>)['logoUrl'] as String?
-                            : null;
-
-                        return AnimatedSwitcher(
-                          duration: const Duration(milliseconds: 200),
-                          child: KeyedSubtree(
-                            key: ValueKey(logoUrl ?? 'default'),
-                            child: logoUrl != null
-                                ? Image.network(
-                                    logoUrl,
-                                    height: 72,
-                                    fit: BoxFit.contain,
-                                    errorBuilder: (_, __, ___) => Image.asset(
-                                      'assets/vetbizpro_illustration.png',
-                                      height: 72,
-                                      fit: BoxFit.contain,
-                                      errorBuilder: (_, __, ___) => Icon(Icons.pets, size: 44, color: primaryDeepGreen),
-                                    ),
-                                  )
-                                : Image.asset(
-                                    'assets/vetbizpro_illustration.png',
-                                    height: 72,
-                                    fit: BoxFit.contain,
-                                    errorBuilder: (_, __, ___) => Icon(Icons.pets, size: 44, color: primaryDeepGreen),
-                                  ),
+                              );
+                            },
                           ),
-                        );
-                      },
+                          const SizedBox(height: 24),
+                          _buildLoginForm(),
+                        ],
+                      ),
                     ),
-                    const SizedBox(height: 24),
-                    _buildLoginForm(),
-                  ],
-                ),
-              ),
-            ),
+                  ),
+          ),
+          _buildFooter(),
+        ],
+      ),
     );
   }
 }
