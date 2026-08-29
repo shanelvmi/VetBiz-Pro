@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:cloud_functions/cloud_functions.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:intl/intl.dart';
 
 /// A single user's account, editable by the Platform Admin - the direct
 /// answer to "an assistant migrated to a new facility, and their old
@@ -24,6 +26,19 @@ class _UserDetailScreenState extends State<UserDetailScreen> {
   void initState() {
     super.initState();
     _userData = Map<String, dynamic>.from(widget.userData);
+    _refreshUserData();
+  }
+
+  Future<void> _refreshUserData() async {
+    try {
+      final freshDoc = await FirebaseFirestore.instance.collection('users').doc(widget.userId).get();
+      if (!mounted || !freshDoc.exists) return;
+      setState(() => _userData = Map<String, dynamic>.from(freshDoc.data()!));
+    } catch (_) {
+      // The passed-in data (from the moment the card was tapped) stays
+      // as a reasonable fallback if this fails - not worth blocking
+      // the screen over.
+    }
   }
 
   Future<void> _addToFacility() async {
@@ -238,9 +253,20 @@ class _UserDetailScreenState extends State<UserDetailScreen> {
     if (confirm != true) return;
 
     try {
-      await FirebaseFirestore.instance.collection('users').doc(widget.userId).update({'status': newStatus});
+      final admin = FirebaseAuth.instance.currentUser;
+      await FirebaseFirestore.instance.collection('users').doc(widget.userId).update({
+        'status': newStatus,
+        'statusChangedBy': admin?.email ?? admin?.uid ?? 'Unknown',
+        'statusChangedByRole': 'Platform Admin',
+        'statusChangedAt': FieldValue.serverTimestamp(),
+      });
       if (!mounted) return;
-      setState(() => _userData['status'] = newStatus);
+      setState(() {
+        _userData['status'] = newStatus;
+        _userData['statusChangedBy'] = admin?.email ?? admin?.uid ?? 'Unknown';
+        _userData['statusChangedByRole'] = 'Platform Admin';
+        _userData['statusChangedAt'] = Timestamp.now();
+      });
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Status updated to $newStatus'), backgroundColor: Colors.green),
       );
@@ -277,13 +303,13 @@ class _UserDetailScreenState extends State<UserDetailScreen> {
                   style: const TextStyle(fontSize: 13),
                 ),
                 const SizedBox(height: 16),
-                Text('Type "$name" to confirm:',
+                Text('Type DELETE to confirm:',
                     style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600)),
                 const SizedBox(height: 8),
                 TextField(
                   controller: confirmController,
                   decoration: const InputDecoration(border: OutlineInputBorder(), isDense: true),
-                  onChanged: (val) => setDialogState(() => canConfirm = val.trim() == name),
+                  onChanged: (val) => setDialogState(() => canConfirm = val.trim() == 'DELETE'),
                 ),
                 if (dialogError != null) ...[
                   const SizedBox(height: 10),
@@ -377,6 +403,20 @@ class _UserDetailScreenState extends State<UserDetailScreen> {
                           ),
                         ],
                       ),
+                      if (_userData['statusChangedBy'] != null) ...[
+                        const SizedBox(height: 4),
+                        Builder(builder: (context) {
+                          final changedByField = _userData['statusChangedAt'];
+                          final changedAt = changedByField is Timestamp ? changedByField.toDate() : null;
+                          final role = (_userData['statusChangedByRole'] as String?) ?? 'Unknown';
+                          final by = (_userData['statusChangedBy'] as String?) ?? 'Unknown';
+                          return Text(
+                            'Changed by $by ($role)'
+                            '${changedAt != null ? ' · ${DateFormat('dd MMM yyyy, HH:mm').format(changedAt)}' : ''}',
+                            style: TextStyle(fontSize: 11.5, color: Colors.grey[600]),
+                          );
+                        }),
+                      ],
                     ],
                   ),
                 ),

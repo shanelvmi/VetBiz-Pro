@@ -145,9 +145,7 @@ class _OverviewTabState extends State<OverviewTab> {
           children: [
             Row(
               children: [
-                const Expanded(
-                  child: Text('Overview', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20)),
-                ),
+                const Spacer(),
                 if (_lastRefreshed != null)
                   Text(
                     'Updated ${DateFormat('HH:mm').format(_lastRefreshed!)}',

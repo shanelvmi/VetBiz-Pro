@@ -154,7 +154,11 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
       if (_proofBytes != null) {
         final ref = FirebaseStorage.instance.ref().child(
             'payment_proofs/$facilityId/${DateTime.now().millisecondsSinceEpoch}.jpg');
-        await ref.putData(_proofBytes!);
+        await ref.putData(_proofBytes!).timeout(
+          const Duration(seconds: 25),
+          onTimeout: () => throw Exception(
+              'The proof image took too long to upload. Please check your connection and try again.'),
+        );
         proofUrl = await ref.getDownloadURL();
       }
 
@@ -414,52 +418,90 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
               ),
 
               const SizedBox(height: 24),
-              if (_hasPendingSubmission)
-                Container(
-                  padding: const EdgeInsets.all(12),
-                  margin: const EdgeInsets.only(bottom: 12),
-                  decoration: BoxDecoration(
-                    color: Colors.orange.withValues(alpha: 0.08),
-                    borderRadius: BorderRadius.circular(10),
-                    border: Border.all(color: Colors.orange.withValues(alpha: 0.3)),
-                  ),
-                  child: Row(
-                    children: [
-                      const Icon(Icons.hourglass_top, size: 18, color: Colors.orange),
-                      const SizedBox(width: 10),
-                      Expanded(
-                        child: Text(
-                          'Your last payment is still under review. Please wait for it to be '
-                          'approved or rejected before submitting another.',
-                          style: TextStyle(fontSize: 12.5, color: Colors.orange[800], fontWeight: FontWeight.w600),
+              Builder(builder: (context) {
+                final effectivePrice = _effectivePrice(_selectedPlan);
+                final priceUnavailable = effectivePrice <= 0;
+                final isBlocked = _hasPendingSubmission || priceUnavailable;
+
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    if (_hasPendingSubmission)
+                      Container(
+                        padding: const EdgeInsets.all(12),
+                        margin: const EdgeInsets.only(bottom: 12),
+                        decoration: BoxDecoration(
+                          color: Colors.orange.withValues(alpha: 0.08),
+                          borderRadius: BorderRadius.circular(10),
+                          border: Border.all(color: Colors.orange.withValues(alpha: 0.3)),
+                        ),
+                        child: Row(
+                          children: [
+                            const Icon(Icons.hourglass_top, size: 18, color: Colors.orange),
+                            const SizedBox(width: 10),
+                            Expanded(
+                              child: Text(
+                                'Your last payment is still under review. Please wait for it to be '
+                                'approved or rejected before submitting another.',
+                                style: TextStyle(fontSize: 12.5, color: Colors.orange[800], fontWeight: FontWeight.w600),
+                              ),
+                            ),
+                          ],
                         ),
                       ),
-                    ],
-                  ),
-                ),
-              SizedBox(
-                height: 48,
-                child: Opacity(
-                  opacity: _hasPendingSubmission ? 0.5 : 1.0,
-                  child: ElevatedButton(
-                    onPressed: (_isSubmitting || _hasPendingSubmission) ? null : _submitPayment,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: primaryColor,
-                      foregroundColor: Colors.white,
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                    ),
-                    child: _isSubmitting
-                        ? const SizedBox(
-                            width: 22, height: 22,
-                            child: CircularProgressIndicator(strokeWidth: 2.5, color: Colors.white),
-                          )
-                        : Text(
-                            _hasPendingSubmission ? 'Awaiting Review' : 'Submit Payment for Review',
-                            style: const TextStyle(fontWeight: FontWeight.bold),
+                    if (priceUnavailable)
+                      Container(
+                        padding: const EdgeInsets.all(12),
+                        margin: const EdgeInsets.only(bottom: 12),
+                        decoration: BoxDecoration(
+                          color: Colors.grey.withValues(alpha: 0.08),
+                          borderRadius: BorderRadius.circular(10),
+                          border: Border.all(color: Colors.grey.withValues(alpha: 0.3)),
+                        ),
+                        child: Row(
+                          children: [
+                            Icon(Icons.error_outline, size: 18, color: Colors.grey[700]),
+                            const SizedBox(width: 10),
+                            Expanded(
+                              child: Text(
+                                'Pricing for this plan isn\'t available right now. Please try again '
+                                'shortly or contact support.',
+                                style: TextStyle(fontSize: 12.5, color: Colors.grey[800], fontWeight: FontWeight.w600),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    SizedBox(
+                      height: 48,
+                      child: Opacity(
+                        opacity: isBlocked ? 0.5 : 1.0,
+                        child: ElevatedButton(
+                          onPressed: (_isSubmitting || isBlocked) ? null : _submitPayment,
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: primaryColor,
+                            foregroundColor: Colors.white,
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                           ),
-                  ),
-                ),
-              ),
+                          child: _isSubmitting
+                              ? const SizedBox(
+                                  width: 22, height: 22,
+                                  child: CircularProgressIndicator(strokeWidth: 2.5, color: Colors.white),
+                                )
+                              : Text(
+                                  _hasPendingSubmission
+                                      ? 'Awaiting Review'
+                                      : priceUnavailable
+                                          ? 'Pricing Unavailable'
+                                          : 'Submit Payment for Review',
+                                  style: const TextStyle(fontWeight: FontWeight.bold),
+                                ),
+                        ),
+                      ),
+                    ),
+                  ],
+                );
+              }),
 
               const SizedBox(height: 24),
               Text('Recent Submissions', style: TextStyle(fontWeight: FontWeight.bold, color: primaryColor)),

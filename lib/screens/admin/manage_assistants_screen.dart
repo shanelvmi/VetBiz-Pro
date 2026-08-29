@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
-import 'package:cloud_functions/cloud_functions.dart';
 import 'invite_assistant_dialog.dart';
 import '../../widgets/hover_elevate_card.dart';
 
@@ -74,8 +73,12 @@ class _ManageAssistantsScreenState extends State<ManageAssistantsScreen> {
 
   Future<void> updateAssistantStatus(String userId, String newStatus) async {
     try {
+      final currentUser = FirebaseAuth.instance.currentUser;
       await FirebaseFirestore.instance.collection('users').doc(userId).update({
         'status': newStatus,
+        'statusChangedBy': currentUser?.email ?? currentUser?.uid ?? 'Unknown',
+        'statusChangedByRole': 'Facility Admin',
+        'statusChangedAt': FieldValue.serverTimestamp(),
       });
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
@@ -86,6 +89,43 @@ class _ManageAssistantsScreenState extends State<ManageAssistantsScreen> {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Failed to update status: $e')),
+      );
+    }
+  }
+
+  // Unlinks just this one facility, never touches status/role or the
+  // account itself - deactivating or permanently removing an account
+  // is Platform-Admin-only. A boss can still "fire" an assistant from
+  // their own team without needing to contact a Platform Admin for
+  // something this routine; the assistant's login stays fully active
+  // and they could be invited to a facility again later.
+  Future<void> removeFromFacility(String userId, String facilityId) async {
+    try {
+      final userDoc = await FirebaseFirestore.instance.collection('users').doc(userId).get();
+      final data = userDoc.data();
+      if (data == null) return;
+
+      final currentFacilityIds = (data['facilityIds'] as List?)?.cast<dynamic>() ?? [];
+      final currentFacilities = (data['facilities'] as List?)?.cast<dynamic>() ?? [];
+
+      final newFacilityIds = currentFacilityIds.where((id) => id != facilityId).toList();
+      final newFacilities = currentFacilities
+          .where((f) => (f as Map)['facilityId'] != facilityId)
+          .toList();
+
+      await FirebaseFirestore.instance.collection('users').doc(userId).update({
+        'facilityIds': newFacilityIds,
+        'facilities': newFacilities,
+      });
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Assistant removed from this facility')),
+      );
+    } catch (e) {
+      debugPrint('Error removing assistant from facility: $e');
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Failed to remove: $e')),
       );
     }
   }
@@ -311,15 +351,15 @@ class _ManageAssistantsScreenState extends State<ManageAssistantsScreen> {
                 if (status == 'active')
                   _actionButton(
                     label: 'Deactivate',
-                    icon: Icons.cancel_outlined,
-                    color: Colors.red,
+                    icon: Icons.pause_circle_outline,
+                    color: Colors.orange,
                     onPressed: () => updateAssistantStatus(doc.id, 'deactivated'),
                   ),
                 if (status == 'deactivated')
                   _actionButton(
                     label: 'Reactivate',
-                    icon: Icons.refresh,
-                    color: Colors.orange,
+                    icon: Icons.play_circle_outline,
+                    color: Colors.green,
                     onPressed: () => updateAssistantStatus(doc.id, 'active'),
                   ),
                 if (status == 'active')
@@ -329,65 +369,39 @@ class _ManageAssistantsScreenState extends State<ManageAssistantsScreen> {
                     color: Colors.teal,
                     onPressed: () => _showFacilityPickerDialog(doc.id),
                   ),
-                if (status != 'active')
+                if (status == 'deactivated')
                   _actionButton(
-                    label: 'Remove',
-                    icon: Icons.delete_outline,
+                    label: 'Remove from Facility',
+                    icon: Icons.person_remove_outlined,
                     color: Colors.grey[700]!,
                     onPressed: () async {
-                      final confirm = await showDialog<bool>(
-                        context: context,
-                        builder: (context) => AlertDialog(
-                          title: const Text('Remove Assistant'),
-                          content: const Text(
-                              'Are you sure you want to remove this assistant? This also fully deletes their login - the same email can be used to register again elsewhere.',
-                              style: TextStyle(fontSize: 13, color: Colors.redAccent)),
-                          actions: [
-                            TextButton(
-                              child: const Text('Cancel'),
-                              onPressed: () => Navigator.pop(context, false),
-                            ),
-                            ElevatedButton(
-                              style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
-                              child: const Text('Remove'),
-                              onPressed: () => Navigator.pop(context, true),
-                            ),
-                          ],
-                        ),
-                      );
-                      if (confirm == true) {
-                        // A dedicated Cloud Function, not a direct
-                        // client-side Firestore delete - it also
-                        // deletes the actual Firebase Auth account,
-                        // which a client can never do for someone
-                        // else's account. Without that, the removed
-                        // assistant's login would silently fail
-                        // forever (no Firestore profile to route from)
-                        // and their email couldn't be used to register
-                        // anywhere else either.
-                        showDialog(
-                          context: context,
-                          barrierDismissible: false,
-                          builder: (context) => const Center(child: CircularProgressIndicator()),
-                        );
-                        try {
-                          final callable = FirebaseFunctions.instance.httpsCallable('removeAssistant');
-                          await callable.call({'assistantUid': doc.id});
-                          if (!mounted) return;
-                          Navigator.pop(context); // close the loading indicator
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(content: Text('Assistant removed')),
-                          );
-                        } catch (e) {
-                          if (!mounted) return;
-                          Navigator.pop(context); // close the loading indicator
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(content: Text('Could not remove assistant: $e')),
-                          );
-                        }
-                      }
-                    },
-                  ),
+                    final confirm = await showDialog<bool>(
+                      context: context,
+                      builder: (context) => AlertDialog(
+                        title: const Text('Remove from Facility'),
+                        content: const Text(
+                            'This removes the assistant from your facility only - their login stays '
+                            'active and they can be invited to a facility again later. Only a Platform '
+                            'Admin can permanently delete an account.',
+                            style: TextStyle(fontSize: 13)),
+                        actions: [
+                          TextButton(
+                            child: const Text('Cancel'),
+                            onPressed: () => Navigator.pop(context, false),
+                          ),
+                          ElevatedButton(
+                            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+                            child: const Text('Remove'),
+                            onPressed: () => Navigator.pop(context, true),
+                          ),
+                        ],
+                      ),
+                    );
+                    if (confirm == true) {
+                      await removeFromFacility(doc.id, facilityId);
+                    }
+                  },
+                ),
               ],
             ),
           ],

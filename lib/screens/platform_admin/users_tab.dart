@@ -40,10 +40,21 @@ class _UsersTabState extends State<UsersTab> {
 
   String _search = '';
   String? _roleFilter;
+  // Client-side only, unlike _roleFilter - avoids needing yet another
+  // Firestore composite index for a role+status combination, and the
+  // already-loaded page is a perfectly reasonable size to filter
+  // locally against.
+  String? _statusFilter;
 
   final ScrollController _scrollController = ScrollController();
 
   List<QueryDocumentSnapshot<Map<String, dynamic>>> _docs = [];
+  // Corrects for _docs being a one-time-fetched, paginated snapshot
+  // rather than a live stream - a card can show a status change made
+  // on the detail screen (e.g. reactivated) the moment you return to
+  // it, rather than only once this list happens to be re-fetched for
+  // some unrelated reason (a filter change, a fresh page load).
+  final Map<String, String> _statusOverrides = {};
   DocumentSnapshot<Map<String, dynamic>>? _lastDoc;
   bool _hasMore = true;
   bool _isLoadingMore = false;
@@ -156,6 +167,10 @@ class _UsersTabState extends State<UsersTab> {
     }
   }
 
+  void _onStatusFilterChanged(String? status) {
+    setState(() => _statusFilter = status);
+  }
+
   Color _roleColor(String role) {
     switch (role) {
       case 'admin':
@@ -252,6 +267,41 @@ class _UsersTabState extends State<UsersTab> {
             ],
           ),
         ),
+        SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          padding: const EdgeInsets.fromLTRB(12, 0, 12, 8),
+          child: Row(
+            children: [
+              _RoleFilterChip(
+                label: 'All',
+                selected: _statusFilter == null,
+                color: primaryColor,
+                onTap: () => _onStatusFilterChanged(null),
+              ),
+              const SizedBox(width: 8),
+              _RoleFilterChip(
+                label: 'Active',
+                selected: _statusFilter == 'active',
+                color: Colors.green,
+                onTap: () => _onStatusFilterChanged('active'),
+              ),
+              const SizedBox(width: 8),
+              _RoleFilterChip(
+                label: 'Awaiting Approval',
+                selected: _statusFilter == 'pending',
+                color: Colors.blue,
+                onTap: () => _onStatusFilterChanged('pending'),
+              ),
+              const SizedBox(width: 8),
+              _RoleFilterChip(
+                label: 'Deactivated',
+                selected: _statusFilter == 'deactivated',
+                color: Colors.orange,
+                onTap: () => _onStatusFilterChanged('deactivated'),
+              ),
+            ],
+          ),
+        ),
         Expanded(
           child: StreamBuilder<QuerySnapshot>(
             stream: FirebaseFirestore.instance.collection('platform_admins').snapshots(),
@@ -335,6 +385,9 @@ class _UsersTabState extends State<UsersTab> {
     var platformAdminDocs = platformAdminDocsRaw.where((doc) {
       final data = doc.data();
       if (_roleFilter != null && data['role'] != _roleFilter) return false;
+      if (_statusFilter != null && (_statusOverrides[doc.id] ?? data['status'] ?? 'active') != _statusFilter) {
+        return false;
+      }
       return _matchesSearch(data);
     }).toList();
     platformAdminDocs.sort((a, b) {
@@ -346,6 +399,12 @@ class _UsersTabState extends State<UsersTab> {
     // Platform Admins are always shown in their own section above,
     // never duplicated here too.
     var docs = _docs.where((doc) => !platformAdminIds.contains(doc.id)).toList();
+    if (_statusFilter != null) {
+      docs = docs.where((doc) {
+        final data = doc.data();
+        return (_statusOverrides[doc.id] ?? data['status'] ?? 'active') == _statusFilter;
+      }).toList();
+    }
     if (_search.isNotEmpty) {
       docs = docs.where((doc) => _matchesSearch(doc.data())).toList();
     }
@@ -427,7 +486,7 @@ class _UsersTabState extends State<UsersTab> {
   Widget _buildUserCard(QueryDocumentSnapshot<Map<String, dynamic>> doc, bool isPlatformAdmin) {
     final data = doc.data();
     final facilities = (data['facilities'] as List?)?.cast<dynamic>() ?? [];
-    final status = (data['status'] ?? 'active').toString();
+    final status = (_statusOverrides[doc.id] ?? data['status'] ?? 'active').toString();
     final role = (data['role'] ?? 'unknown').toString();
     final name = (data['fullName'] ?? 'Unknown').toString();
     final roleColor = _roleColor(role);
@@ -443,13 +502,20 @@ class _UsersTabState extends State<UsersTab> {
         children: [
           InkWell(
         borderRadius: BorderRadius.circular(12),
-        onTap: () {
-          Navigator.push(
+        onTap: () async {
+          await Navigator.push(
             context,
             MaterialPageRoute(
               builder: (_) => UserDetailScreen(userId: doc.id, userData: data),
             ),
           );
+          if (!mounted) return;
+          final freshDoc = await FirebaseFirestore.instance.collection('users').doc(doc.id).get();
+          if (!mounted) return;
+          final freshStatus = freshDoc.data()?['status'] as String?;
+          if (freshStatus != null) {
+            setState(() => _statusOverrides[doc.id] = freshStatus);
+          }
         },
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
@@ -528,8 +594,11 @@ class _UsersTabState extends State<UsersTab> {
               ),
               if (status != 'active')
                 Chip(
-                  label: Text(status, style: const TextStyle(fontSize: 11)),
-                  backgroundColor: Colors.orange.shade100,
+                  label: Text(
+                    status == 'pending' ? 'Awaiting Approval' : status,
+                    style: const TextStyle(fontSize: 11),
+                  ),
+                  backgroundColor: status == 'pending' ? Colors.blue.shade100 : Colors.orange.shade100,
                   visualDensity: VisualDensity.compact,
                 ),
             ],

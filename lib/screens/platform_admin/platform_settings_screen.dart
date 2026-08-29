@@ -14,39 +14,23 @@ import 'promotions_screen.dart';
 /// answers "how's the business doing right now" (stats you glance at),
 /// this answers "how are the business rules configured" (forms you fill
 /// in rarely) - two different things that don't belong on the same
-/// screen. Reached via the gear icon next to Logout, not a tab, since
-/// it's not content to browse alongside Facilities/Users/Requests/etc -
-/// it should feel reachable from anywhere, not like one of the sections.
+/// screen. Embedded directly in the Platform Admin shell's content area
+/// like every other section, reached via its own "Settings" entry under
+/// the sidebar's "Others" group, rather than pushed as a separate
+/// screen or shown as a modal.
 class PlatformSettingsScreen extends StatelessWidget {
-  final bool isModal;
-  const PlatformSettingsScreen({super.key, this.isModal = false});
+  const PlatformSettingsScreen({super.key});
 
   static const Color primaryColor = Color(0xFF2F5D62);
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: const Color(0xFFFDFDF9),
-      appBar: AppBar(
-        title: const Text('Platform Settings'),
-        centerTitle: true,
-        backgroundColor: primaryColor,
-        foregroundColor: Colors.white,
-        automaticallyImplyLeading: !isModal,
-        leading: isModal
-            ? IconButton(
-                icon: const Icon(Icons.close),
-                tooltip: 'Close',
-                onPressed: () => Navigator.of(context).pop(),
-              )
-            : null,
-      ),
-      body: Center(
-        child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 700),
-          child: ListView(
-            padding: const EdgeInsets.all(16),
-            children: [
+    return Center(
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 700),
+        child: ListView(
+          padding: const EdgeInsets.all(16),
+          children: [
               HoverElevateCard(
                 child: InkWell(
                   borderRadius: BorderRadius.circular(12),
@@ -87,8 +71,7 @@ class PlatformSettingsScreen extends StatelessWidget {
             ],
           ),
         ),
-      ),
-    );
+      );
   }
 }
 
@@ -762,57 +745,4 @@ class _FacilityLimitSettingsCardState extends State<_FacilityLimitSettingsCard> 
       ),
     );
   }
-}
-
-/// The one entry point for opening Platform Settings - same reasoning
-/// and threshold as showActivityLog/showSubscriptionScreen/
-/// showInsightsScreen: a full-screen push on mobile, a large, centered,
-/// dismissable modal on desktop/tablet-width screens. This is
-/// substantial form content (two real settings cards), so it gets the
-/// large-modal treatment rather than a small dropdown.
-Future<void> showPlatformSettingsScreen(BuildContext context) async {
-  final isWideScreen = MediaQuery.of(context).size.width >= 900;
-
-  if (!isWideScreen) {
-    await Navigator.of(context).push(
-      MaterialPageRoute(builder: (_) => const PlatformSettingsScreen()),
-    );
-    return;
-  }
-
-  await showGeneralDialog(
-    context: context,
-    barrierDismissible: true,
-    barrierLabel: 'Platform Settings',
-    barrierColor: Colors.black54,
-    transitionDuration: const Duration(milliseconds: 220),
-    pageBuilder: (context, animation, secondaryAnimation) {
-      final screenSize = MediaQuery.of(context).size;
-      return Center(
-        child: SizedBox(
-          width: screenSize.width * 0.8,
-          height: screenSize.height * 0.85,
-          child: ClipRRect(
-            borderRadius: BorderRadius.circular(16),
-            child: const Material(
-              child: PlatformSettingsScreen(isModal: true),
-            ),
-          ),
-        ),
-      );
-    },
-    transitionBuilder: (context, animation, secondaryAnimation, child) {
-      final curved = CurvedAnimation(parent: animation, curve: Curves.easeOutCubic);
-      return FadeTransition(
-        opacity: curved,
-        child: SlideTransition(
-          position: Tween<Offset>(begin: const Offset(0, 0.03), end: Offset.zero).animate(curved),
-          child: ScaleTransition(
-            scale: Tween<double>(begin: 0.96, end: 1.0).animate(curved),
-            child: child,
-          ),
-        ),
-      );
-    },
-  );
 }

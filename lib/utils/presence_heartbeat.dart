@@ -38,10 +38,20 @@ class PresenceHeartbeat {
     final user = FirebaseAuth.instance.currentUser;
     if (user == null) return;
     try {
+      // update(), not set(..., merge: true) - the latter creates the
+      // document if it doesn't exist yet, which is exactly the trap:
+      // right after sign-in, before the registration flow's own write
+      // of the real profile has necessarily run, this heartbeat could
+      // otherwise win that race and originate the user's document
+      // itself, containing nothing but this one field. update() only
+      // ever succeeds against a document that already exists, so a
+      // missing profile simply means this beat fails harmlessly - the
+      // same as any other missed heartbeat - rather than silently
+      // creating a broken, real-profile-less account.
       await FirebaseFirestore.instance
           .collection('users')
           .doc(user.uid)
-          .set({'lastActiveAt': FieldValue.serverTimestamp()}, SetOptions(merge: true));
+          .update({'lastActiveAt': FieldValue.serverTimestamp()});
     } catch (_) {
       // A missed heartbeat just means this one user briefly reads as
       // offline until the next beat succeeds - not worth surfacing as

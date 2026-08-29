@@ -343,22 +343,48 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
     // ---------------- Updating User ----------------
     if (widget.isUpdating && uid != null) {
+      // A defensive guard against wiping a real account's facility
+      // access - if this screen's local facilities list somehow ended
+      // up empty (e.g. the passed-in profile data didn't include
+      // facilities when this screen opened), saving would silently
+      // overwrite the real Firestore data with nothing. That's the
+      // root cause of an account being routed to "No Facility
+      // Assigned" despite genuinely having one: facilityIds, never
+      // touched by this path, stayed correct, while facilities - what
+      // routing actually checks - got wiped.
+      if (facilities.isEmpty) {
+        setState(() => error = 'Could not confirm your facility details - please try again, '
+            'or contact support if this keeps happening.');
+        return;
+      }
+
       final imageUrl = await uploadImage(uid);
+      final updatedFacilities = selectedRole == 'Admin'
+          ? facilities
+          : [
+              {
+                'facilityId': facilities.first['facilityId'] ?? '',
+                'name': assistantFacilityNameController.text.trim(),
+                'type': facilities.first['type'] ?? '',
+                'code': assistantFacilityCodeController.text.trim(),
+              }
+            ];
+
       Map<String, dynamic> updateData = {
         'fullName': fullName,
         'phone': phone,
         'role': roleLower,
         'avatarUrl': imageUrl,
-        'facilities': selectedRole == 'Admin'
-            ? facilities
-            : [
-                {
-                  'facilityId': facilities.isNotEmpty ? facilities.first['facilityId'] ?? '' : '',
-                  'name': assistantFacilityNameController.text.trim(),
-                  'type': facilities.isNotEmpty ? facilities.first['type'] ?? '' : '',
-                  'code': assistantFacilityCodeController.text.trim(),
-                }
-              ],
+        'facilities': updatedFacilities,
+        // Kept in sync with facilities, derived from the same list -
+        // these two fields must never be allowed to drift apart.
+        // facilityIds is what every access-control check
+        // (isInFacility, sharesAFacilityWith) actually relies on,
+        // while facilities is what routing and the UI display.
+        'facilityIds': updatedFacilities
+            .map((f) => f['facilityId'] as String?)
+            .where((id) => id != null && id.isNotEmpty)
+            .toList(),
       };
       await FirebaseFirestore.instance.collection('users').doc(uid).update(updateData);
       if (mounted) {

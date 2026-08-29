@@ -165,6 +165,22 @@ class VetBizProApp extends StatelessWidget {
   }
 }
 
+// Extracted so both the initial read and any retry read (see
+// _decideScreen's empty-facilities handling below) share the exact
+// same parsing logic, rather than duplicating it.
+List<Map<String, dynamic>> _parseFacilities(Map<String, dynamic>? data) {
+  final raw = (data?['facilities'] as List<dynamic>?) ?? [];
+  return raw
+      .whereType<Map>()
+      .map((f) => {
+            'facilityId': f['facilityId'],
+            'facilityName': f['name'] ?? '',
+            'facilityType': f['type'] ?? '',
+          })
+      .where((f) => f['facilityId'] != null)
+      .toList();
+}
+
 class AppEntryPoint extends StatefulWidget {
   const AppEntryPoint({super.key});
 
@@ -184,10 +200,66 @@ class _AppEntryPointState extends State<AppEntryPoint> {
   String? _heartbeatStartedForUid;
   Future<Widget>? _decideScreenFuture;
 
+  // Tracked manually rather than via StreamBuilder<User?> - a known,
+  // documented Flutter-web limitation can leave authStateChanges()
+  // failing to emit at all on a sign-in/sign-out transition (most
+  // reports describe it happening after a hot restart, but also
+  // occasionally during ordinary account switching). _authPollTimer
+  // below is the actual fix for that: a periodic check against the
+  // always-accurate, synchronous currentUser getter, which
+  // self-corrects within a couple of seconds if the stream ever falls
+  // out of sync with it - rather than relying solely on a stream that
+  // can, in practice, occasionally just stop talking.
+  User? _currentUser;
+  bool _authInitialized = false;
+  StreamSubscription<User?>? _authSubscription;
+  Timer? _authPollTimer;
+
+  @override
+  void initState() {
+    super.initState();
+    // Known synchronously and immediately, rather than waiting for the
+    // stream's first event - avoids an unnecessary "connecting" flash
+    // for someone already signed in from a previous session.
+    _currentUser = FirebaseAuth.instance.currentUser;
+    _authInitialized = _currentUser != null;
+    _authSubscription = FirebaseAuth.instance.authStateChanges().listen(_updateAuthUser);
+    _authPollTimer = Timer.periodic(const Duration(seconds: 2), (_) {
+      _updateAuthUser(FirebaseAuth.instance.currentUser);
+    });
+  }
+
+  @override
+  void dispose() {
+    _authSubscription?.cancel();
+    _authPollTimer?.cancel();
+    super.dispose();
+  }
+
+  void _updateAuthUser(User? user) {
+    if (!mounted) return;
+    final changed = user?.uid != _currentUser?.uid;
+    if (!_authInitialized || changed) {
+      setState(() {
+        _currentUser = user;
+        _authInitialized = true;
+      });
+    }
+  }
+
   Future<Widget> _decideScreenMemoized(User user) {
     if (_decidedForUid != user.uid || _decideScreenFuture == null) {
       _decidedForUid = user.uid;
-      _decideScreenFuture = _decideScreen(user);
+      // A defensive outer bound on the whole decision process, not
+      // just the individual reads inside it - regardless of what
+      // specifically causes this to hang (a rule denial that doesn't
+      // resolve cleanly, a network condition the inner .timeout()
+      // calls don't catch, anything not yet anticipated), this
+      // guarantees it can never spin forever with no way out.
+      _decideScreenFuture = _decideScreen(user).timeout(
+        const Duration(seconds: 30),
+        onTimeout: () => throw TimeoutException('Could not load your account in time.'),
+      );
     }
     return _decideScreenFuture!;
   }
@@ -195,16 +267,23 @@ class _AppEntryPointState extends State<AppEntryPoint> {
   Future<Widget> _decideScreen(User user) async {
     try {
       final uid = user.uid;
+      debugPrint('[AUTH] _decideScreen starting for uid=$uid');
+
       final userDoc = await FirebaseFirestore.instance
           .collection('users')
           .doc(uid)
           .get()
           .timeout(const Duration(seconds: 15));
+      debugPrint('[AUTH] users/$uid read complete - exists=${userDoc.exists}');
 
-      if (!userDoc.exists) return const LoginScreen();
+      if (!userDoc.exists) {
+        debugPrint('[AUTH] users/$uid does not exist - showing LoginScreen');
+        return const LoginScreen();
+      }
 
       final data = userDoc.data()!;
       final role = (data['role'] ?? '').toString().toLowerCase();
+      debugPrint('[AUTH] role=$role status=${data['status']} facilities=${data['facilities']}');
 
       // Platform Admins are exempt from the deactivation check entirely
       // - checked first, before status, as a backup to the rules-level
@@ -217,12 +296,14 @@ class _AppEntryPointState extends State<AppEntryPoint> {
           .get()
           .timeout(const Duration(seconds: 10));
       final isPlatformAdminAccount = platformAdminDoc.exists;
+      debugPrint('[AUTH] platform_admins/$uid read complete - isPlatformAdminAccount=$isPlatformAdminAccount');
 
       // Checked for every role, not just assistants - a deactivated
       // admin account was previously still able to log in freely,
       // which defeated the point of "Deactivate Account" entirely.
       final status = (data['status'] ?? 'active').toString().toLowerCase();
       if (!isPlatformAdminAccount && status == 'deactivated') {
+        debugPrint('[AUTH] blocked - deactivated, non-platform-admin account');
         // Not returned as this Future's result - signing out fires its
         // own auth-state change, which can discard this exact
         // FutureBuilder before its return value is ever used. Explicit,
@@ -235,6 +316,7 @@ class _AppEntryPointState extends State<AppEntryPoint> {
         return const Scaffold(body: Center(child: CircularProgressIndicator()));
       }
       if (!isPlatformAdminAccount && role == 'assistant' && status != 'active') {
+        debugPrint('[AUTH] blocked - assistant not yet active');
         forceLogoutAndShowLogin(
           message: 'Your account is not active yet. Please wait for admin approval.',
         );
@@ -246,16 +328,29 @@ class _AppEntryPointState extends State<AppEntryPoint> {
       // fetch (in the old SelectFacilityScreen flow) was the actual
       // cause of "second login just spins" - a duplicate read with its
       // own separate failure point, on top of this one.
-      final rawFacilities = data['facilities'] as List<dynamic>? ?? [];
-      final facilities = rawFacilities
-          .whereType<Map>()
-          .map((f) => {
-                'facilityId': f['facilityId'],
-                'facilityName': f['name'] ?? '',
-                'facilityType': f['type'] ?? '',
-              })
-          .where((f) => f['facilityId'] != null)
-          .toList();
+      var facilities = _parseFacilities(data);
+      debugPrint('[AUTH] parsed facilities count=${facilities.length}');
+
+      // Registration triggers sign-in (and this very check) before its
+      // own, separate facility-creation sequence has necessarily
+      // finished writing to this same document - a real race, not a
+      // hypothetical one. A short, bounded retry gives that sequence a
+      // real chance to finish before concluding "no facility" at all.
+      // Skipped for a Platform Admin specifically - having none of
+      // their own is a deliberate, stable setup for that account type,
+      // not a race, so waiting here could never change the outcome.
+      if (facilities.isEmpty && !isPlatformAdminAccount) {
+        debugPrint('[AUTH] facilities empty, not a platform admin - starting retry loop');
+        for (var attempt = 0; attempt < 4 && facilities.isEmpty; attempt++) {
+          await Future.delayed(const Duration(milliseconds: 800));
+          final retryDoc = await FirebaseFirestore.instance
+              .collection('users')
+              .doc(uid)
+              .get()
+              .timeout(const Duration(seconds: 10));
+          facilities = _parseFacilities(retryDoc.data());
+        }
+      }
 
       if (facilities.isEmpty) {
         // A Platform Admin with no facilities of their own (the
@@ -264,8 +359,10 @@ class _AppEntryPointState extends State<AppEntryPoint> {
         // panel normally lives inside a facility's own Settings. Sent
         // there directly instead of a dead end.
         if (isPlatformAdminAccount) {
+          debugPrint('[AUTH] returning PlatformAdminHomeScreen (no facilities, is platform admin)');
           return const PlatformAdminHomeScreen();
         }
+        debugPrint('[AUTH] returning _NoFacilityScreen (no facilities, not a platform admin)');
         return _NoFacilityScreen(role: role);
       }
 
@@ -312,54 +409,56 @@ class _AppEntryPointState extends State<AppEntryPoint> {
 
   @override
   Widget build(BuildContext context) {
-    return StreamBuilder<User?>(
-      stream: FirebaseAuth.instance.authStateChanges(),
-      builder: (context, snapshot) {
-        _syncHeartbeat(snapshot.data?.uid);
+    _syncHeartbeat(_currentUser?.uid);
 
-        Widget child;
-        String key;
+    Widget child;
+    String key;
 
-        // Still connecting
-        if (snapshot.connectionState == ConnectionState.waiting) {
-          key = 'connecting';
-          child = const Scaffold(
-            body: Center(child: CircularProgressIndicator()),
-          );
-        }
-        // User logged out or no user - shows the block reason if
-        // forceLogoutAndShowLogin() just set one (e.g. "this account
-        // was deactivated"), otherwise a plain login screen (a normal
-        // logout, or nobody ever signed in yet).
-        else if (!snapshot.hasData) {
-          final message = pendingLoginMessage;
-          pendingLoginMessage = null;
-          // Clear the memo so the next sign-in (even as the same
-          // account) starts a genuinely fresh decision, not a stale
-          // leftover result from before.
-          _decidedForUid = null;
-          _decideScreenFuture = null;
-          key = 'login';
-          child = LoginScreen(errorMessage: message);
-        }
-        // User logged in → decide facility/dashboard
-        else {
-          key = 'deciding';
-          child = FutureBuilder<Widget>(
-            future: _decideScreenMemoized(snapshot.data!),
-            builder: (context, snap) {
-              if (snap.connectionState == ConnectionState.waiting) {
-                return const Scaffold(
-                  body: Center(child: CircularProgressIndicator()),
-                );
-              }
-              if (snap.hasError || !snap.hasData) {
-                return const LoginScreen();
-              }
-              return snap.data!;
-            },
-          );
-        }
+    // Still waiting for the very first known auth state.
+    if (!_authInitialized) {
+      key = 'connecting';
+      child = const _AuthLoadingScreen();
+    }
+    // User logged out or no user - shows the block reason if
+    // forceLogoutAndShowLogin() just set one (e.g. "this account
+    // was deactivated"), otherwise a plain login screen (a normal
+    // logout, or nobody ever signed in yet).
+    else if (_currentUser == null) {
+      final message = pendingLoginMessage;
+      pendingLoginMessage = null;
+      // Clear the memo so the next sign-in (even as the same
+      // account) starts a genuinely fresh decision, not a stale
+      // leftover result from before.
+      _decidedForUid = null;
+      _decideScreenFuture = null;
+      key = 'login';
+      child = LoginScreen(errorMessage: message);
+    }
+    // User logged in → decide facility/dashboard
+    else {
+      key = 'deciding';
+      child = FutureBuilder<Widget>(
+        future: _decideScreenMemoized(_currentUser!),
+        builder: (context, snap) {
+          if (snap.connectionState == ConnectionState.waiting) {
+            return const Scaffold(
+              body: Center(child: CircularProgressIndicator()),
+            );
+          }
+          if (snap.hasError || !snap.hasData) {
+            return _DecisionErrorScreen(
+              onRetry: () {
+                setState(() {
+                  _decidedForUid = null;
+                  _decideScreenFuture = null;
+                });
+              },
+            );
+          }
+          return snap.data!;
+        },
+      );
+    }
 
         // A plain fade rather than any sliding/scaling motion - this is
         // specifically about smoothing the loading-spinner-to-login-
@@ -371,8 +470,6 @@ class _AppEntryPointState extends State<AppEntryPoint> {
           transitionBuilder: (child, animation) => FadeTransition(opacity: animation, child: child),
           child: KeyedSubtree(key: ValueKey(key), child: child),
         );
-      },
-    );
   }
 }
 
@@ -382,6 +479,132 @@ class _AppEntryPointState extends State<AppEntryPoint> {
 /// account that has nothing to show yet. Offers Logout as the only real
 /// action, since there's nothing else this account can do until an
 /// admin adds a facility to it.
+/// Shown while waiting for Firebase to report the current sign-in
+/// state. Normally resolves in well under a second. A known
+/// Flutter-web plugin limitation can occasionally leave
+/// authStateChanges() never emitting at all - no error, no timeout of
+/// its own, just silence - most commonly after a hot restart during
+/// development, but also occasionally during ordinary use. Rather than
+/// leave someone staring at an unexplained spinner forever, a real way
+/// out appears after a reasonable wait.
+class _AuthLoadingScreen extends StatefulWidget {
+  const _AuthLoadingScreen();
+
+  @override
+  State<_AuthLoadingScreen> createState() => _AuthLoadingScreenState();
+}
+
+class _AuthLoadingScreenState extends State<_AuthLoadingScreen> {
+  bool _showRecovery = false;
+  Timer? _timer;
+
+  @override
+  void initState() {
+    super.initState();
+    _timer = Timer(const Duration(seconds: 8), () {
+      if (mounted) setState(() => _showRecovery = true);
+    });
+  }
+
+  @override
+  void dispose() {
+    _timer?.cancel();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: const Color(0xFFFDFDF9),
+      body: Center(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const CircularProgressIndicator(),
+            if (_showRecovery) ...[
+              const SizedBox(height: 24),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 32),
+                child: Text(
+                  'Taking longer than expected to load.',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(color: Colors.grey[700]),
+                ),
+              ),
+              const SizedBox(height: 12),
+              OutlinedButton.icon(
+                // The same explicit, navigatorKey-based navigation this
+                // app already relies on elsewhere for stuck-state
+                // recovery - it doesn't depend on the auth stream
+                // itself reacting, so it works regardless of whether
+                // that's the thing currently stuck.
+                onPressed: () => forceLogoutAndShowLogin(),
+                icon: const Icon(Icons.refresh),
+                label: const Text('Try Again'),
+              ),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// Shown if the decision process itself fails or times out, for any
+/// reason - a genuine retry (clearing the memoized future so a fresh
+/// attempt actually re-reads everything, not just re-displaying the
+/// same failure) rather than silently dropping back to a login form
+/// while the person is still actually signed in.
+class _DecisionErrorScreen extends StatelessWidget {
+  final VoidCallback onRetry;
+  const _DecisionErrorScreen({required this.onRetry});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: const Color(0xFFFDFDF9),
+      body: Center(
+        child: Padding(
+          padding: const EdgeInsets.all(32),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Icon(Icons.error_outline, size: 48, color: Colors.grey),
+              const SizedBox(height: 16),
+              const Text('Could Not Load Your Account',
+                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 17)),
+              const SizedBox(height: 8),
+              Text(
+                'Something went wrong while loading your account details. '
+                'Check your connection and try again.',
+                textAlign: TextAlign.center,
+                style: TextStyle(color: Colors.grey[700]),
+              ),
+              const SizedBox(height: 24),
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  OutlinedButton.icon(
+                    onPressed: onRetry,
+                    icon: const Icon(Icons.refresh),
+                    label: const Text('Try Again'),
+                  ),
+                  const SizedBox(width: 12),
+                  OutlinedButton.icon(
+                    onPressed: () => forceLogoutAndShowLogin(),
+                    icon: const Icon(Icons.logout),
+                    label: const Text('Logout'),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
 class _NoFacilityScreen extends StatelessWidget {
   final String? role;
   const _NoFacilityScreen({this.role});

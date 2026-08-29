@@ -1,0 +1,65 @@
+rules_version = '2';
+service firebase.storage {
+  match /b/{bucket}/o {
+
+    // Each user's own avatar. Two path prefixes are both in active use
+    // across the app (avatars/ from registration, user_avatars/ from
+    // the dashboard's own avatar editor) - a pre-existing naming
+    // inconsistency, not something fixed here, but both need a rule so
+    // neither one silently falls through to Storage's own default-deny.
+    match /avatars/{fileName} {
+      allow read: if true;
+      allow write: if request.auth != null;
+    }
+    match /user_avatars/{fileName} {
+      allow read: if true;
+      allow write: if request.auth != null;
+    }
+
+    // A facility's own logo - publicly readable (shown on receipts and
+    // other facility-facing content that isn't gated behind login).
+    // Write access is any authenticated user rather than a stricter
+    // "only this facility's own member" check - a logo image isn't
+    // sensitive data, and parsing the facility ID back out of the
+    // filename would need string methods not confidently confirmed as
+    // supported in this rules language, not worth risking breaking
+    // every facility's logo upload over.
+    match /facility_logos/{fileName} {
+      allow read: if true;
+      allow write: if request.auth != null;
+    }
+
+    // Login screen branding - readable by anyone, including before
+    // authentication (it's shown on the login screen itself), writable
+    // only by a Platform Admin, matching the Announcements tab's own
+    // UI restriction.
+    match /login_poster/{fileName} {
+      allow read: if true;
+      allow write: if request.auth != null &&
+        firestore.exists(/databases/(default)/documents/platform_admins/$(request.auth.uid));
+    }
+    match /login_logo/{fileName} {
+      allow read: if true;
+      allow write: if request.auth != null &&
+        firestore.exists(/databases/(default)/documents/platform_admins/$(request.auth.uid));
+    }
+
+    // Subscription payment proof images - readable by any authenticated
+    // user (a Platform Admin reviewing it, or the facility that
+    // submitted it looking back at its own history), writable only by
+    // a member of the facility this proof is being submitted for. This
+    // was the missing rule behind payment proof uploads hanging
+    // indefinitely - with no rule at all for this path, Storage's own
+    // default-deny silently rejected every upload, and a known
+    // Flutter-web plugin limitation kept that rejection from ever
+    // reaching this app's own try/catch as a real, catchable error.
+    match /payment_proofs/{facilityId}/{fileName} {
+      allow read: if request.auth != null;
+      allow write: if request.auth != null &&
+        facilityId in
+          firestore.get(/databases/(default)/documents/users/$(request.auth.uid)).data.get('facilityIds', []);
+    }
+
+    // Everything else stays denied by default - no blanket fallback.
+  }
+}
