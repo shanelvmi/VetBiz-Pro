@@ -117,6 +117,14 @@ class _UserDetailScreenState extends State<UserDetailScreen> {
       return;
     }
 
+    // Platform Admin status and this facility-level role field are two
+    // separate, independent things - nothing otherwise guarantees they
+    // stay in sync. Without this, a Platform Admin whose role field
+    // isn't exactly 'admin' would get treated as a lower-privilege
+    // account the moment they have any facility at all.
+    final isTargetPlatformAdmin =
+        (await FirebaseFirestore.instance.collection('platform_admins').doc(widget.userId).get()).exists;
+
     setState(() => _isSaving = true);
     try {
       if (isAssistant) {
@@ -130,17 +138,20 @@ class _UserDetailScreenState extends State<UserDetailScreen> {
         await FirebaseFirestore.instance.collection('users').doc(widget.userId).update({
           'facilities': [selected],
           'facilityIds': [selected['facilityId']],
+          if (isTargetPlatformAdmin) 'role': 'admin',
         });
       } else {
         await FirebaseFirestore.instance.collection('users').doc(widget.userId).update({
           'facilities': FieldValue.arrayUnion([selected]),
           'facilityIds': FieldValue.arrayUnion([selected['facilityId']]),
+          if (isTargetPlatformAdmin) 'role': 'admin',
         });
       }
 
       if (!mounted) return;
       setState(() {
         _userData['facilities'] = isAssistant ? [selected] : [...currentFacilities, selected];
+        if (isTargetPlatformAdmin) _userData['role'] = 'admin';
       });
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Added to ${selected['name']}'), backgroundColor: Colors.green),

@@ -98,14 +98,19 @@ Future<void> showInviteAssistantDialog(BuildContext context, String facilityId) 
 
         return AlertDialog(
           title: const Text('Invite Assistant'),
+          // A fixed size for every state (loading, no active code,
+          // active code shown) rather than letting the dialog's own
+          // size follow whichever one is currently displayed - sized
+          // to comfortably fit the tallest of the three (the active
+          // code state, with its explanation text, code box, and two
+          // action rows) so nothing needs to grow into it.
           content: SizedBox(
             width: 320,
+            height: 300,
             child: isLoading
-                ? const Padding(
-                    padding: EdgeInsets.symmetric(vertical: 24),
-                    child: Center(child: CircularProgressIndicator(color: primaryDeepGreen)),
-                  )
-                : Column(
+                ? const Center(child: CircularProgressIndicator(color: primaryDeepGreen))
+                : SingleChildScrollView(
+                  child: Column(
                     mainAxisSize: MainAxisSize.min,
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -210,6 +215,7 @@ Future<void> showInviteAssistantDialog(BuildContext context, String facilityId) 
                       ],
                     ],
                   ),
+                ),
           ),
           actions: [
             TextButton(

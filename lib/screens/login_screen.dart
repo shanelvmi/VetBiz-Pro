@@ -30,28 +30,16 @@ class _LoginScreenState extends State<LoginScreen> {
   bool isRegisterHovered = false;
 
   Timer? _announcementTimer;
-  Timer? _posterTimer;
-  final PageController _posterController = PageController();
-  int _posterIndex = 0;
 
   final Color primaryDeepGreen = const Color(0xFF2F5D62);
   final Color tealAccent = const Color(0xFF3E8E82);
   final Color warmAmber = const Color(0xFFFFB200);
+  final Color tealGlow = const Color(0xFF7EE8CB);
   final Color offWhite = const Color(0xFFFDFDF9);
   final Color neutralBlack = Colors.black87;
 
-  // Each a plain string - the brand mark, icon trio, and overall card
-  // stay identical across every slide; only this tagline alternates,
-  // which is what the dot indicators below the card track.
-  static const List<String> _taglines = [
-    'Better Care.\nStronger Business.\nHealthier Future.',
-    'One Platform.\nEvery Facility.\nTotal Control.',
-    'Smarter Records.\nFaster Service.\nHappier Clients.',
-    'Built for Vets.\nTrusted by Owners.\nReady to Grow.',
-  ];
-
   OutlineInputBorder _fieldBorder(Color color) =>
-      OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: BorderSide(color: color));
+      OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: BorderSide(color: color));
 
   @override
   void initState() {
@@ -64,18 +52,6 @@ class _LoginScreenState extends State<LoginScreen> {
         if (mounted) setState(() => error = widget.errorMessage);
       });
     }
-    // Alternates the poster card's tagline on a fixed cycle -
-    // independent of the announcements carousel below, which runs on
-    // its own timer keyed to how many announcements actually exist.
-    _posterTimer = Timer.periodic(const Duration(seconds: 5), (_) {
-      if (!_posterController.hasClients) return;
-      _posterIndex = (_posterIndex + 1) % _taglines.length;
-      _posterController.animateToPage(
-        _posterIndex,
-        duration: const Duration(milliseconds: 500),
-        curve: Curves.easeInOut,
-      );
-    });
   }
 
   Future<void> _loadRememberedEmail() async {
@@ -95,8 +71,6 @@ class _LoginScreenState extends State<LoginScreen> {
     passwordController.dispose();
     passwordFocusNode.dispose();
     _announcementTimer?.cancel();
-    _posterTimer?.cancel();
-    _posterController.dispose();
     super.dispose();
   }
 
@@ -232,6 +206,7 @@ class _LoginScreenState extends State<LoginScreen> {
   // ==================== TOP HEADER ====================
   Widget _buildHeader() {
     return Container(
+      width: double.infinity,
       padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
       decoration: BoxDecoration(
         gradient: LinearGradient(
@@ -240,54 +215,69 @@ class _LoginScreenState extends State<LoginScreen> {
           end: Alignment.centerRight,
         ),
       ),
-      child: Row(
-        children: [
-          Container(
-            width: 44,
-            height: 44,
-            decoration: const BoxDecoration(color: Colors.white, shape: BoxShape.circle),
-            alignment: Alignment.center,
-            child: Text('VB.', style: TextStyle(color: primaryDeepGreen, fontWeight: FontWeight.bold, fontSize: 16)),
-          ),
-          const SizedBox(width: 12),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisSize: MainAxisSize.min,
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          // Enough room for the subtitle plus everything else on one
+          // line without anything needing to shrink or shift - below
+          // this, the subtitle (the least critical piece here) is
+          // dropped instead, keeping the title, status pill, and
+          // settings icon exactly where they belong.
+          final isNarrow = constraints.maxWidth < 560;
+
+          return Row(
             children: [
-              const Text('VetBiz Pro System',
-                  style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16)),
-              Text('Smart Business & Vet Services Monitor',
-                  style: TextStyle(color: Colors.white.withValues(alpha: 0.75), fontSize: 11.5)),
-            ],
-          ),
-          const Spacer(),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-            decoration: BoxDecoration(
-              color: Colors.white.withValues(alpha: 0.15),
-              borderRadius: BorderRadius.circular(20),
-            ),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Container(
-                  width: 8,
-                  height: 8,
-                  decoration: const BoxDecoration(color: Colors.greenAccent, shape: BoxShape.circle),
+              Container(
+                width: 44,
+                height: 44,
+                decoration: const BoxDecoration(color: Colors.white, shape: BoxShape.circle),
+                alignment: Alignment.center,
+                child: Text('VB.', style: TextStyle(color: primaryDeepGreen, fontWeight: FontWeight.bold, fontSize: 16)),
+              ),
+              const SizedBox(width: 12),
+              Flexible(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Text('VetBiz Pro System',
+                        style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16)),
+                    if (!isNarrow)
+                      Text('Smart Business & Vet Services Monitor',
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(color: Colors.white.withValues(alpha: 0.75), fontSize: 11.5)),
+                  ],
                 ),
-                const SizedBox(width: 6),
-                const Text('System Online', style: TextStyle(color: Colors.white, fontSize: 12.5, fontWeight: FontWeight.w600)),
-              ],
-            ),
-          ),
-          const SizedBox(width: 10),
-          Container(
-            width: 36,
-            height: 36,
-            decoration: BoxDecoration(color: Colors.white.withValues(alpha: 0.15), shape: BoxShape.circle),
-            child: const Icon(Icons.settings_outlined, color: Colors.white, size: 18),
-          ),
-        ],
+              ),
+              const Spacer(),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                decoration: BoxDecoration(
+                  color: Colors.white.withValues(alpha: 0.15),
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Container(
+                      width: 8,
+                      height: 8,
+                      decoration: const BoxDecoration(color: Colors.greenAccent, shape: BoxShape.circle),
+                    ),
+                    const SizedBox(width: 6),
+                    const Text('System Online', style: TextStyle(color: Colors.white, fontSize: 12.5, fontWeight: FontWeight.w600)),
+                  ],
+                ),
+              ),
+              const SizedBox(width: 10),
+              Container(
+                width: 36,
+                height: 36,
+                decoration: BoxDecoration(color: Colors.white.withValues(alpha: 0.15), shape: BoxShape.circle),
+                child: const Icon(Icons.wb_sunny_outlined, color: Colors.white, size: 18),
+              ),
+            ],
+          );
+        },
       ),
     );
   }
@@ -295,21 +285,59 @@ class _LoginScreenState extends State<LoginScreen> {
   // ==================== BOTTOM FOOTER ====================
   Widget _buildFooter() {
     return Container(
+      width: double.infinity,
       padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
       color: primaryDeepGreen,
-      child: Row(
-        children: [
-          Icon(Icons.shield_outlined, color: Colors.white.withValues(alpha: 0.7), size: 16),
-          const SizedBox(width: 8),
-          Text('© 2026 VetBiz Pro System. All rights reserved.',
-              style: TextStyle(color: Colors.white.withValues(alpha: 0.7), fontSize: 12)),
-          const Spacer(),
-          Text('v2.0.0', style: TextStyle(color: Colors.white.withValues(alpha: 0.7), fontSize: 12)),
-          const SizedBox(width: 20),
-          Text('Privacy Policy', style: TextStyle(color: Colors.white.withValues(alpha: 0.7), fontSize: 12)),
-          const SizedBox(width: 20),
-          Text('Terms of Service', style: TextStyle(color: Colors.white.withValues(alpha: 0.7), fontSize: 12)),
-        ],
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          // Enough room for everything on a single line, spanning the
+          // full width edge to edge - only falls back to a reflowing
+          // layout when there genuinely isn't room for that, on small
+          // screens specifically.
+          if (constraints.maxWidth >= 600) {
+            return Row(
+              children: [
+                Icon(Icons.shield_outlined, color: Colors.white.withValues(alpha: 0.7), size: 16),
+                const SizedBox(width: 8),
+                Text('© 2026 VetBiz Pro System. All rights reserved.',
+                    style: TextStyle(color: Colors.white.withValues(alpha: 0.7), fontSize: 12)),
+                const Spacer(),
+                Text('v2.0.0', style: TextStyle(color: Colors.white.withValues(alpha: 0.7), fontSize: 12)),
+                const SizedBox(width: 20),
+                Text('Privacy Policy', style: TextStyle(color: Colors.white.withValues(alpha: 0.7), fontSize: 12)),
+                const SizedBox(width: 20),
+                Text('Terms of Service', style: TextStyle(color: Colors.white.withValues(alpha: 0.7), fontSize: 12)),
+              ],
+            );
+          }
+          return Wrap(
+            alignment: WrapAlignment.center,
+            crossAxisAlignment: WrapCrossAlignment.center,
+            spacing: 16,
+            runSpacing: 6,
+            children: [
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(Icons.shield_outlined, color: Colors.white.withValues(alpha: 0.7), size: 16),
+                  const SizedBox(width: 8),
+                  Text('© 2026 VetBiz Pro System. All rights reserved.',
+                      style: TextStyle(color: Colors.white.withValues(alpha: 0.7), fontSize: 12)),
+                ],
+              ),
+              Wrap(
+                alignment: WrapAlignment.center,
+                spacing: 20,
+                runSpacing: 4,
+                children: [
+                  Text('v2.0.0', style: TextStyle(color: Colors.white.withValues(alpha: 0.7), fontSize: 12)),
+                  Text('Privacy Policy', style: TextStyle(color: Colors.white.withValues(alpha: 0.7), fontSize: 12)),
+                  Text('Terms of Service', style: TextStyle(color: Colors.white.withValues(alpha: 0.7), fontSize: 12)),
+                ],
+              ),
+            ],
+          );
+        },
       ),
     );
   }
@@ -333,10 +361,14 @@ class _LoginScreenState extends State<LoginScreen> {
             width: 44,
             height: 44,
             decoration: BoxDecoration(
-              color: Colors.white.withValues(alpha: 0.15),
+              color: tealGlow.withValues(alpha: 0.16),
               borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: tealGlow.withValues(alpha: 0.5), width: 1.2),
+              boxShadow: [
+                BoxShadow(color: tealGlow.withValues(alpha: 0.3), blurRadius: 8),
+              ],
             ),
-            child: const Icon(Icons.chat_bubble_outline, color: Colors.white, size: 20),
+            child: Icon(Icons.chat_bubble_outline, color: Colors.white, size: 20),
           ),
           const SizedBox(width: 14),
           Expanded(
@@ -344,10 +376,10 @@ class _LoginScreenState extends State<LoginScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text('Welcome to', style: TextStyle(color: Colors.white.withValues(alpha: 0.85), fontSize: 13)),
-                const Text('VetBiz Pro System',
-                    style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 19)),
+                Text('VetBiz Pro',
+                    style: TextStyle(color: Color(0xFF7EE8CB), fontWeight: FontWeight.bold, fontSize: 19)),
                 const SizedBox(height: 8),
-                Text('Stay updated with the latest news and system announcements.',
+                Text('Stay updated with the latest news and announcements.',
                     style: TextStyle(color: Colors.white.withValues(alpha: 0.8), fontSize: 12.5)),
               ],
             ),
@@ -373,7 +405,11 @@ class _LoginScreenState extends State<LoginScreen> {
             children: [
               Icon(Icons.campaign_outlined, color: neutralBlack, size: 18),
               const SizedBox(width: 8),
-              Text('Announcements', style: TextStyle(fontWeight: FontWeight.bold, color: neutralBlack, fontSize: 15)),
+              Flexible(
+                child: Text('Announcements',
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(fontWeight: FontWeight.bold, color: neutralBlack, fontSize: 15)),
+              ),
               const Spacer(),
               Icon(Icons.chevron_right, color: Colors.grey.shade400, size: 18),
             ],
@@ -442,6 +478,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     final ts = data['timestamp'] as Timestamp?;
                     final bool isNew = ts != null &&
                         DateTime.now().difference(ts.toDate()).inHours < 48;
+                    final bool isUrgent = data['urgent'] == true;
 
                     return Container(
                       margin: const EdgeInsets.symmetric(
@@ -450,11 +487,21 @@ class _LoginScreenState extends State<LoginScreen> {
                       decoration: BoxDecoration(
                         color: offWhite,
                         borderRadius: BorderRadius.circular(16),
-                        border: Border.all(color: Colors.grey.shade300),
+                        border: Border.all(color: isUrgent ? Colors.red.withValues(alpha: 0.4) : Colors.grey.shade300),
                       ),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
+                          if (isUrgent)
+                            Padding(
+                              padding: const EdgeInsets.only(bottom: 6),
+                              child: Chip(
+                                label: const Text('URGENT', style: TextStyle(fontSize: 10, color: Colors.white)),
+                                backgroundColor: Colors.red,
+                                visualDensity: VisualDensity.compact,
+                                padding: EdgeInsets.zero,
+                              ),
+                            ),
                           // Title + NEW badge
                           Row(
                             children: [
@@ -526,7 +573,14 @@ class _LoginScreenState extends State<LoginScreen> {
         Container(
           width: 36,
           height: 36,
-          decoration: BoxDecoration(color: primaryDeepGreen.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(10)),
+          decoration: BoxDecoration(
+            color: tealGlow.withValues(alpha: 0.1),
+            shape: BoxShape.circle,
+            border: Border.all(color: tealGlow.withValues(alpha: 0.3), width: 1),
+            boxShadow: [
+              BoxShadow(color: tealGlow.withValues(alpha: 0.15), blurRadius: 5),
+            ],
+          ),
           child: Icon(Icons.verified_user_outlined, color: primaryDeepGreen, size: 18),
         ),
         const SizedBox(width: 12),
@@ -543,161 +597,6 @@ class _LoginScreenState extends State<LoginScreen> {
           ),
         ),
       ],
-    );
-  }
-
-  // ==================== MIDDLE: POSTER CAROUSEL ====================
-  // Admin-uploaded poster (Platform Admin > Announcements) takes over
-  // entirely when set, replacing the alternating tagline slides below
-  // with that single static image - same upload mechanism as before,
-  // just given priority over the default branded carousel rather than
-  // being the only option.
-  Widget _buildPosterCarousel() {
-    return StreamBuilder<DocumentSnapshot>(
-      stream: FirebaseFirestore.instance.collection('app_config').doc('login_poster').snapshots(),
-      builder: (context, snapshot) {
-        final posterUrl = snapshot.data?.data() != null
-            ? (snapshot.data!.data() as Map<String, dynamic>)['posterUrl'] as String?
-            : null;
-
-        if (posterUrl != null) {
-          return ClipRRect(
-            borderRadius: BorderRadius.circular(20),
-            child: Image.network(
-              posterUrl,
-              fit: BoxFit.cover,
-              width: double.infinity,
-              height: double.infinity,
-              errorBuilder: (_, __, ___) => _buildDefaultPosterCarousel(),
-            ),
-          );
-        }
-        return _buildDefaultPosterCarousel();
-      },
-    );
-  }
-
-  Widget _buildDefaultPosterCarousel() {
-    return Container(
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [primaryDeepGreen, tealAccent],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-        borderRadius: BorderRadius.circular(20),
-      ),
-      child: Stack(
-        children: [
-          // A faint dot-grid decoration in the corners - a small,
-          // consistent nod to this brand's other promotional material,
-          // rather than an empty gradient with nothing else going on.
-          Positioned(top: 20, left: 20, child: _buildDotGrid()),
-          Positioned(bottom: 90, right: 20, child: _buildDotGrid()),
-          Padding(
-            padding: const EdgeInsets.all(28),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Expanded(
-                  child: PageView.builder(
-                    controller: _posterController,
-                    itemCount: _taglines.length,
-                    itemBuilder: (context, index) => Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      mainAxisAlignment: MainAxisAlignment.start,
-                      children: [
-                        Text(
-                          _taglines[index],
-                          style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 22, height: 1.3),
-                        ),
-                        const Spacer(),
-                        Center(
-                          child: Column(
-                            children: [
-                              Container(
-                                width: 110,
-                                height: 110,
-                                decoration: BoxDecoration(color: Colors.white.withValues(alpha: 0.15), shape: BoxShape.circle),
-                                alignment: Alignment.center,
-                                child: const Column(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    Text('VB.', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 30)),
-                                    Text('VetBiz Pro', style: TextStyle(color: Colors.white, fontSize: 13)),
-                                  ],
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                        const Spacer(),
-                      ],
-                    ),
-                  ),
-                ),
-                SmoothPageIndicator(
-                  controller: _posterController,
-                  count: _taglines.length,
-                  effect: WormEffect(
-                    dotHeight: 6,
-                    dotWidth: 6,
-                    activeDotColor: Colors.white,
-                    dotColor: Colors.white.withValues(alpha: 0.3),
-                  ),
-                ),
-                const SizedBox(height: 20),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                  children: [
-                    _buildFeatureIcon(Icons.show_chart, 'Monitor', 'Track performance\nin real-time'),
-                    _buildFeatureIcon(Icons.assignment_outlined, 'Manage', 'Manage operations\nefficiently'),
-                    _buildFeatureIcon(Icons.trending_up, 'Grow', 'Grow your vet\nbusiness'),
-                  ],
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildDotGrid() {
-    return SizedBox(
-      width: 48,
-      height: 36,
-      child: GridView.count(
-        crossAxisCount: 4,
-        mainAxisSpacing: 6,
-        crossAxisSpacing: 6,
-        physics: const NeverScrollableScrollPhysics(),
-        children: List.generate(
-          12,
-          (_) => Container(
-            decoration: BoxDecoration(color: Colors.white.withValues(alpha: 0.25), shape: BoxShape.circle),
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildFeatureIcon(IconData icon, String label, String caption) {
-    return Expanded(
-      child: Column(
-        children: [
-          Container(
-            width: 44,
-            height: 44,
-            decoration: BoxDecoration(color: Colors.white.withValues(alpha: 0.15), shape: BoxShape.circle),
-            child: Icon(icon, color: Colors.white, size: 20),
-          ),
-          const SizedBox(height: 8),
-          Text(label, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13)),
-          const SizedBox(height: 2),
-          Text(caption, textAlign: TextAlign.center, style: TextStyle(color: Colors.white.withValues(alpha: 0.75), fontSize: 10.5)),
-        ],
-      ),
     );
   }
 
@@ -719,12 +618,22 @@ class _LoginScreenState extends State<LoginScreen> {
               Container(
                 width: 36,
                 height: 36,
-                decoration: BoxDecoration(color: primaryDeepGreen.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(10)),
+                decoration: BoxDecoration(
+                  color: tealGlow.withValues(alpha: 0.24),
+                  shape: BoxShape.circle,
+                  border: Border.all(color: tealGlow.withValues(alpha: 0.75), width: 1.4),
+                  boxShadow: [
+                    BoxShadow(color: tealGlow.withValues(alpha: 0.5), blurRadius: 14),
+                  ],
+                ),
                 child: Icon(Icons.lock_outline, color: primaryDeepGreen, size: 18),
               ),
               const SizedBox(width: 12),
-              Text('Log into your facility',
-                  style: TextStyle(fontSize: 17, fontWeight: FontWeight.bold, color: neutralBlack)),
+              Flexible(
+                child: Text('Log into your facility',
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(fontSize: 17, fontWeight: FontWeight.bold, color: neutralBlack)),
+              ),
             ],
           ),
           const SizedBox(height: 24),
@@ -815,52 +724,11 @@ class _LoginScreenState extends State<LoginScreen> {
             ],
           ),
           const SizedBox(height: 20),
-          SizedBox(
-            width: double.infinity,
-            height: 48,
-            child: ElevatedButton(
-              onPressed: isLoggingIn ? null : _login,
-              style: ElevatedButton.styleFrom(
-                padding: EdgeInsets.zero,
-                backgroundColor: primaryDeepGreen,
-                disabledBackgroundColor: primaryDeepGreen.withValues(alpha: 0.6),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                elevation: 0,
-              ).copyWith(
-                overlayColor: WidgetStateProperty.resolveWith((states) =>
-                    states.contains(WidgetState.hovered) ? warmAmber : null),
-              ),
-              child: Ink(
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(colors: [primaryDeepGreen, tealAccent]),
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                child: Container(
-                  alignment: Alignment.center,
-                  child: isLoggingIn
-                      ? const SizedBox(
-                          width: 20,
-                          height: 20,
-                          child: CircularProgressIndicator(strokeWidth: 2.5, color: Colors.white),
-                        )
-                      : Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Container(
-                              width: 24,
-                              height: 24,
-                              decoration: BoxDecoration(color: Colors.white.withValues(alpha: 0.2), shape: BoxShape.circle),
-                              child: const Icon(Icons.arrow_forward, color: Colors.white, size: 14),
-                            ),
-                            const SizedBox(width: 10),
-                            const Text('Login', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600, fontSize: 15)),
-                            const SizedBox(width: 10),
-                            const Icon(Icons.arrow_forward, color: Colors.white, size: 16),
-                          ],
-                        ),
-                ),
-              ),
-            ),
+          _AnimatedLoginButton(
+            isLoading: isLoggingIn,
+            onPressed: isLoggingIn ? null : _login,
+            primaryColor: primaryDeepGreen,
+            accentColor: tealAccent,
           ),
           if (error != null)
             Container(
@@ -917,119 +785,311 @@ class _LoginScreenState extends State<LoginScreen> {
   // ==================== BUILD ====================
   @override
   Widget build(BuildContext context) {
-    final isWide = MediaQuery.of(context).size.width > 900;
-
     return Scaffold(
-      backgroundColor: offWhite,
-      body: Column(
+      body: Stack(
         children: [
-          _buildHeader(),
-          Expanded(
-            child: isWide
-                ? LayoutBuilder(
-                    builder: (context, constraints) {
-                      return Padding(
-                        padding: const EdgeInsets.all(24),
-                        child: Row(
-                          crossAxisAlignment: CrossAxisAlignment.stretch,
-                          children: [
-                            // Left: Welcome + Announcements + Trust footer
-                            Expanded(
-                              flex: 3,
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.stretch,
-                                children: [
-                                  _buildWelcomeCard(),
-                                  const SizedBox(height: 16),
-                                  Expanded(child: _buildAnnouncementsCard()),
-                                  const SizedBox(height: 16),
-                                  _buildTrustFooter(),
-                                ],
-                              ),
-                            ),
-                            const SizedBox(width: 20),
+          // Full-bleed background - an admin-uploaded poster (Platform
+          // Admin > Announcements) takes over entirely when set, same
+          // upload mechanism as before, just repurposed as the page
+          // background rather than a separate panel. Falls back to the
+          // bundled default otherwise.
+          Positioned.fill(
+            child: StreamBuilder<DocumentSnapshot>(
+              stream: FirebaseFirestore.instance.collection('app_config').doc('login_poster').snapshots(),
+              builder: (context, snapshot) {
+                final posterUrl = snapshot.data?.data() != null
+                    ? (snapshot.data!.data() as Map<String, dynamic>)['posterUrl'] as String?
+                    : null;
 
-                            // Center: Poster carousel (admin-uploaded, via
-                            // Platform Admin > Announcements, or the
-                            // default alternating branded slides).
-                            Expanded(
-                              flex: 4,
-                              child: _buildPosterCarousel(),
-                            ),
-                            const SizedBox(width: 20),
+                if (posterUrl != null) {
+                  return Image.network(
+                    posterUrl,
+                    fit: BoxFit.cover,
+                    errorBuilder: (_, __, ___) => Image.asset('assets/background.jpeg', fit: BoxFit.cover),
+                  );
+                }
+                return Image.asset('assets/background.jpeg', fit: BoxFit.cover);
+              },
+            ),
+          ),
+          // A subtle dark scrim - keeps the floating card and its
+          // shadow clearly readable against the background photo
+          // regardless of how bright or busy that photo is.
+          Positioned.fill(child: Container(color: Colors.black.withValues(alpha: 0.18))),
 
-                            // Right: Login
-                            Expanded(
-                              flex: 3,
-                              child: Center(child: _buildLoginForm()),
-                            ),
-                          ],
-                        ),
-                      );
-                    },
-                  )
-                : Center(
-                    child: SingleChildScrollView(
-                      padding: const EdgeInsets.all(24),
+          // The single floating card holding every piece of content -
+          // header, welcome/announcements, login form, and footer all
+          // live inside this one unified surface on every screen size,
+          // reflowing between two columns and a single stacked column
+          // rather than switching to a stripped-down alternate layout.
+          Center(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.all(24),
+              child: LayoutBuilder(
+                builder: (context, constraints) {
+                  // The actual space available to the card, after the
+                  // 24px padding on each side above - not the raw
+                  // screen width, which doesn't account for that and
+                  // was the real cause of the two-column layout
+                  // overflowing at widths just above the old cutoff.
+                  final isWide = constraints.maxWidth > 820;
+                  final targetWidth = isWide ? 1100.0 : 480.0;
+                  // The card is forced to be exactly this wide (not
+                  // just "up to" it) - otherwise its own width follows
+                  // whatever its content naturally demands, which can
+                  // end up narrower than the target and is why the
+                  // header's right-aligned elements weren't reaching
+                  // the true card edge. Capped against the actual
+                  // available space so this can never demand more room
+                  // than genuinely exists.
+                  final cardWidth =
+                      constraints.maxWidth < targetWidth ? constraints.maxWidth : targetWidth;
+
+                  return ConstrainedBox(
+                    constraints: BoxConstraints(minWidth: cardWidth, maxWidth: cardWidth),
+                    child: Container(
+                      clipBehavior: Clip.antiAlias,
+                      decoration: BoxDecoration(
+                        color: Colors.white.withValues(alpha: 0.97),
+                        borderRadius: BorderRadius.circular(24),
+                        boxShadow: [
+                          BoxShadow(color: Colors.black.withValues(alpha: 0.35), blurRadius: 40, offset: const Offset(0, 20)),
+                        ],
+                      ),
                       child: Column(
                         mainAxisSize: MainAxisSize.min,
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
                         children: [
-                          // A dedicated upload (Platform Admin > Announcements
-                          // > "Login Screen Logo"), separate from the
-                          // wide-screen poster above - that one's sized and
-                          // intended for a much larger space, not a compact
-                          // phone-screen logo. Shown alone, no text label
-                          // alongside it - a cleaner, more modern mobile
-                          // presentation than icon-plus-wordmark.
-                          StreamBuilder<DocumentSnapshot>(
-                            stream: FirebaseFirestore.instance
-                                .collection('app_config')
-                                .doc('login_logo')
-                                .snapshots(),
-                            builder: (context, snapshot) {
-                              // Waiting for the very first snapshot - reserves
-                              // the same space rather than flashing the
-                              // fallback illustration only to swap it out
-                              // moments later once the real logo arrives.
-                              if (snapshot.connectionState == ConnectionState.waiting && !snapshot.hasData) {
-                                return const SizedBox(height: 72);
-                              }
-
-                              final logoUrl = snapshot.data?.data() != null
-                                  ? (snapshot.data!.data() as Map<String, dynamic>)['logoUrl'] as String?
-                                  : null;
-
-                              return AnimatedSwitcher(
-                                duration: const Duration(milliseconds: 200),
-                                child: KeyedSubtree(
-                                  key: ValueKey(logoUrl ?? 'default'),
-                                  child: logoUrl != null
-                                      ? Image.network(
-                                          logoUrl,
-                                          height: 72,
-                                          fit: BoxFit.contain,
-                                          errorBuilder: (_, __, ___) => Icon(Icons.pets, size: 44, color: primaryDeepGreen),
-                                        )
-                                      : Container(
-                                          width: 72,
-                                          height: 72,
-                                          decoration: BoxDecoration(color: primaryDeepGreen, shape: BoxShape.circle),
-                                          alignment: Alignment.center,
-                                          child: const Text('VB.', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 22)),
+                          _buildHeader(),
+                          Padding(
+                            padding: const EdgeInsets.all(28),
+                            child: isWide
+                                ? IntrinsicHeight(
+                                    child: Row(
+                                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                                      children: [
+                                        // Left: Welcome + Announcements + Trust footer
+                                        Expanded(
+                                          flex: 1,
+                                          child: Column(
+                                            crossAxisAlignment: CrossAxisAlignment.stretch,
+                                            children: [
+                                              _buildWelcomeCard(),
+                                              const SizedBox(height: 16),
+                                              Expanded(child: _buildAnnouncementsCard()),
+                                              const SizedBox(height: 16),
+                                              _buildTrustFooter(),
+                                            ],
+                                          ),
                                         ),
-                                ),
-                              );
-                            },
+                                        const SizedBox(width: 28),
+                                        // Right: Login
+                                        Expanded(
+                                          flex: 1,
+                                          child: Center(child: _buildLoginForm()),
+                                        ),
+                                      ],
+                                    ),
+                                  )
+                                // Narrow screens: the same content, all
+                                // of it, stacked in one column instead
+                                // of a separate, stripped-down layout -
+                                // login first since it's the action
+                                // most people came here for, everything
+                                // else available below it.
+                                : Column(
+                                    mainAxisSize: MainAxisSize.min,
+                                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                                    children: [
+                                      _buildLoginForm(),
+                                      const SizedBox(height: 20),
+                                      _buildWelcomeCard(),
+                                      const SizedBox(height: 16),
+                                      _buildAnnouncementsCard(),
+                                      const SizedBox(height: 16),
+                                      _buildTrustFooter(),
+                                    ],
+                                  ),
                           ),
-                          const SizedBox(height: 24),
-                          _buildLoginForm(),
+                          _buildFooter(),
                         ],
                       ),
                     ),
-                  ),
+                  );
+                },
+              ),
+            ),
           ),
-          _buildFooter(),
         ],
+      ),
+    );
+  }
+}
+
+
+// ==================== ANIMATED LOGIN BUTTON ====================
+class _AnimatedLoginButton extends StatefulWidget {
+  final bool isLoading;
+  final VoidCallback? onPressed;
+  final Color primaryColor;
+  final Color accentColor;
+
+  const _AnimatedLoginButton({
+    required this.isLoading,
+    required this.onPressed,
+    required this.primaryColor,
+    required this.accentColor,
+  });
+
+  @override
+  State<_AnimatedLoginButton> createState() => _AnimatedLoginButtonState();
+}
+
+class _AnimatedLoginButtonState extends State<_AnimatedLoginButton> with SingleTickerProviderStateMixin {
+  late final AnimationController _controller;
+  // Same teal used for the glow treatment on the other icon badges
+  // throughout this screen - defined locally since this is a separate
+  // widget class from _LoginScreenState and can't reach that class's
+  // own instance field.
+  static const Color _tealGlow = Color(0xFF7EE8CB);
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(vsync: this, duration: const Duration(milliseconds: 450));
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  void _setHovered(bool hovered) {
+    if (hovered) {
+      _controller.forward(from: 0);
+    } else {
+      _controller.reverse();
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final enabled = !widget.isLoading && widget.onPressed != null;
+    return MouseRegion(
+      onEnter: (_) => _setHovered(true),
+      onExit: (_) => _setHovered(false),
+      cursor: enabled ? SystemMouseCursors.click : SystemMouseCursors.basic,
+      child: GestureDetector(
+        onTap: enabled ? widget.onPressed : null,
+        child: Semantics(
+          button: true,
+          enabled: enabled,
+          label: 'Login',
+          child: SizedBox(
+            width: double.infinity,
+            height: 48,
+            child: AnimatedBuilder(
+              animation: _controller,
+              builder: (context, _) {
+                final t = _controller.value;
+                return Opacity(
+                  opacity: enabled ? 1 : 0.6,
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(28),
+                    child: Stack(
+                      children: [
+                        // Base gradient - reverses direction as hover
+                        // progresses, rather than a solid amber overlay.
+                        Positioned.fill(
+                          child: DecoratedBox(
+                            decoration: BoxDecoration(
+                              gradient: LinearGradient(
+                                colors: [
+                                  Color.lerp(widget.primaryColor, widget.accentColor, t)!,
+                                  Color.lerp(widget.accentColor, widget.primaryColor, t)!,
+                                ],
+                              ),
+                            ),
+                          ),
+                        ),
+                        // A soft light band sweeping left to right once as
+                        // t goes 0->1 - purely decorative, so it's wrapped
+                        // in IgnorePointer to never intercept the tap.
+                        if (t > 0)
+                          Positioned.fill(
+                            child: IgnorePointer(
+                              child: Align(
+                                alignment: Alignment(-1.6 + t * 3.2, 0),
+                                child: Container(
+                                  width: 60,
+                                  decoration: BoxDecoration(
+                                    gradient: LinearGradient(
+                                      colors: [
+                                        Colors.white.withValues(alpha: 0),
+                                        Colors.white.withValues(alpha: 0.35 * t),
+                                        Colors.white.withValues(alpha: 0),
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 6),
+                          child: widget.isLoading
+                              ? const Center(
+                                  child: SizedBox(
+                                    width: 20,
+                                    height: 20,
+                                    child: CircularProgressIndicator(strokeWidth: 2.5, color: Colors.white),
+                                  ),
+                                )
+                              : Stack(
+                                  alignment: Alignment.center,
+                                  children: [
+                                    const Center(
+                                      child: Text('Login',
+                                          style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600, fontSize: 15)),
+                                    ),
+                                    // Slides from the left edge toward
+                                    // center as t goes 0->1 - the uncircled
+                                    // arrow at the right stays fixed.
+                                    Align(
+                                      alignment: Alignment(-1 + t * 1.3, 0),
+                                      child: Container(
+                                        width: 32,
+                                        height: 32,
+                                        decoration: BoxDecoration(
+                                          color: Colors.white.withValues(alpha: 0.22),
+                                          shape: BoxShape.circle,
+                                          border: Border.all(color: _tealGlow.withValues(alpha: 0.55), width: 1.2),
+                                          boxShadow: [
+                                            BoxShadow(color: _tealGlow.withValues(alpha: 0.3), blurRadius: 8),
+                                          ],
+                                        ),
+                                        child: const Icon(Icons.arrow_forward, color: Colors.white, size: 16),
+                                      ),
+                                    ),
+                                    const Align(
+                                      alignment: Alignment.centerRight,
+                                      child: Padding(
+                                        padding: EdgeInsets.only(right: 4),
+                                        child: Icon(Icons.arrow_forward, color: Colors.white, size: 18),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                        ),
+                      ],
+                    ),
+                  ),
+                );
+              },
+            ),
+          ),
+        ),
       ),
     );
   }

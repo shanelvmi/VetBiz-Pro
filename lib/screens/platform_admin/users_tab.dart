@@ -54,7 +54,12 @@ class _UsersTabState extends State<UsersTab> {
   // on the detail screen (e.g. reactivated) the moment you return to
   // it, rather than only once this list happens to be re-fetched for
   // some unrelated reason (a filter change, a fresh page load).
-  final Map<String, String> _statusOverrides = {};
+  final Map<String, Map<String, dynamic>> _dataOverrides = {};
+
+  // Falls back to the original cached snapshot when nothing has
+  // changed since this list was first loaded.
+  Map<String, dynamic> _effectiveData(QueryDocumentSnapshot<Map<String, dynamic>> doc) =>
+      _dataOverrides[doc.id] ?? doc.data();
   DocumentSnapshot<Map<String, dynamic>>? _lastDoc;
   bool _hasMore = true;
   bool _isLoadingMore = false;
@@ -383,9 +388,9 @@ class _UsersTabState extends State<UsersTab> {
     }
 
     var platformAdminDocs = platformAdminDocsRaw.where((doc) {
-      final data = doc.data();
+      final data = _effectiveData(doc);
       if (_roleFilter != null && data['role'] != _roleFilter) return false;
-      if (_statusFilter != null && (_statusOverrides[doc.id] ?? data['status'] ?? 'active') != _statusFilter) {
+      if (_statusFilter != null && (data['status'] ?? 'active') != _statusFilter) {
         return false;
       }
       return _matchesSearch(data);
@@ -401,12 +406,12 @@ class _UsersTabState extends State<UsersTab> {
     var docs = _docs.where((doc) => !platformAdminIds.contains(doc.id)).toList();
     if (_statusFilter != null) {
       docs = docs.where((doc) {
-        final data = doc.data();
-        return (_statusOverrides[doc.id] ?? data['status'] ?? 'active') == _statusFilter;
+        final data = _effectiveData(doc);
+        return (data['status'] ?? 'active') == _statusFilter;
       }).toList();
     }
     if (_search.isNotEmpty) {
-      docs = docs.where((doc) => _matchesSearch(doc.data())).toList();
+      docs = docs.where((doc) => _matchesSearch(_effectiveData(doc))).toList();
     }
 
     if (docs.isEmpty && platformAdminDocs.isEmpty) {
@@ -484,9 +489,9 @@ class _UsersTabState extends State<UsersTab> {
   }
 
   Widget _buildUserCard(QueryDocumentSnapshot<Map<String, dynamic>> doc, bool isPlatformAdmin) {
-    final data = doc.data();
+    final data = _effectiveData(doc);
     final facilities = (data['facilities'] as List?)?.cast<dynamic>() ?? [];
-    final status = (_statusOverrides[doc.id] ?? data['status'] ?? 'active').toString();
+    final status = (data['status'] ?? 'active').toString();
     final role = (data['role'] ?? 'unknown').toString();
     final name = (data['fullName'] ?? 'Unknown').toString();
     final roleColor = _roleColor(role);
@@ -512,9 +517,9 @@ class _UsersTabState extends State<UsersTab> {
           if (!mounted) return;
           final freshDoc = await FirebaseFirestore.instance.collection('users').doc(doc.id).get();
           if (!mounted) return;
-          final freshStatus = freshDoc.data()?['status'] as String?;
-          if (freshStatus != null) {
-            setState(() => _statusOverrides[doc.id] = freshStatus);
+          final freshData = freshDoc.data();
+          if (freshData != null) {
+            setState(() => _dataOverrides[doc.id] = freshData);
           }
         },
         child: Padding(

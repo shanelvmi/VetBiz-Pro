@@ -68,7 +68,7 @@ class _PlatformAdminHomeScreenState extends State<PlatformAdminHomeScreen> {
     _AdminNavItem(icon: Icons.storefront_outlined, label: 'Facilities', page: FacilitiesDirectoryTab()),
     _AdminNavItem(icon: Icons.people_outline, label: 'Users', page: UsersTab()),
     _AdminNavItem(icon: Icons.receipt_long_outlined, label: 'Requests', page: SubscriptionRequestsTab()),
-    _AdminNavItem(icon: Icons.campaign_outlined, label: 'Announcements', page: AnnouncementsTab()),
+    _AdminNavItem(icon: Icons.campaign_outlined, label: 'Branding', page: AnnouncementsTab()),
     _AdminNavItem(icon: Icons.admin_panel_settings_outlined, label: 'Admins', page: PlatformAdminsTab()),
   ];
 

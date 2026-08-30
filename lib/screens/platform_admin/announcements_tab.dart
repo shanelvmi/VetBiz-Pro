@@ -26,7 +26,6 @@ class _AnnouncementsTabState extends State<AnnouncementsTab> {
   static const Color warmAmber = Color(0xFFFFB200);
 
   bool _isUploadingPoster = false;
-  bool _isUploadingLoginLogo = false;
 
   // A curated, modern spread across the hue spectrum plus neutrals -
   // genuinely more choice than the previous 5 swatches, without the
@@ -475,13 +474,13 @@ class _AnnouncementsTabState extends State<AnnouncementsTab> {
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Poster updated'), backgroundColor: Colors.green),
+          const SnackBar(content: Text('Background image updated'), backgroundColor: Colors.green),
         );
       }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Could not upload poster: $e'), backgroundColor: Colors.redAccent),
+          SnackBar(content: Text('Could not upload background image: $e'), backgroundColor: Colors.redAccent),
         );
       }
     } finally {
@@ -493,8 +492,8 @@ class _AnnouncementsTabState extends State<AnnouncementsTab> {
     final confirm = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Remove Poster?'),
-        content: const Text('The login screen will fall back to its default illustration.'),
+        title: const Text('Remove Background Image?'),
+        content: const Text('The login screen will fall back to its default background image.'),
         actions: [
           TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Cancel')),
           ElevatedButton(
@@ -510,7 +509,7 @@ class _AnnouncementsTabState extends State<AnnouncementsTab> {
     await FirebaseFirestore.instance.collection('app_config').doc('login_poster').delete();
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Poster removed'), backgroundColor: Colors.green),
+        const SnackBar(content: Text('Background image removed'), backgroundColor: Colors.green),
       );
     }
   }
@@ -530,10 +529,11 @@ class _AnnouncementsTabState extends State<AnnouncementsTab> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text('Login Screen Poster', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
+                const Text('Background Image', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
                 const SizedBox(height: 4),
                 Text(
-                  'Shown on the login screen for wide/desktop screens.',
+                  'Shown as the full background of the login screen for every facility. '
+                  'Falls back to the default background image if none is set.',
                   style: TextStyle(fontSize: 12.5, color: Colors.grey[600]),
                 ),
                 const SizedBox(height: 12),
@@ -546,7 +546,7 @@ class _AnnouncementsTabState extends State<AnnouncementsTab> {
                       fit: BoxFit.contain,
                       errorBuilder: (_, __, ___) => const SizedBox(
                         height: 140,
-                        child: Center(child: Text('Could not load current poster')),
+                        child: Center(child: Text('Could not load current background image')),
                       ),
                     ),
                   )
@@ -558,7 +558,7 @@ class _AnnouncementsTabState extends State<AnnouncementsTab> {
                       color: Colors.grey.shade100,
                       borderRadius: BorderRadius.circular(8),
                     ),
-                    child: Text('No poster set - using default illustration', style: TextStyle(color: Colors.grey[600])),
+                    child: Text('No background image set - using default background', style: TextStyle(color: Colors.grey[600])),
                   ),
                 const SizedBox(height: 12),
                 Row(
@@ -568,7 +568,7 @@ class _AnnouncementsTabState extends State<AnnouncementsTab> {
                       icon: _isUploadingPoster
                           ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
                           : const Icon(Icons.upload),
-                      label: Text(posterUrl != null ? 'Replace Poster' : 'Upload Poster'),
+                      label: Text(posterUrl != null ? 'Replace Background Image' : 'Upload Background Image'),
                       style: ButtonStyle(
                         backgroundColor: WidgetStateProperty.resolveWith<Color>((states) {
                           if (states.contains(WidgetState.hovered)) return warmAmber;
@@ -581,154 +581,6 @@ class _AnnouncementsTabState extends State<AnnouncementsTab> {
                       const SizedBox(width: 8),
                       TextButton(
                         onPressed: _removePoster,
-                        style: TextButton.styleFrom(foregroundColor: Colors.red),
-                        child: const Text('Remove'),
-                      ),
-                    ],
-                  ],
-                ),
-              ],
-            ),
-          ),
-        );
-      },
-    );
-  }
-
-  Future<void> _uploadLoginLogo() async {
-    final picker = ImagePicker();
-    final file = await picker.pickImage(source: ImageSource.gallery, imageQuality: 85);
-    if (file == null) return;
-
-    setState(() => _isUploadingLoginLogo = true);
-    try {
-      final Uint8List bytes = await file.readAsBytes();
-      final ref = FirebaseStorage.instance.ref().child('login_logo/logo.jpg');
-      await ref.putData(bytes);
-      final url = await ref.getDownloadURL();
-
-      // A separate document from login_poster, deliberately - not just
-      // a second field on that same one. login_poster's own "Remove"
-      // deletes the whole document, not just that one field; sharing a
-      // document would mean removing the poster also silently wipes
-      // out the logo, and vice versa if this ever grew its own
-      // whole-document removal too.
-      await FirebaseFirestore.instance.collection('app_config').doc('login_logo').set({
-        'logoUrl': url,
-        'updatedAt': FieldValue.serverTimestamp(),
-      });
-
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Logo updated'), backgroundColor: Colors.green),
-        );
-      }
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Could not upload logo: $e'), backgroundColor: Colors.redAccent),
-        );
-      }
-    } finally {
-      if (mounted) setState(() => _isUploadingLoginLogo = false);
-    }
-  }
-
-  Future<void> _removeLoginLogo() async {
-    final confirm = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Remove Logo?'),
-        content: SizedBox(
-          width: MediaQuery.of(context).size.width > 700 ? 360 : MediaQuery.of(context).size.width * 0.85,
-          child: const Text('Phone screens will fall back to the default illustration.'),
-        ),
-        actions: [
-          TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Cancel')),
-          ElevatedButton(
-            onPressed: () => Navigator.pop(context, true),
-            style: ElevatedButton.styleFrom(backgroundColor: Colors.red, foregroundColor: Colors.white),
-            child: const Text('Remove'),
-          ),
-        ],
-      ),
-    );
-    if (confirm != true) return;
-
-    await FirebaseFirestore.instance.collection('app_config').doc('login_logo').delete();
-    if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Logo removed'), backgroundColor: Colors.green),
-      );
-    }
-  }
-
-  Widget _buildLoginLogoSection() {
-    return StreamBuilder<DocumentSnapshot>(
-      stream: FirebaseFirestore.instance.collection('app_config').doc('login_logo').snapshots(),
-      builder: (context, snapshot) {
-        final logoUrl = snapshot.data?.data() != null
-            ? (snapshot.data!.data() as Map<String, dynamic>)['logoUrl'] as String?
-            : null;
-
-        return Card(
-          margin: const EdgeInsets.fromLTRB(12, 4, 12, 4),
-          child: Padding(
-            padding: const EdgeInsets.all(14),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text('Login Screen Logo (Phone Screens)', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
-                const SizedBox(height: 4),
-                Text(
-                  'Shown on narrow/phone screens instead of the poster above.',
-                  style: TextStyle(fontSize: 12.5, color: Colors.grey[600]),
-                ),
-                const SizedBox(height: 12),
-                if (logoUrl != null)
-                  ClipRRect(
-                    borderRadius: BorderRadius.circular(8),
-                    child: Image.network(
-                      logoUrl,
-                      height: 140,
-                      fit: BoxFit.contain,
-                      errorBuilder: (_, __, ___) => const SizedBox(
-                        height: 140,
-                        child: Center(child: Text('Could not load current logo')),
-                      ),
-                    ),
-                  )
-                else
-                  Container(
-                    height: 100,
-                    alignment: Alignment.center,
-                    decoration: BoxDecoration(
-                      color: Colors.grey.shade100,
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: Text('No logo set - using default illustration', style: TextStyle(color: Colors.grey[600])),
-                  ),
-                const SizedBox(height: 12),
-                Row(
-                  children: [
-                    ElevatedButton.icon(
-                      onPressed: _isUploadingLoginLogo ? null : _uploadLoginLogo,
-                      icon: _isUploadingLoginLogo
-                          ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
-                          : const Icon(Icons.upload),
-                      label: Text(logoUrl != null ? 'Replace Logo' : 'Upload Logo'),
-                      style: ButtonStyle(
-                        backgroundColor: WidgetStateProperty.resolveWith<Color>((states) {
-                          if (states.contains(WidgetState.hovered)) return warmAmber;
-                          return primaryColor;
-                        }),
-                        foregroundColor: WidgetStateProperty.all(Colors.white),
-                      ),
-                    ),
-                    if (logoUrl != null) ...[
-                      const SizedBox(width: 8),
-                      TextButton(
-                        onPressed: _removeLoginLogo,
                         style: TextButton.styleFrom(foregroundColor: Colors.red),
                         child: const Text('Remove'),
                       ),
@@ -772,27 +624,7 @@ class _AnnouncementsTabState extends State<AnnouncementsTab> {
           return ListView(
             padding: const EdgeInsets.fromLTRB(0, 12, 0, 80),
             children: [
-              LayoutBuilder(
-                builder: (context, constraints) {
-                  if (constraints.maxWidth >= 700) {
-                    return IntrinsicHeight(
-                      child: Row(
-                        crossAxisAlignment: CrossAxisAlignment.stretch,
-                        children: [
-                          Expanded(child: _buildPosterSection()),
-                          Expanded(child: _buildLoginLogoSection()),
-                        ],
-                      ),
-                    );
-                  }
-                  return Column(
-                    children: [
-                      _buildPosterSection(),
-                      _buildLoginLogoSection(),
-                    ],
-                  );
-                },
-              ),
+              _buildPosterSection(),
               const Padding(
                 padding: EdgeInsets.fromLTRB(12, 16, 12, 4),
                 child: Text('Announcements', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
