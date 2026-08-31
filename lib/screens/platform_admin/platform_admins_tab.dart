@@ -53,21 +53,30 @@ class _PlatformAdminsTabState extends State<PlatformAdminsTab> {
       final userDoc = userQuery.docs.first;
       final userData = userDoc.data();
 
+      // Only an account whose current role is already admin can be
+      // added as a Platform Admin - an Assistant must first be
+      // promoted to Admin through the normal facility-level path
+      // (Manage Assistants), not silently upgraded as a side effect of
+      // this action.
+      if (userData['role'] != 'admin') {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('"$email" is an Assistant and cannot be added as a Platform Admin. '
+                  'They must first be an Admin on a facility.'),
+              backgroundColor: Colors.redAccent,
+            ),
+          );
+        }
+        return;
+      }
+
       await FirebaseFirestore.instance.collection('platform_admins').doc(userDoc.id).set({
         'email': email,
         'fullName': userData['fullName'],
         'addedAt': FieldValue.serverTimestamp(),
         'addedBy': FirebaseAuth.instance.currentUser?.email ?? 'Unknown',
       });
-
-      // Platform Admin status and this facility-level role field are
-      // two separate, independent things - nothing otherwise
-      // guarantees they stay in sync. Normalized here so this account
-      // is never treated as a lower-privilege one the moment it has
-      // any facility at all.
-      if (userData['role'] != 'admin') {
-        await FirebaseFirestore.instance.collection('users').doc(userDoc.id).update({'role': 'admin'});
-      }
 
       _emailController.clear();
 

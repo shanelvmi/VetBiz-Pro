@@ -7,6 +7,9 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import '../services/auth_service.dart';
 import '../widgets/announcement_message.dart';
+import '../utils/navigator_key.dart';
+import 'legal/privacy_policy_screen.dart';
+import 'legal/terms_of_service_screen.dart';
 
 class LoginScreen extends StatefulWidget {
   final String? errorMessage;
@@ -75,11 +78,11 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   // ==================== LOGIN LOGIC ====================
-  // Deliberately does nothing after a successful sign-in beyond that -
-  // no Firestore fetch, no status check, no navigation. The moment
-  // sign-in succeeds, Firebase's own auth-state stream fires and
-  // AppEntryPoint (in main.dart) reacts to it independently - if this
-  // method also tried to navigate here, the two would race: this
+  // Deliberately does nothing after a successful sign-in beyond
+  // pushing the signed-in user directly to AppEntryPoint - no
+  // Firestore fetch, no status check, no navigation here. AppEntryPoint
+  // (in main.dart) owns deciding what screen to show next; if this
+  // method also tried to navigate itself, the two would race: this
   // screen can get torn down and replaced by AppEntryPoint's own
   // rebuild while this method is still mid-flight (fetching Firestore,
   // checking status), and its result gets silently discarded once that
@@ -87,54 +90,87 @@ class _LoginScreenState extends State<LoginScreen> {
   // "doing nothing" after a login/logout cycle - not a Firebase error,
   // two separate pieces of code deciding what screen to show next.
   Future<void> _login() async {
-  if (isLoggingIn) return; // guards against a double-tap firing two logins at once
-  setState(() {
-    error = null;
-    isLoggingIn = true;
-  });
-
-  if (emailController.text.isEmpty || passwordController.text.length < 6) {
+    if (isLoggingIn) return; // guards against a double-tap firing two logins at once
     setState(() {
-      error = "Enter valid email and password (min 6 chars).";
-      isLoggingIn = false;
+      error = null;
+      isLoggingIn = true;
     });
-    return;
-  }
 
-  try {
-    // Remember Me only ever stores the email, never the password - just
-    // a convenience so it's pre-filled next time, not a session/login
-    // bypass of any kind. Done before the sign-in attempt itself so it
-    // never depends on anything that could race with AppEntryPoint.
-    final prefs = await SharedPreferences.getInstance();
-    if (rememberMe) {
-      await prefs.setString('remembered_email', emailController.text.trim());
-    } else {
-      await prefs.remove('remembered_email');
+    if (emailController.text.isEmpty || passwordController.text.length < 6) {
+      setState(() {
+        error = "Enter valid email and password (min 6 chars).";
+        isLoggingIn = false;
+      });
+      return;
     }
 
-    await _authService.login(
-      emailController.text.trim(),
-      passwordController.text.trim(),
-    );
+    try {
+      // Remember Me only ever stores the email, never the password -
+      // just a convenience so it's pre-filled next time, not a
+      // session/login bypass of any kind. Done before the sign-in
+      // attempt itself so it never depends on anything that could race
+      // with AppEntryPoint.
+      final prefs = await SharedPreferences.getInstance();
+      if (rememberMe) {
+        await prefs.setString('remembered_email', emailController.text.trim());
+      } else {
+        await prefs.remove('remembered_email');
+      }
 
-    // No navigation here - see the note above. AppEntryPoint takes it
-    // from here the moment this succeeds. isLoggingIn intentionally
-    // stays true; this whole widget is about to be torn down anyway.
-  } on FirebaseAuthException catch (e) {
-    if (!mounted) return;
-    setState(() {
-      error = _friendlyAuthError(e);
-      isLoggingIn = false;
-    });
-  } catch (e) {
-    if (!mounted) return;
-    setState(() {
-      error = e.toString().replaceAll('Exception:', '').trim();
-      isLoggingIn = false;
-    });
+      debugPrint('[LOGIN] Attempting sign-in for ${emailController.text.trim()}');
+      final credential = await _authService.login(
+        emailController.text.trim(),
+        passwordController.text.trim(),
+      );
+      final signedInUser = credential.user;
+      debugPrint('[LOGIN] Sign-in succeeded for uid=${signedInUser?.uid ?? "unknown"}');
+
+      // The direct fix - tells AppEntryPoint about this newly
+      // signed-in user immediately, rather than only ever finding out
+      // via authStateChanges() (a known, occasionally-unreliable path
+      // specifically on Flutter web, especially right after a
+      // logout-then-login-as-someone-else sequence) or waiting for the
+      // periodic poll's next tick.
+      if (signedInUser != null) {
+        if (pushAuthUser != null) {
+          debugPrint('[LOGIN] Pushing signed-in user directly to AppEntryPoint');
+          pushAuthUser!(signedInUser);
+        } else {
+          debugPrint('[LOGIN] No push callback registered - relying on stream/poll fallback');
+        }
+      }
+
+      // A defensive safety net, not the primary mechanism for getting
+      // to the dashboard - if AppEntryPoint still hasn't navigated
+      // away within a few seconds, this screen would already be
+      // disposed if it had, so this stops the button spinning forever
+      // instead of leaving it stuck indefinitely for any reason not
+      // otherwise anticipated.
+      Future.delayed(const Duration(seconds: 6), () {
+        if (mounted && isLoggingIn) {
+          debugPrint('[LOGIN] Still mounted 6s after a successful sign-in - resetting loading state');
+          setState(() => isLoggingIn = false);
+        }
+      });
+
+      // No further navigation here - see the note above. AppEntryPoint
+      // takes it from here.
+    } on FirebaseAuthException catch (e) {
+      debugPrint('[LOGIN] FirebaseAuthException: ${e.code} - ${e.message}');
+      if (!mounted) return;
+      setState(() {
+        error = _friendlyAuthError(e);
+        isLoggingIn = false;
+      });
+    } catch (e) {
+      debugPrint('[LOGIN] Unexpected error: $e');
+      if (!mounted) return;
+      setState(() {
+        error = e.toString().replaceAll('Exception:', '').trim();
+        isLoggingIn = false;
+      });
+    }
   }
-}
 
   // Firebase's own exception messages are technical and inconsistent in
   // tone - this maps the common cases to something a shop owner would
@@ -207,7 +243,7 @@ class _LoginScreenState extends State<LoginScreen> {
   Widget _buildHeader() {
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+      padding: const EdgeInsets.symmetric(vertical: 16),
       decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: [primaryDeepGreen, tealAccent],
@@ -224,58 +260,95 @@ class _LoginScreenState extends State<LoginScreen> {
           // settings icon exactly where they belong.
           final isNarrow = constraints.maxWidth < 560;
 
-          return Row(
+          return SizedBox(
+            height: 44,
+            child: Stack(
             children: [
-              Container(
-                width: 44,
-                height: 44,
-                decoration: const BoxDecoration(color: Colors.white, shape: BoxShape.circle),
-                alignment: Alignment.center,
-                child: Text('VB.', style: TextStyle(color: primaryDeepGreen, fontWeight: FontWeight.bold, fontSize: 16)),
-              ),
-              const SizedBox(width: 12),
-              Flexible(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    const Text('VetBiz Pro System',
-                        style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16)),
-                    if (!isNarrow)
-                      Text('Smart Business & Vet Services Monitor',
-                          overflow: TextOverflow.ellipsis,
-                          style: TextStyle(color: Colors.white.withValues(alpha: 0.75), fontSize: 11.5)),
-                  ],
+              // Left group - logo, title, subtitle. Positioned rather
+              // than Row's default left alignment, so both groups use
+              // the same explicit-coordinate mechanism.
+              Positioned(
+                left: 16,
+                top: 0,
+                bottom: 0,
+                right: 180, // leaves room for the right group so long titles don't run under it
+                child: Align(
+                  alignment: Alignment.centerLeft,
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Container(
+                        width: 44,
+                        height: 44,
+                        decoration: const BoxDecoration(color: Colors.white, shape: BoxShape.circle),
+                        alignment: Alignment.center,
+                        child: Text('VB.', style: TextStyle(color: primaryDeepGreen, fontWeight: FontWeight.bold, fontSize: 16)),
+                      ),
+                      const SizedBox(width: 12),
+                      Flexible(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            const Text('VetBiz Pro System',
+                                style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16)),
+                            if (!isNarrow)
+                              Text('Smart Business & Vet Services Monitor',
+                                  overflow: TextOverflow.ellipsis,
+                                  style: TextStyle(color: Colors.white.withValues(alpha: 0.75), fontSize: 11.5)),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ),
-              const Spacer(),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: 0.15),
-                  borderRadius: BorderRadius.circular(20),
+              // Right group - status pill and sun icon. Pinned directly
+              // to an explicit right coordinate (16px from the actual
+              // container edge) rather than pushed there by a Spacer
+              // inside a Row - a direct position, not a computed one.
+              Positioned(
+                right: 16,
+                top: 0,
+                bottom: 0,
+                child: Align(
+                  alignment: Alignment.centerRight,
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                        decoration: BoxDecoration(
+                          color: Colors.white.withValues(alpha: 0.15),
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Container(
+                              width: 8,
+                              height: 8,
+                              decoration: const BoxDecoration(color: Colors.greenAccent, shape: BoxShape.circle),
+                            ),
+                            const SizedBox(width: 6),
+                            const Text('System Online',
+                                style: TextStyle(color: Colors.white, fontSize: 12.5, fontWeight: FontWeight.w600)),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(width: 10),
+                      Container(
+                        width: 36,
+                        height: 36,
+                        decoration: BoxDecoration(color: Colors.white.withValues(alpha: 0.15), shape: BoxShape.circle),
+                        child: const Icon(Icons.wb_sunny_outlined, color: Colors.white, size: 18),
+                      ),
+                    ],
+                  ),
                 ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Container(
-                      width: 8,
-                      height: 8,
-                      decoration: const BoxDecoration(color: Colors.greenAccent, shape: BoxShape.circle),
-                    ),
-                    const SizedBox(width: 6),
-                    const Text('System Online', style: TextStyle(color: Colors.white, fontSize: 12.5, fontWeight: FontWeight.w600)),
-                  ],
-                ),
-              ),
-              const SizedBox(width: 10),
-              Container(
-                width: 36,
-                height: 36,
-                decoration: BoxDecoration(color: Colors.white.withValues(alpha: 0.15), shape: BoxShape.circle),
-                child: const Icon(Icons.wb_sunny_outlined, color: Colors.white, size: 18),
               ),
             ],
+            ),
           );
         },
       ),
@@ -304,9 +377,9 @@ class _LoginScreenState extends State<LoginScreen> {
                 const Spacer(),
                 Text('v2.0.0', style: TextStyle(color: Colors.white.withValues(alpha: 0.7), fontSize: 12)),
                 const SizedBox(width: 20),
-                Text('Privacy Policy', style: TextStyle(color: Colors.white.withValues(alpha: 0.7), fontSize: 12)),
+                const _FooterLink(label: 'Privacy Policy', destination: PrivacyPolicyScreen()),
                 const SizedBox(width: 20),
-                Text('Terms of Service', style: TextStyle(color: Colors.white.withValues(alpha: 0.7), fontSize: 12)),
+                const _FooterLink(label: 'Terms of Service', destination: TermsOfServiceScreen()),
               ],
             );
           }
@@ -331,8 +404,8 @@ class _LoginScreenState extends State<LoginScreen> {
                 runSpacing: 4,
                 children: [
                   Text('v2.0.0', style: TextStyle(color: Colors.white.withValues(alpha: 0.7), fontSize: 12)),
-                  Text('Privacy Policy', style: TextStyle(color: Colors.white.withValues(alpha: 0.7), fontSize: 12)),
-                  Text('Terms of Service', style: TextStyle(color: Colors.white.withValues(alpha: 0.7), fontSize: 12)),
+                  const _FooterLink(label: 'Privacy Policy', destination: PrivacyPolicyScreen()),
+                  const _FooterLink(label: 'Terms of Service', destination: TermsOfServiceScreen()),
                 ],
               ),
             ],
@@ -401,18 +474,42 @@ class _LoginScreenState extends State<LoginScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            children: [
-              Icon(Icons.campaign_outlined, color: neutralBlack, size: 18),
-              const SizedBox(width: 8),
-              Flexible(
-                child: Text('Announcements',
-                    overflow: TextOverflow.ellipsis,
-                    style: TextStyle(fontWeight: FontWeight.bold, color: neutralBlack, fontSize: 15)),
-              ),
-              const Spacer(),
-              Icon(Icons.chevron_right, color: Colors.grey.shade400, size: 18),
-            ],
+          SizedBox(
+            height: 22,
+            child: Stack(
+              children: [
+                Positioned(
+                  left: 0,
+                  top: 0,
+                  bottom: 0,
+                  right: 30,
+                  child: Align(
+                    alignment: Alignment.centerLeft,
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(Icons.campaign_outlined, color: neutralBlack, size: 18),
+                        const SizedBox(width: 8),
+                        Flexible(
+                          child: Text('Announcements',
+                              overflow: TextOverflow.ellipsis,
+                              style: TextStyle(fontWeight: FontWeight.bold, color: neutralBlack, fontSize: 15)),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+                Positioned(
+                  right: 0,
+                  top: 0,
+                  bottom: 0,
+                  child: Align(
+                    alignment: Alignment.centerRight,
+                    child: Icon(Icons.chevron_right, color: Colors.grey.shade400, size: 18),
+                  ),
+                ),
+              ],
+            ),
           ),
           const Divider(height: 20),
           _buildAnnouncementsScrollable(),
@@ -952,6 +1049,7 @@ class _AnimatedLoginButtonState extends State<_AnimatedLoginButton> with SingleT
   // widget class from _LoginScreenState and can't reach that class's
   // own instance field.
   static const Color _tealGlow = Color(0xFF7EE8CB);
+  static const Color _warmAmber = Color(0xFFFFB200);
 
   @override
   void initState() {
@@ -1049,9 +1147,12 @@ class _AnimatedLoginButtonState extends State<_AnimatedLoginButton> with SingleT
                               : Stack(
                                   alignment: Alignment.center,
                                   children: [
-                                    const Center(
+                                    Center(
                                       child: Text('Login',
-                                          style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600, fontSize: 15)),
+                                          style: TextStyle(
+                                              color: Color.lerp(Colors.white, _warmAmber, t),
+                                              fontWeight: FontWeight.w600,
+                                              fontSize: 15)),
                                     ),
                                     // Slides from the left edge toward
                                     // center as t goes 0->1 - the uncircled
@@ -1069,7 +1170,7 @@ class _AnimatedLoginButtonState extends State<_AnimatedLoginButton> with SingleT
                                             BoxShadow(color: _tealGlow.withValues(alpha: 0.3), blurRadius: 8),
                                           ],
                                         ),
-                                        child: const Icon(Icons.arrow_forward, color: Colors.white, size: 16),
+                                        child: Icon(Icons.arrow_forward, color: Color.lerp(Colors.white, _warmAmber, t), size: 16),
                                       ),
                                     ),
                                     const Align(
@@ -1150,6 +1251,44 @@ class _NewBadgeState extends State<_NewBadge> {
               fontSize: 10,
               fontWeight: FontWeight.bold),
         ),
+      ),
+    );
+  }
+}
+
+// ==================== FOOTER LINK (Privacy Policy / Terms) ====================
+// A dedicated widget rather than a plain method - each of the four
+// instances of this (two links, two responsive layouts) needs its own
+// independent hover state, which a method returning a Widget has no
+// way to hold across separate calls.
+class _FooterLink extends StatefulWidget {
+  final String label;
+  final Widget destination;
+  const _FooterLink({required this.label, required this.destination});
+
+  @override
+  State<_FooterLink> createState() => _FooterLinkState();
+}
+
+class _FooterLinkState extends State<_FooterLink> {
+  static const Color _warmAmber = Color(0xFFFFB200);
+  bool _hovered = false;
+
+  @override
+  Widget build(BuildContext context) {
+    return MouseRegion(
+      cursor: SystemMouseCursors.click,
+      onEnter: (_) => setState(() => _hovered = true),
+      onExit: (_) => setState(() => _hovered = false),
+      child: GestureDetector(
+        onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => widget.destination)),
+        child: Text(widget.label,
+            style: TextStyle(
+              color: _hovered ? _warmAmber : Colors.white.withValues(alpha: 0.7),
+              fontSize: 12,
+              decoration: TextDecoration.underline,
+              decorationColor: _hovered ? _warmAmber : Colors.white.withValues(alpha: 0.4),
+            )),
       ),
     );
   }

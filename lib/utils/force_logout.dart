@@ -24,10 +24,24 @@ import 'provider_reset.dart';
 /// back to the existing base route instead keeps AppEntryPoint alive
 /// the whole time, so it's still there to react to the next sign-in.
 Future<void> forceLogoutAndShowLogin({String? message}) async {
+  final uidBeingSignedOut = FirebaseAuth.instance.currentUser?.uid;
+  debugPrint('[LOGOUT] Starting for uid=${uidBeingSignedOut ?? "none"}${message != null ? " (message: $message)" : ""}');
+
   final context = navigatorKey.currentContext;
 
   if (context != null && context.mounted) {
-    resetAllUserProviders(context);
+    debugPrint('[LOGOUT] Resetting all user providers');
+    try {
+      resetAllUserProviders(context);
+      debugPrint('[LOGOUT] Providers reset successfully');
+    } catch (e, st) {
+      // Must not prevent signOut() below from running regardless - a
+      // provider lookup failing here is not a reason to leave the
+      // account still signed in.
+      debugPrint('[LOGOUT] Provider reset failed, continuing anyway: $e\n$st');
+    }
+  } else {
+    debugPrint('[LOGOUT] No mounted context available - providers not reset');
   }
 
   // Set before signing out, not after - signOut() is what triggers the
@@ -37,12 +51,21 @@ Future<void> forceLogoutAndShowLogin({String? message}) async {
 
   try {
     await FirebaseAuth.instance.signOut().timeout(const Duration(seconds: 10));
-  } catch (e) {
-    debugPrint('forceLogoutAndShowLogin: sign-out failed, continuing anyway: $e');
+    debugPrint('[LOGOUT] signOut() completed for uid=${uidBeingSignedOut ?? "none"}');
+  } catch (e, st) {
+    debugPrint('[LOGOUT] sign-out failed, continuing anyway: $e\n$st');
   }
 
   final navState = navigatorKey.currentState;
   if (navState != null) {
-    navState.popUntil((route) => route.isFirst);
+    debugPrint('[LOGOUT] Popping back to base route');
+    try {
+      navState.popUntil((route) => route.isFirst);
+      debugPrint('[LOGOUT] popUntil(isFirst) call completed');
+    } catch (e, st) {
+      debugPrint('[LOGOUT] popUntil failed: $e\n$st');
+    }
+  } else {
+    debugPrint('[LOGOUT] No navigator state available to pop');
   }
 }

@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import '../../providers/settings_provider.dart';
 import '../../providers/user_role_provider.dart';
 
@@ -11,7 +9,6 @@ import 'printer_settings_screen.dart';
 import 'export_data_screen.dart';
 import 'trash_screen.dart';
 import '../subscription/subscription_screen.dart';
-import '../platform_admin/platform_admin_home_screen.dart';
 import '../dashboard/stock_alerts_screen.dart';
 
 class SettingsScreen extends StatefulWidget {
@@ -32,17 +29,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
   // default (see _defaultSelection) as soon as role/platform-admin
   // status is known, so the pane is never blank on first load.
   String? _selectedKey;
-
-  bool? _isPlatformAdminCache;
-
-  Future<bool> _isPlatformAdmin() async {
-    if (_isPlatformAdminCache != null) return _isPlatformAdminCache!;
-    final user = FirebaseAuth.instance.currentUser;
-    if (user == null) return false;
-    final doc = await FirebaseFirestore.instance.collection('platform_admins').doc(user.uid).get();
-    _isPlatformAdminCache = doc.exists;
-    return _isPlatformAdminCache!;
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -95,28 +81,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       _buildSettingsItem(
                         icon: Icons.workspace_premium_outlined,
                         label: 'Subscription & Billing',
-                        isLast: false,
+                        isLast: true,
                         onTap: () {
                           Navigator.push(
                             context,
                             MaterialPageRoute(builder: (_) => const SubscriptionScreen()),
-                          );
-                        },
-                      ),
-                      FutureBuilder<bool>(
-                        future: _isPlatformAdmin(),
-                        builder: (context, snapshot) {
-                          if (snapshot.data != true) return const SizedBox.shrink();
-                          return _buildSettingsItem(
-                            icon: Icons.admin_panel_settings_outlined,
-                            label: 'Platform Admin',
-                            isLast: true,
-                            onTap: () {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(builder: (_) => const PlatformAdminHomeScreen()),
-                              );
-                            },
                           );
                         },
                       ),
@@ -324,17 +293,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
                             label: 'Subscription & Billing',
                             navigateKey: 'subscription',
                           ),
-                          FutureBuilder<bool>(
-                            future: _isPlatformAdmin(),
-                            builder: (context, snapshot) {
-                              if (snapshot.data != true) return const SizedBox.shrink();
-                              return _buildSidebarItem(
-                                icon: Icons.admin_panel_settings_outlined,
-                                label: 'Platform Admin',
-                                navigateKey: 'platform_admin',
-                              );
-                            },
-                          ),
                           const SizedBox(height: 16),
                         ],
                         _buildSectionTitle('Account & Data'),
@@ -423,8 +381,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
     switch (_selectedKey) {
       case 'subscription':
         return isAdmin ? const SubscriptionScreen() : _buildEmptyPane();
-      case 'platform_admin':
-        return isAdmin ? const PlatformAdminHomeScreen() : _buildEmptyPane();
       case 'notifications':
         return const StockAlertsScreen();
       case 'printer':

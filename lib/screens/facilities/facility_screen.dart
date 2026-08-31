@@ -372,8 +372,14 @@ class _FacilityScreenState extends State<FacilityScreen> {
                       setState(() => _isAddingFacility = true);
 
                       try {
-                        await _addFacility(name: name, type: selectedType!, logoBytes: pendingLogoBytes);
+                        final newFacility =
+                            await _addFacility(name: name, type: selectedType!, logoBytes: pendingLogoBytes);
                         if (dialogContext.mounted) Navigator.pop(dialogContext);
+                        // Only after the dialog above has actually closed -
+                        // switching first and closing the dialog after was
+                        // racing the dialog's own pop against the
+                        // stack-replacing navigation this triggers.
+                        if (mounted) await _switchToFacility(newFacility);
                       } catch (e) {
                         final message = e.toString().contains('permission-denied')
                             ? "You've reached the facility limit for your account."
@@ -403,7 +409,7 @@ class _FacilityScreenState extends State<FacilityScreen> {
     );
   }
 
-  Future<void> _addFacility({required String name, required String type, Uint8List? logoBytes}) async {
+  Future<Map<String, dynamic>> _addFacility({required String name, required String type, Uint8List? logoBytes}) async {
     final uid = currentUser!.uid;
     final code = await generateUniqueFacilityCode();
     final trialExpiresAt = await computeNewFacilityTrialExpiry();
@@ -452,11 +458,14 @@ class _FacilityScreenState extends State<FacilityScreen> {
       'facilityIds': FieldValue.arrayUnion([docRef.id]),
     });
 
-    if (!mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Facility added'), backgroundColor: Colors.green),
-    );
-    await fetchFacilities();
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Facility added'), backgroundColor: Colors.green),
+      );
+      await fetchFacilities();
+    }
+
+    return newFacilityEntry;
   }
 
   // ==================== EDIT FACILITY ====================

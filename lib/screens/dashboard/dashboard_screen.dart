@@ -28,6 +28,7 @@ import '../sales/sales_screen.dart';
 import '../transactions/transactions_screen.dart';
 import '../facilities/facility_screen.dart';
 import '../settings/settings_screen.dart';
+import '../platform_admin/platform_admin_home_screen.dart';
 import '../activity/activity_log_screen.dart';
 import '../debtors/debtors_screen.dart';
 import '../payments/payments_screen.dart';
@@ -313,6 +314,20 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
   // flash in incorrectly before the actual status is known, and
   // doesn't flash in a false positive before it's checked either.
   bool? _isEmailVerified;
+
+  // Same cached check as settings_screen.dart's own _isPlatformAdmin -
+  // the "Platform Admin" nav item lives here now instead, so this
+  // screen needs the same check.
+  bool? _isPlatformAdminCache;
+
+  Future<bool> _isPlatformAdmin() async {
+    if (_isPlatformAdminCache != null) return _isPlatformAdminCache!;
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) return false;
+    final doc = await FirebaseFirestore.instance.collection('platform_admins').doc(user.uid).get();
+    _isPlatformAdminCache = doc.exists;
+    return _isPlatformAdminCache!;
+  }
 
   // Whether there's something genuinely new since Notifications was
   // last opened on this device (a fresh urgent announcement, or a
@@ -1133,11 +1148,21 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
           ? 'Your trial has ended. You have a few days of grace before read-only mode begins.'
           : 'Your subscription has expired. You have a few days of grace before read-only mode begins.';
     } else if (isInTrialInfo) {
-      message = "You're on a free trial - ${sub.daysRemaining} day${sub.daysRemaining == 1 ? '' : 's'} left.";
+      // A legacy facility with no trial/subscription date recorded at
+      // all reaches this branch with daysRemaining null - shown as an
+      // open-ended trial rather than ever interpolating "null" into
+      // the sentence.
+      message = sub.daysRemaining != null
+          ? "You're on a free trial - ${sub.daysRemaining} day${sub.daysRemaining == 1 ? '' : 's'} left."
+          : "You're on a free trial.";
     } else if (isTrial) {
-      message = 'Your trial expires in ${sub.daysRemaining} day${sub.daysRemaining == 1 ? '' : 's'}.';
+      message = sub.daysRemaining != null
+          ? 'Your trial expires in ${sub.daysRemaining} day${sub.daysRemaining == 1 ? '' : 's'}.'
+          : 'Your trial is active.';
     } else {
-      message = 'Your subscription expires in ${sub.daysRemaining} day${sub.daysRemaining == 1 ? '' : 's'}.';
+      message = sub.daysRemaining != null
+          ? 'Your subscription expires in ${sub.daysRemaining} day${sub.daysRemaining == 1 ? '' : 's'}.'
+          : 'Your subscription is active.';
     }
 
     final isAdmin = Provider.of<UserRoleProvider>(context).isAdmin;
@@ -1572,6 +1597,55 @@ Widget _buildDrawerContent() {
     ),
   );
 
+  // Same amber-tinted recipe as "Go to Facility" in Platform Admin's
+  // own sidebar - reused here since this drawer has no "currently
+  // selected tab" using that same color, so there's no risk of the
+  // confusion that reusing it inside Platform Admin's own sidebar
+  // would cause.
+  Widget platformAdminItem = FutureBuilder<bool>(
+    future: _isPlatformAdmin(),
+    builder: (context, snapshot) {
+      if (snapshot.data != true) return const SizedBox.shrink();
+      final canShowLabel = !effectivelyCollapsed;
+      final content = Padding(
+        padding: EdgeInsets.symmetric(horizontal: effectivelyCollapsed ? 4 : 8),
+        child: InkWell(
+          borderRadius: BorderRadius.circular(8),
+          onTap: () => Navigator.push(
+            context,
+            MaterialPageRoute(builder: (_) => const PlatformAdminHomeScreen()),
+          ),
+          child: Container(
+            padding: EdgeInsets.symmetric(vertical: 10, horizontal: effectivelyCollapsed ? 12 : 16),
+            decoration: BoxDecoration(
+              color: warmAmber.withValues(alpha: 0.12),
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(color: warmAmber.withValues(alpha: 0.35), width: 1),
+            ),
+            child: Row(
+              mainAxisAlignment: effectivelyCollapsed ? MainAxisAlignment.center : MainAxisAlignment.start,
+              children: [
+                Icon(Icons.admin_panel_settings_outlined, color: warmAmber),
+                if (canShowLabel) ...[
+                  const SizedBox(width: 16),
+                  const Expanded(
+                    child: Text(
+                      'Platform Admin',
+                      style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600),
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                ],
+              ],
+            ),
+          ),
+        ),
+      );
+      if (!effectivelyCollapsed) return content;
+      return Tooltip(message: 'Platform Admin', waitDuration: const Duration(milliseconds: 300), child: content);
+    },
+  );
+
   // ---------- FOOTER ----------
   Widget footer = Padding(
     padding: const EdgeInsets.symmetric(vertical: 8),
@@ -1591,6 +1665,7 @@ Widget _buildDrawerContent() {
       items,
       Divider(thickness: 1.2, color: Colors.white54),
       settings,
+      platformAdminItem,
     ],
   );
 

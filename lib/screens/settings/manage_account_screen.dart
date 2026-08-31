@@ -60,6 +60,48 @@ class _ManageAccountScreenState extends State<ManageAccountScreen> {
   bool _isWipingData = false;
   bool _isLoggingOutAll = false;
 
+  // Both null while still being checked - not assumed safe in the
+  // meantime, since a brief "enabled" flash that then suddenly
+  // disables would be more confusing than a moment of "not yet
+  // available" while these two quick reads complete.
+  bool? _isPlatformAdminAccount;
+  bool? _hasOwnedFacility;
+
+  @override
+  void initState() {
+    super.initState();
+    _checkDeleteEligibility();
+  }
+
+  // Determines upfront whether Delete Account should even be tappable,
+  // rather than letting someone tap it and only then finding out it's
+  // blocked:
+  // - A Platform Admin never deletes their own account via this
+  //   self-service path, whether or not they've also added themselves
+  //   to a regular facility - the same protection Firestore's own
+  //   rules already give a Platform Admin's account against
+  //   deactivation extends here too.
+  // - A regular Admin who still owns any facility (created by them,
+  //   not just one they belong to) needs to delete those first, via
+  //   View Facilities - deleting the account underneath them would
+  //   leave those facilities orphaned, with real subscriptions and
+  //   real staff, and nobody left who could ever manage or delete
+  //   them again.
+  Future<void> _checkDeleteEligibility() async {
+    final uid = FirebaseAuth.instance.currentUser?.uid;
+    if (uid == null) return;
+
+    final platformAdminDoc = await FirebaseFirestore.instance.collection('platform_admins').doc(uid).get();
+    final ownedFacilities =
+        await FirebaseFirestore.instance.collection('facilities').where('createdBy', isEqualTo: uid).limit(1).get();
+
+    if (!mounted) return;
+    setState(() {
+      _isPlatformAdminAccount = platformAdminDoc.exists;
+      _hasOwnedFacility = ownedFacilities.docs.isNotEmpty;
+    });
+  }
+
   @override
   void dispose() {
     _deleteEmailController.dispose();
@@ -143,8 +185,20 @@ class _ManageAccountScreenState extends State<ManageAccountScreen> {
         title: Text('Wipe All Data?', style: TextStyle(color: primaryColor, fontWeight: FontWeight.bold)),
         content: SizedBox(
           width: _dialogWidth(context),
-          child: Text(
-              'This will permanently delete all records of sales, products, clients, and transactions for "$facilityName" only. Your other facilities (if any) are not affected. Your login credentials will remain unaffected.'),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Its own prominent line, not buried mid-paragraph - the
+              // one detail that matters most before confirming this,
+              // especially for someone with more than one facility.
+              Text('Business data for "$facilityName" will be permanently wiped.',
+                  style: TextStyle(color: dangerColor, fontWeight: FontWeight.bold, fontSize: 15)),
+              const SizedBox(height: 10),
+              const Text(
+                  'All records of sales, products, clients, and transactions for this facility are erased. Other facilities you have are not affected. Your login credentials remain unaffected.'),
+            ],
+          ),
         ),
         actions: [
           TextButton(
@@ -406,6 +460,15 @@ class _ManageAccountScreenState extends State<ManageAccountScreen> {
 
   // 🔹 Delete account permanently
   void _deleteAccount() async {
+    // Re-derived directly here rather than trusted from the tile's own
+    // disabled state - account deletion is irreversible, so this
+    // refuses to even show the confirmation dialog if blocked, not
+    // just rely on onTap having been null.
+    final isPlatformAdminAccount = _isPlatformAdminAccount == true;
+    final blockedByOwnedFacilities =
+        Provider.of<UserRoleProvider>(context, listen: false).isAdmin && _hasOwnedFacility == true;
+    if (isPlatformAdminAccount || blockedByOwnedFacilities) return;
+
     showDialog(
       context: context,
       barrierDismissible: false,
@@ -512,6 +575,23 @@ class _ManageAccountScreenState extends State<ManageAccountScreen> {
   Widget build(BuildContext context) {
     bool inputDisabled = _isWipingData || _isLoggingOutAll;
 
+    final userRoleProvider = Provider.of<UserRoleProvider>(context);
+    final stillCheckingDeleteEligibility = _isPlatformAdminAccount == null || _hasOwnedFacility == null;
+    final isPlatformAdminAccount = _isPlatformAdminAccount == true;
+    final blockedByOwnedFacilities = userRoleProvider.isAdmin && _hasOwnedFacility == true;
+    final deleteAccountBlocked = stillCheckingDeleteEligibility || isPlatformAdminAccount || blockedByOwnedFacilities;
+
+    final String deleteAccountSubtitle;
+    if (stillCheckingDeleteEligibility) {
+      deleteAccountSubtitle = 'Checking...';
+    } else if (isPlatformAdminAccount) {
+      deleteAccountSubtitle = "Platform Admin accounts can't be deleted from here.";
+    } else if (blockedByOwnedFacilities) {
+      deleteAccountSubtitle = 'Delete all facilities you own in View Facilities first.';
+    } else {
+      deleteAccountSubtitle = 'Permanently delete your account. This action cannot be undone.';
+    }
+
     return Scaffold(
       backgroundColor: backgroundColor,
       appBar: AppBar(
@@ -577,10 +657,18 @@ class _ManageAccountScreenState extends State<ManageAccountScreen> {
           Card(
             elevation: 2,
             child: ListTile(
-              leading: Icon(Icons.phonelink_erase, color: primaryColor),
+              leading: _isWipingData
+                  ? SizedBox(
+                      width: 24,
+                      height: 24,
+                      child: CircularProgressIndicator(strokeWidth: 2, color: dangerColor),
+                    )
+                  : Icon(Icons.phonelink_erase, color: primaryColor),
               title: const Text('Wipe All Business Data'),
-              subtitle: const Text(
-                  'Permanently delete records of transactions, sales, and products while keeping your log in profile.'),
+              subtitle: Text(
+                  _isWipingData
+                      ? 'Erase in progress - please wait, this may take a moment...'
+                      : 'Permanently delete records of transactions, sales, and products while keeping your log in profile.'),
               onTap: inputDisabled ? null : _wipeAllData,
             ),
           ),
@@ -599,11 +687,11 @@ class _ManageAccountScreenState extends State<ManageAccountScreen> {
           Card(
             elevation: 2,
             child: ListTile(
+              enabled: !(inputDisabled || deleteAccountBlocked),
               leading: const Icon(Icons.delete_forever),
               title: const Text('Delete Account'),
-              subtitle: const Text(
-                  'Permanently delete your account. This action cannot be undone.'),
-              onTap: inputDisabled ? null : _deleteAccount,
+              subtitle: Text(deleteAccountSubtitle),
+              onTap: (inputDisabled || deleteAccountBlocked) ? null : _deleteAccount,
             ),
           ),
               ],

@@ -223,32 +223,62 @@ class _AppEntryPointState extends State<AppEntryPoint> {
     // for someone already signed in from a previous session.
     _currentUser = FirebaseAuth.instance.currentUser;
     _authInitialized = _currentUser != null;
-    _authSubscription = FirebaseAuth.instance.authStateChanges().listen(_updateAuthUser);
+    debugPrint('[AUTH] AppEntryPoint mounted - currentUser=${_currentUser?.uid ?? "none"}');
+
+    _authSubscription = FirebaseAuth.instance.authStateChanges().listen((user) {
+      debugPrint('[AUTH] authStateChanges() emitted uid=${user?.uid ?? "null"}');
+      _updateAuthUser(user);
+    }, onError: (Object e, StackTrace st) {
+      debugPrint('[AUTH] authStateChanges() stream error: $e');
+    });
+
     _authPollTimer = Timer.periodic(const Duration(seconds: 2), (_) {
       _updateAuthUser(FirebaseAuth.instance.currentUser);
     });
+
+    // The direct fix - LoginScreen calls this the instant its own
+    // sign-in call succeeds, rather than this widget only ever finding
+    // out via the stream or waiting up to 2 seconds for the next poll.
+    pushAuthUser = (user) {
+      debugPrint('[AUTH] Direct push received for uid=${user.uid}');
+      _updateAuthUser(user);
+    };
   }
 
   @override
   void dispose() {
+    debugPrint('[AUTH] AppEntryPoint disposing - cancelling subscription/timer, clearing push callback');
     _authSubscription?.cancel();
     _authPollTimer?.cancel();
+    // Cleared, not left pointing at a widget that's about to be gone -
+    // if LoginScreen somehow called this after disposal, it would be
+    // acting on a State object that's no longer valid.
+    if (pushAuthUser != null) pushAuthUser = null;
     super.dispose();
   }
 
   void _updateAuthUser(User? user) {
-    if (!mounted) return;
+    if (!mounted) {
+      debugPrint('[AUTH] _updateAuthUser(${user?.uid ?? "null"}) called after dispose - ignored');
+      return;
+    }
     final changed = user?.uid != _currentUser?.uid;
     if (!_authInitialized || changed) {
+      debugPrint('[AUTH] Updating auth state: '
+          '${_currentUser?.uid ?? "none"} -> ${user?.uid ?? "none"} (was initialized=$_authInitialized)');
       setState(() {
         _currentUser = user;
         _authInitialized = true;
       });
+    } else {
+      debugPrint('[AUTH] _updateAuthUser(${user?.uid ?? "null"}) - no change, ignored');
     }
   }
 
   Future<Widget> _decideScreenMemoized(User user) {
     if (_decidedForUid != user.uid || _decideScreenFuture == null) {
+      debugPrint('[AUTH] _decideScreenMemoized: starting a fresh decision for uid=${user.uid} '
+          '(previously decided for=${_decidedForUid ?? "none"})');
       _decidedForUid = user.uid;
       // A defensive outer bound on the whole decision process, not
       // just the individual reads inside it - regardless of what
@@ -260,6 +290,8 @@ class _AppEntryPointState extends State<AppEntryPoint> {
         const Duration(seconds: 30),
         onTimeout: () => throw TimeoutException('Could not load your account in time.'),
       );
+    } else {
+      debugPrint('[AUTH] _decideScreenMemoized: reusing existing decision for uid=${user.uid}');
     }
     return _decideScreenFuture!;
   }
@@ -370,11 +402,13 @@ class _AppEntryPointState extends State<AppEntryPoint> {
         // Straight to Dashboard - no intermediate screen, no second
         // fetch. This is the common case for every Assistant (always
         // exactly one facility) and the majority of Admins too.
+        debugPrint('[AUTH] Single facility - calling activateFacilityAndGoToDashboard for uid=$uid');
         await activateFacilityAndGoToDashboard(
           context: context,
           facility: facilities.first,
           role: role,
         );
+        debugPrint('[AUTH] activateFacilityAndGoToDashboard call returned for uid=$uid');
         return const Scaffold(body: Center(child: CircularProgressIndicator()));
       }
 
@@ -429,6 +463,9 @@ class _AppEntryPointState extends State<AppEntryPoint> {
       // Clear the memo so the next sign-in (even as the same
       // account) starts a genuinely fresh decision, not a stale
       // leftover result from before.
+      if (_decidedForUid != null) {
+        debugPrint('[AUTH] Clearing decision memo (was for uid=$_decidedForUid) - showing login screen');
+      }
       _decidedForUid = null;
       _decideScreenFuture = null;
       key = 'login';

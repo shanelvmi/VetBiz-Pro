@@ -48,6 +48,10 @@ class StockAlertsScreen extends StatefulWidget {
   static const Color primaryColor = Color(0xFF2F5D62);
   static const int lowStockThreshold = 5;
   static const int expiryWarningDays = 30;
+  // How many items each section shows at most in the compact dropdown
+  // before the rest are hidden behind "View all notifications" -
+  // unlimited in the full-screen (non-dropdown) view.
+  static const int dropdownSectionLimit = 3;
 
   /// Cheap, aggregate-only check for the Dashboard bell's red dot - a
   /// quick yes/no signal doesn't need per-batch precision, just "is
@@ -519,9 +523,13 @@ class _StockAlertsScreenState extends State<StockAlertsScreen> {
           ? 'Your trial ended - you have a few days of grace before read-only mode begins.'
           : 'Your subscription expired - you have a few days of grace before read-only mode begins.';
     } else if (isTrial) {
-      message = 'Your trial expires in ${sub.daysRemaining} day${sub.daysRemaining == 1 ? '' : 's'}.';
+      message = sub.daysRemaining != null
+          ? 'Your trial expires in ${sub.daysRemaining} day${sub.daysRemaining == 1 ? '' : 's'}.'
+          : 'Your trial is active.';
     } else {
-      message = 'Your subscription expires in ${sub.daysRemaining} day${sub.daysRemaining == 1 ? '' : 's'}.';
+      message = sub.daysRemaining != null
+          ? 'Your subscription expires in ${sub.daysRemaining} day${sub.daysRemaining == 1 ? '' : 's'}.'
+          : 'Your subscription is active.';
     }
 
     return _AccentCard(
@@ -552,6 +560,9 @@ class _StockAlertsScreenState extends State<StockAlertsScreen> {
 
   Widget _buildFacilityNotifications() {
     if (_visibleNotifications.isEmpty) return const SizedBox.shrink();
+    final shown = widget.isDropdown
+        ? _visibleNotifications.take(StockAlertsScreen.dropdownSectionLimit).toList()
+        : _visibleNotifications;
 
     return Padding(
       padding: const EdgeInsets.only(bottom: 20),
@@ -565,7 +576,7 @@ class _StockAlertsScreenState extends State<StockAlertsScreen> {
             StockAlertsScreen.primaryColor,
           ),
           const SizedBox(height: 8),
-          ..._visibleNotifications.map((n) {
+          ...shown.map((n) {
             final color = n.isPersistent ? Colors.green : Colors.orange;
             return _AccentCard(
               color: color,
@@ -575,6 +586,34 @@ class _StockAlertsScreenState extends State<StockAlertsScreen> {
               child: Text(n.message, style: TextStyle(color: color, fontWeight: FontWeight.w600, fontSize: 12.5)),
             );
           }),
+          // Only ever shows something the truncation above actually hid -
+          // in the full (non-dropdown) screen, shown is the complete
+          // list, so this condition never fires there.
+          if (_visibleNotifications.length > shown.length)
+            Padding(
+              padding: const EdgeInsets.only(top: 2),
+              child: TextButton(
+                onPressed: () {
+                  // Captured before popping - the dropdown's own context
+                  // may already be gone by the time push below runs, but
+                  // this reference to the Navigator itself stays valid
+                  // regardless.
+                  final navigator = Navigator.of(context);
+                  navigator.pop();
+                  navigator.push(
+                    MaterialPageRoute(builder: (_) => const StockAlertsScreen()),
+                  );
+                },
+                style: TextButton.styleFrom(
+                  padding: EdgeInsets.zero,
+                  minimumSize: Size.zero,
+                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                  foregroundColor: StockAlertsScreen.primaryColor,
+                ),
+                child: Text('View all ${_visibleNotifications.length} notifications',
+                    style: const TextStyle(fontSize: 12.5, fontWeight: FontWeight.w600)),
+              ),
+            ),
         ],
       ),
     );

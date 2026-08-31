@@ -56,6 +56,7 @@ class PlatformAdminHomeScreen extends StatefulWidget {
 class _PlatformAdminHomeScreenState extends State<PlatformAdminHomeScreen> {
   static const Color primaryColor = Color(0xFF2F5D62);
   static const Color warmAmber = Color(0xFFFFB200);
+  static const Color tealGlow = Color(0xFF3E8E82);
   static const Color offWhite = Color(0xFFFDFDF9);
 
   // Same breakpoint the main Dashboard already uses for this exact
@@ -88,6 +89,12 @@ class _PlatformAdminHomeScreenState extends State<PlatformAdminHomeScreen> {
   bool _warningShown = false;
   StreamSubscription<void>? _activitySubscription;
 
+  // Null while still checking - the "Go to Facility" tile only ever
+  // appears once this is confirmed true, never flashing in and then
+  // disappearing if it turns out this Platform Admin has no regular
+  // facility of their own.
+  bool? _hasOwnFacility;
+
   @override
   void initState() {
     super.initState();
@@ -97,6 +104,22 @@ class _PlatformAdminHomeScreenState extends State<PlatformAdminHomeScreen> {
     // is genuinely inside Platform Admin, not for the rest of the app.
     _activitySubscription = globalActivitySignal.stream.listen((_) => _resetInactivityTimers());
     _loadSidebarPreference();
+    _checkOwnFacilityMembership();
+  }
+
+  // Whether this Platform Admin account has also been added to a
+  // regular facility of their own - if so, "Go to Facility" gives them
+  // a direct way back to it rather than needing to close this whole
+  // panel and re-navigate from scratch.
+  Future<void> _checkOwnFacilityMembership() async {
+    final uid = FirebaseAuth.instance.currentUser?.uid;
+    if (uid == null) return;
+
+    final userDoc = await FirebaseFirestore.instance.collection('users').doc(uid).get();
+    final facilityIds = (userDoc.data()?['facilityIds'] as List?) ?? [];
+
+    if (!mounted) return;
+    setState(() => _hasOwnFacility = facilityIds.isNotEmpty);
   }
 
   @override
@@ -448,7 +471,51 @@ class _PlatformAdminHomeScreenState extends State<PlatformAdminHomeScreen> {
             onNavigate?.call();
           },
         ),
+        if (_hasOwnFacility == true) _buildGoToFacilityTile(collapsed: collapsed, onNavigate: onNavigate),
       ],
+    );
+  }
+
+  // Distinct from the plain nav items above it - a soft amber-tinted
+  // background and a storefront icon, since this doesn't select
+  // anything within this panel, it leaves it entirely, back to the
+  // facility this account also belongs to. Popping is enough since
+  // this screen is only ever reached via a genuine push now (see
+  // settings_screen.dart) - whatever facility context was already
+  // showing underneath is exactly where this correctly returns to,
+  // with nothing needing to be re-activated or re-fetched.
+  Widget _buildGoToFacilityTile({required bool collapsed, VoidCallback? onNavigate}) {
+    return InkWell(
+      borderRadius: BorderRadius.circular(10),
+      onTap: () {
+        onNavigate?.call();
+        Navigator.pop(context);
+      },
+      child: Container(
+        margin: EdgeInsets.fromLTRB(collapsed ? 8 : 20, 3, 6, 3),
+        padding: EdgeInsets.only(left: collapsed ? 0 : 6, right: collapsed ? 0 : 4, top: 12, bottom: 12),
+        decoration: BoxDecoration(
+          color: tealGlow.withValues(alpha: 0.16),
+          borderRadius: BorderRadius.circular(10),
+          border: Border.all(color: tealGlow.withValues(alpha: 0.45), width: 1),
+        ),
+        child: Row(
+          mainAxisAlignment: collapsed ? MainAxisAlignment.center : MainAxisAlignment.start,
+          children: [
+            const Icon(Icons.storefront_outlined, color: tealGlow, size: 20),
+            if (!collapsed) ...[
+              const SizedBox(width: 6),
+              const Expanded(
+                child: Text(
+                  'Go to Facility',
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600, fontSize: 14),
+                ),
+              ),
+            ],
+          ],
+        ),
+      ),
     );
   }
 
