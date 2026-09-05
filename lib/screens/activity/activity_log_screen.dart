@@ -5,6 +5,7 @@ import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import '../../providers/facility_provider.dart';
 import '../../providers/user_role_provider.dart';
+import '../../utils/text_sanitizer.dart';
 
 class ActivityLogScreen extends StatefulWidget {
   final bool isModal;
@@ -397,12 +398,12 @@ class _ActivityLogScreenState extends State<ActivityLogScreen> {
                   itemBuilder: (context, index) {
                         final data = logs[index].data();
                         final user = data['userName'] ?? 'Unknown';
-                        final action = data['description'] ?? '';
+                        final action = sanitizeForDisplay(data['description'] ?? '');
                         final type = data['actionType'] ?? '';
                         final timestamp = data['timestamp'];
                         String dateStr = '';
                         if (timestamp != null && timestamp is Timestamp) {
-                          dateStr = DateFormat('dd MMM yyyy – HH:mm:ss')
+                          dateStr = DateFormat('dd MMM yyyy - HH:mm:ss')
                               .format(timestamp.toDate().toLocal());
                         }
 

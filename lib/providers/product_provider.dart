@@ -331,6 +331,7 @@ class ProductProvider with ChangeNotifier {
             description: current.description,
             supplier: current.supplier,
             batchNo: batchNo ?? current.batchNo,
+            imageUrl: current.imageUrl,
             expiry: finalAggregates!['expiry'],
             buyPrice: current.buyPrice,
             sellPrice: current.sellPrice,
@@ -424,6 +425,7 @@ class ProductProvider with ChangeNotifier {
           description: current.description,
           supplier: current.supplier,
           batchNo: current.batchNo,
+          imageUrl: current.imageUrl,
           expiry: finalAggregates!['expiry'],
           buyPrice: current.buyPrice,
           sellPrice: current.sellPrice,
@@ -614,6 +616,7 @@ class ProductProvider with ChangeNotifier {
           description: current.description,
           supplier: current.supplier,
           batchNo: current.batchNo,
+          imageUrl: current.imageUrl,
           expiry: finalAggregates!['expiry'],
           buyPrice: current.buyPrice,
           sellPrice: current.sellPrice,
@@ -985,9 +988,9 @@ class ProductProvider with ChangeNotifier {
         userId: userId,
         userName: userName,
         actionType: "Inventory Move",
-        description: "📦→🛒 ${product.name}: $qty ${product.unit} | "
-            "Stock: $stockBefore→$newStock | "
-            "Sellable: $sellableBefore→$newSellable"
+        description: "${product.name}: $qty ${product.unit} | "
+            "Stock: $stockBefore->$newStock | "
+            "Sellable: $sellableBefore->$newSellable"
             "${notes != null ? ' | Note: $notes' : ''}",
       );
 

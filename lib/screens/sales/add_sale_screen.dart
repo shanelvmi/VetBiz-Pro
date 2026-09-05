@@ -35,6 +35,7 @@ class _AddSaleScreenState extends State<AddSaleScreen> {
   final TextEditingController clientController = TextEditingController();
   bool _showClientSuggestions = false;
   final TextEditingController totalPaidController = TextEditingController();
+  final TextEditingController notesController = TextEditingController();
 
   Client? selectedClient;
   List<SaleItem> items = [];
@@ -77,6 +78,7 @@ class _AddSaleScreenState extends State<AddSaleScreen> {
   void dispose() {
     clientController.dispose();
     totalPaidController.dispose();
+    notesController.dispose();
     super.dispose();
   }
 
@@ -444,6 +446,7 @@ class _AddSaleScreenState extends State<AddSaleScreen> {
         realizedProfit: realizedProfit,
         unrealizedProfit: unrealizedProfit,
         paymentMethod: totalPaid > 0 ? paymentMethod : null,
+        notes: notesController.text.trim().isEmpty ? null : notesController.text.trim(),
       );
 
       final saleId = await saleProvider.addSale(sale, facilityId);
@@ -725,6 +728,17 @@ class _AddSaleScreenState extends State<AddSaleScreen> {
                 onChanged: (method) => setState(() => paymentMethod = method),
               ),
             ],
+            const SizedBox(height: 16),
+            TextFormField(
+              controller: notesController,
+              maxLines: 2,
+              decoration: InputDecoration(
+                labelText: 'Notes (optional)',
+                filled: true,
+                fillColor: deepTeal.withValues(alpha: 0.1),
+                border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+              ),
+            ),
             const SizedBox(height: 16),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,

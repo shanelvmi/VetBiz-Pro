@@ -670,6 +670,78 @@ exports.purgeOldTrash = onSchedule("every 24 hours", async () => {
 });
 
 /**
+ * Records a once-daily snapshot of each facility's current balances -
+ * total product stock value, total outstanding debt, and total client
+ * count. Unlike the flow-metric aggregates above (sales, services,
+ * transactions - each already has its own daily summary, built from
+ * records that get created once and never change), these three are
+ * point-in-time balances that get updated in place as debts are paid
+ * down or stock moves, not appended as new records the way a sale is -
+ * there's no way to reconstruct "what was the outstanding debt last
+ * Tuesday" after the fact from the raw collections alone. This is what
+ * makes a dashboard trend indicator for these three cards possible at
+ * all: without a daily record of what the value actually was, there's
+ * nothing to compare today's figure against.
+ *
+ * Formulas mirror the client-side computations exactly - ProductProvider.
+ * totalProductValue ((stockQty + sellableQty) * buyPrice, summed),
+ * DebtProvider.totalOutstanding (amountOwed, summed), ClientProvider.
+ * clients.length (a plain count) - kept in sync deliberately, since a
+ * snapshot computed with a different formula than what's shown live
+ * would make the two numbers subtly, silently disagree.
+ */
+exports.recordDailySnapshots = onSchedule("every 24 hours", async () => {
+  const today = new Date().toISOString().slice(0, 10); // YYYY-MM-DD
+
+  const facilitiesSnap = await db.collection("facilities").get();
+
+  for (const facilityDoc of facilitiesSnap.docs) {
+    const facilityId = facilityDoc.id;
+
+    try {
+      const [productsSnap, debtsSnap, clientsCountSnap] = await Promise.all([
+        db.collection("facilities").doc(facilityId).collection("products").get(),
+        db.collection("facilities").doc(facilityId).collection("debts").get(),
+        db.collection("facilities").doc(facilityId).collection("clients").count().get(),
+      ]);
+
+      let totalProductValue = 0;
+      productsSnap.docs.forEach((doc) => {
+        const d = doc.data();
+        const stockQty = Number(d.stockQty) || 0;
+        const sellableQty = Number(d.sellableQty) || 0;
+        const buyPrice = Number(d.buyPrice) || 0;
+        totalProductValue += (stockQty + sellableQty) * buyPrice;
+      });
+
+      let totalOutstanding = 0;
+      debtsSnap.docs.forEach((doc) => {
+        const d = doc.data();
+        totalOutstanding += Number(d.amountOwed) || 0;
+      });
+
+      const totalClients = clientsCountSnap.data().count;
+
+      await db
+        .collection("facilities")
+        .doc(facilityId)
+        .collection("dailySnapshots")
+        .doc(today)
+        .set({
+          totalProductValue,
+          totalOutstanding,
+          totalClients,
+          recordedAt: admin.firestore.FieldValue.serverTimestamp(),
+        });
+    } catch (error) {
+      console.error(`Error recording daily snapshot for facility ${facilityId}:`, error);
+    }
+  }
+
+  console.log("Daily snapshot sweep complete.");
+});
+
+/**
  * Delete Facility - a Platform Admin action, not a facility-admin one.
  * Deletes every business record for the facility AND the facility
  * document itself, removes the facility's reference from every user who

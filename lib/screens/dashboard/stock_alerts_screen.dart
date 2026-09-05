@@ -46,7 +46,7 @@ class StockAlertsScreen extends StatefulWidget {
   const StockAlertsScreen({super.key, this.isDropdown = false});
 
   static const Color primaryColor = Color(0xFF2F5D62);
-  static const int lowStockThreshold = 5;
+  static const int lowStockThreshold = Product.defaultLowStockThreshold;
   static const int expiryWarningDays = 30;
   // How many items each section shows at most in the compact dropdown
   // before the rest are hidden behind "View all notifications" -
@@ -60,8 +60,7 @@ class StockAlertsScreen extends StatefulWidget {
   static bool hasAnyAlert(List<Product> products) {
     final now = DateTime.now();
     return products.any((p) =>
-        p.sellableQty <= lowStockThreshold ||
-        p.stockQty <= lowStockThreshold ||
+        p.isLowStock ||
         (p.expiry != null && p.expiry!.difference(now).inDays <= expiryWarningDays));
   }
 
@@ -176,8 +175,8 @@ class _StockAlertsScreenState extends State<StockAlertsScreen> {
         if (batchDocs.isEmpty) {
           // Legacy product, no batch records - fall back to its own
           // aggregate fields, same as before Phase 3.
-          final shelfLow = product.sellableQty <= StockAlertsScreen.lowStockThreshold;
-          final warehouseLow = product.stockQty <= StockAlertsScreen.lowStockThreshold;
+          final shelfLow = product.sellableQty <= product.effectiveMinStockLevel;
+          final warehouseLow = product.stockQty <= product.effectiveMinStockLevel;
           final row = _AlertRow(
             productName: product.name,
             sellableQty: product.sellableQty,
@@ -211,8 +210,8 @@ class _StockAlertsScreenState extends State<StockAlertsScreen> {
           // forever.
           if (sellableQty == 0 && stockQty == 0) continue;
 
-          final shelfLow = sellableQty <= StockAlertsScreen.lowStockThreshold;
-          final warehouseLow = stockQty <= StockAlertsScreen.lowStockThreshold;
+          final shelfLow = sellableQty <= product.effectiveMinStockLevel;
+          final warehouseLow = stockQty <= product.effectiveMinStockLevel;
           final row = _AlertRow(
             productName: product.name,
             batchNo: data['batchNo'] as String?,

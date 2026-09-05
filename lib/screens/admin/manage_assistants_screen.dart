@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
 import 'invite_assistant_dialog.dart';
 import '../../widgets/hover_elevate_card.dart';
+import '../../widgets/initials_avatar.dart';
 
 class ManageAssistantsScreen extends StatefulWidget {
   // Set when opened as a deep link from a specific facility's card in
@@ -268,6 +268,82 @@ class _ManageAssistantsScreenState extends State<ManageAssistantsScreen> {
     );
   }
 
+  Map<String, int> _statusCounts(List<QueryDocumentSnapshot> assistants) {
+    int active = 0, deactivated = 0, pending = 0;
+    for (final doc in assistants) {
+      final status = ((doc.data() as Map<String, dynamic>)['status'] ?? 'pending').toString();
+      if (status == 'active') {
+        active++;
+      } else if (status == 'deactivated') {
+        deactivated++;
+      } else {
+        pending++;
+      }
+    }
+    return {'total': assistants.length, 'active': active, 'deactivated': deactivated, 'pending': pending};
+  }
+
+  Widget _buildSummaryMetrics(List<QueryDocumentSnapshot> assistants) {
+    final counts = _statusCounts(assistants);
+    final metrics = [
+      ('Total', counts['total']!, Icons.groups_outlined, primaryColor),
+      ('Active', counts['active']!, Icons.check_circle_outline, Colors.green),
+      ('Deactivated', counts['deactivated']!, Icons.pause_circle_outline, Colors.grey[600]!),
+      ('Waiting Approval', counts['pending']!, Icons.hourglass_empty, Colors.orange),
+    ];
+
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final isNarrow = constraints.maxWidth < 560;
+        return GridView.count(
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          crossAxisCount: isNarrow ? 2 : 4,
+          childAspectRatio: isNarrow ? 2.2 : 2.0,
+          crossAxisSpacing: 12,
+          mainAxisSpacing: 12,
+          children: metrics.map((m) => _metricCard(m.$1, m.$2, m.$3, m.$4)).toList(),
+        );
+      },
+    );
+  }
+
+  Widget _metricCard(String label, int count, IconData icon, Color color) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.grey.withValues(alpha: 0.15)),
+        boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.03), blurRadius: 6, offset: const Offset(0, 2))],
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: 38,
+            height: 38,
+            decoration: BoxDecoration(color: color.withValues(alpha: 0.12), borderRadius: BorderRadius.circular(10)),
+            child: Icon(icon, color: color, size: 18),
+          ),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text('$count', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
+                Text(label,
+                    style: TextStyle(fontSize: 11, color: Colors.grey[600]),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildAssistantCard(QueryDocumentSnapshot doc) {
     final data = doc.data() as Map<String, dynamic>;
     final status = (data['status'] ?? 'pending').toString();
@@ -290,26 +366,12 @@ class _ManageAssistantsScreenState extends State<ManageAssistantsScreen> {
             Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                ClipOval(
-                  child: avatarUrl != null && avatarUrl.isNotEmpty
-                      ? Image.network(
-                          avatarUrl,
-                          width: 48,
-                          height: 48,
-                          fit: BoxFit.cover,
-                          errorBuilder: (context, error, stackTrace) => Container(
-                            width: 48,
-                            height: 48,
-                            color: accentColor.withValues(alpha: 0.15),
-                            child: Icon(Icons.person, color: accentColor),
-                          ),
-                        )
-                      : Container(
-                          width: 48,
-                          height: 48,
-                          color: accentColor.withValues(alpha: 0.15),
-                          child: Icon(Icons.person, color: accentColor),
-                        ),
+                InitialsAvatar(
+                  avatarUrl: avatarUrl,
+                  name: data['fullName'] ?? '',
+                  size: 48,
+                  backgroundColor: accentColor.withValues(alpha: 0.15),
+                  foregroundColor: accentColor,
                 ),
                 const SizedBox(width: 12),
                 Expanded(
@@ -340,69 +402,7 @@ class _ManageAssistantsScreenState extends State<ManageAssistantsScreen> {
             Wrap(
               spacing: 8,
               runSpacing: 8,
-              children: [
-                if (status == 'pending')
-                  _actionButton(
-                    label: 'Approve',
-                    icon: Icons.check_circle_outline,
-                    color: Colors.green,
-                    onPressed: () => updateAssistantStatus(doc.id, 'active'),
-                  ),
-                if (status == 'active')
-                  _actionButton(
-                    label: 'Deactivate',
-                    icon: Icons.pause_circle_outline,
-                    color: Colors.orange,
-                    onPressed: () => updateAssistantStatus(doc.id, 'deactivated'),
-                  ),
-                if (status == 'deactivated')
-                  _actionButton(
-                    label: 'Reactivate',
-                    icon: Icons.play_circle_outline,
-                    color: Colors.green,
-                    onPressed: () => updateAssistantStatus(doc.id, 'active'),
-                  ),
-                if (status == 'active')
-                  _actionButton(
-                    label: 'Reassign',
-                    icon: Icons.swap_horiz,
-                    color: Colors.teal,
-                    onPressed: () => _showFacilityPickerDialog(doc.id),
-                  ),
-                if (status == 'deactivated')
-                  _actionButton(
-                    label: 'Remove from Facility',
-                    icon: Icons.person_remove_outlined,
-                    color: Colors.grey[700]!,
-                    onPressed: () async {
-                    final confirm = await showDialog<bool>(
-                      context: context,
-                      builder: (context) => AlertDialog(
-                        title: const Text('Remove from Facility'),
-                        content: const Text(
-                            'This removes the assistant from your facility only - their login stays '
-                            'active and they can be invited to a facility again later. Only a Platform '
-                            'Admin can permanently delete an account.',
-                            style: TextStyle(fontSize: 13)),
-                        actions: [
-                          TextButton(
-                            child: const Text('Cancel'),
-                            onPressed: () => Navigator.pop(context, false),
-                          ),
-                          ElevatedButton(
-                            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
-                            child: const Text('Remove'),
-                            onPressed: () => Navigator.pop(context, true),
-                          ),
-                        ],
-                      ),
-                    );
-                    if (confirm == true) {
-                      await removeFromFacility(doc.id, facilityId);
-                    }
-                  },
-                ),
-              ],
+              children: _buildActionButtons(doc, status, facilityId),
             ),
           ],
         ),
@@ -410,31 +410,216 @@ class _ManageAssistantsScreenState extends State<ManageAssistantsScreen> {
     );
   }
 
+  // Shared between the card layout (narrow screens) and the table row
+  // layout (wide screens) below - the status-driven action logic is
+  // identical either way, only the surrounding container differs.
+  List<Widget> _buildActionButtons(QueryDocumentSnapshot doc, String status, String facilityId) {
+    return [
+      if (status == 'pending')
+        _actionButton(
+          label: 'Approve',
+          icon: Icons.check_circle_outline,
+          color: Colors.green,
+          onPressed: () => updateAssistantStatus(doc.id, 'active'),
+        ),
+      if (status == 'active')
+        _actionButton(
+          label: 'Deactivate',
+          icon: Icons.pause_circle_outline,
+          color: Colors.orange,
+          onPressed: () => updateAssistantStatus(doc.id, 'deactivated'),
+        ),
+      if (status == 'deactivated')
+        _actionButton(
+          label: 'Reactivate',
+          icon: Icons.play_circle_outline,
+          color: Colors.green,
+          onPressed: () => updateAssistantStatus(doc.id, 'active'),
+        ),
+      if (status == 'active')
+        _actionButton(
+          label: 'Reassign',
+          icon: Icons.swap_horiz,
+          color: Colors.teal,
+          onPressed: () => _showFacilityPickerDialog(doc.id),
+        ),
+      if (status == 'deactivated')
+        _actionButton(
+          label: 'Remove from Facility',
+          icon: Icons.person_remove_outlined,
+          color: Colors.grey[700]!,
+          onPressed: () async {
+            final confirm = await showDialog<bool>(
+              context: context,
+              builder: (context) => AlertDialog(
+                title: const Text('Remove from Facility'),
+                content: const Text(
+                    'This removes the assistant from your facility only - their login stays '
+                    'active and they can be invited to a facility again later. Only a Platform '
+                    'Admin can permanently delete an account.',
+                    style: TextStyle(fontSize: 13)),
+                actions: [
+                  TextButton(
+                    child: const Text('Cancel'),
+                    onPressed: () => Navigator.pop(context, false),
+                  ),
+                  ElevatedButton(
+                    style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+                    child: const Text('Remove'),
+                    onPressed: () => Navigator.pop(context, true),
+                  ),
+                ],
+              ),
+            );
+            if (confirm == true) {
+              await removeFromFacility(doc.id, facilityId);
+            }
+          },
+        ),
+    ];
+  }
+
+  Widget _buildAssistantsTable(List<QueryDocumentSnapshot> assistants) {
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.grey.withValues(alpha: 0.15)),
+      ),
+      child: Column(
+        children: [
+          _buildTableHeaderRow(),
+          for (int i = 0; i < assistants.length; i++)
+            _buildTableRow(assistants[i], isLast: i == assistants.length - 1),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildTableHeaderRow() {
+    final headerStyle = TextStyle(fontWeight: FontWeight.bold, fontSize: 12, color: Colors.grey[600]);
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      decoration: BoxDecoration(
+        color: Colors.grey[50],
+        borderRadius: const BorderRadius.only(topLeft: Radius.circular(12), topRight: Radius.circular(12)),
+      ),
+      child: Row(
+        children: [
+          Expanded(flex: 3, child: Text('Assistant', style: headerStyle)),
+          Expanded(flex: 2, child: Text('Phone', style: headerStyle)),
+          Expanded(flex: 2, child: Text('Facility', style: headerStyle)),
+          Expanded(flex: 1, child: Text('Status', style: headerStyle)),
+          Expanded(flex: 3, child: Text('Actions', style: headerStyle)),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildTableRow(QueryDocumentSnapshot doc, {required bool isLast}) {
+    final data = doc.data() as Map<String, dynamic>;
+    final status = (data['status'] ?? 'pending').toString();
+    final facilityId = (data['facilityIds'] as List?)?.first ?? '';
+    final facilityName = facilityNames[facilityId] ?? 'Unknown';
+    final avatarUrl = data['avatarUrl'] as String?;
+    final statusColor = status == 'active'
+        ? Colors.green
+        : status == 'pending'
+            ? Colors.orange
+            : Colors.red;
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      decoration: BoxDecoration(
+        border: isLast ? null : Border(bottom: BorderSide(color: Colors.grey.withValues(alpha: 0.12))),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          Expanded(
+            flex: 3,
+            child: Row(
+              children: [
+                InitialsAvatar(
+                  avatarUrl: avatarUrl,
+                  name: data['fullName'] ?? '',
+                  size: 36,
+                  backgroundColor: accentColor.withValues(alpha: 0.15),
+                  foregroundColor: accentColor,
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Text(
+                    data['fullName'] ?? '',
+                    style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          Expanded(
+            flex: 2,
+            child: Text('${data['phone'] ?? ''}', style: const TextStyle(fontSize: 13), overflow: TextOverflow.ellipsis),
+          ),
+          Expanded(
+            flex: 2,
+            child: Text(facilityName, style: const TextStyle(fontSize: 13), maxLines: 1, overflow: TextOverflow.ellipsis),
+          ),
+          Expanded(
+            flex: 1,
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+              decoration: BoxDecoration(color: statusColor.withValues(alpha: 0.12), borderRadius: BorderRadius.circular(20)),
+              child: Text(
+                status,
+                textAlign: TextAlign.center,
+                style: TextStyle(color: statusColor, fontSize: 11, fontWeight: FontWeight.w600),
+              ),
+            ),
+          ),
+          Expanded(
+            flex: 3,
+            child: Wrap(
+              spacing: 6,
+              runSpacing: 6,
+              children: _buildActionButtons(doc, status, facilityId),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildAssistantsList(List<QueryDocumentSnapshot> assistants) {
     return LayoutBuilder(
       builder: (context, constraints) {
-        // Smoothly scales to available width rather than one fixed
-        // breakpoint - same reasoning as View Facilities' grid, just a
-        // narrower ideal width since these cards carry less content.
-        const idealCardWidth = 400.0;
-        final crossAxisCount = (constraints.maxWidth / idealCardWidth).floor().clamp(1, 4);
+        // A full-width table reads naturally on desktop, where there's
+        // room for every column at once - cards take over below that,
+        // since the same columns would otherwise get cramped or need
+        // to wrap awkwardly.
+        const tableBreakpoint = 800.0;
 
-        if (crossAxisCount > 1) {
-          return MasonryGridView.count(
-            padding: const EdgeInsets.symmetric(vertical: 8),
-            crossAxisCount: crossAxisCount,
-            crossAxisSpacing: 12,
-            mainAxisSpacing: 12,
-            itemCount: assistants.length,
-            itemBuilder: (context, index) => _buildAssistantCard(assistants[index]),
-          );
+        if (constraints.maxWidth >= tableBreakpoint) {
+          return _buildAssistantsTable(assistants);
         }
 
-        return ListView.builder(
+        return ListView.separated(
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
           itemCount: assistants.length,
+          separatorBuilder: (context, index) => const SizedBox(height: 4),
           itemBuilder: (context, index) => _buildAssistantCard(assistants[index]),
         );
       },
+    );
+  }
+
+  Widget _buildHeader() {
+    return Text(
+      "Manage your team's access and status across your facilities.",
+      style: TextStyle(fontSize: 13, color: Colors.grey[600]),
     );
   }
 
@@ -496,45 +681,64 @@ class _ManageAssistantsScreenState extends State<ManageAssistantsScreen> {
           ),
         ],
       ),
-      body: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 12),
-        child: adminFacilityIds.isEmpty
-            ? const Center(child: Text('No facilities found for your account.'))
-            : StreamBuilder<QuerySnapshot>(
-                stream: FirebaseFirestore.instance
-                    .collection('users')
-                    .where('role', isEqualTo: 'assistant')
-                    .where('facilityIds', arrayContainsAny: adminFacilityIds)
-                    .snapshots(),
-                builder: (context, snapshot) {
-                  if (snapshot.connectionState == ConnectionState.waiting) {
-                    return const Center(child: CircularProgressIndicator());
-                  }
+      body: adminFacilityIds.isEmpty
+          ? const Center(child: Text('No facilities found for your account.'))
+          : StreamBuilder<QuerySnapshot>(
+              stream: FirebaseFirestore.instance
+                  .collection('users')
+                  .where('role', isEqualTo: 'assistant')
+                  .where('facilityIds', arrayContainsAny: adminFacilityIds)
+                  .snapshots(),
+              builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return const Center(child: CircularProgressIndicator());
+                }
 
-                  if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
-                    return const Center(child: Text('No assistants registered yet.'));
-                  }
+                final allAssistants = snapshot.data?.docs ?? [];
 
-                  final allAssistants = snapshot.data!.docs;
+                final filtered = _searchQuery.isEmpty
+                    ? allAssistants
+                    : allAssistants.where((doc) {
+                        final data = doc.data() as Map<String, dynamic>;
+                        final name = (data['fullName'] ?? '').toString().toLowerCase();
+                        final facilityId = (data['facilityIds'] as List?)?.first ?? '';
+                        final facilityName = (facilityNames[facilityId] ?? '').toLowerCase();
+                        return name.contains(_searchQuery) || facilityName.contains(_searchQuery);
+                      }).toList();
 
-                  final filtered = _searchQuery.isEmpty
-                      ? allAssistants
-                      : allAssistants.where((doc) {
-                          final data = doc.data() as Map<String, dynamic>;
-                          final name = (data['fullName'] ?? '').toString().toLowerCase();
-                          final facilityId = (data['facilityIds'] as List?)?.first ?? '';
-                          final facilityName = (facilityNames[facilityId] ?? '').toLowerCase();
-                          return name.contains(_searchQuery) || facilityName.contains(_searchQuery);
-                        }).toList();
-
-                  if (filtered.isEmpty) {
-                    return Center(child: Text('No assistants match "$_searchQuery".'));
-                  }
-
-                  return _buildAssistantsList(filtered);
-                },
-              ),
-      ),
+                return Center(
+                  child: ConstrainedBox(
+                    constraints: const BoxConstraints(maxWidth: 1100),
+                    child: ListView(
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
+                      children: [
+                        _buildHeader(),
+                        const SizedBox(height: 20),
+                        _buildSummaryMetrics(allAssistants),
+                        const SizedBox(height: 24),
+                        if (allAssistants.isEmpty)
+                          Padding(
+                            padding: const EdgeInsets.symmetric(vertical: 60),
+                            child: Center(
+                              child: Text('No assistants registered yet.', style: TextStyle(color: Colors.grey[600])),
+                            ),
+                          )
+                        else if (filtered.isEmpty)
+                          Padding(
+                            padding: const EdgeInsets.symmetric(vertical: 60),
+                            child: Center(
+                              child: Text('No assistants match "$_searchQuery".',
+                                  style: TextStyle(color: Colors.grey[600])),
+                            ),
+                          )
+                        else
+                          _buildAssistantsList(filtered),
+                      ],
+                    ),
+                  ),
+                );
+              },
+            ),
       floatingActionButton: FloatingActionButton.extended(
         backgroundColor: primaryColor,
         foregroundColor: backgroundColor,

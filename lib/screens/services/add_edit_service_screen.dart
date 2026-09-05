@@ -34,6 +34,7 @@ class _AddEditServiceScreenState extends State<AddEditServiceScreen> {
   late TextEditingController _totalPaidController;
   late TextEditingController _providedByController;
   late TextEditingController _clientTextController;
+  late TextEditingController _transactionIdController;
   String? _paymentMethod;
 
   Client? _selectedClient;
@@ -93,6 +94,8 @@ class _AddEditServiceScreenState extends State<AddEditServiceScreen> {
         TextEditingController(text: widget.service?.providedByName ?? '');
     _clientTextController =
         TextEditingController(text: widget.service?.clientName ?? '');
+    _transactionIdController =
+        TextEditingController(text: widget.service?.transactionId ?? '');
 
     _selectedCategory = widget.service?.category ?? _categories.first;
 
@@ -140,6 +143,7 @@ class _AddEditServiceScreenState extends State<AddEditServiceScreen> {
     _totalPaidController.dispose();
     _providedByController.dispose();
     _clientTextController.dispose();
+    _transactionIdController.dispose();
 
     for (var item in _itemsUsedControllers) {
       item['name']!.dispose();
@@ -426,6 +430,18 @@ class _AddEditServiceScreenState extends State<AddEditServiceScreen> {
                   activeColor: primaryDeepGreen,
                   onChanged: (method) => setState(() => _paymentMethod = method),
                 ),
+                if (_paymentMethod == 'M-Pesa') ...[
+                  const SizedBox(height: 16),
+                  TextFormField(
+                    controller: _transactionIdController,
+                    decoration: InputDecoration(
+                      labelText: 'M-Pesa Transaction ID (optional)',
+                      filled: true,
+                      fillColor: darkTeal.withValues(alpha: 0.1),
+                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                    ),
+                  ),
+                ],
               ],
 
               const SizedBox(height: 20),
@@ -662,6 +678,9 @@ class _AddEditServiceScreenState extends State<AddEditServiceScreen> {
                             updatedAt: DateTime.now(),
                             itemsUsed: _collectItemsUsed(),
                             paymentMethod: totalPaid > 0 ? _paymentMethod : null,
+                            transactionId: _paymentMethod == 'M-Pesa' && _transactionIdController.text.trim().isNotEmpty
+                                ? _transactionIdController.text.trim()
+                                : null,
                           );
 
                           try {

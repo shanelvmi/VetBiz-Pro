@@ -11,6 +11,7 @@ class TransactionModel {
   // Nullable - only meaningful for income (money actually received via
   // some method); an expense has nothing to attach one to.
   final String? paymentMethod;
+  final int? receiptNumber;
 
   TransactionModel({
     required this.id,
@@ -21,6 +22,7 @@ class TransactionModel {
     required this.category,
     required this.recordedBy,
     this.paymentMethod,
+    this.receiptNumber,
   });
 
   /// Converts the TransactionModel instance to a Firestore compatible map
@@ -33,6 +35,7 @@ class TransactionModel {
       'category': category,
       'recordedBy': recordedBy,
       if (paymentMethod != null) 'paymentMethod': paymentMethod,
+      if (receiptNumber != null) 'receiptNumber': receiptNumber,
     };
   }
 
@@ -47,6 +50,7 @@ class TransactionModel {
       category: map['category'] ?? '',
       recordedBy: map['recordedBy'] ?? 'Unknown',
       paymentMethod: map['paymentMethod'] as String?,
+      receiptNumber: (map['receiptNumber'] as num?)?.toInt(),
     );
   }
 
@@ -60,6 +64,7 @@ class TransactionModel {
     String? category,
     String? recordedBy,
     String? paymentMethod,
+    int? receiptNumber,
   }) {
     return TransactionModel(
       id: id ?? this.id,
@@ -70,6 +75,7 @@ class TransactionModel {
       category: category ?? this.category,
       recordedBy: recordedBy ?? this.recordedBy,
       paymentMethod: paymentMethod ?? this.paymentMethod,
+      receiptNumber: receiptNumber ?? this.receiptNumber,
     );
   }
 }

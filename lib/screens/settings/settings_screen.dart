@@ -204,7 +204,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     _buildSettingsItem(
                       icon: Icons.currency_exchange_outlined,
                       label: 'Currency',
-                      trailingText: '🇹🇿 Tsh',
+                      trailingText: 'Tsh',
                       isLast: false,
                       onTap: () {}, // not a real choice - no picker to open
                     ),
@@ -221,7 +221,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               const SizedBox(height: 36),
               const Center(
                 child: Text(
-                  'VetBiz Pro • v1.0.0',
+                  'VetBiz Pro - v1.0.0',
                   style: TextStyle(
                     fontSize: 12,
                     color: Colors.grey,
@@ -351,7 +351,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         _buildSidebarItem(
                           icon: Icons.currency_exchange_outlined,
                           label: 'Currency',
-                          trailingText: '🇹🇿 Tsh',
+                          trailingText: 'Tsh',
                           onTapDialog: () {}, // not a real choice - no picker to open
                         ),
                         _buildSidebarItem(

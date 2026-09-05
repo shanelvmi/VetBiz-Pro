@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_storage/firebase_storage.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
 import 'package:uuid/uuid.dart';
 import 'package:intl/intl.dart';
@@ -54,6 +56,7 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
   late TextEditingController _buyPriceController;
   late TextEditingController _sellPriceController;
   late TextEditingController _stockController;
+  late TextEditingController _minStockController;
 
   DateTime? _selectedExpiry;
 
@@ -77,9 +80,139 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
   final Color warmAmber = const Color(0xFFFFB200);
   final Color offWhite = const Color(0xFFFDFDF9);
 
+  // Optional product photo/icon - a local preview shows immediately
+  // after picking, while _imageUrl (the persisted download URL) only
+  // updates once the upload actually finishes. When editing an
+  // existing product, this starts as whatever photo it already has.
+  final ImagePicker _imagePicker = ImagePicker();
+  Uint8List? _imageBytes;
+  String? _imageUrl;
+  bool _isUploadingImage = false;
+
+  Future<void> _pickProductImage() async {
+    final facilityId = Provider.of<FacilityProvider>(context, listen: false).selectedFacilityId;
+    if (facilityId == null || facilityId.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('No facility selected. Please select a facility first.')),
+      );
+      return;
+    }
+
+    final pickedFile = await _imagePicker.pickImage(source: ImageSource.gallery, imageQuality: 85);
+    if (pickedFile == null) return;
+
+    final bytes = await pickedFile.readAsBytes();
+    setState(() {
+      _imageBytes = bytes;
+      _isUploadingImage = true;
+    });
+
+    try {
+      // A filename independent of the product's own id - a brand-new
+      // product doesn't have one yet at this point (it's only
+      // generated on save), so the upload can't wait on that. Scoped
+      // under the facility's own id so the storage rule can verify the
+      // uploader is actually a member of that facility, rather than a
+      // flat path any authenticated user could write to.
+      final storageRef =
+          FirebaseStorage.instance.ref().child('product_images/$facilityId/${const Uuid().v4()}.jpg');
+      await storageRef.putData(bytes);
+      final downloadUrl = await storageRef.getDownloadURL();
+      if (!mounted) return;
+      setState(() {
+        _imageUrl = downloadUrl;
+        _isUploadingImage = false;
+      });
+    } catch (e) {
+      if (!mounted) return;
+      setState(() => _isUploadingImage = false);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Could not upload image: $e')),
+      );
+    }
+  }
+
+  Widget _buildImagePicker() {
+    final hasPreview = _imageBytes != null;
+    final hasUploadedUrl = !hasPreview && _imageUrl != null && _imageUrl!.isNotEmpty;
+
+    return Column(
+      children: [
+        GestureDetector(
+          onTap: _isUploadingImage ? null : _pickProductImage,
+          child: Stack(
+            alignment: Alignment.bottomRight,
+            children: [
+              Container(
+                width: 96,
+                height: 96,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: primaryDeepTealGreen.withValues(alpha: 0.08),
+                  border: Border.all(color: Colors.grey.withValues(alpha: 0.25)),
+                ),
+                clipBehavior: Clip.antiAlias,
+                child: Stack(
+                  fit: StackFit.expand,
+                  children: [
+                    if (hasPreview)
+                      Image.memory(_imageBytes!, fit: BoxFit.cover)
+                    else if (hasUploadedUrl)
+                      Image.network(
+                        _imageUrl!,
+                        fit: BoxFit.cover,
+                        errorBuilder: (context, error, stackTrace) => Icon(
+                          Icons.inventory_2_outlined,
+                          size: 36,
+                          color: primaryDeepTealGreen.withValues(alpha: 0.4),
+                        ),
+                      )
+                    else
+                      Icon(
+                        Icons.inventory_2_outlined,
+                        size: 36,
+                        color: primaryDeepTealGreen.withValues(alpha: 0.4),
+                      ),
+                    if (_isUploadingImage)
+                      Container(
+                        color: Colors.black.withValues(alpha: 0.35),
+                        child: const Center(
+                          child: SizedBox(
+                            width: 24,
+                            height: 24,
+                            child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                          ),
+                        ),
+                      ),
+                  ],
+                ),
+              ),
+              Container(
+                padding: const EdgeInsets.all(6),
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: primaryDeepTealGreen,
+                  border: Border.all(color: Colors.white, width: 2),
+                ),
+                child: const Icon(Icons.camera_alt, size: 14, color: Colors.white),
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 6),
+        Text(
+          'Product photo (optional)',
+          style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+        ),
+      ],
+    );
+  }
+
   @override
   void initState() {
     super.initState();
+
+    _imageUrl = widget.product?.imageUrl;
 
     _nameController = TextEditingController(text: widget.product?.name ?? '');
     _supplierController =
@@ -104,6 +237,8 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
             : '');
     _stockController =
         TextEditingController(text: widget.product?.stockQty.toString() ?? '');
+    _minStockController = TextEditingController(
+        text: widget.product?.minStockLevel?.toString() ?? '');
 
     _unit = widget.product?.unit ?? 'pcs';
     _type = widget.product?.type ?? 'Injectable';
@@ -171,6 +306,7 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
     _buyPriceController.dispose();
     _sellPriceController.dispose();
     _stockController.dispose();
+    _minStockController.dispose();
     _warehouseQtyController.dispose();
     _shelfQtyController.dispose();
     super.dispose();
@@ -444,7 +580,7 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
       if (widget.product == null &&
           existingNames.contains(_nameController.text.trim().toLowerCase())) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('⚠ Product name already exists!')),
+          const SnackBar(content: Text('Product name already exists!')),
         );
         return;
       }
@@ -480,6 +616,7 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
         // expiry" bug this whole restructure fixes. Use "Add New Batch"
         // instead to record new stock.
         batchNo: isEditingProduct ? widget.product!.batchNo : _batchController.text.trim(),
+        imageUrl: _imageUrl,
         expiry: isEditingProduct ? widget.product!.expiry : _selectedExpiry,
         description: _descriptionController.text.trim(),
         buyPrice: parseThousands(_buyPriceController.text),
@@ -498,6 +635,9 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
         type: _type,
         category: _category,
         facilityId: facilityId,
+        minStockLevel: _minStockController.text.trim().isEmpty
+            ? null
+            : int.tryParse(_minStockController.text.trim()),
         target: destination == ProductDestination.sellable
             ? ProductTarget.sellable
             : ProductTarget.stockStore,
@@ -567,9 +707,9 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
           content: Text(
             widget.product == null
                 ? (destination == ProductDestination.sellable
-                    ? '✅ Product added to Sellable Catalog'
-                    : '✅ Product added to Stock Store')
-                : '✅ Product updated successfully',
+                    ? 'Product added to Sellable Catalog'
+                    : 'Product added to Stock Store')
+                : 'Product updated successfully',
           ),
           backgroundColor: Colors.green,
         ),
@@ -580,7 +720,7 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('❌ Failed to save product: $e')),
+        SnackBar(content: Text('Failed to save product: $e')),
       );
     } finally {
       if (mounted) setState(() => _isSaving = false);
@@ -628,6 +768,8 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
           key: _formKey,
           child: ListView(
             children: [
+              Center(child: _buildImagePicker()),
+              const SizedBox(height: 20),
               // Product Name - with live duplicate detection. Typing a
               // name that matches an existing product shows a clear
               // notice with a direct path to "Add New Batch" instead of
@@ -920,6 +1062,30 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
                         Expanded(child: _unitDropdown(fieldsLocked)),
                       ],
                     ),
+
+              const SizedBox(height: 12),
+
+              // Minimum Stock Level - a per-product low-stock threshold.
+              // Always editable (unlike quantity above, which is
+              // batch-managed once editing), since this is a product-level
+              // setting, not something tied to a specific delivery/batch.
+              TextFormField(
+                controller: _minStockController,
+                decoration: _inputDecoration('Minimum Stock Level').copyWith(
+                  hintText: 'e.g. 5 (defaults to ${Product.defaultLowStockThreshold} if left blank)',
+                ),
+                keyboardType: TextInputType.number,
+                cursorColor: primaryDeepTealGreen,
+                enabled: !fieldsLocked,
+                validator: (value) {
+                  final trimmed = (value ?? '').trim();
+                  if (trimmed.isEmpty) return null; // optional
+                  final parsed = int.tryParse(trimmed);
+                  if (parsed == null) return 'Invalid';
+                  if (parsed < 0) return 'Cannot be negative';
+                  return null;
+                },
+              ),
 
               const SizedBox(height: 12),
 

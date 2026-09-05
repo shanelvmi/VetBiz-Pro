@@ -38,6 +38,7 @@ class _AddClientScreenState extends State<AddClientScreen> {
 
   bool _isSaving = false;
   String? _typeError;
+  String _status = 'Active';
 
   final Color primaryDeepGreen = const Color(0xFF2F5D62);
   final Color warmAmber = const Color(0xFFFFB200);
@@ -84,6 +85,7 @@ class _AddClientScreenState extends State<AddClientScreen> {
       _selectedAnimals = List.from(c.animalSpecies);
       _businessName = c.businessName;
       _vetPracticeType = c.vetPracticeType;
+      _status = c.status;
     }
   }
 
@@ -152,6 +154,7 @@ class _AddClientScreenState extends State<AddClientScreen> {
           animalSpecies: _selectedAnimals,
           businessName: _businessName,
           vetPracticeType: _vetPracticeType,
+          status: _status,
         );
         await clientProvider.updateClient(facilityId, updated);
         if (!mounted) return;
@@ -282,6 +285,35 @@ class _AddClientScreenState extends State<AddClientScreen> {
                     onSaved: (value) => _address = value!.trim(),
                   ),
                   const SizedBox(height: 16),
+
+                  if (widget.client != null) ...[
+                    Align(
+                      alignment: Alignment.centerLeft,
+                      child: Text('Status',
+                          style: TextStyle(fontWeight: FontWeight.bold, color: primaryDeepGreen)),
+                    ),
+                    const SizedBox(height: 8),
+                    Row(
+                      children: [
+                        ChoiceChip(
+                          label: const Text('Active'),
+                          selected: _status == 'Active',
+                          onSelected: (_) => setState(() => _status = 'Active'),
+                          selectedColor: Colors.green.withValues(alpha: 0.15),
+                          labelStyle: TextStyle(color: _status == 'Active' ? Colors.green[800] : Colors.black87),
+                        ),
+                        const SizedBox(width: 8),
+                        ChoiceChip(
+                          label: const Text('Inactive'),
+                          selected: _status == 'Inactive',
+                          onSelected: (_) => setState(() => _status = 'Inactive'),
+                          selectedColor: Colors.grey.withValues(alpha: 0.25),
+                          labelStyle: TextStyle(color: _status == 'Inactive' ? Colors.grey[800] : Colors.black87),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 16),
+                  ],
 
                   // CLIENT TYPE(S) - multi-select. A client can genuinely
                   // be more than one of these at once.

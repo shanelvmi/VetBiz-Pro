@@ -13,6 +13,7 @@ class Product {
   final String? supplier;
   final String? batchNo;
   final DateTime? expiry;
+  final String? imageUrl; // optional, user-uploaded product photo/icon
 
   final double buyPrice;
   final double sellPrice;
@@ -29,8 +30,20 @@ class Product {
   /// Used for UI grouping (kept for backward compatibility)
   final ProductTarget target;
 
+  // Per-product low-stock threshold - null means "use the facility-wide
+  // default" (defaultLowStockThreshold below), not "never low stock".
+  final int? minStockLevel;
+
   final DateTime? createdAt;
   final DateTime? updatedAt;
+
+  // The single source of truth for what counts as "low stock" when a
+  // product hasn't set its own minStockLevel - every screen that shows
+  // a Low Stock badge or count reads this same value (via
+  // effectiveMinStockLevel/isLowStock below) instead of each defining
+  // its own number, so "Low Stock" never quietly means something
+  // different from one screen to the next.
+  static const int defaultLowStockThreshold = 5;
 
   Product({
     required this.id,
@@ -39,6 +52,7 @@ class Product {
     this.supplier,
     this.batchNo,
     this.expiry,
+    this.imageUrl,
     required this.buyPrice,
     required this.sellPrice,
     required this.stockQty,
@@ -48,6 +62,7 @@ class Product {
     required this.category,
     required this.facilityId,
     this.target = ProductTarget.sellable, // backward compatible
+    this.minStockLevel,
     this.createdAt,
     this.updatedAt,
   });
@@ -59,6 +74,11 @@ class Product {
 
   bool get hasStock => stockQty > 0;
   bool get hasSellable => sellableQty > 0;
+
+  int get effectiveMinStockLevel => minStockLevel ?? defaultLowStockThreshold;
+
+  bool get isLowStock =>
+      stockQty <= effectiveMinStockLevel || sellableQty <= effectiveMinStockLevel;
 
   /// ---------- Firestore → Model ----------
 
@@ -72,6 +92,7 @@ class Product {
       description: data['description'],
       supplier: data['supplier'],
       batchNo: data['batchNo'],
+      imageUrl: data['imageUrl'],
       expiry: data['expiry'] != null
           ? (data['expiry'] as Timestamp).toDate()
           : null,
@@ -84,6 +105,7 @@ class Product {
       category: data['category'] ?? 'Uncategorized',
       facilityId: data['facilityId'] ?? '',
       target: _targetFromString(data['target']),
+      minStockLevel: (data['minStockLevel'] as num?)?.toInt(),
       createdAt: data['createdAt'] != null
           ? (data['createdAt'] as Timestamp).toDate()
           : null,
@@ -101,6 +123,7 @@ class Product {
       'description': description,
       'supplier': supplier,
       'batchNo': batchNo,
+      'imageUrl': imageUrl,
       'expiry': expiry != null ? Timestamp.fromDate(expiry!) : null,
       'buyPrice': buyPrice,
       'sellPrice': sellPrice,
@@ -111,6 +134,7 @@ class Product {
       'category': category,
       'facilityId': facilityId,
       'target': target.name,
+      'minStockLevel': minStockLevel,
       'createdAt': createdAt != null
           ? Timestamp.fromDate(createdAt!)
           : FieldValue.serverTimestamp(),
@@ -129,6 +153,7 @@ class Product {
     String? supplier,
     String? batchNo,
     DateTime? expiry,
+    String? imageUrl,
     double? buyPrice,
     double? sellPrice,
     int? stockQty,
@@ -138,6 +163,7 @@ class Product {
     String? category,
     String? facilityId,
     ProductTarget? target,
+    int? minStockLevel,
     DateTime? createdAt,
     DateTime? updatedAt,
   }) {
@@ -148,6 +174,7 @@ class Product {
       supplier: supplier ?? this.supplier,
       batchNo: batchNo ?? this.batchNo,
       expiry: expiry ?? this.expiry,
+      imageUrl: imageUrl ?? this.imageUrl,
       buyPrice: buyPrice ?? this.buyPrice,
       sellPrice: sellPrice ?? this.sellPrice,
       stockQty: stockQty ?? this.stockQty,
@@ -157,6 +184,7 @@ class Product {
       category: category ?? this.category,
       facilityId: facilityId ?? this.facilityId,
       target: target ?? this.target,
+      minStockLevel: minStockLevel ?? this.minStockLevel,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
     );

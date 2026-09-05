@@ -20,6 +20,14 @@ class AddPaymentScreen extends StatefulWidget {
   final double? amountOwed;
   final String? facilityId;
   final bool isModal;
+  // Only used when preselectedClient is null - lets the person recording
+  // a payment pick which debtor it's for, scoped to clients who actually
+  // have an outstanding balance (not every client in the system).
+  final List<Client>? debtorClients;
+  // Each debtor's total outstanding debt, keyed by clientId - shown
+  // alongside their name in the picker so it's clear at a glance how
+  // much each debtor owes while choosing who to record a payment for.
+  final Map<String, double>? debtorBalances;
 
   const AddPaymentScreen({
     super.key,
@@ -28,6 +36,8 @@ class AddPaymentScreen extends StatefulWidget {
     this.amountOwed,
     this.facilityId,
     this.isModal = false,
+    this.debtorClients,
+    this.debtorBalances,
   });
 
   @override
@@ -296,6 +306,46 @@ class _AddPaymentScreenState extends State<AddPaymentScreen> {
                 Text(
                   'Client: ${selectedClient!.name}',
                   style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                )
+              else if (widget.debtorClients != null && widget.debtorClients!.isNotEmpty)
+                FormField<Client>(
+                  validator: (_) => selectedClient == null ? 'Select a debtor' : null,
+                  builder: (fieldState) {
+                    return Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Autocomplete<Client>(
+                          displayStringForOption: (c) {
+                            final balance = widget.debtorBalances?[c.id];
+                            if (balance == null) return c.name;
+                            return 'Tsh ${currencyFormat.format(balance)} \u2014 ${c.name}';
+                          },
+                          optionsBuilder: (textEditingValue) {
+                            if (textEditingValue.text.isEmpty) return widget.debtorClients!;
+                            final q = textEditingValue.text.toLowerCase();
+                            return widget.debtorClients!.where(
+                                (c) => c.name.toLowerCase().contains(q) || c.phone.contains(q));
+                          },
+                          onSelected: (client) {
+                            setState(() => selectedClient = client);
+                            fieldState.didChange(client);
+                          },
+                          fieldViewBuilder: (context, controller, focusNode, onFieldSubmitted) {
+                            return TextField(
+                              controller: controller,
+                              focusNode: focusNode,
+                              decoration: InputDecoration(
+                                labelText: 'Debtor',
+                                hintText: 'Search by name or phone',
+                                border: const OutlineInputBorder(),
+                                errorText: fieldState.errorText,
+                              ),
+                            );
+                          },
+                        ),
+                      ],
+                    );
+                  },
                 ),
               const SizedBox(height: 16),
               if (widget.amountOwed != null)
@@ -317,6 +367,12 @@ class _AddPaymentScreenState extends State<AddPaymentScreen> {
                   if (parsed <= 0) return 'Enter a valid amount';
                   if (widget.amountOwed != null && parsed > widget.amountOwed!) {
                     return 'Cannot pay more than owed';
+                  }
+                  final selectedBalance = (selectedClient != null && widget.debtorBalances != null)
+                      ? widget.debtorBalances![selectedClient!.id]
+                      : null;
+                  if (widget.amountOwed == null && selectedBalance != null && parsed > selectedBalance) {
+                    return 'Cannot pay more than total owed';
                   }
                   return null;
                 },
@@ -371,6 +427,8 @@ Future<bool?> showAddPaymentScreen(
   String? debtDocId,
   double? amountOwed,
   String? facilityId,
+  List<Client>? debtorClients,
+  Map<String, double>? debtorBalances,
 }) async {
   final isWideScreen = MediaQuery.of(context).size.width >= 900;
 
@@ -382,6 +440,8 @@ Future<bool?> showAddPaymentScreen(
           debtDocId: debtDocId,
           amountOwed: amountOwed,
           facilityId: facilityId,
+          debtorClients: debtorClients,
+          debtorBalances: debtorBalances,
         ),
       ),
     );
@@ -407,6 +467,8 @@ Future<bool?> showAddPaymentScreen(
                 debtDocId: debtDocId,
                 amountOwed: amountOwed,
                 facilityId: facilityId,
+                debtorClients: debtorClients,
+                debtorBalances: debtorBalances,
                 isModal: true,
               ),
             ),

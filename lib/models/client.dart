@@ -20,6 +20,11 @@ class Client {
   final String? vetPracticeType;
   final DateTime? createdAt;
   final DateTime? updatedAt;
+  final String status;
+  // Free-text notes about this client's debt situation (e.g. "promised
+  // to pay by Friday"), each with its own timestamp - appendable over
+  // time, not a single overwritable field.
+  final List<Map<String, dynamic>> debtorNotes;
 
   Client({
     required this.id,
@@ -38,9 +43,12 @@ class Client {
     this.vetPracticeType,
     this.createdAt,
     this.updatedAt,
+    this.status = 'Active',
+    List<Map<String, dynamic>>? debtorNotes,
   })  : types = types ?? [],
         crops = crops ?? [],
-        animalSpecies = animalSpecies ?? [];
+        animalSpecies = animalSpecies ?? [],
+        debtorNotes = debtorNotes ?? [];
 
   factory Client.fromMap(String id, Map<String, dynamic> data) {
     // New documents store 'types' as a list. Older documents only have
@@ -79,6 +87,11 @@ class Client {
       updatedAt: data['updatedAt'] != null
           ? (data['updatedAt'] as Timestamp).toDate()
           : null,
+      status: (data['status'] as String?) ?? 'Active',
+      debtorNotes: data['debtorNotes'] != null
+          ? List<Map<String, dynamic>>.from(
+              (data['debtorNotes'] as List).map((e) => Map<String, dynamic>.from(e)))
+          : [],
     );
   }
 
@@ -108,6 +121,8 @@ class Client {
       'vetPracticeType': vetPracticeType,
       'createdAt': createdAt != null ? Timestamp.fromDate(createdAt!) : FieldValue.serverTimestamp(),
       'updatedAt': updatedAt != null ? Timestamp.fromDate(updatedAt!) : FieldValue.serverTimestamp(),
+      'status': status,
+      'debtorNotes': debtorNotes,
     };
   }
 
@@ -128,6 +143,8 @@ class Client {
     String? vetPracticeType,
     DateTime? createdAt,
     DateTime? updatedAt,
+    String? status,
+    List<Map<String, dynamic>>? debtorNotes,
   }) {
     return Client(
       id: id,
@@ -146,6 +163,8 @@ class Client {
       vetPracticeType: vetPracticeType ?? this.vetPracticeType,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
+      status: status ?? this.status,
+      debtorNotes: debtorNotes ?? this.debtorNotes,
     );
   }
 }

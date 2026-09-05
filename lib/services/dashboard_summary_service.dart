@@ -18,6 +18,9 @@ class DashboardPeriodTotals {
   // a service automatically records an expense transaction - don't add
   // service expenses again separately)
   final int completedServicesCount; // services performed in the period
+  final double totalServiceRevenue; // service revenue in the period, on
+  // the same revenue-recognition basis as totalSales - separate from
+  // totalEarnings/totalProfit above, which already fold this in
 
   const DashboardPeriodTotals({
     required this.totalSales,
@@ -25,6 +28,7 @@ class DashboardPeriodTotals {
     required this.totalProfit,
     required this.totalExpenses,
     required this.completedServicesCount,
+    required this.totalServiceRevenue,
   });
 
   static const empty = DashboardPeriodTotals(
@@ -33,6 +37,7 @@ class DashboardPeriodTotals {
     totalProfit: 0,
     totalExpenses: 0,
     completedServicesCount: 0,
+    totalServiceRevenue: 0,
   );
 }
 
@@ -159,6 +164,7 @@ class DashboardSummaryService {
           (txTotals['totalProfit'] ?? 0.0);
       final totalExpenses = txTotals['totalExpense'] ?? 0.0;
       final completedServicesCount = (serviceTotals['serviceCount'] ?? 0.0).toInt();
+      final totalServiceRevenue = serviceTotals['totalAmount'] ?? 0.0;
 
       controller.add(DashboardPeriodTotals(
         totalSales: totalSales,
@@ -166,6 +172,7 @@ class DashboardSummaryService {
         totalProfit: totalProfit,
         totalExpenses: totalExpenses,
         completedServicesCount: completedServicesCount,
+        totalServiceRevenue: totalServiceRevenue,
       ));
     }
 
@@ -284,6 +291,7 @@ class DashboardSummaryService {
         (txTotals['totalProfit'] ?? 0.0);
     final totalExpenses = txTotals['totalExpense'] ?? 0.0;
     final completedServicesCount = (serviceTotals['serviceCount'] ?? 0.0).toInt();
+    final totalServiceRevenue = serviceTotals['totalAmount'] ?? 0.0;
 
     return DashboardPeriodTotals(
       totalSales: totalSales,
@@ -291,6 +299,7 @@ class DashboardSummaryService {
       totalProfit: totalProfit,
       totalExpenses: totalExpenses,
       completedServicesCount: completedServicesCount,
+      totalServiceRevenue: totalServiceRevenue,
     );
   }
 }

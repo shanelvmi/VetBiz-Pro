@@ -12,6 +12,7 @@ import '../../providers/facility_provider.dart';
 import '../../providers/subscription_provider.dart';
 import '../../constants/subscription_plans.dart';
 import '../../models/promotion.dart';
+import 'subscription_history_screen.dart';
 
 class SubscriptionScreen extends StatefulWidget {
   final bool isModal;
@@ -413,7 +414,7 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
               OutlinedButton.icon(
                 onPressed: _pickProofImage,
                 icon: const Icon(Icons.upload_file),
-                label: Text(_proofBytes == null ? 'Attach Proof (optional)' : 'Proof attached ✓'),
+                label: Text(_proofBytes == null ? 'Attach Proof (optional)' : 'Proof attached'),
                 style: OutlinedButton.styleFrom(foregroundColor: primaryColor),
               ),
 
@@ -515,22 +516,53 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
   }
 }
 
+Color submissionStatusColor(String status) {
+  switch (status) {
+    case 'approved':
+      return Colors.green;
+    case 'rejected':
+      return Colors.redAccent;
+    default:
+      return Colors.orange;
+  }
+}
+
+Widget buildSubmissionCard(Map<String, dynamic> data) {
+  final status = (data['status'] as String?) ?? 'pending';
+  final submittedAt =
+      data['submittedAt'] is Timestamp ? (data['submittedAt'] as Timestamp).toDate() : null;
+  return Card(
+    margin: const EdgeInsets.only(bottom: 6),
+    child: ListTile(
+      dense: true,
+      title: Text('${data['planLabel'] ?? ''} - Tsh ${data['amount'] ?? 0}'),
+      subtitle: Text(
+        '${data['method'] ?? ''}'
+        '${submittedAt != null ? ' - ${DateFormat('dd MMM yyyy, HH:mm').format(submittedAt)}' : ''}',
+        style: const TextStyle(fontSize: 12),
+      ),
+      trailing: Chip(
+        label: Text(status[0].toUpperCase() + status.substring(1),
+            style: const TextStyle(fontSize: 11, color: Colors.white)),
+        backgroundColor: submissionStatusColor(status),
+        padding: EdgeInsets.zero,
+        materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+      ),
+    ),
+  );
+}
+
 class _SubmissionHistory extends StatelessWidget {
   final String facilityId;
   final Color primaryColor;
 
   const _SubmissionHistory({required this.facilityId, required this.primaryColor});
 
-  Color _statusColor(String status) {
-    switch (status) {
-      case 'approved':
-        return Colors.green;
-      case 'rejected':
-        return Colors.redAccent;
-      default:
-        return Colors.orange;
-    }
-  }
+  // Genuinely "recent" rather than the previous 10, which was already
+  // most of a full history on its own - the full list is a tap away
+  // via "View all" below, so this section only needs to show a
+  // glance, not double as the history itself.
+  static const int _recentLimit = 5;
 
   @override
   Widget build(BuildContext context) {
@@ -540,7 +572,7 @@ class _SubmissionHistory extends StatelessWidget {
           .doc(facilityId)
           .collection('payment_submissions')
           .orderBy('submittedAt', descending: true)
-          .limit(10)
+          .limit(_recentLimit)
           .snapshots(),
       builder: (context, snapshot) {
         final docs = snapshot.data?.docs ?? [];
@@ -548,32 +580,20 @@ class _SubmissionHistory extends StatelessWidget {
           return Text('No submissions yet.', style: TextStyle(color: Colors.grey[600]));
         }
         return Column(
-          children: docs.map((doc) {
-            final data = doc.data() as Map<String, dynamic>;
-            final status = (data['status'] as String?) ?? 'pending';
-            final submittedAt = data['submittedAt'] is Timestamp
-                ? (data['submittedAt'] as Timestamp).toDate()
-                : null;
-            return Card(
-              margin: const EdgeInsets.only(bottom: 6),
-              child: ListTile(
-                dense: true,
-                title: Text('${data['planLabel'] ?? ''} - Tsh ${data['amount'] ?? 0}'),
-                subtitle: Text(
-                  '${data['method'] ?? ''}'
-                  '${submittedAt != null ? ' • ${DateFormat('dd MMM yyyy, HH:mm').format(submittedAt)}' : ''}',
-                  style: const TextStyle(fontSize: 12),
-                ),
-                trailing: Chip(
-                  label: Text(status[0].toUpperCase() + status.substring(1),
-                      style: const TextStyle(fontSize: 11, color: Colors.white)),
-                  backgroundColor: _statusColor(status),
-                  padding: EdgeInsets.zero,
-                  materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            ...docs.map((doc) => buildSubmissionCard(doc.data() as Map<String, dynamic>)),
+            TextButton(
+              onPressed: () => Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => SubscriptionHistoryScreen(facilityId: facilityId, primaryColor: primaryColor),
                 ),
               ),
-            );
-          }).toList(),
+              style: TextButton.styleFrom(padding: EdgeInsets.zero, minimumSize: Size.zero, foregroundColor: primaryColor),
+              child: const Text('View all'),
+            ),
+          ],
         );
       },
     );

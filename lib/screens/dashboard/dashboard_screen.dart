@@ -18,8 +18,12 @@ import '../../providers/debt_provider.dart';
 import '../../services/auth_service.dart';
 import '../../services/session_validity_service.dart';
 import '../../services/dashboard_summary_service.dart';
+import '../../services/sales_summary_service.dart';
+import 'package:fl_chart/fl_chart.dart';
+import '../../utils/text_sanitizer.dart';
 
 import '../../widgets/summary_card.dart';
+import '../../widgets/initials_avatar.dart';
 
 import '../products/products_screen.dart';
 import '../clients/clients_screen.dart';
@@ -74,27 +78,32 @@ class _DrawerHoverItemState extends State<DrawerHoverItem> {
   Widget build(BuildContext context) {
     final row = LayoutBuilder(
       builder: (context, constraints) {
-        // Icon (~24px) + its own horizontal padding (12-16px each
-        // side) + the label's SizedBox(16) leaves roughly this much
-        // as the real floor before a label can fit at all - below it,
-        // show icon-only regardless of what isCollapsed intends,
-        // since the container itself hasn't animated wide enough yet
-        // to actually hold it.
-        final canShowLabel = !widget.isCollapsed && constraints.maxWidth > 100;
+        // Ramps from fully transparent to fully opaque over the same
+        // width range the sidebar itself passes through mid-animation -
+        // constraints.maxWidth updates every frame as the parent
+        // AnimatedContainer's width transitions, so this fade is
+        // genuinely synchronized with that motion rather than the
+        // label instantly popping in/out the moment isCollapsed flips,
+        // which is what made the toggle feel abrupt.
+        final labelOpacity = ((constraints.maxWidth - 100) / 60).clamp(0.0, 1.0);
+        final canShowLabel = labelOpacity > 0.01;
         return Row(
-          mainAxisAlignment: widget.isCollapsed ? MainAxisAlignment.center : MainAxisAlignment.start,
+          mainAxisAlignment: canShowLabel ? MainAxisAlignment.start : MainAxisAlignment.center,
           children: [
             Icon(widget.icon, color: offWhite),
             if (canShowLabel) ...[
               const SizedBox(width: 16),
               Expanded(
-                child: Text(
-                  widget.title,
-                  style: TextStyle(
-                    color: offWhite,
-                    fontWeight: FontWeight.w500,
+                child: Opacity(
+                  opacity: labelOpacity,
+                  child: Text(
+                    widget.title,
+                    style: TextStyle(
+                      color: offWhite,
+                      fontWeight: FontWeight.w500,
+                    ),
+                    overflow: TextOverflow.ellipsis,
                   ),
-                  overflow: TextOverflow.ellipsis,
                 ),
               ),
             ],
@@ -201,6 +210,20 @@ class _BlinkingDotState extends State<_BlinkingDot> with SingleTickerProviderSta
 /// amber-on-hover convention used throughout the app) - a background
 /// fill wouldn't read well on a circular avatar the way it does on a
 /// button, so this uses a border instead.
+class _DashboardSearchResult {
+  final String title;
+  final String subtitle;
+  final IconData icon;
+  final VoidCallback onTap;
+
+  _DashboardSearchResult({
+    required this.title,
+    required this.subtitle,
+    required this.icon,
+    required this.onTap,
+  });
+}
+
 class _HoverableProfileIcon extends StatefulWidget {
   final VoidCallback onTap;
   final Widget child;
@@ -225,9 +248,9 @@ class _HoverableProfileIconState extends State<_HoverableProfileIcon> {
         onTap: widget.onTap,
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 150),
-          padding: const EdgeInsets.all(2),
+          padding: const EdgeInsets.all(4),
           decoration: BoxDecoration(
-            shape: BoxShape.circle,
+            borderRadius: BorderRadius.circular(20),
             border: Border.all(
               color: _hovered ? warmAmber : Colors.transparent,
               width: 2,
@@ -542,6 +565,42 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
   String? _lastLoadedFilter;
   StreamSubscription<DashboardPeriodTotals>? _periodTotalsSub;
 
+  // The immediately-preceding equivalent period's totals, for the
+  // dashboard's trend indicators - a one-time fetch, not a live stream,
+  // since a completed past period doesn't need to keep updating the
+  // way the current, still-in-progress one does.
+  DashboardPeriodTotals _previousPeriodTotals = DashboardPeriodTotals.empty;
+  bool _isPreviousPeriodLoading = false;
+
+  // "Today at a Glance" strip - always today specifically, regardless
+  // of whatever selectedFilter (Today/This Week/etc.) the main metric
+  // cards above are currently showing.
+  int? _glanceSaleCount;
+  int? _glanceServiceCount;
+  double? _glanceCollected;
+  bool _isGlanceLoading = false;
+  int _glanceRequestId = 0;
+
+  // Sales & Revenue chart - its own period selector, independent of
+  // the metric cards' selectedFilter above. Daily granularity only;
+  // "This Year" isn't offered since 365 daily points wouldn't render
+  // usefully on a line chart without separate monthly-bucket logic.
+  String _chartPeriod = 'Last 7 days';
+  List<double>? _chartSalesByDay;
+  List<double>? _chartCollectionsByDay;
+  double? _chartPreviousTotal;
+  bool _isChartLoading = false;
+  int _chartRequestId = 0;
+
+  // The point-in-time balances (product value, outstanding debt,
+  // client count) from the equivalent point in the preceding period -
+  // read from dailySnapshots, the once-daily record recordDailySnapshots
+  // (functions/index.js) writes for exactly this purpose. Unlike the
+  // flow totals above, these three have no "current vs previous range"
+  // to sum over - they're a single recorded balance on a single day.
+  Map<String, dynamic>? _previousSnapshot;
+  bool _isPreviousSnapshotLoading = false;
+
   /// Turns the selected chip ('Today'/'This Week'/'This Month'/'This Year')
   /// into a concrete (start, end) date range.
   (DateTime, DateTime) _dateRangeForFilter(String filter) {
@@ -561,6 +620,62 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
         return (DateTime(now.year, 1, 1), now);
       default:
         return (today, now);
+    }
+  }
+
+  /// The immediately-preceding equivalent period, for trend
+  /// comparisons - the full prior period (yesterday, last week, last
+  /// calendar month, last calendar year), not a time-of-day-prorated
+  /// slice of it. The underlying daily aggregates this reads from are
+  /// per-day, not per-hour, so there's nothing finer to prorate against
+  /// anyway - this is also how most business dashboards handle "today
+  /// vs yesterday": today's still-in-progress total against
+  /// yesterday's complete one, not an artificially truncated
+  /// yesterday.
+  /// The label shown alongside each KPI's trend indicator - what it's
+  /// actually being compared against, since a bare percentage on its
+  /// own doesn't say what period it's relative to.
+  String _comparisonLabelForFilter(String filter) {
+    switch (filter) {
+      case 'Today':
+        return 'vs Yesterday';
+      case 'This Week':
+        return 'vs Last Week';
+      case 'This Month':
+        return 'vs Last Month';
+      case 'This Year':
+        return 'vs Last Year';
+      default:
+        return 'vs Yesterday';
+    }
+  }
+
+  (DateTime, DateTime) _previousPeriodRangeForFilter(String filter) {
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+
+    switch (filter) {
+      case 'Today':
+        final yesterday = today.subtract(const Duration(days: 1));
+        return (yesterday, yesterday);
+      case 'This Week':
+        final startOfThisWeek = today.subtract(Duration(days: now.weekday - 1));
+        final startOfLastWeek = startOfThisWeek.subtract(const Duration(days: 7));
+        final endOfLastWeek = startOfThisWeek.subtract(const Duration(days: 1));
+        return (startOfLastWeek, endOfLastWeek);
+      case 'This Month':
+        final firstOfThisMonth = DateTime(now.year, now.month, 1);
+        // DateTime normalizes month: 0 to December of the previous
+        // year on its own, so January correctly rolls back into last
+        // December here without special-casing it.
+        final firstOfLastMonth = DateTime(now.year, now.month - 1, 1);
+        final lastDayOfLastMonth = firstOfThisMonth.subtract(const Duration(days: 1));
+        return (firstOfLastMonth, lastDayOfLastMonth);
+      case 'This Year':
+        return (DateTime(now.year - 1, 1, 1), DateTime(now.year - 1, 12, 31));
+      default:
+        final yesterday = today.subtract(const Duration(days: 1));
+        return (yesterday, yesterday);
     }
   }
 
@@ -586,6 +701,175 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
       debugPrint('Error watching dashboard period totals: $e');
       if (mounted) {
         setState(() => _isPeriodLoading = false);
+      }
+    });
+  }
+
+  int _previousPeriodRequestId = 0;
+
+  void _loadPreviousPeriodTotals(String facilityId) {
+    setState(() => _isPreviousPeriodLoading = true);
+
+    final (start, end) = _previousPeriodRangeForFilter(selectedFilter);
+    final requestId = ++_previousPeriodRequestId;
+
+    _dashboardSummaryService
+        .getDashboardTotals(facilityId: facilityId, start: start, end: end)
+        .then((totals) {
+      // Discard if a newer facility/filter selection has already
+      // superseded this request - a Future (unlike the live stream
+      // above) can't be cancelled outright, so this guards against a
+      // slow, stale fetch overwriting a newer one's result.
+      if (requestId != _previousPeriodRequestId) return;
+      if (mounted) {
+        setState(() {
+          _previousPeriodTotals = totals;
+          _isPreviousPeriodLoading = false;
+        });
+      }
+    }).catchError((e) {
+      debugPrint('Error fetching previous period totals: $e');
+      if (requestId != _previousPeriodRequestId) return;
+      if (mounted) {
+        setState(() => _isPreviousPeriodLoading = false);
+      }
+    });
+  }
+
+  void _loadTodayGlance(String facilityId) {
+    setState(() => _isGlanceLoading = true);
+
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    final requestId = ++_glanceRequestId;
+
+    Future.wait([
+      SalesSummaryService().getRangeTotals(facilityId: facilityId, start: today, end: today),
+      SalesSummaryService().getTotalCollected(facilityId: facilityId, start: today, end: today),
+      _dashboardSummaryService.getDashboardTotals(facilityId: facilityId, start: today, end: today),
+    ]).then((results) {
+      // Discard if a newer facility selection has already superseded
+      // this request - same reasoning as _loadPreviousPeriodTotals.
+      if (requestId != _glanceRequestId) return;
+      if (!mounted) return;
+
+      final salesTotals = results[0] as Map<String, double>;
+      final collected = results[1] as double;
+      final dashboardTotals = results[2] as DashboardPeriodTotals;
+
+      setState(() {
+        _glanceSaleCount = (salesTotals['saleCount'] ?? 0).toInt();
+        _glanceCollected = collected;
+        _glanceServiceCount = dashboardTotals.completedServicesCount;
+        _isGlanceLoading = false;
+      });
+    }).catchError((e) {
+      debugPrint('Error loading today-at-a-glance totals: $e');
+      if (requestId != _glanceRequestId) return;
+      if (mounted) {
+        setState(() => _isGlanceLoading = false);
+      }
+    });
+  }
+
+  (DateTime, DateTime, int) _chartDateRange() {
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    final days = _chartPeriod == 'Last 30 days' ? 30 : 7;
+    return (today.subtract(Duration(days: days - 1)), today, days);
+  }
+
+  void _loadChartData(String facilityId) {
+    setState(() => _isChartLoading = true);
+
+    final (start, end, days) = _chartDateRange();
+    final requestId = ++_chartRequestId;
+    final salesService = SalesSummaryService();
+
+    final previousEnd = start.subtract(const Duration(days: 1));
+    final previousStart = previousEnd.subtract(Duration(days: days - 1));
+
+    Future.wait([
+      salesService.getDailySummaries(facilityId: facilityId, start: start, end: end),
+      salesService.getDailyCollections(facilityId: facilityId, start: start, end: end),
+      salesService.getRangeTotals(facilityId: facilityId, start: previousStart, end: previousEnd),
+    ]).then((results) {
+      if (requestId != _chartRequestId) return;
+      if (!mounted) return;
+
+      final dailySales = results[0] as List<DailySalesSummary>;
+      final dailyCollections = results[1] as List<DailyCollection>;
+      final previousTotals = results[2] as Map<String, double>;
+
+      final salesByDate = {for (final s in dailySales) s.date: s.totalAmount};
+      final collectedByDate = {for (final c in dailyCollections) c.date: c.totalCollected};
+
+      String fmt(DateTime d) =>
+          '${d.year.toString().padLeft(4, '0')}-${d.month.toString().padLeft(2, '0')}-${d.day.toString().padLeft(2, '0')}';
+
+      // Every day in the range gets a point, 0 if nothing happened
+      // that day - otherwise a quiet day would just be missing from
+      // the chart entirely rather than showing as a dip to zero.
+      final salesByDay = <double>[];
+      final collectionsByDay = <double>[];
+      for (int i = 0; i < days; i++) {
+        final day = fmt(start.add(Duration(days: i)));
+        salesByDay.add(salesByDate[day] ?? 0.0);
+        collectionsByDay.add(collectedByDate[day] ?? 0.0);
+      }
+
+      setState(() {
+        _chartSalesByDay = salesByDay;
+        _chartCollectionsByDay = collectionsByDay;
+        _chartPreviousTotal = previousTotals['totalAmount'];
+        _isChartLoading = false;
+      });
+    }).catchError((e) {
+      debugPrint('Error loading chart data: $e');
+      if (requestId != _chartRequestId) return;
+      if (mounted) {
+        setState(() => _isChartLoading = false);
+      }
+    });
+  }
+
+  int _previousSnapshotRequestId = 0;
+
+  void _loadPreviousSnapshot(String facilityId) {
+    setState(() => _isPreviousSnapshotLoading = true);
+
+    // The previous period's own end date - the most recent point
+    // within that period, matching "what was the balance at the
+    // equivalent point last period" (e.g. "This Month" compares
+    // against the balance on the same day-of-month last month, not
+    // the 1st of last month).
+    final (_, end) = _previousPeriodRangeForFilter(selectedFilter);
+    final dateKey =
+        '${end.year.toString().padLeft(4, '0')}-${end.month.toString().padLeft(2, '0')}-${end.day.toString().padLeft(2, '0')}';
+    final requestId = ++_previousSnapshotRequestId;
+
+    FirebaseFirestore.instance
+        .collection('facilities')
+        .doc(facilityId)
+        .collection('dailySnapshots')
+        .doc(dateKey)
+        .get()
+        .then((doc) {
+      if (requestId != _previousSnapshotRequestId) return;
+      if (mounted) {
+        setState(() {
+          _previousSnapshot = doc.data();
+          _isPreviousSnapshotLoading = false;
+        });
+      }
+    }).catchError((e) {
+      debugPrint('Error fetching previous daily snapshot: $e');
+      if (requestId != _previousSnapshotRequestId) return;
+      if (mounted) {
+        setState(() {
+          _previousSnapshot = null;
+          _isPreviousSnapshotLoading = false;
+        });
       }
     });
   }
@@ -707,7 +991,6 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
 
     // Facility is loaded, we can safely access its fields
     final facilityName = selectedFacility['name'] ?? 'Facility';
-    final facilityType = selectedFacility['type'] as String? ?? '';
     final currentFacilityId = selectedFacility['id'] as String?;
 
     // Kick off a period-totals fetch whenever the facility or the
@@ -719,6 +1002,10 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
       _lastLoadedFilter = selectedFilter;
       WidgetsBinding.instance.addPostFrameCallback((_) {
         _loadPeriodTotals(currentFacilityId);
+        _loadPreviousPeriodTotals(currentFacilityId);
+        _loadPreviousSnapshot(currentFacilityId);
+        _loadTodayGlance(currentFacilityId);
+        _loadChartData(currentFacilityId);
       });
     }
 
@@ -733,6 +1020,14 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
       (sum, p) => sum + (p.sellPrice * p.stockQty),
     );
 
+    // Distinct debtors with an outstanding balance - same grouping
+    // logic as the Debtors screen's own "Total Debtors" count.
+    final Map<String, double> owedByClient = {};
+    for (final debt in debtProvider.debts) {
+      owedByClient[debt.clientId] = (owedByClient[debt.clientId] ?? 0) + debt.amountOwed;
+    }
+    final glanceDebtorCount = owedByClient.values.where((v) => v > 0).length;
+
     final formatter = NumberFormat.decimalPattern();
 
     return LayoutBuilder(
@@ -741,115 +1036,64 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
 
         return Scaffold(
           backgroundColor: offWhite,
-          appBar: AppBar(
-            backgroundColor: primaryDeepGreen,
-            elevation: 4,
-            centerTitle: true,
-            iconTheme: IconThemeData(color: offWhite),
-            leadingWidth: isLargeScreen ? 300 : null,
+          appBar: isLargeScreen ? null : AppBar(
+            backgroundColor: Colors.white,
+            elevation: 1,
+            centerTitle: false,
+            iconTheme: const IconThemeData(color: Colors.black87),
             leading: isLargeScreen
-                ? Stack(
-                    children: [
-                      Row(
-                    children: [
-                      const SizedBox(width: 8),
-                      _buildAlertsBell(context),
-                      Padding(
-                    padding: const EdgeInsets.only(left: 4),
-                    child: StreamBuilder(
-                      stream: Stream.periodic(const Duration(seconds: 1)),
-                      builder: (context, snapshot) {
-                        final now = DateTime.now();
-                        final formattedDate =
-                            DateFormat('EEE, MMM d, yyyy').format(now);
-                        final formattedTime =
-                            DateFormat('HH:mm:ss').format(now);
-
-                        return Center(
-                          child: FittedBox(
-                            fit: BoxFit.scaleDown,
-                            child: Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Text(
-                                formattedTime,
-                                style: TextStyle(
-                                    fontSize: 13,
-                                    fontWeight: FontWeight.bold,
-                                    color: offWhite),
-                              ),
-                              const SizedBox(height: 2),
-                              Text(
-                                formattedDate,
-                                style: TextStyle(fontSize: 12, color: offWhite),
-                              ),
-                            ],
-                            ),
-                          ),
-                        );
-                      },
-                    ),
-                  ),
-                        ],
-                      ),
-                      // Positioned independently of the Row above,
-                      // right at the drawer's own expanded width
-                      // (250px) - previously sat wherever Spacer()
-                      // pushed it within this whole 300px leading
-                      // area, well past the drawer's actual right
-                      // edge. This keeps it visually anchored to the
-                      // drawer's boundary regardless of how wide the
-                      // bell+clock content next to it happens to be.
-                      Positioned(
-                        left: 220,
-                        top: 0,
-                        bottom: 0,
-                        child: Center(
-                          child: IconButton(
-                            constraints: const BoxConstraints(),
-                            padding: const EdgeInsets.all(6),
-                            icon: Icon(
-                              _isDrawerCollapsed ? Icons.menu_open : Icons.menu,
-                              color: offWhite,
-                              size: 20,
-                            ),
-                            tooltip: _isDrawerCollapsed ? 'Expand menu' : 'Collapse menu',
-                            onPressed: _toggleDrawerCollapsed,
-                          ),
-                        ),
-                      ),
-                    ],
+                ? IconButton(
+                    icon: Icon(_isDrawerCollapsed ? Icons.menu_open : Icons.menu, color: Colors.black87, size: 22),
+                    tooltip: _isDrawerCollapsed ? 'Expand menu' : 'Collapse menu',
+                    onPressed: _toggleDrawerCollapsed,
                   )
                 : null,
-            title: StreamBuilder<DocumentSnapshot>(
-              stream: userDoc.snapshots(),
-              builder: (context, snapshot) {
-                final rawData = snapshot.data?.data();
-                final Map<String, dynamic> data = (rawData != null && rawData is Map)
-                    ? Map<String, dynamic>.from(rawData)
-                    : {};
-                final fullName = data['fullName'] ?? '';
-
-                return Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Text(
-                      facilityType.isNotEmpty && facilityType != 'Other'
-                          ? '$facilityName $facilityType Dashboard'
-                          : '$facilityName Dashboard',
-                      style: TextStyle(color: offWhite),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      '${greetingTime()}, $fullName',
-                      style: TextStyle(fontSize: 10, color: offWhite),
-                    ),
-                  ],
-                );
-              },
-            ),
+            title: null,
             actions: [
-              if (!isLargeScreen) _buildAlertsBell(context),
+              // Visual only for now - there's no global search feature
+              // built yet, so this doesn't actually search anything.
+              if (isLargeScreen)
+                Container(
+                  width: 260,
+                  height: 38,
+                  margin: const EdgeInsets.only(right: 12),
+                  padding: const EdgeInsets.symmetric(horizontal: 12),
+                  decoration: BoxDecoration(
+                    color: offWhite,
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: Colors.grey.withValues(alpha: 0.25)),
+                  ),
+                  child: Row(
+                    children: [
+                      Icon(Icons.search, size: 18, color: Colors.grey[500]),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text('Search anything...',
+                            style: TextStyle(fontSize: 13, color: Colors.grey[500])),
+                      ),
+                      Text('Ctrl+K', style: TextStyle(fontSize: 11, color: Colors.grey[400])),
+                    ],
+                  ),
+                ),
+              _buildAlertsBell(context),
+              // No help/support screen exists yet - shows a lightweight
+              // dialog with app info rather than linking to a page that
+              // doesn't exist.
+              IconButton(
+                icon: const Icon(Icons.help_outline, color: Colors.black87, size: 22),
+                tooltip: 'Help',
+                onPressed: () => showDialog(
+                  context: context,
+                  builder: (ctx) => AlertDialog(
+                    title: const Text('VetBiz Pro'),
+                    content: const Text('For help or support, please reach out to your account administrator.'),
+                    actions: [
+                      TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Close')),
+                    ],
+                  ),
+                ),
+              ),
+              const SizedBox(width: 4),
               Padding(
                 padding: const EdgeInsets.only(right: 12),
                 child: Builder(
@@ -864,18 +1108,36 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
                                 ? Map<String, dynamic>.from(rawData)
                                 : {};
                         final avatarUrl = data['avatarUrl'] as String?;
+                        final fullNameForAvatar = data['fullName'] ?? '';
 
-                        return CircleAvatar(
-                          radius: 16,
-                          backgroundImage: (_profileBytes != null)
-                              ? MemoryImage(_profileBytes!)
-                              : (avatarUrl != null && avatarUrl.isNotEmpty)
-                                  ? NetworkImage(avatarUrl)
-                                  : null,
-                          child: (_profileBytes == null &&
-                                  (avatarUrl == null || avatarUrl.isEmpty))
-                              ? const Icon(Icons.person)
-                              : null,
+                        final avatar = _profileBytes != null
+                            ? CircleAvatar(radius: 16, backgroundImage: MemoryImage(_profileBytes!))
+                            : InitialsAvatar(
+                                avatarUrl: avatarUrl,
+                                name: fullNameForAvatar,
+                                size: 32,
+                                backgroundColor: primaryDeepGreen.withValues(alpha: 0.12),
+                                foregroundColor: primaryDeepGreen,
+                              );
+
+                        if (!isLargeScreen) return avatar;
+
+                        return Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            avatar,
+                            const SizedBox(width: 8),
+                            ConstrainedBox(
+                              constraints: const BoxConstraints(maxWidth: 110),
+                              child: Text(
+                                fullNameForAvatar.isNotEmpty ? fullNameForAvatar : 'Account',
+                                style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: Colors.black87),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                            const Icon(Icons.keyboard_arrow_down, size: 18, color: Colors.black54),
+                          ],
                         );
                       },
                     ),
@@ -897,97 +1159,110 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
                       children: [
                         if (isLargeScreen) _buildDrawerContent(),
                         Expanded(
-                          child: Container(
-                            color: offWhite,
-                            child: Padding(
-                            padding: const EdgeInsets.all(16),
-                            child: Column(
-                              children: [
-                                if (isLargeScreen)
-                                  Row(
+                          child: Column(
+                            children: [
+                              if (isLargeScreen) _buildTopBar(context),
+                              Expanded(
+                                child: Container(
+                                  color: offWhite,
+                                  child: Padding(
+                                  padding: const EdgeInsets.all(16),
+                                  child: SingleChildScrollView(
+                                    child: Column(
                                     children: [
-                                      Expanded(
-                                    child: Center(
-                                      child: Wrap(
-                                        spacing: 8,
-                                        children: ['Today', 'This Week', 'This Month', 'This Year']
-                                            .map((filter) => ChoiceChip(
-                                                  label: Text(filter),
-                                                  selected: selectedFilter == filter,
-                                                  onSelected: (val) {
-                                                    setState(() {
-                                                      selectedFilter = filter;
-                                                    });
-                                                  },
-                                                  selectedColor: warmAmber,
-                                                ))
-                                            .toList(),
-                                      ),
-                                    ),
-                                  ),
-                                  OutlinedButton.icon(
-                                    onPressed: () => showInsightsScreen(context),
-                                    icon: Icon(Icons.insights, color: primaryDeepGreen),
-                                    label: Text('Insights', style: TextStyle(color: primaryDeepGreen)),
-                                    style: OutlinedButton.styleFrom(side: BorderSide(color: primaryDeepGreen)),
-                                  ),
-                                ],
-                              )
-                            else ...[
-                              Wrap(
-                                spacing: 8,
-                                children: ['Today', 'This Week', 'This Month', 'This Year']
-                                    .map((filter) => ChoiceChip(
-                                          label: Text(filter),
-                                          selected: selectedFilter == filter,
-                                          onSelected: (val) {
-                                            setState(() {
-                                              selectedFilter = filter;
-                                            });
-                                          },
-                                          selectedColor: warmAmber,
-                                        ))
-                                    .toList(),
-                              ),
-                              const SizedBox(height: 12),
-                              Align(
-                                alignment: Alignment.centerRight,
-                                child: OutlinedButton.icon(
-                                  onPressed: () => showInsightsScreen(context),
-                                  icon: Icon(Icons.insights, color: primaryDeepGreen),
-                                  label: Text('Insights', style: TextStyle(color: primaryDeepGreen)),
-                                  style: OutlinedButton.styleFrom(side: BorderSide(color: primaryDeepGreen)),
-                                ),
-                              ),
-                            ],
-                            const SizedBox(height: 16),
-                            Expanded(
-                              child: LayoutBuilder(
-                                builder: (context, gridConstraints) {
-                                  final gridWidth = gridConstraints.maxWidth;
-                                  // More columns on wide screens; a taller
-                                  // (lower) aspect ratio on narrow ones so
-                                  // card content has room to breathe -
-                                  // SummaryCard itself also self-scales,
-                                  // this just picks a sensible starting
-                                  // shape per screen size.
-                                  final crossAxisCount = gridWidth > 1200
-                                      ? 4
-                                      : gridWidth > 700
-                                          ? 3
-                                          : 2;
-                                  final childAspectRatio = gridWidth > 1200
-                                      ? 1.5
-                                      : gridWidth > 400
-                                          ? 1.3
-                                          : 1.05;
+                                      StreamBuilder<DocumentSnapshot>(
+                                  stream: userDoc.snapshots(),
+                                  builder: (context, snapshot) {
+                                    final rawData = snapshot.data?.data();
+                                    final Map<String, dynamic> data = (rawData != null && rawData is Map)
+                                        ? Map<String, dynamic>.from(rawData)
+                                        : {};
+                                    final fullName = data['fullName'] ?? '';
 
-                                  return GridView.count(
-                                    crossAxisCount: crossAxisCount,
-                                    childAspectRatio: childAspectRatio,
-                                    crossAxisSpacing: 12,
-                                    mainAxisSpacing: 12,
-                                    children: [
+                                    final greetingColumn = Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        Text('${greetingTime()}, $fullName',
+                                            style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.black87)),
+                                        const SizedBox(height: 2),
+                                        Text("Here's how $facilityName is doing today.",
+                                            style: TextStyle(fontSize: 13, color: Colors.grey[600])),
+                                      ],
+                                    );
+
+                                    final dateTimeRow = StreamBuilder(
+                                      stream: Stream.periodic(const Duration(seconds: 1)),
+                                      builder: (context, _) {
+                                        final now = DateTime.now();
+                                        return Row(
+                                          mainAxisSize: MainAxisSize.min,
+                                          children: [
+                                            PopupMenuButton<String>(
+                                              tooltip: 'Change period',
+                                              onSelected: (val) => setState(() => selectedFilter = val),
+                                              itemBuilder: (context) => ['Today', 'This Week', 'This Month', 'This Year']
+                                                  .map((f) => PopupMenuItem(value: f, child: Text(f)))
+                                                  .toList(),
+                                              child: Row(
+                                                mainAxisSize: MainAxisSize.min,
+                                                children: [
+                                                  Icon(Icons.calendar_today_outlined, size: 14, color: Colors.grey[500]),
+                                                  const SizedBox(width: 6),
+                                                  Text(
+                                                    selectedFilter == 'Today'
+                                                        ? DateFormat('EEE, dd MMM yyyy').format(now)
+                                                        : selectedFilter,
+                                                    style: TextStyle(fontSize: 12.5, color: Colors.grey[600]),
+                                                  ),
+                                                  const SizedBox(width: 2),
+                                                  Icon(Icons.arrow_drop_down, size: 16, color: Colors.grey[500]),
+                                                ],
+                                              ),
+                                            ),
+                                            const SizedBox(width: 14),
+                                            Icon(Icons.access_time, size: 14, color: Colors.grey[500]),
+                                            const SizedBox(width: 6),
+                                            Text(DateFormat('hh:mm a').format(now),
+                                                style: TextStyle(fontSize: 12.5, color: Colors.grey[600])),
+                                          ],
+                                        );
+                                      },
+                                    );
+
+                                    if (isLargeScreen) {
+                                      return Row(
+                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                        children: [greetingColumn, dateTimeRow],
+                                      );
+                                    }
+                                    return Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        greetingColumn,
+                                        const SizedBox(height: 8),
+                                        dateTimeRow,
+                                      ],
+                                    );
+                                  },
+                                ),
+                                const SizedBox(height: 16),
+                            LayoutBuilder(
+                              builder: (context, gridConstraints) {
+                                final gridWidth = gridConstraints.maxWidth;
+                                // More columns on wide screens - each
+                                // card gets a fixed height (mainAxisExtent
+                                // below) regardless of width, since
+                                // SummaryCard's content needs a
+                                // consistent minimum height to avoid
+                                // overflowing.
+                                final crossAxisCount = gridWidth > 1200
+                                    ? 4
+                                    : gridWidth > 700
+                                        ? 3
+                                        : 2;
+                                final cards = [
                                       SummaryCard(
                                         title: 'Total Product Value',
                                         value: 'Tsh ${formatter.format(productProvider.totalProductValue)}',
@@ -995,6 +1270,15 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
                                         color: primaryDeepGreen,
                                         shadow: true,
                                         subtitle: 'as of now',
+                                        trend: KpiTrend(
+                                          currentValue: productProvider.totalProductValue,
+                                          previousValue:
+                                              (_previousSnapshot?['totalProductValue'] as num?)?.toDouble() ?? 0,
+                                          higherIsBetter: true,
+                                          comparisonLabel: _comparisonLabelForFilter(selectedFilter),
+                                          formatChange: (v) => 'Tsh ${formatter.format(v)}',
+                                          isLoading: _isPreviousSnapshotLoading,
+                                        ),
                                       ),
                                       SummaryCard(
                                         title: 'Total Sales ($selectedFilter)',
@@ -1003,6 +1287,14 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
                                         color: warmAmber,
                                         shadow: true,
                                         isLoading: _isPeriodLoading,
+                                        trend: KpiTrend(
+                                          currentValue: _periodTotals.totalSales,
+                                          previousValue: _previousPeriodTotals.totalSales,
+                                          higherIsBetter: true,
+                                          comparisonLabel: _comparisonLabelForFilter(selectedFilter),
+                                          formatChange: (v) => 'Tsh ${formatter.format(v)}',
+                                          isLoading: _isPreviousPeriodLoading,
+                                        ),
                                       ),
                                       SummaryCard(
                                         title: 'Total Earnings ($selectedFilter)',
@@ -1011,6 +1303,14 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
                                         color: primaryDeepGreen,
                                         shadow: true,
                                         isLoading: _isPeriodLoading,
+                                        trend: KpiTrend(
+                                          currentValue: _periodTotals.totalEarnings,
+                                          previousValue: _previousPeriodTotals.totalEarnings,
+                                          higherIsBetter: true,
+                                          comparisonLabel: _comparisonLabelForFilter(selectedFilter),
+                                          formatChange: (v) => 'Tsh ${formatter.format(v)}',
+                                          isLoading: _isPreviousPeriodLoading,
+                                        ),
                                       ),
                                       SummaryCard(
                                         title: 'Total Profit ($selectedFilter)',
@@ -1021,6 +1321,21 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
                                         color: primaryDeepGreen,
                                         shadow: true,
                                         isLoading: _isPeriodLoading,
+                                        // Hidden entirely for non-admins, same
+                                        // as the value itself - a trend arrow
+                                        // would still leak directional profit
+                                        // information even with the figure
+                                        // masked.
+                                        trend: Provider.of<UserRoleProvider>(context).isAdmin
+                                            ? KpiTrend(
+                                                currentValue: _periodTotals.totalProfit,
+                                                previousValue: _previousPeriodTotals.totalProfit,
+                                                higherIsBetter: true,
+                                                comparisonLabel: _comparisonLabelForFilter(selectedFilter),
+                                                formatChange: (v) => 'Tsh ${formatter.format(v)}',
+                                                isLoading: _isPreviousPeriodLoading,
+                                              )
+                                            : null,
                                       ),
                                       SummaryCard(
                                         title: 'Total Expenses ($selectedFilter)',
@@ -1029,6 +1344,17 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
                                         color: Colors.red,
                                         shadow: true,
                                         isLoading: _isPeriodLoading,
+                                        trend: KpiTrend(
+                                          currentValue: _periodTotals.totalExpenses,
+                                          previousValue: _previousPeriodTotals.totalExpenses,
+                                          // Rising expenses is the bad
+                                          // outcome here, even though the
+                                          // number itself went up.
+                                          higherIsBetter: false,
+                                          comparisonLabel: _comparisonLabelForFilter(selectedFilter),
+                                          formatChange: (v) => 'Tsh ${formatter.format(v)}',
+                                          isLoading: _isPreviousPeriodLoading,
+                                        ),
                                       ),
                                       SummaryCard(
                                         title: 'Outstanding Payment',
@@ -1037,6 +1363,17 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
                                         color: warmAmber,
                                         shadow: true,
                                         subtitle: 'as of now',
+                                        trend: KpiTrend(
+                                          currentValue: debtProvider.totalOutstanding(),
+                                          previousValue:
+                                              (_previousSnapshot?['totalOutstanding'] as num?)?.toDouble() ?? 0,
+                                          // Rising debt owed is the bad
+                                          // outcome here too.
+                                          higherIsBetter: false,
+                                          comparisonLabel: _comparisonLabelForFilter(selectedFilter),
+                                          formatChange: (v) => 'Tsh ${formatter.format(v)}',
+                                          isLoading: _isPreviousSnapshotLoading,
+                                        ),
                                       ),
                                       SummaryCard(
                                         title: 'Total Clients',
@@ -1045,6 +1382,15 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
                                         color: warmAmber,
                                         shadow: true,
                                         subtitle: 'as of now',
+                                        trend: KpiTrend(
+                                          currentValue: clientProvider.clients.length.toDouble(),
+                                          previousValue:
+                                              (_previousSnapshot?['totalClients'] as num?)?.toDouble() ?? 0,
+                                          higherIsBetter: true,
+                                          comparisonLabel: _comparisonLabelForFilter(selectedFilter),
+                                          formatChange: (v) => v.round().toString(),
+                                          isLoading: _isPreviousSnapshotLoading,
+                                        ),
                                       ),
                                       SummaryCard(
                                         title: 'Completed Services ($selectedFilter)',
@@ -1053,19 +1399,61 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
                                         color: const Color(0xFF3D5A80),
                                         shadow: true,
                                         isLoading: _isPeriodLoading,
+                                        trend: KpiTrend(
+                                          currentValue: _periodTotals.completedServicesCount.toDouble(),
+                                          previousValue: _previousPeriodTotals.completedServicesCount.toDouble(),
+                                          higherIsBetter: true,
+                                          comparisonLabel: _comparisonLabelForFilter(selectedFilter),
+                                          formatChange: (v) => v.round().toString(),
+                                          isLoading: _isPreviousPeriodLoading,
+                                        ),
                                       ),
-                                    ],
-                                  );
-                                },
-                              ),
+                                    ];
+
+                                return GridView.builder(
+                                  shrinkWrap: true,
+                                  physics: const NeverScrollableScrollPhysics(),
+                                  gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                                    crossAxisCount: crossAxisCount,
+                                    mainAxisExtent: 118,
+                                    crossAxisSpacing: 12,
+                                    mainAxisSpacing: 12,
+                                  ),
+                                  itemCount: cards.length,
+                                  itemBuilder: (context, index) => cards[index],
+                                );
+                              },
                             ),
+                            const SizedBox(height: 16),
+                            _buildTodayGlanceStrip(glanceDebtorCount),
+                            const SizedBox(height: 16),
+                            if (isLargeScreen)
+                              Row(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Expanded(flex: 2, child: _buildSalesRevenueChart()),
+                                  const SizedBox(width: 16),
+                                  Expanded(child: _buildRecentActivityFeed()),
+                                ],
+                              )
+                            else ...[
+                              _buildSalesRevenueChart(),
+                              const SizedBox(height: 16),
+                              _buildRecentActivityFeed(),
+                            ],
+                            const SizedBox(height: 16),
+                            _buildQuickActionCards(context),
                           ],
                         ),
-                      ),
+                                ),
+                              ),
+                            ),
+                          ),
+                            ],
+                            ),
+                        ),
+                      ],
                     ),
-                    ),
-                        ],
-                      ),
                     ),
                 Positioned(
                       top: 56,
@@ -1078,7 +1466,6 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
               ),
             ],
           ),
-          floatingActionButton: _buildFABs(),
         );
       },
     );
@@ -1305,6 +1692,696 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
           ),
         );
       },
+    );
+  }
+
+  IconData _activityIcon(String actionType) {
+    switch (actionType.toLowerCase()) {
+      case 'products':
+        return Icons.inventory_2;
+      case 'inventory move':
+        return Icons.swap_horiz;
+      case 'sales':
+        return Icons.shopping_cart;
+      case 'services':
+        return Icons.build;
+      case 'clients':
+        return Icons.people;
+      case 'debtors':
+        return Icons.account_balance_wallet;
+      case 'settings':
+        return Icons.settings;
+      case 'admin':
+        return Icons.admin_panel_settings;
+      default:
+        return Icons.info;
+    }
+  }
+
+  Color _activityColor(String actionType) {
+    switch (actionType.toLowerCase()) {
+      case 'inventory move':
+        return Colors.blue;
+      case 'products':
+        return Colors.green;
+      case 'sales':
+        return warmAmber;
+      case 'services':
+        return Colors.purple;
+      case 'clients':
+        return Colors.teal;
+      case 'debtors':
+        return Colors.orange;
+      case 'settings':
+        return Colors.grey;
+      case 'admin':
+        return Colors.red;
+      default:
+        return primaryDeepGreen;
+    }
+  }
+
+  Widget _buildRecentActivityFeed() {
+    final facilityId = _lastLoadedFacilityId;
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(18),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.grey.withValues(alpha: 0.15)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Row(
+                children: [
+                  Icon(Icons.history, size: 18, color: primaryDeepGreen),
+                  const SizedBox(width: 8),
+                  const Text('Recent Activity', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14.5)),
+                ],
+              ),
+              TextButton(
+                onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const ActivityLogScreen())),
+                child: const Text('View All'),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          if (facilityId == null)
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 20),
+              child: Center(child: Text('No activity yet.', style: TextStyle(color: Colors.grey[600]))),
+            )
+          else
+            StreamBuilder<QuerySnapshot>(
+              stream: FirebaseFirestore.instance
+                  .collection('facilities')
+                  .doc(facilityId)
+                  .collection('activity_logs')
+                  .orderBy('timestamp', descending: true)
+                  .limit(5)
+                  .snapshots(),
+              builder: (context, snapshot) {
+                if (!snapshot.hasData) {
+                  return const Padding(
+                    padding: EdgeInsets.symmetric(vertical: 20),
+                    child: Center(child: CircularProgressIndicator(strokeWidth: 2)),
+                  );
+                }
+                final docs = snapshot.data!.docs;
+                if (docs.isEmpty) {
+                  return Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 20),
+                    child: Center(child: Text('No activity yet.', style: TextStyle(color: Colors.grey[600]))),
+                  );
+                }
+                return Column(
+                  children: [
+                    for (int i = 0; i < docs.length; i++) ...[
+                      if (i > 0) Divider(height: 1, color: Colors.grey.withValues(alpha: 0.15)),
+                      _activityTile(docs[i].data() as Map<String, dynamic>),
+                    ],
+                  ],
+                );
+              },
+            ),
+        ],
+      ),
+    );
+  }
+
+  Widget _activityTile(Map<String, dynamic> data) {
+    final actionType = (data['actionType'] as String?) ?? '';
+    final description = sanitizeForDisplay((data['description'] as String?) ?? '');
+    final timestamp = data['timestamp'];
+    String timeStr = '';
+    if (timestamp is Timestamp) {
+      timeStr = DateFormat('hh:mm a').format(timestamp.toDate());
+    }
+    final color = _activityColor(actionType);
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 10),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            width: 32,
+            height: 32,
+            decoration: BoxDecoration(color: color.withValues(alpha: 0.12), borderRadius: BorderRadius.circular(8)),
+            child: Icon(_activityIcon(actionType), size: 16, color: color),
+          ),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Text(description, style: const TextStyle(fontSize: 12.5), maxLines: 2, overflow: TextOverflow.ellipsis),
+          ),
+          const SizedBox(width: 8),
+          Text(timeStr, style: TextStyle(fontSize: 11, color: Colors.grey[500])),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSalesRevenueChart() {
+    final moneyFormat = NumberFormat.currency(locale: 'en_US', symbol: 'Tsh ', decimalDigits: 0);
+    final salesByDay = _chartSalesByDay;
+    final collectionsByDay = _chartCollectionsByDay;
+    final hasData = salesByDay != null && collectionsByDay != null;
+
+    final currentTotal = hasData ? salesByDay.fold<double>(0, (a, b) => a + b) : 0.0;
+    final previousTotal = _chartPreviousTotal;
+    double? trendPercent;
+    if (previousTotal != null && previousTotal > 0) {
+      trendPercent = ((currentTotal - previousTotal) / previousTotal) * 100;
+    }
+
+    final (start, _, days) = _chartDateRange();
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(18),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.grey.withValues(alpha: 0.15)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Row(
+                children: [
+                  Icon(Icons.show_chart, size: 18, color: primaryDeepGreen),
+                  const SizedBox(width: 8),
+                  const Text('Sales & Revenue Overview', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14.5)),
+                ],
+              ),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 10),
+                height: 36,
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: Colors.grey.withValues(alpha: 0.3)),
+                ),
+                child: DropdownButtonHideUnderline(
+                  child: DropdownButton<String>(
+                    value: _chartPeriod,
+                    items: const ['Last 7 days', 'Last 30 days']
+                        .map((p) => DropdownMenuItem(value: p, child: Text(p, style: const TextStyle(fontSize: 13))))
+                        .toList(),
+                    onChanged: (val) {
+                      if (val == null) return;
+                      setState(() => _chartPeriod = val);
+                      final facilityId = _lastLoadedFacilityId;
+                      if (facilityId != null) _loadChartData(facilityId);
+                    },
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 14),
+          if (!hasData && _isChartLoading)
+            const Padding(
+              padding: EdgeInsets.symmetric(vertical: 40),
+              child: Center(child: CircularProgressIndicator()),
+            )
+          else ...[
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(moneyFormat.format(currentTotal),
+                        style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 22, color: Colors.black87)),
+                    Text('Total Revenue', style: TextStyle(fontSize: 12, color: Colors.grey[600])),
+                  ],
+                ),
+                if (trendPercent != null) ...[
+                  const SizedBox(width: 12),
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 4),
+                    child: Row(
+                      children: [
+                        Icon(trendPercent >= 0 ? Icons.arrow_upward : Icons.arrow_downward,
+                            size: 14, color: trendPercent >= 0 ? Colors.green : Colors.red),
+                        Text('${trendPercent.abs().toStringAsFixed(1)}% vs last period',
+                            style: TextStyle(
+                                fontSize: 12,
+                                fontWeight: FontWeight.w600,
+                                color: trendPercent >= 0 ? Colors.green : Colors.red)),
+                      ],
+                    ),
+                  ),
+                ],
+              ],
+            ),
+            const SizedBox(height: 16),
+            SizedBox(
+              height: 220,
+              child: !hasData || (salesByDay.every((v) => v == 0) && collectionsByDay.every((v) => v == 0))
+                  ? Center(child: Text('No activity in this period.', style: TextStyle(color: Colors.grey[600])))
+                  : LineChart(
+                      LineChartData(
+                        gridData: const FlGridData(show: true, drawVerticalLine: false),
+                        borderData: FlBorderData(show: true, border: Border.all(color: Colors.grey.shade300)),
+                        lineTouchData: LineTouchData(
+                          touchTooltipData: LineTouchTooltipData(
+                            getTooltipItems: (touchedSpots) {
+                              return touchedSpots.map((spot) {
+                                final day = start.add(Duration(days: spot.x.toInt()));
+                                final label = spot.barIndex == 0 ? 'Sales' : 'Collections';
+                                return LineTooltipItem(
+                                  '${DateFormat('d MMM').format(day)}\n$label: ${moneyFormat.format(spot.y)}',
+                                  const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 12),
+                                );
+                              }).toList();
+                            },
+                          ),
+                        ),
+                        titlesData: FlTitlesData(
+                          topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                          rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                          leftTitles: AxisTitles(
+                            sideTitles: SideTitles(
+                              showTitles: true,
+                              reservedSize: 48,
+                              getTitlesWidget: (value, meta) =>
+                                  Text(moneyFormat.format(value), style: const TextStyle(fontSize: 9)),
+                            ),
+                          ),
+                          bottomTitles: AxisTitles(
+                            sideTitles: SideTitles(
+                              showTitles: true,
+                              interval: days > 7 ? 5 : 1,
+                              getTitlesWidget: (value, meta) {
+                                final day = start.add(Duration(days: value.toInt()));
+                                return Padding(
+                                  padding: const EdgeInsets.only(top: 6),
+                                  child: Text(DateFormat('d MMM').format(day), style: const TextStyle(fontSize: 9)),
+                                );
+                              },
+                            ),
+                          ),
+                        ),
+                        lineBarsData: [
+                          LineChartBarData(
+                            spots: [for (int i = 0; i < salesByDay.length; i++) FlSpot(i.toDouble(), salesByDay[i])],
+                            isCurved: true,
+                            color: primaryDeepGreen,
+                            barWidth: 3,
+                            dotData: const FlDotData(show: false),
+                            belowBarData: BarAreaData(show: true, color: primaryDeepGreen.withValues(alpha: 0.1)),
+                          ),
+                          LineChartBarData(
+                            spots: [for (int i = 0; i < collectionsByDay.length; i++) FlSpot(i.toDouble(), collectionsByDay[i])],
+                            isCurved: true,
+                            color: warmAmber,
+                            barWidth: 3,
+                            dotData: const FlDotData(show: false),
+                            belowBarData: BarAreaData(show: true, color: warmAmber.withValues(alpha: 0.1)),
+                          ),
+                        ],
+                      ),
+                    ),
+            ),
+            const SizedBox(height: 12),
+            Row(
+              children: [
+                _chartLegendItem(primaryDeepGreen, 'Sales (Tsh)'),
+                const SizedBox(width: 20),
+                _chartLegendItem(warmAmber, 'Collections (Tsh)'),
+              ],
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
+  Widget _chartLegendItem(Color color, String label) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Container(width: 10, height: 10, decoration: BoxDecoration(color: color, shape: BoxShape.circle)),
+        const SizedBox(width: 6),
+        Text(label, style: TextStyle(fontSize: 12, color: Colors.grey[700])),
+      ],
+    );
+  }
+
+  Widget _buildTopBar(BuildContext context) {
+    return Container(
+      height: 72,
+      padding: const EdgeInsets.only(left: 16, right: 16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        border: Border(bottom: BorderSide(color: Colors.grey.withValues(alpha: 0.2))),
+      ),
+      child: Row(
+        children: [
+          IconButton(
+            padding: EdgeInsets.zero,
+            constraints: const BoxConstraints(),
+            icon: Icon(_isDrawerCollapsed ? Icons.menu_open : Icons.menu, color: Colors.black87, size: 22),
+            tooltip: _isDrawerCollapsed ? 'Expand menu' : 'Collapse menu',
+            onPressed: _toggleDrawerCollapsed,
+          ),
+          const Spacer(),
+          Container(
+            width: 260,
+            margin: const EdgeInsets.only(right: 12),
+            child: Autocomplete<_DashboardSearchResult>(
+              displayStringForOption: (r) => r.title,
+              optionsBuilder: (textEditingValue) {
+                final query = textEditingValue.text.trim().toLowerCase();
+                if (query.isEmpty) return const Iterable<_DashboardSearchResult>.empty();
+
+                final productProvider = Provider.of<ProductProvider>(context, listen: false);
+                final clientProvider = Provider.of<ClientProvider>(context, listen: false);
+                final results = <_DashboardSearchResult>[];
+
+                for (final p in productProvider.products) {
+                  if (p.name.toLowerCase().contains(query)) {
+                    results.add(_DashboardSearchResult(
+                      title: p.name,
+                      subtitle: 'Product',
+                      icon: Icons.inventory_2_outlined,
+                      onTap: () => Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (_) => ProductsScreen(initialSearchQuery: p.name)),
+                      ),
+                    ));
+                  }
+                }
+                for (final c in clientProvider.clients) {
+                  if (c.name.toLowerCase().contains(query) || c.phone.contains(query)) {
+                    results.add(_DashboardSearchResult(
+                      title: c.name,
+                      subtitle: 'Client \u2022 ${c.phone}',
+                      icon: Icons.person_outline,
+                      onTap: () =>
+                          Navigator.push(context, MaterialPageRoute(builder: (_) => const ClientsScreen())),
+                    ));
+                  }
+                }
+                return results.take(8);
+              },
+              onSelected: (r) => r.onTap(),
+              fieldViewBuilder: (context, controller, focusNode, onFieldSubmitted) {
+                return Container(
+                  height: 38,
+                  padding: const EdgeInsets.symmetric(horizontal: 12),
+                  decoration: BoxDecoration(
+                    color: offWhite,
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: Colors.grey.withValues(alpha: 0.25)),
+                  ),
+                  child: Row(
+                    children: [
+                      Icon(Icons.search, size: 18, color: Colors.grey[500]),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: TextField(
+                          controller: controller,
+                          focusNode: focusNode,
+                          style: const TextStyle(fontSize: 13),
+                          decoration: InputDecoration.collapsed(
+                            hintText: 'Search products or clients...',
+                            hintStyle: TextStyle(fontSize: 13, color: Colors.grey[500]),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                );
+              },
+              optionsViewBuilder: (context, onSelected, options) {
+                final list = options.toList();
+                return Align(
+                  alignment: Alignment.topLeft,
+                  child: Material(
+                    elevation: 4,
+                    borderRadius: BorderRadius.circular(8),
+                    child: SizedBox(
+                      width: 300,
+                      child: ListView.builder(
+                        padding: EdgeInsets.zero,
+                        shrinkWrap: true,
+                        itemCount: list.length,
+                        itemBuilder: (context, index) {
+                          final r = list[index];
+                          return ListTile(
+                            dense: true,
+                            leading: Icon(r.icon, size: 18, color: primaryDeepGreen),
+                            title: Text(r.title, style: const TextStyle(fontSize: 13)),
+                            subtitle: Text(r.subtitle, style: const TextStyle(fontSize: 11)),
+                            onTap: () => onSelected(r),
+                          );
+                        },
+                      ),
+                    ),
+                  ),
+                );
+              },
+            ),
+          ),
+          _buildAlertsBell(context),
+          // No help/support screen exists yet - shows a lightweight
+          // dialog with app info rather than linking to a page that
+          // doesn't exist.
+          IconButton(
+            icon: const Icon(Icons.help_outline, color: Colors.black87, size: 22),
+            tooltip: 'Help',
+            onPressed: () => showDialog(
+              context: context,
+              builder: (ctx) => AlertDialog(
+                title: const Text('VetBiz Pro'),
+                content: const Text('For help or support, please reach out to your account administrator.'),
+                actions: [
+                  TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Close')),
+                ],
+              ),
+            ),
+          ),
+          const SizedBox(width: 4),
+          Padding(
+            padding: const EdgeInsets.only(right: 12),
+            child: Builder(
+              builder: (context) => _HoverableProfileIcon(
+                onTap: () => Scaffold.of(context).openEndDrawer(),
+                child: StreamBuilder<DocumentSnapshot>(
+                  stream: userDoc.snapshots(),
+                  builder: (context, snapshot) {
+                    final rawData = snapshot.data?.data();
+                    final Map<String, dynamic> data =
+                        (rawData != null && rawData is Map)
+                            ? Map<String, dynamic>.from(rawData)
+                            : {};
+                    final avatarUrl = data['avatarUrl'] as String?;
+                    final fullNameForAvatar = data['fullName'] ?? '';
+
+                    final avatar = _profileBytes != null
+                        ? CircleAvatar(radius: 16, backgroundImage: MemoryImage(_profileBytes!))
+                        : InitialsAvatar(
+                            avatarUrl: avatarUrl,
+                            name: fullNameForAvatar,
+                            size: 32,
+                            backgroundColor: primaryDeepGreen.withValues(alpha: 0.12),
+                            foregroundColor: primaryDeepGreen,
+                          );
+
+                    return Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        avatar,
+                        const SizedBox(width: 8),
+                        ConstrainedBox(
+                          constraints: const BoxConstraints(maxWidth: 110),
+                          child: Text(
+                            fullNameForAvatar.isNotEmpty ? fullNameForAvatar : 'Account',
+                            style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: Colors.black87),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                        const Icon(Icons.keyboard_arrow_down, size: 18, color: Colors.black54),
+                      ],
+                    );
+                  },
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildTodayGlanceStrip(int debtorCount) {
+    final formatter = NumberFormat.decimalPattern();
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.grey.withValues(alpha: 0.15)),
+      ),
+      child: Wrap(
+        crossAxisAlignment: WrapCrossAlignment.center,
+        spacing: 24,
+        runSpacing: 10,
+        children: [
+          Text('Today at a Glance', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13.5, color: Colors.black87)),
+          if (_glanceSaleCount == null && _isGlanceLoading)
+            const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2))
+          else ...[
+            _glanceStat(Icons.shopping_cart_outlined, '${_glanceSaleCount ?? 0}', 'Sales', primaryDeepGreen),
+            _glanceStat(Icons.build_outlined, '${_glanceServiceCount ?? 0}', 'Services', const Color(0xFF3D5A80)),
+            _glanceStat(Icons.payments_outlined, 'Tsh ${formatter.format(_glanceCollected ?? 0)}', 'Collected', primaryDeepGreen),
+          ],
+          _glanceStat(Icons.folder_outlined, '$debtorCount', debtorCount == 1 ? 'Outstanding Debt' : 'Outstanding Debts', warmAmber),
+          OutlinedButton.icon(
+            onPressed: () => showInsightsScreen(context),
+            icon: Icon(Icons.insights, size: 16, color: primaryDeepGreen),
+            label: Text('Insights', style: TextStyle(color: primaryDeepGreen)),
+            style: OutlinedButton.styleFrom(side: BorderSide(color: primaryDeepGreen)),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _glanceStat(IconData icon, String value, String label, Color color) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Icon(icon, size: 16, color: color),
+        const SizedBox(width: 6),
+        Text(value, style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: color)),
+        const SizedBox(width: 4),
+        Text(label, style: TextStyle(fontSize: 12.5, color: Colors.grey[600])),
+      ],
+    );
+  }
+
+  Widget _buildQuickActionCards(BuildContext context) {
+    final isLargeScreen = MediaQuery.of(context).size.width >= 1024;
+
+    final cards = [
+      _quickActionCard(
+        icon: Icons.add_shopping_cart,
+        title: 'Record Sale',
+        subtitle: 'Create a new sale',
+        backgroundColor: primaryDeepGreen,
+        accentColor: primaryDeepGreen,
+        isDark: true,
+        onTap: () => navigateOrShowLockedDialog(
+          context,
+          const AddSaleScreen(),
+          onNavigate: () => showAddSaleScreen(context),
+        ),
+      ),
+      _quickActionCard(
+        icon: Icons.design_services,
+        title: 'Record Visit',
+        subtitle: 'Add a new service record',
+        backgroundColor: const Color(0xFFE3F0EC),
+        accentColor: primaryDeepGreen,
+        isDark: false,
+        onTap: () => navigateOrShowLockedDialog(
+          context,
+          const AddEditServiceScreen(),
+          onNavigate: () => showAddEditServiceScreen(context),
+        ),
+      ),
+      _quickActionCard(
+        icon: Icons.add_box,
+        title: 'Add Product',
+        subtitle: 'Add new product to store',
+        backgroundColor: const Color(0xFFFCEFD9),
+        accentColor: warmAmber,
+        isDark: false,
+        onTap: () => showAddEditProductScreen(context),
+      ),
+    ];
+
+    if (isLargeScreen) {
+      return Row(
+        children: [
+          for (int i = 0; i < cards.length; i++) ...[
+            if (i > 0) const SizedBox(width: 12),
+            Expanded(child: cards[i]),
+          ],
+        ],
+      );
+    }
+    return Column(
+      children: [
+        for (int i = 0; i < cards.length; i++) ...[
+          if (i > 0) const SizedBox(height: 12),
+          cards[i],
+        ],
+      ],
+    );
+  }
+
+  Widget _quickActionCard({
+    required IconData icon,
+    required String title,
+    required String subtitle,
+    required Color backgroundColor,
+    required Color accentColor,
+    required bool isDark,
+    required VoidCallback onTap,
+  }) {
+    final textColor = isDark ? Colors.white : Colors.black87;
+    final subtitleColor = isDark ? Colors.white.withValues(alpha: 0.85) : Colors.grey[700];
+    final iconCircleColor = isDark ? Colors.white.withValues(alpha: 0.18) : accentColor.withValues(alpha: 0.15);
+    final iconColor = isDark ? Colors.white : accentColor;
+    final chevronColor = isDark ? Colors.white : accentColor;
+
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(12),
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: backgroundColor,
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Row(
+          children: [
+            Container(
+              width: 40,
+              height: 40,
+              decoration: BoxDecoration(
+                color: iconCircleColor,
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Icon(icon, color: iconColor, size: 20),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(title, style: TextStyle(color: textColor, fontWeight: FontWeight.bold, fontSize: 14)),
+                  Text(subtitle, style: TextStyle(color: subtitleColor, fontSize: 11.5)),
+                ],
+              ),
+            ),
+            Icon(Icons.chevron_right, color: chevronColor, size: 20),
+          ],
+        ),
+      ),
     );
   }
 
@@ -1657,10 +2734,58 @@ Widget _buildDrawerContent() {
           ),
   );
 
+  // ---------- FACILITY NAME ----------
+  // Text label for the facility, shown below the logo - this is what
+  // the old AppBar title used to show ("{name} {type} Dashboard")
+  // before that was restyled; preserved here instead since the
+  // sidebar's own logo area is the more natural place for it now.
+  final String facilityDisplayName = selectedFacility?['name'] as String? ?? '';
+  final String facilityDisplayType = selectedFacility?['type'] as String? ?? '';
+  final String? facilityIdForTagline = selectedFacility?['id'] as String?;
+  final String combinedNameAndType =
+      (facilityDisplayType.isNotEmpty && facilityDisplayType != 'Other')
+          ? '$facilityDisplayName $facilityDisplayType'
+          : facilityDisplayName;
+  Widget facilityNameSection = effectivelyCollapsed || facilityDisplayName.isEmpty
+      ? const SizedBox.shrink()
+      : Padding(
+          padding: const EdgeInsets.only(bottom: 12),
+          child: Column(
+            children: [
+              Text(
+                combinedNameAndType,
+                textAlign: TextAlign.center,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: offWhite),
+              ),
+              if (facilityIdForTagline != null)
+                StreamBuilder<DocumentSnapshot>(
+                  stream: FirebaseFirestore.instance.collection('facilities').doc(facilityIdForTagline).snapshots(),
+                  builder: (context, snapshot) {
+                    final tagline = (snapshot.data?.data() as Map<String, dynamic>?)?['tagline'] as String?;
+                    if (tagline == null || tagline.isEmpty) return const SizedBox.shrink();
+                    return Padding(
+                      padding: const EdgeInsets.only(top: 2),
+                      child: Text(
+                        tagline,
+                        textAlign: TextAlign.center,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(fontSize: 11, color: offWhite.withValues(alpha: 0.7)),
+                      ),
+                    );
+                  },
+                ),
+            ],
+          ),
+        );
+
   // ---------- FINAL LAYOUT ----------
   Widget content = Column(
     children: [
       logoSection,
+      facilityNameSection,
       Divider(thickness: 1.2, color: Colors.white54),
       items,
       Divider(thickness: 1.2, color: Colors.white54),
@@ -1677,9 +2802,7 @@ Widget _buildDrawerContent() {
     child: Column(
       children: [
         Expanded(
-          child: isSmallScreen
-              ? SingleChildScrollView(child: content)
-              : content,
+          child: SingleChildScrollView(child: content),
         ),
         footer,
       ],
@@ -1732,17 +2855,16 @@ Widget _buildDrawerContent() {
                           color: Colors.grey.shade400,
                           shape: BoxShape.circle,
                         ),
-                        child: CircleAvatar(
-                          radius: 50,
-                          backgroundColor: offWhite,
-                          backgroundImage: _profileBytes != null
-                              ? MemoryImage(_profileBytes!)
-                              : (avatarUrl != null && avatarUrl.isNotEmpty ? NetworkImage(avatarUrl) : null),
-                          child: (_profileBytes == null &&
-                                  (avatarUrl == null || avatarUrl.isEmpty))
-                              ? const Icon(Icons.person, size: 50, color: Colors.grey)
-                              : null,
-                        ),
+                        child: _profileBytes != null
+                            ? CircleAvatar(
+                                radius: 50, backgroundColor: offWhite, backgroundImage: MemoryImage(_profileBytes!))
+                            : InitialsAvatar(
+                                avatarUrl: avatarUrl,
+                                name: data['fullName'] ?? '',
+                                size: 100,
+                                backgroundColor: offWhite,
+                                foregroundColor: primaryDeepGreen,
+                              ),
                       ),
                       Positioned(
                         bottom: 0,
@@ -1947,90 +3069,5 @@ Widget _buildDrawerContent() {
       onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => page)),
     );
   }
-
-  // --------------------- FLOATING ACTION BUTTONS ---------------------
-  Widget _buildFABs() {
-  final isLargeScreen = MediaQuery.of(context).size.width >= 1024;
-
-  if (isLargeScreen) {
-  return Row(
-    mainAxisSize: MainAxisSize.min,
-    children: [
-      HoverFab(
-        heroTag: 'add_sale',
-        icon: Icons.add_shopping_cart,
-        label: 'Record Sale',
-        color: warmAmber,
-        hoverColor: const Color(0xFFFFC400),
-        onPressed: () => navigateOrShowLockedDialog(
-          context,
-          const AddSaleScreen(),
-          onNavigate: () => showAddSaleScreen(context),
-        ),
-      ),
-      const SizedBox(width: 12),
-      HoverFab(
-        heroTag: 'add_product',
-        icon: Icons.add_box,
-        label: 'Add Product',
-        color: primaryDeepGreen,
-        hoverColor: const Color(0xFF3B6B6E),
-        onPressed: () => showAddEditProductScreen(context),
-      ),
-      const SizedBox(width: 12),
-      HoverFab(
-        heroTag: 'add_service',
-        icon: Icons.design_services,
-        label: 'Record Visit',
-        color: const Color(0xFF3D5A80),
-        hoverColor: const Color(0xFF4A6B94),
-        onPressed: () => navigateOrShowLockedDialog(
-          context,
-          const AddEditServiceScreen(),
-          onNavigate: () => showAddEditServiceScreen(context),
-        ),
-      ),
-    ],
-  );
- }
-
-  // Mobile → no hover
-  return SpeedDial(
-    icon: Icons.add,
-    activeIcon: Icons.close,
-    backgroundColor: primaryDeepGreen,
-    foregroundColor: offWhite,
-    overlayColor: Colors.black,
-    overlayOpacity: 0.4,
-    children: [
-      SpeedDialChild(
-        backgroundColor: warmAmber,
-        child: const Icon(Icons.add_shopping_cart, color: Colors.white),
-        label: 'Record Sale',
-        onTap: () => navigateOrShowLockedDialog(
-          context,
-          const AddSaleScreen(),
-          onNavigate: () => showAddSaleScreen(context),
-        ),
-      ),
-      SpeedDialChild(
-        backgroundColor: primaryDeepGreen,
-        child: const Icon(Icons.add_box, color: Colors.white),
-        label: 'Add Product',
-        onTap: () => showAddEditProductScreen(context),
-      ),
-      SpeedDialChild(
-        backgroundColor: const Color(0xFF3D5A80),
-        child: const Icon(Icons.design_services, color: Colors.white),
-        label: 'Record Visit',
-        onTap: () => navigateOrShowLockedDialog(
-          context,
-          const AddEditServiceScreen(),
-          onNavigate: () => showAddEditServiceScreen(context),
-        ),
-      ),
-    ],
-  );
-}
 
 }

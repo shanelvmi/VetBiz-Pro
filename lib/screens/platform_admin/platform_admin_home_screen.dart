@@ -6,6 +6,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../utils/force_logout.dart';
 import '../../utils/activity_signal.dart';
+import '../../widgets/initials_avatar.dart';
 import 'overview_tab.dart';
 import 'facilities_directory_tab.dart';
 import 'subscription_requests_tab.dart';
@@ -313,15 +314,12 @@ class _PlatformAdminHomeScreenState extends State<PlatformAdminHomeScreen> {
                 return Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    CircleAvatar(
-                      radius: 16,
+                    InitialsAvatar(
+                      avatarUrl: avatarUrl,
+                      name: name,
+                      size: 32,
                       backgroundColor: primaryColor.withValues(alpha: 0.1),
-                      backgroundImage: (avatarUrl != null && avatarUrl.isNotEmpty)
-                          ? NetworkImage(avatarUrl)
-                          : null,
-                      child: (avatarUrl == null || avatarUrl.isEmpty)
-                          ? Icon(Icons.person, size: 18, color: primaryColor)
-                          : null,
+                      foregroundColor: primaryColor,
                     ),
                     if (isWide) ...[
                       const SizedBox(width: 8),

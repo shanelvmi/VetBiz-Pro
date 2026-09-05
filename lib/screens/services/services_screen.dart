@@ -1,18 +1,18 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
-import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 import '../../models/service.dart';
 import '../../constants/service_categories.dart';
 import '../../providers/service_provider.dart';
 import '../../providers/facility_provider.dart';
+import '../../providers/client_provider.dart';
 import 'add_edit_service_screen.dart';
 import 'services_archive_screen.dart';
-import '../../widgets/payment_method_selector.dart';
 import 'service_receipt_preview_screen.dart';
 import '../../utils/subscription_guard.dart';
-import '../../providers/user_role_provider.dart';
 
 class ServicesScreen extends StatefulWidget {
   const ServicesScreen({super.key});
@@ -26,34 +26,38 @@ class _ServicesScreenState extends State<ServicesScreen> {
   final Color warmAmber = const Color(0xFFFFB200);
   final Color offWhite = const Color(0xFFFDFDF9);
 
-  // Accordion behavior: only one service card expanded at a time - same
-  // reasoning and pattern as Sales' own card list.
-  final Map<String, ExpansionTileController> _expansionControllers = {};
-  String? _expandedServiceId;
-
-  ExpansionTileController _controllerFor(String id) {
-    return _expansionControllers.putIfAbsent(id, () => ExpansionTileController());
-  }
-
-  void _collapseIfStillExpanded(String? id) {
-    if (id == null) return;
-    final controller = _expansionControllers[id];
-    if (controller == null) return;
-    try {
-      controller.collapse();
-    } catch (_) {
-      // That card's ExpansionTile is no longer in the tree (e.g. the
-      // service was deleted while expanded) - nothing to collapse.
-    }
-  }
-
-  final NumberFormat _numberFormat = NumberFormat.decimalPattern('en_US');
+  final NumberFormat _moneyFormat = NumberFormat.currency(
+    locale: 'en_US',
+    symbol: 'Tsh ',
+    decimalDigits: 0,
+  );
 
   String _searchQuery = '';
-  bool _isSearchExpanded = false;
   final TextEditingController _searchController = TextEditingController();
 
   String _selectedCategory = 'All';
+  String _dateFilter = 'Last 30 days';
+  String _statusFilter = 'All';
+
+  // Which service is shown in the details panel, and the display
+  // pagination window (over whatever's already loaded) - same pattern
+  // as the Sales screen.
+  Service? _selectedService;
+  int _displayPageSize = 10;
+  int _currentPageIndex = 0;
+
+  String? _facilityId;
+  Map<String, double>? _rangeSummary;
+  bool _isSummaryLoading = false;
+
+  // Auto-refreshes the summary shortly after a service changes below,
+  // instead of leaving it stale until a manual refresh. Unlike Sales,
+  // this reads directly from a live Firestore query (no Cloud
+  // Function aggregate to wait on), so the debounce is short - just
+  // enough to avoid re-querying on rapid successive changes.
+  ServiceProvider? _serviceProvider;
+  int _lastKnownServiceCount = 0;
+  Timer? _pendingSummaryRefresh;
 
   @override
   void initState() {
@@ -61,18 +65,78 @@ class _ServicesScreenState extends State<ServicesScreen> {
     final facilityId =
         Provider.of<FacilityProvider>(context, listen: false).selectedFacilityId;
     if (facilityId != null && facilityId.isNotEmpty) {
-      Provider.of<ServiceProvider>(context, listen: false).listenToServices(facilityId);
+      _facilityId = facilityId;
+      _serviceProvider = Provider.of<ServiceProvider>(context, listen: false);
+      _serviceProvider!.listenToServices(facilityId);
+      _lastKnownServiceCount = _serviceProvider!.services.length;
+      _serviceProvider!.addListener(_onServicesChanged);
+      _loadRangeSummary();
+    }
+  }
+
+  void _onServicesChanged() {
+    if (!mounted || _serviceProvider == null) return;
+    final currentCount = _serviceProvider!.services.length;
+    if (currentCount == _lastKnownServiceCount) return;
+    _lastKnownServiceCount = currentCount;
+
+    _pendingSummaryRefresh?.cancel();
+    _pendingSummaryRefresh = Timer(const Duration(milliseconds: 500), () {
+      if (mounted) _loadRangeSummary();
+    });
+  }
+
+  Future<void> _loadRangeSummary() async {
+    final facilityId = _facilityId;
+    if (facilityId == null) return;
+
+    setState(() => _isSummaryLoading = true);
+    try {
+      final cutoff = DateTime.now().subtract(const Duration(days: 30));
+      final snap = await FirebaseFirestore.instance
+          .collection('facilities')
+          .doc(facilityId)
+          .collection('services')
+          .where('serviceDate', isGreaterThanOrEqualTo: Timestamp.fromDate(cutoff))
+          .get();
+
+      double paidAmount = 0;
+      double outstanding = 0;
+      double mpesaAmount = 0;
+      for (final doc in snap.docs) {
+        final data = doc.data();
+        final totalAmount = (data['totalAmount'] as num?)?.toDouble() ?? 0.0;
+        final totalPaid = (data['totalPaid'] as num?)?.toDouble() ?? 0.0;
+        paidAmount += totalPaid;
+        outstanding += (totalAmount - totalPaid);
+        if (data['paymentMethod'] == 'M-Pesa') {
+          mpesaAmount += totalPaid;
+        }
+      }
+
+      if (!mounted) return;
+      setState(() {
+        _rangeSummary = {
+          'count': snap.docs.length.toDouble(),
+          'paidAmount': paidAmount,
+          'outstanding': outstanding,
+          'mpesaAmount': mpesaAmount,
+        };
+        _isSummaryLoading = false;
+      });
+    } catch (e) {
+      debugPrint('Could not load service summary: $e');
+      if (mounted) setState(() => _isSummaryLoading = false);
     }
   }
 
   @override
   void dispose() {
+    _pendingSummaryRefresh?.cancel();
+    _serviceProvider?.removeListener(_onServicesChanged);
     _searchController.dispose();
     super.dispose();
   }
-
-  String _truncate(String text, int cutoff) =>
-      (text.length <= cutoff) ? text : '${text.substring(0, cutoff)}...';
 
   String _getPaymentStatus(double paid, double total) {
     if (paid >= total) return 'Paid';
@@ -86,488 +150,829 @@ class _ServicesScreenState extends State<ServicesScreen> {
     return Colors.red;
   }
 
-  IconData _statusIcon(double paid, double total) {
-    if (paid >= total) return Icons.check_circle;
-    if (paid > 0) return Icons.pending;
-    return Icons.cancel;
-  }
-
   @override
   Widget build(BuildContext context) {
     final serviceProvider = Provider.of<ServiceProvider>(context);
-    final services = serviceProvider.services;
     final dateFormatter = DateFormat('dd MMM yyyy, HH:mm');
+    final dateOnlyFormatter = DateFormat('dd MMM yyyy');
+    final timeOnlyFormatter = DateFormat('hh:mm a');
 
-    // Always show every category from the Add Service dropdown, even ones
-    // with zero services recorded yet - previously a category only
-    // appeared as a chip once some service already used it, so an unused
-    // category was effectively invisible as a filter option. Any legacy
-    // category value found in real data (e.g. from before a category was
-    // renamed) is still included too, so nothing gets silently hidden.
-    final categories = <String>{...kServiceCategories};
-    for (final s in services) {
-      categories.add(s.category.isNotEmpty ? s.category : 'Other');
-    }
-    final sortedCategories = [
-      'All',
-      ...categories.toList()..sort(),
-    ];
+    final sortedServices = [...serviceProvider.services];
+    sortedServices.sort((a, b) {
+      final aDate = a.serviceDate ?? DateTime(2000);
+      final bDate = b.serviceDate ?? DateTime(2000);
+      return bDate.compareTo(aDate);
+    });
 
-    final filteredServices = services.where((s) {
+    final now = DateTime.now();
+    final filteredServices = sortedServices.where((service) {
       final matchesSearch = _searchQuery.isEmpty ||
-          s.name.toLowerCase().contains(_searchQuery.toLowerCase()) ||
-          s.description.toLowerCase().contains(_searchQuery.toLowerCase()) ||
-          (s.clientName ?? '').toLowerCase().contains(_searchQuery.toLowerCase());
+          service.clientName?.toLowerCase().contains(_searchQuery.toLowerCase()) == true ||
+          service.category.toLowerCase().contains(_searchQuery.toLowerCase()) ||
+          service.name.toLowerCase().contains(_searchQuery.toLowerCase()) ||
+          service.description.toLowerCase().contains(_searchQuery.toLowerCase()) ||
+          _invoiceNo(service).toLowerCase().contains(_searchQuery.toLowerCase());
 
-      final category = s.category.isNotEmpty ? s.category : 'Other';
-      final matchesCategory = _selectedCategory == 'All' || category == _selectedCategory;
+      final matchesCategory = _selectedCategory == 'All' || service.category == _selectedCategory;
 
-      return matchesSearch && matchesCategory;
+      final status = _getPaymentStatus(service.totalPaid, service.totalAmount);
+      final matchesStatus = _statusFilter == 'All' || status == _statusFilter;
+
+      final serviceDate = service.serviceDate;
+      final matchesDate = switch (_dateFilter) {
+        'Today' => serviceDate != null &&
+            serviceDate.year == now.year &&
+            serviceDate.month == now.month &&
+            serviceDate.day == now.day,
+        'Last 7 days' => serviceDate != null && serviceDate.isAfter(now.subtract(const Duration(days: 7))),
+        'Last 30 days' => serviceDate != null && serviceDate.isAfter(now.subtract(const Duration(days: 30))),
+        'This month' => serviceDate != null && serviceDate.year == now.year && serviceDate.month == now.month,
+        _ => true, // 'All time'
+      };
+
+      return matchesSearch && matchesCategory && matchesStatus && matchesDate;
     }).toList();
+
+    // Same honest display-pagination window as the Sales screen - a
+    // page here is a view over whatever's already loaded (or gets
+    // loaded on demand), not a true jump to an arbitrary page number.
+    final totalPages = (filteredServices.length / _displayPageSize).ceil().clamp(1, 999999);
+    if (_currentPageIndex >= totalPages) _currentPageIndex = totalPages - 1;
+    if (_currentPageIndex < 0) _currentPageIndex = 0;
+    final pageStart = _currentPageIndex * _displayPageSize;
+    final pageEnd = (pageStart + _displayPageSize).clamp(0, filteredServices.length);
+    final pageServices = filteredServices.sublist(pageStart.clamp(0, filteredServices.length), pageEnd);
 
     return Scaffold(
       backgroundColor: offWhite,
       appBar: _buildAppBar(),
-      body: Column(
+      body: Row(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          if (sortedCategories.length > 1)
-            Padding(
-              padding: const EdgeInsets.fromLTRB(12, 12, 12, 0),
-              child: SizedBox(
-                width: double.infinity,
-                child: Wrap(
-                  alignment: WrapAlignment.center,
-                  spacing: 8,
-                  runSpacing: 8,
-                  children: sortedCategories.map((category) {
-                    return ChoiceChip(
-                      label: Text(category),
-                      selected: _selectedCategory == category,
-                      onSelected: (_) => setState(() => _selectedCategory = category),
-                      selectedColor: warmAmber,
-                    );
-                  }).toList(),
-                ),
-              ),
-            ),
-          Padding(
-            padding: const EdgeInsets.fromLTRB(16, 6, 16, 0),
-            child: Align(
-              alignment: Alignment.centerRight,
-              child: Text(
-                '${filteredServices.length} service${filteredServices.length == 1 ? '' : 's'}',
-                style: TextStyle(fontSize: 12, color: Colors.grey[600]),
-              ),
-            ),
-          ),
           Expanded(
-            child: filteredServices.isEmpty
-                ? Center(
-                    child: Text(
-                      _searchQuery.isEmpty && _selectedCategory == 'All'
-                          ? 'No services yet.'
-                          : 'No services match your filters.',
-                    ),
-                  )
-                : _buildServicesGrid(filteredServices, serviceProvider, dateFormatter),
+            child: Column(
+              children: [
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      Expanded(child: _buildCategoryChipsRow()),
+                      const SizedBox(width: 12),
+                      _buildArchiveButton(),
+                    ],
+                  ),
+                ),
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
+                  child: _buildMetricsRow(),
+                ),
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+                  child: _buildFiltersToolbar(),
+                ),
+                Expanded(
+                  child: filteredServices.isEmpty
+                      ? Center(
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(Icons.medical_services_outlined, size: 64, color: Colors.grey[400]),
+                              const SizedBox(height: 16),
+                              Text(
+                                _searchQuery.isEmpty ? 'No services yet' : 'No services match your filters',
+                                style: TextStyle(fontSize: 18, color: Colors.grey[600]),
+                              ),
+                            ],
+                          ),
+                        )
+                      : _buildServicesTable(pageServices, dateFormatter),
+                ),
+                _buildPaginationBar(
+                  serviceProvider: serviceProvider,
+                  totalFiltered: filteredServices.length,
+                  pageStart: pageStart,
+                  pageEnd: pageEnd,
+                  totalPages: totalPages,
+                ),
+              ],
+            ),
           ),
+          if (_selectedService != null) ...[
+            const VerticalDivider(width: 1),
+            SizedBox(
+              width: 380,
+              child: _buildServiceDetailsPanel(_selectedService!, dateOnlyFormatter, timeOnlyFormatter),
+            ),
+          ],
         ],
       ),
-      floatingActionButton: FloatingActionButton.extended(
-        backgroundColor: primaryDeepGreen,
-        foregroundColor: offWhite,
-        hoverColor: warmAmber,
-        icon: const Icon(Icons.add),
-        label: const Text('Record Visit'),
-        onPressed: () async {
-          await navigateOrShowLockedDialog(
-            context,
-            const AddEditServiceScreen(),
-            onNavigate: () => showAddEditServiceScreen(context),
-          );
-        },
+    );
+  }
+
+  // ==================== METRICS ROW ====================
+
+  Widget _buildMetricsRow() {
+    final summary = _rangeSummary;
+    final isFirstLoadPending = summary == null && _isSummaryLoading;
+
+    final count = summary?['count']?.toInt() ?? 0;
+    final paidAmount = summary?['paidAmount'] ?? 0.0;
+    final outstanding = summary?['outstanding'] ?? 0.0;
+    final mpesaAmount = summary?['mpesaAmount'] ?? 0.0;
+
+    final metrics = [
+      ('Total Services', '$count', Icons.medical_services_outlined, primaryDeepGreen),
+      ('Paid Amount', _moneyFormat.format(paidAmount), Icons.account_balance_wallet_outlined, Colors.blue),
+      ('Outstanding', _moneyFormat.format(outstanding), Icons.pending_actions_outlined, warmAmber),
+      ('M-Pesa Payments', _moneyFormat.format(mpesaAmount), Icons.phone_iphone_outlined, Colors.green),
+    ];
+
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final isNarrow = constraints.maxWidth < 600;
+        return GridView.builder(
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+            crossAxisCount: isNarrow ? 2 : 4,
+            mainAxisExtent: 90,
+            crossAxisSpacing: 12,
+            mainAxisSpacing: 12,
+          ),
+          itemCount: metrics.length,
+          itemBuilder: (context, index) {
+            final m = metrics[index];
+            return _metricCard(m.$1, m.$2, m.$3, m.$4, isFirstLoadPending);
+          },
+        );
+      },
+    );
+  }
+
+  Widget _metricCard(String label, String value, IconData icon, Color color, bool isLoading) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.grey.withValues(alpha: 0.15)),
+        boxShadow: [
+          BoxShadow(color: Colors.black.withValues(alpha: 0.03), blurRadius: 6, offset: const Offset(0, 2)),
+        ],
+      ),
+      child: FittedBox(
+        fit: BoxFit.scaleDown,
+        alignment: Alignment.topLeft,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Row(
+              children: [
+                Container(
+                  width: 26,
+                  height: 26,
+                  decoration:
+                      BoxDecoration(color: color.withValues(alpha: 0.12), borderRadius: BorderRadius.circular(7)),
+                  child: Icon(icon, color: color, size: 14),
+                ),
+                const SizedBox(width: 8),
+                isLoading
+                    ? const SizedBox(
+                        width: 14,
+                        height: 14,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
+                    : Text(value, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+              ],
+            ),
+            const SizedBox(height: 4),
+            Text(label, style: TextStyle(fontSize: 11.5, color: Colors.grey[600])),
+            Text('Last 30 days', style: TextStyle(fontSize: 10.5, color: Colors.grey[400])),
+          ],
+        ),
       ),
     );
   }
 
   PreferredSizeWidget _buildAppBar() {
     return AppBar(
-      backgroundColor: primaryDeepGreen,
-      iconTheme: const IconThemeData(color: Color(0xFFFDFDF9)),
+      backgroundColor: Colors.white,
+      foregroundColor: Colors.black87,
+      elevation: 1,
       centerTitle: true,
-      title: _isSearchExpanded
-          ? TextField(
-              controller: _searchController,
-              autofocus: true,
-              cursorColor: offWhite,
-              style: TextStyle(color: offWhite),
-              decoration: InputDecoration(
-                hintText: 'Search services...',
-                hintStyle: TextStyle(color: offWhite.withValues(alpha: 0.7)),
-                border: InputBorder.none,
-                suffixIcon: IconButton(
-                  icon: Icon(Icons.clear, color: offWhite),
-                  onPressed: () {
-                    setState(() {
-                      _searchController.clear();
-                      _searchQuery = '';
-                      _isSearchExpanded = false;
-                    });
-                  },
-                ),
-              ),
-              onChanged: (val) => setState(() => _searchQuery = val.trim()),
-            )
-          : const Text('Service Records', style: TextStyle(color: Color(0xFFFDFDF9))),
+      toolbarHeight: 72,
+      title: const Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Text('Service Records', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 19, color: Colors.black87)),
+          Text('Track all services provided to your clients', style: TextStyle(fontSize: 12, color: Colors.black54)),
+        ],
+      ),
       actions: [
-        if (!_isSearchExpanded)
-          IconButton(
-            icon: const Icon(Icons.search),
-            tooltip: 'Search',
-            onPressed: () => setState(() => _isSearchExpanded = true),
-          ),
-        if (!_isSearchExpanded)
-          Padding(
-            padding: const EdgeInsets.only(right: 12),
-            child: TextButton.icon(
-              style: TextButton.styleFrom(
-                foregroundColor: offWhite,
-                backgroundColor: offWhite.withValues(alpha: 0.15),
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-              ),
-              icon: const Icon(Icons.archive, size: 18),
-              label: const Text('Archive', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600)),
-              onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (_) => const ServicesArchiveScreen()),
-                );
-              },
+        Padding(
+          padding: const EdgeInsets.only(right: 12),
+          child: ElevatedButton.icon(
+            onPressed: () => navigateOrShowLockedDialog(context, const AddEditServiceScreen()),
+            icon: const Icon(Icons.add, size: 18),
+            label: const Text('Record Visit'),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: primaryDeepGreen,
+              foregroundColor: offWhite,
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
             ),
           ),
+        ),
       ],
     );
   }
 
-  Widget _buildServicesGrid(
-      List<Service> services, ServiceProvider serviceProvider, DateFormat dateFormatter) {
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final isLargeScreen = constraints.maxWidth >= 1024;
-        final itemCount = services.length + 1; // +1 for the load-more footer
+  // ==================== CATEGORY CHIPS ====================
 
-        Widget itemBuilder(BuildContext context, int index) {
-          if (index == services.length) {
-            return _buildLoadMoreFooter(serviceProvider);
-          }
-          return _buildServiceCard(services[index], serviceProvider, dateFormatter);
-        }
-
-        if (isLargeScreen) {
-          return MasonryGridView.count(
-            padding: const EdgeInsets.all(12),
-            crossAxisCount: 2,
-            crossAxisSpacing: 12,
-            mainAxisSpacing: 12,
-            itemCount: itemCount,
-            itemBuilder: itemBuilder,
-          );
-        }
-
-        return ListView.builder(
-          padding: const EdgeInsets.all(12),
-          itemCount: itemCount,
-          itemBuilder: itemBuilder,
-        );
-      },
-    );
-  }
-
-  // Same load-more footer pattern used on Sales/Archive - pages in older
-  // services instead of ever loading a facility's whole service history.
-  Widget _buildLoadMoreFooter(ServiceProvider serviceProvider) {
-    if (serviceProvider.isLoadingMore) {
-      return Padding(
-        padding: const EdgeInsets.symmetric(vertical: 20),
-        child: Center(
-          child: SizedBox(
-            height: 24,
-            width: 24,
-            child: CircularProgressIndicator(strokeWidth: 2.5, color: primaryDeepGreen),
-          ),
-        ),
-      );
-    }
-    if (!serviceProvider.hasMore) {
-      return Padding(
-        padding: const EdgeInsets.symmetric(vertical: 20),
-        child: Center(
-          child: Text(
-            'Showing all recent services',
-            style: TextStyle(fontSize: 12, color: Colors.grey[500]),
-          ),
-        ),
-      );
-    }
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 12),
-      child: Center(
-        child: OutlinedButton.icon(
-          onPressed: () => serviceProvider.loadMoreServices(),
-          style: OutlinedButton.styleFrom(
-            foregroundColor: primaryDeepGreen,
-            side: BorderSide(color: primaryDeepGreen),
-          ),
-          icon: const Icon(Icons.expand_more),
-          label: const Text('Load more services'),
-        ),
+  Widget _buildCategoryChipsRow() {
+    final categories = ['All', ...kServiceCategories];
+    return SizedBox(
+      height: 40,
+      child: ListView.separated(
+        scrollDirection: Axis.horizontal,
+        itemCount: categories.length,
+        separatorBuilder: (context, index) => const SizedBox(width: 8),
+        itemBuilder: (context, index) => _categoryChip(categories[index]),
       ),
     );
   }
 
-  // Mimics Sales' ExpansionTile card - collapsed shows a quick summary,
-  // expanded shows full detail plus Print/Edit/Delete. No stats/summary
-  // card at the top of this screen (unlike Sales), by design.
-  Widget _buildServiceCard(Service service, ServiceProvider serviceProvider, DateFormat dateFormatter) {
-    final statusColor = _statusColor(service.totalPaid, service.totalAmount);
-    final statusIcon = _statusIcon(service.totalPaid, service.totalAmount);
-    final statusText = _getPaymentStatus(service.totalPaid, service.totalAmount);
-    final updatedDate = service.updatedAt != null
-        ? dateFormatter.format(service.updatedAt!)
-        : (service.serviceDate != null ? dateFormatter.format(service.serviceDate!) : '-');
-
-    return Card(
-      margin: const EdgeInsets.only(bottom: 6),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      elevation: 2,
-      child: ExpansionTile(
-        controller: _controllerFor(service.id),
-        onExpansionChanged: (expanded) {
-          if (expanded) {
-            if (_expandedServiceId != null && _expandedServiceId != service.id) {
-              _collapseIfStillExpanded(_expandedServiceId);
-            }
-            _expandedServiceId = service.id;
-          } else if (_expandedServiceId == service.id) {
-            _expandedServiceId = null;
-          }
-        },
-        tilePadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-        leading: CircleAvatar(
-          backgroundColor: statusColor.withValues(alpha: 0.2),
-          child: Icon(statusIcon, color: statusColor, size: 20),
+  Widget _categoryChip(String category) {
+    final isSelected = _selectedCategory == category;
+    return InkWell(
+      onTap: () => setState(() {
+        _selectedCategory = category;
+        _currentPageIndex = 0;
+      }),
+      borderRadius: BorderRadius.circular(20),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+        decoration: BoxDecoration(
+          color: isSelected ? primaryDeepGreen : Colors.white,
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(color: isSelected ? primaryDeepGreen : Colors.grey.withValues(alpha: 0.3)),
         ),
-        title: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
           children: [
-            Row(
-              children: [
-                Expanded(
-                  child: Text(
-                    _truncate(service.name, 30),
-                    style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ),
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                  decoration: BoxDecoration(
-                    color: statusColor.withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: statusColor.withValues(alpha: 0.4)),
-                  ),
-                  child: Text(
-                    statusText,
-                    style: TextStyle(
-                      color: statusColor,
-                      fontSize: 11,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 4),
-            Row(
-              children: [
-                Text(
-                  "Paid: Tsh ${_numberFormat.format(service.totalPaid)} / Tsh ${_numberFormat.format(service.totalAmount)}",
-                  style: TextStyle(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 13,
-                    color: primaryDeepGreen,
-                  ),
-                ),
-                if (service.paymentMethod != null) ...[
-                  const SizedBox(width: 8),
-                  Icon(iconForPaymentMethod(service.paymentMethod!), size: 13, color: Colors.grey[600]),
-                  const SizedBox(width: 3),
-                  Text(
-                    service.paymentMethod!,
-                    style: TextStyle(fontSize: 12, color: Colors.grey[600], fontWeight: FontWeight.w500),
-                  ),
-                ],
-              ],
-            ),
-          ],
-        ),
-        subtitle: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const SizedBox(height: 4),
+            if (isSelected) ...[
+              const Icon(Icons.check_circle, size: 14, color: Colors.white),
+              const SizedBox(width: 4),
+            ],
             Text(
-              "Updated: $updatedDate",
-              style: const TextStyle(fontSize: 11, color: Colors.grey),
+              category,
+              style: TextStyle(
+                fontSize: 12.5,
+                color: isSelected ? Colors.white : Colors.black87,
+                fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+              ),
             ),
           ],
         ),
-        childrenPadding: const EdgeInsets.all(16),
-        children: [
-          _buildDetailRow("Category:", service.category.isEmpty ? 'Other' : service.category),
-          _buildDetailRow("Client:", service.clientName ?? 'N/A'),
-          _buildDetailRow("Provided By:", service.providedByName ?? 'N/A'),
-          if (service.serviceDate != null)
-            _buildDetailRow("Service Date:", DateFormat.yMMMd().format(service.serviceDate!)),
-          if (service.description.isNotEmpty)
-            _buildDetailRow("Notes:", service.description),
-          if (service.itemsUsed.isNotEmpty) ...[
-            const Divider(height: 16),
-            const Text(
-              "Items Used:",
-              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+      ),
+    );
+  }
+
+  Widget _buildArchiveButton() {
+    return OutlinedButton.icon(
+      onPressed: () {
+        Navigator.push(context, MaterialPageRoute(builder: (_) => const ServicesArchiveScreen()));
+      },
+      icon: const Icon(Icons.archive_outlined, size: 16),
+      label: const Text('Archive'),
+      style: OutlinedButton.styleFrom(
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+        side: BorderSide(color: Colors.grey.withValues(alpha: 0.3)),
+      ),
+    );
+  }
+
+  // ==================== FILTERS TOOLBAR ====================
+
+  static const List<String> _dateFilterOptions = ['All time', 'Today', 'Last 7 days', 'Last 30 days', 'This month'];
+  static const List<String> _statusFilterOptions = ['All', 'Paid', 'Partial', 'Unpaid'];
+
+  Widget _buildFiltersToolbar() {
+    final border = OutlineInputBorder(
+      borderRadius: BorderRadius.circular(10),
+      borderSide: BorderSide(color: Colors.grey.withValues(alpha: 0.3)),
+    );
+    final hasActiveFilters =
+        _searchQuery.isNotEmpty || _selectedCategory != 'All' || _dateFilter != 'Last 30 days' || _statusFilter != 'All';
+
+    return Row(
+      children: [
+        Expanded(
+          flex: 3,
+          child: TextField(
+            controller: _searchController,
+            decoration: InputDecoration(
+              hintText: 'Search service by client, category, note...',
+              hintStyle: const TextStyle(fontSize: 13),
+              prefixIcon: const Icon(Icons.search, size: 20),
+              filled: true,
+              fillColor: Colors.white,
+              isDense: true,
+              contentPadding: const EdgeInsets.symmetric(vertical: 12, horizontal: 12),
+              border: border,
+              enabledBorder: border,
+              suffixIcon: _searchController.text.isEmpty
+                  ? null
+                  : IconButton(
+                      icon: const Icon(Icons.clear, size: 18),
+                      onPressed: () => setState(() {
+                        _searchController.clear();
+                        _searchQuery = '';
+                        _currentPageIndex = 0;
+                      }),
+                    ),
             ),
-            const SizedBox(height: 8),
-            ...service.itemsUsed.map((item) {
-              final name = (item['itemName'] ?? '').toString();
-              final price = (item['price'] is num) ? (item['price'] as num).toDouble() : 0.0;
-              return Padding(
-                padding: const EdgeInsets.symmetric(vertical: 2),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Expanded(
-                      child: Text(name, style: const TextStyle(fontSize: 12)),
-                    ),
-                    Text(
-                      _numberFormat.format(price),
-                      style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w500),
-                    ),
-                  ],
-                ),
-              );
+            onChanged: (val) => setState(() {
+              _searchQuery = val.trim();
+              _currentPageIndex = 0;
             }),
-          ],
-          const Divider(height: 16),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              const Text(
-                "Total:",
-                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
-              ),
-              Text(
-                'Tsh ${_numberFormat.format(service.totalAmount)}',
-                style: TextStyle(
-                  fontWeight: FontWeight.bold,
-                  fontSize: 14,
-                  color: primaryDeepGreen,
-                ),
-              ),
-            ],
           ),
-          const SizedBox(height: 12),
-          Wrap(
-            alignment: WrapAlignment.end,
-            crossAxisAlignment: WrapCrossAlignment.center,
-            spacing: 4,
-            runSpacing: 4,
-            children: [
-              TextButton.icon(
-                icon: Icon(Icons.print, size: 18, color: primaryDeepGreen),
-                label: Text('Print', style: TextStyle(color: primaryDeepGreen)),
-                onPressed: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (_) => ServiceReceiptPreviewScreen(service: service)),
-                  );
-                },
-              ),
-              TextButton.icon(
-                onPressed: () {
-                  showAddEditServiceScreen(context, service: service);
-                },
-                icon: Icon(Icons.edit, size: 18, color: primaryDeepGreen),
-                label: Text('Edit', style: TextStyle(color: primaryDeepGreen)),
-              ),
-              if (Provider.of<UserRoleProvider>(context).isAdmin)
-                TextButton.icon(
-                  icon: Icon(Icons.delete, size: 18, color: Colors.red[400]),
-                  label: Text('Delete', style: TextStyle(color: Colors.red[400])),
-                  onPressed: () => _confirmDelete(service),
-                ),
-            ],
+        ),
+        const SizedBox(width: 10),
+        _toolbarDropdown<String>(
+          value: _dateFilter,
+          items: _dateFilterOptions,
+          label: 'Date',
+          onChanged: (val) => setState(() {
+            _dateFilter = val;
+            _currentPageIndex = 0;
+          }),
+        ),
+        const SizedBox(width: 10),
+        _toolbarDropdown<String>(
+          value: _selectedCategory,
+          items: ['All', ...kServiceCategories],
+          label: 'Category',
+          onChanged: (val) => setState(() {
+            _selectedCategory = val;
+            _currentPageIndex = 0;
+          }),
+        ),
+        const SizedBox(width: 10),
+        _toolbarDropdown<String>(
+          value: _statusFilter,
+          items: _statusFilterOptions,
+          label: 'Status',
+          onChanged: (val) => setState(() {
+            _statusFilter = val;
+            _currentPageIndex = 0;
+          }),
+        ),
+        if (hasActiveFilters) ...[
+          const SizedBox(width: 10),
+          TextButton(
+            onPressed: () => setState(() {
+              _searchController.clear();
+              _searchQuery = '';
+              _selectedCategory = 'All';
+              _dateFilter = 'Last 30 days';
+              _statusFilter = 'All';
+              _currentPageIndex = 0;
+            }),
+            child: const Text('Reset'),
           ),
         ],
+      ],
+    );
+  }
+
+  Widget _toolbarDropdown<T>({
+    required T value,
+    required List<T> items,
+    required String label,
+    required ValueChanged<T> onChanged,
+  }) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10),
+      height: 44,
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: Colors.grey.withValues(alpha: 0.3)),
+      ),
+      child: DropdownButtonHideUnderline(
+        child: DropdownButton<T>(
+          value: value,
+          icon: Icon(Icons.arrow_drop_down, size: 18, color: primaryDeepGreen),
+          style: const TextStyle(color: Colors.black87, fontSize: 13),
+          items: items.map((v) => DropdownMenuItem(value: v, child: Text('$label: $v'))).toList(),
+          onChanged: (val) {
+            if (val != null) onChanged(val);
+          },
+        ),
       ),
     );
   }
 
-  Widget _buildDetailRow(String label, String value) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 2),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(label,
-              style: const TextStyle(fontWeight: FontWeight.w500, fontSize: 12)),
-          const SizedBox(width: 6),
-          Expanded(
-            child: Text(
-              value,
-              style: const TextStyle(fontSize: 12),
-              overflow: TextOverflow.ellipsis,
+  // ==================== TABLE ====================
+
+  String _invoiceNo(Service service) => 'SV-${(service.receiptNumber ?? 0).toString().padLeft(6, '0')}';
+
+  Widget _buildServicesTable(List<Service> services, DateFormat dateFormatter) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          decoration: BoxDecoration(border: Border(bottom: BorderSide(color: Colors.grey.withValues(alpha: 0.2)))),
+          child: Row(
+            children: [
+              _headerCell('Date', flex: 3),
+              _headerCell('Service / Category', flex: 3),
+              _headerCell('Client', flex: 2),
+              _headerCell('Provider', flex: 2),
+              _headerCell('Amount', flex: 2),
+              _headerCell('Status', flex: 2),
+              _headerCell('Payment Method', flex: 2),
+              _headerCell('', flex: 1),
+            ],
+          ),
+        ),
+        Expanded(
+          child: ListView.separated(
+            itemCount: services.length,
+            separatorBuilder: (context, index) => Divider(height: 1, color: Colors.grey.withValues(alpha: 0.12)),
+            itemBuilder: (context, index) => _buildServiceRow(services[index], dateFormatter),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _headerCell(String label, {required int flex}) {
+    return Expanded(
+      flex: flex,
+      child: Text(label, style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Colors.grey[600])),
+    );
+  }
+
+  Widget _buildServiceRow(Service service, DateFormat dateFormatter) {
+    final status = _getPaymentStatus(service.totalPaid, service.totalAmount);
+    final statusColor = _statusColor(service.totalPaid, service.totalAmount);
+    final isSelected = _selectedService?.id == service.id;
+    final serviceDate = service.serviceDate ?? DateTime.now();
+
+    return InkWell(
+      onTap: () => setState(() => _selectedService = service),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        color: isSelected ? primaryDeepGreen.withValues(alpha: 0.06) : null,
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Expanded(
+              flex: 3,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(dateFormatter.format(serviceDate).split(',').first, style: const TextStyle(fontSize: 13)),
+                  Text(DateFormat('hh:mm a').format(serviceDate),
+                      style: TextStyle(fontSize: 11.5, color: Colors.grey[500])),
+                ],
+              ),
             ),
+            Expanded(
+              flex: 3,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(service.name, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
+                      maxLines: 1, overflow: TextOverflow.ellipsis),
+                  const SizedBox(height: 3),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
+                    decoration: BoxDecoration(
+                      color: primaryDeepGreen.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Text(service.category, style: TextStyle(fontSize: 10.5, color: primaryDeepGreen, fontWeight: FontWeight.w600)),
+                  ),
+                  if (service.description.isNotEmpty)
+                    Padding(
+                      padding: const EdgeInsets.only(top: 3),
+                      child: Text('Notes: ${service.description}',
+                          style: TextStyle(fontSize: 11.5, color: Colors.grey[600]),
+                          maxLines: 1, overflow: TextOverflow.ellipsis),
+                    ),
+                ],
+              ),
+            ),
+            Expanded(
+              flex: 2,
+              child: Text(service.clientName ?? 'Walk-in', style: const TextStyle(fontSize: 13), maxLines: 1, overflow: TextOverflow.ellipsis),
+            ),
+            Expanded(
+              flex: 2,
+              child: Text(service.providedByName ?? 'Unknown', style: const TextStyle(fontSize: 13), maxLines: 1, overflow: TextOverflow.ellipsis),
+            ),
+            Expanded(
+              flex: 2,
+              child: Text(_moneyFormat.format(service.totalAmount), style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600)),
+            ),
+            Expanded(
+              flex: 2,
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                decoration: BoxDecoration(
+                  color: statusColor.withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Text(status, style: TextStyle(color: statusColor, fontSize: 11.5, fontWeight: FontWeight.w600)),
+              ),
+            ),
+            Expanded(
+              flex: 2,
+              child: Text(service.paymentMethod ?? '-', style: const TextStyle(fontSize: 13), maxLines: 1, overflow: TextOverflow.ellipsis),
+            ),
+            Expanded(
+              flex: 1,
+              child: PopupMenuButton<String>(
+                icon: Icon(Icons.more_vert, size: 18, color: Colors.grey[600]),
+                onSelected: (value) {
+                  if (value == 'view') {
+                    setState(() => _selectedService = service);
+                  } else if (value == 'edit') {
+                    Navigator.push(context, MaterialPageRoute(builder: (_) => AddEditServiceScreen(service: service)));
+                  } else if (value == 'delete') {
+                    _confirmDeleteService(service);
+                  }
+                },
+                itemBuilder: (context) => [
+                  const PopupMenuItem(value: 'view', child: Text('View Details')),
+                  const PopupMenuItem(value: 'edit', child: Text('Edit')),
+                  PopupMenuItem(value: 'delete', child: Text('Delete', style: TextStyle(color: Colors.red[400]))),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // ==================== PAGINATION ====================
+
+  Widget _buildPaginationBar({
+    required ServiceProvider serviceProvider,
+    required int totalFiltered,
+    required int pageStart,
+    required int pageEnd,
+    required int totalPages,
+  }) {
+    final canGoNext = _currentPageIndex < totalPages - 1 || serviceProvider.hasMore;
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      decoration: BoxDecoration(border: Border(top: BorderSide(color: Colors.grey.withValues(alpha: 0.2)))),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(
+            totalFiltered == 0
+                ? 'No services'
+                : 'Showing ${pageStart + 1} to $pageEnd of $totalFiltered${serviceProvider.hasMore ? '+' : ''} services',
+            style: TextStyle(fontSize: 12.5, color: Colors.grey[600]),
+          ),
+          Row(
+            children: [
+              DropdownButtonHideUnderline(
+                child: DropdownButton<int>(
+                  value: _displayPageSize,
+                  items: const [10, 25, 50]
+                      .map((n) => DropdownMenuItem(value: n, child: Text('$n per page')))
+                      .toList(),
+                  onChanged: (val) {
+                    if (val != null) setState(() {
+                      _displayPageSize = val;
+                      _currentPageIndex = 0;
+                    });
+                  },
+                ),
+              ),
+              const SizedBox(width: 16),
+              IconButton(
+                icon: const Icon(Icons.chevron_left),
+                onPressed: _currentPageIndex > 0 ? () => setState(() => _currentPageIndex--) : null,
+              ),
+              Text('Page ${_currentPageIndex + 1} of $totalPages', style: const TextStyle(fontSize: 13)),
+              IconButton(
+                icon: serviceProvider.isLoadingMore
+                    ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2))
+                    : const Icon(Icons.chevron_right),
+                onPressed: canGoNext && !serviceProvider.isLoadingMore
+                    ? () async {
+                        final needed = (_currentPageIndex + 2) * _displayPageSize;
+                        if (needed > serviceProvider.services.length && serviceProvider.hasMore) {
+                          await serviceProvider.loadMoreServices();
+                        }
+                        if (mounted) setState(() => _currentPageIndex++);
+                      }
+                    : null,
+              ),
+            ],
           ),
         ],
       ),
     );
   }
 
-  Future<void> _confirmDelete(Service service) async {
+  // ==================== SERVICE DETAILS PANEL ====================
+
+  Future<void> _confirmDeleteService(Service service) async {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Confirm Delete'),
-        content: Text('Are you sure you want to delete "${service.name}"?'),
+        title: const Text('Delete Service?'),
+        content: Text('This permanently deletes ${_invoiceNo(service)} (${service.name}). This cannot be undone.'),
         actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx, false),
-            child: const Text('Cancel'),
-          ),
+          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancel')),
           TextButton(
             onPressed: () => Navigator.pop(ctx, true),
-            child: const Text('Delete', style: TextStyle(color: Colors.red)),
+            child: Text('Delete', style: TextStyle(color: Colors.red[400])),
           ),
         ],
       ),
     );
-
     if (confirmed != true) return;
 
     try {
       await Provider.of<ServiceProvider>(context, listen: false).deleteService(service.id);
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Service deleted'), backgroundColor: Colors.green),
-        );
-      }
+      if (!mounted) return;
+      if (_selectedService?.id == service.id) setState(() => _selectedService = null);
+      ScaffoldMessenger.of(context)
+          .showSnackBar(const SnackBar(content: Text('Service deleted'), backgroundColor: Colors.green));
     } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to delete service: $e'), backgroundColor: Colors.red),
-        );
-      }
+      if (!mounted) return;
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text('Could not delete: $e'), backgroundColor: Colors.redAccent));
     }
+  }
+
+  Widget _buildServiceDetailsPanel(Service service, DateFormat dateOnlyFormatter, DateFormat timeOnlyFormatter) {
+    final status = _getPaymentStatus(service.totalPaid, service.totalAmount);
+    final statusColor = _statusColor(service.totalPaid, service.totalAmount);
+    final serviceDate = service.serviceDate ?? DateTime.now();
+    final client =
+        service.clientId != null ? Provider.of<ClientProvider>(context, listen: false).getClientById(service.clientId!) : null;
+
+    return Container(
+      color: Colors.white,
+      child: SingleChildScrollView(
+        padding: const EdgeInsets.all(20),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                const Text('Service Details', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                IconButton(
+                  icon: const Icon(Icons.close, size: 20),
+                  onPressed: () => setState(() => _selectedService = null),
+                ),
+              ],
+            ),
+            const SizedBox(height: 8),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Expanded(
+                  child: Text(service.name, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
+                ),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                  decoration: BoxDecoration(color: statusColor.withValues(alpha: 0.12), borderRadius: BorderRadius.circular(12)),
+                  child: Text(status, style: TextStyle(color: statusColor, fontSize: 12, fontWeight: FontWeight.w600)),
+                ),
+              ],
+            ),
+            Text(_invoiceNo(service), style: TextStyle(fontSize: 12.5, color: Colors.grey[600], fontWeight: FontWeight.w600)),
+            Text('${dateOnlyFormatter.format(serviceDate)}, ${timeOnlyFormatter.format(serviceDate)}',
+                style: TextStyle(fontSize: 12.5, color: Colors.grey[600])),
+            const SizedBox(height: 20),
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(14),
+              decoration: BoxDecoration(
+                color: offWhite,
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      const Text('Payment Information', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13.5)),
+                      Text(status, style: TextStyle(color: statusColor, fontSize: 12.5, fontWeight: FontWeight.w600)),
+                    ],
+                  ),
+                  const SizedBox(height: 10),
+                  _totalsRow('Paid Amount', _moneyFormat.format(service.totalPaid)),
+                  _totalsRow('Payment Method', service.paymentMethod ?? 'Not recorded'),
+                  if (service.transactionId != null && service.transactionId!.isNotEmpty)
+                    _totalsRow('Transaction ID', service.transactionId!),
+                  _totalsRow('Paid On', service.updatedAt != null ? dateOnlyFormatter.format(service.updatedAt!) : '-'),
+                ],
+              ),
+            ),
+            const SizedBox(height: 20),
+            _detailField(Icons.category_outlined, 'Category', service.category),
+            _detailField(Icons.person_outline, 'Client', service.clientName ?? 'Walk-in', subtitle: client?.phone),
+            _detailField(Icons.badge_outlined, 'Provided By', service.providedByName ?? 'Unknown'),
+            _detailField(Icons.calendar_today_outlined, 'Service Date', dateOnlyFormatter.format(serviceDate)),
+            _detailField(Icons.edit_note_outlined, 'Notes', service.description.isNotEmpty ? service.description : '-'),
+            if (service.updatedAt != null)
+              _detailField(Icons.history_outlined, 'Created On',
+                  '${dateOnlyFormatter.format(service.updatedAt!)}, ${timeOnlyFormatter.format(service.updatedAt!)}'),
+            const SizedBox(height: 20),
+            Row(
+              children: [
+                Expanded(
+                  child: OutlinedButton.icon(
+                    onPressed: () {
+                      Navigator.push(context, MaterialPageRoute(builder: (_) => ServiceReceiptPreviewScreen(service: service)));
+                    },
+                    icon: const Icon(Icons.print_outlined, size: 16),
+                    label: const Text('Print'),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: OutlinedButton.icon(
+                    onPressed: () {
+                      Navigator.push(context, MaterialPageRoute(builder: (_) => AddEditServiceScreen(service: service)));
+                    },
+                    icon: const Icon(Icons.edit_outlined, size: 16),
+                    label: const Text('Edit'),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: OutlinedButton.icon(
+                    onPressed: () => _confirmDeleteService(service),
+                    icon: Icon(Icons.delete_outline, size: 16, color: Colors.red[400]),
+                    label: Text('Delete', style: TextStyle(color: Colors.red[400])),
+                    style: OutlinedButton.styleFrom(side: BorderSide(color: Colors.red[200]!)),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _totalsRow(String label, String value, {bool bold = false, Color? color}) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 6),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(label, style: TextStyle(fontSize: 13, color: Colors.grey[600])),
+          Text(
+            value,
+            style: TextStyle(fontSize: 13.5, fontWeight: bold ? FontWeight.bold : FontWeight.normal, color: color),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _detailField(IconData icon, String label, String value, {String? subtitle}) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 14),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(icon, size: 18, color: Colors.grey[600]),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(label, style: TextStyle(fontSize: 11.5, color: Colors.grey[600])),
+                Text(value, style: const TextStyle(fontSize: 13.5, fontWeight: FontWeight.w600)),
+                if (subtitle != null && subtitle.isNotEmpty)
+                  Text(subtitle, style: TextStyle(fontSize: 12, color: Colors.grey[600])),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
   }
 }

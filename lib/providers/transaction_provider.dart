@@ -6,6 +6,7 @@ import 'package:provider/provider.dart';
 import '../models/transaction.dart';
 import 'facility_provider.dart';
 import '../utils/activity_logger.dart';
+import '../utils/receipt_numbering.dart';
 
 class TransactionProvider with ChangeNotifier {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
@@ -173,7 +174,11 @@ class TransactionProvider with ChangeNotifier {
           .collection('transactions')
           .doc();
 
-      final newTransaction = transaction.copyWith(id: docRef.id);
+      final counterName =
+          transaction.type == 'expense' ? 'expenseReceiptNumber' : 'otherIncomeReceiptNumber';
+      final receiptNumber = await nextReceiptNumber(facilityId, counterName: counterName);
+
+      final newTransaction = transaction.copyWith(id: docRef.id, receiptNumber: receiptNumber);
 
       await docRef.set(newTransaction.toMap());
 

@@ -31,6 +31,11 @@ class Service {
   // existed have none.
   final int? receiptNumber;
 
+  // The M-Pesa payment confirmation code (e.g. "RBH7F3K92M"), entered
+  // when the payment method is M-Pesa. Nullable - any other payment
+  // method, or a service not yet paid, has nothing to record here.
+  final String? transactionId;
+
   Service({
     required this.id,
     required this.category,
@@ -47,6 +52,7 @@ class Service {
     this.totalServiceProfit = 0.0,
     this.paymentMethod,
     this.receiptNumber,
+    this.transactionId,
   });
 
   /// ---------- FROM FIRESTORE ----------
@@ -78,6 +84,7 @@ class Service {
           (data['totalServiceProfit'] ?? 0).toDouble(),
       paymentMethod: data['paymentMethod'] as String?,
       receiptNumber: (data['receiptNumber'] as num?)?.toInt(),
+      transactionId: data['transactionId'] as String?,
     );
   }
 
@@ -101,6 +108,7 @@ class Service {
       'totalServiceProfit': totalServiceProfit,
       'paymentMethod': paymentMethod,
       'receiptNumber': receiptNumber,
+      'transactionId': transactionId,
     };
   }
 
@@ -145,6 +153,7 @@ class Service {
     List<Map<String, dynamic>>? itemsUsed,
     String? paymentMethod,
     int? receiptNumber,
+    String? transactionId,
   }) {
     final newPaid = totalPaid ?? this.totalPaid;
     final newItems = itemsUsed ?? this.itemsUsed;
@@ -170,6 +179,7 @@ class Service {
       totalServiceProfit: newPaid - newExpenses, // ALWAYS recomputed
       paymentMethod: paymentMethod ?? this.paymentMethod,
       receiptNumber: receiptNumber ?? this.receiptNumber,
+      transactionId: transactionId ?? this.transactionId,
     );
   }
 }

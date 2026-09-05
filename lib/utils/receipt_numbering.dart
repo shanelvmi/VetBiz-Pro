@@ -1,11 +1,16 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 /// Assigns the next receipt number for [facilityId] - one shared,
-/// sequential numbering across both sales and services, since they're
-/// both "receipts" from the same business, and a business owner
-/// expects one continuous sequence for their own records, not two
-/// separate #1s that could be confused with each other during
-/// reconciliation or an audit.
+/// sequential numbering across both sales and services by default,
+/// since they're both "receipts" from the same business, and a
+/// business owner expects one continuous sequence for their own
+/// records, not two separate #1s that could be confused with each
+/// other during reconciliation or an audit.
+///
+/// Pass [counterName] to use a separate, independent sequence instead
+/// - e.g. expense and other-income transactions each get their own
+/// counter document, so their own numbering never shares or collides
+/// with the sale/service sequence.
 ///
 /// Uses an isolated Firestore transaction scoped to just this counter
 /// document, rather than wrapping the entire sale/service save in one
@@ -18,13 +23,13 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 /// that following write then fails is a small gap in the sequence,
 /// not a duplicate number, which is an acceptable trade-off any real
 /// receipt numbering system already has to tolerate.
-Future<int> nextReceiptNumber(String facilityId) async {
+Future<int> nextReceiptNumber(String facilityId, {String counterName = 'receiptNumber'}) async {
   final firestore = FirebaseFirestore.instance;
   final counterRef = firestore
       .collection('facilities')
       .doc(facilityId)
       .collection('counters')
-      .doc('receiptNumber');
+      .doc(counterName);
 
   return firestore.runTransaction<int>((transaction) async {
     final snapshot = await transaction.get(counterRef);

@@ -10,6 +10,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 
 import '../../providers/facility_provider.dart';
+import '../../models/product.dart';
 import '../../utils/facility_code_generator.dart';
 import '../../utils/facility_activation.dart';
 import '../../constants/facility_types.dart';
@@ -45,6 +46,15 @@ class _FacilityScreenState extends State<FacilityScreen> {
   // remembers about a specific facility.
   bool _isSearchExpanded = false;
   String _searchQuery = '';
+
+  // Master-detail state - which facility's detail panel is showing,
+  // which tab within it is active, and the list panel's own status
+  // filter (All/Active/Inactive). Selecting a facility never replaces
+  // or hides the list, on any screen width - narrow screens stack the
+  // list above the detail content instead of switching between them.
+  String? _selectedFacilityIdForDetail;
+  int _selectedTabIndex = 0;
+  String _listStatusFilter = 'All';
   final TextEditingController _searchController = TextEditingController();
 
   // Same responsive dialog width already established in
@@ -73,6 +83,18 @@ class _FacilityScreenState extends State<FacilityScreen> {
   // type} copy that never included this either, so it needs its own
   // fetch from the real facility document, same as the logo does.
   final Map<String, Map<String, String?>> _contactByFacility = {};
+  // Additional per-facility detail fields (address, license, ownership,
+  // timestamps) that the new detail view needs but the compact card
+  // never did - kept in its own map rather than folded into
+  // _contactByFacility, since that one's specifically for contact info.
+  final Map<String, Map<String, dynamic>> _detailsByFacility = {};
+  // Lazy-loaded, per-facility caches for the Inventory Summary and
+  // Sales Summary tabs - unlike the aggregate counts in
+  // _statsByFacility (fetched for every facility up front), these hold
+  // the full product/sales lists those two tabs need, only fetched
+  // once a tab is actually opened for a given facility.
+  final Map<String, Future<QuerySnapshot>> _productsFutureByFacility = {};
+  final Map<String, Future<QuerySnapshot>> _recentSalesFutureByFacility = {};
   final Map<String, Map<String, dynamic>> _statsByFacility = {};
   final SalesSummaryService _salesSummaryService = SalesSummaryService();
 
@@ -133,27 +155,74 @@ class _FacilityScreenState extends State<FacilityScreen> {
       final logoUrl = facilityDoc.data()?['logoUrl'] as String?;
       final email = facilityDoc.data()?['email'] as String?;
       final phone = facilityDoc.data()?['phone'] as String?;
+      final address = facilityDoc.data()?['address'] as String?;
+      final description = facilityDoc.data()?['description'] as String?;
+      final tagline = facilityDoc.data()?['tagline'] as String?;
+      final licenseNo = facilityDoc.data()?['licenseNo'] as String?;
+      final ownership = facilityDoc.data()?['ownership'] as String?;
+      final status = facilityDoc.data()?['status'] as String? ?? 'Active';
+      final createdAtTs = facilityDoc.data()?['createdAt'] as Timestamp?;
+      final updatedAtTs = facilityDoc.data()?['updatedAt'] as Timestamp?;
+      final retentionDays = (facilityDoc.data()?['activityLogRetentionDays'] as num?)?.toInt() ?? 90;
       final salesTotals = await salesTotalsFuture;
       final clientCountSnap = await clientCountFuture;
       final productsSnap = await productsFuture;
 
       double totalProductValue = 0.0;
+      int sellableProductCount = 0;
+      int lowStockCount = 0;
+      int expiredCount = 0;
+      final nowForExpiry = DateTime.now();
       for (final doc in productsSnap.docs) {
         final data = doc.data();
         final sellPrice = (data['sellPrice'] as num?)?.toDouble() ?? 0.0;
         final stockQty = (data['stockQty'] as num?)?.toDouble() ?? 0.0;
+        final sellableQty = (data['sellableQty'] as num?)?.toDouble() ?? 0.0;
         totalProductValue += sellPrice * stockQty;
+
+        if (sellableQty > 0) sellableProductCount++;
+
+        final effectiveMinStock = (data['minStockLevel'] as num?)?.toInt() ?? Product.defaultLowStockThreshold;
+
+        // Same either-quantity-low check as StockAlertsScreen's own
+        // definition, so this facility's headline number can never
+        // quietly disagree with what the Dashboard's alerts consider
+        // "low" for the same facility.
+        if (stockQty <= effectiveMinStock ||
+            sellableQty <= effectiveMinStock) {
+          lowStockCount++;
+        }
+
+        final expiryTs = data['expiry'] as Timestamp?;
+        if (expiryTs != null && expiryTs.toDate().isBefore(nowForExpiry)) {
+          expiredCount++;
+        }
       }
 
       if (!mounted) return;
       setState(() {
         _logoByFacility[facilityId] = (logoUrl != null && logoUrl.isNotEmpty) ? logoUrl : null;
         _contactByFacility[facilityId] = {'email': email, 'phone': phone};
+        _detailsByFacility[facilityId] = {
+          'address': address,
+          'description': description,
+          'tagline': tagline,
+          'licenseNo': licenseNo,
+          'ownership': ownership,
+          'status': status,
+          'createdAt': createdAtTs?.toDate(),
+          'updatedAt': updatedAtTs?.toDate(),
+          'activityLogRetentionDays': retentionDays,
+        };
         _statsByFacility[facilityId] = {
           'saleCount': salesTotals['saleCount']?.toInt() ?? 0,
           'totalAmount': salesTotals['totalAmount'] ?? 0.0,
           'clientCount': clientCountSnap.count ?? 0,
           'totalProductValue': totalProductValue,
+          'totalProducts': productsSnap.docs.length,
+          'sellableProducts': sellableProductCount,
+          'lowStockCount': lowStockCount,
+          'expiredCount': expiredCount,
         };
       });
     } catch (e) {
@@ -211,6 +280,16 @@ class _FacilityScreenState extends State<FacilityScreen> {
           _assistantsByFacility
             ..clear()
             ..addAll(assistantsMap);
+          // Default the detail panel to the currently-active facility
+          // if it's in this list, otherwise the first one - only when
+          // nothing's been explicitly selected yet, so a later re-fetch
+          // (e.g. after editing) doesn't pull the view back to a
+          // different facility than the one already being looked at.
+          if (_selectedFacilityIdForDetail == null && facilityList.isNotEmpty) {
+            final activeStillExists = facilityList.any((f) => f['facilityId'] == selectedFacilityId);
+            _selectedFacilityIdForDetail =
+                activeStillExists ? selectedFacilityId : facilityList.first['facilityId'] as String?;
+          }
         });
       } else {
         if (mounted) Navigator.of(context).pop();
@@ -475,6 +554,15 @@ class _FacilityScreenState extends State<FacilityScreen> {
     final existingContact = _contactByFacility[facility['facilityId']];
     final emailController = TextEditingController(text: existingContact?['email'] ?? '');
     final phoneController = TextEditingController(text: existingContact?['phone'] ?? '');
+    final existingDetails = _detailsByFacility[facility['facilityId']];
+    final addressController = TextEditingController(text: existingDetails?['address'] as String? ?? '');
+    final licenseController = TextEditingController(text: existingDetails?['licenseNo'] as String? ?? '');
+    final descriptionController =
+        TextEditingController(text: existingDetails?['description'] as String? ?? '');
+    final taglineController =
+        TextEditingController(text: existingDetails?['tagline'] as String? ?? '');
+    String? selectedOwnership = existingDetails?['ownership'] as String?;
+    String selectedStatus = existingDetails?['status'] as String? ?? 'Active';
     String? selectedType = facility['type'] as String?;
     String? dialogError;
     bool isSaving = false;
@@ -613,6 +701,58 @@ class _FacilityScreenState extends State<FacilityScreen> {
                     labelText: 'Business Phone (optional)',
                   ),
                 ),
+                const SizedBox(height: 12),
+                TextField(
+                  controller: addressController,
+                  decoration: const InputDecoration(
+                    labelText: 'Address (optional)',
+                  ),
+                ),
+                const SizedBox(height: 12),
+                TextField(
+                  controller: descriptionController,
+                  maxLines: 3,
+                  decoration: const InputDecoration(
+                    labelText: 'Description (optional)',
+                  ),
+                ),
+                const SizedBox(height: 12),
+                TextField(
+                  controller: taglineController,
+                  decoration: const InputDecoration(
+                    labelText: 'Tagline (optional)',
+                    hintText: 'e.g. Agrovet & Animal Care',
+                  ),
+                ),
+                const SizedBox(height: 12),
+                TextField(
+                  controller: licenseController,
+                  decoration: const InputDecoration(
+                    labelText: 'License Number (optional)',
+                  ),
+                ),
+                const SizedBox(height: 12),
+                DropdownButtonFormField<String>(
+                  initialValue: selectedOwnership,
+                  decoration: const InputDecoration(labelText: 'Ownership (optional)'),
+                  items: const [
+                    DropdownMenuItem(value: 'Owned', child: Text('Owned')),
+                    DropdownMenuItem(value: 'Rented', child: Text('Rented')),
+                  ],
+                  onChanged: (val) => setDialogState(() => selectedOwnership = val),
+                ),
+                const SizedBox(height: 12),
+                DropdownButtonFormField<String>(
+                  initialValue: selectedStatus,
+                  decoration: const InputDecoration(labelText: 'Status'),
+                  items: const [
+                    DropdownMenuItem(value: 'Active', child: Text('Active')),
+                    DropdownMenuItem(value: 'Inactive', child: Text('Inactive')),
+                  ],
+                  onChanged: (val) {
+                    if (val != null) setDialogState(() => selectedStatus = val);
+                  },
+                ),
                 if (dialogError != null) ...[
                   const SizedBox(height: 8),
                   Text(dialogError!, style: const TextStyle(color: Colors.redAccent, fontSize: 12.5)),
@@ -655,6 +795,16 @@ class _FacilityScreenState extends State<FacilityScreen> {
                           removeLogo: logoMarkedForRemoval,
                           email: emailController.text.trim().isEmpty ? null : emailController.text.trim(),
                           phone: phoneController.text.trim().isEmpty ? null : phoneController.text.trim(),
+                          address: addressController.text.trim().isEmpty ? null : addressController.text.trim(),
+                          description: descriptionController.text.trim().isEmpty
+                              ? null
+                              : descriptionController.text.trim(),
+                          tagline: taglineController.text.trim().isEmpty
+                              ? null
+                              : taglineController.text.trim(),
+                          licenseNo: licenseController.text.trim().isEmpty ? null : licenseController.text.trim(),
+                          ownership: selectedOwnership,
+                          status: selectedStatus,
                         );
                         if (dialogContext.mounted) Navigator.pop(dialogContext);
                       } catch (e) {
@@ -701,6 +851,12 @@ class _FacilityScreenState extends State<FacilityScreen> {
     bool removeLogo = false,
     String? email,
     String? phone,
+    String? address,
+    String? description,
+    String? tagline,
+    String? licenseNo,
+    String? ownership,
+    String? status,
   }) async {
     final firestore = FirebaseFirestore.instance;
 
@@ -739,8 +895,29 @@ class _FacilityScreenState extends State<FacilityScreen> {
       'type': type,
       'email': email,
       'phone': phone,
+      'address': address,
+      'description': description,
+      'tagline': tagline,
+      'licenseNo': licenseNo,
+      'ownership': ownership,
+      'status': status,
+      'updatedAt': FieldValue.serverTimestamp(),
     });
     _contactByFacility[facilityId] = {'email': email, 'phone': phone};
+    _detailsByFacility[facilityId] = {
+      ...?_detailsByFacility[facilityId],
+      'address': address,
+      'description': description,
+      'tagline': tagline,
+      'licenseNo': licenseNo,
+      'ownership': ownership,
+      'status': status,
+      // The server timestamp itself isn't known client-side until the
+      // next fetch re-reads it - using "now" here is a reasonable
+      // local approximation so the detail view doesn't show a stale
+      // "Last Updated" until fetchFacilities runs again.
+      'updatedAt': DateTime.now(),
+    };
 
     final batch = firestore.batch();
 
@@ -1012,281 +1189,44 @@ class _FacilityScreenState extends State<FacilityScreen> {
     );
   }
 
-  Widget buildFacilityCard(Map<String, dynamic> facility) {
-    final isActive = facility['facilityId'] == activeFacilityId;
-    final assistants = _assistantsByFacility[facility['facilityId']] ?? [];
-    final logoUrl = _logoByFacility[facility['facilityId']];
-    final stats = _statsByFacility[facility['facilityId']];
 
-    return HoverElevateCard(
-      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-      baseElevation: 4,
-      hoverElevation: 10,
-      borderRadius: BorderRadius.circular(16),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                // The facility's own uploaded logo when it has one - a
-                // bounded box with BoxFit.contain rather than forcing a
-                // circular crop, so a rectangular or text-wordmark logo
-                // isn't cropped or distorted. Editing happens via the
-                // Edit dialog (alongside name/type), not by tapping the
-                // logo directly here.
-                Container(
-                  width: 48,
-                  height: 48,
-                  decoration: BoxDecoration(
-                    color: Colors.grey.shade100,
-                    borderRadius: BorderRadius.circular(10),
-                    border: Border.all(color: Colors.grey.shade300),
-                  ),
-                  padding: const EdgeInsets.all(4),
-                  child: logoUrl != null
-                      ? Image.network(
-                          logoUrl,
-                          fit: BoxFit.contain,
-                          // Same reasoning as Dashboard's drawer logo -
-                          // decodes directly at a small resolution
-                          // rather than the full source image, however
-                          // large it actually is on Storage right now.
-                          cacheWidth: 150,
-                          cacheHeight: 150,
-                          gaplessPlayback: true,
-                          errorBuilder: (context, error, stackTrace) =>
-                              Icon(Icons.business, color: deepGreen),
-                        )
-                      : Icon(Icons.business, color: deepGreen),
-                ),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: Text(
-                    facility['name'] ?? 'Facility',
-                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: deepGreen),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ),
-                IconButton(
-                  icon: const Icon(Icons.edit_outlined, size: 20),
-                  tooltip: 'Edit Facility',
-                  style: ButtonStyle(
-                    foregroundColor: WidgetStateProperty.resolveWith<Color>((states) {
-                      if (states.contains(WidgetState.hovered)) return warmAmber;
-                      return deepGreen;
-                    }),
-                  ),
-                  onPressed: () => _showEditFacilityDialog(facility),
-                ),
-                IconButton(
-                  icon: const Icon(Icons.delete_outline, size: 20),
-                  tooltip: 'Delete Facility',
-                  style: ButtonStyle(
-                    foregroundColor: WidgetStateProperty.resolveWith<Color>((states) {
-                      if (states.contains(WidgetState.hovered)) return Colors.red.shade900;
-                      return Colors.redAccent;
-                    }),
-                  ),
-                  onPressed: () => _showDeleteFacilityDialog(facility),
-                ),
-                if (isActive)
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                    decoration: BoxDecoration(
-                      color: warmAmber,
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: const Text(
-                      'Opened',
-                      style: TextStyle(color: Colors.black87, fontWeight: FontWeight.w700),
-                    ),
-                  ),
-              ],
-            ),
-            const SizedBox(height: 10),
-            Row(
-              children: [
-                Expanded(
-                  child: Text(
-                    "Code: ${facility['code']}",
-                    style: const TextStyle(fontSize: 14),
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ),
-                IconButton(
-                  icon: const Icon(Icons.copy, size: 18),
-                  tooltip: 'Copy Code',
-                  style: ButtonStyle(
-                    foregroundColor: WidgetStateProperty.resolveWith<Color>((states) {
-                      if (states.contains(WidgetState.hovered)) return warmAmber;
-                      return deepGreen;
-                    }),
-                  ),
-                  onPressed: () {
-                    Clipboard.setData(ClipboardData(text: facility['code'] ?? ''));
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text("Copied to clipboard!")),
-                    );
-                  },
-                ),
-              ],
-            ),
-            Text("Type: ${facility['type']}", style: const TextStyle(fontSize: 14)),
-            const SizedBox(height: 10),
-            // This month's quick numbers - the whole point of a
-            // multi-facility owner opening this screen is usually "how
-            // are my shops doing right now", and previously answering
-            // that meant switching into each one individually just to
-            // check. Laid out as a 2x2 grid rather than one row of
-            // four - four stats in a single row risked feeling
-            // cramped, especially with two cards side by side on a
-            // large screen.
-            if (stats != null)
-              Container(
-                width: double.infinity,
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-                margin: const EdgeInsets.only(bottom: 10),
-                decoration: BoxDecoration(
-                  color: deepGreen.withValues(alpha: 0.06),
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                child: Column(
-                  children: [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceAround,
-                      children: [
-                        _statColumn('${stats['saleCount']}', 'Sales this month'),
-                        _statColumn(
-                          'Tsh ${_formatCompact((stats['totalAmount'] as double?) ?? 0.0)}',
-                          'Revenue this month',
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 10),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceAround,
-                      children: [
-                        _statColumn('${stats['clientCount']}', 'Clients'),
-                        _statColumn(
-                          'Tsh ${_formatCompact((stats['totalProductValue'] as double?) ?? 0.0)}',
-                          'Product value',
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-            Text("Admin: ${_adminFullName ?? 'You'}", style: const TextStyle(fontSize: 14)),
-            const SizedBox(height: 10),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                const Text("Assistants:", style: TextStyle(fontWeight: FontWeight.bold)),
-                // Jumps straight to Manage Assistants, pre-filtered to
-                // this facility - so acting on this facility's team
-                // specifically doesn't mean leaving here and
-                // re-searching for the same facility over there.
-                InkWell(
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (_) => ManageAssistantsScreen(
-                          initialSearchQuery: facility['name'] as String?,
-                        ),
-                      ),
-                    );
-                  },
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Text('Manage', style: TextStyle(fontSize: 12.5, color: deepGreen, fontWeight: FontWeight.w600)),
-                      Icon(Icons.arrow_forward, size: 13, color: deepGreen),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 6),
-            if (assistants.isEmpty)
-              const Padding(
-                padding: EdgeInsets.only(left: 8.0),
-                child: Text('None yet', style: TextStyle(fontSize: 13, color: Colors.grey)),
-              )
-            else
-              ...assistants.map((a) => Padding(
-                    padding: const EdgeInsets.only(left: 8.0, bottom: 4),
-                    child: Row(
-                      children: [
-                        const Icon(Icons.person, size: 16),
-                        const SizedBox(width: 6),
-                        Expanded(child: Text(a['fullName'] ?? 'Unknown', style: const TextStyle(fontSize: 14))),
-                        buildStatusChip(a['status'] ?? 'pending'),
-                      ],
-                    ),
-                  )),
-            const SizedBox(height: 14),
-            SizedBox(
-              width: double.infinity,
-              child: isActive
-                  ? OutlinedButton.icon(
-                      onPressed: null,
-                      icon: const Icon(Icons.check_circle, size: 18),
-                      label: const Text('Currently Open'),
-                      style: OutlinedButton.styleFrom(
-                        foregroundColor: Colors.grey[500],
-                        side: BorderSide(color: Colors.grey[300]!),
-                      ),
-                    )
-                  : ElevatedButton.icon(
-                      onPressed: () => _switchToFacility(facility),
-                      icon: const Icon(Icons.sync_alt, size: 18),
-                      label: const Text('Switch to This Facility'),
-                      style: ButtonStyle(
-                        backgroundColor: WidgetStateProperty.resolveWith<Color>((states) {
-                          if (states.contains(WidgetState.hovered)) return warmAmber;
-                          return deepGreen;
-                        }),
-                        foregroundColor: WidgetStateProperty.all(Colors.white),
-                      ),
-                    ),
-            ),
-          ],
-        ),
+  @override
+  PreferredSizeWidget _buildAppBar() {
+    return AppBar(
+      backgroundColor: Colors.white,
+      foregroundColor: Colors.black87,
+      elevation: 1,
+      centerTitle: true,
+      toolbarHeight: 72,
+      title: const Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Text('Facilities', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 19, color: Colors.black87)),
+          Text('Manage all your veterinary facilities and branches',
+              style: TextStyle(fontSize: 12, color: Colors.black54)),
+        ],
       ),
-    );
-  }
-
-  Widget _buildFacilitiesList(List<Map<String, dynamic>> filteredFacilities) {
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        // Smoothly scales to available width rather than one fixed
-        // breakpoint - matches the old 2-column behavior at the same
-        // ~1024px width it used to kick in at, but keeps adding
-        // columns on wider monitors instead of just stretching 2
-        // columns further and further.
-        const idealCardWidth = 460.0;
-        final crossAxisCount = (constraints.maxWidth / idealCardWidth).floor().clamp(1, 4);
-
-        if (crossAxisCount > 1) {
-          return MasonryGridView.count(
-            padding: const EdgeInsets.symmetric(vertical: 8),
-            crossAxisCount: crossAxisCount,
-            crossAxisSpacing: 12,
-            mainAxisSpacing: 12,
-            itemCount: filteredFacilities.length,
-            itemBuilder: (context, index) => buildFacilityCard(filteredFacilities[index]),
-          );
-        }
-
-        return ListView.builder(
-          itemCount: filteredFacilities.length,
-          itemBuilder: (context, index) => buildFacilityCard(filteredFacilities[index]),
-        );
-      },
+      actions: [
+        IconButton(
+          icon: const Icon(Icons.refresh),
+          tooltip: 'Refresh',
+          onPressed: fetchFacilities,
+        ),
+        Padding(
+          padding: const EdgeInsets.only(right: 12),
+          child: ElevatedButton.icon(
+            onPressed: _showAddFacilityDialog,
+            icon: const Icon(Icons.add, size: 18),
+            label: const Text('Add Facility'),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: deepGreen,
+              foregroundColor: offWhite,
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+            ),
+          ),
+        ),
+      ],
     );
   }
 
@@ -1294,79 +1234,1566 @@ class _FacilityScreenState extends State<FacilityScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: offWhite,
-      appBar: AppBar(
-        backgroundColor: deepGreen,
-        iconTheme: const IconThemeData(color: offWhite),
-        centerTitle: true,
-        title: _isSearchExpanded
-            ? TextField(
-                controller: _searchController,
-                autofocus: true,
-                cursorColor: offWhite,
-                style: TextStyle(color: offWhite),
-                decoration: InputDecoration(
-                  hintText: 'Search by name or code...',
-                  hintStyle: TextStyle(color: offWhite.withValues(alpha: 0.7)),
-                  border: InputBorder.none,
-                  suffixIcon: IconButton(
-                    icon: Icon(Icons.clear, color: offWhite),
-                    onPressed: () {
-                      setState(() {
-                        _searchController.clear();
-                        _searchQuery = '';
-                        _isSearchExpanded = false;
-                      });
-                    },
-                  ),
-                ),
-                onChanged: (val) => setState(() => _searchQuery = val.trim().toLowerCase()),
-              )
-            : const Text(
-                'My Facilities',
-                style: TextStyle(color: offWhite),
-              ),
-        actions: [
-          if (!_isSearchExpanded)
-            IconButton(
-              icon: const Icon(Icons.search, color: offWhite),
-              tooltip: 'Search',
-              onPressed: () => setState(() => _isSearchExpanded = true),
-            ),
-          if (!_isSearchExpanded)
-            IconButton(
-              icon: const Icon(Icons.refresh, color: offWhite),
-              tooltip: 'Refresh Facilities',
-              onPressed: fetchFacilities,
-            ),
-        ],
-      ),
+      appBar: _buildAppBar(),
       body: Builder(
         builder: (context) {
           if (isLoading) return const Center(child: CircularProgressIndicator());
           if (facilities.isEmpty) return const Center(child: Text("No facilities found."));
 
-          final filtered = _searchQuery.isEmpty
-              ? facilities
-              : facilities.where((f) {
-                  final name = (f['name'] ?? '').toString().toLowerCase();
-                  final code = (f['code'] ?? '').toString().toLowerCase();
-                  return name.contains(_searchQuery) || code.contains(_searchQuery);
-                }).toList();
+          final filtered = facilities.where((f) {
+            final name = (f['name'] ?? '').toString().toLowerCase();
+            final code = (f['code'] ?? '').toString().toLowerCase();
+            final matchesSearch =
+                _searchQuery.isEmpty || name.contains(_searchQuery) || code.contains(_searchQuery);
+            final status = _detailsByFacility[f['facilityId']]?['status'] as String? ?? 'Active';
+            final matchesStatus = _listStatusFilter == 'All' || status == _listStatusFilter;
+            return matchesSearch && matchesStatus;
+          }).toList();
 
-          if (filtered.isEmpty) {
-            return Center(child: Text('No facilities match "$_searchQuery".'));
+          Map<String, dynamic>? selectedFacility;
+          if (filtered.isNotEmpty) {
+            for (final f in filtered) {
+              if (f['facilityId'] == _selectedFacilityIdForDetail) {
+                selectedFacility = f;
+                break;
+              }
+            }
+            selectedFacility ??= filtered.first;
           }
 
-          return _buildFacilitiesList(filtered);
+          final detailArea = selectedFacility != null
+              ? _buildDetailPanelContent(selectedFacility)
+              : Padding(
+                  padding: const EdgeInsets.all(24),
+                  child: Center(
+                    child: Text(
+                      'No facilities match your filters. Try a different search or status.',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(color: Colors.grey[600]),
+                    ),
+                  ),
+                );
+
+          return LayoutBuilder(
+            builder: (context, constraints) {
+              final isWide = constraints.maxWidth >= 900;
+
+              if (!isWide) {
+                return SingleChildScrollView(
+                  child: Column(
+                    children: [
+                      SizedBox(height: 360, child: _buildListPanel(filtered)),
+                      const Divider(height: 1),
+                      Padding(
+                        padding: const EdgeInsets.all(16),
+                        child: detailArea,
+                      ),
+                    ],
+                  ),
+                );
+              }
+
+              return Row(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  SizedBox(width: 340, child: _buildListPanel(filtered)),
+                  const VerticalDivider(width: 1),
+                  Expanded(
+                    child: selectedFacility != null
+                        ? SingleChildScrollView(padding: const EdgeInsets.all(20), child: detailArea)
+                        : detailArea,
+                  ),
+                ],
+              );
+            },
+          );
         },
       ),
-      floatingActionButton: FloatingActionButton.extended(
-        backgroundColor: deepGreen,
-        foregroundColor: offWhite,
-        hoverColor: warmAmber,
-        icon: const Icon(Icons.add_business),
-        label: const Text('Add Facility'),
-        onPressed: _showAddFacilityDialog,
+    );
+  }
+
+  // ==================== LIST PANEL ====================
+
+  Widget _buildListPanel(List<Map<String, dynamic>> filtered) {
+    return Container(
+      color: offWhite,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                TextField(
+                  controller: _searchController,
+                  decoration: InputDecoration(
+                    hintText: 'Search facilities...',
+                    prefixIcon: const Icon(Icons.search, size: 20),
+                    isDense: true,
+                    contentPadding: const EdgeInsets.symmetric(vertical: 12, horizontal: 12),
+                    filled: true,
+                    fillColor: Colors.white,
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(10),
+                      borderSide: BorderSide(color: Colors.grey.withValues(alpha: 0.3)),
+                    ),
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(10),
+                      borderSide: BorderSide(color: Colors.grey.withValues(alpha: 0.3)),
+                    ),
+                  ),
+                  onChanged: (val) => setState(() => _searchQuery = val.trim().toLowerCase()),
+                ),
+                const SizedBox(height: 10),
+                Row(
+                  children: [
+                    _statusFilterChip('All'),
+                    const SizedBox(width: 8),
+                    _statusFilterChip('Active'),
+                    const SizedBox(width: 8),
+                    _statusFilterChip('Inactive'),
+                  ],
+                ),
+              ],
+            ),
+          ),
+          Expanded(
+            child: filtered.isEmpty
+                ? Padding(
+                    padding: const EdgeInsets.all(20),
+                    child: Center(
+                      child: Text(
+                        'No facilities match this filter.',
+                        textAlign: TextAlign.center,
+                        style: TextStyle(color: Colors.grey[600], fontSize: 13),
+                      ),
+                    ),
+                  )
+                : ListView.builder(
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                    itemCount: filtered.length,
+                    itemBuilder: (context, index) => _buildFacilityListRow(filtered[index]),
+                  ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _statusFilterChip(String value) {
+    final isSelected = _listStatusFilter == value;
+    return InkWell(
+      onTap: () => setState(() => _listStatusFilter = value),
+      borderRadius: BorderRadius.circular(20),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+        decoration: BoxDecoration(
+          color: isSelected ? deepGreen : Colors.white,
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(color: isSelected ? deepGreen : Colors.grey.withValues(alpha: 0.3)),
+        ),
+        child: Text(
+          value,
+          style: TextStyle(
+            fontSize: 12.5,
+            color: isSelected ? Colors.white : Colors.black87,
+            fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildFacilityListRow(Map<String, dynamic> facility) {
+    final facilityId = facility['facilityId'] as String?;
+    final isSelected = facilityId == _selectedFacilityIdForDetail;
+    final logoUrl = _logoByFacility[facilityId];
+    final address = _detailsByFacility[facilityId]?['address'] as String?;
+    final status = _detailsByFacility[facilityId]?['status'] as String? ?? 'Active';
+
+    return InkWell(
+      onTap: () => setState(() {
+        _selectedFacilityIdForDetail = facilityId;
+        _selectedTabIndex = 0;
+      }),
+      borderRadius: BorderRadius.circular(10),
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 6),
+        padding: const EdgeInsets.all(10),
+        decoration: BoxDecoration(
+          color: isSelected ? deepGreen.withValues(alpha: 0.08) : Colors.transparent,
+          borderRadius: BorderRadius.circular(10),
+          border: isSelected ? Border.all(color: deepGreen.withValues(alpha: 0.3)) : null,
+        ),
+        child: Row(
+          children: [
+            Container(
+              width: 40,
+              height: 40,
+              decoration: BoxDecoration(
+                color: Colors.grey.shade100,
+                borderRadius: BorderRadius.circular(9),
+                border: Border.all(color: Colors.grey.shade300),
+              ),
+              padding: const EdgeInsets.all(4),
+              child: logoUrl != null
+                  ? Image.network(
+                      logoUrl,
+                      fit: BoxFit.contain,
+                      errorBuilder: (context, error, stackTrace) => Icon(Icons.business, color: deepGreen, size: 18),
+                    )
+                  : Icon(Icons.business, color: deepGreen, size: 18),
+            ),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    facility['name'] ?? 'Facility',
+                    style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  if (address != null && address.isNotEmpty)
+                    Text(
+                      address,
+                      style: TextStyle(fontSize: 11.5, color: Colors.grey[600]),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  const SizedBox(height: 3),
+                  buildStatusChip(status),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // ==================== DETAIL PANEL ====================
+
+  Widget _buildDetailPanel(Map<String, dynamic> facility) {
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(20),
+      child: _buildDetailPanelContent(facility),
+    );
+  }
+
+  Widget _buildDetailPanelContent(Map<String, dynamic> facility) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _buildBreadcrumbAndActions(facility),
+        const SizedBox(height: 16),
+        _buildHeaderCard(facility),
+        const SizedBox(height: 20),
+        _buildMetricsRow(facility),
+        const SizedBox(height: 20),
+        _buildTabsRow(),
+        const SizedBox(height: 16),
+        _buildTabContent(facility),
+      ],
+    );
+  }
+
+  Widget _buildBreadcrumbAndActions(Map<String, dynamic> facility) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.center,
+      children: [
+        Expanded(
+          child: Wrap(
+            crossAxisAlignment: WrapCrossAlignment.center,
+            children: [
+              Text('Facilities', style: TextStyle(color: Colors.grey[600], fontSize: 14)),
+              Icon(Icons.chevron_right, size: 16, color: Colors.grey[600]),
+              Text(
+                facility['name'] ?? 'Facility',
+                style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+              ),
+            ],
+          ),
+        ),
+        PopupMenuButton<String>(
+          tooltip: 'More actions',
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+            decoration: BoxDecoration(
+              border: Border.all(color: Colors.grey.withValues(alpha: 0.3)),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: const Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(Icons.more_vert, size: 18),
+                SizedBox(width: 4),
+                Text('More Actions', style: TextStyle(fontSize: 13)),
+              ],
+            ),
+          ),
+          onSelected: (value) {
+            if (value == 'edit') {
+              _showEditFacilityDialog(facility);
+            } else if (value == 'switch') {
+              _switchToFacility(facility);
+            } else if (value == 'delete') {
+              _showDeleteFacilityDialog(facility);
+            }
+          },
+          itemBuilder: (context) => [
+            const PopupMenuItem(value: 'edit', child: Text('Edit Facility')),
+            if (facility['facilityId'] != activeFacilityId)
+              const PopupMenuItem(value: 'switch', child: Text('Switch to This Facility')),
+            PopupMenuItem(
+              value: 'delete',
+              child: Text('Delete Facility', style: TextStyle(color: Colors.red[400])),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+
+  Widget _buildHeaderCard(Map<String, dynamic> facility) {
+    final facilityId = facility['facilityId'] as String?;
+    final logoUrl = _logoByFacility[facilityId];
+    final contact = _contactByFacility[facilityId];
+    final details = _detailsByFacility[facilityId];
+    final status = details?['status'] as String? ?? 'Active';
+    final createdAt = details?['createdAt'] as DateTime?;
+
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: Colors.grey.withValues(alpha: 0.15)),
+        boxShadow: [
+          BoxShadow(color: Colors.black.withValues(alpha: 0.04), blurRadius: 8, offset: const Offset(0, 2)),
+        ],
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Reuses the same logo as the compact list row and card,
+          // just larger - a genuinely separate exterior photo upload
+          // is out of scope for now.
+          Container(
+            width: 140,
+            height: 140,
+            decoration: BoxDecoration(
+              color: Colors.grey.shade100,
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: Colors.grey.shade300),
+            ),
+            padding: const EdgeInsets.all(10),
+            child: logoUrl != null
+                ? Image.network(
+                    logoUrl,
+                    fit: BoxFit.contain,
+                    errorBuilder: (context, error, stackTrace) => Icon(Icons.business, color: deepGreen, size: 40),
+                  )
+                : Icon(Icons.business, color: deepGreen, size: 40),
+          ),
+          const SizedBox(width: 20),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Flexible(
+                      child: Text(
+                        facility['name'] ?? 'Facility',
+                        style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 22),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                    buildStatusChip(status),
+                  ],
+                ),
+                const SizedBox(height: 10),
+                if (details?['address'] != null && (details!['address'] as String).isNotEmpty)
+                  _infoRow(Icons.location_on_outlined, details['address'] as String),
+                if (contact?['phone'] != null && contact!['phone']!.isNotEmpty)
+                  _infoRow(Icons.phone_outlined, contact['phone']!),
+                if (contact?['email'] != null && contact!['email']!.isNotEmpty)
+                  _infoRow(Icons.email_outlined, contact['email']!),
+                _infoRow(Icons.person_outline, '${_adminFullName ?? 'You'} (Manager)'),
+                if (createdAt != null)
+                  _infoRow(Icons.calendar_today_outlined, 'Joined on ${_formatDate(createdAt)}'),
+              ],
+            ),
+          ),
+          const SizedBox(width: 20),
+          Container(
+            width: 170,
+            padding: const EdgeInsets.all(14),
+            decoration: BoxDecoration(
+              color: offWhite,
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text('Facility Code', style: TextStyle(fontSize: 11, color: Colors.grey[600])),
+                Row(
+                  children: [
+                    Text(
+                      facility['code'] ?? '-',
+                      style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.copy, size: 15),
+                      padding: EdgeInsets.zero,
+                      constraints: const BoxConstraints(),
+                      onPressed: () {
+                        Clipboard.setData(ClipboardData(text: facility['code'] ?? ''));
+                        ScaffoldMessenger.of(context)
+                            .showSnackBar(const SnackBar(content: Text('Copied to clipboard!')));
+                      },
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 10),
+                Text('License No.', style: TextStyle(fontSize: 11, color: Colors.grey[600])),
+                Row(
+                  children: [
+                    Text(
+                      (details?['licenseNo'] as String?)?.isNotEmpty == true
+                          ? details!['licenseNo'] as String
+                          : 'Not set',
+                      style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+                    ),
+                    if ((details?['licenseNo'] as String?)?.isNotEmpty == true)
+                      IconButton(
+                        icon: const Icon(Icons.copy, size: 15),
+                        padding: EdgeInsets.zero,
+                        constraints: const BoxConstraints(),
+                        onPressed: () {
+                          Clipboard.setData(ClipboardData(text: details!['licenseNo'] as String));
+                          ScaffoldMessenger.of(context)
+                              .showSnackBar(const SnackBar(content: Text('Copied to clipboard!')));
+                        },
+                      ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _infoRow(IconData icon, String text) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 6),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(icon, size: 15, color: Colors.grey[600]),
+          const SizedBox(width: 8),
+          Expanded(child: Text(text, style: const TextStyle(fontSize: 13.5))),
+        ],
+      ),
+    );
+  }
+
+  String _formatDate(DateTime d) {
+    const months = [
+      'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'
+    ];
+    return '${d.day} ${months[d.month - 1]} ${d.year}';
+  }
+
+  String _formatDateTime(DateTime d) {
+    final hour = d.hour % 12 == 0 ? 12 : d.hour % 12;
+    final minute = d.minute.toString().padLeft(2, '0');
+    final period = d.hour >= 12 ? 'PM' : 'AM';
+    return '${_formatDate(d)}, $hour:$minute $period';
+  }
+
+  // ==================== ACTIVITY (shared by the Overview tab's
+  // "Recent Activity" and the Activity Log tab) ====================
+  //
+  // Queries facility-scoped activity_logs directly, rather than
+  // reusing ActivityLogScreen - that screen reads its facility from
+  // FacilityProvider (the currently-active one), not a passed-in id,
+  // so it would show the wrong facility's activity whenever this
+  // detail panel is browsing one that isn't the active facility.
+
+  IconData _activityIcon(String actionType) {
+    switch (actionType.toLowerCase()) {
+      case 'products':
+        return Icons.inventory_2;
+      case 'inventory move':
+        return Icons.swap_horiz;
+      case 'sales':
+        return Icons.shopping_cart;
+      case 'services':
+        return Icons.build;
+      case 'clients':
+        return Icons.people;
+      case 'debtors':
+        return Icons.account_balance_wallet;
+      case 'settings':
+        return Icons.settings;
+      case 'admin':
+        return Icons.admin_panel_settings;
+      default:
+        return Icons.info;
+    }
+  }
+
+  Color _activityColor(String actionType) {
+    switch (actionType.toLowerCase()) {
+      case 'inventory move':
+        return Colors.blue;
+      case 'products':
+        return Colors.green;
+      case 'sales':
+        return warmAmber;
+      case 'services':
+        return Colors.purple;
+      case 'clients':
+        return Colors.teal;
+      case 'debtors':
+        return Colors.orange;
+      case 'settings':
+        return Colors.grey;
+      case 'admin':
+        return Colors.red;
+      default:
+        return deepGreen;
+    }
+  }
+
+  Widget _buildActivityList(String facilityId, {required int limit}) {
+    return StreamBuilder<QuerySnapshot>(
+      stream: FirebaseFirestore.instance
+          .collection('facilities')
+          .doc(facilityId)
+          .collection('activity_logs')
+          .orderBy('timestamp', descending: true)
+          .limit(limit)
+          .snapshots(),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting && !snapshot.hasData) {
+          return const Padding(
+            padding: EdgeInsets.symmetric(vertical: 24),
+            child: Center(child: CircularProgressIndicator(strokeWidth: 2)),
+          );
+        }
+
+        final docs = snapshot.data?.docs ?? [];
+        if (docs.isEmpty) {
+          return Padding(
+            padding: const EdgeInsets.symmetric(vertical: 16),
+            child: Text('No activity yet.', style: TextStyle(color: Colors.grey[600], fontSize: 13)),
+          );
+        }
+
+        return Column(
+          children: docs.map((doc) {
+            final data = doc.data() as Map<String, dynamic>;
+            final actionType = (data['actionType'] as String?) ?? '';
+            final description = (data['description'] as String?) ?? '';
+            final timestampTs = data['timestamp'] as Timestamp?;
+            final color = _activityColor(actionType);
+
+            return Padding(
+              padding: const EdgeInsets.only(bottom: 14),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Container(
+                    width: 34,
+                    height: 34,
+                    decoration: BoxDecoration(color: color.withValues(alpha: 0.15), shape: BoxShape.circle),
+                    child: Icon(_activityIcon(actionType), color: color, size: 17),
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          actionType.isEmpty ? 'Activity' : actionType,
+                          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+                        ),
+                        Text(description, style: TextStyle(fontSize: 12.5, color: Colors.grey[700])),
+                      ],
+                    ),
+                  ),
+                  if (timestampTs != null)
+                    Text(
+                      _formatDateTime(timestampTs.toDate()),
+                      style: TextStyle(fontSize: 11, color: Colors.grey[500]),
+                    ),
+                ],
+              ),
+            );
+          }).toList(),
+        );
+      },
+    );
+  }
+
+  // ==================== METRICS ROW ====================
+
+  Widget _buildMetricsRow(Map<String, dynamic> facility) {
+    final facilityId = facility['facilityId'] as String?;
+    final stats = _statsByFacility[facilityId];
+    final totalProducts = stats?['totalProducts'] as int? ?? 0;
+    final sellableProducts = stats?['sellableProducts'] as int? ?? 0;
+    final lowStockCount = stats?['lowStockCount'] as int? ?? 0;
+    final expiredCount = stats?['expiredCount'] as int? ?? 0;
+    final totalAmount = stats?['totalAmount'] as double? ?? 0.0;
+
+    final metrics = [
+      ('Total Products', '$totalProducts', Icons.inventory_2_outlined, const Color(0xFF3E8E82), 'View Products', 2),
+      ('Sellable Products', '$sellableProducts', Icons.shopping_cart_outlined, Colors.green, 'View All', 2),
+      ('Low Stock Items', '$lowStockCount', Icons.warning_amber_outlined, Colors.orange, 'View Items', 2),
+      ('Expired Items', '$expiredCount', Icons.remove_shopping_cart_outlined, Colors.red, 'View Items', 2),
+      (
+        'Total Sales (This Month)',
+        'TZS ${_formatCompact(totalAmount)}',
+        Icons.trending_up,
+        deepGreen,
+        'View Report',
+        3,
+      ),
+    ];
+
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final isNarrow = constraints.maxWidth < 700;
+        return GridView.count(
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          crossAxisCount: isNarrow ? 2 : 5,
+          childAspectRatio: isNarrow ? 2.0 : 1.7,
+          crossAxisSpacing: 12,
+          mainAxisSpacing: 12,
+          children: metrics
+              .map((m) => _metricCard(
+                    label: m.$1,
+                    value: m.$2,
+                    icon: m.$3,
+                    color: m.$4,
+                    linkLabel: m.$5,
+                    linkTabIndex: m.$6,
+                  ))
+              .toList(),
+        );
+      },
+    );
+  }
+
+  Widget _metricCard({
+    required String label,
+    required String value,
+    required IconData icon,
+    required Color color,
+    required String linkLabel,
+    required int linkTabIndex,
+  }) {
+    return Container(
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.grey.withValues(alpha: 0.15)),
+        boxShadow: [
+          BoxShadow(color: Colors.black.withValues(alpha: 0.03), blurRadius: 6, offset: const Offset(0, 2)),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Row(
+            children: [
+              Container(
+                width: 32,
+                height: 32,
+                decoration:
+                    BoxDecoration(color: color.withValues(alpha: 0.12), borderRadius: BorderRadius.circular(8)),
+                child: Icon(icon, color: color, size: 16),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: FittedBox(
+                  fit: BoxFit.scaleDown,
+                  alignment: Alignment.centerLeft,
+                  child: Text(value, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 19)),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 6),
+          Text(label, style: TextStyle(fontSize: 11.5, color: Colors.grey[600]), maxLines: 1, overflow: TextOverflow.ellipsis),
+          const SizedBox(height: 4),
+          InkWell(
+            onTap: () => setState(() => _selectedTabIndex = linkTabIndex),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(linkLabel, style: TextStyle(fontSize: 11.5, color: deepGreen, fontWeight: FontWeight.w600)),
+                Icon(Icons.arrow_forward, size: 12, color: deepGreen),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // ==================== TABS ====================
+
+  static const List<String> _tabLabels = [
+    'Overview',
+    'Team Members',
+    'Inventory Summary',
+    'Sales Summary',
+    'Activity Log',
+    'Settings',
+  ];
+
+  Widget _buildTabsRow() {
+    final facilityId = _selectedFacilityIdForDetail;
+    final assistantCount = _assistantsByFacility[facilityId]?.length ?? 0;
+
+    return SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
+      child: Row(
+        children: List.generate(_tabLabels.length, (index) {
+          final isSelected = _selectedTabIndex == index;
+          final label = _tabLabels[index];
+          return InkWell(
+            onTap: () => setState(() => _selectedTabIndex = index),
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+              decoration: BoxDecoration(
+                border: Border(
+                  bottom: BorderSide(
+                    color: isSelected ? deepGreen : Colors.transparent,
+                    width: 2,
+                  ),
+                ),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    label,
+                    style: TextStyle(
+                      fontSize: 13.5,
+                      fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                      color: isSelected ? deepGreen : Colors.black87,
+                    ),
+                  ),
+                  if (label == 'Team Members' && assistantCount > 0) ...[
+                    const SizedBox(width: 6),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
+                      decoration: BoxDecoration(
+                        color: Colors.grey.shade200,
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: Text('$assistantCount', style: const TextStyle(fontSize: 11)),
+                    ),
+                  ],
+                ],
+              ),
+            ),
+          );
+        }),
+      ),
+    );
+  }
+
+  Widget _buildTabContent(Map<String, dynamic> facility) {
+    switch (_selectedTabIndex) {
+      case 0:
+        return _buildOverviewTab(facility);
+      case 1:
+        // Team Members is deliberately just a link into the existing,
+        // full Manage Assistants screen rather than a rebuilt view -
+        // there's no separate "team members" concept to maintain here.
+        return _buildComingSoonTab(
+          'Team Members',
+          'Manage this facility\'s team from the Manage Assistants screen.',
+          actionLabel: 'Open Manage Assistants',
+          onAction: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (_) => ManageAssistantsScreen(initialSearchQuery: facility['name'] as String?),
+              ),
+            );
+          },
+        );
+      case 2:
+        return _buildInventorySummaryTab(facility);
+      case 3:
+        return _buildSalesSummaryTab(facility);
+      case 4:
+        return _buildActivityLogTab(facility);
+      case 5:
+        return _buildSettingsTab(facility);
+      default:
+        return _buildOverviewTab(facility);
+    }
+  }
+
+  // ==================== INVENTORY SUMMARY ====================
+
+  Future<QuerySnapshot> _getProductsFuture(String facilityId) {
+    return _productsFutureByFacility.putIfAbsent(
+      facilityId,
+      () => FirebaseFirestore.instance
+          .collection('facilities')
+          .doc(facilityId)
+          .collection('products')
+          .get(),
+    );
+  }
+
+  Widget _buildInventorySummaryTab(Map<String, dynamic> facility) {
+    final facilityId = facility['facilityId'] as String?;
+    if (facilityId == null) return const SizedBox.shrink();
+
+    return FutureBuilder<QuerySnapshot>(
+      future: _getProductsFuture(facilityId),
+      builder: (context, snapshot) {
+        if (!snapshot.hasData) {
+          return const Padding(
+            padding: EdgeInsets.symmetric(vertical: 40),
+            child: Center(child: CircularProgressIndicator(strokeWidth: 2)),
+          );
+        }
+
+        final docs = snapshot.data!.docs;
+        if (docs.isEmpty) {
+          return Container(
+            padding: const EdgeInsets.all(20),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(14),
+              border: Border.all(color: Colors.grey.withValues(alpha: 0.15)),
+            ),
+            child: Text('No products in this facility yet.', style: TextStyle(color: Colors.grey[600])),
+          );
+        }
+
+        // Category breakdown - a simple count per category, using
+        // whatever value each product actually has (falling back to
+        // "Uncategorized" the same way the catalog screens do).
+        final categoryCounts = <String, int>{};
+        final needsAttention = <Map<String, dynamic>>[];
+        final now = DateTime.now();
+
+        for (final doc in docs) {
+          final data = doc.data() as Map<String, dynamic>;
+          final category = (data['category'] as String?)?.isNotEmpty == true
+              ? data['category'] as String
+              : 'Uncategorized';
+          categoryCounts[category] = (categoryCounts[category] ?? 0) + 1;
+
+          final stockQty = (data['stockQty'] as num?)?.toDouble() ?? 0;
+          final sellableQty = (data['sellableQty'] as num?)?.toDouble() ?? 0;
+          final expiryTs = data['expiry'] as Timestamp?;
+          final isExpired = expiryTs != null && expiryTs.toDate().isBefore(now);
+          final effectiveMinStock = (data['minStockLevel'] as num?)?.toInt() ?? Product.defaultLowStockThreshold;
+          final isLow = stockQty <= effectiveMinStock ||
+              sellableQty <= effectiveMinStock;
+
+          if (isExpired || isLow) {
+            needsAttention.add({
+              'name': data['name'] as String? ?? 'Product',
+              'isExpired': isExpired,
+              'isLow': isLow,
+              'stockQty': stockQty.toInt(),
+              'expiry': expiryTs?.toDate(),
+            });
+          }
+        }
+
+        final sortedCategories = categoryCounts.entries.toList()
+          ..sort((a, b) => b.value.compareTo(a.value));
+
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(14),
+                border: Border.all(color: Colors.grey.withValues(alpha: 0.15)),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text('By Category', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
+                  const SizedBox(height: 12),
+                  ...sortedCategories.map((e) => Padding(
+                        padding: const EdgeInsets.only(bottom: 8),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Text(e.key, style: const TextStyle(fontSize: 13.5)),
+                            Text('${e.value}',
+                                style: const TextStyle(fontSize: 13.5, fontWeight: FontWeight.bold)),
+                          ],
+                        ),
+                      )),
+                ],
+              ),
+            ),
+            const SizedBox(height: 16),
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(14),
+                border: Border.all(color: Colors.grey.withValues(alpha: 0.15)),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text('Needs Attention', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
+                  const SizedBox(height: 12),
+                  if (needsAttention.isEmpty)
+                    Text('Nothing low on stock or expired right now.',
+                        style: TextStyle(color: Colors.grey[600], fontSize: 13))
+                  else
+                    ...needsAttention.take(10).map((p) => Padding(
+                          padding: const EdgeInsets.only(bottom: 10),
+                          child: Row(
+                            children: [
+                              Expanded(
+                                child: Text(p['name'] as String, style: const TextStyle(fontSize: 13.5)),
+                              ),
+                              if (p['isExpired'] as bool)
+                                _miniBadge('Expired', Colors.red)
+                              else if (p['isLow'] as bool)
+                                _miniBadge('Low Stock', Colors.orange),
+                            ],
+                          ),
+                        )),
+                ],
+              ),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  Widget _miniBadge(String label, Color color) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: color.withValues(alpha: 0.4)),
+      ),
+      child: Text(label, style: TextStyle(color: color, fontSize: 11, fontWeight: FontWeight.w600)),
+    );
+  }
+
+  // ==================== SALES SUMMARY ====================
+
+  Future<QuerySnapshot> _getRecentSalesFuture(String facilityId) {
+    return _recentSalesFutureByFacility.putIfAbsent(
+      facilityId,
+      () => FirebaseFirestore.instance
+          .collection('facilities')
+          .doc(facilityId)
+          .collection('sales')
+          .orderBy('timestamp', descending: true)
+          .limit(8)
+          .get(),
+    );
+  }
+
+  Widget _buildSalesSummaryTab(Map<String, dynamic> facility) {
+    final facilityId = facility['facilityId'] as String?;
+    if (facilityId == null) return const SizedBox.shrink();
+
+    final now = DateTime.now();
+    final thisMonthStart = DateTime(now.year, now.month, 1);
+    final lastMonthStart = DateTime(now.year, now.month - 1, 1);
+    final lastMonthEnd = thisMonthStart.subtract(const Duration(days: 1));
+
+    return FutureBuilder<List<dynamic>>(
+      future: Future.wait([
+        _salesSummaryService.getRangeTotals(facilityId: facilityId, start: thisMonthStart, end: now),
+        _salesSummaryService.getRangeTotals(facilityId: facilityId, start: lastMonthStart, end: lastMonthEnd),
+        _getRecentSalesFuture(facilityId),
+      ]),
+      builder: (context, snapshot) {
+        if (!snapshot.hasData) {
+          return const Padding(
+            padding: EdgeInsets.symmetric(vertical: 40),
+            child: Center(child: CircularProgressIndicator(strokeWidth: 2)),
+          );
+        }
+
+        final thisMonth = snapshot.data![0] as Map<String, double>;
+        final lastMonth = snapshot.data![1] as Map<String, double>;
+        final recentSales = (snapshot.data![2] as QuerySnapshot).docs;
+
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(14),
+                border: Border.all(color: Colors.grey.withValues(alpha: 0.15)),
+              ),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: _monthComparisonColumn('This Month', thisMonth['totalAmount'] ?? 0,
+                        (thisMonth['saleCount'] ?? 0).toInt()),
+                  ),
+                  Container(width: 1, height: 50, color: Colors.grey.withValues(alpha: 0.2)),
+                  Expanded(
+                    child: _monthComparisonColumn('Last Month', lastMonth['totalAmount'] ?? 0,
+                        (lastMonth['saleCount'] ?? 0).toInt()),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 16),
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(14),
+                border: Border.all(color: Colors.grey.withValues(alpha: 0.15)),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text('Recent Sales', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
+                  const SizedBox(height: 12),
+                  if (recentSales.isEmpty)
+                    Text('No sales recorded yet.', style: TextStyle(color: Colors.grey[600], fontSize: 13))
+                  else
+                    ...recentSales.map((doc) {
+                      final data = doc.data() as Map<String, dynamic>;
+                      final clientName = data['clientName'] as String?;
+                      final totalAmount = (data['totalAmount'] as num?)?.toDouble() ?? 0.0;
+                      final ts = data['timestamp'] as Timestamp?;
+                      return Padding(
+                        padding: const EdgeInsets.only(bottom: 10),
+                        child: Row(
+                          children: [
+                            Expanded(
+                              child: Text(
+                                clientName?.isNotEmpty == true ? clientName! : 'Walk-in sale',
+                                style: const TextStyle(fontSize: 13.5),
+                              ),
+                            ),
+                            if (ts != null)
+                              Text(_formatDate(ts.toDate()),
+                                  style: TextStyle(fontSize: 12, color: Colors.grey[500])),
+                            const SizedBox(width: 10),
+                            Text('Tsh ${_formatCompact(totalAmount)}',
+                                style: const TextStyle(fontSize: 13.5, fontWeight: FontWeight.bold)),
+                          ],
+                        ),
+                      );
+                    }),
+                ],
+              ),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  Widget _monthComparisonColumn(String label, double amount, int count) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(label, style: TextStyle(fontSize: 12, color: Colors.grey[600])),
+        const SizedBox(height: 4),
+        Text('Tsh ${_formatCompact(amount)}', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
+        Text('$count sale${count == 1 ? '' : 's'}', style: TextStyle(fontSize: 12, color: Colors.grey[600])),
+      ],
+    );
+  }
+
+  Widget _buildActivityLogTab(Map<String, dynamic> facility) {
+    final facilityId = facility['facilityId'] as String?;
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: Colors.grey.withValues(alpha: 0.15)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text('Activity Log', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
+          const SizedBox(height: 12),
+          if (facilityId != null) _buildActivityList(facilityId, limit: 50),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSettingsTab(Map<String, dynamic> facility) {
+    final facilityId = facility['facilityId'] as String?;
+    final details = _detailsByFacility[facilityId];
+    final status = (details?['status'] as String?) ?? 'Active';
+    final retentionDays = (details?['activityLogRetentionDays'] as int?) ?? 90;
+    final isActive = status.toLowerCase() == 'active';
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Container(
+          width: double.infinity,
+          padding: const EdgeInsets.all(20),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(14),
+            border: Border.all(color: Colors.grey.withValues(alpha: 0.15)),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text('Facility Actions', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
+              const SizedBox(height: 4),
+              Text(
+                'Settings specific to this facility. For your account, notifications, '
+                'printer, currency, and app-wide preferences, use the main Settings screen.',
+                style: TextStyle(fontSize: 12.5, color: Colors.grey[600]),
+              ),
+              const SizedBox(height: 16),
+              _settingsActionRow(
+                icon: Icons.edit_outlined,
+                label: 'Edit Facility Details',
+                subtitle: 'Name, type, logo, contact info, license, and more.',
+                onTap: () => _showEditFacilityDialog(facility),
+              ),
+              const Divider(height: 24),
+              _settingsActionRow(
+                icon: isActive ? Icons.pause_circle_outline : Icons.play_circle_outline,
+                label: isActive ? 'Deactivate This Facility' : 'Reactivate This Facility',
+                subtitle: isActive
+                    ? 'Marks this facility as inactive. It stays in your list but is flagged as not operating.'
+                    : 'Marks this facility as active again.',
+                onTap: () => _confirmToggleFacilityStatus(facility, currentStatus: status),
+              ),
+              const Divider(height: 24),
+              _settingsActionRow(
+                icon: Icons.delete_outline,
+                label: 'Delete This Facility',
+                subtitle: 'Permanently removes this facility and its data. This cannot be undone.',
+                iconColor: Colors.red,
+                onTap: () => _showDeleteFacilityDialog(facility),
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 16),
+        Container(
+          width: double.infinity,
+          padding: const EdgeInsets.all(20),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(14),
+            border: Border.all(color: Colors.grey.withValues(alpha: 0.15)),
+          ),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text('Activity Log Retention',
+                        style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
+                    const SizedBox(height: 4),
+                    Text(
+                      'Logs older than this are automatically deleted for this facility. Currently: $retentionDays days.',
+                      style: TextStyle(fontSize: 12.5, color: Colors.grey[600]),
+                    ),
+                  ],
+                ),
+              ),
+              OutlinedButton(
+                onPressed: facilityId == null
+                    ? null
+                    : () => _showFacilityRetentionDialog(facilityId, currentRetention: retentionDays),
+                style: OutlinedButton.styleFrom(foregroundColor: deepGreen),
+                child: const Text('Change'),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _settingsActionRow({
+    required IconData icon,
+    required String label,
+    required String subtitle,
+    required VoidCallback onTap,
+    Color? iconColor,
+  }) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(8),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 6),
+        child: Row(
+          children: [
+            Icon(icon, color: iconColor ?? deepGreen, size: 20),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(label, style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13.5)),
+                  Text(subtitle, style: TextStyle(fontSize: 12, color: Colors.grey[600])),
+                ],
+              ),
+            ),
+            Icon(Icons.chevron_right, size: 18, color: Colors.grey[400]),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Future<void> _confirmToggleFacilityStatus(Map<String, dynamic> facility, {required String currentStatus}) async {
+    final facilityId = facility['facilityId'] as String?;
+    if (facilityId == null) return;
+    final isActive = currentStatus.toLowerCase() == 'active';
+    final newStatus = isActive ? 'Inactive' : 'Active';
+
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text(isActive ? 'Deactivate Facility?' : 'Reactivate Facility?'),
+        content: Text(
+          isActive
+              ? '${facility['name']} will be marked Inactive. It stays in your facilities list but is flagged as not operating.'
+              : '${facility['name']} will be marked Active again.',
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancel')),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            child: Text(isActive ? 'Deactivate' : 'Reactivate'),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true) return;
+
+    try {
+      await FirebaseFirestore.instance.collection('facilities').doc(facilityId).update({
+        'status': newStatus,
+        'updatedAt': FieldValue.serverTimestamp(),
+      });
+      if (!mounted) return;
+      setState(() {
+        _detailsByFacility[facilityId] = {
+          ...?_detailsByFacility[facilityId],
+          'status': newStatus,
+          'updatedAt': DateTime.now(),
+        };
+      });
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text('Facility marked $newStatus'), backgroundColor: Colors.green));
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text('Could not update status: $e'), backgroundColor: Colors.redAccent));
+    }
+  }
+
+  // Direct, facilityId-parameterized replica of ActivityLogScreen's own
+  // retention dialog and cleanup logic - that screen reads its
+  // facility from FacilityProvider (the active one), not a parameter,
+  // so this can't just call into it without risking changing the
+  // wrong facility's retention setting.
+  static const List<int> _retentionOptions = [14, 30, 60, 90];
+
+  Future<void> _showFacilityRetentionDialog(String facilityId, {required int currentRetention}) async {
+    final selected = await showDialog<int>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Keep Logs For'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: _retentionOptions.map((days) {
+            return RadioListTile<int>(
+              value: days,
+              groupValue: currentRetention,
+              activeColor: deepGreen,
+              title: Text('$days days'),
+              onChanged: (val) => Navigator.pop(ctx, val),
+            );
+          }).toList(),
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
+        ],
+      ),
+    );
+
+    if (selected == null || selected == currentRetention) return;
+
+    // Shrinking the window is the one direction that's actually
+    // destructive - picking a shorter window deletes everything
+    // outside it immediately, not just going forward. Growing the
+    // window deletes nothing and doesn't need this extra step.
+    if (selected < currentRetention) {
+      final confirmed = await showDialog<bool>(
+        context: context,
+        builder: (ctx) => AlertDialog(
+          title: const Text('Delete Older Logs Now?'),
+          content: Text(
+            'Logs are currently kept for $currentRetention days. Switching to $selected days '
+            'will permanently delete every log older than $selected days right now - '
+            'not just going forward. This cannot be undone.',
+          ),
+          actions: [
+            TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancel')),
+            TextButton(
+              onPressed: () => Navigator.pop(ctx, true),
+              child: Text('Delete and switch to $selected days', style: const TextStyle(color: Colors.red)),
+            ),
+          ],
+        ),
+      );
+      if (confirmed != true) return;
+    }
+
+    try {
+      await FirebaseFirestore.instance
+          .collection('facilities')
+          .doc(facilityId)
+          .set({'activityLogRetentionDays': selected}, SetOptions(merge: true));
+
+      if (selected < currentRetention) {
+        await _cleanupOldFacilityLogs(facilityId, retentionDays: selected);
+      }
+
+      if (!mounted) return;
+      setState(() {
+        _detailsByFacility[facilityId] = {
+          ...?_detailsByFacility[facilityId],
+          'activityLogRetentionDays': selected,
+        };
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Logs will now be kept for $selected days'), backgroundColor: Colors.green),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text('Could not save: $e'), backgroundColor: Colors.redAccent));
+    }
+  }
+
+  Future<void> _cleanupOldFacilityLogs(String facilityId, {required int retentionDays}) async {
+    try {
+      final cutoffDate = DateTime.now().subtract(Duration(days: retentionDays));
+      final oldLogs = await FirebaseFirestore.instance
+          .collection('facilities')
+          .doc(facilityId)
+          .collection('activity_logs')
+          .where('timestamp', isLessThan: Timestamp.fromDate(cutoffDate))
+          .get();
+
+      if (oldLogs.docs.isEmpty) return;
+
+      final batch = FirebaseFirestore.instance.batch();
+      int count = 0;
+      for (final doc in oldLogs.docs) {
+        batch.delete(doc.reference);
+        count++;
+        if (count >= 500) break; // Safety limit, same as ActivityLogScreen's own cleanup.
+      }
+      await batch.commit();
+      debugPrint('Deleted $count old activity logs (>$retentionDays days) for $facilityId');
+    } catch (e) {
+      debugPrint('Failed to cleanup old logs for $facilityId: $e');
+    }
+  }
+
+  Widget _buildComingSoonTab(String title, String message, {String? actionLabel, VoidCallback? onAction}) {
+    return Container(
+      padding: const EdgeInsets.all(24),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: Colors.grey.withValues(alpha: 0.15)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(title, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+          const SizedBox(height: 6),
+          Text(message, style: TextStyle(color: Colors.grey[600], fontSize: 13.5)),
+          if (actionLabel != null && onAction != null) ...[
+            const SizedBox(height: 12),
+            OutlinedButton(
+              onPressed: onAction,
+              style: OutlinedButton.styleFrom(foregroundColor: deepGreen),
+              child: Text(actionLabel),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
+  Widget _buildOverviewTab(Map<String, dynamic> facility) {
+    final facilityId = facility['facilityId'] as String?;
+    final details = _detailsByFacility[facilityId];
+    final description = details?['description'] as String?;
+    final createdAt = details?['createdAt'] as DateTime?;
+    final updatedAt = details?['updatedAt'] as DateTime?;
+
+    final aboutCard = Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: Colors.grey.withValues(alpha: 0.15)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text('About this facility', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
+          const SizedBox(height: 10),
+          if (description != null && description.isNotEmpty) ...[
+            Text(description, style: const TextStyle(fontSize: 13.5, height: 1.5)),
+            const SizedBox(height: 14),
+          ],
+          _aboutField('Facility Type', facility['type'] as String? ?? '-'),
+          _aboutField('Ownership', (details?['ownership'] as String?) ?? 'Not set'),
+          _aboutFieldWithChip('Status', (details?['status'] as String?) ?? 'Active'),
+          _aboutField('Created By', _adminFullName ?? 'You'),
+          if (createdAt != null) _aboutField('Created On', _formatDateTime(createdAt)),
+          if (updatedAt != null) _aboutField('Last Updated', _formatDateTime(updatedAt)),
+        ],
+      ),
+    );
+
+    final activityCard = Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: Colors.grey.withValues(alpha: 0.15)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              const Text('Recent Activity', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
+              InkWell(
+                onTap: () => setState(() => _selectedTabIndex = 4),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text('View all activity',
+                        style: TextStyle(fontSize: 12.5, color: deepGreen, fontWeight: FontWeight.w600)),
+                    Icon(Icons.arrow_forward, size: 12, color: deepGreen),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          if (facilityId != null) _buildActivityList(facilityId, limit: 4),
+        ],
+      ),
+    );
+
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final isWide = constraints.maxWidth >= 700;
+        if (!isWide) {
+          return Column(
+            children: [
+              aboutCard,
+              const SizedBox(height: 16),
+              activityCard,
+            ],
+          );
+        }
+        return Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Expanded(child: aboutCard),
+            const SizedBox(width: 16),
+            Expanded(child: activityCard),
+          ],
+        );
+      },
+    );
+  }
+
+  Widget _aboutField(String label, String value) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 10),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(label, style: TextStyle(fontSize: 13, color: Colors.grey[600])),
+          Flexible(
+            child: Text(
+              value,
+              textAlign: TextAlign.right,
+              style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _aboutFieldWithChip(String label, String value) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 10),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(label, style: TextStyle(fontSize: 13, color: Colors.grey[600])),
+          buildStatusChip(value),
+        ],
       ),
     );
   }

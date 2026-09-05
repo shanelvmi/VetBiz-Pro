@@ -374,7 +374,7 @@ class _FacilityDetailScreenState extends State<FacilityDetailScreen> {
                               title: Text('${subData['planLabel'] ?? ''} - Tsh ${subData['amount'] ?? 0}'),
                               subtitle: Text(
                                 '${subData['method'] ?? ''}'
-                                '${submittedAt != null ? ' • ${DateFormat('dd MMM yyyy').format(submittedAt)}' : ''}',
+                                '${submittedAt != null ? ' - ${DateFormat('dd MMM yyyy').format(submittedAt)}' : ''}',
                                 style: const TextStyle(fontSize: 12),
                               ),
                               trailing: Text(

@@ -49,12 +49,7 @@ class SubscriptionAdminReviewScreen extends StatelessWidget {
     final base = (currentExpiresDate != null && currentExpiresDate.isAfter(now))
         ? currentExpiresDate
         : now;
-    final newExpiryDate = base.add(Duration(days: plan.durationDays));
-    // Always the end of that day, not the exact time-of-day the
-    // payment happened to be approved at - gives the full last day of
-    // access rather than cutting off mid-day at an arbitrary moment.
-    final newExpiry =
-        DateTime(newExpiryDate.year, newExpiryDate.month, newExpiryDate.day, 23, 59, 59);
+    final newExpiry = base.add(Duration(days: plan.durationDays));
 
     final admin = FirebaseAuth.instance.currentUser;
     final batch = FirebaseFirestore.instance.batch();
@@ -229,7 +224,7 @@ class SubscriptionAdminReviewScreen extends StatelessWidget {
                           ),
                           const SizedBox(height: 4),
                           Text('${data['planLabel'] ?? ''} - Tsh ${data['amount'] ?? 0}'),
-                          Text('${data['method'] ?? ''} • Ref: ${data['reference'] ?? ''}'),
+                          Text('${data['method'] ?? ''} - Ref: ${data['reference'] ?? ''}'),
                           if (submittedAt != null)
                             Text(
                               'Submitted ${DateFormat('dd MMM yyyy, HH:mm').format(submittedAt)}',

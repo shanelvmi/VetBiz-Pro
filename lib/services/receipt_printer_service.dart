@@ -5,6 +5,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import '../models/sale.dart';
 import '../models/service.dart';
+import '../models/transaction.dart';
 
 /// Real Bluetooth thermal-printer integration - connects to a printer
 /// already paired at the OS/Bluetooth-settings level (classic SPP
@@ -236,6 +237,54 @@ class ReceiptPrinterService {
         ),
       ]);
     }
+
+    bytes += generator.hr();
+    bytes += generator.text('Thank you for your business!', styles: const PosStyles(align: PosAlign.center));
+    bytes += generator.feed(2);
+    bytes += generator.cut();
+
+    return PrintBluetoothThermal.writeBytes(Uint8List.fromList(bytes));
+  }
+
+  Future<bool> printTransactionReceipt(TransactionModel transaction) async {
+    final generator = await _generator();
+    List<int> bytes = [];
+
+    final isExpense = transaction.type.toLowerCase() == 'expense';
+    final prefix = isExpense ? 'EXP' : 'OI';
+    final reference =
+        transaction.receiptNumber != null ? '$prefix-${transaction.receiptNumber.toString().padLeft(6, '0')}' : null;
+
+    bytes += generator.text(
+      'VetBiz Pro',
+      styles: const PosStyles(align: PosAlign.center, bold: true, height: PosTextSize.size2, width: PosTextSize.size2),
+    );
+    bytes += generator.text('Transaction Receipt', styles: const PosStyles(align: PosAlign.center));
+    bytes += generator.hr();
+
+    if (reference != null) {
+      bytes += generator.text('Ref: $reference', styles: const PosStyles(bold: true));
+    }
+    bytes += generator.text(transaction.description.isEmpty ? transaction.type : transaction.description,
+        styles: const PosStyles(bold: true));
+    if (transaction.category.isNotEmpty) {
+      bytes += generator.text('Category: ${transaction.category}');
+    }
+    bytes += generator.text('Date: ${transaction.date.toLocal().toString().split('.').first}');
+    bytes += generator.text('Recorded by: ${transaction.recordedBy}');
+    if (transaction.paymentMethod != null) {
+      bytes += generator.text('Payment Method: ${transaction.paymentMethod}');
+    }
+    bytes += generator.hr();
+
+    bytes += generator.row([
+      PosColumn(text: isExpense ? 'Expense' : 'Other Income', width: 6, styles: const PosStyles(bold: true)),
+      PosColumn(
+        text: 'Tsh ${transaction.amount.toStringAsFixed(0)}',
+        width: 6,
+        styles: const PosStyles(align: PosAlign.right, bold: true),
+      ),
+    ]);
 
     bytes += generator.hr();
     bytes += generator.text('Thank you for your business!', styles: const PosStyles(align: PosAlign.center));

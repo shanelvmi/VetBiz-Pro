@@ -2,8 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:provider/provider.dart';
-import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
+import '../../models/sale.dart';
 import '../../providers/facility_provider.dart';
+import 'receipt_preview_screen.dart';
 
 class SalesArchiveScreen extends StatefulWidget {
   const SalesArchiveScreen({super.key});
@@ -43,6 +44,17 @@ class _SalesArchiveScreenState extends State<SalesArchiveScreen> {
   bool _hasMore = true;
   bool _isLoadingMore = false;
 
+  // Which archived sale is shown in the details panel, the display
+  // pagination window (over whatever's already loaded), and a
+  // client-side text search over the currently loaded page - matches
+  // the main Sales screen's pattern. Kept separate from the existing
+  // date-range search dialog, which re-queries Firestore server-side.
+  Map<String, dynamic>? _selectedSale;
+  int _displayPageSize = 10;
+  int _currentPageIndex = 0;
+  String _searchQuery = '';
+  final TextEditingController _searchController = TextEditingController();
+
   @override
   void initState() {
     super.initState();
@@ -54,6 +66,12 @@ class _SalesArchiveScreenState extends State<SalesArchiveScreen> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _loadArchivedSales();
     });
+  }
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
   }
 
   Future<void> _showSearchDialog() async {
@@ -185,317 +203,372 @@ class _SalesArchiveScreenState extends State<SalesArchiveScreen> {
     return Colors.red;
   }
 
-  IconData _statusIcon(double paid, double total) {
-    if (paid >= total) return Icons.check_circle;
-    if (paid > 0) return Icons.pending;
-    return Icons.cancel;
+  String _invoiceNo(Map<String, dynamic> sale) {
+    final receiptNumber = sale['receiptNumber'];
+    return 'SL-${(receiptNumber ?? 0).toString().padLeft(6, '0')}';
   }
 
   @override
   Widget build(BuildContext context) {
     final dateFormatter = DateFormat('dd MMM yyyy, HH:mm');
-    
-    final displayedSales = _archivedSales;
+    final dateOnlyFormatter = DateFormat('dd MMM yyyy');
+    final timeOnlyFormatter = DateFormat('hh:mm a');
 
-    final totalAmount = displayedSales.fold<double>(
+    final filteredSales = _archivedSales.where((sale) {
+      if (_searchQuery.isEmpty) return true;
+      final q = _searchQuery.toLowerCase();
+      final clientName = (sale['clientName'] as String? ?? '').toLowerCase();
+      final soldByName = (sale['soldByName'] as String? ?? '').toLowerCase();
+      final items = (sale['items'] as List?)?.cast<Map<String, dynamic>>() ?? [];
+      return clientName.contains(q) ||
+          soldByName.contains(q) ||
+          _invoiceNo(sale).toLowerCase().contains(q) ||
+          items.any((item) => (item['name'] as String? ?? '').toLowerCase().contains(q));
+    }).toList();
+
+    final totalAmount = filteredSales.fold<double>(
         0, (sum, sale) => sum + ((sale['totalAmount'] ?? 0.0) as num).toDouble());
-    final totalPaid = displayedSales.fold<double>(
-        0, (sum, sale) => sum + ((sale['totalPaid'] ?? 0.0) as num).toDouble());
+
+    // Same honest display-pagination window as the main Sales screen -
+    // a page here is a view over whatever's already loaded (or gets
+    // loaded on demand via _loadMoreArchivedSales), not a true jump to
+    // an arbitrary page number.
+    final totalPages = (filteredSales.length / _displayPageSize).ceil().clamp(1, 999999);
+    if (_currentPageIndex >= totalPages) _currentPageIndex = totalPages - 1;
+    if (_currentPageIndex < 0) _currentPageIndex = 0;
+    final pageStart = _currentPageIndex * _displayPageSize;
+    final pageEnd = (pageStart + _displayPageSize).clamp(0, filteredSales.length);
+    final pageSales = filteredSales.sublist(pageStart.clamp(0, filteredSales.length), pageEnd);
 
     return Scaffold(
       backgroundColor: offWhite,
-      appBar: AppBar(
-        backgroundColor: primaryDeepGreen,
-        foregroundColor: offWhite,
-        title: const Text('Sales Archive'),
-        actions: [
-          Padding(
-            padding: const EdgeInsets.only(right: 12),
-            child: TextButton.icon(
-              style: TextButton.styleFrom(
-                foregroundColor: offWhite,
-                backgroundColor: offWhite.withValues(alpha: 0.15),
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(20),
-                ),
-              ),
-              icon: const Icon(Icons.search, size: 18),
-              label: const Text(
-                'Search',
-                style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
-              ),
-              onPressed: _showSearchDialog,
-            ),
-          ),
-        ],
-      ),
+      appBar: _buildAppBar(),
       body: _isLoading
-          ? Center(
-              child: CircularProgressIndicator(color: primaryDeepGreen),
-            )
-          : Column(
+          ? Center(child: CircularProgressIndicator(color: primaryDeepGreen))
+          : Row(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                Container(
-                  margin: const EdgeInsets.all(12),
-                  padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    color: primaryDeepGreen.withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: primaryDeepGreen.withValues(alpha: 0.3)),
-                  ),
+                Expanded(
                   child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Row(
-                        children: [
-                          Icon(Icons.info_outline, color: primaryDeepGreen),
-                          const SizedBox(width: 8),
-                          Text(
-                            'Archived Sales',
-                            style: TextStyle(
-                              color: primaryDeepGreen,
-                              fontWeight: FontWeight.bold,
-                              fontSize: 16,
-                            ),
-                          ),
-                        ],
+                      Padding(
+                        padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
+                        child: _buildInfoBanner(filteredSales.length, totalAmount),
                       ),
-                      const SizedBox(height: 8),
-                      if (_searchStart != null && _searchEnd != null)
-                        Text(
-                          'Period: ${DateFormat('dd MMM yyyy').format(_searchStart!)} - ${DateFormat('dd MMM yyyy').format(_searchEnd!)}',
-                          style: const TextStyle(fontSize: 13),
-                        ),
-                      const SizedBox(height: 8),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Text(
-                            'Found: ${displayedSales.length} sales',
-                            style: TextStyle(
-                              fontWeight: FontWeight.bold,
-                              color: primaryDeepGreen,
-                            ),
-                          ),
-                          Text(
-                            'Total: ${_moneyFormat.format(totalAmount)}',
-                            style: TextStyle(
-                              fontWeight: FontWeight.bold,
-                              color: primaryDeepGreen,
-                            ),
-                          ),
-                        ],
+                      Padding(
+                        padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+                        child: _buildSearchBar(),
+                      ),
+                      Expanded(
+                        child: filteredSales.isEmpty
+                            ? Center(
+                                child: Column(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    Icon(Icons.archive_outlined, size: 64, color: Colors.grey[400]),
+                                    const SizedBox(height: 16),
+                                    Text(
+                                      'No archived sales found',
+                                      style: TextStyle(fontSize: 18, color: Colors.grey[600]),
+                                    ),
+                                    const SizedBox(height: 8),
+                                    Text(
+                                      'Try a different search or date range',
+                                      style: TextStyle(fontSize: 14, color: Colors.grey[500]),
+                                    ),
+                                  ],
+                                ),
+                              )
+                            : _buildArchiveTable(pageSales, dateFormatter),
+                      ),
+                      _buildPaginationBar(
+                        totalFiltered: filteredSales.length,
+                        pageStart: pageStart,
+                        pageEnd: pageEnd,
+                        totalPages: totalPages,
                       ),
                     ],
                   ),
                 ),
-                Expanded(
-                  child: displayedSales.isEmpty
-                      ? Center(
-                          child: Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Icon(Icons.archive_outlined,
-                                  size: 64, color: Colors.grey[400]),
-                              const SizedBox(height: 16),
-                              Text(
-                                'No archived sales found',
-                                style: TextStyle(
-                                    fontSize: 18, color: Colors.grey[600]),
-                              ),
-                              const SizedBox(height: 8),
-                              Text(
-                                'Try a different search criteria',
-                                style: TextStyle(
-                                    fontSize: 14, color: Colors.grey[500]),
-                              ),
-                            ],
-                          ),
-                        )
-                      : Focus(
-                          autofocus: true,
-                          child: LayoutBuilder(
-                            builder: (context, constraints) {
-                              final isLargeScreen = constraints.maxWidth >= 1024;
-
-                              if (isLargeScreen) {
-                                return ScrollConfiguration(
-                                  behavior: const ScrollBehavior()
-                                      .copyWith(overscroll: false),
-                                  child: MasonryGridView.count(
-                                    primary: true,
-                                    padding: const EdgeInsets.all(12),
-                                    crossAxisCount: 2,
-                                    crossAxisSpacing: 12,
-                                    mainAxisSpacing: 12,
-                                    itemCount: displayedSales.length + 1,
-                                    itemBuilder: (context, index) {
-                                      if (index == displayedSales.length) {
-                                        return _buildLoadMoreFooter();
-                                      }
-                                      return _buildArchiveCard(
-                                          displayedSales[index], dateFormatter);
-                                    },
-                                  ),
-                                );
-                              } else {
-                                return ScrollConfiguration(
-                                  behavior: const ScrollBehavior()
-                                      .copyWith(overscroll: false),
-                                  child: ListView.builder(
-                                    primary: true,
-                                    padding: const EdgeInsets.all(12),
-                                    itemCount: displayedSales.length + 1,
-                                    itemBuilder: (context, index) {
-                                      if (index == displayedSales.length) {
-                                        return _buildLoadMoreFooter();
-                                      }
-                                      return _buildArchiveCard(
-                                          displayedSales[index], dateFormatter);
-                                    },
-                                  ),
-                                );
-                              }
-                            },
-                          ),
-                        ),
-                ),
+                if (_selectedSale != null) ...[
+                  const VerticalDivider(width: 1),
+                  SizedBox(
+                    width: 380,
+                    child: _buildDetailsPanel(_selectedSale!, dateOnlyFormatter, timeOnlyFormatter),
+                  ),
+                ],
               ],
             ),
     );
   }
 
-  // Footer at the end of the archived-sales list - lets the user page in
-  // older archived sales instead of ever fetching a facility's whole
-  // archive at once.
-  Widget _buildLoadMoreFooter() {
-    if (_isLoadingMore) {
-      return Padding(
-        padding: const EdgeInsets.symmetric(vertical: 20),
-        child: Center(
-          child: SizedBox(
-            height: 24,
-            width: 24,
-            child: CircularProgressIndicator(
-              strokeWidth: 2.5,
-              color: primaryDeepGreen,
+  PreferredSizeWidget _buildAppBar() {
+    return AppBar(
+      backgroundColor: Colors.white,
+      foregroundColor: Colors.black87,
+      elevation: 1,
+      centerTitle: true,
+      toolbarHeight: 72,
+      title: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          const Text('Sales Archive', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 19, color: Colors.black87)),
+          Text('Sales archived after $_archiveCutoffDays days', style: const TextStyle(fontSize: 12, color: Colors.black54)),
+        ],
+      ),
+      actions: [
+        Padding(
+          padding: const EdgeInsets.only(right: 12),
+          child: OutlinedButton.icon(
+            onPressed: _showSearchDialog,
+            icon: const Icon(Icons.date_range_outlined, size: 16),
+            label: const Text('Date Range'),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildInfoBanner(int foundCount, double totalAmount) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: primaryDeepGreen.withValues(alpha: 0.06),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: primaryDeepGreen.withValues(alpha: 0.2)),
+      ),
+      child: Row(
+        children: [
+          Icon(Icons.info_outline, color: primaryDeepGreen, size: 18),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Text(
+              _searchStart != null && _searchEnd != null
+                  ? 'Period: ${DateFormat('dd MMM yyyy').format(_searchStart!)} \u2013 ${DateFormat('dd MMM yyyy').format(_searchEnd!)}'
+                  : 'Archived sales',
+              style: TextStyle(fontSize: 12.5, color: Colors.grey[700]),
             ),
           ),
-        ),
-      );
-    }
+          Text('$foundCount found', style: TextStyle(fontSize: 12.5, fontWeight: FontWeight.w600, color: primaryDeepGreen)),
+          const SizedBox(width: 12),
+          Text(_moneyFormat.format(totalAmount), style: TextStyle(fontSize: 12.5, fontWeight: FontWeight.bold, color: primaryDeepGreen)),
+        ],
+      ),
+    );
+  }
 
-    if (!_hasMore) {
-      return Padding(
-        padding: const EdgeInsets.symmetric(vertical: 20),
-        child: Center(
-          child: Text(
-            'End of archived sales for this search',
-            style: TextStyle(fontSize: 12, color: Colors.grey[500]),
+  Widget _buildSearchBar() {
+    final border = OutlineInputBorder(
+      borderRadius: BorderRadius.circular(10),
+      borderSide: BorderSide(color: Colors.grey.withValues(alpha: 0.3)),
+    );
+    return TextField(
+      controller: _searchController,
+      decoration: InputDecoration(
+        hintText: 'Search sale by product, client, invoice...',
+        hintStyle: const TextStyle(fontSize: 13),
+        prefixIcon: const Icon(Icons.search, size: 20),
+        filled: true,
+        fillColor: Colors.white,
+        isDense: true,
+        contentPadding: const EdgeInsets.symmetric(vertical: 12, horizontal: 12),
+        border: border,
+        enabledBorder: border,
+        suffixIcon: _searchController.text.isEmpty
+            ? null
+            : IconButton(
+                icon: const Icon(Icons.clear, size: 18),
+                onPressed: () => setState(() {
+                  _searchController.clear();
+                  _searchQuery = '';
+                  _currentPageIndex = 0;
+                }),
+              ),
+      ),
+      onChanged: (val) => setState(() {
+        _searchQuery = val.trim();
+        _currentPageIndex = 0;
+      }),
+    );
+  }
+
+  // ==================== TABLE ====================
+
+  Widget _buildArchiveTable(List<Map<String, dynamic>> sales, DateFormat dateFormatter) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          decoration: BoxDecoration(border: Border(bottom: BorderSide(color: Colors.grey.withValues(alpha: 0.2)))),
+          child: Row(
+            children: [
+              _headerCell('Date', flex: 3),
+              _headerCell('Invoice No.', flex: 2),
+              _headerCell('Client', flex: 2),
+              _headerCell('Items', flex: 3),
+              _headerCell('Amount', flex: 2),
+              _headerCell('Payment Status', flex: 2),
+              _headerCell('Seller', flex: 2),
+            ],
           ),
         ),
-      );
-    }
-
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 12),
-      child: Center(
-        child: OutlinedButton.icon(
-          onPressed: _loadMoreArchivedSales,
-          style: OutlinedButton.styleFrom(
-            foregroundColor: primaryDeepGreen,
-            side: BorderSide(color: primaryDeepGreen),
+        Expanded(
+          child: ListView.separated(
+            itemCount: sales.length,
+            separatorBuilder: (context, index) => Divider(height: 1, color: Colors.grey.withValues(alpha: 0.12)),
+            itemBuilder: (context, index) => _buildArchiveRow(sales[index], dateFormatter),
           ),
-          icon: const Icon(Icons.expand_more),
-          label: const Text('Load more archived sales'),
+        ),
+      ],
+    );
+  }
+
+  Widget _headerCell(String label, {required int flex}) {
+    return Expanded(
+      flex: flex,
+      child: Text(label, style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Colors.grey[600])),
+    );
+  }
+
+  Widget _buildArchiveRow(Map<String, dynamic> sale, DateFormat dateFormatter) {
+    final paid = ((sale['totalPaid'] ?? 0.0) as num).toDouble();
+    final total = ((sale['totalAmount'] ?? 0.0) as num).toDouble();
+    final status = _getPaymentStatus(paid, total);
+    final statusColor = _statusColor(paid, total);
+    final isSelected = _selectedSale?['id'] == sale['id'];
+    final timestamp = (sale['timestamp'] as Timestamp?)?.toDate() ?? DateTime.now();
+    final items = (sale['items'] as List?)?.cast<Map<String, dynamic>>() ?? [];
+    final firstItem = items.isNotEmpty ? items.first : null;
+
+    return InkWell(
+      onTap: () => setState(() => _selectedSale = sale),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        color: isSelected ? primaryDeepGreen.withValues(alpha: 0.06) : null,
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Expanded(
+              flex: 3,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(dateFormatter.format(timestamp).split(',').first, style: const TextStyle(fontSize: 13)),
+                  Text(DateFormat('hh:mm a').format(timestamp),
+                      style: TextStyle(fontSize: 11.5, color: Colors.grey[500])),
+                ],
+              ),
+            ),
+            Expanded(
+              flex: 2,
+              child: Text(
+                _invoiceNo(sale),
+                style: TextStyle(fontSize: 13, color: primaryDeepGreen, fontWeight: FontWeight.w600),
+              ),
+            ),
+            Expanded(
+              flex: 2,
+              child: Text(sale['clientName'] ?? 'Walk-in', style: const TextStyle(fontSize: 13), maxLines: 1, overflow: TextOverflow.ellipsis),
+            ),
+            Expanded(
+              flex: 3,
+              child: firstItem == null
+                  ? const Text('-', style: TextStyle(fontSize: 13))
+                  : Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text('${firstItem['name']} \u00d7 ${firstItem['quantity']}',
+                            style: const TextStyle(fontSize: 13), maxLines: 1, overflow: TextOverflow.ellipsis),
+                        Text('${items.length} item${items.length == 1 ? '' : 's'}',
+                            style: TextStyle(fontSize: 11.5, color: Colors.grey[500])),
+                      ],
+                    ),
+            ),
+            Expanded(
+              flex: 2,
+              child: Text(_moneyFormat.format(total), style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600)),
+            ),
+            Expanded(
+              flex: 2,
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                decoration: BoxDecoration(
+                  color: statusColor.withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Text(status, style: TextStyle(color: statusColor, fontSize: 11.5, fontWeight: FontWeight.w600)),
+              ),
+            ),
+            Expanded(
+              flex: 2,
+              child: Text(sale['soldByName'] ?? 'Unknown', style: const TextStyle(fontSize: 13), maxLines: 1, overflow: TextOverflow.ellipsis),
+            ),
+          ],
         ),
       ),
     );
   }
 
-  Widget _buildArchiveCard(Map<String, dynamic> sale, DateFormat dateFormatter) {
-    final paid = ((sale['totalPaid'] ?? 0.0) as num).toDouble();
-    final total = ((sale['totalAmount'] ?? 0.0) as num).toDouble();
-    final statusColor = _statusColor(paid, total);
-    final statusIcon = _statusIcon(paid, total);
-    final statusText = _getPaymentStatus(paid, total);
+  // ==================== PAGINATION ====================
 
-    final timestamp = (sale['timestamp'] as Timestamp?)?.toDate() ?? DateTime.now();
-    final items = (sale['items'] as List?)?.cast<Map<String, dynamic>>() ?? [];
+  Widget _buildPaginationBar({
+    required int totalFiltered,
+    required int pageStart,
+    required int pageEnd,
+    required int totalPages,
+  }) {
+    final canGoNext = _currentPageIndex < totalPages - 1 || _hasMore;
 
-    return Card(
-      margin: const EdgeInsets.only(bottom: 12),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      elevation: 2,
-      child: ExpansionTile(
-        tilePadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-        childrenPadding: const EdgeInsets.all(16),
-        leading: CircleAvatar(
-          backgroundColor: statusColor.withValues(alpha: 0.2),
-          child: Icon(statusIcon, color: statusColor, size: 20),
-        ),
-        title: Row(
-          children: [
-            Expanded(
-              child: Text(
-                sale['clientName'] ?? 'Walk-in Customer',
-                style: const TextStyle(
-                  fontWeight: FontWeight.w600,
-                  fontSize: 14,
-                ),
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-              ),
-            ),
-            const SizedBox(width: 8),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-              decoration: BoxDecoration(
-                color: statusColor.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: statusColor.withValues(alpha: 0.4)),
-              ),
-              child: Text(
-                statusText,
-                style: TextStyle(
-                  color: statusColor,
-                  fontSize: 11,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-            ),
-          ],
-        ),
-        subtitle: Padding(
-          padding: const EdgeInsets.only(top: 4),
-          child: Text(
-            'Date: ${dateFormatter.format(timestamp)}\nTotal: ${_moneyFormat.format(total)}',
-            style: const TextStyle(fontSize: 11),
-            maxLines: 2,
-          ),
-        ),
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      decoration: BoxDecoration(border: Border(top: BorderSide(color: Colors.grey.withValues(alpha: 0.2)))),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+          Text(
+            totalFiltered == 0
+                ? 'No sales'
+                : 'Showing ${pageStart + 1} to $pageEnd of $totalFiltered${_hasMore ? '+' : ''} sales',
+            style: TextStyle(fontSize: 12.5, color: Colors.grey[600]),
+          ),
+          Row(
             children: [
-              _buildDetailRow('Seller:', sale['soldByName'] ?? 'Unknown'),
-              _buildDetailRow('Paid:', _moneyFormat.format(paid)),
-              const Divider(height: 16),
-              const Text(
-                'Items:',
-                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+              DropdownButtonHideUnderline(
+                child: DropdownButton<int>(
+                  value: _displayPageSize,
+                  items: const [10, 25, 50]
+                      .map((n) => DropdownMenuItem(value: n, child: Text('$n per page')))
+                      .toList(),
+                  onChanged: (val) {
+                    if (val != null) setState(() {
+                      _displayPageSize = val;
+                      _currentPageIndex = 0;
+                    });
+                  },
+                ),
               ),
-              const SizedBox(height: 8),
-              ...items.map((item) {
-                return Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 2),
-                  child: Text(
-                    '• ${item['name']} x${item['quantity']} ${item['unit']}',
-                    style: const TextStyle(fontSize: 12),
-                  ),
-                );
-              }),
+              const SizedBox(width: 16),
+              IconButton(
+                icon: const Icon(Icons.chevron_left),
+                onPressed: _currentPageIndex > 0 ? () => setState(() => _currentPageIndex--) : null,
+              ),
+              Text('Page ${_currentPageIndex + 1} of $totalPages', style: const TextStyle(fontSize: 13)),
+              IconButton(
+                icon: _isLoadingMore
+                    ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2))
+                    : const Icon(Icons.chevron_right),
+                onPressed: canGoNext && !_isLoadingMore
+                    ? () async {
+                        final needed = (_currentPageIndex + 2) * _displayPageSize;
+                        if (needed > _archivedSales.length && _hasMore) {
+                          await _loadMoreArchivedSales();
+                        }
+                        if (mounted) setState(() => _currentPageIndex++);
+                      }
+                    : null,
+              ),
             ],
           ),
         ],
@@ -503,19 +576,163 @@ class _SalesArchiveScreenState extends State<SalesArchiveScreen> {
     );
   }
 
-  Widget _buildDetailRow(String label, String value) {
+  // ==================== DETAILS PANEL ====================
+
+  Widget _buildDetailsPanel(Map<String, dynamic> sale, DateFormat dateOnlyFormatter, DateFormat timeOnlyFormatter) {
+    final paid = ((sale['totalPaid'] ?? 0.0) as num).toDouble();
+    final total = ((sale['totalAmount'] ?? 0.0) as num).toDouble();
+    final status = _getPaymentStatus(paid, total);
+    final statusColor = _statusColor(paid, total);
+    final timestamp = (sale['timestamp'] as Timestamp?)?.toDate() ?? DateTime.now();
+    final items = (sale['items'] as List?)?.cast<Map<String, dynamic>>() ?? [];
+    final subtotal = items.fold<double>(
+        0, (sum, i) => sum + ((i['unitPrice'] ?? 0.0) as num).toDouble() * ((i['quantity'] ?? 0) as num).toDouble());
+    final totalDiscount =
+        items.fold<double>(0, (sum, i) => sum + ((i['discount'] ?? 0.0) as num).toDouble());
+    final balance = total - paid;
+
+    return Container(
+      color: Colors.white,
+      child: SingleChildScrollView(
+        padding: const EdgeInsets.all(20),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                const Text('Sale Details', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                IconButton(
+                  icon: const Icon(Icons.close, size: 20),
+                  onPressed: () => setState(() => _selectedSale = null),
+                ),
+              ],
+            ),
+            const SizedBox(height: 8),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(_invoiceNo(sale), style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                  decoration: BoxDecoration(color: statusColor.withValues(alpha: 0.12), borderRadius: BorderRadius.circular(12)),
+                  child: Text(status, style: TextStyle(color: statusColor, fontSize: 12, fontWeight: FontWeight.w600)),
+                ),
+              ],
+            ),
+            Text('${dateOnlyFormatter.format(timestamp)}, ${timeOnlyFormatter.format(timestamp)}',
+                style: TextStyle(fontSize: 12.5, color: Colors.grey[600])),
+            const SizedBox(height: 20),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                const Text('Items', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13.5)),
+                Text('${items.length} item${items.length == 1 ? '' : 's'}',
+                    style: TextStyle(fontSize: 12, color: Colors.grey[600])),
+              ],
+            ),
+            const SizedBox(height: 10),
+            ...items.map((item) {
+              final unitPrice = ((item['unitPrice'] ?? 0.0) as num).toDouble();
+              final quantity = ((item['quantity'] ?? 0) as num).toDouble();
+              return Padding(
+                padding: const EdgeInsets.only(bottom: 8),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(item['name'] ?? 'Item', style: const TextStyle(fontSize: 13.5, fontWeight: FontWeight.w600)),
+                          Text('\u00d7 ${quantity.toInt()}', style: TextStyle(fontSize: 12, color: Colors.grey[600])),
+                        ],
+                      ),
+                    ),
+                    Text(_moneyFormat.format(unitPrice * quantity), style: const TextStyle(fontSize: 13.5)),
+                  ],
+                ),
+              );
+            }),
+            const Divider(height: 24),
+            _totalsRow('Subtotal', _moneyFormat.format(subtotal)),
+            _totalsRow('Discount', _moneyFormat.format(totalDiscount)),
+            _totalsRow('Total Amount', _moneyFormat.format(total), bold: true, color: primaryDeepGreen),
+            const SizedBox(height: 10),
+            _totalsRow('Paid', _moneyFormat.format(paid), color: Colors.green),
+            _totalsRow('Balance', _moneyFormat.format(balance), bold: true),
+            const Divider(height: 24),
+            _detailField(Icons.person_outline, 'Client', sale['clientName'] ?? 'Walk-in'),
+            _detailField(Icons.badge_outlined, 'Seller', sale['soldByName'] ?? 'Unknown'),
+            _detailField(Icons.payment_outlined, 'Payment Method', sale['paymentMethod'] ?? 'Not recorded'),
+            _detailField(Icons.edit_note_outlined, 'Notes',
+                (sale['notes'] as String?)?.isNotEmpty == true ? sale['notes'] as String : '-'),
+            const SizedBox(height: 20),
+            Row(
+              children: [
+                Expanded(
+                  child: OutlinedButton.icon(
+                    onPressed: () => _openReceipt(sale),
+                    icon: const Icon(Icons.print_outlined, size: 16),
+                    label: const Text('Print'),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: OutlinedButton.icon(
+                    onPressed: () => _openReceipt(sale),
+                    icon: const Icon(Icons.share_outlined, size: 16),
+                    label: const Text('Share'),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // Archived sales aren't deletable (there's no delete path anywhere
+  // in this screen, by design - archiving is meant to be a permanent
+  // historical record), so unlike the main Sales screen's details
+  // panel, there's no Delete button here.
+  void _openReceipt(Map<String, dynamic> sale) {
+    final saleObj = Sale.fromFirestore(sale, sale['id'] as String? ?? '');
+    Navigator.push(context, MaterialPageRoute(builder: (_) => ReceiptPreviewScreen(sale: saleObj)));
+  }
+
+  Widget _totalsRow(String label, String value, {bool bold = false, Color? color}) {
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 2),
+      padding: const EdgeInsets.only(bottom: 6),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(label, style: TextStyle(fontSize: 13, color: Colors.grey[600])),
+          Text(
+            value,
+            style: TextStyle(fontSize: 13.5, fontWeight: bold ? FontWeight.bold : FontWeight.normal, color: color),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _detailField(IconData icon, String label, String value) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 14),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(label,
-              style: const TextStyle(fontWeight: FontWeight.w500, fontSize: 12)),
-          const SizedBox(width: 6),
+          Icon(icon, size: 18, color: Colors.grey[600]),
+          const SizedBox(width: 10),
           Expanded(
-            child: Text(
-              value,
-              style: const TextStyle(fontSize: 12),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(label, style: TextStyle(fontSize: 11.5, color: Colors.grey[600])),
+                Text(value, style: const TextStyle(fontSize: 13.5, fontWeight: FontWeight.w600)),
+              ],
             ),
           ),
         ],

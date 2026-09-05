@@ -5,6 +5,9 @@ import 'package:intl/intl.dart';
 import 'package:fl_chart/fl_chart.dart';
 
 import '../../providers/facility_provider.dart';
+import '../../providers/debt_provider.dart';
+import '../../services/dashboard_summary_service.dart';
+import '../../widgets/summary_card.dart' show KpiTrend;
 
 /// A simple insights view - a 14-day sales trend and your top 5
 /// products by revenue over the last 30 days. Deliberately kept to two
@@ -28,10 +31,20 @@ class _InsightsScreenState extends State<InsightsScreen> {
   late DateTime _trendStart;
   List<MapEntry<String, double>> _topProducts = [];
 
+  // Today vs Yesterday, reusing the exact same comparison service and
+  // KpiTrend model already built for the dashboard's own KPI cards -
+  // "Business Pulse" is a narrative summary of the same underlying
+  // comparison, not a separate calculation.
+  bool _isPulseLoading = true;
+  KpiTrend? _salesPulseTrend;
+  KpiTrend? _serviceRevenuePulseTrend;
+  KpiTrend? _outstandingPulseTrend;
+
   @override
   void initState() {
     super.initState();
     _loadInsights();
+    _loadBusinessPulse();
   }
 
   Future<void> _loadInsights() async {
@@ -99,6 +112,169 @@ class _InsightsScreenState extends State<InsightsScreen> {
     }
   }
 
+  String _dateKey(DateTime d) =>
+      '${d.year.toString().padLeft(4, '0')}-${d.month.toString().padLeft(2, '0')}-${d.day.toString().padLeft(2, '0')}';
+
+  Future<void> _loadBusinessPulse() async {
+    final facilityId = Provider.of<FacilityProvider>(context, listen: false).selectedFacilityId;
+    if (facilityId == null) {
+      setState(() => _isPulseLoading = false);
+      return;
+    }
+
+    final debtProvider = Provider.of<DebtProvider>(context, listen: false);
+
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    final yesterday = today.subtract(const Duration(days: 1));
+
+    try {
+      final summaryService = DashboardSummaryService();
+      final todayTotals =
+          await summaryService.getDashboardTotals(facilityId: facilityId, start: today, end: now);
+      final yesterdayTotals = await summaryService.getDashboardTotals(
+          facilityId: facilityId, start: yesterday, end: yesterday);
+      final yesterdaySnapshotDoc = await FirebaseFirestore.instance
+          .collection('facilities')
+          .doc(facilityId)
+          .collection('dailySnapshots')
+          .doc(_dateKey(yesterday))
+          .get();
+      final yesterdaySnapshot = yesterdaySnapshotDoc.data();
+
+      if (!mounted) return;
+      setState(() {
+        _salesPulseTrend = KpiTrend(
+          currentValue: todayTotals.totalSales,
+          previousValue: yesterdayTotals.totalSales,
+          higherIsBetter: true,
+          comparisonLabel: 'vs Yesterday',
+          formatChange: (v) => 'Tsh ${_moneyFormat.format(v)}',
+        );
+        _serviceRevenuePulseTrend = KpiTrend(
+          currentValue: todayTotals.totalServiceRevenue,
+          previousValue: yesterdayTotals.totalServiceRevenue,
+          higherIsBetter: true,
+          comparisonLabel: 'vs Yesterday',
+          formatChange: (v) => 'Tsh ${_moneyFormat.format(v)}',
+        );
+        _outstandingPulseTrend = KpiTrend(
+          currentValue: debtProvider.totalOutstanding(),
+          previousValue: (yesterdaySnapshot?['totalOutstanding'] as num?)?.toDouble() ?? 0,
+          // Rising outstanding debt is the bad outcome here, same
+          // business-meaning rule as the dashboard's own Outstanding
+          // Payment card.
+          higherIsBetter: false,
+          comparisonLabel: 'vs Yesterday',
+          formatChange: (v) => 'Tsh ${_moneyFormat.format(v)}',
+        );
+        _isPulseLoading = false;
+      });
+    } catch (e) {
+      debugPrint('Error loading Business Pulse: $e');
+      if (mounted) setState(() => _isPulseLoading = false);
+    }
+  }
+
+  List<(String, KpiTrend)> _pulseMetrics() {
+    final metrics = <(String, KpiTrend)>[];
+    if (_salesPulseTrend != null) metrics.add(('Sales', _salesPulseTrend!));
+    if (_serviceRevenuePulseTrend != null) metrics.add(('Service revenue', _serviceRevenuePulseTrend!));
+    if (_outstandingPulseTrend != null) metrics.add(('Outstanding payments', _outstandingPulseTrend!));
+    return metrics;
+  }
+
+  // An overall sentiment from what fraction of the metrics that
+  // actually changed are positive - deliberately not just "did sales
+  // go up", since a genuinely mixed day (sales up, debt also up)
+  // shouldn't be flatly reported as either "great" or "bad".
+  String _pulseHeadline(List<(String, KpiTrend)> metrics) {
+    final withChange = metrics.where((m) => !m.$2.hasNoChange).toList();
+    if (withChange.isEmpty) return "Nothing much has changed since yesterday.";
+    final positiveCount = withChange.where((m) => m.$2.isNewActivity || m.$2.isPositive).length;
+    final ratio = positiveCount / withChange.length;
+    if (ratio >= 0.66) return 'Your business is performing well today.';
+    if (ratio <= 0.33) return 'Today has been a bit slower than usual.';
+    return 'A mixed day for your business so far.';
+  }
+
+  // A clean "X up N%, Y down M%, and Z up P%" list - works for any
+  // combination of directions without needing a hand-crafted sentence
+  // structure per case, unlike trying to weave in a word like "while"
+  // only when the signs are mixed.
+  String _pulseSentence(List<(String, KpiTrend)> metrics) {
+    final phrases = <String>[];
+    for (final (label, trend) in metrics) {
+      if (trend.hasNoChange) continue;
+      if (trend.isNewActivity) {
+        phrases.add('$label picking up');
+        continue;
+      }
+      final direction = trend.absoluteChange >= 0 ? 'up' : 'down';
+      phrases.add('$label $direction ${trend.percent.abs().toStringAsFixed(0)}%');
+    }
+    if (phrases.isEmpty) return "Check back once today's activity picks up.";
+    if (phrases.length == 1) return '${phrases[0]}.';
+    return '${phrases.sublist(0, phrases.length - 1).join(', ')}, and ${phrases.last}.';
+  }
+
+  Widget _buildBusinessPulseCard() {
+    if (_isPulseLoading) {
+      return Container(
+        padding: const EdgeInsets.all(20),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(16),
+          boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 8, offset: const Offset(0, 4))],
+        ),
+        child: const Center(child: CircularProgressIndicator(strokeWidth: 2)),
+      );
+    }
+
+    final metrics = _pulseMetrics();
+    if (metrics.isEmpty) return const SizedBox.shrink();
+
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [primaryColor, const Color(0xFF3E8E82)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [BoxShadow(color: primaryColor.withValues(alpha: 0.25), blurRadius: 16, offset: const Offset(0, 6))],
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            width: 44,
+            height: 44,
+            decoration: BoxDecoration(color: Colors.white.withValues(alpha: 0.15), borderRadius: BorderRadius.circular(12)),
+            child: const Icon(Icons.monitor_heart_outlined, color: Colors.white, size: 22),
+          ),
+          const SizedBox(width: 14),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text('Business Pulse',
+                    style: TextStyle(color: Colors.white.withValues(alpha: 0.85), fontSize: 13, fontWeight: FontWeight.w600)),
+                const SizedBox(height: 4),
+                Text(_pulseHeadline(metrics),
+                    style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold)),
+                const SizedBox(height: 6),
+                Text(_pulseSentence(metrics),
+                    style: TextStyle(color: Colors.white.withValues(alpha: 0.9), fontSize: 13, height: 1.4)),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -127,6 +303,8 @@ class _InsightsScreenState extends State<InsightsScreen> {
                     child: ListView(
                       padding: const EdgeInsets.all(16),
                       children: [
+                        _buildBusinessPulseCard(),
+                        const SizedBox(height: 20),
                         _buildChartCard(
                           title: 'Sales - Last 14 Days',
                           summary: _trendSummary(),
@@ -328,7 +506,7 @@ class _InsightsScreenState extends State<InsightsScreen> {
                 final idx = value.toInt();
                 if (idx < 0 || idx >= _topProducts.length) return const SizedBox.shrink();
                 final name = _topProducts[idx].key;
-                final shortName = name.length > 9 ? '${name.substring(0, 9)}…' : name;
+                final shortName = name.length > 9 ? '${name.substring(0, 9)}...' : name;
                 return Padding(
                   padding: const EdgeInsets.only(top: 6),
                   child: Text(shortName, style: const TextStyle(fontSize: 9), textAlign: TextAlign.center),

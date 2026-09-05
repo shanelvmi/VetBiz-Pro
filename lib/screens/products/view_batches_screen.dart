@@ -400,14 +400,53 @@ class ViewBatchesScreen extends StatelessWidget {
                         return Column(
                           children: batches.map((batch) {
                             final isExpired = batch.expiry != null && batch.expiry!.isBefore(now);
+                            final isDepleted = batch.stockQty <= 0 && batch.sellableQty <= 0;
                             return Card(
                               margin: const EdgeInsets.only(bottom: 10),
                               child: ListTile(
                                 leading: Icon(
                                   Icons.inventory_2_outlined,
-                                  color: isExpired ? Colors.redAccent : primaryColor,
+                                  color: isExpired
+                                      ? Colors.redAccent
+                                      : (isDepleted ? Colors.grey : primaryColor),
                                 ),
-                                title: Text(batch.batchNo?.isNotEmpty == true ? 'Batch ${batch.batchNo}' : 'Unlabeled batch'),
+                                title: Row(
+                                  children: [
+                                    Flexible(
+                                      child: Text(
+                                        batch.batchNo?.isNotEmpty == true
+                                            ? 'Batch ${batch.batchNo}'
+                                            : 'Unlabeled batch',
+                                      ),
+                                    ),
+                                    if (isDepleted) ...[
+                                      const SizedBox(width: 8),
+                                      Container(
+                                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                                        decoration: BoxDecoration(
+                                          color: Colors.red.withValues(alpha: 0.1),
+                                          borderRadius: BorderRadius.circular(20),
+                                          border: Border.all(color: Colors.red.withValues(alpha: 0.4)),
+                                        ),
+                                        child: const Row(
+                                          mainAxisSize: MainAxisSize.min,
+                                          children: [
+                                            Icon(Icons.circle, size: 8, color: Colors.red),
+                                            SizedBox(width: 4),
+                                            Text(
+                                              'Out of Stock - 0 available',
+                                              style: TextStyle(
+                                                color: Colors.red,
+                                                fontSize: 11,
+                                                fontWeight: FontWeight.w600,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                    ],
+                                  ],
+                                ),
                                 subtitle: Text(
                                   'Warehouse: ${batch.stockQty} · Shelf: ${batch.sellableQty} · Tsh ${batch.buyPrice.toStringAsFixed(0)}'
                                   '${batch.expiry != null ? '\n${isExpired ? 'Expired' : 'Expires'} ${DateFormat('dd MMM yyyy').format(batch.expiry!)}' : ''}',

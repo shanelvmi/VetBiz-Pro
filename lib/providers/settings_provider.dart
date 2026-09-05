@@ -20,10 +20,10 @@ class SettingsProvider with ChangeNotifier {
 
   // Centralized, scalable matrix definitions
   final List<Map<String, String>> supportedCurrencies = [
-    {'code': 'TZS', 'name': 'Tanzanian Shilling', 'flag': '🇹🇿'},
-    {'code': 'KES', 'name': 'Kenyan Shilling', 'flag': '🇰🇪'},
-    {'code': 'UGX', 'name': 'Ugandan Shilling', 'flag': '🇺🇬'},
-    {'code': 'USD', 'name': 'United States Dollar', 'flag': '🇺🇸'},
+    {'code': 'TZS', 'name': 'Tanzanian Shilling'},
+    {'code': 'KES', 'name': 'Kenyan Shilling'},
+    {'code': 'UGX', 'name': 'Ugandan Shilling'},
+    {'code': 'USD', 'name': 'United States Dollar'},
   ];
 
   final List<Map<String, String>> supportedLanguages = [

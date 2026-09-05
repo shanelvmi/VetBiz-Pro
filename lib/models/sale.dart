@@ -129,6 +129,9 @@ class Sale {
   // shared, atomic receipt-numbering counter, not set by callers
   // directly. Sales made before this feature existed have none.
   final int? receiptNumber;
+  // Optional free-text note set at sale creation time. Sales made
+  // before this field existed have none.
+  final String? notes;
 
   const Sale({
     required this.id,
@@ -148,6 +151,7 @@ class Sale {
     this.unrealizedProfit = 0.0,
     this.paymentMethod,
     this.receiptNumber,
+    this.notes,
   });
 
   /// Apply a payment and recalc realized/unrealized profit
@@ -210,6 +214,7 @@ class Sale {
       'unrealizedProfit': unrealizedProfit,
       if (paymentMethod != null) 'paymentMethod': paymentMethod,
       if (receiptNumber != null) 'receiptNumber': receiptNumber,
+      if (notes != null) 'notes': notes,
     };
   }
 
@@ -267,6 +272,7 @@ class Sale {
           (map['unrealizedProfit'] as num?)?.toDouble() ?? unrealized,
       paymentMethod: map['paymentMethod'] as String?,
       receiptNumber: (map['receiptNumber'] as num?)?.toInt(),
+      notes: map['notes'] as String?,
     );
   }
 
@@ -288,6 +294,7 @@ class Sale {
     double? unrealizedProfit,
     String? paymentMethod,
     int? receiptNumber,
+    String? notes,
   }) {
     return Sale(
       id: id ?? this.id,
@@ -307,6 +314,7 @@ class Sale {
       unrealizedProfit: unrealizedProfit ?? this.unrealizedProfit,
       paymentMethod: paymentMethod ?? this.paymentMethod,
       receiptNumber: receiptNumber ?? this.receiptNumber,
+      notes: notes ?? this.notes,
     );
   }
 }
