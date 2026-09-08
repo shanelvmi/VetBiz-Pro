@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
 import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 import '../../providers/product_provider.dart';
 import '../../models/product.dart';
@@ -10,11 +11,13 @@ import '../../providers/user_role_provider.dart';
 import '../../widgets/product_catalog_side_panel.dart';
 import '../../widgets/product_thumbnail.dart';
 import '../../services/product_catalog_service.dart';
+import '../../services/usage_calculator_service.dart';
 import 'add_edit_product_screen.dart';
 import 'add_batch_screen.dart';
 import 'view_batches_screen.dart';
 import '../sales/add_sale_screen.dart';
 import '../dashboard/stock_alerts_screen.dart';
+import '../../models/notification_model.dart';
 
 class ProductsScreen extends StatefulWidget {
   final String? initialSearchQuery;
@@ -28,6 +31,7 @@ class _ProductsScreenState extends State<ProductsScreen> {
   final Color primaryDeepGreen = const Color(0xFF2F5D62);
   final Color warmAmber = const Color(0xFFFFB200);
   final Color offWhite = const Color(0xFFFDFDF9);
+  final GlobalKey _bellKey = GlobalKey();
 
   final NumberFormat _moneyFormat = NumberFormat.currency(
     locale: 'en_US',
@@ -78,6 +82,104 @@ class _ProductsScreenState extends State<ProductsScreen> {
     }
   }
 
+  Future<void> _recalculateSmartDefaults() async {
+    final facilityId =
+        Provider.of<FacilityProvider>(context, listen: false).selectedFacilityId;
+    if (facilityId == null) return;
+
+    final products = Provider.of<ProductProvider>(context, listen: false).products;
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Recalculating smart defaults from usage history...')),
+    );
+
+    try {
+      final facilityDoc = await FirebaseFirestore.instance.collection('facilities').doc(facilityId).get();
+      final restockFrequency = facilityDoc.data()?['restockFrequency'] as String? ??
+          UsageCalculatorService.defaultRestockFrequency;
+
+      final updatedCount = await UsageCalculatorService.recalculateForFacility(
+        facilityId,
+        products,
+        restockFrequency: restockFrequency,
+      );
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(updatedCount > 0
+              ? 'Updated smart defaults for $updatedCount product${updatedCount == 1 ? '' : 's'} with enough usage history.'
+              : 'No products have enough sales/service history yet to compute smart defaults.'),
+        ),
+      );
+      if (updatedCount > 0) await _manualRefresh();
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Could not recalculate smart defaults: $e')),
+      );
+    }
+  }
+
+  /// Same anchored-dropdown pattern as the Dashboard's own bell (see
+  /// dashboard_screen.dart's _showNotificationsDropdown) - positioned
+  /// relative to this bell's actual measured position, transparent
+  /// barrier so it reads as a dropdown rather than a modal taking over
+  /// the screen. Scoped to stock-only notifications throughout, since
+  /// this bell belongs to the Products screen specifically.
+  Future<void> _showNotificationsDropdown(BuildContext context) async {
+    final renderBox = _bellKey.currentContext?.findRenderObject() as RenderBox?;
+    if (renderBox == null) return;
+    final bellPosition = renderBox.localToGlobal(Offset.zero);
+    final bellSize = renderBox.size;
+    final screenSize = MediaQuery.of(context).size;
+
+    const panelWidth = 400.0;
+    final left = (bellPosition.dx + panelWidth > screenSize.width - 16)
+        ? screenSize.width - panelWidth - 16
+        : bellPosition.dx;
+
+    await showGeneralDialog(
+      context: context,
+      barrierDismissible: true,
+      barrierLabel: 'Notifications',
+      barrierColor: Colors.transparent,
+      transitionDuration: const Duration(milliseconds: 180),
+      pageBuilder: (context, animation, secondaryAnimation) {
+        return Stack(
+          children: [
+            Positioned(
+              top: bellPosition.dy + bellSize.height + 8,
+              left: left,
+              child: Material(
+                elevation: 8,
+                borderRadius: BorderRadius.circular(12),
+                clipBehavior: Clip.antiAlias,
+                child: SizedBox(
+                  width: panelWidth,
+                  child: ConstrainedBox(
+                    constraints: BoxConstraints(maxHeight: screenSize.height * 0.75),
+                    child: const StockAlertsScreen(isDropdown: true, lockedCategory: NotificationCategory.stock),
+                  ),
+                ),
+              ),
+            ),
+          ],
+        );
+      },
+      transitionBuilder: (context, animation, secondaryAnimation, child) {
+        final curved = CurvedAnimation(parent: animation, curve: Curves.easeOutCubic);
+        return FadeTransition(
+          opacity: curved,
+          child: ScaleTransition(
+            scale: Tween<double>(begin: 0.95, end: 1.0).animate(curved),
+            alignment: Alignment.topLeft,
+            child: child,
+          ),
+        );
+      },
+    );
+  }
+
   String _categoryOf(Product p) => p.category.isNotEmpty ? p.category : 'Uncategorized';
 
   Widget _buildSummaryMetrics({
@@ -95,12 +197,18 @@ class _ProductsScreenState extends State<ProductsScreen> {
 
     return LayoutBuilder(
       builder: (context, constraints) {
-        final isNarrow = constraints.maxWidth < 700;
+        // A smooth 2/3/4/5-column progression across screen widths,
+        // rather than a single narrow/wide jump - 160px is a
+        // reasonable minimum card width before it starts feeling
+        // cramped, and there are exactly 5 cards now, so 5 columns is
+        // both the cap and the point where they all fit in one
+        // complete row with nothing left over.
+        final crossAxisCount = (constraints.maxWidth / 160).floor().clamp(2, 5);
         return GridView.count(
           shrinkWrap: true,
           physics: const NeverScrollableScrollPhysics(),
-          crossAxisCount: isNarrow ? 2 : 5,
-          childAspectRatio: isNarrow ? 3.0 : 2.6,
+          crossAxisCount: crossAxisCount,
+          childAspectRatio: crossAxisCount <= 2 ? 3.0 : 2.6,
           crossAxisSpacing: 12,
           mainAxisSpacing: 12,
           children: metrics.map((m) => _metricCard(m.$1, m.$2, m.$3, m.$4)).toList(),
@@ -152,10 +260,21 @@ class _ProductsScreenState extends State<ProductsScreen> {
   }
 
   Map<String, dynamic> _getProductStatus(Product product) {
+    // A brand-new product that's never carried any stock reads very
+    // differently from one that genuinely ran out - shown neutrally
+    // rather than as an alarming "Depleted", matching the agreed design.
+    if (product.primaryStatus == ProductStockStatus.neverStocked) {
+      return {
+        'text': 'Not Stocked',
+        'color': Colors.grey,
+        'icon': Icons.inventory_2_outlined,
+      };
+    }
+
     // Nothing left anywhere - the most actionable state (needs
     // restocking), so it takes priority even over an old expiry date
     // still sitting on the record from whatever batch was last here.
-    if (product.stockQty <= 0 && product.sellableQty <= 0) {
+    if (product.primaryStatus == ProductStockStatus.depleted) {
       return {
         'text': 'Depleted',
         'color': Colors.red,
@@ -171,14 +290,26 @@ class _ProductsScreenState extends State<ProductsScreen> {
       };
     }
 
-    // Same either-quantity-low check as the dashboard's own stock
-    // alerts, so "Low Stock" never means something different depending
-    // on which screen you're looking at.
-    if (product.isLowStock) {
+    // Same primaryStatus every screen reads, so "Low Stock" (and now
+    // "Reorder Soon") never mean something different depending on which
+    // screen you're looking at.
+    if (product.primaryStatus == ProductStockStatus.lowStock) {
       return {
         'text': 'Low Stock',
         'color': Colors.orange,
         'icon': Icons.trending_down,
+      };
+    }
+
+    // A real, separate signal from Low Stock - sales can continue
+    // normally, but it's time to start planning a purchase. Distinct
+    // color (amber, not orange) so it doesn't read as urgent as Low
+    // Stock/Depleted at a glance.
+    if (product.primaryStatus == ProductStockStatus.reorderSoon) {
+      return {
+        'text': 'Reorder Soon',
+        'color': Colors.amber[700],
+        'icon': Icons.hourglass_bottom,
       };
     }
 
@@ -487,15 +618,39 @@ class _ProductsScreenState extends State<ProductsScreen> {
                 Text('${p.category} \u2022 ${p.type}',
                     style: TextStyle(fontSize: 12, color: Colors.grey[600]), maxLines: 1, overflow: TextOverflow.ellipsis),
                 const SizedBox(height: 4),
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                  decoration: BoxDecoration(
-                    color: statusColor.withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(10),
-                    border: Border.all(color: statusColor.withValues(alpha: 0.4)),
-                  ),
-                  child: Text(status['text'] as String,
-                      style: TextStyle(color: statusColor, fontSize: 11, fontWeight: FontWeight.w600)),
+                Wrap(
+                  spacing: 6,
+                  runSpacing: 4,
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                      decoration: BoxDecoration(
+                        color: statusColor.withValues(alpha: 0.1),
+                        borderRadius: BorderRadius.circular(10),
+                        border: Border.all(color: statusColor.withValues(alpha: 0.4)),
+                      ),
+                      child: Text(status['text'] as String,
+                          style: TextStyle(color: statusColor, fontSize: 11, fontWeight: FontWeight.w600)),
+                    ),
+                    if (p.hasRestockShelfAlert)
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                        decoration: BoxDecoration(
+                          color: Colors.blue.withValues(alpha: 0.1),
+                          borderRadius: BorderRadius.circular(10),
+                          border: Border.all(color: Colors.blue.withValues(alpha: 0.4)),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(Icons.move_up, size: 11, color: Colors.blue[700]),
+                            const SizedBox(width: 3),
+                            Text('Restock Shelf',
+                                style: TextStyle(color: Colors.blue[700], fontSize: 11, fontWeight: FontWeight.w600)),
+                          ],
+                        ),
+                      ),
+                  ],
                 ),
               ],
             ),
@@ -561,6 +716,7 @@ class _ProductsScreenState extends State<ProductsScreen> {
 
   PreferredSizeWidget _buildAppBar() {
     final hasStockAlerts = StockAlertsScreen.hasAnyAlert(Provider.of<ProductProvider>(context).products);
+    final isAdmin = Provider.of<UserRoleProvider>(context).isAdmin;
 
     return AppBar(
       backgroundColor: Colors.white,
@@ -578,6 +734,12 @@ class _ProductsScreenState extends State<ProductsScreen> {
         ],
       ),
       actions: [
+        if (isAdmin)
+          IconButton(
+            icon: const Icon(Icons.auto_awesome),
+            tooltip: 'Recalculate smart defaults from usage history',
+            onPressed: _recalculateSmartDefaults,
+          ),
         IconButton(
           icon: const Icon(Icons.refresh),
           tooltip: 'Refresh',
@@ -587,10 +749,17 @@ class _ProductsScreenState extends State<ProductsScreen> {
           clipBehavior: Clip.none,
           children: [
             IconButton(
+              key: _bellKey,
               icon: const Icon(Icons.notifications_none),
               tooltip: 'Stock Alerts',
-              onPressed: () {
-                Navigator.push(context, MaterialPageRoute(builder: (_) => const StockAlertsScreen()));
+              onPressed: () async {
+                final isWideScreen = MediaQuery.of(context).size.width >= 900;
+                if (isWideScreen) {
+                  await _showNotificationsDropdown(context);
+                } else {
+                  await Navigator.push(context, MaterialPageRoute(
+                      builder: (_) => const StockAlertsScreen(lockedCategory: NotificationCategory.stock)));
+                }
               },
             ),
             if (hasStockAlerts)
@@ -876,24 +1045,50 @@ class _ProductsScreenState extends State<ProductsScreen> {
                       overflow: TextOverflow.ellipsis,
                     ),
                     const SizedBox(height: 6),
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                      decoration: BoxDecoration(
-                        color: statusColor.withValues(alpha: 0.1),
-                        borderRadius: BorderRadius.circular(10),
-                        border: Border.all(color: statusColor.withValues(alpha: 0.4)),
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Icon(status['icon'] as IconData, size: 12, color: statusColor),
-                          const SizedBox(width: 4),
-                          Text(
-                            status['text'] as String,
-                            style: TextStyle(color: statusColor, fontSize: 11, fontWeight: FontWeight.w600),
+                    Wrap(
+                      spacing: 6,
+                      runSpacing: 4,
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                          decoration: BoxDecoration(
+                            color: statusColor.withValues(alpha: 0.1),
+                            borderRadius: BorderRadius.circular(10),
+                            border: Border.all(color: statusColor.withValues(alpha: 0.4)),
                           ),
-                        ],
-                      ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(status['icon'] as IconData, size: 12, color: statusColor),
+                              const SizedBox(width: 4),
+                              Text(
+                                status['text'] as String,
+                                style: TextStyle(color: statusColor, fontSize: 11, fontWeight: FontWeight.w600),
+                              ),
+                            ],
+                          ),
+                        ),
+                        if (p.hasRestockShelfAlert)
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                            decoration: BoxDecoration(
+                              color: Colors.blue.withValues(alpha: 0.1),
+                              borderRadius: BorderRadius.circular(10),
+                              border: Border.all(color: Colors.blue.withValues(alpha: 0.4)),
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Icon(Icons.move_up, size: 12, color: Colors.blue[700]),
+                                const SizedBox(width: 4),
+                                Text(
+                                  'Restock Shelf',
+                                  style: TextStyle(color: Colors.blue[700], fontSize: 11, fontWeight: FontWeight.w600),
+                                ),
+                              ],
+                            ),
+                          ),
+                      ],
                     ),
                     const SizedBox(height: 10),
                     Row(

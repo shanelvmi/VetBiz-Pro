@@ -1,6 +1,6 @@
 const functions = require("firebase-functions/v1");
 const { onSchedule } = require("firebase-functions/v2/scheduler");
-const { onDocumentWritten, onDocumentCreated } = require("firebase-functions/v2/firestore");
+const { onDocumentWritten, onDocumentCreated, onDocumentUpdated } = require("firebase-functions/v2/firestore");
 const admin = require("firebase-admin");
 const nodemailer = require("nodemailer");
 
@@ -1210,3 +1210,236 @@ exports.platformRemoveUser = functions.https.onCall(async (data, context) => {
 
   return { success: true };
 });
+
+// ---------------------------------------------------------------------------
+// Notification triggers: each of these fires the moment a specific kind of
+// record is created, and writes a single, real `notifications` document -
+// the piece the Dashboard bell dropdown and the full Notifications screen
+// both read from. Every one of these is ephemeral (no expiresAt) rather
+// than persistent, since each represents a one-time event that happened
+// once, not an ongoing condition like a promotion - it should simply
+// disappear once someone's actually seen it, matching how
+// FacilityNotification.isCurrentlyVisible already treats ephemeral entries.
+// ---------------------------------------------------------------------------
+
+function formatTsh(amount) {
+  return Math.round(amount).toLocaleString("en-US");
+}
+
+exports.notifyOnPaymentReceived = onDocumentCreated(
+  "facilities/{facilityId}/payments/{paymentId}",
+  async (event) => {
+    const { facilityId, paymentId } = event.params;
+    const payment = event.data?.data();
+
+    if (!payment || typeof payment.amount !== "number") return;
+
+    // clientName isn't stored on the payment document itself (see
+    // Payment.fromFirestore in the Flutter app, which looks it up
+    // separately at read time) - so it's looked up here too, rather
+    // than assumed. A payment can also exist with no clientId at all
+    // (e.g. a walk-in sale paid on the spot), which is a valid case,
+    // not an error - falls back to a generic label instead of skipping
+    // the notification entirely.
+    let clientName = "a client";
+    if (payment.clientId) {
+      const clientSnap = await db
+        .collection("facilities")
+        .doc(facilityId)
+        .collection("clients")
+        .doc(payment.clientId)
+        .get();
+      if (clientSnap.exists && clientSnap.data().name) {
+        clientName = clientSnap.data().name;
+      }
+    }
+
+    await db
+      .collection("facilities")
+      .doc(facilityId)
+      .collection("notifications")
+      .add({
+        type: "paymentReceived",
+        title: "Payment Received",
+        message: `From ${clientName} · Tsh ${formatTsh(payment.amount)}`,
+        relatedEntityType: "payment",
+        relatedEntityId: paymentId,
+        createdAt: admin.firestore.FieldValue.serverTimestamp(),
+      });
+  }
+);
+
+exports.notifyOnServiceRecorded = onDocumentCreated(
+  "facilities/{facilityId}/services/{serviceId}",
+  async (event) => {
+    const { facilityId, serviceId } = event.params;
+    const service = event.data?.data();
+
+    if (!service) return;
+
+    const clientName = service.clientName || "a client";
+    const serviceName = service.name || "Service";
+
+    await db
+      .collection("facilities")
+      .doc(facilityId)
+      .collection("notifications")
+      .add({
+        type: "serviceRecorded",
+        title: "Service Recorded",
+        message: `Client: ${clientName} · ${serviceName}`,
+        relatedEntityType: "service",
+        relatedEntityId: serviceId,
+        createdAt: admin.firestore.FieldValue.serverTimestamp(),
+      });
+  }
+);
+
+exports.notifyOnNewClient = onDocumentCreated(
+  "facilities/{facilityId}/clients/{clientId}",
+  async (event) => {
+    const { facilityId, clientId } = event.params;
+    const client = event.data?.data();
+
+    if (!client || !client.name) return;
+
+    const phonePart = client.phone ? ` · ${client.phone}` : "";
+
+    await db
+      .collection("facilities")
+      .doc(facilityId)
+      .collection("notifications")
+      .add({
+        type: "newClient",
+        title: "New Client Added",
+        message: `${client.name}${phonePart}`,
+        relatedEntityType: "client",
+        relatedEntityId: clientId,
+        createdAt: admin.firestore.FieldValue.serverTimestamp(),
+      });
+  }
+);
+
+// ---------------------------------------------------------------------------
+// Product stock-status change notifications: mirrors
+// Product.primaryStatus / Product.hasRestockShelfAlert from the Flutter app
+// (lib/models/product.dart) in JavaScript, since Cloud Functions can't call
+// Dart code directly. IMPORTANT: if the threshold logic in product.dart
+// ever changes, this must be updated to match, or the two will silently
+// drift apart - there is no shared source of truth between the two
+// languages here.
+//
+// Fires only on a genuine transition into a worse status (or newly needing
+// a shelf restock), never on every product write - editing a product's
+// name or price, for instance, leaves its status unchanged and produces
+// no notification. Also never fires on improvement (e.g. restocked back
+// to "in stock" isn't an alert).
+// ---------------------------------------------------------------------------
+
+const DEFAULT_SHELF_MIN_LEVEL = 3;
+const DEFAULT_LOW_STOCK_THRESHOLD = 5;
+const DEFAULT_REORDER_POINT = 10;
+
+function pickEffectiveThreshold(explicitVal, computedVal, defaultVal) {
+  if (typeof explicitVal === "number") return explicitVal;
+  if (typeof computedVal === "number") return computedVal;
+  return defaultVal;
+}
+
+function computeProductStatus(product) {
+  const stockQty = product.stockQty || 0;
+  const sellableQty = product.sellableQty || 0;
+  const totalStock = stockQty + sellableQty;
+
+  if (totalStock === 0) {
+    return product.hasEverHadStock ? "criticalStock" : "neverStocked";
+  }
+
+  const lowStockThreshold = pickEffectiveThreshold(
+    product.lowStockThreshold,
+    product.computedLowStockThreshold,
+    DEFAULT_LOW_STOCK_THRESHOLD
+  );
+  if (totalStock <= lowStockThreshold) return "lowStock";
+
+  const reorderPoint = pickEffectiveThreshold(
+    product.reorderPoint,
+    product.computedReorderPoint,
+    DEFAULT_REORDER_POINT
+  );
+  if (totalStock <= reorderPoint) return "reorderSoon";
+
+  return "inStock";
+}
+
+function computeHasRestockShelfAlert(product) {
+  const shelfMinLevel = pickEffectiveThreshold(
+    product.shelfMinLevel,
+    product.computedShelfMinLevel,
+    DEFAULT_SHELF_MIN_LEVEL
+  );
+  const sellableQty = product.sellableQty || 0;
+  const stockQty = product.stockQty || 0;
+  const deficit = shelfMinLevel - sellableQty;
+  if (deficit <= 0) return false;
+  return stockQty >= deficit;
+}
+
+const STATUS_NOTIFICATION_INFO = {
+  criticalStock: { type: "criticalStock", title: "Critical - Out of Stock Everywhere" },
+  lowStock: { type: "lowStock", title: "Low Stock" },
+  reorderSoon: { type: "reorderSoon", title: "Reorder Soon" },
+};
+
+exports.notifyOnProductStatusChange = onDocumentUpdated(
+  "facilities/{facilityId}/products/{productId}",
+  async (event) => {
+    const { facilityId, productId } = event.params;
+    const before = event.data?.before?.data();
+    const after = event.data?.after?.data();
+    if (!before || !after) return;
+
+    const beforeStatus = computeProductStatus(before);
+    const afterStatus = computeProductStatus(after);
+    const beforeRestockAlert = computeHasRestockShelfAlert(before);
+    const afterRestockAlert = computeHasRestockShelfAlert(after);
+
+    const productName = after.name || "A product";
+    const writes = [];
+
+    if (afterStatus !== beforeStatus && STATUS_NOTIFICATION_INFO[afterStatus]) {
+      const info = STATUS_NOTIFICATION_INFO[afterStatus];
+      writes.push({
+        type: info.type,
+        title: info.title,
+        message: `${productName} - Shelf: ${after.sellableQty || 0} · Warehouse: ${after.stockQty || 0}`,
+        relatedEntityType: "product",
+        relatedEntityId: productId,
+        createdAt: admin.firestore.FieldValue.serverTimestamp(),
+      });
+    }
+
+    // A separate, non-exclusive signal from the primary status above - a
+    // product can newly need shelf restocking without its overall status
+    // changing at all (e.g. staying "in stock" the whole time).
+    if (!beforeRestockAlert && afterRestockAlert) {
+      writes.push({
+        type: "restockShelf",
+        title: "Restock Shelf",
+        message: `${productName} - ${after.sellableQty || 0} on shelf · ${after.stockQty || 0} in warehouse`,
+        relatedEntityType: "product",
+        relatedEntityId: productId,
+        createdAt: admin.firestore.FieldValue.serverTimestamp(),
+      });
+    }
+
+    if (writes.length === 0) return;
+
+    const notificationsRef = db
+      .collection("facilities")
+      .doc(facilityId)
+      .collection("notifications");
+
+    await Promise.all(writes.map((n) => notificationsRef.add(n)));
+  }
+);

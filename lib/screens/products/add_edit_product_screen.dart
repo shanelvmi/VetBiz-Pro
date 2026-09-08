@@ -28,6 +28,38 @@ enum ProductDestination {
   stockStore,
 }
 
+class _DashedCirclePainter extends CustomPainter {
+  final Color color;
+  const _DashedCirclePainter({required this.color});
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = color
+      ..strokeWidth = 1.5
+      ..style = PaintingStyle.stroke;
+    final radius = size.width / 2;
+    final center = Offset(radius, radius);
+    const dashCount = 28;
+    const dashSweep = 6.0; // degrees drawn per dash
+    const gapSweep = (360 / dashCount) - dashSweep;
+    double angle = 0;
+    for (int i = 0; i < dashCount; i++) {
+      canvas.drawArc(
+        Rect.fromCircle(center: center, radius: radius - 1),
+        angle * (3.14159265 / 180),
+        dashSweep * (3.14159265 / 180),
+        false,
+        paint,
+      );
+      angle += dashSweep + gapSweep;
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant _DashedCirclePainter oldDelegate) => oldDelegate.color != color;
+}
+
 class AddEditProductScreen extends StatefulWidget {
   final Product? product;
   final ProductDestination? presetDestination; // 🆕 NEW: Auto-destination
@@ -132,6 +164,26 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
     }
   }
 
+  Widget _sectionHeader(String title, IconData icon) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 10),
+      child: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(6),
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: primaryDeepTealGreen.withValues(alpha: 0.1),
+            ),
+            child: Icon(icon, size: 16, color: primaryDeepTealGreen),
+          ),
+          const SizedBox(width: 8),
+          Text(title, style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15, color: primaryDeepTealGreen)),
+        ],
+      ),
+    );
+  }
+
   Widget _buildImagePicker() {
     final hasPreview = _imageBytes != null;
     final hasUploadedUrl = !hasPreview && _imageUrl != null && _imageUrl!.isNotEmpty;
@@ -143,13 +195,14 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
           child: Stack(
             alignment: Alignment.bottomRight,
             children: [
-              Container(
+              CustomPaint(
+                painter: _DashedCirclePainter(color: primaryDeepTealGreen.withValues(alpha: 0.5)),
+                child: Container(
                 width: 96,
                 height: 96,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
                   color: primaryDeepTealGreen.withValues(alpha: 0.08),
-                  border: Border.all(color: Colors.grey.withValues(alpha: 0.25)),
                 ),
                 clipBehavior: Clip.antiAlias,
                 child: Stack(
@@ -162,16 +215,16 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
                         _imageUrl!,
                         fit: BoxFit.cover,
                         errorBuilder: (context, error, stackTrace) => Icon(
-                          Icons.inventory_2_outlined,
-                          size: 36,
-                          color: primaryDeepTealGreen.withValues(alpha: 0.4),
+                          Icons.add_photo_alternate_outlined,
+                          size: 32,
+                          color: primaryDeepTealGreen.withValues(alpha: 0.5),
                         ),
                       )
                     else
                       Icon(
-                        Icons.inventory_2_outlined,
-                        size: 36,
-                        color: primaryDeepTealGreen.withValues(alpha: 0.4),
+                        Icons.add_photo_alternate_outlined,
+                        size: 32,
+                        color: primaryDeepTealGreen.withValues(alpha: 0.5),
                       ),
                     if (_isUploadingImage)
                       Container(
@@ -186,23 +239,29 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
                       ),
                   ],
                 ),
-              ),
-              Container(
-                padding: const EdgeInsets.all(6),
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: primaryDeepTealGreen,
-                  border: Border.all(color: Colors.white, width: 2),
                 ),
-                child: const Icon(Icons.camera_alt, size: 14, color: Colors.white),
               ),
+              if (hasPreview || hasUploadedUrl)
+                Container(
+                  padding: const EdgeInsets.all(6),
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: primaryDeepTealGreen,
+                    border: Border.all(color: Colors.white, width: 2),
+                  ),
+                  child: const Icon(Icons.camera_alt, size: 14, color: Colors.white),
+                ),
             ],
           ),
         ),
-        const SizedBox(height: 6),
+        const SizedBox(height: 8),
         Text(
-          'Product photo (optional)',
-          style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+          'Add photo',
+          style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: primaryDeepTealGreen),
+        ),
+        Text(
+          'Optional',
+          style: TextStyle(fontSize: 11, color: Colors.grey[600]),
         ),
       ],
     );
@@ -238,7 +297,7 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
     _stockController =
         TextEditingController(text: widget.product?.stockQty.toString() ?? '');
     _minStockController = TextEditingController(
-        text: widget.product?.minStockLevel?.toString() ?? '');
+        text: widget.product?.lowStockThreshold?.toString() ?? '');
 
     _unit = widget.product?.unit ?? 'pcs';
     _type = widget.product?.type ?? 'Injectable';
@@ -313,11 +372,7 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
   }
 
   Widget _buildSupplierBatchExpiryFields(bool isNarrow) {
-    final supplierField = TextFormField(
-      controller: _supplierController,
-      decoration: _inputDecoration('Supplier'),
-      cursorColor: primaryDeepTealGreen,
-    );
+    final supplierField = _supplierField(enabled: true);
     final batchField = TextFormField(
       controller: _batchController,
       decoration: _inputDecoration('Batch No'),
@@ -352,6 +407,78 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
         const SizedBox(width: 12),
         Expanded(child: expiryField),
       ],
+    );
+  }
+
+  Widget _typeField({required bool enabled}) {
+    return InkWell(
+      onTap: enabled ? _selectTypeDialog : null,
+      child: InputDecorator(
+        decoration: _inputDecoration('Type', required: true),
+        child: Text(
+          _type.isEmpty ? 'Select Type' : _type,
+          style: TextStyle(color: _type.isEmpty ? Colors.grey : (enabled ? Colors.black87 : Colors.grey[600])),
+        ),
+      ),
+    );
+  }
+
+  Widget _categoryField({required bool enabled}) {
+    return FormField<String>(
+      initialValue: _category,
+      validator: (value) =>
+          (value == null || value.isEmpty) ? 'Please select a category' : null,
+      builder: (formFieldState) {
+        return InkWell(
+          onTap: enabled
+              ? () async {
+                  await _selectCategoryDialog();
+                  formFieldState.didChange(_category);
+                }
+              : null,
+          child: InputDecorator(
+            decoration: _inputDecoration('Category', required: true).copyWith(
+              errorText: formFieldState.errorText,
+            ),
+            child: Text(
+              _category.isEmpty ? 'Select Category' : _category,
+              style: TextStyle(
+                  color: _category.isEmpty ? Colors.grey : (enabled ? Colors.black87 : Colors.grey[600])),
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _supplierField({required bool enabled}) {
+    final provider = Provider.of<ProductProvider>(context, listen: false);
+    return Autocomplete<String>(
+      initialValue: TextEditingValue(text: _supplierController.text),
+      optionsBuilder: (textEditingValue) {
+        if (textEditingValue.text.trim().isEmpty) return const Iterable<String>.empty();
+        final query = textEditingValue.text.trim().toLowerCase();
+        final suppliers = provider.products
+            .map((p) => p.supplier)
+            .whereType<String>()
+            .where((s) => s.trim().isNotEmpty)
+            .toSet()
+            .where((s) => s.toLowerCase().contains(query))
+            .toList()
+          ..sort();
+        return suppliers.take(6);
+      },
+      onSelected: (selection) => _supplierController.text = selection,
+      fieldViewBuilder: (context, fieldController, focusNode, onFieldSubmitted) {
+        return TextFormField(
+          controller: fieldController,
+          focusNode: focusNode,
+          decoration: _inputDecoration('Supplier'),
+          cursorColor: primaryDeepTealGreen,
+          enabled: enabled,
+          onChanged: (value) => _supplierController.text = value,
+        );
+      },
     );
   }
 
@@ -451,36 +578,99 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
         backgroundColor: primaryDeepTealGreen.withValues(alpha: 0.95),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         child: Container(
-          padding: const EdgeInsets.all(16),
-          constraints: BoxConstraints(
-            maxHeight: MediaQuery.of(context).size.height * 0.6,
-            maxWidth: 400,
+          padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
+          constraints: const BoxConstraints(
+            maxHeight: 340,
+            maxWidth: 340,
           ),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Text(
-                'Select Category',
-                style: TextStyle(
-                  color: offWhite,
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 8),
+                child: Text(
+                  'Select Category',
+                  style: TextStyle(
+                    color: offWhite,
+                    fontSize: 15,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
               ),
-              const SizedBox(height: 16),
-              Expanded(
+              const SizedBox(height: 8),
+              Flexible(
                 child: ListView(
                   shrinkWrap: true,
                   children: _categories.map((cat) {
                     return ListTile(
+                      dense: true,
+                      visualDensity: const VisualDensity(vertical: -3),
+                      contentPadding: const EdgeInsets.symmetric(horizontal: 8),
                       title: Text(
                         cat,
-                        style: TextStyle(color: offWhite, fontSize: 14),
+                        style: TextStyle(color: offWhite, fontSize: 13),
                       ),
                       onTap: () {
                         if (!mounted) return;
                         setState(() {
                           _category = cat;
+                        });
+                        Navigator.pop(context);
+                      },
+                    );
+                  }).toList(),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Future<void> _selectTypeDialog() {
+    return showDialog(
+      context: context,
+      builder: (context) => Dialog(
+        backgroundColor: primaryDeepTealGreen.withValues(alpha: 0.95),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        child: Container(
+          padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
+          constraints: const BoxConstraints(
+            maxHeight: 340,
+            maxWidth: 340,
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 8),
+                child: Text(
+                  'Select Type',
+                  style: TextStyle(
+                    color: offWhite,
+                    fontSize: 15,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+              const SizedBox(height: 8),
+              Flexible(
+                child: ListView(
+                  shrinkWrap: true,
+                  children: _types.map((t) {
+                    return ListTile(
+                      dense: true,
+                      visualDensity: const VisualDensity(vertical: -3),
+                      contentPadding: const EdgeInsets.symmetric(horizontal: 8),
+                      title: Text(
+                        t,
+                        style: TextStyle(color: offWhite, fontSize: 13),
+                      ),
+                      onTap: () {
+                        if (!mounted) return;
+                        setState(() {
+                          _type = t;
                         });
                         Navigator.pop(context);
                       },
@@ -631,11 +821,18 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
             : (destination == ProductDestination.sellable
                 ? int.tryParse(_stockController.text.trim()) ?? 0
                 : 0),
+        hasEverHadStock: isEditingProduct
+            ? (widget.product!.hasEverHadStock || widget.product!.stockQty > 0 || widget.product!.sellableQty > 0)
+            : (destination == ProductDestination.stockStore
+                ? (int.tryParse(_stockController.text.trim()) ?? 0) > 0
+                : destination == ProductDestination.sellable
+                    ? (int.tryParse(_stockController.text.trim()) ?? 0) > 0
+                    : false),
         unit: _unit,
         type: _type,
         category: _category,
         facilityId: facilityId,
-        minStockLevel: _minStockController.text.trim().isEmpty
+        lowStockThreshold: _minStockController.text.trim().isEmpty
             ? null
             : int.tryParse(_minStockController.text.trim()),
         target: destination == ProductDestination.sellable
@@ -745,15 +942,17 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
       appBar: AppBar(
         backgroundColor: primaryDeepTealGreen,
         iconTheme: IconThemeData(color: offWhite),
-        centerTitle: true,
-        title: Text(appBarTitle, style: TextStyle(color: offWhite)),
+        centerTitle: false,
+        title: Text(appBarTitle, style: TextStyle(color: offWhite, fontWeight: FontWeight.bold, fontSize: 18)),
         automaticallyImplyLeading: !widget.isModal,
-        leading: widget.isModal
-            ? IconButton(
-                icon: Icon(Icons.close, color: offWhite),
-                tooltip: 'Close',
-                onPressed: () => Navigator.of(context).pop(),
-              )
+        actions: widget.isModal
+            ? [
+                IconButton(
+                  icon: Icon(Icons.close, color: offWhite),
+                  tooltip: 'Close',
+                  onPressed: () => Navigator.of(context).pop(),
+                ),
+              ]
             : null,
       ),
       body: LayoutBuilder(
@@ -762,7 +961,10 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
           return Center(
             child: ConstrainedBox(
               constraints: const BoxConstraints(maxWidth: 700),
-              child: Padding(
+              child: Column(
+                children: [
+                  Expanded(
+                    child: Padding(
         padding: const EdgeInsets.all(16),
         child: Form(
           key: _formKey,
@@ -770,6 +972,7 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
             children: [
               Center(child: _buildImagePicker()),
               const SizedBox(height: 20),
+              _sectionHeader('Basic Information', Icons.info_outline),
               // Product Name - with live duplicate detection. Typing a
               // name that matches an existing product shows a clear
               // notice with a direct path to "Add New Batch" instead of
@@ -896,40 +1099,24 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
                 }),
               const SizedBox(height: 12),
 
-              // Type
-              DropdownButtonFormField(
-                initialValue: _type,
-                items: _types
-                    .map((t) => DropdownMenuItem(value: t, child: Text(t)))
-                    .toList(),
-                decoration: _inputDecoration('Type'),
-                onChanged: fieldsLocked ? null : (String? value) => setState(() => _type = value!),
+              // Type & Category
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Expanded(child: _typeField(enabled: !fieldsLocked)),
+                  const SizedBox(width: 12),
+                  Expanded(child: _categoryField(enabled: !fieldsLocked)),
+                ],
               ),
               const SizedBox(height: 12),
 
-              // Product Details Box
-              Container(
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  border: Border.all(color: primaryDeepTealGreen.withValues(alpha: 0.3)),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Column(
+              // Product Details
+              Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text('Product Details',
-                        style: TextStyle(
-                          fontWeight: FontWeight.bold,
-                          color: primaryDeepTealGreen,
-                        )),
-                    const SizedBox(height: 8),
+                    _sectionHeader('Product Details', Icons.folder_outlined),
                     isEditing
-                        ? TextFormField(
-                            controller: _supplierController,
-                            decoration: _inputDecoration('Supplier'),
-                            cursorColor: primaryDeepTealGreen,
-                            enabled: !fieldsLocked,
-                          )
+                        ? _supplierField(enabled: !fieldsLocked)
                         : _buildSupplierBatchExpiryFields(isNarrow),
                     if (isEditing) ...[
                       const SizedBox(height: 14),
@@ -1024,52 +1211,60 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
                     ),
                   ],
                 ),
-              ),
 
               const SizedBox(height: 12),
 
-              // Buy & Sell Price
-              isNarrow
-                  ? Column(
-                      children: [_buyPriceField(fieldsLocked), const SizedBox(height: 12), _sellPriceField(fieldsLocked)],
-                    )
-                  : Row(
-                      children: [
-                        Expanded(child: _buyPriceField(fieldsLocked)),
-                        const SizedBox(width: 12),
-                        Expanded(child: _sellPriceField(fieldsLocked)),
-                      ],
-                    ),
+              // Pricing & Stock Box
+              Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    _sectionHeader('Pricing & Stock', Icons.attach_money),
+                    isNarrow
+                        ? Column(
+                            children: [_buyPriceField(fieldsLocked), const SizedBox(height: 12), _sellPriceField(fieldsLocked)],
+                          )
+                        : Row(
+                            children: [
+                              Expanded(child: _buyPriceField(fieldsLocked)),
+                              const SizedBox(width: 12),
+                              Expanded(child: _sellPriceField(fieldsLocked)),
+                            ],
+                          ),
+                    const SizedBox(height: 12),
+                    isNarrow
+                        ? Column(
+                            children: [
+                              if (!isEditing) ...[
+                                _quantityField(),
+                                const SizedBox(height: 12),
+                              ],
+                              _unitDropdown(fieldsLocked),
+                            ],
+                          )
+                        : Row(
+                            children: [
+                              if (!isEditing) ...[
+                                Expanded(child: _quantityField()),
+                                const SizedBox(width: 12),
+                              ],
+                              Expanded(child: _unitDropdown(fieldsLocked)),
+                            ],
+                          ),
+                  ],
+                ),
+
               const SizedBox(height: 12),
 
-              // Stock & Unit
-              isNarrow
-                  ? Column(
-                      children: [
-                        if (!isEditing) ...[
-                          _quantityField(),
-                          const SizedBox(height: 12),
-                        ],
-                        _unitDropdown(fieldsLocked),
-                      ],
-                    )
-                  : Row(
-                      children: [
-                        if (!isEditing) ...[
-                          Expanded(child: _quantityField()),
-                          const SizedBox(width: 12),
-                        ],
-                        Expanded(child: _unitDropdown(fieldsLocked)),
-                      ],
-                    ),
-
-              const SizedBox(height: 12),
-
-              // Minimum Stock Level - a per-product low-stock threshold.
-              // Always editable (unlike quantity above, which is
-              // batch-managed once editing), since this is a product-level
-              // setting, not something tied to a specific delivery/batch.
-              TextFormField(
+              // Additional Information Box
+              Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    _sectionHeader('Additional Information', Icons.label_outline),
+                    // Minimum Stock Level - a per-product low-stock threshold.
+                    // Always editable (unlike quantity above, which is
+                    // batch-managed once editing), since this is a product-level
+                    // setting, not something tied to a specific delivery/batch.
+                    TextFormField(
                 controller: _minStockController,
                 decoration: _inputDecoration('Minimum Stock Level').copyWith(
                   hintText: 'e.g. 5 (defaults to ${Product.defaultLowStockThreshold} if left blank)',
@@ -1086,63 +1281,59 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
                   return null;
                 },
               ),
-
-              const SizedBox(height: 12),
-
-              // Category
-              FormField<String>(
-                initialValue: _category,
-                validator: (value) =>
-                    (value == null || value.isEmpty) ? 'Please select a category' : null,
-                builder: (formFieldState) {
-                  return InkWell(
-                    onTap: fieldsLocked
-                        ? null
-                        : () async {
-                            await _selectCategoryDialog();
-                            formFieldState.didChange(_category);
-                          },
-                    child: InputDecorator(
-                      decoration: _inputDecoration('Category', required: true).copyWith(
-                        errorText: formFieldState.errorText,
-                      ),
-                      child: Text(
-                        _category.isEmpty ? 'Select Category' : _category,
-                        style: TextStyle(
-                            color: _category.isEmpty ? Colors.grey : (fieldsLocked ? Colors.grey[600] : Colors.black87)),
-                      ),
-                    ),
-                  );
-                },
-              ),
-
-              const SizedBox(height: 24),
-
-              // Save/Update Button
-              ElevatedButton.icon(
-                onPressed: _isSaving ? null : _saveProduct,
-                icon: _isSaving
-                    ? const SizedBox(
-                        width: 18,
-                        height: 18,
-                        child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
-                      )
-                    : Icon(isEditing ? Icons.update : Icons.save),
-                label: Text(_isSaving ? 'Saving...' : buttonText),
-                style: ButtonStyle(
-                  padding: WidgetStateProperty.all(
-                    const EdgeInsets.symmetric(vertical: 16),
-                  ),
-                  backgroundColor: WidgetStateProperty.resolveWith<Color>(
-                      (states) => states.contains(WidgetState.hovered)
-                          ? warmAmber
-                          : primaryDeepTealGreen),
-                  foregroundColor: WidgetStateProperty.all<Color>(offWhite),
+                  ],
                 ),
-              ),
+
             ],
           ),
         ),
+              ),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        SizedBox(
+                          width: 110,
+                          child: OutlinedButton(
+                            onPressed: _isSaving ? null : () => Navigator.of(context).pop(),
+                            style: OutlinedButton.styleFrom(
+                              foregroundColor: primaryDeepTealGreen,
+                              side: BorderSide(color: primaryDeepTealGreen),
+                              padding: const EdgeInsets.symmetric(vertical: 16),
+                            ),
+                            child: const Text('Cancel'),
+                          ),
+                        ),
+                        SizedBox(
+                          width: 180,
+                          child: ElevatedButton.icon(
+                            onPressed: _isSaving ? null : _saveProduct,
+                            icon: _isSaving
+                                ? const SizedBox(
+                                    width: 18,
+                                    height: 18,
+                                    child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                                  )
+                                : Icon(isEditing ? Icons.update : Icons.save),
+                            label: Text(_isSaving ? 'Saving...' : buttonText),
+                            style: ButtonStyle(
+                              padding: WidgetStateProperty.all(
+                                const EdgeInsets.symmetric(vertical: 16),
+                              ),
+                              backgroundColor: WidgetStateProperty.resolveWith<Color>(
+                                  (states) => states.contains(WidgetState.hovered)
+                                      ? warmAmber
+                                      : primaryDeepTealGreen),
+                              foregroundColor: WidgetStateProperty.all<Color>(offWhite),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
               ),
             ),
           );
@@ -1182,8 +1373,8 @@ Future<void> showAddEditProductScreen(
       final screenSize = MediaQuery.of(context).size;
       return Center(
         child: SizedBox(
-          width: screenSize.width * 0.8,
-          height: screenSize.height * 0.85,
+          width: screenSize.width < 680 ? screenSize.width * 0.92 : 620,
+          height: screenSize.height * 0.88,
           child: ClipRRect(
             borderRadius: BorderRadius.circular(16),
             child: Material(

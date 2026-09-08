@@ -13,29 +13,6 @@ import '../../models/notification_model.dart';
 import '../subscription/subscription_screen.dart';
 import '../../widgets/announcement_message.dart';
 
-/// One alert row - either a whole product (legacy, no batches recorded
-/// yet) or one specific batch of a product. Kept generic so both cases
-/// render through the same list/section logic.
-class _AlertRow {
-  final String productName;
-  final String? batchNo;
-  final int sellableQty;
-  final int stockQty;
-  final DateTime? expiry;
-
-  const _AlertRow({
-    required this.productName,
-    this.batchNo,
-    required this.sellableQty,
-    required this.stockQty,
-    this.expiry,
-  });
-
-  String get label => batchNo != null && batchNo!.isNotEmpty
-      ? '$productName - Batch $batchNo'
-      : productName;
-}
-
 /// Everything that needs your attention in one place - subscription
 /// status, urgent announcements, and low-stock/expiry alerts, precise to
 /// the individual batch. Products with no batch records yet (created
@@ -43,15 +20,16 @@ class _AlertRow {
 /// row using their own aggregate fields.
 class StockAlertsScreen extends StatefulWidget {
   final bool isDropdown;
-  const StockAlertsScreen({super.key, this.isDropdown = false});
+  // When set, the full screen is restricted to only this category -
+  // both the visible tabs and the underlying data - rather than the
+  // complete facility-wide feed. Used by screens like Products/Stock
+  // Store, where the bell icon should only ever surface product-related
+  // alerts, not payments/clients/debts/etc.
+  final NotificationCategory? lockedCategory;
+  const StockAlertsScreen({super.key, this.isDropdown = false, this.lockedCategory});
 
   static const Color primaryColor = Color(0xFF2F5D62);
-  static const int lowStockThreshold = Product.defaultLowStockThreshold;
   static const int expiryWarningDays = 30;
-  // How many items each section shows at most in the compact dropdown
-  // before the rest are hidden behind "View all notifications" -
-  // unlimited in the full-screen (non-dropdown) view.
-  static const int dropdownSectionLimit = 3;
 
   /// Cheap, aggregate-only check for the Dashboard bell's red dot - a
   /// quick yes/no signal doesn't need per-batch precision, just "is
@@ -61,6 +39,7 @@ class StockAlertsScreen extends StatefulWidget {
     final now = DateTime.now();
     return products.any((p) =>
         p.isLowStock ||
+        p.hasRestockShelfAlert ||
         (p.expiry != null && p.expiry!.difference(now).inDays <= expiryWarningDays));
   }
 
@@ -71,183 +50,167 @@ class StockAlertsScreen extends StatefulWidget {
 class _StockAlertsScreenState extends State<StockAlertsScreen> {
   bool _isLoading = true;
   String? _error;
-  List<_AlertRow> _critical = [];
-  List<_AlertRow> _lowShelf = [];
-  List<_AlertRow> _lowWarehouse = [];
-  List<_AlertRow> _expiring = [];
 
-  List<FacilityNotification> _visibleNotifications = [];
+  List<FacilityNotification> _needsAttention = [];
+  List<FacilityNotification> _earlier = [];
   StreamSubscription<QuerySnapshot<Map<String, dynamic>>>? _notificationsSub;
+
+  // Full-screen only: the complete recent history (not filtered to only
+  // currently-visible ones, since this screen is for browsing what's
+  // happened, not just what's still new) plus the search/date/category
+  // filters and pagination state that drive it.
+  List<FacilityNotification> _fullHistory = [];
+  final TextEditingController _searchController = TextEditingController();
+  String _searchQuery = '';
+  DateTimeRange? _dateRange;
+  NotificationCategory? _selectedCategory; // null = "All"
+  int _currentPage = 1;
+  static const int _pageSize = 10;
 
   @override
   void initState() {
     super.initState();
-    _load();
+    _selectedCategory = widget.lockedCategory;
     _watchNotifications();
   }
 
   @override
   void dispose() {
     _notificationsSub?.cancel();
+    _searchController.dispose();
     super.dispose();
   }
 
   // A simple, single-field ordering with no where() clause at all -
   // never needs a composite index, unlike a filtered query would.
-  // Ephemeral-vs-persistent visibility (and marking read) is decided
-  // client-side instead, against a bounded recent window.
+  // Ephemeral-vs-persistent visibility is decided client-side instead,
+  // against a bounded recent window. Deliberately does NOT auto-mark
+  // anything as read just by loading it - the mockup's explicit "Mark
+  // all as read" action is the only thing that changes readAt, so it
+  // actually has something to do rather than acting on notifications
+  // already silently marked read the instant the panel opened.
   void _watchNotifications() {
     final facilityId = Provider.of<FacilityProvider>(context, listen: false).selectedFacilityId;
-    if (facilityId == null) return;
+    if (facilityId == null) {
+      setState(() => _isLoading = false);
+      return;
+    }
 
     _notificationsSub = FirebaseFirestore.instance
         .collection('facilities')
         .doc(facilityId)
         .collection('notifications')
         .orderBy('createdAt', descending: true)
-        .limit(50)
+        .limit(widget.isDropdown ? 50 : 200)
         .snapshots()
         .listen((snapshot) {
       final all = snapshot.docs.map(FacilityNotification.fromFirestore).toList();
       final visible = all.where((n) => n.isCurrentlyVisible).toList();
-      if (mounted) setState(() => _visibleNotifications = visible);
 
-      // Viewing this screen with an unread, ephemeral notification on
-      // it counts as having read it - same "seeing it is
-      // acknowledging it" philosophy already used for the urgent-
-      // announcements dot elsewhere in this app. A persistent one
-      // (expiresAt set) is marked read too, but stays visible either
-      // way until it actually expires - readAt only affects whether
-      // it's still counted as new.
-      for (final notification in all) {
-        if (!notification.isRead && !notification.isExpired) {
-          FirebaseFirestore.instance
-              .collection('facilities')
-              .doc(facilityId)
-              .collection('notifications')
-              .doc(notification.id)
-              .update({'readAt': FieldValue.serverTimestamp()});
-        }
-      }
-    });
-  }
-
-  Future<void> _load() async {
-    final facilityId =
-        Provider.of<FacilityProvider>(context, listen: false).selectedFacilityId;
-    final products = Provider.of<ProductProvider>(context, listen: false).products;
-
-    if (facilityId == null) {
-      setState(() => _isLoading = false);
-      return;
-    }
-
-    setState(() {
-      _isLoading = true;
-      _error = null;
-    });
-
-    try {
-      final now = DateTime.now();
-      final critical = <_AlertRow>[];
-      final lowShelf = <_AlertRow>[];
-      final lowWarehouse = <_AlertRow>[];
-      final expiring = <_AlertRow>[];
-
-      // One query per product (batches are a small subcollection, and
-      // shop-scale product counts make this perfectly fine) - run in
-      // parallel rather than one at a time.
-      final batchLists = await Future.wait(products.map((p) async {
-        final snap = await FirebaseFirestore.instance
-            .collection('facilities')
-            .doc(facilityId)
-            .collection('products')
-            .doc(p.id)
-            .collection('batches')
-            .get();
-        return MapEntry(p, snap.docs);
-      }));
-
-      for (final entry in batchLists) {
-        final product = entry.key;
-        final batchDocs = entry.value;
-
-        if (batchDocs.isEmpty) {
-          // Legacy product, no batch records - fall back to its own
-          // aggregate fields, same as before Phase 3.
-          final shelfLow = product.sellableQty <= product.effectiveMinStockLevel;
-          final warehouseLow = product.stockQty <= product.effectiveMinStockLevel;
-          final row = _AlertRow(
-            productName: product.name,
-            sellableQty: product.sellableQty,
-            stockQty: product.stockQty,
-            expiry: product.expiry,
-          );
-
-          if (shelfLow && warehouseLow) {
-            critical.add(row);
-          } else if (shelfLow) {
-            lowShelf.add(row);
-          } else if (warehouseLow) {
-            lowWarehouse.add(row);
-          }
-
-          if (product.expiry != null &&
-              product.expiry!.difference(now).inDays <= StockAlertsScreen.expiryWarningDays) {
-            expiring.add(row);
-          }
-          continue;
-        }
-
-        for (final doc in batchDocs) {
-          final data = doc.data();
-          final sellableQty = (data['sellableQty'] ?? 0) as int;
-          final stockQty = (data['stockQty'] ?? 0) as int;
-          final expiry = data['expiry'] is Timestamp ? (data['expiry'] as Timestamp).toDate() : null;
-
-          // A fully-used-up batch (both zero) is just spent stock, not
-          // an alert - skip it rather than flagging every empty batch
-          // forever.
-          if (sellableQty == 0 && stockQty == 0) continue;
-
-          final shelfLow = sellableQty <= product.effectiveMinStockLevel;
-          final warehouseLow = stockQty <= product.effectiveMinStockLevel;
-          final row = _AlertRow(
-            productName: product.name,
-            batchNo: data['batchNo'] as String?,
-            sellableQty: sellableQty,
-            stockQty: stockQty,
-            expiry: expiry,
-          );
-
-          if (shelfLow && warehouseLow) {
-            critical.add(row);
-          } else if (shelfLow) {
-            lowShelf.add(row);
-          } else if (warehouseLow) {
-            lowWarehouse.add(row);
-          }
-
-          if (expiry != null && expiry.difference(now).inDays <= StockAlertsScreen.expiryWarningDays) {
-            expiring.add(row);
-          }
-        }
-      }
-
-      expiring.sort((a, b) => a.expiry!.compareTo(b.expiry!));
+      // "Needs Attention" is everything with real, specific meaning -
+      // stock/critical/payment/debt/system - while "Earlier" catches
+      // the more routine, informational events (a service recorded, a
+      // new client added) that don't need the same urgency, matching
+      // NotificationType.category's "other" grouping.
+      final needsAttention =
+          visible.where((n) => n.category != NotificationCategory.other).toList();
+      final earlier = visible.where((n) => n.category == NotificationCategory.other).toList();
 
       if (mounted) {
         setState(() {
-          _critical = critical;
-          _lowShelf = lowShelf;
-          _lowWarehouse = lowWarehouse;
-          _expiring = expiring;
+          _needsAttention = needsAttention;
+          _earlier = earlier;
+          _fullHistory = all;
           _isLoading = false;
         });
       }
-    } catch (e) {
+    }, onError: (e) {
       if (mounted) setState(() { _error = '$e'; _isLoading = false; });
+    });
+  }
+
+  Future<void> _markAllAsRead() async {
+    final facilityId = Provider.of<FacilityProvider>(context, listen: false).selectedFacilityId;
+    if (facilityId == null) return;
+
+    final unread = [..._needsAttention, ..._earlier].where((n) => !n.isRead);
+    if (unread.isEmpty) return;
+
+    final batch = FirebaseFirestore.instance.batch();
+    final notificationsRef =
+        FirebaseFirestore.instance.collection('facilities').doc(facilityId).collection('notifications');
+    for (final n in unread) {
+      batch.update(notificationsRef.doc(n.id), {'readAt': FieldValue.serverTimestamp()});
     }
+    await batch.commit();
+  }
+
+  String _relativeTime(DateTime? dt) {
+    if (dt == null) return '';
+    final diff = DateTime.now().difference(dt);
+    if (diff.inMinutes < 1) return 'Just now';
+    if (diff.inMinutes < 60) return '${diff.inMinutes}m ago';
+    if (diff.inHours < 24) return '${diff.inHours}h ago';
+    if (diff.inDays < 7) return '${diff.inDays}d ago';
+    return DateFormat('d MMM').format(dt);
+  }
+
+  // Search + date range + category tab, applied together - the flat,
+  // filtered result pagination and day-grouping below both work from.
+  List<FacilityNotification> get _filteredHistory {
+    return _fullHistory.where((n) {
+      if (_selectedCategory != null && n.category != _selectedCategory) return false;
+
+      if (_dateRange != null && n.createdAt != null) {
+        final day = DateTime(n.createdAt!.year, n.createdAt!.month, n.createdAt!.day);
+        final start = DateTime(_dateRange!.start.year, _dateRange!.start.month, _dateRange!.start.day);
+        final end = DateTime(_dateRange!.end.year, _dateRange!.end.month, _dateRange!.end.day);
+        if (day.isBefore(start) || day.isAfter(end)) return false;
+      }
+
+      if (_searchQuery.trim().isNotEmpty) {
+        final q = _searchQuery.trim().toLowerCase();
+        if (!n.title.toLowerCase().contains(q) && !n.message.toLowerCase().contains(q)) return false;
+      }
+
+      return true;
+    }).toList();
+  }
+
+  int get _totalPages => (_filteredHistory.length / _pageSize).ceil().clamp(1, 999999);
+
+  List<FacilityNotification> get _currentPageItems {
+    final filtered = _filteredHistory;
+    final start = (_currentPage - 1) * _pageSize;
+    if (start >= filtered.length) return [];
+    final end = (start + _pageSize).clamp(0, filtered.length);
+    return filtered.sublist(start, end);
+  }
+
+  // "Today", "Yesterday", or a plain date - the day-group headers shown
+  // above each cluster of notifications from that day.
+  String _dayLabel(DateTime dt) {
+    final now = DateTime.now();
+    final day = DateTime(dt.year, dt.month, dt.day);
+    final today = DateTime(now.year, now.month, now.day);
+    final yesterday = today.subtract(const Duration(days: 1));
+    final dateText = DateFormat('d MMM y').format(dt);
+    if (day == today) return 'Today · $dateText';
+    if (day == yesterday) return 'Yesterday · $dateText';
+    return dateText;
+  }
+
+  // Groups a page's items by day, preserving the newest-first order the
+  // underlying query already provides - each group is a run of
+  // consecutive same-day items, not a full re-sort.
+  List<MapEntry<String, List<FacilityNotification>>> _groupByDay(List<FacilityNotification> items) {
+    final groups = <String, List<FacilityNotification>>{};
+    for (final n in items) {
+      if (n.createdAt == null) continue;
+      final label = _dayLabel(n.createdAt!);
+      groups.putIfAbsent(label, () => []).add(n);
+    }
+    return groups.entries.toList();
   }
 
   @override
@@ -272,13 +235,9 @@ class _StockAlertsScreenState extends State<StockAlertsScreen> {
 
     final nothingToShow = !_isLoading &&
         _error == null &&
-        !subNeedsAttention &&
-        !isInTrial &&
-        _visibleNotifications.isEmpty &&
-        _critical.isEmpty &&
-        _lowShelf.isEmpty &&
-        _lowWarehouse.isEmpty &&
-        _expiring.isEmpty;
+        (widget.lockedCategory != null || (!subNeedsAttention && !isInTrial)) &&
+        _needsAttention.isEmpty &&
+        _earlier.isEmpty;
 
     if (widget.isDropdown) {
       return _buildDropdownChrome(sub, isAdmin, nothingToShow, subNeedsAttention, isInTrial);
@@ -287,31 +246,246 @@ class _StockAlertsScreenState extends State<StockAlertsScreen> {
     return Scaffold(
       backgroundColor: const Color(0xFFF7F7F4),
       appBar: AppBar(
-        title: const Text('Notifications'),
+        backgroundColor: Colors.white,
+        foregroundColor: Colors.black87,
+        elevation: 1,
         centerTitle: true,
-        backgroundColor: StockAlertsScreen.primaryColor,
-        foregroundColor: Colors.white,
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.refresh),
-            tooltip: 'Refresh',
-            onPressed: _isLoading ? null : _load,
-          ),
-        ],
+        toolbarHeight: 72,
+        title: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Text(
+              widget.lockedCategory == NotificationCategory.stock ? 'Product Alerts' : 'Notifications',
+              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 19, color: Colors.black87),
+            ),
+            Text(
+              widget.lockedCategory == NotificationCategory.stock
+                  ? 'Stock and expiry alerts for your products'
+                  : 'All updates and alerts from your facility',
+              style: const TextStyle(fontSize: 12, color: Colors.black54),
+            ),
+          ],
+        ),
       ),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
           : _error != null
               ? Center(child: Padding(padding: const EdgeInsets.all(24), child: Text('Could not load alerts: $_error')))
-              : RefreshIndicator(
-                  onRefresh: _load,
-                  child: Center(
-                    child: ConstrainedBox(
-                      constraints: const BoxConstraints(maxWidth: 720),
-                      child: _buildAlertsList(sub, isAdmin, nothingToShow, subNeedsAttention, isInTrial),
+              : Center(
+                  child: ConstrainedBox(
+                    constraints: const BoxConstraints(maxWidth: 900),
+                    child: _buildFullScreenBody(),
+                  ),
+                ),
+    );
+  }
+
+  Widget _buildFullScreenBody() {
+    return Column(
+      children: [
+        Padding(
+          padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+          child: Row(
+            children: [
+              Expanded(
+                child: TextField(
+                  controller: _searchController,
+                  decoration: InputDecoration(
+                    hintText: 'Search notifications...',
+                    prefixIcon: const Icon(Icons.search, size: 20),
+                    isDense: true,
+                    contentPadding: const EdgeInsets.symmetric(vertical: 10, horizontal: 12),
+                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+                  ),
+                  onChanged: (value) => setState(() {
+                    _searchQuery = value;
+                    _currentPage = 1;
+                  }),
+                ),
+              ),
+              const SizedBox(width: 8),
+              OutlinedButton.icon(
+                onPressed: _pickDateRange,
+                icon: const Icon(Icons.calendar_today_outlined, size: 16),
+                label: Text(
+                  _dateRange == null
+                      ? 'Date range'
+                      : '${DateFormat('d MMM').format(_dateRange!.start)} - ${DateFormat('d MMM y').format(_dateRange!.end)}',
+                  style: const TextStyle(fontSize: 12.5),
+                ),
+                style: OutlinedButton.styleFrom(foregroundColor: StockAlertsScreen.primaryColor),
+              ),
+              if (_dateRange != null)
+                IconButton(
+                  icon: const Icon(Icons.close, size: 18),
+                  tooltip: 'Clear date range',
+                  onPressed: () => setState(() {
+                    _dateRange = null;
+                    _currentPage = 1;
+                  }),
+                ),
+            ],
+          ),
+        ),
+        _buildCategoryTabs(),
+        const Divider(height: 1),
+        Expanded(child: _buildPaginatedList()),
+        if (_filteredHistory.isNotEmpty) _buildPaginationControls(),
+      ],
+    );
+  }
+
+  Future<void> _pickDateRange() async {
+    final picked = await showDateRangePicker(
+      context: context,
+      firstDate: DateTime.now().subtract(const Duration(days: 365)),
+      lastDate: DateTime.now(),
+      initialDateRange: _dateRange,
+    );
+    if (picked != null) {
+      setState(() {
+        _dateRange = picked;
+        _currentPage = 1;
+      });
+    }
+  }
+
+  Widget _buildCategoryTabs() {
+    if (widget.lockedCategory != null) return const SizedBox.shrink();
+
+    final tabs = <(String, NotificationCategory?)>[
+      ('All', null),
+      ('Critical', NotificationCategory.critical),
+      ('Stock', NotificationCategory.stock),
+      ('Debts', NotificationCategory.debt),
+      ('Payments', NotificationCategory.payment),
+      ('System', NotificationCategory.system),
+    ];
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      child: SingleChildScrollView(
+        scrollDirection: Axis.horizontal,
+        child: Row(
+          children: tabs.map((tab) {
+            final (label, category) = tab;
+            final isSelected = _selectedCategory == category;
+            return Padding(
+              padding: const EdgeInsets.only(right: 8),
+              child: ChoiceChip(
+                label: Text(label, style: const TextStyle(fontSize: 12.5)),
+                selected: isSelected,
+                selectedColor: StockAlertsScreen.primaryColor,
+                labelStyle: TextStyle(color: isSelected ? Colors.white : Colors.black87),
+                onSelected: (_) => setState(() {
+                  _selectedCategory = category;
+                  _currentPage = 1;
+                }),
+              ),
+            );
+          }).toList(),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildPaginatedList() {
+    final pageItems = _currentPageItems;
+    if (pageItems.isEmpty) {
+      return Center(
+        child: Padding(
+          padding: const EdgeInsets.all(32),
+          child: Text(
+            _filteredHistory.isEmpty
+                ? 'No notifications match your filters.'
+                : 'Nothing more to show.',
+            style: TextStyle(color: Colors.grey[600]),
+          ),
+        ),
+      );
+    }
+
+    final groups = _groupByDay(pageItems);
+
+    return ListView.builder(
+      padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
+      itemCount: groups.length,
+      itemBuilder: (context, index) {
+        final group = groups[index];
+        return Padding(
+          padding: const EdgeInsets.only(bottom: 12),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Padding(
+                padding: const EdgeInsets.only(bottom: 8),
+                child: Text(
+                  group.key,
+                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12.5, color: Colors.grey[600]),
+                ),
+              ),
+              ...group.value.map((n) => _NotificationRow(
+                    notification: n,
+                    relativeTime: _relativeTime(n.createdAt),
+                  )),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildPaginationControls() {
+    final total = _filteredHistory.length;
+    final start = total == 0 ? 0 : (_currentPage - 1) * _pageSize + 1;
+    final end = ((_currentPage - 1) * _pageSize + _pageSize).clamp(0, total);
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text('Showing $start - $end of $total notifications',
+              style: TextStyle(fontSize: 12, color: Colors.grey[600])),
+          Row(
+            children: [
+              IconButton(
+                icon: const Icon(Icons.chevron_left, size: 20),
+                onPressed: _currentPage > 1 ? () => setState(() => _currentPage--) : null,
+              ),
+              for (var page = 1; page <= _totalPages && page <= 5; page++)
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 2),
+                  child: InkWell(
+                    onTap: () => setState(() => _currentPage = page),
+                    borderRadius: BorderRadius.circular(6),
+                    child: Container(
+                      width: 28,
+                      height: 28,
+                      alignment: Alignment.center,
+                      decoration: BoxDecoration(
+                        color: page == _currentPage ? StockAlertsScreen.primaryColor : null,
+                        borderRadius: BorderRadius.circular(6),
+                      ),
+                      child: Text(
+                        '$page',
+                        style: TextStyle(
+                          fontSize: 12.5,
+                          fontWeight: FontWeight.w600,
+                          color: page == _currentPage ? Colors.white : Colors.black87,
+                        ),
+                      ),
                     ),
                   ),
                 ),
+              IconButton(
+                icon: const Icon(Icons.chevron_right, size: 20),
+                onPressed: _currentPage < _totalPages ? () => setState(() => _currentPage++) : null,
+              ),
+            ],
+          ),
+        ],
+      ),
     );
   }
 
@@ -320,6 +494,8 @@ class _StockAlertsScreenState extends State<StockAlertsScreen> {
   // container the caller wraps this in provides the surface and
   // shadow), just a small header row and the same content beneath it.
   Widget _buildDropdownChrome(SubscriptionProvider sub, bool isAdmin, bool nothingToShow, bool subNeedsAttention, bool isInTrial) {
+    final totalUnread = [..._needsAttention, ..._earlier].where((n) => !n.isRead).length;
+
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
@@ -331,16 +507,27 @@ class _StockAlertsScreenState extends State<StockAlertsScreen> {
           ),
           child: Row(
             children: [
-              const Expanded(
-                child: Text(
-                  'Notifications',
-                  style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 15),
-                ),
+              const Text(
+                'Notifications',
+                style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 15),
               ),
-              IconButton(
-                icon: const Icon(Icons.refresh, color: Colors.white, size: 20),
-                tooltip: 'Refresh',
-                onPressed: _isLoading ? null : _load,
+              if (totalUnread > 0) ...[
+                const SizedBox(width: 8),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                  decoration: BoxDecoration(color: Colors.orange, borderRadius: BorderRadius.circular(10)),
+                  child: Text('$totalUnread',
+                      style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 11)),
+                ),
+              ],
+              const Spacer(),
+              TextButton(
+                onPressed: totalUnread > 0 ? _markAllAsRead : null,
+                style: TextButton.styleFrom(
+                  foregroundColor: Colors.white,
+                  disabledForegroundColor: Colors.white.withValues(alpha: 0.4),
+                ),
+                child: const Text('Mark all as read', style: TextStyle(fontSize: 12.5, fontWeight: FontWeight.w600)),
               ),
               IconButton(
                 icon: const Icon(Icons.close, color: Colors.white, size: 20),
@@ -380,44 +567,55 @@ class _StockAlertsScreenState extends State<StockAlertsScreen> {
       physics: widget.isDropdown ? const NeverScrollableScrollPhysics() : null,
       padding: const EdgeInsets.fromLTRB(16, 16, 16, 32),
       children: [
-        if (subNeedsAttention) ...[
-          _buildSubscriptionCard(context, sub, isAdmin),
-          const SizedBox(height: 20),
-        ] else if (isInTrial) ...[
-          _buildTrialInfoCard(context, sub, isAdmin),
+        if (widget.lockedCategory == null) ...[
+          if (subNeedsAttention) ...[
+            _buildSubscriptionCard(context, sub, isAdmin),
+            const SizedBox(height: 20),
+          ] else if (isInTrial) ...[
+            _buildTrialInfoCard(context, sub, isAdmin),
+            const SizedBox(height: 20),
+          ],
+          _buildUrgentAnnouncements(),
+        ],
+        if (_needsAttention.isNotEmpty) ...[
+          _sectionHeader(Icons.priority_high, 'Needs Attention', _needsAttention.length, Colors.orange),
+          const SizedBox(height: 8),
+          ..._needsAttention.map((n) => _NotificationRow(
+                notification: n,
+                relativeTime: _relativeTime(n.createdAt),
+              )),
           const SizedBox(height: 20),
         ],
-        _buildFacilityNotifications(),
-        _buildUrgentAnnouncements(),
-        _buildSection(
-          icon: Icons.error_outline,
-          title: 'Critical - Out of Stock Everywhere',
-          color: Colors.redAccent,
-          rows: _critical,
-          emptyText: null,
-          subtitleBuilder: (r) => 'Shelf: ${r.sellableQty} · Warehouse: ${r.stockQty}',
-          rowIcon: Icons.error_outline,
-        ),
-        _buildSection(
-          icon: Icons.inventory_2_outlined,
-          title: 'Low on Shelf',
-          color: Colors.orange,
-          rows: _lowShelf,
-          emptyText: null,
-          subtitleBuilder: (r) =>
-              '${r.sellableQty} on shelf · ${r.stockQty} in warehouse - move some to sellable',
-          rowIcon: Icons.inventory_2_outlined,
-        ),
-        _buildSection(
-          icon: Icons.warehouse_outlined,
-          title: 'Low in Warehouse',
-          color: Colors.orange,
-          rows: _lowWarehouse,
-          emptyText: null,
-          subtitleBuilder: (r) => '${r.stockQty} left in warehouse - reorder soon',
-          rowIcon: Icons.warehouse_outlined,
-        ),
-        _buildExpiringSection(),
+        if (_earlier.isNotEmpty) ...[
+          _sectionHeader(Icons.history, 'Earlier', _earlier.length, Colors.grey),
+          const SizedBox(height: 8),
+          ..._earlier.map((n) => _NotificationRow(
+                notification: n,
+                relativeTime: _relativeTime(n.createdAt),
+              )),
+          const SizedBox(height: 12),
+        ],
+        if (widget.isDropdown)
+          Center(
+            child: TextButton(
+              onPressed: () {
+                final navigator = Navigator.of(context);
+                final lockedCategory = widget.lockedCategory;
+                navigator.pop();
+                navigator.push(MaterialPageRoute(
+                    builder: (_) => StockAlertsScreen(lockedCategory: lockedCategory)));
+              },
+              style: TextButton.styleFrom(foregroundColor: StockAlertsScreen.primaryColor),
+              child: const Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text('View all notifications', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600)),
+                  SizedBox(width: 4),
+                  Icon(Icons.arrow_forward, size: 15),
+                ],
+              ),
+            ),
+          ),
       ],
     );
   }
@@ -440,7 +638,9 @@ class _StockAlertsScreenState extends State<StockAlertsScreen> {
           const Text("You're all caught up!", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 17)),
           const SizedBox(height: 6),
           Text(
-            'No urgent announcements, subscription issues, or stock alerts right now.',
+            widget.lockedCategory == NotificationCategory.stock
+                ? 'No stock alerts right now.'
+                : 'No urgent announcements, subscription issues, or stock alerts right now.',
             textAlign: TextAlign.center,
             style: TextStyle(color: Colors.grey[600], fontSize: 13),
           ),
@@ -557,67 +757,6 @@ class _StockAlertsScreenState extends State<StockAlertsScreen> {
     );
   }
 
-  Widget _buildFacilityNotifications() {
-    if (_visibleNotifications.isEmpty) return const SizedBox.shrink();
-    final shown = widget.isDropdown
-        ? _visibleNotifications.take(StockAlertsScreen.dropdownSectionLimit).toList()
-        : _visibleNotifications;
-
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 20),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          _sectionHeader(
-            Icons.notifications_outlined,
-            'Notifications',
-            _visibleNotifications.length,
-            StockAlertsScreen.primaryColor,
-          ),
-          const SizedBox(height: 8),
-          ...shown.map((n) {
-            final color = n.isPersistent ? Colors.green : Colors.orange;
-            return _AccentCard(
-              color: color,
-              icon: n.isPersistent ? Icons.local_offer_outlined : Icons.info_outline,
-              title: n.title,
-              margin: const EdgeInsets.only(bottom: 8),
-              child: Text(n.message, style: TextStyle(color: color, fontWeight: FontWeight.w600, fontSize: 12.5)),
-            );
-          }),
-          // Only ever shows something the truncation above actually hid -
-          // in the full (non-dropdown) screen, shown is the complete
-          // list, so this condition never fires there.
-          if (_visibleNotifications.length > shown.length)
-            Padding(
-              padding: const EdgeInsets.only(top: 2),
-              child: TextButton(
-                onPressed: () {
-                  // Captured before popping - the dropdown's own context
-                  // may already be gone by the time push below runs, but
-                  // this reference to the Navigator itself stays valid
-                  // regardless.
-                  final navigator = Navigator.of(context);
-                  navigator.pop();
-                  navigator.push(
-                    MaterialPageRoute(builder: (_) => const StockAlertsScreen()),
-                  );
-                },
-                style: TextButton.styleFrom(
-                  padding: EdgeInsets.zero,
-                  minimumSize: Size.zero,
-                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                  foregroundColor: StockAlertsScreen.primaryColor,
-                ),
-                child: Text('View all ${_visibleNotifications.length} notifications',
-                    style: const TextStyle(fontSize: 12.5, fontWeight: FontWeight.w600)),
-              ),
-            ),
-        ],
-      ),
-    );
-  }
-
   Widget _buildUrgentAnnouncements() {
     return StreamBuilder<QuerySnapshot>(
       stream: FirebaseFirestore.instance
@@ -656,70 +795,6 @@ class _StockAlertsScreenState extends State<StockAlertsScreen> {
     );
   }
 
-  Widget _buildSection({
-    required IconData icon,
-    required String title,
-    required Color color,
-    required List<_AlertRow> rows,
-    required String? emptyText,
-    required String Function(_AlertRow) subtitleBuilder,
-    required IconData rowIcon,
-  }) {
-    // Sections with nothing in them are omitted entirely, not shown
-    // with a "nothing here" placeholder - a real notification center
-    // doesn't list every category it checked and came up empty on.
-    if (rows.isEmpty) return const SizedBox.shrink();
-
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 20),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          _sectionHeader(icon, title, rows.length, color),
-          const SizedBox(height: 8),
-          ...rows.map((r) => _AccentCard(
-                color: color,
-                icon: rowIcon,
-                title: r.label,
-                margin: const EdgeInsets.only(bottom: 8),
-                child: Text(subtitleBuilder(r), style: TextStyle(color: color, fontWeight: FontWeight.w600, fontSize: 12.5)),
-              )),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildExpiringSection() {
-    if (_expiring.isEmpty) return const SizedBox.shrink();
-
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 8),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          _sectionHeader(Icons.event_busy, 'Expiring Within ${StockAlertsScreen.expiryWarningDays} Days', _expiring.length, Colors.redAccent),
-          const SizedBox(height: 8),
-          ..._expiring.map((r) {
-            final daysLeft = r.expiry!.difference(DateTime.now()).inDays;
-            final label = daysLeft < 0
-                ? 'Expired ${DateFormat('dd MMM yyyy').format(r.expiry!)}'
-                : daysLeft == 0
-                    ? 'Expires today'
-                    : 'Expires in $daysLeft days (${DateFormat('dd MMM yyyy').format(r.expiry!)})';
-            final color = daysLeft < 0 ? Colors.redAccent : Colors.orange;
-            return _AccentCard(
-              color: color,
-              icon: Icons.event_busy,
-              title: r.label,
-              margin: const EdgeInsets.only(bottom: 8),
-              child: Text(label, style: TextStyle(color: color, fontWeight: FontWeight.w600, fontSize: 12.5)),
-            );
-          }),
-        ],
-      ),
-    );
-  }
-
   Widget _sectionHeader(IconData icon, String title, int count, Color color) {
     return Row(
       children: [
@@ -744,6 +819,73 @@ class _StockAlertsScreenState extends State<StockAlertsScreen> {
 /// kind of notification (subscription, urgent announcement, stock
 /// alert) so the whole screen reads as one consistent system instead of
 /// several different card styles bolted together.
+/// A single notification row, matching the mockup's card style: a
+/// circular, colored icon (from the notification's own centralized
+/// type.color/type.icon, so every screen that shows notifications
+/// stays visually consistent), title and message stacked, a relative
+/// timestamp, and a trailing chevron only when there's somewhere
+/// specific to navigate to.
+class _NotificationRow extends StatelessWidget {
+  final FacilityNotification notification;
+  final String relativeTime;
+
+  const _NotificationRow({required this.notification, required this.relativeTime});
+
+  @override
+  Widget build(BuildContext context) {
+    final color = notification.type.color;
+    final hasTarget = notification.relatedEntityType != null && notification.relatedEntityId != null;
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: 8),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(10),
+        boxShadow: [
+          BoxShadow(color: Colors.black.withValues(alpha: 0.04), blurRadius: 6, offset: const Offset(0, 2)),
+        ],
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(12),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(color: color.withValues(alpha: 0.12), shape: BoxShape.circle),
+              child: Icon(notification.type.icon, color: color, size: 18),
+            ),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(notification.title,
+                      style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13.5)),
+                  const SizedBox(height: 2),
+                  Text(notification.message,
+                      style: TextStyle(color: Colors.grey[700], fontSize: 12.5)),
+                ],
+              ),
+            ),
+            const SizedBox(width: 8),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [
+                Text(relativeTime, style: TextStyle(color: Colors.grey[500], fontSize: 11)),
+                if (hasTarget) ...[
+                  const SizedBox(height: 4),
+                  Icon(Icons.chevron_right, color: Colors.grey[400], size: 18),
+                ],
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
 class _AccentCard extends StatelessWidget {
   final Color color;
   final IconData icon;

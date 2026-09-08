@@ -13,6 +13,7 @@ import '../products/add_edit_product_screen.dart';
 import '../products/add_batch_screen.dart';
 import '../products/view_batches_screen.dart';
 import '../dashboard/stock_alerts_screen.dart';
+import '../../models/notification_model.dart';
 
 class StockStoreScreen extends StatefulWidget {
   const StockStoreScreen({super.key});
@@ -23,6 +24,7 @@ class StockStoreScreen extends StatefulWidget {
 
 class _StockStoreScreenState extends State<StockStoreScreen> {
   final TextEditingController _searchController = TextEditingController();
+  final GlobalKey _bellKey = GlobalKey();
 
   // Grid (image cards) vs a more compact list view - matches Sellable
   // Products.
@@ -69,6 +71,64 @@ class _StockStoreScreenState extends State<StockStoreScreen> {
     }
   }
 
+  /// Same anchored-dropdown pattern as the Dashboard's own bell and
+  /// products_screen.dart - positioned relative to this bell's actual
+  /// measured position, transparent barrier so it reads as a dropdown
+  /// rather than a modal. Scoped to stock-only notifications throughout.
+  Future<void> _showNotificationsDropdown(BuildContext context) async {
+    final renderBox = _bellKey.currentContext?.findRenderObject() as RenderBox?;
+    if (renderBox == null) return;
+    final bellPosition = renderBox.localToGlobal(Offset.zero);
+    final bellSize = renderBox.size;
+    final screenSize = MediaQuery.of(context).size;
+
+    const panelWidth = 400.0;
+    final left = (bellPosition.dx + panelWidth > screenSize.width - 16)
+        ? screenSize.width - panelWidth - 16
+        : bellPosition.dx;
+
+    await showGeneralDialog(
+      context: context,
+      barrierDismissible: true,
+      barrierLabel: 'Notifications',
+      barrierColor: Colors.transparent,
+      transitionDuration: const Duration(milliseconds: 180),
+      pageBuilder: (context, animation, secondaryAnimation) {
+        return Stack(
+          children: [
+            Positioned(
+              top: bellPosition.dy + bellSize.height + 8,
+              left: left,
+              child: Material(
+                elevation: 8,
+                borderRadius: BorderRadius.circular(12),
+                clipBehavior: Clip.antiAlias,
+                child: SizedBox(
+                  width: panelWidth,
+                  child: ConstrainedBox(
+                    constraints: BoxConstraints(maxHeight: screenSize.height * 0.75),
+                    child: const StockAlertsScreen(isDropdown: true, lockedCategory: NotificationCategory.stock),
+                  ),
+                ),
+              ),
+            ),
+          ],
+        );
+      },
+      transitionBuilder: (context, animation, secondaryAnimation, child) {
+        final curved = CurvedAnimation(parent: animation, curve: Curves.easeOutCubic);
+        return FadeTransition(
+          opacity: curved,
+          child: ScaleTransition(
+            scale: Tween<double>(begin: 0.95, end: 1.0).animate(curved),
+            alignment: Alignment.topLeft,
+            child: child,
+          ),
+        );
+      },
+    );
+  }
+
   String _categoryOf(Product p) => p.category.isNotEmpty ? p.category : 'Uncategorized';
 
   Widget _buildSummaryMetrics({
@@ -86,12 +146,15 @@ class _StockStoreScreenState extends State<StockStoreScreen> {
 
     return LayoutBuilder(
       builder: (context, constraints) {
-        final isNarrow = constraints.maxWidth < 700;
+        // Same smooth 2/3/4/5-column responsive progression as
+        // products_screen.dart, so both screens' metric rows behave
+        // identically across screen sizes.
+        final crossAxisCount = (constraints.maxWidth / 160).floor().clamp(2, 5);
         return GridView.count(
           shrinkWrap: true,
           physics: const NeverScrollableScrollPhysics(),
-          crossAxisCount: isNarrow ? 2 : 5,
-          childAspectRatio: isNarrow ? 3.0 : 2.6,
+          crossAxisCount: crossAxisCount,
+          childAspectRatio: crossAxisCount <= 2 ? 3.0 : 2.6,
           crossAxisSpacing: 12,
           mainAxisSpacing: 12,
           children: metrics.map((m) => _metricCard(m.$1, m.$2, m.$3, m.$4)).toList(),
@@ -143,10 +206,21 @@ class _StockStoreScreenState extends State<StockStoreScreen> {
   }
 
   Map<String, dynamic> _getProductStatus(Product product) {
+    // A brand-new product that's never carried any stock reads very
+    // differently from one that genuinely ran out - shown neutrally
+    // rather than as an alarming "Depleted", matching the agreed design.
+    if (product.primaryStatus == ProductStockStatus.neverStocked) {
+      return {
+        'text': 'Not Stocked',
+        'color': Colors.grey,
+        'icon': Icons.inventory_2_outlined,
+      };
+    }
+
     // Nothing left anywhere - the most actionable state (needs
     // restocking), so it takes priority even over an old expiry date
     // still sitting on the record from whatever batch was last here.
-    if (product.stockQty <= 0 && product.sellableQty <= 0) {
+    if (product.primaryStatus == ProductStockStatus.depleted) {
       return {
         'text': 'Depleted',
         'color': Colors.red,
@@ -162,14 +236,26 @@ class _StockStoreScreenState extends State<StockStoreScreen> {
       };
     }
 
-    // Same either-quantity-low check as the dashboard's own stock
-    // alerts, so "Low Stock" never means something different depending
-    // on which screen you're looking at.
-    if (product.isLowStock) {
+    // Same primaryStatus every screen reads, so "Low Stock" (and now
+    // "Reorder Soon") never mean something different depending on which
+    // screen you're looking at.
+    if (product.primaryStatus == ProductStockStatus.lowStock) {
       return {
         'text': 'Low Stock',
         'color': Colors.orange,
         'icon': Icons.trending_down,
+      };
+    }
+
+    // A real, separate signal from Low Stock - sales can continue
+    // normally, but it's time to start planning a purchase. Distinct
+    // color (amber, not orange) so it doesn't read as urgent as Low
+    // Stock/Depleted at a glance.
+    if (product.primaryStatus == ProductStockStatus.reorderSoon) {
+      return {
+        'text': 'Reorder Soon',
+        'color': Colors.amber[700],
+        'icon': Icons.hourglass_bottom,
       };
     }
 
@@ -599,15 +685,39 @@ class _StockStoreScreenState extends State<StockStoreScreen> {
                 Text('${p.category} \u2022 ${p.type}',
                     style: TextStyle(fontSize: 12, color: Colors.grey[600]), maxLines: 1, overflow: TextOverflow.ellipsis),
                 const SizedBox(height: 4),
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                  decoration: BoxDecoration(
-                    color: statusColor.withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(10),
-                    border: Border.all(color: statusColor.withValues(alpha: 0.4)),
-                  ),
-                  child: Text(status['text'] as String,
-                      style: TextStyle(color: statusColor, fontSize: 11, fontWeight: FontWeight.w600)),
+                Wrap(
+                  spacing: 6,
+                  runSpacing: 4,
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                      decoration: BoxDecoration(
+                        color: statusColor.withValues(alpha: 0.1),
+                        borderRadius: BorderRadius.circular(10),
+                        border: Border.all(color: statusColor.withValues(alpha: 0.4)),
+                      ),
+                      child: Text(status['text'] as String,
+                          style: TextStyle(color: statusColor, fontSize: 11, fontWeight: FontWeight.w600)),
+                    ),
+                    if (p.hasRestockShelfAlert)
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                        decoration: BoxDecoration(
+                          color: Colors.blue.withValues(alpha: 0.1),
+                          borderRadius: BorderRadius.circular(10),
+                          border: Border.all(color: Colors.blue.withValues(alpha: 0.4)),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(Icons.move_up, size: 11, color: Colors.blue[700]),
+                            const SizedBox(width: 3),
+                            Text('Restock Shelf',
+                                style: TextStyle(color: Colors.blue[700], fontSize: 11, fontWeight: FontWeight.w600)),
+                          ],
+                        ),
+                      ),
+                  ],
                 ),
               ],
             ),
@@ -693,10 +803,17 @@ class _StockStoreScreenState extends State<StockStoreScreen> {
           clipBehavior: Clip.none,
           children: [
             IconButton(
+              key: _bellKey,
               icon: const Icon(Icons.notifications_none),
               tooltip: 'Stock Alerts',
-              onPressed: () {
-                Navigator.push(context, MaterialPageRoute(builder: (_) => const StockAlertsScreen()));
+              onPressed: () async {
+                final isWideScreen = MediaQuery.of(context).size.width >= 900;
+                if (isWideScreen) {
+                  await _showNotificationsDropdown(context);
+                } else {
+                  await Navigator.push(context, MaterialPageRoute(
+                      builder: (_) => const StockAlertsScreen(lockedCategory: NotificationCategory.stock)));
+                }
               },
             ),
             if (hasStockAlerts)
@@ -977,24 +1094,50 @@ class _StockStoreScreenState extends State<StockStoreScreen> {
                       overflow: TextOverflow.ellipsis,
                     ),
                     const SizedBox(height: 6),
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                      decoration: BoxDecoration(
-                        color: statusColor.withValues(alpha: 0.1),
-                        borderRadius: BorderRadius.circular(10),
-                        border: Border.all(color: statusColor.withValues(alpha: 0.4)),
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Icon(status['icon'] as IconData, size: 12, color: statusColor),
-                          const SizedBox(width: 4),
-                          Text(
-                            status['text'] as String,
-                            style: TextStyle(color: statusColor, fontSize: 11, fontWeight: FontWeight.w600),
+                    Wrap(
+                      spacing: 6,
+                      runSpacing: 4,
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                          decoration: BoxDecoration(
+                            color: statusColor.withValues(alpha: 0.1),
+                            borderRadius: BorderRadius.circular(10),
+                            border: Border.all(color: statusColor.withValues(alpha: 0.4)),
                           ),
-                        ],
-                      ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(status['icon'] as IconData, size: 12, color: statusColor),
+                              const SizedBox(width: 4),
+                              Text(
+                                status['text'] as String,
+                                style: TextStyle(color: statusColor, fontSize: 11, fontWeight: FontWeight.w600),
+                              ),
+                            ],
+                          ),
+                        ),
+                        if (p.hasRestockShelfAlert)
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                            decoration: BoxDecoration(
+                              color: Colors.blue.withValues(alpha: 0.1),
+                              borderRadius: BorderRadius.circular(10),
+                              border: Border.all(color: Colors.blue.withValues(alpha: 0.4)),
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Icon(Icons.move_up, size: 12, color: Colors.blue[700]),
+                                const SizedBox(width: 4),
+                                Text(
+                                  'Restock Shelf',
+                                  style: TextStyle(color: Colors.blue[700], fontSize: 11, fontWeight: FontWeight.w600),
+                                ),
+                              ],
+                            ),
+                          ),
+                      ],
                     ),
                     const SizedBox(height: 10),
                     // Stock / Price - Stock (not Sellable) is this

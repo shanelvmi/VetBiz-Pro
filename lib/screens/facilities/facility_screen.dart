@@ -11,6 +11,7 @@ import 'package:firebase_storage/firebase_storage.dart';
 
 import '../../providers/facility_provider.dart';
 import '../../models/product.dart';
+import '../../services/usage_calculator_service.dart';
 import '../../utils/facility_code_generator.dart';
 import '../../utils/facility_activation.dart';
 import '../../constants/facility_types.dart';
@@ -182,7 +183,8 @@ class _FacilityScreenState extends State<FacilityScreen> {
 
         if (sellableQty > 0) sellableProductCount++;
 
-        final effectiveMinStock = (data['minStockLevel'] as num?)?.toInt() ?? Product.defaultLowStockThreshold;
+        final effectiveMinStock = ((data['lowStockThreshold'] ?? data['minStockLevel']) as num?)?.toInt() ??
+            Product.defaultLowStockThreshold;
 
         // Same either-quantity-low check as StockAlertsScreen's own
         // definition, so this facility's headline number can never
@@ -563,6 +565,8 @@ class _FacilityScreenState extends State<FacilityScreen> {
         TextEditingController(text: existingDetails?['tagline'] as String? ?? '');
     String? selectedOwnership = existingDetails?['ownership'] as String?;
     String selectedStatus = existingDetails?['status'] as String? ?? 'Active';
+    String selectedRestockFrequency = existingDetails?['restockFrequency'] as String? ??
+        UsageCalculatorService.defaultRestockFrequency;
     String? selectedType = facility['type'] as String?;
     String? dialogError;
     bool isSaving = false;
@@ -753,6 +757,21 @@ class _FacilityScreenState extends State<FacilityScreen> {
                     if (val != null) setDialogState(() => selectedStatus = val);
                   },
                 ),
+                const SizedBox(height: 12),
+                DropdownButtonFormField<String>(
+                  initialValue: selectedRestockFrequency,
+                  decoration: const InputDecoration(
+                    labelText: 'How often do you typically restock?',
+                    helperText: 'Used to suggest smart stock-level defaults from your sales history',
+                    helperMaxLines: 2,
+                  ),
+                  items: UsageCalculatorService.restockFrequencyOptions
+                      .map((f) => DropdownMenuItem(value: f, child: Text(f)))
+                      .toList(),
+                  onChanged: (val) {
+                    if (val != null) setDialogState(() => selectedRestockFrequency = val);
+                  },
+                ),
                 if (dialogError != null) ...[
                   const SizedBox(height: 8),
                   Text(dialogError!, style: const TextStyle(color: Colors.redAccent, fontSize: 12.5)),
@@ -805,6 +824,7 @@ class _FacilityScreenState extends State<FacilityScreen> {
                           licenseNo: licenseController.text.trim().isEmpty ? null : licenseController.text.trim(),
                           ownership: selectedOwnership,
                           status: selectedStatus,
+                          restockFrequency: selectedRestockFrequency,
                         );
                         if (dialogContext.mounted) Navigator.pop(dialogContext);
                       } catch (e) {
@@ -857,6 +877,7 @@ class _FacilityScreenState extends State<FacilityScreen> {
     String? licenseNo,
     String? ownership,
     String? status,
+    String? restockFrequency,
   }) async {
     final firestore = FirebaseFirestore.instance;
 
@@ -901,6 +922,7 @@ class _FacilityScreenState extends State<FacilityScreen> {
       'licenseNo': licenseNo,
       'ownership': ownership,
       'status': status,
+      'restockFrequency': restockFrequency,
       'updatedAt': FieldValue.serverTimestamp(),
     });
     _contactByFacility[facilityId] = {'email': email, 'phone': phone};
@@ -912,6 +934,7 @@ class _FacilityScreenState extends State<FacilityScreen> {
       'licenseNo': licenseNo,
       'ownership': ownership,
       'status': status,
+      'restockFrequency': restockFrequency,
       // The server timestamp itself isn't known client-side until the
       // next fetch re-reads it - using "now" here is a reasonable
       // local approximation so the detail view doesn't show a stale
@@ -2111,7 +2134,8 @@ class _FacilityScreenState extends State<FacilityScreen> {
           final sellableQty = (data['sellableQty'] as num?)?.toDouble() ?? 0;
           final expiryTs = data['expiry'] as Timestamp?;
           final isExpired = expiryTs != null && expiryTs.toDate().isBefore(now);
-          final effectiveMinStock = (data['minStockLevel'] as num?)?.toInt() ?? Product.defaultLowStockThreshold;
+          final effectiveMinStock = ((data['lowStockThreshold'] ?? data['minStockLevel']) as num?)?.toInt() ??
+              Product.defaultLowStockThreshold;
           final isLow = stockQty <= effectiveMinStock ||
               sellableQty <= effectiveMinStock;
 
