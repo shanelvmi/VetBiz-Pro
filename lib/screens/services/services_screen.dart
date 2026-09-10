@@ -374,7 +374,11 @@ class _ServicesScreenState extends State<ServicesScreen> {
         Padding(
           padding: const EdgeInsets.only(right: 12),
           child: ElevatedButton.icon(
-            onPressed: () => navigateOrShowLockedDialog(context, const AddEditServiceScreen()),
+            onPressed: () => navigateOrShowLockedDialog(
+              context,
+              const AddEditServiceScreen(),
+              onNavigate: () => showAddEditServiceScreen(context),
+            ),
             icon: const Icon(Icons.add, size: 18),
             label: const Text('Record Visit'),
             style: ElevatedButton.styleFrom(
@@ -704,7 +708,7 @@ class _ServicesScreenState extends State<ServicesScreen> {
                   if (value == 'view') {
                     setState(() => _selectedService = service);
                   } else if (value == 'edit') {
-                    Navigator.push(context, MaterialPageRoute(builder: (_) => AddEditServiceScreen(service: service)));
+                    showAddEditServiceScreen(context, service: service);
                   } else if (value == 'delete') {
                     _confirmDeleteService(service);
                   }
@@ -913,7 +917,7 @@ class _ServicesScreenState extends State<ServicesScreen> {
                 Expanded(
                   child: OutlinedButton.icon(
                     onPressed: () {
-                      Navigator.push(context, MaterialPageRoute(builder: (_) => AddEditServiceScreen(service: service)));
+                      showAddEditServiceScreen(context, service: service);
                     },
                     icon: const Icon(Icons.edit_outlined, size: 16),
                     label: const Text('Edit'),

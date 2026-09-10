@@ -217,7 +217,10 @@ class _TransactionScreenState extends State<TransactionScreen> {
         Padding(
           padding: const EdgeInsets.only(right: 12),
           child: ElevatedButton.icon(
-            onPressed: () => showAddTransactionScreen(context),
+            onPressed: () async {
+              await showAddTransactionScreen(context);
+              await _loadPeriodTotals();
+            },
             icon: const Icon(Icons.add, size: 18),
             label: const Text('Record Transaction'),
             style: ElevatedButton.styleFrom(
@@ -389,8 +392,8 @@ class _TransactionScreenState extends State<TransactionScreen> {
           child: Row(
             children: [
               _headerCell('Date & Time', flex: 3),
-              _headerCell('Description', flex: 3),
               _headerCell('Category', flex: 2),
+              _headerCell('Description', flex: 3),
               _headerCell('Method', flex: 2),
               _headerCell('Amount', flex: 2),
               _headerCell('Recorded By', flex: 2),
@@ -485,15 +488,6 @@ class _TransactionScreenState extends State<TransactionScreen> {
             ),
           ),
           Expanded(
-            flex: 3,
-            child: Text(
-              tx.description.isEmpty ? toTitleCase(tx.type) : tx.description,
-              style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-            ),
-          ),
-          Expanded(
             flex: 2,
             child: tx.category.isEmpty
                 ? const Text('-', style: TextStyle(fontSize: 13))
@@ -502,6 +496,15 @@ class _TransactionScreenState extends State<TransactionScreen> {
                     decoration: BoxDecoration(color: accentColor.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(8)),
                     child: Text(tx.category, style: TextStyle(fontSize: 10.5, color: accentColor, fontWeight: FontWeight.w600), maxLines: 1, overflow: TextOverflow.ellipsis),
                   ),
+          ),
+          Expanded(
+            flex: 3,
+            child: Text(
+              tx.description.isEmpty ? toTitleCase(tx.type) : tx.description,
+              style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
           ),
           Expanded(
             flex: 2,
@@ -522,11 +525,12 @@ class _TransactionScreenState extends State<TransactionScreen> {
             flex: 1,
             child: PopupMenuButton<String>(
               icon: Icon(Icons.more_vert, size: 18, color: Colors.grey[600]),
-              onSelected: (value) {
+              onSelected: (value) async {
                 if (value == 'view') {
                   setState(() => _selectedTransaction = tx);
                 } else if (value == 'edit') {
-                  showAddTransactionScreen(context, transaction: tx);
+                  await showAddTransactionScreen(context, transaction: tx);
+                  await _loadPeriodTotals();
                 } else if (value == 'delete') {
                   _confirmDeleteTransaction(tx, transactionProvider, formatter);
                 }

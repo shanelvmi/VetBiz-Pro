@@ -12,6 +12,8 @@ class TransactionModel {
   // some method); an expense has nothing to attach one to.
   final String? paymentMethod;
   final int? receiptNumber;
+  // Free-form additional context - shown in the UI as "Reference/Note".
+  final String? note;
 
   TransactionModel({
     required this.id,
@@ -23,6 +25,7 @@ class TransactionModel {
     required this.recordedBy,
     this.paymentMethod,
     this.receiptNumber,
+    this.note,
   });
 
   /// Converts the TransactionModel instance to a Firestore compatible map
@@ -36,6 +39,7 @@ class TransactionModel {
       'recordedBy': recordedBy,
       if (paymentMethod != null) 'paymentMethod': paymentMethod,
       if (receiptNumber != null) 'receiptNumber': receiptNumber,
+      if (note != null) 'note': note,
     };
   }
 
@@ -51,6 +55,7 @@ class TransactionModel {
       recordedBy: map['recordedBy'] ?? 'Unknown',
       paymentMethod: map['paymentMethod'] as String?,
       receiptNumber: (map['receiptNumber'] as num?)?.toInt(),
+      note: map['note'] as String?,
     );
   }
 
@@ -65,6 +70,7 @@ class TransactionModel {
     String? recordedBy,
     String? paymentMethod,
     int? receiptNumber,
+    String? note,
   }) {
     return TransactionModel(
       id: id ?? this.id,
@@ -76,6 +82,7 @@ class TransactionModel {
       recordedBy: recordedBy ?? this.recordedBy,
       paymentMethod: paymentMethod ?? this.paymentMethod,
       receiptNumber: receiptNumber ?? this.receiptNumber,
+      note: note ?? this.note,
     );
   }
 }

@@ -238,96 +238,199 @@ class _AddEditServiceScreenState extends State<AddEditServiceScreen> {
     );
 
     return Theme(
-  data: Theme.of(context).copyWith(
-    textSelectionTheme: TextSelectionThemeData(
-      cursorColor: darkTeal,                   // caret color
-      selectionColor: darkTeal.withValues(alpha: 0.3), // text selection background
-      selectionHandleColor: darkTeal,          // handles when selecting text
-    ),
-  ),
-  child: Scaffold(
-    backgroundColor: offWhite,
-    appBar: AppBar(
-        title: Text(isEditing ? 'Edit Visit' : 'Record Visit',
-            style: TextStyle(color: offWhite)),
-        backgroundColor: primaryDeepGreen,
-        iconTheme: IconThemeData(color: offWhite),
-        centerTitle: true,
-        automaticallyImplyLeading: !widget.isModal,
-        leading: widget.isModal
-            ? IconButton(
-                icon: Icon(Icons.close, color: offWhite),
-                tooltip: 'Close',
-                onPressed: () => Navigator.of(context).pop(),
-              )
-            : null,
+      data: Theme.of(context).copyWith(
+        textSelectionTheme: TextSelectionThemeData(
+          cursorColor: darkTeal,
+          selectionColor: darkTeal.withValues(alpha: 0.3),
+          selectionHandleColor: darkTeal,
+        ),
       ),
-      body: LayoutBuilder(
-        builder: (context, constraints) {
-          final isNarrow = constraints.maxWidth < 480;
-          return Stack(
-            key: _stackKey,
-            children: [
-              Center(
-                child: ConstrainedBox(
-                  constraints: const BoxConstraints(maxWidth: 700),
-                  child: SingleChildScrollView(
-                    padding: const EdgeInsets.all(16),
-                    child: Form(
-          key: _formKey,
-          child: Column(
-            children: [
-              // CLIENT FIELD
-              Row(
-                key: _clientFieldKey,
-                crossAxisAlignment: CrossAxisAlignment.start,
+      child: Scaffold(
+        backgroundColor: offWhite,
+        appBar: PreferredSize(
+          preferredSize: const Size.fromHeight(64),
+          child: Container(
+            color: primaryDeepGreen,
+            padding: const EdgeInsets.symmetric(horizontal: 20),
+            child: SafeArea(
+              bottom: false,
+              child: Row(
                 children: [
+                  const Icon(Icons.medical_services_outlined, color: Colors.white, size: 22),
+                  const SizedBox(width: 12),
                   Expanded(
-                    child: TextFormField(
-                      controller: _clientTextController,
-                      decoration: InputDecoration(
-                        hintText: 'Select Client',
-                        border: const OutlineInputBorder(),
-                        focusedBorder: OutlineInputBorder(
-                          borderSide: BorderSide(color: darkTeal, width: 2),
-                        ),
-                      ),
-                      style: TextStyle(color: darkTeal),
-                      onTap: () => setState(() {
-                        _showClientSuggestions = _clientTextController.text.trim().isNotEmpty;
-                      }),
-                      onChanged: (val) {
-                        setState(() {
-                          _selectedClient = null; // typing clears any prior selection
-                          _showClientSuggestions = val.trim().isNotEmpty;
-                        });
-                      },
-                      validator: (value) {
-                        if (_selectedClient == null) {
-                          return 'Please select a client';
-                        }
-                        return null;
-                      },
-                    ),
+                    child: Text(isEditing ? 'Edit Visit' : 'Record Visit',
+                        style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 18)),
                   ),
-                  const SizedBox(width: 8),
-                  IconButton(
-                    icon: const Icon(Icons.add, color: Colors.white),
-                    tooltip: 'Add New Client',
-                    style: ButtonStyle(
-                      shape: WidgetStateProperty.all(const CircleBorder()),
-                      backgroundColor: WidgetStateProperty.resolveWith<Color>((states) {
-                        if (states.contains(WidgetState.hovered)) return warmAmber;
-                        return primaryDeepGreen;
-                      }),
-                    ),
-                    onPressed: () => _addNewClient(context),
-                  ),
+                  if (widget.isModal)
+                    IconButton(
+                      icon: const Icon(Icons.close, color: Colors.white),
+                      tooltip: 'Close',
+                      onPressed: () => Navigator.of(context).pop(),
+                    )
+                  else
+                    const BackButton(color: Colors.white),
                 ],
               ),
+            ),
+          ),
+        ),
+        body: LayoutBuilder(
+          builder: (context, constraints) {
+            final isNarrow = constraints.maxWidth < 480;
+            final isTwoColumn = constraints.maxWidth >= 860;
+            return Stack(
+              key: _stackKey,
+              children: [
+                Center(
+                  child: ConstrainedBox(
+                    constraints: const BoxConstraints(maxWidth: 1080),
+                    child: SingleChildScrollView(
+                      padding: const EdgeInsets.all(16),
+                      child: Form(
+                        key: _formKey,
+                        child: isTwoColumn
+                            ? IntrinsicHeight(
+                                child: Row(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Expanded(flex: 2, child: _buildLeftColumn(itemsTotal)),
+                                    const SizedBox(width: 16),
+                                    Expanded(flex: 1, child: _buildVisitSummaryCard()),
+                                  ],
+                                ),
+                              )
+                            : Column(
+                                children: [
+                                  _buildLeftColumn(itemsTotal),
+                                  const SizedBox(height: 16),
+                                  _buildVisitSummaryCard(),
+                                ],
+                              ),
+                      ),
+                    ),
+                  ),
+                ),
+                _buildClientSuggestionsOverlay(clientProvider, isNarrow),
+              ],
+            );
+          },
+        ),
+        bottomNavigationBar: _buildFooter(isEditing, serviceProvider, facilityProvider),
+      ),
+    );
+  }
 
-              const SizedBox(height: 20),
+  Widget _sectionHeader(IconData icon, String title) {
+    return Row(
+      children: [
+        Icon(icon, size: 18, color: primaryDeepGreen),
+        const SizedBox(width: 8),
+        Text(title, style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15, color: primaryDeepGreen)),
+      ],
+    );
+  }
 
+  Widget _buildClientInfoCard() {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.grey.withValues(alpha: 0.2)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _sectionHeader(Icons.person_outline, 'Client Information'),
+          const SizedBox(height: 12),
+          const Text('Select Client *', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 13)),
+          const SizedBox(height: 6),
+          Row(
+            key: _clientFieldKey,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(
+                child: TextFormField(
+                  controller: _clientTextController,
+                  decoration: InputDecoration(
+                    hintText: 'Search or select client...',
+                    hintStyle: const TextStyle(fontSize: 14),
+                    filled: true,
+                    fillColor: Colors.white,
+                    isDense: true,
+                    contentPadding: const EdgeInsets.symmetric(vertical: 12, horizontal: 12),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(10),
+                      borderSide: BorderSide(color: Colors.grey.withValues(alpha: 0.35)),
+                    ),
+                    prefixIcon: const Icon(Icons.person_outline, color: Colors.black54),
+                  ),
+                  onTap: () => setState(() {
+                    _showClientSuggestions = _clientTextController.text.trim().isNotEmpty;
+                  }),
+                  onChanged: (val) {
+                    setState(() {
+                      _selectedClient = null; // typing clears any prior selection
+                      _showClientSuggestions = val.trim().isNotEmpty;
+                    });
+                  },
+                  validator: (value) {
+                    if (_selectedClient == null) {
+                      return 'Please select a client';
+                    }
+                    return null;
+                  },
+                ),
+              ),
+              const SizedBox(width: 8),
+              IconButton(
+                icon: const Icon(Icons.add, color: Colors.white),
+                tooltip: 'Add New Client',
+                padding: const EdgeInsets.all(10),
+                constraints: const BoxConstraints(),
+                style: ButtonStyle(
+                  shape: WidgetStateProperty.all(RoundedRectangleBorder(borderRadius: BorderRadius.circular(10))),
+                  backgroundColor: WidgetStateProperty.resolveWith<Color>((states) {
+                    if (states.contains(WidgetState.hovered)) return warmAmber;
+                    return primaryDeepGreen;
+                  }),
+                ),
+                onPressed: () => _addNewClient(context),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildLeftColumn(double itemsTotal) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _buildClientInfoCard(),
+        const SizedBox(height: 16),
+        _buildVisitDetailsCard(),
+        const SizedBox(height: 16),
+        _buildExpensesCard(itemsTotal),
+      ],
+    );
+  }
+
+  Widget _buildVisitDetailsCard() {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.grey.withValues(alpha: 0.2)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _sectionHeader(Icons.description_outlined, 'Visit Details'),
+          const SizedBox(height: 12),
               // SERVICE NAME
               TextFormField(
                 controller: _nameController,
@@ -389,63 +492,22 @@ class _AddEditServiceScreenState extends State<AddEditServiceScreen> {
                 ],
               ),
 
-              const SizedBox(height: 20),
+        ],
+      ),
+    );
+  }
 
-              // TOTAL + PAID
-              Row(
-                children: [
-                  Expanded(
-                    child: TextFormField(
-                      controller: _totalAmountController,
-                      decoration: _inputDecoration('Total Amount (Tsh)'),
-                      keyboardType: TextInputType.number,
-                      inputFormatters: [
-                        FilteringTextInputFormatter.digitsOnly,
-                        ThousandsSeparatorInputFormatter()
-                      ],
-                      validator: (v) =>
-                          v == null || v.isEmpty ? 'Enter total amount' : null,
-                    ),
-                  ),
-                  const SizedBox(width: 10),
-                  Expanded(
-                    child: TextFormField(
-                      controller: _totalPaidController,
-                      decoration: _inputDecoration('Total Paid (Tsh)'),
-                      keyboardType: TextInputType.number,
-                      inputFormatters: [
-                        FilteringTextInputFormatter.digitsOnly,
-                        ThousandsSeparatorInputFormatter()
-                      ],
-                      validator: (v) =>
-                          v == null || v.isEmpty ? 'Enter paid amount' : null,
-                    ),
-                  ),
-                ],
-              ),
-              if (_parseAmount(_totalPaidController.text) > 0) ...[
-                const SizedBox(height: 16),
-                PaymentMethodSelector(
-                  value: _paymentMethod,
-                  activeColor: primaryDeepGreen,
-                  onChanged: (method) => setState(() => _paymentMethod = method),
-                ),
-                if (_paymentMethod == 'M-Pesa') ...[
-                  const SizedBox(height: 16),
-                  TextFormField(
-                    controller: _transactionIdController,
-                    decoration: InputDecoration(
-                      labelText: 'M-Pesa Transaction ID (optional)',
-                      filled: true,
-                      fillColor: darkTeal.withValues(alpha: 0.1),
-                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-                    ),
-                  ),
-                ],
-              ],
-
-              const SizedBox(height: 20),
-
+  Widget _buildExpensesCard(double itemsTotal) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.grey.withValues(alpha: 0.2)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
               // ITEMS USED HEADER
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -607,142 +669,278 @@ class _AddEditServiceScreenState extends State<AddEditServiceScreen> {
                   ),
                 ),
               ),
+        ],
+      ),
+    );
+  }
 
-              const SizedBox(height: 30),
-
-              // ---- SUBMIT BUTTON ----
-              _isLoading
-                  ? const Center(child: CircularProgressIndicator())
-                  : SizedBox(
+  Widget _buildVisitSummaryCard() {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.grey.withValues(alpha: 0.2)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _sectionHeader(Icons.receipt_long_outlined, 'Visit Summary'),
+          const SizedBox(height: 14),
+          const Text('Total Amount (Tsh) *', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 13)),
+          const SizedBox(height: 6),
+          TextFormField(
+            controller: _totalAmountController,
+            keyboardType: TextInputType.number,
+            inputFormatters: [FilteringTextInputFormatter.digitsOnly, ThousandsSeparatorInputFormatter()],
+            decoration: InputDecoration(
+              hintText: '0.00',
+              filled: true,
+              fillColor: Colors.white,
+              isDense: true,
+              contentPadding: const EdgeInsets.symmetric(vertical: 12, horizontal: 12),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(10),
+                borderSide: BorderSide(color: Colors.grey.withValues(alpha: 0.35)),
+              ),
+            ),
+            validator: (v) => v == null || v.isEmpty ? 'Enter total amount' : null,
+          ),
+          const SizedBox(height: 14),
+          const Text('Total Paid (Tsh) *', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 13)),
+          const SizedBox(height: 6),
+          TextFormField(
+            controller: _totalPaidController,
+            keyboardType: TextInputType.number,
+            inputFormatters: [FilteringTextInputFormatter.digitsOnly, ThousandsSeparatorInputFormatter()],
+            decoration: InputDecoration(
+              hintText: '0.00',
+              filled: true,
+              fillColor: Colors.white,
+              isDense: true,
+              contentPadding: const EdgeInsets.symmetric(vertical: 12, horizontal: 12),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(10),
+                borderSide: BorderSide(color: Colors.grey.withValues(alpha: 0.35)),
+              ),
+            ),
+            validator: (v) => v == null || v.isEmpty ? 'Enter paid amount' : null,
+          ),
+          if (_parseAmount(_totalPaidController.text) > 0) ...[
+            const SizedBox(height: 16),
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: primaryDeepGreen.withValues(alpha: 0.04),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: primaryDeepGreen.withValues(alpha: 0.15)),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Icon(Icons.credit_card_outlined, size: 16, color: primaryDeepGreen),
+                      const SizedBox(width: 8),
+                      Text('Payment Method',
+                          style: TextStyle(fontWeight: FontWeight.w600, fontSize: 13, color: primaryDeepGreen)),
+                    ],
+                  ),
+                  const SizedBox(height: 10),
+                  PopupMenuButton<String>(
+                    initialValue: _paymentMethod,
+                    onSelected: (method) => setState(() => _paymentMethod = method),
+                    itemBuilder: (context) => kPaymentMethods.map((method) {
+                      return PopupMenuItem(
+                        value: method,
+                        child: Row(
+                          children: [
+                            Icon(iconForPaymentMethod(method), size: 18, color: primaryDeepGreen),
+                            const SizedBox(width: 10),
+                            Text(method),
+                          ],
+                        ),
+                      );
+                    }).toList(),
+                    child: Container(
                       width: double.infinity,
-                      child: MouseRegion(
-                        cursor: SystemMouseCursors.click,
-                        child: ElevatedButton(
-                          style: ButtonStyle(
-                          backgroundColor:
-                              WidgetStateProperty.resolveWith<Color>(
-                            (states) => states.contains(WidgetState.hovered)
-                                ? warmAmber
-                                : darkTeal,
-                          ),
-                          foregroundColor:
-                              WidgetStateProperty.all<Color>(offWhite),
-                          padding: WidgetStateProperty.all(
-                            const EdgeInsets.symmetric(vertical: 14),
-                          ),
-                        ),
-                        onPressed: () async {
-                          if (_isLoading) return; // guards against a double-tap firing two saves at once
-                          if (!_formKey.currentState!.validate()) return;
-
-                          setState(() => _isLoading = true);
-
-                          final totalAmount =
-                              _parseAmount(_totalAmountController.text);
-                          final totalPaid =
-                              _parseAmount(_totalPaidController.text);
-
-                          if (totalPaid > totalAmount) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                content: Text(
-                                    'Total Paid cannot exceed Total Amount'),
-                              ),
-                            );
-                            setState(() => _isLoading = false);
-                            return;
-                          }
-
-                          if (totalPaid > 0 && _paymentMethod == null) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                content: Text('Select how this payment was made'),
-                              ),
-                            );
-                            setState(() => _isLoading = false);
-                            return;
-                          }
-
-                          final service = Service(
-                            id: widget.service?.id ?? '',
-                            category: _selectedCategory ?? 'Other',
-                            name: _nameController.text.trim(),
-                            description: _descriptionController.text.trim(),
-                            totalAmount: totalAmount,
-                            totalPaid: totalPaid,
-                            clientId: _selectedClient?.id,
-                            clientName: _clientTextController.text.trim(),
-                            serviceDate: _serviceDate,
-                            providedByName:
-                                _providedByController.text.trim(),
-                            updatedAt: DateTime.now(),
-                            itemsUsed: _collectItemsUsed(),
-                            paymentMethod: totalPaid > 0 ? _paymentMethod : null,
-                            transactionId: _paymentMethod == 'M-Pesa' && _transactionIdController.text.trim().isNotEmpty
-                                ? _transactionIdController.text.trim()
-                                : null,
-                          );
-
-                          try {
-                            final facilityId =
-                                facilityProvider.selectedFacilityId;
-
-                            if (facilityId == null) {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(
-                                  content: Text('No facility selected'),
-                                ),
-                              );
-                              setState(() => _isLoading = false);
-                              return;
-                            }
-
-                            serviceProvider.listenToServices(facilityId);
-
-                            if (widget.service == null) {
-                              await serviceProvider.addService(service);
-                            } else {
-                              await serviceProvider.updateService(service);
-                            }
-
-                            if (!mounted) return;
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(
-                                content: Text(isEditing
-                                    ? 'Service updated'
-                                    : 'Service added'),
-                                backgroundColor: Colors.green,
-                              ),
-                            );
-                            Navigator.pop(context);
-                          } catch (e) {
-                            if (!mounted) return;
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(
-                                content: Text('Failed to save service: $e'),
-                                backgroundColor: Colors.red,
-                              ),
-                            );
-                          } finally {
-                            setState(() => _isLoading = false);
-                          }
-                        },
-                        child: Text(isEditing ? 'Update' : 'Add'),
-                        ),
+                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(10),
+                        border: Border.all(color: Colors.grey.withValues(alpha: 0.3)),
+                      ),
+                      child: Row(
+                        children: [
+                          Icon(iconForPaymentMethod(_paymentMethod ?? 'Cash'), size: 18, color: primaryDeepGreen),
+                          const SizedBox(width: 10),
+                          Expanded(child: Text(_paymentMethod ?? 'Select method')),
+                          Icon(Icons.expand_more, size: 18, color: Colors.grey[600]),
+                        ],
                       ),
                     ),
-            ],
-          ),
-        ),
+                  ),
+                ],
+              ),
+            ),
+            if (_paymentMethod != null && _paymentMethod != 'Cash') ...[
+              const SizedBox(height: 14),
+              const Text('Transaction ID (optional)', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 13)),
+              const SizedBox(height: 6),
+              TextFormField(
+                controller: _transactionIdController,
+                decoration: InputDecoration(
+                  filled: true,
+                  fillColor: Colors.white,
+                  isDense: true,
+                  contentPadding: const EdgeInsets.symmetric(vertical: 12, horizontal: 12),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(10),
+                    borderSide: BorderSide(color: Colors.grey.withValues(alpha: 0.35)),
                   ),
                 ),
               ),
-              _buildClientSuggestionsOverlay(clientProvider, isNarrow),
             ],
-          );
-        },
+          ],
+        ],
       ),
-    )
+    );
+  }
+
+  Widget _buildFooter(bool isEditing, ServiceProvider serviceProvider, FacilityProvider facilityProvider) {
+    return Container(
+      padding: EdgeInsets.fromLTRB(20, 14, 20, 14 + MediaQuery.of(context).padding.bottom),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        border: Border(top: BorderSide(color: Colors.grey.withValues(alpha: 0.15))),
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          OutlinedButton.icon(
+            icon: const Icon(Icons.close, size: 16),
+            label: const Text('Cancel'),
+            style: OutlinedButton.styleFrom(
+              foregroundColor: Colors.black87,
+              side: BorderSide(color: Colors.grey.withValues(alpha: 0.4)),
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+            ),
+            onPressed: _isLoading ? null : () => Navigator.of(context).pop(),
+          ),
+          ElevatedButton(
+            onPressed: _isLoading
+                ? null
+                : () async {
+                    if (_isLoading) return; // guards against a double-tap firing two saves at once
+                    if (!_formKey.currentState!.validate()) return;
+
+                    setState(() => _isLoading = true);
+
+                    final totalAmount = _parseAmount(_totalAmountController.text);
+                    final totalPaid = _parseAmount(_totalPaidController.text);
+
+                    if (totalPaid > totalAmount) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('Total Paid cannot exceed Total Amount')),
+                      );
+                      setState(() => _isLoading = false);
+                      return;
+                    }
+
+                    if (totalPaid > 0 && _paymentMethod == null) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('Select how this payment was made')),
+                      );
+                      setState(() => _isLoading = false);
+                      return;
+                    }
+
+                    final service = Service(
+                      id: widget.service?.id ?? '',
+                      category: _selectedCategory ?? 'Other',
+                      name: _nameController.text.trim(),
+                      description: _descriptionController.text.trim(),
+                      totalAmount: totalAmount,
+                      totalPaid: totalPaid,
+                      clientId: _selectedClient?.id,
+                      clientName: _clientTextController.text.trim(),
+                      serviceDate: _serviceDate,
+                      providedByName: _providedByController.text.trim(),
+                      updatedAt: DateTime.now(),
+                      itemsUsed: _collectItemsUsed(),
+                      paymentMethod: totalPaid > 0 ? _paymentMethod : null,
+                      transactionId: _paymentMethod != null && _paymentMethod != 'Cash' && _transactionIdController.text.trim().isNotEmpty
+                          ? _transactionIdController.text.trim()
+                          : null,
+                    );
+
+                    try {
+                      final facilityId = facilityProvider.selectedFacilityId;
+
+                      if (facilityId == null) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(content: Text('No facility selected')),
+                        );
+                        setState(() => _isLoading = false);
+                        return;
+                      }
+
+                      serviceProvider.listenToServices(facilityId);
+
+                      if (widget.service == null) {
+                        await serviceProvider.addService(service);
+                      } else {
+                        await serviceProvider.updateService(service);
+                      }
+
+                      if (!mounted) return;
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text(isEditing ? 'Service updated' : 'Service added'),
+                          backgroundColor: Colors.green,
+                        ),
+                      );
+                      Navigator.pop(context);
+                    } catch (e) {
+                      if (!mounted) return;
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text('Failed to save service: $e'),
+                          backgroundColor: Colors.red,
+                        ),
+                      );
+                    } finally {
+                      setState(() => _isLoading = false);
+                    }
+                  },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: darkTeal,
+              foregroundColor: offWhite,
+              disabledBackgroundColor: darkTeal.withValues(alpha: 0.5),
+              padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 12),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+            ),
+            child: _isLoading
+                ? const SizedBox(
+                    width: 18,
+                    height: 18,
+                    child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                  )
+                : Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Icon(Icons.medical_services_outlined, size: 16),
+                      const SizedBox(width: 8),
+                      Text(isEditing ? 'Update Visit' : 'Record Visit'),
+                      const SizedBox(width: 6),
+                      const Icon(Icons.arrow_forward, size: 16),
+                    ],
+                  ),
+          ),
+        ],
+      ),
     );
   }
 
@@ -847,10 +1045,12 @@ Future<void> showAddEditServiceScreen(BuildContext context, {Service? service}) 
     transitionDuration: const Duration(milliseconds: 220),
     pageBuilder: (context, animation, secondaryAnimation) {
       final screenSize = MediaQuery.of(context).size;
+      final modalWidth = (screenSize.width * 0.60).clamp(0, 940).toDouble();
+      final modalHeight = (screenSize.height * 0.88).clamp(0, 820).toDouble();
       return Center(
         child: SizedBox(
-          width: screenSize.width * 0.8,
-          height: screenSize.height * 0.85,
+          width: modalWidth,
+          height: modalHeight,
           child: ClipRRect(
             borderRadius: BorderRadius.circular(16),
             child: Material(

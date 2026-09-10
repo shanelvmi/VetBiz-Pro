@@ -236,6 +236,7 @@ class ClientProvider with ChangeNotifier, PaginatedStreamLoader<Client> {
     List<String>? animalSpecies,
     String? businessName,
     String? vetPracticeType,
+    String? notes,
   }) async {
     final clientsCollection = _firestore
         .collection('facilities')
@@ -257,6 +258,7 @@ class ClientProvider with ChangeNotifier, PaginatedStreamLoader<Client> {
       'animalSpecies': animalSpecies ?? [],
       'businessName': businessName,
       'vetPracticeType': vetPracticeType,
+      'notes': notes,
       'createdAt': FieldValue.serverTimestamp(),
       'updatedAt': FieldValue.serverTimestamp(),
     });

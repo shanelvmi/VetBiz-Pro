@@ -25,6 +25,9 @@ class Client {
   // to pay by Friday"), each with its own timestamp - appendable over
   // time, not a single overwritable field.
   final List<Map<String, dynamic>> debtorNotes;
+  // General free-text notes about this client - distinct from
+  // debtorNotes, which is specifically for timestamped debt commentary.
+  final String? notes;
 
   Client({
     required this.id,
@@ -45,6 +48,7 @@ class Client {
     this.updatedAt,
     this.status = 'Active',
     List<Map<String, dynamic>>? debtorNotes,
+    this.notes,
   })  : types = types ?? [],
         crops = crops ?? [],
         animalSpecies = animalSpecies ?? [],
@@ -92,6 +96,7 @@ class Client {
           ? List<Map<String, dynamic>>.from(
               (data['debtorNotes'] as List).map((e) => Map<String, dynamic>.from(e)))
           : [],
+      notes: data['notes'],
     );
   }
 
@@ -123,6 +128,7 @@ class Client {
       'updatedAt': updatedAt != null ? Timestamp.fromDate(updatedAt!) : FieldValue.serverTimestamp(),
       'status': status,
       'debtorNotes': debtorNotes,
+      'notes': notes,
     };
   }
 
@@ -145,6 +151,7 @@ class Client {
     DateTime? updatedAt,
     String? status,
     List<Map<String, dynamic>>? debtorNotes,
+    String? notes,
   }) {
     return Client(
       id: id,
@@ -165,6 +172,7 @@ class Client {
       updatedAt: updatedAt ?? this.updatedAt,
       status: status ?? this.status,
       debtorNotes: debtorNotes ?? this.debtorNotes,
+      notes: notes ?? this.notes,
     );
   }
 }
