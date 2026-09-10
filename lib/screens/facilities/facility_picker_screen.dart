@@ -7,6 +7,7 @@ import '../../utils/facility_activation.dart';
 import '../../utils/force_logout.dart';
 import '../../constants/facility_types.dart';
 import '../../widgets/initials_avatar.dart';
+import '../../widgets/vetbiz_loading_indicator.dart';
 
 /// Only ever shown for an Admin managing more than one facility - the
 /// single-facility case (every Assistant, and most Admins) never
@@ -144,10 +145,16 @@ class _FacilityPickerScreenState extends State<FacilityPickerScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFFF7F9F8),
-      body: _isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : Column(
-              children: [
+      body: AnimatedSwitcher(
+        duration: const Duration(milliseconds: 220),
+        switchInCurve: Curves.easeOut,
+        switchOutCurve: Curves.easeIn,
+        transitionBuilder: (child, animation) => FadeTransition(opacity: animation, child: child),
+        child: _isLoading
+            ? const VetBizLoadingIndicator(key: ValueKey('loading'), style: VetBizLoadingStyle.compact)
+            : Column(
+                key: const ValueKey('content'),
+                children: [
                 _buildHeader(),
                 Expanded(
                   child: SingleChildScrollView(
@@ -171,6 +178,7 @@ class _FacilityPickerScreenState extends State<FacilityPickerScreen> {
                 ),
               ],
             ),
+      ),
     );
   }
 
@@ -380,7 +388,7 @@ class _FacilityPickerScreenState extends State<FacilityPickerScreen> {
 
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: isDefault ? FacilityPickerScreen.primaryColor.withValues(alpha: 0.05) : Colors.white,
         borderRadius: BorderRadius.circular(14),
         border: Border.all(color: isDefault ? FacilityPickerScreen.primaryColor : Colors.grey.withValues(alpha: 0.2), width: isDefault ? 2 : 1),
       ),

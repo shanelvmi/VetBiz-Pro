@@ -184,11 +184,22 @@ class _InsightsScreenState extends State<InsightsScreen> {
     return metrics;
   }
 
+  // True when there's been no sales or service revenue recorded today
+  // at all - used to stop a passive metric like Outstanding payments
+  // (which can shift for reasons that have nothing to do with today,
+  // e.g. a debt settled earlier, or a delayed snapshot) from
+  // single-handedly declaring the day "performing well" when nothing
+  // was actually sold or serviced today.
+  bool get _hasNoRevenueActivityToday =>
+      (_salesPulseTrend == null || _salesPulseTrend!.currentValue == 0) &&
+      (_serviceRevenuePulseTrend == null || _serviceRevenuePulseTrend!.currentValue == 0);
+
   // An overall sentiment from what fraction of the metrics that
   // actually changed are positive - deliberately not just "did sales
   // go up", since a genuinely mixed day (sales up, debt also up)
   // shouldn't be flatly reported as either "great" or "bad".
   String _pulseHeadline(List<(String, KpiTrend)> metrics) {
+    if (_hasNoRevenueActivityToday) return 'No sales or service activity recorded today yet.';
     final withChange = metrics.where((m) => !m.$2.hasNoChange).toList();
     if (withChange.isEmpty) return "Nothing much has changed since yesterday.";
     final positiveCount = withChange.where((m) => m.$2.isNewActivity || m.$2.isPositive).length;
@@ -203,6 +214,7 @@ class _InsightsScreenState extends State<InsightsScreen> {
   // structure per case, unlike trying to weave in a word like "while"
   // only when the signs are mixed.
   String _pulseSentence(List<(String, KpiTrend)> metrics) {
+    if (_hasNoRevenueActivityToday) return 'Record a sale or service to see how today compares.';
     final phrases = <String>[];
     for (final (label, trend) in metrics) {
       if (trend.hasNoChange) continue;

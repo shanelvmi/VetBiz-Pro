@@ -52,6 +52,10 @@ Future<void> forceLogoutAndShowLogin({String? message}) async {
   try {
     await FirebaseAuth.instance.signOut().timeout(const Duration(seconds: 10));
     debugPrint('[LOGOUT] signOut() completed for uid=${uidBeingSignedOut ?? "none"}');
+    if (pushAuthUser != null) {
+      debugPrint('[LOGOUT] Pushing null directly to AppEntryPoint');
+      pushAuthUser!(null);
+    }
   } catch (e, st) {
     debugPrint('[LOGOUT] sign-out failed, continuing anyway: $e\n$st');
   }

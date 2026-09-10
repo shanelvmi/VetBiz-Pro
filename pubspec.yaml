@@ -88,6 +88,7 @@ flutter:
     - assets/vetbizpro_illustration.png
     - assets/vetbiz_pro_logo.png
     - assets/background.jpeg
+    - assets/vetbiz_loading_illustration.jpeg
   #   - images/a_dot_ham.jpeg
 
   # Bundled directly rather than relying on 'monospace' as a generic

@@ -529,7 +529,11 @@ class _SalesScreenState extends State<SalesScreen> {
         Padding(
           padding: const EdgeInsets.only(right: 12),
           child: ElevatedButton.icon(
-            onPressed: () => navigateOrShowLockedDialog(context, const AddSaleScreen()),
+            onPressed: () => navigateOrShowLockedDialog(
+              context,
+              const AddSaleScreen(),
+              onNavigate: () => showAddSaleScreen(context),
+            ),
             icon: const Icon(Icons.add, size: 18),
             label: const Text('Record Sale'),
             style: ElevatedButton.styleFrom(

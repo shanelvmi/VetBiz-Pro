@@ -18,14 +18,17 @@ final navigatorKey = GlobalKey<NavigatorState>();
 String? pendingLoginMessage;
 
 /// Called directly by LoginScreen the instant its own sign-in call
-/// succeeds - the direct fix for auth state occasionally not being
-/// detected promptly after a logout-then-login-as-someone-else
-/// sequence. authStateChanges() has a known, documented Flutter-web
-/// reliability gap (AppEntryPoint's own manual tracking in main.dart
-/// already exists specifically to work around it), and this bypasses
-/// that dependency entirely for the one event that matters most - a
-/// person actively waiting on the login button right now. Registered
-/// by AppEntryPoint on mount, cleared on dispose, so this is never
-/// called against a torn-down widget; the stream and the periodic poll
-/// both remain as fallbacks regardless of whether this fires.
-void Function(User)? pushAuthUser;
+/// succeeds, and by forceLogoutAndShowLogin() the instant signOut()
+/// completes - the direct fix for auth state occasionally not being
+/// detected promptly, in either direction. authStateChanges() has a
+/// known, documented Flutter-web reliability gap (AppEntryPoint's own
+/// manual tracking in main.dart already exists specifically to work
+/// around it), and this bypasses that dependency entirely for the two
+/// events that matter most - a person actively waiting on the login
+/// button, or waiting for logout to actually finish rather than seeing
+/// the previous screen linger for up to the poll timer's 2-second
+/// window. Registered by AppEntryPoint on mount, cleared on dispose, so
+/// this is never called against a torn-down widget; the stream and the
+/// periodic poll both remain as fallbacks regardless of whether this
+/// fires.
+void Function(User?)? pushAuthUser;

@@ -30,6 +30,7 @@ import 'providers/settings_provider.dart';
 import 'providers/subscription_provider.dart';
 import 'providers/user_role_provider.dart';
 import 'providers/debt_provider.dart';
+import 'widgets/vetbiz_loading_indicator.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -240,7 +241,7 @@ class _AppEntryPointState extends State<AppEntryPoint> {
     // sign-in call succeeds, rather than this widget only ever finding
     // out via the stream or waiting up to 2 seconds for the next poll.
     pushAuthUser = (user) {
-      debugPrint('[AUTH] Direct push received for uid=${user.uid}');
+      debugPrint('[AUTH] Direct push received for uid=${user?.uid ?? "null"}');
       _updateAuthUser(user);
     };
   }
@@ -477,13 +478,16 @@ class _AppEntryPointState extends State<AppEntryPoint> {
       child = FutureBuilder<Widget>(
         future: _decideScreenMemoized(_currentUser!),
         builder: (context, snap) {
+          Widget inner;
+          String innerKey;
           if (snap.connectionState == ConnectionState.waiting) {
-            return const Scaffold(
+            innerKey = 'spinner';
+            inner = const Scaffold(
               body: Center(child: CircularProgressIndicator()),
             );
-          }
-          if (snap.hasError || !snap.hasData) {
-            return _DecisionErrorScreen(
+          } else if (snap.hasError || !snap.hasData) {
+            innerKey = 'error';
+            inner = _DecisionErrorScreen(
               onRetry: () {
                 setState(() {
                   _decidedForUid = null;
@@ -491,8 +495,17 @@ class _AppEntryPointState extends State<AppEntryPoint> {
                 });
               },
             );
+          } else {
+            innerKey = 'resolved';
+            inner = snap.data!;
           }
-          return snap.data!;
+          return AnimatedSwitcher(
+            duration: const Duration(milliseconds: 220),
+            switchInCurve: Curves.easeOut,
+            switchOutCurve: Curves.easeIn,
+            transitionBuilder: (child, animation) => FadeTransition(opacity: animation, child: child),
+            child: KeyedSubtree(key: ValueKey(innerKey), child: inner),
+          );
         },
       );
     }
@@ -552,35 +565,35 @@ class _AuthLoadingScreenState extends State<_AuthLoadingScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFFDFDF9),
-      body: Center(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const CircularProgressIndicator(),
-            if (_showRecovery) ...[
-              const SizedBox(height: 24),
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 32),
-                child: Text(
-                  'Taking longer than expected to load.',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(color: Colors.grey[700]),
-                ),
-              ),
-              const SizedBox(height: 12),
-              OutlinedButton.icon(
-                // The same explicit, navigatorKey-based navigation this
-                // app already relies on elsewhere for stuck-state
-                // recovery - it doesn't depend on the auth stream
-                // itself reacting, so it works regardless of whether
-                // that's the thing currently stuck.
-                onPressed: () => forceLogoutAndShowLogin(),
-                icon: const Icon(Icons.refresh),
-                label: const Text('Try Again'),
-              ),
-            ],
-          ],
+      backgroundColor: VetBizLoadingIndicator.backgroundColor,
+      body: SafeArea(
+        child: VetBizLoadingIndicator(
+          style: VetBizLoadingStyle.full,
+          recoveryAction: _showRecovery
+              ? Column(
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 32),
+                      child: Text(
+                        'Taking longer than expected to load.',
+                        textAlign: TextAlign.center,
+                        style: TextStyle(color: Colors.grey[700]),
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    OutlinedButton.icon(
+                      // The same explicit, navigatorKey-based navigation this
+                      // app already relies on elsewhere for stuck-state
+                      // recovery - it doesn't depend on the auth stream
+                      // itself reacting, so it works regardless of whether
+                      // that's the thing currently stuck.
+                      onPressed: () => forceLogoutAndShowLogin(),
+                      icon: const Icon(Icons.refresh),
+                      label: const Text('Try Again'),
+                    ),
+                  ],
+                )
+              : null,
         ),
       ),
     );

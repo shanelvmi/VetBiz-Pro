@@ -679,7 +679,7 @@ class _ProductsScreenState extends State<ProductsScreen> {
                   onPressed: p.sellableQty <= 0
                       ? null
                       : () {
-                          showAddSaleScreen(context);
+                          showAddSaleScreen(context, product: p);
                         },
                   icon: Icon(Icons.sell,
                       color: p.sellableQty <= 0 ? Colors.grey.shade400 : primaryDeepGreen, size: 20),
@@ -1156,7 +1156,7 @@ class _ProductsScreenState extends State<ProductsScreen> {
                     onPressed: p.sellableQty <= 0
                         ? null
                         : () {
-                            showAddSaleScreen(context);
+                            showAddSaleScreen(context, product: p);
                           },
                     icon: const Icon(Icons.sell, size: 16),
                     label: const Text('Sell'),
