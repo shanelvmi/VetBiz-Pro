@@ -73,6 +73,13 @@ class Product {
   final DateTime? createdAt;
   final DateTime? updatedAt;
 
+  // Admin-set flag: this product gets its own highlighted spot in the
+  // daily report's product section, regardless of how small its
+  // movement was that day - see the Business Pulse/daily reports
+  // design discussion. Does not imply any physical counting; it's a
+  // "pay attention to this one" marker, not a stocktake requirement.
+  final bool isWatchlisted;
+
   // Shared fallback defaults, used only when a product hasn't set its
   // own threshold. Every screen that shows a stock status reads through
   // the same effective*/primaryStatus getters below instead of each
@@ -111,6 +118,7 @@ class Product {
     this.hasEverHadStock = false,
     this.createdAt,
     this.updatedAt,
+    this.isWatchlisted = false,
   });
 
   /// ---------- Convenience getters ----------
@@ -208,6 +216,7 @@ class Product {
       updatedAt: data['updatedAt'] != null
           ? (data['updatedAt'] as Timestamp).toDate()
           : null,
+      isWatchlisted: (data['isWatchlisted'] as bool?) ?? false,
     );
   }
 
@@ -245,6 +254,7 @@ class Product {
       'updatedAt': updatedAt != null
           ? Timestamp.fromDate(updatedAt!)
           : FieldValue.serverTimestamp(),
+      'isWatchlisted': isWatchlisted,
     };
   }
 
@@ -277,6 +287,7 @@ class Product {
     bool? hasEverHadStock,
     DateTime? createdAt,
     DateTime? updatedAt,
+    bool? isWatchlisted,
   }) {
     final resolvedStockQty = stockQty ?? this.stockQty;
     final resolvedSellableQty = sellableQty ?? this.sellableQty;
@@ -313,6 +324,7 @@ class Product {
       hasEverHadStock: resolvedHasEverHadStock,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
+      isWatchlisted: isWatchlisted ?? this.isWatchlisted,
     );
   }
 

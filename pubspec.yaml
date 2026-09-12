@@ -58,6 +58,8 @@ dependencies:
   print_bluetooth_thermal: ^1.1.1
   esc_pos_utils_plus: ^2.0.4
   fl_chart: ^0.68.0
+  pdf: ^3.11.1
+  printing: ^5.13.1
   excel: ^4.0.6
 
 dev_dependencies:

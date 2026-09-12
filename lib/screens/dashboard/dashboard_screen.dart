@@ -30,6 +30,7 @@ import '../clients/clients_screen.dart';
 import '../services/services_screen.dart';
 import '../sales/sales_screen.dart';
 import '../transactions/transactions_screen.dart';
+import '../reports/view_reports_screen.dart';
 import '../facilities/facility_screen.dart';
 import '../settings/settings_screen.dart';
 import '../platform_admin/platform_admin_home_screen.dart';
@@ -2649,6 +2650,15 @@ Widget _buildDrawerContent() {
         onTap: () => Navigator.push(
           context,
           MaterialPageRoute(builder: (_) => TransactionScreen()),
+        ),
+      ),
+      DrawerHoverItem(
+        icon: Icons.summarize_outlined,
+        title: 'View Reports',
+        isCollapsed: effectivelyCollapsed,
+        onTap: () => Navigator.push(
+          context,
+          MaterialPageRoute(builder: (_) => const ViewReportsScreen()),
         ),
       ),
       DrawerHoverItem(

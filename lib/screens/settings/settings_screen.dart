@@ -7,6 +7,7 @@ import '../../providers/user_role_provider.dart';
 import 'manage_account_screen.dart';
 import 'printer_settings_screen.dart';
 import 'export_data_screen.dart';
+import 'business_hours_screen.dart';
 import 'trash_screen.dart';
 import '../subscription/subscription_screen.dart';
 import '../dashboard/stock_alerts_screen.dart';
@@ -122,6 +123,18 @@ class _SettingsScreenState extends State<SettingsScreen> {
                           Navigator.push(
                             context,
                             MaterialPageRoute(builder: (_) => const ExportDataScreen()),
+                          );
+                        },
+                      ),
+                    if (isAdmin)
+                      _buildSettingsItem(
+                        icon: Icons.schedule_outlined,
+                        label: 'Business Hours',
+                        isLast: false,
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(builder: (_) => const BusinessHoursScreen()),
                           );
                         },
                       ),
@@ -309,6 +322,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
                             label: 'Export Data',
                             navigateKey: 'export',
                           ),
+                        if (isAdmin)
+                          _buildSidebarItem(
+                            icon: Icons.schedule_outlined,
+                            label: 'Business Hours',
+                            navigateKey: 'business_hours',
+                          ),
                         _buildSidebarItem(
                           icon: Icons.manage_accounts_outlined,
                           label: 'Manage Account',
@@ -389,6 +408,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
         return isAdmin ? const TrashScreen() : _buildEmptyPane();
       case 'export':
         return isAdmin ? const ExportDataScreen() : _buildEmptyPane();
+      case 'business_hours':
+        return isAdmin ? const BusinessHoursScreen() : _buildEmptyPane();
       case 'manage_account':
         return const ManageAccountScreen();
       default:
