@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../utils/sentence_capitalization_formatter.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:intl/intl.dart';
@@ -120,6 +121,8 @@ class _SubscriptionRequestsTabState extends State<SubscriptionRequestsTab> {
           child: TextField(
             controller: reasonController,
             maxLines: 3,
+            textCapitalization: TextCapitalization.sentences,
+            inputFormatters: [SentenceCapitalizationFormatter()],
             decoration: const InputDecoration(labelText: 'Reason (optional)'),
           ),
         ),

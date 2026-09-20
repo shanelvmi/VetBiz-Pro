@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../utils/sentence_capitalization_formatter.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:intl/intl.dart';
 
@@ -362,6 +363,8 @@ Future<void> _showPromotionEditor(BuildContext context, {Promotion? existing}) a
                 ],
                 TextField(
                   controller: labelController,
+                  textCapitalization: TextCapitalization.sentences,
+                  inputFormatters: [SentenceCapitalizationFormatter()],
                   decoration: const InputDecoration(labelText: 'Offer name', hintText: 'e.g. Nanenane Sale'),
                 ),
                 const SizedBox(height: 12),

@@ -1,6 +1,9 @@
 // AddEditServiceScreen.dart
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import '../../utils/sentence_capitalization_formatter.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 
@@ -65,6 +68,9 @@ class _AddEditServiceScreenState extends State<AddEditServiceScreen> {
   int? _activeSuggestionRow;
   // Same idea as the item-row suggestions, for the client search field.
   bool _showClientSuggestions = false;
+  Timer? _clientSearchDebounce;
+  List<Client> _clientSearchResults = [];
+  bool _isSearchingClients = false;
 
   // Used to measure the client field's actual on-screen position, so
   // the suggestions overlay below can be placed precisely under it
@@ -137,6 +143,7 @@ class _AddEditServiceScreenState extends State<AddEditServiceScreen> {
 
   @override
   void dispose() {
+    _clientSearchDebounce?.cancel();
     _nameController.dispose();
     _descriptionController.dispose();
     _totalAmountController.dispose();
@@ -151,6 +158,47 @@ class _AddEditServiceScreenState extends State<AddEditServiceScreen> {
     }
 
     super.dispose();
+  }
+
+  // Debounced, server-side client search - waits for a brief pause in
+  // typing before actually querying Firestore, and only once at least
+  // 2 characters have been entered (a single character matches too
+  // broadly to be useful, and would fire a query on every keystroke
+  // for no benefit). Replaces filtering clientProvider.clients, which
+  // held the facility's entire client list in memory regardless of
+  // how large it was.
+  void _onClientSearchChanged(String query) {
+    _clientSearchDebounce?.cancel();
+    final trimmed = query.trim();
+
+    if (trimmed.length < 2) {
+      setState(() {
+        _clientSearchResults = [];
+        _isSearchingClients = false;
+      });
+      return;
+    }
+
+    setState(() => _isSearchingClients = true);
+    _clientSearchDebounce = Timer(const Duration(milliseconds: 300), () async {
+      final facilityId = Provider.of<FacilityProvider>(context, listen: false).selectedFacilityId;
+      if (facilityId == null) {
+        if (mounted) setState(() => _isSearchingClients = false);
+        return;
+      }
+      try {
+        final results =
+            await Provider.of<ClientProvider>(context, listen: false).searchClientsByName(facilityId, trimmed);
+        if (!mounted) return;
+        setState(() {
+          _clientSearchResults = results;
+          _isSearchingClients = false;
+        });
+      } catch (e) {
+        debugPrint('Client search error: $e');
+        if (mounted) setState(() => _isSearchingClients = false);
+      }
+    });
   }
 
   double _parseAmount(String input) =>
@@ -225,7 +273,6 @@ class _AddEditServiceScreenState extends State<AddEditServiceScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final clientProvider = Provider.of<ClientProvider>(context);
     final serviceProvider =
         Provider.of<ServiceProvider>(context, listen: false);
     final facilityProvider =
@@ -277,7 +324,6 @@ class _AddEditServiceScreenState extends State<AddEditServiceScreen> {
         ),
         body: LayoutBuilder(
           builder: (context, constraints) {
-            final isNarrow = constraints.maxWidth < 480;
             final isTwoColumn = constraints.maxWidth >= 860;
             return Stack(
               key: _stackKey,
@@ -311,7 +357,7 @@ class _AddEditServiceScreenState extends State<AddEditServiceScreen> {
                     ),
                   ),
                 ),
-                _buildClientSuggestionsOverlay(clientProvider, isNarrow),
+                _buildClientSuggestionsOverlay(),
               ],
             );
           },
@@ -367,13 +413,14 @@ class _AddEditServiceScreenState extends State<AddEditServiceScreen> {
                     prefixIcon: const Icon(Icons.person_outline, color: Colors.black54),
                   ),
                   onTap: () => setState(() {
-                    _showClientSuggestions = _clientTextController.text.trim().isNotEmpty;
+                    _showClientSuggestions = _clientTextController.text.trim().length >= 2;
                   }),
                   onChanged: (val) {
                     setState(() {
                       _selectedClient = null; // typing clears any prior selection
-                      _showClientSuggestions = val.trim().isNotEmpty;
+                      _showClientSuggestions = val.trim().length >= 2;
                     });
+                    _onClientSearchChanged(val);
                   },
                   validator: (value) {
                     if (_selectedClient == null) {
@@ -435,6 +482,8 @@ class _AddEditServiceScreenState extends State<AddEditServiceScreen> {
               TextFormField(
                 controller: _nameController,
                 decoration: _inputDecoration('Service Name'),
+                textCapitalization: TextCapitalization.sentences,
+                inputFormatters: [SentenceCapitalizationFormatter()],
                 validator: (v) =>
                     v == null || v.isEmpty ? 'Enter service name' : null,
               ),
@@ -445,6 +494,8 @@ class _AddEditServiceScreenState extends State<AddEditServiceScreen> {
               TextFormField(
                 controller: _descriptionController,
                 decoration: _inputDecoration('Description'),
+                textCapitalization: TextCapitalization.sentences,
+                inputFormatters: [SentenceCapitalizationFormatter()],
                 maxLines: 3,
               ),
 
@@ -470,6 +521,8 @@ class _AddEditServiceScreenState extends State<AddEditServiceScreen> {
                     child: TextFormField(
                       controller: _providedByController,
                       decoration: _inputDecoration('Provided By'),
+                      textCapitalization: TextCapitalization.sentences,
+                      inputFormatters: [SentenceCapitalizationFormatter()],
                       validator: (v) =>
                           v == null || v.trim().isEmpty
                               ? 'Enter provider'
@@ -546,6 +599,8 @@ class _AddEditServiceScreenState extends State<AddEditServiceScreen> {
                             TextFormField(
                               controller: item['name'],
                               decoration: _inputDecoration('Item Name'),
+                              textCapitalization: TextCapitalization.sentences,
+                              inputFormatters: [SentenceCapitalizationFormatter()],
                               validator: (v) =>
                                   v == null || v.isEmpty ? 'Enter name' : null,
                               onTap: () => setState(() => _activeSuggestionRow = index),
@@ -950,8 +1005,9 @@ class _AddEditServiceScreenState extends State<AddEditServiceScreen> {
   /// (including the item rows and Add Item button) down every time it
   /// appeared. Measures the client field's actual on-screen position
   /// via its GlobalKey, rather than assuming a fixed pixel offset.
-  Widget _buildClientSuggestionsOverlay(ClientProvider clientProvider, bool isNarrow) {
-    if (!_showClientSuggestions || _clientTextController.text.trim().isEmpty) {
+  Widget _buildClientSuggestionsOverlay() {
+    final trimmedQuery = _clientTextController.text.trim();
+    if (!_showClientSuggestions || trimmedQuery.length < 2) {
       return const SizedBox.shrink();
     }
 
@@ -961,25 +1017,27 @@ class _AddEditServiceScreenState extends State<AddEditServiceScreen> {
     final fieldPosition = renderBox.localToGlobal(Offset.zero);
     final fieldSize = renderBox.size;
 
+    // Convert the field's global position back to a position relative
+    // to the Stack it's being positioned within - not the whole
+    // Scaffold, which would also fold the AppBar's own height into
+    // this conversion and throw the overlay's position off.
     final stackBox = _stackKey.currentContext?.findRenderObject() as RenderBox?;
     final localTop = stackBox != null
         ? stackBox.globalToLocal(fieldPosition).dy
         : fieldPosition.dy;
 
-    final query = _clientTextController.text.toLowerCase();
-    final matches = clientProvider.clients
-        .where((c) => c.name.toLowerCase().contains(query))
-        .take(6)
-        .toList();
-
-    final horizontalInset = isNarrow
-        ? 16.0
-        : (MediaQuery.of(context).size.width - 700).clamp(0, double.infinity) / 2 + 16;
+    // Aligns with the field's own actual on-screen left edge and width,
+    // rather than assuming the field is centered within some fixed
+    // page width - correct regardless of which column the field sits
+    // in, how it's nested inside its card, or the screen size.
+    final localLeft = stackBox != null
+        ? stackBox.globalToLocal(fieldPosition).dx
+        : fieldPosition.dx;
 
     return Positioned(
       top: localTop + fieldSize.height + 4,
-      left: horizontalInset,
-      right: horizontalInset,
+      left: localLeft,
+      width: fieldSize.width,
       child: Material(
         elevation: 6,
         borderRadius: BorderRadius.circular(8),
@@ -990,29 +1048,34 @@ class _AddEditServiceScreenState extends State<AddEditServiceScreen> {
             borderRadius: BorderRadius.circular(8),
             color: offWhite,
           ),
-          child: matches.isEmpty
-              ? ListTile(
-                  title: const Text('No client found'),
-                  trailing: IconButton(
-                    icon: const Icon(Icons.add),
-                    onPressed: () => _addNewClient(context),
-                  ),
+          child: _isSearchingClients && _clientSearchResults.isEmpty
+              ? const Padding(
+                  padding: EdgeInsets.symmetric(vertical: 16),
+                  child: Center(child: SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2))),
                 )
-              : ListView(
-                  shrinkWrap: true,
-                  padding: EdgeInsets.zero,
-                  children: matches.map((client) {
-                    return ListTile(
-                      title: Text(client.name),
-                      subtitle: Text(client.phone),
-                      hoverColor: warmAmber.withValues(alpha: 0.15),
-                      onTap: () {
-                        setState(() {
-                          _selectedClient = client;
-                          _clientTextController.text = client.name;
-                          _showClientSuggestions = false;
-                        });
-                      },
+              : _clientSearchResults.isEmpty
+                  ? ListTile(
+                      title: const Text('No client found'),
+                      trailing: IconButton(
+                        icon: const Icon(Icons.add),
+                        onPressed: () => _addNewClient(context),
+                      ),
+                    )
+                  : ListView(
+                      shrinkWrap: true,
+                      padding: EdgeInsets.zero,
+                      children: _clientSearchResults.map((client) {
+                        return ListTile(
+                          title: Text(client.name),
+                          subtitle: Text(client.phone),
+                          hoverColor: warmAmber.withValues(alpha: 0.15),
+                          onTap: () {
+                            setState(() {
+                              _selectedClient = client;
+                              _clientTextController.text = client.name;
+                              _showClientSuggestions = false;
+                            });
+                          },
                     );
                   }).toList(),
                 ),

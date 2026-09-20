@@ -37,7 +37,7 @@ class SaleLineItem {
         customerName: map['customerName'] as String? ?? 'Walk-in',
         itemCount: (map['itemCount'] as num?)?.toInt() ?? 0,
         amount: (map['amount'] as num?)?.toDouble() ?? 0,
-        paymentMethod: map['paymentMethod'] as String? ?? 'Unknown',
+        paymentMethod: map['paymentMethod'] as String? ?? 'On Credit',
       );
 }
 
@@ -66,24 +66,33 @@ class ServiceTypeBreakdown {
 class ProductMovementEntry {
   final String productId;
   final String name;
+  final String unit;
   final int opening;
   final int added;
+  final int adjustment;
   final int sold;
   final int expectedClosing;
   final bool isWatchlisted;
   final int? physicalCount;
   final String? varianceReason;
+  // Set when this adjustment can be traced to a logged stock quantity
+  // edit today (who, before/after) - null when no matching log entry
+  // exists, since not every source of an adjustment is logged yet.
+  final String? adjustmentDetail;
 
   const ProductMovementEntry({
     required this.productId,
     required this.name,
+    this.unit = '',
     required this.opening,
     required this.added,
+    required this.adjustment,
     required this.sold,
     required this.expectedClosing,
     required this.isWatchlisted,
     this.physicalCount,
     this.varianceReason,
+    this.adjustmentDetail,
   });
 
   /// null until a physical count has been entered - only meaningful
@@ -93,37 +102,46 @@ class ProductMovementEntry {
   ProductMovementEntry copyWith({int? physicalCount, String? varianceReason}) => ProductMovementEntry(
         productId: productId,
         name: name,
+        unit: unit,
         opening: opening,
         added: added,
+        adjustment: adjustment,
         sold: sold,
         expectedClosing: expectedClosing,
         isWatchlisted: isWatchlisted,
         physicalCount: physicalCount ?? this.physicalCount,
         varianceReason: varianceReason ?? this.varianceReason,
+        adjustmentDetail: adjustmentDetail,
       );
 
   Map<String, dynamic> toMap() => {
         'productId': productId,
         'name': name,
+        'unit': unit,
         'opening': opening,
         'added': added,
+        'adjustment': adjustment,
         'sold': sold,
         'expectedClosing': expectedClosing,
         'isWatchlisted': isWatchlisted,
         'physicalCount': physicalCount,
         'varianceReason': varianceReason,
+        'adjustmentDetail': adjustmentDetail,
       };
 
   factory ProductMovementEntry.fromMap(Map<String, dynamic> map) => ProductMovementEntry(
         productId: map['productId'] as String? ?? '',
         name: map['name'] as String? ?? '',
+        unit: map['unit'] as String? ?? '',
         opening: (map['opening'] as num?)?.toInt() ?? 0,
         added: (map['added'] as num?)?.toInt() ?? 0,
+        adjustment: (map['adjustment'] as num?)?.toInt() ?? 0,
         sold: (map['sold'] as num?)?.toInt() ?? 0,
         expectedClosing: (map['expectedClosing'] as num?)?.toInt() ?? 0,
         isWatchlisted: (map['isWatchlisted'] as bool?) ?? false,
         physicalCount: (map['physicalCount'] as num?)?.toInt(),
         varianceReason: map['varianceReason'] as String?,
+        adjustmentDetail: map['adjustmentDetail'] as String?,
       );
 }
 
@@ -222,6 +240,60 @@ class ActivityLogEntry {
       );
 }
 
+/// One row in the payment-method reconciliation - expected balance
+/// (from sales, services, debt repayments, and other income received
+/// via this method, minus expenses paid via it) versus what was
+/// physically counted, for every method actually used that day, not
+/// just cash.
+class PaymentMethodReconciliation {
+  final String method;
+  final double expected;
+  final double? physicalCount; // null until Submit
+  final String? varianceReason;
+  // Cash always requires a physical count, since a till gets counted
+  // regardless of whether it took in money today - that's the normal,
+  // daily discipline for physical cash. Any other method only requires
+  // one when it actually received income today; a method that only had
+  // an expense against it (nothing came in) isn't a discrepancy
+  // waiting to happen, it's just an honest outflow with nothing to
+  // physically verify against.
+  final bool requiresCount;
+
+  const PaymentMethodReconciliation({
+    required this.method,
+    required this.expected,
+    this.physicalCount,
+    this.varianceReason,
+    this.requiresCount = true,
+  });
+
+  double? get variance => physicalCount == null ? null : physicalCount! - expected;
+
+  PaymentMethodReconciliation copyWith({double? physicalCount, String? varianceReason}) => PaymentMethodReconciliation(
+        method: method,
+        expected: expected,
+        physicalCount: physicalCount ?? this.physicalCount,
+        varianceReason: varianceReason ?? this.varianceReason,
+        requiresCount: requiresCount,
+      );
+
+  Map<String, dynamic> toMap() => {
+        'method': method,
+        'expected': expected,
+        'physicalCount': physicalCount,
+        'varianceReason': varianceReason,
+        'requiresCount': requiresCount,
+      };
+
+  factory PaymentMethodReconciliation.fromMap(Map<String, dynamic> map) => PaymentMethodReconciliation(
+        method: map['method'] as String? ?? 'Unknown',
+        expected: (map['expected'] as num?)?.toDouble() ?? 0,
+        physicalCount: (map['physicalCount'] as num?)?.toDouble(),
+        varianceReason: map['varianceReason'] as String?,
+        requiresCount: (map['requiresCount'] as bool?) ?? true,
+      );
+}
+
 /// One facility's daily closing report. 'draft' status means the
 /// system-computed figures have been generated but physical stock and
 /// cash counts haven't been entered/submitted yet; 'submitted' means
@@ -251,6 +323,7 @@ class DailyReport {
 
   // Transactions
   final double totalOtherIncome;
+  final Map<String, double> otherIncomeByPaymentMethod;
   final double totalExpenses;
   final Map<String, double> expensesByCategory;
   final List<ExpenseLineItem> expenseLineItems;
@@ -259,13 +332,12 @@ class DailyReport {
   // Debt
   final double newDebtValue;
   final double repaymentsValue;
+  final Map<String, double> repaymentsByPaymentMethod;
   final double outstandingChange;
   final List<ClientDebtEntry> clientDebtEntries;
 
   // Cash reconciliation
-  final double expectedCashInDrawer;
-  final double? physicalCashCounted; // null until Submit
-  final String? cashVarianceReason;
+  final List<PaymentMethodReconciliation> paymentReconciliation;
 
   // Products
   final List<ProductMovementEntry> productMovement;
@@ -293,31 +365,30 @@ class DailyReport {
     this.servicesByPaymentMethod = const {},
     this.serviceBreakdown = const [],
     this.totalOtherIncome = 0,
+    this.otherIncomeByPaymentMethod = const {},
     this.totalExpenses = 0,
     this.expensesByCategory = const {},
     this.expenseLineItems = const [],
     this.otherIncomeLineItems = const [],
     this.newDebtValue = 0,
     this.repaymentsValue = 0,
+    this.repaymentsByPaymentMethod = const {},
     this.outstandingChange = 0,
     this.clientDebtEntries = const [],
-    this.expectedCashInDrawer = 0,
-    this.physicalCashCounted,
-    this.cashVarianceReason,
+    this.paymentReconciliation = const [],
     this.productMovement = const [],
     this.activityLogEntries = const [],
     this.declarationConfirmed = false,
   });
 
-  double? get cashVariance => physicalCashCounted == null ? null : physicalCashCounted! - expectedCashInDrawer;
+  bool get hasPaymentVariance => paymentReconciliation.any((p) => p.variance != null && p.variance != 0);
 
   bool get hasStockVariance => productMovement.any((p) => p.variance != null && p.variance != 0);
 
   DailyReport copyWith({
     String? status,
     DateTime? submittedAt,
-    double? physicalCashCounted,
-    String? cashVarianceReason,
+    List<PaymentMethodReconciliation>? paymentReconciliation,
     List<ProductMovementEntry>? productMovement,
     bool? declarationConfirmed,
   }) {
@@ -338,16 +409,16 @@ class DailyReport {
       servicesByPaymentMethod: servicesByPaymentMethod,
       serviceBreakdown: serviceBreakdown,
       totalOtherIncome: totalOtherIncome,
+      otherIncomeByPaymentMethod: otherIncomeByPaymentMethod,
       totalExpenses: totalExpenses,
       expensesByCategory: expensesByCategory,
       expenseLineItems: expenseLineItems,
       newDebtValue: newDebtValue,
       repaymentsValue: repaymentsValue,
+      repaymentsByPaymentMethod: repaymentsByPaymentMethod,
       outstandingChange: outstandingChange,
       clientDebtEntries: clientDebtEntries,
-      expectedCashInDrawer: expectedCashInDrawer,
-      physicalCashCounted: physicalCashCounted ?? this.physicalCashCounted,
-      cashVarianceReason: cashVarianceReason ?? this.cashVarianceReason,
+      paymentReconciliation: paymentReconciliation ?? this.paymentReconciliation,
       productMovement: productMovement ?? this.productMovement,
       declarationConfirmed: declarationConfirmed ?? this.declarationConfirmed,
     );
@@ -371,17 +442,17 @@ class DailyReport {
       'servicesByPaymentMethod': encodeDoubleMap(servicesByPaymentMethod),
       'serviceBreakdown': serviceBreakdown.map((e) => e.toMap()).toList(),
       'totalOtherIncome': totalOtherIncome,
+      'otherIncomeByPaymentMethod': encodeDoubleMap(otherIncomeByPaymentMethod),
       'totalExpenses': totalExpenses,
       'expensesByCategory': encodeDoubleMap(expensesByCategory),
       'expenseLineItems': expenseLineItems.map((e) => e.toMap()).toList(),
       'otherIncomeLineItems': otherIncomeLineItems.map((e) => e.toMap()).toList(),
       'newDebtValue': newDebtValue,
       'repaymentsValue': repaymentsValue,
+      'repaymentsByPaymentMethod': encodeDoubleMap(repaymentsByPaymentMethod),
       'outstandingChange': outstandingChange,
       'clientDebtEntries': clientDebtEntries.map((e) => e.toMap()).toList(),
-      'expectedCashInDrawer': expectedCashInDrawer,
-      'physicalCashCounted': physicalCashCounted,
-      'cashVarianceReason': cashVarianceReason,
+      'paymentReconciliation': paymentReconciliation.map((p) => p.toMap()).toList(),
       'productMovement': productMovement.map((e) => e.toMap()).toList(),
       'activityLogEntries': activityLogEntries.map((e) => e.toMap()).toList(),
       'declarationConfirmed': declarationConfirmed,
@@ -416,17 +487,17 @@ class DailyReport {
       servicesByPaymentMethod: parseDoubleMap(map['servicesByPaymentMethod']),
       serviceBreakdown: parseList(map['serviceBreakdown'], ServiceTypeBreakdown.fromMap),
       totalOtherIncome: (map['totalOtherIncome'] as num?)?.toDouble() ?? 0,
+      otherIncomeByPaymentMethod: parseDoubleMap(map['otherIncomeByPaymentMethod']),
       totalExpenses: (map['totalExpenses'] as num?)?.toDouble() ?? 0,
       expensesByCategory: parseDoubleMap(map['expensesByCategory']),
       expenseLineItems: parseList(map['expenseLineItems'], ExpenseLineItem.fromMap),
       otherIncomeLineItems: parseList(map['otherIncomeLineItems'], ExpenseLineItem.fromMap),
       newDebtValue: (map['newDebtValue'] as num?)?.toDouble() ?? 0,
       repaymentsValue: (map['repaymentsValue'] as num?)?.toDouble() ?? 0,
+      repaymentsByPaymentMethod: parseDoubleMap(map['repaymentsByPaymentMethod']),
       outstandingChange: (map['outstandingChange'] as num?)?.toDouble() ?? 0,
       clientDebtEntries: parseList(map['clientDebtEntries'], ClientDebtEntry.fromMap),
-      expectedCashInDrawer: (map['expectedCashInDrawer'] as num?)?.toDouble() ?? 0,
-      physicalCashCounted: (map['physicalCashCounted'] as num?)?.toDouble(),
-      cashVarianceReason: map['cashVarianceReason'] as String?,
+      paymentReconciliation: parseList(map['paymentReconciliation'], PaymentMethodReconciliation.fromMap),
       productMovement: parseList(map['productMovement'], ProductMovementEntry.fromMap),
       activityLogEntries: parseList(map['activityLogEntries'], ActivityLogEntry.fromMap),
       declarationConfirmed: (map['declarationConfirmed'] as bool?) ?? false,

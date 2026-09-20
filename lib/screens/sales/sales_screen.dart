@@ -5,6 +5,7 @@ import 'package:provider/provider.dart';
 import '../../models/sale.dart';
 import '../../providers/sale_provider.dart';
 import '../../providers/facility_provider.dart';
+import '../../providers/user_role_provider.dart';
 import '../../providers/client_provider.dart';
 import '../../services/sales_summary_service.dart';
 import 'add_sale_screen.dart';
@@ -672,7 +673,8 @@ class _SalesScreenState extends State<SalesScreen> {
                 },
                 itemBuilder: (context) => [
                   const PopupMenuItem(value: 'view', child: Text('View Details')),
-                  PopupMenuItem(value: 'delete', child: Text('Delete', style: TextStyle(color: Colors.red[400]))),
+                  if (Provider.of<UserRoleProvider>(context, listen: false).isAdmin)
+                    PopupMenuItem(value: 'delete', child: Text('Delete', style: TextStyle(color: Colors.red[400]))),
                 ],
               ),
             ),
@@ -895,15 +897,17 @@ class _SalesScreenState extends State<SalesScreen> {
                     label: const Text('Share'),
                   ),
                 ),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: OutlinedButton.icon(
-                    onPressed: () => _confirmDeleteSale(sale),
-                    icon: Icon(Icons.delete_outline, size: 16, color: Colors.red[400]),
-                    label: Text('Delete', style: TextStyle(color: Colors.red[400])),
-                    style: OutlinedButton.styleFrom(side: BorderSide(color: Colors.red[200]!)),
+                if (Provider.of<UserRoleProvider>(context).isAdmin) ...[
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: OutlinedButton.icon(
+                      onPressed: () => _confirmDeleteSale(sale),
+                      icon: Icon(Icons.delete_outline, size: 16, color: Colors.red[400]),
+                      label: Text('Delete', style: TextStyle(color: Colors.red[400])),
+                      style: OutlinedButton.styleFrom(side: BorderSide(color: Colors.red[200]!)),
+                    ),
                   ),
-                ),
+                ],
               ],
             ),
           ],

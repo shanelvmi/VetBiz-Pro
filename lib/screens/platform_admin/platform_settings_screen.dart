@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import '../../utils/sentence_capitalization_formatter.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:intl/intl.dart';
 
@@ -250,6 +251,8 @@ class _MaintenanceModeCardState extends State<_MaintenanceModeCard> {
               TextField(
                 controller: _messageController,
                 maxLines: 2,
+                textCapitalization: TextCapitalization.sentences,
+                inputFormatters: [SentenceCapitalizationFormatter()],
                 decoration: const InputDecoration(
                   labelText: 'Message shown to blocked users (optional)',
                   hintText: "We're currently performing scheduled maintenance...",

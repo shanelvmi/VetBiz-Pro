@@ -1,6 +1,7 @@
 import 'dart:typed_data';
 import 'dart:async';
 import 'package:flutter/material.dart';
+import '../utils/sentence_capitalization_formatter.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -634,6 +635,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     flex: 3,
                     child: TextField(
                       controller: nameController,
+                      textCapitalization: TextCapitalization.sentences,
+                      inputFormatters: [SentenceCapitalizationFormatter()],
                       decoration: InputDecoration(
                         labelText: 'Full Name',
                         enabledBorder: blackBorder,
@@ -868,6 +871,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       flex: 3,
                       child: TextField(
                         controller: facilityNameController,
+                        textCapitalization: TextCapitalization.sentences,
+                        inputFormatters: [SentenceCapitalizationFormatter()],
                         decoration: InputDecoration(
                           labelText: 'Facility Name',
                           enabledBorder: blackBorder,

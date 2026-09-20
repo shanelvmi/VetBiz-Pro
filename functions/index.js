@@ -201,6 +201,8 @@ exports.updateDailySalesSummary = onDocumentWritten(
           totalAmount: admin.firestore.FieldValue.increment(-(before.totalAmount || 0)),
           totalPaid: admin.firestore.FieldValue.increment(-(before.totalPaid || 0)),
           totalProfit: admin.firestore.FieldValue.increment(-(before.totalProfit || 0)),
+          totalRealizedProfit: admin.firestore.FieldValue.increment(-(before.realizedProfit || 0)),
+          totalUnrealizedProfit: admin.firestore.FieldValue.increment(-(before.unrealizedProfit || 0)),
           saleCount: admin.firestore.FieldValue.increment(-1),
         },
         { merge: true }
@@ -214,6 +216,8 @@ exports.updateDailySalesSummary = onDocumentWritten(
           totalAmount: admin.firestore.FieldValue.increment(after.totalAmount || 0),
           totalPaid: admin.firestore.FieldValue.increment(after.totalPaid || 0),
           totalProfit: admin.firestore.FieldValue.increment(after.totalProfit || 0),
+          totalRealizedProfit: admin.firestore.FieldValue.increment(after.realizedProfit || 0),
+          totalUnrealizedProfit: admin.firestore.FieldValue.increment(after.unrealizedProfit || 0),
           saleCount: admin.firestore.FieldValue.increment(1),
           facilityId,
           date: afterDay,
@@ -325,6 +329,7 @@ exports.updateDailyServiceSummary = onDocumentWritten(
         {
           totalAmount: admin.firestore.FieldValue.increment(-(before.totalAmount || 0)),
           totalServiceProfit: admin.firestore.FieldValue.increment(-(before.totalServiceProfit || 0)),
+          totalUnrealizedServiceProfit: admin.firestore.FieldValue.increment(-(before.unrealizedServiceProfit || 0)),
           serviceCount: admin.firestore.FieldValue.increment(-1),
         },
         { merge: true }
@@ -336,6 +341,7 @@ exports.updateDailyServiceSummary = onDocumentWritten(
         {
           totalAmount: admin.firestore.FieldValue.increment(after.totalAmount || 0),
           totalServiceProfit: admin.firestore.FieldValue.increment(after.totalServiceProfit || 0),
+          totalUnrealizedServiceProfit: admin.firestore.FieldValue.increment(after.unrealizedServiceProfit || 0),
           serviceCount: admin.firestore.FieldValue.increment(1),
           facilityId,
           date: afterDay,
@@ -690,7 +696,9 @@ exports.purgeOldTrash = onSchedule("every 24 hours", async () => {
  * snapshot computed with a different formula than what's shown live
  * would make the two numbers subtly, silently disagree.
  */
-exports.recordDailySnapshots = onSchedule("every 24 hours", async () => {
+exports.recordDailySnapshots = onSchedule(
+  { schedule: "0 0 * * *", timeZone: "Africa/Dar_es_Salaam" },
+  async () => {
   const today = new Date().toISOString().slice(0, 10); // YYYY-MM-DD
 
   const facilitiesSnap = await db.collection("facilities").get();
@@ -706,12 +714,14 @@ exports.recordDailySnapshots = onSchedule("every 24 hours", async () => {
       ]);
 
       let totalProductValue = 0;
+      const sellableStock = {};
       productsSnap.docs.forEach((doc) => {
         const d = doc.data();
         const stockQty = Number(d.stockQty) || 0;
         const sellableQty = Number(d.sellableQty) || 0;
         const buyPrice = Number(d.buyPrice) || 0;
         totalProductValue += (stockQty + sellableQty) * buyPrice;
+        sellableStock[doc.id] = sellableQty;
       });
 
       let totalOutstanding = 0;
@@ -722,17 +732,28 @@ exports.recordDailySnapshots = onSchedule("every 24 hours", async () => {
 
       const totalClients = clientsCountSnap.data().count;
 
-      await db
-        .collection("facilities")
-        .doc(facilityId)
-        .collection("dailySnapshots")
-        .doc(today)
-        .set({
-          totalProductValue,
-          totalOutstanding,
-          totalClients,
-          recordedAt: admin.firestore.FieldValue.serverTimestamp(),
-        });
+      await Promise.all([
+        db
+          .collection("facilities")
+          .doc(facilityId)
+          .collection("dailySnapshots")
+          .doc(today)
+          .set({
+            totalProductValue,
+            totalOutstanding,
+            totalClients,
+            recordedAt: admin.firestore.FieldValue.serverTimestamp(),
+          }),
+        db
+          .collection("facilities")
+          .doc(facilityId)
+          .collection("dailyStockSnapshots")
+          .doc(today)
+          .set({
+            sellableStock,
+            recordedAt: admin.firestore.FieldValue.serverTimestamp(),
+          }),
+      ]);
     } catch (error) {
       console.error(`Error recording daily snapshot for facility ${facilityId}:`, error);
     }

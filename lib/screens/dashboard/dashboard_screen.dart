@@ -323,6 +323,7 @@ class DashboardScreen extends StatefulWidget {
 class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingObserver {
   final Color primaryDeepGreen = const Color(0xFF2F5D62);
   final Color warmAmber = const Color(0xFFFFB200);
+  final Color servicesSteelBlue = const Color(0xFF5C7C99);
   final Color offWhite = const Color(0xFFFDFDF9);
 
   final user = FirebaseAuth.instance.currentUser;
@@ -561,6 +562,10 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
   // happens to be loaded in each provider's paginated list.
   final DashboardSummaryService _dashboardSummaryService = DashboardSummaryService();
   DashboardPeriodTotals _periodTotals = DashboardPeriodTotals.empty;
+  // Once true, a refresh keeps showing the last-known values instead of
+  // blanking them out with a loading spinner - only the very first load
+  // (when there's genuinely nothing to show yet) should look like loading.
+  bool _hasLoadedDashboardOnce = false;
   bool _isPeriodLoading = false;
   String? _lastLoadedFacilityId;
   String? _lastLoadedFilter;
@@ -589,7 +594,9 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
   String _chartPeriod = 'Last 7 days';
   List<double>? _chartSalesByDay;
   List<double>? _chartCollectionsByDay;
+  List<double>? _chartServicesByDay;
   double? _chartPreviousTotal;
+  double? _chartOtherIncomeTotal;
   bool _isChartLoading = false;
   int _chartRequestId = 0;
 
@@ -681,7 +688,7 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
   }
 
   void _loadPeriodTotals(String facilityId) {
-    setState(() => _isPeriodLoading = true);
+    if (!_hasLoadedDashboardOnce) setState(() => _isPeriodLoading = true);
 
     final (start, end) = _dateRangeForFilter(selectedFilter);
 
@@ -709,7 +716,7 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
   int _previousPeriodRequestId = 0;
 
   void _loadPreviousPeriodTotals(String facilityId) {
-    setState(() => _isPreviousPeriodLoading = true);
+    if (!_hasLoadedDashboardOnce) setState(() => _isPreviousPeriodLoading = true);
 
     final (start, end) = _previousPeriodRangeForFilter(selectedFilter);
     final requestId = ++_previousPeriodRequestId;
@@ -737,8 +744,24 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
     });
   }
 
+  // Re-triggers every facility-dependent dashboard load, guarded
+  // against a missing facility id. Called right after a sale or
+  // service is successfully recorded, so Total Revenue and the chart
+  // reflect it immediately rather than waiting for the person to
+  // manually change a filter to force a reload.
+  void _refreshDashboardData() {
+    final facilityId = _lastLoadedFacilityId;
+    if (facilityId == null) return;
+    _hasLoadedDashboardOnce = true;
+    _loadPeriodTotals(facilityId);
+    _loadPreviousPeriodTotals(facilityId);
+    _loadPreviousSnapshot(facilityId);
+    _loadTodayGlance(facilityId);
+    _loadChartData(facilityId);
+  }
+
   void _loadTodayGlance(String facilityId) {
-    setState(() => _isGlanceLoading = true);
+    if (!_hasLoadedDashboardOnce) setState(() => _isGlanceLoading = true);
 
     final now = DateTime.now();
     final today = DateTime(now.year, now.month, now.day);
@@ -748,6 +771,7 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
       SalesSummaryService().getRangeTotals(facilityId: facilityId, start: today, end: today),
       SalesSummaryService().getTotalCollected(facilityId: facilityId, start: today, end: today),
       _dashboardSummaryService.getDashboardTotals(facilityId: facilityId, start: today, end: today),
+      SalesSummaryService().getTotalOtherIncome(facilityId: facilityId, start: today, end: today),
     ]).then((results) {
       // Discard if a newer facility selection has already superseded
       // this request - same reasoning as _loadPreviousPeriodTotals.
@@ -757,10 +781,11 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
       final salesTotals = results[0] as Map<String, double>;
       final collected = results[1] as double;
       final dashboardTotals = results[2] as DashboardPeriodTotals;
+      final otherIncome = results[3] as double;
 
       setState(() {
         _glanceSaleCount = (salesTotals['saleCount'] ?? 0).toInt();
-        _glanceCollected = collected;
+        _glanceCollected = collected + otherIncome;
         _glanceServiceCount = dashboardTotals.completedServicesCount;
         _isGlanceLoading = false;
       });
@@ -781,7 +806,7 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
   }
 
   void _loadChartData(String facilityId) {
-    setState(() => _isChartLoading = true);
+    if (!_hasLoadedDashboardOnce) setState(() => _isChartLoading = true);
 
     final (start, end, days) = _chartDateRange();
     final requestId = ++_chartRequestId;
@@ -794,6 +819,10 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
       salesService.getDailySummaries(facilityId: facilityId, start: start, end: end),
       salesService.getDailyCollections(facilityId: facilityId, start: start, end: end),
       salesService.getRangeTotals(facilityId: facilityId, start: previousStart, end: previousEnd),
+      salesService.getDailyServiceSummaries(facilityId: facilityId, start: start, end: end),
+      salesService.getTotalOtherIncome(facilityId: facilityId, start: start, end: end),
+      salesService.getDailyServiceSummaries(facilityId: facilityId, start: previousStart, end: previousEnd),
+      salesService.getTotalOtherIncome(facilityId: facilityId, start: previousStart, end: previousEnd),
     ]).then((results) {
       if (requestId != _chartRequestId) return;
       if (!mounted) return;
@@ -801,9 +830,14 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
       final dailySales = results[0] as List<DailySalesSummary>;
       final dailyCollections = results[1] as List<DailyCollection>;
       final previousTotals = results[2] as Map<String, double>;
+      final dailyServices = results[3] as List<DailyServiceSummary>;
+      final otherIncomeTotal = results[4] as double;
+      final previousDailyServices = results[5] as List<DailyServiceSummary>;
+      final previousOtherIncomeTotal = results[6] as double;
 
       final salesByDate = {for (final s in dailySales) s.date: s.totalAmount};
       final collectedByDate = {for (final c in dailyCollections) c.date: c.totalCollected};
+      final servicesByDate = {for (final s in dailyServices) s.date: s.totalAmount};
 
       String fmt(DateTime d) =>
           '${d.year.toString().padLeft(4, '0')}-${d.month.toString().padLeft(2, '0')}-${d.day.toString().padLeft(2, '0')}';
@@ -813,16 +847,24 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
       // the chart entirely rather than showing as a dip to zero.
       final salesByDay = <double>[];
       final collectionsByDay = <double>[];
+      final servicesByDay = <double>[];
       for (int i = 0; i < days; i++) {
         final day = fmt(start.add(Duration(days: i)));
         salesByDay.add(salesByDate[day] ?? 0.0);
         collectionsByDay.add(collectedByDate[day] ?? 0.0);
+        servicesByDay.add(servicesByDate[day] ?? 0.0);
       }
+
+      final previousServicesTotal = previousDailyServices.fold<double>(0.0, (sum, s) => sum + s.totalAmount);
+      final previousFullTotal =
+          (previousTotals['totalAmount'] ?? 0.0) + previousServicesTotal + previousOtherIncomeTotal;
 
       setState(() {
         _chartSalesByDay = salesByDay;
         _chartCollectionsByDay = collectionsByDay;
-        _chartPreviousTotal = previousTotals['totalAmount'];
+        _chartServicesByDay = servicesByDay;
+        _chartPreviousTotal = previousFullTotal;
+        _chartOtherIncomeTotal = otherIncomeTotal;
         _isChartLoading = false;
       });
     }).catchError((e) {
@@ -837,7 +879,7 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
   int _previousSnapshotRequestId = 0;
 
   void _loadPreviousSnapshot(String facilityId) {
-    setState(() => _isPreviousSnapshotLoading = true);
+    if (!_hasLoadedDashboardOnce) setState(() => _isPreviousSnapshotLoading = true);
 
     // The previous period's own end date - the most recent point
     // within that period, matching "what was the balance at the
@@ -999,6 +1041,12 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
     // unrelated rebuild).
     if (currentFacilityId != null &&
         (_lastLoadedFacilityId != currentFacilityId || _lastLoadedFilter != selectedFilter)) {
+      // Same facility, just a different filter chip - the numbers on
+      // screen are still valid to keep showing while the new range
+      // loads in. A genuine facility switch resets this, so its
+      // initial load still shows loading rather than the previous
+      // facility's now-irrelevant numbers.
+      _hasLoadedDashboardOnce = _lastLoadedFacilityId == currentFacilityId;
       _lastLoadedFacilityId = currentFacilityId;
       _lastLoadedFilter = selectedFilter;
       WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -1298,15 +1346,15 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
                                         ),
                                       ),
                                       SummaryCard(
-                                        title: 'Total Earnings ($selectedFilter)',
-                                        value: 'Tsh ${formatter.format(_periodTotals.totalEarnings)}',
+                                        title: 'Total Collected ($selectedFilter)',
+                                        value: 'Tsh ${formatter.format(_periodTotals.totalCollected)}',
                                         icon: Icons.attach_money,
                                         color: primaryDeepGreen,
                                         shadow: true,
                                         isLoading: _isPeriodLoading,
                                         trend: KpiTrend(
-                                          currentValue: _periodTotals.totalEarnings,
-                                          previousValue: _previousPeriodTotals.totalEarnings,
+                                          currentValue: _periodTotals.totalCollected,
+                                          previousValue: _previousPeriodTotals.totalCollected,
                                           higherIsBetter: true,
                                           comparisonLabel: _comparisonLabelForFilter(selectedFilter),
                                           formatChange: (v) => 'Tsh ${formatter.format(v)}',
@@ -1314,14 +1362,15 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
                                         ),
                                       ),
                                       SummaryCard(
-                                        title: 'Total Profit ($selectedFilter)',
+                                        title: 'Net Profit ($selectedFilter)',
                                         value: Provider.of<UserRoleProvider>(context).isAdmin
-                                            ? 'Tsh ${formatter.format(_periodTotals.totalProfit)}'
+                                            ? 'Tsh ${formatter.format(_periodTotals.netProfit)}'
                                             : '*****',
                                         icon: Icons.trending_up,
                                         color: primaryDeepGreen,
                                         shadow: true,
                                         isLoading: _isPeriodLoading,
+                                        trendOnTitleRow: true,
                                         // Hidden entirely for non-admins, same
                                         // as the value itself - a trend arrow
                                         // would still leak directional profit
@@ -1329,12 +1378,23 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
                                         // masked.
                                         trend: Provider.of<UserRoleProvider>(context).isAdmin
                                             ? KpiTrend(
-                                                currentValue: _periodTotals.totalProfit,
-                                                previousValue: _previousPeriodTotals.totalProfit,
+                                                currentValue: _periodTotals.netProfit,
+                                                previousValue: _previousPeriodTotals.netProfit,
                                                 higherIsBetter: true,
                                                 comparisonLabel: _comparisonLabelForFilter(selectedFilter),
                                                 formatChange: (v) => 'Tsh ${formatter.format(v)}',
                                                 isLoading: _isPreviousPeriodLoading,
+                                              )
+                                            : null,
+                                        // The realized/pending breakdown also
+                                        // reveals profit information, so it's
+                                        // masked the same way as the headline
+                                        // figure and trend above.
+                                        footer: Provider.of<UserRoleProvider>(context).isAdmin
+                                            ? _profitBreakdownFooter(
+                                                _periodTotals.totalRealizedProfit,
+                                                _periodTotals.totalUnrealizedProfit,
+                                                formatter,
                                               )
                                             : null,
                                       ),
@@ -1416,7 +1476,7 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
                                   physics: const NeverScrollableScrollPhysics(),
                                   gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
                                     crossAxisCount: crossAxisCount,
-                                    mainAxisExtent: 118,
+                                    mainAxisExtent: 120,
                                     crossAxisSpacing: 12,
                                     mainAxisSpacing: 12,
                                   ),
@@ -1851,9 +1911,17 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
     final moneyFormat = NumberFormat.currency(locale: 'en_US', symbol: 'Tsh ', decimalDigits: 0);
     final salesByDay = _chartSalesByDay;
     final collectionsByDay = _chartCollectionsByDay;
-    final hasData = salesByDay != null && collectionsByDay != null;
+    final servicesByDay = _chartServicesByDay;
+    final hasData = salesByDay != null && collectionsByDay != null && servicesByDay != null;
 
-    final currentTotal = hasData ? salesByDay.fold<double>(0, (a, b) => a + b) : 0.0;
+    // Total Revenue = Sales + Services + Other Income - not just Sales
+    // alone. Collections stays out of this figure deliberately: it's
+    // debt being repaid, not new revenue coming in.
+    final currentTotal = hasData
+        ? salesByDay.fold<double>(0, (a, b) => a + b) +
+            servicesByDay.fold<double>(0, (a, b) => a + b) +
+            (_chartOtherIncomeTotal ?? 0.0)
+        : 0.0;
     final previousTotal = _chartPreviousTotal;
     double? trendPercent;
     if (previousTotal != null && previousTotal > 0) {
@@ -1958,7 +2026,11 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
                             getTooltipItems: (touchedSpots) {
                               return touchedSpots.map((spot) {
                                 final day = start.add(Duration(days: spot.x.toInt()));
-                                final label = spot.barIndex == 0 ? 'Sales' : 'Collections';
+                                final label = switch (spot.barIndex) {
+                                  0 => 'Sales',
+                                  1 => 'Collections',
+                                  _ => 'Services',
+                                };
                                 return LineTooltipItem(
                                   '${DateFormat('d MMM').format(day)}\n$label: ${moneyFormat.format(spot.y)}',
                                   const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 12),
@@ -2009,6 +2081,14 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
                             dotData: const FlDotData(show: false),
                             belowBarData: BarAreaData(show: true, color: warmAmber.withValues(alpha: 0.1)),
                           ),
+                          LineChartBarData(
+                            spots: [for (int i = 0; i < servicesByDay.length; i++) FlSpot(i.toDouble(), servicesByDay[i])],
+                            isCurved: true,
+                            color: servicesSteelBlue,
+                            barWidth: 3,
+                            dotData: const FlDotData(show: false),
+                            belowBarData: BarAreaData(show: true, color: servicesSteelBlue.withValues(alpha: 0.1)),
+                          ),
                         ],
                       ),
                     ),
@@ -2019,6 +2099,8 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
                 _chartLegendItem(primaryDeepGreen, 'Sales (Tsh)'),
                 const SizedBox(width: 20),
                 _chartLegendItem(warmAmber, 'Collections (Tsh)'),
+                const SizedBox(width: 20),
+                _chartLegendItem(servicesSteelBlue, 'Services (Tsh)'),
               ],
             ),
           ],
@@ -2273,6 +2355,83 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
     );
   }
 
+  // The small, compact breakdown shown under Net Profit's headline
+  // figure - Realized is the portion actually backed by cash already
+  // collected (paid sales/services, or a debt repayment); Pending is
+  // the portion still tied up in an unpaid credit balance.
+  Widget _profitBreakdownFooter(double realized, double pending, NumberFormat formatter) {
+    return SizedBox(
+      width: double.infinity,
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Expanded(
+            child: Row(
+              children: [
+                Expanded(
+                  child: Padding(
+                    padding: const EdgeInsets.only(left: 22),
+                    child: _profitBreakdownDot('Earned', realized, Colors.green, formatter),
+                  ),
+                ),
+                Expanded(
+                  child: Padding(
+                    padding: const EdgeInsets.only(left: 16),
+                    child: _profitBreakdownDot('Pending', pending, warmAmber, formatter),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.only(top: 2, left: 4),
+            child: Tooltip(
+              message: 'Earned: already collected in cash.\nPending: sold on credit, not yet paid.',
+              child: Icon(Icons.info_outline, size: 15, color: Colors.grey[400]),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // Compact form for large amounts in the Earned/Pending breakdown,
+  // which has far less room than the headline Net Profit figure above
+  // it - "Tsh 10.888M" instead of "Tsh 10,000,888". Only kicks in at a
+  // million or more; anything smaller uses the normal formatter, which
+  // already fits comfortably in the space available.
+  String _formatCompactAmount(double value, NumberFormat formatter) {
+    if (value.abs() >= 1000000) {
+      return 'Tsh ${(value / 1000000).toStringAsFixed(3)}M';
+    }
+    return 'Tsh ${formatter.format(value)}';
+  }
+
+  Widget _profitBreakdownDot(String label, double value, Color color, NumberFormat formatter) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: const EdgeInsets.only(top: 4),
+          child: Container(width: 6, height: 6, decoration: BoxDecoration(color: color, shape: BoxShape.circle)),
+        ),
+        const SizedBox(width: 5),
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(label, style: TextStyle(fontSize: 10.5, color: Colors.grey[600]), maxLines: 1, overflow: TextOverflow.ellipsis),
+            Text(_formatCompactAmount(value, formatter),
+                style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Colors.black87),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis),
+          ],
+        ),
+      ],
+    );
+  }
+
   Widget _buildQuickActionCards(BuildContext context) {
     final isLargeScreen = MediaQuery.of(context).size.width >= 1024;
 
@@ -2284,11 +2443,14 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
         backgroundColor: primaryDeepGreen,
         accentColor: primaryDeepGreen,
         isDark: true,
-        onTap: () => navigateOrShowLockedDialog(
-          context,
-          const AddSaleScreen(),
-          onNavigate: () => showAddSaleScreen(context),
-        ),
+        onTap: () async {
+          await navigateOrShowLockedDialog(
+            context,
+            const AddSaleScreen(),
+            onNavigate: () => showAddSaleScreen(context),
+          );
+          _refreshDashboardData();
+        },
       ),
       _quickActionCard(
         icon: Icons.design_services,
@@ -2297,11 +2459,14 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
         backgroundColor: const Color(0xFFE3F0EC),
         accentColor: primaryDeepGreen,
         isDark: false,
-        onTap: () => navigateOrShowLockedDialog(
-          context,
-          const AddEditServiceScreen(),
-          onNavigate: () => showAddEditServiceScreen(context),
-        ),
+        onTap: () async {
+          await navigateOrShowLockedDialog(
+            context,
+            const AddEditServiceScreen(),
+            onNavigate: () => showAddEditServiceScreen(context),
+          );
+          _refreshDashboardData();
+        },
       ),
       _quickActionCard(
         icon: Icons.add_box,
@@ -2593,64 +2758,85 @@ Widget _buildDrawerContent() {
         icon: Icons.store,
         title: 'Stock Store',
         isCollapsed: effectivelyCollapsed,
-        onTap: () => Navigator.push(
-          context,
-          MaterialPageRoute(builder: (_) => StockStoreScreen()),
-        ),
+        onTap: () async {
+          await Navigator.push(
+            context,
+            MaterialPageRoute(builder: (_) => StockStoreScreen()),
+          );
+          _refreshDashboardData();
+        },
       ),
       DrawerHoverItem(
         icon: Icons.inventory,
         title: 'Products',
         isCollapsed: effectivelyCollapsed,
-        onTap: () => Navigator.push(
-          context,
-          MaterialPageRoute(builder: (_) => ProductsScreen()),
-        ),
+        onTap: () async {
+          await Navigator.push(
+            context,
+            MaterialPageRoute(builder: (_) => ProductsScreen()),
+          );
+          _refreshDashboardData();
+        },
       ),
       DrawerHoverItem(
         icon: Icons.attach_money,
         title: 'Sales',
         isCollapsed: effectivelyCollapsed,
-        onTap: () => Navigator.push(
-          context,
-          MaterialPageRoute(builder: (_) => SalesScreen()),
-        ),
+        onTap: () async {
+          await Navigator.push(
+            context,
+            MaterialPageRoute(builder: (_) => SalesScreen()),
+          );
+          _refreshDashboardData();
+        },
       ),
       DrawerHoverItem(
         icon: Icons.design_services,
         title: 'Service Records',
         isCollapsed: effectivelyCollapsed,
-        onTap: () => Navigator.push(
-          context,
-          MaterialPageRoute(builder: (_) => ServicesScreen()),
-        ),
+        onTap: () async {
+          await Navigator.push(
+            context,
+            MaterialPageRoute(builder: (_) => ServicesScreen()),
+          );
+          _refreshDashboardData();
+        },
       ),
       DrawerHoverItem(
         icon: Icons.payments,
         title: 'Payments',
         isCollapsed: effectivelyCollapsed,
-        onTap: () => Navigator.push(
-          context,
-          MaterialPageRoute(builder: (_) => const PaymentsScreen()),
-        ),
+        onTap: () async {
+          await Navigator.push(
+            context,
+            MaterialPageRoute(builder: (_) => const PaymentsScreen()),
+          );
+          _refreshDashboardData();
+        },
       ),
       DrawerHoverItem(
         icon: Icons.money_off,
         title: 'Debtors',
         isCollapsed: effectivelyCollapsed,
-        onTap: () => Navigator.push(
-          context,
-          MaterialPageRoute(builder: (_) => DebtorsScreen()),
-        ),
+        onTap: () async {
+          await Navigator.push(
+            context,
+            MaterialPageRoute(builder: (_) => DebtorsScreen()),
+          );
+          _refreshDashboardData();
+        },
       ),
       DrawerHoverItem(
         icon: Icons.receipt_long,
         title: 'Transactions',
         isCollapsed: effectivelyCollapsed,
-        onTap: () => Navigator.push(
-          context,
-          MaterialPageRoute(builder: (_) => TransactionScreen()),
-        ),
+        onTap: () async {
+          await Navigator.push(
+            context,
+            MaterialPageRoute(builder: (_) => TransactionScreen()),
+          );
+          _refreshDashboardData();
+        },
       ),
       DrawerHoverItem(
         icon: Icons.summarize_outlined,

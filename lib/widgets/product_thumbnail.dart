@@ -73,6 +73,35 @@ class ProductThumbnail extends StatelessWidget {
               height: height,
               fit: BoxFit.cover,
               errorBuilder: (context, error, stackTrace) => _fallback(),
+              // Shows a subtle placeholder while the photo downloads,
+              // instead of blank space - the card no longer looks like
+              // it's missing an image, it looks like it's loading one.
+              loadingBuilder: (context, child, loadingProgress) {
+                if (loadingProgress == null) return child;
+                return Container(
+                  width: width,
+                  height: height,
+                  color: backgroundColor,
+                  alignment: Alignment.center,
+                  child: SizedBox(
+                    width: (width < height ? width : height) * 0.3,
+                    height: (width < height ? width : height) * 0.3,
+                    child: CircularProgressIndicator(strokeWidth: 2, color: iconColor),
+                  ),
+                );
+              },
+              // Fades the photo in over the placeholder once it's ready,
+              // instead of popping in abruptly the moment the first frame
+              // is available - that abrupt swap is what read as a "bounce".
+              frameBuilder: (context, child, frame, wasSynchronouslyLoaded) {
+                if (wasSynchronouslyLoaded) return child;
+                return AnimatedOpacity(
+                  opacity: frame == null ? 0 : 1,
+                  duration: const Duration(milliseconds: 250),
+                  curve: Curves.easeOut,
+                  child: child,
+                );
+              },
             )
           : _fallback(),
     );

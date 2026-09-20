@@ -135,7 +135,7 @@ class _ClientsScreenState extends State<ClientsScreen> {
     }
 
     return SizedBox(
-      height: 118,
+      height: 96,
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
@@ -177,11 +177,12 @@ class _ClientsScreenState extends State<ClientsScreen> {
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
         children: [
           Row(
             children: [
               Container(
-                padding: const EdgeInsets.all(8),
+                padding: const EdgeInsets.all(6),
                 decoration: BoxDecoration(color: color.withValues(alpha: 0.12), borderRadius: BorderRadius.circular(10)),
                 child: Icon(icon, size: 16, color: color),
               ),
@@ -192,8 +193,21 @@ class _ClientsScreenState extends State<ClientsScreen> {
             ],
           ),
           const SizedBox(height: 8),
-          Text(value, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold), maxLines: 1, overflow: TextOverflow.ellipsis),
-          if (subtitle != null) Text(subtitle, style: TextStyle(fontSize: 11, color: Colors.grey[600])),
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.baseline,
+            textBaseline: TextBaseline.alphabetic,
+            children: [
+              Flexible(
+                child: Text(value, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold), maxLines: 1, overflow: TextOverflow.ellipsis),
+              ),
+              if (subtitle != null) ...[
+                const SizedBox(width: 6),
+                Flexible(
+                  child: Text(subtitle, style: TextStyle(fontSize: 11, color: Colors.grey[600]), maxLines: 1, overflow: TextOverflow.ellipsis),
+                ),
+              ],
+            ],
+          ),
         ],
       ),
     );

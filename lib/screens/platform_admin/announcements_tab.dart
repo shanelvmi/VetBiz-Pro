@@ -5,6 +5,7 @@ import 'package:firebase_storage/firebase_storage.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
 import 'package:flutter_markdown/flutter_markdown.dart';
+import '../../utils/sentence_capitalization_formatter.dart';
 import 'package:markdown/markdown.dart' as md;
 
 import '../../widgets/hover_elevate_card.dart';
@@ -106,6 +107,8 @@ class _AnnouncementsTabState extends State<AnnouncementsTab> {
           children: [
             TextField(
               controller: linkTextController,
+              textCapitalization: TextCapitalization.sentences,
+              inputFormatters: [SentenceCapitalizationFormatter()],
               decoration: const InputDecoration(labelText: 'Link text'),
             ),
             const SizedBox(height: 8),
@@ -277,7 +280,7 @@ class _AnnouncementsTabState extends State<AnnouncementsTab> {
                   ),
                   const SizedBox(height: 12),
                 ],
-                TextField(controller: titleController, decoration: const InputDecoration(labelText: 'Title')),
+                TextField(controller: titleController, textCapitalization: TextCapitalization.sentences, inputFormatters: [SentenceCapitalizationFormatter()], decoration: const InputDecoration(labelText: 'Title')),
                 const SizedBox(height: 8),
                 // Formatting toolbar - select text in the message field
                 // below, then tap one of these to wrap the selection in
@@ -309,6 +312,8 @@ class _AnnouncementsTabState extends State<AnnouncementsTab> {
                 ),
                 TextField(
                   controller: messageController,
+                  textCapitalization: TextCapitalization.sentences,
+                  inputFormatters: [SentenceCapitalizationFormatter()],
                   decoration: const InputDecoration(
                     labelText: 'Message',
                     border: OutlineInputBorder(),

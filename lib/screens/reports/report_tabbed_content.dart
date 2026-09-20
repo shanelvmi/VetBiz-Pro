@@ -144,8 +144,7 @@ class _ReportTabbedContentState extends State<ReportTabbedContent> with SingleTi
   // ---------- Summary ----------
 
   Widget _buildSummaryTab() {
-    final revenue = report.salesTotalValue + report.servicesTotalValue;
-    final totalCashReceived = (report.salesByPaymentMethod['Cash'] ?? 0) + (report.servicesByPaymentMethod['Cash'] ?? 0);
+    final revenue = report.salesTotalValue + report.servicesTotalValue + report.totalOtherIncome;
     final productsSoldUnits = report.productMovement.fold(0, (sum, p) => sum + p.sold);
     final transactionsCount = report.salesCount + report.servicesCount;
 
@@ -158,7 +157,7 @@ class _ReportTabbedContentState extends State<ReportTabbedContent> with SingleTi
       _summaryTile('Service Revenue', 'Tsh ${_moneyFormat.format(report.servicesTotalValue)}', Icons.medical_services_outlined, Colors.green),
       _summaryTile('Debt Repayments', 'Tsh ${_moneyFormat.format(report.repaymentsValue)}', Icons.people_alt_outlined, Colors.purple),
       _summaryTile('Expenses', 'Tsh ${_moneyFormat.format(report.totalExpenses)}', Icons.receipt_long_outlined, Colors.red),
-      _summaryTile('Total Cash Received', 'Tsh ${_moneyFormat.format(totalCashReceived)}', Icons.payments_outlined, primaryDeepGreen),
+      _summaryTile('Other Income', 'Tsh ${_moneyFormat.format(report.totalOtherIncome)}', Icons.savings_outlined, primaryDeepGreen),
     ];
     final row2 = [
       _summaryTile('Outstanding New Debt', 'Tsh ${_moneyFormat.format(report.newDebtValue)}', Icons.warning_amber_outlined, Colors.orange),
@@ -526,7 +525,7 @@ class _ReportTabbedContentState extends State<ReportTabbedContent> with SingleTi
             if (report.productMovement.isEmpty)
               _emptyState('No product movement today.')
             else ...[
-              _tableHeaderRow(['Product', 'Opening', 'Added', 'Sold', 'Expected Closing'], [4, 2, 2, 2, 3]),
+              _tableHeaderRow(['Product', 'Unit', 'Opening', 'Added', 'Adjusted', 'Sold', 'Expected Closing'], [4, 2, 2, 2, 2, 2, 3]),
               const Divider(height: 1),
               for (final p in report.productMovement)
                 Container(
@@ -551,8 +550,31 @@ class _ReportTabbedContentState extends State<ReportTabbedContent> with SingleTi
                           ],
                         ),
                       ),
+                      Expanded(flex: 2, child: Text(p.unit.isEmpty ? '-' : p.unit, style: const TextStyle(fontSize: 13, color: Colors.grey))),
                       Expanded(flex: 2, child: Text('${p.opening}', style: const TextStyle(fontSize: 13))),
                       Expanded(flex: 2, child: Text('${p.added}', style: const TextStyle(fontSize: 13))),
+                      Expanded(
+                        flex: 2,
+                        child: Tooltip(
+                          message: p.adjustmentDetail ?? '',
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Text(
+                                p.adjustment == 0 ? '-' : '${p.adjustment > 0 ? '+' : ''}${p.adjustment}',
+                                style: TextStyle(
+                                    fontSize: 13,
+                                    color: p.adjustment == 0 ? null : Colors.orange[800],
+                                    fontWeight: p.adjustment == 0 ? FontWeight.normal : FontWeight.w600),
+                              ),
+                              if (p.adjustmentDetail != null) ...[
+                                const SizedBox(width: 3),
+                                Icon(Icons.info_outline, size: 12, color: Colors.grey[500]),
+                              ],
+                            ],
+                          ),
+                        ),
+                      ),
                       Expanded(flex: 2, child: Text('${p.sold}', style: const TextStyle(fontSize: 13))),
                       Expanded(flex: 3, child: Text('${p.expectedClosing}', style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600))),
                     ],
@@ -789,6 +811,8 @@ class _ReportTabbedContentState extends State<ReportTabbedContent> with SingleTi
         return Icons.shopping_cart;
       case 'services':
         return Icons.build;
+      case 'transactions':
+        return Icons.receipt_long;
       case 'clients':
         return Icons.people;
       case 'debtors':
@@ -812,6 +836,8 @@ class _ReportTabbedContentState extends State<ReportTabbedContent> with SingleTi
         return warmAmber;
       case 'services':
         return Colors.purple;
+      case 'transactions':
+        return Colors.indigo;
       case 'clients':
         return Colors.teal;
       case 'debtors':
@@ -886,7 +912,32 @@ class _ReportTabbedContentState extends State<ReportTabbedContent> with SingleTi
     for (final entry in report.servicesByPaymentMethod.entries) {
       combined[entry.key] = (combined[entry.key] ?? 0) + entry.value;
     }
+    for (final entry in report.repaymentsByPaymentMethod.entries) {
+      combined[entry.key] = (combined[entry.key] ?? 0) + entry.value;
+    }
+    for (final entry in report.otherIncomeByPaymentMethod.entries) {
+      combined[entry.key] = (combined[entry.key] ?? 0) + entry.value;
+    }
     final combinedTotal = combined.values.fold(0.0, (sum, v) => sum + v);
+
+    Widget categoryCard(IconData icon, String title, Map<String, double> byMethod, String emptyText) {
+      return Expanded(
+        child: _card(
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _sectionHeader(icon, title),
+              const SizedBox(height: 10),
+              if (byMethod.isEmpty)
+                _emptyState(emptyText)
+              else
+                for (final entry in byMethod.entries)
+                  _statRow(entry.key, 'Tsh ${_moneyFormat.format(entry.value)}'),
+            ],
+          ),
+        ),
+      );
+    }
 
     return _tabScroll([
       _card(
@@ -895,7 +946,7 @@ class _ReportTabbedContentState extends State<ReportTabbedContent> with SingleTi
           children: [
             _sectionHeader(Icons.credit_card_outlined, 'Combined - All Payment Methods'),
             const SizedBox(height: 4),
-            Text('Sales and service revenue together, by how it was actually received.',
+            Text('Sales, services, debt repayments, and other income together, by how it was actually received.',
                 style: TextStyle(fontSize: 12, color: Colors.grey[600])),
             const SizedBox(height: 10),
             if (combined.isEmpty)
@@ -913,39 +964,20 @@ class _ReportTabbedContentState extends State<ReportTabbedContent> with SingleTi
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Expanded(
-              child: _card(
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    _sectionHeader(Icons.shopping_cart_outlined, 'Sales'),
-                    const SizedBox(height: 10),
-                    if (report.salesByPaymentMethod.isEmpty)
-                      _emptyState('No sales today.')
-                    else
-                      for (final entry in report.salesByPaymentMethod.entries)
-                        _statRow(entry.key, 'Tsh ${_moneyFormat.format(entry.value)}'),
-                  ],
-                ),
-              ),
-            ),
+            categoryCard(Icons.shopping_cart_outlined, 'Sales', report.salesByPaymentMethod, 'No sales today.'),
             const SizedBox(width: 16),
-            Expanded(
-              child: _card(
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    _sectionHeader(Icons.medical_services_outlined, 'Services'),
-                    const SizedBox(height: 10),
-                    if (report.servicesByPaymentMethod.isEmpty)
-                      _emptyState('No services today.')
-                    else
-                      for (final entry in report.servicesByPaymentMethod.entries)
-                        _statRow(entry.key, 'Tsh ${_moneyFormat.format(entry.value)}'),
-                  ],
-                ),
-              ),
-            ),
+            categoryCard(Icons.medical_services_outlined, 'Services', report.servicesByPaymentMethod, 'No services today.'),
+          ],
+        ),
+      ),
+      const SizedBox(height: 16),
+      IntrinsicHeight(
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            categoryCard(Icons.people_alt_outlined, 'Debt Repayments', report.repaymentsByPaymentMethod, 'No repayments today.'),
+            const SizedBox(width: 16),
+            categoryCard(Icons.savings_outlined, 'Other Income', report.otherIncomeByPaymentMethod, 'No other income today.'),
           ],
         ),
       ),

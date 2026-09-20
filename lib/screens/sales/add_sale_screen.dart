@@ -1,8 +1,11 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:intl/intl.dart';
 import 'package:flutter/services.dart';
+import '../../utils/sentence_capitalization_formatter.dart';
 
 import '../../models/client.dart';
 import '../../models/product.dart';
@@ -34,8 +37,12 @@ class AddSaleScreen extends StatefulWidget {
 
 class _AddSaleScreenState extends State<AddSaleScreen> {
   bool _isSaving = false;
+  bool _paymentMethodMissing = false;
   final TextEditingController clientController = TextEditingController();
   bool _showClientSuggestions = false;
+  Timer? _clientSearchDebounce;
+  List<Client> _clientSearchResults = [];
+  bool _isSearchingClients = false;
   final TextEditingController totalPaidController = TextEditingController();
   final TextEditingController notesController = TextEditingController();
   final TextEditingController productSearchController = TextEditingController();
@@ -57,7 +64,7 @@ class _AddSaleScreenState extends State<AddSaleScreen> {
   // an actual client and choosing "Walk-in" are mutually exclusive,
   // radio-style, exactly like the mockup shows.
   bool isWalkIn = true;
-  String? paymentMethod = 'Cash';
+  String? paymentMethod;
 
   // Used to measure the client field's actual on-screen position, so
   // the suggestions overlay below can be placed precisely under it
@@ -112,6 +119,7 @@ class _AddSaleScreenState extends State<AddSaleScreen> {
           unitPrice: product.sellPrice,
           costPrice: product.buyPrice,
           unit: product.unit,
+          category: product.category,
         ));
       }
       _showProductSuggestions = false;
@@ -492,8 +500,50 @@ class _AddSaleScreenState extends State<AddSaleScreen> {
     }
   }
 
+  // Debounced, server-side client search - waits for a brief pause in
+  // typing before actually querying Firestore, and only once at least
+  // 2 characters have been entered (a single character matches too
+  // broadly to be useful, and would fire a query on every keystroke
+  // for no benefit). Replaces filtering clientProvider.clients, which
+  // held the facility's entire client list in memory regardless of
+  // how large it was.
+  void _onClientSearchChanged(String query) {
+    _clientSearchDebounce?.cancel();
+    final trimmed = query.trim();
+
+    if (trimmed.length < 2) {
+      setState(() {
+        _clientSearchResults = [];
+        _isSearchingClients = false;
+      });
+      return;
+    }
+
+    setState(() => _isSearchingClients = true);
+    _clientSearchDebounce = Timer(const Duration(milliseconds: 300), () async {
+      final facilityId = Provider.of<FacilityProvider>(context, listen: false).selectedFacilityId;
+      if (facilityId == null) {
+        if (mounted) setState(() => _isSearchingClients = false);
+        return;
+      }
+      try {
+        final results =
+            await Provider.of<ClientProvider>(context, listen: false).searchClientsByName(facilityId, trimmed);
+        if (!mounted) return;
+        setState(() {
+          _clientSearchResults = results;
+          _isSearchingClients = false;
+        });
+      } catch (e) {
+        debugPrint('Client search error: $e');
+        if (mounted) setState(() => _isSearchingClients = false);
+      }
+    });
+  }
+
   @override
   void dispose() {
+    _clientSearchDebounce?.cancel();
     clientController.dispose();
     totalPaidController.dispose();
     notesController.dispose();
@@ -516,6 +566,22 @@ class _AddSaleScreenState extends State<AddSaleScreen> {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
             content: Text('Walk-in sales must be paid in full - select a registered client to allow partial payment')),
+      );
+      return;
+    }
+
+    if (!isWalkIn && selectedClient == null && totalPaid < totalAmount) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+            content: Text('Select a client to record this as a partial payment, or choose Walk-in Customer and collect payment in full')),
+      );
+      return;
+    }
+
+    if (totalPaid > 0 && paymentMethod == null) {
+      setState(() => _paymentMethodMissing = true);
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Select a payment method before saving')),
       );
       return;
     }
@@ -557,8 +623,23 @@ class _AddSaleScreenState extends State<AddSaleScreen> {
         } catch (_) {}
       }
 
+      // Distributes the sale-wide discount proportionally across items
+      // by each one's share of the subtotal, before anything below
+      // computes off item.discount - profit does, and so do the Sales
+      // screen, receipts, and the daily report's revenue-by-product
+      // figure. Leaving every item's discount at its default of 0 (as
+      // it stayed before this fix) meant all of those silently ignored
+      // a discount that was genuinely applied to the sale's total.
+      final itemsWithDiscount = subtotal > 0 && saleDiscount > 0
+          ? items.map((item) {
+              final itemSubtotal = item.unitPrice * item.quantity;
+              final itemDiscount = saleDiscount * (itemSubtotal / subtotal);
+              return item.copyWith(discount: itemDiscount);
+            }).toList()
+          : items;
+
       // --- Compute per-item realized/unrealized profit ---
-      final List<SaleItem> updatedItems = items.map((item) {
+      final List<SaleItem> updatedItems = itemsWithDiscount.map((item) {
         double paymentRatio = 0.0;
         if (totalAmount > 0) paymentRatio = (totalPaid / totalAmount).clamp(0.0, 1.0);
         final realized = item.profit * paymentRatio;
@@ -608,14 +689,13 @@ class _AddSaleScreenState extends State<AddSaleScreen> {
           clientPhone: selectedClient!.phone,
           saleId: saleId,
           amountOwed: unpaidAmount,
-          items: items.map((i) => i.toMap()).toList(), // <-- FIXED
+          items: itemsWithDiscount.map((i) => i.toMap()).toList(),
           timestamp: DateTime.now(),
           updatedAt: DateTime.now(),
           source: 'Sale',
         );
         await debtProvider.addDebt(debt, facilityId);
       }
-
 
       if (!mounted) return;
 
@@ -645,7 +725,7 @@ class _AddSaleScreenState extends State<AddSaleScreen> {
         items.clear();
         totalPaid = 0.0;
         saleDiscount = 0.0;
-        paymentMethod = 'Cash';
+        paymentMethod = null;
         totalPaidController.text = _thousandsFormat.format(totalPaid);
         clientController.clear();
       });
@@ -665,7 +745,6 @@ class _AddSaleScreenState extends State<AddSaleScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final clientProvider = Provider.of<ClientProvider>(context);
     final productProvider = Provider.of<ProductProvider>(context);
 
     return Scaffold(
@@ -731,7 +810,7 @@ class _AddSaleScreenState extends State<AddSaleScreen> {
                   ),
                 ),
               ),
-              _buildClientSuggestionsOverlay(clientProvider),
+              _buildClientSuggestionsOverlay(),
               _buildProductSuggestionsOverlay(productProvider),
             ],
           );
@@ -889,7 +968,10 @@ class _AddSaleScreenState extends State<AddSaleScreen> {
               const SizedBox(height: 10),
               PopupMenuButton<String>(
                 initialValue: paymentMethod,
-                onSelected: (method) => setState(() => paymentMethod = method),
+                onSelected: (method) => setState(() {
+                  paymentMethod = method;
+                  _paymentMethodMissing = false;
+                }),
                 itemBuilder: (context) => kPaymentMethods.map((method) {
                   return PopupMenuItem(
                     value: method,
@@ -908,13 +990,22 @@ class _AddSaleScreenState extends State<AddSaleScreen> {
                   decoration: BoxDecoration(
                     color: Colors.white,
                     borderRadius: BorderRadius.circular(10),
-                    border: Border.all(color: Colors.grey.withValues(alpha: 0.3)),
+                    border: Border.all(
+                      color: _paymentMethodMissing ? Colors.red : Colors.grey.withValues(alpha: 0.3),
+                      width: _paymentMethodMissing ? 1.5 : 1,
+                    ),
                   ),
                   child: Row(
                     children: [
-                      Icon(iconForPaymentMethod(paymentMethod ?? 'Cash'), size: 18, color: primaryDeepGreen),
+                      Icon(paymentMethod == null ? Icons.payment_outlined : iconForPaymentMethod(paymentMethod!),
+                          size: 18, color: _paymentMethodMissing ? Colors.red : primaryDeepGreen),
                       const SizedBox(width: 10),
-                      Expanded(child: Text(paymentMethod ?? 'Cash')),
+                      Expanded(
+                        child: Text(
+                          paymentMethod ?? 'Select Method',
+                          style: TextStyle(color: _paymentMethodMissing ? Colors.red : (paymentMethod == null ? Colors.grey[600] : null)),
+                        ),
+                      ),
                       Icon(Icons.expand_more, size: 18, color: Colors.grey[600]),
                     ],
                   ),
@@ -1008,13 +1099,14 @@ class _AddSaleScreenState extends State<AddSaleScreen> {
               prefixIcon: const Icon(Icons.person_outline, color: Colors.black54),
             ),
             onTap: () => setState(() {
-              _showClientSuggestions = clientController.text.trim().isNotEmpty;
+              _showClientSuggestions = clientController.text.trim().length >= 2;
             }),
             onChanged: (val) {
               setState(() {
                 selectedClient = null; // typing clears any prior selection
-                _showClientSuggestions = val.trim().isNotEmpty;
+                _showClientSuggestions = val.trim().length >= 2;
               });
+              _onClientSearchChanged(val);
             },
           ),
         ),
@@ -1426,6 +1518,8 @@ class _AddSaleScreenState extends State<AddSaleScreen> {
             controller: notesController,
             maxLines: 2,
             maxLength: 200,
+            textCapitalization: TextCapitalization.sentences,
+            inputFormatters: [SentenceCapitalizationFormatter()],
             decoration: InputDecoration(
               hintText: 'Add any additional notes (optional)...',
               filled: true,
@@ -1443,8 +1537,9 @@ class _AddSaleScreenState extends State<AddSaleScreen> {
     );
   }
 
-  Widget _buildClientSuggestionsOverlay(ClientProvider clientProvider) {
-    if (!_showClientSuggestions || clientController.text.trim().isEmpty) {
+  Widget _buildClientSuggestionsOverlay() {
+    final trimmedQuery = clientController.text.trim();
+    if (!_showClientSuggestions || trimmedQuery.length < 2) {
       return const SizedBox.shrink();
     }
 
@@ -1463,13 +1558,7 @@ class _AddSaleScreenState extends State<AddSaleScreen> {
         ? stackBox.globalToLocal(fieldPosition).dy
         : fieldPosition.dy;
 
-    final query = clientController.text.toLowerCase();
-    final matches = clientProvider.clients
-        .where((c) => c.name.toLowerCase().contains(query))
-        .take(6)
-        .toList();
-
-    if (matches.isEmpty) return const SizedBox.shrink();
+    if (_clientSearchResults.isEmpty && !_isSearchingClients) return const SizedBox.shrink();
 
     // Aligns with the field's own actual on-screen left edge and width,
     // rather than assuming the field is centered within some fixed
@@ -1493,26 +1582,31 @@ class _AddSaleScreenState extends State<AddSaleScreen> {
             borderRadius: BorderRadius.circular(8),
             color: offWhite,
           ),
-          child: ListView(
-            shrinkWrap: true,
-            padding: EdgeInsets.zero,
-            children: matches.map((client) {
-              return ListTile(
-                title: Text(client.name),
-                hoverColor: warmAmber.withValues(alpha: 0.15),
-                onTap: () {
-                  setState(() {
-                    selectedClient = client;
-                    clientController.text = client.name;
-                    _showClientSuggestions = false;
-                    isWalkIn = false;
-                    totalPaid = 0;
-                    totalPaidController.text = _thousandsFormat.format(totalPaid);
-                  });
-                },
-              );
-            }).toList(),
-          ),
+          child: _isSearchingClients && _clientSearchResults.isEmpty
+              ? const Padding(
+                  padding: EdgeInsets.symmetric(vertical: 16),
+                  child: Center(child: SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2))),
+                )
+              : ListView(
+                  shrinkWrap: true,
+                  padding: EdgeInsets.zero,
+                  children: _clientSearchResults.map((client) {
+                    return ListTile(
+                      title: Text(client.name),
+                      hoverColor: warmAmber.withValues(alpha: 0.15),
+                      onTap: () {
+                        setState(() {
+                          selectedClient = client;
+                          clientController.text = client.name;
+                          _showClientSuggestions = false;
+                          isWalkIn = false;
+                          totalPaid = 0;
+                          totalPaidController.text = _thousandsFormat.format(totalPaid);
+                        });
+                      },
+                    );
+                  }).toList(),
+                ),
         ),
       ),
     );

@@ -23,6 +23,14 @@ class InsightsScreen extends StatefulWidget {
 class _InsightsScreenState extends State<InsightsScreen> {
   static const Color primaryColor = Color(0xFF2F5D62);
   static const Color warmAmber = Color(0xFFFFB200);
+  static const List<Color> _servicePalette = [
+    Color(0xFF2F5D62), // same deep teal as primaryColor
+    Color(0xFF5C7C99), // same muted steel blue used for Services on the main dashboard chart
+    Color(0xFFFFB200), // same warm amber
+    Color(0xFF8FA998), // muted sage green
+    Color(0xFFB98B6F), // muted terracotta
+    Color(0xFF9B8AA6), // muted lavender - reserved for the "Other" slice
+  ];
   final NumberFormat _moneyFormat = NumberFormat('#,##0', 'en_US');
 
   bool _isLoading = true;
@@ -30,6 +38,8 @@ class _InsightsScreenState extends State<InsightsScreen> {
   List<double> _dailyTotals = List.filled(14, 0.0);
   late DateTime _trendStart;
   List<MapEntry<String, double>> _topProducts = [];
+  List<MapEntry<String, double>> _serviceBreakdown = [];
+  int? _touchedServiceIndex;
 
   // Today vs Yesterday, reusing the exact same comparison service and
   // KpiTrend model already built for the dashboard's own KPI cards.
@@ -68,12 +78,22 @@ class _InsightsScreenState extends State<InsightsScreen> {
     final windowStart = now.subtract(const Duration(days: 30));
 
     try {
-      final salesSnap = await FirebaseFirestore.instance
-          .collection('facilities')
-          .doc(facilityId)
-          .collection('sales')
-          .where('timestamp', isGreaterThanOrEqualTo: Timestamp.fromDate(windowStart))
-          .get();
+      final results = await Future.wait([
+        FirebaseFirestore.instance
+            .collection('facilities')
+            .doc(facilityId)
+            .collection('sales')
+            .where('timestamp', isGreaterThanOrEqualTo: Timestamp.fromDate(windowStart))
+            .get(),
+        FirebaseFirestore.instance
+            .collection('facilities')
+            .doc(facilityId)
+            .collection('services')
+            .where('serviceDate', isGreaterThanOrEqualTo: Timestamp.fromDate(windowStart))
+            .get(),
+      ]);
+      final salesSnap = results[0];
+      final servicesSnap = results[1];
 
       final dailyTotals = List<double>.filled(14, 0.0);
       final productRevenue = <String, double>{};
@@ -104,6 +124,25 @@ class _InsightsScreenState extends State<InsightsScreen> {
         }
       }
 
+      final serviceRevenue = <String, double>{};
+      for (final doc in servicesSnap.docs) {
+        final data = doc.data();
+        final name = (data['name'] as String?);
+        final key = (name == null || name.isEmpty) ? 'Other' : name;
+        final totalAmount = (data['totalAmount'] as num?)?.toDouble() ?? 0.0;
+        serviceRevenue[key] = (serviceRevenue[key] ?? 0) + totalAmount;
+      }
+
+      final sortedServicesFull = serviceRevenue.entries.toList()
+        ..sort((a, b) => b.value.compareTo(a.value));
+      final topServices = sortedServicesFull.take(5).toList();
+      final remainingServicesTotal =
+          sortedServicesFull.skip(5).fold<double>(0.0, (sum, e) => sum + e.value);
+      final serviceBreakdown = [
+        ...topServices,
+        if (remainingServicesTotal > 0) MapEntry('Other', remainingServicesTotal),
+      ];
+
       final sortedProducts = productRevenue.entries.toList()
         ..sort((a, b) => b.value.compareTo(a.value));
 
@@ -111,6 +150,7 @@ class _InsightsScreenState extends State<InsightsScreen> {
         setState(() {
           _dailyTotals = dailyTotals;
           _topProducts = sortedProducts.take(5).toList();
+          _serviceBreakdown = serviceBreakdown;
           _isLoading = false;
         });
       }
@@ -395,6 +435,13 @@ class _InsightsScreenState extends State<InsightsScreen> {
                           chartHeight: 260,
                           chart: _buildTopProductsChart(),
                         ),
+                        const SizedBox(height: 20),
+                        _buildChartCard(
+                          title: 'Services by Type - Last 30 Days',
+                          summary: _serviceBreakdownSummary(),
+                          chartHeight: 220,
+                          chart: _buildServicesDonutChart(),
+                        ),
                       ],
                     ),
                   ),
@@ -450,6 +497,12 @@ class _InsightsScreenState extends State<InsightsScreen> {
     if (_topProducts.isEmpty) return null;
     final top = _topProducts.first;
     return 'Top seller: ${top.key} · Tsh ${_moneyFormat.format(top.value)}';
+  }
+
+  String? _serviceBreakdownSummary() {
+    if (_serviceBreakdown.isEmpty) return null;
+    final top = _serviceBreakdown.first;
+    return 'Most requested: ${top.key} - Tsh ${_moneyFormat.format(top.value)}';
   }
 
   Widget _buildTrendChart() {
@@ -606,16 +659,128 @@ class _InsightsScreenState extends State<InsightsScreen> {
       ),
     );
   }
+
+  Widget _buildServicesDonutChart() {
+    if (_serviceBreakdown.isEmpty) {
+      return Center(child: Text('No services in the last 30 days.', style: TextStyle(color: Colors.grey[600])));
+    }
+
+    final total = _serviceBreakdown.fold<double>(0.0, (sum, e) => sum + e.value);
+    final touched = _touchedServiceIndex;
+    final centerLabel = (touched != null && touched >= 0 && touched < _serviceBreakdown.length)
+        ? _serviceBreakdown[touched]
+        : null;
+    final centerPercent =
+        centerLabel != null && total > 0 ? (centerLabel.value / total * 100) : null;
+
+    return Row(
+      children: [
+        Expanded(
+          flex: 3,
+          child: Stack(
+            alignment: Alignment.center,
+            children: [
+              PieChart(
+                PieChartData(
+                  sectionsSpace: 2,
+                  centerSpaceRadius: 44,
+                  sections: [
+                    for (int i = 0; i < _serviceBreakdown.length; i++)
+                      PieChartSectionData(
+                        value: _serviceBreakdown[i].value,
+                        color: _servicePalette[i % _servicePalette.length],
+                        radius: i == touched ? 60 : 54,
+                        showTitle: false,
+                      ),
+                  ],
+                  pieTouchData: PieTouchData(
+                    touchCallback: (event, response) {
+                      setState(() {
+                        final index = response?.touchedSection?.touchedSectionIndex;
+                        if (!event.isInterestedForInteractions || index == null || index < 0) {
+                          _touchedServiceIndex = null;
+                          return;
+                        }
+                        _touchedServiceIndex = index;
+                      });
+                    },
+                  ),
+                ),
+              ),
+              if (centerLabel != null)
+                Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(centerLabel.key,
+                        style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold),
+                        textAlign: TextAlign.center,
+                        overflow: TextOverflow.ellipsis),
+                    Text('Tsh ${_moneyFormat.format(centerLabel.value)}',
+                        style: TextStyle(fontSize: 10, color: Colors.grey[600])),
+                    if (centerPercent != null)
+                      Text('${centerPercent.toStringAsFixed(0)}%',
+                          style: TextStyle(fontSize: 10, color: Colors.grey[600])),
+                  ],
+                )
+              else
+                Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text('Total', style: TextStyle(fontSize: 10, color: Colors.grey[600])),
+                    Text('Tsh ${_moneyFormat.format(total)}',
+                        style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
+                  ],
+                ),
+            ],
+          ),
+        ),
+        const SizedBox(width: 12),
+        Expanded(
+          flex: 2,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              for (int i = 0; i < _serviceBreakdown.length; i++)
+                Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 3),
+                  child: Row(
+                    children: [
+                      Container(
+                        width: 10,
+                        height: 10,
+                        decoration: BoxDecoration(
+                          color: _servicePalette[i % _servicePalette.length],
+                          shape: BoxShape.circle,
+                        ),
+                      ),
+                      const SizedBox(width: 6),
+                      Expanded(
+                        child: Text(
+                          _serviceBreakdown[i].key,
+                          style: const TextStyle(fontSize: 11),
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
 }
 
 /// The one entry point for opening Insights - same reasoning and
 /// threshold as showActivityLog/showSubscriptionScreen: a full-screen
 /// push on mobile, a large, centered, dismissable modal on
 /// desktop/tablet-width screens. Insights is genuinely lighter content
-/// than either of those (two charts, no forms, no filters) - "look at
-/// it, then leave" describes it even better than it describes Activity
-/// Log, so it belongs in the same modal category rather than staying a
-/// full-screen navigation.
+/// than either of those (three charts, no forms, no filters) - "look
+/// at it, then leave" describes it even better than it describes
+/// Activity Log, so it belongs in the same modal category rather than
+/// staying a full-screen navigation.
 Future<void> showInsightsScreen(BuildContext context) async {
   final isWideScreen = MediaQuery.of(context).size.width >= 900;
 

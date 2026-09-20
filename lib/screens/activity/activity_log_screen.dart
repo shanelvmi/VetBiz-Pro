@@ -227,6 +227,8 @@ class _ActivityLogScreenState extends State<ActivityLogScreen> {
         return Icons.shopping_cart;
       case 'services':
         return Icons.build;
+      case 'transactions':
+        return Icons.receipt_long;
       case 'clients':
         return Icons.people;
       case 'debtors':
@@ -250,6 +252,8 @@ class _ActivityLogScreenState extends State<ActivityLogScreen> {
         return warmAmber;
       case 'services':
         return Colors.purple;
+      case 'transactions':
+        return Colors.indigo;
       case 'clients':
         return Colors.teal;
       case 'debtors':

@@ -7,12 +7,20 @@ import 'sales_summary_service.dart';
 /// than scanning raw sales/services/transactions.
 class DashboardPeriodTotals {
   final double totalSales; // sales made in the period (by sale date)
-  final double totalEarnings; // actual cash collected in the period
+  final double totalCollected; // actual cash collected in the period
   // (sales + services, via dailyCollections) plus other income
   final double totalProfit; // sales + service + transaction profit for
   // sales/services made in the period (revenue-recognition style, same
   // basis as totalSales - not scoped to when payment was actually
-  // received; see totalEarnings for the cash-received figure)
+  // received; see totalCollected for the cash-received figure)
+  final double totalRealizedProfit; // the portion of totalProfit that's
+  // actually cash-backed - collected via a paid sale or a debt repayment,
+  // not just billed
+  final double totalUnrealizedProfit; // the portion of totalProfit still
+  // tied up in unpaid credit - sales/services sold but not yet paid for
+  final double netProfit; // the true bottom line: totalProfit + other
+  // income - expenses. Unlike totalProfit above, this is what's actually
+  // left over once operating costs are accounted for
   final double totalExpenses; // all expense-type transactions in the
   // period (this already includes service-related expenses, since adding
   // a service automatically records an expense transaction - don't add
@@ -20,12 +28,15 @@ class DashboardPeriodTotals {
   final int completedServicesCount; // services performed in the period
   final double totalServiceRevenue; // service revenue in the period, on
   // the same revenue-recognition basis as totalSales - separate from
-  // totalEarnings/totalProfit above, which already fold this in
+  // totalCollected/totalProfit above, which already fold this in
 
   const DashboardPeriodTotals({
     required this.totalSales,
-    required this.totalEarnings,
+    required this.totalCollected,
     required this.totalProfit,
+    required this.totalRealizedProfit,
+    required this.totalUnrealizedProfit,
+    required this.netProfit,
     required this.totalExpenses,
     required this.completedServicesCount,
     required this.totalServiceRevenue,
@@ -33,8 +44,11 @@ class DashboardPeriodTotals {
 
   static const empty = DashboardPeriodTotals(
     totalSales: 0,
-    totalEarnings: 0,
+    totalCollected: 0,
     totalProfit: 0,
+    totalRealizedProfit: 0,
+    totalUnrealizedProfit: 0,
+    netProfit: 0,
     totalExpenses: 0,
     completedServicesCount: 0,
     totalServiceRevenue: 0,
@@ -67,18 +81,21 @@ class DashboardSummaryService {
 
     double totalAmount = 0.0;
     double totalServiceProfit = 0.0;
+    double totalUnrealizedServiceProfit = 0.0;
     double serviceCount = 0.0;
 
     for (final doc in snapshot.docs) {
       final data = doc.data();
       totalAmount += (data['totalAmount'] as num?)?.toDouble() ?? 0.0;
       totalServiceProfit += (data['totalServiceProfit'] as num?)?.toDouble() ?? 0.0;
+      totalUnrealizedServiceProfit += (data['totalUnrealizedServiceProfit'] as num?)?.toDouble() ?? 0.0;
       serviceCount += (data['serviceCount'] as num?)?.toDouble() ?? 0.0;
     }
 
     return {
       'totalAmount': totalAmount,
       'totalServiceProfit': totalServiceProfit,
+      'totalUnrealizedServiceProfit': totalUnrealizedServiceProfit,
       'serviceCount': serviceCount,
     };
   }
@@ -158,18 +175,27 @@ class DashboardSummaryService {
 
       final totalSales = salesTotals['totalAmount'] ?? 0.0;
       final totalOtherIncome = txTotals['totalOtherIncome'] ?? 0.0;
-      final totalEarnings = collected + totalOtherIncome;
+      final totalCollected = collected + totalOtherIncome;
       final totalProfit = (salesTotals['totalProfit'] ?? 0.0) +
           (serviceTotals['totalServiceProfit'] ?? 0.0) +
           (txTotals['totalProfit'] ?? 0.0);
+      final totalRealizedProfit = (salesTotals['totalRealizedProfit'] ?? 0.0) +
+          (serviceTotals['totalServiceProfit'] ?? 0.0) +
+          totalOtherIncome;
+      final totalUnrealizedProfit = (salesTotals['totalUnrealizedProfit'] ?? 0.0) +
+          (serviceTotals['totalUnrealizedServiceProfit'] ?? 0.0);
       final totalExpenses = txTotals['totalExpense'] ?? 0.0;
+      final netProfit = totalProfit + totalOtherIncome - totalExpenses;
       final completedServicesCount = (serviceTotals['serviceCount'] ?? 0.0).toInt();
       final totalServiceRevenue = serviceTotals['totalAmount'] ?? 0.0;
 
       controller.add(DashboardPeriodTotals(
         totalSales: totalSales,
-        totalEarnings: totalEarnings,
+        totalCollected: totalCollected,
         totalProfit: totalProfit,
+        totalRealizedProfit: totalRealizedProfit,
+        totalUnrealizedProfit: totalUnrealizedProfit,
+        netProfit: netProfit,
         totalExpenses: totalExpenses,
         completedServicesCount: completedServicesCount,
         totalServiceRevenue: totalServiceRevenue,
@@ -186,13 +212,20 @@ class DashboardSummaryService {
         .where(FieldPath.documentId, isLessThanOrEqualTo: endStr)
         .snapshots()
         .listen((snap) {
-      double totalAmount = 0.0, totalProfit = 0.0;
+      double totalAmount = 0.0, totalProfit = 0.0, totalRealizedProfit = 0.0, totalUnrealizedProfit = 0.0;
       for (final doc in snap.docs) {
         final d = doc.data();
         totalAmount += (d['totalAmount'] as num?)?.toDouble() ?? 0.0;
         totalProfit += (d['totalProfit'] as num?)?.toDouble() ?? 0.0;
+        totalRealizedProfit += (d['totalRealizedProfit'] as num?)?.toDouble() ?? 0.0;
+        totalUnrealizedProfit += (d['totalUnrealizedProfit'] as num?)?.toDouble() ?? 0.0;
       }
-      salesTotals = {'totalAmount': totalAmount, 'totalProfit': totalProfit};
+      salesTotals = {
+        'totalAmount': totalAmount,
+        'totalProfit': totalProfit,
+        'totalRealizedProfit': totalRealizedProfit,
+        'totalUnrealizedProfit': totalUnrealizedProfit,
+      };
       hasSales = true;
       emit();
     }, onError: controller.addError));
@@ -285,18 +318,27 @@ class DashboardSummaryService {
 
     final totalSales = salesTotals['totalAmount'] ?? 0.0;
     final totalOtherIncome = txTotals['totalOtherIncome'] ?? 0.0;
-    final totalEarnings = collected + totalOtherIncome;
+    final totalCollected = collected + totalOtherIncome;
     final totalProfit = (salesTotals['totalProfit'] ?? 0.0) +
         (serviceTotals['totalServiceProfit'] ?? 0.0) +
         (txTotals['totalProfit'] ?? 0.0);
+    final totalRealizedProfit = (salesTotals['totalRealizedProfit'] ?? 0.0) +
+        (serviceTotals['totalServiceProfit'] ?? 0.0) +
+        totalOtherIncome;
+    final totalUnrealizedProfit = (salesTotals['totalUnrealizedProfit'] ?? 0.0) +
+        (serviceTotals['totalUnrealizedServiceProfit'] ?? 0.0);
     final totalExpenses = txTotals['totalExpense'] ?? 0.0;
+    final netProfit = totalProfit + totalOtherIncome - totalExpenses;
     final completedServicesCount = (serviceTotals['serviceCount'] ?? 0.0).toInt();
     final totalServiceRevenue = serviceTotals['totalAmount'] ?? 0.0;
 
     return DashboardPeriodTotals(
       totalSales: totalSales,
-      totalEarnings: totalEarnings,
+      totalCollected: totalCollected,
       totalProfit: totalProfit,
+      totalRealizedProfit: totalRealizedProfit,
+      totalUnrealizedProfit: totalUnrealizedProfit,
+      netProfit: netProfit,
       totalExpenses: totalExpenses,
       completedServicesCount: completedServicesCount,
       totalServiceRevenue: totalServiceRevenue,

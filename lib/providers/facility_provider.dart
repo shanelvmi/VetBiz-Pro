@@ -11,6 +11,9 @@ class FacilityProvider with ChangeNotifier {
   String? _logoUrl;
   String? _facilityEmail;
   String? _facilityPhone;
+  String? _facilityAddress;
+  String? _facilityTagline;
+  String? _facilityTin;
   // Per-day closing times (weekday/Saturday/Sunday), each with its own
   // "closed all day" flag, plus a standing admin override to allow
   // report generation at any time regardless of the schedule below -
@@ -47,6 +50,9 @@ class FacilityProvider with ChangeNotifier {
       _logoUrl = data['logoUrl'];
       _facilityEmail = data['email'];
       _facilityPhone = data['phone'];
+      _facilityAddress = data['address'];
+      _facilityTagline = data['tagline'];
+      _facilityTin = data['tin'];
       _businessHours = data['businessHours'] != null
           ? Map<String, dynamic>.from(data['businessHours'] as Map)
           : null;
@@ -111,6 +117,9 @@ class FacilityProvider with ChangeNotifier {
     _logoUrl = null;
     _facilityEmail = null;
     _facilityPhone = null;
+    _facilityAddress = null;
+    _facilityTagline = null;
+    _facilityTin = null;
     _businessHours = null;
     notifyListeners();
 
@@ -239,6 +248,9 @@ class FacilityProvider with ChangeNotifier {
       'logoUrl': _logoUrl,
       'email': _facilityEmail,
       'phone': _facilityPhone,
+      'address': _facilityAddress,
+      'tagline': _facilityTagline,
+      'tin': _facilityTin,
     };
   }
 
@@ -259,6 +271,9 @@ class FacilityProvider with ChangeNotifier {
         _logoUrl = data['logoUrl'];
         _facilityEmail = data['email'];
         _facilityPhone = data['phone'];
+        _facilityAddress = data['address'];
+        _facilityTagline = data['tagline'];
+        _facilityTin = data['tin'];
         _businessHours = data['businessHours'] != null
             ? Map<String, dynamic>.from(data['businessHours'] as Map)
             : null;

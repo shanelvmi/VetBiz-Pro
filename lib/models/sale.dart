@@ -8,6 +8,12 @@ class SaleItem {
   final double discount;
   final double costPrice;
   final String unit;
+  // The product's category at the time of sale (e.g. "Antibiotics") -
+  // snapshotted here the same way name/unitPrice already are, so it
+  // stays accurate on this receipt even if the product's category is
+  // later changed or the product itself is deleted. Empty for sales
+  // made before this field existed.
+  final String category;
 
   final double realizedProfit; // profit received from payment
   final double unrealizedProfit; // profit tied up in credit
@@ -27,6 +33,7 @@ class SaleItem {
     this.discount = 0.0,
     this.costPrice = 0.0,
     this.unit = '',
+    this.category = '',
     this.realizedProfit = 0.0,
     double? unrealizedProfit,
     this.batchAllocations = const [],
@@ -44,6 +51,7 @@ class SaleItem {
       'discount': discount,
       'costPrice': costPrice,
       'unit': unit,
+      'category': category,
       'realizedProfit': realizedProfit,
       'unrealizedProfit': unrealizedProfit,
       'batchAllocations': batchAllocations,
@@ -67,6 +75,7 @@ class SaleItem {
       discount: discount,
       costPrice: costPrice,
       unit: map['unit'] as String? ?? '',
+      category: map['category'] as String? ?? '',
       batchAllocations: rawAllocations
           .whereType<Map>()
           .map((e) => Map<String, dynamic>.from(e))
@@ -85,6 +94,7 @@ class SaleItem {
     double? discount,
     double? costPrice,
     String? unit,
+    String? category,
     double? realizedProfit,
     double? unrealizedProfit,
     List<Map<String, dynamic>>? batchAllocations,
@@ -97,6 +107,7 @@ class SaleItem {
       discount: discount ?? this.discount,
       costPrice: costPrice ?? this.costPrice,
       unit: unit ?? this.unit,
+      category: category ?? this.category,
       realizedProfit: realizedProfit ?? this.realizedProfit,
       unrealizedProfit: unrealizedProfit ?? this.unrealizedProfit,
       batchAllocations: batchAllocations ?? this.batchAllocations,

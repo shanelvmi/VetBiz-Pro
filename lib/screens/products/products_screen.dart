@@ -339,6 +339,24 @@ class _ProductsScreenState extends State<ProductsScreen> {
     };
   }
 
+  Future<void> _toggleWatchlist(Product p) async {
+    final facilityId = Provider.of<FacilityProvider>(context, listen: false).selectedFacilityId;
+    if (facilityId == null) return;
+    try {
+      await Provider.of<ProductProvider>(context, listen: false).toggleWatchlist(
+        facilityId: facilityId,
+        productId: p.id,
+        isWatchlisted: !p.isWatchlisted,
+      );
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Could not update watchlist: $e'), backgroundColor: Colors.red),
+        );
+      }
+    }
+  }
+
   Future<void> _deleteProduct(Product p) async {
     final confirm = await showDialog<bool>(
       context: context,
@@ -693,6 +711,8 @@ class _ProductsScreenState extends State<ProductsScreen> {
                     showAddBatchScreen(context, product: p);
                   } else if (value == 'view_batches') {
                     showViewBatchesScreen(context, product: p);
+                  } else if (value == 'toggle_watchlist') {
+                    _toggleWatchlist(p);
                   } else if (value == 'delete') {
                     _deleteProduct(p);
                   }
@@ -700,6 +720,11 @@ class _ProductsScreenState extends State<ProductsScreen> {
                 itemBuilder: (context) => [
                   const PopupMenuItem(value: 'add_batch', child: Text('Add New Batch')),
                   const PopupMenuItem(value: 'view_batches', child: Text('View Batches')),
+                  if (isAdmin)
+                    PopupMenuItem(
+                      value: 'toggle_watchlist',
+                      child: Text(p.isWatchlisted ? 'Remove from Watchlist' : 'Add to Watchlist'),
+                    ),
                   if (isAdmin)
                     PopupMenuItem(
                       value: 'delete',
@@ -995,7 +1020,9 @@ class _ProductsScreenState extends State<ProductsScreen> {
     final statusColor = status['color'] as Color;
     final isAdmin = Provider.of<UserRoleProvider>(context).isAdmin;
 
-    return Container(
+    return Stack(
+      children: [
+        Container(
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
         color: offWhite,
@@ -1189,6 +1216,8 @@ class _ProductsScreenState extends State<ProductsScreen> {
                     showAddBatchScreen(context, product: p);
                   } else if (value == 'view_batches') {
                     showViewBatchesScreen(context, product: p);
+                  } else if (value == 'toggle_watchlist') {
+                    _toggleWatchlist(p);
                   } else if (value == 'delete') {
                     _deleteProduct(p);
                   }
@@ -1196,6 +1225,11 @@ class _ProductsScreenState extends State<ProductsScreen> {
                 itemBuilder: (context) => [
                   const PopupMenuItem(value: 'add_batch', child: Text('Add New Batch')),
                   const PopupMenuItem(value: 'view_batches', child: Text('View Batches')),
+                  if (isAdmin)
+                    PopupMenuItem(
+                      value: 'toggle_watchlist',
+                      child: Text(p.isWatchlisted ? 'Remove from Watchlist' : 'Add to Watchlist'),
+                    ),
                   if (isAdmin)
                     PopupMenuItem(
                       value: 'delete',
@@ -1207,6 +1241,17 @@ class _ProductsScreenState extends State<ProductsScreen> {
           ),
         ],
       ),
+        ),
+        if (p.isWatchlisted)
+          Positioned(
+            top: 8,
+            right: 8,
+            child: Tooltip(
+              message: 'Watch-listed for daily reports',
+              child: Icon(Icons.star, color: warmAmber, size: 20),
+            ),
+          ),
+      ],
     );
   }
 }

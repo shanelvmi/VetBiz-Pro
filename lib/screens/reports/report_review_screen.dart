@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import '../../utils/sentence_capitalization_formatter.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 
@@ -30,8 +31,8 @@ class _ReportReviewScreenState extends State<ReportReviewScreen> {
   final Map<String, TextEditingController> _physicalCountControllers = {};
   final Map<String, TextEditingController> _varianceReasonControllers = {};
 
-  final TextEditingController _cashController = TextEditingController();
-  final TextEditingController _cashVarianceReasonController = TextEditingController();
+  final Map<String, TextEditingController> _paymentCountControllers = {};
+  final Map<String, TextEditingController> _paymentVarianceReasonControllers = {};
 
   bool _declarationConfirmed = false;
   bool _isSubmitting = false;
@@ -45,10 +46,11 @@ class _ReportReviewScreenState extends State<ReportReviewScreen> {
           TextEditingController(text: p.physicalCount?.toString() ?? '');
       _varianceReasonControllers[p.productId] = TextEditingController(text: p.varianceReason ?? '');
     }
-    if (widget.report.physicalCashCounted != null) {
-      _cashController.text = _formatter.format(widget.report.physicalCashCounted!.round());
+    for (final p in widget.report.paymentReconciliation) {
+      _paymentCountControllers[p.method] =
+          TextEditingController(text: p.physicalCount != null ? _formatter.format(p.physicalCount!.round()) : '');
+      _paymentVarianceReasonControllers[p.method] = TextEditingController(text: p.varianceReason ?? '');
     }
-    _cashVarianceReasonController.text = widget.report.cashVarianceReason ?? '';
   }
 
   @override
@@ -59,27 +61,41 @@ class _ReportReviewScreenState extends State<ReportReviewScreen> {
     for (final c in _varianceReasonControllers.values) {
       c.dispose();
     }
-    _cashController.dispose();
-    _cashVarianceReasonController.dispose();
+    for (final c in _paymentCountControllers.values) {
+      c.dispose();
+    }
+    for (final c in _paymentVarianceReasonControllers.values) {
+      c.dispose();
+    }
     super.dispose();
   }
 
-  double? get _physicalCash {
-    final raw = _cashController.text.replaceAll(',', '');
+  double? _physicalCountForMethod(String method) {
+    final raw = _paymentCountControllers[method]?.text.replaceAll(',', '') ?? '';
     if (raw.isEmpty) return null;
     return double.tryParse(raw);
   }
 
-  double? get _cashVariance {
-    final cash = _physicalCash;
-    if (cash == null) return null;
-    return cash - widget.report.expectedCashInDrawer;
+  double? _varianceForMethod(String method) {
+    final count = _physicalCountForMethod(method);
+    if (count == null) return null;
+    final expected = widget.report.paymentReconciliation.firstWhere((p) => p.method == method).expected;
+    return count - expected;
   }
 
-  bool get _missingCashReason {
-    final variance = _cashVariance;
-    return variance != null && variance != 0 && _cashVarianceReasonController.text.trim().isEmpty;
+  bool _isMissingPaymentReason(String method) {
+    final variance = _varianceForMethod(method);
+    if (variance == null) return false;
+    final reason = _paymentVarianceReasonControllers[method]?.text.trim() ?? '';
+    return variance != 0 && reason.isEmpty;
   }
+
+  bool get _anyMissingPaymentReasons =>
+      widget.report.paymentReconciliation.where((p) => p.requiresCount).any((p) => _isMissingPaymentReason(p.method));
+
+  bool get _allPaymentMethodsCounted => widget.report.paymentReconciliation
+      .where((p) => p.requiresCount)
+      .every((p) => _physicalCountForMethod(p.method) != null);
 
   bool _isMissingStockReason(ProductMovementEntry p) {
     final count = _physicalCountFor(p.productId);
@@ -102,9 +118,9 @@ class _ReportReviewScreenState extends State<ReportReviewScreen> {
   bool get _canSubmit =>
       !_isSubmitting &&
       _allWatchlistedCounted &&
-      _physicalCash != null &&
+      _allPaymentMethodsCounted &&
       _declarationConfirmed &&
-      !_missingCashReason &&
+      !_anyMissingPaymentReasons &&
       !_anyMissingStockReasons;
 
   Future<void> _submit() async {
@@ -124,14 +140,20 @@ class _ReportReviewScreenState extends State<ReportReviewScreen> {
         );
       }).toList();
 
-      final cashReason = _cashVarianceReasonController.text.trim();
+      final updatedReconciliation = widget.report.paymentReconciliation.map((p) {
+        final count = _physicalCountForMethod(p.method);
+        final reasonText = _paymentVarianceReasonControllers[p.method]?.text.trim();
+        return p.copyWith(
+          physicalCount: count,
+          varianceReason: (reasonText != null && reasonText.isNotEmpty) ? reasonText : null,
+        );
+      }).toList();
 
       final submitted = await _reportService.submitReport(
         facilityId: facilityId,
         reportId: widget.report.id,
         productMovement: updatedMovement,
-        physicalCashCounted: _physicalCash!,
-        cashVarianceReason: cashReason.isEmpty ? null : cashReason,
+        paymentReconciliation: updatedReconciliation,
         declarationConfirmed: true,
       );
 
@@ -186,7 +208,7 @@ class _ReportReviewScreenState extends State<ReportReviewScreen> {
                 _buildStockCountCard(),
                 const SizedBox(height: 16),
               ],
-              _buildCashCard(),
+              _buildPaymentReconciliationCard(),
               const SizedBox(height: 16),
               _buildDeclarationCard(),
             ],
@@ -325,6 +347,8 @@ class _ReportReviewScreenState extends State<ReportReviewScreen> {
             const SizedBox(height: 8),
             TextField(
               controller: _varianceReasonControllers[p.productId],
+              textCapitalization: TextCapitalization.sentences,
+              inputFormatters: [SentenceCapitalizationFormatter()],
               decoration: InputDecoration(
                 hintText: 'Reason for variance (e.g. damaged, unable to locate)',
                 errorText: _isMissingStockReason(p) ? 'Please provide a reason for the variance.' : null,
@@ -345,84 +369,151 @@ class _ReportReviewScreenState extends State<ReportReviewScreen> {
     );
   }
 
-  Widget _buildCashCard() {
-    final variance = _cashVariance;
-    final hasVariance = variance != null && variance != 0;
+  Widget _buildPaymentReconciliationCard() {
+    if (widget.report.paymentReconciliation.isEmpty) {
+      return _card(
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            _sectionHeader(Icons.payments_outlined, 'Payment Reconciliation'),
+            const SizedBox(height: 10),
+            Text('No payments recorded today.', style: TextStyle(fontSize: 13, color: Colors.grey[600])),
+          ],
+        ),
+      );
+    }
 
     return _card(
       Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _sectionHeader(Icons.payments_outlined, 'Cash Reconciliation'),
-          const SizedBox(height: 10),
+          _sectionHeader(Icons.payments_outlined, 'Payment Reconciliation'),
+          const SizedBox(height: 4),
+          Text(
+            'Count what you actually have for each method used today - mobile money balance, bank balance, and cash in the drawer.',
+            style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+          ),
+          for (final p in widget.report.paymentReconciliation) ...[
+            const SizedBox(height: 16),
+            const Divider(height: 1),
+            const SizedBox(height: 12),
+            _buildPaymentMethodBlock(p),
+          ],
+        ],
+      ),
+    );
+  }
+
+  Widget _buildPaymentMethodBlock(PaymentMethodReconciliation p) {
+    if (!p.requiresCount) {
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(p.method, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
+          const SizedBox(height: 8),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text('Expected cash in drawer', style: TextStyle(fontSize: 13, color: Colors.grey[700])),
-              Text('Tsh ${_moneyFormat.format(widget.report.expectedCashInDrawer)}',
+              Text('Amount paid out', style: TextStyle(fontSize: 13, color: Colors.grey[700])),
+              Text('Tsh ${_moneyFormat.format(p.expected.abs())}',
                   style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold)),
             ],
           ),
-          const SizedBox(height: 12),
-          const Text('Physical cash counted *', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 13)),
-          const SizedBox(height: 6),
+          const SizedBox(height: 8),
+          Row(
+            children: [
+              Icon(Icons.info_outline, size: 15, color: Colors.blueGrey[400]),
+              const SizedBox(width: 5),
+              Expanded(
+                child: Text(
+                  'No income came in via ${p.method} today - just an outflow. No physical count needed here.',
+                  style: TextStyle(fontSize: 12, color: Colors.blueGrey[500]),
+                ),
+              ),
+            ],
+          ),
+        ],
+      );
+    }
+
+    final variance = _varianceForMethod(p.method);
+    final hasVariance = variance != null && variance != 0;
+    final count = _physicalCountForMethod(p.method);
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(p.method, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
+        const SizedBox(height: 8),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text('Expected balance', style: TextStyle(fontSize: 13, color: Colors.grey[700])),
+            Text('Tsh ${_moneyFormat.format(p.expected)}',
+                style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold)),
+          ],
+        ),
+        const SizedBox(height: 12),
+        const Text('Physical balance counted *', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 13)),
+        const SizedBox(height: 6),
+        TextField(
+          controller: _paymentCountControllers[p.method],
+          keyboardType: TextInputType.number,
+          inputFormatters: [FilteringTextInputFormatter.digitsOnly, ThousandsSeparatorInputFormatter()],
+          decoration: InputDecoration(
+            hintText: '0',
+            isDense: true,
+            filled: true,
+            fillColor: Colors.white,
+            contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(10),
+              borderSide: BorderSide(color: Colors.grey.withValues(alpha: 0.35)),
+            ),
+          ),
+          onChanged: (_) => setState(() {}),
+        ),
+        if (hasVariance) ...[
+          const SizedBox(height: 10),
+          Row(
+            children: [
+              Icon(Icons.warning_amber_rounded, size: 16, color: Colors.red[700]),
+              const SizedBox(width: 4),
+              Text('${p.method} variance: ${variance > 0 ? '+' : ''}Tsh ${_moneyFormat.format(variance)}',
+                  style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: Colors.red[700])),
+            ],
+          ),
+          const SizedBox(height: 8),
           TextField(
-            controller: _cashController,
-            keyboardType: TextInputType.number,
-            inputFormatters: [FilteringTextInputFormatter.digitsOnly, ThousandsSeparatorInputFormatter()],
+            controller: _paymentVarianceReasonControllers[p.method],
+            textCapitalization: TextCapitalization.sentences,
+            inputFormatters: [SentenceCapitalizationFormatter()],
             decoration: InputDecoration(
-              hintText: '0',
+              hintText: 'Reason for ${p.method} variance',
+              errorText: _isMissingPaymentReason(p.method) ? 'Please provide a reason for the variance.' : null,
               isDense: true,
               filled: true,
               fillColor: Colors.white,
-              contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+              contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
               border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(10),
+                borderRadius: BorderRadius.circular(8),
                 borderSide: BorderSide(color: Colors.grey.withValues(alpha: 0.35)),
               ),
             ),
             onChanged: (_) => setState(() {}),
           ),
-          if (hasVariance) ...[
-            const SizedBox(height: 10),
-            Row(
+        ] else if (count != null)
+          Padding(
+            padding: const EdgeInsets.only(top: 10),
+            child: Row(
               children: [
-                Icon(Icons.warning_amber_rounded, size: 16, color: Colors.red[700]),
+                Icon(Icons.check_circle_outline, size: 16, color: Colors.green[600]),
                 const SizedBox(width: 4),
-                Text('Cash variance: ${variance > 0 ? '+' : ''}Tsh ${_moneyFormat.format(variance)}',
-                    style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: Colors.red[700])),
+                Text('${p.method} matches', style: TextStyle(fontSize: 12.5, color: Colors.green[700])),
               ],
             ),
-            const SizedBox(height: 8),
-            TextField(
-              controller: _cashVarianceReasonController,
-              decoration: InputDecoration(
-                hintText: 'Reason for cash variance',
-                errorText: _missingCashReason ? 'Please provide a reason for the variance.' : null,
-                isDense: true,
-                filled: true,
-                fillColor: Colors.white,
-                contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(8),
-                  borderSide: BorderSide(color: Colors.grey.withValues(alpha: 0.35)),
-                ),
-              ),
-              onChanged: (_) => setState(() {}),
-            ),
-          ] else if (_physicalCash != null)
-            Padding(
-              padding: const EdgeInsets.only(top: 10),
-              child: Row(
-                children: [
-                  Icon(Icons.check_circle_outline, size: 16, color: Colors.green[600]),
-                  const SizedBox(width: 4),
-                  Text('Cash matches', style: TextStyle(fontSize: 12.5, color: Colors.green[700])),
-                ],
-              ),
-            ),
-        ],
-      ),
+          ),
+      ],
     );
   }
 
@@ -466,9 +557,9 @@ class _ReportReviewScreenState extends State<ReportReviewScreen> {
     String? blockedReason;
     if (!_allWatchlistedCounted) {
       blockedReason = 'Enter a physical count for every watch-listed product';
-    } else if (_physicalCash == null) {
-      blockedReason = 'Enter the physical cash counted';
-    } else if (_anyMissingStockReasons || _missingCashReason) {
+    } else if (!_allPaymentMethodsCounted) {
+      blockedReason = 'Enter the physical balance for every payment method';
+    } else if (_anyMissingStockReasons || _anyMissingPaymentReasons) {
       blockedReason = 'Please provide a reason for the variance found';
     } else if (!_declarationConfirmed) {
       blockedReason = 'Confirm the closing declaration to submit';

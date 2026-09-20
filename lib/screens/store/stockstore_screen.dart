@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
 import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
+import '../../utils/sentence_capitalization_formatter.dart';
 import '../../models/product.dart';
 import '../../providers/product_provider.dart';
 import '../../providers/facility_provider.dart';
@@ -368,6 +369,8 @@ class _StockStoreScreenState extends State<StockStoreScreen> {
             TextField(
               controller: notesController,
               cursorColor: primaryDeepTealGreen,
+              textCapitalization: TextCapitalization.sentences,
+              inputFormatters: [SentenceCapitalizationFormatter()],
               decoration: InputDecoration(
                 labelText: 'Notes (optional)',
                 hintText: 'e.g., Quality checked, ready for sale',

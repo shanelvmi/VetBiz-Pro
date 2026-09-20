@@ -185,7 +185,7 @@ class _ProductCatalogSidePanelState extends State<ProductCatalogSidePanel> {
     final isExpanded = _expandedGroups.contains(group);
 
     final icon = switch (group) {
-      'Vet' => Icons.pets,
+      'Vet' => Icons.vaccines_outlined,
       'Agro' => Icons.eco_outlined,
       _ => Icons.category_outlined,
     };

@@ -153,6 +153,25 @@ class ProductProvider with ChangeNotifier {
       );
       await batchRef.set(firstBatch.toMap());
 
+      // Logs a brand-new product's starting stock the same way a later
+      // restock would be logged via addBatch - this is what lets the
+      // Daily Report count a new product's initial quantity under
+      // "Added" on the day it's created, instead of leaving the whole
+      // starting amount to be inferred as an unexplained "Adjusted"
+      // figure with nothing behind it.
+      if (product.stockQty > 0 || product.sellableQty > 0) {
+        await FirebaseFirestore.instance
+            .collection('facilities')
+            .doc(facilityId)
+            .collection('stockAdditions')
+            .add({
+          'productId': docRef.id,
+          'sellableDelta': product.sellableQty,
+          'stockDelta': product.stockQty,
+          'timestamp': FieldValue.serverTimestamp(),
+        });
+      }
+
       // Only append manually if the live listener isn't already
       // watching this facility - if it is (the common case, since
       // Stock Store and Products both start it in initState),
@@ -187,6 +206,19 @@ class ProductProvider with ChangeNotifier {
   /// (Stock Alerts, Products list) keep showing a sensible value without
   /// needing to know about batches at all yet - full per-batch detail is
   /// a later phase.
+  Future<void> toggleWatchlist({
+    required String facilityId,
+    required String productId,
+    required bool isWatchlisted,
+  }) async {
+    await FirebaseFirestore.instance
+        .collection('facilities')
+        .doc(facilityId)
+        .collection('products')
+        .doc(productId)
+        .update({'isWatchlisted': isWatchlisted});
+  }
+
   Future<bool> addBatch({
     required String facilityId,
     required String productId,
@@ -273,6 +305,25 @@ class ProductProvider with ChangeNotifier {
         );
         await batchRef.set(batch.toMap());
       }
+
+      // Logs exactly what was added this call - a brand-new batch or a
+      // merge into an existing one both land here the same way, with a
+      // fresh timestamp regardless of whether the batch document's own
+      // receivedAt changed. This is what the daily report reads to
+      // compute "Added" reliably, since a merge alone never touches
+      // that timestamp and the batch's current sellableQty total can't
+      // be trusted to represent only today's addition once it already
+      // had stock from before.
+      await FirebaseFirestore.instance
+          .collection('facilities')
+          .doc(facilityId)
+          .collection('stockAdditions')
+          .add({
+        'productId': productId,
+        'sellableDelta': toSellable ? stockQty : 0,
+        'stockDelta': toSellable ? 0 : stockQty,
+        'timestamp': FieldValue.serverTimestamp(),
+      });
 
       // Recalculates the product's aggregate fields from every batch's
       // actual current state (including the one just added/merged
@@ -981,6 +1032,22 @@ class ProductProvider with ChangeNotifier {
         _products[index] = updatedProduct;
         notifyListeners();
       }
+
+      // Logs this release the same way addBatch logs a fresh delivery -
+      // stock becoming sellable today either way, just from the
+      // warehouse instead of a new supplier delivery. This is what
+      // lets the Daily Report count it under "Added" instead of an
+      // unexplained "Adjusted" figure.
+      await FirebaseFirestore.instance
+          .collection('facilities')
+          .doc(facilityId)
+          .collection('stockAdditions')
+          .add({
+        'productId': product.id,
+        'sellableDelta': qty,
+        'stockDelta': -qty,
+        'timestamp': FieldValue.serverTimestamp(),
+      });
 
       // Log the movement activity
       await ActivityLogger.logActivity(

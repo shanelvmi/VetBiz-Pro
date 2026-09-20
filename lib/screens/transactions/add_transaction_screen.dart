@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import '../../utils/sentence_capitalization_formatter.dart';
 import 'package:provider/provider.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:intl/intl.dart'; // For formatting
@@ -52,7 +53,7 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
   final TextEditingController amountController = TextEditingController();
   final TextEditingController noteController = TextEditingController();
   String? selectedCategory;
-  String? type = 'other income';
+  String? type = 'expense';
   String? paymentMethod;
 
   final Color primaryDeepGreen = const Color(0xFF2F5D62);
@@ -160,6 +161,7 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
     try {
       await provider.addTransaction(newTx, context);
       if (!context.mounted) return;
+
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Transaction saved successfully')),
       );
@@ -365,6 +367,8 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
           const SizedBox(height: 6),
           TextField(
             controller: descriptionController,
+            textCapitalization: TextCapitalization.sentences,
+            inputFormatters: [SentenceCapitalizationFormatter()],
             decoration: _fieldDecoration(hintText: 'What was this for?'),
           ),
           const SizedBox(height: 14),
@@ -374,6 +378,8 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
             controller: noteController,
             maxLines: 4,
             minLines: 4,
+            textCapitalization: TextCapitalization.sentences,
+            inputFormatters: [SentenceCapitalizationFormatter()],
             decoration: _fieldDecoration(hintText: 'Add any additional information'),
           ),
         ],

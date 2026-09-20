@@ -11,6 +11,6 @@ const List<String> kServiceCategories = [
   'Management',
   'Consultation',
   'Diagnostics',
-  'Vaccination',
+  'Preventive',
   'Other',
 ];

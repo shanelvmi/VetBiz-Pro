@@ -40,6 +40,10 @@ class _TransactionScreenState extends State<TransactionScreen> {
   String? _facilityId;
   double _otherIncomeTotal = 0;
   double _expensesTotal = 0;
+  // Once true, a refresh keeps showing the last-known totals instead of
+  // blanking them out with a loading spinner - only the very first load
+  // should look like loading.
+  bool _hasLoadedSummaryOnce = false;
   bool _isSummaryLoading = false;
   late DateTime _rangeStart;
   late DateTime _rangeEnd;
@@ -89,6 +93,7 @@ class _TransactionScreenState extends State<TransactionScreen> {
     setState(() {
       _rangeStart = result['start']!;
       _rangeEnd = result['end']!;
+      _hasLoadedSummaryOnce = false;
     });
 
     await _loadPeriodTotals();
@@ -98,7 +103,7 @@ class _TransactionScreenState extends State<TransactionScreen> {
     final facilityId = _facilityId;
     if (facilityId == null) return;
 
-    setState(() => _isSummaryLoading = true);
+    if (!_hasLoadedSummaryOnce) setState(() => _isSummaryLoading = true);
 
     try {
       final totals = await _summaryService.getTransactionRangeTotals(
@@ -111,6 +116,7 @@ class _TransactionScreenState extends State<TransactionScreen> {
           _otherIncomeTotal = totals['totalOtherIncome'] ?? 0;
           _expensesTotal = totals['totalExpense'] ?? 0;
           _isSummaryLoading = false;
+          _hasLoadedSummaryOnce = true;
         });
       }
     } catch (e) {
@@ -237,7 +243,7 @@ class _TransactionScreenState extends State<TransactionScreen> {
 
   Widget _buildMetricsRow(double subProfit, NumberFormat formatter) {
     return SizedBox(
-      height: 118,
+      height: 92,
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
@@ -251,7 +257,7 @@ class _TransactionScreenState extends State<TransactionScreen> {
           const SizedBox(width: 12),
           Expanded(
             child: _metricCard(
-              'Net Profit / (Loss)',
+              'Other Income vs Expenses',
               subProfit,
               subProfit >= 0 ? Colors.green[700]! : Colors.red[400]!,
               formatter,
@@ -265,7 +271,7 @@ class _TransactionScreenState extends State<TransactionScreen> {
   Widget _metricCard(String title, double amount, Color color, NumberFormat formatter) {
     final isLoading = _isSummaryLoading;
     return Container(
-      padding: const EdgeInsets.all(14),
+      padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(12),
@@ -273,13 +279,14 @@ class _TransactionScreenState extends State<TransactionScreen> {
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
         children: [
           Row(
             children: [
               Container(
-                padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(color: color.withValues(alpha: 0.12), borderRadius: BorderRadius.circular(10)),
-                child: Icon(Icons.account_balance_wallet_outlined, size: 16, color: color),
+                padding: const EdgeInsets.all(6),
+                decoration: BoxDecoration(color: color.withValues(alpha: 0.12), borderRadius: BorderRadius.circular(8)),
+                child: Icon(Icons.account_balance_wallet_outlined, size: 14, color: color),
               ),
               const SizedBox(width: 8),
               Expanded(
@@ -287,7 +294,7 @@ class _TransactionScreenState extends State<TransactionScreen> {
               ),
             ],
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: 6),
           AnimatedSwitcher(
             duration: const Duration(milliseconds: 300),
             child: isLoading
@@ -714,6 +721,11 @@ class _TransactionScreenState extends State<TransactionScreen> {
               const SizedBox(height: 16),
               _detailLabel('Reference'),
               Text(reference, style: const TextStyle(fontSize: 14)),
+            ],
+            if (tx.note != null && tx.note!.trim().isNotEmpty) ...[
+              const SizedBox(height: 16),
+              _detailLabel('Notes'),
+              Text(tx.note!, style: const TextStyle(fontSize: 14)),
             ],
             const SizedBox(height: 24),
             SizedBox(

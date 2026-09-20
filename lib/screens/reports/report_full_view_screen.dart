@@ -100,7 +100,7 @@ class ReportFullViewScreen extends StatelessWidget {
                       const SizedBox(height: 16),
                       _expensesSection(),
                       const SizedBox(height: 16),
-                      _cashReconciliationSection(),
+                      _paymentReconciliationSection(),
                       const SizedBox(height: 16),
                       _paymentMethodsSection(),
                       if (report.activityLogEntries.isNotEmpty) ...[
@@ -199,7 +199,7 @@ class ReportFullViewScreen extends StatelessWidget {
   }
 
   Widget _summarySection() {
-    final revenue = report.salesTotalValue + report.servicesTotalValue;
+    final revenue = report.salesTotalValue + report.servicesTotalValue + report.totalOtherIncome;
     return _card(
       Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -209,6 +209,7 @@ class ReportFullViewScreen extends StatelessWidget {
           _statRow('Total Sales', 'Tsh ${_money(report.salesTotalValue)}'),
           _statRow('Service Revenue', 'Tsh ${_money(report.servicesTotalValue)}'),
           _statRow('Total Revenue', 'Tsh ${_money(revenue)}', bold: true),
+          if (report.totalOtherIncome > 0) _statRow('Other Income', 'Tsh ${_money(report.totalOtherIncome)}'),
           _statRow('Debt Repayments', 'Tsh ${_money(report.repaymentsValue)}'),
           _statRow('Expenses', 'Tsh ${_money(report.totalExpenses)}'),
           _statRow('New Debt Today', 'Tsh ${_money(report.newDebtValue)}'),
@@ -259,7 +260,13 @@ class ReportFullViewScreen extends StatelessWidget {
           if (report.productMovement.isEmpty)
             _emptyState('No product movement today.')
           else
-            for (final p in report.productMovement) _statRow(p.name, 'Sold: ${p.sold}  |  Closing: ${p.expectedClosing}'),
+            for (final p in report.productMovement)
+              _statRow(
+                p.name,
+                p.adjustment == 0
+                    ? 'Sold: ${p.sold} ${p.unit}  |  Closing: ${p.expectedClosing} ${p.unit}'
+                    : 'Sold: ${p.sold} ${p.unit}  |  Adjusted: ${p.adjustment > 0 ? '+' : ''}${p.adjustment} ${p.unit}  |  Closing: ${p.expectedClosing} ${p.unit}',
+              ),
         ],
       ),
     );
@@ -317,21 +324,40 @@ class ReportFullViewScreen extends StatelessWidget {
     );
   }
 
-  Widget _cashReconciliationSection() {
-    final variance = report.cashVariance;
-    final hasVariance = variance != null && variance != 0;
+  Widget _paymentReconciliationSection() {
+    if (report.paymentReconciliation.isEmpty) {
+      return _card(
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            _sectionHeader('Payment Reconciliation'),
+            const SizedBox(height: 8),
+            _emptyState('No payments recorded today.'),
+          ],
+        ),
+      );
+    }
     return _card(
       Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _sectionHeader('Cash Reconciliation'),
+          _sectionHeader('Payment Reconciliation'),
           const SizedBox(height: 8),
-          _statRow('Expected cash in drawer', 'Tsh ${_money(report.expectedCashInDrawer)}'),
-          if (report.physicalCashCounted != null) ...[
-            _statRow('Physical cash counted', 'Tsh ${_money(report.physicalCashCounted!)}', bold: true),
-            _statRow('Cash variance', hasVariance ? 'Tsh ${_money(variance)} - VARIANCE' : 'Tsh 0 - Match', bold: hasVariance),
-          ] else
-            _emptyState('Not yet submitted.'),
+          for (final p in report.paymentReconciliation) ...[
+            Text(p.method, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
+            _statRow('Expected balance', 'Tsh ${_money(p.expected)}'),
+            if (p.physicalCount != null) ...[
+              _statRow('Physical balance counted', 'Tsh ${_money(p.physicalCount!)}', bold: true),
+              _statRow('Variance', (p.variance != null && p.variance != 0) ? 'Tsh ${_money(p.variance!)} - VARIANCE' : 'Tsh 0 - Match',
+                  bold: p.variance != null && p.variance != 0),
+              if (p.varianceReason != null && p.varianceReason!.isNotEmpty)
+                _statRow('Reason', p.varianceReason!),
+            ] else if (!p.requiresCount)
+              _emptyState('No income via ${p.method} today - outflow only, no count needed.')
+            else
+              _emptyState('Not yet submitted.'),
+            if (p != report.paymentReconciliation.last) const SizedBox(height: 10),
+          ],
         ],
       ),
     );
@@ -345,6 +371,27 @@ class ReportFullViewScreen extends StatelessWidget {
     for (final entry in report.servicesByPaymentMethod.entries) {
       combined[entry.key] = (combined[entry.key] ?? 0) + entry.value;
     }
+    for (final entry in report.repaymentsByPaymentMethod.entries) {
+      combined[entry.key] = (combined[entry.key] ?? 0) + entry.value;
+    }
+    for (final entry in report.otherIncomeByPaymentMethod.entries) {
+      combined[entry.key] = (combined[entry.key] ?? 0) + entry.value;
+    }
+
+    Widget category(String title, Map<String, double> byMethod, String emptyText) {
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(title, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
+          if (byMethod.isEmpty)
+            _emptyState(emptyText)
+          else
+            for (final entry in byMethod.entries) _statRow(entry.key, 'Tsh ${_money(entry.value)}'),
+          const SizedBox(height: 10),
+        ],
+      );
+    }
+
     return _card(
       Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -353,8 +400,16 @@ class ReportFullViewScreen extends StatelessWidget {
           const SizedBox(height: 8),
           if (combined.isEmpty)
             _emptyState('No payments recorded today.')
-          else
-            for (final entry in combined.entries) _statRow(entry.key, 'Tsh ${_money(entry.value)}'),
+          else ...[
+            for (final entry in combined.entries) _statRow(entry.key, 'Tsh ${_money(entry.value)}', bold: true),
+            const SizedBox(height: 12),
+            const Divider(height: 1),
+            const SizedBox(height: 12),
+            category('Sales', report.salesByPaymentMethod, 'No sales today.'),
+            category('Services', report.servicesByPaymentMethod, 'No services today.'),
+            category('Debt Repayments', report.repaymentsByPaymentMethod, 'No repayments today.'),
+            category('Other Income', report.otherIncomeByPaymentMethod, 'No other income today.'),
+          ],
         ],
       ),
     );

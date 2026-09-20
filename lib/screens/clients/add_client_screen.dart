@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../utils/sentence_capitalization_formatter.dart';
 import 'package:provider/provider.dart';
 import '../../providers/client_provider.dart';
 import '../../providers/facility_provider.dart';
@@ -341,6 +342,8 @@ class _AddClientScreenState extends State<AddClientScreen> {
             initialValue: _name,
             decoration: _fieldDecoration(hintText: 'Enter client name'),
             cursorColor: primaryDeepGreen,
+            textCapitalization: TextCapitalization.sentences,
+            inputFormatters: [SentenceCapitalizationFormatter()],
             validator: (value) =>
                 value == null || value.trim().isEmpty ? 'Required' : null,
             onChanged: (value) => setState(() => _name = value),
@@ -366,6 +369,8 @@ class _AddClientScreenState extends State<AddClientScreen> {
             initialValue: _address,
             decoration: _fieldDecoration(hintText: 'Enter address'),
             cursorColor: primaryDeepGreen,
+            textCapitalization: TextCapitalization.sentences,
+            inputFormatters: [SentenceCapitalizationFormatter()],
             validator: (value) =>
                 value == null || value.trim().isEmpty ? 'Required' : null,
             onChanged: (value) => setState(() => _address = value),
@@ -380,6 +385,8 @@ class _AddClientScreenState extends State<AddClientScreen> {
             maxLines: 3,
             decoration: _fieldDecoration(hintText: 'Any additional information about the client...'),
             cursorColor: primaryDeepGreen,
+            textCapitalization: TextCapitalization.sentences,
+            inputFormatters: [SentenceCapitalizationFormatter()],
             onSaved: (value) => _notes = value?.trim(),
           ),
           const SizedBox(height: 4),
@@ -836,6 +843,8 @@ class _AddClientScreenState extends State<AddClientScreen> {
               initialValue: _businessName,
               decoration: _fieldDecoration(hintText: 'Enter business name'),
               cursorColor: primaryDeepGreen,
+              textCapitalization: TextCapitalization.sentences,
+              inputFormatters: [SentenceCapitalizationFormatter()],
               onSaved: (val) => _businessName = val?.trim(),
             ),
           ],

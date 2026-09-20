@@ -475,6 +475,7 @@ class ServiceProvider extends ChangeNotifier {
       'recordedBy': name,
       'type': 'expense',
       'serviceId': serviceId,
+      'paymentMethod': service.paymentMethod ?? 'Cash',
     });
   }
 

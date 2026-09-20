@@ -8,6 +8,7 @@ import '../../models/service.dart';
 import '../../constants/service_categories.dart';
 import '../../providers/service_provider.dart';
 import '../../providers/facility_provider.dart';
+import '../../providers/user_role_provider.dart';
 import '../../providers/client_provider.dart';
 import 'add_edit_service_screen.dart';
 import 'services_archive_screen.dart';
@@ -102,15 +103,15 @@ class _ServicesScreenState extends State<ServicesScreen> {
 
       double paidAmount = 0;
       double outstanding = 0;
-      double mpesaAmount = 0;
+      double nonCashAmount = 0;
       for (final doc in snap.docs) {
         final data = doc.data();
         final totalAmount = (data['totalAmount'] as num?)?.toDouble() ?? 0.0;
         final totalPaid = (data['totalPaid'] as num?)?.toDouble() ?? 0.0;
         paidAmount += totalPaid;
         outstanding += (totalAmount - totalPaid);
-        if (data['paymentMethod'] == 'M-Pesa') {
-          mpesaAmount += totalPaid;
+        if (data['paymentMethod'] != null && data['paymentMethod'] != 'Cash') {
+          nonCashAmount += totalPaid;
         }
       }
 
@@ -120,7 +121,7 @@ class _ServicesScreenState extends State<ServicesScreen> {
           'count': snap.docs.length.toDouble(),
           'paidAmount': paidAmount,
           'outstanding': outstanding,
-          'mpesaAmount': mpesaAmount,
+          'nonCashAmount': nonCashAmount,
         };
         _isSummaryLoading = false;
       });
@@ -279,13 +280,13 @@ class _ServicesScreenState extends State<ServicesScreen> {
     final count = summary?['count']?.toInt() ?? 0;
     final paidAmount = summary?['paidAmount'] ?? 0.0;
     final outstanding = summary?['outstanding'] ?? 0.0;
-    final mpesaAmount = summary?['mpesaAmount'] ?? 0.0;
+    final nonCashAmount = summary?['nonCashAmount'] ?? 0.0;
 
     final metrics = [
       ('Total Services', '$count', Icons.medical_services_outlined, primaryDeepGreen),
       ('Paid Amount', _moneyFormat.format(paidAmount), Icons.account_balance_wallet_outlined, Colors.blue),
       ('Outstanding', _moneyFormat.format(outstanding), Icons.pending_actions_outlined, warmAmber),
-      ('M-Pesa Payments', _moneyFormat.format(mpesaAmount), Icons.phone_iphone_outlined, Colors.green),
+      ('Digital Payments', _moneyFormat.format(nonCashAmount), Icons.phone_iphone_outlined, Colors.green),
     ];
 
     return LayoutBuilder(
@@ -663,13 +664,6 @@ class _ServicesScreenState extends State<ServicesScreen> {
                     ),
                     child: Text(service.category, style: TextStyle(fontSize: 10.5, color: primaryDeepGreen, fontWeight: FontWeight.w600)),
                   ),
-                  if (service.description.isNotEmpty)
-                    Padding(
-                      padding: const EdgeInsets.only(top: 3),
-                      child: Text('Notes: ${service.description}',
-                          style: TextStyle(fontSize: 11.5, color: Colors.grey[600]),
-                          maxLines: 1, overflow: TextOverflow.ellipsis),
-                    ),
                 ],
               ),
             ),
@@ -716,7 +710,8 @@ class _ServicesScreenState extends State<ServicesScreen> {
                 itemBuilder: (context) => [
                   const PopupMenuItem(value: 'view', child: Text('View Details')),
                   const PopupMenuItem(value: 'edit', child: Text('Edit')),
-                  PopupMenuItem(value: 'delete', child: Text('Delete', style: TextStyle(color: Colors.red[400]))),
+                  if (Provider.of<UserRoleProvider>(context, listen: false).isAdmin)
+                    PopupMenuItem(value: 'delete', child: Text('Delete', style: TextStyle(color: Colors.red[400]))),
                 ],
               ),
             ),
@@ -923,15 +918,17 @@ class _ServicesScreenState extends State<ServicesScreen> {
                     label: const Text('Edit'),
                   ),
                 ),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: OutlinedButton.icon(
-                    onPressed: () => _confirmDeleteService(service),
-                    icon: Icon(Icons.delete_outline, size: 16, color: Colors.red[400]),
-                    label: Text('Delete', style: TextStyle(color: Colors.red[400])),
-                    style: OutlinedButton.styleFrom(side: BorderSide(color: Colors.red[200]!)),
+                if (Provider.of<UserRoleProvider>(context).isAdmin) ...[
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: OutlinedButton.icon(
+                      onPressed: () => _confirmDeleteService(service),
+                      icon: Icon(Icons.delete_outline, size: 16, color: Colors.red[400]),
+                      label: Text('Delete', style: TextStyle(color: Colors.red[400])),
+                      style: OutlinedButton.styleFrom(side: BorderSide(color: Colors.red[200]!)),
+                    ),
                   ),
-                ),
+                ],
               ],
             ),
           ],

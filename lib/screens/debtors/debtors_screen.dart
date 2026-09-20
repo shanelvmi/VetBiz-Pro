@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
+import '../../utils/sentence_capitalization_formatter.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -1114,6 +1115,8 @@ class _DebtorsScreenState extends State<DebtorsScreen> {
           controller: controller,
           autofocus: true,
           maxLines: 3,
+          textCapitalization: TextCapitalization.sentences,
+          inputFormatters: [SentenceCapitalizationFormatter()],
           decoration: const InputDecoration(hintText: 'e.g. Promised to pay by Friday'),
         ),
         actions: [

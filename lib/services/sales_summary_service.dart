@@ -7,6 +7,8 @@ class DailySalesSummary {
   final double totalAmount;
   final double totalPaid;
   final double totalProfit;
+  final double totalRealizedProfit;
+  final double totalUnrealizedProfit;
   final int saleCount;
 
   const DailySalesSummary({
@@ -14,6 +16,8 @@ class DailySalesSummary {
     required this.totalAmount,
     required this.totalPaid,
     required this.totalProfit,
+    required this.totalRealizedProfit,
+    required this.totalUnrealizedProfit,
     required this.saleCount,
   });
 
@@ -23,6 +27,8 @@ class DailySalesSummary {
       totalAmount: (map['totalAmount'] as num?)?.toDouble() ?? 0.0,
       totalPaid: (map['totalPaid'] as num?)?.toDouble() ?? 0.0,
       totalProfit: (map['totalProfit'] as num?)?.toDouble() ?? 0.0,
+      totalRealizedProfit: (map['totalRealizedProfit'] as num?)?.toDouble() ?? 0.0,
+      totalUnrealizedProfit: (map['totalUnrealizedProfit'] as num?)?.toDouble() ?? 0.0,
       saleCount: (map['saleCount'] as num?)?.toInt() ?? 0,
     );
   }
@@ -49,6 +55,36 @@ class DailyCollection {
       date: map['date'] as String? ?? id,
       totalCollected: (map['totalCollected'] as num?)?.toDouble() ?? 0.0,
       paymentCount: (map['paymentCount'] as num?)?.toInt() ?? 0,
+    );
+  }
+}
+
+/// One precomputed daily service-revenue aggregate, written incrementally
+/// by the `updateDailyServiceSummary` Cloud Function on every service
+/// write - same pattern as [DailySalesSummary], for the `services`
+/// collection instead of `sales`.
+class DailyServiceSummary {
+  final String date; // YYYY-MM-DD
+  final double totalAmount;
+  final double totalServiceProfit;
+  final double totalUnrealizedServiceProfit;
+  final int serviceCount;
+
+  const DailyServiceSummary({
+    required this.date,
+    required this.totalAmount,
+    required this.totalServiceProfit,
+    required this.totalUnrealizedServiceProfit,
+    required this.serviceCount,
+  });
+
+  factory DailyServiceSummary.fromFirestore(Map<String, dynamic> map, String id) {
+    return DailyServiceSummary(
+      date: map['date'] as String? ?? id,
+      totalAmount: (map['totalAmount'] as num?)?.toDouble() ?? 0.0,
+      totalServiceProfit: (map['totalServiceProfit'] as num?)?.toDouble() ?? 0.0,
+      totalUnrealizedServiceProfit: (map['totalUnrealizedServiceProfit'] as num?)?.toDouble() ?? 0.0,
+      serviceCount: (map['serviceCount'] as num?)?.toInt() ?? 0,
     );
   }
 }
@@ -98,6 +134,8 @@ class SalesSummaryService {
       'totalAmount': summaries.fold(0.0, (sum, s) => sum + s.totalAmount),
       'totalPaid': summaries.fold(0.0, (sum, s) => sum + s.totalPaid),
       'totalProfit': summaries.fold(0.0, (sum, s) => sum + s.totalProfit),
+      'totalRealizedProfit': summaries.fold(0.0, (sum, s) => sum + s.totalRealizedProfit),
+      'totalUnrealizedProfit': summaries.fold(0.0, (sum, s) => sum + s.totalUnrealizedProfit),
       'saleCount': summaries.fold(0.0, (sum, s) => sum + s.saleCount),
     };
   }
@@ -135,5 +173,52 @@ class SalesSummaryService {
     final collections =
         await getDailyCollections(facilityId: facilityId, start: start, end: end);
     return collections.fold<double>(0.0, (sum, c) => sum + c.totalCollected);
+  }
+
+  /// Fetch daily service-revenue aggregates for [facilityId] between
+  /// [start] and [end] (inclusive), sorted by date ascending - same
+  /// pattern as getDailySummaries, for services instead of sales.
+  Future<List<DailyServiceSummary>> getDailyServiceSummaries({
+    required String facilityId,
+    required DateTime start,
+    required DateTime end,
+  }) async {
+    final snapshot = await _firestore
+        .collection('facilities')
+        .doc(facilityId)
+        .collection('dailyServiceSummaries')
+        .where(FieldPath.documentId, isGreaterThanOrEqualTo: _fmt(start))
+        .where(FieldPath.documentId, isLessThanOrEqualTo: _fmt(end))
+        .get();
+
+    final summaries = snapshot.docs
+        .map((doc) => DailyServiceSummary.fromFirestore(doc.data(), doc.id))
+        .toList();
+    summaries.sort((a, b) => a.date.compareTo(b.date));
+    return summaries;
+  }
+
+  /// Convenience: total "Other Income" transactions across a date range,
+  /// reading the totalOtherIncome field already aggregated daily by the
+  /// updateDailyTransactionSummary Cloud Function - the same field
+  /// TransactionProvider's own totalOtherIncome getter is backed by,
+  /// just precomputed per day instead of scanned live.
+  Future<double> getTotalOtherIncome({
+    required String facilityId,
+    required DateTime start,
+    required DateTime end,
+  }) async {
+    final snapshot = await _firestore
+        .collection('facilities')
+        .doc(facilityId)
+        .collection('dailyTransactionSummaries')
+        .where(FieldPath.documentId, isGreaterThanOrEqualTo: _fmt(start))
+        .where(FieldPath.documentId, isLessThanOrEqualTo: _fmt(end))
+        .get();
+
+    return snapshot.docs.fold<double>(
+      0.0,
+      (sum, doc) => sum + ((doc.data()['totalOtherIncome'] as num?)?.toDouble() ?? 0.0),
+    );
   }
 }

@@ -146,7 +146,7 @@ class DailyReportService {
               customerName: s.clientName ?? 'Walk-in',
               itemCount: s.items.length,
               amount: s.totalAmount,
-              paymentMethod: s.paymentMethod ?? 'Unknown',
+              paymentMethod: s.paymentMethod ?? 'On Credit',
             ))
         .toList()
       ..sort((a, b) => a.time.compareTo(b.time));
@@ -184,8 +184,19 @@ class DailyReportService {
     final salesByPaymentMethod = <String, double>{};
     final servicesByPaymentMethod = <String, double>{};
     double repaymentsValue = 0;
-    double cashIn = 0;
+    // Every amount actually received today, by method - sales,
+    // services, and debt repayments alike. This is the "in" side of
+    // reconciling any method, not just cash.
+    final receivedByMethod = <String, double>{};
     final repaymentsByClient = <String, double>{};
+    final repaymentsByMethod = <String, double>{};
+    // Fallback name source for a client whose debt was fully repaid
+    // today - their debts document gets deleted the moment the balance
+    // hits zero, so by the time this report runs, there's no debts
+    // record left to read a name from. The payment record itself
+    // isn't deleted and already stores clientName directly, so it
+    // covers exactly the gap closingDebtByClient/clientNameById can't.
+    final paymentClientNameById = <String, String>{};
 
     for (final doc in paymentsSnap.docs) {
       final data = doc.data();
@@ -200,12 +211,17 @@ class DailyReportService {
         servicesByPaymentMethod[method] = (servicesByPaymentMethod[method] ?? 0) + amount;
       } else if (source == 'debt_repayment') {
         repaymentsValue += amount;
+        repaymentsByMethod[method] = (repaymentsByMethod[method] ?? 0) + amount;
         if (clientId != null) {
           repaymentsByClient[clientId] = (repaymentsByClient[clientId] ?? 0) + amount;
+          final paymentClientName = data['clientName'] as String?;
+          if (paymentClientName != null && paymentClientName.isNotEmpty) {
+            paymentClientNameById[clientId] = paymentClientName;
+          }
         }
       }
 
-      if (method == 'Cash') cashIn += amount;
+      receivedByMethod[method] = (receivedByMethod[method] ?? 0) + amount;
     }
 
     // ---- Transactions: other income and itemized expenses.
@@ -217,7 +233,12 @@ class DailyReportService {
 
     double totalOtherIncome = 0;
     double totalExpenses = 0;
-    double cashOutExpenses = 0;
+    // Every expense paid today, by method - the "out" side of
+    // reconciling any method. Other income received by method is
+    // tracked too, since money coming in via, say, a bank transfer
+    // belongs to that method's expected balance, not just cash's.
+    final expensesByMethod = <String, double>{};
+    final otherIncomeByMethod = <String, double>{};
     final expensesByCategory = <String, double>{};
     final expenseLineItems = <ExpenseLineItem>[];
     final otherIncomeLineItems = <ExpenseLineItem>[];
@@ -235,10 +256,15 @@ class DailyReportService {
         totalExpenses += amount;
         expensesByCategory[category] = (expensesByCategory[category] ?? 0) + amount;
         expenseLineItems.add(ExpenseLineItem(time: date, description: description, category: category, amount: amount));
-        if (method == 'Cash') cashOutExpenses += amount;
+        if (method.isNotEmpty) {
+          expensesByMethod[method] = (expensesByMethod[method] ?? 0) + amount;
+        }
       } else if (type == 'other income') {
         totalOtherIncome += amount;
         otherIncomeLineItems.add(ExpenseLineItem(time: date, description: description, category: category, amount: amount));
+        if (method.isNotEmpty) {
+          otherIncomeByMethod[method] = (otherIncomeByMethod[method] ?? 0) + amount;
+        }
       }
     }
     expenseLineItems.sort((a, b) => a.time.compareTo(b.time));
@@ -270,8 +296,14 @@ class DailyReportService {
     final yesterday = today.subtract(const Duration(days: 1));
     final yesterdaySnapshotDoc = await _labeled(
         'dailySnapshots', () => facilities.collection('dailySnapshots').doc(_dateKey(yesterday)).get());
-    final yesterdayOutstanding =
-        (yesterdaySnapshotDoc.data()?['totalOutstanding'] as num?)?.toDouble() ?? 0.0;
+    // If yesterday's snapshot doesn't exist at all - the Cloud
+    // Function hadn't run yet, or this is a facility's very first day
+    // - there's no real prior figure to compare against. Falling back
+    // to 0 here would make the entire current debt total look like
+    // today's change, the same mistake as the product opening bug
+    // above; treating today's total as unchanged from yesterday keeps
+    // this honest instead: nothing is known to have changed.
+    final yesterdayOutstandingRaw = (yesterdaySnapshotDoc.data()?['totalOutstanding'] as num?)?.toDouble();
 
     final debtsAllSnap = await _labeled('debts (all)', () => facilities.collection('debts').get());
     final closingDebtByClient = <String, double>{};
@@ -288,6 +320,7 @@ class DailyReportService {
         clientNameById[clientId] = clientName;
       }
     }
+    final yesterdayOutstanding = yesterdayOutstandingRaw ?? todayOutstanding;
     final outstandingChange = todayOutstanding - yesterdayOutstanding;
 
     // Only clients whose debt actually moved today get a row - a
@@ -301,7 +334,7 @@ class DailyReportService {
       final openingDebt = closingDebt - newDebt + repayment;
       return ClientDebtEntry(
         clientId: clientId,
-        clientName: clientNameById[clientId] ?? 'Unknown',
+        clientName: clientNameById[clientId] ?? paymentClientNameById[clientId] ?? 'Unknown',
         openingDebt: openingDebt < 0 ? 0 : openingDebt,
         newDebt: newDebt,
         repayment: repayment,
@@ -335,35 +368,67 @@ class DailyReportService {
 
     final productsSnap = await _labeled('products', () => facilities.collection('products').get());
 
-    // Units added today, per product - queried directly against each
-    // product's own batches subcollection (a nested, non-collection-
-    // group read) rather than a collectionGroup('batches') query.
-    // Firestore requires collection-group *queries* specifically to
-    // have their own dedicated {path=**} rule to run at all, distinct
-    // from a rule authorizing a direct read at a known nested path -
-    // querying per-product here sidesteps that distinction entirely,
-    // using only the plain nested rule that's been reliable from the
-    // start, at the cost of one query per product instead of one
-    // query overall.
-    final batchResults = await Future.wait(productsSnap.docs.map((productDoc) => _labeled(
-        'batches for ${productDoc.id}',
-        () => facilities
-            .collection('products')
-            .doc(productDoc.id)
-            .collection('batches')
-            .where('receivedAt', isGreaterThanOrEqualTo: todayStart)
-            .where('receivedAt', isLessThanOrEqualTo: nowStamp)
-            .get())));
+    // Today's authoritative opening figure, per product - written by
+    // the recordDailySnapshots Cloud Function at the start of the day,
+    // not reverse-computed. The whole document being missing (the
+    // Cloud Function hasn't run yet today, or this is a facility's
+    // very first day) is handled separately below, falling back to
+    // each product's current live stock rather than zero - see the
+    // opening computation in the loop for why. A specific product
+    // missing from an otherwise-real snapshot (created after the
+    // snapshot ran today) correctly still defaults to 0 here.
+    final stockSnapshotDoc = await _labeled(
+        'dailyStockSnapshots', () => facilities.collection('dailyStockSnapshots').doc(_dateKey(today)).get());
+    final openingByProduct = <String, int>{};
+    final snapshotSellableStock = stockSnapshotDoc.data()?['sellableStock'] as Map<String, dynamic>?;
+    if (snapshotSellableStock != null) {
+      snapshotSellableStock.forEach((productId, value) {
+        openingByProduct[productId] = (value as num?)?.toInt() ?? 0;
+      });
+    }
 
-    final unitsAddedByProduct = <String, int>{};
-    for (var i = 0; i < productsSnap.docs.length; i++) {
-      final productId = productsSnap.docs[i].id;
-      var added = 0;
-      for (final batchDoc in batchResults[i].docs) {
-        final data = batchDoc.data();
-        added += ((data['stockQty'] as num?)?.toInt() ?? 0) + ((data['sellableQty'] as num?)?.toInt() ?? 0);
-      }
-      if (added > 0) unitsAddedByProduct[productId] = added;
+    // Today's genuine additions, per product - summed from the
+    // stockAdditions log addBatch() writes on every call (new batch or
+    // merge alike), rather than inferred from a batch document's own
+    // current totals or its receivedAt timestamp. A merge into an
+    // existing batch never changes that batch's receivedAt, and its
+    // current sellableQty total isn't the same as what was added
+    // today if it already had stock from before - this log is what
+    // makes "Added" reliable in both cases.
+    final stockAdditionsSnap = await _labeled('stockAdditions', () => facilities
+        .collection('stockAdditions')
+        .where('timestamp', isGreaterThanOrEqualTo: todayStart)
+        .where('timestamp', isLessThanOrEqualTo: nowStamp)
+        .get());
+    final addedByProduct = <String, int>{};
+    for (final doc in stockAdditionsSnap.docs) {
+      final data = doc.data();
+      final productId = data['productId'] as String?;
+      if (productId == null) continue;
+      final delta = (data['sellableDelta'] as num?)?.toInt() ?? 0;
+      addedByProduct[productId] = (addedByProduct[productId] ?? 0) + delta;
+    }
+
+    // Today's logged stock quantity edits - explains an "Adjusted"
+    // figure with who changed it and what it went from/to, whenever
+    // the change came through a path that actually logs it. A product
+    // adjusted more than once today keeps only the latest edit, since
+    // the "Adjusted" number itself is a single net figure, not a list.
+    final stockAdjustmentsSnap = await _labeled('stock_adjustments', () => facilities
+        .collection('stock_adjustments')
+        .where('timestamp', isGreaterThanOrEqualTo: todayStart)
+        .where('timestamp', isLessThanOrEqualTo: nowStamp)
+        .get());
+    final adjustmentDetailByProduct = <String, String>{};
+    for (final doc in stockAdjustmentsSnap.docs) {
+      final data = doc.data();
+      final productId = data['productId'] as String?;
+      if (productId == null) continue;
+      final userName = (data['userName'] as String?) ?? 'Unknown';
+      final oldSellable = (data['oldSellableQty'] as num?)?.toInt() ?? 0;
+      final newSellable = (data['newSellableQty'] as num?)?.toInt() ?? 0;
+      final source = (data['source'] as String?) ?? 'Stock edit';
+      adjustmentDetailByProduct[productId] = '$source by $userName ($oldSellable to $newSellable)';
     }
 
     final productMovement = <ProductMovementEntry>[];
@@ -371,26 +436,47 @@ class DailyReportService {
     for (final doc in productsSnap.docs) {
       final data = doc.data();
       final sold = unitsSoldByProduct[doc.id] ?? 0;
-      final added = unitsAddedByProduct[doc.id] ?? 0;
+      final added = addedByProduct[doc.id] ?? 0;
       final isWatchlisted = (data['isWatchlisted'] as bool?) ?? false;
-      final expectedClosing =
-          ((data['stockQty'] as num?)?.toInt() ?? 0) + ((data['sellableQty'] as num?)?.toInt() ?? 0);
-      final opening = expectedClosing - added + sold;
+      // Only sellableQty - warehouse stock (stockQty) isn't something
+      // a customer could actually buy today, so it has no place in a
+      // daily closing report focused on what was available to sell.
+      final actualSellable = (data['sellableQty'] as num?)?.toInt() ?? 0;
+      // If today's snapshot document doesn't exist at all, there's no
+      // real opening figure to read - falling back to today's live
+      // stock as-is would be wrong the moment anything actually
+      // happened today, since live stock already reflects today's
+      // sales and additions. Reversing those out of the live figure
+      // reconstructs what opening genuinely must have been: whatever
+      // is sellable right now, plus what was sold today, minus what
+      // was added today. Zero is still correct, and used via
+      // openingByProduct's own lookup below, for a specific product
+      // that's missing from an otherwise-real snapshot - one created
+      // after the snapshot ran today.
+      final opening = stockSnapshotDoc.exists ? (openingByProduct[doc.id] ?? 0) : (actualSellable + sold - added);
+      // Whatever's left unexplained once tracked additions and sales
+      // are accounted for - a warehouse-to-shelf release, a miscount
+      // correction, or any other sellable-quantity change that wasn't
+      // a fresh restock or an actual sale.
+      final adjustment = actualSellable - (opening + added - sold);
 
       // Only carried forward when there's something to say: a
       // watch-listed product always appears (it always needs a
       // physical count), everything else only appears if it actually
       // moved today - a shop with hundreds of untouched SKUs
       // shouldn't get hundreds of zero-movement rows.
-      if (isWatchlisted || sold > 0 || added > 0) {
+      if (isWatchlisted || sold > 0 || added > 0 || adjustment != 0) {
         productMovement.add(ProductMovementEntry(
           productId: doc.id,
           name: (data['name'] as String?) ?? '',
+          unit: (data['unit'] as String?) ?? '',
           opening: opening < 0 ? 0 : opening,
           added: added,
+          adjustment: adjustment,
           sold: sold,
-          expectedClosing: expectedClosing,
+          expectedClosing: actualSellable,
           isWatchlisted: isWatchlisted,
+          adjustmentDetail: adjustment != 0 ? adjustmentDetailByProduct[doc.id] : null,
         ));
       }
     }
@@ -419,6 +505,27 @@ class DailyReportService {
       );
     }).toList();
 
+    // Every method that showed up anywhere today - received, other
+    // income, or expenses - gets its own reconciliation row. A method
+    // that only appeared as an expense (paid out of pocket, say) still
+    // needs a row, since its expected balance would be negative and
+    // that's worth surfacing too.
+    final allMethodsToday = <String>{
+      ...receivedByMethod.keys,
+      ...otherIncomeByMethod.keys,
+      ...expensesByMethod.keys,
+    };
+    final paymentReconciliation = allMethodsToday.map((method) {
+      final expected = (receivedByMethod[method] ?? 0) + (otherIncomeByMethod[method] ?? 0) - (expensesByMethod[method] ?? 0);
+      final hadIncomeToday = (receivedByMethod[method] ?? 0) + (otherIncomeByMethod[method] ?? 0) > 0;
+      return PaymentMethodReconciliation(
+        method: method,
+        expected: expected,
+        requiresCount: method == 'Cash' || hadIncomeToday,
+      );
+    }).toList()
+      ..sort((a, b) => a.method.compareTo(b.method));
+
     final report = DailyReport(
       id: dateKey,
       facilityId: facilityId,
@@ -435,15 +542,17 @@ class DailyReportService {
       servicesByPaymentMethod: servicesByPaymentMethod,
       serviceBreakdown: serviceBreakdown,
       totalOtherIncome: totalOtherIncome,
+      otherIncomeByPaymentMethod: otherIncomeByMethod,
       totalExpenses: totalExpenses,
       expensesByCategory: expensesByCategory,
       expenseLineItems: expenseLineItems,
       otherIncomeLineItems: otherIncomeLineItems,
       newDebtValue: newDebtValue,
       repaymentsValue: repaymentsValue,
+      repaymentsByPaymentMethod: repaymentsByMethod,
       outstandingChange: outstandingChange,
       clientDebtEntries: clientDebtEntries,
-      expectedCashInDrawer: cashIn - cashOutExpenses,
+      paymentReconciliation: paymentReconciliation,
       productMovement: productMovement,
       activityLogEntries: activityLogEntries,
     );
@@ -461,8 +570,7 @@ class DailyReportService {
     required String facilityId,
     required String reportId,
     required List<ProductMovementEntry> productMovement,
-    required double physicalCashCounted,
-    String? cashVarianceReason,
+    required List<PaymentMethodReconciliation> paymentReconciliation,
     required bool declarationConfirmed,
   }) async {
     final docRef = _reportsCollection(facilityId).doc(reportId);
@@ -481,8 +589,7 @@ class DailyReportService {
       status: 'submitted',
       submittedAt: DateTime.now(),
       productMovement: productMovement,
-      physicalCashCounted: physicalCashCounted,
-      cashVarianceReason: cashVarianceReason,
+      paymentReconciliation: paymentReconciliation,
       declarationConfirmed: declarationConfirmed,
     );
 

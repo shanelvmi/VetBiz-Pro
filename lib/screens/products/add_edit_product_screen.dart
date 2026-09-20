@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import '../../utils/sentence_capitalization_formatter.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:image_picker/image_picker.dart';
@@ -79,6 +80,7 @@ class AddEditProductScreen extends StatefulWidget {
 class _AddEditProductScreenState extends State<AddEditProductScreen> {
   final _formKey = GlobalKey<FormState>();
   bool _isSaving = false;
+  bool _isWatchlisted = false;
 
   late TextEditingController _nameController;
   late TextEditingController _supplierController;
@@ -272,6 +274,7 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
     super.initState();
 
     _imageUrl = widget.product?.imageUrl;
+    _isWatchlisted = widget.product?.isWatchlisted ?? false;
 
     _nameController = TextEditingController(text: widget.product?.name ?? '');
     _supplierController =
@@ -474,6 +477,8 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
           controller: fieldController,
           focusNode: focusNode,
           decoration: _inputDecoration('Supplier'),
+          textCapitalization: TextCapitalization.sentences,
+          inputFormatters: [SentenceCapitalizationFormatter()],
           cursorColor: primaryDeepTealGreen,
           enabled: enabled,
           onChanged: (value) => _supplierController.text = value,
@@ -840,6 +845,7 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
             : ProductTarget.stockStore,
         createdAt: widget.product?.createdAt ?? now,
         updatedAt: now,
+        isWatchlisted: _isWatchlisted,
       );
 
       final userInfo = await ActivityLogger.getCurrentUserInfo();
@@ -858,33 +864,66 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
       } else {
         await provider.updateProduct(newProduct, context);
 
-        // Persist the quantity fields from the simple editor above -
-        // only meaningful for the common case (no batch yet, or exactly
-        // one). Multiple batches are handled through "Manage Batches"
-        // instead, since a single number wouldn't mean anything clear.
+        // Persist the quantity fields from the simple editor above - but
+        // only if the person actually changed one of them. These
+        // controllers are seeded once, when the screen opens, from
+        // whatever the product's numbers were at that moment - if stock
+        // moved in the background since then (a sale, for instance) and
+        // the person only meant to edit something unrelated like the
+        // name or price, blindly re-writing these fields back would
+        // silently overwrite that real, live stock change with the
+        // stale snapshot this form started with. Comparing against the
+        // original values catches that and skips the write entirely
+        // when nothing here was actually touched.
         if (_batches.length <= 1) {
           final newWarehouseQty = int.tryParse(_warehouseQtyController.text.trim()) ?? 0;
           final newShelfQty = int.tryParse(_shelfQtyController.text.trim()) ?? 0;
+          final originalWarehouseQty = widget.product?.stockQty ?? 0;
+          final originalShelfQty = widget.product?.sellableQty ?? 0;
+          final quantityWasEdited = newWarehouseQty != originalWarehouseQty || newShelfQty != originalShelfQty;
 
-          if (_batches.length == 1) {
-            await provider.adjustExistingBatch(
-              facilityId: facilityId,
-              productId: widget.product!.id,
-              batchId: _batches.first.id,
-              mode: 'set',
-              stockQty: newWarehouseQty,
-              sellableQty: newShelfQty,
-            );
-          } else {
-            // Legacy product, no batch on file yet - a direct, simple
-            // update, same as how this worked before batch tracking
-            // existed.
+          if (quantityWasEdited) {
+            if (_batches.length == 1) {
+              await provider.adjustExistingBatch(
+                facilityId: facilityId,
+                productId: widget.product!.id,
+                batchId: _batches.first.id,
+                mode: 'set',
+                stockQty: newWarehouseQty,
+                sellableQty: newShelfQty,
+              );
+            } else {
+              // Legacy product, no batch on file yet - a direct, simple
+              // update, same as how this worked before batch tracking
+              // existed.
+              await FirebaseFirestore.instance
+                  .collection('facilities')
+                  .doc(facilityId)
+                  .collection('products')
+                  .doc(widget.product!.id)
+                  .update({'stockQty': newWarehouseQty, 'sellableQty': newShelfQty});
+            }
+
+            // A real, structured record of this specific change - who,
+            // when, before and after - rather than leaving the Daily
+            // Report to infer that something happened from a leftover
+            // number with no explanation attached to it.
             await FirebaseFirestore.instance
                 .collection('facilities')
                 .doc(facilityId)
-                .collection('products')
-                .doc(widget.product!.id)
-                .update({'stockQty': newWarehouseQty, 'sellableQty': newShelfQty});
+                .collection('stock_adjustments')
+                .add({
+              'productId': widget.product!.id,
+              'productName': newProduct.name,
+              'oldStockQty': originalWarehouseQty,
+              'oldSellableQty': originalShelfQty,
+              'newStockQty': newWarehouseQty,
+              'newSellableQty': newShelfQty,
+              'userId': userId,
+              'userName': userName,
+              'source': 'Product edit',
+              'timestamp': FieldValue.serverTimestamp(),
+            });
           }
         }
 
@@ -981,6 +1020,8 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
               TextFormField(
                 controller: _nameController,
                 decoration: _inputDecoration('Product Name', required: true),
+                textCapitalization: TextCapitalization.sentences,
+                inputFormatters: [SentenceCapitalizationFormatter()],
                 validator: (value) =>
                     value == null || value.trim().isEmpty ? 'Product name is required' : null,
                 cursorColor: primaryDeepTealGreen,
@@ -1205,6 +1246,8 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
                     TextFormField(
                       controller: _descriptionController,
                       decoration: _inputDecoration('Description'),
+                      textCapitalization: TextCapitalization.sentences,
+                      inputFormatters: [SentenceCapitalizationFormatter()],
                       maxLines: 2,
                       cursorColor: primaryDeepTealGreen,
                       enabled: !fieldsLocked,
@@ -1281,6 +1324,19 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
                   return null;
                 },
               ),
+                  const SizedBox(height: 12),
+                  SwitchListTile(
+                    contentPadding: EdgeInsets.zero,
+                    title: const Text('Track in Daily Reports', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600)),
+                    subtitle: const Text(
+                      'Watch-listed products need a physical stock count before the daily closing report can be submitted.',
+                      style: TextStyle(fontSize: 12),
+                    ),
+                    secondary: Icon(Icons.star_outline, color: primaryDeepTealGreen),
+                    value: _isWatchlisted,
+                    activeColor: primaryDeepTealGreen,
+                    onChanged: fieldsLocked ? null : (value) => setState(() => _isWatchlisted = value),
+                  ),
                   ],
                 ),
 

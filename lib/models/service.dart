@@ -17,8 +17,17 @@ class Service {
 
   final List<Map<String, dynamic>> itemsUsed;
 
-  // Stored in Firestore for reporting
+  // Stored in Firestore for reporting. Despite the name, this has always
+  // been the realized portion specifically - computed from totalPaid,
+  // not totalAmount (see copyWith below) - it just had no explicit
+  // unrealized counterpart until now, unlike Sale which tracks both.
   final double totalServiceProfit;
+
+  // The profit still tied up in an unpaid balance - the service-side
+  // equivalent of Sale.unrealizedProfit. Since totalServiceProfit already
+  // deducts item costs against whatever's been paid so far, whatever
+  // remains unpaid is entirely unrealized profit: totalAmount - totalPaid.
+  final double unrealizedServiceProfit;
 
   // Nullable - a service not yet paid at all has nothing to record a
   // method for. Set at the moment of the actual payment, whether
@@ -50,6 +59,7 @@ class Service {
     this.updatedAt,
     this.itemsUsed = const [],
     this.totalServiceProfit = 0.0,
+    this.unrealizedServiceProfit = 0.0,
     this.paymentMethod,
     this.receiptNumber,
     this.transactionId,
@@ -82,6 +92,8 @@ class Service {
       itemsUsed: parsedItems,
       totalServiceProfit:
           (data['totalServiceProfit'] ?? 0).toDouble(),
+      unrealizedServiceProfit:
+          (data['unrealizedServiceProfit'] ?? 0).toDouble(),
       paymentMethod: data['paymentMethod'] as String?,
       receiptNumber: (data['receiptNumber'] as num?)?.toInt(),
       transactionId: data['transactionId'] as String?,
@@ -106,6 +118,7 @@ class Service {
           : FieldValue.serverTimestamp(),
       'itemsUsed': itemsUsed,
       'totalServiceProfit': totalServiceProfit,
+      'unrealizedServiceProfit': unrealizedServiceProfit,
       'paymentMethod': paymentMethod,
       'receiptNumber': receiptNumber,
       'transactionId': transactionId,
@@ -156,6 +169,7 @@ class Service {
     String? transactionId,
   }) {
     final newPaid = totalPaid ?? this.totalPaid;
+    final newTotalAmount = totalAmount ?? this.totalAmount;
     final newItems = itemsUsed ?? this.itemsUsed;
 
     final newExpenses = newItems.fold(0.0, (sum, item) {
@@ -168,7 +182,7 @@ class Service {
       category: category ?? this.category,
       name: name ?? this.name,
       description: description ?? this.description,
-      totalAmount: totalAmount ?? this.totalAmount,
+      totalAmount: newTotalAmount,
       totalPaid: newPaid,
       clientId: clientId ?? this.clientId,
       clientName: clientName ?? this.clientName,
@@ -177,6 +191,8 @@ class Service {
       updatedAt: updatedAt ?? this.updatedAt,
       itemsUsed: newItems,
       totalServiceProfit: newPaid - newExpenses, // ALWAYS recomputed
+      unrealizedServiceProfit:
+          (newTotalAmount - newPaid).clamp(0.0, double.infinity), // ALWAYS recomputed
       paymentMethod: paymentMethod ?? this.paymentMethod,
       receiptNumber: receiptNumber ?? this.receiptNumber,
       transactionId: transactionId ?? this.transactionId,

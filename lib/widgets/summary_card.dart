@@ -69,6 +69,19 @@ class SummaryCard extends StatefulWidget {
   // exactly as before.
   final KpiTrend? trend;
 
+  // Optional extra content shown below the trend pill - null (the
+  // default) for every existing caller. Lets one card (e.g. Net Profit's
+  // realized/pending breakdown) add its own small footer without needing
+  // a separate, parallel widget that duplicates this card's whole layout.
+  final Widget? footer;
+
+  // False (the default) keeps every existing card's layout exactly as
+  // before - the trend pill stacked below the value. True moves it
+  // inline with the title instead, top-right of the card, matching a
+  // card (Net Profit) that wants the percentage change visible at a
+  // glance without competing with the headline figure for attention.
+  final bool trendOnTitleRow;
+
   const SummaryCard({
     super.key,
     required this.title,
@@ -79,6 +92,8 @@ class SummaryCard extends StatefulWidget {
     this.subtitle,
     this.isLoading = false,
     this.trend,
+    this.footer,
+    this.trendOnTitleRow = false,
   });
 
   @override
@@ -162,80 +177,105 @@ class _SummaryCardState extends State<SummaryCard> with SingleTickerProviderStat
 
         return Padding(
               padding: EdgeInsets.all(isCompact ? 8 : 10),
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.center,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
                 children: [
-                  CircleAvatar(
-                    radius: avatarRadius,
-                    backgroundColor: widget.color.withValues(alpha: 0.2),
-                    child: Icon(widget.icon, color: widget.color, size: avatarRadius),
-                  ),
-                  SizedBox(width: isCompact ? 8 : 12),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Text(
-                          widget.title,
-                          textAlign: TextAlign.start,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: TextStyle(
-                            color: Colors.black87,
-                            fontSize: titleSize,
-                          ),
-                        ),
-                        const SizedBox(height: 2),
-                        if (widget.isLoading)
-                          SizedBox(
-                            height: valueSize + 4,
-                            width: valueSize + 4,
-                            child: CircularProgressIndicator(
-                              strokeWidth: 2,
-                              color: widget.color,
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      CircleAvatar(
+                        radius: avatarRadius,
+                        backgroundColor: widget.color.withValues(alpha: 0.2),
+                        child: Icon(widget.icon, color: widget.color, size: avatarRadius),
+                      ),
+                      SizedBox(width: isCompact ? 8 : 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Row(
+                              children: [
+                                Expanded(
+                                  child: Text(
+                                    widget.title,
+                                    textAlign: TextAlign.start,
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: TextStyle(
+                                      color: Colors.black87,
+                                      fontSize: titleSize,
+                                    ),
+                                  ),
+                                ),
+                                if (widget.trendOnTitleRow &&
+                                    !widget.isLoading &&
+                                    widget.trend != null &&
+                                    !widget.trend!.isLoading &&
+                                    !widget.trend!.hasNoChange) ...[
+                                  const SizedBox(width: 6),
+                                  _TrendPill(trend: widget.trend!, compact: isCompact),
+                                ],
+                              ],
                             ),
-                          )
-                        else
-                          // FittedBox instead of ellipsis for the value: a
-                          // truncated money figure ("Tsh 12,345,6...") could be
-                          // dangerously misleading - shrinking it to fit is safer
-                          // than cutting characters off.
-                          FittedBox(
-                            fit: BoxFit.scaleDown,
-                            alignment: Alignment.centerLeft,
-                            child: Text(
-                              widget.value,
-                              textAlign: TextAlign.start,
-                              maxLines: 1,
-                              style: TextStyle(
-                                color: Colors.black,
-                                fontWeight: FontWeight.bold,
-                                fontSize: valueSize,
+                            const SizedBox(height: 2),
+                            if (widget.isLoading)
+                              SizedBox(
+                                height: valueSize + 4,
+                                width: valueSize + 4,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                  color: widget.color,
+                                ),
+                              )
+                            else
+                              // FittedBox instead of ellipsis for the value: a
+                              // truncated money figure ("Tsh 12,345,6...") could be
+                              // dangerously misleading - shrinking it to fit is safer
+                              // than cutting characters off.
+                              FittedBox(
+                                fit: BoxFit.scaleDown,
+                                alignment: Alignment.centerLeft,
+                                child: Text(
+                                  widget.value,
+                                  textAlign: TextAlign.start,
+                                  maxLines: 1,
+                                  style: TextStyle(
+                                    color: Colors.black,
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: valueSize,
+                                  ),
+                                ),
                               ),
-                            ),
-                          ),
-                        if (widget.subtitle != null)
-                          Text(
-                            widget.subtitle!,
-                            textAlign: TextAlign.start,
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: TextStyle(
-                              fontSize: isCompact ? 9 : 10,
-                              color: Colors.grey[600],
-                            ),
-                          ),
-                        if (!widget.isLoading &&
-                            widget.trend != null &&
-                            !widget.trend!.isLoading &&
-                            !widget.trend!.hasNoChange) ...[
-                          SizedBox(height: isCompact ? 3 : 4),
-                          _TrendPill(trend: widget.trend!, compact: isCompact),
-                        ],
-                      ],
-                    ),
+                            if (widget.subtitle != null)
+                              Text(
+                                widget.subtitle!,
+                                textAlign: TextAlign.start,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: TextStyle(
+                                  fontSize: isCompact ? 9 : 10,
+                                  color: Colors.grey[600],
+                                ),
+                              ),
+                            if (!widget.trendOnTitleRow &&
+                                !widget.isLoading &&
+                                widget.trend != null &&
+                                !widget.trend!.isLoading &&
+                                !widget.trend!.hasNoChange) ...[
+                              SizedBox(height: isCompact ? 3 : 4),
+                              _TrendPill(trend: widget.trend!, compact: isCompact),
+                            ],
+                          ],
+                        ),
+                      ),
+                    ],
                   ),
+                  if (!widget.isLoading && widget.footer != null) ...[
+                    SizedBox(height: isCompact ? 2 : 4),
+                    widget.footer!,
+                  ],
                 ],
               ),
             );

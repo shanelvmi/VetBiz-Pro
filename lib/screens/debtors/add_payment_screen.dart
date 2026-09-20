@@ -282,19 +282,33 @@ class _AddPaymentScreenState extends State<AddPaymentScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFFFDFDF9),
-      appBar: AppBar(
-        title: const Text('Record Payment'),
-        centerTitle: true,
-        backgroundColor: primaryDeepGreen,
-        foregroundColor: Colors.white,
-        automaticallyImplyLeading: !widget.isModal,
-        leading: widget.isModal
-            ? IconButton(
-                icon: const Icon(Icons.close),
-                tooltip: 'Close',
-                onPressed: () => Navigator.of(context).pop(),
-              )
-            : null,
+      appBar: PreferredSize(
+        preferredSize: const Size.fromHeight(64),
+        child: Container(
+          color: primaryDeepGreen,
+          padding: const EdgeInsets.symmetric(horizontal: 20),
+          child: SafeArea(
+            bottom: false,
+            child: Row(
+              children: [
+                const Icon(Icons.payments_outlined, color: Colors.white, size: 22),
+                const SizedBox(width: 12),
+                const Expanded(
+                  child: Text('Record Payment',
+                      style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 18)),
+                ),
+                if (widget.isModal)
+                  IconButton(
+                    icon: const Icon(Icons.close, color: Colors.white),
+                    tooltip: 'Close',
+                    onPressed: () => Navigator.of(context).pop(),
+                  )
+                else
+                  const BackButton(color: Colors.white),
+              ],
+            ),
+          ),
+        ),
       ),
       body: Padding(
         padding: const EdgeInsets.all(16),
@@ -321,8 +335,8 @@ class _AddPaymentScreenState extends State<AddPaymentScreen> {
                             return 'Tsh ${currencyFormat.format(balance)} \u2014 ${c.name}';
                           },
                           optionsBuilder: (textEditingValue) {
-                            if (textEditingValue.text.isEmpty) return widget.debtorClients!;
-                            final q = textEditingValue.text.toLowerCase();
+                            final q = textEditingValue.text.trim().toLowerCase();
+                            if (q.length < 2) return const Iterable<Client>.empty();
                             return widget.debtorClients!.where(
                                 (c) => c.name.toLowerCase().contains(q) || c.phone.contains(q));
                           },
@@ -384,33 +398,60 @@ class _AddPaymentScreenState extends State<AddPaymentScreen> {
                 activeColor: primaryDeepGreen,
                 onChanged: (method) => setState(() => paymentMethod = method),
               ),
-              const SizedBox(height: 30),
-              MouseRegion(
-                cursor: SystemMouseCursors.click,
-                child: ElevatedButton(
-                  style: ButtonStyle(
-                    backgroundColor: WidgetStateProperty.resolveWith<Color>((states) {
-                      if (states.contains(WidgetState.hovered)) return warmAmber;
-                      return primaryDeepGreen;
-                    }),
-                    minimumSize: WidgetStateProperty.all(const Size.fromHeight(50)),
-                  ),
-                  onPressed: _isSaving ? null : _savePayment,
-                  child: _isSaving
-                      ? const SizedBox(
-                          width: 20,
-                          height: 20,
-                          child: CircularProgressIndicator(strokeWidth: 2, color: Color(0xFFFDFDF9)),
-                        )
-                      : const Text(
-                          'Save Payment',
-                          style: TextStyle(color: Color(0xFFFDFDF9), fontSize: 18),
-                        ),
-                ),
-              ),
             ],
           ),
         ),
+      ),
+      bottomNavigationBar: _buildFooter(),
+    );
+  }
+
+  Widget _buildFooter() {
+    return Container(
+      padding: EdgeInsets.fromLTRB(20, 14, 20, 14 + MediaQuery.of(context).padding.bottom),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        border: Border(top: BorderSide(color: Colors.grey.withValues(alpha: 0.15))),
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          OutlinedButton.icon(
+            icon: const Icon(Icons.close, size: 16),
+            label: const Text('Cancel'),
+            style: OutlinedButton.styleFrom(
+              foregroundColor: Colors.black87,
+              side: BorderSide(color: Colors.grey.withValues(alpha: 0.4)),
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+            ),
+            onPressed: _isSaving ? null : () => Navigator.of(context).pop(),
+          ),
+          ElevatedButton(
+            onPressed: _isSaving ? null : _savePayment,
+            style: ElevatedButton.styleFrom(
+              backgroundColor: primaryDeepGreen,
+              foregroundColor: Colors.white,
+              disabledBackgroundColor: primaryDeepGreen.withValues(alpha: 0.5),
+              padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 12),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+            ),
+            child: _isSaving
+                ? const SizedBox(
+                    width: 18,
+                    height: 18,
+                    child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                  )
+                : const Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(Icons.payments_outlined, size: 16),
+                      SizedBox(width: 8),
+                      Text('Save Payment'),
+                    ],
+                  ),
+          ),
+        ],
       ),
     );
   }
@@ -455,10 +496,12 @@ Future<bool?> showAddPaymentScreen(
     transitionDuration: const Duration(milliseconds: 220),
     pageBuilder: (context, animation, secondaryAnimation) {
       final screenSize = MediaQuery.of(context).size;
+      final modalWidth = (screenSize.width * 0.60).clamp(0, 940).toDouble();
+      final modalHeight = (screenSize.height * 0.88) < 480 ? 480.0 : screenSize.height * 0.88;
       return Center(
         child: SizedBox(
-          width: screenSize.width * 0.8,
-          height: screenSize.height * 0.85,
+          width: modalWidth,
+          height: modalHeight,
           child: ClipRRect(
             borderRadius: BorderRadius.circular(16),
             child: Material(

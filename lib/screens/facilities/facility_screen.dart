@@ -5,6 +5,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
+import '../../utils/sentence_capitalization_formatter.dart';
 import 'package:cloud_functions/cloud_functions.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:firebase_storage/firebase_storage.dart';
@@ -160,6 +161,7 @@ class _FacilityScreenState extends State<FacilityScreen> {
       final description = facilityDoc.data()?['description'] as String?;
       final tagline = facilityDoc.data()?['tagline'] as String?;
       final licenseNo = facilityDoc.data()?['licenseNo'] as String?;
+      final tin = facilityDoc.data()?['tin'] as String?;
       final ownership = facilityDoc.data()?['ownership'] as String?;
       final status = facilityDoc.data()?['status'] as String? ?? 'Active';
       final createdAtTs = facilityDoc.data()?['createdAt'] as Timestamp?;
@@ -210,7 +212,7 @@ class _FacilityScreenState extends State<FacilityScreen> {
           'description': description,
           'tagline': tagline,
           'licenseNo': licenseNo,
-          'ownership': ownership,
+          'tin': tin,
           'status': status,
           'createdAt': createdAtTs?.toDate(),
           'updatedAt': updatedAtTs?.toDate(),
@@ -412,6 +414,8 @@ class _FacilityScreenState extends State<FacilityScreen> {
                 const SizedBox(height: 16),
                 TextField(
                   controller: nameController,
+                  textCapitalization: TextCapitalization.sentences,
+                  inputFormatters: [SentenceCapitalizationFormatter()],
                   decoration: const InputDecoration(labelText: 'Facility Name'),
                 ),
                 const SizedBox(height: 12),
@@ -559,6 +563,7 @@ class _FacilityScreenState extends State<FacilityScreen> {
     final existingDetails = _detailsByFacility[facility['facilityId']];
     final addressController = TextEditingController(text: existingDetails?['address'] as String? ?? '');
     final licenseController = TextEditingController(text: existingDetails?['licenseNo'] as String? ?? '');
+    final tinController = TextEditingController(text: existingDetails?['tin'] as String? ?? '');
     final descriptionController =
         TextEditingController(text: existingDetails?['description'] as String? ?? '');
     final taglineController =
@@ -680,6 +685,8 @@ class _FacilityScreenState extends State<FacilityScreen> {
                 const SizedBox(height: 16),
                 TextField(
                   controller: nameController,
+                  textCapitalization: TextCapitalization.sentences,
+                  inputFormatters: [SentenceCapitalizationFormatter()],
                   decoration: const InputDecoration(labelText: 'Facility Name'),
                 ),
                 const SizedBox(height: 12),
@@ -708,6 +715,8 @@ class _FacilityScreenState extends State<FacilityScreen> {
                 const SizedBox(height: 12),
                 TextField(
                   controller: addressController,
+                  textCapitalization: TextCapitalization.sentences,
+                  inputFormatters: [SentenceCapitalizationFormatter()],
                   decoration: const InputDecoration(
                     labelText: 'Address (optional)',
                   ),
@@ -715,6 +724,8 @@ class _FacilityScreenState extends State<FacilityScreen> {
                 const SizedBox(height: 12),
                 TextField(
                   controller: descriptionController,
+                  textCapitalization: TextCapitalization.sentences,
+                  inputFormatters: [SentenceCapitalizationFormatter()],
                   maxLines: 3,
                   decoration: const InputDecoration(
                     labelText: 'Description (optional)',
@@ -723,6 +734,8 @@ class _FacilityScreenState extends State<FacilityScreen> {
                 const SizedBox(height: 12),
                 TextField(
                   controller: taglineController,
+                  textCapitalization: TextCapitalization.sentences,
+                  inputFormatters: [SentenceCapitalizationFormatter()],
                   decoration: const InputDecoration(
                     labelText: 'Tagline (optional)',
                     hintText: 'e.g. Agrovet & Animal Care',
@@ -733,6 +746,14 @@ class _FacilityScreenState extends State<FacilityScreen> {
                   controller: licenseController,
                   decoration: const InputDecoration(
                     labelText: 'License Number (optional)',
+                  ),
+                ),
+                const SizedBox(height: 12),
+                TextField(
+                  controller: tinController,
+                  decoration: const InputDecoration(
+                    labelText: 'TIN (optional)',
+                    hintText: 'Tax Identification Number',
                   ),
                 ),
                 const SizedBox(height: 12),
@@ -822,6 +843,7 @@ class _FacilityScreenState extends State<FacilityScreen> {
                               ? null
                               : taglineController.text.trim(),
                           licenseNo: licenseController.text.trim().isEmpty ? null : licenseController.text.trim(),
+                          tin: tinController.text.trim().isEmpty ? null : tinController.text.trim(),
                           ownership: selectedOwnership,
                           status: selectedStatus,
                           restockFrequency: selectedRestockFrequency,
@@ -875,6 +897,7 @@ class _FacilityScreenState extends State<FacilityScreen> {
     String? description,
     String? tagline,
     String? licenseNo,
+    String? tin,
     String? ownership,
     String? status,
     String? restockFrequency,
@@ -920,6 +943,7 @@ class _FacilityScreenState extends State<FacilityScreen> {
       'description': description,
       'tagline': tagline,
       'licenseNo': licenseNo,
+      'tin': tin,
       'ownership': ownership,
       'status': status,
       'restockFrequency': restockFrequency,
@@ -932,6 +956,7 @@ class _FacilityScreenState extends State<FacilityScreen> {
       'description': description,
       'tagline': tagline,
       'licenseNo': licenseNo,
+      'tin': tin,
       'ownership': ownership,
       'status': status,
       'restockFrequency': restockFrequency,

@@ -53,6 +53,8 @@ class DailyReportPdfService {
           pw.SizedBox(height: 14),
           _servicesSection(report),
           pw.SizedBox(height: 14),
+          _paymentMethodsSection(report),
+          pw.SizedBox(height: 14),
           _productMovementSection(report),
           pw.SizedBox(height: 14),
           _stockReconciliationSection(report),
@@ -61,12 +63,8 @@ class DailyReportPdfService {
           pw.SizedBox(height: 14),
           _expensesSection(report),
           pw.SizedBox(height: 14),
-          _cashReconciliationSection(report),
+          _paymentReconciliationSection(report),
           pw.SizedBox(height: 14),
-          if (report.activityLogEntries.isNotEmpty) ...[
-            _activityLogSection(report),
-            pw.SizedBox(height: 14),
-          ],
           _declarationSection(report),
           pw.SizedBox(height: 18),
           _signOffSection(report),
@@ -190,8 +188,11 @@ class DailyReportPdfService {
   // ---------- Sections ----------
 
   static pw.Widget _summarySection(DailyReport report) {
-    final revenue = report.salesTotalValue + report.servicesTotalValue;
-    final totalCash = (report.salesByPaymentMethod['Cash'] ?? 0) + (report.servicesByPaymentMethod['Cash'] ?? 0);
+    final revenue = report.salesTotalValue + report.servicesTotalValue + report.totalOtherIncome;
+    final totalCash = (report.salesByPaymentMethod['Cash'] ?? 0) +
+        (report.servicesByPaymentMethod['Cash'] ?? 0) +
+        (report.repaymentsByPaymentMethod['Cash'] ?? 0) +
+        (report.otherIncomeByPaymentMethod['Cash'] ?? 0);
     final productsSoldUnits = report.productMovement.fold(0, (sum, p) => sum + p.sold);
 
     return pw.Column(
@@ -205,6 +206,8 @@ class DailyReportPdfService {
             pw.SizedBox(width: 230, child: _statLine('Total Sales', 'Tsh ${_money.format(report.salesTotalValue)}', bold: true)),
             pw.SizedBox(width: 230, child: _statLine('Service Revenue', 'Tsh ${_money.format(report.servicesTotalValue)}', bold: true)),
             pw.SizedBox(width: 230, child: _statLine('Total Revenue', 'Tsh ${_money.format(revenue)}', bold: true)),
+            if (report.totalOtherIncome > 0)
+              pw.SizedBox(width: 230, child: _statLine('Other Income', 'Tsh ${_money.format(report.totalOtherIncome)}')),
             pw.SizedBox(width: 230, child: _statLine('Debt Repayments', 'Tsh ${_money.format(report.repaymentsValue)}')),
             pw.SizedBox(width: 230, child: _statLine('Expenses', 'Tsh ${_money.format(report.totalExpenses)}')),
             pw.SizedBox(width: 230, child: _statLine('Total Cash Received', 'Tsh ${_money.format(totalCash)}')),
@@ -276,6 +279,85 @@ class DailyReportPdfService {
     );
   }
 
+  static pw.Widget _paymentMethodsSection(DailyReport report) {
+    final combined = <String, double>{};
+    for (final entry in report.salesByPaymentMethod.entries) {
+      combined[entry.key] = (combined[entry.key] ?? 0) + entry.value;
+    }
+    for (final entry in report.servicesByPaymentMethod.entries) {
+      combined[entry.key] = (combined[entry.key] ?? 0) + entry.value;
+    }
+    for (final entry in report.repaymentsByPaymentMethod.entries) {
+      combined[entry.key] = (combined[entry.key] ?? 0) + entry.value;
+    }
+    for (final entry in report.otherIncomeByPaymentMethod.entries) {
+      combined[entry.key] = (combined[entry.key] ?? 0) + entry.value;
+    }
+    final combinedTotal = combined.values.fold(0.0, (sum, v) => sum + v);
+
+    if (combined.isEmpty) {
+      return pw.Column(
+        crossAxisAlignment: pw.CrossAxisAlignment.start,
+        children: [
+          _sectionTitle('Payment Methods'),
+          _emptyNote('No payments recorded today.'),
+        ],
+      );
+    }
+
+    pw.Widget categoryColumn(String title, Map<String, double> byMethod, String emptyText) {
+      return pw.Expanded(
+        child: pw.Column(
+          crossAxisAlignment: pw.CrossAxisAlignment.start,
+          children: [
+            pw.Text(title, style: pw.TextStyle(fontSize: 10.5, fontWeight: pw.FontWeight.bold, color: _deepGreen)),
+            pw.SizedBox(height: 4),
+            if (byMethod.isEmpty)
+              _emptyNote(emptyText)
+            else
+              _table(
+                ['Method', 'Amount'],
+                byMethod.entries.map((e) => [e.key, _money.format(e.value)]).toList(),
+                flex: [3, 2],
+              ),
+          ],
+        ),
+      );
+    }
+
+    return pw.Column(
+      crossAxisAlignment: pw.CrossAxisAlignment.start,
+      children: [
+        _sectionTitle('Payment Methods'),
+        _table(
+          ['Method (all sources combined)', 'Amount'],
+          combined.entries.map((e) => [e.key, _money.format(e.value)]).toList(),
+          flex: [4, 2],
+        ),
+        pw.SizedBox(height: 4),
+        _statLine('Total', 'Tsh ${_money.format(combinedTotal)}', bold: true),
+        pw.SizedBox(height: 10),
+        pw.Row(
+          crossAxisAlignment: pw.CrossAxisAlignment.start,
+          children: [
+            categoryColumn('Sales', report.salesByPaymentMethod, 'No sales today.'),
+            pw.SizedBox(width: 16),
+            categoryColumn('Services', report.servicesByPaymentMethod, 'No services today.'),
+          ],
+        ),
+        pw.SizedBox(height: 10),
+        pw.Row(
+          crossAxisAlignment: pw.CrossAxisAlignment.start,
+          children: [
+            categoryColumn('Debt Repayments', report.repaymentsByPaymentMethod, 'No repayments today.'),
+            pw.SizedBox(width: 16),
+            categoryColumn('Other Income', report.otherIncomeByPaymentMethod, 'No other income today.'),
+          ],
+        ),
+      ],
+    );
+  }
+
   static pw.Widget _productMovementSection(DailyReport report) {
     return pw.Column(
       crossAxisAlignment: pw.CrossAxisAlignment.start,
@@ -285,22 +367,36 @@ class DailyReportPdfService {
           _emptyNote('No product movement today.')
         else
           _table(
-            ['Product', 'Opening', 'Added', 'Sold', 'Expected Closing'],
+            ['Product', 'Unit', 'Opening', 'Added', 'Adjusted', 'Sold', 'Expected Closing'],
             report.productMovement
                 .map((p) => [
                       p.isWatchlisted ? '* ${p.name}' : p.name,
+                      p.unit.isEmpty ? '-' : p.unit,
                       '${p.opening}',
                       '${p.added}',
+                      p.adjustment == 0 ? '-' : '${p.adjustment > 0 ? '+' : ''}${p.adjustment}',
                       '${p.sold}',
                       '${p.expectedClosing}',
                     ])
                 .toList(),
-            flex: [4, 2, 2, 2, 3],
+            flex: [3, 2, 2, 2, 2, 2, 3],
           ),
         if (report.productMovement.any((p) => p.isWatchlisted))
           pw.Padding(
             padding: const pw.EdgeInsets.only(top: 4),
             child: pw.Text('* Watch-listed - see Stock Reconciliation below.', style: pw.TextStyle(fontSize: 8.5, color: _grey, fontStyle: pw.FontStyle.italic)),
+          ),
+        if (report.productMovement.any((p) => p.adjustment != 0 && p.adjustmentDetail != null))
+          pw.Padding(
+            padding: const pw.EdgeInsets.only(top: 6),
+            child: pw.Column(
+              crossAxisAlignment: pw.CrossAxisAlignment.start,
+              children: [
+                pw.Text('Adjustment details:', style: pw.TextStyle(fontSize: 8.5, color: _grey, fontWeight: pw.FontWeight.bold)),
+                for (final p in report.productMovement.where((p) => p.adjustment != 0 && p.adjustmentDetail != null))
+                  pw.Text('${p.name}: ${p.adjustmentDetail}', style: pw.TextStyle(fontSize: 8.5, color: _grey)),
+              ],
+            ),
           ),
       ],
     );
@@ -387,42 +483,43 @@ class DailyReportPdfService {
     );
   }
 
-  static pw.Widget _cashReconciliationSection(DailyReport report) {
-    final variance = report.cashVariance;
-    final hasVariance = variance != null && variance != 0;
+  static pw.Widget _paymentReconciliationSection(DailyReport report) {
+    if (report.paymentReconciliation.isEmpty) {
+      return pw.Column(
+        crossAxisAlignment: pw.CrossAxisAlignment.start,
+        children: [
+          _sectionTitle('Payment Reconciliation'),
+          _emptyNote('No payments recorded today.'),
+        ],
+      );
+    }
     return pw.Column(
       crossAxisAlignment: pw.CrossAxisAlignment.start,
       children: [
-        _sectionTitle('Cash Reconciliation'),
-        _statLine('Expected cash in drawer', 'Tsh ${_money.format(report.expectedCashInDrawer)}'),
-        if (report.physicalCashCounted != null) ...[
-          _statLine('Physical cash counted', 'Tsh ${_money.format(report.physicalCashCounted!)}', bold: true),
-          _statLine(
-            'Cash variance',
-            hasVariance ? '${variance > 0 ? '+' : ''}Tsh ${_money.format(variance)} - VARIANCE' : 'Tsh 0 - Match',
-            bold: hasVariance,
-          ),
-          if (hasVariance && (report.cashVarianceReason ?? '').isNotEmpty)
-            pw.Padding(
-              padding: const pw.EdgeInsets.only(top: 2),
-              child: pw.Text('Reason: ${report.cashVarianceReason}', style: pw.TextStyle(fontSize: 9, color: _grey, fontStyle: pw.FontStyle.italic)),
+        _sectionTitle('Payment Reconciliation'),
+        for (final p in report.paymentReconciliation) ...[
+          pw.Text(p.method, style: pw.TextStyle(fontSize: 10, fontWeight: pw.FontWeight.bold, color: _deepGreen)),
+          _statLine('Expected balance', 'Tsh ${_money.format(p.expected)}'),
+          if (p.physicalCount != null) ...[
+            _statLine('Physical balance counted', 'Tsh ${_money.format(p.physicalCount!)}', bold: true),
+            _statLine(
+              'Variance',
+              (p.variance != null && p.variance != 0)
+                  ? '${p.variance! > 0 ? '+' : ''}Tsh ${_money.format(p.variance!)} - VARIANCE'
+                  : 'Tsh 0 - Match',
+              bold: p.variance != null && p.variance != 0,
             ),
-        ] else
-          _emptyNote('Not yet submitted.'),
-      ],
-    );
-  }
-
-  static pw.Widget _activityLogSection(DailyReport report) {
-    return pw.Column(
-      crossAxisAlignment: pw.CrossAxisAlignment.start,
-      children: [
-        _sectionTitle('Activity Log'),
-        _table(
-          ['Time', 'Activity', 'By'],
-          report.activityLogEntries.map((a) => [_time.format(a.time), a.description, a.userName]).toList(),
-          flex: [1, 5, 2],
-        ),
+            if (p.variance != null && p.variance != 0 && (p.varianceReason ?? '').isNotEmpty)
+              pw.Padding(
+                padding: const pw.EdgeInsets.only(top: 2),
+                child: pw.Text('Reason: ${p.varianceReason}', style: pw.TextStyle(fontSize: 9, color: _grey, fontStyle: pw.FontStyle.italic)),
+              ),
+          ] else if (!p.requiresCount)
+            _emptyNote('No income via ${p.method} today - outflow only, no count needed.')
+          else
+            _emptyNote('Not yet submitted.'),
+          if (p != report.paymentReconciliation.last) pw.SizedBox(height: 6),
+        ],
       ],
     );
   }
