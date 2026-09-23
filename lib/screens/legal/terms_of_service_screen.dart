@@ -8,10 +8,40 @@ class TermsOfServiceScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return const LegalDocumentScreen(
       title: 'Terms of Service',
+      subtitle: 'Please read and review these terms carefully before using VetBiz Pro.',
       lastUpdated: 'August 30, 2026',
       intro: 'These Terms of Service ("Terms") govern your use of VetBiz Pro, a business management '
           'platform for veterinary and agrovet facilities. By registering an account or using the '
           'app, you agree to these Terms on behalf of yourself and, if applicable, your facility.',
+      keyPoints: [
+        LegalKeyPoint(
+          icon: Icons.shield_outlined,
+          title: 'Platform',
+          description: 'VetBiz Pro - Veterinary & Agrovet Management',
+        ),
+        LegalKeyPoint(
+          icon: Icons.groups_outlined,
+          title: 'Applies to',
+          description: 'All users and facilities',
+        ),
+        LegalKeyPoint(
+          icon: Icons.lock_outline,
+          title: 'Your responsibility',
+          description: 'Keep your login credentials secure',
+        ),
+        LegalKeyPoint(
+          icon: Icons.calendar_today_outlined,
+          title: 'Trial period',
+          description: 'Starts with a trial, then requires a subscription',
+        ),
+        LegalKeyPoint(
+          icon: Icons.description_outlined,
+          title: 'Full terms',
+          description: 'Read the complete terms below',
+        ),
+      ],
+      calloutTitle: 'Your data. Our priority.',
+      calloutBody: 'We value your trust and are committed to keeping your data safe.',
       sections: [
         LegalSection(
           heading: '1. The Service',

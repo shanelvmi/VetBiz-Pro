@@ -21,6 +21,7 @@ import '../../providers/facility_provider.dart';
 import '../../providers/debt_provider.dart';
 
 import '../../services/auth_service.dart';
+import '../../utils/activity_logger.dart';
 import '../clients/add_client_screen.dart';
 import '../../widgets/product_thumbnail.dart';
 
@@ -551,6 +552,100 @@ class _AddSaleScreenState extends State<AddSaleScreen> {
     super.dispose();
   }
 
+  // Mirrors deductSellableFIFO's own batch-selection logic exactly
+  // (same sellableQty query, same soonest-expiry-first sort, same
+  // "take" math) but read-only, run once per cart item and combined
+  // into one list - a sale can include several products at once, so
+  // this surfaces every expired portion across the whole cart in a
+  // single check rather than one warning per item.
+  Future<List<(String, String, int)>> _simulateExpiredSalePortion() async {
+    final facilityProvider = Provider.of<FacilityProvider>(context, listen: false);
+    final facilityId = facilityProvider.selectedFacility?['id'] ?? '';
+    if (facilityId.isEmpty) return [];
+
+    final now = DateTime.now();
+    final expiredPortion = <(String, String, int)>[];
+
+    for (final item in items) {
+      final batchesRef = FirebaseFirestore.instance
+          .collection('facilities')
+          .doc(facilityId)
+          .collection('products')
+          .doc(item.productId)
+          .collection('batches');
+
+      final snap = await batchesRef.where('sellableQty', isGreaterThan: 0).get();
+      if (snap.docs.isEmpty) continue;
+
+      final candidates = snap.docs.toList()
+        ..sort((a, b) {
+          final aExp = a.data()['expiry'] as Timestamp?;
+          final bExp = b.data()['expiry'] as Timestamp?;
+          if (aExp == null && bExp == null) return 0;
+          if (aExp == null) return 1;
+          if (bExp == null) return -1;
+          return aExp.compareTo(bExp);
+        });
+
+      int remaining = item.quantity;
+      for (final doc in candidates) {
+        if (remaining <= 0) break;
+        final data = doc.data();
+        final available = (data['sellableQty'] ?? 0) as int;
+        if (available <= 0) continue;
+
+        final take = remaining < available ? remaining : available;
+        final expiry = data['expiry'] as Timestamp?;
+        if (expiry != null && expiry.toDate().isBefore(now)) {
+          expiredPortion.add((item.name, item.unit, take));
+        }
+        remaining -= take;
+      }
+    }
+    return expiredPortion;
+  }
+
+  Future<bool?> _showExpiredSaleWarning(List<(String, String, int)> expiredPortion) {
+    return showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: const Row(
+          children: [
+            Icon(Icons.warning_amber_rounded, color: Colors.red),
+            SizedBox(width: 8),
+            Text('Expired Stock'),
+          ],
+        ),
+        content: SizedBox(
+          width: 320,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text('This product is expired. Do you still want to sell it?',
+                  style: TextStyle(fontSize: 13.5)),
+              const SizedBox(height: 10),
+              ...expiredPortion.map((e) => Padding(
+                    padding: const EdgeInsets.only(bottom: 4),
+                    child: Text('• ${e.$3} ${e.$2} of ${e.$1}',
+                        style: TextStyle(fontSize: 12.5, color: Colors.red[700])),
+                  )),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancel')),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.red, foregroundColor: Colors.white),
+            onPressed: () => Navigator.pop(ctx, true),
+            child: const Text('Sell Anyway'),
+          ),
+        ],
+      ),
+    );
+  }
+
   // --- Save Sale ---
   Future<void> _saveSale() async {
     if (_isSaving) return; // guards against a double-tap firing two saves at once
@@ -584,6 +679,13 @@ class _AddSaleScreenState extends State<AddSaleScreen> {
         const SnackBar(content: Text('Select a payment method before saving')),
       );
       return;
+    }
+
+    final expiredPortion = await _simulateExpiredSalePortion();
+    if (expiredPortion.isNotEmpty) {
+      if (!mounted) return;
+      final proceedAnyway = await _showExpiredSaleWarning(expiredPortion);
+      if (proceedAnyway != true) return;
     }
 
     setState(() => _isSaving = true);
@@ -679,6 +781,17 @@ class _AddSaleScreenState extends State<AddSaleScreen> {
 
       final saleId = await saleProvider.addSale(sale, facilityId);
       if (saleId == null) throw Exception('Sale could not be saved.');
+
+      if (expiredPortion.isNotEmpty) {
+        final unitsSummary = expiredPortion.map((e) => '${e.$3} ${e.$2} of ${e.$1}').join(', ');
+        await ActivityLogger.logActivity(
+          facilityId: facilityId,
+          userId: soldById,
+          userName: soldByName,
+          actionType: "Sale",
+          description: "Sale included expired stock ($unitsSummary), confirmed by $soldByName",
+        );
+      }
 
       final unpaidAmount = totalAmount - totalPaid;
       if (unpaidAmount > 0 && selectedClient != null) {

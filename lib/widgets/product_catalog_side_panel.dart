@@ -156,6 +156,7 @@ class _ProductCatalogSidePanelState extends State<ProductCatalogSidePanel> {
             _buildStatusRow('Low Stock', 'Low Stock', Colors.orange, widget.statusCounts['Low Stock'] ?? 0),
             _buildStatusRow('Reorder Soon', 'Reorder Soon', Colors.amber[700], widget.statusCounts['Reorder Soon'] ?? 0),
             _buildStatusRow('Depleted', 'Depleted', Colors.red, widget.statusCounts['Depleted'] ?? 0),
+            _buildStatusRow('Expired', 'Expired', Colors.red, widget.statusCounts['Expired'] ?? 0),
           ],
         ),
       ),

@@ -9,6 +9,7 @@ import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:intl/intl.dart';
 import 'package:flutter_speed_dial/flutter_speed_dial.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../../providers/product_provider.dart';
 import '../../providers/client_provider.dart';
@@ -42,7 +43,7 @@ import '../../models/promotion.dart';
 import '../../models/notification_model.dart';
 import '../../providers/user_role_provider.dart';
 import '../subscription/subscription_screen.dart';
-import 'stock_alerts_screen.dart';
+import 'notifications_screen.dart';
 import 'insights_screen.dart';
 import '../../utils/subscription_guard.dart';
 import '../../utils/force_logout.dart';
@@ -123,7 +124,8 @@ class _DrawerHoverItemState extends State<DrawerHoverItem> {
           borderRadius: BorderRadius.circular(8),
           onTap: widget.onTap,
           child: AnimatedContainer(
-            duration: const Duration(milliseconds: 120),
+            duration: const Duration(milliseconds: 200),
+            curve: Curves.easeInOut,
             padding: EdgeInsets.symmetric(vertical: 10, horizontal: widget.isCollapsed ? 12 : 16),
             decoration: BoxDecoration(
               color: _hovered ? Colors.teal.shade700 : Colors.transparent,
@@ -1125,22 +1127,13 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
                   ),
                 ),
               _buildAlertsBell(context),
-              // No help/support screen exists yet - shows a lightweight
-              // dialog with app info rather than linking to a page that
-              // doesn't exist.
+              // Reads whatever Platform Admin has set under Branding >
+              // Contact Details, falling back to a generic message if
+              // nothing's configured yet.
               IconButton(
                 icon: const Icon(Icons.help_outline, color: Colors.black87, size: 22),
                 tooltip: 'Help',
-                onPressed: () => showDialog(
-                  context: context,
-                  builder: (ctx) => AlertDialog(
-                    title: const Text('VetBiz Pro'),
-                    content: const Text('For help or support, please reach out to your account administrator.'),
-                    actions: [
-                      TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Close')),
-                    ],
-                  ),
-                ),
+                onPressed: () => _showHelpDialog(context),
               ),
               const SizedBox(width: 4),
               Padding(
@@ -1734,7 +1727,7 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
                   width: panelWidth,
                   child: ConstrainedBox(
                     constraints: BoxConstraints(maxHeight: screenSize.height * 0.75),
-                    child: const StockAlertsScreen(isDropdown: true),
+                    child: const NotificationsScreen(isDropdown: true),
                   ),
                 ),
               ),
@@ -2237,22 +2230,13 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
             ),
           ),
           _buildAlertsBell(context),
-          // No help/support screen exists yet - shows a lightweight
-          // dialog with app info rather than linking to a page that
-          // doesn't exist.
+          // Reads whatever Platform Admin has set under Branding >
+          // Contact Details, falling back to a generic message if
+          // nothing's configured yet.
           IconButton(
             icon: const Icon(Icons.help_outline, color: Colors.black87, size: 22),
             tooltip: 'Help',
-            onPressed: () => showDialog(
-              context: context,
-              builder: (ctx) => AlertDialog(
-                title: const Text('VetBiz Pro'),
-                content: const Text('For help or support, please reach out to your account administrator.'),
-                actions: [
-                  TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Close')),
-                ],
-              ),
-            ),
+            onPressed: () => _showHelpDialog(context),
           ),
           const SizedBox(width: 4),
           Padding(
@@ -2551,10 +2535,148 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
     );
   }
 
-  Widget _buildAlertsBell(BuildContext context) {
-    final products = Provider.of<ProductProvider>(context).products;
-    final hasStockAlerts = StockAlertsScreen.hasAnyAlert(products);
+  // Reads whatever Platform Admin has filled in under Branding >
+  // Contact Details - each field is optional, so this only shows rows
+  // for what's actually set, and falls back to the original generic
+  // message if none of the four have been configured yet.
+  Future<void> _showHelpDialog(BuildContext context) async {
+    Map<String, dynamic>? data;
+    try {
+      final doc = await FirebaseFirestore.instance.collection('app_config').doc('support_contact').get();
+      data = doc.data();
+    } catch (_) {
+      // Falls through to the generic message below - a failed fetch
+      // shouldn't block someone from at least seeing that dialog.
+    }
 
+    final email = (data?['email'] as String?)?.trim() ?? '';
+    final phone = (data?['phone'] as String?)?.trim() ?? '';
+    final whatsapp = (data?['whatsapp'] as String?)?.trim() ?? '';
+    final address = (data?['address'] as String?)?.trim() ?? '';
+
+    if (!context.mounted) return;
+
+    Future<void> launch(Uri uri, String failureLabel) async {
+      final launched = await launchUrl(uri, mode: LaunchMode.externalApplication);
+      if (!launched && context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Could not open $failureLabel')));
+      }
+    }
+
+    // Clickable rows (email/phone/WhatsApp) get a tinted, rounded
+    // background and a trailing chevron so they visually read as
+    // tappable - the plain address row below has neither, so the one
+    // row with nothing to tap doesn't invite a tap.
+    Widget contactRow({
+      required IconData icon,
+      required String label,
+      String? sublabel,
+      VoidCallback? onTap,
+    }) {
+      final row = Row(
+        children: [
+          Icon(icon, size: 18, color: primaryDeepGreen),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(label, style: const TextStyle(fontSize: 13.5)),
+                if (sublabel != null)
+                  Text(sublabel, style: TextStyle(fontSize: 11, color: Colors.grey[600])),
+              ],
+            ),
+          ),
+          if (onTap != null) Icon(Icons.chevron_right, size: 18, color: Colors.grey[400]),
+        ],
+      );
+
+      if (onTap == null) {
+        return Padding(
+          padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
+          child: row,
+        );
+      }
+
+      return Padding(
+        padding: const EdgeInsets.symmetric(vertical: 3),
+        child: Material(
+          color: primaryDeepGreen.withValues(alpha: 0.06),
+          borderRadius: BorderRadius.circular(8),
+          child: InkWell(
+            borderRadius: BorderRadius.circular(8),
+            onTap: onTap,
+            child: Padding(
+              padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 8),
+              child: row,
+            ),
+          ),
+        ),
+      );
+    }
+
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: const Text('Contact Support'),
+        content: SizedBox(
+          width: 320,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Always shown, regardless of whether any contact
+              // details are configured - the statement itself already
+              // names Platform Admin explicitly.
+              const Text('For help or support please reach out to VetBiz Pro platform admin.',
+                  style: TextStyle(fontSize: 13.5)),
+              if (email.isNotEmpty || phone.isNotEmpty || whatsapp.isNotEmpty || address.isNotEmpty) ...[
+                const SizedBox(height: 10),
+                if (email.isNotEmpty)
+                  contactRow(
+                    icon: Icons.email_outlined,
+                    label: email,
+                    onTap: () {
+                      Navigator.pop(ctx);
+                      launch(Uri.parse('mailto:$email'), 'your email app');
+                    },
+                  ),
+                if (phone.isNotEmpty)
+                  contactRow(
+                    icon: Icons.call_outlined,
+                    label: phone,
+                    onTap: () {
+                      Navigator.pop(ctx);
+                      launch(Uri.parse('tel:$phone'), 'the dialer');
+                    },
+                  ),
+                if (whatsapp.isNotEmpty)
+                  contactRow(
+                    icon: Icons.chat_outlined,
+                    label: whatsapp,
+                    sublabel: 'WhatsApp',
+                    onTap: () {
+                      Navigator.pop(ctx);
+                      final digitsOnly = whatsapp.replaceAll(RegExp(r'[^0-9+]'), '').replaceAll('+', '');
+                      launch(Uri.parse('https://wa.me/$digitsOnly'), 'WhatsApp');
+                    },
+                  ),
+                if (address.isNotEmpty)
+                  contactRow(icon: Icons.location_on_outlined, label: address),
+              ],
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Close')),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildAlertsBell(BuildContext context) {
     final sub = Provider.of<SubscriptionProvider>(context);
     // Same thresholds as the pill/Notifications screen, so all three
     // never disagree about whether the subscription needs attention.
@@ -2569,65 +2691,51 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
     // from subscriptionNeedsAttention above, which only covers the
     // urgent <=7-day window.
     final isInTrialInfo = sub.status == SubscriptionStatus.trial && !subscriptionNeedsAttention;
+    final hasNew = _hasNewUrgentSinceViewed || _hasNewPendingAssistantSinceViewed;
 
-    return StreamBuilder<QuerySnapshot>(
-      stream: FirebaseFirestore.instance
-          .collection('public_announcements')
-          .where('urgent', isEqualTo: true)
-          .snapshots(),
-      builder: (context, snapshot) {
-        final hasUrgentAnnouncement = (snapshot.data?.docs ?? []).any((doc) {
-          final data = doc.data() as Map<String, dynamic>;
-          return data['hidden'] != true;
-        });
-        final hasAlerts = hasStockAlerts || hasUrgentAnnouncement || _isEmailVerified == false;
-        // Subscription deliberately blinks rather than joining the
-        // steady hasAlerts group, and deliberately isn't gated by
-        // "since Notifications was last viewed" the way the other two
-        // are - it's not a one-off event to acknowledge, it's an
-        // ongoing problem that should keep drawing the eye for as long
-        // as it's actually true, independent of the floating pill's
-        // own snooze state (dismissing that pill never silences this).
-        final hasNew = _hasNewUrgentSinceViewed || _hasNewPendingAssistantSinceViewed || subscriptionNeedsAttention;
+    // Amber category - reuses the exact same <=7-day definition
+    // (subscriptionNeedsAttention) as "expiring soon" for a
+    // targeted promotion, so this never disagrees with what the
+    // Subscription screen itself would show.
+    final facilityId = Provider.of<FacilityProvider>(context, listen: false).selectedFacilityId ?? '';
 
-        // Amber category - reuses the exact same <=7-day definition
-        // (subscriptionNeedsAttention) as "expiring soon" for a
-        // targeted promotion, so this never disagrees with what the
-        // Subscription screen itself would show.
-        final facilityId = Provider.of<FacilityProvider>(context, listen: false).selectedFacilityId ?? '';
+    return StreamBuilder<Promotion?>(
+      stream: streamApplicablePromotion(facilityId: facilityId, isExpiringSoon: subscriptionNeedsAttention),
+      builder: (context, promoSnapshot) {
+        final hasActivePromotion = promoSnapshot.data != null;
 
-        return StreamBuilder<Promotion?>(
-          stream: streamApplicablePromotion(facilityId: facilityId, isExpiringSoon: subscriptionNeedsAttention),
-          builder: (context, promoSnapshot) {
-            final hasActivePromotion = promoSnapshot.data != null;
+        return StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
+          stream: facilityId.isEmpty
+              ? null
+              : FirebaseFirestore.instance
+                  .collection('facilities')
+                  .doc(facilityId)
+                  .collection('notifications')
+                  .orderBy('createdAt', descending: true)
+                  .limit(50)
+                  .snapshots(),
+          builder: (context, notifSnapshot) {
+            final storedNotifications =
+                (notifSnapshot.data?.docs ?? []).map(FacilityNotification.fromFirestore).toList();
+            // Covers every notification type, subscription alerts
+            // included - once marked read (via "Mark all as read"),
+            // it stops counting here, same as any other
+            // notification. No special-casing: read means quiet.
+            final hasUnreadFacilityNotification =
+                storedNotifications.any((n) => !n.isRead && !n.isExpired);
 
-            return StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
-              stream: facilityId.isEmpty
-                  ? null
-                  : FirebaseFirestore.instance
-                      .collection('facilities')
-                      .doc(facilityId)
-                      .collection('notifications')
-                      .orderBy('createdAt', descending: true)
-                      .limit(50)
-                      .snapshots(),
-              builder: (context, notifSnapshot) {
-                final hasUnreadFacilityNotification = (notifSnapshot.data?.docs ?? [])
-                    .map(FacilityNotification.fromFirestore)
-                    .any((n) => !n.isRead && !n.isExpired);
+            // Cycles through whichever of the three actually apply -
+            // one just blinks in place, several cycle between them,
+            // so someone with an urgent issue AND an active
+            // promotion sees both rather than only whichever was
+            // checked first.
+            final activeCategories = <Color>[
+              if (hasNew || hasUnreadFacilityNotification) Colors.redAccent,
+              if (isInTrialInfo) Colors.blue,
+              if (hasActivePromotion) warmAmber,
+            ];
 
-                // Cycles through whichever of the four actually apply -
-                // one just blinks in place, several cycle between them,
-                // so someone with an urgent issue AND an active
-                // promotion sees both rather than only whichever was
-                // checked first.
-                final activeCategories = <Color>[
-                  if (hasNew || hasUnreadFacilityNotification) Colors.redAccent,
-                  if (isInTrialInfo) Colors.blue,
-                  if (hasActivePromotion) warmAmber,
-                ];
-
-                return Stack(
+            return Stack(
               clipBehavior: Clip.none,
               children: [
                 IconButton(
@@ -2641,7 +2749,7 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
                     } else {
                       await Navigator.push(
                         context,
-                        MaterialPageRoute(builder: (_) => const StockAlertsScreen()),
+                        MaterialPageRoute(builder: (_) => const NotificationsScreen()),
                       );
                     }
                     // Notifications marks itself "viewed" on open - re-check
@@ -2655,20 +2763,8 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
                     right: 8,
                     top: 8,
                     child: _BlinkingDot(colors: activeCategories),
-                  )
-                else if (hasAlerts)
-                  Positioned(
-                    right: 8,
-                    top: 8,
-                    child: Container(
-                      width: 9,
-                      height: 9,
-                      decoration: const BoxDecoration(color: Colors.redAccent, shape: BoxShape.circle),
-                    ),
                   ),
               ],
-            );
-              },
             );
           },
         );
@@ -2702,7 +2798,9 @@ Widget _buildDrawerContent() {
     width: double.infinity,
     padding: const EdgeInsets.only(top: 18, bottom: 12),
     alignment: Alignment.center,
-    child: Container(
+    child: AnimatedContainer(
+      duration: const Duration(milliseconds: 200),
+      curve: Curves.easeInOut,
       width: _logoSize,
       height: _logoSize,
       padding: const EdgeInsets.all(4),
@@ -2756,7 +2854,7 @@ Widget _buildDrawerContent() {
     children: [
       DrawerHoverItem(
         icon: Icons.store,
-        title: 'Stock Store',
+        title: 'Stock',
         isCollapsed: effectivelyCollapsed,
         onTap: () async {
           await Navigator.push(
@@ -2792,7 +2890,7 @@ Widget _buildDrawerContent() {
       ),
       DrawerHoverItem(
         icon: Icons.design_services,
-        title: 'Service Records',
+        title: 'Services',
         isCollapsed: effectivelyCollapsed,
         onTap: () async {
           await Navigator.push(
@@ -2801,6 +2899,15 @@ Widget _buildDrawerContent() {
           );
           _refreshDashboardData();
         },
+      ),
+      DrawerHoverItem(
+        icon: Icons.people,
+        title: 'Clients',
+        isCollapsed: effectivelyCollapsed,
+        onTap: () => Navigator.push(
+          context,
+          MaterialPageRoute(builder: (_) => ClientsScreen()),
+        ),
       ),
       DrawerHoverItem(
         icon: Icons.payments,
@@ -2840,20 +2947,11 @@ Widget _buildDrawerContent() {
       ),
       DrawerHoverItem(
         icon: Icons.summarize_outlined,
-        title: 'View Reports',
+        title: 'Reports',
         isCollapsed: effectivelyCollapsed,
         onTap: () => Navigator.push(
           context,
           MaterialPageRoute(builder: (_) => const ViewReportsScreen()),
-        ),
-      ),
-      DrawerHoverItem(
-        icon: Icons.people,
-        title: 'Clients',
-        isCollapsed: effectivelyCollapsed,
-        onTap: () => Navigator.push(
-          context,
-          MaterialPageRoute(builder: (_) => ClientsScreen()),
         ),
       ),
     ],

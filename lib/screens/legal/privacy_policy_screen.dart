@@ -8,11 +8,41 @@ class PrivacyPolicyScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return const LegalDocumentScreen(
       title: 'Privacy Policy',
+      subtitle: 'Please read how we collect, use, and protect your data.',
       lastUpdated: 'August 30, 2026',
       intro: 'This Privacy Policy explains what information VetBiz Pro ("we", "us", "the platform") '
           'collects when you or your facility use the app, how that information is used, and the '
           'choices you have. It applies to every account type on the platform - Admin, Assistant, and '
           'Platform Admin.',
+      keyPoints: [
+        LegalKeyPoint(
+          icon: Icons.shield_outlined,
+          title: 'Platform',
+          description: 'VetBiz Pro - Veterinary & Agrovet Management',
+        ),
+        LegalKeyPoint(
+          icon: Icons.groups_outlined,
+          title: 'Applies to',
+          description: 'Every account type: Admin, Assistant, Platform Admin',
+        ),
+        LegalKeyPoint(
+          icon: Icons.storage_outlined,
+          title: 'Where it\'s stored',
+          description: 'Hosted on Firebase, access-restricted per facility',
+        ),
+        LegalKeyPoint(
+          icon: Icons.block_outlined,
+          title: 'Not sold, ever',
+          description: 'We never sell your data or share it with advertisers',
+        ),
+        LegalKeyPoint(
+          icon: Icons.description_outlined,
+          title: 'Full policy',
+          description: 'Read the complete policy below',
+        ),
+      ],
+      calloutTitle: 'Your data. Our priority.',
+      calloutBody: 'We value your trust and are committed to keeping your data safe.',
       sections: [
         LegalSection(
           heading: '1. Information We Collect',

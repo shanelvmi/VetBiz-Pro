@@ -24,6 +24,7 @@ enum NotificationType {
   productExpiry,
   promotion,
   subscriptionRejected,
+  subscriptionExpiring,
   general; // fallback for anything unrecognized - never crashes on unknown data
 
   static NotificationType fromString(String? value) {
@@ -58,6 +59,7 @@ extension NotificationTypeDisplay on NotificationType {
         return NotificationCategory.debt;
       case NotificationType.promotion:
       case NotificationType.subscriptionRejected:
+      case NotificationType.subscriptionExpiring:
         return NotificationCategory.system;
       case NotificationType.serviceRecorded:
       case NotificationType.newClient:
@@ -94,6 +96,8 @@ extension NotificationTypeDisplay on NotificationType {
         return Icons.celebration_outlined;
       case NotificationType.subscriptionRejected:
         return Icons.error_outline;
+      case NotificationType.subscriptionExpiring:
+        return Icons.timer_outlined;
       case NotificationType.general:
         return Icons.notifications_none;
     }
@@ -105,6 +109,7 @@ extension NotificationTypeDisplay on NotificationType {
       case NotificationType.subscriptionRejected:
         return Colors.red;
       case NotificationType.lowStock:
+      case NotificationType.subscriptionExpiring:
         return Colors.orange;
       case NotificationType.reorderSoon:
         return Colors.amber[700]!;

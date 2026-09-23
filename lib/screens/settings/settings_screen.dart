@@ -10,7 +10,7 @@ import 'export_data_screen.dart';
 import 'business_hours_screen.dart';
 import 'trash_screen.dart';
 import '../subscription/subscription_screen.dart';
-import '../dashboard/stock_alerts_screen.dart';
+import '../dashboard/notifications_screen.dart';
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
@@ -167,7 +167,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       onTap: () {
                         Navigator.push(
                           context,
-                          MaterialPageRoute(builder: (_) => const StockAlertsScreen()),
+                          MaterialPageRoute(builder: (_) => const NotificationsScreen()),
                         );
                       },
                     ),
@@ -401,7 +401,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
       case 'subscription':
         return isAdmin ? const SubscriptionScreen() : _buildEmptyPane();
       case 'notifications':
-        return const StockAlertsScreen();
+        return const NotificationsScreen();
       case 'printer':
         return const PrinterSettingsScreen();
       case 'trash':

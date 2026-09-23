@@ -293,10 +293,17 @@ class _InsightsScreenState extends State<InsightsScreen> {
     }
 
     final baseline = _recentAvgDailyActivity;
+    // Both the 7-day baseline and today are genuinely zero - there's
+    // no activity to read a trend from at all, so say that plainly
+    // rather than falling into the ratio's fallback (which would
+    // otherwise read as a misleadingly "steady" 1.0).
+    if (baseline == 0 && _todayActivity == 0) {
+      return 'No activity recorded yet.';
+    }
     // No baseline to compare against yet (a brand-new facility) - fall
     // back to a plain read of whether anything happened today at all,
     // rather than a ratio against zero.
-    final ratio = baseline > 0 ? (_todayActivity / baseline) : (_todayActivity > 0 ? 1.6 : 1.0);
+    final ratio = baseline > 0 ? (_todayActivity / baseline) : 1.6;
 
     if (ratio >= 1.6) {
       if (_todaySalesShare >= 0.65) return 'Sales are trending upward.';
@@ -315,7 +322,10 @@ class _InsightsScreenState extends State<InsightsScreen> {
   // rather than being folded into the headline.
   String _pulseSentence() {
     final trend = _outstandingPulseTrend;
-    if (trend == null || trend.hasNoChange) return 'Outstanding payments are stable.';
+    // Both today's and yesterday's outstanding total were literally
+    // zero - there's no debt to call "stable", so say that plainly
+    // instead of implying steady debt at some nonzero amount.
+    if (trend == null || trend.hasNoChange) return 'No outstanding payments.';
     if (trend.isNewActivity) return 'Outstanding payments are rising - worth following up.';
     // A zero or negligible move isn't a real trend in either
     // direction - only call it rising/improving once the change is

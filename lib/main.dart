@@ -297,16 +297,42 @@ class _AppEntryPointState extends State<AppEntryPoint> {
     return _decideScreenFuture!;
   }
 
+  // Firestore's web SDK has a known cold-start race: the very first
+  // query issued right after a fresh page load can spuriously report
+  // itself as "unavailable"/offline before the underlying connection
+  // has actually finished establishing - even though the identical
+  // query succeeds moments later with nothing else changed. A plain
+  // browser reload already proved this resolves itself; this retries
+  // the same way automatically instead of leaving someone to
+  // rediscover that fix by hand.
+  Future<DocumentSnapshot<Map<String, dynamic>>> _getWithRetry(
+    DocumentReference<Map<String, dynamic>> ref, {
+    required Duration timeout,
+    int maxAttempts = 3,
+  }) async {
+    for (var attempt = 1; attempt <= maxAttempts; attempt++) {
+      try {
+        return await ref.get().timeout(timeout);
+      } on FirebaseException catch (e) {
+        final isLastAttempt = attempt == maxAttempts;
+        if (e.code != 'unavailable' || isLastAttempt) rethrow;
+        debugPrint('[AUTH] ${ref.path} attempt $attempt hit "unavailable" - retrying');
+        await Future.delayed(Duration(milliseconds: 500 * attempt));
+      }
+    }
+    // Unreachable - the loop above always either returns or rethrows.
+    throw StateError('_getWithRetry exhausted attempts without returning or rethrowing');
+  }
+
   Future<Widget> _decideScreen(User user) async {
     try {
       final uid = user.uid;
       debugPrint('[AUTH] _decideScreen starting for uid=$uid');
 
-      final userDoc = await FirebaseFirestore.instance
-          .collection('users')
-          .doc(uid)
-          .get()
-          .timeout(const Duration(seconds: 15));
+      final userDoc = await _getWithRetry(
+        FirebaseFirestore.instance.collection('users').doc(uid),
+        timeout: const Duration(seconds: 15),
+      );
       debugPrint('[AUTH] users/$uid read complete - exists=${userDoc.exists}');
 
       if (!userDoc.exists) {
@@ -323,11 +349,10 @@ class _AppEntryPointState extends State<AppEntryPoint> {
       // protection (which stops this from being written in the first
       // place) in case any pre-existing account somehow already has
       // status: deactivated set.
-      final platformAdminDoc = await FirebaseFirestore.instance
-          .collection('platform_admins')
-          .doc(uid)
-          .get()
-          .timeout(const Duration(seconds: 10));
+      final platformAdminDoc = await _getWithRetry(
+        FirebaseFirestore.instance.collection('platform_admins').doc(uid),
+        timeout: const Duration(seconds: 10),
+      );
       final isPlatformAdminAccount = platformAdminDoc.exists;
       debugPrint('[AUTH] platform_admins/$uid read complete - isPlatformAdminAccount=$isPlatformAdminAccount');
 
@@ -376,11 +401,10 @@ class _AppEntryPointState extends State<AppEntryPoint> {
         debugPrint('[AUTH] facilities empty, not a platform admin - starting retry loop');
         for (var attempt = 0; attempt < 4 && facilities.isEmpty; attempt++) {
           await Future.delayed(const Duration(milliseconds: 800));
-          final retryDoc = await FirebaseFirestore.instance
-              .collection('users')
-              .doc(uid)
-              .get()
-              .timeout(const Duration(seconds: 10));
+          final retryDoc = await _getWithRetry(
+            FirebaseFirestore.instance.collection('users').doc(uid),
+            timeout: const Duration(seconds: 10),
+          );
           facilities = _parseFacilities(retryDoc.data());
         }
       }

@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
 import '../../utils/sentence_capitalization_formatter.dart';
+import '../../utils/activity_logger.dart';
 import '../../models/product.dart';
 import '../../providers/product_provider.dart';
 import '../../providers/facility_provider.dart';
@@ -13,8 +15,8 @@ import '../../services/product_catalog_service.dart';
 import '../products/add_edit_product_screen.dart';
 import '../products/add_batch_screen.dart';
 import '../products/view_batches_screen.dart';
-import '../dashboard/stock_alerts_screen.dart';
-import '../../models/notification_model.dart';
+import '../products/move_expired_to_stock_dialog.dart';
+import '../products/stock_alerts_screen.dart';
 
 class StockStoreScreen extends StatefulWidget {
   const StockStoreScreen({super.key});
@@ -108,7 +110,7 @@ class _StockStoreScreenState extends State<StockStoreScreen> {
                   width: panelWidth,
                   child: ConstrainedBox(
                     constraints: BoxConstraints(maxHeight: screenSize.height * 0.75),
-                    child: const StockAlertsScreen(isDropdown: true, lockedCategory: NotificationCategory.stock),
+                    child: const StockAlertsScreen(isDropdown: true),
                   ),
                 ),
               ),
@@ -204,6 +206,12 @@ class _StockStoreScreenState extends State<StockStoreScreen> {
         ],
       ),
     );
+  }
+
+  bool _hasLikelyExpiredSellable(Product product) {
+    return product.expiry != null &&
+        product.expiry!.isBefore(DateTime.now()) &&
+        product.sellableQty > 0;
   }
 
   Map<String, dynamic> _getProductStatus(Product product) {
@@ -330,6 +338,94 @@ class _StockStoreScreenState extends State<StockStoreScreen> {
     }
   }
 
+  // Mirrors moveToSellable's own batch-selection logic exactly (same
+  // soonest-expiry-first sort, same "take" math) but read-only - just
+  // to find out, before committing to anything, whether releasing this
+  // quantity would actually draw from an already-expired batch, and if
+  // so, precisely how many units from which one.
+  Future<List<(String, int)>> _simulateExpiredPortion(Product product, int qty) async {
+    final batchesRef = FirebaseFirestore.instance
+        .collection('facilities')
+        .doc(product.facilityId)
+        .collection('products')
+        .doc(product.id)
+        .collection('batches');
+
+    final snap = await batchesRef.where('stockQty', isGreaterThan: 0).get();
+    if (snap.docs.isEmpty) return [];
+
+    final now = DateTime.now();
+    final candidates = snap.docs.toList()
+      ..sort((a, b) {
+        final aExp = a.data()['expiry'] as Timestamp?;
+        final bExp = b.data()['expiry'] as Timestamp?;
+        if (aExp == null && bExp == null) return 0;
+        if (aExp == null) return 1;
+        if (bExp == null) return -1;
+        return aExp.compareTo(bExp);
+      });
+
+    final expiredPortion = <(String, int)>[];
+    int remaining = qty;
+    for (final doc in candidates) {
+      if (remaining <= 0) break;
+      final data = doc.data();
+      final availableStock = (data['stockQty'] ?? 0) as int;
+      if (availableStock <= 0) continue;
+
+      final take = remaining < availableStock ? remaining : availableStock;
+      final expiry = data['expiry'] as Timestamp?;
+      if (expiry != null && expiry.toDate().isBefore(now)) {
+        final batchNo = data['batchNo'] as String?;
+        final label = batchNo?.isNotEmpty == true ? 'Batch $batchNo' : 'an unlabeled batch';
+        expiredPortion.add((label, take));
+      }
+      remaining -= take;
+    }
+    return expiredPortion;
+  }
+
+  Future<bool?> _showExpiredReleaseWarning(Product product, List<(String, int)> expiredPortion) {
+    return showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: const Row(
+          children: [
+            Icon(Icons.warning_amber_rounded, color: Colors.red),
+            SizedBox(width: 8),
+            Text('Expired Stock'),
+          ],
+        ),
+        content: SizedBox(
+          width: 320,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text('This product is expired. Do you still want to release it to the shop?',
+                  style: const TextStyle(fontSize: 13.5)),
+              const SizedBox(height: 10),
+              ...expiredPortion.map((e) => Padding(
+                    padding: const EdgeInsets.only(bottom: 4),
+                    child: Text('• ${e.$2} ${product.unit} from ${e.$1}',
+                        style: TextStyle(fontSize: 12.5, color: Colors.red[700])),
+                  )),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancel')),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.red, foregroundColor: Colors.white),
+            onPressed: () => Navigator.pop(ctx, true),
+            child: const Text('Release Anyway'),
+          ),
+        ],
+      ),
+    );
+  }
+
   Future<void> _releaseToShop(Product product) async {
     final qtyController = TextEditingController(text: '1');
     final notesController = TextEditingController();
@@ -430,6 +526,13 @@ class _StockStoreScreenState extends State<StockStoreScreen> {
       return;
     }
 
+    final expiredPortion = await _simulateExpiredPortion(product, qty);
+    if (expiredPortion.isNotEmpty) {
+      if (!mounted) return;
+      final proceedAnyway = await _showExpiredReleaseWarning(product, expiredPortion);
+      if (proceedAnyway != true) return;
+    }
+
     try {
       await Provider.of<ProductProvider>(context, listen: false)
           .moveToSellable(
@@ -440,6 +543,18 @@ class _StockStoreScreenState extends State<StockStoreScreen> {
                 ? notesController.text.trim()
                 : null,
           );
+
+      if (expiredPortion.isNotEmpty) {
+        final userInfo = await ActivityLogger.getCurrentUserInfo();
+        final unitsSummary = expiredPortion.map((e) => '${e.$2} from ${e.$1}').join(', ');
+        await ActivityLogger.logActivity(
+          facilityId: product.facilityId,
+          userId: userInfo['userId']!,
+          userName: userInfo['userName']!,
+          actionType: "Inventory Move",
+          description: "${product.name}: released $unitsSummary despite expired-stock warning",
+        );
+      }
 
       if (!mounted) return;
 
@@ -736,14 +851,15 @@ class _StockStoreScreenState extends State<StockStoreScreen> {
           Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              IconButton(
-                onPressed: () {
-                  showAddEditProductScreen(context, product: p);
-                },
-                icon: Icon(Icons.edit_outlined, color: primaryDeepTealGreen, size: 20),
-                tooltip: 'Edit',
-              ),
-              if (p.stockQty > 0)
+              if (isAdmin)
+                IconButton(
+                  onPressed: () {
+                    showAddEditProductScreen(context, product: p);
+                  },
+                  icon: Icon(Icons.edit_outlined, color: primaryDeepTealGreen, size: 20),
+                  tooltip: 'Edit',
+                ),
+              if (isAdmin && p.stockQty > 0)
                 IconButton(
                   onPressed: () => _releaseToShop(p),
                   icon: Icon(Icons.upload, color: primaryDeepTealGreen, size: 20),
@@ -757,6 +873,8 @@ class _StockStoreScreenState extends State<StockStoreScreen> {
                     showAddBatchScreen(context, product: p);
                   } else if (value == 'view_batches') {
                     showViewBatchesScreen(context, product: p);
+                  } else if (value == 'move_expired_to_stock') {
+                    showMoveExpiredToStockDialog(context, product: p);
                   } else if (value == 'delete') {
                     _deleteProduct(p.id);
                   }
@@ -764,6 +882,8 @@ class _StockStoreScreenState extends State<StockStoreScreen> {
                 itemBuilder: (context) => [
                   const PopupMenuItem(value: 'add_batch', child: Text('Add New Batch')),
                   const PopupMenuItem(value: 'view_batches', child: Text('View Batches')),
+                  if (_hasLikelyExpiredSellable(p))
+                    const PopupMenuItem(value: 'move_expired_to_stock', child: Text('Move to Stock')),
                   if (isAdmin)
                     PopupMenuItem(
                       value: 'delete',
@@ -815,7 +935,7 @@ class _StockStoreScreenState extends State<StockStoreScreen> {
                   await _showNotificationsDropdown(context);
                 } else {
                   await Navigator.push(context, MaterialPageRoute(
-                      builder: (_) => const StockAlertsScreen(lockedCategory: NotificationCategory.stock)));
+                      builder: (_) => const StockAlertsScreen()));
                 }
               },
             ),
@@ -1159,15 +1279,62 @@ class _StockStoreScreenState extends State<StockStoreScreen> {
                       'Sellable: ${p.sellableQty} ${p.unit} \u2022 Batch: ${p.batchNo ?? "-"}',
                       style: TextStyle(fontSize: 12.5, color: Colors.grey[700]),
                     ),
-                    Text(
-                      'Buy: ${_moneyFormat.format(p.buyPrice)}',
-                      style: TextStyle(fontSize: 12.5, color: Colors.grey[700]),
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.end,
+                      children: [
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'Buy: ${_moneyFormat.format(p.buyPrice)}',
+                                style: TextStyle(fontSize: 12.5, color: Colors.grey[700]),
+                              ),
+                              if (p.expiry != null)
+                                Text(
+                                  'Expiry: ${DateFormat('dd MMM yyyy').format(p.expiry!)}',
+                                  style: TextStyle(fontSize: 12.5, color: Colors.grey[700]),
+                                ),
+                            ],
+                          ),
+                        ),
+                        // Overflow menu - batches (Add New Batch /
+                        // View Batches / Move to Stock when
+                        // relevant) plus, for an admin, Delete.
+                        // Sits up here with the product's own
+                        // details rather than down with Edit/
+                        // Release, since those two are this
+                        // screen's primary actions and deserve
+                        // their own row without a third, less-used
+                        // control crowding it.
+                        PopupMenuButton<String>(
+                          icon: Icon(Icons.more_vert, color: primaryDeepTealGreen),
+                          tooltip: 'More actions',
+                          onSelected: (value) {
+                            if (value == 'add_batch') {
+                              showAddBatchScreen(context, product: p);
+                            } else if (value == 'view_batches') {
+                              showViewBatchesScreen(context, product: p);
+                            } else if (value == 'move_expired_to_stock') {
+                              showMoveExpiredToStockDialog(context, product: p);
+                            } else if (value == 'delete') {
+                              _deleteProduct(p.id);
+                            }
+                          },
+                          itemBuilder: (context) => [
+                            const PopupMenuItem(value: 'add_batch', child: Text('Add New Batch')),
+                            const PopupMenuItem(value: 'view_batches', child: Text('View Batches')),
+                            if (_hasLikelyExpiredSellable(p))
+                              const PopupMenuItem(value: 'move_expired_to_stock', child: Text('Move to Stock')),
+                            if (isAdmin)
+                              PopupMenuItem(
+                                value: 'delete',
+                                child: Text('Delete', style: TextStyle(color: Colors.red[400])),
+                              ),
+                          ],
+                        ),
+                      ],
                     ),
-                    if (p.expiry != null)
-                      Text(
-                        'Expiry: ${DateFormat('dd MMM yyyy').format(p.expiry!)}',
-                        style: TextStyle(fontSize: 12.5, color: Colors.grey[700]),
-                      ),
                   ],
                 ),
               ),
@@ -1176,20 +1343,21 @@ class _StockStoreScreenState extends State<StockStoreScreen> {
           const SizedBox(height: 12),
           Row(
             children: [
-              Expanded(
-                child: OutlinedButton.icon(
-                  onPressed: () {
-                    showAddEditProductScreen(context, product: p);
-                  },
-                  icon: Icon(Icons.edit_outlined, size: 16, color: primaryDeepTealGreen),
-                  label: Text('Edit', style: TextStyle(color: primaryDeepTealGreen)),
-                  style: OutlinedButton.styleFrom(
-                    side: BorderSide(color: primaryDeepTealGreen.withValues(alpha: 0.4)),
-                    padding: const EdgeInsets.symmetric(vertical: 10),
+              if (isAdmin)
+                Expanded(
+                  child: OutlinedButton.icon(
+                    onPressed: () {
+                      showAddEditProductScreen(context, product: p);
+                    },
+                    icon: Icon(Icons.edit_outlined, size: 16, color: primaryDeepTealGreen),
+                    label: Text('Edit', style: TextStyle(color: primaryDeepTealGreen)),
+                    style: OutlinedButton.styleFrom(
+                      side: BorderSide(color: primaryDeepTealGreen.withValues(alpha: 0.4)),
+                      padding: const EdgeInsets.symmetric(vertical: 10),
+                    ),
                   ),
                 ),
-              ),
-              if (p.stockQty > 0) ...[
+              if (isAdmin && p.stockQty > 0) ...[
                 const SizedBox(width: 8),
                 Expanded(
                   child: ElevatedButton.icon(
@@ -1207,32 +1375,6 @@ class _StockStoreScreenState extends State<StockStoreScreen> {
                   ),
                 ),
               ],
-              // Overflow menu - batches (Add New Batch / View
-              // Batches) plus, for an admin, Delete. Consolidates
-              // what used to be three separate buttons into one,
-              // without removing any of the actions themselves.
-              PopupMenuButton<String>(
-                icon: Icon(Icons.more_vert, color: primaryDeepTealGreen),
-                tooltip: 'More actions',
-                onSelected: (value) {
-                  if (value == 'add_batch') {
-                    showAddBatchScreen(context, product: p);
-                  } else if (value == 'view_batches') {
-                    showViewBatchesScreen(context, product: p);
-                  } else if (value == 'delete') {
-                    _deleteProduct(p.id);
-                  }
-                },
-                itemBuilder: (context) => [
-                  const PopupMenuItem(value: 'add_batch', child: Text('Add New Batch')),
-                  const PopupMenuItem(value: 'view_batches', child: Text('View Batches')),
-                  if (isAdmin)
-                    PopupMenuItem(
-                      value: 'delete',
-                      child: Text('Delete', style: TextStyle(color: Colors.red[400])),
-                    ),
-                ],
-              ),
             ],
           ),
         ],

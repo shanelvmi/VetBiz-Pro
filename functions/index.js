@@ -762,6 +762,116 @@ exports.recordDailySnapshots = onSchedule(
   console.log("Daily snapshot sweep complete.");
 });
 
+// Mirrors SubscriptionProvider's exact status/wording logic (Dart side)
+// so the Notifications screen finally has something real to show for
+// subscription/trial expiry - previously this only ever existed as a
+// live computation on the Dashboard, never written anywhere, so it
+// could never appear in the Notifications screen no matter how that
+// screen filtered.
+//
+// Runs daily. For each facility close enough to needing attention
+// (grace, locked, or 7 days or fewer remaining on an active/trial
+// period), upserts one notification at a fixed document ID -
+// refreshing the day-count wording each run without creating a new
+// document every day, and without resetting readAt on a notification
+// someone's already seen (createdAt is only set on first write, via
+// merge). Set to expire in 2 days as a safety net: as long as this
+// function keeps running daily, the notification stays current; if it
+// ever stops, the notification quietly disappears instead of
+// lingering with stale information. Once a facility no longer needs
+// attention (renewed, or never had a subscription/trial date at all),
+// any existing notification is deleted.
+const kGracePeriodDays = 3;
+const kAttentionThresholdDays = 7;
+
+exports.checkSubscriptionExpiry = onSchedule(
+  { schedule: "30 0 * * *", timeZone: "Africa/Dar_es_Salaam" },
+  async () => {
+  const facilitiesSnap = await db.collection("facilities").get();
+
+  for (const facilityDoc of facilitiesSnap.docs) {
+    const facilityId = facilityDoc.id;
+    const notifRef = db
+      .collection("facilities")
+      .doc(facilityId)
+      .collection("notifications")
+      .doc("subscription_expiring");
+
+    try {
+      const data = facilityDoc.data() || {};
+      const subscriptionExpiresAt = data.subscriptionExpiresAt ? data.subscriptionExpiresAt.toDate() : null;
+      const trialExpiresAt = data.trialExpiresAt ? data.trialExpiresAt.toDate() : null;
+      const isTrial = subscriptionExpiresAt === null;
+      const expiresAt = subscriptionExpiresAt || trialExpiresAt;
+
+      // Neither date set at all - an "open," indefinite trial (a
+      // facility created before this feature existed). Nothing to
+      // warn about, and nothing to clean up either, so just move on.
+      if (expiresAt === null) continue;
+
+      const now = new Date();
+      const graceEnd = new Date(expiresAt.getTime() + kGracePeriodDays * 24 * 60 * 60 * 1000);
+      const isLocked = now >= graceEnd;
+      const isGrace = !isLocked && now >= expiresAt;
+      // Mirrors SubscriptionProvider.daysRemaining exactly - truncate to
+      // whole hours first, then divide by 24 and ceil - not a direct
+      // ceil of the raw millisecond difference. The two disagree at
+      // specific boundary moments (confirmed: exactly 7 days + 30
+      // minutes remaining gives Dart 7 but a raw-ms ceil 8), which
+      // silently failed the <=7 threshold here even while the
+      // Dashboard and bell, reading Dart's own number, already showed
+      // "7 days" and lit up red - exactly the mismatch this function
+      // exists to prevent.
+      const diffHours = Math.trunc((expiresAt.getTime() - now.getTime()) / (60 * 60 * 1000));
+      const daysRemaining = diffHours >= 0 ? Math.ceil(diffHours / 24) : -Math.ceil(-diffHours / 24);
+      const needsAttention = isLocked || isGrace || daysRemaining <= kAttentionThresholdDays;
+
+      if (!needsAttention) {
+        // Was flagged before, isn't anymore (renewed, most likely) -
+        // remove any notification left over from an earlier run.
+        await notifRef.delete().catch(() => {});
+        continue;
+      }
+
+      let title;
+      let message;
+      if (isLocked) {
+        title = isTrial ? "Trial Ended" : "Subscription Expired";
+        message = isTrial
+          ? "Your trial has ended. The app is in read-only mode."
+          : "Your subscription has expired. The app is in read-only mode.";
+      } else if (isGrace) {
+        title = isTrial ? "Trial Ended" : "Subscription Expired";
+        message = isTrial
+          ? "Your trial has ended. You have a few days of grace before read-only mode begins."
+          : "Your subscription has expired. You have a few days of grace before read-only mode begins.";
+      } else if (isTrial) {
+        title = "Trial Expiring Soon";
+        message = `Your trial expires in ${daysRemaining} day${daysRemaining === 1 ? "" : "s"}.`;
+      } else {
+        title = "Subscription Expiring Soon";
+        message = `Your subscription expires in ${daysRemaining} day${daysRemaining === 1 ? "" : "s"}.`;
+      }
+
+      const notifExpiresAt = new Date(now.getTime() + 2 * 24 * 60 * 60 * 1000);
+      const existing = await notifRef.get();
+
+      const payload = {
+        type: "subscriptionExpiring",
+        title,
+        message,
+        expiresAt: admin.firestore.Timestamp.fromDate(notifExpiresAt),
+      };
+      if (!existing.exists) {
+        payload.createdAt = admin.firestore.FieldValue.serverTimestamp();
+      }
+      await notifRef.set(payload, { merge: true });
+    } catch (error) {
+      console.error(`Error checking subscription expiry for facility ${facilityId}:`, error);
+    }
+  }
+});
+
 /**
  * Delete Facility - a Platform Admin action, not a facility-admin one.
  * Deletes every business record for the facility AND the facility

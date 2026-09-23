@@ -4,50 +4,28 @@ import 'package:provider/provider.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:intl/intl.dart';
 
-import '../../providers/product_provider.dart';
 import '../../providers/facility_provider.dart';
-import '../../providers/subscription_provider.dart';
-import '../../providers/user_role_provider.dart';
-import '../../models/product.dart';
 import '../../models/notification_model.dart';
-import '../subscription/subscription_screen.dart';
 import '../../widgets/announcement_message.dart';
+import '../../widgets/notification_row.dart';
 
-/// Everything that needs your attention in one place - subscription
-/// status, urgent announcements, and low-stock/expiry alerts, precise to
-/// the individual batch. Products with no batch records yet (created
-/// before batch tracking existed) fall back to a single whole-product
-/// row using their own aggregate fields.
-class StockAlertsScreen extends StatefulWidget {
+/// Everything that needs your attention, facility-wide - subscription
+/// status, urgent announcements, payments, debts, and system messages.
+/// Stock/product alerts have their own dedicated screen now (see
+/// StockAlertsScreen in screens/products/) - this one is deliberately
+/// general-purpose, so it no longer needs to know about a "locked
+/// category" at all.
+class NotificationsScreen extends StatefulWidget {
   final bool isDropdown;
-  // When set, the full screen is restricted to only this category -
-  // both the visible tabs and the underlying data - rather than the
-  // complete facility-wide feed. Used by screens like Products/Stock
-  // Store, where the bell icon should only ever surface product-related
-  // alerts, not payments/clients/debts/etc.
-  final NotificationCategory? lockedCategory;
-  const StockAlertsScreen({super.key, this.isDropdown = false, this.lockedCategory});
+  const NotificationsScreen({super.key, this.isDropdown = false});
 
   static const Color primaryColor = Color(0xFF2F5D62);
-  static const int expiryWarningDays = 30;
-
-  /// Cheap, aggregate-only check for the Dashboard bell's red dot - a
-  /// quick yes/no signal doesn't need per-batch precision, just "is
-  /// there anything to look at". The detail screen below is what shows
-  /// the real per-batch breakdown.
-  static bool hasAnyAlert(List<Product> products) {
-    final now = DateTime.now();
-    return products.any((p) =>
-        p.isLowStock ||
-        p.hasRestockShelfAlert ||
-        (p.expiry != null && p.expiry!.difference(now).inDays <= expiryWarningDays));
-  }
 
   @override
-  State<StockAlertsScreen> createState() => _StockAlertsScreenState();
+  State<NotificationsScreen> createState() => _NotificationsScreenState();
 }
 
-class _StockAlertsScreenState extends State<StockAlertsScreen> {
+class _NotificationsScreenState extends State<NotificationsScreen> {
   bool _isLoading = true;
   String? _error;
 
@@ -70,7 +48,6 @@ class _StockAlertsScreenState extends State<StockAlertsScreen> {
   @override
   void initState() {
     super.initState();
-    _selectedCategory = widget.lockedCategory;
     _watchNotifications();
   }
 
@@ -145,16 +122,6 @@ class _StockAlertsScreenState extends State<StockAlertsScreen> {
     await batch.commit();
   }
 
-  String _relativeTime(DateTime? dt) {
-    if (dt == null) return '';
-    final diff = DateTime.now().difference(dt);
-    if (diff.inMinutes < 1) return 'Just now';
-    if (diff.inMinutes < 60) return '${diff.inMinutes}m ago';
-    if (diff.inHours < 24) return '${diff.inHours}h ago';
-    if (diff.inDays < 7) return '${diff.inDays}d ago';
-    return DateFormat('d MMM').format(dt);
-  }
-
   // Search + date range + category tab, applied together - the flat,
   // filtered result pagination and day-grouping below both work from.
   List<FacilityNotification> get _filteredHistory {
@@ -215,32 +182,13 @@ class _StockAlertsScreenState extends State<StockAlertsScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final sub = Provider.of<SubscriptionProvider>(context);
-    final isAdmin = Provider.of<UserRoleProvider>(context).isAdmin;
-
-    // Same thresholds as the Dashboard banner, so the two can never
-    // disagree about whether the subscription needs attention.
-    final subNeedsAttention = sub.status == SubscriptionStatus.grace ||
-        sub.status == SubscriptionStatus.locked ||
-        ((sub.status == SubscriptionStatus.trial || sub.status == SubscriptionStatus.active) &&
-            sub.daysRemaining != null &&
-            sub.daysRemaining! <= 7);
-
-    // True for the entire trial, not just its last 7 days - a
-    // deliberately calmer, informational notice (not urgent) shown
-    // whenever someone's on a trial at all, separate from
-    // subNeedsAttention above which only covers the "running out
-    // soon" case.
-    final isInTrial = sub.status == SubscriptionStatus.trial;
-
     final nothingToShow = !_isLoading &&
         _error == null &&
-        (widget.lockedCategory != null || (!subNeedsAttention && !isInTrial)) &&
         _needsAttention.isEmpty &&
         _earlier.isEmpty;
 
     if (widget.isDropdown) {
-      return _buildDropdownChrome(sub, isAdmin, nothingToShow, subNeedsAttention, isInTrial);
+      return _buildDropdownChrome(nothingToShow);
     }
 
     return Scaffold(
@@ -251,19 +199,11 @@ class _StockAlertsScreenState extends State<StockAlertsScreen> {
         elevation: 1,
         centerTitle: true,
         toolbarHeight: 72,
-        title: Column(
+        title: const Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Text(
-              widget.lockedCategory == NotificationCategory.stock ? 'Product Alerts' : 'Notifications',
-              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 19, color: Colors.black87),
-            ),
-            Text(
-              widget.lockedCategory == NotificationCategory.stock
-                  ? 'Stock and expiry alerts for your products'
-                  : 'All updates and alerts from your facility',
-              style: const TextStyle(fontSize: 12, color: Colors.black54),
-            ),
+            Text('Notifications', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 19, color: Colors.black87)),
+            Text('All updates and alerts from your facility', style: TextStyle(fontSize: 12, color: Colors.black54)),
           ],
         ),
       ),
@@ -313,7 +253,7 @@ class _StockAlertsScreenState extends State<StockAlertsScreen> {
                       : '${DateFormat('d MMM').format(_dateRange!.start)} - ${DateFormat('d MMM y').format(_dateRange!.end)}',
                   style: const TextStyle(fontSize: 12.5),
                 ),
-                style: OutlinedButton.styleFrom(foregroundColor: StockAlertsScreen.primaryColor),
+                style: OutlinedButton.styleFrom(foregroundColor: NotificationsScreen.primaryColor),
               ),
               if (_dateRange != null)
                 IconButton(
@@ -351,8 +291,6 @@ class _StockAlertsScreenState extends State<StockAlertsScreen> {
   }
 
   Widget _buildCategoryTabs() {
-    if (widget.lockedCategory != null) return const SizedBox.shrink();
-
     final tabs = <(String, NotificationCategory?)>[
       ('All', null),
       ('Critical', NotificationCategory.critical),
@@ -375,7 +313,7 @@ class _StockAlertsScreenState extends State<StockAlertsScreen> {
               child: ChoiceChip(
                 label: Text(label, style: const TextStyle(fontSize: 12.5)),
                 selected: isSelected,
-                selectedColor: StockAlertsScreen.primaryColor,
+                selectedColor: NotificationsScreen.primaryColor,
                 labelStyle: TextStyle(color: isSelected ? Colors.white : Colors.black87),
                 onSelected: (_) => setState(() {
                   _selectedCategory = category;
@@ -424,10 +362,7 @@ class _StockAlertsScreenState extends State<StockAlertsScreen> {
                   style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12.5, color: Colors.grey[600]),
                 ),
               ),
-              ...group.value.map((n) => _NotificationRow(
-                    notification: n,
-                    relativeTime: _relativeTime(n.createdAt),
-                  )),
+              ...group.value.map((n) => NotificationRow(notification: n)),
             ],
           ),
         );
@@ -464,7 +399,7 @@ class _StockAlertsScreenState extends State<StockAlertsScreen> {
                       height: 28,
                       alignment: Alignment.center,
                       decoration: BoxDecoration(
-                        color: page == _currentPage ? StockAlertsScreen.primaryColor : null,
+                        color: page == _currentPage ? NotificationsScreen.primaryColor : null,
                         borderRadius: BorderRadius.circular(6),
                       ),
                       child: Text(
@@ -493,7 +428,7 @@ class _StockAlertsScreenState extends State<StockAlertsScreen> {
   // full screen - no Scaffold/AppBar of its own (the dropdown
   // container the caller wraps this in provides the surface and
   // shadow), just a small header row and the same content beneath it.
-  Widget _buildDropdownChrome(SubscriptionProvider sub, bool isAdmin, bool nothingToShow, bool subNeedsAttention, bool isInTrial) {
+  Widget _buildDropdownChrome(bool nothingToShow) {
     final totalUnread = [..._needsAttention, ..._earlier].where((n) => !n.isRead).length;
 
     return Column(
@@ -502,7 +437,7 @@ class _StockAlertsScreenState extends State<StockAlertsScreen> {
         Container(
           padding: const EdgeInsets.fromLTRB(16, 14, 8, 14),
           decoration: BoxDecoration(
-            color: StockAlertsScreen.primaryColor,
+            color: NotificationsScreen.primaryColor,
             borderRadius: const BorderRadius.vertical(top: Radius.circular(12)),
           ),
           child: Row(
@@ -550,7 +485,7 @@ class _StockAlertsScreenState extends State<StockAlertsScreen> {
                     )
                   : SingleChildScrollView(
                       padding: const EdgeInsets.all(12),
-                      child: _buildAlertsList(sub, isAdmin, nothingToShow, subNeedsAttention, isInTrial),
+                      child: _buildAlertsList(nothingToShow),
                     ),
         ),
       ],
@@ -559,7 +494,7 @@ class _StockAlertsScreenState extends State<StockAlertsScreen> {
 
   // Shared between the full-screen and dropdown chrome - same content
   // either way, only how much space it's given differs.
-  Widget _buildAlertsList(SubscriptionProvider sub, bool isAdmin, bool nothingToShow, bool subNeedsAttention, bool isInTrial) {
+  Widget _buildAlertsList(bool nothingToShow) {
     if (nothingToShow) return _buildAllCaughtUp();
 
     return ListView(
@@ -567,32 +502,17 @@ class _StockAlertsScreenState extends State<StockAlertsScreen> {
       physics: widget.isDropdown ? const NeverScrollableScrollPhysics() : null,
       padding: const EdgeInsets.fromLTRB(16, 16, 16, 32),
       children: [
-        if (widget.lockedCategory == null) ...[
-          if (subNeedsAttention) ...[
-            _buildSubscriptionCard(context, sub, isAdmin),
-            const SizedBox(height: 20),
-          ] else if (isInTrial) ...[
-            _buildTrialInfoCard(context, sub, isAdmin),
-            const SizedBox(height: 20),
-          ],
-          _buildUrgentAnnouncements(),
-        ],
+        _buildUrgentAnnouncements(),
         if (_needsAttention.isNotEmpty) ...[
           _sectionHeader(Icons.priority_high, 'Needs Attention', _needsAttention.length, Colors.orange),
           const SizedBox(height: 8),
-          ..._needsAttention.map((n) => _NotificationRow(
-                notification: n,
-                relativeTime: _relativeTime(n.createdAt),
-              )),
+          ..._needsAttention.map((n) => NotificationRow(notification: n)),
           const SizedBox(height: 20),
         ],
         if (_earlier.isNotEmpty) ...[
           _sectionHeader(Icons.history, 'Earlier', _earlier.length, Colors.grey),
           const SizedBox(height: 8),
-          ..._earlier.map((n) => _NotificationRow(
-                notification: n,
-                relativeTime: _relativeTime(n.createdAt),
-              )),
+          ..._earlier.map((n) => NotificationRow(notification: n)),
           const SizedBox(height: 12),
         ],
         if (widget.isDropdown)
@@ -600,12 +520,10 @@ class _StockAlertsScreenState extends State<StockAlertsScreen> {
             child: TextButton(
               onPressed: () {
                 final navigator = Navigator.of(context);
-                final lockedCategory = widget.lockedCategory;
                 navigator.pop();
-                navigator.push(MaterialPageRoute(
-                    builder: (_) => StockAlertsScreen(lockedCategory: lockedCategory)));
+                navigator.push(MaterialPageRoute(builder: (_) => const NotificationsScreen()));
               },
-              style: TextButton.styleFrom(foregroundColor: StockAlertsScreen.primaryColor),
+              style: TextButton.styleFrom(foregroundColor: NotificationsScreen.primaryColor),
               child: const Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
@@ -638,9 +556,7 @@ class _StockAlertsScreenState extends State<StockAlertsScreen> {
           const Text("You're all caught up!", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 17)),
           const SizedBox(height: 6),
           Text(
-            widget.lockedCategory == NotificationCategory.stock
-                ? 'No stock alerts right now.'
-                : 'No urgent announcements, subscription issues, or stock alerts right now.',
+            'No urgent announcements, subscription issues, or stock alerts right now.',
             textAlign: TextAlign.center,
             style: TextStyle(color: Colors.grey[600], fontSize: 13),
           ),
@@ -665,94 +581,6 @@ class _StockAlertsScreenState extends State<StockAlertsScreen> {
           constraints: BoxConstraints(minHeight: constraints.maxHeight),
           child: Center(child: content),
         ),
-      ),
-    );
-  }
-
-  // Calm, informational - not urgent. Shown for the entire trial
-  // (once subNeedsAttention's <=7-day threshold no longer applies,
-  // this takes over instead of showing nothing at all), so someone's
-  // aware they're on a trial well before it's actually running out.
-  Widget _buildTrialInfoCard(BuildContext context, SubscriptionProvider sub, bool isAdmin) {
-    const color = Colors.blue;
-    final daysText = sub.daysRemaining != null
-        ? '${sub.daysRemaining} day${sub.daysRemaining == 1 ? '' : 's'} left'
-        : null;
-
-    return _AccentCard(
-      color: color,
-      icon: Icons.workspace_premium_outlined,
-      title: 'Free Trial',
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Expanded(
-            child: Text(
-              daysText != null
-                  ? "You're on a free trial - $daysText."
-                  : "You're on a free trial.",
-              style: const TextStyle(color: color, fontSize: 13, fontWeight: FontWeight.w600),
-            ),
-          ),
-          const SizedBox(width: 8),
-          if (isAdmin)
-            TextButton(
-              onPressed: () => showSubscriptionScreen(context),
-              style: TextButton.styleFrom(foregroundColor: color, padding: EdgeInsets.zero),
-              child: const Text('View Plans'),
-            ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildSubscriptionCard(BuildContext context, SubscriptionProvider sub, bool isAdmin) {
-    final isLocked = sub.status == SubscriptionStatus.locked;
-    final isGrace = sub.status == SubscriptionStatus.grace;
-    final isTrial = sub.status == SubscriptionStatus.trial;
-    final color = isLocked ? Colors.redAccent : Colors.orange;
-
-    String message;
-    if (isLocked) {
-      message = isTrial
-          ? 'Your trial has ended. The app is in read-only mode - subscribe to restore full access.'
-          : 'Your subscription has expired. The app is in read-only mode - submit a payment to restore full access.';
-    } else if (isGrace) {
-      message = isTrial
-          ? 'Your trial ended - you have a few days of grace before read-only mode begins.'
-          : 'Your subscription expired - you have a few days of grace before read-only mode begins.';
-    } else if (isTrial) {
-      message = sub.daysRemaining != null
-          ? 'Your trial expires in ${sub.daysRemaining} day${sub.daysRemaining == 1 ? '' : 's'}.'
-          : 'Your trial is active.';
-    } else {
-      message = sub.daysRemaining != null
-          ? 'Your subscription expires in ${sub.daysRemaining} day${sub.daysRemaining == 1 ? '' : 's'}.'
-          : 'Your subscription is active.';
-    }
-
-    return _AccentCard(
-      color: color,
-      icon: isLocked ? Icons.lock_outline : Icons.workspace_premium_outlined,
-      title: 'Subscription',
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Expanded(
-            child: Text(message, style: TextStyle(color: color, fontSize: 13, fontWeight: FontWeight.w600)),
-          ),
-          const SizedBox(width: 8),
-          if (isAdmin)
-            TextButton(
-              onPressed: () {
-                showSubscriptionScreen(context);
-              },
-              style: TextButton.styleFrom(foregroundColor: color, padding: EdgeInsets.zero),
-              child: const Text('Renew'),
-            )
-          else
-            Text('Ask your admin', style: TextStyle(color: color, fontSize: 11.5, fontStyle: FontStyle.italic)),
-        ],
       ),
     );
   }
@@ -798,11 +626,11 @@ class _StockAlertsScreenState extends State<StockAlertsScreen> {
   Widget _sectionHeader(IconData icon, String title, int count, Color color) {
     return Row(
       children: [
-        Icon(icon, size: 16, color: StockAlertsScreen.primaryColor),
+        Icon(icon, size: 16, color: NotificationsScreen.primaryColor),
         const SizedBox(width: 6),
         Expanded(
           child: Text(title,
-              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: StockAlertsScreen.primaryColor)),
+              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: NotificationsScreen.primaryColor)),
         ),
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
@@ -815,77 +643,9 @@ class _StockAlertsScreenState extends State<StockAlertsScreen> {
 }
 
 /// Shared "notification card" look - a colored left accent bar, a
-/// leading icon, a title, and freeform content below. Used for every
-/// kind of notification (subscription, urgent announcement, stock
-/// alert) so the whole screen reads as one consistent system instead of
-/// several different card styles bolted together.
-/// A single notification row, matching the mockup's card style: a
-/// circular, colored icon (from the notification's own centralized
-/// type.color/type.icon, so every screen that shows notifications
-/// stays visually consistent), title and message stacked, a relative
-/// timestamp, and a trailing chevron only when there's somewhere
-/// specific to navigate to.
-class _NotificationRow extends StatelessWidget {
-  final FacilityNotification notification;
-  final String relativeTime;
-
-  const _NotificationRow({required this.notification, required this.relativeTime});
-
-  @override
-  Widget build(BuildContext context) {
-    final color = notification.type.color;
-    final hasTarget = notification.relatedEntityType != null && notification.relatedEntityId != null;
-
-    return Container(
-      margin: const EdgeInsets.only(bottom: 8),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(10),
-        boxShadow: [
-          BoxShadow(color: Colors.black.withValues(alpha: 0.04), blurRadius: 6, offset: const Offset(0, 2)),
-        ],
-      ),
-      child: Padding(
-        padding: const EdgeInsets.all(12),
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Container(
-              padding: const EdgeInsets.all(8),
-              decoration: BoxDecoration(color: color.withValues(alpha: 0.12), shape: BoxShape.circle),
-              child: Icon(notification.type.icon, color: color, size: 18),
-            ),
-            const SizedBox(width: 10),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(notification.title,
-                      style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13.5)),
-                  const SizedBox(height: 2),
-                  Text(notification.message,
-                      style: TextStyle(color: Colors.grey[700], fontSize: 12.5)),
-                ],
-              ),
-            ),
-            const SizedBox(width: 8),
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.end,
-              children: [
-                Text(relativeTime, style: TextStyle(color: Colors.grey[500], fontSize: 11)),
-                if (hasTarget) ...[
-                  const SizedBox(height: 4),
-                  Icon(Icons.chevron_right, color: Colors.grey[400], size: 18),
-                ],
-              ],
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
+/// leading icon, a title, and freeform content below. Used for urgent
+/// announcements so they read as part of the same notification system
+/// as everything else on this screen, not a visually separate bolt-on.
 class _AccentCard extends StatelessWidget {
   final Color color;
   final IconData icon;

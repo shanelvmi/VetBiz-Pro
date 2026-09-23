@@ -533,38 +533,46 @@ class _AnnouncementsTabState extends State<AnnouncementsTab> {
             padding: const EdgeInsets.all(14),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                const Text('Background Image', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
-                const SizedBox(height: 4),
-                Text(
-                  'Shown as the full background of the login screen for every facility. '
-                  'Falls back to the default background image if none is set.',
-                  style: TextStyle(fontSize: 12.5, color: Colors.grey[600]),
-                ),
-                const SizedBox(height: 12),
-                if (posterUrl != null)
-                  ClipRRect(
-                    borderRadius: BorderRadius.circular(8),
-                    child: Image.network(
-                      posterUrl,
-                      height: 140,
-                      fit: BoxFit.contain,
-                      errorBuilder: (_, __, ___) => const SizedBox(
-                        height: 140,
-                        child: Center(child: Text('Could not load current background image')),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Text('Background Image', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
+                    const SizedBox(height: 4),
+                    Text(
+                      'Shown as the full background of the login screen for every facility. '
+                      'Falls back to the default background image if none is set.',
+                      style: TextStyle(fontSize: 12.5, color: Colors.grey[600]),
+                    ),
+                    const SizedBox(height: 12),
+                    if (posterUrl != null)
+                      ClipRRect(
+                        borderRadius: BorderRadius.circular(8),
+                        child: Image.network(
+                          posterUrl,
+                          height: 140,
+                          fit: BoxFit.contain,
+                          gaplessPlayback: true,
+                          errorBuilder: (_, __, ___) => const SizedBox(
+                            height: 140,
+                            child: Center(child: Text('Could not load current background image')),
+                          ),
+                        ),
+                      )
+                    else
+                      Container(
+                        height: 100,
+                        alignment: Alignment.center,
+                        decoration: BoxDecoration(
+                          color: Colors.grey.shade100,
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Text('No background image set - using default background', style: TextStyle(color: Colors.grey[600])),
                       ),
-                    ),
-                  )
-                else
-                  Container(
-                    height: 100,
-                    alignment: Alignment.center,
-                    decoration: BoxDecoration(
-                      color: Colors.grey.shade100,
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: Text('No background image set - using default background', style: TextStyle(color: Colors.grey[600])),
-                  ),
+                  ],
+                ),
                 const SizedBox(height: 12),
                 Row(
                   children: [
@@ -629,7 +637,24 @@ class _AnnouncementsTabState extends State<AnnouncementsTab> {
           return ListView(
             padding: const EdgeInsets.fromLTRB(0, 12, 0, 80),
             children: [
-              _buildPosterSection(),
+              LayoutBuilder(
+                builder: (context, constraints) {
+                  if (constraints.maxWidth < 700) {
+                    return Column(
+                      children: [_buildPosterSection(), const _ContactDetailsCard()],
+                    );
+                  }
+                  return IntrinsicHeight(
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        Expanded(child: _buildPosterSection()),
+                        const Expanded(child: _ContactDetailsCard()),
+                      ],
+                    ),
+                  );
+                },
+              ),
               const Padding(
                 padding: EdgeInsets.fromLTRB(12, 16, 12, 4),
                 child: Text('Announcements', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
@@ -750,6 +775,186 @@ class _AnnouncementsTabState extends State<AnnouncementsTab> {
             ],
           );
         },
+      ),
+    );
+  }
+}
+
+/// Contact Details card, split out as its own widget specifically so
+/// its save button's spin-while-saving state stays scoped to just this
+/// card. Living inside the main tab's State previously meant every
+/// setState() here re-ran the *entire* tab's build() - including
+/// recreating the background Image.network fresh each time, which
+/// blanked out and reloaded visibly (the reported "full screen
+/// blinking"). Isolated like this, saving only ever rebuilds this
+/// card.
+class _ContactDetailsCard extends StatefulWidget {
+  const _ContactDetailsCard();
+
+  @override
+  State<_ContactDetailsCard> createState() => _ContactDetailsCardState();
+}
+
+class _ContactDetailsCardState extends State<_ContactDetailsCard> {
+  static const Color primaryColor = Color(0xFF2F5D62);
+  static const Color warmAmber = Color(0xFFFFB200);
+
+  // Loaded once on open (not a live StreamBuilder, since that would
+  // fight with whatever the admin is actively typing), edited freely,
+  // saved explicitly. All four are optional; the Dashboard help
+  // dialog only ever needs at least one filled in.
+  final _emailController = TextEditingController();
+  final _phoneController = TextEditingController();
+  final _whatsappController = TextEditingController();
+  final _addressController = TextEditingController();
+  bool _isLoading = true;
+  bool _isSaving = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadContactDetails();
+  }
+
+  @override
+  void dispose() {
+    _emailController.dispose();
+    _phoneController.dispose();
+    _whatsappController.dispose();
+    _addressController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _loadContactDetails() async {
+    try {
+      final doc = await FirebaseFirestore.instance.collection('app_config').doc('support_contact').get();
+      final data = doc.data();
+      if (mounted && data != null) {
+        _emailController.text = (data['email'] as String?) ?? '';
+        _phoneController.text = (data['phone'] as String?) ?? '';
+        _whatsappController.text = (data['whatsapp'] as String?) ?? '';
+        _addressController.text = (data['address'] as String?) ?? '';
+      }
+    } catch (_) {
+      // Leaves the fields blank rather than blocking the rest of the
+      // page - the admin can still fill them in and save from scratch.
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
+  }
+
+  Future<void> _saveContactDetails() async {
+    setState(() => _isSaving = true);
+    try {
+      await FirebaseFirestore.instance.collection('app_config').doc('support_contact').set({
+        'email': _emailController.text.trim(),
+        'phone': _phoneController.text.trim(),
+        'whatsapp': _whatsappController.text.trim(),
+        'address': _addressController.text.trim(),
+        'updatedAt': FieldValue.serverTimestamp(),
+      });
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Contact details saved'), backgroundColor: Colors.green),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Could not save contact details: $e'), backgroundColor: Colors.redAccent),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _isSaving = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Card(
+      margin: const EdgeInsets.fromLTRB(12, 12, 12, 4),
+      child: Padding(
+        padding: const EdgeInsets.all(14),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text('Contact Details', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
+            const SizedBox(height: 4),
+            Text(
+              'Shown when someone taps Help on the Dashboard. All optional - '
+              'at least one filled in is enough for the help dialog to have something to show.',
+              style: TextStyle(fontSize: 12.5, color: Colors.grey[600]),
+            ),
+            const SizedBox(height: 12),
+            if (_isLoading)
+              const Padding(
+                padding: EdgeInsets.symmetric(vertical: 20),
+                child: Center(child: CircularProgressIndicator()),
+              )
+            else ...[
+              TextField(
+                controller: _emailController,
+                keyboardType: TextInputType.emailAddress,
+                decoration: const InputDecoration(
+                  labelText: 'Email address',
+                  prefixIcon: Icon(Icons.email_outlined),
+                  border: OutlineInputBorder(),
+                  isDense: true,
+                ),
+              ),
+              const SizedBox(height: 12),
+              TextField(
+                controller: _phoneController,
+                keyboardType: TextInputType.phone,
+                decoration: const InputDecoration(
+                  labelText: 'Phone call',
+                  prefixIcon: Icon(Icons.call_outlined),
+                  border: OutlineInputBorder(),
+                  isDense: true,
+                ),
+              ),
+              const SizedBox(height: 12),
+              TextField(
+                controller: _whatsappController,
+                keyboardType: TextInputType.phone,
+                decoration: const InputDecoration(
+                  labelText: 'WhatsApp',
+                  prefixIcon: Icon(Icons.chat_outlined),
+                  border: OutlineInputBorder(),
+                  isDense: true,
+                ),
+              ),
+              const SizedBox(height: 12),
+              TextField(
+                controller: _addressController,
+                maxLines: 2,
+                textCapitalization: TextCapitalization.sentences,
+                decoration: const InputDecoration(
+                  labelText: 'Physical address',
+                  prefixIcon: Icon(Icons.location_on_outlined),
+                  border: OutlineInputBorder(),
+                  isDense: true,
+                ),
+              ),
+              const SizedBox(height: 12),
+              ElevatedButton.icon(
+                onPressed: _isSaving ? null : _saveContactDetails,
+                icon: _isSaving
+                    ? const SizedBox(
+                        width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
+                    : const Icon(Icons.save_outlined),
+                label: const Text('Save Contact Details'),
+                style: ButtonStyle(
+                  backgroundColor: WidgetStateProperty.resolveWith<Color>((states) {
+                    if (states.contains(WidgetState.hovered)) return warmAmber;
+                    return primaryColor;
+                  }),
+                  foregroundColor: WidgetStateProperty.all(Colors.white),
+                ),
+              ),
+            ],
+          ],
+        ),
       ),
     );
   }

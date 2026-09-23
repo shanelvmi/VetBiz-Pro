@@ -23,10 +23,9 @@ class _ActivityLogScreenState extends State<ActivityLogScreen> {
   String selectedFilter = 'All';
   String searchQuery = '';
 
-  // Search now lives in the AppBar (expandable icon), same pattern as
-  // Sales/Products/Services - not a permanent field taking up body
-  // space when nobody's actually searching.
-  bool _isSearchExpanded = false;
+  // Always-visible, same layout pattern as the Notifications screen's
+  // search box - to the left of the days filter, not tucked behind an
+  // expandable AppBar icon.
   final TextEditingController _searchController = TextEditingController();
 
   // Drives the action-chip row's horizontal scroll - a plain
@@ -80,7 +79,6 @@ class _ActivityLogScreenState extends State<ActivityLogScreen> {
       selectedFilter = 'All';
       searchQuery = '';
       _searchController.clear();
-      _isSearchExpanded = false;
       _retentionDays = null;
       _retentionLoadedForFacilityId = null;
     });
@@ -115,17 +113,20 @@ class _ActivityLogScreenState extends State<ActivityLogScreen> {
       context: context,
       builder: (ctx) => AlertDialog(
         title: const Text('Keep Logs For'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: _retentionOptions.map((days) {
-            return RadioListTile<int>(
-              value: days,
-              groupValue: current,
-              activeColor: primaryDeepGreen,
-              title: Text('$days days'),
-              onChanged: (val) => Navigator.pop(ctx, val),
-            );
-          }).toList(),
+        content: SizedBox(
+          width: 320,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: _retentionOptions.map((days) {
+              return RadioListTile<int>(
+                value: days,
+                groupValue: current,
+                activeColor: primaryDeepGreen,
+                title: Text('$days days'),
+                onChanged: (val) => Navigator.pop(ctx, val),
+              );
+            }).toList(),
+          ),
         ),
         actions: [
           TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
@@ -146,10 +147,13 @@ class _ActivityLogScreenState extends State<ActivityLogScreen> {
         context: context,
         builder: (ctx) => AlertDialog(
           title: const Text('Delete Older Logs Now?'),
-          content: Text(
-            'Logs are currently kept for $current days. Switching to $selected days '
-            'will permanently delete every log older than $selected days right now - '
-            'not just going forward. This cannot be undone.',
+          content: SizedBox(
+            width: 360,
+            child: Text(
+              'Logs are currently kept for $current days. Switching to $selected days '
+              'will permanently delete every log older than $selected days right now - '
+              'not just going forward. This cannot be undone.',
+            ),
           ),
           actions: [
             TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancel')),
@@ -278,16 +282,15 @@ class _ActivityLogScreenState extends State<ActivityLogScreen> {
       return Scaffold(
         backgroundColor: offWhite,
         appBar: AppBar(
-          title: const Text(
-            'Activity Log',
-            style: TextStyle(color: Color(0xFFFDFDF9)),
-          ),
-          backgroundColor: primaryDeepGreen,
+          title: const Text('Activity Log', style: TextStyle(color: Colors.black87)),
+          backgroundColor: Colors.white,
+          foregroundColor: Colors.black87,
+          elevation: 1,
           centerTitle: true,
           automaticallyImplyLeading: !widget.isModal,
           leading: widget.isModal
               ? IconButton(
-                  icon: const Icon(Icons.close, color: Color(0xFFFDFDF9)),
+                  icon: const Icon(Icons.close, color: Colors.black87),
                   tooltip: 'Close',
                   onPressed: () => Navigator.of(context).pop(),
                 )
@@ -320,15 +323,42 @@ class _ActivityLogScreenState extends State<ActivityLogScreen> {
 
     return Scaffold(
       backgroundColor: offWhite,
-      appBar: _buildAppBar(facilityId, isAdmin),
-      body: Center(
-        child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 900),
-          child: Column(
+      appBar: _buildAppBar(),
+      body: Column(
         children: [
           // One unified summary that's also the filter - see
           // _buildActionSummary for the full reasoning.
           _buildActionSummary(facilityId),
+
+          Padding(
+            padding: const EdgeInsets.fromLTRB(12, 0, 12, 8),
+            child: Row(
+              children: [
+                Expanded(
+                  child: TextField(
+                    controller: _searchController,
+                    decoration: InputDecoration(
+                      hintText: 'Search logs...',
+                      prefixIcon: const Icon(Icons.search, size: 20),
+                      isDense: true,
+                      contentPadding: const EdgeInsets.symmetric(vertical: 10, horizontal: 12),
+                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+                    ),
+                    onChanged: (val) => setState(() => searchQuery = val.trim()),
+                  ),
+                ),
+                if (isAdmin) ...[
+                  const SizedBox(width: 8),
+                  TextButton.icon(
+                    onPressed: () => _showRetentionDialog(facilityId),
+                    icon: const Icon(Icons.schedule_outlined, size: 16),
+                    label: Text('Keeping logs for ${_retentionDays ?? _defaultRetentionDays} days'),
+                    style: TextButton.styleFrom(foregroundColor: primaryDeepGreen, textStyle: const TextStyle(fontSize: 12.5)),
+                  ),
+                ],
+              ],
+            ),
+          ),
 
           const Divider(height: 1),
 
@@ -419,79 +449,93 @@ class _ActivityLogScreenState extends State<ActivityLogScreen> {
                           margin: const EdgeInsets.symmetric(vertical: 4),
                           shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(8)),
-                          child: ListTile(
-                            leading: CircleAvatar(
-                              backgroundColor: actionColor.withValues(alpha: 0.2),
-                              child: Icon(
-                                actionIcon,
-                                color: actionColor,
-                                size: 20,
-                              ),
-                            ),
-                            title: Text(
-                              action,
-                              style: const TextStyle(
-                                fontSize: 14,
-                                fontWeight: FontWeight.w500,
-                              ),
-                            ),
-                            subtitle: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                            child: Row(
+                              crossAxisAlignment: CrossAxisAlignment.center,
                               children: [
-                                const SizedBox(height: 4),
-                                Row(
-                                  children: [
-                                    Icon(Icons.person,
-                                      size: 14,
-                                      color: Colors.grey[600]),
-                                    const SizedBox(width: 4),
-                                    Text(
-                                      user,
-                                      style: TextStyle(
-                                        fontSize: 12,
-                                        color: Colors.grey[700],
-                                      ),
-                                    ),
-                                  ],
+                                CircleAvatar(
+                                  backgroundColor: actionColor.withValues(alpha: 0.2),
+                                  child: Icon(
+                                    actionIcon,
+                                    color: actionColor,
+                                    size: 20,
+                                  ),
                                 ),
-                                const SizedBox(height: 2),
-                                Row(
-                                  children: [
-                                    Icon(Icons.access_time,
-                                      size: 14,
-                                      color: Colors.grey[600]),
-                                    const SizedBox(width: 4),
-                                    Text(
-                                      dateStr,
-                                      style: TextStyle(
-                                        fontSize: 11,
-                                        color: Colors.grey[600],
+                                const SizedBox(width: 16),
+                                Expanded(
+                                  flex: 3,
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        action,
+                                        style: const TextStyle(
+                                          fontSize: 14,
+                                          fontWeight: FontWeight.w500,
+                                        ),
                                       ),
+                                      const SizedBox(height: 4),
+                                      Row(
+                                        children: [
+                                          Icon(Icons.person,
+                                            size: 14,
+                                            color: Colors.grey[600]),
+                                          const SizedBox(width: 4),
+                                          Text(
+                                            user,
+                                            style: TextStyle(
+                                              fontSize: 12,
+                                              color: Colors.grey[700],
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                const SizedBox(width: 16),
+                                Expanded(
+                                  flex: 2,
+                                  child: Row(
+                                    children: [
+                                      Icon(Icons.access_time,
+                                        size: 14,
+                                        color: Colors.grey[600]),
+                                      const SizedBox(width: 4),
+                                      Text(
+                                        dateStr,
+                                        style: TextStyle(
+                                          fontSize: 11,
+                                          color: Colors.grey[600],
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                const SizedBox(width: 16),
+                                Container(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 8,
+                                    vertical: 4,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: actionColor.withValues(alpha: 0.1),
+                                    borderRadius: BorderRadius.circular(12),
+                                    border: Border.all(
+                                      color: actionColor.withValues(alpha: 0.3),
                                     ),
-                                  ],
+                                  ),
+                                  child: Text(
+                                    type,
+                                    style: TextStyle(
+                                      fontSize: 11,
+                                      fontWeight: FontWeight.w600,
+                                      color: actionColor,
+                                    ),
+                                  ),
                                 ),
                               ],
-                            ),
-                            trailing: Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 8,
-                                vertical: 4,
-                              ),
-                              decoration: BoxDecoration(
-                                color: actionColor.withValues(alpha: 0.1),
-                                borderRadius: BorderRadius.circular(12),
-                                border: Border.all(
-                                  color: actionColor.withValues(alpha: 0.3),
-                                ),
-                              ),
-                              child: Text(
-                                type,
-                                style: TextStyle(
-                                  fontSize: 11,
-                                  fontWeight: FontWeight.w600,
-                                  color: actionColor,
-                                ),
-                              ),
                             ),
                           ),
                         );
@@ -502,16 +546,16 @@ class _ActivityLogScreenState extends State<ActivityLogScreen> {
           ),
         ],
           ),
-        ),
-      ),
     );
   }
 
-  PreferredSizeWidget _buildAppBar(String facilityId, bool isAdmin) {
+  PreferredSizeWidget _buildAppBar() {
     return AppBar(
-      backgroundColor: primaryDeepGreen,
-      iconTheme: const IconThemeData(color: Color(0xFFFDFDF9)),
+      backgroundColor: Colors.white,
+      foregroundColor: Colors.black87,
+      elevation: 1,
       centerTitle: true,
+      toolbarHeight: 72,
       automaticallyImplyLeading: !widget.isModal,
       leading: widget.isModal
           ? IconButton(
@@ -520,51 +564,13 @@ class _ActivityLogScreenState extends State<ActivityLogScreen> {
               onPressed: () => Navigator.of(context).pop(),
             )
           : null,
-      title: _isSearchExpanded
-          ? TextField(
-              controller: _searchController,
-              autofocus: true,
-              cursorColor: offWhite,
-              style: TextStyle(color: offWhite),
-              decoration: InputDecoration(
-                hintText: 'Search logs...',
-                hintStyle: TextStyle(color: offWhite.withValues(alpha: 0.7)),
-                border: InputBorder.none,
-                suffixIcon: IconButton(
-                  icon: Icon(Icons.clear, color: offWhite),
-                  onPressed: () {
-                    setState(() {
-                      _searchController.clear();
-                      searchQuery = '';
-                      _isSearchExpanded = false;
-                    });
-                  },
-                ),
-              ),
-              onChanged: (val) => setState(() => searchQuery = val.trim()),
-            )
-          : const Text(
-              'Activity Log',
-              style: TextStyle(
-                fontWeight: FontWeight.normal,
-                color: Color(0xFFFDFDF9),
-              ),
-            ),
-      actions: [
-        if (!_isSearchExpanded) ...[
-          IconButton(
-            icon: const Icon(Icons.search),
-            tooltip: 'Search',
-            onPressed: () => setState(() => _isSearchExpanded = true),
-          ),
-          if (isAdmin)
-            IconButton(
-              icon: const Icon(Icons.settings_outlined),
-              tooltip: 'Log retention setting',
-              onPressed: () => _showRetentionDialog(facilityId),
-            ),
+      title: const Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Text('Activity Log', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 19, color: Colors.black87)),
+          Text('Every recorded action for this facility', style: TextStyle(fontSize: 12, color: Colors.black54)),
         ],
-      ],
+      ),
     );
   }
 

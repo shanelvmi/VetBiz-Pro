@@ -1069,6 +1069,125 @@ class ProductProvider with ChangeNotifier {
   }
 
   /// -------------------------------
+  /// MOVE EXPIRED BATCH BACK TO STOCK
+  /// -------------------------------
+  /// Pulls units of one specific, already-expired batch off the shelf
+  /// and back into warehouse stock - not a generic reverse of
+  /// moveToSellable, deliberately scoped to a single batch the caller
+  /// has already identified as expired, since which batch to pull from
+  /// isn't something this method should be guessing at. Getting expired
+  /// stock off the shelf immediately (out of sellableQty) without
+  /// deleting the batch's record is the point - what happens to it
+  /// after (write-off, supplier return) is a separate decision.
+  ///
+  /// Recorded as a stock_adjustments entry, the same real, structured
+  /// audit trail a manual product edit already writes - not a
+  /// stockAdditions entry, since this isn't new stock arriving, it's an
+  /// adjustment, and the Daily Report should show it as one, with a
+  /// real explanation attached instead of an unexplained number.
+  Future<void> moveExpiredBatchToStock(
+    Product product,
+    ProductBatch batch,
+    int qty,
+    BuildContext context, {
+    String? notes,
+  }) async {
+    if (qty <= 0) {
+      debugPrint('❌ Invalid quantity');
+      return;
+    }
+
+    final facilityId = product.facilityId;
+    final productRef = FirebaseFirestore.instance
+        .collection('facilities')
+        .doc(facilityId)
+        .collection('products')
+        .doc(product.id);
+    final batchRef = productRef.collection('batches').doc(batch.id);
+
+    try {
+      final userInfo = await ActivityLogger.getCurrentUserInfo();
+      final userId = userInfo['userId']!;
+      final userName = userInfo['userName']!;
+
+      late int oldStockQty;
+      late int oldSellableQty;
+      late int newStockQty;
+      late int newSellableQty;
+
+      await FirebaseFirestore.instance.runTransaction((transaction) async {
+        final batchSnap = await transaction.get(batchRef);
+        final productSnap = await transaction.get(productRef);
+        if (!batchSnap.exists) throw Exception('Batch no longer exists');
+        if (!productSnap.exists) throw Exception('Product no longer exists');
+
+        final batchSellable = (batchSnap.data()?['sellableQty'] ?? 0) as int;
+        final batchStock = (batchSnap.data()?['stockQty'] ?? 0) as int;
+        if (qty > batchSellable) throw Exception('Not enough sellable stock in this batch');
+
+        oldStockQty = (productSnap.data()?['stockQty'] ?? 0) as int;
+        oldSellableQty = (productSnap.data()?['sellableQty'] ?? 0) as int;
+        newStockQty = oldStockQty + qty;
+        newSellableQty = oldSellableQty - qty;
+
+        transaction.update(batchRef, {
+          'sellableQty': batchSellable - qty,
+          'stockQty': batchStock + qty,
+        });
+        transaction.update(productRef, {
+          'stockQty': newStockQty,
+          'sellableQty': newSellableQty,
+          'updatedAt': FieldValue.serverTimestamp(),
+        });
+      });
+
+      // Update local state
+      final updatedProduct = product.copyWith(
+        stockQty: newStockQty,
+        sellableQty: newSellableQty,
+        updatedAt: DateTime.now(),
+      );
+      final index = _products.indexWhere((p) => p.id == updatedProduct.id);
+      if (index != -1) {
+        _products[index] = updatedProduct;
+        notifyListeners();
+      }
+
+      await FirebaseFirestore.instance
+          .collection('facilities')
+          .doc(facilityId)
+          .collection('stock_adjustments')
+          .add({
+        'productId': product.id,
+        'productName': product.name,
+        'oldStockQty': oldStockQty,
+        'oldSellableQty': oldSellableQty,
+        'newStockQty': newStockQty,
+        'newSellableQty': newSellableQty,
+        'userId': userId,
+        'userName': userName,
+        'source': 'Moved expired batch to Stock Store',
+        'timestamp': FieldValue.serverTimestamp(),
+      });
+
+      await ActivityLogger.logActivity(
+        facilityId: facilityId,
+        userId: userId,
+        userName: userName,
+        actionType: "Inventory Move",
+        description: "${product.name}: moved $qty ${product.unit} of expired "
+            "batch${batch.batchNo?.isNotEmpty == true ? ' ${batch.batchNo}' : ''} back to Stock Store"
+            "${notes != null ? ' | Note: $notes' : ''}",
+      );
+
+      debugPrint('🔍 Logged expired batch move to stock for ${product.name} in facility: $facilityId');
+    } catch (e) {
+      debugPrint('❌ Move expired batch to stock failed: $e');
+      rethrow;
+    }
+  }
+
+  /// -------------------------------
   /// DELETE PRODUCT
   /// -------------------------------
   /// Moves the product to `trash_products` instead of erasing it
