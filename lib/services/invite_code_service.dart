@@ -53,6 +53,10 @@ class InviteCodeService {
   }) async {
     await revokeInviteCode(facilityId);
 
+    final facilityDoc = await _firestore.collection('facilities').doc(facilityId).get();
+    final facilityName = facilityDoc.data()?['name'] as String? ?? '';
+    final facilityType = facilityDoc.data()?['type'] as String? ?? '';
+
     String code;
     // Collision is extremely unlikely given the character set and
     // length, but this guards against it rather than assuming.
@@ -62,6 +66,12 @@ class InviteCodeService {
 
     await _firestore.collection('inviteCodes').doc(code).set({
       'facilityId': facilityId,
+      // Denormalized here specifically so the registration screen can
+      // show "you're joining X" from this already-public document,
+      // without ever needing to read the facilities collection itself
+      // before the person registering has an account at all.
+      'facilityName': facilityName,
+      'facilityType': facilityType,
       'createdByUserId': createdByUserId,
       'createdAt': FieldValue.serverTimestamp(),
       'expiresAt': Timestamp.fromDate(DateTime.now().add(validityDuration)),
@@ -72,11 +82,14 @@ class InviteCodeService {
     return code;
   }
 
-  /// Validates an entered invite code and returns the facilityId it
-  /// belongs to if valid - null if it doesn't exist, has already been
-  /// used, or has expired. Does NOT mark it as used; that only happens
-  /// once registration has actually succeeded, via markInviteCodeUsed.
-  Future<String?> validateInviteCode(String enteredCode) async {
+  /// Validates an entered invite code and returns the facility it
+  /// belongs to (id, name, type - name/type read from this document's
+  /// own denormalized copy, not a separate facilities read, since the
+  /// person entering this code doesn't have an account yet) if valid -
+  /// null if it doesn't exist, has already been used, or has expired.
+  /// Does NOT mark it as used; that only happens once registration has
+  /// actually succeeded, via markInviteCodeUsed.
+  Future<Map<String, String>?> validateInviteCode(String enteredCode) async {
     final normalized = _normalizeInput(enteredCode);
     if (normalized.length != codeLength) return null;
 
@@ -89,7 +102,14 @@ class InviteCodeService {
     final expiresAt = (data['expiresAt'] as Timestamp?)?.toDate();
     if (expiresAt == null || DateTime.now().isAfter(expiresAt)) return null;
 
-    return data['facilityId'] as String?;
+    final facilityId = data['facilityId'] as String?;
+    if (facilityId == null) return null;
+
+    return {
+      'facilityId': facilityId,
+      'facilityName': (data['facilityName'] as String?) ?? '',
+      'facilityType': (data['facilityType'] as String?) ?? '',
+    };
   }
 
   /// Marks an invite code as consumed - call only after the new

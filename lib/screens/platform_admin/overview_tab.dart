@@ -63,7 +63,32 @@ class _OverviewTabState extends State<OverviewTab> {
   }
 
   Future<Map<String, dynamic>> _loadStats() async {
-    final facilitiesSnap = await FirebaseFirestore.instance.collection('facilities').get();
+    final now = DateTime.now();
+    final monthStart = DateTime(now.year, now.month, 1);
+
+    // All three are independent - none depends on another's result - so
+    // they run concurrently instead of one full round trip after another.
+    final results = await Future.wait([
+      FirebaseFirestore.instance.collection('facilities').get(),
+      // Filtered by date at the query itself now, not after downloading
+      // everything - this previously pulled every approved payment ever
+      // recorded platform-wide just to sum the ones from this month,
+      // getting slower every month as that history grew. Requires a
+      // composite index (status + reviewedAt) - Firestore's error
+      // message on first run includes a direct link to create it.
+      FirebaseFirestore.instance
+          .collectionGroup('payment_submissions')
+          .where('status', isEqualTo: 'approved')
+          .where('reviewedAt', isGreaterThanOrEqualTo: Timestamp.fromDate(monthStart))
+          .get(),
+      FirebaseFirestore.instance
+          .collectionGroup('payment_submissions')
+          .where('status', isEqualTo: 'pending')
+          .get(),
+    ]);
+    final facilitiesSnap = results[0];
+    final approvedSnap = results[1];
+    final pendingSnap = results[2];
 
     int trial = 0, active = 0, grace = 0, locked = 0;
     for (final doc in facilitiesSnap.docs) {
@@ -87,32 +112,12 @@ class _OverviewTabState extends State<OverviewTab> {
       }
     }
 
-    // Revenue actually collected this month - summed from approved
-    // subscription payments across every facility (a collection-group read,
-    // same access already granted for the Requests tab).
-    final now = DateTime.now();
-    final monthStart = DateTime(now.year, now.month, 1);
-    final approvedSnap = await FirebaseFirestore.instance
-        .collectionGroup('payment_submissions')
-        .where('status', isEqualTo: 'approved')
-        .get();
-
     double monthRevenue = 0;
     int monthPayments = 0;
     for (final doc in approvedSnap.docs) {
-      final data = doc.data();
-      final reviewedAt = data['reviewedAt'];
-      final reviewedDate = reviewedAt is Timestamp ? reviewedAt.toDate() : null;
-      if (reviewedDate != null && !reviewedDate.isBefore(monthStart)) {
-        monthRevenue += (data['amount'] as num?)?.toDouble() ?? 0.0;
-        monthPayments++;
-      }
+      monthRevenue += (doc.data()['amount'] as num?)?.toDouble() ?? 0.0;
+      monthPayments++;
     }
-
-    final pendingSnap = await FirebaseFirestore.instance
-        .collectionGroup('payment_submissions')
-        .where('status', isEqualTo: 'pending')
-        .get();
 
     return {
       'total': facilitiesSnap.docs.length,

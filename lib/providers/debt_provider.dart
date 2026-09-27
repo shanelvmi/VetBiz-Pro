@@ -6,6 +6,28 @@ import '../models/debt.dart';
 class DebtProvider with ChangeNotifier {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
+  /// This client's oldest still-existing debt's own timestamp - null if
+  /// they have none left. Individual debt records are the source of
+  /// truth; this is only ever read to refresh the maintained summary
+  /// field on the client itself, never relied on directly for display.
+  static Future<DateTime?> recomputeOldestUnpaidDebtDate({
+    required FirebaseFirestore firestore,
+    required String facilityId,
+    required String clientId,
+  }) async {
+    final snap = await firestore
+        .collection('facilities')
+        .doc(facilityId)
+        .collection('debts')
+        .where('clientId', isEqualTo: clientId)
+        .orderBy('timestamp')
+        .limit(1)
+        .get();
+    if (snap.docs.isEmpty) return null;
+    final ts = snap.docs.first.data()['timestamp'];
+    return ts is Timestamp ? ts.toDate() : null;
+  }
+
   List<Debt> _debts = [];
   List<Debt> get debts => [..._debts];
 

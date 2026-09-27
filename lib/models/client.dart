@@ -6,6 +6,12 @@ class Client {
   final String phone;
   final String address;
   final double balance;
+  // Maintained summary, not a source of truth - the timestamp of
+  // whichever of this client's currently-unpaid debts is oldest. Null
+  // means no unpaid debt at all. Recomputed from the debts collection
+  // whenever the debt that held this date gets paid off, so it never
+  // silently points at a debt that no longer exists or is settled.
+  final DateTime? oldestUnpaidDebtDate;
   // A client can genuinely be more than one thing at once - a vet who
   // also farms, a retailer who also buys wholesale - so this is a list,
   // not a single exclusive category.
@@ -35,6 +41,7 @@ class Client {
     required this.phone,
     required this.address,
     this.balance = 0.0,
+    this.oldestUnpaidDebtDate,
     List<String>? types,
     this.farmerSubType,
     List<String>? crops,
@@ -76,6 +83,8 @@ class Client {
       phone: data['phone'] ?? '',
       address: data['address'] ?? '',
       balance: (data['balance'] is num) ? (data['balance'] as num).toDouble() : 0.0,
+      oldestUnpaidDebtDate:
+          data['oldestUnpaidDebtDate'] != null ? (data['oldestUnpaidDebtDate'] as Timestamp).toDate() : null,
       types: resolvedTypes,
       farmerSubType: data['farmerSubType'],
       crops: data['crops'] != null ? List<String>.from(data['crops']) : [],
@@ -110,6 +119,8 @@ class Client {
       'phone': phone,
       'address': address,
       'balance': balance,
+      'oldestUnpaidDebtDate':
+          oldestUnpaidDebtDate != null ? Timestamp.fromDate(oldestUnpaidDebtDate!) : null,
       'types': types,
       // Also kept in the legacy single-string field, best-effort (first
       // selected type) - in case anything outside this codebase (an

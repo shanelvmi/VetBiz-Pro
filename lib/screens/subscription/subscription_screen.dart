@@ -624,20 +624,19 @@ Future<void> showSubscriptionScreen(BuildContext context) async {
     transitionDuration: const Duration(milliseconds: 220),
     pageBuilder: (context, animation, secondaryAnimation) {
       final screenSize = MediaQuery.of(context).size;
+      final modalWidth = (screenSize.width * 0.60).clamp(0, 940).toDouble();
+      // Never shorter than 480px, fixed - 88% of screen height
+      // comfortably exceeds that on most windows, but this guarantees
+      // it even on a smaller one.
+      final modalHeight = (screenSize.height * 0.88) < 480 ? 480.0 : screenSize.height * 0.88;
       return Center(
-        child: ConstrainedBox(
-          constraints: BoxConstraints(
-            maxWidth: 900,
-            maxHeight: screenSize.height * 0.85,
-          ),
-          child: SizedBox(
-            width: screenSize.width * 0.8,
-            height: screenSize.height * 0.85,
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(16),
-              child: const Material(
-                child: SubscriptionScreen(isModal: true),
-              ),
+        child: SizedBox(
+          width: modalWidth,
+          height: modalHeight,
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(16),
+            child: const Material(
+              child: SubscriptionScreen(isModal: true),
             ),
           ),
         ),

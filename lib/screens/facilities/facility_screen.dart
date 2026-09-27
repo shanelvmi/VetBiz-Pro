@@ -167,6 +167,7 @@ class _FacilityScreenState extends State<FacilityScreen> {
       final createdAtTs = facilityDoc.data()?['createdAt'] as Timestamp?;
       final updatedAtTs = facilityDoc.data()?['updatedAt'] as Timestamp?;
       final retentionDays = (facilityDoc.data()?['activityLogRetentionDays'] as num?)?.toInt() ?? 90;
+      final debtOverdueDays = (facilityDoc.data()?['debtOverdueDays'] as num?)?.toInt() ?? 30;
       final salesTotals = await salesTotalsFuture;
       final clientCountSnap = await clientCountFuture;
       final productsSnap = await productsFuture;
@@ -217,6 +218,7 @@ class _FacilityScreenState extends State<FacilityScreen> {
           'createdAt': createdAtTs?.toDate(),
           'updatedAt': updatedAtTs?.toDate(),
           'activityLogRetentionDays': retentionDays,
+          'debtOverdueDays': debtOverdueDays,
         };
         _statsByFacility[facilityId] = {
           'saleCount': salesTotals['saleCount']?.toInt() ?? 0,
@@ -2416,6 +2418,7 @@ class _FacilityScreenState extends State<FacilityScreen> {
     final details = _detailsByFacility[facilityId];
     final status = (details?['status'] as String?) ?? 'Active';
     final retentionDays = (details?['activityLogRetentionDays'] as int?) ?? 90;
+    final debtOverdueDays = (details?['debtOverdueDays'] as int?) ?? 30;
     final isActive = status.toLowerCase() == 'active';
 
     return Column(
@@ -2496,6 +2499,43 @@ class _FacilityScreenState extends State<FacilityScreen> {
                 onPressed: facilityId == null
                     ? null
                     : () => _showFacilityRetentionDialog(facilityId, currentRetention: retentionDays),
+                style: OutlinedButton.styleFrom(foregroundColor: deepGreen),
+                child: const Text('Change'),
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 16),
+        Container(
+          width: double.infinity,
+          padding: const EdgeInsets.all(20),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(14),
+            border: Border.all(color: Colors.grey.withValues(alpha: 0.15)),
+          ),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text('Debt Overdue Threshold',
+                        style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
+                    const SizedBox(height: 4),
+                    Text(
+                      'An unpaid debt is considered overdue once it is older than this many days. '
+                      'Currently: $debtOverdueDays days.',
+                      style: TextStyle(fontSize: 12.5, color: Colors.grey[600]),
+                    ),
+                  ],
+                ),
+              ),
+              OutlinedButton(
+                onPressed: facilityId == null
+                    ? null
+                    : () => _showDebtOverdueDialog(facilityId, currentThreshold: debtOverdueDays),
                 style: OutlinedButton.styleFrom(foregroundColor: deepGreen),
                 child: const Text('Change'),
               ),
@@ -2694,6 +2734,56 @@ class _FacilityScreenState extends State<FacilityScreen> {
       debugPrint('Deleted $count old activity logs (>$retentionDays days) for $facilityId');
     } catch (e) {
       debugPrint('Failed to cleanup old logs for $facilityId: $e');
+    }
+  }
+
+  static const List<int> _debtOverdueOptions = [7, 14, 30, 60, 90];
+
+  Future<void> _showDebtOverdueDialog(String facilityId, {required int currentThreshold}) async {
+    final selected = await showDialog<int>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Overdue After'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: _debtOverdueOptions.map((days) {
+            return RadioListTile<int>(
+              value: days,
+              groupValue: currentThreshold,
+              activeColor: deepGreen,
+              title: Text('$days days'),
+              onChanged: (val) => Navigator.pop(ctx, val),
+            );
+          }).toList(),
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
+        ],
+      ),
+    );
+
+    if (selected == null || selected == currentThreshold) return;
+
+    try {
+      await FirebaseFirestore.instance
+          .collection('facilities')
+          .doc(facilityId)
+          .set({'debtOverdueDays': selected}, SetOptions(merge: true));
+
+      if (!mounted) return;
+      setState(() {
+        _detailsByFacility[facilityId] = {
+          ...?_detailsByFacility[facilityId],
+          'debtOverdueDays': selected,
+        };
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Debts are now overdue after $selected days'), backgroundColor: Colors.green),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text('Could not save: $e'), backgroundColor: Colors.redAccent));
     }
   }
 

@@ -157,6 +157,41 @@ class _AddPaymentScreenState extends State<AddPaymentScreen> {
           .collection('clients')
           .doc(selectedClient!.id);
 
+      // Read what's needed to maintain oldestUnpaidDebtDate before the
+      // batch below - only relevant if this payment fully settles the
+      // specific debt being paid, and only actually changes anything if
+      // that debt was the one holding the client's recorded oldest
+      // date (some other, older debt may still remain untouched).
+      DateTime? newOldestUnpaidDebtDate;
+      var oldestUnpaidDebtDateChanged = false;
+      if (debtRef != null) {
+        final remainingCheck = (widget.amountOwed ?? 0) - amount;
+        if (remainingCheck <= 0) {
+          final clientDoc = await clientRef.get();
+          final rawOldest = clientDoc.data()?['oldestUnpaidDebtDate'];
+          final currentOldest = rawOldest is Timestamp ? rawOldest.toDate() : null;
+          if (currentOldest != null) {
+            final thisDebtDoc = await debtRef.get();
+            final rawThis = thisDebtDoc.data()?['timestamp'];
+            final thisDebtTimestamp = rawThis is Timestamp ? rawThis.toDate() : null;
+            if (thisDebtTimestamp != null && thisDebtTimestamp.isAtSameMomentAs(currentOldest)) {
+              final remainingSnap = await FirebaseFirestore.instance
+                  .collection('facilities')
+                  .doc(facilityId)
+                  .collection('debts')
+                  .where('clientId', isEqualTo: selectedClient!.id)
+                  .orderBy('timestamp')
+                  .limit(2)
+                  .get();
+              final remainingDocs = remainingSnap.docs.where((d) => d.id != debtRef.id).toList();
+              final nextTs = remainingDocs.isEmpty ? null : remainingDocs.first.data()['timestamp'];
+              newOldestUnpaidDebtDate = nextTs is Timestamp ? nextTs.toDate() : null;
+              oldestUnpaidDebtDateChanged = true;
+            }
+          }
+        }
+      }
+
       final batch = FirebaseFirestore.instance.batch();
 
       final paymentRef = FirebaseFirestore.instance
@@ -194,6 +229,7 @@ class _AddPaymentScreenState extends State<AddPaymentScreen> {
         // entirely while an earlier one (saved before this field was
         // added) still showed.
         'clientName': selectedClient!.name,
+        'clientNameLower': selectedClient!.name.toLowerCase(),
         'debtId': widget.debtDocId,
         'saleId': sale?.id,
         'serviceId': service?.id,
@@ -208,6 +244,16 @@ class _AddPaymentScreenState extends State<AddPaymentScreen> {
       batch.update(clientRef, {
         'balance': FieldValue.increment(-amount),
       });
+      if (oldestUnpaidDebtDateChanged) {
+        batch.set(
+          clientRef,
+          {
+            'oldestUnpaidDebtDate':
+                newOldestUnpaidDebtDate != null ? Timestamp.fromDate(newOldestUnpaidDebtDate) : null,
+          },
+          SetOptions(merge: true),
+        );
+      }
 
       if (debtRef != null) {
         final remaining = (widget.amountOwed ?? 0) - amount;

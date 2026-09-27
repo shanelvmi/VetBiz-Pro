@@ -28,6 +28,17 @@ class TransactionModel {
     this.note,
   });
 
+  /// Lowercased copy of description - the one field a real, prefix-based
+  /// Firestore search runs against (search here spans
+  /// description/category/recordedBy client-side today; only one field
+  /// can be a real query per Firestore's one-range-filter-per-query
+  /// limit, and description is the most free-text field worth
+  /// searching). Never read back into this Dart object, only written
+  /// alongside toMap().
+  Map<String, dynamic> searchFields() {
+    return {'descriptionLower': description.toLowerCase()};
+  }
+
   /// Converts the TransactionModel instance to a Firestore compatible map
   Map<String, dynamic> toMap() {
     return {

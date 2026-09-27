@@ -30,6 +30,7 @@ import 'providers/settings_provider.dart';
 import 'providers/subscription_provider.dart';
 import 'providers/user_role_provider.dart';
 import 'providers/debt_provider.dart';
+import 'providers/payment_provider.dart';
 import 'widgets/vetbiz_loading_indicator.dart';
 
 void main() async {
@@ -42,6 +43,7 @@ void main() async {
     MultiProvider(
       providers: [
         ChangeNotifierProvider(create: (_) => DebtProvider()),
+        ChangeNotifierProvider(create: (_) => PaymentProvider()),
         ChangeNotifierProvider(
           create: (context) => ServiceProvider(
             debtProvider: Provider.of<DebtProvider>(context, listen: false),

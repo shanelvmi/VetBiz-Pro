@@ -1069,26 +1069,28 @@ class ProductProvider with ChangeNotifier {
   }
 
   /// -------------------------------
-  /// MOVE EXPIRED BATCH BACK TO STOCK
+  /// MOVE BATCH BACK TO STOCK
   /// -------------------------------
-  /// Pulls units of one specific, already-expired batch off the shelf
-  /// and back into warehouse stock - not a generic reverse of
-  /// moveToSellable, deliberately scoped to a single batch the caller
-  /// has already identified as expired, since which batch to pull from
-  /// isn't something this method should be guessing at. Getting expired
-  /// stock off the shelf immediately (out of sellableQty) without
-  /// deleting the batch's record is the point - what happens to it
-  /// after (write-off, supplier return) is a separate decision.
+  /// Pulls units of one specific batch off the shelf and back into
+  /// warehouse stock, for whatever reason the caller supplies (expired,
+  /// deteriorated, or another reason they specify) - not a generic
+  /// reverse of moveToSellable, deliberately scoped to a single batch
+  /// the caller has already identified, since which batch to pull from
+  /// isn't something this method should be guessing at. Getting stock
+  /// off the shelf immediately (out of sellableQty) without deleting
+  /// the batch's record is the point - what happens to it after
+  /// (write-off, supplier return) is a separate decision.
   ///
   /// Recorded as a stock_adjustments entry, the same real, structured
   /// audit trail a manual product edit already writes - not a
   /// stockAdditions entry, since this isn't new stock arriving, it's an
   /// adjustment, and the Daily Report should show it as one, with a
   /// real explanation attached instead of an unexplained number.
-  Future<void> moveExpiredBatchToStock(
+  Future<void> moveBatchToStock(
     Product product,
     ProductBatch batch,
     int qty,
+    String reason,
     BuildContext context, {
     String? notes,
   }) async {
@@ -1166,7 +1168,8 @@ class ProductProvider with ChangeNotifier {
         'newSellableQty': newSellableQty,
         'userId': userId,
         'userName': userName,
-        'source': 'Moved expired batch to Stock Store',
+        'source': 'Moved batch to Stock Store',
+        'reason': reason,
         'timestamp': FieldValue.serverTimestamp(),
       });
 
@@ -1175,14 +1178,15 @@ class ProductProvider with ChangeNotifier {
         userId: userId,
         userName: userName,
         actionType: "Inventory Move",
-        description: "${product.name}: moved $qty ${product.unit} of expired "
-            "batch${batch.batchNo?.isNotEmpty == true ? ' ${batch.batchNo}' : ''} back to Stock Store"
+        description: "${product.name}: moved $qty ${product.unit} of "
+            "batch${batch.batchNo?.isNotEmpty == true ? ' ${batch.batchNo}' : ''} back to Stock Store "
+            "($reason)"
             "${notes != null ? ' | Note: $notes' : ''}",
       );
 
-      debugPrint('🔍 Logged expired batch move to stock for ${product.name} in facility: $facilityId');
+      debugPrint('🔍 Logged batch move to stock ($reason) for ${product.name} in facility: $facilityId');
     } catch (e) {
-      debugPrint('❌ Move expired batch to stock failed: $e');
+      debugPrint('❌ Move batch to stock failed: $e');
       rethrow;
     }
   }

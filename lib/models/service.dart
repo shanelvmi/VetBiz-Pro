@@ -100,6 +100,19 @@ class Service {
     );
   }
 
+  /// Lowercased copies of the fields a real, prefix-based Firestore
+  /// search needs (Firestore has no native "contains" search), plus a
+  /// denormalized paymentStatus so that filter can be a real equality
+  /// query too - never read back into this Dart object, only written
+  /// alongside toMap(). Centralized here, not duplicated at each write
+  /// site, so every place a service gets written keeps these in sync.
+  Map<String, dynamic> searchFields() {
+    return {
+      'clientNameLower': (clientName ?? '').toLowerCase(),
+      'paymentStatus': totalPaid >= totalAmount ? 'Paid' : (totalPaid > 0 ? 'Partial' : 'Unpaid'),
+    };
+  }
+
   /// ---------- TO FIRESTORE ----------
   Map<String, dynamic> toMap() {
     return {

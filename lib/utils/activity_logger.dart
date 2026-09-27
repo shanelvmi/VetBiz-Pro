@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
@@ -35,9 +36,9 @@ class ActivityLogger {
         'timestamp': FieldValue.serverTimestamp(),
       });
 
-      print('✅ Activity logged: $actionType by $userName in facility $facilityId');
+      debugPrint('✅ Activity logged: $actionType by $userName in facility $facilityId');
     } catch (e) {
-      print('❌ Failed to log activity: $e');
+      debugPrint('❌ Failed to log activity: $e');
     }
   }
 

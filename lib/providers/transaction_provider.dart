@@ -7,9 +7,18 @@ import '../models/transaction.dart';
 import 'facility_provider.dart';
 import '../utils/activity_logger.dart';
 import '../utils/receipt_numbering.dart';
+import '../services/cursor_paginated_list_controller.dart';
 
 class TransactionProvider with ChangeNotifier {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+
+  TransactionProvider() {
+    transactionsListController = CursorPaginatedListController<TransactionModel>(
+      pageSize: 25,
+      fetchPage: _fetchTransactionsListPage,
+      countCreatedAfter: _countNewTransactions,
+    );
+  }
 
   /// Same fix as Sales/Services: only stream the most recent [pageSize]
   /// transactions live; older ones page in on demand via
@@ -50,6 +59,93 @@ class TransactionProvider with ChangeNotifier {
       .doc(facilityId)
       .collection('transactions')
       .orderBy('date', descending: true);
+
+  // ==================== Transactions list screen: real cursor pagination ====================
+  //
+  // A second, separate mechanism just for the Transactions list
+  // screen's own display - does not replace `transactions` above.
+
+  /// searchTerm searches description only (prefix match) - see
+  /// SaleProvider's identical field for the full reasoning.
+  ({String searchTerm, String? typeFilter}) _transactionsListQuery = (searchTerm: '', typeFilter: null);
+
+  late final CursorPaginatedListController<TransactionModel> transactionsListController;
+
+  String? _transactionsListFacilityId;
+
+  ({String searchTerm, String? typeFilter}) updateTransactionsListFilters({
+    required String facilityId,
+    required String searchTerm,
+    required String? typeFilter,
+  }) {
+    _transactionsListFacilityId = facilityId;
+    _transactionsListQuery = (searchTerm: searchTerm.trim().toLowerCase(), typeFilter: typeFilter);
+    return _transactionsListQuery;
+  }
+
+  Future<CursorPage<TransactionModel>> _fetchTransactionsListPage({
+    required DateTime snapshotAt,
+    required int pageSize,
+    DocumentSnapshot<Map<String, dynamic>>? startAfterDocument,
+  }) async {
+    final facilityId = _transactionsListFacilityId;
+    if (facilityId == null) {
+      return const CursorPage(items: [], lastDocument: null, hasMore: false);
+    }
+
+    final q = _transactionsListQuery;
+    final hasSearch = q.searchTerm.isNotEmpty;
+    Query<Map<String, dynamic>> query =
+        _firestore.collection('facilities').doc(facilityId).collection('transactions');
+
+    if (q.typeFilter != null) {
+      query = query.where('type', isEqualTo: q.typeFilter);
+    }
+
+    if (hasSearch) {
+      query = query
+          .where('descriptionLower', isGreaterThanOrEqualTo: q.searchTerm)
+          .where('descriptionLower', isLessThan: '${q.searchTerm}\uf8ff')
+          .orderBy('descriptionLower')
+          .orderBy(FieldPath.documentId);
+    } else {
+      query = query
+          .where('date', isLessThanOrEqualTo: Timestamp.fromDate(snapshotAt))
+          .orderBy('date', descending: true)
+          .orderBy(FieldPath.documentId, descending: true);
+    }
+
+    if (startAfterDocument != null) {
+      query = query.startAfterDocument(startAfterDocument);
+    }
+
+    final snapshot = await query.limit(pageSize).get();
+    return CursorPage(
+      items: snapshot.docs.map((d) => TransactionModel.fromFirestore(d.data(), d.id)).toList(),
+      lastDocument: snapshot.docs.isNotEmpty ? snapshot.docs.last : null,
+      hasMore: snapshot.docs.length >= pageSize,
+    );
+  }
+
+  Future<int> _countNewTransactions({required DateTime after}) async {
+    final facilityId = _transactionsListFacilityId;
+    if (facilityId == null) return 0;
+
+    final q = _transactionsListQuery;
+    if (q.searchTerm.isNotEmpty) return 0;
+
+    Query<Map<String, dynamic>> query = _firestore
+        .collection('facilities')
+        .doc(facilityId)
+        .collection('transactions')
+        .where('date', isGreaterThan: Timestamp.fromDate(after));
+    if (q.typeFilter != null) {
+      query = query.where('type', isEqualTo: q.typeFilter);
+    }
+
+    final agg = await query.count().get();
+    return agg.count ?? 0;
+  }
 
   /// ---------------------------------------------------
   /// REAL-TIME LISTENER (paginated - most recent page only)
@@ -180,7 +276,7 @@ class TransactionProvider with ChangeNotifier {
 
       final newTransaction = transaction.copyWith(id: docRef.id, receiptNumber: receiptNumber);
 
-      await docRef.set(newTransaction.toMap());
+      await docRef.set({...newTransaction.toMap(), ...newTransaction.searchFields()});
 
       // No manual add needed if real-time listener is active
       if (_subscription == null) {
@@ -223,7 +319,7 @@ class TransactionProvider with ChangeNotifier {
           .doc(facilityId)
           .collection('transactions')
           .doc(updatedTransaction.id)
-          .set(updatedTransaction.toMap());
+          .set({...updatedTransaction.toMap(), ...updatedTransaction.searchFields()});
 
       // Update local list only if not listening in realtime
       if (_subscription == null) {

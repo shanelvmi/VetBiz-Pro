@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:provider/provider.dart';
@@ -6,45 +7,15 @@ import 'package:url_launcher/url_launcher.dart';
 
 import '../../providers/facility_provider.dart';
 import '../../providers/debt_provider.dart';
+import '../../providers/payment_provider.dart';
 import '../../widgets/payment_method_selector.dart';
 import '../../models/sale.dart';
 import '../../models/service.dart';
+import '../../models/ledger_entry.dart';
+import '../../services/snapshot_ledger_controller.dart';
+import '../../widgets/firestore_error_view.dart';
 import '../sales/receipt_preview_screen.dart';
 import '../services/service_receipt_preview_screen.dart';
-
-/// A single row in the merged payments ledger - could originate from a
-/// sale payment, a service payment, a debt repayment, or an "other
-/// income" transaction. Local to this screen; not a Firestore model since
-/// it's a display-only merge of two different collections.
-class _LedgerEntry {
-  final String type; // 'sale' | 'service' | 'debt_repayment' | 'other_income'
-  final double amount;
-  final DateTime timestamp;
-  final String? clientId;
-  final String? clientName;
-  final String? clientPhone;
-  final String description;
-  final String? paymentMethod;
-  final String? paidById;
-  final String? saleId;
-  final String? serviceId;
-  final String? debtId;
-
-  const _LedgerEntry({
-    required this.type,
-    required this.amount,
-    required this.timestamp,
-    this.clientId,
-    this.clientName,
-    this.clientPhone,
-    required this.description,
-    this.paymentMethod,
-    this.paidById,
-    this.saleId,
-    this.serviceId,
-    this.debtId,
-  });
-}
 
 class _PaymentMetric {
   final double amount;
@@ -84,9 +55,12 @@ class _PaymentsScreenState extends State<PaymentsScreen> {
   DateTime _rangeStart = DateTime.now();
   DateTime _rangeEnd = DateTime.now();
 
-  bool _isLoading = false;
   final Map<String, String> _userNames = {};
-  List<_LedgerEntry> _entries = [];
+  Timer? _searchDebounce;
+  // Periodically checks (never a live listener) whether new ledger
+  // entries have landed since the current session's snapshot moment,
+  // to drive the "N new entries available - Refresh" banner.
+  Timer? _newRecordsCheckTimer;
 
   _PaymentMetric? _todayMetric;
   _PaymentMetric? _weekMetric;
@@ -107,7 +81,7 @@ class _PaymentsScreenState extends State<PaymentsScreen> {
   String _selectedTypeFilter = 'All';
   String? _selectedMethodFilter;
   final Map<String, Future<(String?, String?)>> _referenceFutureByKey = {};
-  _LedgerEntry? _selectedEntry;
+  LedgerEntry? _selectedEntry;
 
   @override
   void initState() {
@@ -127,7 +101,11 @@ class _PaymentsScreenState extends State<PaymentsScreen> {
       _rangeEnd = now;
     }
 
-    _loadEntries();
+    _openLedgerSession();
+    _newRecordsCheckTimer = Timer.periodic(
+      const Duration(seconds: 45),
+      (_) => Provider.of<PaymentProvider>(context, listen: false).ledgerController.checkForNewEntries(),
+    );
     if (widget.initialClientId == null) {
       final facilityId = Provider.of<FacilityProvider>(context, listen: false).selectedFacilityId;
       if (facilityId != null) {
@@ -140,22 +118,9 @@ class _PaymentsScreenState extends State<PaymentsScreen> {
   @override
   void dispose() {
     _searchController.dispose();
+    _searchDebounce?.cancel();
+    _newRecordsCheckTimer?.cancel();
     super.dispose();
-  }
-
-  String _labelFor(String type) {
-    switch (type) {
-      case 'sale':
-        return 'Sale payment';
-      case 'service':
-        return 'Service payment';
-      case 'debt_repayment':
-        return 'Debt repayment';
-      case 'other_income':
-        return 'Other income';
-      default:
-        return 'Payment';
-    }
   }
 
   IconData _iconFor(String type) {
@@ -173,95 +138,35 @@ class _PaymentsScreenState extends State<PaymentsScreen> {
     }
   }
 
-  Future<void> _loadEntries() async {
-    final facilityId =
-        Provider.of<FacilityProvider>(context, listen: false).selectedFacilityId;
+  /// Records the toolbar's current filters and chosen date range onto
+  /// PaymentProvider, then (re)opens the ledger session for them - a
+  /// no-op if neither has actually changed and a session's already
+  /// open. Loads the user names shown against each entry right after,
+  /// same as the method this replaces did.
+  Future<void> _openLedgerSession({bool forceRefresh = false}) async {
+    final facilityId = Provider.of<FacilityProvider>(context, listen: false).selectedFacilityId;
     if (facilityId == null) return;
 
-    setState(() => _isLoading = true);
-
-    final entries = <_LedgerEntry>[];
-
-    try {
-      // Sale/service payments + debt repayments - all already merged into
-      // one `payments` collection.
-      final paymentsSnap = await FirebaseFirestore.instance
-          .collection('facilities')
-          .doc(facilityId)
-          .collection('payments')
-          .where('timestamp', isGreaterThanOrEqualTo: Timestamp.fromDate(_rangeStart))
-          .where('timestamp', isLessThanOrEqualTo: Timestamp.fromDate(_rangeEnd))
-          .orderBy('timestamp', descending: true)
-          .get();
-
-      for (final doc in paymentsSnap.docs) {
-        final data = doc.data();
-        final source = (data['source'] as String?) ?? 'sale';
-        entries.add(_LedgerEntry(
-          type: source,
-          amount: (data['amount'] as num?)?.toDouble() ?? 0.0,
-          timestamp: (data['timestamp'] as Timestamp?)?.toDate() ?? DateTime.now(),
-          clientId: data['clientId'] as String?,
-          clientName: data['clientName'] as String?,
-          clientPhone: data['clientPhone'] as String?,
-          description: _labelFor(source),
-          paymentMethod: data['paymentMethod'] as String?,
-          paidById: data['paidById'] as String?,
-          saleId: data['saleId'] as String?,
-          serviceId: data['serviceId'] as String?,
-          debtId: data['debtId'] as String?,
-        ));
-      }
-
-      // Other Income - read-only here; still created/edited only in
-      // Transactions. Not tied to a client, so excluded when viewing one
-      // specific debtor's history.
-      if (widget.initialClientId == null) {
-        final txSnap = await FirebaseFirestore.instance
-            .collection('facilities')
-            .doc(facilityId)
-            .collection('transactions')
-            .where('date', isGreaterThanOrEqualTo: Timestamp.fromDate(_rangeStart))
-            .where('date', isLessThanOrEqualTo: Timestamp.fromDate(_rangeEnd))
-            .orderBy('date', descending: true)
-            .get();
-
-        for (final doc in txSnap.docs) {
-          final data = doc.data();
-          final type = ((data['type'] as String?) ?? '').toLowerCase();
-          if (type != 'other income') continue;
-
-          entries.add(_LedgerEntry(
-            type: 'other_income',
-            amount: (data['amount'] as num?)?.toDouble() ?? 0.0,
-            timestamp: (data['date'] as Timestamp?)?.toDate() ?? DateTime.now(),
-            clientId: null,
-            clientName: null,
-            description: (data['description'] as String?)?.isNotEmpty == true
-                ? data['description'] as String
-                : 'Other income',
-            paymentMethod: data['paymentMethod'] as String?,
-          ));
-        }
-      }
-
-      entries.sort((a, b) => b.timestamp.compareTo(a.timestamp));
-
-      if (mounted) {
-        setState(() {
-          _entries = entries;
-          _isLoading = false;
-        });
-      }
-
-      await _loadUserNames(entries);
-    } catch (e) {
-      debugPrint('Error loading payments ledger: $e');
-      if (mounted) setState(() => _isLoading = false);
+    final provider = Provider.of<PaymentProvider>(context, listen: false);
+    final signature = provider.updateLedgerFilters(
+      facilityId: facilityId,
+      searchTerm: _searchQuery,
+      typeFilter: _typeTabs.firstWhere((t) => t.$1 == _selectedTypeFilter).$2,
+      methodFilter: _selectedMethodFilter,
+      initialClientId: widget.initialClientId,
+    );
+    await provider.ledgerController.openSession(
+      querySignature: signature,
+      rangeStart: _rangeStart,
+      rangeEnd: _rangeEnd,
+      forceRefresh: forceRefresh,
+    );
+    if (mounted) {
+      await _loadUserNames(provider.ledgerController.entries);
     }
   }
 
-  Future<void> _loadUserNames(List<_LedgerEntry> entries) async {
+  Future<void> _loadUserNames(List<LedgerEntry> entries) async {
     final uniqueIds = entries
         .map((e) => e.paidById)
         .whereType<String>()
@@ -284,7 +189,7 @@ class _PaymentsScreenState extends State<PaymentsScreen> {
     }
   }
 
-  Future<(String?, String?)> _getSourceDetailsFuture(_LedgerEntry e) {
+  Future<(String?, String?)> _getSourceDetailsFuture(LedgerEntry e) {
     final key = '${e.type}_${e.saleId}_${e.serviceId}_${e.debtId}';
     return _referenceFutureByKey.putIfAbsent(key, () async {
       final facilityId = Provider.of<FacilityProvider>(context, listen: false).selectedFacilityId;
@@ -328,7 +233,7 @@ class _PaymentsScreenState extends State<PaymentsScreen> {
     return (reference, notes);
   }
 
-  Future<(String, String)?> _resolvePrintTarget(_LedgerEntry e) async {
+  Future<(String, String)?> _resolvePrintTarget(LedgerEntry e) async {
     final facilityId = Provider.of<FacilityProvider>(context, listen: false).selectedFacilityId;
     if (facilityId == null) return null;
     if (e.type == 'sale' && e.saleId != null) return ('sales', e.saleId!);
@@ -349,7 +254,7 @@ class _PaymentsScreenState extends State<PaymentsScreen> {
     return null;
   }
 
-  Future<void> _printReceiptFor(_LedgerEntry e) async {
+  Future<void> _printReceiptFor(LedgerEntry e) async {
     final facilityId = Provider.of<FacilityProvider>(context, listen: false).selectedFacilityId;
     if (facilityId == null) return;
     final target = await _resolvePrintTarget(e);
@@ -479,49 +384,12 @@ class _PaymentsScreenState extends State<PaymentsScreen> {
       _rangeEnd = result['end']!;
     });
 
-    await _loadEntries();
+    await _openLedgerSession();
   }
 
   @override
   Widget build(BuildContext context) {
-    final filtered = _entries.where((e) {
-      final selectedType = _typeTabs.firstWhere((t) => t.$1 == _selectedTypeFilter).$2;
-      if (selectedType != null && e.type != selectedType) return false;
-      if (_selectedMethodFilter != null && e.paymentMethod != _selectedMethodFilter) return false;
-
-      if (widget.initialClientId != null) {
-        // Already scoped to one specific client by ID - that's the
-        // authoritative match. The search box still lets someone type
-        // further within this client's own history, but the client-name
-        // text that's pre-filled here on open must never itself act as a
-        // required filter - not every payment document reliably carries
-        // a clientName field, and requiring it silently dropped valid,
-        // correctly-matched entries (this is exactly what caused a
-        // second debt repayment to go missing while an earlier one, with
-        // a clientName set, still showed).
-        if (e.clientId != widget.initialClientId) return false;
-        if (_searchQuery.isEmpty || _searchQuery == widget.initialClientName) {
-          return true;
-        }
-        final q = _searchQuery.toLowerCase();
-        return (e.clientName ?? '').toLowerCase().contains(q) ||
-            e.description.toLowerCase().contains(q);
-      }
-
-      if (_searchQuery.isEmpty) return true;
-      final q = _searchQuery.toLowerCase();
-      return (e.clientName ?? '').toLowerCase().contains(q) ||
-          e.description.toLowerCase().contains(q);
-    }).toList();
-
-    final total = filtered.fold<double>(0.0, (sum, e) => sum + e.amount);
-
-    // Group by calendar day, preserving descending order.
-    final Map<String, List<_LedgerEntry>> grouped = {};
-    for (final e in filtered) {
-      final key = DateFormat('yyyy-MM-dd').format(e.timestamp);
-      grouped.putIfAbsent(key, () => []).add(e);
-    }
+    final paymentProvider = Provider.of<PaymentProvider>(context);
 
     return Scaffold(
       backgroundColor: offWhite,
@@ -530,57 +398,101 @@ class _PaymentsScreenState extends State<PaymentsScreen> {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           Expanded(
-            child: _isLoading
-                ? Center(child: CircularProgressIndicator(color: primaryDeepGreen))
-                : Padding(
-                    padding: const EdgeInsets.all(16),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        if (widget.initialClientId == null) ...[
-                          _buildMetricsRow(),
-                          const SizedBox(height: 16),
-                        ],
-                        _buildToolbarRow(total),
-                        const SizedBox(height: 16),
-                        Expanded(
-                          child: filtered.isEmpty
-                              ? Center(
-                                  child: Text('No payments in this period.', style: TextStyle(color: Colors.grey[600])),
-                                )
-                              : Column(
-                                  crossAxisAlignment: CrossAxisAlignment.stretch,
+            child: ListenableBuilder(
+              listenable: paymentProvider.ledgerController,
+              builder: (context, _) {
+                final controller = paymentProvider.ledgerController;
+                final filtered = controller.entries;
+                final total = filtered.fold<double>(0.0, (sum, e) => sum + e.amount);
+
+                // Group by calendar day, preserving descending order.
+                final Map<String, List<LedgerEntry>> grouped = {};
+                for (final e in filtered) {
+                  final key = DateFormat('yyyy-MM-dd').format(e.timestamp);
+                  grouped.putIfAbsent(key, () => []).add(e);
+                }
+
+                if (controller.error != null && filtered.isEmpty) {
+                  return Center(child: FirestoreErrorView(error: controller.error));
+                }
+
+                return controller.isLoading && filtered.isEmpty
+                    ? Center(child: CircularProgressIndicator(color: primaryDeepGreen))
+                    : Padding(
+                        padding: const EdgeInsets.all(16),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            if (widget.initialClientId == null) ...[
+                              _buildMetricsRow(),
+                              const SizedBox(height: 16),
+                            ],
+                            if (controller.newEntriesAvailable > 0)
+                              Container(
+                                width: double.infinity,
+                                margin: const EdgeInsets.only(bottom: 12),
+                                color: primaryDeepGreen.withValues(alpha: 0.08),
+                                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                                child: Row(
                                   children: [
-                                    Container(
-                                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                                      decoration: BoxDecoration(border: Border(bottom: BorderSide(color: Colors.grey.withValues(alpha: 0.2)))),
-                                      child: Row(
-                                        children: [
-                                          _headerCell('Date & Time', flex: 3),
-                                          _headerCell('Payer', flex: 2),
-                                          _headerCell('Source', flex: 2),
-                                          _headerCell('Reference', flex: 2),
-                                          _headerCell('Method', flex: 2),
-                                          _headerCell('Amount', flex: 2),
-                                          _headerCell('Recorded By', flex: 2),
-                                        ],
+                                    Icon(Icons.fiber_new, size: 18, color: primaryDeepGreen),
+                                    const SizedBox(width: 8),
+                                    Expanded(
+                                      child: Text(
+                                        '${controller.newEntriesAvailable} new entr'
+                                        '${controller.newEntriesAvailable == 1 ? 'y' : 'ies'} available',
+                                        style: TextStyle(fontSize: 13, color: primaryDeepGreen),
                                       ),
                                     ),
-                                    Expanded(
-                                      child: ListView(
-                                        children: grouped.entries.map((dayEntry) {
-                                          final dayTotal =
-                                              dayEntry.value.fold<double>(0.0, (sum, e) => sum + e.amount);
-                                          return _buildDayGroup(dayEntry.key, dayEntry.value, dayTotal);
-                                        }).toList(),
-                                      ),
+                                    TextButton(
+                                      onPressed: () => controller.refreshSession(),
+                                      child: const Text('Refresh'),
                                     ),
                                   ],
                                 ),
+                              ),
+                            _buildToolbarRow(total),
+                            const SizedBox(height: 16),
+                            Expanded(
+                              child: filtered.isEmpty
+                                  ? Center(
+                                      child: Text('No payments in this period.', style: TextStyle(color: Colors.grey[600])),
+                                    )
+                                  : Column(
+                                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                                      children: [
+                                        Container(
+                                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                                          decoration: BoxDecoration(border: Border(bottom: BorderSide(color: Colors.grey.withValues(alpha: 0.2)))),
+                                          child: Row(
+                                            children: [
+                                              _headerCell('Date & Time', flex: 3),
+                                              _headerCell('Payer', flex: 2),
+                                              _headerCell('Source', flex: 2),
+                                              _headerCell('Reference', flex: 2),
+                                              _headerCell('Method', flex: 2),
+                                              _headerCell('Amount', flex: 2),
+                                              _headerCell('Recorded By', flex: 2),
+                                            ],
+                                          ),
+                                        ),
+                                        Expanded(
+                                          child: ListView(
+                                            children: grouped.entries.map((dayEntry) {
+                                              final dayTotal =
+                                                  dayEntry.value.fold<double>(0.0, (sum, e) => sum + e.amount);
+                                              return _buildDayGroup(dayEntry.key, dayEntry.value, dayTotal);
+                                            }).toList(),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                            ),
+                          ],
                         ),
-                      ],
-                    ),
-                  ),
+                      );
+              },
+            ),
           ),
           if (_selectedEntry != null) ...[
             const VerticalDivider(width: 1),
@@ -596,7 +508,7 @@ class _PaymentsScreenState extends State<PaymentsScreen> {
 
   Widget _buildMetricsRow() {
     return SizedBox(
-      height: 118,
+      height: 92,
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
@@ -615,7 +527,7 @@ class _PaymentsScreenState extends State<PaymentsScreen> {
   Widget _metricCard(String title, _PaymentMetric? metric) {
     final isLoading = _isMetricsLoading && metric == null;
     return Container(
-      padding: const EdgeInsets.all(14),
+      padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(12),
@@ -625,7 +537,7 @@ class _PaymentsScreenState extends State<PaymentsScreen> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(title, style: TextStyle(fontSize: 12, color: Colors.grey[600])),
-          const SizedBox(height: 6),
+          const SizedBox(height: 4),
           AnimatedSwitcher(
             duration: const Duration(milliseconds: 300),
             child: isLoading
@@ -635,15 +547,19 @@ class _PaymentsScreenState extends State<PaymentsScreen> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Text(
-                        'Tsh ${_moneyFormat.format(metric?.amount ?? 0)}',
-                        style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                      Row(
+                        children: [
+                          Text(
+                            'Tsh ${_moneyFormat.format(metric?.amount ?? 0)}',
+                            style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                          ),
+                          if (metric?.trendPercent != null) ...[
+                            const SizedBox(width: 8),
+                            _trendPill(metric!.trendPercent!),
+                          ],
+                        ],
                       ),
                       Text('${metric?.count ?? 0} payments', style: TextStyle(fontSize: 11, color: Colors.grey[600])),
-                      if (metric?.trendPercent != null) ...[
-                        const SizedBox(height: 4),
-                        _trendPill(metric!.trendPercent!),
-                      ],
                     ],
                   ),
           ),
@@ -658,7 +574,7 @@ class _PaymentsScreenState extends State<PaymentsScreen> {
         : null;
     final isLoading = _isMetricsLoading && _outstandingAmount == null;
     return Container(
-      padding: const EdgeInsets.all(14),
+      padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(12),
@@ -668,7 +584,7 @@ class _PaymentsScreenState extends State<PaymentsScreen> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text('Outstanding', style: TextStyle(fontSize: 12, color: Colors.grey[600])),
-          const SizedBox(height: 6),
+          const SizedBox(height: 4),
           AnimatedSwitcher(
             duration: const Duration(milliseconds: 300),
             child: isLoading
@@ -678,15 +594,19 @@ class _PaymentsScreenState extends State<PaymentsScreen> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Text(
-                        'Tsh ${_moneyFormat.format(_outstandingAmount ?? 0)}',
-                        style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: warmAmber),
+                      Row(
+                        children: [
+                          Text(
+                            'Tsh ${_moneyFormat.format(_outstandingAmount ?? 0)}',
+                            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: warmAmber),
+                          ),
+                          if (trendPercent != null) ...[
+                            const SizedBox(width: 8),
+                            _trendPill(trendPercent, invertColors: true),
+                          ],
+                        ],
                       ),
                       Text('${_outstandingCount ?? 0} debts', style: TextStyle(fontSize: 11, color: Colors.grey[600])),
-                      if (trendPercent != null) ...[
-                        const SizedBox(height: 4),
-                        _trendPill(trendPercent, invertColors: true),
-                      ],
                     ],
                   ),
           ),
@@ -723,7 +643,7 @@ class _PaymentsScreenState extends State<PaymentsScreen> {
     );
   }
 
-  Widget _buildDetailsPanel(_LedgerEntry e) {
+  Widget _buildDetailsPanel(LedgerEntry e) {
     final recordedBy = e.paidById != null ? _userNames[e.paidById] : null;
     return Container(
       decoration: BoxDecoration(
@@ -891,13 +811,19 @@ class _PaymentsScreenState extends State<PaymentsScreen> {
                   ? null
                   : IconButton(
                       icon: const Icon(Icons.clear, size: 18),
-                      onPressed: () => setState(() {
+                      onPressed: () {
+                        _searchDebounce?.cancel();
+                        setState(() => _searchQuery = '');
                         _searchController.clear();
-                        _searchQuery = '';
-                      }),
+                        _openLedgerSession();
+                      },
                     ),
             ),
-            onChanged: (val) => setState(() => _searchQuery = val.trim()),
+            onChanged: (val) {
+              setState(() => _searchQuery = val.trim());
+              _searchDebounce?.cancel();
+              _searchDebounce = Timer(const Duration(milliseconds: 400), _openLedgerSession);
+            },
           ),
         ),
         if (widget.initialClientId == null) ...[
@@ -906,7 +832,10 @@ class _PaymentsScreenState extends State<PaymentsScreen> {
             value: _selectedTypeFilter,
             items: _typeTabs.map((t) => t.$1).toList(),
             label: 'Type',
-            onChanged: (val) => setState(() => _selectedTypeFilter = val),
+            onChanged: (val) {
+              setState(() => _selectedTypeFilter = val);
+              _openLedgerSession();
+            },
           ),
           const SizedBox(width: 10),
           Container(
@@ -927,17 +856,23 @@ class _PaymentsScreenState extends State<PaymentsScreen> {
                   const DropdownMenuItem<String?>(value: null, child: Text('Method: All')),
                   ...kPaymentMethods.map((m) => DropdownMenuItem<String?>(value: m, child: Text('Method: $m'))),
                 ],
-                onChanged: (val) => setState(() => _selectedMethodFilter = val),
+                onChanged: (val) {
+                  setState(() => _selectedMethodFilter = val);
+                  _openLedgerSession();
+                },
               ),
             ),
           ),
           if (hasActiveFilters) ...[
             const SizedBox(width: 8),
             TextButton(
-              onPressed: () => setState(() {
-                _selectedTypeFilter = 'All';
-                _selectedMethodFilter = null;
-              }),
+              onPressed: () {
+                setState(() {
+                  _selectedTypeFilter = 'All';
+                  _selectedMethodFilter = null;
+                });
+                _openLedgerSession();
+              },
               child: const Text('Clear', style: TextStyle(fontSize: 13)),
             ),
           ],
@@ -1013,7 +948,7 @@ class _PaymentsScreenState extends State<PaymentsScreen> {
     );
   }
 
-  Widget _buildDayGroup(String dayKey, List<_LedgerEntry> entries, double dayTotal) {
+  Widget _buildDayGroup(String dayKey, List<LedgerEntry> entries, double dayTotal) {
     final date = DateTime.parse(dayKey);
     final now = DateTime.now();
     final today = DateTime(now.year, now.month, now.day);
@@ -1057,7 +992,7 @@ class _PaymentsScreenState extends State<PaymentsScreen> {
     );
   }
 
-  Widget _buildEntryTile(_LedgerEntry e) {
+  Widget _buildEntryTile(LedgerEntry e) {
     final recordedBy = e.paidById != null ? _userNames[e.paidById] : null;
     final isSelected = _selectedEntry == e;
     return InkWell(

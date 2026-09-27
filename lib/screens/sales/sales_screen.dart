@@ -8,6 +8,8 @@ import '../../providers/facility_provider.dart';
 import '../../providers/user_role_provider.dart';
 import '../../providers/client_provider.dart';
 import '../../services/sales_summary_service.dart';
+import '../../services/cursor_paginated_list_controller.dart';
+import '../../widgets/firestore_error_view.dart';
 import 'add_sale_screen.dart';
 import 'receipt_preview_screen.dart';
 import 'sales_archive_screen.dart';
@@ -38,13 +40,9 @@ class _SalesScreenState extends State<SalesScreen> {
   final TextEditingController _searchController = TextEditingController();
 
   // Which sale is shown in the details panel (null = panel hidden,
-  // table takes full width), and the display pagination window - a
-  // page here is a view over whatever's already loaded (or gets
-  // loaded on demand), independent of SaleProvider's own 25-per-fetch
-  // Firestore batching.
+  // table takes full width). Pagination state (page size, current
+  // page) now lives entirely in salesListController below, not here.
   Sale? _selectedSale;
-  int _displayPageSize = 10;
-  int _currentPageIndex = 0;
 
   // Summary card totals - deliberately NOT derived from whatever sales
   // happen to be loaded in the paginated list below. Those only ever
@@ -63,6 +61,11 @@ class _SalesScreenState extends State<SalesScreen> {
   SaleProvider? _saleProvider;
   int _lastKnownSaleCount = 0;
   Timer? _pendingSummaryRefresh;
+  // Periodically checks (never a live listener) whether new sales have
+  // landed since the current browsing session's snapshot moment, to
+  // drive the "N new sales available - Refresh" banner.
+  Timer? _newRecordsCheckTimer;
+  Timer? _searchDebounce;
 
   @override
   void initState() {
@@ -76,7 +79,28 @@ class _SalesScreenState extends State<SalesScreen> {
       _lastKnownSaleCount = _saleProvider!.sales.length;
       _saleProvider!.addListener(_onSalesChanged);
       _loadRangeSummary();
+      _openSalesListSession();
+      _newRecordsCheckTimer = Timer.periodic(
+        const Duration(seconds: 45),
+        (_) => _saleProvider?.salesListController.checkForNewRecords(),
+      );
     }
+  }
+
+  /// Records the toolbar's current filters onto SaleProvider, then
+  /// (re)opens the browsing session for them - a no-op if the
+  /// signature hasn't actually changed and a session's already open,
+  /// same as any other call site of this.
+  void _openSalesListSession({bool forceRefresh = false}) {
+    final provider = _saleProvider;
+    if (provider == null) return;
+    final signature = provider.updateSalesListFilters(
+      searchTerm: _searchQuery,
+      statusFilter: _filterStatus,
+      sellerFilter: _sellerFilter,
+      dateFilter: _dateFilter,
+    );
+    provider.salesListController.openSession(signature, forceRefresh: forceRefresh);
   }
 
   void _onSalesChanged() {
@@ -87,11 +111,11 @@ class _SalesScreenState extends State<SalesScreen> {
 
     // The summary card reads a precomputed daily aggregate, written by
     // a Cloud Function shortly after each sale write - not the instant
-    // the sale document itself is created. A short delay here gives
-    // that function time to actually finish before re-fetching, so
-    // this reliably picks up the new total instead of re-reading the
-    // same still-stale aggregate the manual Refresh button could
-    // otherwise hit if pressed immediately.
+    // the sale document itself is created. _loadRangeSummary itself now
+    // retries until that aggregate actually reflects this change (or
+    // gives up after a few attempts), rather than a single, fixed-delay
+    // guess that silently stayed stale whenever the function ran a
+    // little slower than expected.
     _pendingSummaryRefresh?.cancel();
     _pendingSummaryRefresh = Timer(const Duration(seconds: 2), () {
       if (mounted) _loadRangeSummary();
@@ -106,34 +130,56 @@ class _SalesScreenState extends State<SalesScreen> {
 
     final now = DateTime.now();
     final start = now.subtract(const Duration(days: 30));
+    final previousCollected = _rangeSummary?['totalCollected'];
 
-    try {
-      final results = await Future.wait([
-        _summaryService.getRangeTotals(
-          facilityId: facilityId,
-          start: start,
-          end: now,
-        ),
-        _summaryService.getTotalCollected(
-          facilityId: facilityId,
-          start: start,
-          end: now,
-        ),
-      ]);
+    // Retries a few times, spaced further apart each time, until the
+    // fetched total actually differs from what it was before this
+    // change - the Cloud Function's own latency is unpredictable (cold
+    // starts especially), so a single fixed-delay attempt either fires
+    // too early and silently keeps showing a stale total, or has to
+    // guess a delay long enough to cover the worst case every time.
+    // Retrying instead adapts to however long this specific write
+    // actually takes, and gives up cleanly after a few tries rather
+    // than retrying forever.
+    const retryDelays = [Duration.zero, Duration(seconds: 2), Duration(seconds: 3), Duration(seconds: 5)];
 
-      final totals = results[0] as Map<String, double>;
-      final collected = results[1] as double;
+    for (var attempt = 0; attempt < retryDelays.length; attempt++) {
+      if (retryDelays[attempt] > Duration.zero) {
+        await Future.delayed(retryDelays[attempt]);
+        if (!mounted) return;
+      }
 
-      if (mounted) {
+      try {
+        final results = await Future.wait([
+          _summaryService.getRangeTotals(
+            facilityId: facilityId,
+            start: start,
+            end: now,
+          ),
+          _summaryService.getTotalCollected(
+            facilityId: facilityId,
+            start: start,
+            end: now,
+          ),
+        ]);
+
+        final totals = results[0] as Map<String, double>;
+        final collected = results[1] as double;
+
+        if (!mounted) return;
         setState(() {
           _rangeSummary = {...totals, 'totalCollected': collected};
           _isSummaryLoading = false;
         });
-      }
-    } catch (e) {
-      debugPrint('Error loading range summary: $e');
-      if (mounted) {
-        setState(() => _isSummaryLoading = false);
+
+        // Changed from before this refresh started (or this is the
+        // very first load, with nothing to compare against) - done,
+        // no need to keep retrying.
+        if (previousCollected == null || collected != previousCollected) return;
+      } catch (e) {
+        debugPrint('Error loading range summary: $e');
+        if (mounted) setState(() => _isSummaryLoading = false);
+        return;
       }
     }
   }
@@ -141,6 +187,8 @@ class _SalesScreenState extends State<SalesScreen> {
   @override
   void dispose() {
     _pendingSummaryRefresh?.cancel();
+    _newRecordsCheckTimer?.cancel();
+    _searchDebounce?.cancel();
     _saleProvider?.removeListener(_onSalesChanged);
     _searchController.dispose();
     super.dispose();
@@ -165,50 +213,13 @@ class _SalesScreenState extends State<SalesScreen> {
     final dateOnlyFormatter = DateFormat('dd MMM yyyy');
     final timeOnlyFormatter = DateFormat('hh:mm a');
 
-    final sortedSales = [...saleProvider.sales];
-    sortedSales.sort((a, b) => b.updatedAt.compareTo(a.updatedAt));
-
-    final now = DateTime.now();
-    final filteredSales = sortedSales.where((sale) {
-      final matchesSearch = _searchQuery.isEmpty ||
-          sale.clientName?.toLowerCase().contains(_searchQuery.toLowerCase()) == true ||
-          sale.soldByName.toLowerCase().contains(_searchQuery.toLowerCase()) ||
-          _invoiceNo(sale).toLowerCase().contains(_searchQuery.toLowerCase()) ||
-          sale.items.any((item) => item.name.toLowerCase().contains(_searchQuery.toLowerCase()));
-
-      final status = _getPaymentStatus(sale.totalPaid, sale.totalAmount);
-      final matchesStatus = _filterStatus == 'All' || status == _filterStatus;
-
-      final matchesSeller = _sellerFilter == 'All' || sale.soldByName == _sellerFilter;
-
-      final matchesDate = switch (_dateFilter) {
-        'Today' => sale.timestamp.year == now.year && sale.timestamp.month == now.month && sale.timestamp.day == now.day,
-        'Last 7 days' => sale.timestamp.isAfter(now.subtract(const Duration(days: 7))),
-        'Last 30 days' => sale.timestamp.isAfter(now.subtract(const Duration(days: 30))),
-        'This month' => sale.timestamp.year == now.year && sale.timestamp.month == now.month,
-        _ => true, // 'All time'
-      };
-
-      return matchesSearch && matchesStatus && matchesSeller && matchesDate;
-    }).toList();
-
-    // Filter options this screen can offer are only ever as complete as
-    // the sales already loaded - listing sellers seen only among what's
-    // in memory, same honest limitation as the search bar above.
-    final availableSellers = sortedSales.map((s) => s.soldByName).toSet().toList()..sort();
-
-    // Display pagination is a window over whatever's already loaded
-    // (or about to be), not a true "jump to page 1249" - Firestore's
-    // cursor-based pagination genuinely can't do that without
-    // significant extra infrastructure. Clamping the page index keeps
-    // this consistent if the underlying list shrinks (e.g. after a
-    // delete) while sitting on a later page.
-    final totalPages = (filteredSales.length / _displayPageSize).ceil().clamp(1, 999999);
-    if (_currentPageIndex >= totalPages) _currentPageIndex = totalPages - 1;
-    if (_currentPageIndex < 0) _currentPageIndex = 0;
-    final pageStart = _currentPageIndex * _displayPageSize;
-    final pageEnd = (pageStart + _displayPageSize).clamp(0, filteredSales.length);
-    final pageSales = filteredSales.sublist(pageStart.clamp(0, filteredSales.length), pageEnd);
+    // A low-stakes dropdown convenience only, not part of search or
+    // filter correctness (which is now a real query, further below) -
+    // drawn from whichever sales this older, separate mechanism
+    // happens to have live/loaded, same honest limitation the search
+    // box used to have entirely. A full facility-staff query would be
+    // a more complete source, but a bigger, separate change.
+    final availableSellers = saleProvider.sales.map((s) => s.soldByName).toSet().toList()..sort();
 
     return Scaffold(
       backgroundColor: offWhite,
@@ -235,28 +246,62 @@ class _SalesScreenState extends State<SalesScreen> {
                   child: _buildFiltersToolbar(availableSellers),
                 ),
                 Expanded(
-                  child: filteredSales.isEmpty
-                      ? Center(
-                          child: Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Icon(Icons.shopping_cart_outlined, size: 64, color: Colors.grey[400]),
-                              const SizedBox(height: 16),
-                              Text(
-                                _searchQuery.isEmpty ? 'No sales yet' : 'No sales match your filters',
-                                style: TextStyle(fontSize: 18, color: Colors.grey[600]),
+                  child: ListenableBuilder(
+                    listenable: saleProvider.salesListController,
+                    builder: (context, _) {
+                      final controller = saleProvider.salesListController;
+                      final pageSales = controller.items;
+                      return Column(
+                        children: [
+                          if (controller.newRecordsAvailable > 0)
+                            Container(
+                              width: double.infinity,
+                              color: primaryDeepGreen.withValues(alpha: 0.08),
+                              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                              child: Row(
+                                children: [
+                                  Icon(Icons.fiber_new, size: 18, color: primaryDeepGreen),
+                                  const SizedBox(width: 8),
+                                  Expanded(
+                                    child: Text(
+                                      '${controller.newRecordsAvailable} new sale'
+                                      '${controller.newRecordsAvailable == 1 ? '' : 's'} available',
+                                      style: TextStyle(fontSize: 13, color: primaryDeepGreen),
+                                    ),
+                                  ),
+                                  TextButton(
+                                    onPressed: () => saleProvider.salesListController.refreshSession(),
+                                    child: const Text('Refresh'),
+                                  ),
+                                ],
                               ),
-                            ],
+                            ),
+                          Expanded(
+                            child: controller.error != null && pageSales.isEmpty
+                                ? Center(child: FirestoreErrorView(error: controller.error))
+                                : controller.isLoading && pageSales.isEmpty
+                                ? const Center(child: CircularProgressIndicator())
+                                : pageSales.isEmpty
+                                    ? Center(
+                                        child: Column(
+                                          mainAxisAlignment: MainAxisAlignment.center,
+                                          children: [
+                                            Icon(Icons.shopping_cart_outlined, size: 64, color: Colors.grey[400]),
+                                            const SizedBox(height: 16),
+                                            Text(
+                                              _searchQuery.isEmpty ? 'No sales yet' : 'No sales match your filters',
+                                              style: TextStyle(fontSize: 18, color: Colors.grey[600]),
+                                            ),
+                                          ],
+                                        ),
+                                      )
+                                    : _buildSalesTable(pageSales, dateFormatter),
                           ),
-                        )
-                      : _buildSalesTable(pageSales, dateFormatter),
-                ),
-                _buildPaginationBar(
-                  saleProvider: saleProvider,
-                  totalFiltered: filteredSales.length,
-                  pageStart: pageStart,
-                  pageEnd: pageEnd,
-                  totalPages: totalPages,
+                          _buildPaginationBar(saleProvider: saleProvider, controller: controller),
+                        ],
+                      );
+                    },
+                  ),
                 ),
               ],
             ),
@@ -418,17 +463,19 @@ class _SalesScreenState extends State<SalesScreen> {
                   ? null
                   : IconButton(
                       icon: const Icon(Icons.clear, size: 18),
-                      onPressed: () => setState(() {
+                      onPressed: () {
+                        _searchDebounce?.cancel();
+                        setState(() => _searchQuery = '');
                         _searchController.clear();
-                        _searchQuery = '';
-                        _currentPageIndex = 0;
-                      }),
+                        _openSalesListSession();
+                      },
                     ),
             ),
-            onChanged: (val) => setState(() {
-              _searchQuery = val.trim();
-              _currentPageIndex = 0;
-            }),
+            onChanged: (val) {
+              setState(() => _searchQuery = val.trim());
+              _searchDebounce?.cancel();
+              _searchDebounce = Timer(const Duration(milliseconds: 400), _openSalesListSession);
+            },
           ),
         ),
         const SizedBox(width: 10),
@@ -436,42 +483,45 @@ class _SalesScreenState extends State<SalesScreen> {
           value: _dateFilter,
           items: _dateFilterOptions,
           label: 'Date',
-          onChanged: (val) => setState(() {
-            _dateFilter = val;
-            _currentPageIndex = 0;
-          }),
+          onChanged: (val) {
+            setState(() => _dateFilter = val);
+            _openSalesListSession();
+          },
         ),
         const SizedBox(width: 10),
         _toolbarDropdown<String>(
           value: _filterStatus,
           items: _statusFilterOptions,
           label: 'Payment Status',
-          onChanged: (val) => setState(() {
-            _filterStatus = val;
-            _currentPageIndex = 0;
-          }),
+          onChanged: (val) {
+            setState(() => _filterStatus = val);
+            _openSalesListSession();
+          },
         ),
         const SizedBox(width: 10),
         _toolbarDropdown<String>(
           value: _sellerFilter,
           items: ['All', ...availableSellers],
           label: 'Seller',
-          onChanged: (val) => setState(() {
-            _sellerFilter = val;
-            _currentPageIndex = 0;
-          }),
+          onChanged: (val) {
+            setState(() => _sellerFilter = val);
+            _openSalesListSession();
+          },
         ),
         if (hasActiveFilters) ...[
           const SizedBox(width: 10),
           TextButton(
-            onPressed: () => setState(() {
+            onPressed: () {
+              _searchDebounce?.cancel();
               _searchController.clear();
-              _searchQuery = '';
-              _filterStatus = 'All';
-              _dateFilter = 'Last 30 days';
-              _sellerFilter = 'All';
-              _currentPageIndex = 0;
-            }),
+              setState(() {
+                _searchQuery = '';
+                _filterStatus = 'All';
+                _dateFilter = 'Last 30 days';
+                _sellerFilter = 'All';
+              });
+              _openSalesListSession();
+            },
             child: const Text('Reset'),
           ),
         ],
@@ -533,7 +583,10 @@ class _SalesScreenState extends State<SalesScreen> {
             onPressed: () => navigateOrShowLockedDialog(
               context,
               const AddSaleScreen(),
-              onNavigate: () => showAddSaleScreen(context),
+              onNavigate: () async {
+                await showAddSaleScreen(context);
+                if (mounted) _openSalesListSession(forceRefresh: true);
+              },
             ),
             icon: const Icon(Icons.add, size: 18),
             label: const Text('Record Sale'),
@@ -688,12 +741,12 @@ class _SalesScreenState extends State<SalesScreen> {
 
   Widget _buildPaginationBar({
     required SaleProvider saleProvider,
-    required int totalFiltered,
-    required int pageStart,
-    required int pageEnd,
-    required int totalPages,
+    required CursorPaginatedListController<Sale> controller,
   }) {
-    final canGoNext = _currentPageIndex < totalPages - 1 || saleProvider.hasMore;
+    final pageSize = controller.pageSize;
+    final itemCount = controller.items.length;
+    final pageStart = itemCount == 0 ? 0 : (controller.currentPage - 1) * pageSize + 1;
+    final pageEnd = (controller.currentPage - 1) * pageSize + itemCount;
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
@@ -702,49 +755,34 @@ class _SalesScreenState extends State<SalesScreen> {
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           Text(
-            totalFiltered == 0
-                ? 'No sales'
-                : 'Showing ${pageStart + 1} to $pageEnd of $totalFiltered${saleProvider.hasMore ? '+' : ''} sales',
+            itemCount == 0 ? 'No sales' : 'Showing $pageStart to $pageEnd',
             style: TextStyle(fontSize: 12.5, color: Colors.grey[600]),
           ),
           Row(
             children: [
               DropdownButtonHideUnderline(
                 child: DropdownButton<int>(
-                  value: _displayPageSize,
+                  value: pageSize,
                   items: const [10, 25, 50]
                       .map((n) => DropdownMenuItem(value: n, child: Text('$n per page')))
                       .toList(),
                   onChanged: (val) {
-                    if (val != null) setState(() {
-                      _displayPageSize = val;
-                      _currentPageIndex = 0;
-                    });
+                    if (val != null) saleProvider.salesListController.setPageSize(val);
                   },
                 ),
               ),
               const SizedBox(width: 16),
               IconButton(
                 icon: const Icon(Icons.chevron_left),
-                onPressed: _currentPageIndex > 0 ? () => setState(() => _currentPageIndex--) : null,
+                onPressed: controller.hasPreviousPage ? () => controller.goToPreviousPage() : null,
               ),
-              Text('Page ${_currentPageIndex + 1} of $totalPages', style: const TextStyle(fontSize: 13)),
+              Text('Page ${controller.currentPage}', style: const TextStyle(fontSize: 13)),
               IconButton(
-                icon: saleProvider.isLoadingMore
+                icon: controller.isLoading
                     ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2))
                     : const Icon(Icons.chevron_right),
-                onPressed: canGoNext && !saleProvider.isLoadingMore
-                    ? () async {
-                        // If the next page isn't loaded yet, fetch more
-                        // before advancing - this is what keeps "Next"
-                        // honest without pretending to jump to an
-                        // arbitrary page number.
-                        final needed = (_currentPageIndex + 2) * _displayPageSize;
-                        if (needed > saleProvider.sales.length && saleProvider.hasMore) {
-                          await saleProvider.loadMoreSales();
-                        }
-                        if (mounted) setState(() => _currentPageIndex++);
-                      }
+                onPressed: controller.hasNextPage && !controller.isLoading
+                    ? () => controller.goToNextPage()
                     : null,
               ),
             ],
@@ -779,6 +817,7 @@ class _SalesScreenState extends State<SalesScreen> {
       await Provider.of<SaleProvider>(context, listen: false).deleteSale(sale.id, facilityId);
       if (!mounted) return;
       if (_selectedSale?.id == sale.id) setState(() => _selectedSale = null);
+      _openSalesListSession(forceRefresh: true);
       ScaffoldMessenger.of(context)
           .showSnackBar(const SnackBar(content: Text('Sale deleted'), backgroundColor: Colors.green));
     } catch (e) {

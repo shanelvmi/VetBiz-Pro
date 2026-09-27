@@ -207,6 +207,23 @@ class Sale {
     );
   }
 
+  /// Lowercased copies of the fields a real, prefix-based Firestore
+  /// search needs (Firestore has no native "contains" search) - never
+  /// read back into this Dart object, only written alongside toMap()
+  /// so a query can do `.where(field, isGreaterThanOrEqualTo: term)`.
+  /// Centralized here, not duplicated at each write site, so every
+  /// place a sale gets written keeps these in sync automatically.
+  Map<String, dynamic> searchFields() {
+    return {
+      'clientNameLower': (clientName ?? '').toLowerCase(),
+      'soldByNameLower': soldByName.toLowerCase(),
+      // Mirrors sales_screen.dart's _getPaymentStatus exactly - kept as
+      // an equality-filterable field precisely so the status filter
+      // can be part of a real query rather than a client-side check.
+      'paymentStatus': totalPaid >= totalAmount ? 'Paid' : (totalPaid > 0 ? 'Partial' : 'Unpaid'),
+    };
+  }
+
   Map<String, dynamic> toMap() {
     return {
       if (clientId != null) 'clientId': clientId,

@@ -10,6 +10,7 @@ import '../../providers/facility_provider.dart';
 import '../../providers/user_role_provider.dart';
 import 'add_edit_product_screen.dart';
 import 'add_batch_screen.dart';
+import 'move_expired_to_stock_dialog.dart';
 
 /// Full management view for one product's stock - every batch on file,
 /// with a way to correct or top up any of them directly, plus a clear
@@ -17,13 +18,44 @@ import 'add_batch_screen.dart';
 /// This is where the duplicate-detection prompt in Add Product sends you
 /// when you pick an existing product, so you have full context (and both
 /// options) in one place instead of being dropped straight into a form.
-class ViewBatchesScreen extends StatelessWidget {
+class ViewBatchesScreen extends StatefulWidget {
   final Product product;
   final bool isModal;
-  const ViewBatchesScreen({super.key, required this.product, this.isModal = false});
+  // Defaults to Products' original wording - Stock Store passes
+  // 'Remove from Sellable' explicitly, since the same action reads
+  // oddly as "move to stock" while already standing in the Stock
+  // screen.
+  final String moveToStockLabel;
+  const ViewBatchesScreen({
+    super.key,
+    required this.product,
+    this.isModal = false,
+    this.moveToStockLabel = 'Move to Stock',
+  });
 
+  @override
+  State<ViewBatchesScreen> createState() => _ViewBatchesScreenState();
+}
+
+class _ViewBatchesScreenState extends State<ViewBatchesScreen> {
   static const Color primaryColor = Color(0xFF2F5D62);
   static const Color warmAmber = Color(0xFFFFB200);
+
+  // Created once here, not on every rebuild - a StreamBuilder given a
+  // new stream instance each time resets to its loading state before
+  // that new stream's first value arrives, which is what was causing
+  // this screen's content to flicker (appear, disappear, reappear)
+  // whenever anything caused a rebuild.
+  late final Stream<List<ProductBatch>> _batchesStream;
+
+  @override
+  void initState() {
+    super.initState();
+    final facilityId = Provider.of<FacilityProvider>(context, listen: false).selectedFacilityId;
+    _batchesStream = facilityId == null
+        ? Stream.value(<ProductBatch>[])
+        : Provider.of<ProductProvider>(context, listen: false).streamBatchesForProduct(facilityId, widget.product.id);
+  }
 
   Future<void> _showAdjustDialog(BuildContext context, String facilityId, ProductBatch batch) async {
     final stockController = TextEditingController();
@@ -150,7 +182,7 @@ class ViewBatchesScreen extends StatelessWidget {
                       try {
                         await Provider.of<ProductProvider>(context, listen: false).adjustExistingBatch(
                           facilityId: facilityId,
-                          productId: product.id,
+                          productId: widget.product.id,
                           batchId: batch.id,
                           mode: mode,
                           stockQty: stockVal,
@@ -278,7 +310,7 @@ class ViewBatchesScreen extends StatelessWidget {
                       try {
                         await Provider.of<ProductProvider>(context, listen: false).deleteBatch(
                           facilityId: facilityId,
-                          productId: product.id,
+                          productId: widget.product.id,
                           batchId: batch.id,
                         );
                         if (context.mounted) Navigator.pop(context);
@@ -318,12 +350,12 @@ class ViewBatchesScreen extends StatelessWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(product.name),
+        title: Text(widget.product.name),
         centerTitle: true,
         backgroundColor: primaryColor,
         foregroundColor: Colors.white,
-        automaticallyImplyLeading: !isModal,
-        leading: isModal
+        automaticallyImplyLeading: !widget.isModal,
+        leading: widget.isModal
             ? IconButton(
                 icon: const Icon(Icons.close),
                 tooltip: 'Close',
@@ -333,7 +365,7 @@ class ViewBatchesScreen extends StatelessWidget {
       ),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () {
-          showAddBatchScreen(context, product: product);
+          showAddBatchScreen(context, product: widget.product);
         },
         backgroundColor: primaryColor,
         foregroundColor: Colors.white,
@@ -351,11 +383,11 @@ class ViewBatchesScreen extends StatelessWidget {
                   children: [
                     Card(
                       child: ListTile(
-                        title: Text(product.name, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
-                        subtitle: Text('${product.category} · Tsh ${product.sellPrice.toStringAsFixed(0)}'),
+                        title: Text(widget.product.name, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                        subtitle: Text('${widget.product.category} · Tsh ${widget.product.sellPrice.toStringAsFixed(0)}'),
                         trailing: TextButton(
                           onPressed: () {
-                            showAddEditProductScreen(context, product: product);
+                            showAddEditProductScreen(context, product: widget.product);
                           },
                           style: ButtonStyle(
                             foregroundColor: WidgetStateProperty.resolveWith<Color>((states) {
@@ -371,8 +403,7 @@ class ViewBatchesScreen extends StatelessWidget {
                     const Text('Batches', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
                     const SizedBox(height: 8),
                     StreamBuilder<List<ProductBatch>>(
-                      stream: Provider.of<ProductProvider>(context, listen: false)
-                          .streamBatchesForProduct(facilityId, product.id),
+                      stream: _batchesStream,
                       builder: (context, snapshot) {
                         if (snapshot.connectionState == ConnectionState.waiting) {
                           return const Padding(
@@ -455,6 +486,19 @@ class ViewBatchesScreen extends StatelessWidget {
                                 trailing: Row(
                                   mainAxisSize: MainAxisSize.min,
                                   children: [
+                                    if (batch.sellableQty > 0)
+                                      IconButton(
+                                        icon: const Icon(Icons.move_up_outlined, size: 20),
+                                        tooltip: widget.moveToStockLabel,
+                                        style: ButtonStyle(
+                                          foregroundColor: WidgetStateProperty.resolveWith<Color>((states) {
+                                            if (states.contains(WidgetState.hovered)) return warmAmber;
+                                            return primaryColor;
+                                          }),
+                                        ),
+                                        onPressed: () => promptQuantityAndMoveToStock(
+                                            context, widget.product, batch, actionLabel: widget.moveToStockLabel),
+                                      ),
                                     if (isAdmin)
                                       IconButton(
                                         icon: const Icon(Icons.delete_outline, size: 20),
@@ -504,12 +548,16 @@ class ViewBatchesScreen extends StatelessWidget {
 /// category as Platform Admin's Activity Log or Promotions screens,
 /// both already modal on desktop despite also being list views rather
 /// than forms.
-Future<void> showViewBatchesScreen(BuildContext context, {required Product product}) async {
+Future<void> showViewBatchesScreen(
+  BuildContext context, {
+  required Product product,
+  String moveToStockLabel = 'Move to Stock',
+}) async {
   final isWideScreen = MediaQuery.of(context).size.width >= 900;
 
   if (!isWideScreen) {
     await Navigator.of(context).push(
-      MaterialPageRoute(builder: (_) => ViewBatchesScreen(product: product)),
+      MaterialPageRoute(builder: (_) => ViewBatchesScreen(product: product, moveToStockLabel: moveToStockLabel)),
     );
     return;
   }
@@ -534,7 +582,7 @@ Future<void> showViewBatchesScreen(BuildContext context, {required Product produ
           child: ClipRRect(
             borderRadius: BorderRadius.circular(16),
             child: Material(
-              child: ViewBatchesScreen(product: product, isModal: true),
+              child: ViewBatchesScreen(product: product, isModal: true, moveToStockLabel: moveToStockLabel),
             ),
           ),
         ),

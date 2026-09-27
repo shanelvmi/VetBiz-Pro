@@ -15,7 +15,6 @@ import '../../services/usage_calculator_service.dart';
 import 'add_edit_product_screen.dart';
 import 'add_batch_screen.dart';
 import 'view_batches_screen.dart';
-import 'move_expired_to_stock_dialog.dart';
 import '../sales/add_sale_screen.dart';
 import 'stock_alerts_screen.dart';
 
@@ -355,12 +354,6 @@ class _ProductsScreenState extends State<ProductsScreen> {
         );
       }
     }
-  }
-
-  bool _hasLikelyExpiredSellable(Product product) {
-    return product.expiry != null &&
-        product.expiry!.isBefore(DateTime.now()) &&
-        product.sellableQty > 0;
   }
 
   Future<void> _deleteProduct(Product p) async {
@@ -717,8 +710,6 @@ class _ProductsScreenState extends State<ProductsScreen> {
                     showAddBatchScreen(context, product: p);
                   } else if (value == 'view_batches') {
                     showViewBatchesScreen(context, product: p);
-                  } else if (value == 'move_expired_to_stock') {
-                    showMoveExpiredToStockDialog(context, product: p);
                   } else if (value == 'toggle_watchlist') {
                     _toggleWatchlist(p);
                   } else if (value == 'delete') {
@@ -728,11 +719,6 @@ class _ProductsScreenState extends State<ProductsScreen> {
                 itemBuilder: (context) => [
                   const PopupMenuItem(value: 'add_batch', child: Text('Add New Batch')),
                   const PopupMenuItem(value: 'view_batches', child: Text('View Batches')),
-                  if (_hasLikelyExpiredSellable(p))
-                    const PopupMenuItem(
-                      value: 'move_expired_to_stock',
-                      child: Text('Move to Stock'),
-                    ),
                   if (isAdmin)
                     PopupMenuItem(
                       value: 'toggle_watchlist',
@@ -1229,8 +1215,6 @@ class _ProductsScreenState extends State<ProductsScreen> {
                     showAddBatchScreen(context, product: p);
                   } else if (value == 'view_batches') {
                     showViewBatchesScreen(context, product: p);
-                  } else if (value == 'move_expired_to_stock') {
-                    showMoveExpiredToStockDialog(context, product: p);
                   } else if (value == 'toggle_watchlist') {
                     _toggleWatchlist(p);
                   } else if (value == 'delete') {
@@ -1240,11 +1224,6 @@ class _ProductsScreenState extends State<ProductsScreen> {
                 itemBuilder: (context) => [
                   const PopupMenuItem(value: 'add_batch', child: Text('Add New Batch')),
                   const PopupMenuItem(value: 'view_batches', child: Text('View Batches')),
-                  if (_hasLikelyExpiredSellable(p))
-                    const PopupMenuItem(
-                      value: 'move_expired_to_stock',
-                      child: Text('Move to Stock'),
-                    ),
                   if (isAdmin)
                     PopupMenuItem(
                       value: 'toggle_watchlist',

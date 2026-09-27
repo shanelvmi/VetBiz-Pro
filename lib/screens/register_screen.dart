@@ -68,11 +68,11 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
     _facilityLookupDebounce = Timer(const Duration(milliseconds: 500), () async {
       try {
-        final facilityId = await _inviteCodeService.validateInviteCode(code);
+        final facility = await _inviteCodeService.validateInviteCode(code);
 
         if (!mounted) return;
 
-        if (facilityId == null) {
+        if (facility == null) {
           setState(() {
             _isLookingUpFacility = false;
             _foundFacility = null;
@@ -81,31 +81,12 @@ class _RegisterScreenState extends State<RegisterScreen> {
           return;
         }
 
-        // The invite code only carries the facilityId - fetch the
-        // actual facility document for its name/type to show what
-        // this invite is actually joining.
-        final facilityDoc = await FirebaseFirestore.instance
-            .collection('facilities')
-            .doc(facilityId)
-            .get();
-
-        if (!mounted) return;
-
-        if (!facilityDoc.exists) {
-          setState(() {
-            _isLookingUpFacility = false;
-            _foundFacility = null;
-            _facilityLookupError = 'This invite points to a facility that no longer exists';
-          });
-          return;
-        }
-
         setState(() {
           _isLookingUpFacility = false;
           _foundFacility = {
-            'facilityId': facilityId,
-            'name': facilityDoc.data()?['name'] ?? '',
-            'type': facilityDoc.data()?['type'] ?? '',
+            'facilityId': facility['facilityId']!,
+            'name': facility['facilityName']!,
+            'type': facility['facilityType']!,
             'code': code, // the invite code itself, kept for markInviteCodeUsed at submit time
           };
           _facilityLookupError = null;
@@ -549,7 +530,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
       setState(() => error = e.message ?? 'Registration failed. Please try again.');
     }
   } catch (e, stackTrace) {
-    print('🔥 Error: $e\n📌 Stack: $stackTrace');
+    debugPrint('🔥 Error: $e\n📌 Stack: $stackTrace');
     setState(() => error = e.toString());
   }
  }

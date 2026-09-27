@@ -108,7 +108,15 @@ service cloud.firestore {
     }
     // ========== 🏢 Facilities Collection ==========
     match /facilities/{facilityId} {
-      allow read: if true;
+      // Was previously fully public (no authentication required at
+      // all) - the one genuine reason for that, showing a facility's
+      // name during invite-code registration before the person has an
+      // account, no longer needs it: that name/type is now denormalized
+      // directly onto the invite code document itself (see
+      // InviteCodeService.generateInviteCode), which stays public on
+      // its own, narrower terms. Everyone else reading a facility
+      // needs to actually belong to it, or be a Platform Admin.
+      allow read: if isAuthenticated() && (isInFacility(facilityId) || isPlatformAdmin());
       allow create: if isAuthenticated() && (isPlatformAdmin() || (isAdmin() && isUnderFacilityLimit()));
       allow update: if isAuthenticated() && (isAdmin() || isPlatformAdmin());
       allow delete: if isAuthenticated() && isPlatformAdmin();
@@ -313,7 +321,15 @@ service cloud.firestore {
     match /inviteCodes/{code} {
       allow read: if true;
       allow create: if isAuthenticated() && isAdmin();
-      allow update, delete: if isAuthenticated();
+      // Previously any authenticated user, anywhere, could modify or
+      // delete another facility's invite code. Now scoped to whoever
+      // actually belongs to the facility this code was generated for -
+      // covers both the Admin revoking/replacing their own invite, and
+      // the newly-registered Assistant marking it used right after
+      // their own account (with this facilityId already on it) is
+      // created.
+      allow update, delete: if isAuthenticated() &&
+        (isInFacility(resource.data.facilityId) || isPlatformAdmin());
     }
   }
 }

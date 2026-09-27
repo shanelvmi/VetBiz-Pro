@@ -15,7 +15,6 @@ import '../../services/product_catalog_service.dart';
 import '../products/add_edit_product_screen.dart';
 import '../products/add_batch_screen.dart';
 import '../products/view_batches_screen.dart';
-import '../products/move_expired_to_stock_dialog.dart';
 import '../products/stock_alerts_screen.dart';
 
 class StockStoreScreen extends StatefulWidget {
@@ -206,12 +205,6 @@ class _StockStoreScreenState extends State<StockStoreScreen> {
         ],
       ),
     );
-  }
-
-  bool _hasLikelyExpiredSellable(Product product) {
-    return product.expiry != null &&
-        product.expiry!.isBefore(DateTime.now()) &&
-        product.sellableQty > 0;
   }
 
   Map<String, dynamic> _getProductStatus(Product product) {
@@ -872,9 +865,7 @@ class _StockStoreScreenState extends State<StockStoreScreen> {
                   if (value == 'add_batch') {
                     showAddBatchScreen(context, product: p);
                   } else if (value == 'view_batches') {
-                    showViewBatchesScreen(context, product: p);
-                  } else if (value == 'move_expired_to_stock') {
-                    showMoveExpiredToStockDialog(context, product: p);
+                    showViewBatchesScreen(context, product: p, moveToStockLabel: 'Remove from Sellable');
                   } else if (value == 'delete') {
                     _deleteProduct(p.id);
                   }
@@ -882,8 +873,6 @@ class _StockStoreScreenState extends State<StockStoreScreen> {
                 itemBuilder: (context) => [
                   const PopupMenuItem(value: 'add_batch', child: Text('Add New Batch')),
                   const PopupMenuItem(value: 'view_batches', child: Text('View Batches')),
-                  if (_hasLikelyExpiredSellable(p))
-                    const PopupMenuItem(value: 'move_expired_to_stock', child: Text('Move to Stock')),
                   if (isAdmin)
                     PopupMenuItem(
                       value: 'delete',
@@ -1314,9 +1303,7 @@ class _StockStoreScreenState extends State<StockStoreScreen> {
                             if (value == 'add_batch') {
                               showAddBatchScreen(context, product: p);
                             } else if (value == 'view_batches') {
-                              showViewBatchesScreen(context, product: p);
-                            } else if (value == 'move_expired_to_stock') {
-                              showMoveExpiredToStockDialog(context, product: p);
+                              showViewBatchesScreen(context, product: p, moveToStockLabel: 'Remove from Sellable');
                             } else if (value == 'delete') {
                               _deleteProduct(p.id);
                             }
@@ -1324,8 +1311,6 @@ class _StockStoreScreenState extends State<StockStoreScreen> {
                           itemBuilder: (context) => [
                             const PopupMenuItem(value: 'add_batch', child: Text('Add New Batch')),
                             const PopupMenuItem(value: 'view_batches', child: Text('View Batches')),
-                            if (_hasLikelyExpiredSellable(p))
-                              const PopupMenuItem(value: 'move_expired_to_stock', child: Text('Move to Stock')),
                             if (isAdmin)
                               PopupMenuItem(
                                 value: 'delete',

@@ -128,13 +128,85 @@ class DailyReportService {
     final todayStart = Timestamp.fromDate(today);
     final nowStamp = Timestamp.fromDate(now);
     final facilities = _firestore.collection('facilities').doc(facilityId);
+    final yesterday = today.subtract(const Duration(days: 1));
+
+    // None of these 12 reads' parameters depend on another read's
+    // result - every one of them only needs facilityId/today/yesterday,
+    // all already known before any of them run - so there's no
+    // correctness risk in firing them all at once instead of one
+    // completing before the next even starts. Split into two groups by
+    // return type (QuerySnapshot vs DocumentSnapshot) since Future.wait
+    // needs a homogeneous list type; both groups are started before
+    // either is awaited, so this is still one round trip's worth of
+    // latency overall, not two back-to-back ones.
+    final querySnapshotsFuture = Future.wait([
+      _labeled('sales', () => facilities
+          .collection('sales')
+          .where('timestamp', isGreaterThanOrEqualTo: todayStart)
+          .where('timestamp', isLessThanOrEqualTo: nowStamp)
+          .get()),
+      _labeled('services', () => facilities
+          .collection('services')
+          .where('serviceDate', isGreaterThanOrEqualTo: todayStart)
+          .where('serviceDate', isLessThanOrEqualTo: nowStamp)
+          .get()),
+      _labeled('payments', () => facilities
+          .collection('payments')
+          .where('timestamp', isGreaterThanOrEqualTo: todayStart)
+          .where('timestamp', isLessThanOrEqualTo: nowStamp)
+          .get()),
+      _labeled('transactions', () => facilities
+          .collection('transactions')
+          .where('date', isGreaterThanOrEqualTo: todayStart)
+          .where('date', isLessThanOrEqualTo: nowStamp)
+          .get()),
+      _labeled('debts (today)', () => facilities
+          .collection('debts')
+          .where('timestamp', isGreaterThanOrEqualTo: todayStart)
+          .where('timestamp', isLessThanOrEqualTo: nowStamp)
+          .get()),
+      _labeled('debts (all)', () => facilities.collection('debts').get()),
+      _labeled('products', () => facilities.collection('products').get()),
+      _labeled('stockAdditions', () => facilities
+          .collection('stockAdditions')
+          .where('timestamp', isGreaterThanOrEqualTo: todayStart)
+          .where('timestamp', isLessThanOrEqualTo: nowStamp)
+          .get()),
+      _labeled('stock_adjustments', () => facilities
+          .collection('stock_adjustments')
+          .where('timestamp', isGreaterThanOrEqualTo: todayStart)
+          .where('timestamp', isLessThanOrEqualTo: nowStamp)
+          .get()),
+      _labeled('activity_logs', () => facilities
+          .collection('activity_logs')
+          .where('timestamp', isGreaterThanOrEqualTo: todayStart)
+          .where('timestamp', isLessThanOrEqualTo: nowStamp)
+          .orderBy('timestamp')
+          .get()),
+    ]);
+    final docSnapshotsFuture = Future.wait([
+      _labeled(
+          'dailySnapshots', () => facilities.collection('dailySnapshots').doc(_dateKey(yesterday)).get()),
+      _labeled('dailyStockSnapshots',
+          () => facilities.collection('dailyStockSnapshots').doc(_dateKey(today)).get()),
+    ]);
+    final queryResults = await querySnapshotsFuture;
+    final docResults = await docSnapshotsFuture;
+
+    final salesSnap = queryResults[0];
+    final servicesSnap = queryResults[1];
+    final paymentsSnap = queryResults[2];
+    final txSnap = queryResults[3];
+    final debtsSnap = queryResults[4];
+    final debtsAllSnap = queryResults[5];
+    final productsSnap = queryResults[6];
+    final stockAdditionsSnap = queryResults[7];
+    final stockAdjustmentsSnap = queryResults[8];
+    final activitySnap = queryResults[9];
+    final yesterdaySnapshotDoc = docResults[0];
+    final stockSnapshotDoc = docResults[1];
 
     // ---- Sales ----
-    final salesSnap = await _labeled('sales', () => facilities
-        .collection('sales')
-        .where('timestamp', isGreaterThanOrEqualTo: todayStart)
-        .where('timestamp', isLessThanOrEqualTo: nowStamp)
-        .get());
     final sales = salesSnap.docs.map((d) => Sale.fromFirestore(d.data(), d.id)).toList();
     final salesCount = sales.length;
     final salesTotalValue = sales.fold(0.0, (sum, s) => sum + s.totalAmount);
@@ -152,11 +224,6 @@ class DailyReportService {
       ..sort((a, b) => a.time.compareTo(b.time));
 
     // ---- Services ----
-    final servicesSnap = await _labeled('services', () => facilities
-        .collection('services')
-        .where('serviceDate', isGreaterThanOrEqualTo: todayStart)
-        .where('serviceDate', isLessThanOrEqualTo: nowStamp)
-        .get());
     final services = servicesSnap.docs.map((d) => Service.fromFirestore(d.data(), d.id)).toList();
     final servicesCount = services.length;
     final servicesTotalValue = services.fold(0.0, (sum, s) => sum + s.totalAmount);
@@ -175,11 +242,6 @@ class DailyReportService {
     // ---- Payments ledger: payment-method breakdown for sales/services,
     // debt repayments (aggregate and per-client), and the cash-in side
     // of the drawer figure.
-    final paymentsSnap = await _labeled('payments', () => facilities
-        .collection('payments')
-        .where('timestamp', isGreaterThanOrEqualTo: todayStart)
-        .where('timestamp', isLessThanOrEqualTo: nowStamp)
-        .get());
 
     final salesByPaymentMethod = <String, double>{};
     final servicesByPaymentMethod = <String, double>{};
@@ -225,11 +287,6 @@ class DailyReportService {
     }
 
     // ---- Transactions: other income and itemized expenses.
-    final txSnap = await _labeled('transactions', () => facilities
-        .collection('transactions')
-        .where('date', isGreaterThanOrEqualTo: todayStart)
-        .where('date', isLessThanOrEqualTo: nowStamp)
-        .get());
 
     double totalOtherIncome = 0;
     double totalExpenses = 0;
@@ -274,11 +331,6 @@ class DailyReportService {
     // before - the Debt model only stores a current remaining
     // balance, not a separate as-incurred figure, so this is a
     // daily-operational approximation, not full accounting).
-    final debtsSnap = await _labeled('debts (today)', () => facilities
-        .collection('debts')
-        .where('timestamp', isGreaterThanOrEqualTo: todayStart)
-        .where('timestamp', isLessThanOrEqualTo: nowStamp)
-        .get());
     final newDebtByClient = <String, double>{};
     double newDebtValue = 0;
     for (final d in debtsSnap.docs) {
@@ -293,9 +345,6 @@ class DailyReportService {
 
     // ---- Outstanding change and per-client closing debt: today's
     // live totals against yesterday's recorded snapshot.
-    final yesterday = today.subtract(const Duration(days: 1));
-    final yesterdaySnapshotDoc = await _labeled(
-        'dailySnapshots', () => facilities.collection('dailySnapshots').doc(_dateKey(yesterday)).get());
     // If yesterday's snapshot doesn't exist at all - the Cloud
     // Function hadn't run yet, or this is a facility's very first day
     // - there's no real prior figure to compare against. Falling back
@@ -305,7 +354,6 @@ class DailyReportService {
     // this honest instead: nothing is known to have changed.
     final yesterdayOutstandingRaw = (yesterdaySnapshotDoc.data()?['totalOutstanding'] as num?)?.toDouble();
 
-    final debtsAllSnap = await _labeled('debts (all)', () => facilities.collection('debts').get());
     final closingDebtByClient = <String, double>{};
     final clientNameById = <String, String>{};
     double todayOutstanding = 0;
@@ -366,8 +414,6 @@ class DailyReportService {
       }
     }
 
-    final productsSnap = await _labeled('products', () => facilities.collection('products').get());
-
     // Today's authoritative opening figure, per product - written by
     // the recordDailySnapshots Cloud Function at the start of the day,
     // not reverse-computed. The whole document being missing (the
@@ -377,8 +423,6 @@ class DailyReportService {
     // opening computation in the loop for why. A specific product
     // missing from an otherwise-real snapshot (created after the
     // snapshot ran today) correctly still defaults to 0 here.
-    final stockSnapshotDoc = await _labeled(
-        'dailyStockSnapshots', () => facilities.collection('dailyStockSnapshots').doc(_dateKey(today)).get());
     final openingByProduct = <String, int>{};
     final snapshotSellableStock = stockSnapshotDoc.data()?['sellableStock'] as Map<String, dynamic>?;
     if (snapshotSellableStock != null) {
@@ -395,11 +439,6 @@ class DailyReportService {
     // current sellableQty total isn't the same as what was added
     // today if it already had stock from before - this log is what
     // makes "Added" reliable in both cases.
-    final stockAdditionsSnap = await _labeled('stockAdditions', () => facilities
-        .collection('stockAdditions')
-        .where('timestamp', isGreaterThanOrEqualTo: todayStart)
-        .where('timestamp', isLessThanOrEqualTo: nowStamp)
-        .get());
     final addedByProduct = <String, int>{};
     for (final doc in stockAdditionsSnap.docs) {
       final data = doc.data();
@@ -414,11 +453,6 @@ class DailyReportService {
     // the change came through a path that actually logs it. A product
     // adjusted more than once today keeps only the latest edit, since
     // the "Adjusted" number itself is a single net figure, not a list.
-    final stockAdjustmentsSnap = await _labeled('stock_adjustments', () => facilities
-        .collection('stock_adjustments')
-        .where('timestamp', isGreaterThanOrEqualTo: todayStart)
-        .where('timestamp', isLessThanOrEqualTo: nowStamp)
-        .get());
     final adjustmentDetailByProduct = <String, String>{};
     for (final doc in stockAdjustmentsSnap.docs) {
       final data = doc.data();
@@ -489,12 +523,6 @@ class DailyReportService {
     // existing activity_logs collection (already written throughout
     // the day by sales, services, products, transactions, and
     // payments) - copied in at generation time, not a live reference.
-    final activitySnap = await _labeled('activity_logs', () => facilities
-        .collection('activity_logs')
-        .where('timestamp', isGreaterThanOrEqualTo: todayStart)
-        .where('timestamp', isLessThanOrEqualTo: nowStamp)
-        .orderBy('timestamp')
-        .get());
     final activityLogEntries = activitySnap.docs.map((doc) {
       final data = doc.data();
       return ActivityLogEntry(

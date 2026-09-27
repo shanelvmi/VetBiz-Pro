@@ -19,6 +19,13 @@ class FacilityProvider with ChangeNotifier {
   // report generation at any time regardless of the schedule below -
   // see isReportGenerationAllowedNow().
   Map<String, dynamic>? _businessHours;
+  // How many days old an unpaid debt must be before Debtors treats it
+  // as overdue - a facility-level setting, not stored on individual
+  // debt records, so an admin can change it later without needing to
+  // touch any existing debt. Defaults to 30 whenever the field is
+  // absent from the facility document, which covers every facility
+  // that existed before this setting did - no migration needed.
+  int _debtOverdueDays = 30;
   StreamSubscription<DocumentSnapshot>? _facilitySub;
 
   FacilityProvider() {
@@ -56,6 +63,7 @@ class FacilityProvider with ChangeNotifier {
       _businessHours = data['businessHours'] != null
           ? Map<String, dynamic>.from(data['businessHours'] as Map)
           : null;
+      _debtOverdueDays = (data['debtOverdueDays'] as num?)?.toInt() ?? 30;
       notifyListeners();
 
       final prefs = await SharedPreferences.getInstance();
@@ -134,6 +142,7 @@ class FacilityProvider with ChangeNotifier {
   }
 
   // ==================== GETTERS ====================
+  int get debtOverdueDays => _debtOverdueDays;
   String? get selectedFacilityId => _facilityId;
   String? get selectedFacilityName => _facilityName;
   String? get selectedFacilityType => _facilityType;

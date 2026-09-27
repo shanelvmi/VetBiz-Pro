@@ -6,6 +6,8 @@ import '../models/sale.dart';
 import 'product_provider.dart';
 import '../utils/activity_logger.dart';
 import '../utils/receipt_numbering.dart';
+import 'debt_provider.dart';
+import '../services/cursor_paginated_list_controller.dart';
 
 class SaleProvider extends ChangeNotifier {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
@@ -33,6 +35,14 @@ class SaleProvider extends ChangeNotifier {
 
   bool _isLoadingMore = false;
   bool get isLoadingMore => _isLoadingMore;
+
+  SaleProvider() {
+    salesListController = CursorPaginatedListController<Sale>(
+      pageSize: 25,
+      fetchPage: _fetchSalesListPage,
+      countCreatedAfter: _countNewSales,
+    );
+  }
 
   /// Initialize provider: listen to real-time updates for [facilityId].
   /// Safe to call repeatedly (e.g. on screen re-entry) - it's a no-op if
@@ -63,6 +73,175 @@ class SaleProvider extends ChangeNotifier {
       .doc(facilityId)
       .collection('sales')
       .orderBy('timestamp', descending: true);
+
+  // ==================== Sales list screen: real cursor pagination ====================
+  //
+  // Everything below is a second, separate mechanism just for the
+  // Sales list screen's own display - it does not replace `sales`,
+  // `init()`, `loadMoreSales()` or `updateSale()` above, which
+  // PaymentProvider and other screens depend on for unrelated reasons
+  // (finding a specific sale by id regardless of what page the list
+  // screen happens to be showing, adding a brand-new sale, resetting
+  // state on facility switch). Two mechanisms living side by side
+  // rather than one trying to serve every caller.
+
+  /// Everything that identifies "this exact query" for the Sales list
+  /// screen - a search term, and the status/seller/date filters. Two
+  /// values compare equal (via Dart's built-in record equality) only
+  /// when every field matches, so changing any single one of these is
+  /// what tells the controller to discard its cursor and start over,
+  /// per the same rule as a page-size change.
+  ///
+  /// searchTerm searches client name only (prefix match, e.g. "jo"
+  /// matches "John") - not invoice number or item names within a sale.
+  /// Firestore only allows a range/prefix filter on one field per
+  /// query, and searching by name already uses that one allowance;
+  /// combining it with a second, different-field search would need
+  /// either several merged queries or a dedicated search index, both
+  /// larger changes than this pass covers.
+  ///
+  /// A search term also can't combine with the snapshot boundary or a
+  /// date-range filter in the same query, for the identical reason -
+  /// both would need the timestamp field's one allowed range slot,
+  /// which the name search is already using. While a search term is
+  /// active, the query intentionally omits both, so a sale created
+  /// after the browsing session started can appear in search results -
+  /// a deliberate, narrow trade-off, not an oversight: searching is a
+  /// point-in-time lookup for a specific, named record, not passive
+  /// browsing, so finding a just-created match is more often what's
+  /// wanted than not.
+  ({String searchTerm, String statusFilter, String sellerFilter, String dateFilter}) _salesListQuery =
+      (searchTerm: '', statusFilter: 'All', sellerFilter: 'All', dateFilter: 'All time');
+
+  late final CursorPaginatedListController<Sale> salesListController;
+
+  /// Called by the Sales list screen whenever the search box or any
+  /// filter dropdown changes. Returns the query-signature value to
+  /// pass into salesListController.openSession() - the controller
+  /// itself decides whether that's actually different from the
+  /// previous one and a reset is warranted; this method's only job is
+  /// recording what the screen's filters now are, so the fetcher below
+  /// reads the current ones whenever it next runs.
+  ({String searchTerm, String statusFilter, String sellerFilter, String dateFilter}) updateSalesListFilters({
+    required String searchTerm,
+    required String statusFilter,
+    required String sellerFilter,
+    required String dateFilter,
+  }) {
+    _salesListQuery = (
+      searchTerm: searchTerm.trim().toLowerCase(),
+      statusFilter: statusFilter,
+      sellerFilter: sellerFilter,
+      dateFilter: dateFilter,
+    );
+    return _salesListQuery;
+  }
+
+  DateTime? _dateFilterStart(String dateFilter, DateTime now) {
+    final today = DateTime(now.year, now.month, now.day);
+    switch (dateFilter) {
+      case 'Today':
+        return today;
+      case 'Last 7 days':
+        return now.subtract(const Duration(days: 7));
+      case 'Last 30 days':
+        return now.subtract(const Duration(days: 30));
+      case 'This month':
+        return DateTime(now.year, now.month, 1);
+      default:
+        return null; // 'All time'
+    }
+  }
+
+  /// Builds and runs the actual, real Firestore query for one page of
+  /// the Sales list - search, status, seller, and date all become real
+  /// query conditions here, never a client-side filter over whatever
+  /// happens to already be loaded.
+  Future<CursorPage<Sale>> _fetchSalesListPage({
+    required DateTime snapshotAt,
+    required int pageSize,
+    DocumentSnapshot<Map<String, dynamic>>? startAfterDocument,
+  }) async {
+    final facilityId = _facilityId;
+    if (facilityId == null) {
+      return const CursorPage(items: [], lastDocument: null, hasMore: false);
+    }
+
+    final q = _salesListQuery;
+    final hasSearch = q.searchTerm.isNotEmpty;
+    Query<Map<String, dynamic>> query =
+        _firestore.collection('facilities').doc(facilityId).collection('sales');
+
+    if (q.statusFilter != 'All') {
+      query = query.where('paymentStatus', isEqualTo: q.statusFilter);
+    }
+    if (q.sellerFilter != 'All') {
+      query = query.where('soldByName', isEqualTo: q.sellerFilter);
+    }
+
+    if (hasSearch) {
+      // Prefix match on client name - see the doc comment on
+      // _salesListQuery for why this can't combine with the snapshot
+      // boundary or a date filter in the same query.
+      query = query
+          .where('clientNameLower', isGreaterThanOrEqualTo: q.searchTerm)
+          .where('clientNameLower', isLessThan: '${q.searchTerm}\uf8ff')
+          .orderBy('clientNameLower')
+          .orderBy(FieldPath.documentId);
+    } else {
+      final dateStart = _dateFilterStart(q.dateFilter, snapshotAt);
+      if (dateStart != null) {
+        query = query.where('timestamp', isGreaterThanOrEqualTo: Timestamp.fromDate(dateStart));
+      }
+      query = query
+          .where('timestamp', isLessThanOrEqualTo: Timestamp.fromDate(snapshotAt))
+          .orderBy('timestamp', descending: true)
+          .orderBy(FieldPath.documentId, descending: true);
+    }
+
+    if (startAfterDocument != null) {
+      query = query.startAfterDocument(startAfterDocument);
+    }
+
+    final snapshot = await query.limit(pageSize).get();
+    return CursorPage(
+      items: snapshot.docs.map(_hydrateSale).toList(),
+      lastDocument: snapshot.docs.isNotEmpty ? snapshot.docs.last : null,
+      hasMore: snapshot.docs.length >= pageSize,
+    );
+  }
+
+  /// One-time count query (no documents downloaded) for the "N new
+  /// sales available - Refresh" banner - respects the current filters,
+  /// so the count shown always matches what would actually appear if
+  /// the person refreshes, not a raw, unfiltered total.
+  Future<int> _countNewSales({required DateTime after}) async {
+    final facilityId = _facilityId;
+    if (facilityId == null) return 0;
+
+    final q = _salesListQuery;
+    if (q.searchTerm.isNotEmpty) {
+      // A search session already omits the snapshot boundary entirely
+      // (see _fetchSalesListPage) - there's nothing "new" to report
+      // relative to a boundary that isn't being enforced.
+      return 0;
+    }
+
+    Query<Map<String, dynamic>> query = _firestore
+        .collection('facilities')
+        .doc(facilityId)
+        .collection('sales')
+        .where('timestamp', isGreaterThan: Timestamp.fromDate(after));
+    if (q.statusFilter != 'All') {
+      query = query.where('paymentStatus', isEqualTo: q.statusFilter);
+    }
+    if (q.sellerFilter != 'All') {
+      query = query.where('soldByName', isEqualTo: q.sellerFilter);
+    }
+
+    final agg = await query.count().get();
+    return agg.count ?? 0;
+  }
 
   /// Real-time listener for the most recent page of sales only. This is the
   /// key cost/perf fix: we used to load *every* sale a facility ever made on
@@ -215,6 +394,7 @@ class SaleProvider extends ChangeNotifier {
           .collection('sales')
           .add({
         ...saleToSave.toMap(),
+        ...saleToSave.searchFields(),
         'timestamp': FieldValue.serverTimestamp(),
         'updatedAt': FieldValue.serverTimestamp(),
       });
@@ -247,6 +427,7 @@ class SaleProvider extends ChangeNotifier {
           'paidById': saleToSave.soldById,
           'source': 'sale',
           'paymentMethod': saleToSave.paymentMethod,
+          'clientNameLower': (saleToSave.clientName ?? '').toLowerCase(),
         });
       }
 
@@ -291,6 +472,7 @@ class SaleProvider extends ChangeNotifier {
         .doc(sale.id)
         .update({
       ...sale.toMap(),
+      ...sale.searchFields(),
       'updatedAt': FieldValue.serverTimestamp(),
     });
 
@@ -353,14 +535,14 @@ class SaleProvider extends ChangeNotifier {
 
       if (sale != null) {
         await _restoreStock(sale, facilityId);
-        final outstanding = sale.totalAmount - sale.totalPaid;
-        if (outstanding != 0) {
-          await _adjustClientBalance(sale.clientId, -outstanding, facilityId);
-        }
 
-        // Clean up any debt record this sale created - previously left
-        // behind permanently, still showing the client owing money for
-        // a sale that no longer exists.
+        // Clean up any debt record this sale created before adjusting
+        // balance below - previously left behind permanently, still
+        // showing the client owing money for a sale that no longer
+        // exists. Ordered before the balance adjustment specifically so
+        // that adjustment's own oldestUnpaidDebtDate recompute (if it
+        // ends up needing one) sees this debt already gone, not a stale
+        // entry still counting itself.
         final debtSnap = await _firestore
             .collection('facilities')
             .doc(facilityId)
@@ -369,6 +551,11 @@ class SaleProvider extends ChangeNotifier {
             .get();
         for (final debtDoc in debtSnap.docs) {
           await debtDoc.reference.delete();
+        }
+
+        final outstanding = sale.totalAmount - sale.totalPaid;
+        if (outstanding != 0) {
+          await _adjustClientBalance(sale.clientId, -outstanding, facilityId);
         }
       }
 
@@ -465,10 +652,31 @@ class SaleProvider extends ChangeNotifier {
         .doc(clientId);
 
     try {
-      await clientRef.set(
-        {'balance': FieldValue.increment(delta)},
-        SetOptions(merge: true),
-      );
+      if (delta > 0) {
+        final clientDoc = await clientRef.get();
+        final currentBalance = (clientDoc.data()?['balance'] as num?)?.toDouble() ?? 0.0;
+        final batch = _firestore.batch();
+        batch.set(clientRef, {'balance': FieldValue.increment(delta)}, SetOptions(merge: true));
+        if (currentBalance <= 0) {
+          batch.set(
+            clientRef,
+            {'oldestUnpaidDebtDate': Timestamp.fromDate(DateTime.now())},
+            SetOptions(merge: true),
+          );
+        }
+        await batch.commit();
+      } else {
+        await clientRef.set({'balance': FieldValue.increment(delta)}, SetOptions(merge: true));
+        final newOldest = await DebtProvider.recomputeOldestUnpaidDebtDate(
+          firestore: _firestore,
+          facilityId: facilityId,
+          clientId: clientId,
+        );
+        await clientRef.set(
+          {'oldestUnpaidDebtDate': newOldest != null ? Timestamp.fromDate(newOldest) : null},
+          SetOptions(merge: true),
+        );
+      }
     } catch (e) {
       debugPrint('Error adjusting client balance: $e');
     }

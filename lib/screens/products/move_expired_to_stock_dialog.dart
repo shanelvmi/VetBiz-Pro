@@ -1,4 +1,3 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
@@ -9,100 +8,36 @@ import '../../providers/product_provider.dart';
 
 const Color _primaryDeepGreen = Color(0xFF2F5D62);
 
-/// Entry point from Products' "More actions" menu - finds this
-/// product's expired batches that still hold sellable quantity, and
-/// walks the admin through picking one and a quantity to pull back
-/// into Stock Store. Only ever touches sellableQty on an already-
-/// expired batch - never a fresh one, and never a whole product.
-Future<void> showMoveExpiredToStockDialog(BuildContext context, {required Product product}) async {
-  final batchesRef = FirebaseFirestore.instance
-      .collection('facilities')
-      .doc(product.facilityId)
-      .collection('products')
-      .doc(product.id)
-      .collection('batches');
+const List<String> _moveReasons = ['Expired', 'Deteriorated', 'Other (specify)'];
 
-  final snap = await batchesRef.get();
-  if (!context.mounted) return;
-
-  final now = DateTime.now();
-  final expiredBatches = snap.docs
-      .map((doc) => ProductBatch.fromFirestore(doc.data(), doc.id, product.id))
-      .where((b) => b.expiry != null && b.expiry!.isBefore(now) && b.sellableQty > 0)
-      .toList()
-    ..sort((a, b) => a.expiry!.compareTo(b.expiry!));
-
-  if (expiredBatches.isEmpty) {
-    await showDialog(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('No Expired Stock on Shelf'),
-        content: SizedBox(
-          width: 320,
-          child: Text(
-            '${product.name} has no expired batches currently holding sellable stock - '
-            'nothing here needs to move back to Stock Store.',
-          ),
-        ),
-        actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Close')),
-        ],
-      ),
-    );
-    return;
-  }
-
-  if (!context.mounted) return;
-  final chosen = await _pickBatch(context, product, expiredBatches);
-  if (chosen == null || !context.mounted) return;
-
-  await _promptQuantityAndMove(context, product, chosen);
-}
-
-Future<ProductBatch?> _pickBatch(BuildContext context, Product product, List<ProductBatch> batches) async {
-  // Skip straight to the quantity step when there's only one candidate -
-  // no need to make someone pick from a list of one.
-  if (batches.length == 1) return batches.first;
-
-  return showDialog<ProductBatch>(
-    context: context,
-    builder: (ctx) => AlertDialog(
-      title: const Text('Which Expired Batch?'),
-      content: SizedBox(
-        width: 340,
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: batches.map((batch) {
-            return ListTile(
-              contentPadding: EdgeInsets.zero,
-              leading: const Icon(Icons.warning_amber_rounded, color: Colors.red),
-              title: Text(batch.batchNo?.isNotEmpty == true ? 'Batch ${batch.batchNo}' : 'Unlabeled batch'),
-              subtitle: Text(
-                'Expired ${DateFormat('dd MMM yyyy').format(batch.expiry!)} - '
-                '${batch.sellableQty} ${product.unit} on shelf',
-              ),
-              onTap: () => Navigator.pop(ctx, batch),
-            );
-          }).toList(),
-        ),
-      ),
-      actions: [
-        TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
-      ],
-    ),
-  );
-}
-
-Future<void> _promptQuantityAndMove(BuildContext context, Product product, ProductBatch batch) async {
+/// Prompts for a quantity and a reason, then moves a sellable batch
+/// back to Stock Store - called from View Batches' per-batch action,
+/// where the batch is already known. The reason comes from whoever is
+/// standing at the shelf, not a system guess - they already know why a
+/// batch needs to come off it, and "Other (specify)" covers any reason
+/// neither Expired nor Deteriorated fits.
+Future<void> promptQuantityAndMoveToStock(
+  BuildContext context,
+  Product product,
+  ProductBatch batch, {
+  String actionLabel = 'Move to Stock',
+}) async {
   final qtyController = TextEditingController(text: '${batch.sellableQty}');
   final notesController = TextEditingController();
-  String? errorText;
+  final isAlreadyExpired = batch.expiry != null && batch.expiry!.isBefore(DateTime.now());
+  // A convenience, not a gate - pre-selects the common case (a batch
+  // whose own date has already passed) but never stops someone from
+  // picking Deteriorated or Other instead, or from moving a batch
+  // that isn't expired at all.
+  String? reason = isAlreadyExpired ? 'Expired' : null;
+  String? qtyErrorText;
+  String? reasonErrorText;
 
   final confirmed = await showDialog<bool>(
     context: context,
     builder: (ctx) => StatefulBuilder(
       builder: (ctx, setDialogState) => AlertDialog(
-        title: const Text('Move to Stock'),
+        title: Text(actionLabel),
         content: SizedBox(
           width: 320,
           child: Column(
@@ -110,8 +45,8 @@ Future<void> _promptQuantityAndMove(BuildContext context, Product product, Produ
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                '${product.name}${batch.batchNo?.isNotEmpty == true ? ' - Batch ${batch.batchNo}' : ''} '
-                'expired ${DateFormat('dd MMM yyyy').format(batch.expiry!)}. '
+                '${product.name}${batch.batchNo?.isNotEmpty == true ? ' - Batch ${batch.batchNo}' : ''}'
+                '${batch.expiry != null ? ' (${isAlreadyExpired ? 'expired' : 'expires'} ${DateFormat('dd MMM yyyy').format(batch.expiry!)})' : ''}. '
                 'Up to ${batch.sellableQty} ${product.unit} can move back to Stock Store.',
                 style: const TextStyle(fontSize: 13),
               ),
@@ -123,15 +58,32 @@ Future<void> _promptQuantityAndMove(BuildContext context, Product product, Produ
                   labelText: 'Quantity to move (${product.unit})',
                   border: const OutlineInputBorder(),
                   isDense: true,
-                  errorText: errorText,
+                  errorText: qtyErrorText,
                 ),
+              ),
+              const SizedBox(height: 10),
+              DropdownButtonFormField<String>(
+                initialValue: reason,
+                decoration: InputDecoration(
+                  labelText: 'Reason',
+                  border: const OutlineInputBorder(),
+                  isDense: true,
+                  errorText: reasonErrorText,
+                ),
+                items: _moveReasons
+                    .map((r) => DropdownMenuItem(value: r, child: Text(r, style: const TextStyle(fontSize: 13))))
+                    .toList(),
+                onChanged: (v) => setDialogState(() {
+                  reason = v;
+                  reasonErrorText = null;
+                }),
               ),
               const SizedBox(height: 10),
               TextField(
                 controller: notesController,
-                decoration: const InputDecoration(
-                  labelText: 'Note (optional)',
-                  border: OutlineInputBorder(),
+                decoration: InputDecoration(
+                  labelText: reason == 'Other (specify)' ? 'Note (required for Other)' : 'Note (optional)',
+                  border: const OutlineInputBorder(),
                   isDense: true,
                 ),
                 maxLines: 2,
@@ -145,13 +97,25 @@ Future<void> _promptQuantityAndMove(BuildContext context, Product product, Produ
             style: ElevatedButton.styleFrom(backgroundColor: _primaryDeepGreen, foregroundColor: Colors.white),
             onPressed: () {
               final qty = int.tryParse(qtyController.text.trim()) ?? 0;
+              var hasError = false;
               if (qty <= 0 || qty > batch.sellableQty) {
-                setDialogState(() => errorText = 'Enter a quantity up to ${batch.sellableQty}');
+                qtyErrorText = 'Enter a quantity up to ${batch.sellableQty}';
+                hasError = true;
+              }
+              if (reason == null) {
+                reasonErrorText = 'Select a reason';
+                hasError = true;
+              } else if (reason == 'Other (specify)' && notesController.text.trim().isEmpty) {
+                reasonErrorText = 'Describe the reason in the note below';
+                hasError = true;
+              }
+              if (hasError) {
+                setDialogState(() {});
                 return;
               }
               Navigator.pop(ctx, true);
             },
-            child: const Text('Move to Stock'),
+            child: Text(actionLabel),
           ),
         ],
       ),
@@ -161,19 +125,25 @@ Future<void> _promptQuantityAndMove(BuildContext context, Product product, Produ
   if (confirmed != true || !context.mounted) return;
 
   final qty = int.tryParse(qtyController.text.trim()) ?? 0;
-  if (qty <= 0) return;
+  if (qty <= 0 || reason == null) return;
 
   try {
-    await Provider.of<ProductProvider>(context, listen: false).moveExpiredBatchToStock(
+    await Provider.of<ProductProvider>(context, listen: false).moveBatchToStock(
       product,
       batch,
       qty,
+      reason!,
       context,
       notes: notesController.text.trim().isNotEmpty ? notesController.text.trim() : null,
     );
     if (context.mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Moved $qty ${product.unit} back to Stock Store'), backgroundColor: Colors.green),
+        SnackBar(
+          content: Text(actionLabel == 'Move to Stock'
+              ? 'Moved $qty ${product.unit} back to Stock Store'
+              : 'Removed $qty ${product.unit} from Sellable'),
+          backgroundColor: Colors.green,
+        ),
       );
     }
   } catch (e) {

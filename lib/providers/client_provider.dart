@@ -3,6 +3,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/foundation.dart';
 import '../models/client.dart';
 import '../utils/paginated_stream_loader.dart';
+import '../services/cursor_paginated_list_controller.dart';
 
 // Two genuinely different loading strategies coexist here, because they
 // serve two genuinely different needs:
@@ -22,6 +23,18 @@ import '../utils/paginated_stream_loader.dart';
 //   into the current page yet.
 class ClientProvider with ChangeNotifier, PaginatedStreamLoader<Client> {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+
+  ClientProvider() {
+    clientsListController = CursorPaginatedListController<Client>(
+      pageSize: 25,
+      fetchPage: _fetchClientsListPage,
+      countCreatedAfter: _countNewClients,
+    );
+    debtorsListController = CursorPaginatedListController<Client>(
+      pageSize: 25,
+      fetchPage: _fetchDebtorsListPage,
+    );
+  }
 
   @override
   Client fromDoc(DocumentSnapshot doc) {
@@ -220,6 +233,278 @@ class ClientProvider with ChangeNotifier, PaginatedStreamLoader<Client> {
       await batch.commit();
     }
     return updated;
+  }
+
+  // ==================== Clients browse screen: real cursor pagination ====================
+  //
+  // A third, separate mechanism, alongside the unbounded
+  // listenToClients() above (Debtors' lookup needs) and the
+  // PaginatedStreamLoader mixin's own paginated path (whose first page
+  // is still a live listener - the exact instability this replaces).
+  // Ordered by createdAt, not name - name is user-editable and isn't a
+  // reliable, monotonic field for a stable cursor, the same reason
+  // ServiceProvider's equivalent section uses serviceDate rather than
+  // a field someone can freely edit after the fact.
+
+  /// searchTerm reuses the exact same nameLower prefix-match
+  /// searchClientsByName already used - see SaleProvider's identical
+  /// field for why a search term can't combine with the snapshot
+  /// boundary in the same query (Firestore's one-range-filter-per-query
+  /// limit), and why that's an accepted, deliberate trade-off here too.
+  ({String searchTerm, String typeFilter, String statusFilter}) _clientsListQuery =
+      (searchTerm: '', typeFilter: 'All', statusFilter: 'All');
+
+  late final CursorPaginatedListController<Client> clientsListController;
+
+  String? _clientsListFacilityId;
+
+  ({String searchTerm, String typeFilter, String statusFilter}) updateClientsListFilters({
+    required String facilityId,
+    required String searchTerm,
+    required String typeFilter,
+    required String statusFilter,
+  }) {
+    _clientsListFacilityId = facilityId;
+    _clientsListQuery = (
+      searchTerm: searchTerm.trim().toLowerCase(),
+      typeFilter: typeFilter,
+      statusFilter: statusFilter,
+    );
+    return _clientsListQuery;
+  }
+
+  Future<CursorPage<Client>> _fetchClientsListPage({
+    required DateTime snapshotAt,
+    required int pageSize,
+    DocumentSnapshot<Map<String, dynamic>>? startAfterDocument,
+  }) async {
+    final facilityId = _clientsListFacilityId;
+    if (facilityId == null) {
+      return const CursorPage(items: [], lastDocument: null, hasMore: false);
+    }
+
+    final q = _clientsListQuery;
+    final hasSearch = q.searchTerm.isNotEmpty;
+    Query<Map<String, dynamic>> query =
+        _firestore.collection('facilities').doc(facilityId).collection('clients');
+
+    if (q.typeFilter != 'All') {
+      query = query.where('types', arrayContains: q.typeFilter);
+    }
+    if (q.statusFilter != 'All') {
+      query = query.where('status', isEqualTo: q.statusFilter);
+    }
+
+    if (hasSearch) {
+      query = query
+          .where('nameLower', isGreaterThanOrEqualTo: q.searchTerm)
+          .where('nameLower', isLessThan: '${q.searchTerm}\uf8ff')
+          .orderBy('nameLower')
+          .orderBy(FieldPath.documentId);
+    } else {
+      query = query
+          .where('createdAt', isLessThanOrEqualTo: Timestamp.fromDate(snapshotAt))
+          .orderBy('createdAt', descending: true)
+          .orderBy(FieldPath.documentId, descending: true);
+    }
+
+    if (startAfterDocument != null) {
+      query = query.startAfterDocument(startAfterDocument);
+    }
+
+    final snapshot = await query.limit(pageSize).get();
+    return CursorPage(
+      items: snapshot.docs.map((d) => Client.fromMap(d.id, d.data())).toList(),
+      lastDocument: snapshot.docs.isNotEmpty ? snapshot.docs.last : null,
+      hasMore: snapshot.docs.length >= pageSize,
+    );
+  }
+
+  Future<int> _countNewClients({required DateTime after}) async {
+    final facilityId = _clientsListFacilityId;
+    if (facilityId == null) return 0;
+
+    final q = _clientsListQuery;
+    if (q.searchTerm.isNotEmpty) return 0;
+
+    Query<Map<String, dynamic>> query = _firestore
+        .collection('facilities')
+        .doc(facilityId)
+        .collection('clients')
+        .where('createdAt', isGreaterThan: Timestamp.fromDate(after));
+    if (q.typeFilter != 'All') {
+      query = query.where('types', arrayContains: q.typeFilter);
+    }
+    if (q.statusFilter != 'All') {
+      query = query.where('status', isEqualTo: q.statusFilter);
+    }
+
+    final agg = await query.count().get();
+    return agg.count ?? 0;
+  }
+
+  // ==================== Debtors screen: clients where balance > 0 ====================
+  //
+  // A separate cursor session from clientsListController above - same
+  // controller type, since this is still "browse one collection,
+  // filtered and sorted," but a distinct instance so the Debtors and
+  // Clients screens don't share (and clobber) each other's session
+  // state if both happen to be relevant at once.
+  //
+  // debtOverdueDays is no longer a fixed constant here - it's a real,
+  // per-facility, admin-configurable setting (FacilityProvider.
+  // debtOverdueDays), passed in below by whoever calls
+  // updateDebtorsListFilters. Individual debt records remain the
+  // source of truth for the exact overdue amount; this and
+  // oldestUnpaidDebtDate are only maintained summaries that let this
+  // list-level filtering stay a real query instead of loading every
+  // debt.
+
+  late final CursorPaginatedListController<Client> debtorsListController;
+
+  String? _debtorsListFacilityId;
+
+  /// searchTerm: prefix match against nameLower, same trade-off as
+  /// every other module this session - can't combine with the
+  /// balance/oldestUnpaidDebtDate range in the same query, so an active
+  /// search is a point-in-time lookup across all debtors, not bounded
+  /// by the status/range filters. statusFilter is 'All' | 'Overdue' |
+  /// 'Current'. overdueRangeFilter is 'All' | '1-30 days' | '31-60
+  /// days' | '60+ days' - only meaningful when statusFilter isn't
+  /// already narrowing by itself, matching the existing screen's own
+  /// filter combination logic. overdueDays is the facility's own
+  /// configured threshold (FacilityProvider.debtOverdueDays) - part of
+  /// the query signature, so a facility admin changing it correctly
+  /// opens a fresh session rather than silently keeping stale results.
+  ({String searchTerm, String statusFilter, String overdueRangeFilter, int overdueDays}) _debtorsListQuery = (
+    searchTerm: '',
+    statusFilter: 'All',
+    overdueRangeFilter: 'All',
+    overdueDays: 30,
+  );
+
+  ({String searchTerm, String statusFilter, String overdueRangeFilter, int overdueDays}) updateDebtorsListFilters({
+    required String facilityId,
+    required String searchTerm,
+    required String statusFilter,
+    required String overdueRangeFilter,
+    required int overdueDays,
+  }) {
+    _debtorsListFacilityId = facilityId;
+    _debtorsListQuery = (
+      searchTerm: searchTerm.trim().toLowerCase(),
+      statusFilter: statusFilter,
+      overdueRangeFilter: overdueRangeFilter,
+      overdueDays: overdueDays,
+    );
+    return _debtorsListQuery;
+  }
+
+  /// Bounds for the active status/range filter, in terms of
+  /// oldestUnpaidDebtDate - null,null means "no overdue-based filter is
+  /// active," which tells the fetch method to range on balance instead.
+  (DateTime? olderThanOrEqual, DateTime? newerThan) _overdueDateBounds(
+    ({String searchTerm, String statusFilter, String overdueRangeFilter, int overdueDays}) q,
+    DateTime now,
+  ) {
+    if (q.statusFilter == 'Overdue') {
+      return (now.subtract(Duration(days: q.overdueDays)), null);
+    }
+    if (q.statusFilter == 'Current') {
+      return (null, now.subtract(Duration(days: q.overdueDays)));
+    }
+    switch (q.overdueRangeFilter) {
+      case '1-30 days':
+        return (now.subtract(const Duration(days: 1)), now.subtract(const Duration(days: 30)));
+      case '31-60 days':
+        return (now.subtract(const Duration(days: 31)), now.subtract(const Duration(days: 60)));
+      case '60+ days':
+        return (now.subtract(const Duration(days: 60)), null);
+      default:
+        return (null, null);
+    }
+  }
+
+  Future<CursorPage<Client>> _fetchDebtorsListPage({
+    required DateTime snapshotAt,
+    required int pageSize,
+    DocumentSnapshot<Map<String, dynamic>>? startAfterDocument,
+  }) async {
+    final facilityId = _debtorsListFacilityId;
+    if (facilityId == null) {
+      return const CursorPage(items: [], lastDocument: null, hasMore: false);
+    }
+
+    final q = _debtorsListQuery;
+    final hasSearch = q.searchTerm.isNotEmpty;
+    Query<Map<String, dynamic>> query =
+        _firestore.collection('facilities').doc(facilityId).collection('clients');
+
+    if (hasSearch) {
+      query = query
+          .where('nameLower', isGreaterThanOrEqualTo: q.searchTerm)
+          .where('nameLower', isLessThan: '${q.searchTerm}\uf8ff')
+          .orderBy('nameLower')
+          .orderBy(FieldPath.documentId);
+    } else {
+      final (olderThanOrEqual, newerThan) = _overdueDateBounds(q, snapshotAt);
+      if (olderThanOrEqual != null || newerThan != null) {
+        // An overdue-based filter is active - range on
+        // oldestUnpaidDebtDate instead of balance (Firestore allows
+        // only one inequality field per query). Any client with an
+        // actual unpaid debt has this field set, so this stays
+        // implicitly scoped to real debtors without also needing
+        // balance > 0 in the same query.
+        if (olderThanOrEqual != null) {
+          query = query.where('oldestUnpaidDebtDate', isLessThanOrEqualTo: Timestamp.fromDate(olderThanOrEqual));
+        }
+        if (newerThan != null) {
+          query = query.where('oldestUnpaidDebtDate', isGreaterThan: Timestamp.fromDate(newerThan));
+        }
+        query = query
+            .orderBy('oldestUnpaidDebtDate')
+            .orderBy(FieldPath.documentId);
+      } else {
+        query = query
+            .where('balance', isGreaterThan: 0)
+            .orderBy('balance', descending: true)
+            .orderBy(FieldPath.documentId, descending: true);
+      }
+    }
+
+    if (startAfterDocument != null) {
+      query = query.startAfterDocument(startAfterDocument);
+    }
+
+    final snapshot = await query.limit(pageSize).get();
+    return CursorPage(
+      items: snapshot.docs.map((d) => Client.fromMap(d.id, d.data())).toList(),
+      lastDocument: snapshot.docs.isNotEmpty ? snapshot.docs.last : null,
+      hasMore: snapshot.docs.length >= pageSize,
+    );
+  }
+
+  /// Facility-wide totals for the Debtors metrics row - real Firestore
+  /// aggregate queries, so these reflect every debtor, not just
+  /// whichever page the list has loaded so far.
+  Future<({int totalDebtors, double totalOwed, int overdueDebtors})> fetchDebtorsMetrics(
+      String facilityId, {required int overdueDays}) async {
+    final clientsRef = _firestore.collection('facilities').doc(facilityId).collection('clients');
+    final debtorsQuery = clientsRef.where('balance', isGreaterThan: 0);
+
+    final countAgg = await debtorsQuery.count().get();
+    final sumAgg = await debtorsQuery.aggregate(sum('balance')).get();
+    final overdueAgg = await clientsRef
+        .where('oldestUnpaidDebtDate',
+            isLessThanOrEqualTo: Timestamp.fromDate(DateTime.now().subtract(Duration(days: overdueDays))))
+        .count()
+        .get();
+
+    return (
+      totalDebtors: countAgg.count ?? 0,
+      totalOwed: (sumAgg.getSum('balance') ?? 0).toDouble(),
+      overdueDebtors: overdueAgg.count ?? 0,
+    );
   }
 
   // ==================== WRITE / MUTATE ====================

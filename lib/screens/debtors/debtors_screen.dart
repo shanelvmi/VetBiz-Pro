@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
@@ -11,7 +12,9 @@ import 'package:share_plus/share_plus.dart';
 import '../../models/client.dart';
 import '../../models/debt.dart';
 import '../../providers/facility_provider.dart';
-import '../../providers/debt_provider.dart';
+import '../../providers/client_provider.dart';
+import '../../services/cursor_paginated_list_controller.dart';
+import '../../widgets/firestore_error_view.dart';
 import 'add_payment_screen.dart';
 import '../payments/payments_screen.dart';
 
@@ -39,20 +42,22 @@ class _DebtorsScreenState extends State<DebtorsScreen> {
   String _overdueRangeFilter = 'All';
   final TextEditingController _searchController = TextEditingController();
 
-  // A debt older than this many days counts as "Overdue" - there's no
-  // due-date field anywhere on Debt, so this is a convention we're
-  // introducing, not something derived from existing app logic.
-  static const int _overdueDays = 30;
-
-  // Which debtor (by clientId) is shown in the details panel, and the
-  // display pagination window - same pattern as the other rebuilt
-  // screens.
+  // Which debtor (by clientId) is shown in the details panel.
   String? _selectedClientId;
-  int _displayPageSize = 10;
-  int _currentPageIndex = 0;
   String? _facilityId;
   double? _paidThisMonth;
   bool _isPaidThisMonthLoading = false;
+
+  Timer? _searchDebounce;
+  // Periodically checks (never a live listener) whether new debtors
+  // have appeared since this browsing session's snapshot moment.
+  Timer? _newRecordsCheckTimer;
+
+  // Facility-wide totals for the metrics row - loaded once via real
+  // aggregate queries (see ClientProvider.fetchDebtorsMetrics), not
+  // recomputed from whichever page happens to be loaded.
+  ({int totalDebtors, double totalOwed, int overdueDebtors})? _metrics;
+  bool _isMetricsLoading = false;
 
   // Lazy-loaded, per-client cache of debtor notes - only fetched once
   // a given debtor's details panel is actually opened, then cached.
@@ -65,6 +70,15 @@ class _DebtorsScreenState extends State<DebtorsScreen> {
   // this needs its own fetch of the original sale/service document.
   final Map<String, Future<int?>> _receiptNumberFutureByDebt = {};
 
+  // This client's own real, individual unpaid debt records - loaded
+  // only once their details panel is opened, and only ever this one
+  // client's debts (a small, targeted query), never the whole
+  // facility's. Powers the exact overdue amount shown there, computed
+  // from each debt's own timestamp rather than approximated from the
+  // client-level balance/oldestUnpaidDebtDate summary fields.
+  String? _detailsDebtsClientId;
+  Future<List<Debt>>? _detailsDebtsFuture;
+
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
@@ -73,14 +87,55 @@ class _DebtorsScreenState extends State<DebtorsScreen> {
 
     if (facilityId.isNotEmpty && facilityId != _facilityId) {
       _facilityId = facilityId;
-      Provider.of<DebtProvider>(context, listen: false).listenToDebts(facilityId);
       _loadPaidThisMonth();
+      _loadMetrics();
+      _openDebtorsListSession();
+      _newRecordsCheckTimer ??= Timer.periodic(
+        const Duration(seconds: 45),
+        (_) => Provider.of<ClientProvider>(context, listen: false).debtorsListController.checkForNewRecords(),
+      );
+    }
+  }
+
+  /// Records the toolbar's current filters onto ClientProvider, then
+  /// (re)opens the browsing session for them - a no-op if the
+  /// signature hasn't actually changed and a session's already open.
+  void _openDebtorsListSession({bool forceRefresh = false}) {
+    final facilityId = _facilityId;
+    if (facilityId == null) return;
+    final provider = Provider.of<ClientProvider>(context, listen: false);
+    final overdueDays = Provider.of<FacilityProvider>(context, listen: false).debtOverdueDays;
+    final signature = provider.updateDebtorsListFilters(
+      facilityId: facilityId,
+      searchTerm: _searchQuery,
+      statusFilter: _statusFilter,
+      overdueRangeFilter: _overdueRangeFilter,
+      overdueDays: overdueDays,
+    );
+    provider.debtorsListController.openSession(signature, forceRefresh: forceRefresh);
+  }
+
+  Future<void> _loadMetrics() async {
+    final facilityId = _facilityId;
+    if (facilityId == null) return;
+    setState(() => _isMetricsLoading = true);
+    try {
+      final overdueDays = Provider.of<FacilityProvider>(context, listen: false).debtOverdueDays;
+      final metrics = await Provider.of<ClientProvider>(context, listen: false)
+          .fetchDebtorsMetrics(facilityId, overdueDays: overdueDays);
+      if (mounted) setState(() => _metrics = metrics);
+    } catch (e) {
+      debugPrint('Error loading debtors metrics: $e');
+    } finally {
+      if (mounted) setState(() => _isMetricsLoading = false);
     }
   }
 
   @override
   void dispose() {
     _searchController.dispose();
+    _searchDebounce?.cancel();
+    _newRecordsCheckTimer?.cancel();
     super.dispose();
   }
 
@@ -124,145 +179,140 @@ class _DebtorsScreenState extends State<DebtorsScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final debtProvider = Provider.of<DebtProvider>(context);
-    final debts = debtProvider.debts;
-    final now = DateTime.now();
-
-    // Group debts by clientId - clientName/clientPhone come straight
-    // off the Debt record itself (denormalized at creation time),
-    // rather than a live Firestore lookup per client on every render.
-    final Map<String, List<Debt>> debtsByClient = {};
-    for (final debt in debts) {
-      debtsByClient.putIfAbsent(debt.clientId, () => []).add(debt);
-    }
-
-    final debtors = debtsByClient.entries.map((entry) {
-      final clientDebts = entry.value;
-      final totalOwed = clientDebts.fold<double>(0, (sum, d) => sum + d.amountOwed);
-      final overdueAmount = clientDebts
-          .where((d) => now.difference(d.timestamp).inDays > _overdueDays)
-          .fold<double>(0, (sum, d) => sum + d.amountOwed);
-      clientDebts.sort((a, b) => b.timestamp.compareTo(a.timestamp));
-      return _DebtorRow(
-        clientId: entry.key,
-        clientName: clientDebts.first.clientName ?? 'Unknown',
-        clientPhone: clientDebts.first.clientPhone ?? '',
-        totalOwed: totalOwed,
-        overdueAmount: overdueAmount,
-        lastTransaction: clientDebts.first.timestamp,
-        lastSource: clientDebts.first.source,
-        debts: clientDebts,
-      );
-    }).where((d) => d.totalOwed > 0).toList()
-      ..sort((a, b) => b.totalOwed.compareTo(a.totalOwed));
-
-    final filteredDebtors = debtors.where((d) {
-      final matchesSearch = _searchQuery.isEmpty ||
-          d.clientName.toLowerCase().contains(_searchQuery.toLowerCase()) ||
-          d.clientPhone.contains(_searchQuery);
-
-      final isOverdue = d.overdueAmount > 0;
-      final matchesStatus = _statusFilter == 'All' ||
-          (_statusFilter == 'Overdue' && isOverdue) ||
-          (_statusFilter == 'Current' && !isOverdue);
-
-      final matchesOverdueRange = switch (_overdueRangeFilter) {
-        '1-30 days' => d.maxDaysOverdue >= 1 && d.maxDaysOverdue <= 30,
-        '31-60 days' => d.maxDaysOverdue >= 31 && d.maxDaysOverdue <= 60,
-        '60+ days' => d.maxDaysOverdue > 60,
-        _ => true, // 'All'
-      };
-
-      return matchesSearch && matchesStatus && matchesOverdueRange;
-    }).toList();
-
-    // Same honest display-pagination window as the other rebuilt
-    // screens - a page here is a view over the already-loaded, live
-    // debtor list, not a true jump to an arbitrary page number.
-    final totalPages = (filteredDebtors.length / _displayPageSize).ceil().clamp(1, 999999);
-    if (_currentPageIndex >= totalPages) _currentPageIndex = totalPages - 1;
-    if (_currentPageIndex < 0) _currentPageIndex = 0;
-    final pageStart = _currentPageIndex * _displayPageSize;
-    final pageEnd = (pageStart + _displayPageSize).clamp(0, filteredDebtors.length);
-    final pageDebtors = filteredDebtors.sublist(pageStart.clamp(0, filteredDebtors.length), pageEnd);
-
-    _DebtorRow? selectedDebtor;
-    if (_selectedClientId != null) {
-      for (final d in filteredDebtors) {
-        if (d.clientId == _selectedClientId) {
-          selectedDebtor = d;
-          break;
-        }
-      }
-    }
+    final clientProvider = Provider.of<ClientProvider>(context);
+    final overdueDays = Provider.of<FacilityProvider>(context).debtOverdueDays;
 
     return Scaffold(
       backgroundColor: offWhite,
-      appBar: _buildAppBar(debtors),
-      body: Row(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Expanded(
-            child: Column(
-              children: [
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
-                  child: _buildMetricsRow(debtors),
-                ),
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
-                  child: _buildFiltersToolbar(filteredDebtors),
-                ),
-                Expanded(
-                  child: filteredDebtors.isEmpty
-                      ? Center(
-                          child: Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Icon(Icons.people_outline, size: 64, color: Colors.grey[400]),
-                              const SizedBox(height: 16),
-                              Text(
-                                _searchQuery.isEmpty ? 'No outstanding debts' : 'No debtors match your search',
-                                style: TextStyle(fontSize: 18, color: Colors.grey[600]),
-                              ),
-                            ],
+      appBar: _buildAppBar(),
+      body: ListenableBuilder(
+        listenable: clientProvider.debtorsListController,
+        builder: (context, _) {
+                final controller = clientProvider.debtorsListController;
+                final debtors = controller.items.map((c) => _DebtorRow(c, overdueDays)).toList();
+
+                _DebtorRow? selectedDebtor;
+                if (_selectedClientId != null) {
+                  for (final d in debtors) {
+                    if (d.clientId == _selectedClientId) {
+                      selectedDebtor = d;
+                      break;
+                    }
+                  }
+                }
+
+                return Row(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Expanded(
+                      child: Column(
+                        children: [
+                          Padding(
+                            padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
+                            child: _buildMetricsRow(),
                           ),
-                        )
-                      : _buildDebtorsTable(pageDebtors),
-                ),
-                _buildPaginationBar(
-                  totalFiltered: filteredDebtors.length,
-                  pageStart: pageStart,
-                  pageEnd: pageEnd,
-                  totalPages: totalPages,
-                ),
-              ],
-            ),
-          ),
-          if (selectedDebtor != null) ...[
-            const VerticalDivider(width: 1),
-            SizedBox(
-              width: 380,
-              child: _buildDebtorDetailsPanel(selectedDebtor),
-            ),
-          ],
-        ],
+                          Padding(
+                            padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+                            child: _buildFiltersToolbar(),
+                          ),
+                          if (controller.newRecordsAvailable > 0)
+                            Container(
+                              width: double.infinity,
+                              margin: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+                              color: primaryDeepGreen.withValues(alpha: 0.08),
+                              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                              child: Row(
+                                children: [
+                                  Icon(Icons.fiber_new, size: 18, color: primaryDeepGreen),
+                                  const SizedBox(width: 8),
+                                  Expanded(
+                                    child: Text(
+                                      '${controller.newRecordsAvailable} new debtor'
+                                      '${controller.newRecordsAvailable == 1 ? '' : 's'} available',
+                                      style: TextStyle(fontSize: 13, color: primaryDeepGreen),
+                                    ),
+                                  ),
+                                  TextButton(
+                                    onPressed: () => controller.refreshSession(),
+                                    child: const Text('Refresh'),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          Expanded(
+                            child: controller.error != null && debtors.isEmpty
+                                ? Center(child: FirestoreErrorView(error: controller.error))
+                                : controller.isLoading && debtors.isEmpty
+                                ? const Center(child: CircularProgressIndicator())
+                                : debtors.isEmpty
+                                    ? Center(
+                                        child: Column(
+                                          mainAxisAlignment: MainAxisAlignment.center,
+                                          children: [
+                                            Icon(Icons.people_outline, size: 64, color: Colors.grey[400]),
+                                            const SizedBox(height: 16),
+                                            Text(
+                                              _searchQuery.isEmpty
+                                                  ? 'No outstanding debts'
+                                                  : 'No debtors match your search',
+                                              style: TextStyle(fontSize: 18, color: Colors.grey[600]),
+                                            ),
+                                          ],
+                                        ),
+                                      )
+                                    : _buildDebtorsTable(debtors),
+                          ),
+                          _buildPaginationBar(controller),
+                        ],
+                      ),
+                    ),
+                    if (selectedDebtor != null) ...[
+                      const VerticalDivider(width: 1),
+                      SizedBox(
+                        width: 380,
+                        child: _buildDebtorDetailsPanel(selectedDebtor),
+                      ),
+                    ],
+                  ],
+                );
+        },
       ),
     );
   }
 
   // ==================== METRICS ROW ====================
 
-  Widget _buildMetricsRow(List<_DebtorRow> debtors) {
-    final totalDebtors = debtors.length;
-    final totalOwed = debtors.fold<double>(0, (sum, d) => sum + d.totalOwed);
-    final overdueAmount = debtors.fold<double>(0, (sum, d) => sum + d.overdueAmount);
+  Widget _buildMetricsRow() {
     final isPaidLoading = _paidThisMonth == null && _isPaidThisMonthLoading;
+    final facilityMetrics = _metrics;
+    final isMetricsLoading = facilityMetrics == null && _isMetricsLoading;
+    final overdueDays = Provider.of<FacilityProvider>(context, listen: false).debtOverdueDays;
 
     final metrics = [
-      ('Total Debtors', '$totalDebtors', Icons.people_outline, primaryDeepGreen, 'With outstanding balance', false),
-      ('Total Owed', _moneyFormat.format(totalOwed), Icons.account_balance_wallet_outlined, Colors.orange, 'Outstanding balance', false),
-      ('Overdue Amount', _moneyFormat.format(overdueAmount), Icons.error_outline, Colors.red, 'Overdue balance', false),
+      (
+        'Total Debtors',
+        isMetricsLoading ? '' : '${facilityMetrics?.totalDebtors ?? 0}',
+        Icons.people_outline,
+        primaryDeepGreen,
+        'With outstanding balance',
+        isMetricsLoading,
+      ),
+      (
+        'Total Owed',
+        isMetricsLoading ? '' : _moneyFormat.format(facilityMetrics?.totalOwed ?? 0),
+        Icons.account_balance_wallet_outlined,
+        Colors.orange,
+        'Outstanding balance',
+        isMetricsLoading,
+      ),
+      (
+        'Overdue Debtors',
+        isMetricsLoading ? '' : '${facilityMetrics?.overdueDebtors ?? 0}',
+        Icons.error_outline,
+        Colors.red,
+        'Over $overdueDays days',
+        isMetricsLoading,
+      ),
       (
         'Paid This Month',
         _moneyFormat.format(_paidThisMonth ?? 0),
@@ -341,7 +391,24 @@ class _DebtorsScreenState extends State<DebtorsScreen> {
     );
   }
 
-  PreferredSizeWidget _buildAppBar(List<_DebtorRow> debtors) {
+  /// All current debtors, fetched fresh - used only by the "Record
+  /// Payment" picker in the app bar, which needs to offer every
+  /// debtor, not just whichever page the main list has loaded. A
+  /// deliberate, infrequent action, so loading everyone once here is
+  /// an acceptable trade-off, unlike the main browsing list itself.
+  Future<List<Client>> _fetchAllDebtorClients() async {
+    final facilityId = _facilityId;
+    if (facilityId == null) return [];
+    final snap = await FirebaseFirestore.instance
+        .collection('facilities')
+        .doc(facilityId)
+        .collection('clients')
+        .where('balance', isGreaterThan: 0)
+        .get();
+    return snap.docs.map((d) => Client.fromMap(d.id, d.data())).toList();
+  }
+
+  PreferredSizeWidget _buildAppBar() {
     return AppBar(
       backgroundColor: Colors.white,
       foregroundColor: Colors.black87,
@@ -360,17 +427,9 @@ class _DebtorsScreenState extends State<DebtorsScreen> {
           padding: const EdgeInsets.only(right: 12),
           child: ElevatedButton.icon(
             onPressed: () async {
-              final debtorClients = debtors
-                  .map((d) => Client(
-                        id: d.clientId,
-                        name: d.clientName,
-                        phone: d.clientPhone,
-                        address: '',
-                        balance: 0.0,
-                        types: const [],
-                      ))
-                  .toList();
-              final debtorBalances = {for (final d in debtors) d.clientId: d.totalOwed};
+              final debtorClients = await _fetchAllDebtorClients();
+              if (!mounted) return;
+              final debtorBalances = {for (final c in debtorClients) c.id: c.balance};
               final result = await showAddPaymentScreen(
                 context,
                 facilityId: _facilityId,
@@ -378,7 +437,10 @@ class _DebtorsScreenState extends State<DebtorsScreen> {
                 debtorBalances: debtorBalances,
               );
               if (result == true && _facilityId != null && mounted) {
-                Provider.of<DebtProvider>(context, listen: false).listenToDebts(_facilityId!);
+                Provider.of<ClientProvider>(context, listen: false)
+                    .debtorsListController
+                    .refreshSession();
+                _loadMetrics();
               }
             },
             icon: const Icon(Icons.add, size: 18),
@@ -400,7 +462,7 @@ class _DebtorsScreenState extends State<DebtorsScreen> {
   static const List<String> _statusFilterOptions = ['All', 'Overdue', 'Current'];
   static const List<String> _overdueRangeOptions = ['All', '1-30 days', '31-60 days', '60+ days'];
 
-  Widget _buildFiltersToolbar(List<_DebtorRow> debtors) {
+  Widget _buildFiltersToolbar() {
     final border = OutlineInputBorder(
       borderRadius: BorderRadius.circular(10),
       borderSide: BorderSide(color: Colors.grey.withValues(alpha: 0.3)),
@@ -414,7 +476,7 @@ class _DebtorsScreenState extends State<DebtorsScreen> {
           child: TextField(
             controller: _searchController,
             decoration: InputDecoration(
-              hintText: 'Search debtor by name, phone, invoice...',
+              hintText: 'Search debtor by name...',
               hintStyle: const TextStyle(fontSize: 13),
               prefixIcon: const Icon(Icons.search, size: 20),
               filled: true,
@@ -427,17 +489,19 @@ class _DebtorsScreenState extends State<DebtorsScreen> {
                   ? null
                   : IconButton(
                       icon: const Icon(Icons.clear, size: 18),
-                      onPressed: () => setState(() {
+                      onPressed: () {
+                        _searchDebounce?.cancel();
+                        setState(() => _searchQuery = '');
                         _searchController.clear();
-                        _searchQuery = '';
-                        _currentPageIndex = 0;
-                      }),
+                        _openDebtorsListSession();
+                      },
                     ),
             ),
-            onChanged: (val) => setState(() {
-              _searchQuery = val.trim();
-              _currentPageIndex = 0;
-            }),
+            onChanged: (val) {
+              setState(() => _searchQuery = val.trim());
+              _searchDebounce?.cancel();
+              _searchDebounce = Timer(const Duration(milliseconds: 400), _openDebtorsListSession);
+            },
           ),
         ),
         const SizedBox(width: 10),
@@ -445,37 +509,40 @@ class _DebtorsScreenState extends State<DebtorsScreen> {
           value: _statusFilter,
           items: _statusFilterOptions,
           label: 'Status',
-          onChanged: (val) => setState(() {
-            _statusFilter = val;
-            _currentPageIndex = 0;
-          }),
+          onChanged: (val) {
+            setState(() => _statusFilter = val);
+            _openDebtorsListSession();
+          },
         ),
         const SizedBox(width: 10),
         _toolbarDropdown<String>(
           value: _overdueRangeFilter,
           items: _overdueRangeOptions,
           label: 'Overdue',
-          onChanged: (val) => setState(() {
-            _overdueRangeFilter = val;
-            _currentPageIndex = 0;
-          }),
+          onChanged: (val) {
+            setState(() => _overdueRangeFilter = val);
+            _openDebtorsListSession();
+          },
         ),
         if (hasActiveFilters) ...[
           const SizedBox(width: 10),
           TextButton(
-            onPressed: () => setState(() {
-              _searchController.clear();
-              _searchQuery = '';
-              _statusFilter = 'All';
-              _overdueRangeFilter = 'All';
-              _currentPageIndex = 0;
-            }),
+            onPressed: () {
+              _searchDebounce?.cancel();
+              setState(() {
+                _searchController.clear();
+                _searchQuery = '';
+                _statusFilter = 'All';
+                _overdueRangeFilter = 'All';
+              });
+              _openDebtorsListSession();
+            },
             child: const Text('Reset'),
           ),
         ],
         const SizedBox(width: 10),
         OutlinedButton.icon(
-          onPressed: debtors.isEmpty ? null : () => _exportDebtors(debtors),
+          onPressed: () => _exportDebtors(),
           icon: const Icon(Icons.download_outlined, size: 16),
           label: const Text('Export'),
           style: OutlinedButton.styleFrom(
@@ -529,7 +596,7 @@ class _DebtorsScreenState extends State<DebtorsScreen> {
               _headerCell('Debtor', flex: 3),
               _headerCell('Total Owed', flex: 2),
               _headerCell('Overdue', flex: 2),
-              _headerCell('Last Transaction', flex: 2),
+              _headerCell('Oldest Debt Since', flex: 2),
               _headerCell('Status', flex: 2),
               _headerCell('Actions', flex: 2),
             ],
@@ -555,7 +622,7 @@ class _DebtorsScreenState extends State<DebtorsScreen> {
 
   Widget _buildDebtorRow(_DebtorRow debtor) {
     final isSelected = _selectedClientId == debtor.clientId;
-    final isOverdue = debtor.overdueAmount > 0;
+    final isOverdue = debtor.isOverdue;
 
     return InkWell(
       onTap: () => setState(() => _selectedClientId = debtor.clientId),
@@ -587,8 +654,6 @@ class _DebtorsScreenState extends State<DebtorsScreen> {
                             maxLines: 1, overflow: TextOverflow.ellipsis),
                         if (debtor.clientPhone.isNotEmpty)
                           Text(debtor.clientPhone, style: TextStyle(fontSize: 11.5, color: Colors.grey[600])),
-                        Text('${debtor.debts.length} outstanding debt${debtor.debts.length == 1 ? '' : 's'}',
-                            style: TextStyle(fontSize: 11, color: primaryDeepGreen)),
                       ],
                     ),
                   ),
@@ -602,18 +667,19 @@ class _DebtorsScreenState extends State<DebtorsScreen> {
             ),
             Expanded(
               flex: 2,
-              child: Text(_moneyFormat.format(debtor.overdueAmount),
-                  style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: isOverdue ? Colors.red : Colors.grey[600])),
+              child: Text(
+                isOverdue ? '${debtor.daysSinceOldestDebt} days' : '\u2014',
+                style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: isOverdue ? Colors.red : Colors.grey[600]),
+              ),
             ),
             Expanded(
               flex: 2,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(DateFormat('dd MMM yyyy').format(debtor.lastTransaction), style: const TextStyle(fontSize: 13)),
-                  Text(debtor.lastSource, style: TextStyle(fontSize: 11.5, color: Colors.grey[500])),
-                ],
-              ),
+              child: debtor.client.oldestUnpaidDebtDate != null
+                  ? Text(
+                      DateFormat('dd MMM yyyy').format(debtor.client.oldestUnpaidDebtDate!),
+                      style: const TextStyle(fontSize: 13),
+                    )
+                  : Text('\u2014', style: TextStyle(fontSize: 13, color: Colors.grey[500])),
             ),
             Expanded(
               flex: 2,
@@ -673,12 +739,12 @@ class _DebtorsScreenState extends State<DebtorsScreen> {
 
   // ==================== PAGINATION ====================
 
-  Widget _buildPaginationBar({
-    required int totalFiltered,
-    required int pageStart,
-    required int pageEnd,
-    required int totalPages,
-  }) {
+  Widget _buildPaginationBar(CursorPaginatedListController<Client> controller) {
+    final pageSize = controller.pageSize;
+    final itemCount = controller.items.length;
+    final pageStart = itemCount == 0 ? 0 : (controller.currentPage - 1) * pageSize + 1;
+    final pageEnd = (controller.currentPage - 1) * pageSize + itemCount;
+
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       decoration: BoxDecoration(border: Border(top: BorderSide(color: Colors.grey.withValues(alpha: 0.2)))),
@@ -686,34 +752,34 @@ class _DebtorsScreenState extends State<DebtorsScreen> {
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           Text(
-            totalFiltered == 0 ? 'No debtors' : 'Showing ${pageStart + 1} to $pageEnd of $totalFiltered debtors',
+            itemCount == 0 ? 'No debtors' : 'Showing $pageStart to $pageEnd',
             style: TextStyle(fontSize: 12.5, color: Colors.grey[600]),
           ),
           Row(
             children: [
               DropdownButtonHideUnderline(
                 child: DropdownButton<int>(
-                  value: _displayPageSize,
+                  value: pageSize,
                   items: const [10, 25, 50]
                       .map((n) => DropdownMenuItem(value: n, child: Text('$n per page')))
                       .toList(),
                   onChanged: (val) {
-                    if (val != null) setState(() {
-                      _displayPageSize = val;
-                      _currentPageIndex = 0;
-                    });
+                    if (val != null) controller.setPageSize(val);
                   },
                 ),
               ),
               const SizedBox(width: 16),
               IconButton(
                 icon: const Icon(Icons.chevron_left),
-                onPressed: _currentPageIndex > 0 ? () => setState(() => _currentPageIndex--) : null,
+                onPressed: controller.hasPreviousPage ? () => controller.goToPreviousPage() : null,
               ),
-              Text('Page ${_currentPageIndex + 1} of $totalPages', style: const TextStyle(fontSize: 13)),
+              Text('Page ${controller.currentPage}', style: const TextStyle(fontSize: 13)),
               IconButton(
-                icon: const Icon(Icons.chevron_right),
-                onPressed: _currentPageIndex < totalPages - 1 ? () => setState(() => _currentPageIndex++) : null,
+                icon: controller.isLoading
+                    ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2))
+                    : const Icon(Icons.chevron_right),
+                onPressed:
+                    controller.hasNextPage && !controller.isLoading ? () => controller.goToNextPage() : null,
               ),
             ],
           ),
@@ -724,8 +790,38 @@ class _DebtorsScreenState extends State<DebtorsScreen> {
 
   // ==================== DEBTOR DETAILS PANEL ====================
 
+  Future<List<Debt>> _getDetailsDebtsFuture(String clientId) {
+    if (_detailsDebtsClientId != clientId || _detailsDebtsFuture == null) {
+      _detailsDebtsClientId = clientId;
+      final facilityId = _facilityId;
+      _detailsDebtsFuture = facilityId == null
+          ? Future.value(<Debt>[])
+          : FirebaseFirestore.instance
+              .collection('facilities')
+              .doc(facilityId)
+              .collection('debts')
+              .where('clientId', isEqualTo: clientId)
+              .orderBy('timestamp', descending: true)
+              .get()
+              .then((snap) => snap.docs.map((d) => Debt.fromMap(d.id, d.data())).toList());
+    }
+    return _detailsDebtsFuture!;
+  }
+
+  /// Called after recording a payment against a debtor whose panel is
+  /// currently open, so it re-fetches fresh debt records instead of
+  /// showing what's now stale.
+  void _refreshDetailsDebts(String clientId) {
+    if (_detailsDebtsClientId == clientId) {
+      setState(() {
+        _detailsDebtsClientId = null;
+        _detailsDebtsFuture = null;
+      });
+    }
+  }
+
   Widget _buildDebtorDetailsPanel(_DebtorRow debtor) {
-    final isOverdue = debtor.overdueAmount > 0;
+    final isOverdue = debtor.isOverdue;
 
     return Container(
       color: Colors.white,
@@ -803,12 +899,42 @@ class _DebtorsScreenState extends State<DebtorsScreen> {
             const Text('Summary', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13.5)),
             const SizedBox(height: 10),
             _totalsRow('Total Owed', _moneyFormat.format(debtor.totalOwed), color: Colors.red),
-            _totalsRow('Overdue Amount', _moneyFormat.format(debtor.overdueAmount), color: Colors.red),
-            _totalsRow('Last Transaction', DateFormat('dd MMM yyyy').format(debtor.lastTransaction)),
-            const SizedBox(height: 20),
-            Text('Outstanding Debts (${debtor.debts.length})', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13.5)),
-            const SizedBox(height: 10),
-            ...debtor.debts.map((debt) => _buildDebtTile(debtor, debt)),
+            FutureBuilder<List<Debt>>(
+              future: _getDetailsDebtsFuture(debtor.clientId),
+              builder: (context, snapshot) {
+                if (snapshot.hasError) {
+                  return Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 20),
+                    child: FirestoreErrorView(error: snapshot.error),
+                  );
+                }
+                if (!snapshot.hasData) {
+                  return const Padding(
+                    padding: EdgeInsets.symmetric(vertical: 20),
+                    child: Center(child: CircularProgressIndicator(strokeWidth: 2)),
+                  );
+                }
+                final clientDebts = [...snapshot.data!]..sort((a, b) => b.timestamp.compareTo(a.timestamp));
+                final now = DateTime.now();
+                final overdueDays = Provider.of<FacilityProvider>(context, listen: false).debtOverdueDays;
+                final overdueAmount = clientDebts
+                    .where((d) => now.difference(d.timestamp).inDays > overdueDays)
+                    .fold<double>(0, (sum, d) => sum + d.amountOwed);
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    _totalsRow('Overdue Amount', _moneyFormat.format(overdueAmount), color: Colors.red),
+                    if (clientDebts.isNotEmpty)
+                      _totalsRow('Last Transaction', DateFormat('dd MMM yyyy').format(clientDebts.first.timestamp)),
+                    const SizedBox(height: 20),
+                    Text('Outstanding Debts (${clientDebts.length})',
+                        style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13.5)),
+                    const SizedBox(height: 10),
+                    ...clientDebts.map((debt) => _buildDebtTile(debtor, debt)),
+                  ],
+                );
+              },
+            ),
             const SizedBox(height: 20),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -880,7 +1006,11 @@ class _DebtorsScreenState extends State<DebtorsScreen> {
                   facilityId: _facilityId,
                 );
                 if (result == true && _facilityId != null && mounted) {
-                  Provider.of<DebtProvider>(context, listen: false).listenToDebts(_facilityId!);
+                  Provider.of<ClientProvider>(context, listen: false)
+                      .debtorsListController
+                      .refreshSession();
+                  _refreshDetailsDebts(debtor.clientId);
+                  _loadMetrics();
                 }
               },
               icon: const Icon(Icons.account_balance_wallet_outlined, size: 16),
@@ -898,7 +1028,8 @@ class _DebtorsScreenState extends State<DebtorsScreen> {
   }
 
   Widget _buildDebtTile(_DebtorRow debtor, Debt debt) {
-    final isOverdue = DateTime.now().difference(debt.timestamp).inDays > _overdueDays;
+    final overdueDays = Provider.of<FacilityProvider>(context, listen: false).debtOverdueDays;
+    final isOverdue = DateTime.now().difference(debt.timestamp).inDays > overdueDays;
     return Container(
       margin: const EdgeInsets.only(bottom: 10),
       padding: const EdgeInsets.all(12),
@@ -984,7 +1115,9 @@ class _DebtorsScreenState extends State<DebtorsScreen> {
     );
 
     if (result == true && _facilityId != null && mounted) {
-      Provider.of<DebtProvider>(context, listen: false).listenToDebts(_facilityId!);
+      Provider.of<ClientProvider>(context, listen: false).debtorsListController.refreshSession();
+      _refreshDetailsDebts(debtor.clientId);
+      _loadMetrics();
     }
   }
 
@@ -1072,19 +1205,25 @@ class _DebtorsScreenState extends State<DebtorsScreen> {
     return field;
   }
 
-  Future<void> _exportDebtors(List<_DebtorRow> debtors) async {
+  Future<void> _exportDebtors() async {
+    final clients = await _fetchAllDebtorClients();
+    if (!mounted) return;
+    final overdueDays = Provider.of<FacilityProvider>(context, listen: false).debtOverdueDays;
+    final debtors = clients.map((c) => _DebtorRow(c, overdueDays)).toList()
+      ..sort((a, b) => b.totalOwed.compareTo(a.totalOwed));
+
     final rows = <List<String>>[
-      ['Debtor', 'Phone', 'Total Owed', 'Overdue Amount', 'Last Transaction', 'Last Source', 'Status', 'Outstanding Debts'],
+      ['Debtor', 'Phone', 'Total Owed', 'Days Overdue', 'Oldest Debt Since', 'Status'],
       for (final d in debtors)
         [
           d.clientName,
           d.clientPhone,
           d.totalOwed.toStringAsFixed(0),
-          d.overdueAmount.toStringAsFixed(0),
-          DateFormat('dd MMM yyyy').format(d.lastTransaction),
-          d.lastSource,
-          d.overdueAmount > 0 ? 'Overdue' : 'Current',
-          '${d.debts.length}',
+          d.isOverdue ? '${d.daysSinceOldestDebt}' : '',
+          d.client.oldestUnpaidDebtDate != null
+              ? DateFormat('dd MMM yyyy').format(d.client.oldestUnpaidDebtDate!)
+              : '',
+          d.isOverdue ? 'Overdue' : 'Current',
         ],
     ];
 
@@ -1230,30 +1369,21 @@ class _DebtorsScreenState extends State<DebtorsScreen> {
 }
 
 class _DebtorRow {
-  final String clientId;
-  final String clientName;
-  final String clientPhone;
-  final double totalOwed;
-  final double overdueAmount;
-  final DateTime lastTransaction;
-  final String lastSource;
-  final List<Debt> debts;
+  final Client client;
+  final int overdueDays;
 
-  _DebtorRow({
-    required this.clientId,
-    required this.clientName,
-    required this.clientPhone,
-    required this.totalOwed,
-    required this.overdueAmount,
-    required this.lastTransaction,
-    required this.lastSource,
-    required this.debts,
-  });
+  _DebtorRow(this.client, this.overdueDays);
 
-  // The oldest debt determines how overdue this debtor is overall.
-  int get maxDaysOverdue {
-    if (debts.isEmpty) return 0;
-    final oldest = debts.map((d) => d.timestamp).reduce((a, b) => a.isBefore(b) ? a : b);
+  String get clientId => client.id;
+  String get clientName => client.name.isNotEmpty ? client.name : 'Unknown';
+  String get clientPhone => client.phone;
+  double get totalOwed => client.balance;
+
+  int get daysSinceOldestDebt {
+    final oldest = client.oldestUnpaidDebtDate;
+    if (oldest == null) return 0;
     return DateTime.now().difference(oldest).inDays;
   }
+
+  bool get isOverdue => daysSinceOldestDebt > overdueDays;
 }

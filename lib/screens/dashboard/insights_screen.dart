@@ -75,7 +75,11 @@ class _InsightsScreenState extends State<InsightsScreen> {
     final now = DateTime.now();
     final today = DateTime(now.year, now.month, now.day);
     _trendStart = today.subtract(const Duration(days: 13));
-    final windowStart = now.subtract(const Duration(days: 30));
+    // Matches exactly what's displayed - the trend chart and the
+    // top-products/services figures below both only ever use this
+    // same 14-day window, so there's nothing gained from querying
+    // further back than what's actually shown.
+    final windowStart = _trendStart;
 
     try {
       final results = await Future.wait([
@@ -809,11 +813,15 @@ Future<void> showInsightsScreen(BuildContext context) async {
     transitionDuration: const Duration(milliseconds: 220),
     pageBuilder: (context, animation, secondaryAnimation) {
       final screenSize = MediaQuery.of(context).size;
-      final modalWidth = (screenSize.width * 0.60).clamp(0, 860).toDouble();
+      final modalWidth = (screenSize.width * 0.60).clamp(0, 940).toDouble();
+      // Never shorter than 480px, fixed - 88% of screen height
+      // comfortably exceeds that on most windows, but this guarantees
+      // it even on a smaller one.
+      final modalHeight = (screenSize.height * 0.88) < 480 ? 480.0 : screenSize.height * 0.88;
       return Center(
         child: SizedBox(
           width: modalWidth,
-          height: screenSize.height * 0.85,
+          height: modalHeight,
           child: ClipRRect(
             borderRadius: BorderRadius.circular(16),
             child: const Material(

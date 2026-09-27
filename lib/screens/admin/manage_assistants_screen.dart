@@ -25,6 +25,13 @@ class _ManageAssistantsScreenState extends State<ManageAssistantsScreen> {
   late final String adminUid;
   List<String> adminFacilityIds = [];
   Map<String, String> facilityNames = {};
+  // Created once, only when adminFacilityIds actually changes (initial
+  // load, or an explicit Refresh) - not on every rebuild. A
+  // StreamBuilder given a brand-new stream instance on every build
+  // resets to its loading state before that new stream's first value
+  // arrives, which was causing this screen to load slowly and its
+  // assistants to appear staggered rather than all at once.
+  Stream<QuerySnapshot>? _assistantsStream;
 
   String _searchQuery = '';
   bool _isSearchExpanded = false;
@@ -65,6 +72,13 @@ class _ManageAssistantsScreenState extends State<ManageAssistantsScreen> {
         facilityNames = {
           for (var doc in snapshot.docs) doc.id: doc['name'] ?? 'Unknown'
         };
+        _assistantsStream = adminFacilityIds.isEmpty
+            ? null
+            : FirebaseFirestore.instance
+                .collection('users')
+                .where('role', isEqualTo: 'assistant')
+                .where('facilityIds', arrayContainsAny: adminFacilityIds)
+                .snapshots();
       });
     } catch (e) {
       debugPrint('Error fetching admin facilities: $e');
@@ -684,11 +698,7 @@ class _ManageAssistantsScreenState extends State<ManageAssistantsScreen> {
       body: adminFacilityIds.isEmpty
           ? const Center(child: Text('No facilities found for your account.'))
           : StreamBuilder<QuerySnapshot>(
-              stream: FirebaseFirestore.instance
-                  .collection('users')
-                  .where('role', isEqualTo: 'assistant')
-                  .where('facilityIds', arrayContainsAny: adminFacilityIds)
-                  .snapshots(),
+              stream: _assistantsStream!,
               builder: (context, snapshot) {
                 if (snapshot.connectionState == ConnectionState.waiting) {
                   return const Center(child: CircularProgressIndicator());

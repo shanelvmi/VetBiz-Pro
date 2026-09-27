@@ -10,6 +10,8 @@ import '../../providers/service_provider.dart';
 import '../../providers/facility_provider.dart';
 import '../../providers/user_role_provider.dart';
 import '../../providers/client_provider.dart';
+import '../../services/cursor_paginated_list_controller.dart';
+import '../../widgets/firestore_error_view.dart';
 import 'add_edit_service_screen.dart';
 import 'services_archive_screen.dart';
 import 'service_receipt_preview_screen.dart';
@@ -40,12 +42,9 @@ class _ServicesScreenState extends State<ServicesScreen> {
   String _dateFilter = 'Last 30 days';
   String _statusFilter = 'All';
 
-  // Which service is shown in the details panel, and the display
-  // pagination window (over whatever's already loaded) - same pattern
-  // as the Sales screen.
+  // Which service is shown in the details panel. Pagination state now
+  // lives entirely in servicesListController below.
   Service? _selectedService;
-  int _displayPageSize = 10;
-  int _currentPageIndex = 0;
 
   String? _facilityId;
   Map<String, double>? _rangeSummary;
@@ -59,6 +58,11 @@ class _ServicesScreenState extends State<ServicesScreen> {
   ServiceProvider? _serviceProvider;
   int _lastKnownServiceCount = 0;
   Timer? _pendingSummaryRefresh;
+  // Periodically checks (never a live listener) whether new services
+  // have landed since the current browsing session's snapshot moment,
+  // to drive the "N new services available - Refresh" banner.
+  Timer? _newRecordsCheckTimer;
+  Timer? _searchDebounce;
 
   @override
   void initState() {
@@ -72,7 +76,27 @@ class _ServicesScreenState extends State<ServicesScreen> {
       _lastKnownServiceCount = _serviceProvider!.services.length;
       _serviceProvider!.addListener(_onServicesChanged);
       _loadRangeSummary();
+      _openServicesListSession();
+      _newRecordsCheckTimer = Timer.periodic(
+        const Duration(seconds: 45),
+        (_) => _serviceProvider?.servicesListController.checkForNewRecords(),
+      );
     }
+  }
+
+  /// Records the toolbar's current filters onto ServiceProvider, then
+  /// (re)opens the browsing session for them - a no-op if the
+  /// signature hasn't actually changed and a session's already open.
+  void _openServicesListSession({bool forceRefresh = false}) {
+    final provider = _serviceProvider;
+    if (provider == null) return;
+    final signature = provider.updateServicesListFilters(
+      searchTerm: _searchQuery,
+      statusFilter: _statusFilter,
+      categoryFilter: _selectedCategory,
+      dateFilter: _dateFilter,
+    );
+    provider.servicesListController.openSession(signature, forceRefresh: forceRefresh);
   }
 
   void _onServicesChanged() {
@@ -134,6 +158,8 @@ class _ServicesScreenState extends State<ServicesScreen> {
   @override
   void dispose() {
     _pendingSummaryRefresh?.cancel();
+    _newRecordsCheckTimer?.cancel();
+    _searchDebounce?.cancel();
     _serviceProvider?.removeListener(_onServicesChanged);
     _searchController.dispose();
     super.dispose();
@@ -158,52 +184,6 @@ class _ServicesScreenState extends State<ServicesScreen> {
     final dateOnlyFormatter = DateFormat('dd MMM yyyy');
     final timeOnlyFormatter = DateFormat('hh:mm a');
 
-    final sortedServices = [...serviceProvider.services];
-    sortedServices.sort((a, b) {
-      final aDate = a.serviceDate ?? DateTime(2000);
-      final bDate = b.serviceDate ?? DateTime(2000);
-      return bDate.compareTo(aDate);
-    });
-
-    final now = DateTime.now();
-    final filteredServices = sortedServices.where((service) {
-      final matchesSearch = _searchQuery.isEmpty ||
-          service.clientName?.toLowerCase().contains(_searchQuery.toLowerCase()) == true ||
-          service.category.toLowerCase().contains(_searchQuery.toLowerCase()) ||
-          service.name.toLowerCase().contains(_searchQuery.toLowerCase()) ||
-          service.description.toLowerCase().contains(_searchQuery.toLowerCase()) ||
-          _invoiceNo(service).toLowerCase().contains(_searchQuery.toLowerCase());
-
-      final matchesCategory = _selectedCategory == 'All' || service.category == _selectedCategory;
-
-      final status = _getPaymentStatus(service.totalPaid, service.totalAmount);
-      final matchesStatus = _statusFilter == 'All' || status == _statusFilter;
-
-      final serviceDate = service.serviceDate;
-      final matchesDate = switch (_dateFilter) {
-        'Today' => serviceDate != null &&
-            serviceDate.year == now.year &&
-            serviceDate.month == now.month &&
-            serviceDate.day == now.day,
-        'Last 7 days' => serviceDate != null && serviceDate.isAfter(now.subtract(const Duration(days: 7))),
-        'Last 30 days' => serviceDate != null && serviceDate.isAfter(now.subtract(const Duration(days: 30))),
-        'This month' => serviceDate != null && serviceDate.year == now.year && serviceDate.month == now.month,
-        _ => true, // 'All time'
-      };
-
-      return matchesSearch && matchesCategory && matchesStatus && matchesDate;
-    }).toList();
-
-    // Same honest display-pagination window as the Sales screen - a
-    // page here is a view over whatever's already loaded (or gets
-    // loaded on demand), not a true jump to an arbitrary page number.
-    final totalPages = (filteredServices.length / _displayPageSize).ceil().clamp(1, 999999);
-    if (_currentPageIndex >= totalPages) _currentPageIndex = totalPages - 1;
-    if (_currentPageIndex < 0) _currentPageIndex = 0;
-    final pageStart = _currentPageIndex * _displayPageSize;
-    final pageEnd = (pageStart + _displayPageSize).clamp(0, filteredServices.length);
-    final pageServices = filteredServices.sublist(pageStart.clamp(0, filteredServices.length), pageEnd);
-
     return Scaffold(
       backgroundColor: offWhite,
       appBar: _buildAppBar(),
@@ -218,43 +198,73 @@ class _ServicesScreenState extends State<ServicesScreen> {
                   child: Row(
                     crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
-                      Expanded(child: _buildCategoryChipsRow()),
+                      Expanded(child: _buildMetricsRow()),
                       const SizedBox(width: 12),
                       _buildArchiveButton(),
                     ],
                   ),
                 ),
                 Padding(
-                  padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
-                  child: _buildMetricsRow(),
-                ),
-                Padding(
                   padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
                   child: _buildFiltersToolbar(),
                 ),
                 Expanded(
-                  child: filteredServices.isEmpty
-                      ? Center(
-                          child: Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Icon(Icons.medical_services_outlined, size: 64, color: Colors.grey[400]),
-                              const SizedBox(height: 16),
-                              Text(
-                                _searchQuery.isEmpty ? 'No services yet' : 'No services match your filters',
-                                style: TextStyle(fontSize: 18, color: Colors.grey[600]),
+                  child: ListenableBuilder(
+                    listenable: serviceProvider.servicesListController,
+                    builder: (context, _) {
+                      final controller = serviceProvider.servicesListController;
+                      final pageServices = controller.items;
+                      return Column(
+                        children: [
+                          if (controller.newRecordsAvailable > 0)
+                            Container(
+                              width: double.infinity,
+                              color: primaryDeepGreen.withValues(alpha: 0.08),
+                              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                              child: Row(
+                                children: [
+                                  Icon(Icons.fiber_new, size: 18, color: primaryDeepGreen),
+                                  const SizedBox(width: 8),
+                                  Expanded(
+                                    child: Text(
+                                      '${controller.newRecordsAvailable} new service'
+                                      '${controller.newRecordsAvailable == 1 ? '' : 's'} available',
+                                      style: TextStyle(fontSize: 13, color: primaryDeepGreen),
+                                    ),
+                                  ),
+                                  TextButton(
+                                    onPressed: () => serviceProvider.servicesListController.refreshSession(),
+                                    child: const Text('Refresh'),
+                                  ),
+                                ],
                               ),
-                            ],
+                            ),
+                          Expanded(
+                            child: controller.error != null && pageServices.isEmpty
+                                ? Center(child: FirestoreErrorView(error: controller.error))
+                                : controller.isLoading && pageServices.isEmpty
+                                ? const Center(child: CircularProgressIndicator())
+                                : pageServices.isEmpty
+                                    ? Center(
+                                        child: Column(
+                                          mainAxisAlignment: MainAxisAlignment.center,
+                                          children: [
+                                            Icon(Icons.medical_services_outlined, size: 64, color: Colors.grey[400]),
+                                            const SizedBox(height: 16),
+                                            Text(
+                                              _searchQuery.isEmpty ? 'No services yet' : 'No services match your filters',
+                                              style: TextStyle(fontSize: 18, color: Colors.grey[600]),
+                                            ),
+                                          ],
+                                        ),
+                                      )
+                                    : _buildServicesTable(pageServices, dateFormatter),
                           ),
-                        )
-                      : _buildServicesTable(pageServices, dateFormatter),
-                ),
-                _buildPaginationBar(
-                  serviceProvider: serviceProvider,
-                  totalFiltered: filteredServices.length,
-                  pageStart: pageStart,
-                  pageEnd: pageEnd,
-                  totalPages: totalPages,
+                          _buildPaginationBar(serviceProvider: serviceProvider, controller: controller),
+                        ],
+                      );
+                    },
+                  ),
                 ),
               ],
             ),
@@ -378,7 +388,10 @@ class _ServicesScreenState extends State<ServicesScreen> {
             onPressed: () => navigateOrShowLockedDialog(
               context,
               const AddEditServiceScreen(),
-              onNavigate: () => showAddEditServiceScreen(context),
+              onNavigate: () async {
+                await showAddEditServiceScreen(context);
+                if (mounted) _openServicesListSession(forceRefresh: true);
+              },
             ),
             icon: const Icon(Icons.add, size: 18),
             label: const Text('Record Visit'),
@@ -395,55 +408,6 @@ class _ServicesScreenState extends State<ServicesScreen> {
   }
 
   // ==================== CATEGORY CHIPS ====================
-
-  Widget _buildCategoryChipsRow() {
-    final categories = ['All', ...kServiceCategories];
-    return SizedBox(
-      height: 40,
-      child: ListView.separated(
-        scrollDirection: Axis.horizontal,
-        itemCount: categories.length,
-        separatorBuilder: (context, index) => const SizedBox(width: 8),
-        itemBuilder: (context, index) => _categoryChip(categories[index]),
-      ),
-    );
-  }
-
-  Widget _categoryChip(String category) {
-    final isSelected = _selectedCategory == category;
-    return InkWell(
-      onTap: () => setState(() {
-        _selectedCategory = category;
-        _currentPageIndex = 0;
-      }),
-      borderRadius: BorderRadius.circular(20),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-        decoration: BoxDecoration(
-          color: isSelected ? primaryDeepGreen : Colors.white,
-          borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: isSelected ? primaryDeepGreen : Colors.grey.withValues(alpha: 0.3)),
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            if (isSelected) ...[
-              const Icon(Icons.check_circle, size: 14, color: Colors.white),
-              const SizedBox(width: 4),
-            ],
-            Text(
-              category,
-              style: TextStyle(
-                fontSize: 12.5,
-                color: isSelected ? Colors.white : Colors.black87,
-                fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
 
   Widget _buildArchiveButton() {
     return OutlinedButton.icon(
@@ -492,17 +456,19 @@ class _ServicesScreenState extends State<ServicesScreen> {
                   ? null
                   : IconButton(
                       icon: const Icon(Icons.clear, size: 18),
-                      onPressed: () => setState(() {
+                      onPressed: () {
+                        _searchDebounce?.cancel();
+                        setState(() => _searchQuery = '');
                         _searchController.clear();
-                        _searchQuery = '';
-                        _currentPageIndex = 0;
-                      }),
+                        _openServicesListSession();
+                      },
                     ),
             ),
-            onChanged: (val) => setState(() {
-              _searchQuery = val.trim();
-              _currentPageIndex = 0;
-            }),
+            onChanged: (val) {
+              setState(() => _searchQuery = val.trim());
+              _searchDebounce?.cancel();
+              _searchDebounce = Timer(const Duration(milliseconds: 400), _openServicesListSession);
+            },
           ),
         ),
         const SizedBox(width: 10),
@@ -510,42 +476,45 @@ class _ServicesScreenState extends State<ServicesScreen> {
           value: _dateFilter,
           items: _dateFilterOptions,
           label: 'Date',
-          onChanged: (val) => setState(() {
-            _dateFilter = val;
-            _currentPageIndex = 0;
-          }),
+          onChanged: (val) {
+            setState(() => _dateFilter = val);
+            _openServicesListSession();
+          },
         ),
         const SizedBox(width: 10),
         _toolbarDropdown<String>(
           value: _selectedCategory,
           items: ['All', ...kServiceCategories],
           label: 'Category',
-          onChanged: (val) => setState(() {
-            _selectedCategory = val;
-            _currentPageIndex = 0;
-          }),
+          onChanged: (val) {
+            setState(() => _selectedCategory = val);
+            _openServicesListSession();
+          },
         ),
         const SizedBox(width: 10),
         _toolbarDropdown<String>(
           value: _statusFilter,
           items: _statusFilterOptions,
           label: 'Status',
-          onChanged: (val) => setState(() {
-            _statusFilter = val;
-            _currentPageIndex = 0;
-          }),
+          onChanged: (val) {
+            setState(() => _statusFilter = val);
+            _openServicesListSession();
+          },
         ),
         if (hasActiveFilters) ...[
           const SizedBox(width: 10),
           TextButton(
-            onPressed: () => setState(() {
+            onPressed: () {
+              _searchDebounce?.cancel();
               _searchController.clear();
-              _searchQuery = '';
-              _selectedCategory = 'All';
-              _dateFilter = 'Last 30 days';
-              _statusFilter = 'All';
-              _currentPageIndex = 0;
-            }),
+              setState(() {
+                _searchQuery = '';
+                _selectedCategory = 'All';
+                _dateFilter = 'Last 30 days';
+                _statusFilter = 'All';
+              });
+              _openServicesListSession();
+            },
             child: const Text('Reset'),
           ),
         ],
@@ -725,12 +694,12 @@ class _ServicesScreenState extends State<ServicesScreen> {
 
   Widget _buildPaginationBar({
     required ServiceProvider serviceProvider,
-    required int totalFiltered,
-    required int pageStart,
-    required int pageEnd,
-    required int totalPages,
+    required CursorPaginatedListController<Service> controller,
   }) {
-    final canGoNext = _currentPageIndex < totalPages - 1 || serviceProvider.hasMore;
+    final pageSize = controller.pageSize;
+    final itemCount = controller.items.length;
+    final pageStart = itemCount == 0 ? 0 : (controller.currentPage - 1) * pageSize + 1;
+    final pageEnd = (controller.currentPage - 1) * pageSize + itemCount;
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
@@ -739,45 +708,34 @@ class _ServicesScreenState extends State<ServicesScreen> {
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           Text(
-            totalFiltered == 0
-                ? 'No services'
-                : 'Showing ${pageStart + 1} to $pageEnd of $totalFiltered${serviceProvider.hasMore ? '+' : ''} services',
+            itemCount == 0 ? 'No services' : 'Showing $pageStart to $pageEnd',
             style: TextStyle(fontSize: 12.5, color: Colors.grey[600]),
           ),
           Row(
             children: [
               DropdownButtonHideUnderline(
                 child: DropdownButton<int>(
-                  value: _displayPageSize,
+                  value: pageSize,
                   items: const [10, 25, 50]
                       .map((n) => DropdownMenuItem(value: n, child: Text('$n per page')))
                       .toList(),
                   onChanged: (val) {
-                    if (val != null) setState(() {
-                      _displayPageSize = val;
-                      _currentPageIndex = 0;
-                    });
+                    if (val != null) serviceProvider.servicesListController.setPageSize(val);
                   },
                 ),
               ),
               const SizedBox(width: 16),
               IconButton(
                 icon: const Icon(Icons.chevron_left),
-                onPressed: _currentPageIndex > 0 ? () => setState(() => _currentPageIndex--) : null,
+                onPressed: controller.hasPreviousPage ? () => controller.goToPreviousPage() : null,
               ),
-              Text('Page ${_currentPageIndex + 1} of $totalPages', style: const TextStyle(fontSize: 13)),
+              Text('Page ${controller.currentPage}', style: const TextStyle(fontSize: 13)),
               IconButton(
-                icon: serviceProvider.isLoadingMore
+                icon: controller.isLoading
                     ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2))
                     : const Icon(Icons.chevron_right),
-                onPressed: canGoNext && !serviceProvider.isLoadingMore
-                    ? () async {
-                        final needed = (_currentPageIndex + 2) * _displayPageSize;
-                        if (needed > serviceProvider.services.length && serviceProvider.hasMore) {
-                          await serviceProvider.loadMoreServices();
-                        }
-                        if (mounted) setState(() => _currentPageIndex++);
-                      }
+                onPressed: controller.hasNextPage && !controller.isLoading
+                    ? () => controller.goToNextPage()
                     : null,
               ),
             ],
@@ -810,6 +768,7 @@ class _ServicesScreenState extends State<ServicesScreen> {
       await Provider.of<ServiceProvider>(context, listen: false).deleteService(service.id);
       if (!mounted) return;
       if (_selectedService?.id == service.id) setState(() => _selectedService = null);
+      _openServicesListSession(forceRefresh: true);
       ScaffoldMessenger.of(context)
           .showSnackBar(const SnackBar(content: Text('Service deleted'), backgroundColor: Colors.green));
     } catch (e) {
