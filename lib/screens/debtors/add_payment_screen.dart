@@ -28,6 +28,12 @@ class AddPaymentScreen extends StatefulWidget {
   // alongside their name in the picker so it's clear at a glance how
   // much each debtor owes while choosing who to record a payment for.
   final Map<String, double>? debtorBalances;
+  // The debtor's total outstanding debt, shown in red beside their name at
+  // the top. Passed by callers that pre-select a debtor and already know it;
+  // in the pick-a-debtor flow it's looked up from [debtorBalances] for
+  // whoever gets chosen. Unset for a payment against one specific debt,
+  // which shows that debt's own "Amount owed" line instead.
+  final double? totalOwed;
 
   const AddPaymentScreen({
     super.key,
@@ -38,6 +44,7 @@ class AddPaymentScreen extends StatefulWidget {
     this.isModal = false,
     this.debtorClients,
     this.debtorBalances,
+    this.totalOwed,
   });
 
   @override
@@ -47,6 +54,11 @@ class AddPaymentScreen extends StatefulWidget {
 class _AddPaymentScreenState extends State<AddPaymentScreen> {
   bool _isSaving = false;
   Client? selectedClient;
+  // The picker's own text box, captured so validation can see what was typed.
+  TextEditingController? _debtorText;
+  // True once Record has been pressed - from then on an empty or un-picked
+  // debtor field is flagged too, not just a name nobody has.
+  bool _attemptedSave = false;
   double amount = 0.0;
   String? paymentMethod;
   final _formKey = GlobalKey<FormState>();
@@ -61,8 +73,76 @@ class _AddPaymentScreenState extends State<AddPaymentScreen> {
     selectedClient = widget.preselectedClient;
   }
 
+  // Same matching the suggestion list uses: name contains it, or phone does.
+  bool _hasDebtorMatching(String query) {
+    final needle = query.trim().toLowerCase();
+    return (widget.debtorClients ?? const <Client>[])
+        .any((c) => c.name.toLowerCase().contains(needle) || c.phone.contains(needle));
+  }
+
+  /// What's wrong with the debtor field right now, in plain words - or null.
+  ///
+  /// This used to be a single "Select a debtor" no matter what had happened:
+  /// nothing typed, a name that doesn't exist, or a real name that was typed
+  /// but never picked from the list. Now each says what it is. While still
+  /// typing only the clearest case is flagged (nobody by that name); after
+  /// Record has been pressed ([afterSave]) an empty or un-picked field counts
+  /// too.
+  String? _debtorError(String rawText, {required bool afterSave}) {
+    if (selectedClient != null) return null;
+    final typed = rawText.trim();
+    if (typed.isEmpty) return afterSave ? 'Choose the debtor this payment is for' : null;
+    if (typed.length >= 2 && !_hasDebtorMatching(typed)) return 'No debtor found with the name "$typed"';
+    if (!afterSave) return null;
+    if (typed.length < 2) return "Type at least 2 letters of the debtor's name";
+    return 'Choose a debtor from the suggestions';
+  }
+
+  // "Client: Juma Hassan  ·  Total owed: Tsh 150,000" - the amount in red so
+  // it's the first thing noticed.
+  Widget _buildClientHeader() {
+    final client = selectedClient!;
+    final owed = widget.totalOwed ?? widget.debtorBalances?[client.id];
+    // Only when this person was picked from the list - a debtor that was
+    // pre-selected by the screen that opened this isn't ours to swap.
+    final canChange = widget.preselectedClient == null &&
+        widget.debtorClients != null &&
+        widget.debtorClients!.isNotEmpty;
+
+    return Row(
+      children: [
+        Expanded(
+          child: Text.rich(
+            TextSpan(
+              style: const TextStyle(fontSize: 16, color: Colors.black87),
+              children: [
+                TextSpan(text: 'Client: ${client.name}', style: const TextStyle(fontWeight: FontWeight.bold)),
+                if (owed != null) ...[
+                  TextSpan(text: '  \u00b7  Total owed: ', style: TextStyle(fontSize: 14, color: Colors.grey[700])),
+                  TextSpan(
+                    text: 'Tsh ${currencyFormat.format(owed)}',
+                    style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.redAccent),
+                  ),
+                ],
+              ],
+            ),
+          ),
+        ),
+        if (canChange)
+          TextButton(
+            onPressed: () => setState(() {
+              selectedClient = null;
+              _attemptedSave = false;
+            }),
+            child: const Text('Change'),
+          ),
+      ],
+    );
+  }
+
   Future<void> _savePayment() async {
     if (_isSaving) return; // guards against a double-tap firing two saves at once
+    if (!_attemptedSave) setState(() => _attemptedSave = true);
     if (!_formKey.currentState!.validate()) return;
     _formKey.currentState!.save();
 
@@ -363,13 +443,10 @@ class _AddPaymentScreenState extends State<AddPaymentScreen> {
           child: ListView(
             children: [
               if (selectedClient != null)
-                Text(
-                  'Client: ${selectedClient!.name}',
-                  style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
-                )
+                _buildClientHeader()
               else if (widget.debtorClients != null && widget.debtorClients!.isNotEmpty)
                 FormField<Client>(
-                  validator: (_) => selectedClient == null ? 'Select a debtor' : null,
+                  validator: (_) => _debtorError(_debtorText?.text ?? '', afterSave: true),
                   builder: (fieldState) {
                     return Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -391,15 +468,27 @@ class _AddPaymentScreenState extends State<AddPaymentScreen> {
                             fieldState.didChange(client);
                           },
                           fieldViewBuilder: (context, controller, focusNode, onFieldSubmitted) {
-                            return TextField(
-                              controller: controller,
-                              focusNode: focusNode,
-                              decoration: InputDecoration(
-                                labelText: 'Debtor',
-                                hintText: 'Search by name or phone',
-                                border: const OutlineInputBorder(),
-                                errorText: fieldState.errorText,
-                              ),
+                            _debtorText = controller;
+                            // Listens to the text so "no debtor found" appears
+                            // as soon as it's true, not only after Record.
+                            return ValueListenableBuilder<TextEditingValue>(
+                              valueListenable: controller,
+                              builder: (context, value, _) {
+                                return TextField(
+                                  controller: controller,
+                                  focusNode: focusNode,
+                                  decoration: InputDecoration(
+                                    labelText: 'Debtor',
+                                    hintText: 'Search by name or phone',
+                                    // Why a name might be missing: only people
+                                    // who owe something are in this list.
+                                    helperText: 'Only clients who currently owe money are listed',
+                                    border: const OutlineInputBorder(),
+                                    errorText: _debtorError(value.text, afterSave: _attemptedSave),
+                                    errorMaxLines: 2,
+                                  ),
+                                );
+                              },
                             );
                           },
                         ),
@@ -516,6 +605,7 @@ Future<bool?> showAddPaymentScreen(
   String? facilityId,
   List<Client>? debtorClients,
   Map<String, double>? debtorBalances,
+  double? totalOwed,
 }) async {
   final isWideScreen = MediaQuery.of(context).size.width >= 900;
 
@@ -529,6 +619,7 @@ Future<bool?> showAddPaymentScreen(
           facilityId: facilityId,
           debtorClients: debtorClients,
           debtorBalances: debtorBalances,
+          totalOwed: totalOwed,
         ),
       ),
     );
@@ -558,6 +649,7 @@ Future<bool?> showAddPaymentScreen(
                 facilityId: facilityId,
                 debtorClients: debtorClients,
                 debtorBalances: debtorBalances,
+                totalOwed: totalOwed,
                 isModal: true,
               ),
             ),

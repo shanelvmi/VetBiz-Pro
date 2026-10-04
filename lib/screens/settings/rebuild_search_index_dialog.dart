@@ -45,9 +45,10 @@ Future<void> showRebuildSearchIndexDialog(BuildContext context) async {
             if (resultMessage == null) ...[
               const Text(
                 'This makes clients added before search was available '
-                'show up correctly when searched by name. It only needs '
-                'to be run once - existing, unaffected clients are left '
-                'alone.',
+                'show up correctly when searched by name, and lets the app '
+                'spot a new client whose phone number or name matches one '
+                'you already have. It only needs to be run once - clients '
+                'that are already up to date are left alone.',
                 style: TextStyle(fontSize: 13),
               ),
             ] else

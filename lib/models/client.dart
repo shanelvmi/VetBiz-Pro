@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import '../utils/client_duplicate_matcher.dart';
 
 class Client {
   final String id;
@@ -117,6 +118,9 @@ class Client {
       // fly, so this needs to physically exist as its own field.
       'nameLower': name.toLowerCase(),
       'phone': phone,
+      // The phone in one comparable form (0712 345 678 and +255712345678 give
+      // the same value) - what the duplicate check queries on.
+      'phoneKey': ClientDuplicateMatcher.phoneKey(phone),
       'address': address,
       'balance': balance,
       'oldestUnpaidDebtDate':

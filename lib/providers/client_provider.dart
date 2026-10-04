@@ -2,8 +2,20 @@ import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/foundation.dart';
 import '../models/client.dart';
+import '../utils/client_duplicate_matcher.dart';
 import '../utils/paginated_stream_loader.dart';
 import '../services/cursor_paginated_list_controller.dart';
+
+/// An existing client that looks like the one being saved - see
+/// [ClientProvider.findSimilarClient].
+class SimilarClientMatch {
+  final Client client;
+
+  /// True when the phone number matched; false when the name did.
+  final bool matchedByPhone;
+
+  const SimilarClientMatch(this.client, {required this.matchedByPhone});
+}
 
 // Two genuinely different loading strategies coexist here, because they
 // serve two genuinely different needs:
@@ -202,14 +214,14 @@ class ClientProvider with ChangeNotifier, PaginatedStreamLoader<Client> {
   }
 
   /// One-time, admin-triggered backfill for clients created before
-  /// nameLower existed - without this, a client who's never been
-  /// opened and re-saved since this feature shipped simply won't have
-  /// nameLower set on their document at all, and Firestore queries
-  /// can't match a field that isn't there. This is NOT run
-  /// automatically (that would mean re-downloading the entire
-  /// collection on every app load, exactly what pagination is meant to
-  /// avoid) - it's meant to be triggered once, deliberately, from
-  /// Settings.
+  /// nameLower and phoneKey existed - without this, a client who's never
+  /// been opened and re-saved since those fields shipped simply won't have
+  /// them on their document at all, and Firestore queries can't match a
+  /// field that isn't there: they'd be missed by name search and by the
+  /// duplicate check. This is NOT run automatically (that would mean
+  /// re-downloading the entire collection on every app load, exactly what
+  /// pagination is meant to avoid) - it's meant to be triggered once,
+  /// deliberately, from Settings.
   Future<int> rebuildSearchIndex(String facilityId) async {
     final snapshot = await _firestore
         .collection('facilities')
@@ -217,21 +229,38 @@ class ClientProvider with ChangeNotifier, PaginatedStreamLoader<Client> {
         .collection('clients')
         .get();
 
-    final batch = _firestore.batch();
-    int updated = 0;
+    // Firestore allows at most 500 writes per batch, and every older client
+    // now needs one - so commit in chunks rather than one big batch.
+    var batch = _firestore.batch();
+    var inBatch = 0;
+    var updated = 0;
 
     for (final doc in snapshot.docs) {
       final data = doc.data();
+      final updates = <String, dynamic>{};
+
       if (data['nameLower'] == null) {
         final name = (data['name'] as String?) ?? '';
-        batch.update(doc.reference, {'nameLower': name.toLowerCase()});
-        updated++;
+        updates['nameLower'] = name.toLowerCase();
+      }
+      // Written even when null (a phone too short to compare), so such a
+      // client isn't picked up again on every run.
+      if (!data.containsKey('phoneKey')) {
+        updates['phoneKey'] = ClientDuplicateMatcher.phoneKey((data['phone'] as String?) ?? '');
+      }
+      if (updates.isEmpty) continue;
+
+      batch.update(doc.reference, updates);
+      updated++;
+      inBatch++;
+      if (inBatch >= 400) {
+        await batch.commit();
+        batch = _firestore.batch();
+        inBatch = 0;
       }
     }
 
-    if (updated > 0) {
-      await batch.commit();
-    }
+    if (inBatch > 0) await batch.commit();
     return updated;
   }
 
@@ -369,9 +398,13 @@ class ClientProvider with ChangeNotifier, PaginatedStreamLoader<Client> {
   /// balance/oldestUnpaidDebtDate range in the same query, so an active
   /// search is a point-in-time lookup across all debtors, not bounded
   /// by the status/range filters. statusFilter is 'All' | 'Overdue' |
-  /// 'Current'. overdueRangeFilter is 'All' | '1-30 days' | '31-60
-  /// days' | '60+ days' - only meaningful when statusFilter isn't
-  /// already narrowing by itself, matching the existing screen's own
+  /// 'Current'. overdueRangeFilter is 'All' | 'bucket1' | 'bucket2' |
+  /// 'bucket3' - stable keys, not display text (debtors_screen.dart
+  /// computes the actual shown label from these plus overdueDays,
+  /// since the bucket boundaries scale with the facility's own
+  /// threshold rather than staying fixed regardless of it) - only
+  /// meaningful when statusFilter isn't already narrowing by itself,
+  /// matching the existing screen's own
   /// filter combination logic. overdueDays is the facility's own
   /// configured threshold (FacilityProvider.debtOverdueDays) - part of
   /// the query signature, so a facility admin changing it correctly
@@ -414,12 +447,15 @@ class ClientProvider with ChangeNotifier, PaginatedStreamLoader<Client> {
       return (null, now.subtract(Duration(days: q.overdueDays)));
     }
     switch (q.overdueRangeFilter) {
-      case '1-30 days':
-        return (now.subtract(const Duration(days: 1)), now.subtract(const Duration(days: 30)));
-      case '31-60 days':
-        return (now.subtract(const Duration(days: 31)), now.subtract(const Duration(days: 60)));
-      case '60+ days':
-        return (now.subtract(const Duration(days: 60)), null);
+      case 'bucket1':
+        return (now.subtract(const Duration(days: 1)), now.subtract(Duration(days: q.overdueDays)));
+      case 'bucket2':
+        return (
+          now.subtract(Duration(days: q.overdueDays + 1)),
+          now.subtract(Duration(days: q.overdueDays * 2)),
+        );
+      case 'bucket3':
+        return (now.subtract(Duration(days: q.overdueDays * 2)), null);
       default:
         return (null, null);
     }
@@ -509,6 +545,79 @@ class ClientProvider with ChangeNotifier, PaginatedStreamLoader<Client> {
 
   // ==================== WRITE / MUTATE ====================
 
+  /// Looks for an existing client that is, in practice, the same person as
+  /// the one about to be saved - same phone number (in any format) or a
+  /// similar name. See [ClientDuplicateMatcher] for exactly what counts.
+  ///
+  /// Queries the database rather than the clients currently loaded in the
+  /// app: the Clients list only ever holds a page or two at a time, so
+  /// checking against it would miss most of the facility's clients.
+  ///
+  /// [excludeClientId] is the client being edited (so it doesn't match
+  /// itself); [checkName]/[checkPhone] let an edit check only what changed.
+  /// Phone is checked first, and wins if both match.
+  Future<SimilarClientMatch?> findSimilarClient(
+    String facilityId, {
+    required String name,
+    required String phone,
+    String? excludeClientId,
+    bool checkName = true,
+    bool checkPhone = true,
+  }) async {
+    final clients = _firestore.collection('facilities').doc(facilityId).collection('clients');
+
+    if (checkPhone) {
+      final key = ClientDuplicateMatcher.phoneKey(phone);
+      if (key != null) {
+        // phoneKey finds every client saved or backfilled since it existed;
+        // the variants query finds older ones typed in a common format.
+        final snaps = await Future.wait([
+          clients.where('phoneKey', isEqualTo: key).limit(5).get(),
+          clients.where('phone', whereIn: ClientDuplicateMatcher.phoneVariants(phone)).limit(5).get(),
+        ]);
+        for (final snap in snaps) {
+          for (final doc in snap.docs) {
+            if (doc.id == excludeClientId) continue;
+            final candidate = Client.fromMap(doc.id, doc.data());
+            if (ClientDuplicateMatcher.phoneKey(candidate.phone) == key) {
+              return SimilarClientMatch(candidate, matchedByPhone: true);
+            }
+          }
+        }
+      }
+    }
+
+    if (checkName) {
+      // Candidates are clients whose name starts like any of the first three
+      // words typed (first three letters of each) - that finds reordered
+      // names and a typo late in a word. The exact "is this similar" test
+      // then runs on those few, not on the whole collection.
+      final words = ClientDuplicateMatcher.nameWords(name).take(3).toList();
+      if (words.isNotEmpty) {
+        final snaps = await Future.wait(words.map((word) {
+          final prefix = word.length > 3 ? word.substring(0, 3) : word;
+          return clients
+              .where('nameLower', isGreaterThanOrEqualTo: prefix)
+              .where('nameLower', isLessThan: '$prefix\uf8ff')
+              .limit(40)
+              .get();
+        }));
+        final seen = <String>{};
+        for (final snap in snaps) {
+          for (final doc in snap.docs) {
+            if (doc.id == excludeClientId || !seen.add(doc.id)) continue;
+            final candidate = Client.fromMap(doc.id, doc.data());
+            if (ClientDuplicateMatcher.areNamesSimilar(name, candidate.name)) {
+              return SimilarClientMatch(candidate, matchedByPhone: false);
+            }
+          }
+        }
+      }
+    }
+
+    return null;
+  }
+
   /// Add a new client (fully supports all fields from AddClientScreen)
   Future<String> addClient(
     String facilityId, {
@@ -532,6 +641,7 @@ class ClientProvider with ChangeNotifier, PaginatedStreamLoader<Client> {
       'name': name,
       'nameLower': name.toLowerCase(),
       'phone': phone,
+      'phoneKey': ClientDuplicateMatcher.phoneKey(phone),
       'address': address,
       'balance': 0.0,
       'types': types,

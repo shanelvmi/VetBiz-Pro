@@ -1,5 +1,6 @@
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
+import '../../services/activity_log_retention.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/services.dart';
@@ -2699,8 +2700,17 @@ class _FacilityScreenState extends State<FacilityScreen> {
           .doc(facilityId)
           .set({'activityLogRetentionDays': selected}, SetOptions(merge: true));
 
+      // Shrinking the window deletes right away (growing it deletes
+      // nothing). Reported honestly - this used to swallow any failure and
+      // say "Logs will now be kept for N days" regardless.
+      var deleted = 0;
+      String? problem;
       if (selected < currentRetention) {
-        await _cleanupOldFacilityLogs(facilityId, retentionDays: selected);
+        try {
+          deleted = await ActivityLogRetention.deleteExpired(facilityId, selected);
+        } catch (e) {
+          problem = ActivityLogRetention.explainFailure(e);
+        }
       }
 
       if (!mounted) return;
@@ -2711,38 +2721,20 @@ class _FacilityScreenState extends State<FacilityScreen> {
         };
       });
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Logs will now be kept for $selected days'), backgroundColor: Colors.green),
+        SnackBar(
+          content: Text(problem != null
+              ? 'Saved - logs older than $selected days will be hidden, but could not be deleted yet: $problem'
+              : deleted > 0
+                  ? 'Logs will now be kept for $selected days - $deleted older log${deleted == 1 ? '' : 's'} deleted'
+                  : 'Logs will now be kept for $selected days'),
+          backgroundColor: problem != null ? Colors.orange.shade800 : Colors.green,
+          duration: Duration(seconds: problem != null ? 7 : 4),
+        ),
       );
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context)
           .showSnackBar(SnackBar(content: Text('Could not save: $e'), backgroundColor: Colors.redAccent));
-    }
-  }
-
-  Future<void> _cleanupOldFacilityLogs(String facilityId, {required int retentionDays}) async {
-    try {
-      final cutoffDate = DateTime.now().subtract(Duration(days: retentionDays));
-      final oldLogs = await FirebaseFirestore.instance
-          .collection('facilities')
-          .doc(facilityId)
-          .collection('activity_logs')
-          .where('timestamp', isLessThan: Timestamp.fromDate(cutoffDate))
-          .get();
-
-      if (oldLogs.docs.isEmpty) return;
-
-      final batch = FirebaseFirestore.instance.batch();
-      int count = 0;
-      for (final doc in oldLogs.docs) {
-        batch.delete(doc.reference);
-        count++;
-        if (count >= 500) break; // Safety limit, same as ActivityLogScreen's own cleanup.
-      }
-      await batch.commit();
-      debugPrint('Deleted $count old activity logs (>$retentionDays days) for $facilityId');
-    } catch (e) {
-      debugPrint('Failed to cleanup old logs for $facilityId: $e');
     }
   }
 

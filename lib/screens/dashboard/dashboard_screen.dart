@@ -1819,7 +1819,8 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
                 ],
               ),
               TextButton(
-                onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const ActivityLogScreen())),
+                // Opens as a modal over the Dashboard (full screen on a phone).
+                onPressed: () => showActivityLog(context),
                 child: const Text('View All'),
               ),
             ],
@@ -3307,7 +3308,13 @@ Widget _buildDrawerContent() {
                   ElevatedButton(
                     style: buttonStyle,
                     child: const Text('Activity Log'),
-                    onPressed: () => showActivityLog(context),
+                    // Full screen, like the other drawer items (Manage Assistants,
+                    // View Facilities).
+                    onPressed: () {
+                      Navigator.of(context).push(
+                        MaterialPageRoute(builder: (_) => const ActivityLogScreen()),
+                      );
+                    },
                   ),
                 ],
                 const SizedBox(height: 12),

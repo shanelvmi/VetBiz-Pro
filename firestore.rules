@@ -284,8 +284,15 @@ service cloud.firestore {
         allow create: if isAuthenticated();
         // Admins or users belonging to this facility can read logs
         allow read: if isAuthenticated() && isInFacility(facilityId);
-        // Logs are immutable
-        allow update, delete: if false;
+        // Logs can't be edited...
+        allow update: if false;
+        // ...but an admin of this facility can delete them. That is how the
+        // "Keep logs for N days" setting actually removes expired logs
+        // (ActivityLogRetention.deleteExpired). Without this the delete is
+        // refused, the cleanup can never remove anything, and old logs pile
+        // up forever. Do not tighten this back to `if false` without also
+        // removing the retention feature.
+        allow delete: if isAuthenticated() && isInFacility(facilityId) && isAdmin();
       }
     }
     // ========== 🌐 Collection-group access for platform admin subscription review ==========

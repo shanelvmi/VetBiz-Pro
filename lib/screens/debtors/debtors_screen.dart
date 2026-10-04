@@ -460,7 +460,26 @@ class _DebtorsScreenState extends State<DebtorsScreen> {
   // ==================== FILTERS TOOLBAR ====================
 
   static const List<String> _statusFilterOptions = ['All', 'Overdue', 'Current'];
-  static const List<String> _overdueRangeOptions = ['All', '1-30 days', '31-60 days', '60+ days'];
+  // Stable keys - never shown directly. bucket1 = 1x the facility's
+  // threshold past due, bucket2 = 1x-2x past due, bucket3 = beyond 2x.
+  static const List<String> _overdueRangeOptions = ['All', 'bucket1', 'bucket2', 'bucket3'];
+
+  /// The dropdown's actual displayed text for a given key, computed
+  /// from the facility's own configured threshold - e.g. with a
+  /// 30-day threshold, bucket1 reads "1-30 days overdue"; with a
+  /// 60-day threshold, the same key reads "1-60 days overdue".
+  String _overdueRangeLabel(String key, int overdueDays) {
+    switch (key) {
+      case 'bucket1':
+        return '1-$overdueDays days overdue';
+      case 'bucket2':
+        return '${overdueDays + 1}-${overdueDays * 2} days overdue';
+      case 'bucket3':
+        return '${overdueDays * 2 + 1}+ days overdue';
+      default:
+        return 'All';
+    }
+  }
 
   Widget _buildFiltersToolbar() {
     final border = OutlineInputBorder(
@@ -468,6 +487,7 @@ class _DebtorsScreenState extends State<DebtorsScreen> {
       borderSide: BorderSide(color: Colors.grey.withValues(alpha: 0.3)),
     );
     final hasActiveFilters = _searchQuery.isNotEmpty || _statusFilter != 'All' || _overdueRangeFilter != 'All';
+    final overdueDays = Provider.of<FacilityProvider>(context, listen: false).debtOverdueDays;
 
     return Row(
       children: [
@@ -515,14 +535,32 @@ class _DebtorsScreenState extends State<DebtorsScreen> {
           },
         ),
         const SizedBox(width: 10),
-        _toolbarDropdown<String>(
-          value: _overdueRangeFilter,
-          items: _overdueRangeOptions,
-          label: 'Overdue',
-          onChanged: (val) {
-            setState(() => _overdueRangeFilter = val);
-            _openDebtorsListSession();
-          },
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 10),
+          height: 44,
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(10),
+            border: Border.all(color: Colors.grey.withValues(alpha: 0.3)),
+          ),
+          child: DropdownButtonHideUnderline(
+            child: DropdownButton<String>(
+              value: _overdueRangeFilter,
+              icon: Icon(Icons.arrow_drop_down, size: 18, color: primaryDeepGreen),
+              style: const TextStyle(color: Colors.black87, fontSize: 13),
+              items: _overdueRangeOptions
+                  .map((key) => DropdownMenuItem(
+                        value: key,
+                        child: Text('Overdue: ${_overdueRangeLabel(key, overdueDays)}'),
+                      ))
+                  .toList(),
+              onChanged: (val) {
+                if (val == null) return;
+                setState(() => _overdueRangeFilter = val);
+                _openDebtorsListSession();
+              },
+            ),
+          ),
         ),
         if (hasActiveFilters) ...[
           const SizedBox(width: 10),
@@ -1004,6 +1042,7 @@ class _DebtorsScreenState extends State<DebtorsScreen> {
                   context,
                   preselectedClient: selectedClient,
                   facilityId: _facilityId,
+                  totalOwed: debtor.totalOwed,
                 );
                 if (result == true && _facilityId != null && mounted) {
                   Provider.of<ClientProvider>(context, listen: false)

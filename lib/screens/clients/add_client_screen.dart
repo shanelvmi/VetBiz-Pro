@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import '../../providers/client_provider.dart';
 import '../../providers/facility_provider.dart';
 import '../../models/client.dart';
+import '../../utils/client_duplicate_matcher.dart';
 
 class AddClientScreen extends StatefulWidget {
   final Client? client; // null = add, not null = edit
@@ -124,6 +125,32 @@ class _AddClientScreenState extends State<AddClientScreen> {
       final clientProvider = Provider.of<ClientProvider>(context, listen: false);
       final typesList = _selectedTypes.toList();
 
+      // Stop the same person being added twice - checked against the
+      // database BEFORE anything is written. When editing, only a name or
+      // phone number that was actually changed is checked, so a client who
+      // is already a duplicate (from before this check existed) can still
+      // have their other details edited.
+      final existing = widget.client;
+      final nameChanged = existing == null ||
+          ClientDuplicateMatcher.normalizeName(_name) != ClientDuplicateMatcher.normalizeName(existing.name);
+      final phoneChanged = existing == null ||
+          ClientDuplicateMatcher.phoneKey(_phone) != ClientDuplicateMatcher.phoneKey(existing.phone);
+      if (nameChanged || phoneChanged) {
+        final duplicate = await clientProvider.findSimilarClient(
+          facilityId,
+          name: _name,
+          phone: _phone,
+          excludeClientId: existing?.id,
+          checkName: nameChanged,
+          checkPhone: phoneChanged,
+        );
+        if (duplicate != null) {
+          if (!mounted) return;
+          await _showDuplicateDialog(duplicate);
+          return; // nothing saved; the form stays as it was so it can be corrected
+        }
+      }
+
       if (widget.client == null) {
         // ADD
         await clientProvider.addClient(
@@ -183,6 +210,73 @@ class _AddClientScreenState extends State<AddClientScreen> {
     } finally {
       if (mounted) setState(() => _isSaving = false);
     }
+  }
+
+  Future<void> _showDuplicateDialog(SimilarClientMatch match) {
+    final existing = match.client;
+    final byPhone = match.matchedByPhone;
+    final isAdding = widget.client == null;
+
+    return showDialog<void>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: const Row(
+          children: [
+            Icon(Icons.warning_amber_rounded, color: Colors.red),
+            SizedBox(width: 8),
+            Expanded(child: Text('Client already exists')),
+          ],
+        ),
+        content: SizedBox(
+          width: 340,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                byPhone
+                    ? 'A client with this phone number already exists:'
+                    : 'A client with a similar name already exists:',
+                style: const TextStyle(fontSize: 13.5),
+              ),
+              const SizedBox(height: 12),
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: Colors.red.withValues(alpha: 0.06),
+                  borderRadius: BorderRadius.circular(10),
+                  border: Border.all(color: Colors.red.withValues(alpha: 0.2)),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(existing.name, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14.5)),
+                    const SizedBox(height: 2),
+                    Text(
+                      existing.phone.trim().isEmpty ? 'No phone number' : existing.phone,
+                      style: TextStyle(fontSize: 13, color: Colors.grey[700]),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 12),
+              Text(
+                'To avoid duplicate clients, ${isAdding ? 'this client was not saved' : 'your changes were not saved'}. '
+                'If it is the same person, use the existing client from the Clients list. '
+                'If it is a different person, ${byPhone ? 'enter a different phone number' : 'change the name slightly'} '
+                'and try again.',
+                style: TextStyle(fontSize: 12.5, color: Colors.grey[700]),
+              ),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('OK')),
+        ],
+      ),
+    );
   }
 
   @override

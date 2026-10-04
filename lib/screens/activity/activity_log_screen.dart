@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import '../../services/activity_log_retention.dart';
 import 'package:flutter/gestures.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
@@ -113,6 +114,8 @@ class _ActivityLogScreenState extends State<ActivityLogScreen> {
       _retentionLoadedForFacilityId = null;
       _logStream = null;
       _logStreamFacilityId = null;
+      _actionSummaryStream = null;
+      _actionSummaryStreamFacilityId = null;
       _cleanupRanForFacilityId = null;
     });
   }
@@ -152,44 +155,55 @@ class _ActivityLogScreenState extends State<ActivityLogScreen> {
   }
 
   /// Everything that only needs to happen once per facility, not on
-  /// every rebuild: caching the log query itself, and loading the
-  /// configured retention window before running cleanup against it -
-  /// previously these two ran independently (cleanup firing off a
-  /// zero-delay Future right alongside the retention fetch, not after
-  /// it), so on a facility's first load each session cleanup would
-  /// read _retentionDays while it was still null and silently fall
-  /// back to the 90-day default - deleting nothing between the real,
-  /// configured cutoff and 90 days even when a shorter window was set.
+  /// every rebuild: loading the configured retention window, then (and
+  /// only then) creating the log streams and running cleanup against it.
+  ///
+  /// The streams wait for the retention window because they are bounded by
+  /// it - see [_buildStreams]. Creating them first and correcting them
+  /// afterwards would flash logs from outside the window (everything up to
+  /// the 90-day default) before settling.
   void _ensureInitializedForFacility(String facilityId) {
-    if (_logStreamFacilityId != facilityId) {
-      _logStreamFacilityId = facilityId;
-      // No date-range filter here - retention (14/30/60/90 days,
-      // configurable above) already naturally bounds how much data
-      // exists at all. The limit below remains as a hard safety cap.
-      _logStream = FirebaseFirestore.instance
-          .collection('facilities')
-          .doc(facilityId)
-          .collection('activity_logs')
-          .orderBy('timestamp', descending: true)
-          .limit(500) // Performance limit
-          .snapshots();
-    }
+    if (_cleanupRanForFacilityId == facilityId) return;
+    _cleanupRanForFacilityId = facilityId;
 
-    if (_actionSummaryStreamFacilityId != facilityId) {
-      _actionSummaryStreamFacilityId = facilityId;
-      _actionSummaryStream = FirebaseFirestore.instance
-          .collection('facilities')
-          .doc(facilityId)
-          .collection('activity_logs')
-          .snapshots();
-    }
+    _fetchRetentionDays(facilityId).then((retentionDays) async {
+      if (!mounted || _cleanupRanForFacilityId != facilityId) return;
+      setState(() => _buildStreams(facilityId, retentionDays));
+      try {
+        await _cleanupOldLogs(facilityId, retentionDays);
+      } catch (e) {
+        // Background tidy-up: nothing to tell the user here, and the screen
+        // is already correct without it because the streams hide anything
+        // outside the window. (Deleting is what frees the storage.)
+        debugPrint('Could not delete expired activity logs: $e');
+      }
+    });
+  }
 
-    if (_cleanupRanForFacilityId != facilityId) {
-      _cleanupRanForFacilityId = facilityId;
-      _fetchRetentionDays(facilityId).then((retentionDays) {
-        if (mounted) _cleanupOldLogs(facilityId, retentionDays);
-      });
-    }
+  /// Creates the two log streams, both limited to the retention window.
+  ///
+  /// Deleting expired logs is a separate, best-effort step (see
+  /// [_cleanupOldLogs]) that depends on security rules, batch sizes and the
+  /// network. Previously the screen showed whatever happened to still be in
+  /// the database, so if that cleanup lagged or failed, logs from outside
+  /// the "keep for N days" window stayed visible - the reported "set to 30
+  /// days but still seeing 31 August". Bounding the query itself means the
+  /// screen is always right, whether or not anything has been deleted yet.
+  void _buildStreams(String facilityId, int retentionDays) {
+    final cutoff = Timestamp.fromDate(ActivityLogRetention.cutoffFor(retentionDays));
+    final logs = FirebaseFirestore.instance.collection('facilities').doc(facilityId).collection('activity_logs');
+
+    _logStreamFacilityId = facilityId;
+    _logStream = logs
+        .where('timestamp', isGreaterThanOrEqualTo: cutoff)
+        .orderBy('timestamp', descending: true)
+        .limit(500) // Performance limit
+        .snapshots();
+
+    // The type counts in the summary row now cover only what's visible,
+    // and no longer read every log ever stored.
+    _actionSummaryStreamFacilityId = facilityId;
+    _actionSummaryStream = logs.where('timestamp', isGreaterThanOrEqualTo: cutoff).snapshots();
   }
 
   Future<void> _showRetentionDialog(String facilityId) async {
@@ -258,17 +272,33 @@ class _ActivityLogScreenState extends State<ActivityLogScreen> {
         SetOptions(merge: true),
       );
       if (!mounted) return;
-      setState(() => _retentionDays = selected);
-      // Explicit, rather than relying on the next rebuild to trigger
-      // _ensureInitializedForFacility's own auto-cleanup - that only
-      // runs once per facility per session, so without this, shrinking
-      // the window wouldn't actually delete anything until the
-      // facility changed or the app restarted, silently breaking the
-      // "right now, not just going forward" promise confirmed above.
-      await _cleanupOldLogs(facilityId, selected);
+      // The screen follows the new window immediately - hiding what's now
+      // outside it - whether or not the delete below succeeds.
+      setState(() {
+        _retentionDays = selected;
+        _buildStreams(facilityId, selected);
+      });
+      // Explicit, rather than relying on the once-per-session cleanup in
+      // _ensureInitializedForFacility, so shrinking the window deletes
+      // right now, as promised in the confirmation above.
+      var deleted = 0;
+      String? problem;
+      try {
+        deleted = await _cleanupOldLogs(facilityId, selected);
+      } catch (e) {
+        problem = ActivityLogRetention.explainFailure(e);
+      }
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Logs will now be kept for $selected days'), backgroundColor: Colors.green),
+        SnackBar(
+          content: Text(problem != null
+              ? 'Saved - logs older than $selected days are now hidden, but could not be deleted yet: $problem'
+              : deleted > 0
+                  ? 'Logs will now be kept for $selected days - $deleted older log${deleted == 1 ? '' : 's'} deleted'
+                  : 'Logs will now be kept for $selected days'),
+          backgroundColor: problem != null ? Colors.orange.shade800 : Colors.green,
+          duration: Duration(seconds: problem != null ? 7 : 4),
+        ),
       );
     } catch (e) {
       if (!mounted) return;
@@ -278,45 +308,13 @@ class _ActivityLogScreenState extends State<ActivityLogScreen> {
     }
   }
 
-  // Auto-delete logs older than the configured retention window
-  /// Takes the resolved retention value directly from the caller,
-  /// rather than reading _retentionDays itself - the caller (now
-  /// _ensureInitializedForFacility) only calls this after
-  /// _fetchRetentionDays has actually finished, so there's no risk of
-  /// this reading the field before it's been set for this facility.
-  Future<void> _cleanupOldLogs(String facilityId, int retentionDays) async {
-    try {
-      final cutoffDate = DateTime.now().subtract(Duration(days: retentionDays));
-
-      final oldLogs = await FirebaseFirestore.instance
-          .collection('facilities')
-          .doc(facilityId)
-          .collection('activity_logs')
-          .where('timestamp', isLessThan: Timestamp.fromDate(cutoffDate))
-          .get();
-
-      if (oldLogs.docs.isEmpty) {
-        debugPrint('No old logs to delete');
-        return;
-      }
-
-      // Delete in batches (Firestore limit: 500 operations per batch)
-      final batch = FirebaseFirestore.instance.batch();
-      int count = 0;
-
-      for (final doc in oldLogs.docs) {
-        batch.delete(doc.reference);
-        count++;
-
-        if (count >= 500) break; // Safety limit
-      }
-
-      await batch.commit();
-      debugPrint('Deleted $count old activity logs (>$retentionDays days)');
-    } catch (e) {
-      debugPrint('Failed to cleanup old logs: $e');
-    }
-  }
+  // Deletes logs older than the retention window, returning how many were
+  // removed. Throws if the delete fails (see ActivityLogRetention) - callers
+  // decide what to tell the user. Takes the resolved retention value from
+  // the caller rather than reading _retentionDays, so it can never see an
+  // unset or stale one.
+  Future<int> _cleanupOldLogs(String facilityId, int retentionDays) =>
+      ActivityLogRetention.deleteExpired(facilityId, retentionDays);
 
   IconData _getActionIcon(String actionType) {
     switch (actionType.toLowerCase()) {
@@ -454,7 +452,10 @@ class _ActivityLogScreenState extends State<ActivityLogScreen> {
             child: StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
               stream: _logStream,
               builder: (context, snapshot) {
-                if (snapshot.connectionState == ConnectionState.waiting) {
+                // 'none' = the stream doesn't exist yet (still loading the
+                // retention window) - show loading, not an empty list.
+                if (snapshot.connectionState == ConnectionState.waiting ||
+                    snapshot.connectionState == ConnectionState.none) {
                   return Center(
                     child: CircularProgressIndicator(
                       color: primaryDeepGreen,
