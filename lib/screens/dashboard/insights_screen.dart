@@ -526,6 +526,10 @@ class _InsightsScreenState extends State<InsightsScreen> {
 
     return LineChart(
       LineChartData(
+        // Revenue is never negative - an explicit floor so the
+        // curve/shaded area can't visually dip below the zero line,
+        // on top of preventCurveOverShooting below.
+        minY: 0,
         gridData: const FlGridData(show: true, drawVerticalLine: false),
         borderData: FlBorderData(show: true, border: Border.all(color: Colors.grey.shade300)),
         // Hover/tap a point to see its exact date and amount - was
@@ -573,6 +577,11 @@ class _InsightsScreenState extends State<InsightsScreen> {
           LineChartBarData(
             spots: [for (int i = 0; i < 14; i++) FlSpot(i.toDouble(), _dailyTotals[i])],
             isCurved: true,
+            // Revenue is never negative - stops the curve smoothing
+            // from overshooting past a point and visually dipping
+            // below zero when a high day is immediately followed by a
+            // much lower one.
+            preventCurveOverShooting: true,
             color: primaryColor,
             barWidth: 3,
             dotData: const FlDotData(show: false),

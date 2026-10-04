@@ -28,8 +28,15 @@ enum NotificationType {
   general; // fallback for anything unrecognized - never crashes on unknown data
 
   static NotificationType fromString(String? value) {
+    if (value == null) return NotificationType.general;
+    // Compared ignoring underscores and case: the subscription-rejection
+    // flow writes 'subscription_rejected', not the enum's own
+    // 'subscriptionRejected', so an exact match never found it and every
+    // rejection notice fell through to [general] - filed under "Update"
+    // instead of "System", with the wrong icon.
+    final normalized = value.replaceAll('_', '').toLowerCase();
     return NotificationType.values.firstWhere(
-      (t) => t.name == value,
+      (t) => t.name.toLowerCase() == normalized,
       orElse: () => NotificationType.general,
     );
   }

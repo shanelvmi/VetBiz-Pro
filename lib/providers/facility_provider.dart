@@ -301,7 +301,7 @@ class FacilityProvider with ChangeNotifier {
         }
       }
     } catch (e) {
-      print('Error loading facility: $e');
+      debugPrint('Error loading facility: $e');
     }
   }
 

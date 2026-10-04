@@ -43,6 +43,55 @@ class SubscriptionProvider with ChangeNotifier {
     return diff.inHours >= 0 ? (diff.inHours / 24).ceil() : -((-diff.inHours) / 24).ceil();
   }
 
+  /// How many days out an active/trial period starts counting as
+  /// "needs attention" - the same 7 the Dashboard banner and bell
+  /// already use, and kAttentionThresholdDays in the
+  /// checkSubscriptionExpiry Cloud Function.
+  static const int attentionThresholdDays = 7;
+
+  /// The subscription notice that applies RIGHT NOW, or null when
+  /// nothing needs attention (comfortably active, an open trial with no
+  /// end date, or just renewed). Derived live from the same state the
+  /// Dashboard banner and Subscription screen read, so a screen showing
+  /// this can never disagree with them - the stored
+  /// notifications/subscription_expiring document is a once-a-day
+  /// snapshot written by the Cloud Function at 00:30, which is what let
+  /// Notifications say "1 day left" while the banner already said
+  /// "grace period". Wording matches that function exactly, so
+  /// switching the source doesn't change what anyone reads.
+  ({String title, String message})? get attentionNotice {
+    // Same rule the function uses: no paid cycle date means this is a
+    // trial, even after that trial has run out (status is then grace
+    // or locked, so status alone can't tell them apart).
+    final isTrial = _expiresAt == null;
+    final endedTitle = isTrial ? 'Trial Ended' : 'Subscription Expired';
+
+    switch (_status) {
+      case SubscriptionStatus.locked:
+        return (
+          title: endedTitle,
+          message: isTrial
+              ? 'Your trial has ended. The app is in read-only mode.'
+              : 'Your subscription has expired. The app is in read-only mode.',
+        );
+      case SubscriptionStatus.grace:
+        return (
+          title: endedTitle,
+          message: isTrial
+              ? 'Your trial has ended. You have a few days of grace before read-only mode begins.'
+              : 'Your subscription has expired. You have a few days of grace before read-only mode begins.',
+        );
+      case SubscriptionStatus.trial:
+      case SubscriptionStatus.active:
+        final days = daysRemaining;
+        if (days == null || days > attentionThresholdDays) return null;
+        final plural = days == 1 ? '' : 's';
+        return isTrial
+            ? (title: 'Trial Expiring Soon', message: 'Your trial expires in $days day$plural.')
+            : (title: 'Subscription Expiring Soon', message: 'Your subscription expires in $days day$plural.');
+    }
+  }
+
   String get statusLabel {
     switch (_status) {
       case SubscriptionStatus.trial:

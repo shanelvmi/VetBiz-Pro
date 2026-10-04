@@ -2012,6 +2012,19 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
                   ? Center(child: Text('No activity in this period.', style: TextStyle(color: Colors.grey[600])))
                   : LineChart(
                       LineChartData(
+                        // None of these three (sales, collections,
+                        // services) are ever actually negative - this
+                        // is the floor that keeps the curve/shaded
+                        // area from visually dipping below the zero
+                        // line at all, on top of
+                        // preventCurveOverShooting below (which stops
+                        // the smoothing itself from overshooting past
+                        // a point, the more common cause of the dip -
+                        // a sharp rise immediately followed by a steep
+                        // drop, where the curve swings past the lower
+                        // point before coming back up to the next
+                        // one).
+                        minY: 0,
                         gridData: const FlGridData(show: true, drawVerticalLine: false),
                         borderData: FlBorderData(show: true, border: Border.all(color: Colors.grey.shade300)),
                         lineTouchData: LineTouchData(
@@ -2061,6 +2074,7 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
                           LineChartBarData(
                             spots: [for (int i = 0; i < salesByDay.length; i++) FlSpot(i.toDouble(), salesByDay[i])],
                             isCurved: true,
+                            preventCurveOverShooting: true,
                             color: primaryDeepGreen,
                             barWidth: 3,
                             dotData: const FlDotData(show: false),
@@ -2069,6 +2083,7 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
                           LineChartBarData(
                             spots: [for (int i = 0; i < collectionsByDay.length; i++) FlSpot(i.toDouble(), collectionsByDay[i])],
                             isCurved: true,
+                            preventCurveOverShooting: true,
                             color: warmAmber,
                             barWidth: 3,
                             dotData: const FlDotData(show: false),
@@ -2077,6 +2092,7 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
                           LineChartBarData(
                             spots: [for (int i = 0; i < servicesByDay.length; i++) FlSpot(i.toDouble(), servicesByDay[i])],
                             isCurved: true,
+                            preventCurveOverShooting: true,
                             color: servicesSteelBlue,
                             barWidth: 3,
                             dotData: const FlDotData(show: false),
@@ -2799,8 +2815,12 @@ Widget _buildDrawerContent() {
     padding: const EdgeInsets.only(top: 18, bottom: 12),
     alignment: Alignment.center,
     child: AnimatedContainer(
-      duration: const Duration(milliseconds: 200),
-      curve: Curves.easeInOut,
+      // Kept in step with the sidebar width's own animation below
+      // (same duration and curve) - this shrinks at the same time as
+      // the panel narrows, so the two don't visibly drift out of sync
+      // mid-slide.
+      duration: const Duration(milliseconds: 380),
+      curve: Curves.easeInOutCubic,
       width: _logoSize,
       height: _logoSize,
       padding: const EdgeInsets.all(4),
@@ -3089,8 +3109,13 @@ Widget _buildDrawerContent() {
   );
 
   return AnimatedContainer(
-    duration: const Duration(milliseconds: 200),
-    curve: Curves.easeInOut,
+    // Was 200ms/easeInOut - reported as too quick/abrupt for a panel
+    // this size sliding this far (72 to 250). Slower, and
+    // easeInOutCubic eases in and out more gradually at both ends than
+    // easeInOut (which is close to linear through its middle), reading
+    // as a deliberate glide rather than a snap.
+    duration: const Duration(milliseconds: 380),
+    curve: Curves.easeInOutCubic,
     width: effectivelyCollapsed ? 72 : 250,
     color: primaryDeepGreen,
     child: Column(

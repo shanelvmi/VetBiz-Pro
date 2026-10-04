@@ -1,10 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
-import '../../utils/sentence_capitalization_formatter.dart';
-import '../../utils/activity_logger.dart';
 import '../../models/product.dart';
 import '../../providers/product_provider.dart';
 import '../../providers/facility_provider.dart';
@@ -16,6 +13,7 @@ import '../products/add_edit_product_screen.dart';
 import '../products/add_batch_screen.dart';
 import '../products/view_batches_screen.dart';
 import '../products/stock_alerts_screen.dart';
+import 'release_to_shop_flow.dart';
 
 class StockStoreScreen extends StatefulWidget {
   const StockStoreScreen({super.key});
@@ -140,10 +138,18 @@ class _StockStoreScreenState extends State<StockStoreScreen> {
   }) {
     final metrics = [
       ('Total Products', '$totalCount', Icons.shopping_bag_outlined, primaryDeepTealGreen),
-      ('In Stock', '${statusCounts['Active'] ?? 0}', Icons.check_circle_outline, Colors.green),
+      (
+        'In Stock',
+        // 'Unknown' (no expiry set at all) is still genuinely in stock
+        // and sellable - just missing expiry information - so it counts
+        // here alongside 'Active' instead of vanishing from the summary.
+        '${(statusCounts['Active'] ?? 0) + (statusCounts['Unknown'] ?? 0)}',
+        Icons.check_circle_outline,
+        Colors.green,
+      ),
       ('Low Stock', '${statusCounts['Low Stock'] ?? 0}', Icons.trending_down, Colors.orange),
       ('Depleted', '${statusCounts['Depleted'] ?? 0}', Icons.remove_shopping_cart_outlined, Colors.red),
-      ('Total Stock Value', _moneyFormat.format(totalStockValue), Icons.account_balance_wallet_outlined, warmAmber),
+      ('Store Stock Value', _moneyFormat.format(totalStockValue), Icons.account_balance_wallet_outlined, warmAmber),
     ];
 
     return LayoutBuilder(
@@ -331,244 +337,10 @@ class _StockStoreScreenState extends State<StockStoreScreen> {
     }
   }
 
-  // Mirrors moveToSellable's own batch-selection logic exactly (same
-  // soonest-expiry-first sort, same "take" math) but read-only - just
-  // to find out, before committing to anything, whether releasing this
-  // quantity would actually draw from an already-expired batch, and if
-  // so, precisely how many units from which one.
-  Future<List<(String, int)>> _simulateExpiredPortion(Product product, int qty) async {
-    final batchesRef = FirebaseFirestore.instance
-        .collection('facilities')
-        .doc(product.facilityId)
-        .collection('products')
-        .doc(product.id)
-        .collection('batches');
-
-    final snap = await batchesRef.where('stockQty', isGreaterThan: 0).get();
-    if (snap.docs.isEmpty) return [];
-
-    final now = DateTime.now();
-    final candidates = snap.docs.toList()
-      ..sort((a, b) {
-        final aExp = a.data()['expiry'] as Timestamp?;
-        final bExp = b.data()['expiry'] as Timestamp?;
-        if (aExp == null && bExp == null) return 0;
-        if (aExp == null) return 1;
-        if (bExp == null) return -1;
-        return aExp.compareTo(bExp);
-      });
-
-    final expiredPortion = <(String, int)>[];
-    int remaining = qty;
-    for (final doc in candidates) {
-      if (remaining <= 0) break;
-      final data = doc.data();
-      final availableStock = (data['stockQty'] ?? 0) as int;
-      if (availableStock <= 0) continue;
-
-      final take = remaining < availableStock ? remaining : availableStock;
-      final expiry = data['expiry'] as Timestamp?;
-      if (expiry != null && expiry.toDate().isBefore(now)) {
-        final batchNo = data['batchNo'] as String?;
-        final label = batchNo?.isNotEmpty == true ? 'Batch $batchNo' : 'an unlabeled batch';
-        expiredPortion.add((label, take));
-      }
-      remaining -= take;
-    }
-    return expiredPortion;
-  }
-
-  Future<bool?> _showExpiredReleaseWarning(Product product, List<(String, int)> expiredPortion) {
-    return showDialog<bool>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: const Row(
-          children: [
-            Icon(Icons.warning_amber_rounded, color: Colors.red),
-            SizedBox(width: 8),
-            Text('Expired Stock'),
-          ],
-        ),
-        content: SizedBox(
-          width: 320,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text('This product is expired. Do you still want to release it to the shop?',
-                  style: const TextStyle(fontSize: 13.5)),
-              const SizedBox(height: 10),
-              ...expiredPortion.map((e) => Padding(
-                    padding: const EdgeInsets.only(bottom: 4),
-                    child: Text('• ${e.$2} ${product.unit} from ${e.$1}',
-                        style: TextStyle(fontSize: 12.5, color: Colors.red[700])),
-                  )),
-            ],
-          ),
-        ),
-        actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancel')),
-          ElevatedButton(
-            style: ElevatedButton.styleFrom(backgroundColor: Colors.red, foregroundColor: Colors.white),
-            onPressed: () => Navigator.pop(ctx, true),
-            child: const Text('Release Anyway'),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Future<void> _releaseToShop(Product product) async {
-    final qtyController = TextEditingController(text: '1');
-    final notesController = TextEditingController();
-
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (_) => AlertDialog(
-        title: Text('Release to Shop',
-            style: TextStyle(color: primaryDeepTealGreen)),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text('Available stock: ${product.stockQty} ${product.unit}'),
-            const SizedBox(height: 12),
-            TextField(
-              controller: qtyController,
-              keyboardType: TextInputType.number,
-              cursorColor: primaryDeepTealGreen,
-              decoration: InputDecoration(
-                labelText: 'Quantity to release',
-                labelStyle: TextStyle(color: Colors.grey[700]),
-                floatingLabelStyle: TextStyle(color: primaryDeepTealGreen),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                enabledBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(8),
-                  borderSide: BorderSide(color: Colors.grey[400]!),
-                ),
-                focusedBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(8),
-                  borderSide: BorderSide(color: primaryDeepTealGreen, width: 2),
-                ),
-              ),
-            ),
-            const SizedBox(height: 12),
-            TextField(
-              controller: notesController,
-              cursorColor: primaryDeepTealGreen,
-              textCapitalization: TextCapitalization.sentences,
-              inputFormatters: [SentenceCapitalizationFormatter()],
-              decoration: InputDecoration(
-                labelText: 'Notes (optional)',
-                hintText: 'e.g., Quality checked, ready for sale',
-                labelStyle: TextStyle(color: Colors.grey[700]),
-                floatingLabelStyle: TextStyle(color: primaryDeepTealGreen),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                enabledBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(8),
-                  borderSide: BorderSide(color: Colors.grey[400]!),
-                ),
-                focusedBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(8),
-                  borderSide: BorderSide(color: primaryDeepTealGreen, width: 2),
-                ),
-              ),
-              maxLines: 2,
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            style: TextButton.styleFrom(
-              foregroundColor: primaryDeepTealGreen,
-            ),
-            child: const Text('Cancel'),
-          ),
-          ElevatedButton(
-            onPressed: () => Navigator.pop(context, true),
-            style: ButtonStyle(
-              backgroundColor: WidgetStateProperty.resolveWith<Color>(
-                (states) {
-                  if (states.contains(WidgetState.hovered)) {
-                    return warmAmber;
-                  }
-                  return primaryDeepTealGreen;
-                },
-              ),
-              foregroundColor: WidgetStateProperty.all(offWhite),
-            ),
-            child: const Text('Release'),
-          ),
-        ],
-      ),
-    );
-
-    if (confirmed != true) return;
-
-    final qty = int.tryParse(qtyController.text.trim()) ?? 0;
-    if (qty <= 0 || qty > product.stockQty) {
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Invalid quantity')),
-      );
-      return;
-    }
-
-    final expiredPortion = await _simulateExpiredPortion(product, qty);
-    if (expiredPortion.isNotEmpty) {
-      if (!mounted) return;
-      final proceedAnyway = await _showExpiredReleaseWarning(product, expiredPortion);
-      if (proceedAnyway != true) return;
-    }
-
-    try {
-      await Provider.of<ProductProvider>(context, listen: false)
-          .moveToSellable(
-            product,
-            qty,
-            context,
-            notes: notesController.text.trim().isNotEmpty
-                ? notesController.text.trim()
-                : null,
-          );
-
-      if (expiredPortion.isNotEmpty) {
-        final userInfo = await ActivityLogger.getCurrentUserInfo();
-        final unitsSummary = expiredPortion.map((e) => '${e.$2} from ${e.$1}').join(', ');
-        await ActivityLogger.logActivity(
-          facilityId: product.facilityId,
-          userId: userInfo['userId']!,
-          userName: userInfo['userName']!,
-          actionType: "Inventory Move",
-          description: "${product.name}: released $unitsSummary despite expired-stock warning",
-        );
-      }
-
-      if (!mounted) return;
-
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            'Released $qty ${product.unit} of ${product.name} to shop',
-          ),
-          backgroundColor: Colors.green,
-        ),
-      );
-    } catch (e) {
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Failed to release product: $e'),
-          backgroundColor: Colors.red,
-        ),
-      );
-    }
-  }
+  // The release flow itself (quantity prompt, expired-stock warning, the move)
+  // lives in release_to_shop_flow.dart so Product Alerts' "Move to shelf"
+  // button runs exactly the same thing.
+  Future<void> _releaseToShop(Product product) => releaseProductToShop(context, product);
 
   @override
   Widget build(BuildContext context) {

@@ -74,7 +74,7 @@ class _ViewBatchesScreenState extends State<ViewBatchesScreen> {
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('Currently: ${batch.stockQty} warehouse · ${batch.sellableQty} sellable',
+                Text('Currently: ${batch.stockQty} store · ${batch.sellableQty} sellable',
                     style: TextStyle(fontSize: 12.5, color: Colors.grey[600])),
                 const SizedBox(height: 14),
                 Row(
@@ -113,7 +113,7 @@ class _ViewBatchesScreenState extends State<ViewBatchesScreen> {
                   keyboardType: TextInputType.number,
                   inputFormatters: [FilteringTextInputFormatter.digitsOnly],
                   decoration: InputDecoration(
-                    labelText: mode == 'add' ? 'Add to Warehouse Qty' : 'Correct Warehouse Qty to',
+                    labelText: mode == 'add' ? 'Add to Store Qty' : 'Correct Store Qty to',
                     isDense: true,
                     border: const OutlineInputBorder(),
                   ),
@@ -262,7 +262,7 @@ class _ViewBatchesScreenState extends State<ViewBatchesScreen> {
               ],
               Text(
                 'This permanently removes ${batch.batchNo?.isNotEmpty == true ? 'Batch ${batch.batchNo}' : 'this unlabeled batch'} '
-                'and subtracts its ${batch.stockQty} warehouse and ${batch.sellableQty} sellable units from this product\'s '
+                'and subtracts its ${batch.stockQty} store and ${batch.sellableQty} sellable units from this product\'s '
                 'totals. This cannot be undone.',
                 style: const TextStyle(fontSize: 13),
               ),
@@ -479,7 +479,7 @@ class _ViewBatchesScreenState extends State<ViewBatchesScreen> {
                                   ],
                                 ),
                                 subtitle: Text(
-                                  'Warehouse: ${batch.stockQty} · Shelf: ${batch.sellableQty} · Tsh ${batch.buyPrice.toStringAsFixed(0)}'
+                                  'Store: ${batch.stockQty} · Shelf: ${batch.sellableQty} · Tsh ${batch.buyPrice.toStringAsFixed(0)}'
                                   '${batch.expiry != null ? '\n${isExpired ? 'Expired' : 'Expires'} ${DateFormat('dd MMM yyyy').format(batch.expiry!)}' : ''}',
                                 ),
                                 isThreeLine: batch.expiry != null,

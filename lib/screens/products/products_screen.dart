@@ -188,10 +188,18 @@ class _ProductsScreenState extends State<ProductsScreen> {
   }) {
     final metrics = [
       ('Total Products', '$totalCount', Icons.shopping_bag_outlined, primaryDeepGreen),
-      ('In Stock', '${statusCounts['Active'] ?? 0}', Icons.check_circle_outline, Colors.green),
+      (
+        'In Stock',
+        // 'Unknown' (no expiry set at all) is still genuinely in stock
+        // and sellable - just missing expiry information - so it counts
+        // here alongside 'Active' instead of vanishing from the summary.
+        '${(statusCounts['Active'] ?? 0) + (statusCounts['Unknown'] ?? 0)}',
+        Icons.check_circle_outline,
+        Colors.green,
+      ),
       ('Low Stock', '${statusCounts['Low Stock'] ?? 0}', Icons.trending_down, Colors.orange),
       ('Depleted', '${statusCounts['Depleted'] ?? 0}', Icons.remove_shopping_cart_outlined, Colors.red),
-      ('Total Stock Value', _moneyFormat.format(totalStockValue), Icons.account_balance_wallet_outlined, warmAmber),
+      ('Shelf Stock Value', _moneyFormat.format(totalStockValue), Icons.account_balance_wallet_outlined, warmAmber),
     ];
 
     return LayoutBuilder(

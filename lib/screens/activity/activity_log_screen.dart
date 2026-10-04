@@ -49,14 +49,44 @@ class _ActivityLogScreenState extends State<ActivityLogScreen> {
   // How long logs are kept before auto-delete - configurable per
   // facility (Admin only), one of 14/30/60/90 days. Cached here once
   // fetched, rather than re-reading the facility doc on every build.
-  // Null means "not loaded yet" - _cleanupOldLogs falls back to 90
-  // until it resolves, and any facility that never explicitly set
-  // this also defaults to 90, same as before this setting existed.
+  // Null only ever means "not loaded yet, for display purposes" - the
+  // actual cleanup run (_ensureInitializedForFacility) always waits
+  // for _fetchRetentionDays to resolve before calling it, rather than
+  // reading this field directly, so cleanup itself never sees a null
+  // or stale value. Any facility that never explicitly set this
+  // defaults to 90, same as before this setting existed.
   int? _retentionDays;
   String? _retentionLoadedForFacilityId;
 
   static const List<int> _retentionOptions = [14, 30, 60, 90];
   static const int _defaultRetentionDays = 90;
+
+  // The log query itself - was previously rebuilt fresh inside build()
+  // on every rebuild, which handed StreamBuilder a brand-new Stream
+  // instance each time. StreamBuilder has no way to know that's "the
+  // same query, still loading" rather than a genuinely new one, so it
+  // reset to ConnectionState.waiting and re-showed the loading state
+  // on every rebuild - the reported flicker while scrolling. Cached
+  // here instead, created once per facilityId.
+  Stream<QuerySnapshot<Map<String, dynamic>>>? _logStream;
+  String? _logStreamFacilityId;
+
+  // Same fix as _logStream above, for the second place this file had
+  // the identical bug: _buildActionSummary built its own `.snapshots()`
+  // call inline, on every build() - including rebuilds that have
+  // nothing to do with the summary itself (typing in search, picking a
+  // filter chip) - so its StreamBuilder flickered to its own loading
+  // state (a blank SizedBox.shrink()) and back on each one. Cached here
+  // instead, created once per facilityId, exactly like _logStream.
+  Stream<QuerySnapshot<Map<String, dynamic>>>? _actionSummaryStream;
+  String? _actionSummaryStreamFacilityId;
+
+  // Guards _cleanupOldLogs so it actually runs once per facility per
+  // session, as its own comment already claimed - previously had no
+  // guard at all, so it re-ran its Firestore query (and potential
+  // batch delete) on every rebuild, each one racing _fetchRetentionDays
+  // independently.
+  String? _cleanupRanForFacilityId;
 
   @override
   void didChangeDependencies() {
@@ -81,21 +111,34 @@ class _ActivityLogScreenState extends State<ActivityLogScreen> {
       _searchController.clear();
       _retentionDays = null;
       _retentionLoadedForFacilityId = null;
+      _logStream = null;
+      _logStreamFacilityId = null;
+      _cleanupRanForFacilityId = null;
     });
   }
 
-  Future<void> _fetchRetentionDays(String facilityId) async {
-    if (_retentionLoadedForFacilityId == facilityId) return;
+  /// Returns the resolved value so callers that need it immediately
+  /// (cleanup, below) don't have to re-read _retentionDays afterward -
+  /// previously, cleanup read that field straight away without waiting
+  /// for this fetch to actually finish, so on a facility's first load
+  /// each session it silently used the 90-day default instead of
+  /// whatever was really configured, deleting nothing between the
+  /// real cutoff and 90 days even when a shorter window was set.
+  Future<int> _fetchRetentionDays(String facilityId) async {
+    if (_retentionLoadedForFacilityId == facilityId) return _retentionDays ?? _defaultRetentionDays;
     try {
       final doc = await FirebaseFirestore.instance.collection('facilities').doc(facilityId).get();
       final configured = (doc.data()?['activityLogRetentionDays'] as num?)?.toInt();
-      if (!mounted) return;
-      setState(() {
-        _retentionDays = (configured != null && _retentionOptions.contains(configured))
-            ? configured
-            : _defaultRetentionDays;
-        _retentionLoadedForFacilityId = facilityId;
-      });
+      final resolved = (configured != null && _retentionOptions.contains(configured))
+          ? configured
+          : _defaultRetentionDays;
+      if (mounted) {
+        setState(() {
+          _retentionDays = resolved;
+          _retentionLoadedForFacilityId = facilityId;
+        });
+      }
+      return resolved;
     } catch (e) {
       debugPrint('Could not load retention setting: $e');
       if (mounted) {
@@ -104,6 +147,48 @@ class _ActivityLogScreenState extends State<ActivityLogScreen> {
           _retentionLoadedForFacilityId = facilityId;
         });
       }
+      return _defaultRetentionDays;
+    }
+  }
+
+  /// Everything that only needs to happen once per facility, not on
+  /// every rebuild: caching the log query itself, and loading the
+  /// configured retention window before running cleanup against it -
+  /// previously these two ran independently (cleanup firing off a
+  /// zero-delay Future right alongside the retention fetch, not after
+  /// it), so on a facility's first load each session cleanup would
+  /// read _retentionDays while it was still null and silently fall
+  /// back to the 90-day default - deleting nothing between the real,
+  /// configured cutoff and 90 days even when a shorter window was set.
+  void _ensureInitializedForFacility(String facilityId) {
+    if (_logStreamFacilityId != facilityId) {
+      _logStreamFacilityId = facilityId;
+      // No date-range filter here - retention (14/30/60/90 days,
+      // configurable above) already naturally bounds how much data
+      // exists at all. The limit below remains as a hard safety cap.
+      _logStream = FirebaseFirestore.instance
+          .collection('facilities')
+          .doc(facilityId)
+          .collection('activity_logs')
+          .orderBy('timestamp', descending: true)
+          .limit(500) // Performance limit
+          .snapshots();
+    }
+
+    if (_actionSummaryStreamFacilityId != facilityId) {
+      _actionSummaryStreamFacilityId = facilityId;
+      _actionSummaryStream = FirebaseFirestore.instance
+          .collection('facilities')
+          .doc(facilityId)
+          .collection('activity_logs')
+          .snapshots();
+    }
+
+    if (_cleanupRanForFacilityId != facilityId) {
+      _cleanupRanForFacilityId = facilityId;
+      _fetchRetentionDays(facilityId).then((retentionDays) {
+        if (mounted) _cleanupOldLogs(facilityId, retentionDays);
+      });
     }
   }
 
@@ -174,6 +259,14 @@ class _ActivityLogScreenState extends State<ActivityLogScreen> {
       );
       if (!mounted) return;
       setState(() => _retentionDays = selected);
+      // Explicit, rather than relying on the next rebuild to trigger
+      // _ensureInitializedForFacility's own auto-cleanup - that only
+      // runs once per facility per session, so without this, shrinking
+      // the window wouldn't actually delete anything until the
+      // facility changed or the app restarted, silently breaking the
+      // "right now, not just going forward" promise confirmed above.
+      await _cleanupOldLogs(facilityId, selected);
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Logs will now be kept for $selected days'), backgroundColor: Colors.green),
       );
@@ -186,9 +279,13 @@ class _ActivityLogScreenState extends State<ActivityLogScreen> {
   }
 
   // Auto-delete logs older than the configured retention window
-  Future<void> _cleanupOldLogs(String facilityId) async {
+  /// Takes the resolved retention value directly from the caller,
+  /// rather than reading _retentionDays itself - the caller (now
+  /// _ensureInitializedForFacility) only calls this after
+  /// _fetchRetentionDays has actually finished, so there's no risk of
+  /// this reading the field before it's been set for this facility.
+  Future<void> _cleanupOldLogs(String facilityId, int retentionDays) async {
     try {
-      final retentionDays = _retentionDays ?? _defaultRetentionDays;
       final cutoffDate = DateTime.now().subtract(Duration(days: retentionDays));
 
       final oldLogs = await FirebaseFirestore.instance
@@ -302,24 +399,14 @@ class _ActivityLogScreenState extends State<ActivityLogScreen> {
 
     final isAdmin = Provider.of<UserRoleProvider>(context).isAdmin;
 
-    // Load the configured retention window for this facility (once
-    // per facility, not on every rebuild - _fetchRetentionDays itself
-    // guards against redundant fetches).
-    _fetchRetentionDays(facilityId);
-
-    // Run cleanup on screen load (runs once per session)
-    Future.delayed(Duration.zero, () => _cleanupOldLogs(facilityId));
-
-    // No date-range filter here - retention (14/30/60/90 days,
-    // configurable above) already naturally bounds how much data
-    // exists at all. The limit below remains as a hard safety cap.
-    final logStream = FirebaseFirestore.instance
-        .collection('facilities')
-        .doc(facilityId)
-        .collection('activity_logs')
-        .orderBy('timestamp', descending: true)
-        .limit(500) // Performance limit
-        .snapshots();
+    // Creates the stream and kicks off retention-loading/cleanup the
+    // first time this facility is seen; a no-op on every rebuild after
+    // that. Previously ran unconditionally on every single build() -
+    // both recreating the stream (the reported flicker - a fresh
+    // Stream instance resets StreamBuilder to "waiting" even though
+    // it's the same query) and re-running cleanup redundantly, each
+    // time racing the retention fetch independently.
+    _ensureInitializedForFacility(facilityId);
 
     return Scaffold(
       backgroundColor: offWhite,
@@ -365,7 +452,7 @@ class _ActivityLogScreenState extends State<ActivityLogScreen> {
           // Activity Log List
           Expanded(
             child: StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
-              stream: logStream,
+              stream: _logStream,
               builder: (context, snapshot) {
                 if (snapshot.connectionState == ConnectionState.waiting) {
                   return Center(
@@ -604,11 +691,7 @@ class _ActivityLogScreenState extends State<ActivityLogScreen> {
 
   Widget _buildActionSummary(String facilityId) {
     return StreamBuilder<QuerySnapshot>(
-      stream: FirebaseFirestore.instance
-          .collection('facilities')
-          .doc(facilityId)
-          .collection('activity_logs')
-          .snapshots(),
+      stream: _actionSummaryStream,
       builder: (context, snapshot) {
         if (!snapshot.hasData) return const SizedBox.shrink();
 
@@ -720,19 +803,20 @@ Future<void> showActivityLog(BuildContext context) async {
     transitionDuration: const Duration(milliseconds: 220),
     pageBuilder: (context, animation, secondaryAnimation) {
       final screenSize = MediaQuery.of(context).size;
-      final modalWidth = (screenSize.width * 0.60).clamp(0, 940).toDouble();
-      // Never shorter than 480px, fixed - 88% of screen height
-      // comfortably exceeds that on most windows, but this guarantees
-      // it even on a smaller one.
-      final modalHeight = (screenSize.height * 0.88) < 480 ? 480.0 : screenSize.height * 0.88;
       return Center(
-        child: SizedBox(
-          width: modalWidth,
-          height: modalHeight,
-          child: ClipRRect(
-            borderRadius: BorderRadius.circular(16),
-            child: const Material(
-              child: ActivityLogScreen(isModal: true),
+        child: ConstrainedBox(
+          constraints: BoxConstraints(
+            maxWidth: 1000,
+            maxHeight: screenSize.height * 0.85,
+          ),
+          child: SizedBox(
+            width: screenSize.width * 0.85,
+            height: screenSize.height * 0.85,
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(16),
+              child: const Material(
+                child: ActivityLogScreen(isModal: true),
+              ),
             ),
           ),
         ),

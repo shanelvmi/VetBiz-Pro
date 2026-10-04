@@ -31,7 +31,7 @@ class _AddBatchScreenState extends State<AddBatchScreen> {
   late final TextEditingController _expiryController;
   DateTime? _selectedExpiry;
   bool _isSaving = false;
-  // Real deliveries don't always go through the warehouse first - a
+  // Real deliveries don't always go through the Stock Store first - a
   // small top-up picked up on the way to the counter can go straight to
   // the shelf instead.
   String _destination = 'stock';
@@ -167,7 +167,7 @@ class _AddBatchScreenState extends State<AddBatchScreen> {
                 RadioListTile<String>(
                   contentPadding: EdgeInsets.zero,
                   dense: true,
-                  title: const Text('Stock Store (warehouse)'),
+                  title: const Text('Stock Store'),
                   subtitle: const Text('Needs a separate "Release" step before it can be sold', style: TextStyle(fontSize: 11.5)),
                   value: 'stock',
                   groupValue: _destination,

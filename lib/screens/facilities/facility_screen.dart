@@ -1455,6 +1455,15 @@ class _FacilityScreenState extends State<FacilityScreen> {
     );
   }
 
+  /// A facility's name with its type folded in - "Ukuli Agrovet"
+  /// rather than just "Ukuli" - falling back to the name alone if
+  /// type isn't set.
+  String _nameWithType(Map<String, dynamic> facility) {
+    final name = (facility['name'] as String?) ?? 'Facility';
+    final type = facility['type'] as String?;
+    return (type != null && type.isNotEmpty) ? '$name $type' : name;
+  }
+
   Widget _buildFacilityListRow(Map<String, dynamic> facility) {
     final facilityId = facility['facilityId'] as String?;
     final isSelected = facilityId == _selectedFacilityIdForDetail;
@@ -1501,7 +1510,7 @@ class _FacilityScreenState extends State<FacilityScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    facility['name'] ?? 'Facility',
+                    _nameWithType(facility),
                     style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
@@ -1657,7 +1666,7 @@ class _FacilityScreenState extends State<FacilityScreen> {
                   children: [
                     Flexible(
                       child: Text(
-                        facility['name'] ?? 'Facility',
+                        _nameWithType(facility),
                         style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 22),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,

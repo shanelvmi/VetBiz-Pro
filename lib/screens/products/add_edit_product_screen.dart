@@ -29,9 +29,10 @@ enum ProductDestination {
   stockStore,
 }
 
-class _DashedCirclePainter extends CustomPainter {
+class _DashedRectPainter extends CustomPainter {
   final Color color;
-  const _DashedCirclePainter({required this.color});
+  final double radius;
+  const _DashedRectPainter({required this.color, this.radius = 12});
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -39,26 +40,26 @@ class _DashedCirclePainter extends CustomPainter {
       ..color = color
       ..strokeWidth = 1.5
       ..style = PaintingStyle.stroke;
-    final radius = size.width / 2;
-    final center = Offset(radius, radius);
-    const dashCount = 28;
-    const dashSweep = 6.0; // degrees drawn per dash
-    const gapSweep = (360 / dashCount) - dashSweep;
-    double angle = 0;
-    for (int i = 0; i < dashCount; i++) {
-      canvas.drawArc(
-        Rect.fromCircle(center: center, radius: radius - 1),
-        angle * (3.14159265 / 180),
-        dashSweep * (3.14159265 / 180),
-        false,
-        paint,
-      );
-      angle += dashSweep + gapSweep;
+    final path = Path()
+      ..addRRect(RRect.fromRectAndRadius(
+        Rect.fromLTWH(0.75, 0.75, size.width - 1.5, size.height - 1.5),
+        Radius.circular(radius),
+      ));
+    const dashLength = 7.0;
+    const gapLength = 5.0;
+    for (final metric in path.computeMetrics()) {
+      double distance = 0;
+      while (distance < metric.length) {
+        final end = distance + dashLength > metric.length ? metric.length : distance + dashLength;
+        canvas.drawPath(metric.extractPath(distance, end), paint);
+        distance += dashLength + gapLength;
+      }
     }
   }
 
   @override
-  bool shouldRepaint(covariant _DashedCirclePainter oldDelegate) => oldDelegate.color != color;
+  bool shouldRepaint(covariant _DashedRectPainter oldDelegate) =>
+      oldDelegate.color != color || oldDelegate.radius != radius;
 }
 
 class AddEditProductScreen extends StatefulWidget {
@@ -189,82 +190,89 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
   Widget _buildImagePicker() {
     final hasPreview = _imageBytes != null;
     final hasUploadedUrl = !hasPreview && _imageUrl != null && _imageUrl!.isNotEmpty;
+    final hasImage = hasPreview || hasUploadedUrl;
 
-    return Column(
-      children: [
-        GestureDetector(
-          onTap: _isUploadingImage ? null : _pickProductImage,
-          child: Stack(
-            alignment: Alignment.bottomRight,
-            children: [
-              CustomPaint(
-                painter: _DashedCirclePainter(color: primaryDeepTealGreen.withValues(alpha: 0.5)),
-                child: Container(
-                width: 96,
-                height: 96,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: primaryDeepTealGreen.withValues(alpha: 0.08),
-                ),
-                clipBehavior: Clip.antiAlias,
-                child: Stack(
-                  fit: StackFit.expand,
-                  children: [
-                    if (hasPreview)
-                      Image.memory(_imageBytes!, fit: BoxFit.cover)
-                    else if (hasUploadedUrl)
-                      Image.network(
-                        _imageUrl!,
-                        fit: BoxFit.cover,
-                        errorBuilder: (context, error, stackTrace) => Icon(
-                          Icons.add_photo_alternate_outlined,
-                          size: 32,
-                          color: primaryDeepTealGreen.withValues(alpha: 0.5),
-                        ),
-                      )
-                    else
-                      Icon(
-                        Icons.add_photo_alternate_outlined,
-                        size: 32,
-                        color: primaryDeepTealGreen.withValues(alpha: 0.5),
+    // A rectangle that fills its column rather than a round avatar - a
+    // product photo is a picture of an object, not a face, and a wide
+    // frame shows far more of it. Capped so it doesn't stretch absurdly
+    // wide when the form is a single, roomy column.
+    return ConstrainedBox(
+      constraints: const BoxConstraints(maxWidth: 480),
+      child: GestureDetector(
+        onTap: _isUploadingImage ? null : _pickProductImage,
+        child: CustomPaint(
+          // Dashed outline only while empty - a chosen photo gets a
+          // plain, thin border instead.
+          foregroundPainter:
+              hasImage ? null : _DashedRectPainter(color: primaryDeepTealGreen.withValues(alpha: 0.5)),
+          child: Container(
+            width: double.infinity,
+            height: 150,
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(12),
+              color: primaryDeepTealGreen.withValues(alpha: 0.08),
+              border: hasImage ? Border.all(color: Colors.grey.withValues(alpha: 0.3)) : null,
+            ),
+            clipBehavior: Clip.antiAlias,
+            child: Stack(
+              fit: StackFit.expand,
+              children: [
+                if (hasPreview)
+                  Image.memory(_imageBytes!, fit: BoxFit.cover)
+                else if (hasUploadedUrl)
+                  Image.network(
+                    _imageUrl!,
+                    fit: BoxFit.cover,
+                    errorBuilder: (context, error, stackTrace) => _photoPlaceholder(),
+                  )
+                else
+                  _photoPlaceholder(),
+                if (_isUploadingImage)
+                  Container(
+                    color: Colors.black.withValues(alpha: 0.35),
+                    child: const Center(
+                      child: SizedBox(
+                        width: 24,
+                        height: 24,
+                        child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
                       ),
-                    if (_isUploadingImage)
-                      Container(
-                        color: Colors.black.withValues(alpha: 0.35),
-                        child: const Center(
-                          child: SizedBox(
-                            width: 24,
-                            height: 24,
-                            child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
-                          ),
-                        ),
-                      ),
-                  ],
-                ),
-                ),
-              ),
-              if (hasPreview || hasUploadedUrl)
-                Container(
-                  padding: const EdgeInsets.all(6),
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: primaryDeepTealGreen,
-                    border: Border.all(color: Colors.white, width: 2),
+                    ),
                   ),
-                  child: const Icon(Icons.camera_alt, size: 14, color: Colors.white),
-                ),
-            ],
+                if (hasImage && !_isUploadingImage)
+                  Positioned(
+                    right: 8,
+                    bottom: 8,
+                    child: Container(
+                      padding: const EdgeInsets.all(6),
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: primaryDeepTealGreen,
+                        border: Border.all(color: Colors.white, width: 2),
+                      ),
+                      child: const Icon(Icons.camera_alt, size: 14, color: Colors.white),
+                    ),
+                  ),
+              ],
+            ),
           ),
         ),
+      ),
+    );
+  }
+
+  /// What the empty photo frame shows - the prompt lives inside the
+  /// rectangle now rather than in a caption underneath it.
+  Widget _photoPlaceholder() {
+    return Column(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        Icon(Icons.add_photo_alternate_outlined, size: 36, color: primaryDeepTealGreen.withValues(alpha: 0.6)),
         const SizedBox(height: 8),
         Text(
           'Add photo',
           style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: primaryDeepTealGreen),
         ),
-        Text(
-          'Optional',
-          style: TextStyle(fontSize: 11, color: Colors.grey[600]),
-        ),
+        Text('Optional', style: TextStyle(fontSize: 11, color: Colors.grey[600])),
       ],
     );
   }
@@ -319,7 +327,7 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
   // wouldn't mean anything clear at that point.
   List<ProductBatch> _batches = [];
   bool _loadingBatches = false;
-  late final TextEditingController _warehouseQtyController =
+  late final TextEditingController _storeQtyController =
       TextEditingController(text: widget.product?.stockQty.toString() ?? '0');
   late final TextEditingController _shelfQtyController =
       TextEditingController(text: widget.product?.sellableQty.toString() ?? '0');
@@ -348,7 +356,7 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
           _batches = batches;
           _loadingBatches = false;
           if (batches.length == 1) {
-            _warehouseQtyController.text = batches.first.stockQty.toString();
+            _storeQtyController.text = batches.first.stockQty.toString();
             _shelfQtyController.text = batches.first.sellableQty.toString();
           }
         });
@@ -369,12 +377,15 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
     _sellPriceController.dispose();
     _stockController.dispose();
     _minStockController.dispose();
-    _warehouseQtyController.dispose();
+    _storeQtyController.dispose();
     _shelfQtyController.dispose();
     super.dispose();
   }
 
-  Widget _buildSupplierBatchExpiryFields(bool isNarrow) {
+  /// [compact] is for a half-width column (the two-column layout): supplier
+  /// on its own line, then batch and expiry side by side - three fields
+  /// in one row would be too cramped at that width.
+  Widget _buildSupplierBatchExpiryFields(bool isNarrow, {bool compact = false}) {
     final supplierField = _supplierField(enabled: true);
     final batchField = TextFormField(
       controller: _batchController,
@@ -398,6 +409,22 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
           batchField,
           const SizedBox(height: 12),
           expiryField,
+        ],
+      );
+    }
+
+    if (compact) {
+      return Column(
+        children: [
+          supplierField,
+          const SizedBox(height: 12),
+          Row(
+            children: [
+              Expanded(child: batchField),
+              const SizedBox(width: 12),
+              Expanded(child: expiryField),
+            ],
+          ),
         ],
       );
     }
@@ -805,14 +832,31 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
         id: widget.product?.id ?? const Uuid().v4(),
         name: _nameController.text.trim(),
         supplier: _supplierController.text.trim(),
-        // Batch number, expiry, and quantity are only set here when adding
-        // a brand-new product - editing an existing one never touches
-        // these, since that's exactly the "new batch overwrites old
-        // expiry" bug this whole restructure fixes. Use "Add New Batch"
-        // instead to record new stock.
-        batchNo: isEditingProduct ? widget.product!.batchNo : _batchController.text.trim(),
+        // Quantity is only set here when adding a brand-new product -
+        // editing an existing one never touches it, since that's
+        // exactly the "new batch overwrites old expiry" bug this whole
+        // restructure fixes. Use "Add New Batch" instead to record new
+        // stock.
+        //
+        // batchNo/expiry follow the same rule, with one deliberate
+        // exception: if the product was saved with no batch number or
+        // no expiry at all (never set, not "set to something else"),
+        // whatever's now in the form is allowed through - there was
+        // previously no way to ever fill these in after the fact, since
+        // "Add New Batch" creates a separate, additional batch rather
+        // than correcting the existing one. An already-set value is
+        // still never touched here, for the same reason as always -
+        // see the batch-sync just below, which keeps the one matching
+        // batch record (if there's exactly one) in step with this.
+        batchNo: isEditingProduct
+            ? (widget.product!.batchNo == null || widget.product!.batchNo!.isEmpty)
+                ? _batchController.text.trim()
+                : widget.product!.batchNo
+            : _batchController.text.trim(),
         imageUrl: _imageUrl,
-        expiry: isEditingProduct ? widget.product!.expiry : _selectedExpiry,
+        expiry: isEditingProduct
+            ? widget.product!.expiry ?? _selectedExpiry
+            : _selectedExpiry,
         description: _descriptionController.text.trim(),
         buyPrice: parseThousands(_buyPriceController.text),
         sellPrice: parseThousands(_sellPriceController.text),
@@ -876,11 +920,11 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
         // original values catches that and skips the write entirely
         // when nothing here was actually touched.
         if (_batches.length <= 1) {
-          final newWarehouseQty = int.tryParse(_warehouseQtyController.text.trim()) ?? 0;
+          final newStoreQty = int.tryParse(_storeQtyController.text.trim()) ?? 0;
           final newShelfQty = int.tryParse(_shelfQtyController.text.trim()) ?? 0;
-          final originalWarehouseQty = widget.product?.stockQty ?? 0;
+          final originalStoreQty = widget.product?.stockQty ?? 0;
           final originalShelfQty = widget.product?.sellableQty ?? 0;
-          final quantityWasEdited = newWarehouseQty != originalWarehouseQty || newShelfQty != originalShelfQty;
+          final quantityWasEdited = newStoreQty != originalStoreQty || newShelfQty != originalShelfQty;
 
           if (quantityWasEdited) {
             if (_batches.length == 1) {
@@ -889,7 +933,7 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
                 productId: widget.product!.id,
                 batchId: _batches.first.id,
                 mode: 'set',
-                stockQty: newWarehouseQty,
+                stockQty: newStoreQty,
                 sellableQty: newShelfQty,
               );
             } else {
@@ -901,7 +945,7 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
                   .doc(facilityId)
                   .collection('products')
                   .doc(widget.product!.id)
-                  .update({'stockQty': newWarehouseQty, 'sellableQty': newShelfQty});
+                  .update({'stockQty': newStoreQty, 'sellableQty': newShelfQty});
             }
 
             // A real, structured record of this specific change - who,
@@ -915,9 +959,9 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
                 .add({
               'productId': widget.product!.id,
               'productName': newProduct.name,
-              'oldStockQty': originalWarehouseQty,
+              'oldStockQty': originalStoreQty,
               'oldSellableQty': originalShelfQty,
-              'newStockQty': newWarehouseQty,
+              'newStockQty': newStoreQty,
               'newSellableQty': newShelfQty,
               'userId': userId,
               'userName': userName,
@@ -925,6 +969,34 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
               'timestamp': FieldValue.serverTimestamp(),
             });
           }
+        }
+
+        // Fills in a batch number/expiry that was never set, the one
+        // time it's now allowed through (see the comment on newProduct
+        // above) - keeps the single matching batch record in step with
+        // the product's own field, since every other screen (View
+        // Batches, FIFO deduction) reads expiry from there, not from
+        // the product document. Only the one, originally-auto-created
+        // batch is touched - with more than one on file there's no
+        // longer a single, unambiguous batch this correction could mean,
+        // so it's left for "Add New Batch" instead, same as quantity
+        // above.
+        final batchNoWasFilledIn = (widget.product!.batchNo == null || widget.product!.batchNo!.isEmpty) &&
+            newProduct.batchNo != null &&
+            newProduct.batchNo!.isNotEmpty;
+        final expiryWasFilledIn = widget.product!.expiry == null && newProduct.expiry != null;
+        if ((batchNoWasFilledIn || expiryWasFilledIn) && _batches.length == 1) {
+          final batchUpdate = <String, dynamic>{};
+          if (batchNoWasFilledIn) batchUpdate['batchNo'] = newProduct.batchNo;
+          if (expiryWasFilledIn) batchUpdate['expiry'] = Timestamp.fromDate(newProduct.expiry!);
+          await FirebaseFirestore.instance
+              .collection('facilities')
+              .doc(facilityId)
+              .collection('products')
+              .doc(widget.product!.id)
+              .collection('batches')
+              .doc(_batches.first.id)
+              .update(batchUpdate);
         }
 
         await ActivityLogger.logActivity(
@@ -982,7 +1054,14 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
         backgroundColor: primaryDeepTealGreen,
         iconTheme: IconThemeData(color: offWhite),
         centerTitle: false,
-        title: Text(appBarTitle, style: TextStyle(color: offWhite, fontWeight: FontWeight.bold, fontSize: 18)),
+        // Icon before the title, same as Add Sale's header.
+        title: Row(
+          children: [
+            Icon(Icons.inventory_2_outlined, color: offWhite, size: 22),
+            const SizedBox(width: 12),
+            Text(appBarTitle, style: TextStyle(color: offWhite, fontWeight: FontWeight.bold, fontSize: 18)),
+          ],
+        ),
         automaticallyImplyLeading: !widget.isModal,
         actions: widget.isModal
             ? [
@@ -994,23 +1073,21 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
               ]
             : null,
       ),
+      backgroundColor: offWhite,
       body: LayoutBuilder(
         builder: (context, constraints) {
           final isNarrow = constraints.maxWidth < 480;
-          return Center(
-            child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 700),
-              child: Column(
-                children: [
-                  Expanded(
-                    child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Form(
-          key: _formKey,
-          child: ListView(
-            children: [
-              Center(child: _buildImagePicker()),
-              const SizedBox(height: 20),
+          // Same breakpoint Add Sale uses for its own two-column layout,
+          // so the two modals always switch layouts at the same width.
+          final isTwoColumn = constraints.maxWidth >= 860;
+
+          final List<Widget> imageItems = [
+            Center(child: _buildImagePicker()),
+          ];
+
+          // Each section's contents, unchanged from before - only where
+          // they're placed (one column vs two) is decided below.
+          final List<Widget> basicInfoItems = [
               _sectionHeader('Basic Information', Icons.info_outline),
               // Product Name - with live duplicate detection. Typing a
               // name that matches an existing product shows a clear
@@ -1151,6 +1228,9 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
               ),
               const SizedBox(height: 12),
 
+          ];
+
+          final List<Widget> detailsItems = [
               // Product Details
               Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -1158,7 +1238,7 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
                     _sectionHeader('Product Details', Icons.folder_outlined),
                     isEditing
                         ? _supplierField(enabled: !fieldsLocked)
-                        : _buildSupplierBatchExpiryFields(isNarrow),
+                        : _buildSupplierBatchExpiryFields(isNarrow, compact: isTwoColumn),
                     if (isEditing) ...[
                       const SizedBox(height: 14),
                       const Text('Current Quantity', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
@@ -1173,8 +1253,8 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
                           children: [
                             Expanded(
                               child: TextFormField(
-                                controller: _warehouseQtyController,
-                                decoration: _inputDecoration('Warehouse Qty', required: true),
+                                controller: _storeQtyController,
+                                decoration: _inputDecoration('Store Qty', required: true),
                                 keyboardType: TextInputType.number,
                                 cursorColor: primaryDeepTealGreen,
                                 validator: (value) {
@@ -1245,18 +1325,26 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
                     const SizedBox(height: 12),
                     TextFormField(
                       controller: _descriptionController,
-                      decoration: _inputDecoration('Description'),
+                      decoration: _inputDecoration('Description').copyWith(alignLabelWithHint: true),
                       textCapitalization: TextCapitalization.sentences,
                       inputFormatters: [SentenceCapitalizationFormatter()],
-                      maxLines: 2,
+                      // Adding, in two columns: the right-hand column (photo,
+                      // pricing, settings) is much taller than what sits above
+                      // this on the left, so this grows to fill the gap and the
+                      // two columns end together. Editing already has the extra
+                      // quantity and batch controls on the left, which balance
+                      // the columns on their own.
+                      minLines: (isTwoColumn && !isEditing) ? 5 : 2,
+                      maxLines: (isTwoColumn && !isEditing) ? 9 : 4,
                       cursorColor: primaryDeepTealGreen,
                       enabled: !fieldsLocked,
                     ),
                   ],
                 ),
 
-              const SizedBox(height: 12),
+          ];
 
+          final List<Widget> pricingItems = [
               // Pricing & Stock Box
               Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -1296,8 +1384,9 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
                   ],
                 ),
 
-              const SizedBox(height: 12),
+          ];
 
+          final List<Widget> additionalItems = [
               // Additional Information Box
               Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -1340,60 +1429,123 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
                   ],
                 ),
 
-            ],
-          ),
-        ),
-              ),
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        SizedBox(
-                          width: 110,
-                          child: OutlinedButton(
-                            onPressed: _isSaving ? null : () => Navigator.of(context).pop(),
-                            style: OutlinedButton.styleFrom(
-                              foregroundColor: primaryDeepTealGreen,
-                              side: BorderSide(color: primaryDeepTealGreen),
-                              padding: const EdgeInsets.symmetric(vertical: 16),
-                            ),
-                            child: const Text('Cancel'),
-                          ),
-                        ),
-                        SizedBox(
-                          width: 180,
-                          child: ElevatedButton.icon(
-                            onPressed: _isSaving ? null : _saveProduct,
-                            icon: _isSaving
-                                ? const SizedBox(
-                                    width: 18,
-                                    height: 18,
-                                    child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
-                                  )
-                                : Icon(isEditing ? Icons.update : Icons.save),
-                            label: Text(_isSaving ? 'Saving...' : buttonText),
-                            style: ButtonStyle(
-                              padding: WidgetStateProperty.all(
-                                const EdgeInsets.symmetric(vertical: 16),
-                              ),
-                              backgroundColor: WidgetStateProperty.resolveWith<Color>(
-                                  (states) => states.contains(WidgetState.hovered)
-                                      ? warmAmber
-                                      : primaryDeepTealGreen),
-                              foregroundColor: WidgetStateProperty.all<Color>(offWhite),
-                            ),
-                          ),
-                        ),
-                      ],
+          ];
+
+          Widget group(List<Widget> items) =>
+              Column(crossAxisAlignment: CrossAxisAlignment.start, children: items);
+
+          final Widget content = isTwoColumn
+              ? Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Left: who/what the product is.
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          group(basicInfoItems),
+                          group(detailsItems),
+                        ],
+                      ),
                     ),
-                  ),
-                ],
+                    const SizedBox(width: 16),
+                    // Right: picture, money, and settings.
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          group(imageItems),
+                          const SizedBox(height: 16),
+                          group(pricingItems),
+                          const SizedBox(height: 12),
+                          group(additionalItems),
+                        ],
+                      ),
+                    ),
+                  ],
+                )
+              : Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    group(imageItems),
+                    const SizedBox(height: 20),
+                    group(basicInfoItems),
+                    group(detailsItems),
+                    const SizedBox(height: 12),
+                    group(pricingItems),
+                    const SizedBox(height: 12),
+                    group(additionalItems),
+                  ],
+                );
+
+          return Form(
+            key: _formKey,
+            child: Center(
+              child: ConstrainedBox(
+                // Fills the modal's width (it's never wider than this) -
+                // was capped at 700, leaving dead space on both sides.
+                constraints: const BoxConstraints(maxWidth: 1080),
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.all(16),
+                  child: content,
+                ),
               ),
             ),
           );
         },
+      ),
+      bottomNavigationBar: _buildFooter(isEditing: isEditing, buttonText: buttonText),
+    );
+  }
+
+  /// Full-width footer pinned to the bottom of the modal, same as Add
+  /// Sale's: Cancel at the far left, the primary action at the far right.
+  Widget _buildFooter({required bool isEditing, required String buttonText}) {
+    return Container(
+      padding: EdgeInsets.fromLTRB(20, 14, 20, 14 + MediaQuery.of(context).padding.bottom),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        border: Border(top: BorderSide(color: Colors.grey.withValues(alpha: 0.15))),
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          OutlinedButton.icon(
+            icon: const Icon(Icons.close, size: 16),
+            label: const Text('Cancel'),
+            style: OutlinedButton.styleFrom(
+              foregroundColor: Colors.black87,
+              side: BorderSide(color: Colors.grey.withValues(alpha: 0.4)),
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+            ),
+            onPressed: _isSaving ? null : () => Navigator.of(context).pop(),
+          ),
+          ElevatedButton(
+            onPressed: _isSaving ? null : _saveProduct,
+            style: ElevatedButton.styleFrom(
+              backgroundColor: primaryDeepTealGreen,
+              foregroundColor: offWhite,
+              disabledBackgroundColor: primaryDeepTealGreen.withValues(alpha: 0.5),
+              padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 12),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+            ),
+            child: _isSaving
+                ? const SizedBox(
+                    width: 18,
+                    height: 18,
+                    child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                  )
+                : Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(isEditing ? Icons.update : Icons.save, size: 16),
+                      const SizedBox(width: 8),
+                      Text(buttonText),
+                    ],
+                  ),
+          ),
+        ],
       ),
     );
   }
@@ -1427,10 +1579,17 @@ Future<void> showAddEditProductScreen(
     transitionDuration: const Duration(milliseconds: 220),
     pageBuilder: (context, animation, secondaryAnimation) {
       final screenSize = MediaQuery.of(context).size;
+      // Same formula as showAddSaleScreen's modal, for consistency
+      // across every full-screen-style modal in the app - was
+      // previously a fixed 620px (with no floor on height for a short
+      // window), rather than scaling with the screen the way every
+      // other modal of this kind does.
+      final modalWidth = (screenSize.width * 0.60).clamp(0, 940).toDouble();
+      final modalHeight = (screenSize.height * 0.88) < 480 ? 480.0 : screenSize.height * 0.88;
       return Center(
         child: SizedBox(
-          width: screenSize.width < 680 ? screenSize.width * 0.92 : 620,
-          height: screenSize.height * 0.88,
+          width: modalWidth,
+          height: modalHeight,
           child: ClipRRect(
             borderRadius: BorderRadius.circular(16),
             child: Material(

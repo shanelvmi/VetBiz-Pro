@@ -1543,7 +1543,7 @@ exports.notifyOnProductStatusChange = onDocumentUpdated(
       writes.push({
         type: info.type,
         title: info.title,
-        message: `${productName} - Shelf: ${after.sellableQty || 0} · Warehouse: ${after.stockQty || 0}`,
+        message: `${productName} - Shelf: ${after.sellableQty || 0} · Store: ${after.stockQty || 0}`,
         relatedEntityType: "product",
         relatedEntityId: productId,
         createdAt: admin.firestore.FieldValue.serverTimestamp(),
@@ -1557,7 +1557,7 @@ exports.notifyOnProductStatusChange = onDocumentUpdated(
       writes.push({
         type: "restockShelf",
         title: "Restock Shelf",
-        message: `${productName} - ${after.sellableQty || 0} on shelf · ${after.stockQty || 0} in warehouse`,
+        message: `${productName} - ${after.sellableQty || 0} on shelf · ${after.stockQty || 0} in store`,
         relatedEntityType: "product",
         relatedEntityId: productId,
         createdAt: admin.firestore.FieldValue.serverTimestamp(),

@@ -278,10 +278,10 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
                       const SizedBox(height: 6),
                       Text(
                         sub.status == SubscriptionStatus.locked
-                            ? 'Expired on ${DateFormat('dd MMM yyyy').format(sub.expiresAt!)}'
+                            ? 'Expired on ${DateFormat('dd MMM yyyy, HH:mm').format(sub.expiresAt!)}'
                             : sub.status == SubscriptionStatus.trial
-                                ? 'Trial expires on ${DateFormat('dd MMM yyyy').format(sub.expiresAt!)}'
-                                : 'Renews / expires on ${DateFormat('dd MMM yyyy').format(sub.expiresAt!)}',
+                                ? 'Trial expires on ${DateFormat('dd MMM yyyy, HH:mm').format(sub.expiresAt!)}'
+                                : 'Renews / expires on ${DateFormat('dd MMM yyyy, HH:mm').format(sub.expiresAt!)}',
                         style: const TextStyle(fontSize: 13),
                       ),
                     ],
@@ -531,22 +531,57 @@ Widget buildSubmissionCard(Map<String, dynamic> data) {
   final status = (data['status'] as String?) ?? 'pending';
   final submittedAt =
       data['submittedAt'] is Timestamp ? (data['submittedAt'] as Timestamp).toDate() : null;
+  // Saved by the platform admin when rejecting - empty if they left the
+  // (optional) reason blank.
+  final reviewNote = ((data['reviewNote'] as String?) ?? '').trim();
   return Card(
     margin: const EdgeInsets.only(bottom: 6),
-    child: ListTile(
-      dense: true,
-      title: Text('${data['planLabel'] ?? ''} - Tsh ${data['amount'] ?? 0}'),
-      subtitle: Text(
-        '${data['method'] ?? ''}'
-        '${submittedAt != null ? ' - ${DateFormat('dd MMM yyyy, HH:mm').format(submittedAt)}' : ''}',
-        style: const TextStyle(fontSize: 12),
-      ),
-      trailing: Chip(
-        label: Text(status[0].toUpperCase() + status.substring(1),
-            style: const TextStyle(fontSize: 11, color: Colors.white)),
-        backgroundColor: submissionStatusColor(status),
-        padding: EdgeInsets.zero,
-        materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+    child: Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text('${data['planLabel'] ?? ''} - Tsh ${data['amount'] ?? 0}',
+                        style: const TextStyle(fontSize: 14)),
+                    const SizedBox(height: 2),
+                    Text(
+                      '${data['method'] ?? ''}'
+                      '${submittedAt != null ? ' - ${DateFormat('dd MMM yyyy, HH:mm').format(submittedAt)}' : ''}',
+                      style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(width: 8),
+              Chip(
+                label: Text(status[0].toUpperCase() + status.substring(1),
+                    style: const TextStyle(fontSize: 11, color: Colors.white)),
+                backgroundColor: submissionStatusColor(status),
+                padding: EdgeInsets.zero,
+                materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+              ),
+            ],
+          ),
+          // Why it was rejected - previously only visible in the one-off
+          // notification, gone from the history itself.
+          if (status == 'rejected') ...[
+            const SizedBox(height: 6),
+            Text(
+              reviewNote.isNotEmpty ? 'Reason: $reviewNote' : 'No reason was given',
+              style: TextStyle(
+                fontSize: 12,
+                color: reviewNote.isNotEmpty ? Colors.red[700] : Colors.grey[600],
+                fontStyle: reviewNote.isNotEmpty ? FontStyle.normal : FontStyle.italic,
+              ),
+            ),
+          ],
+        ],
       ),
     ),
   );
