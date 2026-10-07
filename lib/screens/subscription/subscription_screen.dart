@@ -17,6 +17,7 @@ import '../../theme/app_palette.dart';
 import '../../data/collections.dart';
 import '../../data/fields.dart';
 import '../../data/payment_submission_status.dart';
+import '../../config/payment_methods.dart';
 
 class SubscriptionScreen extends StatefulWidget {
   final bool isModal;
@@ -39,7 +40,7 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
   // below swaps these in as soon as they're available.
   List<SubscriptionPlan> _plans = kSubscriptionPlans;
   SubscriptionPlan _selectedPlan = kSubscriptionPlans[2]; // Monthly default
-  String _method = 'M-Pesa';
+  String _method = PaymentMethod.mPesa.key;
   final TextEditingController _referenceController = TextEditingController();
 
   Uint8List? _proofBytes;
@@ -393,12 +394,11 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
               DropdownButtonFormField<String>(
                 initialValue: _method,
                 decoration: const InputDecoration(labelText: 'Payment Method', border: OutlineInputBorder()),
-                items: const [
-                  DropdownMenuItem(value: 'M-Pesa', child: Text('M-Pesa')),
-                  DropdownMenuItem(value: 'Tigo Pesa', child: Text('Tigo Pesa')),
-                  DropdownMenuItem(value: 'Airtel Money', child: Text('Airtel Money')),
-                  DropdownMenuItem(value: 'Bank Transfer', child: Text('Bank Transfer')),
-                  DropdownMenuItem(value: 'Cash', child: Text('Cash')),
+                // New requests store the method's key ('Mixx by Yas', not the
+                // old 'Tigo Pesa'); old requests keep what they stored.
+                items: [
+                  for (final m in PaymentMethod.subscription)
+                    DropdownMenuItem(value: m.key, child: Text(m.label)),
                 ],
                 onChanged: (value) {
                   if (value != null) setState(() => _method = value);

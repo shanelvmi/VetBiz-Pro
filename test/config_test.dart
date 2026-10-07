@@ -25,6 +25,13 @@ void main() {
     expect(PaymentMethod.fromKey(null), isNull);
   });
 
+  test('the subscription form offers Mixx by Yas, not Tigo Pesa, but old Tigo Pesa records still read', () {
+    expect(PaymentMethod.subscription.map((m) => m.key).toList(),
+        ['M-Pesa', 'Mixx by Yas', 'Airtel Money', 'Bank Transfer', 'Cash']);
+    expect(PaymentMethod.subscription, isNot(contains(PaymentMethod.tigoPesa)));
+    expect(PaymentMethod.fromKey('Tigo Pesa'), PaymentMethod.tigoPesa);
+  });
+
   test('restock frequencies match UsageCalculatorService', () {
     expect(RestockRules.frequencies, UsageCalculatorService.restockFrequencyOptions);
     expect(RestockRules.defaultFrequency, UsageCalculatorService.defaultRestockFrequency);

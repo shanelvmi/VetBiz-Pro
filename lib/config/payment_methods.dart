@@ -11,9 +11,9 @@ enum PaymentMethod {
   airtelMoney('Airtel Money'),
   bankTransfer('Bank Transfer'),
 
-  /// Tigo Pesa's old name, still offered by the subscription payment form
-  /// until step 2C switches it to Mixx by Yas (owner's decision). Never
-  /// removed: old subscription requests stored this key and must still display.
+  /// Mixx by Yas's old name. No longer offered anywhere (the subscription
+  /// form switched to Mixx by Yas in step 2C), but never removed: old
+  /// subscription requests stored this key and must still display.
   tigoPesa('Tigo Pesa');
 
   const PaymentMethod(this.key);
@@ -31,6 +31,17 @@ enum PaymentMethod {
     haloPesa,
     airtelMoney,
     bankTransfer,
+  ];
+
+  /// The methods the subscription payment form offers, in its order. The
+  /// same as [recordable] apart from order and HaloPesa, which the form has
+  /// never offered.
+  static const List<PaymentMethod> subscription = [
+    mPesa,
+    mixxByYas,
+    airtelMoney,
+    bankTransfer,
+    cash,
   ];
 
   /// The stored key's method, or null for a key the app doesn't know (an
