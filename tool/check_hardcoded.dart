@@ -24,7 +24,12 @@ class GuardRule {
   /// Off until its step switches it on (R10 is switched on in step 2F).
   final bool enabled;
 
-  const GuardRule(this.id, this.description, this.patterns, {this.accept, this.enabled = true});
+  /// Folders this rule alone doesn't look in (on top of the shared
+  /// exclusions in [isExcluded]).
+  final List<String> alsoExcludes;
+
+  const GuardRule(this.id, this.description, this.patterns,
+      {this.accept, this.enabled = true, this.alsoExcludes = const []});
 }
 
 final _nonZeroNumber = RegExp(r'(?<![\w.])(0*[1-9]\d*(\.\d+)?|0?\.\d*[1-9]\d*)(?![\w.])');
@@ -65,6 +70,15 @@ final List<GuardRule> guardRules = [
       RegExp(r"""hintText:\s*['"]"""),
     ],
     enabled: false,
+  ),
+  // docs/PHASE2_FEEDBACK_SPEC.md section 9: messages go through AppFeedback;
+  // only lib/ui/feedback/ may talk to the SnackBar machinery. Falls to 0 by
+  // the end of step 2D.
+  GuardRule(
+    'R11',
+    'raw feedback call',
+    [RegExp(r'\bshowSnackBar\('), RegExp(r'\bSnackBar\('), RegExp(r'ScaffoldMessenger\.of')],
+    alsoExcludes: ['lib/ui/feedback/'],
   ),
 ];
 
@@ -115,6 +129,7 @@ Map<String, Map<String, int>> scan(Directory root, {List<AllowEntry> allowlist =
       // Whole-line comments (including doc comments) are explanations, not code.
       if (line.trimLeft().startsWith('//')) continue;
       for (final rule in guardRules) {
+        if (rule.alsoExcludes.any(rel.startsWith)) continue;
         final allowed = allowlist.any((a) => a.rule == rule.id && a.file == rel && line.contains(a.lineContains));
         if (allowed) continue;
         var n = 0;
@@ -222,7 +237,16 @@ void main(List<String> args) {
     return;
   }
 
-  final problems = violations(current, baseline.counts);
+  // A rule that has no baseline yet (just added) is seeded from today's
+  // counts by --update. Every other rule can only go down. Without --update
+  // an unseeded rule fails like any other rise, so it can't be forgotten.
+  final unseeded = {
+    for (final r in guardRules)
+      if (r.enabled && !baseline.counts.containsKey(r.id)) r.id,
+  };
+  final problems = violations(current, baseline.counts)
+      .where((p) => !(update && unseeded.any((id) => p.startsWith('$id '))))
+      .toList();
   final before = totals(baseline.counts);
   final now = totals(current);
   for (final rule in guardRules) {
@@ -246,6 +270,9 @@ void main(List<String> args) {
       next[rule.id] = rule.enabled ? current[rule.id]! : (baseline.counts[rule.id] ?? current[rule.id]!);
     }
     Baseline.fileIn(root).writeAsStringSync(_encode(next, baseline.raw['allowlist'] as List<dynamic>? ?? []));
+    for (final id in unseeded) {
+      stdout.writeln('\n$id had no baseline: seeded with today\'s counts (${totals(current)[id]}).');
+    }
     stdout.writeln('\nBaseline lowered to today\'s counts.');
   }
 }

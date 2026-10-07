@@ -41,6 +41,23 @@ void main() {
     expect(r9.patterns.any((p) => p.hasMatch(".collectionGroup('users')")), isTrue);
   });
 
+  test('every switched-on rule has a baseline', () {
+    final baseline = Baseline.load(Directory.current)!;
+    for (final r in guardRules.where((r) => r.enabled)) {
+      expect(baseline.counts.containsKey(r.id), isTrue,
+          reason: '${r.id} has no baseline: run dart run tool/check_hardcoded.dart --update');
+    }
+  });
+
+  test('R11 sees raw feedback calls, but not inside lib/ui/feedback', () {
+    final r11 = guardRules.firstWhere((r) => r.id == 'R11');
+    bool hits(String line) => r11.patterns.any((p) => p.hasMatch(line));
+    expect(hits('ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(x)));'), isTrue);
+    expect(hits('messenger.showSnackBar(bar);'), isTrue);
+    expect(hits("AppFeedback.success('Product saved');"), isFalse);
+    expect(r11.alsoExcludes, contains('lib/ui/feedback/'));
+  });
+
   test('the scanner sees what it should', () {
     final r4 = guardRules.firstWhere((r) => r.id == 'R4');
     bool hits(GuardRule rule, String line) =>
