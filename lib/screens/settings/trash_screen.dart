@@ -11,6 +11,7 @@ import '../../data/activity_type.dart';
 import '../../config/money.dart';
 import '../../config/app_rules.dart';
 import '../../config/app_date_format.dart';
+import '../../services/trash_service.dart';
 
 class TrashScreen extends StatefulWidget {
   const TrashScreen({super.key});
@@ -137,39 +138,13 @@ class _TrashList extends StatelessWidget {
   });
 
   Future<void> _restore(BuildContext context, String id, Map<String, dynamic> data) async {
-    final restoredData = Map<String, dynamic>.from(data)
-      ..remove('deletedAt')
-      ..remove('deletedBy');
-
-    final firestore = FirebaseFirestore.instance;
-    final batch = firestore.batch();
-
-    batch.set(
-      firestore
-          .collection(Collections.facilities)
-          .doc(facilityId)
-          .collection(liveCollection)
-          .doc(id),
-      restoredData,
-    );
-    batch.delete(
-      firestore
-          .collection(Collections.facilities)
-          .doc(facilityId)
-          .collection(trashCollection)
-          .doc(id),
-    );
-
     try {
-      await batch.commit();
-
-      final userInfo = await ActivityLogger.getCurrentUserInfo();
-      await ActivityLogger.logActivity(
+      await TrashService.restore(
         facilityId: facilityId,
-        userId: userInfo[Fields.userId]!,
-        userName: userInfo['userName'],
-        actionType: ActivityType.trash.key,
-        description: 'Restored ${data['name'] ?? data['clientName'] ?? liveCollection}',
+        trashCollection: trashCollection,
+        liveCollection: liveCollection,
+        id: id,
+        data: data,
       );
 
       if (context.mounted) {
