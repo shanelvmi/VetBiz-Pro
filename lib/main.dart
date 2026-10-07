@@ -36,6 +36,7 @@ import 'providers/debt_provider.dart';
 import 'providers/payment_provider.dart';
 import 'widgets/vetbiz_loading_indicator.dart';
 import 'theme/app_palette.dart';
+import 'theme/app_theme.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -72,83 +73,22 @@ void main() async {
 class VetBizProApp extends StatelessWidget {
   const VetBizProApp({super.key});
 
-  // Brand colors, defined once here so the WHOLE app's theme - text field
-  // focus borders, the blinking cursor, date picker selections - uses them
-  // automatically, instead of every screen needing to remember to override
-  // Flutter's default blue individually.
+  // The brand colours, kept here as names for the default theme (the widget
+  // test checks they still come from AppPalette). The theme itself is built
+  // by AppTheme.build, from the colour theme chosen in UI Settings.
   static const Color primaryDeepGreen = AppPalette.primary;
   static const Color warmAmber = AppPalette.accent;
   static const Color offWhite = AppPalette.background;
 
   @override
   Widget build(BuildContext context) {
-    final colorScheme = ColorScheme.fromSeed(
-      seedColor: primaryDeepGreen,
-      brightness: Brightness.light,
-    ).copyWith(
-      primary: primaryDeepGreen,
-      secondary: warmAmber,
-      surface: offWhite,
-    );
+    // Watched so a colour-theme change in UI Settings rebuilds the theme.
+    final colorTheme = context.watch<UiSettingsProvider>().colorTheme;
 
     return MaterialApp(
       navigatorKey: navigatorKey,
       title: 'VetBiz Pro',
-      theme: ThemeData(
-        useMaterial3: true,
-        colorScheme: colorScheme,
-        scaffoldBackgroundColor: offWhite,
-        // The blinking text cursor and the highlighted selection in every
-        // text field, app-wide.
-        textSelectionTheme: TextSelectionThemeData(
-          cursorColor: primaryDeepGreen,
-          selectionColor: primaryDeepGreen.withValues(alpha: 0.3),
-          selectionHandleColor: primaryDeepGreen,
-        ),
-        // The outline/underline every text field shows once focused
-        // (tapped into), app-wide.
-        inputDecorationTheme: InputDecorationTheme(
-          focusedBorder: const OutlineInputBorder(
-            borderSide: BorderSide(color: primaryDeepGreen, width: 2),
-          ),
-          enabledBorder: OutlineInputBorder(
-            borderSide: BorderSide(color: Colors.grey.shade400),
-          ),
-          floatingLabelStyle: const TextStyle(color: primaryDeepGreen),
-        ),
-        // The calendar shown by every showDatePicker call, app-wide (header,
-        // selected day, "today" outline).
-        datePickerTheme: DatePickerThemeData(
-          headerBackgroundColor: primaryDeepGreen,
-          headerForegroundColor: offWhite,
-          todayBorder: const BorderSide(color: primaryDeepGreen),
-          todayForegroundColor: WidgetStateProperty.resolveWith((states) {
-            if (states.contains(WidgetState.selected)) return offWhite;
-            return primaryDeepGreen;
-          }),
-          dayForegroundColor: WidgetStateProperty.resolveWith((states) {
-            if (states.contains(WidgetState.selected)) return offWhite;
-            return null;
-          }),
-          dayBackgroundColor: WidgetStateProperty.resolveWith((states) {
-            if (states.contains(WidgetState.selected)) return primaryDeepGreen;
-            return null;
-          }),
-          confirmButtonStyle: TextButton.styleFrom(foregroundColor: primaryDeepGreen),
-          cancelButtonStyle: TextButton.styleFrom(foregroundColor: primaryDeepGreen),
-        ),
-        // Buttons that don't explicitly set their own colors fall back to
-        // these, instead of Material's default blue.
-        textButtonTheme: TextButtonThemeData(
-          style: TextButton.styleFrom(foregroundColor: primaryDeepGreen),
-        ),
-        elevatedButtonTheme: ElevatedButtonThemeData(
-          style: ElevatedButton.styleFrom(
-            backgroundColor: primaryDeepGreen,
-            foregroundColor: offWhite,
-          ),
-        ),
-      ),
+      theme: AppTheme.build(colorTheme, Brightness.light),
       debugShowCheckedModeBanner: false,
       routes: {
         '/login': (context) => const LoginScreen(),
