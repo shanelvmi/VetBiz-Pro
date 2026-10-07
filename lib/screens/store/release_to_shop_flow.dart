@@ -8,6 +8,7 @@ import '../../providers/product_provider.dart';
 import '../../theme/app_palette.dart';
 import '../../data/collections.dart';
 import '../../data/fields.dart';
+import '../../data/activity_type.dart';
 
 // The "release to shelf" flow, shared so it behaves identically wherever it's
 // started from - the Stock Store's own Release button and the Product Alerts
@@ -240,7 +241,7 @@ Future<void> releaseProductToShop(BuildContext context, Product product, {int in
         facilityId: product.facilityId,
         userId: userInfo[Fields.userId]!,
         userName: userInfo['userName']!,
-        actionType: "Inventory Move",
+        actionType: ActivityType.inventoryMove.key,
         description: "${product.name}: released $unitsSummary despite expired-stock warning",
       );
     }

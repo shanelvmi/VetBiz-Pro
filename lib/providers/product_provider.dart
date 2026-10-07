@@ -9,6 +9,7 @@ import 'facility_provider.dart';
 import '../utils/activity_logger.dart';
 import '../data/collections.dart';
 import '../data/fields.dart';
+import '../data/activity_type.dart';
 
 class ProductProvider with ChangeNotifier {
   final List<Product> _products = [];
@@ -1056,7 +1057,7 @@ class ProductProvider with ChangeNotifier {
         facilityId: facilityId,
         userId: userId,
         userName: userName,
-        actionType: "Inventory Move",
+        actionType: ActivityType.inventoryMove.key,
         description: "${product.name}: $qty ${product.unit} | "
             "Stock: $stockBefore->$newStock | "
             "Sellable: $sellableBefore->$newSellable"
@@ -1179,7 +1180,7 @@ class ProductProvider with ChangeNotifier {
         facilityId: facilityId,
         userId: userId,
         userName: userName,
-        actionType: "Inventory Move",
+        actionType: ActivityType.inventoryMove.key,
         description: "${product.name}: moved $qty ${product.unit} of "
             "batch${batch.batchNo?.isNotEmpty == true ? ' ${batch.batchNo}' : ''} back to Stock Store "
             "($reason)"

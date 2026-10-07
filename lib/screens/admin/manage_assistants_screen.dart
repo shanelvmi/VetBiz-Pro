@@ -15,6 +15,7 @@ import '../../data/collections.dart';
 import '../../data/fields.dart';
 import '../../data/user_role.dart';
 import '../../data/user_status.dart';
+import '../../data/activity_type.dart';
 
 /// Who someone is on a facility's team, as this screen shows them. Worked out
 /// from the user record (role, previousRole, who created the facility); not
@@ -252,7 +253,7 @@ class _ManageAssistantsScreenState extends State<ManageAssistantsScreen> {
           facilityId: facilityId,
           userId: info[Fields.userId] ?? '',
           userName: info['userName'],
-          actionType: 'Account',
+          actionType: ActivityType.account.key,
           targetUserId: userId,
           description: '${verb[0].toUpperCase()}${verb.substring(1)} assistant $name',
         );
@@ -597,7 +598,7 @@ class _ManageAssistantsScreenState extends State<ManageAssistantsScreen> {
           facilityId: facilityId,
           userId: info[Fields.userId] ?? '',
           userName: info['userName'],
-          actionType: 'Account',
+          actionType: ActivityType.account.key,
           targetUserId: doc.id,
           description: '${activating ? 'Reactivated' : 'Deactivated'} co-admin $name',
         );

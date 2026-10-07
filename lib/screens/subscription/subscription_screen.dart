@@ -16,6 +16,7 @@ import 'subscription_history_screen.dart';
 import '../../theme/app_palette.dart';
 import '../../data/collections.dart';
 import '../../data/fields.dart';
+import '../../data/payment_submission_status.dart';
 
 class SubscriptionScreen extends StatefulWidget {
   final bool isModal;
@@ -102,7 +103,7 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
           .collection(Collections.facilities)
           .doc(facilityId)
           .collection(Collections.paymentSubmissions)
-          .where(Fields.status, isEqualTo: 'pending')
+          .where(Fields.status, isEqualTo: PaymentSubmissionStatus.pending.key)
           .snapshots()
           .listen((snapshot) {
         if (!mounted) return;
@@ -187,7 +188,7 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
         'method': _method,
         'reference': _referenceController.text.trim(),
         'proofImageUrl': proofUrl,
-        Fields.status: 'pending',
+        Fields.status: PaymentSubmissionStatus.pending.key,
         'submittedAt': FieldValue.serverTimestamp(),
         'submittedBy': user?.email ?? user?.uid ?? 'Unknown',
       });
@@ -520,10 +521,10 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
 }
 
 Color submissionStatusColor(String status) {
-  switch (status) {
-    case 'approved':
+  switch (PaymentSubmissionStatus.fromKey(status)) {
+    case PaymentSubmissionStatus.approved:
       return Colors.green;
-    case 'rejected':
+    case PaymentSubmissionStatus.rejected:
       return Colors.redAccent;
     default:
       return Colors.orange;
@@ -531,7 +532,7 @@ Color submissionStatusColor(String status) {
 }
 
 Widget buildSubmissionCard(Map<String, dynamic> data) {
-  final status = (data[Fields.status] as String?) ?? 'pending';
+  final status = (data[Fields.status] as String?) ?? PaymentSubmissionStatus.pending.key;
   final submittedAt =
       data['submittedAt'] is Timestamp ? (data['submittedAt'] as Timestamp).toDate() : null;
   // Saved by the platform admin when rejecting - empty if they left the
@@ -573,7 +574,7 @@ Widget buildSubmissionCard(Map<String, dynamic> data) {
           ),
           // Why it was rejected - previously only visible in the one-off
           // notification, gone from the history itself.
-          if (status == 'rejected') ...[
+          if (status == PaymentSubmissionStatus.rejected.key) ...[
             const SizedBox(height: 6),
             Text(
               reviewNote.isNotEmpty ? 'Reason: $reviewNote' : 'No reason was given',

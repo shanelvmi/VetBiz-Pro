@@ -22,6 +22,7 @@ import 'report_tabbed_content.dart';
 import '../../theme/app_palette.dart';
 import '../../data/collections.dart';
 import '../../data/fields.dart';
+import '../../data/activity_type.dart';
 
 /// The main View Reports screen - shows today's own report directly,
 /// matching the Daily Closing Report mockup, rather than a separate
@@ -179,7 +180,7 @@ class _ViewReportsScreenState extends State<ViewReportsScreen> {
         facilityId: facilityId,
         userId: userInfo[Fields.userId]!,
         userName: userInfo['userName'],
-        actionType: 'Report Draft Deleted',
+        actionType: ActivityType.reportDraftDeleted.key,
         description: 'Draft report for ${DateFormat('d MMM yyyy').format(_todaysReport!.reportDate)} deleted',
       );
       if (!mounted) return;

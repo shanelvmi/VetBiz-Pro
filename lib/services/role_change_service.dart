@@ -7,6 +7,7 @@ import '../data/collections.dart';
 import '../data/fields.dart';
 import '../data/user_role.dart';
 import '../data/user_status.dart';
+import '../data/activity_type.dart';
 
 /// Changing someone's role - done ONLY by a Platform Admin (Platform Admin >
 /// Users > the person > Change role). Nobody else can: not the person
@@ -334,7 +335,7 @@ class RoleChangeService {
         facilityId: fid,
         userId: admin?.uid ?? '',
         userName: 'Platform Admin',
-        actionType: 'Account',
+        actionType: ActivityType.account.key,
         targetUserId: userId,
         description: 'Platform Admin changed $name\'s role from ${plan.currentLabel} to ${plan.newLabel}'
             '${cleanReason.isEmpty ? '' : ' ($cleanReason)'}',

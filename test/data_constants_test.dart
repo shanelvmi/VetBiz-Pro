@@ -1,5 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
 
+import 'package:vetbiz_pro/data/activity_type.dart';
+import 'package:vetbiz_pro/data/payment_submission_status.dart';
 import 'package:vetbiz_pro/data/user_role.dart';
 import 'package:vetbiz_pro/data/user_status.dart';
 
@@ -22,6 +24,22 @@ void main() {
 
   test('UserStatus keys are the stored strings', () {
     expect(UserStatus.values.map((s) => s.key), ['pending', 'active', 'deactivated', 'rejected']);
+  });
+
+  test('PaymentSubmissionStatus keys are the stored strings; unknown is pending', () {
+    expect(PaymentSubmissionStatus.values.map((s) => s.key), ['pending', 'approved', 'rejected']);
+    for (final s in PaymentSubmissionStatus.values) {
+      expect(PaymentSubmissionStatus.fromKey(s.key), s);
+    }
+    expect(PaymentSubmissionStatus.fromKey('cancelled'), PaymentSubmissionStatus.pending);
+    expect(PaymentSubmissionStatus.fromKey(null), PaymentSubmissionStatus.pending);
+  });
+
+  test('ActivityType keys are the stored actionType strings', () {
+    expect(ActivityType.values.map((t) => t.key), [
+      'Account', 'Debtors', 'Products', 'Inventory Move', 'Sales', 'Sale',
+      'Services', 'Transactions', 'Trash', 'Report Draft Deleted',
+    ]);
   });
 
   test('UserStatus.fromKey round-trips and defaults to pending', () {

@@ -17,6 +17,7 @@ import '../../utils/force_logout.dart';
 import '../../theme/app_palette.dart';
 import '../../data/collections.dart';
 import '../../data/fields.dart';
+import '../../data/activity_type.dart';
 
 class ManageAccountScreen extends StatefulWidget {
   const ManageAccountScreen({super.key});
@@ -291,7 +292,7 @@ class _ManageAccountScreenState extends State<ManageAccountScreen> {
         facilityId: facilityId,
         userId: userInfo[Fields.userId]!,
         userName: userInfo['userName'],
-        actionType: 'Account',
+        actionType: ActivityType.account.key,
         description: 'Wiped all business data for this facility',
       );
 
@@ -440,7 +441,7 @@ class _ManageAccountScreenState extends State<ManageAccountScreen> {
           facilityId: facilityId,
           userId: userInfo[Fields.userId]!,
           userName: userInfo['userName'],
-          actionType: 'Account',
+          actionType: ActivityType.account.key,
           description: 'Deactivated their own account',
         );
       }
@@ -530,7 +531,7 @@ class _ManageAccountScreenState extends State<ManageAccountScreen> {
                           facilityId: facilityId,
                           userId: userInfo[Fields.userId]!,
                           userName: userInfo['userName'],
-                          actionType: 'Account',
+                          actionType: ActivityType.account.key,
                           description: 'Deleted their own account',
                         );
                       }

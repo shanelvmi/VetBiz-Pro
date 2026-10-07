@@ -10,6 +10,7 @@ import '../../theme/app_palette.dart';
 import '../../data/collections.dart';
 import '../../data/fields.dart';
 import '../../data/subscription_keys.dart';
+import '../../data/payment_submission_status.dart';
 
 /// A snapshot of the whole business - how many facilities, in what state, and
 /// how much has actually been collected this month. Reads every facility
@@ -82,12 +83,12 @@ class _OverviewTabState extends State<OverviewTab> {
       // message on first run includes a direct link to create it.
       FirebaseFirestore.instance
           .collectionGroup(Collections.paymentSubmissions)
-          .where(Fields.status, isEqualTo: 'approved')
+          .where(Fields.status, isEqualTo: PaymentSubmissionStatus.approved.key)
           .where('reviewedAt', isGreaterThanOrEqualTo: Timestamp.fromDate(monthStart))
           .get(),
       FirebaseFirestore.instance
           .collectionGroup(Collections.paymentSubmissions)
-          .where(Fields.status, isEqualTo: 'pending')
+          .where(Fields.status, isEqualTo: PaymentSubmissionStatus.pending.key)
           .get(),
     ]);
     final facilitiesSnap = results[0];

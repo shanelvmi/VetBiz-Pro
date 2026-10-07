@@ -26,6 +26,7 @@ import '../clients/add_client_screen.dart';
 import '../../widgets/product_thumbnail.dart';
 import '../../theme/app_palette.dart';
 import '../../data/collections.dart';
+import '../../data/activity_type.dart';
 
 // --- Custom Formatter ---
 // --- Add Sale Screen ---
@@ -790,7 +791,7 @@ class _AddSaleScreenState extends State<AddSaleScreen> {
           facilityId: facilityId,
           userId: soldById,
           userName: soldByName,
-          actionType: "Sale",
+          actionType: ActivityType.sale.key,
           description: "Sale included expired stock ($unitsSummary), confirmed by $soldByName",
         );
       }

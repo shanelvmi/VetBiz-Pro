@@ -10,6 +10,7 @@ import 'debt_provider.dart';
 import '../services/cursor_paginated_list_controller.dart';
 import '../data/collections.dart';
 import '../data/fields.dart';
+import '../data/activity_type.dart';
 
 class SaleProvider extends ChangeNotifier {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
@@ -438,7 +439,7 @@ class SaleProvider extends ChangeNotifier {
         facilityId: facilityId,
         userId: userInfo[Fields.userId]!,
         userName: userInfo['userName'],
-        actionType: 'Sales',
+        actionType: ActivityType.sales.key,
         description: 'Recorded sale to ${saleToSave.clientName ?? 'Walk-in'} - Tsh ${saleToSave.totalAmount.toStringAsFixed(0)}',
       );
 
@@ -567,7 +568,7 @@ class SaleProvider extends ChangeNotifier {
           facilityId: facilityId,
           userId: userInfo[Fields.userId]!,
           userName: userInfo['userName'],
-          actionType: 'Sales',
+          actionType: ActivityType.sales.key,
           description: 'Deleted sale to ${sale.clientName ?? 'Walk-in'} - Tsh ${sale.totalAmount.toStringAsFixed(0)}',
         );
       }

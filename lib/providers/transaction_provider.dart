@@ -10,6 +10,7 @@ import '../utils/receipt_numbering.dart';
 import '../services/cursor_paginated_list_controller.dart';
 import '../data/collections.dart';
 import '../data/fields.dart';
+import '../data/activity_type.dart';
 
 class TransactionProvider with ChangeNotifier {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
@@ -291,7 +292,7 @@ class TransactionProvider with ChangeNotifier {
         facilityId: facilityId,
         userId: userInfo[Fields.userId]!,
         userName: userInfo['userName'],
-        actionType: 'Transactions',
+        actionType: ActivityType.transactions.key,
         description: 'Added ${newTransaction.type}: ${newTransaction.description} - Tsh ${newTransaction.amount.toStringAsFixed(0)}',
       );
 
@@ -338,7 +339,7 @@ class TransactionProvider with ChangeNotifier {
         facilityId: facilityId,
         userId: userInfo[Fields.userId]!,
         userName: userInfo['userName'],
-        actionType: 'Transactions',
+        actionType: ActivityType.transactions.key,
         description: 'Updated ${updatedTransaction.type}: ${updatedTransaction.description} - Tsh ${updatedTransaction.amount.toStringAsFixed(0)}',
       );
     } catch (e) {
@@ -404,7 +405,7 @@ class TransactionProvider with ChangeNotifier {
         facilityId: facilityId,
         userId: userInfo[Fields.userId]!,
         userName: userInfo['userName'],
-        actionType: 'Transactions',
+        actionType: ActivityType.transactions.key,
         description: 'Deleted transaction: $deletedDescription',
       );
     } catch (e) {

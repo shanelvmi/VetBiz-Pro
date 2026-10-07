@@ -10,6 +10,7 @@ import '../../widgets/hover_elevate_card.dart';
 import '../../theme/app_palette.dart';
 import '../../data/collections.dart';
 import '../../data/fields.dart';
+import '../../data/payment_submission_status.dart';
 
 /// Embeddable version of the subscription submissions review list -
 /// same logic as the original standalone Subscription Review screen,
@@ -96,7 +97,7 @@ class _SubscriptionRequestsTabState extends State<SubscriptionRequestsTab> {
     );
 
     batch.update(submissionDoc.reference, {
-      Fields.status: 'approved',
+      Fields.status: PaymentSubmissionStatus.approved.key,
       'reviewedAt': FieldValue.serverTimestamp(),
       'reviewedBy': admin?.email ?? admin?.uid ?? 'Unknown',
     });
@@ -147,7 +148,7 @@ class _SubscriptionRequestsTabState extends State<SubscriptionRequestsTab> {
     final reason = reasonController.text.trim();
 
     await submissionDoc.reference.update({
-      Fields.status: 'rejected',
+      Fields.status: PaymentSubmissionStatus.rejected.key,
       'reviewedAt': FieldValue.serverTimestamp(),
       'reviewedBy': admin?.email ?? admin?.uid ?? 'Unknown',
       'reviewNote': reason,
@@ -227,7 +228,7 @@ class _SubscriptionRequestsTabState extends State<SubscriptionRequestsTab> {
     return StreamBuilder<QuerySnapshot>(
       stream: FirebaseFirestore.instance
           .collectionGroup(Collections.paymentSubmissions)
-          .where(Fields.status, isEqualTo: 'pending')
+          .where(Fields.status, isEqualTo: PaymentSubmissionStatus.pending.key)
           .orderBy('submittedAt', descending: false)
           .snapshots(),
       builder: (context, snapshot) {
@@ -449,7 +450,7 @@ class _SubscriptionRequestsTabState extends State<SubscriptionRequestsTab> {
     return StreamBuilder<QuerySnapshot>(
       stream: FirebaseFirestore.instance
           .collectionGroup(Collections.paymentSubmissions)
-          .where(Fields.status, whereIn: ['approved', 'rejected'])
+          .where(Fields.status, whereIn: [PaymentSubmissionStatus.approved.key, PaymentSubmissionStatus.rejected.key])
           .where('reviewedAt', isGreaterThanOrEqualTo: Timestamp.fromDate(since))
           .orderBy('reviewedAt', descending: true)
           .snapshots(),
@@ -486,7 +487,7 @@ class _SubscriptionRequestsTabState extends State<SubscriptionRequestsTab> {
               itemBuilder: (context, index) {
                 final doc = docs[index];
                 final data = doc.data() as Map<String, dynamic>;
-                final isApproved = data[Fields.status] == 'approved';
+                final isApproved = data[Fields.status] == PaymentSubmissionStatus.approved.key;
                 final statusColor = isApproved ? Colors.green : Colors.redAccent;
                 final reviewedAt =
                     data['reviewedAt'] is Timestamp ? (data['reviewedAt'] as Timestamp).toDate() : null;

@@ -16,6 +16,7 @@ import '../../widgets/payment_method_selector.dart';
 import '../../theme/app_palette.dart';
 import '../../data/collections.dart';
 import '../../data/fields.dart';
+import '../../data/activity_type.dart';
 
 class AddPaymentScreen extends StatefulWidget {
   final Client? preselectedClient;
@@ -380,7 +381,7 @@ class _AddPaymentScreenState extends State<AddPaymentScreen> {
         facilityId: facilityId,
         userId: userInfo[Fields.userId]!,
         userName: userInfo['userName'],
-        actionType: 'Debtors',
+        actionType: ActivityType.debtors.key,
         description: 'Recorded payment of Tsh ${amount.toStringAsFixed(0)} from ${selectedClient!.name}',
       );
 

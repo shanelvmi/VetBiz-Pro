@@ -25,6 +25,7 @@ import '../../constants/product_types.dart';
 import '../../theme/app_palette.dart';
 import '../../data/collections.dart';
 import '../../data/fields.dart';
+import '../../data/activity_type.dart';
 
 enum ProductDestination {
   sellable,
@@ -904,7 +905,7 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
           facilityId: facilityId,
           userId: userId,
           userName: userName,
-          actionType: "Products",
+          actionType: ActivityType.products.key,
           description: "Added new product: ${newProduct.name}",
         );
       } else {
@@ -1005,7 +1006,7 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
           facilityId: facilityId,
           userId: userId,
           userName: userName,
-          actionType: "Products",
+          actionType: ActivityType.products.key,
           description: "Updated product: ${newProduct.name}",
         );
       }

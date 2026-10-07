@@ -12,6 +12,7 @@ import '../utils/receipt_numbering.dart';
 import '../services/cursor_paginated_list_controller.dart';
 import '../data/collections.dart';
 import '../data/fields.dart';
+import '../data/activity_type.dart';
 
 class ServiceProvider extends ChangeNotifier {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
@@ -339,7 +340,7 @@ class ServiceProvider extends ChangeNotifier {
         facilityId: _facilityId!,
         userId: userInfo[Fields.userId]!,
         userName: userInfo['userName'],
-        actionType: 'Services',
+        actionType: ActivityType.services.key,
         description: 'Recorded service for ${saved.clientName ?? 'Walk-in'} - Tsh ${saved.totalAmount.toStringAsFixed(0)}',
       );
 
@@ -414,7 +415,7 @@ class ServiceProvider extends ChangeNotifier {
         facilityId: _facilityId!,
         userId: userInfo[Fields.userId]!,
         userName: userInfo['userName'],
-        actionType: 'Services',
+        actionType: ActivityType.services.key,
         description: 'Updated service for ${updated.clientName ?? 'Walk-in'} - Tsh ${updated.totalAmount.toStringAsFixed(0)}',
       );
     } catch (e) {
@@ -567,7 +568,7 @@ class ServiceProvider extends ChangeNotifier {
         facilityId: _facilityId!,
         userId: userInfo[Fields.userId]!,
         userName: userInfo['userName'],
-        actionType: 'Services',
+        actionType: ActivityType.services.key,
         description: 'Deleted service for ${dataForTrash['clientName'] ?? 'Walk-in'} - Tsh ${(dataForTrash['totalAmount'] ?? 0).toString()}',
       );
     }

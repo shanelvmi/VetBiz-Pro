@@ -8,6 +8,7 @@ import '../../utils/activity_logger.dart';
 import '../../theme/app_palette.dart';
 import '../../data/collections.dart';
 import '../../data/fields.dart';
+import '../../data/activity_type.dart';
 
 class TrashScreen extends StatefulWidget {
   const TrashScreen({super.key});
@@ -165,7 +166,7 @@ class _TrashList extends StatelessWidget {
         facilityId: facilityId,
         userId: userInfo[Fields.userId]!,
         userName: userInfo['userName'],
-        actionType: 'Trash',
+        actionType: ActivityType.trash.key,
         description: 'Restored ${data['name'] ?? data['clientName'] ?? liveCollection}',
       );
 
@@ -234,7 +235,7 @@ class _TrashList extends StatelessWidget {
         facilityId: facilityId,
         userId: userInfo[Fields.userId]!,
         userName: userInfo['userName'],
-        actionType: 'Trash',
+        actionType: ActivityType.trash.key,
         description: 'Permanently deleted: $label',
       );
 

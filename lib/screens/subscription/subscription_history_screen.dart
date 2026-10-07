@@ -5,6 +5,7 @@ import 'package:intl/intl.dart';
 import 'subscription_screen.dart' show submissionStatusColor;
 import '../../data/collections.dart';
 import '../../data/fields.dart';
+import '../../data/payment_submission_status.dart';
 
 /// One payment submission, read from a payment_submissions document.
 class _Submission {
@@ -12,7 +13,7 @@ class _Submission {
   final num amount;
   final String method;
   final String reference;
-  final String status; // 'approved' | 'rejected' | 'pending'
+  final String status; // PaymentSubmissionStatus.approved.key | PaymentSubmissionStatus.rejected.key | PaymentSubmissionStatus.pending.key
   final DateTime? submittedAt;
   final DateTime? reviewedAt;
   final String reviewNote; // the rejection reason - empty if none was given
@@ -32,14 +33,14 @@ class _Submission {
 
   factory _Submission.fromMap(Map<String, dynamic> d) {
     DateTime? asDate(dynamic v) => v is Timestamp ? v.toDate() : null;
-    final rawStatus = (d[Fields.status] as String?) ?? 'pending';
+    final rawStatus = (d[Fields.status] as String?) ?? PaymentSubmissionStatus.pending.key;
     return _Submission(
       planLabel: (d['planLabel'] as String?) ?? '',
       amount: (d['amount'] as num?) ?? 0,
       method: (d['method'] as String?) ?? '',
       reference: ((d['reference'] as String?) ?? '').trim(),
       // Anything that isn't a final decision is still waiting on one.
-      status: (rawStatus == 'approved' || rawStatus == 'rejected') ? rawStatus : 'pending',
+      status: (rawStatus == PaymentSubmissionStatus.approved.key || rawStatus == PaymentSubmissionStatus.rejected.key) ? rawStatus : PaymentSubmissionStatus.pending.key,
       submittedAt: asDate(d['submittedAt']),
       reviewedAt: asDate(d['reviewedAt']),
       reviewNote: ((d['reviewNote'] as String?) ?? '').trim(),
@@ -182,11 +183,11 @@ class _SubscriptionHistoryScreenState extends State<SubscriptionHistoryScreen> {
       );
     }
 
-    final counts = <String, int>{'approved': 0, 'pending': 0, 'rejected': 0};
+    final counts = <String, int>{PaymentSubmissionStatus.approved.key: 0, PaymentSubmissionStatus.pending.key: 0, PaymentSubmissionStatus.rejected.key: 0};
     num approvedTotal = 0;
     for (final s in all) {
       counts[s.status] = (counts[s.status] ?? 0) + 1;
-      if (s.status == 'approved') approvedTotal += s.amount;
+      if (s.status == PaymentSubmissionStatus.approved.key) approvedTotal += s.amount;
     }
 
     final plans = <String>{for (final s in all) if (s.planLabel.isNotEmpty) s.planLabel}.toList()..sort();
@@ -247,27 +248,27 @@ class _SubscriptionHistoryScreenState extends State<SubscriptionHistoryScreen> {
       ),
       _card(
         label: 'Approved',
-        value: '${counts['approved'] ?? 0}',
+        value: '${counts[PaymentSubmissionStatus.approved.key] ?? 0}',
         hint: _money.format(approvedTotal),
         icon: Icons.check_circle_outline,
-        color: submissionStatusColor('approved'),
-        filter: 'approved',
+        color: submissionStatusColor(PaymentSubmissionStatus.approved.key),
+        filter: PaymentSubmissionStatus.approved.key,
       ),
       _card(
         label: 'Pending',
-        value: '${counts['pending'] ?? 0}',
+        value: '${counts[PaymentSubmissionStatus.pending.key] ?? 0}',
         hint: 'Awaiting review',
         icon: Icons.hourglass_empty,
-        color: submissionStatusColor('pending'),
-        filter: 'pending',
+        color: submissionStatusColor(PaymentSubmissionStatus.pending.key),
+        filter: PaymentSubmissionStatus.pending.key,
       ),
       _card(
         label: 'Rejected',
-        value: '${counts['rejected'] ?? 0}',
+        value: '${counts[PaymentSubmissionStatus.rejected.key] ?? 0}',
         hint: 'Not accepted',
         icon: Icons.cancel_outlined,
-        color: submissionStatusColor('rejected'),
-        filter: 'rejected',
+        color: submissionStatusColor(PaymentSubmissionStatus.rejected.key),
+        filter: PaymentSubmissionStatus.rejected.key,
       ),
     ];
 
@@ -536,8 +537,8 @@ class _SubscriptionHistoryScreenState extends State<SubscriptionHistoryScreen> {
   // (or an honest "none given"), for an approval when, for a pending
   // one that it's still waiting.
   Widget _detailsFor(_Submission s) {
-    switch (s.status) {
-      case 'rejected':
+    switch (PaymentSubmissionStatus.fromKey(s.status)) {
+      case PaymentSubmissionStatus.rejected:
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -558,7 +559,7 @@ class _SubscriptionHistoryScreenState extends State<SubscriptionHistoryScreen> {
             ],
           ],
         );
-      case 'approved':
+      case PaymentSubmissionStatus.approved:
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -692,7 +693,7 @@ class _SubscriptionHistoryScreenState extends State<SubscriptionHistoryScreen> {
                 const SizedBox(height: 6),
                 Text(methodLine, style: TextStyle(fontSize: 12, color: Colors.grey[700])),
               ],
-              if (s.status != 'pending') ...[
+              if (s.status != PaymentSubmissionStatus.pending.key) ...[
                 const SizedBox(height: 8),
                 _detailsFor(s),
               ],
