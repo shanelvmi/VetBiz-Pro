@@ -11,6 +11,7 @@ import '../../widgets/vetbiz_loading_indicator.dart';
 import '../../theme/app_palette.dart';
 import '../../data/collections.dart';
 import '../../data/fields.dart';
+import '../../data/user_role.dart';
 
 /// Only ever shown for an Admin managing more than one facility - the
 /// single-facility case (every Assistant, and most Admins) never
@@ -76,7 +77,7 @@ class _FacilityPickerScreenState extends State<FacilityPickerScreen> {
       if (facilityIds.isNotEmpty) {
         final assistantsSnap = await firestore
             .collection(Collections.users)
-            .where(Fields.role, isEqualTo: 'assistant')
+            .where(Fields.role, isEqualTo: UserRole.assistant.key)
             .where('facilityIds', arrayContainsAny: facilityIds.take(30).toList())
             .get();
         for (final doc in assistantsSnap.docs) {

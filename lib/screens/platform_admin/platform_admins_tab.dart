@@ -7,6 +7,7 @@ import '../../widgets/hover_elevate_card.dart';
 import '../../theme/app_palette.dart';
 import '../../data/collections.dart';
 import '../../data/fields.dart';
+import '../../data/user_role.dart';
 
 /// Manage who else has platform admin access - previously the only way
 /// to grant this was manually creating a document in Firebase Console.
@@ -60,7 +61,7 @@ class _PlatformAdminsTabState extends State<PlatformAdminsTab> {
       // added as a Platform Admin - an Assistant must first be promoted
       // to Admin (Users > their profile > Change role), not silently
       // upgraded as a side effect of this action.
-      if (userData[Fields.role] != 'admin') {
+      if (userData[Fields.role] != UserRole.admin.key) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(

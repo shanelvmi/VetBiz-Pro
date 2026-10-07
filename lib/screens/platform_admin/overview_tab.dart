@@ -9,6 +9,7 @@ import 'overview_details_screen.dart';
 import '../../theme/app_palette.dart';
 import '../../data/collections.dart';
 import '../../data/fields.dart';
+import '../../data/subscription_keys.dart';
 
 /// A snapshot of the whole business - how many facilities, in what state, and
 /// how much has actually been collected this month. Reads every facility
@@ -124,10 +125,10 @@ class _OverviewTabState extends State<OverviewTab> {
 
     return {
       'total': facilitiesSnap.docs.length,
-      'trial': trial,
-      'active': active,
-      'grace': grace,
-      'locked': locked,
+      SubscriptionKeys.trial: trial,
+      SubscriptionKeys.active: active,
+      SubscriptionKeys.grace: grace,
+      SubscriptionKeys.locked: locked,
       'monthRevenue': monthRevenue,
       'monthPayments': monthPayments,
       'pendingCount': pendingSnap.docs.length,
@@ -221,10 +222,10 @@ class _OverviewTabState extends State<OverviewTab> {
             const SizedBox(height: 12),
             _StatusBar(
               primaryColor: primaryColor,
-              active: stats['active'] as int,
-              trial: stats['trial'] as int,
-              grace: stats['grace'] as int,
-              locked: stats['locked'] as int,
+              active: stats[SubscriptionKeys.active] as int,
+              trial: stats[SubscriptionKeys.trial] as int,
+              grace: stats[SubscriptionKeys.grace] as int,
+              locked: stats[SubscriptionKeys.locked] as int,
             ),
 
             const SizedBox(height: 24),

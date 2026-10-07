@@ -9,6 +9,7 @@ import 'package:firebase_storage/firebase_storage.dart';
 import 'membership_service.dart';
 import '../data/collections.dart';
 import '../data/fields.dart';
+import '../data/user_status.dart';
 
 class AuthService {
   final FirebaseAuth _auth = FirebaseAuth.instance;
@@ -234,7 +235,7 @@ class AuthService {
     if (user == null) throw Exception('No user logged in');
 
     await _firestore.collection(Collections.users).doc(user.uid).update({
-      Fields.status: 'deactivated',
+      Fields.status: UserStatus.deactivated.key,
     });
 
     await logout(); // Immediately log out user

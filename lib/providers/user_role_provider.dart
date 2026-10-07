@@ -6,6 +6,8 @@ import 'package:firebase_auth/firebase_auth.dart';
 import '../utils/force_logout.dart';
 import '../data/collections.dart';
 import '../data/fields.dart';
+import '../data/user_role.dart';
+import '../data/user_status.dart';
 
 /// Tracks the signed-in user's own role in real time (admin vs
 /// assistant), read from their `users/{uid}` document - the same
@@ -16,8 +18,8 @@ class UserRoleProvider with ChangeNotifier {
   StreamSubscription<DocumentSnapshot>? _subscription;
 
   String? _role;
-  String get role => _role ?? 'assistant';
-  bool get isAdmin => _role == 'admin';
+  String get role => _role ?? UserRole.assistant.key;
+  bool get isAdmin => _role == UserRole.admin.key;
   bool get isAssistant => !isAdmin;
 
   void listenToCurrentUser() {
@@ -39,7 +41,7 @@ class UserRoleProvider with ChangeNotifier {
       // themselves now prevent a Platform Admin's status from ever
       // being set to deactivated in the first place).
       final status = (snapshot.data()?[Fields.status] as String?)?.toLowerCase();
-      if (status == 'deactivated') {
+      if (status == UserStatus.deactivated.key) {
         _handlePossibleDeactivation(user.uid);
         return;
       }

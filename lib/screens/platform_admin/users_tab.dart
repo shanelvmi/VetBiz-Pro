@@ -9,6 +9,8 @@ import '../../services/role_change_service.dart';
 import '../../theme/app_palette.dart';
 import '../../data/collections.dart';
 import '../../data/fields.dart';
+import '../../data/user_role.dart';
+import '../../data/user_status.dart';
 
 /// Every registered user across the whole platform, not scoped to one
 /// facility - the missing piece that made "an assistant switching
@@ -180,15 +182,12 @@ class _UsersTabState extends State<UsersTab> {
     setState(() => _statusFilter = status);
   }
 
+  // Compared to the keys rather than UserRole.fromKey, which would read an
+  // unknown role as assistant: an unknown role stays grey.
   Color _roleColor(String role) {
-    switch (role) {
-      case 'admin':
-        return primaryColor;
-      case 'assistant':
-        return Colors.blue;
-      default:
-        return Colors.grey;
-    }
+    if (role == UserRole.admin.key) return primaryColor;
+    if (role == UserRole.assistant.key) return Colors.blue;
+    return Colors.grey;
   }
 
   bool _matchesSearch(Map<String, dynamic> data) {
@@ -262,16 +261,16 @@ class _UsersTabState extends State<UsersTab> {
               const SizedBox(width: 8),
               _RoleFilterChip(
                 label: 'Admins',
-                selected: _roleFilter == 'admin',
+                selected: _roleFilter == UserRole.admin.key,
                 color: primaryColor,
-                onTap: () => _onRoleFilterChanged('admin'),
+                onTap: () => _onRoleFilterChanged(UserRole.admin.key),
               ),
               const SizedBox(width: 8),
               _RoleFilterChip(
                 label: 'Assistants',
-                selected: _roleFilter == 'assistant',
+                selected: _roleFilter == UserRole.assistant.key,
                 color: Colors.blue,
-                onTap: () => _onRoleFilterChanged('assistant'),
+                onTap: () => _onRoleFilterChanged(UserRole.assistant.key),
               ),
             ],
           ),
@@ -290,23 +289,23 @@ class _UsersTabState extends State<UsersTab> {
               const SizedBox(width: 8),
               _RoleFilterChip(
                 label: 'Active',
-                selected: _statusFilter == 'active',
+                selected: _statusFilter == UserStatus.active.key,
                 color: Colors.green,
-                onTap: () => _onStatusFilterChanged('active'),
+                onTap: () => _onStatusFilterChanged(UserStatus.active.key),
               ),
               const SizedBox(width: 8),
               _RoleFilterChip(
                 label: 'Awaiting Approval',
-                selected: _statusFilter == 'pending',
+                selected: _statusFilter == UserStatus.pending.key,
                 color: Colors.blue,
-                onTap: () => _onStatusFilterChanged('pending'),
+                onTap: () => _onStatusFilterChanged(UserStatus.pending.key),
               ),
               const SizedBox(width: 8),
               _RoleFilterChip(
                 label: 'Deactivated',
-                selected: _statusFilter == 'deactivated',
+                selected: _statusFilter == UserStatus.deactivated.key,
                 color: Colors.orange,
-                onTap: () => _onStatusFilterChanged('deactivated'),
+                onTap: () => _onStatusFilterChanged(UserStatus.deactivated.key),
               ),
             ],
           ),
@@ -394,7 +393,7 @@ class _UsersTabState extends State<UsersTab> {
     var platformAdminDocs = platformAdminDocsRaw.where((doc) {
       final data = _effectiveData(doc);
       if (_roleFilter != null && data[Fields.role] != _roleFilter) return false;
-      if (_statusFilter != null && (data[Fields.status] ?? 'active') != _statusFilter) {
+      if (_statusFilter != null && (data[Fields.status] ?? UserStatus.active.key) != _statusFilter) {
         return false;
       }
       return _matchesSearch(data);
@@ -411,7 +410,7 @@ class _UsersTabState extends State<UsersTab> {
     if (_statusFilter != null) {
       docs = docs.where((doc) {
         final data = _effectiveData(doc);
-        return (data[Fields.status] ?? 'active') == _statusFilter;
+        return (data[Fields.status] ?? UserStatus.active.key) == _statusFilter;
       }).toList();
     }
     if (_search.isNotEmpty) {
@@ -495,7 +494,7 @@ class _UsersTabState extends State<UsersTab> {
   Widget _buildUserCard(QueryDocumentSnapshot<Map<String, dynamic>> doc, bool isPlatformAdmin) {
     final data = _effectiveData(doc);
     final facilities = (data['facilities'] as List?)?.cast<dynamic>() ?? [];
-    final status = (data[Fields.status] ?? 'active').toString();
+    final status = (data[Fields.status] ?? UserStatus.active.key).toString();
     final role = (data[Fields.role] ?? 'unknown').toString();
     final name = (data['fullName'] ?? 'Unknown').toString();
     final roleColor = _roleColor(role);
@@ -602,13 +601,13 @@ class _UsersTabState extends State<UsersTab> {
                   ],
                 ),
               ),
-              if (status != 'active')
+              if (status != UserStatus.active.key)
                 Chip(
                   label: Text(
-                    status == 'pending' ? 'Awaiting Approval' : status,
+                    status == UserStatus.pending.key ? 'Awaiting Approval' : status,
                     style: const TextStyle(fontSize: 11),
                   ),
-                  backgroundColor: status == 'pending' ? Colors.blue.shade100 : Colors.orange.shade100,
+                  backgroundColor: status == UserStatus.pending.key ? Colors.blue.shade100 : Colors.orange.shade100,
                   visualDensity: VisualDensity.compact,
                 ),
             ],

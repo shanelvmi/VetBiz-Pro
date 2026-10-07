@@ -58,6 +58,8 @@ import '../register_screen.dart';
 import '../../theme/app_palette.dart';
 import '../../data/collections.dart';
 import '../../data/fields.dart';
+import '../../data/user_role.dart';
+import '../../data/user_status.dart';
 
 class DrawerHoverItem extends StatefulWidget {
   final IconData icon;
@@ -480,8 +482,8 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
     if (isAdmin && facilityId != null) {
       _pendingWatchSub = FirebaseFirestore.instance
           .collection(Collections.users)
-          .where(Fields.role, isEqualTo: 'assistant')
-          .where(Fields.status, isEqualTo: 'pending')
+          .where(Fields.role, isEqualTo: UserRole.assistant.key)
+          .where(Fields.status, isEqualTo: UserStatus.pending.key)
           .where('facilityIds', arrayContains: facilityId)
           .snapshots()
           .listen((snapshot) {
@@ -3285,7 +3287,7 @@ Widget _buildDrawerContent() {
                       const TextSpan(text: "Role: ", style: TextStyle(fontWeight: FontWeight.bold)),
                       // A promoted Assistant is a Co-admin, not just "Admin".
                       TextSpan(
-                          text: (role == 'admin' && data['previousRole'] == 'assistant')
+                          text: (role == UserRole.admin.key && data['previousRole'] == UserRole.assistant.key)
                               ? 'Co-admin'
                               : _capitalize(role)),
                     ],

@@ -7,6 +7,8 @@ import '../../services/role_change_service.dart';
 import '../../theme/app_palette.dart';
 import '../../data/collections.dart';
 import '../../data/fields.dart';
+import '../../data/user_role.dart';
+import '../../data/user_status.dart';
 
 /// A single user's account, editable by the Platform Admin - the direct
 /// answer to "an assistant migrated to a new facility, and their old
@@ -61,7 +63,7 @@ class _UserDetailScreenState extends State<UserDetailScreen> {
           }).toList();
 
           return AlertDialog(
-            title: Text((_userData[Fields.role] ?? '') == 'assistant' ? 'Move to Facility' : 'Add to Facility'),
+            title: Text((_userData[Fields.role] ?? '') == UserRole.assistant.key ? 'Move to Facility' : 'Add to Facility'),
             content: SizedBox(
               width: 420,
               height: 420,
@@ -109,7 +111,7 @@ class _UserDetailScreenState extends State<UserDetailScreen> {
 
     if (selected == null) return;
 
-    final isAssistant = (_userData[Fields.role] ?? '') == 'assistant';
+    final isAssistant = (_userData[Fields.role] ?? '') == UserRole.assistant.key;
     final currentFacilities = (_userData['facilities'] as List?)?.cast<dynamic>() ?? [];
     final alreadyThere = currentFacilities.any((f) => f is Map && f[Fields.facilityId] == selected[Fields.facilityId]);
     if (alreadyThere) {
@@ -142,20 +144,20 @@ class _UserDetailScreenState extends State<UserDetailScreen> {
         await FirebaseFirestore.instance.collection(Collections.users).doc(widget.userId).update({
           'facilities': [selected],
           'facilityIds': [selected[Fields.facilityId]],
-          if (isTargetPlatformAdmin) Fields.role: 'admin',
+          if (isTargetPlatformAdmin) Fields.role: UserRole.admin.key,
         });
       } else {
         await FirebaseFirestore.instance.collection(Collections.users).doc(widget.userId).update({
           'facilities': FieldValue.arrayUnion([selected]),
           'facilityIds': FieldValue.arrayUnion([selected[Fields.facilityId]]),
-          if (isTargetPlatformAdmin) Fields.role: 'admin',
+          if (isTargetPlatformAdmin) Fields.role: UserRole.admin.key,
         });
       }
 
       if (!mounted) return;
       setState(() {
         _userData['facilities'] = isAssistant ? [selected] : [...currentFacilities, selected];
-        if (isTargetPlatformAdmin) _userData[Fields.role] = 'admin';
+        if (isTargetPlatformAdmin) _userData[Fields.role] = UserRole.admin.key;
       });
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Added to ${selected['name']}'), backgroundColor: Colors.green),
@@ -214,10 +216,10 @@ class _UserDetailScreenState extends State<UserDetailScreen> {
   }
 
   Future<void> _toggleStatus() async {
-    final currentStatus = (_userData[Fields.status] ?? 'active').toString();
-    final newStatus = currentStatus == 'active' ? 'deactivated' : 'active';
+    final currentStatus = (_userData[Fields.status] ?? UserStatus.active.key).toString();
+    final newStatus = currentStatus == UserStatus.active.key ? UserStatus.deactivated.key : UserStatus.active.key;
 
-    if (newStatus == 'deactivated') {
+    if (newStatus == UserStatus.deactivated.key) {
       final platformAdminDoc =
           await FirebaseFirestore.instance.collection(Collections.platformAdmins).doc(widget.userId).get();
       if (platformAdminDoc.exists) {
@@ -245,10 +247,10 @@ class _UserDetailScreenState extends State<UserDetailScreen> {
     final confirm = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text(newStatus == 'active' ? 'Reactivate Account?' : 'Deactivate Account?'),
+        title: Text(newStatus == UserStatus.active.key ? 'Reactivate Account?' : 'Deactivate Account?'),
         content: SizedBox(
           width: MediaQuery.of(context).size.width > 700 ? 360 : MediaQuery.of(context).size.width * 0.85,
-          child: Text(newStatus == 'active'
+          child: Text(newStatus == UserStatus.active.key
               ? 'This user will be able to log in again.'
               : 'This user will no longer be able to log in, at any facility.'),
         ),
@@ -257,10 +259,10 @@ class _UserDetailScreenState extends State<UserDetailScreen> {
           ElevatedButton(
             onPressed: () => Navigator.pop(context, true),
             style: ElevatedButton.styleFrom(
-              backgroundColor: newStatus == 'active' ? Colors.green : Colors.red,
+              backgroundColor: newStatus == UserStatus.active.key ? Colors.green : Colors.red,
               foregroundColor: Colors.white,
             ),
-            child: Text(newStatus == 'active' ? 'Reactivate' : 'Deactivate'),
+            child: Text(newStatus == UserStatus.active.key ? 'Reactivate' : 'Deactivate'),
           ),
         ],
       ),
@@ -433,7 +435,7 @@ class _UserDetailScreenState extends State<UserDetailScreen> {
     final plan = await _planRoleChange(name);
     if (plan == null || !mounted) return;
 
-    final isPromotion = plan.newRole == 'admin';
+    final isPromotion = plan.newRole == UserRole.admin.key;
     // Not disposed: it lives exactly as long as the dialog, and disposing it
     // while the dialog is still animating closed can trip a "used after
     // dispose" error. It holds no resources, so letting it be collected is
@@ -554,7 +556,7 @@ class _UserDetailScreenState extends State<UserDetailScreen> {
   @override
   Widget build(BuildContext context) {
     final facilities = (_userData['facilities'] as List?)?.cast<dynamic>() ?? [];
-    final status = (_userData[Fields.status] ?? 'active').toString();
+    final status = (_userData[Fields.status] ?? UserStatus.active.key).toString();
     final role = (_userData[Fields.role] ?? '').toString();
 
     return Scaffold(
@@ -586,7 +588,7 @@ class _UserDetailScreenState extends State<UserDetailScreen> {
                           const Spacer(),
                           // Only a Platform Admin can change a role - this is
                           // the one place it's done.
-                          if (role == 'admin' || role == 'assistant')
+                          if (role == UserRole.admin.key || role == UserRole.assistant.key)
                             TextButton.icon(
                               onPressed: _isSaving ? null : _changeRole,
                               icon: const Icon(Icons.manage_accounts_outlined, size: 18),
@@ -620,7 +622,7 @@ class _UserDetailScreenState extends State<UserDetailScreen> {
                             style: TextStyle(
                               fontSize: 13,
                               fontWeight: FontWeight.bold,
-                              color: status == 'active' ? Colors.green : Colors.orange,
+                              color: status == UserStatus.active.key ? Colors.green : Colors.orange,
                             ),
                           ),
                         ],
@@ -650,8 +652,8 @@ class _UserDetailScreenState extends State<UserDetailScreen> {
                   const Text('Facilities', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
                   TextButton.icon(
                     onPressed: _isSaving ? null : _addToFacility,
-                    icon: Icon((_userData[Fields.role] ?? '') == 'assistant' ? Icons.swap_horiz : Icons.add),
-                    label: Text((_userData[Fields.role] ?? '') == 'assistant' ? 'Move to Facility' : 'Add to Facility'),
+                    icon: Icon((_userData[Fields.role] ?? '') == UserRole.assistant.key ? Icons.swap_horiz : Icons.add),
+                    label: Text((_userData[Fields.role] ?? '') == UserRole.assistant.key ? 'Move to Facility' : 'Add to Facility'),
                   ),
                 ],
               ),
@@ -680,13 +682,13 @@ class _UserDetailScreenState extends State<UserDetailScreen> {
               const SizedBox(height: 24),
               OutlinedButton.icon(
                 onPressed: _toggleStatus,
-                icon: Icon(status == 'active' ? Icons.block : Icons.check_circle_outline),
-                label: Text(status == 'active' ? 'Deactivate Account' : 'Reactivate Account'),
+                icon: Icon(status == UserStatus.active.key ? Icons.block : Icons.check_circle_outline),
+                label: Text(status == UserStatus.active.key ? 'Deactivate Account' : 'Reactivate Account'),
                 style: OutlinedButton.styleFrom(
-                  foregroundColor: status == 'active' ? Colors.red : Colors.green,
+                  foregroundColor: status == UserStatus.active.key ? Colors.red : Colors.green,
                 ),
               ),
-              if (status == 'deactivated') ...[
+              if (status == UserStatus.deactivated.key) ...[
                 const SizedBox(height: 12),
                 OutlinedButton.icon(
                   onPressed: _removeAccount,

@@ -21,6 +21,7 @@ import '../services/role_change_service.dart';
 import '../theme/app_palette.dart';
 import '../data/collections.dart';
 import '../data/fields.dart';
+import '../data/user_role.dart';
 
 class RegisterScreen extends StatefulWidget {
   final bool isUpdating;
@@ -203,7 +204,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
       // Role
       final roleFromDb = (data[Fields.role] ?? '').toString().toLowerCase();
-      selectedRole = roleFromDb == 'admin' ? 'Admin' : 'Assistant';
+      selectedRole = roleFromDb == UserRole.admin.key ? 'Admin' : 'Assistant';
 
       // Avatar
       avatarUrl = data['avatarUrl'];
@@ -420,7 +421,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
               'facilityName': selected['name'],
               'facilityType': selected['type'],
             },
-            role: 'admin',
+            role: UserRole.admin.key,
           );
         } else {
           final facilityList = facilitiesWithId.map((f) {
@@ -433,7 +434,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
           Navigator.pushReplacement(
             context,
             MaterialPageRoute(
-              builder: (_) => FacilityPickerScreen(facilities: facilityList, role: 'admin'),
+              builder: (_) => FacilityPickerScreen(facilities: facilityList, role: UserRole.admin.key),
             ),
           );
         }

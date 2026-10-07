@@ -39,6 +39,8 @@ import 'theme/app_palette.dart';
 import 'theme/app_theme.dart';
 import 'data/collections.dart';
 import 'data/fields.dart';
+import 'data/user_role.dart';
+import 'data/user_status.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -346,7 +348,7 @@ class _AppEntryPointState extends State<AppEntryPoint> {
       // Checked for every role, not just assistants - a deactivated
       // admin account was previously still able to log in freely,
       // which defeated the point of "Deactivate Account" entirely.
-      final status = (data[Fields.status] ?? 'active').toString().toLowerCase();
+      final status = (data[Fields.status] ?? UserStatus.active.key).toString().toLowerCase();
 
       // An assistant who is in NO facility - removed from theirs - has nothing
       // left to be blocked from: every rule that opens data checks facility
@@ -355,9 +357,9 @@ class _AppEntryPointState extends State<AppEntryPoint> {
       // admin can no longer see them to reactivate them. They get through to
       // the screen that lets them join another facility with an invite code.
       final facilitiesOnRecord = _parseFacilities(data);
-      final removedAssistant = role == 'assistant' && facilitiesOnRecord.isEmpty;
+      final removedAssistant = role == UserRole.assistant.key && facilitiesOnRecord.isEmpty;
 
-      if (!isPlatformAdminAccount && !removedAssistant && status == 'deactivated') {
+      if (!isPlatformAdminAccount && !removedAssistant && status == UserStatus.deactivated.key) {
         debugPrint('[AUTH] blocked - deactivated, non-platform-admin account');
         // Not returned as this Future's result - signing out fires its
         // own auth-state change, which can discard this exact
@@ -370,7 +372,7 @@ class _AppEntryPointState extends State<AppEntryPoint> {
         );
         return const Scaffold(body: Center(child: CircularProgressIndicator()));
       }
-      if (!isPlatformAdminAccount && !removedAssistant && role == 'assistant' && status != 'active') {
+      if (!isPlatformAdminAccount && !removedAssistant && role == UserRole.assistant.key && status != UserStatus.active.key) {
         debugPrint('[AUTH] blocked - assistant not yet active');
         forceLogoutAndShowLogin(
           message: 'Your account is not active yet. Please wait for admin approval.',
@@ -427,7 +429,7 @@ class _AppEntryPointState extends State<AppEntryPoint> {
         // offered the invite-code box like anyone else with no facility.
         String? notice;
         final rejection = data['lastRejection'];
-        if (role == 'assistant' && rejection is Map) {
+        if (role == UserRole.assistant.key && rejection is Map) {
           final from = (rejection['facilityName'] ?? '').toString().trim();
           notice = from.isEmpty ? 'Your request to join was not approved.' : 'Your request to join $from was not approved.';
         }
@@ -749,7 +751,7 @@ class _NoFacilityScreenState extends State<_NoFacilityScreen> {
   bool _checking = false;
   bool _joining = false;
 
-  bool get _isAssistant => widget.role == 'assistant';
+  bool get _isAssistant => widget.role == UserRole.assistant.key;
 
   // ---- an admin with no facility: add one, or delete the account ----
   final TextEditingController _facilityNameController = TextEditingController();

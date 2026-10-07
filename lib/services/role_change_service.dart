@@ -5,6 +5,8 @@ import '../utils/activity_logger.dart';
 import '../utils/facility_limit_helper.dart';
 import '../data/collections.dart';
 import '../data/fields.dart';
+import '../data/user_role.dart';
+import '../data/user_status.dart';
 
 /// Changing someone's role - done ONLY by a Platform Admin (Platform Admin >
 /// Users > the person > Change role). Nobody else can: not the person
@@ -105,11 +107,11 @@ class RoleChangeBlockedException implements Exception {
 class RoleChangeService {
   RoleChangeService._();
 
-  static String newRoleFor(String role) => role == 'admin' ? 'assistant' : 'admin';
+  static String newRoleFor(String role) => role == UserRole.admin.key ? UserRole.assistant.key : UserRole.admin.key;
 
   static String roleLabel(String role) {
-    if (role == 'admin') return 'Admin';
-    if (role == 'assistant') return 'Assistant';
+    if (role == UserRole.admin.key) return 'Admin';
+    if (role == UserRole.assistant.key) return 'Assistant';
     return role.isEmpty ? 'Unknown' : role;
   }
 
@@ -118,13 +120,13 @@ class RoleChangeService {
   /// is simply an Admin. [previousRole] is what the change itself records, so
   /// no separate flag is needed.
   static String displayRole(String role, {String? previousRole}) {
-    if (role == 'admin' && previousRole == 'assistant') return 'Co-admin';
+    if (role == UserRole.admin.key && previousRole == UserRole.assistant.key) return 'Co-admin';
     return roleLabel(role);
   }
 
   /// True for the people displayRole calls Co-admin.
   static bool isCoAdmin(Map<String, dynamic> userData) =>
-      userData[Fields.role] == 'admin' && userData['previousRole'] == 'assistant';
+      userData[Fields.role] == UserRole.admin.key && userData['previousRole'] == UserRole.assistant.key;
 
   // "Ukuli Agrovet" rather than "Ukuli" - unless the name already says it.
   static String _facilityLabel(Map<dynamic, dynamic> f) {
@@ -140,20 +142,20 @@ class RoleChangeService {
     final next = newRoleFor(current);
     final currentLabel = displayRole(current, previousRole: facts.previousRole);
     // Whoever is promoted from Assistant is, from then on, a Co-admin.
-    final newLabel = next == 'admin' ? 'Co-admin' : 'Assistant';
+    final newLabel = next == UserRole.admin.key ? 'Co-admin' : 'Assistant';
     final blockers = <String>[];
     final effects = <String>[];
     final warnings = <String>[];
 
-    if (current != 'admin' && current != 'assistant') {
+    if (current != UserRole.admin.key && current != UserRole.assistant.key) {
       blockers.add('This account\'s role ("$current") isn\'t one that can be changed here.');
     }
     if (facts.isPlatformAdminAccount) {
       blockers.add('This is a Platform Admin account. Its role can\'t be changed here.');
     }
 
-    if (current == 'assistant') {
-      if (facts.status != 'active') {
+    if (current == UserRole.assistant.key) {
+      if (facts.status != UserStatus.active.key) {
         blockers.add('This account is ${facts.status}. Approve or reactivate it before promoting them.');
       }
       effects.add('$userName becomes a Co-admin: they can manage assistants, create invite codes, delete records, '
@@ -166,7 +168,7 @@ class RoleChangeService {
             'Only a facility\'s creator can delete the facility itself.');
         effects.add('They\'re told, and so are the facility\'s Admins.');
       }
-    } else if (current == 'admin') {
+    } else if (current == UserRole.admin.key) {
       if (facts.ownedFacilityNames.isNotEmpty) {
         blockers.add('They own ${facts.ownedFacilityNames.join(', ')}. A facility\'s owner has to stay an Admin - '
             'delete the facility first (ownership can\'t be transferred yet).');
@@ -208,7 +210,7 @@ class RoleChangeService {
   static Future<RoleChangeFacts> gatherFacts(String userId, Map<String, dynamic> userData) async {
     final db = FirebaseFirestore.instance;
     final role = (userData[Fields.role] ?? '').toString();
-    final status = (userData[Fields.status] ?? 'active').toString();
+    final status = (userData[Fields.status] ?? UserStatus.active.key).toString();
 
     // Both fields are read: they're meant to stay in step, but an older
     // account might only have one of them.
@@ -239,15 +241,15 @@ class RoleChangeService {
 
     // Whether a facility keeps another Admin only matters when demoting one.
     final others = <String, int>{};
-    if (role == 'admin') {
+    if (role == UserRole.admin.key) {
       for (final fid in facilityIds) {
         final admins =
-            await db.collection(Collections.users).where(Fields.role, isEqualTo: 'admin').where('facilityIds', arrayContains: fid).get();
+            await db.collection(Collections.users).where(Fields.role, isEqualTo: UserRole.admin.key).where('facilityIds', arrayContains: fid).get();
         others[fid] = admins.docs
             .where((d) =>
                 d.id != userId &&
                 !platformAdminIds.contains(d.id) &&
-                (d.data()[Fields.status] ?? 'active').toString() != 'deactivated')
+                (d.data()[Fields.status] ?? UserStatus.active.key).toString() != UserStatus.deactivated.key)
             .length;
       }
     }
@@ -321,7 +323,7 @@ class RoleChangeService {
     // this method, or the caller would report a failure for a change that
     // happened. Everything is best-effort and just recorded in the outcome.
     final reasonNote = cleanReason.isEmpty ? '' : ' Reason: $cleanReason.';
-    final promoted = plan.newRole == 'admin';
+    final promoted = plan.newRole == UserRole.admin.key;
     var allSent = true;
 
     for (final fid in facts.facilityIds) {

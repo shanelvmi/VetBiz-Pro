@@ -22,6 +22,7 @@ import '../admin/manage_assistants_screen.dart';
 import '../../theme/app_palette.dart';
 import '../../data/collections.dart';
 import '../../data/fields.dart';
+import '../../data/user_role.dart';
 
 const Color deepGreen = AppPalette.primary;
 const Color warmAmber = AppPalette.accent;
@@ -267,7 +268,7 @@ class _FacilityScreenState extends State<FacilityScreen> {
       final userDoc = await FirebaseFirestore.instance.collection(Collections.users).doc(currentUser!.uid).get();
       final userData = userDoc.data();
 
-      if (userData != null && userData[Fields.role] == 'admin') {
+      if (userData != null && userData[Fields.role] == UserRole.admin.key) {
         final facilityList = List<Map<String, dynamic>>.from(userData['facilities'] ?? []);
         final selectedFacilityId = Provider.of<FacilityProvider>(context, listen: false).selectedFacilityId;
 
@@ -337,7 +338,7 @@ class _FacilityScreenState extends State<FacilityScreen> {
   Future<List<Map<String, dynamic>>> _fetchAssistantsForFacility(String facilityId) async {
     final snapshot = await FirebaseFirestore.instance
         .collection(Collections.users)
-        .where(Fields.role, isEqualTo: 'assistant')
+        .where(Fields.role, isEqualTo: UserRole.assistant.key)
         .where('facilityIds', arrayContains: facilityId)
         .get();
 
@@ -352,7 +353,7 @@ class _FacilityScreenState extends State<FacilityScreen> {
         'facilityName': facility['name'],
         'facilityType': facility['type'],
       },
-      role: 'admin',
+      role: UserRole.admin.key,
     );
   }
 

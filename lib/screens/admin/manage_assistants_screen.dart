@@ -13,6 +13,20 @@ import '../../utils/activity_logger.dart';
 import '../../theme/app_palette.dart';
 import '../../data/collections.dart';
 import '../../data/fields.dart';
+import '../../data/user_role.dart';
+import '../../data/user_status.dart';
+
+/// Who someone is on a facility's team, as this screen shows them. Worked out
+/// from the user record (role, previousRole, who created the facility); not
+/// stored anywhere.
+enum TeamMemberKind {
+  /// The facility's Admin, its owner.
+  owner,
+
+  /// `role: admin` with `previousRole: assistant`.
+  coAdmin,
+  assistant,
+}
 
 class ManageAssistantsScreen extends StatefulWidget {
   // Set when opened as a deep link from a specific facility's card in
@@ -57,7 +71,7 @@ class _ManageAssistantsScreenState extends State<ManageAssistantsScreen> {
 
   String _searchQuery = ''; // trimmed + lowercased
   final TextEditingController _searchController = TextEditingController();
-  String? _statusFilter; // 'active' | 'deactivated' | 'pending', null = all
+  String? _statusFilter; // UserStatus.active.key | UserStatus.deactivated.key | UserStatus.pending.key, null = all
   String _facilityFilter = 'All'; // a facility id, or 'All'
   int _page = 1;
   int _pageSize = 10;
@@ -447,31 +461,32 @@ class _ManageAssistantsScreenState extends State<ManageAssistantsScreen> {
   bool _isListed(QueryDocumentSnapshot doc) {
     if (doc.id == adminUid) return true;
     final data = doc.data() as Map<String, dynamic>;
-    if (data[Fields.role] == 'assistant') return true;
-    return data[Fields.role] == 'admin' && (RoleChangeService.isCoAdmin(data) || _isOwnerUid(doc.id));
+    if (data[Fields.role] == UserRole.assistant.key) return true;
+    return data[Fields.role] == UserRole.admin.key && (RoleChangeService.isCoAdmin(data) || _isOwnerUid(doc.id));
   }
 
-  // 'owner' | 'coadmin' | 'assistant' | 'admin' (an Admin who is neither the
-  // owner nor a Co-admin - which can only ever be you).
-  String _kindOf(String uid, Map<String, dynamic> data) {
-    if (data[Fields.role] == 'assistant') return 'assistant';
-    if (RoleChangeService.isCoAdmin(data)) return 'coadmin';
-    if (_isOwnerUid(uid)) return 'owner';
-    return 'admin';
+  // An Admin who is neither the owner nor a Co-admin (which can only ever be
+  // you) counts as owner: this screen shows and treats the two the same.
+  TeamMemberKind _kindOf(String uid, Map<String, dynamic> data) {
+    if (data[Fields.role] == UserRole.assistant.key) return TeamMemberKind.assistant;
+    if (RoleChangeService.isCoAdmin(data)) return TeamMemberKind.coAdmin;
+    return TeamMemberKind.owner;
   }
 
-  String _kindLabel(String kind) {
-    if (kind == 'assistant') return 'Assistant';
-    if (kind == 'coadmin') return 'Co-admin';
+  String _kindLabel(TeamMemberKind kind) {
+    if (kind == TeamMemberKind.assistant) return 'Assistant';
+    if (kind == TeamMemberKind.coAdmin) return 'Co-admin';
     return 'Admin';
   }
 
   // The order of authority: Admin first, then Co-admins, then Assistants.
-  int _tier(String kind) => kind == 'assistant' ? 2 : (kind == 'coadmin' ? 1 : 0);
+  int _tier(TeamMemberKind kind) =>
+      kind == TeamMemberKind.assistant ? 2 : (kind == TeamMemberKind.coAdmin ? 1 : 0);
 
-  Widget _roleChip(String kind) {
-    final MaterialColor color =
-        kind == 'assistant' ? Colors.blueGrey : (kind == 'coadmin' ? Colors.teal : Colors.indigo);
+  Widget _roleChip(TeamMemberKind kind) {
+    final MaterialColor color = kind == TeamMemberKind.assistant
+        ? Colors.blueGrey
+        : (kind == TeamMemberKind.coAdmin ? Colors.teal : Colors.indigo);
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(color: color.withValues(alpha: 0.12), borderRadius: BorderRadius.circular(10)),
@@ -507,26 +522,26 @@ class _ManageAssistantsScreenState extends State<ManageAssistantsScreen> {
     if (_busyUserIds.contains(doc.id)) return [_workingNote()];
     if (doc.id == adminUid) return [_note('You', strong: true)];
     final kind = _kindOf(doc.id, data);
-    if (kind == 'owner' || kind == 'admin') return [_note('Facility admin')];
-    if (kind == 'coadmin') {
+    if (kind == TeamMemberKind.owner) return [_note('Facility admin')];
+    if (kind == TeamMemberKind.coAdmin) {
       if (!_viewerOwns(facilityId)) return [_note('Co-admin')];
       final bucket = _bucket(data);
       return [
-        if (bucket == 'active')
+        if (bucket == UserStatus.active.key)
           _actionButton(
             label: 'Deactivate',
             icon: Icons.pause_circle_outline,
             color: Colors.orange,
             onPressed: () => _confirmDeactivateCoAdmin(doc, data),
           ),
-        if (bucket == 'deactivated')
+        if (bucket == UserStatus.deactivated.key)
           _actionButton(
             label: 'Reactivate',
             icon: Icons.play_circle_outline,
             color: Colors.green,
-            onPressed: () => _setCoAdminStatus(doc, data, 'active'),
+            onPressed: () => _setCoAdminStatus(doc, data, UserStatus.active.key),
           ),
-        if (bucket == 'pending') _note('Co-admin'),
+        if (bucket == UserStatus.pending.key) _note('Co-admin'),
       ];
     }
     return _buildActionButtons(doc, status, facilityId);
@@ -556,7 +571,7 @@ class _ManageAssistantsScreenState extends State<ManageAssistantsScreen> {
         ],
       ),
     );
-    if (confirm == true) await _setCoAdminStatus(doc, data, 'deactivated');
+    if (confirm == true) await _setCoAdminStatus(doc, data, UserStatus.deactivated.key);
   }
 
   Future<void> _setCoAdminStatus(QueryDocumentSnapshot doc, Map<String, dynamic> data, String newStatus) =>
@@ -565,7 +580,7 @@ class _ManageAssistantsScreenState extends State<ManageAssistantsScreen> {
   Future<void> _doSetCoAdminStatus(QueryDocumentSnapshot doc, Map<String, dynamic> data, String newStatus) async {
     final name = (data['fullName'] ?? 'This co-admin').toString();
     final facilityId = _facilityIdOf(data);
-    final activating = newStatus == 'active';
+    final activating = newStatus == UserStatus.active.key;
     try {
       final me = FirebaseAuth.instance.currentUser;
       await FirebaseFirestore.instance.collection(Collections.users).doc(doc.id).update({
@@ -613,33 +628,25 @@ class _ManageAssistantsScreenState extends State<ManageAssistantsScreen> {
   String _bucket(Map<String, dynamic> data) {
     // An Admin or Co-admin has no approval step, so no status means active -
     // only an Assistant waiting to be approved is "pending".
-    final status = (data[Fields.status] ?? (data[Fields.role] == 'assistant' ? 'pending' : 'active')).toString();
-    if (status == 'active') return 'active';
-    if (status == 'deactivated') return 'deactivated';
-    return 'pending';
+    final status = (data[Fields.status] ?? (data[Fields.role] == UserRole.assistant.key ? UserStatus.pending.key : UserStatus.active.key)).toString();
+    if (status == UserStatus.active.key) return UserStatus.active.key;
+    if (status == UserStatus.deactivated.key) return UserStatus.deactivated.key;
+    return UserStatus.pending.key;
   }
 
-  Color _statusColor(String bucket) {
-    switch (bucket) {
-      case 'active':
-        return Colors.green;
-      case 'deactivated':
-        return Colors.red;
-      default:
-        return Colors.orange;
-    }
-  }
+  // Anything that isn't active or deactivated shows as pending - including an
+  // unknown value, which fromKey reads as pending.
+  Color _statusColor(String bucket) => switch (UserStatus.fromKey(bucket)) {
+        UserStatus.active => Colors.green,
+        UserStatus.deactivated => Colors.red,
+        UserStatus.pending || UserStatus.rejected => Colors.orange,
+      };
 
-  String _statusLabel(String bucket) {
-    switch (bucket) {
-      case 'active':
-        return 'Active';
-      case 'deactivated':
-        return 'Deactivated';
-      default:
-        return 'Pending';
-    }
-  }
+  String _statusLabel(String bucket) => switch (UserStatus.fromKey(bucket)) {
+        UserStatus.active => 'Active',
+        UserStatus.deactivated => 'Deactivated',
+        UserStatus.pending || UserStatus.rejected => 'Pending',
+      };
 
   // First facility id on the record, or '' - an empty list used to throw.
   String _facilityIdOf(Map<String, dynamic> data) {
@@ -653,7 +660,7 @@ class _ManageAssistantsScreenState extends State<ManageAssistantsScreen> {
   List<Widget> _buildActionButtons(QueryDocumentSnapshot doc, String status, String facilityId) {
     final data = doc.data() as Map<String, dynamic>;
     return [
-      if (status == 'pending') ...[
+      if (status == UserStatus.pending.key) ...[
         _actionButton(
           label: 'Approve',
           icon: Icons.check_circle_outline,
@@ -670,7 +677,7 @@ class _ManageAssistantsScreenState extends State<ManageAssistantsScreen> {
           onPressed: () => _confirmReject(doc.id, data),
         ),
       ],
-      if (status == 'active') ...[
+      if (status == UserStatus.active.key) ...[
         _actionButton(
           label: 'Deactivate',
           icon: Icons.pause_circle_outline,
@@ -688,7 +695,7 @@ class _ManageAssistantsScreenState extends State<ManageAssistantsScreen> {
           ),
         ),
       ],
-      if (status == 'deactivated') ...[
+      if (status == UserStatus.deactivated.key) ...[
         _actionButton(
           label: 'Reactivate',
           icon: Icons.play_circle_outline,
@@ -921,7 +928,7 @@ class _ManageAssistantsScreenState extends State<ManageAssistantsScreen> {
   }
 
   Widget _buildBody(List<QueryDocumentSnapshot> all) {
-    final counts = <String, int>{'active': 0, 'deactivated': 0, 'pending': 0};
+    final counts = <String, int>{UserStatus.active.key: 0, UserStatus.deactivated.key: 0, UserStatus.pending.key: 0};
     for (final doc in all) {
       final b = _bucket(doc.data() as Map<String, dynamic>);
       counts[b] = (counts[b] ?? 0) + 1;
@@ -952,7 +959,7 @@ class _ManageAssistantsScreenState extends State<ManageAssistantsScreen> {
     // each, you come first; then anyone waiting on a decision, then active,
     // then deactivated - so the people who need something from you are at the
     // top of the Assistants.
-    int rank(String b) => b == 'pending' ? 0 : (b == 'active' ? 1 : 2);
+    int rank(String b) => b == UserStatus.pending.key ? 0 : (b == UserStatus.active.key ? 1 : 2);
     filtered.sort((a, b) {
       final da = a.data() as Map<String, dynamic>;
       final db = b.data() as Map<String, dynamic>;
@@ -1042,27 +1049,27 @@ class _ManageAssistantsScreenState extends State<ManageAssistantsScreen> {
       ),
       _card(
         label: 'Active',
-        value: '${counts['active'] ?? 0}',
+        value: '${counts[UserStatus.active.key] ?? 0}',
         hint: 'Have access',
         icon: Icons.check_circle_outline,
-        color: _statusColor('active'),
-        filter: 'active',
+        color: _statusColor(UserStatus.active.key),
+        filter: UserStatus.active.key,
       ),
       _card(
         label: 'Deactivated',
-        value: '${counts['deactivated'] ?? 0}',
+        value: '${counts[UserStatus.deactivated.key] ?? 0}',
         hint: 'Access paused',
         icon: Icons.pause_circle_outline,
-        color: _statusColor('deactivated'),
-        filter: 'deactivated',
+        color: _statusColor(UserStatus.deactivated.key),
+        filter: UserStatus.deactivated.key,
       ),
       _card(
         label: 'Waiting Approval',
-        value: '${counts['pending'] ?? 0}',
+        value: '${counts[UserStatus.pending.key] ?? 0}',
         hint: 'Need your decision',
         icon: Icons.hourglass_empty,
-        color: _statusColor('pending'),
-        filter: 'pending',
+        color: _statusColor(UserStatus.pending.key),
+        filter: UserStatus.pending.key,
       ),
     ];
 
@@ -1382,7 +1389,7 @@ class _ManageAssistantsScreenState extends State<ManageAssistantsScreen> {
   // Wide layout: one table row. Tapping it opens that person's details.
   Widget _buildRow(QueryDocumentSnapshot doc) {
     final data = doc.data() as Map<String, dynamic>;
-    final rawStatus = (data[Fields.status] ?? 'pending').toString();
+    final rawStatus = (data[Fields.status] ?? UserStatus.pending.key).toString();
     final bucket = _bucket(data);
     final facilityId = _facilityIdOf(data);
     final facilityName = _facilityText(data);
@@ -1454,7 +1461,7 @@ class _ManageAssistantsScreenState extends State<ManageAssistantsScreen> {
   // Narrow layout (phones): the same information as a card per assistant.
   Widget _buildNarrowCard(QueryDocumentSnapshot doc) {
     final data = doc.data() as Map<String, dynamic>;
-    final rawStatus = (data[Fields.status] ?? 'pending').toString();
+    final rawStatus = (data[Fields.status] ?? UserStatus.pending.key).toString();
     final bucket = _bucket(data);
     final facilityId = _facilityIdOf(data);
     final facilityName = _facilityText(data);
@@ -1618,10 +1625,10 @@ class _ManageAssistantsScreenState extends State<ManageAssistantsScreen> {
     final data = doc.data() as Map<String, dynamic>;
     final kind = _kindOf(doc.id, data);
     final bucket = _bucket(data);
-    final rawStatus = (data[Fields.status] ?? 'pending').toString();
+    final rawStatus = (data[Fields.status] ?? UserStatus.pending.key).toString();
     final facilityId = _facilityIdOf(data);
     final isSelf = doc.id == adminUid;
-    final isAssistant = kind == 'assistant';
+    final isAssistant = kind == TeamMemberKind.assistant;
 
     final created = _ts(data[Fields.createdAt]);
     final approved = _ts(data['approvedAt']);
@@ -1730,10 +1737,10 @@ class _ManageAssistantsScreenState extends State<ManageAssistantsScreen> {
                 'Approved',
                 approved != null
                     ? _when(approved)
-                    : (bucket == 'pending' ? 'Waiting for approval' : 'Not recorded'),
+                    : (bucket == UserStatus.pending.key ? 'Waiting for approval' : 'Not recorded'),
                 subtitle: approved != null
                     ? (approvedBy.isEmpty ? null : 'by $approvedBy')
-                    : (bucket == 'pending' ? null : 'Approved before approvals were recorded'),
+                    : (bucket == UserStatus.pending.key ? null : 'Approved before approvals were recorded'),
               ),
             _panelField(
               Icons.update_outlined,
