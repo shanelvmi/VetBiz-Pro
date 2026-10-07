@@ -32,3 +32,11 @@ String? pendingLoginMessage;
 /// periodic poll both remain as fallbacks regardless of whether this
 /// fires.
 void Function(User?)? pushAuthUser;
+
+/// Set by AppEntryPoint: asks it to decide afresh what the signed-in person
+/// should see, WITHOUT signing them out. Used when something about their
+/// account changed underneath them - they just deleted their last facility, or
+/// just added one - so the front door re-reads the account instead of showing
+/// a stale answer.
+VoidCallback? reDecideAccount;
+

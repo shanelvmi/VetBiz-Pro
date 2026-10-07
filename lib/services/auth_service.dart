@@ -1,8 +1,12 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:flutter/foundation.dart' show debugPrint;
+import 'package:cloud_functions/cloud_functions.dart';
 import 'dart:typed_data';
 import 'package:firebase_storage/firebase_storage.dart';
+
+import 'membership_service.dart';
 
 class AuthService {
   final FirebaseAuth _auth = FirebaseAuth.instance;
@@ -10,135 +14,179 @@ class AuthService {
 
   Stream<User?> get user => _auth.authStateChanges();
 
-  // ✅ Register admin or regular user
-  Future<String> register({
+  // ======================================================================
+  // REGISTRATION
+  // ======================================================================
+  //
+  // Both kinds of account are created the same way, and the app never writes
+  // the person's profile itself (role, status, which facilities they belong
+  // to): it creates the Firebase account on a SEPARATE, temporary app session,
+  // then asks the server to build the profile (MembershipService), which
+  // decides all of that.
+  //
+  // The separate session matters. The main session only signs in once the
+  // profile is complete, so the app never sees a signed-in person with no
+  // profile yet - which is what it used to paper over with a retry loop.
+
+  // The secondary app is created ONCE and reused for the life of the page -
+  // it is never deleted.
+  //
+  // It used to be deleted and re-created around every registration. That works
+  // exactly once: FirebaseAuth.instanceFor() keeps one cached instance per app
+  // NAME, and in the firebase_auth version this app uses nothing clears that
+  // cache when an app is deleted. So the second registration in a session was
+  // handed the Auth object of the app that no longer existed, and failed with
+  // a network-style error (timeout / unreachable / interrupted connection).
+  // The first registration worked; every later one broke.
+  Future<FirebaseApp> _secondaryApp() async {
+    try {
+      return Firebase.app('SecondaryApp');
+    } catch (_) {
+      // Not created yet - the normal case on first use.
+      return Firebase.initializeApp(name: 'SecondaryApp', options: Firebase.app().options);
+    }
+  }
+
+  // Signed out before use as well as after: an interrupted earlier attempt
+  // could have left someone signed in on it.
+  Future<FirebaseAuth> _cleanSecondaryAuth(FirebaseApp app) async {
+    final auth = FirebaseAuth.instanceFor(app: app);
+    try {
+      await auth.signOut();
+    } catch (_) {}
+    return auth;
+  }
+
+  Future<void> _closeSecondary(FirebaseAuth auth) async {
+    try {
+      await auth.signOut();
+    } catch (_) {}
+  }
+
+  // Which step failed, in the console - registration spans an account, an
+  // email, a photo and a server call, and "something went wrong" alone
+  // doesn't say which.
+  Future<UserCredential> _createAccount(FirebaseAuth auth, String email, String password) async {
+    try {
+      debugPrint('[REGISTER] creating the account');
+      return await auth.createUserWithEmailAndPassword(email: email, password: password);
+    } on FirebaseAuthException catch (e) {
+      debugPrint('[REGISTER] creating the account FAILED: ${e.code} - ${e.message}');
+      rethrow;
+    }
+  }
+
+  /// Registers a new owner (Admin) with their first facility or facilities
+  /// ([facilities]: name and type each), then signs them in. Returns the
+  /// facilities with the ids the server gave them.
+  ///
+  /// If the server can't create the profile, the bare account is removed again,
+  /// so the person can simply try again - not be told the email is "already
+  /// registered" with nothing behind it.
+  Future<List<Map<String, dynamic>>> registerOwnerAccount({
     required String email,
     required String password,
     required String fullName,
     required String phone,
-    required String role,
-    required List<Map<String, dynamic>> facilities, // changed to dynamic
-    String avatarUrl = '',
-    String status = 'active', // default active for admins/users
+    required List<Map<String, dynamic>> facilities,
   }) async {
-    UserCredential userCred = await _auth.createUserWithEmailAndPassword(
-      email: email,
-      password: password,
-    );
+    final secondaryApp = await _secondaryApp();
+    final secondaryAuth = await _cleanSecondaryAuth(secondaryApp);
+    late List<Map<String, dynamic>> created;
 
     try {
-      await userCred.user!.sendEmailVerification();
-    } catch (e) {
-      // Registration itself already succeeded - a failed verification
-      // email (network hiccup, rate limit) shouldn't block the account
-      // from being created. They can resend it later from the
-      // dashboard reminder.
+      final cred = await _createAccount(secondaryAuth, email, password);
+
+      try {
+        await cred.user!.sendEmailVerification();
+      } catch (_) {
+        // Registration itself already succeeded - a failed verification
+        // email (network hiccup, rate limit) shouldn't block the account.
+        // They can resend it later from the dashboard reminder.
+      }
+
+      try {
+        debugPrint('[REGISTER] asking the server to create the profile and facilities');
+        created = await MembershipService(functions: FirebaseFunctions.instanceFor(app: secondaryApp, region: kMembershipFunctionsRegion))
+            .registerOwner(fullName: fullName, phone: phone, facilities: facilities);
+      } catch (e) {
+        debugPrint('[REGISTER] the server step FAILED: $e');
+        try {
+          await cred.user?.delete();
+        } catch (_) {}
+        rethrow;
+      }
+    } finally {
+      await _closeSecondary(secondaryAuth);
     }
 
-    await _saveUserToFirestore(
-      uid: userCred.user!.uid,
-      fullName: fullName,
-      email: email,
-      phone: phone,
-      role: role,
-      facilities: facilities,
-      avatarUrl: avatarUrl,
-      status: status,
-    );
-
-    return userCred.user!.uid;
+    // The profile is complete now, so this is the first the main session
+    // sees of the account.
+    try {
+      await _auth.signInWithEmailAndPassword(email: email, password: password);
+    } catch (_) {
+      throw AccountCreatedException(
+          'Your account was created, but we could not sign you in automatically. '
+          'Please log in with your email and password.');
+    }
+    return created;
   }
 
-  // ✅ Register assistant via secondary Firebase app
-  Future<String> registerAssistantSilently({
+  /// Registers an assistant with an invite code. The server puts them in the
+  /// facility the invite was made for, as "pending" until an admin approves
+  /// them, and uses the invite up in the same step - the person chooses none
+  /// of that. They are NOT signed in: they wait for approval.
+  Future<void> registerAssistantWithInvite({
     required String email,
     required String password,
     required String fullName,
     required String phone,
-    required List<Map<String, dynamic>> facilities, // changed to dynamic
-    Uint8List? avatarBytes, // optional avatar bytes
+    required String inviteCode,
+    Uint8List? avatarBytes,
   }) async {
-    final FirebaseApp secondaryApp = await Firebase.initializeApp(
-      name: 'SecondaryApp',
-      options: Firebase.app().options,
-    );
-
-    final FirebaseAuth secondaryAuth = FirebaseAuth.instanceFor(app: secondaryApp);
-    final FirebaseFirestore secondaryFirestore = FirebaseFirestore.instanceFor(app: secondaryApp);
-
-    UserCredential userCred = await secondaryAuth.createUserWithEmailAndPassword(
-      email: email,
-      password: password,
-    );
+    final secondaryApp = await _secondaryApp();
+    final secondaryAuth = await _cleanSecondaryAuth(secondaryApp);
 
     try {
-      await userCred.user!.sendEmailVerification();
-    } catch (e) {
-      // Same reasoning as the admin path - don't let a failed
-      // verification email block the registration itself.
+      final cred = await _createAccount(secondaryAuth, email, password);
+
+      try {
+        await cred.user!.sendEmailVerification();
+      } catch (_) {
+        // Same reasoning as the owner path.
+      }
+
+      var avatarUrl = '';
+      if (avatarBytes != null) {
+        try {
+          final ref = FirebaseStorage.instanceFor(app: secondaryApp).ref().child('avatars/${cred.user!.uid}.jpg');
+          await ref.putData(avatarBytes);
+          avatarUrl = await ref.getDownloadURL();
+        } catch (_) {
+          // The photo is optional - registering without it beats failing here.
+        }
+      }
+
+      try {
+        debugPrint('[REGISTER] asking the server to join the facility with the invite');
+        await MembershipService(functions: FirebaseFunctions.instanceFor(app: secondaryApp, region: kMembershipFunctionsRegion)).joinWithInvite(
+          code: inviteCode,
+          fullName: fullName,
+          phone: phone,
+          avatarUrl: avatarUrl,
+        );
+      } catch (e) {
+        debugPrint('[REGISTER] the server step FAILED: $e');
+        // No profile was created (the code may have just been used, or has
+        // expired): remove the bare account so the person can retry.
+        try {
+          await cred.user?.delete();
+        } catch (_) {}
+        rethrow;
+      }
+    } finally {
+      await _closeSecondary(secondaryAuth);
     }
-
-    final String newUid = userCred.user!.uid;
-    String avatarUrl = '';
-
-    if (avatarBytes != null) {
-      final ref = FirebaseStorage.instanceFor(app: secondaryApp).ref().child('avatars/$newUid.jpg');
-      await ref.putData(avatarBytes);
-      avatarUrl = await ref.getDownloadURL();
-    }
-
-    List<String> facilityIds = facilities
-        .map((f) => f['facilityId']?.toString() ?? '')
-        .where((id) => id.isNotEmpty)
-        .toList();
-
-    await secondaryFirestore.collection('users').doc(newUid).set({
-      'uid': newUid,
-      'fullName': fullName,
-      'email': email,
-      'phone': phone,
-      'role': 'assistant',
-      'status': 'pending',
-      'facilities': facilities,
-      'facilityIds': facilityIds,
-      'avatarUrl': avatarUrl,
-      'createdAt': FieldValue.serverTimestamp(),
-    });
-
-    await secondaryAuth.signOut();
-    await secondaryApp.delete();
-
-    return newUid;
-  }
-
-  // ✅ Save user to Firestore (for Admin or regular user)
-  Future<void> _saveUserToFirestore({
-    required String uid,
-    required String fullName,
-    required String email,
-    required String phone,
-    required String role,
-    required List<Map<String, dynamic>> facilities, // changed to dynamic
-    required String avatarUrl,
-    String status = 'active',
-  }) async {
-    List<String> facilityIds = facilities
-        .map((f) => f['facilityId']?.toString() ?? '')
-        .where((id) => id.isNotEmpty)
-        .toList();
-
-    await _firestore.collection('users').doc(uid).set({
-      'uid': uid,
-      'fullName': fullName,
-      'email': email,
-      'phone': phone,
-      'role': role.toLowerCase(),
-      'status': status,
-      'facilities': facilities,
-      'facilityIds': facilityIds,
-      'avatarUrl': avatarUrl,
-      'createdAt': FieldValue.serverTimestamp(),
-    });
   }
 
   // ✅ Login
@@ -205,4 +253,15 @@ class AuthService {
     // Delete Firebase Auth account
     await user.delete();
   }
+}
+
+/// The account WAS created, but something afterwards failed - so the person
+/// should be told to log in, not to register again. Its message is meant to be
+/// shown as it is.
+class AccountCreatedException implements Exception {
+  final String message;
+  AccountCreatedException(this.message);
+
+  @override
+  String toString() => message;
 }

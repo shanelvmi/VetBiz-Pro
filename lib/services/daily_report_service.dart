@@ -114,6 +114,8 @@ class DailyReportService {
   Future<DailyReport> generateDraftReport({
     required String facilityId,
     required String generatedByName,
+    // False for an assistant - see DailyReport.activityLogIncluded.
+    bool includeActivityLog = true,
   }) async {
     final now = DateTime.now();
     final today = DateTime(now.year, now.month, now.day);
@@ -139,6 +141,22 @@ class DailyReportService {
     // needs a homogeneous list type; both groups are started before
     // either is awaited, so this is still one round trip's worth of
     // latency overall, not two back-to-back ones.
+    // The activity log is read for an ADMIN only. An assistant may not read the
+    // whole log (they see just their own entries - see firestore.rules), so
+    // asking for all of it would be refused and take the whole report down
+    // with it; and the report KEEPS a copy of what it reads, which would hand
+    // them everyone's activity. So a draft an assistant generates has no
+    // activity log (DailyReport.activityLogIncluded), and an admin can delete
+    // it and generate it again for the full one. Started here, with the rest,
+    // so it still runs in parallel.
+    final activityFuture = includeActivityLog
+        ? _labeled('activity_logs', () => facilities
+            .collection('activity_logs')
+            .where('timestamp', isGreaterThanOrEqualTo: todayStart)
+            .where('timestamp', isLessThanOrEqualTo: nowStamp)
+            .orderBy('timestamp')
+            .get())
+        : null;
     final querySnapshotsFuture = Future.wait([
       _labeled('sales', () => facilities
           .collection('sales')
@@ -177,12 +195,6 @@ class DailyReportService {
           .where('timestamp', isGreaterThanOrEqualTo: todayStart)
           .where('timestamp', isLessThanOrEqualTo: nowStamp)
           .get()),
-      _labeled('activity_logs', () => facilities
-          .collection('activity_logs')
-          .where('timestamp', isGreaterThanOrEqualTo: todayStart)
-          .where('timestamp', isLessThanOrEqualTo: nowStamp)
-          .orderBy('timestamp')
-          .get()),
     ]);
     final docSnapshotsFuture = Future.wait([
       _labeled(
@@ -202,7 +214,9 @@ class DailyReportService {
     final productsSnap = queryResults[6];
     final stockAdditionsSnap = queryResults[7];
     final stockAdjustmentsSnap = queryResults[8];
-    final activitySnap = queryResults[9];
+    final activityDocs = activityFuture == null
+        ? <QueryDocumentSnapshot<Map<String, dynamic>>>[]
+        : (await activityFuture).docs;
     final yesterdaySnapshotDoc = docResults[0];
     final stockSnapshotDoc = docResults[1];
 
@@ -523,7 +537,7 @@ class DailyReportService {
     // existing activity_logs collection (already written throughout
     // the day by sales, services, products, transactions, and
     // payments) - copied in at generation time, not a live reference.
-    final activityLogEntries = activitySnap.docs.map((doc) {
+    final activityLogEntries = activityDocs.map((doc) {
       final data = doc.data();
       return ActivityLogEntry(
         time: (data['timestamp'] as Timestamp?)?.toDate() ?? now,
@@ -583,6 +597,7 @@ class DailyReportService {
       paymentReconciliation: paymentReconciliation,
       productMovement: productMovement,
       activityLogEntries: activityLogEntries,
+      activityLogIncluded: includeActivityLog,
     );
 
     await _labeled('dailyReports (create)', () => docRef.set(report.toMap()));

@@ -1574,3 +1574,82 @@ exports.notifyOnProductStatusChange = onDocumentUpdated(
     await Promise.all(writes.map((n) => notificationsRef.add(n)));
   }
 );
+
+// ---------------------------------------------------------------------------
+// MEMBERSHIP - who belongs to which facility, and in what role.
+//
+// Everything that writes this lives in membership.js and runs here, with the
+// Admin SDK, after checking who is asking. The app no longer writes any of
+// it directly (see firestore.rules): that's what stops a person writing
+// themselves into someone else's facility, marking themselves approved, or
+// choosing their own trial length.
+// ---------------------------------------------------------------------------
+const { randomInt } = require("crypto");
+const { onCall, HttpsError } = require("firebase-functions/v2/https");
+
+// WHERE THESE RUN. The database lives in africa-south1 (Johannesburg), and each
+// of these makes several sequential database round trips. Run from the
+// default region (us-central1) every one of those crossed continents, on top of
+// the cold start - registering took many seconds, with nothing on screen to
+// say why. Next to the database it's a few milliseconds a trip.
+//
+// africa-south1 only offers 2nd generation functions, which is why these are
+// onCall from firebase-functions/v2 rather than functions.https.onCall.
+// (The app must call the same region: see kMembershipFunctionsRegion.)
+//
+// Every callable is deployed open to be CALLED by anyone - the deploy tool
+// grants that itself for callables - which it has to be, because
+// checkInviteCode runs before the person has an account. That is permission
+// to call the endpoint, not permission to DO anything: each function checks
+// who is asking (membership.js) and refuses what they aren't entitled to.
+const MEMBERSHIP_REGION = "africa-south1";
+const membership = require("./membership").create({
+  db,
+  FieldValue: admin.firestore.FieldValue,
+  Timestamp: admin.firestore.Timestamp,
+  HttpsError,
+  randomInt,
+});
+
+// membership.js takes (data, context); a 2nd gen callable receives one request
+// object. This adapts one to the other, so membership.js - and its unit
+// tests - stay exactly as they were.
+function membershipCallable(name) {
+  return onCall({ region: MEMBERSHIP_REGION }, (request) =>
+    membership[name](request.data, { auth: request.auth })
+  );
+}
+
+// Callable by anyone, signed in or not: the registration screen checks an
+// invite code before the person has an account. Answers only whether the
+// code works, and the facility's name and type - never its id.
+exports.checkInviteCode = membershipCallable("checkInviteCode");
+exports.registerOwner = membershipCallable("registerOwner");
+exports.joinWithInvite = membershipCallable("joinWithInvite");
+// For someone already registered who has no facility any more (removed from
+// theirs): ask to join another with a fresh invite code.
+exports.joinFacilityWithInvite = membershipCallable("joinFacilityWithInvite");
+exports.addFacility = membershipCallable("addFacility");
+exports.createInviteCode = membershipCallable("createInviteCode");
+exports.reassignAssistant = membershipCallable("reassignAssistant");
+exports.removeAssistantFromFacility = membershipCallable("removeAssistantFromFacility");
+// Approve, reject, deactivate or reactivate an assistant - stamped by the
+// server, with a history. Reject also removes them from the facility.
+exports.setAssistantStatus = membershipCallable("setAssistantStatus");
+
+// Called by the Edit Facility screen right after saving, so the new name
+// shows straight away.
+exports.syncFacilityDetails = membershipCallable("syncFacilityDetails");
+
+// The safety net behind it: whatever edits a facility's name or type -
+// this screen, a Platform Admin, anything - every member's copy follows.
+exports.syncFacilityDetailsOnWrite = onDocumentUpdated(
+  "facilities/{facilityId}",
+  async (event) => {
+    const before = event.data?.before?.data();
+    const after = event.data?.after?.data();
+    if (!before || !after) return;
+    if (before.name === after.name && before.type === after.type) return;
+    await membership.propagateFacilityDetails(event.params.facilityId);
+  }
+);

@@ -5,6 +5,7 @@ import 'package:url_launcher/url_launcher.dart';
 import '../../widgets/hover_elevate_card.dart';
 import '../../utils/presence_heartbeat.dart';
 import 'user_detail_screen.dart';
+import '../../services/role_change_service.dart';
 
 /// Every registered user across the whole platform, not scoped to one
 /// facility - the missing piece that made "an assistant switching
@@ -585,7 +586,8 @@ class _UsersTabState extends State<UsersTab> {
                             color: roleColor.withValues(alpha: 0.12),
                             borderRadius: BorderRadius.circular(10),
                           ),
-                          child: Text(role, style: TextStyle(color: roleColor, fontSize: 10.5, fontWeight: FontWeight.w600)),
+                          child: Text(RoleChangeService.isCoAdmin(data) ? 'co-admin' : role,
+                              style: TextStyle(color: roleColor, fontSize: 10.5, fontWeight: FontWeight.w600)),
                         ),
                         const SizedBox(width: 6),
                         Text(

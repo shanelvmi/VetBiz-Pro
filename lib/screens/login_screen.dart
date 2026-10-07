@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -29,6 +30,13 @@ class _LoginScreenState extends State<LoginScreen> {
   bool isLoggingIn = false;
   final FocusNode passwordFocusNode = FocusNode();
   String? error;
+  // True when the current error is about the credentials themselves (unknown
+  // email, wrong password, empty fields) - the two inputs are outlined in
+  // red so the problem is still visible after the alert is dismissed. Other
+  // errors (network down, account blocked) aren't about what was typed.
+  bool errorIsAboutCredentials = false;
+  // Bumped on every new error to replay the form card's shake.
+  int _shakeCount = 0;
   bool isForgotHovered = false;
   bool isRegisterHovered = false;
 
@@ -52,7 +60,9 @@ class _LoginScreenState extends State<LoginScreen> {
       // Deferred to after the first frame - setState during initState
       // itself is unsafe.
       WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (mounted) setState(() => error = widget.errorMessage);
+        if (!mounted) return;
+        setState(() => error = widget.errorMessage);
+        _startErrorTimer();
       });
     }
   }
@@ -74,6 +84,7 @@ class _LoginScreenState extends State<LoginScreen> {
     passwordController.dispose();
     passwordFocusNode.dispose();
     _announcementTimer?.cancel();
+    _errorTimer?.cancel();
     super.dispose();
   }
 
@@ -91,16 +102,21 @@ class _LoginScreenState extends State<LoginScreen> {
   // two separate pieces of code deciding what screen to show next.
   Future<void> _login() async {
     if (isLoggingIn) return; // guards against a double-tap firing two logins at once
+    _errorTimer?.cancel();
     setState(() {
       error = null;
+      errorIsAboutCredentials = false;
       isLoggingIn = true;
     });
 
     if (emailController.text.isEmpty || passwordController.text.length < 6) {
       setState(() {
         error = "Enter valid email and password (min 6 chars).";
+        errorIsAboutCredentials = true;
+        _shakeCount++;
         isLoggingIn = false;
       });
+      _startErrorTimer();
       return;
     }
 
@@ -149,7 +165,15 @@ class _LoginScreenState extends State<LoginScreen> {
       Future.delayed(const Duration(seconds: 6), () {
         if (mounted && isLoggingIn) {
           debugPrint('[LOGIN] Still mounted 6s after a successful sign-in - resetting loading state');
-          setState(() => isLoggingIn = false);
+          // Never silently: this screen should have been replaced long ago.
+          // Say so, instead of just handing the person back an idle form.
+          setState(() {
+            isLoggingIn = false;
+            error = 'Signing in is taking longer than expected. '
+                'Check your internet connection and try again.';
+            errorIsAboutCredentials = false;
+          });
+          _startErrorTimer();
         }
       });
 
@@ -160,15 +184,21 @@ class _LoginScreenState extends State<LoginScreen> {
       if (!mounted) return;
       setState(() {
         error = _friendlyAuthError(e);
+        errorIsAboutCredentials = _isCredentialError(e);
+        _shakeCount++;
         isLoggingIn = false;
       });
+      _startErrorTimer();
     } catch (e) {
       debugPrint('[LOGIN] Unexpected error: $e');
       if (!mounted) return;
       setState(() {
         error = e.toString().replaceAll('Exception:', '').trim();
+        errorIsAboutCredentials = false;
+        _shakeCount++;
         isLoggingIn = false;
       });
+      _startErrorTimer();
     }
   }
 
@@ -203,7 +233,12 @@ class _LoginScreenState extends State<LoginScreen> {
   Future<void> _forgotPassword() async {
     final email = emailController.text.trim();
     if (email.isEmpty) {
-      setState(() => error = "Enter your email first to reset password.");
+      setState(() {
+        error = "Enter your email first to reset password.";
+        errorIsAboutCredentials = true; // it's the email field that's empty
+        _shakeCount++;
+      });
+      _startErrorTimer();
       return;
     }
     // Deliberately the same message whether this succeeds or the email
@@ -232,10 +267,20 @@ class _LoginScreenState extends State<LoginScreen> {
           ));
         }
       } else {
-        setState(() => error = _friendlyAuthError(e));
+        setState(() {
+          error = _friendlyAuthError(e);
+          errorIsAboutCredentials = _isCredentialError(e);
+          _shakeCount++;
+        });
+        _startErrorTimer();
       }
     } catch (e) {
-      setState(() => error = "Could not send reset email: $e");
+      setState(() {
+        error = "Could not send reset email: $e";
+        errorIsAboutCredentials = false;
+        _shakeCount++;
+      });
+      _startErrorTimer();
     }
   }
 
@@ -698,183 +743,389 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   // ==================== RIGHT: LOGIN FORM ====================
-  Widget _buildLoginForm() {
-    return Container(
-      padding: const EdgeInsets.all(24),
-      decoration: BoxDecoration(
-        color: Colors.white,
+  // ==================== ERROR HANDLING ====================
+
+  Timer? _errorTimer;
+
+  // How long an alert stays up before dismissing itself: long enough to read
+  // - 4 seconds plus one more per ~20 characters, between 5 and 12 - so a
+  // short "Incorrect email or password." doesn't linger, while a long
+  // message isn't gone before it can be read. It floats over the card's
+  // "Welcome back" heading, so it shouldn't stay longer than it's needed.
+  Duration _errorDisplayDuration(String message) {
+    final seconds = (4 + message.length ~/ 20).clamp(5, 12).toInt();
+    return Duration(seconds: seconds);
+  }
+
+  // (Re)starts the countdown for the error currently showing. Safe to call
+  // with no error showing - it does nothing then.
+  void _startErrorTimer({Duration? after}) {
+    _errorTimer?.cancel();
+    final message = error;
+    if (message == null) return;
+    _errorTimer = Timer(after ?? _errorDisplayDuration(message), () {
+      // Only if it's still the same alert - a newer one has its own timer.
+      if (mounted && error == message) _dismissError();
+    });
+  }
+
+  // Hides the alert: the X, or the timer running out. The red outline on the
+  // two fields is deliberately NOT cleared here - it's what keeps the problem
+  // visible once the alert has gone - and lasts until the person edits a
+  // field or tries again.
+  void _dismissError() {
+    _errorTimer?.cancel();
+    if (error == null) return;
+    setState(() => error = null);
+  }
+
+  // Typing in either field: the problem is being fixed, so the alert (if
+  // still up) and the red outlines both go.
+  void _onCredentialsEdited() {
+    _errorTimer?.cancel();
+    if (error == null && !errorIsAboutCredentials) return;
+    setState(() {
+      error = null;
+      errorIsAboutCredentials = false;
+    });
+  }
+
+  // Whether a sign-in failure is about what was typed (unknown email, wrong
+  // password), as opposed to the network being down or the account being
+  // blocked - only the former outlines the two fields in red.
+  bool _isCredentialError(FirebaseAuthException e) {
+    switch (e.code) {
+      case 'user-not-found':
+      case 'invalid-email':
+      case 'wrong-password':
+      case 'invalid-credential':
+        return true;
+      default:
+        return false;
+    }
+  }
+
+  // ==================== LOGIN FORM ====================
+
+  InputDecoration _loginInputDecoration({
+    required String hint,
+    required IconData icon,
+    required bool hasError,
+    Widget? suffix,
+  }) {
+    final restColor = hasError ? Colors.redAccent.withValues(alpha: 0.7) : const Color(0xFFE2E8E6);
+    final focusColor = hasError ? Colors.redAccent : primaryDeepGreen;
+    return InputDecoration(
+      hintText: hint,
+      hintStyle: TextStyle(color: Colors.grey.shade400),
+      prefixIcon: Icon(icon, size: 19, color: hasError ? Colors.redAccent : Colors.grey.shade500),
+      suffixIcon: suffix,
+      filled: true,
+      fillColor: const Color(0xFFF6F9F8),
+      isDense: true,
+      contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 15),
+      border: _fieldBorder(restColor),
+      enabledBorder: _fieldBorder(restColor),
+      focusedBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(16),
-        boxShadow: const [BoxShadow(color: Colors.black12, blurRadius: 10, offset: Offset(0, 4))],
+        borderSide: BorderSide(color: focusColor, width: 1.6),
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Row(
-            children: [
-              Container(
-                width: 36,
-                height: 36,
-                decoration: BoxDecoration(
-                  color: tealGlow.withValues(alpha: 0.24),
-                  shape: BoxShape.circle,
-                  border: Border.all(color: tealGlow.withValues(alpha: 0.75), width: 1.4),
-                  boxShadow: [
-                    BoxShadow(color: tealGlow.withValues(alpha: 0.5), blurRadius: 14),
-                  ],
-                ),
-                child: Icon(Icons.lock_outline, color: primaryDeepGreen, size: 18),
-              ),
-              const SizedBox(width: 12),
-              Flexible(
-                child: Text('Log into your facility',
-                    overflow: TextOverflow.ellipsis,
-                    style: TextStyle(fontSize: 17, fontWeight: FontWeight.bold, color: neutralBlack)),
-              ),
-            ],
-          ),
-          const SizedBox(height: 24),
-          Text('Email', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: neutralBlack)),
-          const SizedBox(height: 6),
-          TextField(
-            controller: emailController,
-            style: TextStyle(color: neutralBlack),
-            autofocus: true,
-            textInputAction: TextInputAction.next,
-            onSubmitted: (_) => passwordFocusNode.requestFocus(),
-            decoration: InputDecoration(
-              hintText: 'Enter your email',
-              hintStyle: TextStyle(color: Colors.grey.shade400),
-              isDense: true,
-              contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
-              border: _fieldBorder(Colors.grey.shade300),
-              enabledBorder: _fieldBorder(Colors.grey.shade300),
-              focusedBorder: _fieldBorder(primaryDeepGreen),
+    );
+  }
+
+  // The alert. It is an OVERLAY on the card (see _buildLoginForm's Stack),
+  // not a row in the form's column: it used to sit under the Login button,
+  // so every error made the form taller - which made the whole two-column
+  // card taller and shoved everything below it down. As an overlay it
+  // takes no layout space at all, so showing or hiding it moves nothing,
+  // whatever the message length.
+  Widget _buildErrorBanner() {
+    // Hovering the alert pauses its countdown, so a long message can be read
+    // at leisure on desktop; moving away restarts it with a short grace.
+    return MouseRegion(
+      // New message -> new key on the OUTERMOST widget (the only one
+      // AnimatedSwitcher looks at), so a changed message animates in.
+      key: ValueKey(error),
+      onEnter: (_) => _errorTimer?.cancel(),
+      onExit: (_) => _startErrorTimer(after: const Duration(seconds: 3)),
+      child: Semantics(
+        liveRegion: true,
+        child: Material(
+          color: Colors.transparent,
+          child: Container(
+            padding: const EdgeInsets.fromLTRB(12, 10, 6, 10),
+            decoration: BoxDecoration(
+              color: const Color(0xFFFFF1F0),
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: Colors.redAccent.withValues(alpha: 0.35)),
+              boxShadow: [
+                BoxShadow(color: Colors.redAccent.withValues(alpha: 0.18), blurRadius: 16, offset: const Offset(0, 6)),
+              ],
             ),
-          ),
-          const SizedBox(height: 18),
-          Text('Password', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: neutralBlack)),
-          const SizedBox(height: 6),
-          TextField(
-            controller: passwordController,
-            focusNode: passwordFocusNode,
-            obscureText: obscurePassword,
-            style: TextStyle(color: neutralBlack),
-            textInputAction: TextInputAction.done,
-            onSubmitted: (_) => _login(),
-            decoration: InputDecoration(
-              hintText: 'Enter your password',
-              hintStyle: TextStyle(color: Colors.grey.shade400),
-              isDense: true,
-              contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
-              border: _fieldBorder(Colors.grey.shade300),
-              enabledBorder: _fieldBorder(Colors.grey.shade300),
-              focusedBorder: _fieldBorder(primaryDeepGreen),
-              suffixIcon: GestureDetector(
-                onTap: () => setState(() => obscurePassword = !obscurePassword),
-                child: Icon(
-                  obscurePassword ? Icons.visibility_outlined : Icons.visibility_off_outlined,
-                  color: Colors.grey.shade500,
-                  size: 20,
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Padding(
+                  padding: EdgeInsets.only(top: 1),
+                  child: Icon(Icons.error_outline, color: Colors.redAccent, size: 18),
                 ),
-              ),
-            ),
-          ),
-          const SizedBox(height: 4),
-          Padding(
-            padding: const EdgeInsets.only(left: 2),
-            child: Text('Minimum 6 characters', style: TextStyle(color: Colors.grey.shade500, fontSize: 11.5)),
-          ),
-          const SizedBox(height: 12),
-          Row(
-            children: [
-              SizedBox(
-                width: 20,
-                height: 20,
-                child: Checkbox(
-                  value: rememberMe,
-                  onChanged: (value) => setState(() => rememberMe = value ?? false),
-                  activeColor: primaryDeepGreen,
-                  checkColor: Colors.white,
-                  materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                ),
-              ),
-              const SizedBox(width: 8),
-              Text('Remember Me', style: TextStyle(color: neutralBlack, fontSize: 13)),
-              const Spacer(),
-              MouseRegion(
-                onEnter: (_) => setState(() => isForgotHovered = true),
-                onExit: (_) => setState(() => isForgotHovered = false),
-                cursor: SystemMouseCursors.click,
-                child: GestureDetector(
-                  onTap: _forgotPassword,
-                  child: Text(
-                    'Forgot Password?',
-                    style: TextStyle(
-                      color: isForgotHovered ? warmAmber : tealAccent,
-                      fontSize: 13,
-                      fontWeight: FontWeight.w600,
+                const SizedBox(width: 8),
+                Expanded(
+                  // A very long message scrolls inside the alert rather than
+                  // growing it over the whole form.
+                  child: ConstrainedBox(
+                    constraints: const BoxConstraints(maxHeight: 96),
+                    child: SingleChildScrollView(
+                      child: Text(
+                        error!,
+                        style: const TextStyle(color: Color(0xFFB3261E), fontSize: 12.5, height: 1.35),
+                      ),
                     ),
                   ),
                 ),
-              ),
-            ],
+                IconButton(
+                  icon: const Icon(Icons.close, size: 16),
+                  color: Colors.redAccent,
+                  tooltip: 'Dismiss',
+                  padding: EdgeInsets.zero,
+                  constraints: const BoxConstraints(minWidth: 28, minHeight: 28),
+                  visualDensity: VisualDensity.compact,
+                  onPressed: _dismissError,
+                ),
+              ],
+            ),
           ),
-          const SizedBox(height: 20),
-          _AnimatedLoginButton(
-            isLoading: isLoggingIn,
-            onPressed: isLoggingIn ? null : _login,
-            primaryColor: primaryDeepGreen,
-            accentColor: tealAccent,
-          ),
-          if (error != null)
-            Container(
-              margin: const EdgeInsets.only(top: 16),
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: Colors.red.withValues(alpha: 0.08),
-                borderRadius: BorderRadius.circular(10),
-              ),
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildLoginForm() {
+    // The flag alone - not 'an alert is showing' - so the outline outlives
+    // the alert (see _dismissError).
+    final fieldsInError = errorIsAboutCredentials;
+
+    // A short side-to-side shake on every new error. Driven by _shakeCount
+    // rather than a controller: each increment animates the value up by one,
+    // and its fractional part is the 0..1 progress of the current shake
+    // (and exactly 0 - no offset - when it isn't shaking).
+    return TweenAnimationBuilder<double>(
+      tween: Tween<double>(begin: 0, end: _shakeCount.toDouble()),
+      duration: const Duration(milliseconds: 420),
+      builder: (context, value, child) {
+        final progress = value - value.floorToDouble();
+        final dx = math.sin(progress * math.pi * 6) * 8 * (1 - progress);
+        return Transform.translate(offset: Offset(dx, 0), child: child);
+      },
+      child: Container(
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(color: const Color(0xFFDDEAE7)),
+          // Two layers: a wide, teal-tinted one that lifts the card off the
+          // panel behind it, and a tight one for a crisp edge.
+          boxShadow: [
+            BoxShadow(color: primaryDeepGreen.withValues(alpha: 0.15), blurRadius: 32, offset: const Offset(0, 14)),
+            BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 8, offset: const Offset(0, 2)),
+          ],
+        ),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(19),
+          child: Stack(
+            children: [
+              Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  const Icon(Icons.error_outline, color: Colors.redAccent, size: 18),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: Text(error!, style: const TextStyle(color: Colors.redAccent, fontSize: 12.5)),
+                  // Thin gradient accent along the top edge.
+                  Container(
+                    height: 4,
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(colors: [primaryDeepGreen, tealAccent, tealGlow]),
+                    ),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(28, 26, 28, 24),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Row(
+                          children: [
+                            Container(
+                              width: 42,
+                              height: 42,
+                              decoration: BoxDecoration(
+                                color: tealGlow.withValues(alpha: 0.24),
+                                shape: BoxShape.circle,
+                                border: Border.all(color: tealGlow.withValues(alpha: 0.75), width: 1.4),
+                                boxShadow: [
+                                  BoxShadow(color: tealGlow.withValues(alpha: 0.5), blurRadius: 14),
+                                ],
+                              ),
+                              child: Icon(Icons.lock_outline, color: primaryDeepGreen, size: 20),
+                            ),
+                            const SizedBox(width: 14),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text('Welcome back',
+                                      overflow: TextOverflow.ellipsis,
+                                      style: TextStyle(fontSize: 20, fontWeight: FontWeight.w800, color: neutralBlack)),
+                                  const SizedBox(height: 2),
+                                  Text('Log into your facility',
+                                      overflow: TextOverflow.ellipsis,
+                                      style: TextStyle(fontSize: 13, color: Colors.grey.shade600)),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 26),
+                        Text('Email', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: neutralBlack)),
+                        const SizedBox(height: 6),
+                        TextField(
+                          controller: emailController,
+                          style: TextStyle(color: neutralBlack),
+                          autofocus: true,
+                          textInputAction: TextInputAction.next,
+                          onChanged: (_) => _onCredentialsEdited(),
+                          onSubmitted: (_) => passwordFocusNode.requestFocus(),
+                          decoration: _loginInputDecoration(
+                            hint: 'Enter your email',
+                            icon: Icons.mail_outline,
+                            hasError: fieldsInError,
+                          ),
+                        ),
+                        const SizedBox(height: 18),
+                        Text('Password', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: neutralBlack)),
+                        const SizedBox(height: 6),
+                        TextField(
+                          controller: passwordController,
+                          focusNode: passwordFocusNode,
+                          obscureText: obscurePassword,
+                          style: TextStyle(color: neutralBlack),
+                          textInputAction: TextInputAction.done,
+                          onChanged: (_) => _onCredentialsEdited(),
+                          onSubmitted: (_) => _login(),
+                          decoration: _loginInputDecoration(
+                            hint: 'Enter your password',
+                            icon: Icons.lock_outline,
+                            hasError: fieldsInError,
+                            suffix: GestureDetector(
+                              onTap: () => setState(() => obscurePassword = !obscurePassword),
+                              child: Icon(
+                                obscurePassword ? Icons.visibility_outlined : Icons.visibility_off_outlined,
+                                color: Colors.grey.shade500,
+                                size: 20,
+                              ),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Padding(
+                          padding: const EdgeInsets.only(left: 2),
+                          child: Text('Minimum 6 characters', style: TextStyle(color: Colors.grey.shade500, fontSize: 11.5)),
+                        ),
+                        const SizedBox(height: 12),
+                        Row(
+                          children: [
+                            SizedBox(
+                              width: 20,
+                              height: 20,
+                              child: Checkbox(
+                                value: rememberMe,
+                                onChanged: (value) => setState(() => rememberMe = value ?? false),
+                                activeColor: primaryDeepGreen,
+                                checkColor: Colors.white,
+                                materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            Text('Remember Me', style: TextStyle(color: neutralBlack, fontSize: 13)),
+                            const Spacer(),
+                            MouseRegion(
+                              onEnter: (_) => setState(() => isForgotHovered = true),
+                              onExit: (_) => setState(() => isForgotHovered = false),
+                              cursor: SystemMouseCursors.click,
+                              child: GestureDetector(
+                                onTap: _forgotPassword,
+                                child: Text(
+                                  'Forgot Password?',
+                                  style: TextStyle(
+                                    color: isForgotHovered ? warmAmber : tealAccent,
+                                    fontSize: 13,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 20),
+                        _AnimatedLoginButton(
+                          isLoading: isLoggingIn,
+                          onPressed: isLoggingIn ? null : _login,
+                          primaryColor: primaryDeepGreen,
+                          accentColor: tealAccent,
+                        ),
+                        const SizedBox(height: 20),
+                        Center(
+                          child: MouseRegion(
+                            onEnter: (_) => setState(() => isRegisterHovered = true),
+                            onExit: (_) => setState(() => isRegisterHovered = false),
+                            cursor: SystemMouseCursors.click,
+                            child: GestureDetector(
+                              onTap: () {
+                                Navigator.pushNamed(context, '/register');
+                              },
+                              child: RichText(
+                                text: TextSpan(
+                                  style: TextStyle(fontSize: 13, color: neutralBlack),
+                                  children: [
+                                    const TextSpan(text: "Don't have an account? "),
+                                    TextSpan(
+                                      text: 'Register',
+                                      style: TextStyle(
+                                        color: isRegisterHovered ? warmAmber : tealAccent,
+                                        fontWeight: FontWeight.w700,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                 ],
               ),
-            ),
-          const SizedBox(height: 20),
-          Center(
-            child: MouseRegion(
-              onEnter: (_) => setState(() => isRegisterHovered = true),
-              onExit: (_) => setState(() => isRegisterHovered = false),
-              cursor: SystemMouseCursors.click,
-              child: GestureDetector(
-                onTap: () {
-                  Navigator.pushNamed(context, '/register');
-                },
-                child: RichText(
-                  text: TextSpan(
-                    style: TextStyle(fontSize: 13, color: neutralBlack),
-                    children: [
-                      const TextSpan(text: "Don't have an account? "),
-                      TextSpan(
-                        text: 'Register',
-                        style: TextStyle(
-                          color: isRegisterHovered ? warmAmber : tealAccent,
-                          fontWeight: FontWeight.w700,
-                        ),
-                      ),
-                    ],
+              // The alert floats over the top of the card - see
+              // _buildErrorBanner. Positioned children take no part in
+              // the Stack's sizing, so this can never resize the card.
+              Positioned(
+                top: 14,
+                left: 14,
+                right: 14,
+                child: AnimatedSwitcher(
+                  duration: const Duration(milliseconds: 260),
+                  switchInCurve: Curves.easeOutCubic,
+                  transitionBuilder: (child, animation) => FadeTransition(
+                    opacity: animation,
+                    child: SlideTransition(
+                      position: Tween<Offset>(begin: const Offset(0, -0.25), end: Offset.zero).animate(animation),
+                      child: child,
+                    ),
                   ),
+                  child: error == null ? const SizedBox.shrink(key: ValueKey('no-error')) : _buildErrorBanner(),
                 ),
               ),
-            ),
+            ],
           ),
-        ],
+        ),
       ),
     );
   }
@@ -983,7 +1234,23 @@ class _LoginScreenState extends State<LoginScreen> {
                                         // Right: Login
                                         Expanded(
                                           flex: 1,
-                                          child: Center(child: _buildLoginForm()),
+                                          // A softly tinted panel behind the form
+                                          // card: the card is white with a deep
+                                          // shadow, so it lifts off this instead
+                                          // of blending into the white surface
+                                          // around it.
+                                          child: Container(
+                                            padding: const EdgeInsets.all(24),
+                                            decoration: BoxDecoration(
+                                              gradient: const LinearGradient(
+                                                begin: Alignment.topLeft,
+                                                end: Alignment.bottomRight,
+                                                colors: [Color(0xFFE8F4F1), Color(0xFFF6FAF9)],
+                                              ),
+                                              borderRadius: BorderRadius.circular(24),
+                                            ),
+                                            child: Center(child: _buildLoginForm()),
+                                          ),
                                         ),
                                       ],
                                     ),

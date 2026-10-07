@@ -54,16 +54,15 @@ class _PlatformAdminsTabState extends State<PlatformAdminsTab> {
       final userData = userDoc.data();
 
       // Only an account whose current role is already admin can be
-      // added as a Platform Admin - an Assistant must first be
-      // promoted to Admin through the normal facility-level path
-      // (Manage Assistants), not silently upgraded as a side effect of
-      // this action.
+      // added as a Platform Admin - an Assistant must first be promoted
+      // to Admin (Users > their profile > Change role), not silently
+      // upgraded as a side effect of this action.
       if (userData['role'] != 'admin') {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text('"$email" is an Assistant and cannot be added as a Platform Admin. '
-                  'They must first be an Admin on a facility.'),
+                  'Change their role to Admin first (Users > their profile > Change role).'),
               backgroundColor: Colors.redAccent,
             ),
           );

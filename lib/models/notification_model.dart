@@ -25,6 +25,10 @@ enum NotificationType {
   promotion,
   subscriptionRejected,
   subscriptionExpiring,
+  roleChanged, // a Platform Admin changed someone's role (Assistant <-> Co-admin)
+  trialStarted, // LEGACY: a stored notice an earlier version wrote at registration - no longer shown
+  trialStatus, // the live "Free Trial - N days left" row (never stored; built from the subscription)
+  assistantPending, // an assistant registered (or asked to join) and needs approval
   general; // fallback for anything unrecognized - never crashes on unknown data
 
   static NotificationType fromString(String? value) {
@@ -67,6 +71,10 @@ extension NotificationTypeDisplay on NotificationType {
       case NotificationType.promotion:
       case NotificationType.subscriptionRejected:
       case NotificationType.subscriptionExpiring:
+      case NotificationType.roleChanged:
+      case NotificationType.trialStarted:
+      case NotificationType.trialStatus:
+      case NotificationType.assistantPending:
         return NotificationCategory.system;
       case NotificationType.serviceRecorded:
       case NotificationType.newClient:
@@ -105,6 +113,15 @@ extension NotificationTypeDisplay on NotificationType {
         return Icons.error_outline;
       case NotificationType.subscriptionExpiring:
         return Icons.timer_outlined;
+      case NotificationType.roleChanged:
+        return Icons.manage_accounts_outlined;
+      case NotificationType.trialStarted:
+        return Icons.rocket_launch_outlined;
+      case NotificationType.trialStatus:
+        // The same icon as the Dashboard's blue "View Plans" pill.
+        return Icons.workspace_premium_outlined;
+      case NotificationType.assistantPending:
+        return Icons.person_add_alt_1_outlined;
       case NotificationType.general:
         return Icons.notifications_none;
     }
@@ -133,6 +150,13 @@ extension NotificationTypeDisplay on NotificationType {
         return Colors.red;
       case NotificationType.promotion:
         return Colors.purple;
+      case NotificationType.roleChanged:
+        return Colors.teal;
+      case NotificationType.trialStarted:
+      case NotificationType.trialStatus:
+        return Colors.blue;
+      case NotificationType.assistantPending:
+        return Colors.orange;
       case NotificationType.general:
         return Colors.grey;
     }
@@ -194,6 +218,26 @@ class FacilityNotification {
   final String? relatedEntityType; // 'product' | 'payment' | 'client' | 'debt' | 'service'
   final String? relatedEntityId;
 
+  // Who this is FOR. Notifications used to be facility-wide - everyone in
+  // the facility saw every one - which can't express "tell this person they
+  // were promoted" or "tell the admins". All three are optional, and a
+  // notification without them (every older one) is still for everybody.
+  //
+  //   audience 'all' (or absent)  - everyone in the facility
+  //   audience 'admins'           - Admins and Co-admins only
+  //   audience 'user'             - just [targetUserId]
+  //   excludeUserId               - hidden from this one person, however the
+  //                                 audience would otherwise include them
+  //                                 (so the person a notice is ABOUT doesn't
+  //                                 get it twice, once for them and once as
+  //                                 an admin)
+  //
+  // This decides what each screen SHOWS. It is not access control: the
+  // security rules still let any member of the facility read the collection.
+  final String? audience;
+  final String? targetUserId;
+  final String? excludeUserId;
+
   const FacilityNotification({
     required this.id,
     required this.type,
@@ -204,6 +248,9 @@ class FacilityNotification {
     this.expiresAt,
     this.relatedEntityType,
     this.relatedEntityId,
+    this.audience,
+    this.targetUserId,
+    this.excludeUserId,
   });
 
   bool get isRead => readAt != null;
@@ -216,6 +263,29 @@ class FacilityNotification {
   bool get isCurrentlyVisible => isPersistent ? !isExpired : !isRead;
 
   NotificationCategory get category => type.category;
+
+  /// Whether this notification is meant for the person looking at it. Every
+  /// place that lists or counts notifications (the Notifications screen and
+  /// the Dashboard bell) has to apply this, or the bell would light up for
+  /// something the person can't even see on the screen.
+  bool isVisibleTo({required String? uid, required bool isAdmin}) {
+    // A stored "trial started" notice (an earlier version wrote one at
+    // registration) is superseded by the live trial row, which says the same
+    // thing, to everyone, and stays correct. Left visible it would duplicate
+    // that row - and being stored and unread it would flash the bell red and
+    // couldn't be cleared once hidden. Dropped here, which is where both the
+    // bell and the Notifications screen already filter.
+    if (type == NotificationType.trialStarted) return false;
+    if (excludeUserId != null && excludeUserId == uid) return false;
+    switch (audience) {
+      case 'admins':
+        return isAdmin;
+      case 'user':
+        return targetUserId != null && targetUserId == uid;
+      default:
+        return true; // 'all', or an older notification with no audience
+    }
+  }
 
   factory FacilityNotification.fromFirestore(DocumentSnapshot<Map<String, dynamic>> doc) {
     final data = doc.data() ?? {};
@@ -230,6 +300,9 @@ class FacilityNotification {
       expiresAt: asDate(data['expiresAt']),
       relatedEntityType: data['relatedEntityType'] as String?,
       relatedEntityId: data['relatedEntityId'] as String?,
+      audience: data['audience'] as String?,
+      targetUserId: data['targetUserId'] as String?,
+      excludeUserId: data['excludeUserId'] as String?,
     );
   }
 }

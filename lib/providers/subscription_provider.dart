@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:intl/intl.dart';
 
 import '../constants/subscription_plans.dart';
 
@@ -48,6 +49,35 @@ class SubscriptionProvider with ChangeNotifier {
   /// already use, and kAttentionThresholdDays in the
   /// checkSubscriptionExpiry Cloud Function.
   static const int attentionThresholdDays = 7;
+
+  /// The CALM trial: still in the free trial, with no urgency yet - more than a
+  /// week left, or no end date at all.
+  ///
+  /// This is the ONE definition of that state. The bell's blue blink, the
+  /// Dashboard's blue "View Plans" pill and the Notifications lists all use it,
+  /// so they can't disagree. They used to: the bell and pill each worked it out
+  /// for themselves while the lists only knew about [attentionNotice], which is
+  /// empty for exactly this state - so the bell blinked blue for the whole
+  /// trial with nothing in the dropdown or on the Notifications screen to say
+  /// why.
+  bool get isInCalmTrial => _status == SubscriptionStatus.trial && attentionNotice == null;
+
+  /// What to tell someone in the calm trial - the message the blue blink is
+  /// about. Live, like [attentionNotice]: the days left are worked out now, not
+  /// read from something written once and left to go stale.
+  ({String title, String message})? get trialInfoNotice {
+    if (!isInCalmTrial) return null;
+    final end = expiresAt;
+    final days = daysRemaining;
+    if (end == null || days == null) {
+      return (title: 'Free Trial', message: "You're on a free trial.");
+    }
+    return (
+      title: 'Free Trial',
+      message: 'You have $days day${days == 1 ? '' : 's'} left of your free trial, '
+          'ending on ${DateFormat('d MMM yyyy').format(end)}.',
+    );
+  }
 
   /// The subscription notice that applies RIGHT NOW, or null when
   /// nothing needs attention (comfortably active, an open trial with no

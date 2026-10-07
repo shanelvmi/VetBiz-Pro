@@ -3,6 +3,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:cloud_functions/cloud_functions.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:intl/intl.dart';
+import '../../services/role_change_service.dart';
 
 /// A single user's account, editable by the Platform Admin - the direct
 /// answer to "an assistant migrated to a new facility, and their old
@@ -372,10 +373,186 @@ class _UserDetailScreenState extends State<UserDetailScreen> {
     );
   }
 
+  // ---------------- role ----------------
+
+  // Takes the label itself ("Admin", "Co-admin", "Assistant") rather than
+  // the stored role, so a promoted Assistant reads as Co-admin everywhere.
+  Widget _roleChip(String label) {
+    final color = label == 'Assistant' ? Colors.blueGrey : primaryColor;
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+      decoration: BoxDecoration(color: color.withValues(alpha: 0.12), borderRadius: BorderRadius.circular(10)),
+      child: Text(
+        label,
+        style: TextStyle(color: color, fontSize: 12.5, fontWeight: FontWeight.w700),
+      ),
+    );
+  }
+
+  Widget _roleDialogLine(IconData icon, Color color, String text) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Padding(
+            padding: const EdgeInsets.only(top: 1),
+            child: Icon(icon, size: 16, color: color),
+          ),
+          const SizedBox(width: 8),
+          Expanded(child: Text(text, style: const TextStyle(fontSize: 13, height: 1.35))),
+        ],
+      ),
+    );
+  }
+
+  // Checks the account first; null if it couldn't be checked (already told).
+  Future<RoleChangePlan?> _planRoleChange(String name) async {
+    setState(() => _isSaving = true);
+    try {
+      final facts = await RoleChangeService.gatherFacts(widget.userId, _userData);
+      return RoleChangeService.evaluate(userName: name, facts: facts);
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Could not check this account: $e'), backgroundColor: Colors.red),
+        );
+      }
+      return null;
+    } finally {
+      if (mounted) setState(() => _isSaving = false);
+    }
+  }
+
+  Future<void> _changeRole() async {
+    final name = (_userData['fullName'] ?? 'this user').toString();
+
+    final plan = await _planRoleChange(name);
+    if (plan == null || !mounted) return;
+
+    final isPromotion = plan.newRole == 'admin';
+    // Not disposed: it lives exactly as long as the dialog, and disposing it
+    // while the dialog is still animating closed can trip a "used after
+    // dispose" error. It holds no resources, so letting it be collected is
+    // harmless.
+    final reasonController = TextEditingController();
+
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text(plan.allowed ? 'Change role' : "Can't change role yet"),
+        content: SizedBox(
+          width: 400,
+          child: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(name, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
+                const SizedBox(height: 8),
+                Row(
+                  children: [
+                    _roleChip(plan.currentLabel),
+                    const Padding(
+                      padding: EdgeInsets.symmetric(horizontal: 8),
+                      child: Icon(Icons.arrow_forward, size: 18, color: Colors.grey),
+                    ),
+                    _roleChip(plan.newLabel),
+                  ],
+                ),
+                const SizedBox(height: 16),
+                if (!plan.allowed) ...[
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: Colors.red.withValues(alpha: 0.06),
+                      borderRadius: BorderRadius.circular(10),
+                      border: Border.all(color: Colors.red.withValues(alpha: 0.25)),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        for (final reason in plan.blockers) _roleDialogLine(Icons.block, Colors.red, reason),
+                      ],
+                    ),
+                  ),
+                ] else ...[
+                  const Text('What will change', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 13)),
+                  const SizedBox(height: 8),
+                  for (final effect in plan.effects) _roleDialogLine(Icons.check_circle_outline, Colors.green, effect),
+                  for (final warning in plan.warnings)
+                    _roleDialogLine(Icons.info_outline, Colors.orange.shade800, warning),
+                  const SizedBox(height: 8),
+                  TextField(
+                    controller: reasonController,
+                    maxLines: 2,
+                    decoration: const InputDecoration(
+                      labelText: 'Reason (optional)',
+                      hintText: 'Shown in the facility\'s Activity Log',
+                      border: OutlineInputBorder(),
+                      isDense: true,
+                    ),
+                  ),
+                ],
+              ],
+            ),
+          ),
+        ),
+        actions: plan.allowed
+            ? [
+                TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancel')),
+                ElevatedButton(
+                  onPressed: () => Navigator.pop(ctx, true),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: isPromotion ? primaryColor : Colors.red,
+                    foregroundColor: Colors.white,
+                  ),
+                  child: Text(isPromotion ? 'Make Co-admin' : 'Make Assistant'),
+                ),
+              ]
+            : [TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('OK'))],
+      ),
+    );
+    if (confirm != true) return;
+
+    setState(() => _isSaving = true);
+    try {
+      final outcome =
+          await RoleChangeService.apply(userId: widget.userId, userData: _userData, reason: reasonController.text);
+      await _refreshUserData();
+      if (!mounted) return;
+      // The role changed either way; only the notifications can have failed.
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('$name is now ${isPromotion ? 'a Co-admin' : 'an Assistant'}'
+              '${outcome.notificationsSent ? '' : ' - but some notifications could not be sent'}'),
+          backgroundColor: outcome.notificationsSent ? Colors.green : Colors.orange.shade800,
+        ),
+      );
+    } on RoleChangeBlockedException catch (e) {
+      // Re-checked at the moment of change; something moved since the dialog opened.
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text("Couldn't change the role: $e"), backgroundColor: Colors.red),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Could not change role: $e'), backgroundColor: Colors.red),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _isSaving = false);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final facilities = (_userData['facilities'] as List?)?.cast<dynamic>() ?? [];
     final status = (_userData['status'] ?? 'active').toString();
+    final role = (_userData['role'] ?? '').toString();
 
     return Scaffold(
       appBar: AppBar(
@@ -398,8 +575,39 @@ class _UserDetailScreenState extends State<UserDetailScreen> {
                     children: [
                       Text(_userData['email'] ?? '', style: const TextStyle(fontSize: 14)),
                       const SizedBox(height: 4),
-                      Text('Role: ${_userData['role'] ?? 'unknown'}',
-                          style: const TextStyle(fontSize: 13, color: Colors.grey)),
+                      Row(
+                        children: [
+                          const Text('Role: ', style: TextStyle(fontSize: 13, color: Colors.grey)),
+                          _roleChip(RoleChangeService.displayRole(role,
+                              previousRole: _userData['previousRole']?.toString())),
+                          const Spacer(),
+                          // Only a Platform Admin can change a role - this is
+                          // the one place it's done.
+                          if (role == 'admin' || role == 'assistant')
+                            TextButton.icon(
+                              onPressed: _isSaving ? null : _changeRole,
+                              icon: const Icon(Icons.manage_accounts_outlined, size: 18),
+                              label: const Text('Change role'),
+                            ),
+                        ],
+                      ),
+                      if (_userData['roleChangedBy'] != null) ...[
+                        const SizedBox(height: 2),
+                        Builder(builder: (context) {
+                          final changedAtField = _userData['roleChangedAt'];
+                          final changedAt = changedAtField is Timestamp ? changedAtField.toDate() : null;
+                          final previous = (_userData['previousRoleLabel'] as String?) ??
+                              RoleChangeService.roleLabel((_userData['previousRole'] ?? '').toString());
+                          final by = (_userData['roleChangedBy'] as String?) ?? 'Unknown';
+                          final why = (_userData['roleChangeReason'] as String?) ?? '';
+                          return Text(
+                            'Role changed from $previous by $by (Platform Admin)'
+                            '${changedAt != null ? ' \u00b7 ${DateFormat('dd MMM yyyy, HH:mm').format(changedAt)}' : ''}'
+                            '${why.isEmpty ? '' : ' - "$why"'}',
+                            style: TextStyle(fontSize: 11.5, color: Colors.grey[600]),
+                          );
+                        }),
+                      ],
                       const SizedBox(height: 4),
                       Row(
                         children: [

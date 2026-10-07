@@ -17,6 +17,8 @@ import 'utils/presence_heartbeat.dart';
 import 'widgets/maintenance_gate.dart';
 
 import 'services/auth_service.dart';
+import 'services/membership_service.dart';
+import 'constants/facility_types.dart';
 
 import 'providers/product_provider.dart';
 import 'providers/client_provider.dart';
@@ -246,6 +248,16 @@ class _AppEntryPointState extends State<AppEntryPoint> {
       debugPrint('[AUTH] Direct push received for uid=${user?.uid ?? "null"}');
       _updateAuthUser(user);
     };
+
+    // See reDecideAccount in navigator_key.dart.
+    reDecideAccount = () {
+      if (!mounted) return;
+      debugPrint('[AUTH] Asked to decide afresh for uid=${_currentUser?.uid ?? "none"}');
+      setState(() {
+        _decidedForUid = null;
+        _decideScreenFuture = null;
+      });
+    };
   }
 
   @override
@@ -257,6 +269,7 @@ class _AppEntryPointState extends State<AppEntryPoint> {
     // if LoginScreen somehow called this after disposal, it would be
     // acting on a State object that's no longer valid.
     if (pushAuthUser != null) pushAuthUser = null;
+    if (reDecideAccount != null) reDecideAccount = null;
     super.dispose();
   }
 
@@ -331,15 +344,42 @@ class _AppEntryPointState extends State<AppEntryPoint> {
       final uid = user.uid;
       debugPrint('[AUTH] _decideScreen starting for uid=$uid');
 
-      final userDoc = await _getWithRetry(
+      var userDoc = await _getWithRetry(
         FirebaseFirestore.instance.collection('users').doc(uid),
         timeout: const Duration(seconds: 15),
       );
       debugPrint('[AUTH] users/$uid read complete - exists=${userDoc.exists}');
 
+      // A profile that isn't there yet gets a short second look before
+      // concluding it never will be.
+      for (var attempt = 0; attempt < 2 && !userDoc.exists; attempt++) {
+        await Future.delayed(const Duration(milliseconds: 700));
+        userDoc = await _getWithRetry(
+          FirebaseFirestore.instance.collection('users').doc(uid),
+          timeout: const Duration(seconds: 10),
+        );
+        debugPrint('[AUTH] users/$uid re-checked - exists=${userDoc.exists}');
+      }
+
       if (!userDoc.exists) {
-        debugPrint('[AUTH] users/$uid does not exist - showing LoginScreen');
-        return const LoginScreen();
+        // A sign-in that has no profile behind it: registration stopped part
+        // way (the account was made, the profile never was), or the profile
+        // was removed. This used to return a bare LoginScreen WITHOUT signing
+        // out and WITHOUT a word. Two things made that a trap:
+        //  - the person stayed signed in, so signing in again pushed the same
+        //    user, which _updateAuthUser ignores as "no change"; and
+        //  - this decision is memoized per user, so the same answer was
+        //    reused every time.
+        // Every further attempt then just spun for six seconds and bounced
+        // back, silently, until the page was reloaded. Signing out clears
+        // both, and the message says what's actually wrong.
+        debugPrint('[AUTH] users/$uid does not exist - signing out with a message');
+        forceLogoutAndShowLogin(
+          message: "We couldn't find a profile for this account. If you have just registered, "
+              'the registration did not finish - please register again. '
+              'If this keeps happening, contact support.',
+        );
+        return const Scaffold(body: Center(child: CircularProgressIndicator()));
       }
 
       final data = userDoc.data()!;
@@ -362,7 +402,17 @@ class _AppEntryPointState extends State<AppEntryPoint> {
       // admin account was previously still able to log in freely,
       // which defeated the point of "Deactivate Account" entirely.
       final status = (data['status'] ?? 'active').toString().toLowerCase();
-      if (!isPlatformAdminAccount && status == 'deactivated') {
+
+      // An assistant who is in NO facility - removed from theirs - has nothing
+      // left to be blocked from: every rule that opens data checks facility
+      // membership, and they have none. Blocking them on "deactivated" was a
+      // dead end, because removal leaves their status alone and their old
+      // admin can no longer see them to reactivate them. They get through to
+      // the screen that lets them join another facility with an invite code.
+      final facilitiesOnRecord = _parseFacilities(data);
+      final removedAssistant = role == 'assistant' && facilitiesOnRecord.isEmpty;
+
+      if (!isPlatformAdminAccount && !removedAssistant && status == 'deactivated') {
         debugPrint('[AUTH] blocked - deactivated, non-platform-admin account');
         // Not returned as this Future's result - signing out fires its
         // own auth-state change, which can discard this exact
@@ -375,7 +425,7 @@ class _AppEntryPointState extends State<AppEntryPoint> {
         );
         return const Scaffold(body: Center(child: CircularProgressIndicator()));
       }
-      if (!isPlatformAdminAccount && role == 'assistant' && status != 'active') {
+      if (!isPlatformAdminAccount && !removedAssistant && role == 'assistant' && status != 'active') {
         debugPrint('[AUTH] blocked - assistant not yet active');
         forceLogoutAndShowLogin(
           message: 'Your account is not active yet. Please wait for admin approval.',
@@ -388,7 +438,7 @@ class _AppEntryPointState extends State<AppEntryPoint> {
       // fetch (in the old SelectFacilityScreen flow) was the actual
       // cause of "second login just spins" - a duplicate read with its
       // own separate failure point, on top of this one.
-      var facilities = _parseFacilities(data);
+      var facilities = facilitiesOnRecord;
       debugPrint('[AUTH] parsed facilities count=${facilities.length}');
 
       // Registration triggers sign-in (and this very check) before its
@@ -399,7 +449,13 @@ class _AppEntryPointState extends State<AppEntryPoint> {
       // Skipped for a Platform Admin specifically - having none of
       // their own is a deliberate, stable setup for that account type,
       // not a race, so waiting here could never change the outcome.
-      if (facilities.isEmpty && !isPlatformAdminAccount) {
+      // (Not when the account's lists are WRITTEN and empty - which is what
+      // registration, removal and deleting a facility all leave: that means
+      // "none", not "still being written". Registration now creates the
+      // profile and its facilities together, so this only still guards a
+      // profile that has no lists at all.)
+      final facilityListsWritten = data['facilities'] is List && data['facilityIds'] is List;
+      if (facilities.isEmpty && !isPlatformAdminAccount && !removedAssistant && !facilityListsWritten) {
         debugPrint('[AUTH] facilities empty, not a platform admin - starting retry loop');
         for (var attempt = 0; attempt < 4 && facilities.isEmpty; attempt++) {
           await Future.delayed(const Duration(milliseconds: 800));
@@ -422,7 +478,15 @@ class _AppEntryPointState extends State<AppEntryPoint> {
           return const PlatformAdminHomeScreen();
         }
         debugPrint('[AUTH] returning _NoFacilityScreen (no facilities, not a platform admin)');
-        return _NoFacilityScreen(role: role);
+        // An assistant who was REJECTED is told so, and by which facility - then
+        // offered the invite-code box like anyone else with no facility.
+        String? notice;
+        final rejection = data['lastRejection'];
+        if (role == 'assistant' && rejection is Map) {
+          final from = (rejection['facilityName'] ?? '').toString().trim();
+          notice = from.isEmpty ? 'Your request to join was not approved.' : 'Your request to join $from was not approved.';
+        }
+        return _NoFacilityScreen(role: role, notice: notice);
       }
 
       if (facilities.length == 1) {
@@ -444,17 +508,21 @@ class _AppEntryPointState extends State<AppEntryPoint> {
       // does no fetching of its own.
       return FacilityPickerScreen(facilities: facilities, role: role);
     } catch (e) {
-      // Whatever went wrong - a timeout, a permission error, anything -
-      // this always resolves to a real screen with a real message,
-      // never leaves the FutureBuilder hanging on its loading spinner
-      // indefinitely. No sign-out happens on this path, so there's no
-      // race to worry about - a direct return is fine here.
+      // Whatever went wrong - a timeout, a connection blip, a refused read -
+      // it must end on a screen that can RECOVER. This used to return a
+      // LoginScreen while the person was still signed in, and that was a dead
+      // end: the failed answer was memoized for this user, and signing in
+      // again pushes the same user, which is ignored as "no change". So ONE
+      // hiccup (a dropped connection while the account was loading) meant
+      // every later attempt spun for six seconds and bounced back silently,
+      // even once the connection was fine, until the page was reloaded.
+      //
+      // Rethrowing hands it to the FutureBuilder, which shows
+      // _DecisionErrorScreen: Try Again (clears the memo and decides afresh)
+      // or Logout. That screen already existed - this path just never reached
+      // it.
       debugPrint('Error deciding screen: $e');
-      return LoginScreen(
-        errorMessage: e is TimeoutException
-            ? 'This is taking longer than expected. Check your connection and try again.'
-            : 'Something went wrong signing you in: $e',
-      );
+      rethrow;
     }
   }
 
@@ -514,6 +582,7 @@ class _AppEntryPointState extends State<AppEntryPoint> {
           } else if (snap.hasError || !snap.hasData) {
             innerKey = 'error';
             inner = _DecisionErrorScreen(
+              error: snap.error,
               onRetry: () {
                 setState(() {
                   _decidedForUid = null;
@@ -633,7 +702,35 @@ class _AuthLoadingScreenState extends State<_AuthLoadingScreen> {
 /// while the person is still actually signed in.
 class _DecisionErrorScreen extends StatelessWidget {
   final VoidCallback onRetry;
-  const _DecisionErrorScreen({required this.onRetry});
+  final Object? error;
+  const _DecisionErrorScreen({required this.onRetry, this.error});
+
+  // Plain words for what went wrong, and a short technical tag underneath so
+  // it can be reported accurately.
+  String get _explanation {
+    final e = error;
+    if (e is TimeoutException) {
+      return 'This is taking longer than expected. Check your internet connection and try again.';
+    }
+    if (e is FirebaseException) {
+      if (e.code == 'unavailable') {
+        return "We couldn't reach the server. Check your internet connection and try again.";
+      }
+      if (e.code == 'permission-denied') {
+        return "Your account couldn't be opened because access was refused. "
+            'Try again, and if it keeps happening, contact support.';
+      }
+    }
+    return 'Something went wrong while loading your account details. '
+        'Check your connection and try again.';
+  }
+
+  String? get _tag {
+    final e = error;
+    if (e is FirebaseException) return '${e.plugin}/${e.code}';
+    if (e is TimeoutException) return 'timeout';
+    return e?.runtimeType.toString();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -651,11 +748,14 @@ class _DecisionErrorScreen extends StatelessWidget {
                   style: TextStyle(fontWeight: FontWeight.bold, fontSize: 17)),
               const SizedBox(height: 8),
               Text(
-                'Something went wrong while loading your account details. '
-                'Check your connection and try again.',
+                _explanation,
                 textAlign: TextAlign.center,
                 style: TextStyle(color: Colors.grey[700]),
               ),
+              if (_tag != null) ...[
+                const SizedBox(height: 8),
+                Text(_tag!, style: TextStyle(fontSize: 11, color: Colors.grey[500])),
+              ],
               const SizedBox(height: 24),
               Row(
                 mainAxisSize: MainAxisSize.min,
@@ -681,38 +781,474 @@ class _DecisionErrorScreen extends StatelessWidget {
   }
 }
 
-class _NoFacilityScreen extends StatelessWidget {
+class _NoFacilityScreen extends StatefulWidget {
   final String? role;
-  const _NoFacilityScreen({this.role});
+  // Something to tell the person first - e.g. that their request was rejected.
+  final String? notice;
+  const _NoFacilityScreen({this.role, this.notice});
+
+  @override
+  State<_NoFacilityScreen> createState() => _NoFacilityScreenState();
+}
+
+class _NoFacilityScreenState extends State<_NoFacilityScreen> {
+  static const Color _deepGreen = Color(0xFF2F5D62);
+
+  final MembershipService _membership = MembershipService();
+  final TextEditingController _codeController = TextEditingController();
+  Timer? _debounce;
+
+  InviteCheck? _found; // the facility a valid code leads to
+  String? _codeProblem; // why the code can't be used
+  String? _error; // why asking to join failed
+  bool _checking = false;
+  bool _joining = false;
+
+  bool get _isAssistant => widget.role == 'assistant';
+
+  // ---- an admin with no facility: add one, or delete the account ----
+  final TextEditingController _facilityNameController = TextEditingController();
+  String? _facilityType;
+  bool _adding = false;
+  String? _addError;
+
+  @override
+  void dispose() {
+    _debounce?.cancel();
+    _codeController.dispose();
+    _facilityNameController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _addFacility() async {
+    if (_adding) return;
+    final name = _facilityNameController.text.trim();
+    final type = _facilityType;
+    if (name.isEmpty || type == null) {
+      setState(() => _addError = name.isEmpty ? 'Enter the facility name.' : 'Choose the facility type.');
+      return;
+    }
+    setState(() {
+      _adding = true;
+      _addError = null;
+    });
+    try {
+      // The server checks the limit, starts the trial and tells the admin.
+      await _membership.addFacility(name: name, type: type);
+      // The profile lists it now: decide afresh, which lands on the dashboard.
+      reDecideAccount?.call();
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _adding = false;
+        _addError = MembershipService.errorMessage(e);
+      });
+    }
+  }
+
+  String _deleteAccountError(Object e) {
+    if (e is FirebaseAuthException) {
+      if (e.code == 'wrong-password' || e.code == 'invalid-credential') return "That password isn't right.";
+      if (e.code == 'too-many-requests') return 'Too many attempts. Wait a few minutes and try again.';
+      if (e.code == 'network-request-failed') return "We couldn't reach the server. Check your connection and try again.";
+      return e.message ?? 'Could not delete the account.';
+    }
+    return 'Could not delete the account: $e';
+  }
+
+  // Deleting the account used to live only inside Settings - which needs a
+  // facility to open. The advice "delete your facilities first, then you can
+  // delete your account" therefore ended here with no way to do the last step.
+  Future<void> _confirmDeleteAccount() async {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) return;
+
+    // Account deletion is refused while the account still OWNS a facility - it
+    // would leave one that nobody could manage or delete. Normally that can't
+    // be the case here, but a facility missing from the profile would be
+    // exactly that.
+    try {
+      final owned = await FirebaseFirestore.instance
+          .collection('facilities')
+          .where('createdBy', isEqualTo: user.uid)
+          .limit(1)
+          .get();
+      if (owned.docs.isNotEmpty && mounted) {
+        final name = (owned.docs.first.data()['name'] ?? 'a facility').toString();
+        await showDialog(
+          context: context,
+          builder: (ctx) => AlertDialog(
+            title: const Text("Can't delete the account yet"),
+            content: SizedBox(
+              width: 340,
+              child: Text(
+                'This account still owns "$name", which isn\'t on your profile. '
+                'Contact support so it can be sorted out first.',
+              ),
+            ),
+            actions: [TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('OK'))],
+          ),
+        );
+        return;
+      }
+    } catch (e) {
+      debugPrint('[ACCOUNT] ownership check failed, continuing: $e');
+    }
+    if (!mounted) return;
+
+    // Not disposed: they live exactly as long as the dialog, and disposing
+    // while it animates closed can trip a "used after dispose" error.
+    final emailController = TextEditingController(text: user.email ?? '');
+    final passwordController = TextEditingController();
+    var deleting = false;
+    String? dialogError;
+
+    await showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, setDialogState) => AlertDialog(
+          title: const Text('Delete your account?'),
+          content: SizedBox(
+            width: 340,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Text(
+                  'This is permanent and cannot be undone. Your account and profile will be erased, '
+                  'and you will not be able to sign in with this email again.',
+                  style: TextStyle(fontSize: 13),
+                ),
+                const SizedBox(height: 14),
+                TextField(
+                  controller: emailController,
+                  decoration: const InputDecoration(labelText: 'Email', prefixIcon: Icon(Icons.email_outlined)),
+                ),
+                const SizedBox(height: 8),
+                TextField(
+                  controller: passwordController,
+                  obscureText: true,
+                  decoration: const InputDecoration(labelText: 'Password', prefixIcon: Icon(Icons.lock_outline)),
+                ),
+                if (dialogError != null) ...[
+                  const SizedBox(height: 10),
+                  Text(dialogError!, style: const TextStyle(color: Colors.redAccent, fontSize: 12.5)),
+                ],
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(onPressed: deleting ? null : () => Navigator.pop(ctx), child: const Text('Cancel')),
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(backgroundColor: Colors.redAccent, foregroundColor: Colors.white),
+              onPressed: deleting
+                  ? null
+                  : () async {
+                      if (passwordController.text.isEmpty) {
+                        setDialogState(() => dialogError = 'Enter your password to confirm.');
+                        return;
+                      }
+                      setDialogState(() {
+                        deleting = true;
+                        dialogError = null;
+                      });
+                      try {
+                        await AuthService().deleteAccount(
+                          email: emailController.text.trim(),
+                          password: passwordController.text,
+                        );
+                        if (ctx.mounted) Navigator.pop(ctx);
+                        await forceLogoutAndShowLogin(message: 'Your account has been deleted.');
+                      } catch (e) {
+                        if (!ctx.mounted) return;
+                        setDialogState(() {
+                          deleting = false;
+                          dialogError = _deleteAccountError(e);
+                        });
+                      }
+                    },
+              child: deleting
+                  ? const SizedBox(
+                      width: 18,
+                      height: 18,
+                      child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                    )
+                  : const Text('Delete account'),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _adminSection() {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        const SizedBox(height: 22),
+        TextField(
+          controller: _facilityNameController,
+          enabled: !_adding,
+          textCapitalization: TextCapitalization.words,
+          onChanged: (_) => setState(() => _addError = null),
+          decoration: InputDecoration(
+            labelText: 'Facility name',
+            hintText: 'e.g. Ukuli',
+            prefixIcon: const Icon(Icons.storefront_outlined),
+            border: OutlineInputBorder(borderRadius: BorderRadius.circular(14)),
+          ),
+        ),
+        const SizedBox(height: 12),
+        DropdownButtonFormField<String>(
+          initialValue: _facilityType,
+          isExpanded: true,
+          decoration: InputDecoration(
+            labelText: 'Type',
+            border: OutlineInputBorder(borderRadius: BorderRadius.circular(14)),
+          ),
+          items: kFacilityTypes.map((t) => DropdownMenuItem(value: t, child: Text(t))).toList(),
+          onChanged: _adding
+              ? null
+              : (value) => setState(() {
+                    _facilityType = value;
+                    _addError = null;
+                  }),
+        ),
+        if (_addError != null) ...[
+          const SizedBox(height: 10),
+          Text(_addError!, textAlign: TextAlign.center, style: const TextStyle(color: Colors.redAccent, fontSize: 12.5)),
+        ],
+        const SizedBox(height: 16),
+        SizedBox(
+          width: double.infinity,
+          height: 46,
+          child: ElevatedButton(
+            onPressed: _adding ? null : _addFacility,
+            style: ElevatedButton.styleFrom(
+              backgroundColor: _deepGreen,
+              foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+            ),
+            child: _adding
+                ? const Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white)),
+                      SizedBox(width: 10),
+                      Text('Adding facility...'),
+                    ],
+                  )
+                : const Text('Add facility'),
+          ),
+        ),
+        const SizedBox(height: 8),
+        TextButton(
+          onPressed: _adding ? null : _confirmDeleteAccount,
+          style: TextButton.styleFrom(foregroundColor: Colors.redAccent),
+          child: const Text('Delete my account instead'),
+        ),
+      ],
+    );
+  }
+
+  // Same approach as the register screen: wait for a pause in typing, then ask
+  // the server - so the person sees which facility a code leads to BEFORE they
+  // send anything.
+  void _onCodeChanged(String value) {
+    _debounce?.cancel();
+    final code = value.trim();
+    final letters = code.replaceAll(RegExp(r'[^A-Za-z0-9]'), '');
+    setState(() {
+      _found = null;
+      _codeProblem = null;
+      _error = null;
+      _checking = letters.length >= 6;
+    });
+    if (letters.length < 6) return;
+
+    _debounce = Timer(const Duration(milliseconds: 450), () async {
+      try {
+        final check = await _membership.checkInviteCode(code);
+        // They've typed on since - this answer is about an older code.
+        if (!mounted || _codeController.text.trim() != code) return;
+        setState(() {
+          _checking = false;
+          _found = check;
+          _codeProblem = check == null ? 'That code is invalid, has expired, or has already been used.' : null;
+        });
+      } catch (e) {
+        if (!mounted || _codeController.text.trim() != code) return;
+        setState(() {
+          _checking = false;
+          _codeProblem = MembershipService.errorMessage(e);
+        });
+      }
+    });
+  }
+
+  Future<void> _join() async {
+    final found = _found;
+    if (found == null || _joining) return;
+    setState(() {
+      _joining = true;
+      _error = null;
+    });
+    try {
+      await _membership.joinFacilityWithInvite(code: _codeController.text.trim());
+      // They're "pending" now, so the sign-in check would turn them away
+      // anyway. Sign out with a plain message rather than leave them here.
+      await forceLogoutAndShowLogin(
+        message: 'Request sent to ${found.facilityName}. You can sign in once its admin approves you.',
+      );
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _joining = false;
+        _error = MembershipService.errorMessage(e);
+      });
+    }
+  }
+
+  Widget _logoutButton() {
+    return OutlinedButton.icon(
+      onPressed: (_joining || _adding) ? null : () => forceLogoutAndShowLogin(),
+      icon: const Icon(Icons.logout),
+      label: const Text('Logout'),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
+    final found = _found;
     return Scaffold(
       backgroundColor: const Color(0xFFFDFDF9),
       body: Center(
-        child: Padding(
+        child: SingleChildScrollView(
           padding: const EdgeInsets.all(32),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const Icon(Icons.storefront_outlined, size: 48, color: Colors.grey),
-              const SizedBox(height: 16),
-              const Text('No Facility Assigned', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 17)),
-              const SizedBox(height: 8),
-              Text(
-                role == 'assistant'
-                    ? 'Your account isn\'t linked to a facility yet. Ask your admin to add you to one.'
-                    : 'This account has no facility on record. Register one, or ask your Platform Admin for help.',
-                textAlign: TextAlign.center,
-                style: TextStyle(color: Colors.grey[700]),
-              ),
-              const SizedBox(height: 24),
-              OutlinedButton.icon(
-                onPressed: () => forceLogoutAndShowLogin(),
-                icon: const Icon(Icons.logout),
-                label: const Text('Logout'),
-              ),
-            ],
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 420),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Icon(Icons.storefront_outlined, size: 48, color: Colors.grey),
+                const SizedBox(height: 16),
+                Text(
+                  _isAssistant ? "You're not in a facility right now" : "You don't have a facility right now",
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 17),
+                ),
+                if (widget.notice != null) ...[
+                  const SizedBox(height: 14),
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: Colors.orange.withValues(alpha: 0.10),
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: Colors.orange.withValues(alpha: 0.35)),
+                    ),
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Icon(Icons.info_outline, size: 18, color: Colors.orange.shade800),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Text(
+                            '${widget.notice} If you think that was a mistake, ask for a new invite code.',
+                            style: TextStyle(fontSize: 13, color: Colors.orange.shade900, height: 1.35),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+                const SizedBox(height: 8),
+                Text(
+                  _isAssistant
+                      ? 'You may have been removed from your facility, or not added to one yet. '
+                          'Your account, name, phone number and photo are kept. To join a facility, '
+                          'enter an invite code from its admin.'
+                      : 'Your account is kept. Add a facility to carry on, or delete your account '
+                          'if you no longer need it.',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(color: Colors.grey[700], height: 1.4),
+                ),
+                if (_isAssistant) ...[
+                  const SizedBox(height: 22),
+                  TextField(
+                    controller: _codeController,
+                    enabled: !_joining,
+                    textCapitalization: TextCapitalization.characters,
+                    onChanged: _onCodeChanged,
+                    decoration: InputDecoration(
+                      labelText: 'Invite code',
+                      hintText: 'e.g. JK7-2P4',
+                      prefixIcon: const Icon(Icons.vpn_key_outlined),
+                      suffixIcon: _checking
+                          ? const Padding(
+                              padding: EdgeInsets.all(12),
+                              child: SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2)),
+                            )
+                          : (found != null ? const Icon(Icons.check_circle, color: Colors.green) : null),
+                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(14)),
+                    ),
+                  ),
+                  const SizedBox(height: 10),
+                  if (found != null)
+                    Text(
+                      "You'll be asking to join: ${found.facilityName}"
+                      '${found.facilityType.isEmpty ? '' : ' (${found.facilityType})'}',
+                      textAlign: TextAlign.center,
+                      style: const TextStyle(color: Colors.green, fontWeight: FontWeight.w600, fontSize: 13),
+                    )
+                  else if (_codeProblem != null)
+                    Text(_codeProblem!,
+                        textAlign: TextAlign.center, style: const TextStyle(color: Colors.redAccent, fontSize: 12.5)),
+                  if (_error != null) ...[
+                    const SizedBox(height: 8),
+                    Text(_error!,
+                        textAlign: TextAlign.center, style: const TextStyle(color: Colors.redAccent, fontSize: 12.5)),
+                  ],
+                  const SizedBox(height: 16),
+                  SizedBox(
+                    width: double.infinity,
+                    height: 46,
+                    child: ElevatedButton(
+                      onPressed: (found != null && !_joining) ? _join : null,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: _deepGreen,
+                        foregroundColor: Colors.white,
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                      ),
+                      child: _joining
+                          ? const Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                SizedBox(
+                                  width: 18,
+                                  height: 18,
+                                  child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                                ),
+                                SizedBox(width: 10),
+                                Text('Sending your request...'),
+                              ],
+                            )
+                          : const Text('Request to join'),
+                    ),
+                  ),
+                  const SizedBox(height: 10),
+                  Text(
+                    "The facility's admin has to approve you, as with any new assistant. "
+                    'Or ask your previous admin to add you back.',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(color: Colors.grey[600], fontSize: 12, height: 1.4),
+                  ),
+                ],
+                if (!_isAssistant) _adminSection(),
+                const SizedBox(height: 20),
+                _logoutButton(),
+              ],
+            ),
           ),
         ),
       ),

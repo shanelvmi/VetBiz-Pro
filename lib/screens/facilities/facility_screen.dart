@@ -1,6 +1,7 @@
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import '../../services/activity_log_retention.dart';
+import '../../services/membership_service.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/services.dart';
@@ -14,12 +15,10 @@ import 'package:firebase_storage/firebase_storage.dart';
 import '../../providers/facility_provider.dart';
 import '../../models/product.dart';
 import '../../services/usage_calculator_service.dart';
-import '../../utils/facility_code_generator.dart';
 import '../../utils/facility_activation.dart';
 import '../../constants/facility_types.dart';
 import '../../services/sales_summary_service.dart';
 import '../../utils/force_logout.dart';
-import '../../utils/trial_period_helper.dart';
 import '../../utils/facility_limit_helper.dart';
 import '../../widgets/hover_elevate_card.dart';
 import '../admin/manage_assistants_screen.dart';
@@ -76,6 +75,9 @@ class _FacilityScreenState extends State<FacilityScreen> {
   // future was recreated on every build(), causing a visible flicker
   // back to a loading state and a redundant Firestore read each time.
   final Map<String, List<Map<String, dynamic>>> _assistantsByFacility = {};
+
+  // True while Delete Facility is checking, afresh, that no assistants remain.
+  bool _checkingBeforeDelete = false;
 
   // Logo URL and quick stats (this month's sales, client count) per
   // facility - same reasoning as assistants above: fetched once per
@@ -234,6 +236,28 @@ class _FacilityScreenState extends State<FacilityScreen> {
       });
     } catch (e) {
       debugPrint('Could not load extras for facility $facilityId: $e');
+    }
+  }
+
+  // Re-reads who is in each facility. The copy in _assistantsByFacility is
+  // taken when this screen opens, so it goes stale the moment the Team Members
+  // screen - which this screen links to - removes or moves someone.
+  Future<void> _refreshAssistants() async {
+    try {
+      final fresh = <String, List<Map<String, dynamic>>>{};
+      await Future.wait(facilities.map((f) async {
+        final id = f['facilityId'] as String?;
+        if (id == null) return;
+        fresh[id] = await _fetchAssistantsForFacility(id);
+      }));
+      if (!mounted) return;
+      setState(() {
+        _assistantsByFacility
+          ..clear()
+          ..addAll(fresh);
+      });
+    } catch (e) {
+      debugPrint('Could not refresh who is in each facility: $e');
     }
   }
 
@@ -469,10 +493,9 @@ class _FacilityScreenState extends State<FacilityScreen> {
                         // stack-replacing navigation this triggers.
                         if (mounted) await _switchToFacility(newFacility);
                       } catch (e) {
-                        final message = e.toString().contains('permission-denied')
-                            ? "You've reached the facility limit for your account."
-                            : 'Could not add facility: $e';
-                        setDialogState(() => dialogError = message);
+                        // The server's own wording: the facility limit, a
+                        // connection problem, and so on.
+                        setDialogState(() => dialogError = MembershipService.errorMessage(e));
                       } finally {
                         if (mounted) setState(() => _isAddingFacility = false);
                       }
@@ -485,9 +508,16 @@ class _FacilityScreenState extends State<FacilityScreen> {
                 foregroundColor: WidgetStateProperty.all(Colors.white),
               ),
               child: _isAddingFacility
-                  ? const SizedBox(
-                      width: 18, height: 18,
-                      child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                  ? const Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        SizedBox(
+                          width: 16, height: 16,
+                          child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                        ),
+                        SizedBox(width: 8),
+                        Text('Adding...'),
+                      ],
                     )
                   : const Text('Add'),
             ),
@@ -498,53 +528,33 @@ class _FacilityScreenState extends State<FacilityScreen> {
   }
 
   Future<Map<String, dynamic>> _addFacility({required String name, required String type, Uint8List? logoBytes}) async {
-    final uid = currentUser!.uid;
-    final code = await generateUniqueFacilityCode();
-    final trialExpiresAt = await computeNewFacilityTrialExpiry();
+    // The server creates the facility, works out its trial, checks the facility
+    // limit, and adds it to this person's lists. None of that can be written
+    // from the app any more - it's what stopped people writing themselves
+    // into facilities that weren't theirs.
+    final newFacilityEntry = await MembershipService().addFacility(name: name, type: type);
+    final newFacilityId = newFacilityEntry['facilityId'] as String;
 
-    final docRef = await FirebaseFirestore.instance.collection('facilities').add({
-      'name': name,
-      'type': type,
-      'code': code,
-      'createdBy': uid,
-      'createdAt': FieldValue.serverTimestamp(),
-      'trialExpiresAt': Timestamp.fromDate(trialExpiresAt),
-    });
-
-    // Logo upload needs a facilityId to key the Storage path on, so it
-    // can only happen after the document above already exists.
+    // Logo upload needs a facilityId to key the Storage path on, so it can
+    // only happen after the facility above already exists. (The logo is an
+    // ordinary facility setting, which an admin of it may write.)
     if (logoBytes != null) {
       try {
-        final storageRef = FirebaseStorage.instance.ref().child('facility_logos/${docRef.id}.png');
+        final storageRef = FirebaseStorage.instance.ref().child('facility_logos/$newFacilityId.png');
         await storageRef.putData(logoBytes);
         final rawDownloadUrl = await storageRef.getDownloadURL();
         final downloadUrl = '$rawDownloadUrl&cb=${DateTime.now().millisecondsSinceEpoch}';
-        await docRef.set({'logoUrl': downloadUrl}, SetOptions(merge: true));
+        await FirebaseFirestore.instance
+            .collection('facilities')
+            .doc(newFacilityId)
+            .set({'logoUrl': downloadUrl}, SetOptions(merge: true));
       } catch (e) {
         // The facility itself was created successfully - a failed logo
         // upload shouldn't be treated as a failed facility creation.
         // It can always be added afterward via Edit.
-        debugPrint('Logo upload failed for new facility ${docRef.id}: $e');
+        debugPrint('Logo upload failed for new facility $newFacilityId: $e');
       }
     }
-
-    final newFacilityEntry = {
-      'facilityId': docRef.id,
-      'name': name,
-      'type': type,
-      'code': code,
-    };
-
-    // Both arrays need updating - 'facilities' is what this screen (and
-    // the facility picker) actually displays, while 'facilityIds' is
-    // what every Firestore rule's isInFacility() check relies on for
-    // actual data access. Adding to one without the other would either
-    // show a facility that can't be opened, or grant access to one
-    // that's invisible in the UI.
-    await FirebaseFirestore.instance.collection('users').doc(uid).update({
-      'facilities': FieldValue.arrayUnion([newFacilityEntry]),
-      'facilityIds': FieldValue.arrayUnion([docRef.id]),
-    });
 
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -879,15 +889,14 @@ class _FacilityScreenState extends State<FacilityScreen> {
     );
   }
 
-  /// Updates a facility's name/type everywhere it's stored - the real
-  /// facilities/{facilityId} document, plus every denormalized copy of
-  /// it (the editing Admin's own account, and every Assistant belonging
-  /// to this facility). Deliberately does NOT touch main.dart's login
-  /// path or how it reads this data - that path was specifically built
-  /// to avoid extra Firestore fetches during sign-in (a documented,
-  /// previously-fixed source of login reliability problems), so instead
-  /// of eliminating the denormalized copies, this keeps every one of
-  /// them correct at the moment a rename actually happens.
+  /// Updates a facility's details: the real facilities/{facilityId} document,
+  /// then asks the server to bring every denormalized copy of its name and
+  /// type (on the profile of everyone who belongs to it) into line.
+  /// Deliberately does NOT touch main.dart's login path or how it reads this
+  /// data - that path was specifically built to avoid extra Firestore fetches
+  /// during sign-in (a documented, previously-fixed source of login
+  /// reliability problems), so instead of eliminating the denormalized copies,
+  /// they're kept correct at the moment a rename actually happens.
   Future<void> _editFacility({
     required String facilityId,
     required String name,
@@ -970,39 +979,17 @@ class _FacilityScreenState extends State<FacilityScreen> {
       'updatedAt': DateTime.now(),
     };
 
-    final batch = firestore.batch();
-
-    // The editing Admin's own account.
-    final selfRef = firestore.collection('users').doc(currentUser!.uid);
-    final selfDoc = await selfRef.get();
-    final selfFacilities = List<Map<String, dynamic>>.from(selfDoc.data()?['facilities'] ?? []);
-    final updatedSelfFacilities = selfFacilities.map((f) {
-      if (f['facilityId'] == facilityId) {
-        return {...f, 'name': name, 'type': type};
-      }
-      return f;
-    }).toList();
-    batch.update(selfRef, {'facilities': updatedSelfFacilities});
-
-    // Every Assistant belonging to this facility.
-    final assistantsSnap = await firestore
-        .collection('users')
-        .where('role', isEqualTo: 'assistant')
-        .where('facilityIds', arrayContains: facilityId)
-        .get();
-
-    for (final doc in assistantsSnap.docs) {
-      final assistantFacilities = List<Map<String, dynamic>>.from(doc.data()['facilities'] ?? []);
-      final updatedAssistantFacilities = assistantFacilities.map((f) {
-        if (f['facilityId'] == facilityId) {
-          return {...f, 'name': name, 'type': type};
-        }
-        return f;
-      }).toList();
-      batch.update(doc.reference, {'facilities': updatedAssistantFacilities});
+    // Every member's profile carries a copy of this facility's name and type,
+    // which the screens read without a second lookup. The app can't write
+    // other people's profiles any more, so the server brings them all into
+    // line - asked for here so the change shows at once. (A trigger on the
+    // facility document does the same for any other way a name changes, as a
+    // safety net.) If this call fails the edit itself has still been saved.
+    try {
+      await MembershipService().syncFacilityDetails(facilityId);
+    } catch (e) {
+      debugPrint('Could not refresh the facility details on members\' profiles: $e');
     }
-
-    await batch.commit();
 
     if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
@@ -1022,7 +1009,28 @@ class _FacilityScreenState extends State<FacilityScreen> {
   /// something that's going to be rejected anyway.
   Future<void> _showDeleteFacilityDialog(Map<String, dynamic> facility) async {
     final facilityId = facility['facilityId'] as String;
-    final assistants = _assistantsByFacility[facilityId] ?? [];
+    if (_checkingBeforeDelete) return;
+
+    // Looked at afresh, NOT read from the copy loaded when this screen opened:
+    // that went stale as soon as the last assistant was removed, and Delete
+    // Facility kept refusing until the owner signed out and back in. The
+    // server re-checks too, so this is only about telling the truth promptly.
+    setState(() => _checkingBeforeDelete = true);
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Checking that no assistants remain...'), duration: Duration(seconds: 2)),
+    );
+    List<Map<String, dynamic>> assistants;
+    try {
+      assistants = await _fetchAssistantsForFacility(facilityId);
+      if (mounted) setState(() => _assistantsByFacility[facilityId] = assistants);
+    } catch (e) {
+      debugPrint('Could not re-check assistants, using the last known list: $e');
+      assistants = _assistantsByFacility[facilityId] ?? [];
+    } finally {
+      if (mounted) setState(() => _checkingBeforeDelete = false);
+    }
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).hideCurrentSnackBar();
 
     if (assistants.isNotEmpty) {
       await showDialog(
@@ -1089,7 +1097,7 @@ class _FacilityScreenState extends State<FacilityScreen> {
                       border: Border.all(color: Colors.redAccent.withValues(alpha: 0.3)),
                     ),
                     child: const Text(
-                      'This is your only facility. Deleting it will leave your account with no facility at all.',
+                      'This is your only facility. Deleting it leaves your account with no facility - you will stay signed in, and can then add a new one or delete your account.',
                       style: TextStyle(fontSize: 12.5, color: Colors.redAccent, fontWeight: FontWeight.w600),
                     ),
                   ),
@@ -1186,11 +1194,12 @@ class _FacilityScreenState extends State<FacilityScreen> {
       if (facilities.isNotEmpty) {
         await _switchToFacility(facilities.first);
       } else {
-        await forceLogoutAndShowLogin(
-          message: isOnlyFacility
-              ? 'Your facility was deleted. Register a new one, or ask your Platform Admin for help.'
-              : 'That facility was deleted.',
-        );
+        // Stay signed in and land on the account's own "no facility" screen,
+        // where a new facility can be added or the account deleted. This used
+        // to sign them out with "Register a new one" - misleading, since
+        // signing back in only showed a bare message, and the account's
+        // Delete Account (which needs no facilities) was unreachable.
+        await returnToAccountDecision();
       }
     }
   }
@@ -2089,15 +2098,18 @@ class _FacilityScreenState extends State<FacilityScreen> {
         // there's no separate "team members" concept to maintain here.
         return _buildComingSoonTab(
           'Team Members',
-          'Manage this facility\'s team from the Manage Assistants screen.',
-          actionLabel: 'Open Manage Assistants',
-          onAction: () {
-            Navigator.push(
+          'Manage this facility\'s team from the Team Members screen.',
+          actionLabel: 'Open Team Members',
+          onAction: () async {
+            await Navigator.push(
               context,
               MaterialPageRoute(
                 builder: (_) => ManageAssistantsScreen(initialSearchQuery: facility['name'] as String?),
               ),
             );
+            // Whatever was done there (assistants removed or moved) must show
+            // here straight away - Delete Facility depends on it.
+            if (mounted) await _refreshAssistants();
           },
         );
       case 2:

@@ -11,6 +11,12 @@ class ActivityLogger {
     String? userName, // optional, will fetch from Firestore if null
     required String actionType,
     required String description,
+    // Who the entry is ABOUT, when that isn't the person doing it - an admin
+    // approving, rejecting or deactivating someone, a role being changed. It
+    // is what lets that person see "I was approved" while everyone else's
+    // admin matters stay out of their view: an assistant reads only entries
+    // they did (userId) or that are about them (this).
+    String? targetUserId,
   }) async {
     try {
       // Fetch fullName from Firestore if userName not provided
@@ -33,6 +39,7 @@ class ActivityLogger {
         'userName': userName,
         'actionType': actionType,
         'description': description,
+        if (targetUserId != null && targetUserId.isNotEmpty) 'targetUserId': targetUserId,
         'timestamp': FieldValue.serverTimestamp(),
       });
 

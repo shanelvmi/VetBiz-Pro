@@ -42,6 +42,7 @@ import '../../providers/subscription_provider.dart';
 import '../../models/promotion.dart';
 import '../../models/notification_model.dart';
 import '../../providers/user_role_provider.dart';
+import '../../utils/merged_query_stream.dart';
 import '../subscription/subscription_screen.dart';
 import 'notifications_screen.dart';
 import 'insights_screen.dart';
@@ -570,6 +571,31 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
   bool _hasLoadedDashboardOnce = false;
   bool _isPeriodLoading = false;
   String? _lastLoadedFacilityId;
+
+  // The Recent Activity feed's stream, kept per facility and role. It used to
+  // be built inline on every rebuild, handing the StreamBuilder a brand-new
+  // stream each time.
+  Stream<List<LogDoc>>? _recentActivityStream;
+  String? _recentActivityKey;
+
+  // An admin sees the latest entries; an ASSISTANT only the latest that are
+  // theirs (what they did, or what is about them) - not the admin matters of
+  // the facility. See firestore.rules: the rule only allows the scoped query.
+  Stream<List<LogDoc>> _recentActivityStreamFor(String facilityId, bool isAdmin) {
+    final key = '$facilityId|$isAdmin';
+    final cached = _recentActivityStream;
+    if (_recentActivityKey == key && cached != null) return cached;
+    _recentActivityKey = key;
+    final logs = FirebaseFirestore.instance.collection('facilities').doc(facilityId).collection('activity_logs');
+    if (isAdmin) {
+      return _recentActivityStream = logs.orderBy('timestamp', descending: true).limit(5).snapshots().map((s) => s.docs);
+    }
+    final uid = FirebaseAuth.instance.currentUser?.uid ?? '';
+    return _recentActivityStream = mergedLogStream([
+      logs.where('userId', isEqualTo: uid).orderBy('timestamp', descending: true).limit(5),
+      logs.where('targetUserId', isEqualTo: uid).orderBy('timestamp', descending: true).limit(5),
+    ], limit: 5);
+  }
   String? _lastLoadedFilter;
   StreamSubscription<DashboardPeriodTotals>? _periodTotalsSub;
 
@@ -1559,7 +1585,7 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
     // Calm, informational - shown for the rest of the trial once the
     // urgent <=7-day window above doesn't apply yet, rather than
     // showing nothing at all until it's nearly over.
-    final isInTrialInfo = sub.status == SubscriptionStatus.trial && !needsAttention;
+    final isInTrialInfo = sub.isInCalmTrial; // one shared definition - see SubscriptionProvider
 
     final isSnoozed = _subscriptionSnoozedUntil != null &&
         DateTime.now().isBefore(_subscriptionSnoozedUntil!);
@@ -1832,22 +1858,24 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
               child: Center(child: Text('No activity yet.', style: TextStyle(color: Colors.grey[600]))),
             )
           else
-            StreamBuilder<QuerySnapshot>(
-              stream: FirebaseFirestore.instance
-                  .collection('facilities')
-                  .doc(facilityId)
-                  .collection('activity_logs')
-                  .orderBy('timestamp', descending: true)
-                  .limit(5)
-                  .snapshots(),
+            StreamBuilder<List<LogDoc>>(
+              stream: _recentActivityStreamFor(facilityId, Provider.of<UserRoleProvider>(context).isAdmin),
               builder: (context, snapshot) {
+                if (snapshot.hasError) {
+                  return Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 20),
+                    child: Center(
+                      child: Text("Couldn't load recent activity.", style: TextStyle(color: Colors.grey[600])),
+                    ),
+                  );
+                }
                 if (!snapshot.hasData) {
                   return const Padding(
                     padding: EdgeInsets.symmetric(vertical: 20),
                     child: Center(child: CircularProgressIndicator(strokeWidth: 2)),
                   );
                 }
-                final docs = snapshot.data!.docs;
+                final docs = snapshot.data!;
                 if (docs.isEmpty) {
                   return Padding(
                     padding: const EdgeInsets.symmetric(vertical: 20),
@@ -1858,7 +1886,7 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
                   children: [
                     for (int i = 0; i < docs.length; i++) ...[
                       if (i > 0) Divider(height: 1, color: Colors.grey.withValues(alpha: 0.15)),
-                      _activityTile(docs[i].data() as Map<String, dynamic>),
+                      _activityTile(docs[i].data()),
                     ],
                   ],
                 );
@@ -2707,7 +2735,7 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
     // the Dashboard banner and in the Notifications dropdown; distinct
     // from subscriptionNeedsAttention above, which only covers the
     // urgent <=7-day window.
-    final isInTrialInfo = sub.status == SubscriptionStatus.trial && !subscriptionNeedsAttention;
+    final isInTrialInfo = sub.isInCalmTrial; // the same definition the lists use, so a blink always has a message
     final hasNew = _hasNewUrgentSinceViewed || _hasNewPendingAssistantSinceViewed;
 
     // Amber category - reuses the exact same <=7-day definition
@@ -2732,8 +2760,15 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
                   .limit(50)
                   .snapshots(),
           builder: (context, notifSnapshot) {
-            final storedNotifications =
-                (notifSnapshot.data?.docs ?? []).map(FacilityNotification.fromFirestore).toList();
+            // Only what's meant for this person - the same rule the
+            // Notifications screen applies, or the bell would light up for
+            // something that isn't even listed there.
+            final bellUid = FirebaseAuth.instance.currentUser?.uid;
+            final bellIsAdmin = Provider.of<UserRoleProvider>(context).isAdmin;
+            final storedNotifications = (notifSnapshot.data?.docs ?? [])
+                .map(FacilityNotification.fromFirestore)
+                .where((n) => n.isVisibleTo(uid: bellUid, isAdmin: bellIsAdmin))
+                .toList();
             // Covers every notification type, subscription alerts
             // included - once marked read (via "Mark all as read"),
             // it stops counting here, same as any other
@@ -3238,7 +3273,11 @@ Widget _buildDrawerContent() {
                     style: const TextStyle(color: Colors.black),
                     children: [
                       const TextSpan(text: "Role: ", style: TextStyle(fontWeight: FontWeight.bold)),
-                      TextSpan(text: _capitalize(role)),
+                      // A promoted Assistant is a Co-admin, not just "Admin".
+                      TextSpan(
+                          text: (role == 'admin' && data['previousRole'] == 'assistant')
+                              ? 'Co-admin'
+                              : _capitalize(role)),
                     ],
                   ),
                 ),
@@ -3259,15 +3298,9 @@ Widget _buildDrawerContent() {
                         ? Map<String, dynamic>.from(rawUserData)
                         : <String, dynamic>{};
 
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (_) => RegisterScreen(
-                          userData: userData,
-                          isUpdating: true,
-                        ),
-                      ),
-                    );
+                    // A modal over the Dashboard on wide screens (full screen
+                    // on a phone), like the other edit screens.
+                    showEditProfileScreen(context, userData: userData);
                   },
                 ),
                 const SizedBox(height: 12),
@@ -3275,7 +3308,7 @@ Widget _buildDrawerContent() {
                 if (Provider.of<UserRoleProvider>(context).isAdmin) ...[
                   ElevatedButton(
                     style: buttonStyle,
-                    child: const Text('Manage Assistants'),
+                    child: const Text('Team Members'),
                     onPressed: () {
                       Navigator.of(context).push(
                         MaterialPageRoute(builder: (_) => ManageAssistantsScreen()),

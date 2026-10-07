@@ -1,5 +1,4 @@
 import 'dart:math';
-import 'package:cloud_firestore/cloud_firestore.dart';
 
 // Shared between registration and the Facilities screen's "Add
 // Facility" action - both need to generate a facility's own permanent
@@ -13,25 +12,24 @@ String _randomFacilityCode({int length = 8}) {
   );
 }
 
-/// Generates a facility code and verifies it's not already in use before
-/// returning it - the random generator alone (2.8 trillion possible
-/// 8-character codes) makes a collision extremely unlikely, but
-/// "extremely unlikely" isn't "never." This makes it actually
-/// guaranteed rather than just statistically safe, at the cost of one
-/// quick query per attempt.
-Future<String> generateUniqueFacilityCode({int length = 8, int maxAttempts = 5}) async {
-  for (var attempt = 0; attempt < maxAttempts; attempt++) {
-    final candidate = _randomFacilityCode(length: length);
-    final existing = await FirebaseFirestore.instance
-        .collection('facilities')
-        .where('code', isEqualTo: candidate)
-        .limit(1)
-        .get();
-    if (existing.docs.isEmpty) return candidate;
-    // Collision (astronomically rare) - loop and try a fresh one.
-  }
-  // maxAttempts exhausted (should never realistically happen) - fall
-  // back to a longer code, which shrinks the collision odds further
-  // still rather than silently reusing something.
-  return _randomFacilityCode(length: length + 4);
+/// Generates a facility code.
+///
+/// This used to query the facilities collection to confirm the code wasn't
+/// already taken. That can no longer work, and shouldn't: facilities are only
+/// readable by their own members (and Platform Admins), so a lookup of
+/// "any facility with this code" is - correctly - refused. During
+/// registration the person isn't even signed in yet, so Add Facility simply
+/// did nothing; for a signed-in admin the same query was refused too.
+///
+/// Dropping the check is safe because the code is no longer a credential:
+/// joining a facility goes through short-lived invite codes, and the
+/// permanent code can't be used to join anything. It's an identifier, and
+/// 8 random characters give 36^8 (about 2.8 trillion) possibilities - a
+/// collision across even tens of thousands of facilities is vanishingly
+/// unlikely, and harmless if it ever happened.
+///
+/// Still async, and still named for what callers expect, so they didn't need
+/// to change.
+Future<String> generateUniqueFacilityCode({int length = 8}) async {
+  return _randomFacilityCode(length: length);
 }

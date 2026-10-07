@@ -109,11 +109,17 @@ class _ViewReportsScreenState extends State<ViewReportsScreen> {
     if (_isGenerating) return;
     final facilityId = Provider.of<FacilityProvider>(context, listen: false).selectedFacilityId;
     if (facilityId == null) return;
+    // Only an admin can read - and so include - the whole activity log.
+    final isAdmin = Provider.of<UserRoleProvider>(context, listen: false).isAdmin;
 
     setState(() => _isGenerating = true);
     try {
       final userName = await _fetchCurrentUserFullName();
-      await _reportService.generateDraftReport(facilityId: facilityId, generatedByName: userName);
+      await _reportService.generateDraftReport(
+        facilityId: facilityId,
+        generatedByName: userName,
+        includeActivityLog: isAdmin,
+      );
       if (!mounted) return;
       // Stays on this same screen, now showing the fresh draft's
       // figures directly - Review & Submit is a separate step,

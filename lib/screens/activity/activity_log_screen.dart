@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import '../../services/activity_log_retention.dart';
 import 'package:flutter/gestures.dart';
@@ -6,7 +7,9 @@ import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import '../../providers/facility_provider.dart';
 import '../../providers/user_role_provider.dart';
+import '../../utils/merged_query_stream.dart';
 import '../../utils/text_sanitizer.dart';
+import '../../widgets/firestore_error_view.dart';
 
 class ActivityLogScreen extends StatefulWidget {
   final bool isModal;
@@ -69,7 +72,7 @@ class _ActivityLogScreenState extends State<ActivityLogScreen> {
   // reset to ConnectionState.waiting and re-showed the loading state
   // on every rebuild - the reported flicker while scrolling. Cached
   // here instead, created once per facilityId.
-  Stream<QuerySnapshot<Map<String, dynamic>>>? _logStream;
+  Stream<List<LogDoc>>? _logStream;
   String? _logStreamFacilityId;
 
   // Same fix as _logStream above, for the second place this file had
@@ -79,7 +82,7 @@ class _ActivityLogScreenState extends State<ActivityLogScreen> {
   // filter chip) - so its StreamBuilder flickered to its own loading
   // state (a blank SizedBox.shrink()) and back on each one. Cached here
   // instead, created once per facilityId, exactly like _logStream.
-  Stream<QuerySnapshot<Map<String, dynamic>>>? _actionSummaryStream;
+  Stream<List<LogDoc>>? _actionSummaryStream;
   String? _actionSummaryStreamFacilityId;
 
   // Guards _cleanupOldLogs so it actually runs once per facility per
@@ -162,13 +165,17 @@ class _ActivityLogScreenState extends State<ActivityLogScreen> {
   /// it - see [_buildStreams]. Creating them first and correcting them
   /// afterwards would flash logs from outside the window (everything up to
   /// the 90-day default) before settling.
-  void _ensureInitializedForFacility(String facilityId) {
+  void _ensureInitializedForFacility(String facilityId, {required bool isAdmin}) {
     if (_cleanupRanForFacilityId == facilityId) return;
     _cleanupRanForFacilityId = facilityId;
 
     _fetchRetentionDays(facilityId).then((retentionDays) async {
       if (!mounted || _cleanupRanForFacilityId != facilityId) return;
-      setState(() => _buildStreams(facilityId, retentionDays));
+      setState(() => _buildStreams(facilityId, retentionDays, isAdmin: isAdmin));
+      // Tidying up old entries is the admin's job (it deletes, which only an
+      // admin may do) - and it reads the WHOLE log to find them, which an
+      // assistant can't.
+      if (!isAdmin) return;
       try {
         await _cleanupOldLogs(facilityId, retentionDays);
       } catch (e) {
@@ -189,21 +196,38 @@ class _ActivityLogScreenState extends State<ActivityLogScreen> {
   /// the "keep for N days" window stayed visible - the reported "set to 30
   /// days but still seeing 31 August". Bounding the query itself means the
   /// screen is always right, whether or not anything has been deleted yet.
-  void _buildStreams(String facilityId, int retentionDays) {
+  void _buildStreams(String facilityId, int retentionDays, {required bool isAdmin}) {
     final cutoff = Timestamp.fromDate(ActivityLogRetention.cutoffFor(retentionDays));
     final logs = FirebaseFirestore.instance.collection('facilities').doc(facilityId).collection('activity_logs');
 
-    _logStreamFacilityId = facilityId;
-    _logStream = logs
-        .where('timestamp', isGreaterThanOrEqualTo: cutoff)
-        .orderBy('timestamp', descending: true)
-        .limit(500) // Performance limit
-        .snapshots();
+    // Newest first, inside the retention window.
+    Query<Map<String, dynamic>> windowed(Query<Map<String, dynamic>> q) =>
+        q.where('timestamp', isGreaterThanOrEqualTo: cutoff).orderBy('timestamp', descending: true);
 
-    // The type counts in the summary row now cover only what's visible,
-    // and no longer read every log ever stored.
+    _logStreamFacilityId = facilityId;
     _actionSummaryStreamFacilityId = facilityId;
-    _actionSummaryStream = logs.where('timestamp', isGreaterThanOrEqualTo: cutoff).snapshots();
+
+    if (isAdmin) {
+      _logStream = windowed(logs).limit(500).snapshots().map((s) => s.docs); // performance limit
+      // The type counts in the summary row cover only what's visible, and no
+      // longer read every log ever stored.
+      _actionSummaryStream =
+          logs.where('timestamp', isGreaterThanOrEqualTo: cutoff).snapshots().map((s) => s.docs);
+      return;
+    }
+
+    // An ASSISTANT sees only what is theirs: what they did (userId) and what is
+    // about them (targetUserId - "approved", "promoted"...). Not the admin
+    // matters of the facility. Two questions, joined into one list - the
+    // security rule only vouches for a query that pins one of these down, and
+    // would refuse anything wider outright (see firestore.rules).
+    final uid = FirebaseAuth.instance.currentUser?.uid ?? '';
+    final mine = [
+      windowed(logs.where('userId', isEqualTo: uid)),
+      windowed(logs.where('targetUserId', isEqualTo: uid)),
+    ];
+    _logStream = mergedLogStream(mine.map((q) => q.limit(500)).toList(), limit: 500);
+    _actionSummaryStream = mergedLogStream(mine);
   }
 
   Future<void> _showRetentionDialog(String facilityId) async {
@@ -276,7 +300,8 @@ class _ActivityLogScreenState extends State<ActivityLogScreen> {
       // outside it - whether or not the delete below succeeds.
       setState(() {
         _retentionDays = selected;
-        _buildStreams(facilityId, selected);
+        // Only an admin can reach this dialog (it changes the facility's setting).
+        _buildStreams(facilityId, selected, isAdmin: true);
       });
       // Explicit, rather than relying on the once-per-session cleanup in
       // _ensureInitializedForFacility, so shrinking the window deletes
@@ -404,7 +429,7 @@ class _ActivityLogScreenState extends State<ActivityLogScreen> {
     // Stream instance resets StreamBuilder to "waiting" even though
     // it's the same query) and re-running cleanup redundantly, each
     // time racing the retention fetch independently.
-    _ensureInitializedForFacility(facilityId);
+    _ensureInitializedForFacility(facilityId, isAdmin: isAdmin);
 
     return Scaffold(
       backgroundColor: offWhite,
@@ -413,6 +438,7 @@ class _ActivityLogScreenState extends State<ActivityLogScreen> {
         children: [
           // One unified summary that's also the filter - see
           // _buildActionSummary for the full reasoning.
+          if (!isAdmin) _buildScopeNote(),
           _buildActionSummary(facilityId),
 
           Padding(
@@ -449,9 +475,15 @@ class _ActivityLogScreenState extends State<ActivityLogScreen> {
 
           // Activity Log List
           Expanded(
-            child: StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
+            child: StreamBuilder<List<LogDoc>>(
               stream: _logStream,
               builder: (context, snapshot) {
+                // Said out loud: a refused or not-yet-ready query used to fall
+                // through to "No activity logs found", which looks like an
+                // empty log rather than a problem.
+                if (snapshot.hasError) {
+                  return Center(child: FirestoreErrorView(error: snapshot.error));
+                }
                 // 'none' = the stream doesn't exist yet (still loading the
                 // retention window) - show loading, not an empty list.
                 if (snapshot.connectionState == ConnectionState.waiting ||
@@ -463,7 +495,7 @@ class _ActivityLogScreenState extends State<ActivityLogScreen> {
                   );
                 }
 
-                if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
+                if (!snapshot.hasData || snapshot.data!.isEmpty) {
                   return Center(
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
@@ -493,7 +525,7 @@ class _ActivityLogScreenState extends State<ActivityLogScreen> {
                 }
 
                 // Filter logs
-                final logs = snapshot.data!.docs.where((doc) {
+                final logs = snapshot.data!.where((doc) {
                   final data = doc.data();
                   final actionType = data['actionType'] ?? '';
                   final description = data['description'] ?? '';
@@ -690,13 +722,39 @@ class _ActivityLogScreenState extends State<ActivityLogScreen> {
     }
   }
 
+  // Said plainly, so a short log isn't mistaken for a broken one.
+  Widget _buildScopeNote() {
+    return Container(
+      width: double.infinity,
+      margin: const EdgeInsets.fromLTRB(12, 10, 12, 0),
+      padding: const EdgeInsets.all(10),
+      decoration: BoxDecoration(
+        color: Colors.blue.withValues(alpha: 0.06),
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: Colors.blue.withValues(alpha: 0.2)),
+      ),
+      child: Row(
+        children: [
+          Icon(Icons.lock_outline, size: 16, color: Colors.blue.shade700),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Text(
+              'You see your own activity, and anything about you. Other team matters are only visible to admins.',
+              style: TextStyle(fontSize: 12.5, color: Colors.blue.shade900),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildActionSummary(String facilityId) {
-    return StreamBuilder<QuerySnapshot>(
+    return StreamBuilder<List<LogDoc>>(
       stream: _actionSummaryStream,
       builder: (context, snapshot) {
         if (!snapshot.hasData) return const SizedBox.shrink();
 
-        final docs = snapshot.data!.docs;
+        final docs = snapshot.data!;
         final totalLogs = docs.length;
 
         final typeCounts = <String, int>{};

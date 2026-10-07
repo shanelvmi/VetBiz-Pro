@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:provider/provider.dart';
 
 import '../../models/daily_report.dart';
+import '../../providers/user_role_provider.dart';
 
 /// Opens the full report as a single continuous scroll, mirroring the
 /// PDF's own section order - this is the "what would the PDF look
@@ -103,7 +105,9 @@ class ReportFullViewScreen extends StatelessWidget {
                       _paymentReconciliationSection(),
                       const SizedBox(height: 16),
                       _paymentMethodsSection(),
-                      if (report.activityLogEntries.isNotEmpty) ...[
+                      // Admins only - it lists everyone's activity.
+                      if (Provider.of<UserRoleProvider>(context, listen: false).isAdmin &&
+                          report.activityLogEntries.isNotEmpty) ...[
                         const SizedBox(height: 16),
                         _activityLogSection(),
                       ],

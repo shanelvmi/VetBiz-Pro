@@ -2,10 +2,12 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:intl/intl.dart';
 
 import '../../providers/facility_provider.dart';
 import '../../providers/subscription_provider.dart';
+import '../../providers/user_role_provider.dart';
 import '../../utils/notification_seen_tracker.dart';
 import '../../models/notification_model.dart';
 import '../../widgets/announcement_message.dart';
@@ -31,6 +33,9 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
   bool _isLoading = true;
   String? _error;
 
+  // "Your Plan": calm, informational notes about the subscription - today the
+  // free trial - kept apart from "Needs Attention" because they don't.
+  List<FacilityNotification> _planNotices = [];
   List<FacilityNotification> _needsAttention = [];
   List<FacilityNotification> _earlier = [];
   StreamSubscription<QuerySnapshot<Map<String, dynamic>>>? _notificationsSub;
@@ -133,7 +138,13 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
   /// swapping the subscription row for what SubscriptionProvider says
   /// right now. Call inside setState.
   void _rebuildLists() {
-    final all = _reconcileSubscription(_rawAll);
+    // Only what's meant for THIS person: a role-change notice for the admins
+    // isn't shown to an assistant, and a personal one only to its recipient.
+    // (Re-evaluated on every rebuild, so it follows a change of role.)
+    final uid = FirebaseAuth.instance.currentUser?.uid;
+    final isAdmin = Provider.of<UserRoleProvider>(context, listen: false).isAdmin;
+    final forMe = _rawAll.where((n) => n.isVisibleTo(uid: uid, isAdmin: isAdmin)).toList();
+    final all = _reconcileSubscription(forMe);
     final visible = all.where((n) => n.isCurrentlyVisible).toList();
 
     // "Needs Attention" is everything with real, specific meaning -
@@ -141,7 +152,10 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
     // the more routine, informational events (a service recorded, a
     // new client added) that don't need the same urgency, matching
     // NotificationType.category's "other" grouping.
-    _needsAttention = visible.where((n) => n.category != NotificationCategory.other).toList();
+    _planNotices = visible.where((n) => n.type == NotificationType.trialStatus).toList();
+    _needsAttention = visible
+        .where((n) => n.category != NotificationCategory.other && n.type != NotificationType.trialStatus)
+        .toList();
     _earlier = visible.where((n) => n.category == NotificationCategory.other).toList();
     // The full screen is for browsing what's happened, so it keeps read
     // items - but anything that has EXPIRED (an offer whose end date has
@@ -225,6 +239,31 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
         ),
       );
     }
+
+    // The calm trial. The bell blinks blue and the Dashboard shows its pill for
+    // the WHOLE of it, but the notice above only exists once a week or less is
+    // left - so for most of a trial both of those had a message and these
+    // lists had nothing. Same condition as the blink (SubscriptionProvider
+    // .isInCalmTrial), shown to everyone who sees it, admin or assistant.
+    final trialInfo = _subscriptionProvider?.trialInfoNotice;
+    if (trialInfo != null) {
+      final now = DateTime.now();
+      result.insert(
+        0,
+        FacilityNotification(
+          id: 'trial_status',
+          type: NotificationType.trialStatus,
+          title: trialInfo.title,
+          message: trialInfo.message,
+          createdAt: now,
+          // A standing condition with no document behind it, so it can't be
+          // marked read - shown as already seen, and given a lifetime so it
+          // isn't treated as something that disappears once read.
+          readAt: now,
+          expiresAt: now.add(const Duration(days: 2)),
+        ),
+      );
+    }
     return result;
   }
 
@@ -290,6 +329,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
   Widget build(BuildContext context) {
     final nothingToShow = !_isLoading &&
         _error == null &&
+        _planNotices.isEmpty &&
         _needsAttention.isEmpty &&
         _earlier.isEmpty;
 
@@ -1090,6 +1130,12 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
       padding: const EdgeInsets.fromLTRB(16, 16, 16, 32),
       children: [
         _buildUrgentAnnouncements(),
+        if (_planNotices.isNotEmpty) ...[
+          _sectionHeader(Icons.workspace_premium_outlined, 'Your Plan', _planNotices.length, Colors.blue),
+          const SizedBox(height: 8),
+          ..._planNotices.map((n) => NotificationRow(notification: n)),
+          const SizedBox(height: 20),
+        ],
         if (_needsAttention.isNotEmpty) ...[
           _sectionHeader(Icons.priority_high, 'Needs Attention', _needsAttention.length, Colors.orange),
           const SizedBox(height: 8),

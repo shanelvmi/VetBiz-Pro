@@ -5,6 +5,7 @@ import 'package:intl/intl.dart';
 
 import '../../services/auth_service.dart';
 import '../../services/invite_code_service.dart';
+import '../../services/membership_service.dart';
 
 /// Generates a short-lived, single-use code for inviting a new
 /// Assistant to join this facility - shown to the Admin to share
@@ -24,6 +25,17 @@ Future<void> showInviteAssistantDialog(BuildContext context, String facilityId) 
   final authService = Provider.of<AuthService>(context, listen: false);
 
   bool isLoading = true;
+  // The first check for an existing invite must run ONCE. It was guarded by
+  // "still loading and no code yet", which is ALSO true the moment someone taps
+  // Generate - so tapping it started a second check, which came back empty and
+  // switched the dialog back to the Generate button while the first request was
+  // still running. Each further tap made another code (the earlier unused one
+  // is replaced each time, so they all appeared at once when the server caught
+  // up).
+  bool initialCheckStarted = false;
+  // One request at a time, whatever the buttons show.
+  bool busy = false;
+  String loadingMessage = 'Checking for an existing invite...';
   String? activeCode;
   DateTime? activeExpiresAt;
   String? errorMessage;
@@ -33,15 +45,20 @@ Future<void> showInviteAssistantDialog(BuildContext context, String facilityId) 
     builder: (dialogContext) => StatefulBuilder(
       builder: (dialogContext, setDialogState) {
         Future<void> loadActiveInvite() async {
-          setDialogState(() => isLoading = true);
+          setDialogState(() {
+            isLoading = true;
+            loadingMessage = 'Checking for an existing invite...';
+          });
           try {
             final active = await inviteService.getActiveInvite(facilityId);
+            if (!dialogContext.mounted) return;
             setDialogState(() {
               activeCode = active?['code'] as String?;
               activeExpiresAt = active?['expiresAt'] as DateTime?;
               isLoading = false;
             });
           } catch (e) {
+            if (!dialogContext.mounted) return;
             setDialogState(() {
               errorMessage = 'Could not check for an existing invite: $e';
               isLoading = false;
@@ -50,19 +67,26 @@ Future<void> showInviteAssistantDialog(BuildContext context, String facilityId) 
         }
 
         // Kick off the initial check exactly once.
-        if (isLoading && activeCode == null && errorMessage == null) {
+        if (!initialCheckStarted) {
+          initialCheckStarted = true;
           // Deferred so setDialogState isn't called during build.
           WidgetsBinding.instance.addPostFrameCallback((_) => loadActiveInvite());
         }
 
         Future<void> generateNew() async {
-          setDialogState(() => isLoading = true);
+          if (busy) return;
+          busy = true;
+          setDialogState(() {
+            isLoading = true;
+            loadingMessage = 'Generating your invite code...';
+          });
           try {
             final user = authService.getCurrentUser();
             final code = await inviteService.generateInviteCode(
               facilityId: facilityId,
               createdByUserId: user?.uid ?? '',
             );
+            if (!dialogContext.mounted) return;
             setDialogState(() {
               activeCode = code;
               activeExpiresAt = DateTime.now().add(InviteCodeService.validityDuration);
@@ -70,27 +94,39 @@ Future<void> showInviteAssistantDialog(BuildContext context, String facilityId) 
               errorMessage = null;
             });
           } catch (e) {
+            if (!dialogContext.mounted) return;
             setDialogState(() {
-              errorMessage = 'Could not generate an invite: $e';
+              errorMessage = 'Could not generate an invite: ${MembershipService.errorMessage(e)}';
               isLoading = false;
             });
+          } finally {
+            busy = false;
           }
         }
 
         Future<void> revoke() async {
-          setDialogState(() => isLoading = true);
+          if (busy) return;
+          busy = true;
+          setDialogState(() {
+            isLoading = true;
+            loadingMessage = 'Revoking the code...';
+          });
           try {
             await inviteService.revokeInviteCode(facilityId);
+            if (!dialogContext.mounted) return;
             setDialogState(() {
               activeCode = null;
               activeExpiresAt = null;
               isLoading = false;
             });
           } catch (e) {
+            if (!dialogContext.mounted) return;
             setDialogState(() {
               errorMessage = 'Could not revoke: $e';
               isLoading = false;
             });
+          } finally {
+            busy = false;
           }
         }
 
@@ -106,9 +142,18 @@ Future<void> showInviteAssistantDialog(BuildContext context, String facilityId) 
           content: SizedBox(
             width: 320,
             child: isLoading
-                ? const SizedBox(
+                ? SizedBox(
                     height: 120,
-                    child: Center(child: CircularProgressIndicator(color: primaryDeepGreen)),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        const CircularProgressIndicator(color: primaryDeepGreen),
+                        const SizedBox(height: 14),
+                        // Says what it's doing - generating a code can take a
+                        // few seconds, and a bare spinner looks like nothing is.
+                        Text(loadingMessage, style: TextStyle(fontSize: 13, color: Colors.grey[700])),
+                      ],
+                    ),
                   )
                 : SingleChildScrollView(
                   child: Column(

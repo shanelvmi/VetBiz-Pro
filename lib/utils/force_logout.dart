@@ -73,3 +73,25 @@ Future<void> forceLogoutAndShowLogin({String? message}) async {
     debugPrint('[LOGOUT] No navigator state available to pop');
   }
 }
+
+/// Takes the person back to the app's front door WITHOUT signing them out, so
+/// it decides afresh what to show them.
+///
+/// For when their account changed under them: they deleted their last
+/// facility, so the dashboard has nothing left to show. Signing them out
+/// (what used to happen) was wrong twice over - it threw away a perfectly good
+/// session, and on signing back in they met a bare "no facility" message from
+/// which neither adding a facility nor deleting the account was possible.
+Future<void> returnToAccountDecision() async {
+  final context = navigatorKey.currentContext;
+  if (context != null && context.mounted) {
+    try {
+      resetAllUserProviders(context);
+    } catch (e, st) {
+      debugPrint('[NAV] Provider reset failed, continuing anyway: $e\n$st');
+    }
+  }
+  navigatorKey.currentState?.popUntil((route) => route.isFirst);
+  reDecideAccount?.call();
+}
+

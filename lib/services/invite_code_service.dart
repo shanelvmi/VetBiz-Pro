@@ -1,5 +1,6 @@
-import 'dart:math';
 import 'package:cloud_firestore/cloud_firestore.dart';
+
+import 'membership_service.dart';
 
 /// Short-lived, single-use codes for inviting a specific Assistant to
 /// join a facility - deliberately separate from the facility's own
@@ -9,24 +10,19 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 /// including a former employee - could keep using it indefinitely.
 /// An invite code only ever matters for one specific hire, once: it
 /// dies the moment it's used, or after 48 hours, whichever comes first.
+///
+/// Creating a code, checking one, and using one up are all done by the
+/// server now (see MembershipService): a code is made by someone who
+/// administers the facility, checked without ever revealing the facility's
+/// id, and used up in the same step that creates the new assistant, so it
+/// really can only be used once. What's left here is what an Admin does with
+/// their own facility's codes: see the active one, and revoke it.
 class InviteCodeService {
-  // Deliberately excludes visually ambiguous characters (0/O, 1/I/L) -
-  // this code gets read aloud over the phone and typed on small mobile
-  // keyboards, so nobody should ever have to guess whether a character
-  // was a zero or a letter O.
-  static const _unambiguousChars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
   static const codeLength = 6; // displayed as "XXX-XXX"
   static const validityDuration = Duration(hours: 48);
 
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
-  final Random _random = Random.secure();
-
-  String _generateRawCode() {
-    return List.generate(
-      codeLength,
-      (_) => _unambiguousChars[_random.nextInt(_unambiguousChars.length)],
-    ).join();
-  }
+  final MembershipService _membership = MembershipService();
 
   /// "JK72P4" -> "JK7-2P4" - grouped for readability, since chunked
   /// codes are read aloud and re-typed far more reliably than one long,
@@ -37,97 +33,18 @@ class InviteCodeService {
     return '${rawCode.substring(0, 3)}-${rawCode.substring(3)}';
   }
 
-  /// Strips dashes/spaces and uppercases, so "jk7 2p4", "JK7-2P4", and
-  /// "jk72p4" are all treated as the same code when someone types it in.
-  String _normalizeInput(String input) {
-    return input.replaceAll(RegExp(r'[\s\-]'), '').toUpperCase();
-  }
-
-  /// Generates a new invite code for a facility, first invalidating any
-  /// previous unused invite for that same facility - only one active
-  /// invite exists per facility at a time, so there's never ambiguity
-  /// about which code is the current, real one.
+  /// Generates a new invite code for a facility. Any earlier unused invite for
+  /// the same facility is replaced - only one active invite exists per
+  /// facility at a time, so there's never ambiguity about which code is the
+  /// current, real one. The server does both, and checks you administer this
+  /// facility. ([createdByUserId] is kept so existing callers compile; the
+  /// server records who asked from their sign-in, not from what the app says.)
   Future<String> generateInviteCode({
     required String facilityId,
-    required String createdByUserId,
+    String createdByUserId = '',
   }) async {
-    await revokeInviteCode(facilityId);
-
-    final facilityDoc = await _firestore.collection('facilities').doc(facilityId).get();
-    final facilityName = facilityDoc.data()?['name'] as String? ?? '';
-    final facilityType = facilityDoc.data()?['type'] as String? ?? '';
-
-    String code;
-    // Collision is extremely unlikely given the character set and
-    // length, but this guards against it rather than assuming.
-    do {
-      code = _generateRawCode();
-    } while ((await _firestore.collection('inviteCodes').doc(code).get()).exists);
-
-    await _firestore.collection('inviteCodes').doc(code).set({
-      'facilityId': facilityId,
-      // Denormalized here specifically so the registration screen can
-      // show "you're joining X" from this already-public document,
-      // without ever needing to read the facilities collection itself
-      // before the person registering has an account at all.
-      'facilityName': facilityName,
-      'facilityType': facilityType,
-      'createdByUserId': createdByUserId,
-      'createdAt': FieldValue.serverTimestamp(),
-      'expiresAt': Timestamp.fromDate(DateTime.now().add(validityDuration)),
-      'usedAt': null,
-      'usedByEmail': null,
-    });
-
-    return code;
-  }
-
-  /// Validates an entered invite code and returns the facility it
-  /// belongs to (id, name, type - name/type read from this document's
-  /// own denormalized copy, not a separate facilities read, since the
-  /// person entering this code doesn't have an account yet) if valid -
-  /// null if it doesn't exist, has already been used, or has expired.
-  /// Does NOT mark it as used; that only happens once registration has
-  /// actually succeeded, via markInviteCodeUsed.
-  Future<Map<String, String>?> validateInviteCode(String enteredCode) async {
-    final normalized = _normalizeInput(enteredCode);
-    if (normalized.length != codeLength) return null;
-
-    final doc = await _firestore.collection('inviteCodes').doc(normalized).get();
-    if (!doc.exists) return null;
-
-    final data = doc.data()!;
-    if (data['usedAt'] != null) return null;
-
-    final expiresAt = (data['expiresAt'] as Timestamp?)?.toDate();
-    if (expiresAt == null || DateTime.now().isAfter(expiresAt)) return null;
-
-    final facilityId = data['facilityId'] as String?;
-    if (facilityId == null) return null;
-
-    return {
-      'facilityId': facilityId,
-      'facilityName': (data['facilityName'] as String?) ?? '',
-      'facilityType': (data['facilityType'] as String?) ?? '',
-    };
-  }
-
-  /// Marks an invite code as consumed - call only after the new
-  /// assistant's account has genuinely been created successfully, so a
-  /// failed registration attempt doesn't burn the invite for nothing.
-  /// Marks an invite code as consumed - call only after the new
-  /// assistant's account has genuinely been created successfully, so a
-  /// failed registration attempt doesn't burn the invite for nothing.
-  /// Records the email rather than a UID purely for audit purposes -
-  /// the email is what's reliably on hand at the registration call
-  /// site, without needing the assistant registration flow to expose a
-  /// new user ID it doesn't currently return.
-  Future<void> markInviteCodeUsed(String enteredCode, String usedByEmail) async {
-    final normalized = _normalizeInput(enteredCode);
-    await _firestore.collection('inviteCodes').doc(normalized).update({
-      'usedAt': FieldValue.serverTimestamp(),
-      'usedByEmail': usedByEmail,
-    });
+    final invite = await _membership.createInviteCode(facilityId);
+    return invite.code;
   }
 
   /// The currently active (unused, unexpired) invite for a facility, if
