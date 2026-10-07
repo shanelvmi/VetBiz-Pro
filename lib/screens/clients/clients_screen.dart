@@ -20,6 +20,7 @@ import '../../services/cursor_paginated_list_controller.dart';
 import '../../theme/app_palette.dart';
 import '../../data/collections.dart';
 import '../../config/money.dart';
+import '../../config/app_timeouts.dart';
 
 class ClientsScreen extends StatefulWidget {
   const ClientsScreen({super.key});
@@ -62,7 +63,7 @@ class _ClientsScreenState extends State<ClientsScreen> {
       Provider.of<ClientProvider>(context, listen: false).listenToClients(facilityId);
       _openClientsListSession();
       _newRecordsCheckTimer ??= Timer.periodic(
-        const Duration(seconds: 45),
+        AppTimeouts.newRecordsPoll,
         (_) => Provider.of<ClientProvider>(context, listen: false).clientsListController.checkForNewRecords(),
       );
     }
@@ -95,7 +96,7 @@ class _ClientsScreenState extends State<ClientsScreen> {
   void _onSearchChanged(String value) {
     setState(() => _searchQuery = value.trim());
     _searchDebounce?.cancel();
-    _searchDebounce = Timer(const Duration(milliseconds: 400), _openClientsListSession);
+    _searchDebounce = Timer(AppTimeouts.searchDebounce, _openClientsListSession);
   }
 
   void _onTypeSelected(String type) {

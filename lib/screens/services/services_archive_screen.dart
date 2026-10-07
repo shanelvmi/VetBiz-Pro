@@ -11,6 +11,7 @@ import '../../theme/app_palette.dart';
 import '../../data/collections.dart';
 import '../../config/money.dart';
 import '../../config/app_limits.dart';
+import '../../config/app_ranges.dart';
 
 class ServicesArchiveScreen extends StatefulWidget {
   const ServicesArchiveScreen({super.key});
@@ -29,11 +30,10 @@ class _ServicesArchiveScreenState extends State<ServicesArchiveScreen> {
 
   // Must match ARCHIVE_AFTER_DAYS in functions/index.js - anything newer
   // than this hasn't reached the archive yet.
-  static const int _archiveCutoffDays = 180;
+  static const int _archiveCutoffDays = AppRanges.archiveCutoffDays;
   // Default initial window on open: the most recently archived 90 days,
   // ending right at the cutoff, so the screen shows something immediately
   // instead of forcing a search dialog first.
-  static const int _defaultWindowDays = 90;
 
   List<Map<String, dynamic>> _archivedServices = [];
   bool _isLoading = false;
@@ -60,9 +60,9 @@ class _ServicesArchiveScreenState extends State<ServicesArchiveScreen> {
   @override
   void initState() {
     super.initState();
-    final cutoff = DateTime.now().subtract(const Duration(days: _archiveCutoffDays));
+    final cutoff = DateTime.now().subtract(AppRanges.archiveCutoff);
     _searchEnd = cutoff;
-    _searchStart = cutoff.subtract(const Duration(days: _defaultWindowDays));
+    _searchStart = cutoff.subtract(AppRanges.archiveDefaultWindow);
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _loadArchivedServices();
@@ -130,7 +130,7 @@ class _ServicesArchiveScreenState extends State<ServicesArchiveScreen> {
       if (_searchEnd != null) {
         query = query.where('serviceDate',
             isLessThanOrEqualTo:
-                Timestamp.fromDate(_searchEnd!.add(const Duration(days: 1))));
+                Timestamp.fromDate(_searchEnd!.add(AppRanges.day)));
       }
 
       query = query.orderBy('serviceDate', descending: true);
@@ -789,9 +789,8 @@ class _SearchServicesArchiveDialog extends StatefulWidget {
 }
 
 class _SearchServicesArchiveDialogState extends State<_SearchServicesArchiveDialog> {
-  static const int _archiveCutoffDays = 180;
   final DateTime _archiveCutoff =
-      DateTime.now().subtract(const Duration(days: _archiveCutoffDays));
+      DateTime.now().subtract(AppRanges.archiveCutoff);
 
   String _dateMode = 'month';
   late DateTime _selectedMonth;
@@ -802,7 +801,7 @@ class _SearchServicesArchiveDialogState extends State<_SearchServicesArchiveDial
   void initState() {
     super.initState();
     _selectedMonth = DateTime(_archiveCutoff.year, _archiveCutoff.month);
-    _startDate = _archiveCutoff.subtract(const Duration(days: 30));
+    _startDate = _archiveCutoff.subtract(AppRanges.month);
     _endDate = _archiveCutoff;
   }
 

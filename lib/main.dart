@@ -42,6 +42,7 @@ import 'data/fields.dart';
 import 'data/user_role.dart';
 import 'data/user_status.dart';
 import 'config/app_limits.dart';
+import 'config/app_timeouts.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -185,7 +186,7 @@ class _AppEntryPointState extends State<AppEntryPoint> {
       debugPrint('[AUTH] authStateChanges() stream error: $e');
     });
 
-    _authPollTimer = Timer.periodic(const Duration(seconds: 2), (_) {
+    _authPollTimer = Timer.periodic(AppTimeouts.authPoll, (_) {
       _updateAuthUser(FirebaseAuth.instance.currentUser);
     });
 
@@ -251,7 +252,7 @@ class _AppEntryPointState extends State<AppEntryPoint> {
       // calls don't catch, anything not yet anticipated), this
       // guarantees it can never spin forever with no way out.
       _decideScreenFuture = _decideScreen(user).timeout(
-        const Duration(seconds: 30),
+        AppTimeouts.decideFirstScreen,
         onTimeout: () => throw TimeoutException('Could not load your account in time.'),
       );
     } else {
@@ -280,7 +281,7 @@ class _AppEntryPointState extends State<AppEntryPoint> {
         final isLastAttempt = attempt == maxAttempts;
         if (e.code != 'unavailable' || isLastAttempt) rethrow;
         debugPrint('[AUTH] ${ref.path} attempt $attempt hit "unavailable" - retrying');
-        await Future.delayed(Duration(milliseconds: 500 * attempt));
+        await Future.delayed(AppTimeouts.unavailableRetryStep * attempt);
       }
     }
     // Unreachable - the loop above always either returns or rethrows.
@@ -294,17 +295,17 @@ class _AppEntryPointState extends State<AppEntryPoint> {
 
       var userDoc = await _getWithRetry(
         FirebaseFirestore.instance.collection(Collections.users).doc(uid),
-        timeout: const Duration(seconds: 15),
+        timeout: AppTimeouts.profileRead,
       );
       debugPrint('[AUTH] users/$uid read complete - exists=${userDoc.exists}');
 
       // A profile that isn't there yet gets a short second look before
       // concluding it never will be.
       for (var attempt = 0; attempt < 2 && !userDoc.exists; attempt++) {
-        await Future.delayed(const Duration(milliseconds: 700));
+        await Future.delayed(AppTimeouts.profileRecheckDelay);
         userDoc = await _getWithRetry(
           FirebaseFirestore.instance.collection(Collections.users).doc(uid),
-          timeout: const Duration(seconds: 10),
+          timeout: AppTimeouts.profileRecheck,
         );
         debugPrint('[AUTH] users/$uid re-checked - exists=${userDoc.exists}');
       }
@@ -341,7 +342,7 @@ class _AppEntryPointState extends State<AppEntryPoint> {
       // status: deactivated set.
       final platformAdminDoc = await _getWithRetry(
         FirebaseFirestore.instance.collection(Collections.platformAdmins).doc(uid),
-        timeout: const Duration(seconds: 10),
+        timeout: AppTimeouts.platformAdminRead,
       );
       final isPlatformAdminAccount = platformAdminDoc.exists;
       debugPrint('[AUTH] platform_admins/$uid read complete - isPlatformAdminAccount=$isPlatformAdminAccount');
@@ -406,10 +407,10 @@ class _AppEntryPointState extends State<AppEntryPoint> {
       if (facilities.isEmpty && !isPlatformAdminAccount && !removedAssistant && !facilityListsWritten) {
         debugPrint('[AUTH] facilities empty, not a platform admin - starting retry loop');
         for (var attempt = 0; attempt < 4 && facilities.isEmpty; attempt++) {
-          await Future.delayed(const Duration(milliseconds: 800));
+          await Future.delayed(AppTimeouts.facilityListRetryDelay);
           final retryDoc = await _getWithRetry(
             FirebaseFirestore.instance.collection(Collections.users).doc(uid),
-            timeout: const Duration(seconds: 10),
+            timeout: AppTimeouts.facilityListRetry,
           );
           facilities = _parseFacilities(retryDoc.data());
         }
@@ -594,7 +595,7 @@ class _AuthLoadingScreenState extends State<_AuthLoadingScreen> {
   @override
   void initState() {
     super.initState();
-    _timer = Timer(const Duration(seconds: 8), () {
+    _timer = Timer(AppTimeouts.startupRecoveryOffer, () {
       if (mounted) setState(() => _showRecovery = true);
     });
   }
@@ -1014,7 +1015,7 @@ class _NoFacilityScreenState extends State<_NoFacilityScreen> {
     });
     if (letters.length < 6) return;
 
-    _debounce = Timer(const Duration(milliseconds: 450), () async {
+    _debounce = Timer(AppTimeouts.inviteCodeLookupDebounce, () async {
       try {
         final check = await _membership.checkInviteCode(code);
         // They've typed on since - this answer is about an older code.

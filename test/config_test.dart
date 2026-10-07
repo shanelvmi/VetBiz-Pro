@@ -1,7 +1,9 @@
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:vetbiz_pro/config/app_links.dart';
+import 'package:vetbiz_pro/config/app_ranges.dart';
 import 'package:vetbiz_pro/config/app_rules.dart';
+import 'package:vetbiz_pro/config/app_timeouts.dart';
 import 'package:vetbiz_pro/config/payment_methods.dart';
 import 'package:vetbiz_pro/config/restock_rules.dart';
 import 'package:vetbiz_pro/providers/subscription_provider.dart';
@@ -30,6 +32,52 @@ void main() {
         ['M-Pesa', 'Mixx by Yas', 'Airtel Money', 'Bank Transfer', 'Cash']);
     expect(PaymentMethod.subscription, isNot(contains(PaymentMethod.tigoPesa)));
     expect(PaymentMethod.fromKey('Tigo Pesa'), PaymentMethod.tigoPesa);
+  });
+
+  test('timeouts keep the values the code used (step 2C)', () {
+    // (value, legacy milliseconds) pairs: several timeouts share a value, so
+    // this is a list, not a map keyed by Duration.
+    final pairs = <(Duration, int)>[
+      (AppTimeouts.decideFirstScreen, 30000), (AppTimeouts.profileRead, 15000),
+      (AppTimeouts.profileRecheck, 10000), (AppTimeouts.profileRecheckDelay, 700),
+      (AppTimeouts.platformAdminRead, 10000), (AppTimeouts.facilityListRetry, 10000),
+      (AppTimeouts.facilityListRetryDelay, 800), (AppTimeouts.unavailableRetryStep, 500),
+      (AppTimeouts.authPoll, 2000), (AppTimeouts.startupRecoveryOffer, 8000),
+      (AppTimeouts.loginSafetyNet, 6000), (AppTimeouts.roleLoad, 10000),
+      (AppTimeouts.facilityLoad, 15000), (AppTimeouts.signOut, 10000),
+      (AppTimeouts.teamLoadFallback, 8000), (AppTimeouts.proofUpload, 25000),
+      (AppTimeouts.newRecordsPoll, 45000), (AppTimeouts.sessionCheck, 600000),
+      (AppTimeouts.clockTick, 1000), (AppTimeouts.noticeExpiryTick, 60000),
+      (AppTimeouts.presenceHeartbeat, 120000), (AppTimeouts.presenceOnlineWindow, 300000),
+      (AppTimeouts.loginAnnouncementRotate, 6000), (AppTimeouts.platformAdminInactivity, 900000),
+      (AppTimeouts.platformAdminInactivityWarning, 60000), (AppTimeouts.subscriptionNoticeSnooze, 7200000),
+      (AppTimeouts.salesSummaryRefresh, 2000), (AppTimeouts.servicesSummaryRefresh, 500),
+      (AppTimeouts.searchDebounce, 400), (AppTimeouts.clientPickerDebounce, 300),
+      (AppTimeouts.inviteCodeLookupDebounce, 450), (AppTimeouts.facilityLookupDebounce, 500),
+    ];
+    for (final (actual, ms) in pairs) {
+      expect(actual.inMilliseconds, ms);
+    }
+    expect(AppTimeouts.salesSummaryRetryDelays.map((d) => d.inSeconds), [0, 2, 3, 5]);
+  });
+
+  test('ranges keep the values the code used (step 2C)', () {
+    expect(AppRanges.day.inDays, 1);
+    expect(AppRanges.week.inDays, 7);
+    expect(AppRanges.fortnight.inDays, 14);
+    expect(AppRanges.month.inDays, 30);
+    expect(AppRanges.year.inDays, 365);
+    expect(AppRanges.defaultListRange.inDays, 30);
+    expect(AppRanges.paymentsDefaultRange.inDays, 365);
+    expect(AppRanges.instant.inSeconds, 1);
+    expect(AppRanges.adminOverviewWindow.inDays, 90);
+    expect(AppRanges.noticeLifetime.inDays, 2);
+    expect(AppRanges.insightsTrendBack.inDays, 13);
+    expect(AppRanges.exportLast7DaysBack.inDays, 6);
+    expect(AppRanges.exportLast30DaysBack.inDays, 29);
+    expect(AppRanges.archiveCutoffDays, 180);
+    expect(AppRanges.archiveCutoff.inDays, 180);
+    expect(AppRanges.archiveDefaultWindow.inDays, 90);
   });
 
   test('restock frequencies match UsageCalculatorService', () {

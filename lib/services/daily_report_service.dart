@@ -5,6 +5,7 @@ import '../models/sale.dart';
 import '../models/service.dart';
 import '../data/collections.dart';
 import '../data/fields.dart';
+import '../config/app_ranges.dart';
 
 class DailyReportService {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
@@ -132,7 +133,7 @@ class DailyReportService {
     final todayStart = Timestamp.fromDate(today);
     final nowStamp = Timestamp.fromDate(now);
     final facilities = _firestore.collection(Collections.facilities).doc(facilityId);
-    final yesterday = today.subtract(const Duration(days: 1));
+    final yesterday = today.subtract(AppRanges.day);
 
     // None of these 12 reads' parameters depend on another read's
     // result - every one of them only needs facilityId/today/yesterday,

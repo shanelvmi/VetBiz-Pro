@@ -16,6 +16,7 @@ import 'users_tab.dart';
 import 'platform_settings_screen.dart';
 import '../../theme/app_palette.dart';
 import '../../data/collections.dart';
+import '../../config/app_timeouts.dart';
 
 /// One navigation entry - a simple data record rather than each item
 /// being hand-built inline. Adding a new section (or, later, a nested
@@ -84,8 +85,8 @@ class _PlatformAdminHomeScreenState extends State<PlatformAdminHomeScreen> {
   // the app - a regular Admin/Assistant working inside their own
   // facility is a different risk profile from standing access to
   // every facility on the platform.
-  static const Duration _inactivityTimeout = Duration(minutes: 15);
-  static const Duration _warningBefore = Duration(minutes: 1);
+  static const Duration _inactivityTimeout = AppTimeouts.platformAdminInactivity;
+  static const Duration _warningBefore = AppTimeouts.platformAdminInactivityWarning;
 
   Timer? _warningTimer;
   Timer? _logoutTimer;

@@ -20,6 +20,7 @@ import '../payments/payments_screen.dart';
 import '../../theme/app_palette.dart';
 import '../../data/collections.dart';
 import '../../config/money.dart';
+import '../../config/app_timeouts.dart';
 
 class DebtorsScreen extends StatefulWidget {
   const DebtorsScreen({super.key});
@@ -88,7 +89,7 @@ class _DebtorsScreenState extends State<DebtorsScreen> {
       _loadMetrics();
       _openDebtorsListSession();
       _newRecordsCheckTimer ??= Timer.periodic(
-        const Duration(seconds: 45),
+        AppTimeouts.newRecordsPoll,
         (_) => Provider.of<ClientProvider>(context, listen: false).debtorsListController.checkForNewRecords(),
       );
     }
@@ -517,7 +518,7 @@ class _DebtorsScreenState extends State<DebtorsScreen> {
             onChanged: (val) {
               setState(() => _searchQuery = val.trim());
               _searchDebounce?.cancel();
-              _searchDebounce = Timer(const Duration(milliseconds: 400), _openDebtorsListSession);
+              _searchDebounce = Timer(AppTimeouts.searchDebounce, _openDebtorsListSession);
             },
           ),
         ),

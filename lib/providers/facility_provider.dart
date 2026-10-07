@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../data/collections.dart';
+import '../config/app_timeouts.dart';
 
 class FacilityProvider with ChangeNotifier {
   String? _facilityId;
@@ -271,7 +272,7 @@ class FacilityProvider with ChangeNotifier {
           .collection(Collections.facilities)
           .doc(facilityId)
           .get()
-          .timeout(const Duration(seconds: 15));
+          .timeout(AppTimeouts.facilityLoad);
 
       if (doc.exists) {
         final data = doc.data()!;

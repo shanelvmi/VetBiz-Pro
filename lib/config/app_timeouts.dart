@@ -56,11 +56,47 @@ class AppTimeouts {
   /// Uploading a payment proof (subscription_screen.dart).
   static const Duration proofUpload = Duration(seconds: 25);
 
-  // Polling.
+  /// Waits before each try to read the sales summary after a sale is saved
+  /// (sales_screen.dart): the write can take a moment to land.
+  static const List<Duration> salesSummaryRetryDelays = [
+    Duration.zero,
+    Duration(seconds: 2),
+    Duration(seconds: 3),
+    Duration(seconds: 5),
+  ];
+
+  // Polling and live ticks.
 
   /// Checking for records added by someone else (sales, services, clients,
   /// debtors, payments screens).
   static const Duration newRecordsPoll = Duration(seconds: 45);
+
+  /// How often the dashboard re-checks that the session is still valid.
+  static const Duration sessionCheck = Duration(minutes: 10);
+
+  /// The dashboard's live clock.
+  static const Duration clockTick = Duration(seconds: 1);
+
+  /// How often the notifications screen drops notices that have expired.
+  static const Duration noticeExpiryTick = Duration(minutes: 1);
+
+  /// Presence: how often this device says "online", and how recent that
+  /// must be to count as online (presence_heartbeat.dart).
+  static const Duration presenceHeartbeat = Duration(minutes: 2);
+  static const Duration presenceOnlineWindow = Duration(minutes: 5);
+
+  /// The login screen's rotating announcements.
+  static const Duration loginAnnouncementRotate = Duration(seconds: 6);
+
+  // Sessions.
+
+  /// A platform admin is signed out after this long without activity, with
+  /// a warning shortly before (platform_admin_home_screen.dart).
+  static const Duration platformAdminInactivity = Duration(minutes: 15);
+  static const Duration platformAdminInactivityWarning = Duration(minutes: 1);
+
+  /// "Remind me later" on the dashboard's subscription notice.
+  static const Duration subscriptionNoticeSnooze = Duration(hours: 2);
 
   // Refreshing a screen's summary after a change. Two values on purpose
   // (decided by the owner, Phase 2 open questions).

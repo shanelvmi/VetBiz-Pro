@@ -16,6 +16,8 @@ import '../../theme/app_palette.dart';
 import '../../data/collections.dart';
 import '../../data/fields.dart';
 import '../../config/app_limits.dart';
+import '../../config/app_timeouts.dart';
+import '../../config/app_ranges.dart';
 
 /// Everything that needs your attention, facility-wide - subscription
 /// status, urgent announcements, payments, debts, and system messages.
@@ -75,7 +77,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
     _subscriptionProvider = Provider.of<SubscriptionProvider>(context, listen: false);
     _subscriptionProvider!.addListener(_onSubscriptionChanged);
     _watchNotifications();
-    _expiryTicker = Timer.periodic(const Duration(minutes: 1), (_) {
+    _expiryTicker = Timer.periodic(AppTimeouts.noticeExpiryTick, (_) {
       if (mounted) setState(_rebuildLists);
     });
     // NotificationSeenTracker had no callers anywhere in the app - the
@@ -217,7 +219,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
         // Lifetime now follows the live state rather than the stored
         // document's 2-day safety-net expiry; rebuilt on every change,
         // so it can't go stale.
-        expiresAt: DateTime.now().add(const Duration(days: 2)),
+        expiresAt: DateTime.now().add(AppRanges.noticeLifetime),
         relatedEntityType: n.relatedEntityType,
         relatedEntityId: n.relatedEntityId,
       ));
@@ -239,7 +241,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
           // condition the bell already shows live, not a fresh arrival,
           // so it appears as already seen until the daily run stores it.
           readAt: now,
-          expiresAt: now.add(const Duration(days: 2)),
+          expiresAt: now.add(AppRanges.noticeLifetime),
         ),
       );
     }
@@ -264,7 +266,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
           // marked read - shown as already seen, and given a lifetime so it
           // isn't treated as something that disappears once read.
           readAt: now,
-          expiresAt: now.add(const Duration(days: 2)),
+          expiresAt: now.add(AppRanges.noticeLifetime),
         ),
       );
     }
@@ -743,7 +745,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
   Future<void> _pickDateRange() async {
     final picked = await showDateRangePicker(
       context: context,
-      firstDate: DateTime.now().subtract(const Duration(days: 365)),
+      firstDate: DateTime.now().subtract(AppRanges.year),
       lastDate: DateTime.now(),
       initialDateRange: _dateRange,
     );

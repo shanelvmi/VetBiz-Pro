@@ -18,6 +18,8 @@ import '../services/service_receipt_preview_screen.dart';
 import '../../theme/app_palette.dart';
 import '../../data/collections.dart';
 import '../../config/money.dart';
+import '../../config/app_timeouts.dart';
+import '../../config/app_ranges.dart';
 
 class _PaymentMetric {
   final double amount;
@@ -94,7 +96,7 @@ class _PaymentsScreenState extends State<PaymentsScreen> {
     if (widget.initialClientId != null) {
       // Viewing one client's history - default to a wide window so their
       // past payments are actually visible, not just "did they pay today".
-      _rangeStart = now.subtract(const Duration(days: 365));
+      _rangeStart = now.subtract(AppRanges.paymentsDefaultRange);
       _rangeEnd = now;
     } else {
       // Default view: today only.
@@ -104,7 +106,7 @@ class _PaymentsScreenState extends State<PaymentsScreen> {
 
     _openLedgerSession();
     _newRecordsCheckTimer = Timer.periodic(
-      const Duration(seconds: 45),
+      AppTimeouts.newRecordsPoll,
       (_) => Provider.of<PaymentProvider>(context, listen: false).ledgerController.checkForNewEntries(),
     );
     if (widget.initialClientId == null) {
@@ -304,12 +306,12 @@ class _PaymentsScreenState extends State<PaymentsScreen> {
 
     final now = DateTime.now();
     final today = DateTime(now.year, now.month, now.day);
-    final yesterday = today.subtract(const Duration(days: 1));
-    final weekStart = now.subtract(const Duration(days: 7));
-    final previousWeekStart = now.subtract(const Duration(days: 14));
+    final yesterday = today.subtract(AppRanges.day);
+    final weekStart = now.subtract(AppRanges.week);
+    final previousWeekStart = now.subtract(AppRanges.fortnight);
     final monthStart = DateTime(now.year, now.month, 1);
     final lastMonthStart = DateTime(now.year, now.month - 1, 1);
-    final lastMonthEnd = monthStart.subtract(const Duration(seconds: 1));
+    final lastMonthEnd = monthStart.subtract(AppRanges.instant);
 
     // Same dailySnapshots record the dashboard reads for its own
     // "outstanding balance last period" trend - the equivalent point
@@ -823,7 +825,7 @@ class _PaymentsScreenState extends State<PaymentsScreen> {
             onChanged: (val) {
               setState(() => _searchQuery = val.trim());
               _searchDebounce?.cancel();
-              _searchDebounce = Timer(const Duration(milliseconds: 400), _openLedgerSession);
+              _searchDebounce = Timer(AppTimeouts.searchDebounce, _openLedgerSession);
             },
           ),
         ),
@@ -953,7 +955,7 @@ class _PaymentsScreenState extends State<PaymentsScreen> {
     final date = DateTime.parse(dayKey);
     final now = DateTime.now();
     final today = DateTime(now.year, now.month, now.day);
-    final yesterday = today.subtract(const Duration(days: 1));
+    final yesterday = today.subtract(AppRanges.day);
 
     String label;
     if (date == today) {

@@ -3,6 +3,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 
 import 'navigator_key.dart';
 import 'provider_reset.dart';
+import '../config/app_timeouts.dart';
 
 /// Signs the current user out, resets every provider, and gets back to
 /// a real, visible login screen - used anywhere an account needs to be
@@ -50,7 +51,7 @@ Future<void> forceLogoutAndShowLogin({String? message}) async {
   pendingLoginMessage = message;
 
   try {
-    await FirebaseAuth.instance.signOut().timeout(const Duration(seconds: 10));
+    await FirebaseAuth.instance.signOut().timeout(AppTimeouts.signOut);
     debugPrint('[LOGOUT] signOut() completed for uid=${uidBeingSignedOut ?? "none"}');
     if (pushAuthUser != null) {
       debugPrint('[LOGOUT] Pushing null directly to AppEntryPoint');

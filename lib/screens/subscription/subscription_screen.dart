@@ -19,6 +19,7 @@ import '../../data/fields.dart';
 import '../../data/payment_submission_status.dart';
 import '../../config/payment_methods.dart';
 import '../../config/money.dart';
+import '../../config/app_timeouts.dart';
 
 class SubscriptionScreen extends StatefulWidget {
   final bool isModal;
@@ -161,7 +162,7 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
         final ref = FirebaseStorage.instance.ref().child(
             'payment_proofs/$facilityId/${DateTime.now().millisecondsSinceEpoch}.jpg');
         await ref.putData(_proofBytes!).timeout(
-          const Duration(seconds: 25),
+          AppTimeouts.proofUpload,
           onTimeout: () => throw Exception(
               'The proof image took too long to upload. Please check your connection and try again.'),
         );

@@ -14,6 +14,7 @@ import '../../theme/app_palette.dart';
 import '../../data/collections.dart';
 import '../../data/fields.dart';
 import '../../config/money.dart';
+import '../../config/app_ranges.dart';
 
 /// One logical table of data - a title (shown as its own line in CSV,
 /// its own sheet/tab name in xlsx), a header row, and the data rows
@@ -372,7 +373,7 @@ class _ExportDataScreenState extends State<ExportDataScreen> {
               isGreaterThanOrEqualTo: Timestamp.fromDate(_selectedDateRange!.start))
           .where(dateField,
               isLessThanOrEqualTo: Timestamp.fromDate(
-                  _selectedDateRange!.end.add(const Duration(days: 1))));
+                  _selectedDateRange!.end.add(AppRanges.day)));
     }
 
     final snapshot = await query.get();
@@ -758,9 +759,9 @@ class _ExportDataScreenState extends State<ExportDataScreen> {
               mainAxisSize: MainAxisSize.min,
               children: [
                 presetTile('Last 7 Days', () => DateTimeRange(
-                    start: today.subtract(const Duration(days: 6)), end: today)),
+                    start: today.subtract(AppRanges.exportLast7DaysBack), end: today)),
                 presetTile('Last 30 Days', () => DateTimeRange(
-                    start: today.subtract(const Duration(days: 29)), end: today)),
+                    start: today.subtract(AppRanges.exportLast30DaysBack), end: today)),
                 presetTile('This Month', () => DateTimeRange(
                     start: DateTime(today.year, today.month, 1), end: today)),
                 presetTile('Last Month', () {

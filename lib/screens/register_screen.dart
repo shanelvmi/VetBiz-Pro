@@ -22,6 +22,7 @@ import '../theme/app_palette.dart';
 import '../data/collections.dart';
 import '../data/fields.dart';
 import '../data/user_role.dart';
+import '../config/app_timeouts.dart';
 
 class RegisterScreen extends StatefulWidget {
   final bool isUpdating;
@@ -77,7 +78,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
     setState(() => _isLookingUpFacility = true);
 
-    _facilityLookupDebounce = Timer(const Duration(milliseconds: 500), () async {
+    _facilityLookupDebounce = Timer(AppTimeouts.facilityLookupDebounce, () async {
       try {
         final check = await _membershipService.checkInviteCode(code);
 

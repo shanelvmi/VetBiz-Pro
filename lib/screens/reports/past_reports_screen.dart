@@ -11,6 +11,7 @@ import 'report_review_screen.dart';
 import '../../theme/app_palette.dart';
 import '../../config/money.dart';
 import '../../config/app_limits.dart';
+import '../../config/app_ranges.dart';
 
 class PastReportsScreen extends StatefulWidget {
   const PastReportsScreen({super.key});
@@ -40,7 +41,7 @@ extension on _TimeFilter {
       case _TimeFilter.allTime:
         return null;
       case _TimeFilter.last7Days:
-        return now.subtract(const Duration(days: 7));
+        return now.subtract(AppRanges.week);
       case _TimeFilter.thisMonth:
         return DateTime(now.year, now.month, 1);
       case _TimeFilter.thisYear:

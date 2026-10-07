@@ -16,6 +16,7 @@ import '../../providers/user_role_provider.dart';
 import '../../utils/provider_reset.dart';
 import '../../data/collections.dart';
 import '../../data/fields.dart';
+import '../../config/app_timeouts.dart';
 
 
 class AppColors {
@@ -68,7 +69,7 @@ class _SelectFacilityScreenState extends State<SelectFacilityScreen> {
               .collection(Collections.users)
               .doc(uid)
               .get()
-              .timeout(const Duration(seconds: 15));
+              .timeout(AppTimeouts.facilityLoad);
           role = userDoc.data()?[Fields.role] ?? role;
 
           facilities = (userDoc.data()?['facilities'] as List<dynamic>?)

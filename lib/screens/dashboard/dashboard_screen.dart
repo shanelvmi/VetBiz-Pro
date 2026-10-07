@@ -63,6 +63,8 @@ import '../../data/user_status.dart';
 import '../../config/money.dart';
 import '../../config/app_defaults.dart';
 import '../../config/app_limits.dart';
+import '../../config/app_timeouts.dart';
+import '../../config/app_ranges.dart';
 
 class DrawerHoverItem extends StatefulWidget {
   final IconData icon;
@@ -387,7 +389,7 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
   // (AppBar leading on wide screens, actions on narrow ones), so a
   // fixed/assumed position wouldn't anchor correctly in both.
   final GlobalKey _bellKey = GlobalKey();
-  static const Duration _sessionCheckInterval = Duration(minutes: 10);
+  static const Duration _sessionCheckInterval = AppTimeouts.sessionCheck;
 
   // Persisted per device (not synced) so the collapsed/expanded choice
   // survives between sessions, same reasoning as the notification
@@ -419,7 +421,7 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
   // DashboardScreen instance (the old one is disposed on logout), so
   // this naturally resets and reappears on every new login, on top of
   // the 2-hour timer resurfacing it within a single continuous session.
-  static const Duration _subscriptionSnoozeDuration = Duration(hours: 2);
+  static const Duration _subscriptionSnoozeDuration = AppTimeouts.subscriptionNoticeSnooze;
   DateTime? _subscriptionSnoozedUntil;
 
   void _snoozeSubscriptionBanner() {
@@ -700,12 +702,12 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
 
     switch (filter) {
       case 'Today':
-        final yesterday = today.subtract(const Duration(days: 1));
+        final yesterday = today.subtract(AppRanges.day);
         return (yesterday, yesterday);
       case 'This Week':
         final startOfThisWeek = today.subtract(Duration(days: now.weekday - 1));
-        final startOfLastWeek = startOfThisWeek.subtract(const Duration(days: 7));
-        final endOfLastWeek = startOfThisWeek.subtract(const Duration(days: 1));
+        final startOfLastWeek = startOfThisWeek.subtract(AppRanges.week);
+        final endOfLastWeek = startOfThisWeek.subtract(AppRanges.day);
         return (startOfLastWeek, endOfLastWeek);
       case 'This Month':
         final firstOfThisMonth = DateTime(now.year, now.month, 1);
@@ -713,12 +715,12 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
         // year on its own, so January correctly rolls back into last
         // December here without special-casing it.
         final firstOfLastMonth = DateTime(now.year, now.month - 1, 1);
-        final lastDayOfLastMonth = firstOfThisMonth.subtract(const Duration(days: 1));
+        final lastDayOfLastMonth = firstOfThisMonth.subtract(AppRanges.day);
         return (firstOfLastMonth, lastDayOfLastMonth);
       case 'This Year':
         return (DateTime(now.year - 1, 1, 1), DateTime(now.year - 1, 12, 31));
       default:
-        final yesterday = today.subtract(const Duration(days: 1));
+        final yesterday = today.subtract(AppRanges.day);
         return (yesterday, yesterday);
     }
   }
@@ -848,7 +850,7 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
     final requestId = ++_chartRequestId;
     final salesService = SalesSummaryService();
 
-    final previousEnd = start.subtract(const Duration(days: 1));
+    final previousEnd = start.subtract(AppRanges.day);
     final previousStart = previousEnd.subtract(Duration(days: days - 1));
 
     Future.wait([
@@ -1267,7 +1269,7 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
                                     );
 
                                     final dateTimeRow = StreamBuilder(
-                                      stream: Stream.periodic(const Duration(seconds: 1)),
+                                      stream: Stream.periodic(AppTimeouts.clockTick),
                                       builder: (context, _) {
                                         final now = DateTime.now();
                                         return Row(

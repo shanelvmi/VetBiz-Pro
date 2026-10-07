@@ -10,6 +10,7 @@ import '../../data/collections.dart';
 import '../../data/fields.dart';
 import '../../data/payment_submission_status.dart';
 import '../../config/money.dart';
+import '../../config/app_ranges.dart';
 
 /// The detail behind Overview's own summary cards - day-to-day earnings,
 /// individual recent payments, revenue by plan, and the
@@ -61,7 +62,7 @@ class _OverviewDetailsScreenState extends State<OverviewDetailsScreen> {
       // this screen actually adds context rather than repeating it -
       // bounded to 90 days rather than every payment ever made, since
       // this is a look-back view, not a growing archive.
-      final windowStart = DateTime(now.year, now.month, now.day).subtract(const Duration(days: 90));
+      final windowStart = DateTime(now.year, now.month, now.day).subtract(AppRanges.adminOverviewWindow);
 
       // Same query shape (single where(), no orderBy()) already proven
       // working by Overview's own revenue figure - no new composite

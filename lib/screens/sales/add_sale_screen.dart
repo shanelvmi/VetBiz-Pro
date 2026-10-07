@@ -29,6 +29,7 @@ import '../../data/collections.dart';
 import '../../data/activity_type.dart';
 import '../../config/money.dart';
 import '../../config/app_defaults.dart';
+import '../../config/app_timeouts.dart';
 
 // --- Custom Formatter ---
 // --- Add Sale Screen ---
@@ -525,7 +526,7 @@ class _AddSaleScreenState extends State<AddSaleScreen> {
     }
 
     setState(() => _isSearchingClients = true);
-    _clientSearchDebounce = Timer(const Duration(milliseconds: 300), () async {
+    _clientSearchDebounce = Timer(AppTimeouts.clientPickerDebounce, () async {
       final facilityId = Provider.of<FacilityProvider>(context, listen: false).selectedFacilityId;
       if (facilityId == null) {
         if (mounted) setState(() => _isSearchingClients = false);

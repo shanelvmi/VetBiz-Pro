@@ -13,6 +13,7 @@ import 'legal/privacy_policy_screen.dart';
 import 'legal/terms_of_service_screen.dart';
 import '../theme/app_palette.dart';
 import '../data/collections.dart';
+import '../config/app_timeouts.dart';
 
 class LoginScreen extends StatefulWidget {
   final String? errorMessage;
@@ -164,7 +165,7 @@ class _LoginScreenState extends State<LoginScreen> {
       // disposed if it had, so this stops the button spinning forever
       // instead of leaving it stuck indefinitely for any reason not
       // otherwise anticipated.
-      Future.delayed(const Duration(seconds: 6), () {
+      Future.delayed(AppTimeouts.loginSafetyNet, () {
         if (mounted && isLoggingIn) {
           debugPrint('[LOGIN] Still mounted 6s after a successful sign-in - resetting loading state');
           // Never silently: this screen should have been replaced long ago.
@@ -599,7 +600,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
         // Auto-scroll timer
         _announcementTimer?.cancel();
-        _announcementTimer = Timer.periodic(const Duration(seconds: 6), (_) {
+        _announcementTimer = Timer.periodic(AppTimeouts.loginAnnouncementRotate, (_) {
           if (!controller.hasClients || docs.isEmpty) return;
           currentIndex = (currentIndex + 1) % docs.length;
           controller.animateToPage(currentIndex,

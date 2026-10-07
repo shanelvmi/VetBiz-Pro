@@ -11,6 +11,7 @@ import '../../widgets/summary_card.dart' show KpiTrend;
 import '../../theme/app_palette.dart';
 import '../../data/collections.dart';
 import '../../config/money.dart';
+import '../../config/app_ranges.dart';
 
 /// A simple insights view - a 14-day sales trend and your top 5
 /// products by revenue over the last 30 days. Deliberately kept to two
@@ -76,7 +77,7 @@ class _InsightsScreenState extends State<InsightsScreen> {
 
     final now = DateTime.now();
     final today = DateTime(now.year, now.month, now.day);
-    _trendStart = today.subtract(const Duration(days: 13));
+    _trendStart = today.subtract(AppRanges.insightsTrendBack);
     // Matches exactly what's displayed - the trend chart and the
     // top-products/services figures below both only ever use this
     // same 14-day window, so there's nothing gained from querying
@@ -179,17 +180,17 @@ class _InsightsScreenState extends State<InsightsScreen> {
 
     final now = DateTime.now();
     final today = DateTime(now.year, now.month, now.day);
-    final yesterday = today.subtract(const Duration(days: 1));
+    final yesterday = today.subtract(AppRanges.day);
     // "Normal" is judged against the preceding 7 days, not a single
     // noisy yesterday - one unusually quiet or busy day shouldn't set
     // the bar for what counts as typical.
-    final recentStart = today.subtract(const Duration(days: 7));
+    final recentStart = today.subtract(AppRanges.week);
     final recentEnd = yesterday;
     // Comparable-period week-over-week: this week's Monday through
     // today, against last week's Monday through the same weekday - so
     // a partial week is never compared against a full one.
     final startOfThisWeek = today.subtract(Duration(days: today.weekday - 1));
-    final startOfLastWeek = startOfThisWeek.subtract(const Duration(days: 7));
+    final startOfLastWeek = startOfThisWeek.subtract(AppRanges.week);
     final lastWeekComparableEnd = startOfLastWeek.add(Duration(days: today.weekday - 1));
 
     try {

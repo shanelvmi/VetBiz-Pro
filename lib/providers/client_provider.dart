@@ -8,6 +8,7 @@ import '../services/cursor_paginated_list_controller.dart';
 import '../data/collections.dart';
 import '../data/fields.dart';
 import '../config/app_limits.dart';
+import '../config/app_ranges.dart';
 
 /// An existing client that looks like the one being saved - see
 /// [ClientProvider.findSimilarClient].
@@ -451,7 +452,7 @@ class ClientProvider with ChangeNotifier, PaginatedStreamLoader<Client> {
     }
     switch (q.overdueRangeFilter) {
       case 'bucket1':
-        return (now.subtract(const Duration(days: 1)), now.subtract(Duration(days: q.overdueDays)));
+        return (now.subtract(AppRanges.day), now.subtract(Duration(days: q.overdueDays)));
       case 'bucket2':
         return (
           now.subtract(Duration(days: q.overdueDays + 1)),

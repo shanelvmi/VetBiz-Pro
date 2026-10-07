@@ -14,6 +14,7 @@ import '../settings/printer_settings_screen.dart';
 import 'add_transaction_screen.dart';
 import '../../theme/app_palette.dart';
 import '../../config/money.dart';
+import '../../config/app_ranges.dart';
 
 class TransactionScreen extends StatefulWidget {
   const TransactionScreen({super.key});
@@ -56,7 +57,7 @@ class _TransactionScreenState extends State<TransactionScreen> {
   void initState() {
     super.initState();
     final now = DateTime.now();
-    _rangeStart = now.subtract(const Duration(days: 30));
+    _rangeStart = now.subtract(AppRanges.defaultListRange);
     _rangeEnd = now;
 
     final facilityId =

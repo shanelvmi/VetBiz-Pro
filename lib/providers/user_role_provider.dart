@@ -8,6 +8,7 @@ import '../data/collections.dart';
 import '../data/fields.dart';
 import '../data/user_role.dart';
 import '../data/user_status.dart';
+import '../config/app_timeouts.dart';
 
 /// Tracks the signed-in user's own role in real time (admin vs
 /// assistant), read from their `users/{uid}` document - the same
@@ -58,7 +59,7 @@ class UserRoleProvider with ChangeNotifier {
           .collection(Collections.platformAdmins)
           .doc(uid)
           .get()
-          .timeout(const Duration(seconds: 10));
+          .timeout(AppTimeouts.roleLoad);
       if (platformAdminDoc.exists) {
         // Exempt - this account is a Platform Admin, so this status
         // value is ignored entirely regardless of how it got set.

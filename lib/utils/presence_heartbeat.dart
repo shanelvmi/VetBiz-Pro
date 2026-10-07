@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../data/collections.dart';
+import '../config/app_timeouts.dart';
 
 /// Writes a "last active" heartbeat to the current user's own document
 /// every couple of minutes while they're signed in - the basis for the
@@ -16,13 +17,13 @@ import '../data/collections.dart';
 /// needs to react the instant someone actually disconnects.
 class PresenceHeartbeat {
   static Timer? _timer;
-  static const Duration interval = Duration(minutes: 2);
+  static const Duration interval = AppTimeouts.presenceHeartbeat;
 
   // Comfortably longer than [interval] - a single missed or delayed
   // beat (a brief network hiccup, the app briefly backgrounded)
   // shouldn't flip someone to "offline" and back within the same
   // ongoing session.
-  static const Duration onlineWindow = Duration(minutes: 5);
+  static const Duration onlineWindow = AppTimeouts.presenceOnlineWindow;
 
   static void start() {
     _sendHeartbeat();

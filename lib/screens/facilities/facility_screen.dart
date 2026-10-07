@@ -25,6 +25,7 @@ import '../../data/fields.dart';
 import '../../data/user_role.dart';
 import '../../config/app_defaults.dart';
 import '../../config/app_limits.dart';
+import '../../config/app_ranges.dart';
 
 const Color deepGreen = AppPalette.primary;
 const Color warmAmber = AppPalette.accent;
@@ -2310,7 +2311,7 @@ class _FacilityScreenState extends State<FacilityScreen> {
     final now = DateTime.now();
     final thisMonthStart = DateTime(now.year, now.month, 1);
     final lastMonthStart = DateTime(now.year, now.month - 1, 1);
-    final lastMonthEnd = thisMonthStart.subtract(const Duration(days: 1));
+    final lastMonthEnd = thisMonthStart.subtract(AppRanges.day);
 
     return FutureBuilder<List<dynamic>>(
       future: Future.wait([

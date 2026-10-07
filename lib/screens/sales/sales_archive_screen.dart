@@ -9,6 +9,7 @@ import '../../theme/app_palette.dart';
 import '../../data/collections.dart';
 import '../../config/money.dart';
 import '../../config/app_limits.dart';
+import '../../config/app_ranges.dart';
 
 class SalesArchiveScreen extends StatefulWidget {
   const SalesArchiveScreen({super.key});
@@ -27,12 +28,11 @@ class _SalesArchiveScreenState extends State<SalesArchiveScreen> {
 
   // Must match ARCHIVE_AFTER_DAYS in functions/index.js - anything newer
   // than this hasn't reached the archive yet.
-  static const int _archiveCutoffDays = 180;
+  static const int _archiveCutoffDays = AppRanges.archiveCutoffDays;
   // Default initial window shown on open: the most recently archived 90
   // days, ending right at the cutoff. Lets the screen show something
   // immediately instead of forcing a dialog before any data appears - the
   // Search button still lets the user widen or change the range anytime.
-  static const int _defaultWindowDays = 90;
 
   List<Map<String, dynamic>> _archivedSales = [];
   bool _isLoading = false;
@@ -58,9 +58,9 @@ class _SalesArchiveScreenState extends State<SalesArchiveScreen> {
   void initState() {
     super.initState();
     final cutoff =
-        DateTime.now().subtract(const Duration(days: _archiveCutoffDays));
+        DateTime.now().subtract(AppRanges.archiveCutoff);
     _searchEnd = cutoff;
-    _searchStart = cutoff.subtract(const Duration(days: _defaultWindowDays));
+    _searchStart = cutoff.subtract(AppRanges.archiveDefaultWindow);
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _loadArchivedSales();
@@ -137,7 +137,7 @@ class _SalesArchiveScreenState extends State<SalesArchiveScreen> {
       if (_searchEnd != null) {
         query = query.where('timestamp',
             isLessThanOrEqualTo:
-                Timestamp.fromDate(_searchEnd!.add(const Duration(days: 1))));
+                Timestamp.fromDate(_searchEnd!.add(AppRanges.day)));
       }
 
       query = query.orderBy('timestamp', descending: true);
@@ -760,9 +760,8 @@ class _SearchArchiveDialogState extends State<_SearchArchiveDialog> {
   // days (see ARCHIVE_AFTER_DAYS in functions/index.js). Bounding the date
   // pickers to that cutoff stops someone picking "this month" and always
   // getting zero results, since nothing that recent has been archived yet.
-  static const int _archiveCutoffDays = 180;
   final DateTime _archiveCutoff =
-      DateTime.now().subtract(const Duration(days: _archiveCutoffDays));
+      DateTime.now().subtract(AppRanges.archiveCutoff);
 
   String _dateMode = 'month';
   late DateTime _selectedMonth;
@@ -773,7 +772,7 @@ class _SearchArchiveDialogState extends State<_SearchArchiveDialog> {
   void initState() {
     super.initState();
     _selectedMonth = DateTime(_archiveCutoff.year, _archiveCutoff.month);
-    _startDate = _archiveCutoff.subtract(const Duration(days: 30));
+    _startDate = _archiveCutoff.subtract(AppRanges.month);
     _endDate = _archiveCutoff;
   }
 

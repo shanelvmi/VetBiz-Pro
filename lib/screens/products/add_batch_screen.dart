@@ -10,6 +10,7 @@ import '../../utils/thousands_input_formatter.dart';
 import '../../theme/app_palette.dart';
 import '../../config/money.dart';
 import '../../config/app_defaults.dart';
+import '../../config/app_ranges.dart';
 
 /// Records a new delivery of an existing product as its own batch - a
 /// separate batch number, expiry, and quantity, never overwriting an
@@ -62,7 +63,7 @@ class _AddBatchScreenState extends State<AddBatchScreen> {
   Future<void> _pickExpiry() async {
     final picked = await showDatePicker(
       context: context,
-      initialDate: DateTime.now().add(const Duration(days: 365)),
+      initialDate: DateTime.now().add(AppRanges.year),
       firstDate: DateTime.now(),
       lastDate: DateTime(2100),
     );

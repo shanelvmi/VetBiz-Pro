@@ -19,6 +19,8 @@ import '../../utils/subscription_guard.dart';
 import '../../theme/app_palette.dart';
 import '../../data/collections.dart';
 import '../../config/money.dart';
+import '../../config/app_timeouts.dart';
+import '../../config/app_ranges.dart';
 
 class ServicesScreen extends StatefulWidget {
   const ServicesScreen({super.key});
@@ -76,7 +78,7 @@ class _ServicesScreenState extends State<ServicesScreen> {
       _loadRangeSummary();
       _openServicesListSession();
       _newRecordsCheckTimer = Timer.periodic(
-        const Duration(seconds: 45),
+        AppTimeouts.newRecordsPoll,
         (_) => _serviceProvider?.servicesListController.checkForNewRecords(),
       );
     }
@@ -104,7 +106,7 @@ class _ServicesScreenState extends State<ServicesScreen> {
     _lastKnownServiceCount = currentCount;
 
     _pendingSummaryRefresh?.cancel();
-    _pendingSummaryRefresh = Timer(const Duration(milliseconds: 500), () {
+    _pendingSummaryRefresh = Timer(AppTimeouts.servicesSummaryRefresh, () {
       if (mounted) _loadRangeSummary();
     });
   }
@@ -115,7 +117,7 @@ class _ServicesScreenState extends State<ServicesScreen> {
 
     setState(() => _isSummaryLoading = true);
     try {
-      final cutoff = DateTime.now().subtract(const Duration(days: 30));
+      final cutoff = DateTime.now().subtract(AppRanges.defaultListRange);
       final snap = await FirebaseFirestore.instance
           .collection(Collections.facilities)
           .doc(facilityId)
@@ -465,7 +467,7 @@ class _ServicesScreenState extends State<ServicesScreen> {
             onChanged: (val) {
               setState(() => _searchQuery = val.trim());
               _searchDebounce?.cancel();
-              _searchDebounce = Timer(const Duration(milliseconds: 400), _openServicesListSession);
+              _searchDebounce = Timer(AppTimeouts.searchDebounce, _openServicesListSession);
             },
           ),
         ),

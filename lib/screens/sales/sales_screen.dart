@@ -16,6 +16,8 @@ import 'sales_archive_screen.dart';
 import '../../utils/subscription_guard.dart';
 import '../../theme/app_palette.dart';
 import '../../config/money.dart';
+import '../../config/app_timeouts.dart';
+import '../../config/app_ranges.dart';
 
 class SalesScreen extends StatefulWidget {
   const SalesScreen({super.key});
@@ -78,7 +80,7 @@ class _SalesScreenState extends State<SalesScreen> {
       _loadRangeSummary();
       _openSalesListSession();
       _newRecordsCheckTimer = Timer.periodic(
-        const Duration(seconds: 45),
+        AppTimeouts.newRecordsPoll,
         (_) => _saleProvider?.salesListController.checkForNewRecords(),
       );
     }
@@ -114,7 +116,7 @@ class _SalesScreenState extends State<SalesScreen> {
     // guess that silently stayed stale whenever the function ran a
     // little slower than expected.
     _pendingSummaryRefresh?.cancel();
-    _pendingSummaryRefresh = Timer(const Duration(seconds: 2), () {
+    _pendingSummaryRefresh = Timer(AppTimeouts.salesSummaryRefresh, () {
       if (mounted) _loadRangeSummary();
     });
   }
@@ -126,7 +128,7 @@ class _SalesScreenState extends State<SalesScreen> {
     setState(() => _isSummaryLoading = true);
 
     final now = DateTime.now();
-    final start = now.subtract(const Duration(days: 30));
+    final start = now.subtract(AppRanges.defaultListRange);
     final previousCollected = _rangeSummary?['totalCollected'];
 
     // Retries a few times, spaced further apart each time, until the
@@ -138,7 +140,7 @@ class _SalesScreenState extends State<SalesScreen> {
     // Retrying instead adapts to however long this specific write
     // actually takes, and gives up cleanly after a few tries rather
     // than retrying forever.
-    const retryDelays = [Duration.zero, Duration(seconds: 2), Duration(seconds: 3), Duration(seconds: 5)];
+    const retryDelays = AppTimeouts.salesSummaryRetryDelays;
 
     for (var attempt = 0; attempt < retryDelays.length; attempt++) {
       if (retryDelays[attempt] > Duration.zero) {
@@ -471,7 +473,7 @@ class _SalesScreenState extends State<SalesScreen> {
             onChanged: (val) {
               setState(() => _searchQuery = val.trim());
               _searchDebounce?.cancel();
-              _searchDebounce = Timer(const Duration(milliseconds: 400), _openSalesListSession);
+              _searchDebounce = Timer(AppTimeouts.searchDebounce, _openSalesListSession);
             },
           ),
         ),

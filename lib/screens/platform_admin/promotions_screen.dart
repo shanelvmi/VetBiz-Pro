@@ -10,6 +10,7 @@ import '../../widgets/firestore_error_view.dart';
 import '../../theme/app_palette.dart';
 import '../../data/collections.dart';
 import '../../data/fields.dart';
+import '../../config/app_ranges.dart';
 
 /// Manage subscription discounts/offers - "Nanenane Sale", a
 /// month-end push, a renew-now discount for facilities about to
@@ -475,9 +476,9 @@ Future<void> _showPromotionEditor(BuildContext context, {Promotion? existing}) a
                       onPressed: () async {
                         final picked = await showDatePicker(
                           context: context,
-                          initialDate: endsAt ?? DateTime.now().add(const Duration(days: 14)),
+                          initialDate: endsAt ?? DateTime.now().add(AppRanges.fortnight),
                           firstDate: DateTime.now(),
-                          lastDate: DateTime.now().add(const Duration(days: 365)),
+                          lastDate: DateTime.now().add(AppRanges.year),
                         );
                         if (picked != null) setDialogState(() => endsAt = picked);
                       },

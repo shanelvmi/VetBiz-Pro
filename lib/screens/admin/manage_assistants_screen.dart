@@ -17,6 +17,7 @@ import '../../data/user_role.dart';
 import '../../data/user_status.dart';
 import '../../data/activity_type.dart';
 import '../../config/app_limits.dart';
+import '../../config/app_timeouts.dart';
 
 /// Who someone is on a facility's team, as this screen shows them. Worked out
 /// from the user record (role, previousRole, who created the facility); not
@@ -167,7 +168,7 @@ class _ManageAssistantsScreenState extends State<ManageAssistantsScreen> {
         _teamServerLoaded = false;
         _teamLoadGaveUp = false;
         _teamLoadTimer?.cancel();
-        _teamLoadTimer = Timer(const Duration(seconds: 8), () {
+        _teamLoadTimer = Timer(AppTimeouts.teamLoadFallback, () {
           if (mounted && !_teamServerLoaded) setState(() => _teamLoadGaveUp = true);
         });
         _assistantsStream = adminFacilityIds.isEmpty

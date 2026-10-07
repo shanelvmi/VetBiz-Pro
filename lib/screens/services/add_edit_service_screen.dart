@@ -20,6 +20,7 @@ import '../clients/add_client_screen.dart';
 import '../../theme/app_palette.dart';
 import '../../config/money.dart';
 import '../../config/app_defaults.dart';
+import '../../config/app_timeouts.dart';
 
 class AddEditServiceScreen extends StatefulWidget {
   final Service? service;
@@ -180,7 +181,7 @@ class _AddEditServiceScreenState extends State<AddEditServiceScreen> {
     }
 
     setState(() => _isSearchingClients = true);
-    _clientSearchDebounce = Timer(const Duration(milliseconds: 300), () async {
+    _clientSearchDebounce = Timer(AppTimeouts.clientPickerDebounce, () async {
       final facilityId = Provider.of<FacilityProvider>(context, listen: false).selectedFacilityId;
       if (facilityId == null) {
         if (mounted) setState(() => _isSearchingClients = false);

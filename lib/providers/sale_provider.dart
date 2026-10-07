@@ -13,6 +13,7 @@ import '../data/fields.dart';
 import '../data/activity_type.dart';
 import '../config/money.dart';
 import '../config/app_limits.dart';
+import '../config/app_ranges.dart';
 
 class SaleProvider extends ChangeNotifier {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
@@ -148,9 +149,9 @@ class SaleProvider extends ChangeNotifier {
       case 'Today':
         return today;
       case 'Last 7 days':
-        return now.subtract(const Duration(days: 7));
+        return now.subtract(AppRanges.week);
       case 'Last 30 days':
-        return now.subtract(const Duration(days: 30));
+        return now.subtract(AppRanges.month);
       case 'This month':
         return DateTime(now.year, now.month, 1);
       default:

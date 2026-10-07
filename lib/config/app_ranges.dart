@@ -13,11 +13,12 @@ class AppRanges {
   /// Sales, services and transactions open on the last 30 days.
   static const Duration defaultListRange = month;
 
-  /// How far each "load older" step of the archives reaches back.
-  static const Duration archiveStep = month;
-
   /// The payments ledger opens on the last year.
   static const Duration paymentsDefaultRange = year;
+
+  /// The last moment before a boundary ("the end of last month" is the
+  /// start of this month minus this).
+  static const Duration instant = Duration(seconds: 1);
 
   /// Platform admin overview: activity window.
   static const Duration adminOverviewWindow = Duration(days: 90);
@@ -26,10 +27,18 @@ class AppRanges {
   static const Duration noticeLifetime = Duration(days: 2);
 
   /// Insights trend: today and the 13 days before it (14 days in all).
-  static const int insightsTrendDaysBack = 13;
+  static const Duration insightsTrendBack = Duration(days: 13);
 
   /// Export presets: "last 7 days" and "last 30 days", today included, so
   /// they reach back 6 and 29 days.
-  static const int exportLast7DaysBack = 6;
-  static const int exportLast30DaysBack = 29;
+  static const Duration exportLast7DaysBack = Duration(days: 6);
+  static const Duration exportLast30DaysBack = Duration(days: 29);
+
+  /// Sales and services older than this are in the archive; the archive
+  /// screens also print the number ("archived after 180 days").
+  static const int archiveCutoffDays = 180;
+  static const Duration archiveCutoff = Duration(days: archiveCutoffDays);
+
+  /// How far back the archive search opens, from the cutoff.
+  static const Duration archiveDefaultWindow = Duration(days: 90);
 }
