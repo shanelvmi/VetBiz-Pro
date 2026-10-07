@@ -30,7 +30,8 @@ class GuardRule {
 final _nonZeroNumber = RegExp(r'(?<![\w.])(0*[1-9]\d*(\.\d+)?|0?\.\d*[1-9]\d*)(?![\w.])');
 
 final List<GuardRule> guardRules = [
-  GuardRule('R1', 'raw colour', [RegExp(r'Color\(0x'), RegExp(r'Colors\.(?!transparent\b)')]),
+  // \b so that our own AppColors.* (the tokens) isn't mistaken for Flutter's Colors.*.
+  GuardRule('R1', 'raw colour', [RegExp(r'Color\(0x'), RegExp(r'\bColors\.(?!transparent\b)')]),
   GuardRule('R2', 'raw font size', [RegExp(r'fontSize:\s*\d')]),
   GuardRule('R3', 'raw radius', [RegExp(r'Radius\.circular\(\s*\d')]),
   GuardRule(

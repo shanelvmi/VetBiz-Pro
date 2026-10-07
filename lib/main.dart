@@ -45,6 +45,7 @@ import 'config/app_limits.dart';
 import 'config/app_timeouts.dart';
 import 'config/app_rules.dart';
 import 'config/app_info.dart';
+import 'ui/feedback/app_feedback.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -95,6 +96,9 @@ class VetBizProApp extends StatelessWidget {
 
     return MaterialApp(
       navigatorKey: navigatorKey,
+      // Lets AppFeedback show messages without a BuildContext (after an
+      // await, or after the screen that asked is gone).
+      scaffoldMessengerKey: AppFeedback.messengerKey,
       title: AppInfo.name,
       theme: AppTheme.build(colorTheme, Brightness.light),
       debugShowCheckedModeBanner: false,

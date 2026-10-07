@@ -54,6 +54,7 @@ void main() {
     final r1 = guardRules.firstWhere((r) => r.id == 'R1');
     expect(hits(r1, 'color: Colors.transparent,'), isFalse);
     expect(hits(r1, 'color: Colors.grey[600],'), isTrue);
+    expect(hits(r1, 'final c = AppColors.fromTheme(theme);'), isFalse);
     expect(isExcluded('lib/theme/app_colors.dart'), isTrue);
     expect(isExcluded('lib/screens/sales/sales_screen.dart'), isFalse);
   });
