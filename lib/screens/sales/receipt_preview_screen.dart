@@ -15,6 +15,7 @@ import '../../services/receipt_pdf_service.dart';
 import '../settings/printer_settings_screen.dart';
 import '../../utils/web_download.dart';
 import '../../theme/app_palette.dart';
+import '../../config/money.dart';
 
 /// Shows the receipt as it will actually look before doing anything with
 /// it - a real preview, not a blind print. From here it can be shared or
@@ -32,7 +33,6 @@ class ReceiptPreviewScreen extends StatefulWidget {
 class _ReceiptPreviewScreenState extends State<ReceiptPreviewScreen> {
   static const Color primaryColor = AppPalette.primary;
   final GlobalKey _receiptKey = GlobalKey();
-  final NumberFormat _moneyFormat = NumberFormat('#,##0', 'en_US');
 
   bool _isSharing = false;
   bool _isPrinting = false;
@@ -513,8 +513,8 @@ class _ReceiptPreviewScreenState extends State<ReceiptPreviewScreen> {
               ),
             ),
             Expanded(flex: 1, child: Text('${item.quantity}', style: const TextStyle(fontSize: 12.5))),
-            Expanded(flex: 2, child: Text(_moneyFormat.format(item.unitPrice), textAlign: TextAlign.right, style: const TextStyle(fontSize: 12.5))),
-            Expanded(flex: 2, child: Text(_moneyFormat.format(lineTotal), textAlign: TextAlign.right, style: const TextStyle(fontSize: 12.5, fontWeight: FontWeight.w600))),
+            Expanded(flex: 2, child: Text(Money.plain(item.unitPrice), textAlign: TextAlign.right, style: const TextStyle(fontSize: 12.5))),
+            Expanded(flex: 2, child: Text(Money.plain(lineTotal), textAlign: TextAlign.right, style: const TextStyle(fontSize: 12.5, fontWeight: FontWeight.w600))),
           ],
         ),
       );
@@ -600,17 +600,17 @@ class _ReceiptPreviewScreenState extends State<ReceiptPreviewScreen> {
             for (final item in sale.items) itemRow(item),
             divider(),
             // ---- Totals ----
-            totalsRow('Subtotal', _moneyFormat.format(sale.totalAmount + sale.items.fold(0.0, (sum, i) => sum + i.discount))),
-            totalsRow('Discount', _moneyFormat.format(sale.items.fold(0.0, (sum, i) => sum + i.discount))),
+            totalsRow('Subtotal', Money.plain(sale.totalAmount + sale.items.fold(0.0, (sum, i) => sum + i.discount))),
+            totalsRow('Discount', Money.plain(sale.items.fold(0.0, (sum, i) => sum + i.discount))),
             const SizedBox(height: 8),
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
               color: primaryColor.withValues(alpha: 0.08),
-              child: totalsRow('TOTAL', 'TSh ${_moneyFormat.format(sale.totalAmount)}', bold: true),
+              child: totalsRow('TOTAL', 'TSh ${Money.plain(sale.totalAmount)}', bold: true),
             ),
             const SizedBox(height: 8),
-            totalsRow('Paid', _moneyFormat.format(sale.totalPaid)),
-            totalsRow('Balance', _moneyFormat.format(balance), bold: balance > 0, color: balance > 0 ? Colors.red : null),
+            totalsRow('Paid', Money.plain(sale.totalPaid)),
+            totalsRow('Balance', Money.plain(balance), bold: balance > 0, color: balance > 0 ? Colors.red : null),
             const SizedBox(height: 10),
             Row(
               children: [

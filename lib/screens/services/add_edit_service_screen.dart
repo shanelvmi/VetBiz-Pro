@@ -18,6 +18,8 @@ import '../../providers/product_provider.dart';
 import '../../providers/facility_provider.dart';
 import '../clients/add_client_screen.dart';
 import '../../theme/app_palette.dart';
+import '../../config/money.dart';
+import '../../config/app_defaults.dart';
 
 class AddEditServiceScreen extends StatefulWidget {
   final Service? service;
@@ -52,8 +54,6 @@ class _AddEditServiceScreenState extends State<AddEditServiceScreen> {
   final Color offWhite = AppPalette.background;
   final Color darkTeal = AppPalette.primary;
 
-  final NumberFormat _tshFormat =
-      NumberFormat.currency(locale: 'en_US', symbol: '', decimalDigits: 0);
 
   bool _isLoading = false;
 
@@ -112,12 +112,12 @@ class _AddEditServiceScreenState extends State<AddEditServiceScreen> {
     double totalAmount = widget.service?.totalAmount ?? 0.0;
 
     _totalAmountController =
-        TextEditingController(text: _tshFormat.format(totalAmount));
+        TextEditingController(text: Money.plain(totalAmount));
 
     _totalPaidController = TextEditingController(
       text: widget.service?.totalPaid != null
-          ? _tshFormat.format(widget.service!.totalPaid)
-          : _tshFormat.format(totalAmount),
+          ? Money.plain(widget.service!.totalPaid)
+          : Money.plain(totalAmount),
     );
     _totalPaidController.addListener(() => setState(() {}));
 
@@ -126,7 +126,7 @@ class _AddEditServiceScreenState extends State<AddEditServiceScreen> {
       for (var item in widget.service!.itemsUsed) {
         final nameCtrl = TextEditingController(text: item['itemName'] ?? '');
         final priceCtrl = TextEditingController(
-          text: _tshFormat.format(item['price'] ?? 0),
+          text: Money.plain(item['price'] ?? 0),
         );
 
         // LIVE update
@@ -656,7 +656,7 @@ class _AddEditServiceScreenState extends State<AddEditServiceScreen> {
                                         onTap: () {
                                           item['name']!.text = product.name;
                                           item['price']!.text =
-                                              _tshFormat.format(product.sellPrice);
+                                              Money.plain(product.sellPrice);
                                           setState(() {
                                             _itemsUsedProductIds[index] = product.id;
                                             _activeSuggestionRow = null;
@@ -716,7 +716,7 @@ class _AddEditServiceScreenState extends State<AddEditServiceScreen> {
               Align(
                 alignment: Alignment.centerRight,
                 child: Text(
-                  'Total Items Cost: Tsh ${NumberFormat.decimalPattern().format(itemsTotal)}',
+                  'Total Items Cost: ${Money.symbolDecimal(itemsTotal)}',
                   style: const TextStyle(
                     fontSize: 12,
                     color: Colors.grey,
@@ -742,7 +742,7 @@ class _AddEditServiceScreenState extends State<AddEditServiceScreen> {
         children: [
           _sectionHeader(Icons.receipt_long_outlined, 'Visit Summary'),
           const SizedBox(height: 14),
-          const Text('Total Amount (Tsh) *', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 13)),
+          const Text('Total Amount (${AppDefaults.currencySymbol}) *', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 13)),
           const SizedBox(height: 6),
           TextFormField(
             controller: _totalAmountController,
@@ -762,7 +762,7 @@ class _AddEditServiceScreenState extends State<AddEditServiceScreen> {
             validator: (v) => v == null || v.isEmpty ? 'Enter total amount' : null,
           ),
           const SizedBox(height: 14),
-          const Text('Total Paid (Tsh) *', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 13)),
+          const Text('Total Paid (${AppDefaults.currencySymbol}) *', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 13)),
           const SizedBox(height: 6),
           TextFormField(
             controller: _totalPaidController,

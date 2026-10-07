@@ -13,6 +13,7 @@ import '../services/cursor_paginated_list_controller.dart';
 import '../data/collections.dart';
 import '../data/fields.dart';
 import '../data/activity_type.dart';
+import '../config/money.dart';
 
 class ServiceProvider extends ChangeNotifier {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
@@ -341,7 +342,7 @@ class ServiceProvider extends ChangeNotifier {
         userId: userInfo[Fields.userId]!,
         userName: userInfo['userName'],
         actionType: ActivityType.services.key,
-        description: 'Recorded service for ${saved.clientName ?? 'Walk-in'} - Tsh ${saved.totalAmount.toStringAsFixed(0)}',
+        description: 'Recorded service for ${saved.clientName ?? 'Walk-in'} - ${Money.savedWhole(saved.totalAmount)}',
       );
 
       return docRef.id;
@@ -416,7 +417,7 @@ class ServiceProvider extends ChangeNotifier {
         userId: userInfo[Fields.userId]!,
         userName: userInfo['userName'],
         actionType: ActivityType.services.key,
-        description: 'Updated service for ${updated.clientName ?? 'Walk-in'} - Tsh ${updated.totalAmount.toStringAsFixed(0)}',
+        description: 'Updated service for ${updated.clientName ?? 'Walk-in'} - ${Money.savedWhole(updated.totalAmount)}',
       );
     } catch (e) {
       debugPrint('ServiceProvider.updateService error: $e');
@@ -569,7 +570,7 @@ class ServiceProvider extends ChangeNotifier {
         userId: userInfo[Fields.userId]!,
         userName: userInfo['userName'],
         actionType: ActivityType.services.key,
-        description: 'Deleted service for ${dataForTrash['clientName'] ?? 'Walk-in'} - Tsh ${(dataForTrash['totalAmount'] ?? 0).toString()}',
+        description: 'Deleted service for ${dataForTrash['clientName'] ?? 'Walk-in'} - ${Money.savedAsStored(dataForTrash['totalAmount'] ?? 0)}',
       );
     }
   }

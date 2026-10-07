@@ -11,6 +11,7 @@ import '../services/cursor_paginated_list_controller.dart';
 import '../data/collections.dart';
 import '../data/fields.dart';
 import '../data/activity_type.dart';
+import '../config/money.dart';
 
 class TransactionProvider with ChangeNotifier {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
@@ -293,7 +294,7 @@ class TransactionProvider with ChangeNotifier {
         userId: userInfo[Fields.userId]!,
         userName: userInfo['userName'],
         actionType: ActivityType.transactions.key,
-        description: 'Added ${newTransaction.type}: ${newTransaction.description} - Tsh ${newTransaction.amount.toStringAsFixed(0)}',
+        description: 'Added ${newTransaction.type}: ${newTransaction.description} - ${Money.savedWhole(newTransaction.amount)}',
       );
 
     } catch (e) {
@@ -340,7 +341,7 @@ class TransactionProvider with ChangeNotifier {
         userId: userInfo[Fields.userId]!,
         userName: userInfo['userName'],
         actionType: ActivityType.transactions.key,
-        description: 'Updated ${updatedTransaction.type}: ${updatedTransaction.description} - Tsh ${updatedTransaction.amount.toStringAsFixed(0)}',
+        description: 'Updated ${updatedTransaction.type}: ${updatedTransaction.description} - ${Money.savedWhole(updatedTransaction.amount)}',
       );
     } catch (e) {
       debugPrint('Error updating transaction: $e');

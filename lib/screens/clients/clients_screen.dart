@@ -19,6 +19,7 @@ import 'add_client_screen.dart';
 import '../../services/cursor_paginated_list_controller.dart';
 import '../../theme/app_palette.dart';
 import '../../data/collections.dart';
+import '../../config/money.dart';
 
 class ClientsScreen extends StatefulWidget {
   const ClientsScreen({super.key});
@@ -583,7 +584,7 @@ class _ClientsScreenState extends State<ClientsScreen> {
                     Text('$count', style: const TextStyle(fontSize: 14)),
                     const SizedBox(height: 16),
                     _detailLabel('Total Spent'),
-                    Text('Tsh ${NumberFormat('#,##0').format(total)}', style: const TextStyle(fontSize: 14)),
+                    Text(Money.symbolPlain(total), style: const TextStyle(fontSize: 14)),
                   ],
                 );
               },

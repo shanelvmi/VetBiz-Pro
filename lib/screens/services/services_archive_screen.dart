@@ -9,6 +9,7 @@ import '../../constants/service_categories.dart';
 import 'service_receipt_preview_screen.dart';
 import '../../theme/app_palette.dart';
 import '../../data/collections.dart';
+import '../../config/money.dart';
 
 class ServicesArchiveScreen extends StatefulWidget {
   const ServicesArchiveScreen({super.key});
@@ -22,11 +23,6 @@ class _ServicesArchiveScreenState extends State<ServicesArchiveScreen> {
   final Color warmAmber = AppPalette.accent;
   final Color offWhite = AppPalette.background;
 
-  final NumberFormat _moneyFormat = NumberFormat.currency(
-    locale: 'en_US',
-    symbol: 'Tsh ',
-    decimalDigits: 0,
-  );
 
   static const int _pageSize = 30;
 
@@ -358,7 +354,7 @@ class _ServicesArchiveScreenState extends State<ServicesArchiveScreen> {
           ),
           Text('$foundCount found', style: TextStyle(fontSize: 12.5, fontWeight: FontWeight.w600, color: primaryDeepGreen)),
           const SizedBox(width: 12),
-          Text(_moneyFormat.format(totalAmount), style: TextStyle(fontSize: 12.5, fontWeight: FontWeight.bold, color: primaryDeepGreen)),
+          Text(Money.format(totalAmount), style: TextStyle(fontSize: 12.5, fontWeight: FontWeight.bold, color: primaryDeepGreen)),
         ],
       ),
     );
@@ -547,7 +543,7 @@ class _ServicesArchiveScreenState extends State<ServicesArchiveScreen> {
             ),
             Expanded(
               flex: 2,
-              child: Text(_moneyFormat.format(totalAmount), style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600)),
+              child: Text(Money.format(totalAmount), style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600)),
             ),
             Expanded(
               flex: 2,
@@ -701,7 +697,7 @@ class _ServicesArchiveScreenState extends State<ServicesArchiveScreen> {
                     ],
                   ),
                   const SizedBox(height: 10),
-                  _totalsRow('Paid Amount', _moneyFormat.format(totalPaid)),
+                  _totalsRow('Paid Amount', Money.format(totalPaid)),
                   _totalsRow('Payment Method', service['paymentMethod'] ?? 'Not recorded'),
                   if (transactionId != null && transactionId.isNotEmpty)
                     _totalsRow('Transaction ID', transactionId),

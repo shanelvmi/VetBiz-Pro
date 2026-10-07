@@ -15,6 +15,7 @@ import 'receipt_preview_screen.dart';
 import 'sales_archive_screen.dart';
 import '../../utils/subscription_guard.dart';
 import '../../theme/app_palette.dart';
+import '../../config/money.dart';
 
 class SalesScreen extends StatefulWidget {
   const SalesScreen({super.key});
@@ -28,11 +29,6 @@ class _SalesScreenState extends State<SalesScreen> {
   final Color warmAmber = AppPalette.accent;
   final Color offWhite = AppPalette.background;
 
-  final NumberFormat _moneyFormat = NumberFormat.currency(
-    locale: 'en_US',
-    symbol: 'Tsh ',
-    decimalDigits: 0,
-  );
 
   String _searchQuery = '';
   String _filterStatus = 'All';
@@ -344,9 +340,9 @@ class _SalesScreenState extends State<SalesScreen> {
 
     final metrics = [
       ('Total Sales', '$count', Icons.receipt_long_outlined, primaryDeepGreen),
-      ('Revenue', _moneyFormat.format(total), Icons.bar_chart, Colors.blue),
-      ('Collected', _moneyFormat.format(collected), Icons.account_balance_wallet_outlined, Colors.green),
-      ('Pending', _moneyFormat.format(pending), Icons.pending_actions_outlined, warmAmber),
+      ('Revenue', Money.format(total), Icons.bar_chart, Colors.blue),
+      ('Collected', Money.format(collected), Icons.account_balance_wallet_outlined, Colors.green),
+      ('Pending', Money.format(pending), Icons.pending_actions_outlined, warmAmber),
     ];
 
     return LayoutBuilder(
@@ -697,7 +693,7 @@ class _SalesScreenState extends State<SalesScreen> {
             ),
             Expanded(
               flex: 2,
-              child: Text(_moneyFormat.format(sale.totalAmount), style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600)),
+              child: Text(Money.format(sale.totalAmount), style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600)),
             ),
             Expanded(
               flex: 2,
@@ -895,8 +891,8 @@ class _SalesScreenState extends State<SalesScreen> {
                       Column(
                         crossAxisAlignment: CrossAxisAlignment.end,
                         children: [
-                          Text(_moneyFormat.format(item.unitPrice * item.quantity), style: const TextStyle(fontSize: 13.5)),
-                          Text(_moneyFormat.format(item.unitPrice * item.quantity),
+                          Text(Money.format(item.unitPrice * item.quantity), style: const TextStyle(fontSize: 13.5)),
+                          Text(Money.format(item.unitPrice * item.quantity),
                               style: TextStyle(fontSize: 12, color: Colors.grey[500])),
                         ],
                       ),
@@ -904,12 +900,12 @@ class _SalesScreenState extends State<SalesScreen> {
                   ),
                 )),
             const Divider(height: 24),
-            _totalsRow('Subtotal', _moneyFormat.format(subtotal)),
-            _totalsRow('Discount', _moneyFormat.format(totalDiscount)),
-            _totalsRow('Total Amount', _moneyFormat.format(sale.totalAmount), bold: true, color: primaryDeepGreen),
+            _totalsRow('Subtotal', Money.format(subtotal)),
+            _totalsRow('Discount', Money.format(totalDiscount)),
+            _totalsRow('Total Amount', Money.format(sale.totalAmount), bold: true, color: primaryDeepGreen),
             const SizedBox(height: 10),
-            _totalsRow('Paid', _moneyFormat.format(sale.totalPaid), color: Colors.green),
-            _totalsRow('Balance', _moneyFormat.format(balance), bold: true),
+            _totalsRow('Paid', Money.format(sale.totalPaid), color: Colors.green),
+            _totalsRow('Balance', Money.format(balance), bold: true),
             const Divider(height: 24),
             _detailField(Icons.person_outline, 'Client', sale.clientName ?? 'Walk-in', subtitle: client?.phone),
             _detailField(Icons.badge_outlined, 'Seller', sale.soldByName),

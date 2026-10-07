@@ -42,7 +42,6 @@ class _ViewReportsScreenState extends State<ViewReportsScreen> {
 
   final DailyReportService _reportService = DailyReportService();
   final AuthService _authService = AuthService();
-  final NumberFormat _moneyFormat = NumberFormat.decimalPattern();
 
   bool _isLoading = true;
   bool _isGenerating = false;

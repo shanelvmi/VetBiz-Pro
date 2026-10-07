@@ -6,6 +6,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../models/sale.dart';
 import '../models/service.dart';
 import '../models/transaction.dart';
+import '../config/money.dart';
 
 /// Real Bluetooth thermal-printer integration - connects to a printer
 /// already paired at the OS/Bluetooth-settings level (classic SPP
@@ -142,7 +143,7 @@ class ReceiptPrinterService {
     bytes += generator.row([
       PosColumn(text: 'Total', width: 6, styles: const PosStyles(bold: true)),
       PosColumn(
-        text: 'Tsh ${sale.totalAmount.toStringAsFixed(0)}',
+        text: Money.symbolWhole(sale.totalAmount),
         width: 6,
         styles: const PosStyles(align: PosAlign.right, bold: true),
       ),
@@ -150,7 +151,7 @@ class ReceiptPrinterService {
     bytes += generator.row([
       PosColumn(text: 'Paid', width: 6),
       PosColumn(
-        text: 'Tsh ${sale.totalPaid.toStringAsFixed(0)}',
+        text: Money.symbolWhole(sale.totalPaid),
         width: 6,
         styles: const PosStyles(align: PosAlign.right),
       ),
@@ -160,7 +161,7 @@ class ReceiptPrinterService {
       bytes += generator.row([
         PosColumn(text: 'Balance', width: 6, styles: const PosStyles(bold: true)),
         PosColumn(
-          text: 'Tsh ${(sale.totalAmount - sale.totalPaid).toStringAsFixed(0)}',
+          text: Money.symbolWhole((sale.totalAmount - sale.totalPaid)),
           width: 6,
           styles: const PosStyles(align: PosAlign.right, bold: true),
         ),
@@ -213,7 +214,7 @@ class ReceiptPrinterService {
     bytes += generator.row([
       PosColumn(text: 'Total', width: 6, styles: const PosStyles(bold: true)),
       PosColumn(
-        text: 'Tsh ${service.totalAmount.toStringAsFixed(0)}',
+        text: Money.symbolWhole(service.totalAmount),
         width: 6,
         styles: const PosStyles(align: PosAlign.right, bold: true),
       ),
@@ -221,7 +222,7 @@ class ReceiptPrinterService {
     bytes += generator.row([
       PosColumn(text: 'Paid', width: 6),
       PosColumn(
-        text: 'Tsh ${service.totalPaid.toStringAsFixed(0)}',
+        text: Money.symbolWhole(service.totalPaid),
         width: 6,
         styles: const PosStyles(align: PosAlign.right),
       ),
@@ -231,7 +232,7 @@ class ReceiptPrinterService {
       bytes += generator.row([
         PosColumn(text: 'Balance', width: 6, styles: const PosStyles(bold: true)),
         PosColumn(
-          text: 'Tsh ${(service.totalAmount - service.totalPaid).toStringAsFixed(0)}',
+          text: Money.symbolWhole((service.totalAmount - service.totalPaid)),
           width: 6,
           styles: const PosStyles(align: PosAlign.right, bold: true),
         ),
@@ -280,7 +281,7 @@ class ReceiptPrinterService {
     bytes += generator.row([
       PosColumn(text: isExpense ? 'Expense' : 'Other Income', width: 6, styles: const PosStyles(bold: true)),
       PosColumn(
-        text: 'Tsh ${transaction.amount.toStringAsFixed(0)}',
+        text: Money.symbolWhole(transaction.amount),
         width: 6,
         styles: const PosStyles(align: PosAlign.right, bold: true),
       ),

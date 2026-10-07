@@ -9,6 +9,7 @@ import '../../providers/facility_provider.dart';
 import '../../services/daily_report_service.dart';
 import '../../utils/thousands_input_formatter.dart';
 import '../../theme/app_palette.dart';
+import '../../config/money.dart';
 
 class ReportReviewScreen extends StatefulWidget {
   final DailyReport report;
@@ -25,8 +26,6 @@ class _ReportReviewScreenState extends State<ReportReviewScreen> {
   static const Color offWhite = AppPalette.background;
 
   final DailyReportService _reportService = DailyReportService();
-  final NumberFormat _moneyFormat = NumberFormat.decimalPattern();
-  final _formatter = NumberFormat.decimalPattern();
 
   late List<ProductMovementEntry> _watchlisted;
   final Map<String, TextEditingController> _physicalCountControllers = {};
@@ -49,7 +48,7 @@ class _ReportReviewScreenState extends State<ReportReviewScreen> {
     }
     for (final p in widget.report.paymentReconciliation) {
       _paymentCountControllers[p.method] =
-          TextEditingController(text: p.physicalCount != null ? _formatter.format(p.physicalCount!.round()) : '');
+          TextEditingController(text: p.physicalCount != null ? Money.decimal(p.physicalCount!.round()) : '');
       _paymentVarianceReasonControllers[p.method] = TextEditingController(text: p.varianceReason ?? '');
     }
   }
@@ -416,7 +415,7 @@ class _ReportReviewScreenState extends State<ReportReviewScreen> {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text('Amount paid out', style: TextStyle(fontSize: 13, color: Colors.grey[700])),
-              Text('Tsh ${_moneyFormat.format(p.expected.abs())}',
+              Text(Money.symbolDecimal(p.expected.abs()),
                   style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold)),
             ],
           ),
@@ -450,7 +449,7 @@ class _ReportReviewScreenState extends State<ReportReviewScreen> {
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             Text('Expected balance', style: TextStyle(fontSize: 13, color: Colors.grey[700])),
-            Text('Tsh ${_moneyFormat.format(p.expected)}',
+            Text(Money.symbolDecimal(p.expected),
                 style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold)),
           ],
         ),
@@ -480,7 +479,7 @@ class _ReportReviewScreenState extends State<ReportReviewScreen> {
             children: [
               Icon(Icons.warning_amber_rounded, size: 16, color: Colors.red[700]),
               const SizedBox(width: 4),
-              Text('${p.method} variance: ${variance > 0 ? '+' : ''}Tsh ${_moneyFormat.format(variance)}',
+              Text('${p.method} variance: ${variance > 0 ? '+' : ''}${Money.symbolDecimal(variance)}',
                   style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: Colors.red[700])),
             ],
           ),

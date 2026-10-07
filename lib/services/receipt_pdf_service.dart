@@ -7,6 +7,7 @@ import 'package:printing/printing.dart';
 
 import '../models/sale.dart';
 import '../models/service.dart';
+import '../config/money.dart';
 
 /// Builds a genuine A4 PDF receipt for a Sale or a Service - a real,
 /// correctly-sized printable document, not a screenshot of the on-screen
@@ -19,7 +20,6 @@ import '../models/service.dart';
 /// Fetching a network image reliably into a PDF (across web and mobile)
 /// is a separate piece of complexity this doesn't take on.
 class ReceiptPdfService {
-  static final _money = NumberFormat.decimalPattern();
   static final _fullDate = DateFormat('EEEE, d MMMM yyyy');
   static final _dateTime = DateFormat('d MMM yyyy, h:mm a');
 
@@ -185,8 +185,8 @@ class ReceiptPdfService {
                 .map((item) => [
                       item.category.isNotEmpty ? '${item.name}\n${item.category}' : item.name,
                       '${item.quantity}',
-                      _money.format(item.unitPrice),
-                      _money.format(item.quantity * item.unitPrice - item.discount),
+                      Money.decimal(item.unitPrice),
+                      Money.decimal(item.quantity * item.unitPrice - item.discount),
                     ])
                 .toList(),
           ),
@@ -258,13 +258,13 @@ class ReceiptPdfService {
           ]),
           pw.SizedBox(height: 14),
           _itemsTable([
-            [service.name, '1', _money.format(serviceFeePortion), _money.format(serviceFeePortion)],
+            [service.name, '1', Money.decimal(serviceFeePortion), Money.decimal(serviceFeePortion)],
             for (final item in service.itemsUsed)
               [
                 (item['itemName'] ?? '').toString(),
                 '1',
-                _money.format((item['price'] is num) ? (item['price'] as num).toDouble() : 0.0),
-                _money.format((item['price'] is num) ? (item['price'] as num).toDouble() : 0.0),
+                Money.decimal((item['price'] is num) ? (item['price'] as num).toDouble() : 0.0),
+                Money.decimal((item['price'] is num) ? (item['price'] as num).toDouble() : 0.0),
               ],
           ]),
           pw.SizedBox(height: 12),
@@ -442,17 +442,17 @@ class ReceiptPdfService {
           crossAxisAlignment: pw.CrossAxisAlignment.stretch,
           children: [
             if (discount > 0) ...[
-              row('Subtotal', 'Tsh ${_money.format(subtotal)}'),
-              row('Discount', '- Tsh ${_money.format(discount)}'),
+              row('Subtotal', Money.symbolDecimal(subtotal)),
+              row('Discount', '- ${Money.symbolDecimal(discount)}'),
             ],
             pw.Container(
               margin: const pw.EdgeInsets.symmetric(vertical: 4),
               padding: const pw.EdgeInsets.symmetric(horizontal: 8, vertical: 6),
               color: _lightGrey,
-              child: row('TOTAL', 'Tsh ${_money.format(total)}', bold: true),
+              child: row('TOTAL', Money.symbolDecimal(total), bold: true),
             ),
-            row('Paid', 'Tsh ${_money.format(paid)}'),
-            if (balance > 0) row('Balance', 'Tsh ${_money.format(balance)}', bold: true, color: _red),
+            row('Paid', Money.symbolDecimal(paid)),
+            if (balance > 0) row('Balance', Money.symbolDecimal(balance), bold: true, color: _red),
             pw.SizedBox(height: 6),
             pw.Align(
               alignment: pw.Alignment.centerRight,

@@ -11,6 +11,7 @@ import '../../theme/app_palette.dart';
 import '../../data/collections.dart';
 import '../../data/fields.dart';
 import '../../data/payment_submission_status.dart';
+import '../../config/money.dart';
 
 /// Embeddable version of the subscription submissions review list -
 /// same logic as the original standalone Subscription Review screen,
@@ -311,7 +312,7 @@ class _SubscriptionRequestsTabState extends State<SubscriptionRequestsTab> {
                             Icon(Icons.sell_outlined, size: 16, color: primaryColor),
                             const SizedBox(width: 6),
                             Text(
-                              '${data['planLabel'] ?? ''} · Tsh ${data['amount'] ?? 0}',
+                              '${data['planLabel'] ?? ''} · ${Money.symbolAsStored(data['amount'] ?? 0)}',
                               style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: primaryColor),
                             ),
                           ],
@@ -537,7 +538,7 @@ class _SubscriptionRequestsTabState extends State<SubscriptionRequestsTab> {
                             Icon(Icons.sell_outlined, size: 16, color: primaryColor),
                             const SizedBox(width: 6),
                             Text(
-                              '${data['planLabel'] ?? ''} · Tsh ${data['amount'] ?? 0}',
+                              '${data['planLabel'] ?? ''} · ${Money.symbolAsStored(data['amount'] ?? 0)}',
                               style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: primaryColor),
                             ),
                           ],

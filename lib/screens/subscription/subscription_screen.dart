@@ -18,6 +18,7 @@ import '../../data/collections.dart';
 import '../../data/fields.dart';
 import '../../data/payment_submission_status.dart';
 import '../../config/payment_methods.dart';
+import '../../config/money.dart';
 
 class SubscriptionScreen extends StatefulWidget {
   final bool isModal;
@@ -32,7 +33,6 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
   final Color warmAmber = AppPalette.accent;
   final Color backgroundColor = AppPalette.background;
 
-  final NumberFormat _moneyFormat = NumberFormat('#,##0', 'en_US');
   final ImagePicker _picker = ImagePicker();
 
   // Starts with the static defaults so the plan picker isn't blank
@@ -361,7 +361,7 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
                         ? Row(
                             children: [
                               Text(
-                                'Tsh ${_moneyFormat.format(plan.priceTsh)}',
+                                Money.symbolPlain(plan.priceTsh),
                                 style: TextStyle(
                                   decoration: TextDecoration.lineThrough,
                                   color: Colors.grey[500],
@@ -370,7 +370,7 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
                               ),
                               const SizedBox(width: 6),
                               Text(
-                                'Tsh ${_moneyFormat.format(effectivePrice)}',
+                                Money.symbolPlain(effectivePrice),
                                 style: const TextStyle(
                                   color: Colors.green,
                                   fontWeight: FontWeight.bold,
@@ -379,7 +379,7 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
                               ),
                             ],
                           )
-                        : Text('Tsh ${_moneyFormat.format(plan.priceTsh)}'),
+                        : Text(Money.symbolPlain(plan.priceTsh)),
                     onChanged: (value) {
                       if (value != null) setState(() => _selectedPlan = value);
                     },
@@ -551,7 +551,7 @@ Widget buildSubmissionCard(Map<String, dynamic> data) {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text('${data['planLabel'] ?? ''} - Tsh ${data['amount'] ?? 0}',
+                    Text('${data['planLabel'] ?? ''} - ${Money.symbolAsStored(data['amount'] ?? 0)}',
                         style: const TextStyle(fontSize: 14)),
                     const SizedBox(height: 2),
                     Text(

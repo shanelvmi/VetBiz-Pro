@@ -6,6 +6,7 @@ import 'subscription_screen.dart' show submissionStatusColor;
 import '../../data/collections.dart';
 import '../../data/fields.dart';
 import '../../data/payment_submission_status.dart';
+import '../../config/money.dart';
 
 /// One payment submission, read from a payment_submissions document.
 class _Submission {
@@ -80,7 +81,6 @@ class _SubscriptionHistoryScreenState extends State<SubscriptionHistoryScreen> {
   late final Stream<QuerySnapshot> _stream;
 
   final TextEditingController _searchController = TextEditingController();
-  final NumberFormat _money = NumberFormat.currency(locale: 'en_US', symbol: 'Tsh ', decimalDigits: 0);
   final DateFormat _dateFormat = DateFormat('dd MMM yyyy');
   final DateFormat _dateTimeFormat = DateFormat('dd MMM yyyy, HH:mm');
 
@@ -249,7 +249,7 @@ class _SubscriptionHistoryScreenState extends State<SubscriptionHistoryScreen> {
       _card(
         label: 'Approved',
         value: '${counts[PaymentSubmissionStatus.approved.key] ?? 0}',
-        hint: _money.format(approvedTotal),
+        hint: Money.format(approvedTotal),
         icon: Icons.check_circle_outline,
         color: submissionStatusColor(PaymentSubmissionStatus.approved.key),
         filter: PaymentSubmissionStatus.approved.key,
@@ -615,7 +615,7 @@ class _SubscriptionHistoryScreenState extends State<SubscriptionHistoryScreen> {
           ),
           Expanded(
             flex: 2,
-            child: Text(_money.format(s.amount), style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600)),
+            child: Text(Money.format(s.amount), style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600)),
           ),
           Expanded(
             flex: 3,
@@ -670,7 +670,7 @@ class _SubscriptionHistoryScreenState extends State<SubscriptionHistoryScreen> {
                         style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold)),
                   ),
                   const SizedBox(width: 8),
-                  Text(_money.format(s.amount), style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600)),
+                  Text(Money.format(s.amount), style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600)),
                 ],
               ),
               if (s.promotionLabel != null && s.promotionLabel!.isNotEmpty) ...[

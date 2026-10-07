@@ -5,6 +5,7 @@ import 'package:provider/provider.dart';
 import '../../models/daily_report.dart';
 import '../../providers/user_role_provider.dart';
 import '../../theme/app_palette.dart';
+import '../../config/money.dart';
 
 /// The full tabbed report layout (Summary through Activity Log) -
 /// extracted as its own reusable widget since both the main "today's
@@ -26,7 +27,6 @@ class _ReportTabbedContentState extends State<ReportTabbedContent> with SingleTi
   static const Color warmAmber = AppPalette.accent;
 
   late TabController _tabController;
-  final NumberFormat _moneyFormat = NumberFormat.decimalPattern();
 
   static const _tabs = ['Summary', 'Sales', 'Services', 'Products', 'Stock Reconciliation', 'Debt', 'Expenses', 'Transactions', 'Activity Log', 'Payment Methods'];
 
@@ -163,18 +163,18 @@ class _ReportTabbedContentState extends State<ReportTabbedContent> with SingleTi
     // plain Row/Expanded instead, same as the count is fixed and
     // known ahead of time.
     final row1 = [
-      _summaryTile('Total Sales', 'Tsh ${_moneyFormat.format(report.salesTotalValue)}', Icons.shopping_cart_outlined, Colors.blue),
-      _summaryTile('Service Revenue', 'Tsh ${_moneyFormat.format(report.servicesTotalValue)}', Icons.medical_services_outlined, Colors.green),
-      _summaryTile('Debt Repayments', 'Tsh ${_moneyFormat.format(report.repaymentsValue)}', Icons.people_alt_outlined, Colors.purple),
-      _summaryTile('Expenses', 'Tsh ${_moneyFormat.format(report.totalExpenses)}', Icons.receipt_long_outlined, Colors.red),
-      _summaryTile('Other Income', 'Tsh ${_moneyFormat.format(report.totalOtherIncome)}', Icons.savings_outlined, primaryDeepGreen),
+      _summaryTile('Total Sales', Money.symbolDecimal(report.salesTotalValue), Icons.shopping_cart_outlined, Colors.blue),
+      _summaryTile('Service Revenue', Money.symbolDecimal(report.servicesTotalValue), Icons.medical_services_outlined, Colors.green),
+      _summaryTile('Debt Repayments', Money.symbolDecimal(report.repaymentsValue), Icons.people_alt_outlined, Colors.purple),
+      _summaryTile('Expenses', Money.symbolDecimal(report.totalExpenses), Icons.receipt_long_outlined, Colors.red),
+      _summaryTile('Other Income', Money.symbolDecimal(report.totalOtherIncome), Icons.savings_outlined, primaryDeepGreen),
     ];
     final row2 = [
-      _summaryTile('Outstanding New Debt', 'Tsh ${_moneyFormat.format(report.newDebtValue)}', Icons.warning_amber_outlined, Colors.orange),
+      _summaryTile('Outstanding New Debt', Money.symbolDecimal(report.newDebtValue), Icons.warning_amber_outlined, Colors.orange),
       _summaryTile('Transactions', '$transactionsCount', Icons.sync_alt_outlined, Colors.blueGrey),
       _summaryTile('Services Performed', '${report.servicesCount}', Icons.build_outlined, Colors.teal),
       _summaryTile('Products Sold', '$productsSoldUnits units', Icons.inventory_2_outlined, warmAmber.withValues(alpha: 0.9)),
-      _summaryTile('Total Revenue Today', 'Tsh ${_moneyFormat.format(revenue)}', Icons.trending_up_outlined, primaryDeepGreen),
+      _summaryTile('Total Revenue Today', Money.symbolDecimal(revenue), Icons.trending_up_outlined, primaryDeepGreen),
     ];
 
     return Padding(
@@ -302,7 +302,7 @@ class _ReportTabbedContentState extends State<ReportTabbedContent> with SingleTi
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         Expanded(child: Text(s.customerName, style: const TextStyle(fontSize: 12.5), overflow: TextOverflow.ellipsis)),
-                        Text('Tsh ${_moneyFormat.format(s.amount)}', style: const TextStyle(fontSize: 12.5, fontWeight: FontWeight.w600)),
+                        Text(Money.symbolDecimal(s.amount), style: const TextStyle(fontSize: 12.5, fontWeight: FontWeight.w600)),
                       ],
                     ),
                   ),
@@ -328,7 +328,7 @@ class _ReportTabbedContentState extends State<ReportTabbedContent> with SingleTi
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         Expanded(child: Text(s.serviceName, style: const TextStyle(fontSize: 12.5), overflow: TextOverflow.ellipsis)),
-                        Text('Tsh ${_moneyFormat.format(s.revenue)}', style: const TextStyle(fontSize: 12.5, fontWeight: FontWeight.w600)),
+                        Text(Money.symbolDecimal(s.revenue), style: const TextStyle(fontSize: 12.5, fontWeight: FontWeight.w600)),
                       ],
                     ),
                   ),
@@ -380,7 +380,7 @@ class _ReportTabbedContentState extends State<ReportTabbedContent> with SingleTi
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         Expanded(child: Text(c.clientName, style: const TextStyle(fontSize: 12.5), overflow: TextOverflow.ellipsis)),
-                        Text('Tsh ${_moneyFormat.format(c.closingDebt)}', style: const TextStyle(fontSize: 12.5, fontWeight: FontWeight.w600)),
+                        Text(Money.symbolDecimal(c.closingDebt), style: const TextStyle(fontSize: 12.5, fontWeight: FontWeight.w600)),
                       ],
                     ),
                   ),
@@ -440,14 +440,14 @@ class _ReportTabbedContentState extends State<ReportTabbedContent> with SingleTi
                       Expanded(flex: 2, child: Text(s.receiptNo, style: const TextStyle(fontSize: 12.5))),
                       Expanded(flex: 3, child: Text(s.customerName, style: const TextStyle(fontSize: 12.5))),
                       Expanded(flex: 1, child: Text('${s.itemCount}', style: const TextStyle(fontSize: 12.5))),
-                      Expanded(flex: 2, child: Text(_moneyFormat.format(s.amount), style: const TextStyle(fontSize: 12.5, fontWeight: FontWeight.w600))),
+                      Expanded(flex: 2, child: Text(Money.decimal(s.amount), style: const TextStyle(fontSize: 12.5, fontWeight: FontWeight.w600))),
                       Expanded(flex: 2, child: Text(s.paymentMethod, style: const TextStyle(fontSize: 12.5))),
                     ],
                   ),
                 ),
               const Divider(height: 1),
               const SizedBox(height: 8),
-              _statRow('Total Sales', 'Tsh ${_moneyFormat.format(report.salesTotalValue)}', bold: true),
+              _statRow('Total Sales', Money.symbolDecimal(report.salesTotalValue), bold: true),
             ],
           ],
         ),
@@ -461,7 +461,7 @@ class _ReportTabbedContentState extends State<ReportTabbedContent> with SingleTi
               _sectionHeader(Icons.credit_card_outlined, 'Payment Methods'),
               const SizedBox(height: 8),
               for (final e in report.salesByPaymentMethod.entries)
-                _statRow(e.key, 'Tsh ${_moneyFormat.format(e.value)}'),
+                _statRow(e.key, Money.symbolDecimal(e.value)),
             ],
           ),
         ),
@@ -491,13 +491,13 @@ class _ReportTabbedContentState extends State<ReportTabbedContent> with SingleTi
                     children: [
                       Expanded(flex: 4, child: Text(s.serviceName, style: const TextStyle(fontSize: 13))),
                       Expanded(flex: 2, child: Text('${s.count}', style: const TextStyle(fontSize: 13))),
-                      Expanded(flex: 2, child: Text('Tsh ${_moneyFormat.format(s.revenue)}', style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600))),
+                      Expanded(flex: 2, child: Text(Money.symbolDecimal(s.revenue), style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600))),
                     ],
                   ),
                 ),
               const Divider(height: 1),
               const SizedBox(height: 8),
-              _statRow('Total Service Revenue', 'Tsh ${_moneyFormat.format(report.servicesTotalValue)}', bold: true),
+              _statRow('Total Service Revenue', Money.symbolDecimal(report.servicesTotalValue), bold: true),
             ],
           ],
         ),
@@ -511,7 +511,7 @@ class _ReportTabbedContentState extends State<ReportTabbedContent> with SingleTi
               _sectionHeader(Icons.credit_card_outlined, 'Payment Methods'),
               const SizedBox(height: 8),
               for (final e in report.servicesByPaymentMethod.entries)
-                _statRow(e.key, 'Tsh ${_moneyFormat.format(e.value)}'),
+                _statRow(e.key, Money.symbolDecimal(e.value)),
             ],
           ),
         ),
@@ -676,9 +676,9 @@ class _ReportTabbedContentState extends State<ReportTabbedContent> with SingleTi
           children: [
             _sectionHeader(Icons.people_alt_outlined, 'Debt Activity'),
             const SizedBox(height: 10),
-            _statRow('New debt today', 'Tsh ${_moneyFormat.format(report.newDebtValue)}'),
-            _statRow('Repayments collected', 'Tsh ${_moneyFormat.format(report.repaymentsValue)}'),
-            _statRow('Outstanding change', 'Tsh ${_moneyFormat.format(report.outstandingChange)}', bold: true),
+            _statRow('New debt today', Money.symbolDecimal(report.newDebtValue)),
+            _statRow('Repayments collected', Money.symbolDecimal(report.repaymentsValue)),
+            _statRow('Outstanding change', Money.symbolDecimal(report.outstandingChange), bold: true),
           ],
         ),
       ),
@@ -700,10 +700,10 @@ class _ReportTabbedContentState extends State<ReportTabbedContent> with SingleTi
                   child: Row(
                     children: [
                       Expanded(flex: 3, child: Text(c.clientName, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w500))),
-                      Expanded(flex: 2, child: Text(_moneyFormat.format(c.openingDebt), style: const TextStyle(fontSize: 12.5))),
-                      Expanded(flex: 2, child: Text(_moneyFormat.format(c.newDebt), style: const TextStyle(fontSize: 12.5))),
-                      Expanded(flex: 2, child: Text(_moneyFormat.format(c.repayment), style: const TextStyle(fontSize: 12.5))),
-                      Expanded(flex: 2, child: Text(_moneyFormat.format(c.closingDebt), style: const TextStyle(fontSize: 12.5, fontWeight: FontWeight.w600))),
+                      Expanded(flex: 2, child: Text(Money.decimal(c.openingDebt), style: const TextStyle(fontSize: 12.5))),
+                      Expanded(flex: 2, child: Text(Money.decimal(c.newDebt), style: const TextStyle(fontSize: 12.5))),
+                      Expanded(flex: 2, child: Text(Money.decimal(c.repayment), style: const TextStyle(fontSize: 12.5))),
+                      Expanded(flex: 2, child: Text(Money.decimal(c.closingDebt), style: const TextStyle(fontSize: 12.5, fontWeight: FontWeight.w600))),
                     ],
                   ),
                 ),
@@ -737,13 +737,13 @@ class _ReportTabbedContentState extends State<ReportTabbedContent> with SingleTi
                       Expanded(flex: 2, child: Text(DateFormat('HH:mm').format(e.time), style: const TextStyle(fontSize: 12.5))),
                       Expanded(flex: 4, child: Text(e.description, style: const TextStyle(fontSize: 12.5))),
                       Expanded(flex: 3, child: Text(e.category, style: const TextStyle(fontSize: 12.5))),
-                      Expanded(flex: 2, child: Text(_moneyFormat.format(e.amount), style: const TextStyle(fontSize: 12.5, fontWeight: FontWeight.w600))),
+                      Expanded(flex: 2, child: Text(Money.decimal(e.amount), style: const TextStyle(fontSize: 12.5, fontWeight: FontWeight.w600))),
                     ],
                   ),
                 ),
               const Divider(height: 1),
               const SizedBox(height: 8),
-              _statRow('Total Expenses', 'Tsh ${_moneyFormat.format(report.totalExpenses)}', bold: true),
+              _statRow('Total Expenses', Money.symbolDecimal(report.totalExpenses), bold: true),
             ],
           ],
         ),
@@ -789,7 +789,7 @@ class _ReportTabbedContentState extends State<ReportTabbedContent> with SingleTi
                       ),
                       Expanded(
                         flex: 2,
-                        child: Text('${entry.isExpense ? '-' : '+'}${_moneyFormat.format(entry.item.amount)}',
+                        child: Text('${entry.isExpense ? '-' : '+'}${Money.decimal(entry.item.amount)}',
                             style: TextStyle(fontSize: 12.5, fontWeight: FontWeight.w600, color: entry.isExpense ? Colors.red[700] : Colors.green[700])),
                       ),
                     ],
@@ -797,8 +797,8 @@ class _ReportTabbedContentState extends State<ReportTabbedContent> with SingleTi
                 ),
               const Divider(height: 1),
               const SizedBox(height: 8),
-              _statRow('Other Income', 'Tsh ${_moneyFormat.format(report.totalOtherIncome)}'),
-              _statRow('Expenses', 'Tsh ${_moneyFormat.format(report.totalExpenses)}', bold: true),
+              _statRow('Other Income', Money.symbolDecimal(report.totalOtherIncome)),
+              _statRow('Expenses', Money.symbolDecimal(report.totalExpenses), bold: true),
             ],
           ],
         ),
@@ -945,7 +945,7 @@ class _ReportTabbedContentState extends State<ReportTabbedContent> with SingleTi
                 _emptyState(emptyText)
               else
                 for (final entry in byMethod.entries)
-                  _statRow(entry.key, 'Tsh ${_moneyFormat.format(entry.value)}'),
+                  _statRow(entry.key, Money.symbolDecimal(entry.value)),
             ],
           ),
         ),
@@ -965,9 +965,9 @@ class _ReportTabbedContentState extends State<ReportTabbedContent> with SingleTi
             if (combined.isEmpty)
               _emptyState('No payments recorded today.')
             else ...[
-              for (final entry in combined.entries) _statRow(entry.key, 'Tsh ${_moneyFormat.format(entry.value)}'),
+              for (final entry in combined.entries) _statRow(entry.key, Money.symbolDecimal(entry.value)),
               const Divider(height: 18),
-              _statRow('Total', 'Tsh ${_moneyFormat.format(combinedTotal)}', bold: true),
+              _statRow('Total', Money.symbolDecimal(combinedTotal), bold: true),
             ],
           ],
         ),

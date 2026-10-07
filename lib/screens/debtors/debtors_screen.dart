@@ -19,6 +19,7 @@ import 'add_payment_screen.dart';
 import '../payments/payments_screen.dart';
 import '../../theme/app_palette.dart';
 import '../../data/collections.dart';
+import '../../config/money.dart';
 
 class DebtorsScreen extends StatefulWidget {
   const DebtorsScreen({super.key});
@@ -32,12 +33,6 @@ class _DebtorsScreenState extends State<DebtorsScreen> {
   final Color warmAmber = AppPalette.accent;
   final Color offWhite = AppPalette.background;
 
-  final NumberFormat currencyFormat = NumberFormat('#,##0', 'en_US');
-  final NumberFormat _moneyFormat = NumberFormat.currency(
-    locale: 'en_US',
-    symbol: 'Tsh ',
-    decimalDigits: 0,
-  );
 
   String _searchQuery = '';
   String _statusFilter = 'All';
@@ -301,7 +296,7 @@ class _DebtorsScreenState extends State<DebtorsScreen> {
       ),
       (
         'Total Owed',
-        isMetricsLoading ? '' : _moneyFormat.format(facilityMetrics?.totalOwed ?? 0),
+        isMetricsLoading ? '' : Money.format(facilityMetrics?.totalOwed ?? 0),
         Icons.account_balance_wallet_outlined,
         Colors.orange,
         'Outstanding balance',
@@ -317,7 +312,7 @@ class _DebtorsScreenState extends State<DebtorsScreen> {
       ),
       (
         'Paid This Month',
-        _moneyFormat.format(_paidThisMonth ?? 0),
+        Money.format(_paidThisMonth ?? 0),
         Icons.account_balance_outlined,
         Colors.green,
         'From debt payments',
@@ -702,7 +697,7 @@ class _DebtorsScreenState extends State<DebtorsScreen> {
             ),
             Expanded(
               flex: 2,
-              child: Text(_moneyFormat.format(debtor.totalOwed),
+              child: Text(Money.format(debtor.totalOwed),
                   style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: Colors.red)),
             ),
             Expanded(
@@ -938,7 +933,7 @@ class _DebtorsScreenState extends State<DebtorsScreen> {
             const SizedBox(height: 20),
             const Text('Summary', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13.5)),
             const SizedBox(height: 10),
-            _totalsRow('Total Owed', _moneyFormat.format(debtor.totalOwed), color: Colors.red),
+            _totalsRow('Total Owed', Money.format(debtor.totalOwed), color: Colors.red),
             FutureBuilder<List<Debt>>(
               future: _getDetailsDebtsFuture(debtor.clientId),
               builder: (context, snapshot) {
@@ -963,7 +958,7 @@ class _DebtorsScreenState extends State<DebtorsScreen> {
                 return Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    _totalsRow('Overdue Amount', _moneyFormat.format(overdueAmount), color: Colors.red),
+                    _totalsRow('Overdue Amount', Money.format(overdueAmount), color: Colors.red),
                     if (clientDebts.isNotEmpty)
                       _totalsRow('Last Transaction', DateFormat('dd MMM yyyy').format(clientDebts.first.timestamp)),
                     const SizedBox(height: 20),
@@ -1118,7 +1113,7 @@ class _DebtorsScreenState extends State<DebtorsScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text('Amount', style: TextStyle(fontSize: 11, color: Colors.grey[600])),
-                  Text(_moneyFormat.format(debt.amountOwed),
+                  Text(Money.format(debt.amountOwed),
                       style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: Colors.red)),
                 ],
               ),
@@ -1357,17 +1352,16 @@ class _DebtorsScreenState extends State<DebtorsScreen> {
       BuildContext context, String clientName, String phone, double amountOwed) async {
     final facilityName =
         Provider.of<FacilityProvider>(context, listen: false).selectedFacilityName ?? 'us';
-    final formatter = NumberFormat('#,##0', 'en_US');
     final message =
         'Hi $clientName, this is a reminder from $facilityName that you have an outstanding '
-        'balance of Tsh ${formatter.format(amountOwed)}. Kindly settle at your earliest '
+        'balance of ${Money.symbolPlain(amountOwed)}. Kindly settle at your earliest '
         'convenience. Thank you!';
 
     final choice = await showDialog<String>(
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Send Reminder'),
-        content: Text('Remind $clientName about their Tsh ${formatter.format(amountOwed)} balance via:'),
+        content: Text('Remind $clientName about their ${Money.symbolPlain(amountOwed)} balance via:'),
         actions: [
           TextButton(onPressed: () => Navigator.pop(context, null), child: const Text('Cancel')),
           TextButton(

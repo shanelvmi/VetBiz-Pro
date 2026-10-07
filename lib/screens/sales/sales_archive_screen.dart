@@ -7,6 +7,7 @@ import '../../providers/facility_provider.dart';
 import 'receipt_preview_screen.dart';
 import '../../theme/app_palette.dart';
 import '../../data/collections.dart';
+import '../../config/money.dart';
 
 class SalesArchiveScreen extends StatefulWidget {
   const SalesArchiveScreen({super.key});
@@ -20,11 +21,6 @@ class _SalesArchiveScreenState extends State<SalesArchiveScreen> {
   final Color warmAmber = AppPalette.accent;
   final Color offWhite = AppPalette.background;
 
-  final NumberFormat _moneyFormat = NumberFormat.currency(
-    locale: 'en_US',
-    symbol: 'Tsh ',
-    decimalDigits: 0,
-  );
 
   static const int _pageSize = 30;
 
@@ -354,7 +350,7 @@ class _SalesArchiveScreenState extends State<SalesArchiveScreen> {
           ),
           Text('$foundCount found', style: TextStyle(fontSize: 12.5, fontWeight: FontWeight.w600, color: primaryDeepGreen)),
           const SizedBox(width: 12),
-          Text(_moneyFormat.format(totalAmount), style: TextStyle(fontSize: 12.5, fontWeight: FontWeight.bold, color: primaryDeepGreen)),
+          Text(Money.format(totalAmount), style: TextStyle(fontSize: 12.5, fontWeight: FontWeight.bold, color: primaryDeepGreen)),
         ],
       ),
     );
@@ -490,7 +486,7 @@ class _SalesArchiveScreenState extends State<SalesArchiveScreen> {
             ),
             Expanded(
               flex: 2,
-              child: Text(_moneyFormat.format(total), style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600)),
+              child: Text(Money.format(total), style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600)),
             ),
             Expanded(
               flex: 2,
@@ -651,18 +647,18 @@ class _SalesArchiveScreenState extends State<SalesArchiveScreen> {
                         ],
                       ),
                     ),
-                    Text(_moneyFormat.format(unitPrice * quantity), style: const TextStyle(fontSize: 13.5)),
+                    Text(Money.format(unitPrice * quantity), style: const TextStyle(fontSize: 13.5)),
                   ],
                 ),
               );
             }),
             const Divider(height: 24),
-            _totalsRow('Subtotal', _moneyFormat.format(subtotal)),
-            _totalsRow('Discount', _moneyFormat.format(totalDiscount)),
-            _totalsRow('Total Amount', _moneyFormat.format(total), bold: true, color: primaryDeepGreen),
+            _totalsRow('Subtotal', Money.format(subtotal)),
+            _totalsRow('Discount', Money.format(totalDiscount)),
+            _totalsRow('Total Amount', Money.format(total), bold: true, color: primaryDeepGreen),
             const SizedBox(height: 10),
-            _totalsRow('Paid', _moneyFormat.format(paid), color: Colors.green),
-            _totalsRow('Balance', _moneyFormat.format(balance), bold: true),
+            _totalsRow('Paid', Money.format(paid), color: Colors.green),
+            _totalsRow('Balance', Money.format(balance), bold: true),
             const Divider(height: 24),
             _detailField(Icons.person_outline, 'Client', sale['clientName'] ?? 'Walk-in'),
             _detailField(Icons.badge_outlined, 'Seller', sale['soldByName'] ?? 'Unknown'),

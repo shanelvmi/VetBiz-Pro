@@ -17,6 +17,7 @@ import '../sales/receipt_preview_screen.dart';
 import '../services/service_receipt_preview_screen.dart';
 import '../../theme/app_palette.dart';
 import '../../data/collections.dart';
+import '../../config/money.dart';
 
 class _PaymentMetric {
   final double amount;
@@ -48,7 +49,6 @@ class _PaymentsScreenState extends State<PaymentsScreen> {
   final Color warmAmber = AppPalette.accent;
   final Color offWhite = AppPalette.background;
 
-  final NumberFormat _moneyFormat = NumberFormat('#,##0', 'en_US');
 
   String _searchQuery = '';
   late final TextEditingController _searchController;
@@ -551,7 +551,7 @@ class _PaymentsScreenState extends State<PaymentsScreen> {
                       Row(
                         children: [
                           Text(
-                            'Tsh ${_moneyFormat.format(metric?.amount ?? 0)}',
+                            Money.symbolPlain(metric?.amount ?? 0),
                             style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                           ),
                           if (metric?.trendPercent != null) ...[
@@ -598,7 +598,7 @@ class _PaymentsScreenState extends State<PaymentsScreen> {
                       Row(
                         children: [
                           Text(
-                            'Tsh ${_moneyFormat.format(_outstandingAmount ?? 0)}',
+                            Money.symbolPlain(_outstandingAmount ?? 0),
                             style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: warmAmber),
                           ),
                           if (trendPercent != null) ...[
@@ -681,7 +681,7 @@ class _PaymentsScreenState extends State<PaymentsScreen> {
               ),
             ),
             const SizedBox(height: 12),
-            Text('Tsh ${_moneyFormat.format(e.amount)}', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 22)),
+            Text(Money.symbolPlain(e.amount), style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 22)),
             const SizedBox(height: 4),
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
@@ -880,7 +880,7 @@ class _PaymentsScreenState extends State<PaymentsScreen> {
         ],
         const SizedBox(width: 16),
         Text(
-          'Total: Tsh ${_moneyFormat.format(total)}',
+          'Total: ${Money.symbolPlain(total)}',
           style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: primaryDeepGreen),
         ),
       ],
@@ -981,7 +981,7 @@ class _PaymentsScreenState extends State<PaymentsScreen> {
                   style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12.5, color: primaryDeepGreen),
                 ),
                 Text(
-                  'Tsh ${_moneyFormat.format(dayTotal)}',
+                  Money.symbolPlain(dayTotal),
                   style: TextStyle(fontSize: 12.5, fontWeight: FontWeight.bold, color: primaryDeepGreen),
                 ),
               ],
@@ -1051,7 +1051,7 @@ class _PaymentsScreenState extends State<PaymentsScreen> {
           Expanded(
             flex: 2,
             child: Text(
-              'Tsh ${_moneyFormat.format(e.amount)}',
+              Money.symbolPlain(e.amount),
               style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: primaryDeepGreen),
             ),
           ),

@@ -4,9 +4,9 @@ import 'package:pdf/widgets.dart' as pw;
 import 'package:printing/printing.dart';
 
 import '../models/daily_report.dart';
+import '../config/money.dart';
 
 class DailyReportPdfService {
-  static final _money = NumberFormat.decimalPattern();
   static final _fullDate = DateFormat('EEEE, d MMMM yyyy');
   static final _dateTime = DateFormat('d MMM yyyy, h:mm a');
   static final _time = DateFormat('HH:mm');
@@ -203,15 +203,15 @@ class DailyReportPdfService {
           spacing: 24,
           runSpacing: 4,
           children: [
-            pw.SizedBox(width: 230, child: _statLine('Total Sales', 'Tsh ${_money.format(report.salesTotalValue)}', bold: true)),
-            pw.SizedBox(width: 230, child: _statLine('Service Revenue', 'Tsh ${_money.format(report.servicesTotalValue)}', bold: true)),
-            pw.SizedBox(width: 230, child: _statLine('Total Revenue', 'Tsh ${_money.format(revenue)}', bold: true)),
+            pw.SizedBox(width: 230, child: _statLine('Total Sales', Money.symbolDecimal(report.salesTotalValue), bold: true)),
+            pw.SizedBox(width: 230, child: _statLine('Service Revenue', Money.symbolDecimal(report.servicesTotalValue), bold: true)),
+            pw.SizedBox(width: 230, child: _statLine('Total Revenue', Money.symbolDecimal(revenue), bold: true)),
             if (report.totalOtherIncome > 0)
-              pw.SizedBox(width: 230, child: _statLine('Other Income', 'Tsh ${_money.format(report.totalOtherIncome)}')),
-            pw.SizedBox(width: 230, child: _statLine('Debt Repayments', 'Tsh ${_money.format(report.repaymentsValue)}')),
-            pw.SizedBox(width: 230, child: _statLine('Expenses', 'Tsh ${_money.format(report.totalExpenses)}')),
-            pw.SizedBox(width: 230, child: _statLine('Total Cash Received', 'Tsh ${_money.format(totalCash)}')),
-            pw.SizedBox(width: 230, child: _statLine('New Debt Today', 'Tsh ${_money.format(report.newDebtValue)}')),
+              pw.SizedBox(width: 230, child: _statLine('Other Income', Money.symbolDecimal(report.totalOtherIncome))),
+            pw.SizedBox(width: 230, child: _statLine('Debt Repayments', Money.symbolDecimal(report.repaymentsValue))),
+            pw.SizedBox(width: 230, child: _statLine('Expenses', Money.symbolDecimal(report.totalExpenses))),
+            pw.SizedBox(width: 230, child: _statLine('Total Cash Received', Money.symbolDecimal(totalCash))),
+            pw.SizedBox(width: 230, child: _statLine('New Debt Today', Money.symbolDecimal(report.newDebtValue))),
             pw.SizedBox(width: 230, child: _statLine('Transactions', '${report.salesCount + report.servicesCount}')),
             pw.SizedBox(width: 230, child: _statLine('Products Sold', '$productsSoldUnits units')),
           ],
@@ -236,21 +236,21 @@ class DailyReportPdfService {
                       s.receiptNo,
                       s.customerName,
                       '${s.itemCount}',
-                      _money.format(s.amount),
+                      Money.decimal(s.amount),
                       s.paymentMethod,
                     ])
                 .toList(),
             flex: [2, 2, 3, 1, 2, 2],
           ),
           pw.SizedBox(height: 6),
-          _statLine('Total Sales', 'Tsh ${_money.format(report.salesTotalValue)}', bold: true),
+          _statLine('Total Sales', Money.symbolDecimal(report.salesTotalValue), bold: true),
           if (report.salesByPaymentMethod.isNotEmpty)
             pw.Padding(
               padding: const pw.EdgeInsets.only(top: 4),
               child: pw.Wrap(
                 spacing: 24,
                 children: report.salesByPaymentMethod.entries
-                    .map((e) => pw.Text('${e.key}: Tsh ${_money.format(e.value)}', style: const pw.TextStyle(fontSize: 9, color: PdfColors.grey700)))
+                    .map((e) => pw.Text('${e.key}: ${Money.symbolDecimal(e.value)}', style: const pw.TextStyle(fontSize: 9, color: PdfColors.grey700)))
                     .toList(),
               ),
             ),
@@ -269,11 +269,11 @@ class DailyReportPdfService {
         else ...[
           _table(
             ['Service', 'Number', 'Revenue'],
-            report.serviceBreakdown.map((s) => [s.serviceName, '${s.count}', _money.format(s.revenue)]).toList(),
+            report.serviceBreakdown.map((s) => [s.serviceName, '${s.count}', Money.decimal(s.revenue)]).toList(),
             flex: [4, 2, 2],
           ),
           pw.SizedBox(height: 6),
-          _statLine('Total Service Revenue', 'Tsh ${_money.format(report.servicesTotalValue)}', bold: true),
+          _statLine('Total Service Revenue', Money.symbolDecimal(report.servicesTotalValue), bold: true),
         ],
       ],
     );
@@ -317,7 +317,7 @@ class DailyReportPdfService {
             else
               _table(
                 ['Method', 'Amount'],
-                byMethod.entries.map((e) => [e.key, _money.format(e.value)]).toList(),
+                byMethod.entries.map((e) => [e.key, Money.decimal(e.value)]).toList(),
                 flex: [3, 2],
               ),
           ],
@@ -331,11 +331,11 @@ class DailyReportPdfService {
         _sectionTitle('Payment Methods'),
         _table(
           ['Method (all sources combined)', 'Amount'],
-          combined.entries.map((e) => [e.key, _money.format(e.value)]).toList(),
+          combined.entries.map((e) => [e.key, Money.decimal(e.value)]).toList(),
           flex: [4, 2],
         ),
         pw.SizedBox(height: 4),
-        _statLine('Total', 'Tsh ${_money.format(combinedTotal)}', bold: true),
+        _statLine('Total', Money.symbolDecimal(combinedTotal), bold: true),
         pw.SizedBox(height: 10),
         pw.Row(
           crossAxisAlignment: pw.CrossAxisAlignment.start,
@@ -438,9 +438,9 @@ class DailyReportPdfService {
       crossAxisAlignment: pw.CrossAxisAlignment.start,
       children: [
         _sectionTitle('Debt Activity'),
-        _statLine('New debt today', 'Tsh ${_money.format(report.newDebtValue)}'),
-        _statLine('Repayments collected', 'Tsh ${_money.format(report.repaymentsValue)}'),
-        _statLine('Outstanding change', 'Tsh ${_money.format(report.outstandingChange)}', bold: true),
+        _statLine('New debt today', Money.symbolDecimal(report.newDebtValue)),
+        _statLine('Repayments collected', Money.symbolDecimal(report.repaymentsValue)),
+        _statLine('Outstanding change', Money.symbolDecimal(report.outstandingChange), bold: true),
         pw.SizedBox(height: 6),
         if (report.clientDebtEntries.isEmpty)
           _emptyNote('No debt activity today.')
@@ -450,10 +450,10 @@ class DailyReportPdfService {
             report.clientDebtEntries
                 .map((c) => [
                       c.clientName,
-                      _money.format(c.openingDebt),
-                      _money.format(c.newDebt),
-                      _money.format(c.repayment),
-                      _money.format(c.closingDebt),
+                      Money.decimal(c.openingDebt),
+                      Money.decimal(c.newDebt),
+                      Money.decimal(c.repayment),
+                      Money.decimal(c.closingDebt),
                     ])
                 .toList(),
             flex: [3, 2, 2, 2, 2],
@@ -472,12 +472,12 @@ class DailyReportPdfService {
         else ...[
           _table(
             ['Time', 'Description', 'Category', 'Amount'],
-            report.expenseLineItems.map((e) => [_time.format(e.time), e.description, e.category, _money.format(e.amount)]).toList(),
+            report.expenseLineItems.map((e) => [_time.format(e.time), e.description, e.category, Money.decimal(e.amount)]).toList(),
             flex: [2, 4, 3, 2],
           ),
           pw.SizedBox(height: 6),
-          _statLine('Total Expenses', 'Tsh ${_money.format(report.totalExpenses)}', bold: true),
-          if (report.totalOtherIncome > 0) _statLine('Other Income', 'Tsh ${_money.format(report.totalOtherIncome)}'),
+          _statLine('Total Expenses', Money.symbolDecimal(report.totalExpenses), bold: true),
+          if (report.totalOtherIncome > 0) _statLine('Other Income', Money.symbolDecimal(report.totalOtherIncome)),
         ],
       ],
     );
@@ -499,14 +499,14 @@ class DailyReportPdfService {
         _sectionTitle('Payment Reconciliation'),
         for (final p in report.paymentReconciliation) ...[
           pw.Text(p.method, style: pw.TextStyle(fontSize: 10, fontWeight: pw.FontWeight.bold, color: _deepGreen)),
-          _statLine('Expected balance', 'Tsh ${_money.format(p.expected)}'),
+          _statLine('Expected balance', Money.symbolDecimal(p.expected)),
           if (p.physicalCount != null) ...[
-            _statLine('Physical balance counted', 'Tsh ${_money.format(p.physicalCount!)}', bold: true),
+            _statLine('Physical balance counted', Money.symbolDecimal(p.physicalCount!), bold: true),
             _statLine(
               'Variance',
               (p.variance != null && p.variance != 0)
-                  ? '${p.variance! > 0 ? '+' : ''}Tsh ${_money.format(p.variance!)} - VARIANCE'
-                  : 'Tsh 0 - Match',
+                  ? '${p.variance! > 0 ? '+' : ''}${Money.symbolDecimal(p.variance!)} - VARIANCE'
+                  : '${Money.symbolDecimal(0)} - Match',
               bold: p.variance != null && p.variance != 0,
             ),
             if (p.variance != null && p.variance != 0 && (p.varianceReason ?? '').isNotEmpty)

@@ -12,6 +12,7 @@ import 'add_edit_product_screen.dart';
 import 'add_batch_screen.dart';
 import 'move_expired_to_stock_dialog.dart';
 import '../../theme/app_palette.dart';
+import '../../config/money.dart';
 
 /// Full management view for one product's stock - every batch on file,
 /// with a way to correct or top up any of them directly, plus a clear
@@ -385,7 +386,7 @@ class _ViewBatchesScreenState extends State<ViewBatchesScreen> {
                     Card(
                       child: ListTile(
                         title: Text(widget.product.name, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
-                        subtitle: Text('${widget.product.category} · Tsh ${widget.product.sellPrice.toStringAsFixed(0)}'),
+                        subtitle: Text('${widget.product.category} · ${Money.symbolWhole(widget.product.sellPrice)}'),
                         trailing: TextButton(
                           onPressed: () {
                             showAddEditProductScreen(context, product: widget.product);
@@ -480,7 +481,7 @@ class _ViewBatchesScreenState extends State<ViewBatchesScreen> {
                                   ],
                                 ),
                                 subtitle: Text(
-                                  'Store: ${batch.stockQty} · Shelf: ${batch.sellableQty} · Tsh ${batch.buyPrice.toStringAsFixed(0)}'
+                                  'Store: ${batch.stockQty} · Shelf: ${batch.sellableQty} · ${Money.symbolWhole(batch.buyPrice)}'
                                   '${batch.expiry != null ? '\n${isExpired ? 'Expired' : 'Expires'} ${DateFormat('dd MMM yyyy').format(batch.expiry!)}' : ''}',
                                 ),
                                 isThreeLine: batch.expiry != null,

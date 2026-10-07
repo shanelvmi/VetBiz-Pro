@@ -3,7 +3,6 @@ import 'package:flutter/services.dart';
 import '../../utils/sentence_capitalization_formatter.dart';
 import 'package:provider/provider.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:intl/intl.dart'; // For formatting
 
 import '../../providers/transaction_provider.dart';
 import '../../models/transaction.dart';
@@ -12,6 +11,8 @@ import '../../widgets/payment_method_selector.dart';
 import '../../utils/thousands_input_formatter.dart';
 import '../../theme/app_palette.dart';
 import '../../data/collections.dart';
+import '../../config/money.dart';
+import '../../config/app_defaults.dart';
 
 // Expense categories, grouped for the picker - matches the proposed
 // structure exactly. Kept local to this file rather than centralized,
@@ -64,7 +65,6 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
 
   final AuthService _authService = AuthService();
 
-  final formatter = NumberFormat('#,##0', 'en_US');
 
   Future<String?> _fetchCurrentUserFullName() async {
     final user = _authService.getCurrentUser();
@@ -188,7 +188,7 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
       type = tx.type;
       descriptionController.text = tx.description;
       selectedCategory = tx.category.isEmpty ? null : tx.category;
-      amountController.text = formatter.format(tx.amount.round());
+      amountController.text = Money.plain(tx.amount.round());
       paymentMethod = tx.paymentMethod;
       noteController.text = tx.note ?? '';
     }
@@ -402,7 +402,7 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
         children: [
           _sectionHeader(Icons.receipt_long_outlined, 'Amount & Payment'),
           const SizedBox(height: 14),
-          const Text('Amount (Tsh) *', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 13)),
+          const Text('Amount (${AppDefaults.currencySymbol}) *', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 13)),
           const SizedBox(height: 6),
           TextField(
             controller: amountController,

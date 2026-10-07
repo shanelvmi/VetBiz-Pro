@@ -10,6 +10,7 @@ import '../../services/dashboard_summary_service.dart';
 import '../../widgets/summary_card.dart' show KpiTrend;
 import '../../theme/app_palette.dart';
 import '../../data/collections.dart';
+import '../../config/money.dart';
 
 /// A simple insights view - a 14-day sales trend and your top 5
 /// products by revenue over the last 30 days. Deliberately kept to two
@@ -33,7 +34,6 @@ class _InsightsScreenState extends State<InsightsScreen> {
     Color(0xFFB98B6F), // muted terracotta
     Color(0xFF9B8AA6), // muted lavender - reserved for the "Other" slice
   ];
-  final NumberFormat _moneyFormat = NumberFormat('#,##0', 'en_US');
 
   bool _isLoading = true;
   String? _error;
@@ -237,14 +237,14 @@ class _InsightsScreenState extends State<InsightsScreen> {
           previousValue: yesterdayTotals.totalSales,
           higherIsBetter: true,
           comparisonLabel: 'vs Yesterday',
-          formatChange: (v) => 'Tsh ${_moneyFormat.format(v)}',
+          formatChange: (v) => Money.symbolPlain(v),
         );
         _serviceRevenuePulseTrend = KpiTrend(
           currentValue: todayTotals.totalServiceRevenue,
           previousValue: yesterdayTotals.totalServiceRevenue,
           higherIsBetter: true,
           comparisonLabel: 'vs Yesterday',
-          formatChange: (v) => 'Tsh ${_moneyFormat.format(v)}',
+          formatChange: (v) => Money.symbolPlain(v),
         );
         _outstandingPulseTrend = KpiTrend(
           currentValue: debtProvider.totalOutstanding(),
@@ -254,7 +254,7 @@ class _InsightsScreenState extends State<InsightsScreen> {
           // Payment card.
           higherIsBetter: false,
           comparisonLabel: 'vs Yesterday',
-          formatChange: (v) => 'Tsh ${_moneyFormat.format(v)}',
+          formatChange: (v) => Money.symbolPlain(v),
         );
         _todayActivity = todayActivity;
         _todaySalesShare = todaySalesShare;
@@ -506,19 +506,19 @@ class _InsightsScreenState extends State<InsightsScreen> {
   String? _trendSummary() {
     if (_dailyTotals.every((v) => v == 0)) return null;
     final total = _dailyTotals.reduce((a, b) => a + b);
-    return 'Total: Tsh ${_moneyFormat.format(total)} over 14 days';
+    return 'Total: ${Money.symbolPlain(total)} over 14 days';
   }
 
   String? _topProductSummary() {
     if (_topProducts.isEmpty) return null;
     final top = _topProducts.first;
-    return 'Top seller: ${top.key} · Tsh ${_moneyFormat.format(top.value)}';
+    return 'Top seller: ${top.key} · ${Money.symbolPlain(top.value)}';
   }
 
   String? _serviceBreakdownSummary() {
     if (_serviceBreakdown.isEmpty) return null;
     final top = _serviceBreakdown.first;
-    return 'Most requested: ${top.key} - Tsh ${_moneyFormat.format(top.value)}';
+    return 'Most requested: ${top.key} - ${Money.symbolPlain(top.value)}';
   }
 
   Widget _buildTrendChart() {
@@ -543,7 +543,7 @@ class _InsightsScreenState extends State<InsightsScreen> {
               return touchedSpots.map((spot) {
                 final day = _trendStart.add(Duration(days: spot.x.toInt()));
                 return LineTooltipItem(
-                  '${DateFormat('d MMM').format(day)}\nTsh ${_moneyFormat.format(spot.y)}',
+                  '${DateFormat('d MMM').format(day)}\n${Money.symbolPlain(spot.y)}',
                   const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 12),
                 );
               }).toList();
@@ -558,7 +558,7 @@ class _InsightsScreenState extends State<InsightsScreen> {
               showTitles: true,
               reservedSize: 48,
               getTitlesWidget: (value, meta) =>
-                  Text(_moneyFormat.format(value), style: const TextStyle(fontSize: 9)),
+                  Text(Money.plain(value), style: const TextStyle(fontSize: 9)),
             ),
           ),
           bottomTitles: AxisTitles(
@@ -616,7 +616,7 @@ class _InsightsScreenState extends State<InsightsScreen> {
             getTooltipItem: (group, groupIndex, rod, rodIndex) {
               final name = _topProducts[group.x.toInt()].key;
               return BarTooltipItem(
-                '$name\nTsh ${_moneyFormat.format(rod.toY)}',
+                '$name\n${Money.symbolPlain(rod.toY)}',
                 const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 12),
               );
             },
@@ -637,7 +637,7 @@ class _InsightsScreenState extends State<InsightsScreen> {
                 return Padding(
                   padding: const EdgeInsets.only(bottom: 4),
                   child: Text(
-                    _moneyFormat.format(_topProducts[idx].value),
+                    Money.plain(_topProducts[idx].value),
                     style: TextStyle(fontSize: 9, fontWeight: FontWeight.w600, color: primaryColor),
                   ),
                 );
@@ -650,7 +650,7 @@ class _InsightsScreenState extends State<InsightsScreen> {
               showTitles: true,
               reservedSize: 48,
               getTitlesWidget: (value, meta) =>
-                  Text(_moneyFormat.format(value), style: const TextStyle(fontSize: 9)),
+                  Text(Money.plain(value), style: const TextStyle(fontSize: 9)),
             ),
           ),
           bottomTitles: AxisTitles(
@@ -740,7 +740,7 @@ class _InsightsScreenState extends State<InsightsScreen> {
                         style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold),
                         textAlign: TextAlign.center,
                         overflow: TextOverflow.ellipsis),
-                    Text('Tsh ${_moneyFormat.format(centerLabel.value)}',
+                    Text(Money.symbolPlain(centerLabel.value),
                         style: TextStyle(fontSize: 10, color: Colors.grey[600])),
                     if (centerPercent != null)
                       Text('${centerPercent.toStringAsFixed(0)}%',
@@ -752,7 +752,7 @@ class _InsightsScreenState extends State<InsightsScreen> {
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     Text('Total', style: TextStyle(fontSize: 10, color: Colors.grey[600])),
-                    Text('Tsh ${_moneyFormat.format(total)}',
+                    Text(Money.symbolPlain(total),
                         style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
                   ],
                 ),

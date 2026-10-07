@@ -9,6 +9,7 @@ import '../../theme/app_palette.dart';
 import '../../data/collections.dart';
 import '../../data/fields.dart';
 import '../../data/activity_type.dart';
+import '../../config/money.dart';
 
 class TrashScreen extends StatefulWidget {
   const TrashScreen({super.key});
@@ -95,7 +96,7 @@ class _TrashScreenState extends State<TrashScreen> with SingleTickerProviderStat
                       titleBuilder: (data) {
                         final client = (data['clientName'] as String?) ?? 'Walk-in';
                         final amount = (data['totalAmount'] as num?) ?? 0;
-                        return 'Sale - $client - Tsh ${amount.toStringAsFixed(0)}';
+                        return 'Sale - $client - ${Money.symbolWhole(amount)}';
                       },
                     ),
                     _TrashList(
@@ -108,7 +109,7 @@ class _TrashScreenState extends State<TrashScreen> with SingleTickerProviderStat
                         final type = (data['type'] as String?) ?? '';
                         final amount = (data['amount'] as num?) ?? 0;
                         final label = description.isNotEmpty ? description : (type.isNotEmpty ? type : 'Transaction');
-                        return '$label - Tsh ${amount.toStringAsFixed(0)}';
+                        return '$label - ${Money.symbolWhole(amount)}';
                       },
                     ),
                   ],

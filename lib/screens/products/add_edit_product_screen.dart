@@ -26,6 +26,7 @@ import '../../theme/app_palette.dart';
 import '../../data/collections.dart';
 import '../../data/fields.dart';
 import '../../data/activity_type.dart';
+import '../../config/app_defaults.dart';
 
 enum ProductDestination {
   sellable,
@@ -108,11 +109,6 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
 
   final List<String> _categories = kProductCategories;
 
-  final NumberFormat _moneyFormat = NumberFormat.currency(
-    locale: 'en_US',
-    symbol: 'Tsh ',
-    decimalDigits: 0,
-  );
 
   final Color primaryDeepTealGreen = AppPalette.primary;
   final Color warmAmber = AppPalette.accent;
@@ -520,7 +516,7 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
   Widget _buyPriceField(bool fieldsLocked) {
     return TextFormField(
       controller: _buyPriceController,
-      decoration: _inputDecoration('Buying Price (Tsh)', required: true),
+      decoration: _inputDecoration('Buying Price (${AppDefaults.currencySymbol})', required: true),
       keyboardType: TextInputType.number,
       inputFormatters: [FilteringTextInputFormatter.digitsOnly, ThousandsSeparatorInputFormatter()],
       cursorColor: primaryDeepTealGreen,
@@ -536,7 +532,7 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
   Widget _sellPriceField(bool fieldsLocked) {
     return TextFormField(
       controller: _sellPriceController,
-      decoration: _inputDecoration('Selling Price (Tsh)', required: true),
+      decoration: _inputDecoration('Selling Price (${AppDefaults.currencySymbol})', required: true),
       keyboardType: TextInputType.number,
       inputFormatters: [FilteringTextInputFormatter.digitsOnly, ThousandsSeparatorInputFormatter()],
       cursorColor: primaryDeepTealGreen,

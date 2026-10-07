@@ -60,6 +60,8 @@ import '../../data/collections.dart';
 import '../../data/fields.dart';
 import '../../data/user_role.dart';
 import '../../data/user_status.dart';
+import '../../config/money.dart';
+import '../../config/app_defaults.dart';
 
 class DrawerHoverItem extends StatefulWidget {
   final IconData icon;
@@ -1110,7 +1112,6 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
     }
     final glanceDebtorCount = owedByClient.values.where((v) => v > 0).length;
 
-    final formatter = NumberFormat.decimalPattern();
 
     return LayoutBuilder(
       builder: (context, constraints) {
@@ -1338,7 +1339,7 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
                                 final cards = [
                                       SummaryCard(
                                         title: 'Total Product Value',
-                                        value: 'Tsh ${formatter.format(productProvider.totalProductValue)}',
+                                        value: Money.symbolDecimal(productProvider.totalProductValue),
                                         icon: Icons.inventory,
                                         color: primaryDeepGreen,
                                         shadow: true,
@@ -1349,13 +1350,13 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
                                               (_previousSnapshot?['totalProductValue'] as num?)?.toDouble() ?? 0,
                                           higherIsBetter: true,
                                           comparisonLabel: _comparisonLabelForFilter(selectedFilter),
-                                          formatChange: (v) => 'Tsh ${formatter.format(v)}',
+                                          formatChange: (v) => Money.symbolDecimal(v),
                                           isLoading: _isPreviousSnapshotLoading,
                                         ),
                                       ),
                                       SummaryCard(
                                         title: 'Total Sales ($selectedFilter)',
-                                        value: 'Tsh ${formatter.format(_periodTotals.totalSales)}',
+                                        value: Money.symbolDecimal(_periodTotals.totalSales),
                                         icon: Icons.shopping_cart,
                                         color: warmAmber,
                                         shadow: true,
@@ -1365,13 +1366,13 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
                                           previousValue: _previousPeriodTotals.totalSales,
                                           higherIsBetter: true,
                                           comparisonLabel: _comparisonLabelForFilter(selectedFilter),
-                                          formatChange: (v) => 'Tsh ${formatter.format(v)}',
+                                          formatChange: (v) => Money.symbolDecimal(v),
                                           isLoading: _isPreviousPeriodLoading,
                                         ),
                                       ),
                                       SummaryCard(
                                         title: 'Total Collected ($selectedFilter)',
-                                        value: 'Tsh ${formatter.format(_periodTotals.totalCollected)}',
+                                        value: Money.symbolDecimal(_periodTotals.totalCollected),
                                         icon: Icons.attach_money,
                                         color: primaryDeepGreen,
                                         shadow: true,
@@ -1381,14 +1382,14 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
                                           previousValue: _previousPeriodTotals.totalCollected,
                                           higherIsBetter: true,
                                           comparisonLabel: _comparisonLabelForFilter(selectedFilter),
-                                          formatChange: (v) => 'Tsh ${formatter.format(v)}',
+                                          formatChange: (v) => Money.symbolDecimal(v),
                                           isLoading: _isPreviousPeriodLoading,
                                         ),
                                       ),
                                       SummaryCard(
                                         title: 'Net Profit ($selectedFilter)',
                                         value: Provider.of<UserRoleProvider>(context).isAdmin
-                                            ? 'Tsh ${formatter.format(_periodTotals.netProfit)}'
+                                            ? Money.symbolDecimal(_periodTotals.netProfit)
                                             : '*****',
                                         icon: Icons.trending_up,
                                         color: primaryDeepGreen,
@@ -1406,7 +1407,7 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
                                                 previousValue: _previousPeriodTotals.netProfit,
                                                 higherIsBetter: true,
                                                 comparisonLabel: _comparisonLabelForFilter(selectedFilter),
-                                                formatChange: (v) => 'Tsh ${formatter.format(v)}',
+                                                formatChange: (v) => Money.symbolDecimal(v),
                                                 isLoading: _isPreviousPeriodLoading,
                                               )
                                             : null,
@@ -1418,13 +1419,12 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
                                             ? _profitBreakdownFooter(
                                                 _periodTotals.totalRealizedProfit,
                                                 _periodTotals.totalUnrealizedProfit,
-                                                formatter,
                                               )
                                             : null,
                                       ),
                                       SummaryCard(
                                         title: 'Total Expenses ($selectedFilter)',
-                                        value: 'Tsh ${formatter.format(_periodTotals.totalExpenses)}',
+                                        value: Money.symbolDecimal(_periodTotals.totalExpenses),
                                         icon: Icons.trending_down,
                                         color: Colors.red,
                                         shadow: true,
@@ -1437,13 +1437,13 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
                                           // number itself went up.
                                           higherIsBetter: false,
                                           comparisonLabel: _comparisonLabelForFilter(selectedFilter),
-                                          formatChange: (v) => 'Tsh ${formatter.format(v)}',
+                                          formatChange: (v) => Money.symbolDecimal(v),
                                           isLoading: _isPreviousPeriodLoading,
                                         ),
                                       ),
                                       SummaryCard(
                                         title: 'Outstanding Payment',
-                                        value: 'Tsh ${formatter.format(debtProvider.totalOutstanding())}',
+                                        value: Money.symbolDecimal(debtProvider.totalOutstanding()),
                                         icon: Icons.account_balance_wallet,
                                         color: warmAmber,
                                         shadow: true,
@@ -1456,7 +1456,7 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
                                           // outcome here too.
                                           higherIsBetter: false,
                                           comparisonLabel: _comparisonLabelForFilter(selectedFilter),
-                                          formatChange: (v) => 'Tsh ${formatter.format(v)}',
+                                          formatChange: (v) => Money.symbolDecimal(v),
                                           isLoading: _isPreviousSnapshotLoading,
                                         ),
                                       ),
@@ -1935,7 +1935,6 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
   }
 
   Widget _buildSalesRevenueChart() {
-    final moneyFormat = NumberFormat.currency(locale: 'en_US', symbol: 'Tsh ', decimalDigits: 0);
     final salesByDay = _chartSalesByDay;
     final collectionsByDay = _chartCollectionsByDay;
     final servicesByDay = _chartServicesByDay;
@@ -2015,7 +2014,7 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(moneyFormat.format(currentTotal),
+                    Text(Money.format(currentTotal),
                         style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 22, color: Colors.black87)),
                     Text('Total Revenue', style: TextStyle(fontSize: 12, color: Colors.grey[600])),
                   ],
@@ -2072,7 +2071,7 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
                                   _ => 'Services',
                                 };
                                 return LineTooltipItem(
-                                  '${DateFormat('d MMM').format(day)}\n$label: ${moneyFormat.format(spot.y)}',
+                                  '${DateFormat('d MMM').format(day)}\n$label: ${Money.format(spot.y)}',
                                   const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 12),
                                 );
                               }).toList();
@@ -2087,7 +2086,7 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
                               showTitles: true,
                               reservedSize: 48,
                               getTitlesWidget: (value, meta) =>
-                                  Text(moneyFormat.format(value), style: const TextStyle(fontSize: 9)),
+                                  Text(Money.format(value), style: const TextStyle(fontSize: 9)),
                             ),
                           ),
                           bottomTitles: AxisTitles(
@@ -2139,11 +2138,11 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
             const SizedBox(height: 12),
             Row(
               children: [
-                _chartLegendItem(primaryDeepGreen, 'Sales (Tsh)'),
+                _chartLegendItem(primaryDeepGreen, 'Sales (${AppDefaults.currencySymbol})'),
                 const SizedBox(width: 20),
-                _chartLegendItem(warmAmber, 'Collections (Tsh)'),
+                _chartLegendItem(warmAmber, 'Collections (${AppDefaults.currencySymbol})'),
                 const SizedBox(width: 20),
-                _chartLegendItem(servicesSteelBlue, 'Services (Tsh)'),
+                _chartLegendItem(servicesSteelBlue, 'Services (${AppDefaults.currencySymbol})'),
               ],
             ),
           ],
@@ -2346,7 +2345,6 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
   }
 
   Widget _buildTodayGlanceStrip(int debtorCount) {
-    final formatter = NumberFormat.decimalPattern();
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
       decoration: BoxDecoration(
@@ -2365,7 +2363,7 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
           else ...[
             _glanceStat(Icons.shopping_cart_outlined, '${_glanceSaleCount ?? 0}', 'Sales', primaryDeepGreen),
             _glanceStat(Icons.build_outlined, '${_glanceServiceCount ?? 0}', 'Services', const Color(0xFF3D5A80)),
-            _glanceStat(Icons.payments_outlined, 'Tsh ${formatter.format(_glanceCollected ?? 0)}', 'Collected', primaryDeepGreen),
+            _glanceStat(Icons.payments_outlined, Money.symbolDecimal(_glanceCollected ?? 0), 'Collected', primaryDeepGreen),
           ],
           _glanceStat(Icons.folder_outlined, '$debtorCount', debtorCount == 1 ? 'Outstanding Debt' : 'Outstanding Debts', warmAmber),
           OutlinedButton.icon(
@@ -2396,7 +2394,7 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
   // figure - Realized is the portion actually backed by cash already
   // collected (paid sales/services, or a debt repayment); Pending is
   // the portion still tied up in an unpaid credit balance.
-  Widget _profitBreakdownFooter(double realized, double pending, NumberFormat formatter) {
+  Widget _profitBreakdownFooter(double realized, double pending) {
     return SizedBox(
       width: double.infinity,
       child: Row(
@@ -2408,13 +2406,13 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
                 Expanded(
                   child: Padding(
                     padding: const EdgeInsets.only(left: 22),
-                    child: _profitBreakdownDot('Earned', realized, Colors.green, formatter),
+                    child: _profitBreakdownDot('Earned', realized, Colors.green),
                   ),
                 ),
                 Expanded(
                   child: Padding(
                     padding: const EdgeInsets.only(left: 16),
-                    child: _profitBreakdownDot('Pending', pending, warmAmber, formatter),
+                    child: _profitBreakdownDot('Pending', pending, warmAmber),
                   ),
                 ),
               ],
@@ -2437,14 +2435,14 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
   // it - "Tsh 10.888M" instead of "Tsh 10,000,888". Only kicks in at a
   // million or more; anything smaller uses the normal formatter, which
   // already fits comfortably in the space available.
-  String _formatCompactAmount(double value, NumberFormat formatter) {
+  String _formatCompactAmount(double value) {
     if (value.abs() >= 1000000) {
-      return 'Tsh ${(value / 1000000).toStringAsFixed(3)}M';
+      return '${AppDefaults.currencySymbol} ${(value / 1000000).toStringAsFixed(3)}M';
     }
-    return 'Tsh ${formatter.format(value)}';
+    return Money.symbolDecimal(value);
   }
 
-  Widget _profitBreakdownDot(String label, double value, Color color, NumberFormat formatter) {
+  Widget _profitBreakdownDot(String label, double value, Color color) {
     return Row(
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -2459,7 +2457,7 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
           mainAxisSize: MainAxisSize.min,
           children: [
             Text(label, style: TextStyle(fontSize: 10.5, color: Colors.grey[600]), maxLines: 1, overflow: TextOverflow.ellipsis),
-            Text(_formatCompactAmount(value, formatter),
+            Text(_formatCompactAmount(value),
                 style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Colors.black87),
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis),

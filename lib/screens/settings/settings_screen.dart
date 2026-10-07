@@ -13,6 +13,7 @@ import 'trash_screen.dart';
 import '../subscription/subscription_screen.dart';
 import '../dashboard/notifications_screen.dart';
 import '../../theme/app_palette.dart';
+import '../../config/app_defaults.dart';
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
@@ -217,7 +218,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     _buildSettingsItem(
                       icon: Icons.currency_exchange_outlined,
                       label: 'Currency',
-                      trailingText: 'Tsh',
+                      trailingText: AppDefaults.currencySymbol,
                       isLast: false,
                       onTap: () {}, // not a real choice - no picker to open
                     ),
@@ -368,7 +369,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         _buildSidebarItem(
                           icon: Icons.currency_exchange_outlined,
                           label: 'Currency',
-                          trailingText: 'Tsh',
+                          trailingText: AppDefaults.currencySymbol,
                           onTapDialog: () {}, // not a real choice - no picker to open
                         ),
                         _buildSidebarItem(

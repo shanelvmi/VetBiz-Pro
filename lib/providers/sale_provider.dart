@@ -11,6 +11,7 @@ import '../services/cursor_paginated_list_controller.dart';
 import '../data/collections.dart';
 import '../data/fields.dart';
 import '../data/activity_type.dart';
+import '../config/money.dart';
 
 class SaleProvider extends ChangeNotifier {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
@@ -440,7 +441,7 @@ class SaleProvider extends ChangeNotifier {
         userId: userInfo[Fields.userId]!,
         userName: userInfo['userName'],
         actionType: ActivityType.sales.key,
-        description: 'Recorded sale to ${saleToSave.clientName ?? 'Walk-in'} - Tsh ${saleToSave.totalAmount.toStringAsFixed(0)}',
+        description: 'Recorded sale to ${saleToSave.clientName ?? 'Walk-in'} - ${Money.savedWhole(saleToSave.totalAmount)}',
       );
 
       return docRef.id;
@@ -569,7 +570,7 @@ class SaleProvider extends ChangeNotifier {
           userId: userInfo[Fields.userId]!,
           userName: userInfo['userName'],
           actionType: ActivityType.sales.key,
-          description: 'Deleted sale to ${sale.clientName ?? 'Walk-in'} - Tsh ${sale.totalAmount.toStringAsFixed(0)}',
+          description: 'Deleted sale to ${sale.clientName ?? 'Walk-in'} - ${Money.savedWhole(sale.totalAmount)}',
         );
       }
     } catch (e) {

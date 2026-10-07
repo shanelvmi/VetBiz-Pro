@@ -13,6 +13,7 @@ import '../../utils/web_download.dart';
 import '../../theme/app_palette.dart';
 import '../../data/collections.dart';
 import '../../data/fields.dart';
+import '../../config/money.dart';
 
 /// One logical table of data - a title (shown as its own line in CSV,
 /// its own sheet/tab name in xlsx), a header row, and the data rows
@@ -137,7 +138,7 @@ class _ExportDataScreenState extends State<ExportDataScreen> {
   int _cellDisplayLength(dynamic value) {
     if (value == null) return 0;
     if (value is DateTime) return 16; // "yyyy-MM-dd HH:mm" length
-    if (value is num) return NumberFormat('#,##0').format(value).length;
+    if (value is num) return Money.plain(value).length;
     return value.toString().length;
   }
 

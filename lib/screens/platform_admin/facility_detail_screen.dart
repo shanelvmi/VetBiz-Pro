@@ -9,6 +9,7 @@ import '../../constants/subscription_plans.dart';
 import '../../theme/app_palette.dart';
 import '../../data/collections.dart';
 import '../../data/fields.dart';
+import '../../config/money.dart';
 
 class FacilityDetailScreen extends StatefulWidget {
   final String facilityId;
@@ -21,7 +22,6 @@ class FacilityDetailScreen extends StatefulWidget {
 class _FacilityDetailScreenState extends State<FacilityDetailScreen> {
   static const Color primaryColor = AppPalette.primary;
   static const Color warmAmber = AppPalette.accent;
-  final NumberFormat _moneyFormat = NumberFormat('#,##0', 'en_US');
 
   ButtonStyle get _accentButtonStyle => ButtonStyle(
         backgroundColor: WidgetStateProperty.resolveWith<Color>((states) {
@@ -60,7 +60,7 @@ class _FacilityDetailScreenState extends State<FacilityDetailScreen> {
                 ...plans.map((plan) {
                   return RadioListTile<String>(
                     contentPadding: EdgeInsets.zero,
-                    title: Text('${plan.label} - Tsh ${plan.priceTsh.toStringAsFixed(0)}'),
+                    title: Text('${plan.label} - ${Money.symbolWhole(plan.priceTsh)}'),
                     value: plan.id,
                     groupValue: isFree ? 'free' : selectedPlan.id,
                     activeColor: primaryColor,
@@ -336,7 +336,7 @@ class _FacilityDetailScreenState extends State<FacilityDetailScreen> {
                             Text('Signed up: ${DateFormat('dd MMM yyyy').format(createdAt)}',
                                 style: const TextStyle(fontSize: 12)),
                           if (data['lastPaymentAmount'] != null)
-                            Text('Last payment: Tsh ${_moneyFormat.format(data['lastPaymentAmount'])}'),
+                            Text('Last payment: ${Money.symbolPlain(data['lastPaymentAmount'])}'),
                         ],
                       ),
                     ),
@@ -374,7 +374,7 @@ class _FacilityDetailScreenState extends State<FacilityDetailScreen> {
                             margin: const EdgeInsets.only(bottom: 6),
                             child: ListTile(
                               dense: true,
-                              title: Text('${subData['planLabel'] ?? ''} - Tsh ${subData['amount'] ?? 0}'),
+                              title: Text('${subData['planLabel'] ?? ''} - ${Money.symbolAsStored(subData['amount'] ?? 0)}'),
                               subtitle: Text(
                                 '${subData['method'] ?? ''}'
                                 '${submittedAt != null ? ' - ${DateFormat('dd MMM yyyy').format(submittedAt)}' : ''}',

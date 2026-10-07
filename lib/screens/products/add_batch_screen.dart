@@ -8,6 +8,8 @@ import '../../providers/product_provider.dart';
 import '../../providers/facility_provider.dart';
 import '../../utils/thousands_input_formatter.dart';
 import '../../theme/app_palette.dart';
+import '../../config/money.dart';
+import '../../config/app_defaults.dart';
 
 /// Records a new delivery of an existing product as its own batch - a
 /// separate batch number, expiry, and quantity, never overwriting an
@@ -43,7 +45,7 @@ class _AddBatchScreenState extends State<AddBatchScreen> {
     _batchController = TextEditingController();
     _quantityController = TextEditingController();
     _buyPriceController = TextEditingController(
-      text: NumberFormat.decimalPattern('en_US').format(widget.product.buyPrice.round()),
+      text: Money.decimal(widget.product.buyPrice.round()),
     );
     _expiryController = TextEditingController();
   }
@@ -202,7 +204,7 @@ class _AddBatchScreenState extends State<AddBatchScreen> {
                   controller: _buyPriceController,
                   keyboardType: TextInputType.number,
                   inputFormatters: [FilteringTextInputFormatter.digitsOnly, ThousandsSeparatorInputFormatter()],
-                  decoration: const InputDecoration(labelText: 'Buy Price (Tsh)', border: OutlineInputBorder()),
+                  decoration: const InputDecoration(labelText: 'Buy Price (${AppDefaults.currencySymbol})', border: OutlineInputBorder()),
                 ),
                 const SizedBox(height: 24),
                 SizedBox(

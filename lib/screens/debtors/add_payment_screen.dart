@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:provider/provider.dart';
-import 'package:intl/intl.dart';
 
 import '../../models/client.dart';
 import '../../models/sale.dart';
@@ -17,6 +16,7 @@ import '../../theme/app_palette.dart';
 import '../../data/collections.dart';
 import '../../data/fields.dart';
 import '../../data/activity_type.dart';
+import '../../config/money.dart';
 
 class AddPaymentScreen extends StatefulWidget {
   final Client? preselectedClient;
@@ -66,7 +66,6 @@ class _AddPaymentScreenState extends State<AddPaymentScreen> {
   double amount = 0.0;
   String? paymentMethod;
   final _formKey = GlobalKey<FormState>();
-  final NumberFormat currencyFormat = NumberFormat('#,##0', 'en_US');
 
   static const Color primaryDeepGreen = AppPalette.primary;
   static const Color warmAmber = AppPalette.accent;
@@ -124,7 +123,7 @@ class _AddPaymentScreenState extends State<AddPaymentScreen> {
                 if (owed != null) ...[
                   TextSpan(text: '  \u00b7  Total owed: ', style: TextStyle(fontSize: 14, color: Colors.grey[700])),
                   TextSpan(
-                    text: 'Tsh ${currencyFormat.format(owed)}',
+                    text: Money.symbolPlain(owed),
                     style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.redAccent),
                   ),
                 ],
@@ -382,14 +381,14 @@ class _AddPaymentScreenState extends State<AddPaymentScreen> {
         userId: userInfo[Fields.userId]!,
         userName: userInfo['userName'],
         actionType: ActivityType.debtors.key,
-        description: 'Recorded payment of Tsh ${amount.toStringAsFixed(0)} from ${selectedClient!.name}',
+        description: 'Recorded payment of ${Money.savedWhole(amount)} from ${selectedClient!.name}',
       );
 
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
-              'Payment of Tsh ${currencyFormat.format(amount)} recorded for ${selectedClient!.name}'),
+              'Payment of ${Money.symbolPlain(amount)} recorded for ${selectedClient!.name}'),
           backgroundColor: Colors.green,
         ),
       );
@@ -459,7 +458,7 @@ class _AddPaymentScreenState extends State<AddPaymentScreen> {
                           displayStringForOption: (c) {
                             final balance = widget.debtorBalances?[c.id];
                             if (balance == null) return c.name;
-                            return 'Tsh ${currencyFormat.format(balance)} \u2014 ${c.name}';
+                            return '${Money.symbolPlain(balance)} \u2014 ${c.name}';
                           },
                           optionsBuilder: (textEditingValue) {
                             final q = textEditingValue.text.trim().toLowerCase();
@@ -503,7 +502,7 @@ class _AddPaymentScreenState extends State<AddPaymentScreen> {
               const SizedBox(height: 16),
               if (widget.amountOwed != null)
                 Text(
-                  'Amount owed: Tsh ${currencyFormat.format(widget.amountOwed)}',
+                  'Amount owed: ${Money.symbolPlain(widget.amountOwed!)}',
                   style: const TextStyle(fontSize: 14, color: Colors.redAccent),
                 ),
               const SizedBox(height: 12),

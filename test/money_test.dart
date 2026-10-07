@@ -32,6 +32,32 @@ void main() {
     }
   });
 
+  test('symbolPlain / symbolDecimal equal the hand-built "Tsh \${formatter.format(x)}"', () {
+    for (final a in amounts) {
+      expect(Money.symbolPlain(a), 'Tsh ${legacyPlain.format(a)}', reason: '$a');
+      expect(Money.symbolDecimal(a), 'Tsh ${legacyDecimal.format(a)}', reason: '$a');
+    }
+  });
+
+  test('saved text keeps its exact legacy shape (no thousands separator)', () {
+    for (final a in amounts) {
+      expect(Money.savedWhole(a), 'Tsh ${a.toStringAsFixed(0)}', reason: '$a');
+    }
+    for (final Object v in [12500, 12500.0, 12500.5, 0]) {
+      expect(Money.savedAsStored(v), 'Tsh ${v.toString()}', reason: '$v');
+    }
+    expect(Money.savedWhole(12500), 'Tsh 12500');
+    expect(Money.savedAsStored(12500.0), 'Tsh 12500.0');
+  });
+
+  test('a currency formatter with an empty symbol prints the same as plain', () {
+    // add_edit_service_screen's formatter: NumberFormat.currency(symbol: '').
+    final emptySymbol = NumberFormat.currency(locale: 'en_US', symbol: '', decimalDigits: 0);
+    for (final a in amounts) {
+      expect(Money.plain(a), emptySymbol.format(a), reason: '$a');
+    }
+  });
+
   test('the exact strings people see', () {
     expect(Money.format(12500), 'Tsh 12,500');
     expect(Money.format(-12500), '-Tsh 12,500');

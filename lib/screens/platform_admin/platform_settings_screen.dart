@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../../utils/sentence_capitalization_formatter.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:intl/intl.dart';
 
 import '../../constants/subscription_plans.dart';
 import '../../widgets/hover_elevate_card.dart';
@@ -11,6 +10,8 @@ import '../../utils/thousands_input_formatter.dart';
 import 'promotions_screen.dart';
 import '../../theme/app_palette.dart';
 import '../../data/collections.dart';
+import '../../config/money.dart';
+import '../../config/app_defaults.dart';
 
 /// Platform-wide configuration - currently new-facility trial length and
 /// subscription pricing. Deliberately separate from Overview: Overview
@@ -491,7 +492,7 @@ class _PricingSettingsCardState extends State<_PricingSettingsCard> {
     if (!mounted) return;
     setState(() {
       for (final plan in plans) {
-        _controllers[plan.id]?.text = NumberFormat.decimalPattern('en_US').format(plan.priceTsh.round());
+        _controllers[plan.id]?.text = Money.decimal(plan.priceTsh.round());
       }
       _isLoading = false;
     });
@@ -572,7 +573,7 @@ class _PricingSettingsCardState extends State<_PricingSettingsCard> {
                         labelText: plan.label,
                         border: const OutlineInputBorder(),
                         isDense: true,
-                        prefixText: 'Tsh ',
+                        prefixText: '${AppDefaults.currencySymbol} ',
                       ),
                     ),
                   );

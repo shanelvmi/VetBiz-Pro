@@ -1,5 +1,5 @@
 import 'package:flutter/services.dart';
-import 'package:intl/intl.dart';
+import '../config/money.dart';
 
 /// Live thousand-separator formatting for money input fields - typing
 /// "5000" displays as "5,000" as each digit is entered, not just after
@@ -18,7 +18,6 @@ import 'package:intl/intl.dart';
 /// which strips the commas before parsing - never parse the field's
 /// raw text directly, since it contains display-only separators.
 class ThousandsSeparatorInputFormatter extends TextInputFormatter {
-  final NumberFormat _formatter = NumberFormat.decimalPattern('en_US');
 
   @override
   TextEditingValue formatEditUpdate(TextEditingValue oldValue, TextEditingValue newValue) {
@@ -36,7 +35,7 @@ class ThousandsSeparatorInputFormatter extends TextInputFormatter {
     }
 
     final intValue = int.parse(digitsOnly);
-    final newText = _formatter.format(intValue);
+    final newText = Money.decimal(intValue);
 
     int selectionIndex = newText.length - (oldValue.text.length - oldValue.selection.end);
     if (selectionIndex < 0) selectionIndex = 0;

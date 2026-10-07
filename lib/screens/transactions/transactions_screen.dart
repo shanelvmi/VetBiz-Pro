@@ -13,6 +13,7 @@ import '../../services/receipt_printer_service.dart';
 import '../settings/printer_settings_screen.dart';
 import 'add_transaction_screen.dart';
 import '../../theme/app_palette.dart';
+import '../../config/money.dart';
 
 class TransactionScreen extends StatefulWidget {
   const TransactionScreen({super.key});
@@ -138,7 +139,6 @@ class _TransactionScreenState extends State<TransactionScreen> {
   @override
   Widget build(BuildContext context) {
     final transactionProvider = Provider.of<TransactionProvider>(context);
-    final formatter = NumberFormat.decimalPattern();
 
     final subProfit = _otherIncomeTotal - _expensesTotal;
 
@@ -165,7 +165,7 @@ class _TransactionScreenState extends State<TransactionScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  _buildMetricsRow(subProfit, formatter),
+                  _buildMetricsRow(subProfit),
                   const SizedBox(height: 16),
                   _buildToolbarRow(filteredTransactions.length),
                   const SizedBox(height: 16),
@@ -177,7 +177,7 @@ class _TransactionScreenState extends State<TransactionScreen> {
                               style: const TextStyle(fontSize: 16, color: TransactionScreen.primaryDeepGreen),
                             ),
                           )
-                        : _buildTransactionsTable(filteredTransactions, transactionProvider, formatter),
+                        : _buildTransactionsTable(filteredTransactions, transactionProvider),
                   ),
                 ],
               ),
@@ -187,7 +187,7 @@ class _TransactionScreenState extends State<TransactionScreen> {
             const VerticalDivider(width: 1),
             SizedBox(
               width: 340,
-              child: _buildDetailsPanel(_selectedTransaction!, formatter),
+              child: _buildDetailsPanel(_selectedTransaction!),
             ),
           ],
         ],
@@ -242,18 +242,18 @@ class _TransactionScreenState extends State<TransactionScreen> {
     );
   }
 
-  Widget _buildMetricsRow(double subProfit, NumberFormat formatter) {
+  Widget _buildMetricsRow(double subProfit) {
     return SizedBox(
       height: 92,
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           Expanded(
-            child: _metricCard('Other Income', _otherIncomeTotal, TransactionScreen.warmAmber, formatter),
+            child: _metricCard('Other Income', _otherIncomeTotal, TransactionScreen.warmAmber),
           ),
           const SizedBox(width: 12),
           Expanded(
-            child: _metricCard('Expenses', _expensesTotal, Colors.red[400]!, formatter),
+            child: _metricCard('Expenses', _expensesTotal, Colors.red[400]!),
           ),
           const SizedBox(width: 12),
           Expanded(
@@ -261,7 +261,6 @@ class _TransactionScreenState extends State<TransactionScreen> {
               'Other Income vs Expenses',
               subProfit,
               subProfit >= 0 ? Colors.green[700]! : Colors.red[400]!,
-              formatter,
             ),
           ),
         ],
@@ -269,7 +268,7 @@ class _TransactionScreenState extends State<TransactionScreen> {
     );
   }
 
-  Widget _metricCard(String title, double amount, Color color, NumberFormat formatter) {
+  Widget _metricCard(String title, double amount, Color color) {
     final isLoading = _isSummaryLoading;
     return Container(
       padding: const EdgeInsets.all(12),
@@ -301,7 +300,7 @@ class _TransactionScreenState extends State<TransactionScreen> {
             child: isLoading
                 ? SizedBox(key: const ValueKey('loading'), height: 20, width: 20, child: CircularProgressIndicator(strokeWidth: 2, color: color))
                 : Text(
-                    'Tsh ${formatter.format(amount)}',
+                    Money.symbolDecimal(amount),
                     key: const ValueKey('loaded'),
                     style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                   ),
@@ -384,7 +383,7 @@ class _TransactionScreenState extends State<TransactionScreen> {
   }
 
   Widget _buildTransactionsTable(List<TransactionModel> transactions,
-      TransactionProvider transactionProvider, NumberFormat formatter) {
+      TransactionProvider transactionProvider) {
     final Map<String, List<TransactionModel>> grouped = {};
     for (final tx in transactions) {
       final key = DateFormat('yyyy-MM-dd').format(tx.date);
@@ -414,7 +413,7 @@ class _TransactionScreenState extends State<TransactionScreen> {
             children: [
               ...grouped.entries.map((dayEntry) {
                 final dayTotal = dayEntry.value.fold<double>(0.0, (sum, tx) => sum + tx.amount);
-                return _buildDayGroup(dayEntry.key, dayEntry.value, dayTotal, formatter);
+                return _buildDayGroup(dayEntry.key, dayEntry.value, dayTotal);
               }),
               _buildLoadMoreFooter(transactionProvider),
             ],
@@ -431,7 +430,7 @@ class _TransactionScreenState extends State<TransactionScreen> {
     );
   }
 
-  Widget _buildDayGroup(String dayKey, List<TransactionModel> transactions, double dayTotal, NumberFormat formatter) {
+  Widget _buildDayGroup(String dayKey, List<TransactionModel> transactions, double dayTotal) {
     final date = DateFormat('yyyy-MM-dd').parse(dayKey);
     final isProfit = dayTotal >= 0;
     return Column(
@@ -449,7 +448,7 @@ class _TransactionScreenState extends State<TransactionScreen> {
                 style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12.5, color: TransactionScreen.primaryDeepGreen),
               ),
               Text(
-                'Total: Tsh ${formatter.format(dayTotal)}',
+                'Total: ${Money.symbolDecimal(dayTotal)}',
                 style: TextStyle(
                   fontSize: 12.5,
                   fontWeight: FontWeight.bold,
@@ -459,12 +458,12 @@ class _TransactionScreenState extends State<TransactionScreen> {
             ],
           ),
         ),
-        ...transactions.map((tx) => _buildTransactionRow(tx, transactionProvider: Provider.of<TransactionProvider>(context, listen: false), formatter: formatter)),
+        ...transactions.map((tx) => _buildTransactionRow(tx, transactionProvider: Provider.of<TransactionProvider>(context, listen: false))),
       ],
     );
   }
 
-  Widget _buildTransactionRow(TransactionModel tx, {required TransactionProvider transactionProvider, required NumberFormat formatter}) {
+  Widget _buildTransactionRow(TransactionModel tx, {required TransactionProvider transactionProvider}) {
     final isIncome = tx.type.toLowerCase() == 'other income';
     final accentColor = isIncome ? TransactionScreen.warmAmber : Colors.redAccent;
     final isSelected = _selectedTransaction?.id == tx.id;
@@ -521,7 +520,7 @@ class _TransactionScreenState extends State<TransactionScreen> {
           Expanded(
             flex: 2,
             child: Text(
-              'Tsh ${formatter.format(tx.amount)}',
+              Money.symbolDecimal(tx.amount),
               style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: accentColor),
             ),
           ),
@@ -540,7 +539,7 @@ class _TransactionScreenState extends State<TransactionScreen> {
                   await showAddTransactionScreen(context, transaction: tx);
                   await _loadPeriodTotals();
                 } else if (value == 'delete') {
-                  _confirmDeleteTransaction(tx, transactionProvider, formatter);
+                  _confirmDeleteTransaction(tx, transactionProvider);
                 }
               },
               itemBuilder: (context) => [
@@ -558,14 +557,14 @@ class _TransactionScreenState extends State<TransactionScreen> {
   }
 
   Future<void> _confirmDeleteTransaction(
-      TransactionModel tx, TransactionProvider transactionProvider, NumberFormat formatter) async {
+      TransactionModel tx, TransactionProvider transactionProvider) async {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Delete this transaction?'),
         content: Text(
           '"${tx.description.isEmpty ? toTitleCase(tx.type) : tx.description}" - '
-          'Tsh ${formatter.format(tx.amount)}\n\nThis cannot be undone.',
+          '${Money.symbolDecimal(tx.amount)}\n\nThis cannot be undone.',
         ),
         actions: [
           TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Cancel')),
@@ -638,7 +637,7 @@ class _TransactionScreenState extends State<TransactionScreen> {
     }
   }
 
-  Widget _buildDetailsPanel(TransactionModel tx, NumberFormat formatter) {
+  Widget _buildDetailsPanel(TransactionModel tx) {
     final isIncome = tx.type.toLowerCase() == 'other income';
     final accentColor = isIncome ? TransactionScreen.warmAmber : Colors.redAccent;
     final reference = tx.receiptNumber != null
@@ -674,7 +673,7 @@ class _TransactionScreenState extends State<TransactionScreen> {
             ),
             const SizedBox(height: 12),
             Text(
-              'Tsh ${formatter.format(tx.amount)}',
+              Money.symbolDecimal(tx.amount),
               style: TextStyle(fontWeight: FontWeight.bold, fontSize: 22, color: accentColor),
             ),
             const SizedBox(height: 4),

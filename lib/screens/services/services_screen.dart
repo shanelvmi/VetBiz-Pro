@@ -18,6 +18,7 @@ import 'service_receipt_preview_screen.dart';
 import '../../utils/subscription_guard.dart';
 import '../../theme/app_palette.dart';
 import '../../data/collections.dart';
+import '../../config/money.dart';
 
 class ServicesScreen extends StatefulWidget {
   const ServicesScreen({super.key});
@@ -31,11 +32,6 @@ class _ServicesScreenState extends State<ServicesScreen> {
   final Color warmAmber = AppPalette.accent;
   final Color offWhite = AppPalette.background;
 
-  final NumberFormat _moneyFormat = NumberFormat.currency(
-    locale: 'en_US',
-    symbol: 'Tsh ',
-    decimalDigits: 0,
-  );
 
   String _searchQuery = '';
   final TextEditingController _searchController = TextEditingController();
@@ -296,9 +292,9 @@ class _ServicesScreenState extends State<ServicesScreen> {
 
     final metrics = [
       ('Total Services', '$count', Icons.medical_services_outlined, primaryDeepGreen),
-      ('Paid Amount', _moneyFormat.format(paidAmount), Icons.account_balance_wallet_outlined, Colors.blue),
-      ('Outstanding', _moneyFormat.format(outstanding), Icons.pending_actions_outlined, warmAmber),
-      ('Digital Payments', _moneyFormat.format(nonCashAmount), Icons.phone_iphone_outlined, Colors.green),
+      ('Paid Amount', Money.format(paidAmount), Icons.account_balance_wallet_outlined, Colors.blue),
+      ('Outstanding', Money.format(outstanding), Icons.pending_actions_outlined, warmAmber),
+      ('Digital Payments', Money.format(nonCashAmount), Icons.phone_iphone_outlined, Colors.green),
     ];
 
     return LayoutBuilder(
@@ -648,7 +644,7 @@ class _ServicesScreenState extends State<ServicesScreen> {
             ),
             Expanded(
               flex: 2,
-              child: Text(_moneyFormat.format(service.totalAmount), style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600)),
+              child: Text(Money.format(service.totalAmount), style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600)),
             ),
             Expanded(
               flex: 2,
@@ -840,7 +836,7 @@ class _ServicesScreenState extends State<ServicesScreen> {
                     ],
                   ),
                   const SizedBox(height: 10),
-                  _totalsRow('Paid Amount', _moneyFormat.format(service.totalPaid)),
+                  _totalsRow('Paid Amount', Money.format(service.totalPaid)),
                   _totalsRow('Payment Method', service.paymentMethod ?? 'Not recorded'),
                   if (service.transactionId != null && service.transactionId!.isNotEmpty)
                     _totalsRow('Transaction ID', service.transactionId!),

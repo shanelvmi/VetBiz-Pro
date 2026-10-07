@@ -11,6 +11,7 @@ import '../../data/collections.dart';
 import '../../data/fields.dart';
 import '../../data/subscription_keys.dart';
 import '../../data/payment_submission_status.dart';
+import '../../config/money.dart';
 
 /// A snapshot of the whole business - how many facilities, in what state, and
 /// how much has actually been collected this month. Reads every facility
@@ -32,7 +33,6 @@ class OverviewTab extends StatefulWidget {
 
 class _OverviewTabState extends State<OverviewTab> {
   static const Color primaryColor = AppPalette.primary;
-  final NumberFormat _moneyFormat = NumberFormat('#,##0', 'en_US');
 
   Map<String, dynamic>? _stats;
   bool _isLoading = true;
@@ -192,7 +192,7 @@ class _OverviewTabState extends State<OverviewTab> {
                   ),
                   _StatCard(
                     label: 'Revenue This Month',
-                    value: 'Tsh ${_moneyFormat.format(stats['monthRevenue'])}',
+                    value: Money.symbolPlain(stats['monthRevenue']),
                     color: Colors.green,
                     icon: Icons.payments,
                   ),

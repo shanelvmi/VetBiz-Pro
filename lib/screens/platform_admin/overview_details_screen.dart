@@ -9,6 +9,7 @@ import '../../theme/app_palette.dart';
 import '../../data/collections.dart';
 import '../../data/fields.dart';
 import '../../data/payment_submission_status.dart';
+import '../../config/money.dart';
 
 /// The detail behind Overview's own summary cards - day-to-day earnings,
 /// individual recent payments, revenue by plan, and the
@@ -29,7 +30,6 @@ class _OverviewDetailsScreenState extends State<OverviewDetailsScreen> {
   static const Color primaryColor = AppPalette.primary;
   static const Color warmAmber = AppPalette.accent;
 
-  final NumberFormat _moneyFormat = NumberFormat('#,##0', 'en_US');
 
   bool _isLoading = true;
   Object? _error;
@@ -224,7 +224,7 @@ class _OverviewDetailsScreenState extends State<OverviewDetailsScreen> {
             getTooltipItem: (group, groupIndex, rod, rodIndex) {
               final day = _dailyEarnings[group.x.toInt()].key;
               return BarTooltipItem(
-                '${DateFormat('d MMM').format(day)}\nTsh ${_moneyFormat.format(rod.toY)}',
+                '${DateFormat('d MMM').format(day)}\n${Money.symbolPlain(rod.toY)}',
                 const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 12),
               );
             },
@@ -238,7 +238,7 @@ class _OverviewDetailsScreenState extends State<OverviewDetailsScreen> {
               showTitles: true,
               reservedSize: 48,
               getTitlesWidget: (value, meta) =>
-                  Text(_moneyFormat.format(value), style: const TextStyle(fontSize: 9)),
+                  Text(Money.plain(value), style: const TextStyle(fontSize: 9)),
             ),
           ),
           bottomTitles: AxisTitles(
@@ -299,7 +299,7 @@ class _OverviewDetailsScreenState extends State<OverviewDetailsScreen> {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Text(entry.key, style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13)),
-                      Text('Tsh ${_moneyFormat.format(entry.value)}',
+                      Text(Money.symbolPlain(entry.value),
                           style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: primaryColor)),
                     ],
                   ),
@@ -398,7 +398,7 @@ class _OverviewDetailsScreenState extends State<OverviewDetailsScreen> {
                   ),
                 ),
                 Text(
-                  'Tsh ${_moneyFormat.format(payment['amount'])}',
+                  Money.symbolPlain(payment['amount']),
                   style: TextStyle(fontWeight: FontWeight.bold, color: primaryColor),
                 ),
               ],

@@ -27,6 +27,8 @@ import '../../widgets/product_thumbnail.dart';
 import '../../theme/app_palette.dart';
 import '../../data/collections.dart';
 import '../../data/activity_type.dart';
+import '../../config/money.dart';
+import '../../config/app_defaults.dart';
 
 // --- Custom Formatter ---
 // --- Add Sale Screen ---
@@ -88,7 +90,6 @@ class _AddSaleScreenState extends State<AddSaleScreen> {
   final Color offWhite = AppPalette.background;
   final Color deepTeal = const Color(0xFF004D40);
 
-  final NumberFormat _thousandsFormat = NumberFormat.decimalPattern('en_US');
 
   double get subtotal {
     return items.fold(0.0, (sum, item) => sum + (item.unitPrice * item.quantity));
@@ -180,7 +181,7 @@ class _AddSaleScreenState extends State<AddSaleScreen> {
   // single editable "Discount" line rather than a per-line amount.
   Future<void> _showEditDiscountDialog() async {
     final controller =
-        TextEditingController(text: saleDiscount > 0 ? _thousandsFormat.format(saleDiscount) : '');
+        TextEditingController(text: saleDiscount > 0 ? Money.decimal(saleDiscount) : '');
 
     await showDialog(
       context: context,
@@ -193,7 +194,7 @@ class _AddSaleScreenState extends State<AddSaleScreen> {
             inputFormatters: [FilteringTextInputFormatter.digitsOnly, ThousandsSeparatorInputFormatter()],
             autofocus: true,
             decoration: InputDecoration(
-              labelText: 'Discount Amount (Tsh)',
+              labelText: 'Discount Amount (${AppDefaults.currencySymbol})',
               border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
             ),
           ),
@@ -418,7 +419,7 @@ class _AddSaleScreenState extends State<AddSaleScreen> {
                                                         Text(
                                                           outOfStock
                                                               ? 'Out of stock'
-                                                              : '$remainingAvailable ${product.unit} available · Tsh ${_thousandsFormat.format(product.sellPrice)}',
+                                                              : '$remainingAvailable ${product.unit} available · ${Money.symbolDecimal(product.sellPrice)}',
                                                           style: TextStyle(
                                                             fontSize: 12,
                                                             color: outOfStock ? Colors.red : Colors.grey[600],
@@ -496,7 +497,7 @@ class _AddSaleScreenState extends State<AddSaleScreen> {
   void initState() {
     super.initState();
     totalPaid = 0.0;
-    totalPaidController.text = _thousandsFormat.format(totalPaid);
+    totalPaidController.text = Money.decimal(totalPaid);
     if (widget.prefilledProduct != null) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (mounted) _addProductToSale(widget.prefilledProduct!);
@@ -842,7 +843,7 @@ class _AddSaleScreenState extends State<AddSaleScreen> {
         totalPaid = 0.0;
         saleDiscount = 0.0;
         paymentMethod = null;
-        totalPaidController.text = _thousandsFormat.format(totalPaid);
+        totalPaidController.text = Money.decimal(totalPaid);
         clientController.clear();
       });
 
@@ -1019,7 +1020,7 @@ class _AddSaleScreenState extends State<AddSaleScreen> {
               const SizedBox(height: 14),
               _summaryRow('Total Items', '$totalItemCount'),
               const SizedBox(height: 10),
-              _summaryRow('Subtotal', _thousandsFormat.format(subtotal)),
+              _summaryRow('Subtotal', Money.decimal(subtotal)),
               const SizedBox(height: 10),
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -1027,7 +1028,7 @@ class _AddSaleScreenState extends State<AddSaleScreen> {
                   Text('Discount', style: TextStyle(fontSize: 13, color: Colors.grey[700])),
                   Row(
                     children: [
-                      Text(_thousandsFormat.format(saleDiscount),
+                      Text(Money.decimal(saleDiscount),
                           style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13)),
                       const SizedBox(width: 6),
                       InkWell(
@@ -1056,7 +1057,7 @@ class _AddSaleScreenState extends State<AddSaleScreen> {
             children: [
               Text('Total Amount', style: TextStyle(fontSize: 12.5, color: Colors.grey[700])),
               const SizedBox(height: 4),
-              Text('Tsh ${_thousandsFormat.format(totalAmount)}',
+              Text(Money.symbolDecimal(totalAmount),
                   style: TextStyle(fontWeight: FontWeight.bold, fontSize: 24, color: primaryDeepGreen)),
             ],
           ),
@@ -1131,7 +1132,7 @@ class _AddSaleScreenState extends State<AddSaleScreen> {
           ),
         ),
         const SizedBox(height: 16),
-        const Text('Amount Received (Tsh) *', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 13)),
+        const Text('Amount Received (${AppDefaults.currencySymbol}) *', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 13)),
         const SizedBox(height: 6),
         TextFormField(
           controller: totalPaidController,
@@ -1155,7 +1156,7 @@ class _AddSaleScreenState extends State<AddSaleScreen> {
           },
         ),
         const SizedBox(height: 14),
-        const Text('Change (Tsh)', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 13)),
+        const Text('Change (${AppDefaults.currencySymbol})', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 13)),
         const SizedBox(height: 6),
         Container(
           width: double.infinity,
@@ -1165,7 +1166,7 @@ class _AddSaleScreenState extends State<AddSaleScreen> {
             borderRadius: BorderRadius.circular(10),
             border: Border.all(color: Colors.grey.withValues(alpha: 0.25)),
           ),
-          child: Text(_thousandsFormat.format(change), style: TextStyle(color: Colors.grey[600])),
+          child: Text(Money.decimal(change), style: TextStyle(color: Colors.grey[600])),
         ),
       ],
     );
@@ -1253,7 +1254,7 @@ class _AddSaleScreenState extends State<AddSaleScreen> {
         selectedClient = null;
         clientController.clear();
         totalPaid = 0;
-        totalPaidController.text = _thousandsFormat.format(totalPaid);
+        totalPaidController.text = Money.decimal(totalPaid);
       }),
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
@@ -1288,7 +1289,7 @@ class _AddSaleScreenState extends State<AddSaleScreen> {
                 selectedClient = null;
                 clientController.clear();
                 totalPaid = 0;
-                totalPaidController.text = _thousandsFormat.format(totalPaid);
+                totalPaidController.text = Money.decimal(totalPaid);
               }),
             ),
           ],
@@ -1443,9 +1444,9 @@ class _AddSaleScreenState extends State<AddSaleScreen> {
               Expanded(flex: 3, child: Text('Product', style: _tableHeaderStyle)),
               Expanded(flex: 2, child: Text('Batch No.', style: _tableHeaderStyle)),
               Expanded(flex: 2, child: Text('Expiry Date', style: _tableHeaderStyle)),
-              Expanded(flex: 2, child: Text('Unit Price (Tsh)', style: _tableHeaderStyle)),
+              Expanded(flex: 2, child: Text('Unit Price (${AppDefaults.currencySymbol})', style: _tableHeaderStyle)),
               SizedBox(width: 96, child: Text('Qty', style: _tableHeaderStyle, textAlign: TextAlign.center)),
-              Expanded(flex: 2, child: Text('Total (Tsh)', style: _tableHeaderStyle)),
+              Expanded(flex: 2, child: Text('Total (${AppDefaults.currencySymbol})', style: _tableHeaderStyle)),
               SizedBox(width: 32, child: SizedBox.shrink()),
             ],
           ),
@@ -1480,7 +1481,7 @@ class _AddSaleScreenState extends State<AddSaleScreen> {
                 ),
                 Expanded(
                   flex: 2,
-                  child: Text(_thousandsFormat.format(item.unitPrice), style: const TextStyle(fontSize: 13)),
+                  child: Text(Money.decimal(item.unitPrice), style: const TextStyle(fontSize: 13)),
                 ),
                 SizedBox(
                   width: 96,
@@ -1509,7 +1510,7 @@ class _AddSaleScreenState extends State<AddSaleScreen> {
                 Expanded(
                   flex: 2,
                   child: Text(
-                    _thousandsFormat.format((item.unitPrice * item.quantity) - item.discount),
+                    Money.decimal((item.unitPrice * item.quantity) - item.discount),
                     style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
                   ),
                 ),
@@ -1580,7 +1581,7 @@ class _AddSaleScreenState extends State<AddSaleScreen> {
                   ),
                 Row(
                   children: [
-                    Text('Tsh ${_thousandsFormat.format(item.unitPrice)}',
+                    Text(Money.symbolDecimal(item.unitPrice),
                         style: TextStyle(fontSize: 13, color: Colors.grey[700])),
                     const Spacer(),
                     InkWell(
@@ -1598,7 +1599,7 @@ class _AddSaleScreenState extends State<AddSaleScreen> {
                       child: Icon(Icons.add_circle_outline, size: 20, color: primaryDeepGreen),
                     ),
                     const SizedBox(width: 10),
-                    Text('Tsh ${_thousandsFormat.format((item.unitPrice * item.quantity) - item.discount)}',
+                    Text(Money.symbolDecimal((item.unitPrice * item.quantity) - item.discount),
                         style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
                   ],
                 ),
@@ -1717,7 +1718,7 @@ class _AddSaleScreenState extends State<AddSaleScreen> {
                           _showClientSuggestions = false;
                           isWalkIn = false;
                           totalPaid = 0;
-                          totalPaidController.text = _thousandsFormat.format(totalPaid);
+                          totalPaidController.text = Money.decimal(totalPaid);
                         });
                       },
                     );
@@ -1788,7 +1789,7 @@ class _AddSaleScreenState extends State<AddSaleScreen> {
                   iconColor: primaryDeepGreen,
                 ),
                 title: Text(product.name),
-                subtitle: Text('${product.sellableQty} ${product.unit} available · Tsh ${_thousandsFormat.format(product.sellPrice)}'),
+                subtitle: Text('${product.sellableQty} ${product.unit} available · ${Money.symbolDecimal(product.sellPrice)}'),
                 hoverColor: warmAmber.withValues(alpha: 0.15),
                 onTap: () => _addProductToSale(product),
               );

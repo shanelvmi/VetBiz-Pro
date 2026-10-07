@@ -23,6 +23,7 @@ import '../../theme/app_palette.dart';
 import '../../data/collections.dart';
 import '../../data/fields.dart';
 import '../../data/user_role.dart';
+import '../../config/app_defaults.dart';
 
 const Color deepGreen = AppPalette.primary;
 const Color warmAmber = AppPalette.accent;
@@ -1933,7 +1934,7 @@ class _FacilityScreenState extends State<FacilityScreen> {
       ('Expired Items', '$expiredCount', Icons.remove_shopping_cart_outlined, Colors.red, 'View Items', 2),
       (
         'Total Sales (This Month)',
-        'TZS ${_formatCompact(totalAmount)}',
+        '${AppDefaults.currencyCode} ${_formatCompact(totalAmount)}',
         Icons.trending_up,
         deepGreen,
         'View Report',
@@ -2389,7 +2390,7 @@ class _FacilityScreenState extends State<FacilityScreen> {
                               Text(_formatDate(ts.toDate()),
                                   style: TextStyle(fontSize: 12, color: Colors.grey[500])),
                             const SizedBox(width: 10),
-                            Text('Tsh ${_formatCompact(totalAmount)}',
+                            Text('${AppDefaults.currencySymbol} ${_formatCompact(totalAmount)}',
                                 style: const TextStyle(fontSize: 13.5, fontWeight: FontWeight.bold)),
                           ],
                         ),
@@ -2410,7 +2411,7 @@ class _FacilityScreenState extends State<FacilityScreen> {
       children: [
         Text(label, style: TextStyle(fontSize: 12, color: Colors.grey[600])),
         const SizedBox(height: 4),
-        Text('Tsh ${_formatCompact(amount)}', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
+        Text('${AppDefaults.currencySymbol} ${_formatCompact(amount)}', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
         Text('$count sale${count == 1 ? '' : 's'}', style: TextStyle(fontSize: 12, color: Colors.grey[600])),
       ],
     );

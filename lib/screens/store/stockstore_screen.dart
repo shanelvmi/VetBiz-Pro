@@ -15,6 +15,7 @@ import '../products/view_batches_screen.dart';
 import '../products/stock_alerts_screen.dart';
 import 'release_to_shop_flow.dart';
 import '../../theme/app_palette.dart';
+import '../../config/money.dart';
 
 class StockStoreScreen extends StatefulWidget {
   const StockStoreScreen({super.key});
@@ -42,11 +43,6 @@ class _StockStoreScreenState extends State<StockStoreScreen> {
   final Color offWhite = AppPalette.background;
 
   // Money formatter with thousand separator
-  final NumberFormat _moneyFormat = NumberFormat.currency(
-    locale: 'en_US',
-    symbol: 'Tsh ',
-    decimalDigits: 0,
-  );
 
   @override
   void initState() {
@@ -150,7 +146,7 @@ class _StockStoreScreenState extends State<StockStoreScreen> {
       ),
       ('Low Stock', '${statusCounts['Low Stock'] ?? 0}', Icons.trending_down, Colors.orange),
       ('Depleted', '${statusCounts['Depleted'] ?? 0}', Icons.remove_shopping_cart_outlined, Colors.red),
-      ('Store Stock Value', _moneyFormat.format(totalStockValue), Icons.account_balance_wallet_outlined, warmAmber),
+      ('Store Stock Value', Money.format(totalStockValue), Icons.account_balance_wallet_outlined, warmAmber),
     ];
 
     return LayoutBuilder(
@@ -612,7 +608,7 @@ class _StockStoreScreenState extends State<StockStoreScreen> {
           ),
           Expanded(
             flex: 2,
-            child: _labelValue('Price', _moneyFormat.format(p.sellPrice)),
+            child: _labelValue('Price', Money.format(p.sellPrice)),
           ),
           Row(
             mainAxisSize: MainAxisSize.min,
@@ -1033,7 +1029,7 @@ class _StockStoreScreenState extends State<StockStoreScreen> {
                         Expanded(
                           child: _labelValue('Stock', '${p.stockQty} ${p.unit}', valueColor: statusColor),
                         ),
-                        Expanded(child: _labelValue('Price', _moneyFormat.format(p.sellPrice))),
+                        Expanded(child: _labelValue('Price', Money.format(p.sellPrice))),
                       ],
                     ),
                     const SizedBox(height: 8),
@@ -1049,7 +1045,7 @@ class _StockStoreScreenState extends State<StockStoreScreen> {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
-                                'Buy: ${_moneyFormat.format(p.buyPrice)}',
+                                'Buy: ${Money.format(p.buyPrice)}',
                                 style: TextStyle(fontSize: 12.5, color: Colors.grey[700]),
                               ),
                               if (p.expiry != null)

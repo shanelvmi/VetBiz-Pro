@@ -5,6 +5,7 @@ import 'package:provider/provider.dart';
 import '../../models/daily_report.dart';
 import '../../providers/user_role_provider.dart';
 import '../../theme/app_palette.dart';
+import '../../config/money.dart';
 
 /// Opens the full report as a single continuous scroll, mirroring the
 /// PDF's own section order - this is the "what would the PDF look
@@ -69,7 +70,6 @@ class ReportFullViewScreen extends StatelessWidget {
   static const Color primaryDeepGreen = AppPalette.primary;
   static const Color offWhite = AppPalette.background;
 
-  String _money(num value) => NumberFormat.decimalPattern().format(value);
 
   @override
   Widget build(BuildContext context) {
@@ -211,13 +211,13 @@ class ReportFullViewScreen extends StatelessWidget {
         children: [
           _sectionHeader('Daily Summary'),
           const SizedBox(height: 8),
-          _statRow('Total Sales', 'Tsh ${_money(report.salesTotalValue)}'),
-          _statRow('Service Revenue', 'Tsh ${_money(report.servicesTotalValue)}'),
-          _statRow('Total Revenue', 'Tsh ${_money(revenue)}', bold: true),
-          if (report.totalOtherIncome > 0) _statRow('Other Income', 'Tsh ${_money(report.totalOtherIncome)}'),
-          _statRow('Debt Repayments', 'Tsh ${_money(report.repaymentsValue)}'),
-          _statRow('Expenses', 'Tsh ${_money(report.totalExpenses)}'),
-          _statRow('New Debt Today', 'Tsh ${_money(report.newDebtValue)}'),
+          _statRow('Total Sales', Money.symbolDecimal(report.salesTotalValue)),
+          _statRow('Service Revenue', Money.symbolDecimal(report.servicesTotalValue)),
+          _statRow('Total Revenue', Money.symbolDecimal(revenue), bold: true),
+          if (report.totalOtherIncome > 0) _statRow('Other Income', Money.symbolDecimal(report.totalOtherIncome)),
+          _statRow('Debt Repayments', Money.symbolDecimal(report.repaymentsValue)),
+          _statRow('Expenses', Money.symbolDecimal(report.totalExpenses)),
+          _statRow('New Debt Today', Money.symbolDecimal(report.newDebtValue)),
         ],
       ),
     );
@@ -233,7 +233,7 @@ class ReportFullViewScreen extends StatelessWidget {
           if (report.salesLineItems.isEmpty)
             _emptyState('No sales recorded today.')
           else
-            for (final s in report.salesLineItems) _statRow(s.customerName, 'Tsh ${_money(s.amount)}'),
+            for (final s in report.salesLineItems) _statRow(s.customerName, Money.symbolDecimal(s.amount)),
         ],
       ),
     );
@@ -249,7 +249,7 @@ class ReportFullViewScreen extends StatelessWidget {
           if (report.serviceBreakdown.isEmpty)
             _emptyState('No services provided today.')
           else
-            for (final s in report.serviceBreakdown) _statRow(s.serviceName, 'Tsh ${_money(s.revenue)}'),
+            for (final s in report.serviceBreakdown) _statRow(s.serviceName, Money.symbolDecimal(s.revenue)),
         ],
       ),
     );
@@ -307,7 +307,7 @@ class ReportFullViewScreen extends StatelessWidget {
           if (report.clientDebtEntries.isEmpty)
             _emptyState('No debt activity today.')
           else
-            for (final c in report.clientDebtEntries) _statRow(c.clientName, 'Tsh ${_money(c.closingDebt)}'),
+            for (final c in report.clientDebtEntries) _statRow(c.clientName, Money.symbolDecimal(c.closingDebt)),
         ],
       ),
     );
@@ -323,7 +323,7 @@ class ReportFullViewScreen extends StatelessWidget {
           if (report.expenseLineItems.isEmpty)
             _emptyState('No expenses recorded today.')
           else
-            for (final e in report.expenseLineItems) _statRow(e.description, 'Tsh ${_money(e.amount)}'),
+            for (final e in report.expenseLineItems) _statRow(e.description, Money.symbolDecimal(e.amount)),
         ],
       ),
     );
@@ -350,10 +350,10 @@ class ReportFullViewScreen extends StatelessWidget {
           const SizedBox(height: 8),
           for (final p in report.paymentReconciliation) ...[
             Text(p.method, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
-            _statRow('Expected balance', 'Tsh ${_money(p.expected)}'),
+            _statRow('Expected balance', Money.symbolDecimal(p.expected)),
             if (p.physicalCount != null) ...[
-              _statRow('Physical balance counted', 'Tsh ${_money(p.physicalCount!)}', bold: true),
-              _statRow('Variance', (p.variance != null && p.variance != 0) ? 'Tsh ${_money(p.variance!)} - VARIANCE' : 'Tsh 0 - Match',
+              _statRow('Physical balance counted', Money.symbolDecimal(p.physicalCount!), bold: true),
+              _statRow('Variance', (p.variance != null && p.variance != 0) ? '${Money.symbolDecimal(p.variance!)} - VARIANCE' : '${Money.symbolDecimal(0)} - Match',
                   bold: p.variance != null && p.variance != 0),
               if (p.varianceReason != null && p.varianceReason!.isNotEmpty)
                 _statRow('Reason', p.varianceReason!),
@@ -391,7 +391,7 @@ class ReportFullViewScreen extends StatelessWidget {
           if (byMethod.isEmpty)
             _emptyState(emptyText)
           else
-            for (final entry in byMethod.entries) _statRow(entry.key, 'Tsh ${_money(entry.value)}'),
+            for (final entry in byMethod.entries) _statRow(entry.key, Money.symbolDecimal(entry.value)),
           const SizedBox(height: 10),
         ],
       );
@@ -406,7 +406,7 @@ class ReportFullViewScreen extends StatelessWidget {
           if (combined.isEmpty)
             _emptyState('No payments recorded today.')
           else ...[
-            for (final entry in combined.entries) _statRow(entry.key, 'Tsh ${_money(entry.value)}', bold: true),
+            for (final entry in combined.entries) _statRow(entry.key, Money.symbolDecimal(entry.value), bold: true),
             const SizedBox(height: 12),
             const Divider(height: 1),
             const SizedBox(height: 12),

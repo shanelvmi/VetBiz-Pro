@@ -15,6 +15,7 @@ import '../../services/receipt_pdf_service.dart';
 import '../settings/printer_settings_screen.dart';
 import '../../utils/web_download.dart';
 import '../../theme/app_palette.dart';
+import '../../config/money.dart';
 
 /// Shows the service receipt as it will actually look before doing
 /// anything with it - same pattern as Sales' ReceiptPreviewScreen, just
@@ -30,7 +31,6 @@ class ServiceReceiptPreviewScreen extends StatefulWidget {
 class _ServiceReceiptPreviewScreenState extends State<ServiceReceiptPreviewScreen> {
   static const Color primaryColor = AppPalette.primary;
   final GlobalKey _receiptKey = GlobalKey();
-  final NumberFormat _moneyFormat = NumberFormat('#,##0', 'en_US');
 
   bool _isSharing = false;
   bool _isPrinting = false;
@@ -487,8 +487,8 @@ class _ServiceReceiptPreviewScreenState extends State<ServiceReceiptPreviewScree
           children: [
             Expanded(flex: 4, child: Text(name, style: const TextStyle(fontSize: 12.5, fontWeight: FontWeight.w600))),
             const Expanded(flex: 1, child: Text('1', style: TextStyle(fontSize: 12.5))),
-            Expanded(flex: 2, child: Text(_moneyFormat.format(amount), textAlign: TextAlign.right, style: const TextStyle(fontSize: 12.5))),
-            Expanded(flex: 2, child: Text(_moneyFormat.format(amount), textAlign: TextAlign.right, style: const TextStyle(fontSize: 12.5, fontWeight: FontWeight.w600))),
+            Expanded(flex: 2, child: Text(Money.plain(amount), textAlign: TextAlign.right, style: const TextStyle(fontSize: 12.5))),
+            Expanded(flex: 2, child: Text(Money.plain(amount), textAlign: TextAlign.right, style: const TextStyle(fontSize: 12.5, fontWeight: FontWeight.w600))),
           ],
         ),
       );
@@ -581,11 +581,11 @@ class _ServiceReceiptPreviewScreenState extends State<ServiceReceiptPreviewScree
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
               color: primaryColor.withValues(alpha: 0.08),
-              child: totalsRow('TOTAL', 'TSh ${_moneyFormat.format(service.totalAmount)}', bold: true),
+              child: totalsRow('TOTAL', 'TSh ${Money.plain(service.totalAmount)}', bold: true),
             ),
             const SizedBox(height: 8),
-            totalsRow('Paid', _moneyFormat.format(service.totalPaid)),
-            totalsRow('Balance', _moneyFormat.format(balance), bold: balance > 0, color: balance > 0 ? Colors.red : null),
+            totalsRow('Paid', Money.plain(service.totalPaid)),
+            totalsRow('Balance', Money.plain(balance), bold: balance > 0, color: balance > 0 ? Colors.red : null),
             const SizedBox(height: 10),
             Row(
               children: [

@@ -19,6 +19,7 @@ import '../sales/add_sale_screen.dart';
 import 'stock_alerts_screen.dart';
 import '../../theme/app_palette.dart';
 import '../../data/collections.dart';
+import '../../config/money.dart';
 
 class ProductsScreen extends StatefulWidget {
   final String? initialSearchQuery;
@@ -34,11 +35,6 @@ class _ProductsScreenState extends State<ProductsScreen> {
   final Color offWhite = AppPalette.background;
   final GlobalKey _bellKey = GlobalKey();
 
-  final NumberFormat _moneyFormat = NumberFormat.currency(
-    locale: 'en_US',
-    symbol: 'Tsh ',
-    decimalDigits: 0,
-  );
 
   final TextEditingController _searchController = TextEditingController();
 
@@ -201,7 +197,7 @@ class _ProductsScreenState extends State<ProductsScreen> {
       ),
       ('Low Stock', '${statusCounts['Low Stock'] ?? 0}', Icons.trending_down, Colors.orange),
       ('Depleted', '${statusCounts['Depleted'] ?? 0}', Icons.remove_shopping_cart_outlined, Colors.red),
-      ('Shelf Stock Value', _moneyFormat.format(totalStockValue), Icons.account_balance_wallet_outlined, warmAmber),
+      ('Shelf Stock Value', Money.format(totalStockValue), Icons.account_balance_wallet_outlined, warmAmber),
     ];
 
     return LayoutBuilder(
@@ -688,7 +684,7 @@ class _ProductsScreenState extends State<ProductsScreen> {
           ),
           Expanded(
             flex: 2,
-            child: _labelValue('Price', _moneyFormat.format(p.sellPrice)),
+            child: _labelValue('Price', Money.format(p.sellPrice)),
           ),
           Row(
             mainAxisSize: MainAxisSize.min,
@@ -1132,7 +1128,7 @@ class _ProductsScreenState extends State<ProductsScreen> {
                         Expanded(
                           child: _labelValue('Sellable', '${p.sellableQty} ${p.unit}', valueColor: statusColor),
                         ),
-                        Expanded(child: _labelValue('Price', _moneyFormat.format(p.sellPrice))),
+                        Expanded(child: _labelValue('Price', Money.format(p.sellPrice))),
                       ],
                     ),
                     const SizedBox(height: 8),
@@ -1150,7 +1146,7 @@ class _ProductsScreenState extends State<ProductsScreen> {
                       style: TextStyle(fontSize: 12.5, color: Colors.grey[700]),
                     ),
                     Text(
-                      'Buy: ${_moneyFormat.format(p.buyPrice)}',
+                      'Buy: ${Money.format(p.buyPrice)}',
                       style: TextStyle(fontSize: 12.5, color: Colors.grey[700]),
                     ),
                     if (p.expiry != null)
