@@ -30,6 +30,7 @@ import '../../config/money.dart';
 import '../../config/app_defaults.dart';
 import '../../config/app_timeouts.dart';
 import '../../config/app_date_format.dart';
+import '../../ui/feedback/app_feedback.dart';
 
 // --- Custom Formatter ---
 // --- Add Sale Screen ---
@@ -104,9 +105,7 @@ class _AddSaleScreenState extends State<AddSaleScreen> {
   // same product again reads naturally as "one more of these."
   void _addProductToSale(Product product) {
     if (product.sellableQty <= 0) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('${product.name} has no stock available on the shelf')),
-      );
+      AppFeedback.info('${product.name} has no stock available on the shelf');
       return;
     }
 
@@ -656,33 +655,29 @@ class _AddSaleScreenState extends State<AddSaleScreen> {
     if (_isSaving) return; // guards against a double-tap firing two saves at once
 
     if (items.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Add at least one item before saving')),
-      );
+      AppFeedback.warning('Add at least one item before saving');
       return;
     }
 
     if (isWalkIn && totalPaid < totalAmount) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-            content: Text('Walk-in sales must be paid in full - select a registered client to allow partial payment')),
+      AppFeedback.warning(
+        'Select a registered client to allow a partial payment',
+        detail: 'Walk-in sales must be paid in full',
       );
       return;
     }
 
     if (!isWalkIn && selectedClient == null && totalPaid < totalAmount) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-            content: Text('Select a client to record this as a partial payment, or choose Walk-in Customer and collect payment in full')),
+      AppFeedback.warning(
+        'Select a client to record a partial payment',
+        detail: 'Or choose Walk-in Customer and collect payment in full',
       );
       return;
     }
 
     if (totalPaid > 0 && paymentMethod == null) {
       setState(() => _paymentMethodMissing = true);
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Select a payment method before saving')),
-      );
+      AppFeedback.warning('Select a payment method before saving');
       return;
     }
 
@@ -710,9 +705,7 @@ class _AddSaleScreenState extends State<AddSaleScreen> {
 
       final facility = facilityProvider.selectedFacility;
       if (facility == null) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('No facility selected')),
-        );
+        AppFeedback.info('No facility selected');
         return;
       }
 
@@ -817,23 +810,11 @@ class _AddSaleScreenState extends State<AddSaleScreen> {
 
       if (!mounted) return;
 
-      // Snackbar for sale type
+      // Message for sale type
       if (saleOnCredit) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Saved in Sales and Debt successfully'),
-            backgroundColor: Colors.green,
-            duration: Duration(seconds: 2),
-          ),
-        );
+        AppFeedback.success('Sale saved and debt recorded');
       } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Sales saved successfully'),
-            backgroundColor: Colors.green,
-            duration: Duration(seconds: 2),
-          ),
-        );
+        AppFeedback.success('Sale saved');
       }
 
       // Reset form
@@ -849,13 +830,10 @@ class _AddSaleScreenState extends State<AddSaleScreen> {
       });
 
       Navigator.pop(context, true);
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Failed to save sale: $e'),
-          backgroundColor: Colors.red,
-        ),
-      );
+    } catch (e, st) {
+      // No Retry: the sale and its debt are saved in two separate calls, so
+      // a retry after a half-finished save could record the sale twice.
+      AppFeedback.error("Couldn't save the sale", error: e, stackTrace: st);
     } finally {
       if (mounted) setState(() => _isSaving = false);
     }

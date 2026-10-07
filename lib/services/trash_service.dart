@@ -49,7 +49,36 @@ class TrashService {
     );
 
     await batch.commit();
+    await _logRestore(facilityId, liveCollection, data);
+  }
 
+  /// [restore], for a caller that only knows the id (the Undo on a delete
+  /// message): reads the trash document first. Throws a StateError if it is
+  /// no longer in Trash (already restored, or deleted for good).
+  static Future<void> restoreById({
+    required String facilityId,
+    required String trashCollection,
+    required String liveCollection,
+    required String id,
+  }) async {
+    final snap = await FirebaseFirestore.instance
+        .collection(Collections.facilities)
+        .doc(facilityId)
+        .collection(trashCollection)
+        .doc(id)
+        .get();
+    final data = snap.data();
+    if (data == null) throw StateError('$trashCollection/$id is no longer in Trash');
+    await restore(
+      facilityId: facilityId,
+      trashCollection: trashCollection,
+      liveCollection: liveCollection,
+      id: id,
+      data: data,
+    );
+  }
+
+  static Future<void> _logRestore(String facilityId, String liveCollection, Map<String, dynamic> data) async {
     final userInfo = await ActivityLogger.getCurrentUserInfo();
     await ActivityLogger.logActivity(
       facilityId: facilityId,

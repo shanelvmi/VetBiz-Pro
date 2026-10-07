@@ -20,6 +20,7 @@ import '../../config/payment_methods.dart';
 import '../../config/money.dart';
 import '../../config/app_timeouts.dart';
 import '../../config/app_date_format.dart';
+import '../../ui/feedback/app_feedback.dart';
 
 class SubscriptionScreen extends StatefulWidget {
   final bool isModal;
@@ -148,9 +149,7 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
     if (facilityId == null) return;
 
     if (_referenceController.text.trim().isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Enter the payment reference / confirmation code')),
-      );
+      AppFeedback.warning('Enter the payment reference / confirmation code');
       return;
     }
 
@@ -199,17 +198,11 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
       _referenceController.clear();
       setState(() => _proofBytes = null);
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Payment submitted - it will be reviewed and confirmed shortly.'),
-          backgroundColor: Colors.green,
-        ),
-      );
-    } catch (e) {
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Submission failed: $e'), backgroundColor: Colors.redAccent),
-      );
+      AppFeedback.success('Payment submitted', detail: 'It will be reviewed and confirmed shortly');
+    } catch (e, st) {
+      // The reference and proof are still in the form (they're cleared only
+      // on success), so Retry simply submits again.
+      AppFeedback.error("Couldn't submit the payment", error: e, stackTrace: st, onRetry: _submitPayment);
     } finally {
       if (mounted) setState(() => _isSubmitting = false);
     }

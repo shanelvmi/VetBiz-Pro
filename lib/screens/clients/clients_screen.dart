@@ -22,6 +22,7 @@ import '../../config/money.dart';
 import '../../config/app_timeouts.dart';
 import '../../config/app_date_format.dart';
 import '../../config/app_links.dart';
+import '../../ui/feedback/app_feedback.dart';
 
 class ClientsScreen extends StatefulWidget {
   const ClientsScreen({super.key});
@@ -376,14 +377,11 @@ class _ClientsScreenState extends State<ClientsScreen> {
             .deleteClient(facilityId, client.id);
         if (!mounted) return;
         if (_selectedClient?.id == client.id) setState(() => _selectedClient = null);
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Client deleted'), backgroundColor: Colors.green),
-        );
-      } catch (e) {
-        if (!mounted) return;
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Could not delete client: $e'), backgroundColor: Colors.redAccent),
-        );
+        // A hard delete (nothing goes to trash_clients), so no Undo: see
+        // design-open-questions.md, "make client deletion soft?".
+        AppFeedback.success('Client deleted');
+      } catch (e, st) {
+        AppFeedback.error("Couldn't delete the client", error: e, stackTrace: st);
       }
     }
   }

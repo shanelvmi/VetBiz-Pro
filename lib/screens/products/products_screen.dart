@@ -20,6 +20,8 @@ import '../../theme/app_palette.dart';
 import '../../data/collections.dart';
 import '../../config/money.dart';
 import '../../config/app_date_format.dart';
+import '../../ui/feedback/app_feedback.dart';
+import '../../services/trash_service.dart';
 
 class ProductsScreen extends StatefulWidget {
   final String? initialSearchQuery;
@@ -387,21 +389,37 @@ class _ProductsScreenState extends State<ProductsScreen> {
       ),
     );
 
-    if (confirm != true) return;
+    if (confirm != true || !mounted) return;
 
+    // Read before the await: Undo may run after this screen is gone.
+    final facilityId = Provider.of<FacilityProvider>(context, listen: false).selectedFacilityId;
     try {
       await Provider.of<ProductProvider>(context, listen: false)
           .deleteProduct(context, p.id);
 
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Product deleted')),
+      // deleteProduct moves the product to Trash (a soft delete), so Undo
+      // puts it back with the Trash screen's own restore.
+      AppFeedback.undo(
+        'Product moved to Trash',
+        onUndo: () => _undoDeleteProduct(facilityId, p.id),
       );
-    } catch (e) {
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Could not delete: $e'), backgroundColor: Colors.redAccent),
+    } catch (e, st) {
+      AppFeedback.error("Couldn't delete the product", error: e, stackTrace: st);
+    }
+  }
+
+  static Future<void> _undoDeleteProduct(String? facilityId, String productId) async {
+    if (facilityId == null || facilityId.isEmpty) return;
+    try {
+      await TrashService.restoreById(
+        facilityId: facilityId,
+        trashCollection: Collections.trashProducts,
+        liveCollection: Collections.products,
+        id: productId,
       );
+      AppFeedback.success('Product restored');
+    } catch (e, st) {
+      AppFeedback.error("Couldn't restore the product", error: e, stackTrace: st);
     }
   }
 

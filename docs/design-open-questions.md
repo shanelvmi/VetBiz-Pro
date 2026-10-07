@@ -59,6 +59,8 @@ User-facing "VetBiz Pro" now reads `AppInfo.name` (titles, Settings, support lin
   - fallback "Login failed. Please try again." ("Please"), and an unknown code shows Firebase's own message.
   Reword to the copy rules? (The login screen would change too.)
 
+- **Make client deletion soft?** `ClientProvider.deleteClient` (`lib/providers/client_provider.dart`) deletes the client document outright, so its message ("Client deleted") has no Undo. Everything else that can be deleted from the app (products, sales, services, transactions) goes to a `trash_*` collection first. `trash_clients` is already supported end to end: `firestore.rules` has a rule for it, `functions/index.js` purges it after 30 days, and the Trash screen lists and restores it. Nothing in the app writes to it. Moving clients to Trash would give them Undo too (a behaviour change, so not done in Phase 2).
+
 ## Decided
 
 Decided by the owner after step 2A.
