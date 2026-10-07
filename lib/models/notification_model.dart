@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import '../data/fields.dart';
 
 /// The specific kind of event this notification represents. Deliberately
 /// granular - one value per distinct event kind - with [category] below
@@ -295,7 +296,7 @@ class FacilityNotification {
       type: NotificationType.fromString(data['type'] as String?),
       title: (data['title'] as String?) ?? '',
       message: (data['message'] as String?) ?? '',
-      createdAt: asDate(data['createdAt']),
+      createdAt: asDate(data[Fields.createdAt]),
       readAt: asDate(data['readAt']),
       expiresAt: asDate(data['expiresAt']),
       relatedEntityType: data['relatedEntityType'] as String?,

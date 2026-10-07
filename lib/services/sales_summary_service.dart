@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import '../data/collections.dart';
 
 /// One precomputed daily aggregate for a facility, written incrementally by
 /// the `updateDailySalesSummary` Cloud Function on every sale write.
@@ -107,9 +108,9 @@ class SalesSummaryService {
     required DateTime end,
   }) async {
     final snapshot = await _firestore
-        .collection('facilities')
+        .collection(Collections.facilities)
         .doc(facilityId)
-        .collection('dailySummaries')
+        .collection(Collections.dailySummaries)
         .where(FieldPath.documentId, isGreaterThanOrEqualTo: _fmt(start))
         .where(FieldPath.documentId, isLessThanOrEqualTo: _fmt(end))
         .get();
@@ -148,9 +149,9 @@ class SalesSummaryService {
     required DateTime end,
   }) async {
     final snapshot = await _firestore
-        .collection('facilities')
+        .collection(Collections.facilities)
         .doc(facilityId)
-        .collection('dailyCollections')
+        .collection(Collections.dailyCollections)
         .where(FieldPath.documentId, isGreaterThanOrEqualTo: _fmt(start))
         .where(FieldPath.documentId, isLessThanOrEqualTo: _fmt(end))
         .get();
@@ -184,9 +185,9 @@ class SalesSummaryService {
     required DateTime end,
   }) async {
     final snapshot = await _firestore
-        .collection('facilities')
+        .collection(Collections.facilities)
         .doc(facilityId)
-        .collection('dailyServiceSummaries')
+        .collection(Collections.dailyServiceSummaries)
         .where(FieldPath.documentId, isGreaterThanOrEqualTo: _fmt(start))
         .where(FieldPath.documentId, isLessThanOrEqualTo: _fmt(end))
         .get();
@@ -209,9 +210,9 @@ class SalesSummaryService {
     required DateTime end,
   }) async {
     final snapshot = await _firestore
-        .collection('facilities')
+        .collection(Collections.facilities)
         .doc(facilityId)
-        .collection('dailyTransactionSummaries')
+        .collection(Collections.dailyTransactionSummaries)
         .where(FieldPath.documentId, isGreaterThanOrEqualTo: _fmt(start))
         .where(FieldPath.documentId, isLessThanOrEqualTo: _fmt(end))
         .get();

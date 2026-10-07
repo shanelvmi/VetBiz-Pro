@@ -1,6 +1,8 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 import '../utils/subscription_status_utils.dart';
+import '../data/collections.dart';
+import '../data/fields.dart';
 
 /// One subscription discount/offer. The schema itself already
 /// supports several promotions coexisting (V2: a real list, priority
@@ -69,7 +71,7 @@ class Promotion {
   factory Promotion.fromDoc(DocumentSnapshot<Map<String, dynamic>> doc) {
     final data = doc.data() ?? {};
     final endsAtField = data['endsAt'];
-    final createdAtField = data['createdAt'];
+    final createdAtField = data[Fields.createdAt];
     return Promotion(
       id: doc.id,
       label: (data['label'] as String?) ?? 'Untitled Offer',
@@ -99,8 +101,8 @@ class Promotion {
 /// what's currently applicable.
 Stream<List<Promotion>> streamAllPromotions() {
   return FirebaseFirestore.instance
-      .collection('promotions')
-      .orderBy('createdAt', descending: true)
+      .collection(Collections.promotions)
+      .orderBy(Fields.createdAt, descending: true)
       .snapshots()
       .map((snap) => snap.docs.map(Promotion.fromDoc).toList());
 }
@@ -115,7 +117,7 @@ Stream<List<Promotion>> streamAllPromotions() {
 /// changing anything upstream of this function.
 Stream<Promotion?> streamApplicablePromotion({required String facilityId, required bool isExpiringSoon}) {
   return FirebaseFirestore.instance
-      .collection('promotions')
+      .collection(Collections.promotions)
       .where('active', isEqualTo: true)
       .snapshots()
       .map((snap) {
@@ -138,7 +140,7 @@ Stream<Promotion?> streamApplicablePromotion({required String facilityId, requir
 /// add priority/overlap handling) - everything else in this file
 /// already supports it as-is.
 Future<void> setActivePromotion(String promoId) async {
-  final collection = FirebaseFirestore.instance.collection('promotions');
+  final collection = FirebaseFirestore.instance.collection(Collections.promotions);
   final currentlyActive = await collection.where('active', isEqualTo: true).get();
 
   final batch = FirebaseFirestore.instance.batch();
@@ -178,7 +180,7 @@ Future<void> _notifyFacilitiesOfPromotion(Promotion promo) async {
     // won't get this one-time notification, though the live bell/banner
     // elsewhere will still correctly reflect the offer applying to them
     // by then regardless.
-    final facilitiesSnap = await FirebaseFirestore.instance.collection('facilities').get();
+    final facilitiesSnap = await FirebaseFirestore.instance.collection(Collections.facilities).get();
     targetFacilityIds = facilitiesSnap.docs.where((doc) {
       final data = doc.data();
       final expiresAtField = data['subscriptionExpiresAt'];
@@ -202,12 +204,12 @@ Future<void> _notifyFacilitiesOfPromotion(Promotion promo) async {
     final chunk = targetFacilityIds.sublist(i, i + 400 > targetFacilityIds.length ? targetFacilityIds.length : i + 400);
     final batch = firestore.batch();
     for (final facilityId in chunk) {
-      final ref = firestore.collection('facilities').doc(facilityId).collection('notifications').doc();
+      final ref = firestore.collection(Collections.facilities).doc(facilityId).collection(Collections.notifications).doc();
       batch.set(ref, {
         'type': 'promotion',
         'title': promo.label,
         'message': message,
-        'createdAt': FieldValue.serverTimestamp(),
+        Fields.createdAt: FieldValue.serverTimestamp(),
         'expiresAt': promo.endsAt != null ? Timestamp.fromDate(promo.endsAt!) : null,
       });
     }

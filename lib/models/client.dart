@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../utils/client_duplicate_matcher.dart';
+import '../data/fields.dart';
 
 class Client {
   final String id;
@@ -95,13 +96,13 @@ class Client {
       businessName: data['businessName'],
       licenseNumber: data['licenseNumber'],
       vetPracticeType: data['vetPracticeType'],
-      createdAt: data['createdAt'] != null
-          ? (data['createdAt'] as Timestamp).toDate()
+      createdAt: data[Fields.createdAt] != null
+          ? (data[Fields.createdAt] as Timestamp).toDate()
           : null,
-      updatedAt: data['updatedAt'] != null
-          ? (data['updatedAt'] as Timestamp).toDate()
+      updatedAt: data[Fields.updatedAt] != null
+          ? (data[Fields.updatedAt] as Timestamp).toDate()
           : null,
-      status: (data['status'] as String?) ?? 'Active',
+      status: (data[Fields.status] as String?) ?? 'Active',
       debtorNotes: data['debtorNotes'] != null
           ? List<Map<String, dynamic>>.from(
               (data['debtorNotes'] as List).map((e) => Map<String, dynamic>.from(e)))
@@ -139,9 +140,9 @@ class Client {
       'businessName': businessName,
       'licenseNumber': licenseNumber,
       'vetPracticeType': vetPracticeType,
-      'createdAt': createdAt != null ? Timestamp.fromDate(createdAt!) : FieldValue.serverTimestamp(),
-      'updatedAt': updatedAt != null ? Timestamp.fromDate(updatedAt!) : FieldValue.serverTimestamp(),
-      'status': status,
+      Fields.createdAt: createdAt != null ? Timestamp.fromDate(createdAt!) : FieldValue.serverTimestamp(),
+      Fields.updatedAt: updatedAt != null ? Timestamp.fromDate(updatedAt!) : FieldValue.serverTimestamp(),
+      Fields.status: status,
       'debtorNotes': debtorNotes,
       'notes': notes,
     };

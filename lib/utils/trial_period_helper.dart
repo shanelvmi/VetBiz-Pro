@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 import '../constants/subscription_plans.dart';
+import '../data/collections.dart';
 
 /// Looks up the Platform Admin's configured trial length
 /// (platform_config/settings.trialDays) and returns the expiry date a
@@ -17,7 +18,7 @@ Future<DateTime> computeNewFacilityTrialExpiry() async {
   int days = kDefaultTrialDays;
   try {
     final configDoc =
-        await FirebaseFirestore.instance.collection('platform_config').doc('settings').get();
+        await FirebaseFirestore.instance.collection(Collections.platformConfig).doc('settings').get();
     final configuredDays = (configDoc.data()?['trialDays'] as num?)?.toInt();
     if (configuredDays != null && configuredDays > 0) {
       days = configuredDays;

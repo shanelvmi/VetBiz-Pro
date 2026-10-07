@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import '../data/collections.dart';
 
 /// Subscription plan definitions. Prices below are the fallback
 /// defaults used only until a Platform Admin sets real ones via the
@@ -52,7 +53,7 @@ String _priceFieldFor(String planId) => '${planId}PriceTsh';
 /// e.g. offline), so this always returns something usable.
 Future<List<SubscriptionPlan>> loadSubscriptionPlans() async {
   try {
-    final doc = await FirebaseFirestore.instance.collection('platform_config').doc('settings').get();
+    final doc = await FirebaseFirestore.instance.collection(Collections.platformConfig).doc('settings').get();
     final data = doc.data();
     if (data == null) return kSubscriptionPlans;
 
@@ -90,7 +91,7 @@ Future<SubscriptionPlan?> loadPlanById(String id) async {
 /// for a screen visited briefly.
 Stream<List<SubscriptionPlan>> streamSubscriptionPlans() {
   return FirebaseFirestore.instance
-      .collection('platform_config')
+      .collection(Collections.platformConfig)
       .doc('settings')
       .snapshots()
       .map((doc) {

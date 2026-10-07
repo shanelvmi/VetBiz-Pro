@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import '../data/collections.dart';
 
 /// Assigns the next receipt number for [facilityId] - one shared,
 /// sequential numbering across both sales and services by default,
@@ -26,9 +27,9 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 Future<int> nextReceiptNumber(String facilityId, {String counterName = 'receiptNumber'}) async {
   final firestore = FirebaseFirestore.instance;
   final counterRef = firestore
-      .collection('facilities')
+      .collection(Collections.facilities)
       .doc(facilityId)
-      .collection('counters')
+      .collection(Collections.counters)
       .doc(counterName);
 
   return firestore.runTransaction<int>((transaction) async {

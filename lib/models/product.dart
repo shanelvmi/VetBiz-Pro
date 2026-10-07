@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import '../data/fields.dart';
 
 /// Defines where the product belongs (UI / grouping purpose)
 enum ProductTarget {
@@ -196,7 +197,7 @@ class Product {
       unit: data['unit'] ?? '',
       type: data['type'] ?? '',
       category: data['category'] ?? 'Uncategorized',
-      facilityId: data['facilityId'] ?? '',
+      facilityId: data[Fields.facilityId] ?? '',
       target: _targetFromString(data['target']),
       shelfMinLevel: (data['shelfMinLevel'] as num?)?.toInt(),
       lowStockThreshold: (data['lowStockThreshold'] as num?)?.toInt() ??
@@ -210,11 +211,11 @@ class Product {
           : null,
       hasEverHadStock: (data['hasEverHadStock'] as bool?) ??
           (((data['stockQty'] ?? 0) as num).toInt() > 0 || ((data['sellableQty'] ?? 0) as num).toInt() > 0),
-      createdAt: data['createdAt'] != null
-          ? (data['createdAt'] as Timestamp).toDate()
+      createdAt: data[Fields.createdAt] != null
+          ? (data[Fields.createdAt] as Timestamp).toDate()
           : null,
-      updatedAt: data['updatedAt'] != null
-          ? (data['updatedAt'] as Timestamp).toDate()
+      updatedAt: data[Fields.updatedAt] != null
+          ? (data[Fields.updatedAt] as Timestamp).toDate()
           : null,
       isWatchlisted: (data['isWatchlisted'] as bool?) ?? false,
     );
@@ -237,7 +238,7 @@ class Product {
       'unit': unit,
       'type': type,
       'category': category,
-      'facilityId': facilityId,
+      Fields.facilityId: facilityId,
       'target': target.name,
       'shelfMinLevel': shelfMinLevel,
       'lowStockThreshold': lowStockThreshold,
@@ -248,10 +249,10 @@ class Product {
       'thresholdsComputedAt':
           thresholdsComputedAt != null ? Timestamp.fromDate(thresholdsComputedAt!) : null,
       'hasEverHadStock': hasEverHadStock,
-      'createdAt': createdAt != null
+      Fields.createdAt: createdAt != null
           ? Timestamp.fromDate(createdAt!)
           : FieldValue.serverTimestamp(),
-      'updatedAt': updatedAt != null
+      Fields.updatedAt: updatedAt != null
           ? Timestamp.fromDate(updatedAt!)
           : FieldValue.serverTimestamp(),
       'isWatchlisted': isWatchlisted,

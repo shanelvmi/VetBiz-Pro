@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import '../data/fields.dart';
 
 class Debt {
   final String id;
@@ -38,7 +39,7 @@ class Debt {
       'source': source,
       'amountOwed': amountOwed,
       'timestamp': Timestamp.fromDate(timestamp),
-      'updatedAt': Timestamp.fromDate(updatedAt),
+      Fields.updatedAt: Timestamp.fromDate(updatedAt),
       'items': items.map((e) => e is Map ? e : e.toString()).toList(),
     };
   }
@@ -68,7 +69,7 @@ class Debt {
       source: map['source'] ?? 'Sale',
       amountOwed: parseAmount(map['amountOwed']),
       timestamp: parseDate(map['timestamp']),
-      updatedAt: parseDate(map['updatedAt']),
+      updatedAt: parseDate(map[Fields.updatedAt]),
       items: List<dynamic>.from(map['items'] ?? []),
     );
   }

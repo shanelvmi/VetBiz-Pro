@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import '../data/collections.dart';
 
 /// The full-bleed background for the signed-out screens (Register today;
 /// Login has its own copy of the same logic).
@@ -17,7 +18,7 @@ class AuthBackground extends StatelessWidget {
       fit: StackFit.expand,
       children: [
         StreamBuilder<DocumentSnapshot>(
-          stream: FirebaseFirestore.instance.collection('app_config').doc('login_poster').snapshots(),
+          stream: FirebaseFirestore.instance.collection(Collections.appConfig).doc('login_poster').snapshots(),
           builder: (context, snapshot) {
             final posterUrl = snapshot.data?.data() != null
                 ? (snapshot.data!.data() as Map<String, dynamic>)['posterUrl'] as String?

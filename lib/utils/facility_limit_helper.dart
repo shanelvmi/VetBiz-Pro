@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import '../data/collections.dart';
 
 /// Default cap on how many facilities a single Admin account can
 /// create, used only until a Platform Admin configures a different
@@ -15,7 +16,7 @@ const int kDefaultMaxFacilitiesPerAdmin = 6;
 Future<int> loadMaxFacilitiesPerAdmin() async {
   try {
     final doc =
-        await FirebaseFirestore.instance.collection('platform_config').doc('settings').get();
+        await FirebaseFirestore.instance.collection(Collections.platformConfig).doc('settings').get();
     final configured = (doc.data()?['maxFacilitiesPerAdmin'] as num?)?.toInt();
     return (configured != null && configured > 0) ? configured : kDefaultMaxFacilitiesPerAdmin;
   } catch (_) {
@@ -30,7 +31,7 @@ Future<int> loadMaxFacilitiesPerAdmin() async {
 /// pricing already works.
 Stream<int> streamMaxFacilitiesPerAdmin() {
   return FirebaseFirestore.instance
-      .collection('platform_config')
+      .collection(Collections.platformConfig)
       .doc('settings')
       .snapshots()
       .map((doc) {

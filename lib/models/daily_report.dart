@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import '../data/fields.dart';
 
 /// One line in the itemized Sales tab.
 class SaleLineItem {
@@ -434,11 +435,11 @@ class DailyReport {
   Map<String, dynamic> toMap() {
     Map<String, double> encodeDoubleMap(Map<String, double> m) => m;
     return {
-      'facilityId': facilityId,
+      Fields.facilityId: facilityId,
       'reportDate': Timestamp.fromDate(reportDate),
       'generatedAt': Timestamp.fromDate(generatedAt),
       'generatedByName': generatedByName,
-      'status': status,
+      Fields.status: status,
       'submittedAt': submittedAt != null ? Timestamp.fromDate(submittedAt!) : null,
       'salesCount': salesCount,
       'salesTotalValue': salesTotalValue,
@@ -480,11 +481,11 @@ class DailyReport {
 
     return DailyReport(
       id: id,
-      facilityId: map['facilityId'] as String? ?? '',
+      facilityId: map[Fields.facilityId] as String? ?? '',
       reportDate: (map['reportDate'] as Timestamp?)?.toDate() ?? DateTime.now(),
       generatedAt: (map['generatedAt'] as Timestamp?)?.toDate() ?? DateTime.now(),
       generatedByName: map['generatedByName'] as String? ?? 'Unknown',
-      status: map['status'] as String? ?? 'draft',
+      status: map[Fields.status] as String? ?? 'draft',
       submittedAt: (map['submittedAt'] as Timestamp?)?.toDate(),
       salesCount: (map['salesCount'] as num?)?.toInt() ?? 0,
       salesTotalValue: (map['salesTotalValue'] as num?)?.toDouble() ?? 0,

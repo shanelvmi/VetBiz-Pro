@@ -3,6 +3,8 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import '../models/daily_report.dart';
 import '../models/sale.dart';
 import '../models/service.dart';
+import '../data/collections.dart';
+import '../data/fields.dart';
 
 class DailyReportService {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
@@ -11,7 +13,7 @@ class DailyReportService {
       '${d.year.toString().padLeft(4, '0')}-${d.month.toString().padLeft(2, '0')}-${d.day.toString().padLeft(2, '0')}';
 
   CollectionReference<Map<String, dynamic>> _reportsCollection(String facilityId) =>
-      _firestore.collection('facilities').doc(facilityId).collection('dailyReports');
+      _firestore.collection(Collections.facilities).doc(facilityId).collection(Collections.dailyReports);
 
   /// Fetches one page of reports, newest first. Pass [startAfter] (the
   /// last document from the previous page) to continue from where the
@@ -67,7 +69,7 @@ class DailyReportService {
   Future<void> deleteDraftReport({required String facilityId, required String reportId}) async {
     final docRef = _reportsCollection(facilityId).doc(reportId);
     final doc = await _labeled('dailyReports (read before delete)', () => docRef.get());
-    final status = doc.data()?['status'] as String?;
+    final status = doc.data()?[Fields.status] as String?;
     if (status != 'draft') {
       throw Exception('Only a draft report can be deleted - this report has already been submitted.');
     }
@@ -129,7 +131,7 @@ class DailyReportService {
 
     final todayStart = Timestamp.fromDate(today);
     final nowStamp = Timestamp.fromDate(now);
-    final facilities = _firestore.collection('facilities').doc(facilityId);
+    final facilities = _firestore.collection(Collections.facilities).doc(facilityId);
     final yesterday = today.subtract(const Duration(days: 1));
 
     // None of these 12 reads' parameters depend on another read's
@@ -151,7 +153,7 @@ class DailyReportService {
     // so it still runs in parallel.
     final activityFuture = includeActivityLog
         ? _labeled('activity_logs', () => facilities
-            .collection('activity_logs')
+            .collection(Collections.activityLogs)
             .where('timestamp', isGreaterThanOrEqualTo: todayStart)
             .where('timestamp', isLessThanOrEqualTo: nowStamp)
             .orderBy('timestamp')
@@ -159,48 +161,48 @@ class DailyReportService {
         : null;
     final querySnapshotsFuture = Future.wait([
       _labeled('sales', () => facilities
-          .collection('sales')
+          .collection(Collections.sales)
           .where('timestamp', isGreaterThanOrEqualTo: todayStart)
           .where('timestamp', isLessThanOrEqualTo: nowStamp)
           .get()),
       _labeled('services', () => facilities
-          .collection('services')
+          .collection(Collections.services)
           .where('serviceDate', isGreaterThanOrEqualTo: todayStart)
           .where('serviceDate', isLessThanOrEqualTo: nowStamp)
           .get()),
       _labeled('payments', () => facilities
-          .collection('payments')
+          .collection(Collections.payments)
           .where('timestamp', isGreaterThanOrEqualTo: todayStart)
           .where('timestamp', isLessThanOrEqualTo: nowStamp)
           .get()),
       _labeled('transactions', () => facilities
-          .collection('transactions')
+          .collection(Collections.transactions)
           .where('date', isGreaterThanOrEqualTo: todayStart)
           .where('date', isLessThanOrEqualTo: nowStamp)
           .get()),
       _labeled('debts (today)', () => facilities
-          .collection('debts')
+          .collection(Collections.debts)
           .where('timestamp', isGreaterThanOrEqualTo: todayStart)
           .where('timestamp', isLessThanOrEqualTo: nowStamp)
           .get()),
-      _labeled('debts (all)', () => facilities.collection('debts').get()),
-      _labeled('products', () => facilities.collection('products').get()),
+      _labeled('debts (all)', () => facilities.collection(Collections.debts).get()),
+      _labeled('products', () => facilities.collection(Collections.products).get()),
       _labeled('stockAdditions', () => facilities
-          .collection('stockAdditions')
+          .collection(Collections.stockAdditions)
           .where('timestamp', isGreaterThanOrEqualTo: todayStart)
           .where('timestamp', isLessThanOrEqualTo: nowStamp)
           .get()),
       _labeled('stock_adjustments', () => facilities
-          .collection('stock_adjustments')
+          .collection(Collections.stockAdjustments)
           .where('timestamp', isGreaterThanOrEqualTo: todayStart)
           .where('timestamp', isLessThanOrEqualTo: nowStamp)
           .get()),
     ]);
     final docSnapshotsFuture = Future.wait([
       _labeled(
-          'dailySnapshots', () => facilities.collection('dailySnapshots').doc(_dateKey(yesterday)).get()),
+          'dailySnapshots', () => facilities.collection(Collections.dailySnapshots).doc(_dateKey(yesterday)).get()),
       _labeled('dailyStockSnapshots',
-          () => facilities.collection('dailyStockSnapshots').doc(_dateKey(today)).get()),
+          () => facilities.collection(Collections.dailyStockSnapshots).doc(_dateKey(today)).get()),
     ]);
     final queryResults = await querySnapshotsFuture;
     final docResults = await docSnapshotsFuture;

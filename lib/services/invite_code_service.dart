@@ -1,6 +1,8 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 import 'membership_service.dart';
+import '../data/collections.dart';
+import '../data/fields.dart';
 
 /// Short-lived, single-use codes for inviting a specific Assistant to
 /// join a facility - deliberately separate from the facility's own
@@ -53,8 +55,8 @@ class InviteCodeService {
   /// one with no visibility into whether one already exists.
   Future<Map<String, dynamic>?> getActiveInvite(String facilityId) async {
     final snap = await _firestore
-        .collection('inviteCodes')
-        .where('facilityId', isEqualTo: facilityId)
+        .collection(Collections.inviteCodes)
+        .where(Fields.facilityId, isEqualTo: facilityId)
         .where('usedAt', isNull: true)
         .limit(1)
         .get();
@@ -71,8 +73,8 @@ class InviteCodeService {
   /// Explicitly revokes a facility's active invite code, if any exists.
   Future<void> revokeInviteCode(String facilityId) async {
     final existing = await _firestore
-        .collection('inviteCodes')
-        .where('facilityId', isEqualTo: facilityId)
+        .collection(Collections.inviteCodes)
+        .where(Fields.facilityId, isEqualTo: facilityId)
         .where('usedAt', isNull: true)
         .get();
     for (final doc in existing.docs) {

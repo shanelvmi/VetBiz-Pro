@@ -1,6 +1,8 @@
 import 'package:flutter/foundation.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import '../data/collections.dart';
+import '../data/fields.dart';
 
 class ActivityLogger {
   /// Logs an activity to the 'activity_logs' subcollection under a facility in Firestore
@@ -22,7 +24,7 @@ class ActivityLogger {
       // Fetch fullName from Firestore if userName not provided
       if (userName == null || userName.isEmpty) {
         final userDoc = await FirebaseFirestore.instance
-            .collection('users')
+            .collection(Collections.users)
             .doc(userId)
             .get();
         userName = userDoc.exists
@@ -31,11 +33,11 @@ class ActivityLogger {
       }
 
       await FirebaseFirestore.instance
-          .collection('facilities')
+          .collection(Collections.facilities)
           .doc(facilityId)
-          .collection('activity_logs')
+          .collection(Collections.activityLogs)
           .add({
-        'userId': userId,
+        Fields.userId: userId,
         'userName': userName,
         'actionType': actionType,
         'description': description,
@@ -57,7 +59,7 @@ class ActivityLogger {
     String userName = 'Unknown';
     try {
       final doc = await FirebaseFirestore.instance
-          .collection('users')
+          .collection(Collections.users)
           .doc(user.uid)
           .get();
       userName = doc.exists ? (doc.data()?['fullName'] ?? user.email ?? 'Unknown') : user.email ?? 'Unknown';

@@ -55,9 +55,14 @@ void main(List<String> args) {
         c++;
         return '.${m.group(1)}(Collections.$id)';
       });
-      // Fields are Firestore field names only. A SharedPreferences key or a key
-      // of the in-app userInfo map can be the same word, but is not a field.
-      final notAField = out.contains('prefs.') || out.contains('userInfo[');
+      // Fields are Firestore field names only. A SharedPreferences key, a key
+      // of an in-app map (userInfo, the parsed facility entry) or a callable
+      // function's parameter can be the same word, but is not a field. Each
+      // batch's diff is still reviewed by hand for others.
+      final notAField = out.contains('prefs.') ||
+          out.contains('userInfo[') ||
+          out.contains('facility[') ||
+          out.contains('_call(');
       if (!notAField) {
         out = out.replaceAllMapped(_fieldLiteral, (m) {
           f++;

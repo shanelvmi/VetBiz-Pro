@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'sales_summary_service.dart';
+import '../data/collections.dart';
 
 /// The set of period-aware ("Today"/"This Week"/etc.) figures the
 /// dashboard needs, all sourced from precomputed daily aggregates rather
@@ -72,9 +73,9 @@ class DashboardSummaryService {
     required DateTime end,
   }) async {
     final snapshot = await _firestore
-        .collection('facilities')
+        .collection(Collections.facilities)
         .doc(facilityId)
-        .collection('dailyServiceSummaries')
+        .collection(Collections.dailyServiceSummaries)
         .where(FieldPath.documentId, isGreaterThanOrEqualTo: _fmt(start))
         .where(FieldPath.documentId, isLessThanOrEqualTo: _fmt(end))
         .get();
@@ -116,9 +117,9 @@ class DashboardSummaryService {
     required DateTime end,
   }) async {
     final snapshot = await _firestore
-        .collection('facilities')
+        .collection(Collections.facilities)
         .doc(facilityId)
-        .collection('dailyTransactionSummaries')
+        .collection(Collections.dailyTransactionSummaries)
         .where(FieldPath.documentId, isGreaterThanOrEqualTo: _fmt(start))
         .where(FieldPath.documentId, isLessThanOrEqualTo: _fmt(end))
         .get();
@@ -205,9 +206,9 @@ class DashboardSummaryService {
     final subs = <StreamSubscription>[];
 
     subs.add(_firestore
-        .collection('facilities')
+        .collection(Collections.facilities)
         .doc(facilityId)
-        .collection('dailySummaries')
+        .collection(Collections.dailySummaries)
         .where(FieldPath.documentId, isGreaterThanOrEqualTo: startStr)
         .where(FieldPath.documentId, isLessThanOrEqualTo: endStr)
         .snapshots()
@@ -231,9 +232,9 @@ class DashboardSummaryService {
     }, onError: controller.addError));
 
     subs.add(_firestore
-        .collection('facilities')
+        .collection(Collections.facilities)
         .doc(facilityId)
-        .collection('dailyCollections')
+        .collection(Collections.dailyCollections)
         .where(FieldPath.documentId, isGreaterThanOrEqualTo: startStr)
         .where(FieldPath.documentId, isLessThanOrEqualTo: endStr)
         .snapshots()
@@ -245,9 +246,9 @@ class DashboardSummaryService {
     }, onError: controller.addError));
 
     subs.add(_firestore
-        .collection('facilities')
+        .collection(Collections.facilities)
         .doc(facilityId)
-        .collection('dailyServiceSummaries')
+        .collection(Collections.dailyServiceSummaries)
         .where(FieldPath.documentId, isGreaterThanOrEqualTo: startStr)
         .where(FieldPath.documentId, isLessThanOrEqualTo: endStr)
         .snapshots()
@@ -269,9 +270,9 @@ class DashboardSummaryService {
     }, onError: controller.addError));
 
     subs.add(_firestore
-        .collection('facilities')
+        .collection(Collections.facilities)
         .doc(facilityId)
-        .collection('dailyTransactionSummaries')
+        .collection(Collections.dailyTransactionSummaries)
         .where(FieldPath.documentId, isGreaterThanOrEqualTo: startStr)
         .where(FieldPath.documentId, isLessThanOrEqualTo: endStr)
         .snapshots()

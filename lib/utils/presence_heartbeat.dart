@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import '../data/collections.dart';
 
 /// Writes a "last active" heartbeat to the current user's own document
 /// every couple of minutes while they're signed in - the basis for the
@@ -49,7 +50,7 @@ class PresenceHeartbeat {
       // same as any other missed heartbeat - rather than silently
       // creating a broken, real-profile-less account.
       await FirebaseFirestore.instance
-          .collection('users')
+          .collection(Collections.users)
           .doc(user.uid)
           .update({'lastActiveAt': FieldValue.serverTimestamp()});
     } catch (_) {

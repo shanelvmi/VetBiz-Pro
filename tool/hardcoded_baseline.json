@@ -478,9 +478,6 @@
       "lib/services/receipt_printer_service.dart": 7
     },
     "R9": {
-      "lib/constants/subscription_plans.dart": 2,
-      "lib/main.dart": 5,
-      "lib/models/promotion.dart": 6,
       "lib/screens/activity/activity_log_screen.dart": 4,
       "lib/screens/admin/manage_assistants_screen.dart": 4,
       "lib/screens/clients/clients_screen.dart": 2,
@@ -521,22 +518,7 @@
       "lib/screens/store/release_to_shop_flow.dart": 3,
       "lib/screens/subscription/subscription_history_screen.dart": 2,
       "lib/screens/subscription/subscription_screen.dart": 6,
-      "lib/screens/transactions/add_transaction_screen.dart": 1,
-      "lib/services/activity_log_retention.dart": 2,
-      "lib/services/auth_service.dart": 2,
-      "lib/services/daily_report_service.dart": 15,
-      "lib/services/dashboard_summary_service.dart": 12,
-      "lib/services/invite_code_service.dart": 2,
-      "lib/services/role_change_service.dart": 7,
-      "lib/services/sales_summary_service.dart": 8,
-      "lib/services/usage_calculator_service.dart": 6,
-      "lib/utils/activity_logger.dart": 4,
-      "lib/utils/facility_limit_helper.dart": 2,
-      "lib/utils/presence_heartbeat.dart": 1,
-      "lib/utils/receipt_numbering.dart": 2,
-      "lib/utils/trial_period_helper.dart": 1,
-      "lib/widgets/auth_background.dart": 1,
-      "lib/widgets/maintenance_gate.dart": 2
+      "lib/screens/transactions/add_transaction_screen.dart": 1
     },
     "R10": {
       "lib/main.dart": 22,

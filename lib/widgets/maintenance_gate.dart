@@ -5,6 +5,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 
 import '../utils/force_logout.dart';
 import '../theme/app_palette.dart';
+import '../data/collections.dart';
 
 /// Wraps the entire app (see main.dart's MaterialApp.builder) so a
 /// maintenance-mode block applies regardless of which screen or dialog
@@ -83,7 +84,7 @@ class _MaintenanceGateState extends State<MaintenanceGate> {
     if (user == null) return;
 
     _platformAdminSub = FirebaseFirestore.instance
-        .collection('platform_admins')
+        .collection(Collections.platformAdmins)
         .doc(user.uid)
         .snapshots()
         .listen((snap) {
@@ -98,7 +99,7 @@ class _MaintenanceGateState extends State<MaintenanceGate> {
       _configSub = null;
       if (!isPlatformAdmin) {
         _configSub = FirebaseFirestore.instance
-            .collection('platform_config')
+            .collection(Collections.platformConfig)
             .doc('settings')
             .snapshots()
             .listen((configSnap) {

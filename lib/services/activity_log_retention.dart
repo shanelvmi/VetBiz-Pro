@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import '../data/collections.dart';
 
 /// Removes activity logs that have aged out of a facility's "keep logs for
 /// N days" setting.
@@ -26,7 +27,7 @@ class ActivityLogRetention {
   /// anything left over is picked up the next time this runs.
   static Future<int> deleteExpired(String facilityId, int retentionDays, {int maxRounds = 60}) async {
     final firestore = FirebaseFirestore.instance;
-    final logs = firestore.collection('facilities').doc(facilityId).collection('activity_logs');
+    final logs = firestore.collection(Collections.facilities).doc(facilityId).collection(Collections.activityLogs);
     final cutoff = Timestamp.fromDate(cutoffFor(retentionDays));
 
     var deleted = 0;

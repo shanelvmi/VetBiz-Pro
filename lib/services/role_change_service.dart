@@ -3,6 +3,8 @@ import 'package:firebase_auth/firebase_auth.dart';
 
 import '../utils/activity_logger.dart';
 import '../utils/facility_limit_helper.dart';
+import '../data/collections.dart';
+import '../data/fields.dart';
 
 /// Changing someone's role - done ONLY by a Platform Admin (Platform Admin >
 /// Users > the person > Change role). Nobody else can: not the person
@@ -122,7 +124,7 @@ class RoleChangeService {
 
   /// True for the people displayRole calls Co-admin.
   static bool isCoAdmin(Map<String, dynamic> userData) =>
-      userData['role'] == 'admin' && userData['previousRole'] == 'assistant';
+      userData[Fields.role] == 'admin' && userData['previousRole'] == 'assistant';
 
   // "Ukuli Agrovet" rather than "Ukuli" - unless the name already says it.
   static String _facilityLabel(Map<dynamic, dynamic> f) {
@@ -205,8 +207,8 @@ class RoleChangeService {
   /// Admin is allowed to read.
   static Future<RoleChangeFacts> gatherFacts(String userId, Map<String, dynamic> userData) async {
     final db = FirebaseFirestore.instance;
-    final role = (userData['role'] ?? '').toString();
-    final status = (userData['status'] ?? 'active').toString();
+    final role = (userData[Fields.role] ?? '').toString();
+    final status = (userData[Fields.status] ?? 'active').toString();
 
     // Both fields are read: they're meant to stay in step, but an older
     // account might only have one of them.
@@ -215,9 +217,9 @@ class RoleChangeService {
     };
     final names = <String, String>{};
     for (final f in (userData['facilities'] as List? ?? const [])) {
-      if (f is Map && f['facilityId'] != null && f['facilityId'].toString().isNotEmpty) {
-        ids.add(f['facilityId'].toString());
-        names[f['facilityId'].toString()] = _facilityLabel(f);
+      if (f is Map && f[Fields.facilityId] != null && f[Fields.facilityId].toString().isNotEmpty) {
+        ids.add(f[Fields.facilityId].toString());
+        names[f[Fields.facilityId].toString()] = _facilityLabel(f);
       }
     }
     final facilityIds = ids.where((id) => id.isNotEmpty).toList();
@@ -225,14 +227,14 @@ class RoleChangeService {
     // A facility the user's own list doesn't name still gets a proper name in
     // the dialog and the notifications.
     for (final fid in facilityIds.where((id) => !names.containsKey(id))) {
-      final snap = await db.collection('facilities').doc(fid).get();
+      final snap = await db.collection(Collections.facilities).doc(fid).get();
       if (snap.exists) names[fid] = _facilityLabel(snap.data() ?? const {});
     }
 
-    final platformAdminDocs = await db.collection('platform_admins').get();
+    final platformAdminDocs = await db.collection(Collections.platformAdmins).get();
     final platformAdminIds = platformAdminDocs.docs.map((d) => d.id).toSet();
 
-    final owned = await db.collection('facilities').where('createdBy', isEqualTo: userId).get();
+    final owned = await db.collection(Collections.facilities).where('createdBy', isEqualTo: userId).get();
     final ownedNames = owned.docs.map((d) => _facilityLabel(d.data())).toList();
 
     // Whether a facility keeps another Admin only matters when demoting one.
@@ -240,12 +242,12 @@ class RoleChangeService {
     if (role == 'admin') {
       for (final fid in facilityIds) {
         final admins =
-            await db.collection('users').where('role', isEqualTo: 'admin').where('facilityIds', arrayContains: fid).get();
+            await db.collection(Collections.users).where(Fields.role, isEqualTo: 'admin').where('facilityIds', arrayContains: fid).get();
         others[fid] = admins.docs
             .where((d) =>
                 d.id != userId &&
                 !platformAdminIds.contains(d.id) &&
-                (d.data()['status'] ?? 'active').toString() != 'deactivated')
+                (d.data()[Fields.status] ?? 'active').toString() != 'deactivated')
             .length;
       }
     }
@@ -273,11 +275,11 @@ class RoleChangeService {
     String? targetUserId,
     String? excludeUserId,
   }) {
-    return FirebaseFirestore.instance.collection('facilities').doc(facilityId).collection('notifications').add({
+    return FirebaseFirestore.instance.collection(Collections.facilities).doc(facilityId).collection(Collections.notifications).add({
       'type': 'roleChanged',
       'title': title,
       'message': message,
-      'createdAt': FieldValue.serverTimestamp(),
+      Fields.createdAt: FieldValue.serverTimestamp(),
       'audience': audience,
       if (targetUserId != null) 'targetUserId': targetUserId,
       if (excludeUserId != null) 'excludeUserId': excludeUserId,
@@ -305,8 +307,8 @@ class RoleChangeService {
     // The same audit fields a status change leaves (statusChangedBy, ...).
     // previousRole is also what makes someone a Co-admin (an Admin whose
     // previous role was Assistant), so it must always be written.
-    await FirebaseFirestore.instance.collection('users').doc(userId).update({
-      'role': plan.newRole,
+    await FirebaseFirestore.instance.collection(Collections.users).doc(userId).update({
+      Fields.role: plan.newRole,
       'previousRole': plan.currentRole,
       'previousRoleLabel': plan.currentLabel,
       'roleChangedBy': by,

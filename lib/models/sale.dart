@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import '../data/fields.dart';
 
 class SaleItem {
   final String productId;
@@ -229,11 +230,11 @@ class Sale {
       if (clientId != null) 'clientId': clientId,
       if (clientName != null) 'clientName': clientName,
       'timestamp': Timestamp.fromDate(timestamp),
-      'updatedAt': Timestamp.fromDate(updatedAt),
+      Fields.updatedAt: Timestamp.fromDate(updatedAt),
       'items': items.map((i) => i.toMap()).toList(),
       'totalAmount': totalAmount,
       'totalPaid': totalPaid,
-      'facilityId': facilityId,
+      Fields.facilityId: facilityId,
       'soldById': soldById,
       'soldByName': soldByName,
       'saleOnCredit': saleOnCredit,
@@ -271,7 +272,7 @@ class Sale {
     }
 
     DateTime updatedAt = timestamp;
-    final rawUpdated = map['updatedAt'];
+    final rawUpdated = map[Fields.updatedAt];
     if (rawUpdated != null) {
       if (rawUpdated is Timestamp) {
         updatedAt = rawUpdated.toDate();
@@ -289,7 +290,7 @@ class Sale {
       items: itemsList,
       totalAmount: (map['totalAmount'] as num?)?.toDouble() ?? 0.0,
       totalPaid: (map['totalPaid'] as num?)?.toDouble() ?? 0.0,
-      facilityId: map['facilityId'] as String? ?? '',
+      facilityId: map[Fields.facilityId] as String? ?? '',
       soldById: map['soldById'] as String? ?? '',
       soldByName: map['soldByName'] as String? ?? '',
       saleOnCredit: map['saleOnCredit'] as bool? ?? false,

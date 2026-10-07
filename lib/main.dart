@@ -37,6 +37,8 @@ import 'providers/payment_provider.dart';
 import 'widgets/vetbiz_loading_indicator.dart';
 import 'theme/app_palette.dart';
 import 'theme/app_theme.dart';
+import 'data/collections.dart';
+import 'data/fields.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -121,7 +123,7 @@ List<Map<String, dynamic>> _parseFacilities(Map<String, dynamic>? data) {
   return raw
       .whereType<Map>()
       .map((f) => {
-            'facilityId': f['facilityId'],
+            'facilityId': f[Fields.facilityId],
             'facilityName': f['name'] ?? '',
             'facilityType': f['type'] ?? '',
           })
@@ -288,7 +290,7 @@ class _AppEntryPointState extends State<AppEntryPoint> {
       debugPrint('[AUTH] _decideScreen starting for uid=$uid');
 
       var userDoc = await _getWithRetry(
-        FirebaseFirestore.instance.collection('users').doc(uid),
+        FirebaseFirestore.instance.collection(Collections.users).doc(uid),
         timeout: const Duration(seconds: 15),
       );
       debugPrint('[AUTH] users/$uid read complete - exists=${userDoc.exists}');
@@ -298,7 +300,7 @@ class _AppEntryPointState extends State<AppEntryPoint> {
       for (var attempt = 0; attempt < 2 && !userDoc.exists; attempt++) {
         await Future.delayed(const Duration(milliseconds: 700));
         userDoc = await _getWithRetry(
-          FirebaseFirestore.instance.collection('users').doc(uid),
+          FirebaseFirestore.instance.collection(Collections.users).doc(uid),
           timeout: const Duration(seconds: 10),
         );
         debugPrint('[AUTH] users/$uid re-checked - exists=${userDoc.exists}');
@@ -326,8 +328,8 @@ class _AppEntryPointState extends State<AppEntryPoint> {
       }
 
       final data = userDoc.data()!;
-      final role = (data['role'] ?? '').toString().toLowerCase();
-      debugPrint('[AUTH] role=$role status=${data['status']} facilities=${data['facilities']}');
+      final role = (data[Fields.role] ?? '').toString().toLowerCase();
+      debugPrint('[AUTH] role=$role status=${data[Fields.status]} facilities=${data['facilities']}');
 
       // Platform Admins are exempt from the deactivation check entirely
       // - checked first, before status, as a backup to the rules-level
@@ -335,7 +337,7 @@ class _AppEntryPointState extends State<AppEntryPoint> {
       // place) in case any pre-existing account somehow already has
       // status: deactivated set.
       final platformAdminDoc = await _getWithRetry(
-        FirebaseFirestore.instance.collection('platform_admins').doc(uid),
+        FirebaseFirestore.instance.collection(Collections.platformAdmins).doc(uid),
         timeout: const Duration(seconds: 10),
       );
       final isPlatformAdminAccount = platformAdminDoc.exists;
@@ -344,7 +346,7 @@ class _AppEntryPointState extends State<AppEntryPoint> {
       // Checked for every role, not just assistants - a deactivated
       // admin account was previously still able to log in freely,
       // which defeated the point of "Deactivate Account" entirely.
-      final status = (data['status'] ?? 'active').toString().toLowerCase();
+      final status = (data[Fields.status] ?? 'active').toString().toLowerCase();
 
       // An assistant who is in NO facility - removed from theirs - has nothing
       // left to be blocked from: every rule that opens data checks facility
@@ -403,7 +405,7 @@ class _AppEntryPointState extends State<AppEntryPoint> {
         for (var attempt = 0; attempt < 4 && facilities.isEmpty; attempt++) {
           await Future.delayed(const Duration(milliseconds: 800));
           final retryDoc = await _getWithRetry(
-            FirebaseFirestore.instance.collection('users').doc(uid),
+            FirebaseFirestore.instance.collection(Collections.users).doc(uid),
             timeout: const Duration(seconds: 10),
           );
           facilities = _parseFacilities(retryDoc.data());
@@ -812,7 +814,7 @@ class _NoFacilityScreenState extends State<_NoFacilityScreen> {
     // exactly that.
     try {
       final owned = await FirebaseFirestore.instance
-          .collection('facilities')
+          .collection(Collections.facilities)
           .where('createdBy', isEqualTo: user.uid)
           .limit(1)
           .get();

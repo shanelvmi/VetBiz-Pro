@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 import '../models/product.dart';
+import '../data/collections.dart';
 
 /// The three day-counts a single restock frequency choice maps to.
 class _RestockDayCounts {
@@ -89,9 +90,9 @@ class UsageCalculatorService {
 
     // Sales - each line item carries its own quantity.
     final salesSnap = await FirebaseFirestore.instance
-        .collection('facilities')
+        .collection(Collections.facilities)
         .doc(facilityId)
-        .collection('sales')
+        .collection(Collections.sales)
         .where('timestamp', isGreaterThanOrEqualTo: cutoffTimestamp)
         .get();
 
@@ -112,9 +113,9 @@ class UsageCalculatorService {
     // entry; there's no separate quantity field on these items), so this
     // counts entries rather than summing a quantity field.
     final servicesSnap = await FirebaseFirestore.instance
-        .collection('facilities')
+        .collection(Collections.facilities)
         .doc(facilityId)
-        .collection('services')
+        .collection(Collections.services)
         .where('serviceDate', isGreaterThanOrEqualTo: cutoffTimestamp)
         .get();
 
@@ -166,9 +167,9 @@ class UsageCalculatorService {
       if (avgDailyUsage == null) continue; // not enough history - leave alone
 
       final docRef = FirebaseFirestore.instance
-          .collection('facilities')
+          .collection(Collections.facilities)
           .doc(facilityId)
-          .collection('products')
+          .collection(Collections.products)
           .doc(product.id);
 
       batch.update(docRef, {

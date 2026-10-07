@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import '../data/fields.dart';
 
 class Service {
   final String id;
@@ -86,8 +87,8 @@ class Service {
           ? (data['serviceDate'] as Timestamp).toDate()
           : null,
       providedByName: data['providedByName'],
-      updatedAt: data['updatedAt'] != null
-          ? (data['updatedAt'] as Timestamp).toDate()
+      updatedAt: data[Fields.updatedAt] != null
+          ? (data[Fields.updatedAt] as Timestamp).toDate()
           : null,
       itemsUsed: parsedItems,
       totalServiceProfit:
@@ -126,7 +127,7 @@ class Service {
       'serviceDate':
           serviceDate != null ? Timestamp.fromDate(serviceDate!) : null,
       'providedByName': providedByName,
-      'updatedAt': updatedAt != null
+      Fields.updatedAt: updatedAt != null
           ? Timestamp.fromDate(updatedAt!)
           : FieldValue.serverTimestamp(),
       'itemsUsed': itemsUsed,
