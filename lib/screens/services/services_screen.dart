@@ -17,6 +17,7 @@ import 'services_archive_screen.dart';
 import 'service_receipt_preview_screen.dart';
 import '../../utils/subscription_guard.dart';
 import '../../theme/app_palette.dart';
+import '../../data/collections.dart';
 
 class ServicesScreen extends StatefulWidget {
   const ServicesScreen({super.key});
@@ -120,9 +121,9 @@ class _ServicesScreenState extends State<ServicesScreen> {
     try {
       final cutoff = DateTime.now().subtract(const Duration(days: 30));
       final snap = await FirebaseFirestore.instance
-          .collection('facilities')
+          .collection(Collections.facilities)
           .doc(facilityId)
-          .collection('services')
+          .collection(Collections.services)
           .where('serviceDate', isGreaterThanOrEqualTo: Timestamp.fromDate(cutoff))
           .get();
 

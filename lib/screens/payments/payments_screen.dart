@@ -16,6 +16,7 @@ import '../../widgets/firestore_error_view.dart';
 import '../sales/receipt_preview_screen.dart';
 import '../services/service_receipt_preview_screen.dart';
 import '../../theme/app_palette.dart';
+import '../../data/collections.dart';
 
 class _PaymentMetric {
   final double amount;
@@ -175,7 +176,7 @@ class _PaymentsScreenState extends State<PaymentsScreen> {
     if (uniqueIds.isEmpty) return;
 
     try {
-      final futures = uniqueIds.map((id) => FirebaseFirestore.instance.collection('users').doc(id).get());
+      final futures = uniqueIds.map((id) => FirebaseFirestore.instance.collection(Collections.users).doc(id).get());
       final docs = await Future.wait(futures);
       if (!mounted) return;
       setState(() {
@@ -201,9 +202,9 @@ class _PaymentsScreenState extends State<PaymentsScreen> {
           return _formattedReceiptWithNotes(facilityId, 'services', e.serviceId!, 'SV', 'description');
         } else if (e.type == 'debt_repayment' && e.debtId != null) {
           final debtDoc = await FirebaseFirestore.instance
-              .collection('facilities')
+              .collection(Collections.facilities)
               .doc(facilityId)
-              .collection('debts')
+              .collection(Collections.debts)
               .doc(e.debtId)
               .get();
           final debtData = debtDoc.data();
@@ -225,7 +226,7 @@ class _PaymentsScreenState extends State<PaymentsScreen> {
   Future<(String?, String?)> _formattedReceiptWithNotes(
       String facilityId, String collection, String docId, String prefix, String notesField) async {
     final doc =
-        await FirebaseFirestore.instance.collection('facilities').doc(facilityId).collection(collection).doc(docId).get();
+        await FirebaseFirestore.instance.collection(Collections.facilities).doc(facilityId).collection(collection).doc(docId).get();
     final data = doc.data();
     final receiptNumber = (data?['receiptNumber'] as num?)?.toInt();
     final reference = receiptNumber == null ? null : '$prefix-${receiptNumber.toString().padLeft(6, '0')}';
@@ -240,9 +241,9 @@ class _PaymentsScreenState extends State<PaymentsScreen> {
     if (e.type == 'service' && e.serviceId != null) return ('services', e.serviceId!);
     if (e.type == 'debt_repayment' && e.debtId != null) {
       final debtDoc = await FirebaseFirestore.instance
-          .collection('facilities')
+          .collection(Collections.facilities)
           .doc(facilityId)
-          .collection('debts')
+          .collection(Collections.debts)
           .doc(e.debtId)
           .get();
       final debtData = debtDoc.data();
@@ -266,7 +267,7 @@ class _PaymentsScreenState extends State<PaymentsScreen> {
     }
     final (collection, docId) = target;
     final doc =
-        await FirebaseFirestore.instance.collection('facilities').doc(facilityId).collection(collection).doc(docId).get();
+        await FirebaseFirestore.instance.collection(Collections.facilities).doc(facilityId).collection(collection).doc(docId).get();
     if (doc.data() == null) return;
     if (!mounted) return;
     if (collection == 'sales') {
@@ -281,9 +282,9 @@ class _PaymentsScreenState extends State<PaymentsScreen> {
 
   Future<(double, int)> _fetchPaymentsSum(String facilityId, DateTime start, DateTime end) async {
     final snap = await FirebaseFirestore.instance
-        .collection('facilities')
+        .collection(Collections.facilities)
         .doc(facilityId)
-        .collection('payments')
+        .collection(Collections.payments)
         .where('timestamp', isGreaterThanOrEqualTo: Timestamp.fromDate(start))
         .where('timestamp', isLessThanOrEqualTo: Timestamp.fromDate(end))
         .get();
@@ -326,9 +327,9 @@ class _PaymentsScreenState extends State<PaymentsScreen> {
         _fetchPaymentsSum(facilityId, lastMonthStart, lastMonthEnd),
       ]);
       final snapshotDoc = await FirebaseFirestore.instance
-          .collection('facilities')
+          .collection(Collections.facilities)
           .doc(facilityId)
-          .collection('dailySnapshots')
+          .collection(Collections.dailySnapshots)
           .doc(snapshotDateKey)
           .get();
 

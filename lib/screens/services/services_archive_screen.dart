@@ -8,6 +8,7 @@ import '../../providers/facility_provider.dart';
 import '../../constants/service_categories.dart';
 import 'service_receipt_preview_screen.dart';
 import '../../theme/app_palette.dart';
+import '../../data/collections.dart';
 
 class ServicesArchiveScreen extends StatefulWidget {
   const ServicesArchiveScreen({super.key});
@@ -121,9 +122,9 @@ class _ServicesArchiveScreenState extends State<ServicesArchiveScreen> {
   Future<void> _fetchArchivedServicesPage(String facilityId) async {
     try {
       Query query = FirebaseFirestore.instance
-          .collection('facilities')
+          .collection(Collections.facilities)
           .doc(facilityId)
-          .collection('archived_services');
+          .collection(Collections.archivedServices);
 
       if (_searchStart != null) {
         query = query.where('serviceDate',

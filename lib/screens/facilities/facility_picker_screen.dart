@@ -378,7 +378,7 @@ class _FacilityPickerScreenState extends State<FacilityPickerScreen> {
   }
 
   Widget _buildFacilityCard(Map<String, dynamic> facility) {
-    final facilityId = facility['facilityId'] as String;
+    final facilityId = facility[Fields.facilityId] as String;
     final name = facility['facilityName'] as String? ?? 'Unnamed Facility';
     final type = facility['facilityType'] as String? ?? '';
     final details = _detailsByFacility[facilityId];

@@ -23,6 +23,8 @@ import '../../constants/product_units.dart';
 import '../../constants/product_types.dart';
 
 import '../../theme/app_palette.dart';
+import '../../data/collections.dart';
+import '../../data/fields.dart';
 
 enum ProductDestination {
   sellable,
@@ -340,11 +342,11 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
     setState(() => _loadingBatches = true);
     try {
       final snap = await FirebaseFirestore.instance
-          .collection('facilities')
+          .collection(Collections.facilities)
           .doc(facilityId)
-          .collection('products')
+          .collection(Collections.products)
           .doc(widget.product!.id)
-          .collection('batches')
+          .collection(Collections.batches)
           .get();
 
       final batches = snap.docs
@@ -893,7 +895,7 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
       );
 
       final userInfo = await ActivityLogger.getCurrentUserInfo();
-      final userId = userInfo['userId']!;
+      final userId = userInfo[Fields.userId]!;
       final userName = userInfo['userName']!;
 
       if (widget.product == null) {
@@ -941,9 +943,9 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
               // update, same as how this worked before batch tracking
               // existed.
               await FirebaseFirestore.instance
-                  .collection('facilities')
+                  .collection(Collections.facilities)
                   .doc(facilityId)
-                  .collection('products')
+                  .collection(Collections.products)
                   .doc(widget.product!.id)
                   .update({'stockQty': newStoreQty, 'sellableQty': newShelfQty});
             }
@@ -953,9 +955,9 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
             // Report to infer that something happened from a leftover
             // number with no explanation attached to it.
             await FirebaseFirestore.instance
-                .collection('facilities')
+                .collection(Collections.facilities)
                 .doc(facilityId)
-                .collection('stock_adjustments')
+                .collection(Collections.stockAdjustments)
                 .add({
               'productId': widget.product!.id,
               'productName': newProduct.name,
@@ -963,7 +965,7 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
               'oldSellableQty': originalShelfQty,
               'newStockQty': newStoreQty,
               'newSellableQty': newShelfQty,
-              'userId': userId,
+              Fields.userId: userId,
               'userName': userName,
               'source': 'Product edit',
               'timestamp': FieldValue.serverTimestamp(),
@@ -990,11 +992,11 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
           if (batchNoWasFilledIn) batchUpdate['batchNo'] = newProduct.batchNo;
           if (expiryWasFilledIn) batchUpdate['expiry'] = Timestamp.fromDate(newProduct.expiry!);
           await FirebaseFirestore.instance
-              .collection('facilities')
+              .collection(Collections.facilities)
               .doc(facilityId)
-              .collection('products')
+              .collection(Collections.products)
               .doc(widget.product!.id)
-              .collection('batches')
+              .collection(Collections.batches)
               .doc(_batches.first.id)
               .update(batchUpdate);
         }

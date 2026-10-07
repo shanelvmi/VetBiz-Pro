@@ -20,6 +20,8 @@ import 'report_full_view_screen.dart';
 import 'report_review_screen.dart';
 import 'report_tabbed_content.dart';
 import '../../theme/app_palette.dart';
+import '../../data/collections.dart';
+import '../../data/fields.dart';
 
 /// The main View Reports screen - shows today's own report directly,
 /// matching the Daily Closing Report mockup, rather than a separate
@@ -100,7 +102,7 @@ class _ViewReportsScreenState extends State<ViewReportsScreen> {
   Future<String> _fetchCurrentUserFullName() async {
     final user = _authService.getCurrentUser();
     if (user == null) return 'Unknown User';
-    final doc = await FirebaseFirestore.instance.collection('users').doc(user.uid).get();
+    final doc = await FirebaseFirestore.instance.collection(Collections.users).doc(user.uid).get();
     final data = doc.data();
     return (data?['fullName'] as String?) ?? 'Unknown User';
   }
@@ -175,7 +177,7 @@ class _ViewReportsScreenState extends State<ViewReportsScreen> {
       final userInfo = await ActivityLogger.getCurrentUserInfo();
       await ActivityLogger.logActivity(
         facilityId: facilityId,
-        userId: userInfo['userId']!,
+        userId: userInfo[Fields.userId]!,
         userName: userInfo['userName'],
         actionType: 'Report Draft Deleted',
         description: 'Draft report for ${DateFormat('d MMM yyyy').format(_todaysReport!.reportDate)} deleted',

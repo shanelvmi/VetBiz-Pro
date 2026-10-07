@@ -56,6 +56,8 @@ import '../products/add_edit_product_screen.dart';
 import '../services/add_edit_service_screen.dart';
 import '../register_screen.dart';
 import '../../theme/app_palette.dart';
+import '../../data/collections.dart';
+import '../../data/fields.dart';
 
 class DrawerHoverItem extends StatefulWidget {
   final IconData icon;
@@ -331,7 +333,7 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
   final Color offWhite = AppPalette.background;
 
   final user = FirebaseAuth.instance.currentUser;
-  late final userDoc = FirebaseFirestore.instance.collection('users').doc(user?.uid);
+  late final userDoc = FirebaseFirestore.instance.collection(Collections.users).doc(user?.uid);
 
   Uint8List? _profileBytes; // Profile picture in memory
   final ImagePicker _picker = ImagePicker();
@@ -353,7 +355,7 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
     if (_isPlatformAdminCache != null) return _isPlatformAdminCache!;
     final user = FirebaseAuth.instance.currentUser;
     if (user == null) return false;
-    final doc = await FirebaseFirestore.instance.collection('platform_admins').doc(user.uid).get();
+    final doc = await FirebaseFirestore.instance.collection(Collections.platformAdmins).doc(user.uid).get();
     _isPlatformAdminCache = doc.exists;
     return _isPlatformAdminCache!;
   }
@@ -459,7 +461,7 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
     setState(() => _lastNotificationsViewedAt = lastViewed);
 
     _urgentWatchSub = FirebaseFirestore.instance
-        .collection('public_announcements')
+        .collection(Collections.publicAnnouncements)
         .where('urgent', isEqualTo: true)
         .snapshots()
         .listen((snapshot) {
@@ -477,15 +479,15 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
     final facilityId = Provider.of<FacilityProvider>(context, listen: false).selectedFacilityId;
     if (isAdmin && facilityId != null) {
       _pendingWatchSub = FirebaseFirestore.instance
-          .collection('users')
-          .where('role', isEqualTo: 'assistant')
-          .where('status', isEqualTo: 'pending')
+          .collection(Collections.users)
+          .where(Fields.role, isEqualTo: 'assistant')
+          .where(Fields.status, isEqualTo: 'pending')
           .where('facilityIds', arrayContains: facilityId)
           .snapshots()
           .listen((snapshot) {
         final isNew = _lastNotificationsViewedAt != null &&
             snapshot.docs.any((doc) {
-              final ts = doc.data()['createdAt'];
+              final ts = doc.data()[Fields.createdAt];
               return ts is Timestamp && ts.toDate().isAfter(_lastNotificationsViewedAt!);
             });
         if (mounted) setState(() => _hasNewPendingAssistantSinceViewed = isNew);
@@ -527,7 +529,7 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
     if (activeFacilityId == null) return;
 
     try {
-      final userDoc = await FirebaseFirestore.instance.collection('users').doc(user.uid).get();
+      final userDoc = await FirebaseFirestore.instance.collection(Collections.users).doc(user.uid).get();
       final facilityIds = (userDoc.data()?['facilityIds'] as List?)?.cast<String>() ?? [];
       if (!facilityIds.contains(activeFacilityId)) {
         await forceLogoutAndShowLogin(
@@ -587,13 +589,13 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
     final cached = _recentActivityStream;
     if (_recentActivityKey == key && cached != null) return cached;
     _recentActivityKey = key;
-    final logs = FirebaseFirestore.instance.collection('facilities').doc(facilityId).collection('activity_logs');
+    final logs = FirebaseFirestore.instance.collection(Collections.facilities).doc(facilityId).collection(Collections.activityLogs);
     if (isAdmin) {
       return _recentActivityStream = logs.orderBy('timestamp', descending: true).limit(5).snapshots().map((s) => s.docs);
     }
     final uid = FirebaseAuth.instance.currentUser?.uid ?? '';
     return _recentActivityStream = mergedLogStream([
-      logs.where('userId', isEqualTo: uid).orderBy('timestamp', descending: true).limit(5),
+      logs.where(Fields.userId, isEqualTo: uid).orderBy('timestamp', descending: true).limit(5),
       logs.where('targetUserId', isEqualTo: uid).orderBy('timestamp', descending: true).limit(5),
     ], limit: 5);
   }
@@ -921,9 +923,9 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
     final requestId = ++_previousSnapshotRequestId;
 
     FirebaseFirestore.instance
-        .collection('facilities')
+        .collection(Collections.facilities)
         .doc(facilityId)
-        .collection('dailySnapshots')
+        .collection(Collections.dailySnapshots)
         .doc(dateKey)
         .get()
         .then((doc) {
@@ -2591,7 +2593,7 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
   Future<void> _showHelpDialog(BuildContext context) async {
     Map<String, dynamic>? data;
     try {
-      final doc = await FirebaseFirestore.instance.collection('app_config').doc('support_contact').get();
+      final doc = await FirebaseFirestore.instance.collection(Collections.appConfig).doc('support_contact').get();
       data = doc.data();
     } catch (_) {
       // Falls through to the generic message below - a failed fetch
@@ -2757,10 +2759,10 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
           stream: facilityId.isEmpty
               ? null
               : FirebaseFirestore.instance
-                  .collection('facilities')
+                  .collection(Collections.facilities)
                   .doc(facilityId)
-                  .collection('notifications')
-                  .orderBy('createdAt', descending: true)
+                  .collection(Collections.notifications)
+                  .orderBy(Fields.createdAt, descending: true)
                   .limit(50)
                   .snapshots(),
           builder: (context, notifSnapshot) {
@@ -3119,7 +3121,7 @@ Widget _buildDrawerContent() {
               ),
               if (facilityIdForTagline != null)
                 StreamBuilder<DocumentSnapshot>(
-                  stream: FirebaseFirestore.instance.collection('facilities').doc(facilityIdForTagline).snapshots(),
+                  stream: FirebaseFirestore.instance.collection(Collections.facilities).doc(facilityIdForTagline).snapshots(),
                   builder: (context, snapshot) {
                     final tagline = (snapshot.data?.data() as Map<String, dynamic>?)?['tagline'] as String?;
                     if (tagline == null || tagline.isEmpty) return const SizedBox.shrink();
@@ -3199,7 +3201,7 @@ Widget _buildDrawerContent() {
         final Map<String, dynamic> data =
             (rawData != null && rawData is Map) ? Map<String, dynamic>.from(rawData) : {};
 
-        final role = data['role'] ?? 'Assistant';
+        final role = data[Fields.role] ?? 'Assistant';
         final avatarUrl = data['avatarUrl'] as String?;
 
         return Stack(

@@ -6,6 +6,8 @@ import 'package:intl/intl.dart';
 import '../../providers/facility_provider.dart';
 import '../../utils/activity_logger.dart';
 import '../../theme/app_palette.dart';
+import '../../data/collections.dart';
+import '../../data/fields.dart';
 
 class TrashScreen extends StatefulWidget {
   const TrashScreen({super.key});
@@ -141,7 +143,7 @@ class _TrashList extends StatelessWidget {
 
     batch.set(
       firestore
-          .collection('facilities')
+          .collection(Collections.facilities)
           .doc(facilityId)
           .collection(liveCollection)
           .doc(id),
@@ -149,7 +151,7 @@ class _TrashList extends StatelessWidget {
     );
     batch.delete(
       firestore
-          .collection('facilities')
+          .collection(Collections.facilities)
           .doc(facilityId)
           .collection(trashCollection)
           .doc(id),
@@ -161,7 +163,7 @@ class _TrashList extends StatelessWidget {
       final userInfo = await ActivityLogger.getCurrentUserInfo();
       await ActivityLogger.logActivity(
         facilityId: facilityId,
-        userId: userInfo['userId']!,
+        userId: userInfo[Fields.userId]!,
         userName: userInfo['userName'],
         actionType: 'Trash',
         description: 'Restored ${data['name'] ?? data['clientName'] ?? liveCollection}',
@@ -209,11 +211,11 @@ class _TrashList extends StatelessWidget {
       // to it.
       if (trashCollection == 'trash_products') {
         final batchesSnap = await FirebaseFirestore.instance
-            .collection('facilities')
+            .collection(Collections.facilities)
             .doc(facilityId)
-            .collection('products')
+            .collection(Collections.products)
             .doc(id)
-            .collection('batches')
+            .collection(Collections.batches)
             .get();
         for (final batchDoc in batchesSnap.docs) {
           await batchDoc.reference.delete();
@@ -221,7 +223,7 @@ class _TrashList extends StatelessWidget {
       }
 
       await FirebaseFirestore.instance
-          .collection('facilities')
+          .collection(Collections.facilities)
           .doc(facilityId)
           .collection(trashCollection)
           .doc(id)
@@ -230,7 +232,7 @@ class _TrashList extends StatelessWidget {
       final userInfo = await ActivityLogger.getCurrentUserInfo();
       await ActivityLogger.logActivity(
         facilityId: facilityId,
-        userId: userInfo['userId']!,
+        userId: userInfo[Fields.userId]!,
         userName: userInfo['userName'],
         actionType: 'Trash',
         description: 'Permanently deleted: $label',
@@ -265,7 +267,7 @@ class _TrashList extends StatelessWidget {
   Widget build(BuildContext context) {
     return StreamBuilder<QuerySnapshot>(
       stream: FirebaseFirestore.instance
-          .collection('facilities')
+          .collection(Collections.facilities)
           .doc(facilityId)
           .collection(trashCollection)
           .orderBy('deletedAt', descending: true)

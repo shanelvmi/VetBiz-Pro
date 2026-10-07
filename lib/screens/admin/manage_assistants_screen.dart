@@ -11,6 +11,8 @@ import '../../services/role_change_service.dart';
 import '../../services/membership_service.dart';
 import '../../utils/activity_logger.dart';
 import '../../theme/app_palette.dart';
+import '../../data/collections.dart';
+import '../../data/fields.dart';
 
 class ManageAssistantsScreen extends StatefulWidget {
   // Set when opened as a deep link from a specific facility's card in
@@ -114,12 +116,12 @@ class _ManageAssistantsScreenState extends State<ManageAssistantsScreen> {
 
   Future<void> _fetchAdminFacilities() async {
     try {
-      final facilitiesCollection = FirebaseFirestore.instance.collection('facilities');
+      final facilitiesCollection = FirebaseFirestore.instance.collection(Collections.facilities);
       // Started together: they don't depend on each other, and they used to run
       // one after the other - each a full round trip before the team could
       // even begin to load.
       final createdFuture = facilitiesCollection.where('createdBy', isEqualTo: adminUid).get();
-      final userDocFuture = FirebaseFirestore.instance.collection('users').doc(adminUid).get();
+      final userDocFuture = FirebaseFirestore.instance.collection(Collections.users).doc(adminUid).get();
       final created = await createdFuture;
 
       // Also the facilities this Admin was ADDED to rather than created. A
@@ -159,7 +161,7 @@ class _ManageAssistantsScreenState extends State<ManageAssistantsScreen> {
             // stay in this list. Who actually belongs in it is decided by
             // _isListed - the query can't express "assistant OR co-admin".
             : FirebaseFirestore.instance
-                .collection('users')
+                .collection(Collections.users)
                 .where('facilityIds', arrayContainsAny: adminFacilityIds)
                 // includeMetadataChanges: so the move from "remembered" to "from the
                 // server" arrives as an event, and the screen can wait for it.
@@ -234,7 +236,7 @@ class _ManageAssistantsScreenState extends State<ManageAssistantsScreen> {
         final verb = past[action] ?? action;
         await ActivityLogger.logActivity(
           facilityId: facilityId,
-          userId: info['userId'] ?? '',
+          userId: info[Fields.userId] ?? '',
           userName: info['userName'],
           actionType: 'Account',
           targetUserId: userId,
@@ -445,14 +447,14 @@ class _ManageAssistantsScreenState extends State<ManageAssistantsScreen> {
   bool _isListed(QueryDocumentSnapshot doc) {
     if (doc.id == adminUid) return true;
     final data = doc.data() as Map<String, dynamic>;
-    if (data['role'] == 'assistant') return true;
-    return data['role'] == 'admin' && (RoleChangeService.isCoAdmin(data) || _isOwnerUid(doc.id));
+    if (data[Fields.role] == 'assistant') return true;
+    return data[Fields.role] == 'admin' && (RoleChangeService.isCoAdmin(data) || _isOwnerUid(doc.id));
   }
 
   // 'owner' | 'coadmin' | 'assistant' | 'admin' (an Admin who is neither the
   // owner nor a Co-admin - which can only ever be you).
   String _kindOf(String uid, Map<String, dynamic> data) {
-    if (data['role'] == 'assistant') return 'assistant';
+    if (data[Fields.role] == 'assistant') return 'assistant';
     if (RoleChangeService.isCoAdmin(data)) return 'coadmin';
     if (_isOwnerUid(uid)) return 'owner';
     return 'admin';
@@ -566,8 +568,8 @@ class _ManageAssistantsScreenState extends State<ManageAssistantsScreen> {
     final activating = newStatus == 'active';
     try {
       final me = FirebaseAuth.instance.currentUser;
-      await FirebaseFirestore.instance.collection('users').doc(doc.id).update({
-        'status': newStatus,
+      await FirebaseFirestore.instance.collection(Collections.users).doc(doc.id).update({
+        Fields.status: newStatus,
         'statusChangedBy': me?.email ?? me?.uid ?? 'Unknown',
         'statusChangedByRole': 'Facility Admin',
         'statusChangedAt': FieldValue.serverTimestamp(),
@@ -578,7 +580,7 @@ class _ManageAssistantsScreenState extends State<ManageAssistantsScreen> {
         final info = await ActivityLogger.getCurrentUserInfo();
         await ActivityLogger.logActivity(
           facilityId: facilityId,
-          userId: info['userId'] ?? '',
+          userId: info[Fields.userId] ?? '',
           userName: info['userName'],
           actionType: 'Account',
           targetUserId: doc.id,
@@ -611,7 +613,7 @@ class _ManageAssistantsScreenState extends State<ManageAssistantsScreen> {
   String _bucket(Map<String, dynamic> data) {
     // An Admin or Co-admin has no approval step, so no status means active -
     // only an Assistant waiting to be approved is "pending".
-    final status = (data['status'] ?? (data['role'] == 'assistant' ? 'pending' : 'active')).toString();
+    final status = (data[Fields.status] ?? (data[Fields.role] == 'assistant' ? 'pending' : 'active')).toString();
     if (status == 'active') return 'active';
     if (status == 'deactivated') return 'deactivated';
     return 'pending';
@@ -1380,7 +1382,7 @@ class _ManageAssistantsScreenState extends State<ManageAssistantsScreen> {
   // Wide layout: one table row. Tapping it opens that person's details.
   Widget _buildRow(QueryDocumentSnapshot doc) {
     final data = doc.data() as Map<String, dynamic>;
-    final rawStatus = (data['status'] ?? 'pending').toString();
+    final rawStatus = (data[Fields.status] ?? 'pending').toString();
     final bucket = _bucket(data);
     final facilityId = _facilityIdOf(data);
     final facilityName = _facilityText(data);
@@ -1452,7 +1454,7 @@ class _ManageAssistantsScreenState extends State<ManageAssistantsScreen> {
   // Narrow layout (phones): the same information as a card per assistant.
   Widget _buildNarrowCard(QueryDocumentSnapshot doc) {
     final data = doc.data() as Map<String, dynamic>;
-    final rawStatus = (data['status'] ?? 'pending').toString();
+    final rawStatus = (data[Fields.status] ?? 'pending').toString();
     final bucket = _bucket(data);
     final facilityId = _facilityIdOf(data);
     final facilityName = _facilityText(data);
@@ -1616,12 +1618,12 @@ class _ManageAssistantsScreenState extends State<ManageAssistantsScreen> {
     final data = doc.data() as Map<String, dynamic>;
     final kind = _kindOf(doc.id, data);
     final bucket = _bucket(data);
-    final rawStatus = (data['status'] ?? 'pending').toString();
+    final rawStatus = (data[Fields.status] ?? 'pending').toString();
     final facilityId = _facilityIdOf(data);
     final isSelf = doc.id == adminUid;
     final isAssistant = kind == 'assistant';
 
-    final created = _ts(data['createdAt']);
+    final created = _ts(data[Fields.createdAt]);
     final approved = _ts(data['approvedAt']);
     final statusChanged = _ts(data['statusChangedAt']);
     final lastActive = _ts(data['lastActiveAt']);

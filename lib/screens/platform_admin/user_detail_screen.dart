@@ -195,11 +195,11 @@ class _UserDetailScreenState extends State<UserDetailScreen> {
     try {
       await FirebaseFirestore.instance.collection(Collections.users).doc(widget.userId).update({
         'facilities': FieldValue.arrayRemove([facility]),
-        'facilityIds': FieldValue.arrayRemove([facility['facilityId']]),
+        'facilityIds': FieldValue.arrayRemove([facility[Fields.facilityId]]),
       });
       if (!mounted) return;
       setState(() {
-        (_userData['facilities'] as List).removeWhere((f) => f is Map && f['facilityId'] == facility['facilityId']);
+        (_userData['facilities'] as List).removeWhere((f) => f is Map && f[Fields.facilityId] == facility[Fields.facilityId]);
       });
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Removed'), backgroundColor: Colors.green),

@@ -9,6 +9,7 @@ import '../../providers/debt_provider.dart';
 import '../../services/dashboard_summary_service.dart';
 import '../../widgets/summary_card.dart' show KpiTrend;
 import '../../theme/app_palette.dart';
+import '../../data/collections.dart';
 
 /// A simple insights view - a 14-day sales trend and your top 5
 /// products by revenue over the last 30 days. Deliberately kept to two
@@ -85,15 +86,15 @@ class _InsightsScreenState extends State<InsightsScreen> {
     try {
       final results = await Future.wait([
         FirebaseFirestore.instance
-            .collection('facilities')
+            .collection(Collections.facilities)
             .doc(facilityId)
-            .collection('sales')
+            .collection(Collections.sales)
             .where('timestamp', isGreaterThanOrEqualTo: Timestamp.fromDate(windowStart))
             .get(),
         FirebaseFirestore.instance
-            .collection('facilities')
+            .collection(Collections.facilities)
             .doc(facilityId)
-            .collection('services')
+            .collection(Collections.services)
             .where('serviceDate', isGreaterThanOrEqualTo: Timestamp.fromDate(windowStart))
             .get(),
       ]);
@@ -208,9 +209,9 @@ class _InsightsScreenState extends State<InsightsScreen> {
       final lastWeekComparableTotals = results[4];
 
       final yesterdaySnapshotDoc = await FirebaseFirestore.instance
-          .collection('facilities')
+          .collection(Collections.facilities)
           .doc(facilityId)
-          .collection('dailySnapshots')
+          .collection(Collections.dailySnapshots)
           .doc(_dateKey(yesterday))
           .get();
       final yesterdaySnapshot = yesterdaySnapshotDoc.data();

@@ -18,6 +18,7 @@ import 'view_batches_screen.dart';
 import '../sales/add_sale_screen.dart';
 import 'stock_alerts_screen.dart';
 import '../../theme/app_palette.dart';
+import '../../data/collections.dart';
 
 class ProductsScreen extends StatefulWidget {
   final String? initialSearchQuery;
@@ -94,7 +95,7 @@ class _ProductsScreenState extends State<ProductsScreen> {
     );
 
     try {
-      final facilityDoc = await FirebaseFirestore.instance.collection('facilities').doc(facilityId).get();
+      final facilityDoc = await FirebaseFirestore.instance.collection(Collections.facilities).doc(facilityId).get();
       final restockFrequency = facilityDoc.data()?['restockFrequency'] as String? ??
           UsageCalculatorService.defaultRestockFrequency;
 

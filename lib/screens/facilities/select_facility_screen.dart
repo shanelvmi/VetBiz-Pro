@@ -114,19 +114,19 @@ class _SelectFacilityScreenState extends State<SelectFacilityScreen> {
 
     // Set selected facility
     facilityProvider.setFacility(
-      id: facility['facilityId'],
+      id: facility[Fields.facilityId],
       name: facility['facilityName'],
       type: facility['facilityType'],
     );
 
     // Listen to real-time updates
-    productProvider.fetchProducts(facility['facilityId']); // fetch products immediately
-    saleProvider.init(facility['facilityId']); // real-time sales
-    clientProvider.listenToClients(facility['facilityId']); // real-time clients
-    serviceProvider.listenToServices(facility['facilityId']); // needed
-    transactionProvider.listenToTransactions(facility['facilityId']);
-    debtProvider.listenToDebts(facility['facilityId']);
-    subscriptionProvider.listenToFacility(facility['facilityId']);
+    productProvider.fetchProducts(facility[Fields.facilityId]); // fetch products immediately
+    saleProvider.init(facility[Fields.facilityId]); // real-time sales
+    clientProvider.listenToClients(facility[Fields.facilityId]); // real-time clients
+    serviceProvider.listenToServices(facility[Fields.facilityId]); // needed
+    transactionProvider.listenToTransactions(facility[Fields.facilityId]);
+    debtProvider.listenToDebts(facility[Fields.facilityId]);
+    subscriptionProvider.listenToFacility(facility[Fields.facilityId]);
     context.read<UserRoleProvider>().listenToCurrentUser();
 
 
@@ -136,7 +136,7 @@ class _SelectFacilityScreenState extends State<SelectFacilityScreen> {
         '/dashboard',
         arguments: {
           Fields.role: role,
-          'facilityId': facility['facilityId'],
+          Fields.facilityId: facility[Fields.facilityId],
           'facilityName': facility['facilityName'],
           'facilityType': facility['facilityType'],
         },
@@ -187,7 +187,7 @@ class _SelectFacilityScreenState extends State<SelectFacilityScreen> {
               itemCount: facilities.length,
               itemBuilder: (context, index) {
                 final facility = facilities[index];
-                final id = facility['facilityId'];
+                final id = facility[Fields.facilityId];
                 return _HoverCard(
                   facility: facility,
                   isSelected: id == selectedFacilityId,

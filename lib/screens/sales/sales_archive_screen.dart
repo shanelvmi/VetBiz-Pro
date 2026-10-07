@@ -6,6 +6,7 @@ import '../../models/sale.dart';
 import '../../providers/facility_provider.dart';
 import 'receipt_preview_screen.dart';
 import '../../theme/app_palette.dart';
+import '../../data/collections.dart';
 
 class SalesArchiveScreen extends StatefulWidget {
   const SalesArchiveScreen({super.key});
@@ -128,9 +129,9 @@ class _SalesArchiveScreenState extends State<SalesArchiveScreen> {
   Future<void> _fetchArchivedSalesPage(String facilityId) async {
     try {
       Query query = FirebaseFirestore.instance
-          .collection('facilities')
+          .collection(Collections.facilities)
           .doc(facilityId)
-          .collection('archived_sales');
+          .collection(Collections.archivedSales);
 
       if (_searchStart != null) {
         query = query.where('timestamp',

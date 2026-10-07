@@ -15,6 +15,8 @@ import '../../providers/user_role_provider.dart';
 import '../../utils/activity_logger.dart';
 import '../../utils/force_logout.dart';
 import '../../theme/app_palette.dart';
+import '../../data/collections.dart';
+import '../../data/fields.dart';
 
 class ManageAccountScreen extends StatefulWidget {
   const ManageAccountScreen({super.key});
@@ -92,9 +94,9 @@ class _ManageAccountScreenState extends State<ManageAccountScreen> {
     final uid = FirebaseAuth.instance.currentUser?.uid;
     if (uid == null) return;
 
-    final platformAdminDoc = await FirebaseFirestore.instance.collection('platform_admins').doc(uid).get();
+    final platformAdminDoc = await FirebaseFirestore.instance.collection(Collections.platformAdmins).doc(uid).get();
     final ownedFacilities =
-        await FirebaseFirestore.instance.collection('facilities').where('createdBy', isEqualTo: uid).limit(1).get();
+        await FirebaseFirestore.instance.collection(Collections.facilities).where('createdBy', isEqualTo: uid).limit(1).get();
 
     if (!mounted) return;
     setState(() {
@@ -287,7 +289,7 @@ class _ManageAccountScreenState extends State<ManageAccountScreen> {
       final userInfo = await ActivityLogger.getCurrentUserInfo();
       await ActivityLogger.logActivity(
         facilityId: facilityId,
-        userId: userInfo['userId']!,
+        userId: userInfo[Fields.userId]!,
         userName: userInfo['userName'],
         actionType: 'Account',
         description: 'Wiped all business data for this facility',
@@ -327,7 +329,7 @@ class _ManageAccountScreenState extends State<ManageAccountScreen> {
     final currentUid = FirebaseAuth.instance.currentUser?.uid;
     if (currentUid != null) {
       final platformAdminDoc =
-          await FirebaseFirestore.instance.collection('platform_admins').doc(currentUid).get();
+          await FirebaseFirestore.instance.collection(Collections.platformAdmins).doc(currentUid).get();
       if (platformAdminDoc.exists) {
         if (!mounted) return;
         await showDialog<void>(
@@ -436,7 +438,7 @@ class _ManageAccountScreenState extends State<ManageAccountScreen> {
         final userInfo = await ActivityLogger.getCurrentUserInfo();
         await ActivityLogger.logActivity(
           facilityId: facilityId,
-          userId: userInfo['userId']!,
+          userId: userInfo[Fields.userId]!,
           userName: userInfo['userName'],
           actionType: 'Account',
           description: 'Deactivated their own account',
@@ -526,7 +528,7 @@ class _ManageAccountScreenState extends State<ManageAccountScreen> {
                         final userInfo = await ActivityLogger.getCurrentUserInfo();
                         await ActivityLogger.logActivity(
                           facilityId: facilityId,
-                          userId: userInfo['userId']!,
+                          userId: userInfo[Fields.userId]!,
                           userName: userInfo['userName'],
                           actionType: 'Account',
                           description: 'Deleted their own account',

@@ -18,6 +18,7 @@ import '../../models/client.dart';
 import 'add_client_screen.dart';
 import '../../services/cursor_paginated_list_controller.dart';
 import '../../theme/app_palette.dart';
+import '../../data/collections.dart';
 
 class ClientsScreen extends StatefulWidget {
   const ClientsScreen({super.key});
@@ -390,9 +391,9 @@ class _ClientsScreenState extends State<ClientsScreen> {
       if (facilityId == null) return (0, 0.0);
       try {
         final snap = await FirebaseFirestore.instance
-            .collection('facilities')
+            .collection(Collections.facilities)
             .doc(facilityId)
-            .collection('payments')
+            .collection(Collections.payments)
             .where('clientId', isEqualTo: client.id)
             .get();
         double total = 0;

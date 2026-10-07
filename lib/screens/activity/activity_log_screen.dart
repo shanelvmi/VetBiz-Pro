@@ -11,6 +11,8 @@ import '../../utils/merged_query_stream.dart';
 import '../../utils/text_sanitizer.dart';
 import '../../widgets/firestore_error_view.dart';
 import '../../theme/app_palette.dart';
+import '../../data/collections.dart';
+import '../../data/fields.dart';
 
 class ActivityLogScreen extends StatefulWidget {
   final bool isModal;
@@ -134,7 +136,7 @@ class _ActivityLogScreenState extends State<ActivityLogScreen> {
   Future<int> _fetchRetentionDays(String facilityId) async {
     if (_retentionLoadedForFacilityId == facilityId) return _retentionDays ?? _defaultRetentionDays;
     try {
-      final doc = await FirebaseFirestore.instance.collection('facilities').doc(facilityId).get();
+      final doc = await FirebaseFirestore.instance.collection(Collections.facilities).doc(facilityId).get();
       final configured = (doc.data()?['activityLogRetentionDays'] as num?)?.toInt();
       final resolved = (configured != null && _retentionOptions.contains(configured))
           ? configured
@@ -199,7 +201,7 @@ class _ActivityLogScreenState extends State<ActivityLogScreen> {
   /// screen is always right, whether or not anything has been deleted yet.
   void _buildStreams(String facilityId, int retentionDays, {required bool isAdmin}) {
     final cutoff = Timestamp.fromDate(ActivityLogRetention.cutoffFor(retentionDays));
-    final logs = FirebaseFirestore.instance.collection('facilities').doc(facilityId).collection('activity_logs');
+    final logs = FirebaseFirestore.instance.collection(Collections.facilities).doc(facilityId).collection(Collections.activityLogs);
 
     // Newest first, inside the retention window.
     Query<Map<String, dynamic>> windowed(Query<Map<String, dynamic>> q) =>
@@ -224,7 +226,7 @@ class _ActivityLogScreenState extends State<ActivityLogScreen> {
     // would refuse anything wider outright (see firestore.rules).
     final uid = FirebaseAuth.instance.currentUser?.uid ?? '';
     final mine = [
-      windowed(logs.where('userId', isEqualTo: uid)),
+      windowed(logs.where(Fields.userId, isEqualTo: uid)),
       windowed(logs.where('targetUserId', isEqualTo: uid)),
     ];
     _logStream = mergedLogStream(mine.map((q) => q.limit(500)).toList(), limit: 500);
@@ -292,7 +294,7 @@ class _ActivityLogScreenState extends State<ActivityLogScreen> {
     }
 
     try {
-      await FirebaseFirestore.instance.collection('facilities').doc(facilityId).set(
+      await FirebaseFirestore.instance.collection(Collections.facilities).doc(facilityId).set(
         {'activityLogRetentionDays': selected},
         SetOptions(merge: true),
       );

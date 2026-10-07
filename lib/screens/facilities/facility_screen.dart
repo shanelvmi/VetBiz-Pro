@@ -348,7 +348,7 @@ class _FacilityScreenState extends State<FacilityScreen> {
     await activateFacilityAndGoToDashboard(
       context: context,
       facility: {
-        'facilityId': facility['facilityId'],
+        Fields.facilityId: facility[Fields.facilityId],
         'facilityName': facility['name'],
         'facilityType': facility['type'],
       },
@@ -570,10 +570,10 @@ class _FacilityScreenState extends State<FacilityScreen> {
 
   Future<void> _showEditFacilityDialog(Map<String, dynamic> facility) async {
     final nameController = TextEditingController(text: facility['name'] as String? ?? '');
-    final existingContact = _contactByFacility[facility['facilityId']];
+    final existingContact = _contactByFacility[facility[Fields.facilityId]];
     final emailController = TextEditingController(text: existingContact?['email'] ?? '');
     final phoneController = TextEditingController(text: existingContact?['phone'] ?? '');
-    final existingDetails = _detailsByFacility[facility['facilityId']];
+    final existingDetails = _detailsByFacility[facility[Fields.facilityId]];
     final addressController = TextEditingController(text: existingDetails?['address'] as String? ?? '');
     final licenseController = TextEditingController(text: existingDetails?['licenseNo'] as String? ?? '');
     final tinController = TextEditingController(text: existingDetails?['tin'] as String? ?? '');
@@ -593,7 +593,7 @@ class _FacilityScreenState extends State<FacilityScreen> {
     // logo - kept separate from "no change made" so _editFacility
     // knows to actually delete it, not just leave it untouched.
     bool logoMarkedForRemoval = false;
-    final existingLogoUrl = _logoByFacility[facility['facilityId']];
+    final existingLogoUrl = _logoByFacility[facility[Fields.facilityId]];
 
     await showDialog(
       context: context,
@@ -841,7 +841,7 @@ class _FacilityScreenState extends State<FacilityScreen> {
 
                       try {
                         await _editFacility(
-                          facilityId: facility['facilityId'] as String,
+                          facilityId: facility[Fields.facilityId] as String,
                           name: name,
                           type: selectedType!,
                           logoBytes: pendingLogoBytes,
@@ -1008,7 +1008,7 @@ class _FacilityScreenState extends State<FacilityScreen> {
   /// rather than letting someone reach a typed-confirmation dialog for
   /// something that's going to be rejected anyway.
   Future<void> _showDeleteFacilityDialog(Map<String, dynamic> facility) async {
-    final facilityId = facility['facilityId'] as String;
+    final facilityId = facility[Fields.facilityId] as String;
     if (_checkingBeforeDelete) return;
 
     // Looked at afresh, NOT read from the copy loaded when this screen opened:
@@ -1063,7 +1063,7 @@ class _FacilityScreenState extends State<FacilityScreen> {
   }
 
   Future<void> _showDeleteConfirmationDialog(Map<String, dynamic> facility) async {
-    final facilityId = facility['facilityId'] as String;
+    final facilityId = facility[Fields.facilityId] as String;
     final facilityName = facility['name'] as String? ?? 'this facility';
     final isOnlyFacility = facilities.length == 1;
     final confirmController = TextEditingController();
@@ -1475,7 +1475,7 @@ class _FacilityScreenState extends State<FacilityScreen> {
   }
 
   Widget _buildFacilityListRow(Map<String, dynamic> facility) {
-    final facilityId = facility['facilityId'] as String?;
+    final facilityId = facility[Fields.facilityId] as String?;
     final isSelected = facilityId == _selectedFacilityIdForDetail;
     final logoUrl = _logoByFacility[facilityId];
     final address = _detailsByFacility[facilityId]?['address'] as String?;
@@ -1614,7 +1614,7 @@ class _FacilityScreenState extends State<FacilityScreen> {
           },
           itemBuilder: (context) => [
             const PopupMenuItem(value: 'edit', child: Text('Edit Facility')),
-            if (facility['facilityId'] != activeFacilityId)
+            if (facility[Fields.facilityId] != activeFacilityId)
               const PopupMenuItem(value: 'switch', child: Text('Switch to This Facility')),
             PopupMenuItem(
               value: 'delete',
@@ -1627,7 +1627,7 @@ class _FacilityScreenState extends State<FacilityScreen> {
   }
 
   Widget _buildHeaderCard(Map<String, dynamic> facility) {
-    final facilityId = facility['facilityId'] as String?;
+    final facilityId = facility[Fields.facilityId] as String?;
     final logoUrl = _logoByFacility[facilityId];
     final contact = _contactByFacility[facilityId];
     final details = _detailsByFacility[facilityId];
@@ -1917,7 +1917,7 @@ class _FacilityScreenState extends State<FacilityScreen> {
   // ==================== METRICS ROW ====================
 
   Widget _buildMetricsRow(Map<String, dynamic> facility) {
-    final facilityId = facility['facilityId'] as String?;
+    final facilityId = facility[Fields.facilityId] as String?;
     final stats = _statsByFacility[facilityId];
     final totalProducts = stats?['totalProducts'] as int? ?? 0;
     final sellableProducts = stats?['sellableProducts'] as int? ?? 0;
@@ -2139,7 +2139,7 @@ class _FacilityScreenState extends State<FacilityScreen> {
   }
 
   Widget _buildInventorySummaryTab(Map<String, dynamic> facility) {
-    final facilityId = facility['facilityId'] as String?;
+    final facilityId = facility[Fields.facilityId] as String?;
     if (facilityId == null) return const SizedBox.shrink();
 
     return FutureBuilder<QuerySnapshot>(
@@ -2301,7 +2301,7 @@ class _FacilityScreenState extends State<FacilityScreen> {
   }
 
   Widget _buildSalesSummaryTab(Map<String, dynamic> facility) {
-    final facilityId = facility['facilityId'] as String?;
+    final facilityId = facility[Fields.facilityId] as String?;
     if (facilityId == null) return const SizedBox.shrink();
 
     final now = DateTime.now();
@@ -2416,7 +2416,7 @@ class _FacilityScreenState extends State<FacilityScreen> {
   }
 
   Widget _buildActivityLogTab(Map<String, dynamic> facility) {
-    final facilityId = facility['facilityId'] as String?;
+    final facilityId = facility[Fields.facilityId] as String?;
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
@@ -2436,7 +2436,7 @@ class _FacilityScreenState extends State<FacilityScreen> {
   }
 
   Widget _buildSettingsTab(Map<String, dynamic> facility) {
-    final facilityId = facility['facilityId'] as String?;
+    final facilityId = facility[Fields.facilityId] as String?;
     final details = _detailsByFacility[facilityId];
     final status = (details?[Fields.status] as String?) ?? 'Active';
     final retentionDays = (details?['activityLogRetentionDays'] as int?) ?? 90;
@@ -2601,7 +2601,7 @@ class _FacilityScreenState extends State<FacilityScreen> {
   }
 
   Future<void> _confirmToggleFacilityStatus(Map<String, dynamic> facility, {required String currentStatus}) async {
-    final facilityId = facility['facilityId'] as String?;
+    final facilityId = facility[Fields.facilityId] as String?;
     if (facilityId == null) return;
     final isActive = currentStatus.toLowerCase() == 'active';
     final newStatus = isActive ? 'Inactive' : 'Active';
@@ -2828,7 +2828,7 @@ class _FacilityScreenState extends State<FacilityScreen> {
   }
 
   Widget _buildOverviewTab(Map<String, dynamic> facility) {
-    final facilityId = facility['facilityId'] as String?;
+    final facilityId = facility[Fields.facilityId] as String?;
     final details = _detailsByFacility[facilityId];
     final description = details?['description'] as String?;
     final createdAt = details?[Fields.createdAt] as DateTime?;

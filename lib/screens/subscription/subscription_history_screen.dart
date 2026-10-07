@@ -3,6 +3,8 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:intl/intl.dart';
 
 import 'subscription_screen.dart' show submissionStatusColor;
+import '../../data/collections.dart';
+import '../../data/fields.dart';
 
 /// One payment submission, read from a payment_submissions document.
 class _Submission {
@@ -30,7 +32,7 @@ class _Submission {
 
   factory _Submission.fromMap(Map<String, dynamic> d) {
     DateTime? asDate(dynamic v) => v is Timestamp ? v.toDate() : null;
-    final rawStatus = (d['status'] as String?) ?? 'pending';
+    final rawStatus = (d[Fields.status] as String?) ?? 'pending';
     return _Submission(
       planLabel: (d['planLabel'] as String?) ?? '',
       amount: (d['amount'] as num?) ?? 0,
@@ -94,9 +96,9 @@ class _SubscriptionHistoryScreenState extends State<SubscriptionHistoryScreen> {
   void initState() {
     super.initState();
     _stream = FirebaseFirestore.instance
-        .collection('facilities')
+        .collection(Collections.facilities)
         .doc(widget.facilityId)
-        .collection('payment_submissions')
+        .collection(Collections.paymentSubmissions)
         .orderBy('submittedAt', descending: true)
         .limit(_historyLimit)
         .snapshots();

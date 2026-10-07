@@ -6,6 +6,8 @@ import '../../utils/activity_logger.dart';
 import '../../models/product.dart';
 import '../../providers/product_provider.dart';
 import '../../theme/app_palette.dart';
+import '../../data/collections.dart';
+import '../../data/fields.dart';
 
 // The "release to shelf" flow, shared so it behaves identically wherever it's
 // started from - the Stock Store's own Release button and the Product Alerts
@@ -24,11 +26,11 @@ const Color _offWhite = AppPalette.background;
 // so, precisely how many units from which one.
 Future<List<(String, int)>> _simulateExpiredPortion(Product product, int qty) async {
   final batchesRef = FirebaseFirestore.instance
-      .collection('facilities')
+      .collection(Collections.facilities)
       .doc(product.facilityId)
-      .collection('products')
+      .collection(Collections.products)
       .doc(product.id)
-      .collection('batches');
+      .collection(Collections.batches);
 
   final snap = await batchesRef.where('stockQty', isGreaterThan: 0).get();
   if (snap.docs.isEmpty) return [];
@@ -236,7 +238,7 @@ Future<void> releaseProductToShop(BuildContext context, Product product, {int in
       final unitsSummary = expiredPortion.map((e) => '${e.$2} from ${e.$1}').join(', ');
       await ActivityLogger.logActivity(
         facilityId: product.facilityId,
-        userId: userInfo['userId']!,
+        userId: userInfo[Fields.userId]!,
         userName: userInfo['userName']!,
         actionType: "Inventory Move",
         description: "${product.name}: released $unitsSummary despite expired-stock warning",

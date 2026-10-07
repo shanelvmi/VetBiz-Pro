@@ -14,6 +14,8 @@ import '../../constants/subscription_plans.dart';
 import '../../models/promotion.dart';
 import 'subscription_history_screen.dart';
 import '../../theme/app_palette.dart';
+import '../../data/collections.dart';
+import '../../data/fields.dart';
 
 class SubscriptionScreen extends StatefulWidget {
   final bool isModal;
@@ -97,10 +99,10 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
       });
 
       _pendingSubscription = FirebaseFirestore.instance
-          .collection('facilities')
+          .collection(Collections.facilities)
           .doc(facilityId)
-          .collection('payment_submissions')
-          .where('status', isEqualTo: 'pending')
+          .collection(Collections.paymentSubmissions)
+          .where(Fields.status, isEqualTo: 'pending')
           .snapshots()
           .listen((snapshot) {
         if (!mounted) return;
@@ -171,11 +173,11 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
           : null;
 
       await FirebaseFirestore.instance
-          .collection('facilities')
+          .collection(Collections.facilities)
           .doc(facilityId)
-          .collection('payment_submissions')
+          .collection(Collections.paymentSubmissions)
           .add({
-        'facilityId': facilityId,
+        Fields.facilityId: facilityId,
         'facilityName': facilityName ?? 'Unknown',
         'planId': _selectedPlan.id,
         'planLabel': _selectedPlan.label,
@@ -185,7 +187,7 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
         'method': _method,
         'reference': _referenceController.text.trim(),
         'proofImageUrl': proofUrl,
-        'status': 'pending',
+        Fields.status: 'pending',
         'submittedAt': FieldValue.serverTimestamp(),
         'submittedBy': user?.email ?? user?.uid ?? 'Unknown',
       });
@@ -529,7 +531,7 @@ Color submissionStatusColor(String status) {
 }
 
 Widget buildSubmissionCard(Map<String, dynamic> data) {
-  final status = (data['status'] as String?) ?? 'pending';
+  final status = (data[Fields.status] as String?) ?? 'pending';
   final submittedAt =
       data['submittedAt'] is Timestamp ? (data['submittedAt'] as Timestamp).toDate() : null;
   // Saved by the platform admin when rejecting - empty if they left the
@@ -604,9 +606,9 @@ class _SubmissionHistory extends StatelessWidget {
   Widget build(BuildContext context) {
     return StreamBuilder<QuerySnapshot>(
       stream: FirebaseFirestore.instance
-          .collection('facilities')
+          .collection(Collections.facilities)
           .doc(facilityId)
-          .collection('payment_submissions')
+          .collection(Collections.paymentSubmissions)
           .orderBy('submittedAt', descending: true)
           .limit(_recentLimit)
           .snapshots(),

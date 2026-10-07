@@ -18,6 +18,7 @@ import '../../widgets/firestore_error_view.dart';
 import 'add_payment_screen.dart';
 import '../payments/payments_screen.dart';
 import '../../theme/app_palette.dart';
+import '../../data/collections.dart';
 
 class DebtorsScreen extends StatefulWidget {
   const DebtorsScreen({super.key});
@@ -150,9 +151,9 @@ class _DebtorsScreenState extends State<DebtorsScreen> {
       final monthStart = DateTime(now.year, now.month, 1);
 
       final snap = await FirebaseFirestore.instance
-          .collection('facilities')
+          .collection(Collections.facilities)
           .doc(facilityId)
-          .collection('payments')
+          .collection(Collections.payments)
           .where('timestamp', isGreaterThanOrEqualTo: Timestamp.fromDate(monthStart))
           .get();
 
@@ -401,9 +402,9 @@ class _DebtorsScreenState extends State<DebtorsScreen> {
     final facilityId = _facilityId;
     if (facilityId == null) return [];
     final snap = await FirebaseFirestore.instance
-        .collection('facilities')
+        .collection(Collections.facilities)
         .doc(facilityId)
-        .collection('clients')
+        .collection(Collections.clients)
         .where('balance', isGreaterThan: 0)
         .get();
     return snap.docs.map((d) => Client.fromMap(d.id, d.data())).toList();
@@ -836,9 +837,9 @@ class _DebtorsScreenState extends State<DebtorsScreen> {
       _detailsDebtsFuture = facilityId == null
           ? Future.value(<Debt>[])
           : FirebaseFirestore.instance
-              .collection('facilities')
+              .collection(Collections.facilities)
               .doc(facilityId)
-              .collection('debts')
+              .collection(Collections.debts)
               .where('clientId', isEqualTo: clientId)
               .orderBy('timestamp', descending: true)
               .get()
@@ -1168,17 +1169,17 @@ class _DebtorsScreenState extends State<DebtorsScreen> {
       try {
         if (debt.source == 'Sale' && debt.saleId != null) {
           final doc = await FirebaseFirestore.instance
-              .collection('facilities')
+              .collection(Collections.facilities)
               .doc(facilityId)
-              .collection('sales')
+              .collection(Collections.sales)
               .doc(debt.saleId)
               .get();
           return (doc.data()?['receiptNumber'] as num?)?.toInt();
         } else if (debt.source == 'Service' && debt.serviceId != null) {
           final doc = await FirebaseFirestore.instance
-              .collection('facilities')
+              .collection(Collections.facilities)
               .doc(facilityId)
-              .collection('services')
+              .collection(Collections.services)
               .doc(debt.serviceId)
               .get();
           return (doc.data()?['receiptNumber'] as num?)?.toInt();
@@ -1227,9 +1228,9 @@ class _DebtorsScreenState extends State<DebtorsScreen> {
       final facilityId = _facilityId;
       if (facilityId == null) return [];
       final doc = await FirebaseFirestore.instance
-          .collection('facilities')
+          .collection(Collections.facilities)
           .doc(facilityId)
-          .collection('clients')
+          .collection(Collections.clients)
           .doc(clientId)
           .get();
       final raw = doc.data()?['debtorNotes'] as List? ?? [];
@@ -1313,9 +1314,9 @@ class _DebtorsScreenState extends State<DebtorsScreen> {
 
     try {
       await FirebaseFirestore.instance
-          .collection('facilities')
+          .collection(Collections.facilities)
           .doc(facilityId)
-          .collection('clients')
+          .collection(Collections.clients)
           .doc(debtor.clientId)
           .set({
         'debtorNotes': FieldValue.arrayUnion([

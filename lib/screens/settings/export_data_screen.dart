@@ -11,6 +11,8 @@ import 'package:excel/excel.dart' as xl;
 import '../../providers/facility_provider.dart';
 import '../../utils/web_download.dart';
 import '../../theme/app_palette.dart';
+import '../../data/collections.dart';
+import '../../data/fields.dart';
 
 /// One logical table of data - a title (shown as its own line in CSV,
 /// its own sheet/tab name in xlsx), a header row, and the data rows
@@ -359,7 +361,7 @@ class _ExportDataScreenState extends State<ExportDataScreen> {
     required String dateField,
   }) async {
     Query query = FirebaseFirestore.instance
-        .collection('facilities')
+        .collection(Collections.facilities)
         .doc(facilityId)
         .collection(collection);
 
@@ -492,9 +494,9 @@ class _ExportDataScreenState extends State<ExportDataScreen> {
   /// aggregate fields, same as before this existed.
   Future<List<_ExportSection>> _buildProductsData(String facilityId) async {
     final snapshot = await FirebaseFirestore.instance
-        .collection('facilities')
+        .collection(Collections.facilities)
         .doc(facilityId)
-        .collection('products')
+        .collection(Collections.products)
         .orderBy('name')
         .get();
 
@@ -503,7 +505,7 @@ class _ExportDataScreenState extends State<ExportDataScreen> {
     // any real size this is the difference between a quick export and
     // a genuinely slow one.
     final batchSnapshots = await Future.wait(
-      snapshot.docs.map((doc) => doc.reference.collection('batches').get()),
+      snapshot.docs.map((doc) => doc.reference.collection(Collections.batches).get()),
     );
 
     final rows = <List<dynamic>>[];
@@ -557,9 +559,9 @@ class _ExportDataScreenState extends State<ExportDataScreen> {
 
   Future<List<_ExportSection>> _buildClientsData(String facilityId) async {
     final snapshot = await FirebaseFirestore.instance
-        .collection('facilities')
+        .collection(Collections.facilities)
         .doc(facilityId)
-        .collection('clients')
+        .collection(Collections.clients)
         .orderBy('name')
         .get();
 
@@ -588,9 +590,9 @@ class _ExportDataScreenState extends State<ExportDataScreen> {
   /// what right now", not filtered by date.
   Future<List<_ExportSection>> _buildDebtorsData(String facilityId) async {
     final snapshot = await FirebaseFirestore.instance
-        .collection('facilities')
+        .collection(Collections.facilities)
         .doc(facilityId)
-        .collection('debts')
+        .collection(Collections.debts)
         .orderBy('timestamp', descending: true)
         .get();
 
@@ -602,7 +604,7 @@ class _ExportDataScreenState extends State<ExportDataScreen> {
         data['source'] ?? '',
         data['amountOwed'] ?? 0,
         _asDate(data['timestamp']),
-        _asDate(data['updatedAt']),
+        _asDate(data[Fields.updatedAt]),
       ];
     }).toList();
 

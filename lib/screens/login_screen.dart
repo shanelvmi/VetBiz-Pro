@@ -12,6 +12,7 @@ import '../utils/navigator_key.dart';
 import 'legal/privacy_policy_screen.dart';
 import 'legal/terms_of_service_screen.dart';
 import '../theme/app_palette.dart';
+import '../data/collections.dart';
 
 class LoginScreen extends StatefulWidget {
   final String? errorMessage;
@@ -567,7 +568,7 @@ class _LoginScreenState extends State<LoginScreen> {
   Widget _buildAnnouncementsScrollable() {
     return StreamBuilder<QuerySnapshot>(
       stream: FirebaseFirestore.instance
-          .collection('public_announcements')
+          .collection(Collections.publicAnnouncements)
           .orderBy('timestamp', descending: true)
           .snapshots(),
       builder: (context, snapshot) {
@@ -1144,7 +1145,7 @@ class _LoginScreenState extends State<LoginScreen> {
           // bundled default otherwise.
           Positioned.fill(
             child: StreamBuilder<DocumentSnapshot>(
-              stream: FirebaseFirestore.instance.collection('app_config').doc('login_poster').snapshots(),
+              stream: FirebaseFirestore.instance.collection(Collections.appConfig).doc('login_poster').snapshots(),
               builder: (context, snapshot) {
                 final posterUrl = snapshot.data?.data() != null
                     ? (snapshot.data!.data() as Map<String, dynamic>)['posterUrl'] as String?

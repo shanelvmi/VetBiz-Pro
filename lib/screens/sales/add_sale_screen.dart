@@ -25,6 +25,7 @@ import '../../utils/activity_logger.dart';
 import '../clients/add_client_screen.dart';
 import '../../widgets/product_thumbnail.dart';
 import '../../theme/app_palette.dart';
+import '../../data/collections.dart';
 
 // --- Custom Formatter ---
 // --- Add Sale Screen ---
@@ -569,11 +570,11 @@ class _AddSaleScreenState extends State<AddSaleScreen> {
 
     for (final item in items) {
       final batchesRef = FirebaseFirestore.instance
-          .collection('facilities')
+          .collection(Collections.facilities)
           .doc(facilityId)
-          .collection('products')
+          .collection(Collections.products)
           .doc(item.productId)
-          .collection('batches');
+          .collection(Collections.batches);
 
       final snap = await batchesRef.where('sellableQty', isGreaterThan: 0).get();
       if (snap.docs.isEmpty) continue;
@@ -719,7 +720,7 @@ class _AddSaleScreenState extends State<AddSaleScreen> {
       if (user != null) {
         try {
           final userDoc =
-              await FirebaseFirestore.instance.collection('users').doc(user.uid).get();
+              await FirebaseFirestore.instance.collection(Collections.users).doc(user.uid).get();
           if (userDoc.exists) {
             soldByName = userDoc.data()?['fullName'] ?? 'Unknown';
           }

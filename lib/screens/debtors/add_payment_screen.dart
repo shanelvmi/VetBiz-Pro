@@ -14,6 +14,8 @@ import '../../utils/activity_logger.dart';
 import '../../utils/thousands_input_formatter.dart';
 import '../../widgets/payment_method_selector.dart';
 import '../../theme/app_palette.dart';
+import '../../data/collections.dart';
+import '../../data/fields.dart';
 
 class AddPaymentScreen extends StatefulWidget {
   final Client? preselectedClient;
@@ -188,9 +190,9 @@ class _AddPaymentScreenState extends State<AddPaymentScreen> {
 
       final debtRef = widget.debtDocId != null
           ? FirebaseFirestore.instance
-              .collection('facilities')
+              .collection(Collections.facilities)
               .doc(facilityId)
-              .collection('debts')
+              .collection(Collections.debts)
               .doc(widget.debtDocId)
           : null;
 
@@ -210,9 +212,9 @@ class _AddPaymentScreenState extends State<AddPaymentScreen> {
 
       if (saleId != null) {
         final saleSnap = await FirebaseFirestore.instance
-            .collection('facilities')
+            .collection(Collections.facilities)
             .doc(facilityId)
-            .collection('sales')
+            .collection(Collections.sales)
             .doc(saleId)
             .get();
         if (saleSnap.exists && saleSnap.data() != null) {
@@ -222,9 +224,9 @@ class _AddPaymentScreenState extends State<AddPaymentScreen> {
 
       if (serviceId != null) {
         final serviceSnap = await FirebaseFirestore.instance
-            .collection('facilities')
+            .collection(Collections.facilities)
             .doc(facilityId)
-            .collection('services')
+            .collection(Collections.services)
             .doc(serviceId)
             .get();
         if (serviceSnap.exists && serviceSnap.data() != null) {
@@ -233,9 +235,9 @@ class _AddPaymentScreenState extends State<AddPaymentScreen> {
       }
 
       final clientRef = FirebaseFirestore.instance
-          .collection('facilities')
+          .collection(Collections.facilities)
           .doc(facilityId)
-          .collection('clients')
+          .collection(Collections.clients)
           .doc(selectedClient!.id);
 
       // Read what's needed to maintain oldestUnpaidDebtDate before the
@@ -257,9 +259,9 @@ class _AddPaymentScreenState extends State<AddPaymentScreen> {
             final thisDebtTimestamp = rawThis is Timestamp ? rawThis.toDate() : null;
             if (thisDebtTimestamp != null && thisDebtTimestamp.isAtSameMomentAs(currentOldest)) {
               final remainingSnap = await FirebaseFirestore.instance
-                  .collection('facilities')
+                  .collection(Collections.facilities)
                   .doc(facilityId)
-                  .collection('debts')
+                  .collection(Collections.debts)
                   .where('clientId', isEqualTo: selectedClient!.id)
                   .orderBy('timestamp')
                   .limit(2)
@@ -276,9 +278,9 @@ class _AddPaymentScreenState extends State<AddPaymentScreen> {
       final batch = FirebaseFirestore.instance.batch();
 
       final paymentRef = FirebaseFirestore.instance
-          .collection('facilities')
+          .collection(Collections.facilities)
           .doc(facilityId)
-          .collection('payments')
+          .collection(Collections.payments)
           .doc();
 
       final List<Map<String, dynamic>> items = [];
@@ -348,9 +350,9 @@ class _AddPaymentScreenState extends State<AddPaymentScreen> {
       if (sale != null) {
         final updatedSale = sale.applyPayment(amount);
         final saleRef = FirebaseFirestore.instance
-            .collection('facilities')
+            .collection(Collections.facilities)
             .doc(facilityId)
-            .collection('sales')
+            .collection(Collections.sales)
             .doc(updatedSale.id);
         batch.update(saleRef, updatedSale.toMap());
       }
@@ -361,9 +363,9 @@ class _AddPaymentScreenState extends State<AddPaymentScreen> {
           updatedAt: DateTime.now(),
         );
         final serviceRef = FirebaseFirestore.instance
-            .collection('facilities')
+            .collection(Collections.facilities)
             .doc(facilityId)
-            .collection('services')
+            .collection(Collections.services)
             .doc(updatedService.id);
         batch.update(serviceRef, updatedService.toMap());
 
@@ -376,7 +378,7 @@ class _AddPaymentScreenState extends State<AddPaymentScreen> {
       final userInfo = await ActivityLogger.getCurrentUserInfo();
       await ActivityLogger.logActivity(
         facilityId: facilityId,
-        userId: userInfo['userId']!,
+        userId: userInfo[Fields.userId]!,
         userName: userInfo['userName'],
         actionType: 'Debtors',
         description: 'Recorded payment of Tsh ${amount.toStringAsFixed(0)} from ${selectedClient!.name}',

@@ -19,6 +19,8 @@ import 'legal/terms_of_service_screen.dart';
 import '../widgets/auth_background.dart';
 import '../services/role_change_service.dart';
 import '../theme/app_palette.dart';
+import '../data/collections.dart';
+import '../data/fields.dart';
 
 class RegisterScreen extends StatefulWidget {
   final bool isUpdating;
@@ -146,7 +148,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
     if (uid == null) return;
 
     _facilitiesSub = FirebaseFirestore.instance
-        .collection('users')
+        .collection(Collections.users)
         .doc(uid)
         .snapshots()
         .listen((snapshot) {
@@ -200,7 +202,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
       phoneController.text = data['phone'] ?? '';
 
       // Role
-      final roleFromDb = (data['role'] ?? '').toString().toLowerCase();
+      final roleFromDb = (data[Fields.role] ?? '').toString().toLowerCase();
       selectedRole = roleFromDb == 'admin' ? 'Admin' : 'Assistant';
 
       // Avatar
@@ -267,7 +269,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
       final code = await generateUniqueFacilityCode();
       if (!mounted) return;
       setState(() {
-        facilities.add({'name': name, 'type': type, 'code': code, 'facilityId': ''});
+        facilities.add({'name': name, 'type': type, 'code': code, Fields.facilityId: ''});
         facilityNameController.clear();
         _selectedFacilityType = null;
       });
@@ -359,7 +361,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
         'phone': phone,
         'avatarUrl': imageUrl,
       };
-      await FirebaseFirestore.instance.collection('users').doc(uid).update(updateData);
+      await FirebaseFirestore.instance.collection(Collections.users).doc(uid).update(updateData);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text("Profile updated successfully!")),
@@ -394,7 +396,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
       if (_imageBytes != null && uid != null) {
         try {
           final imageUrl = await uploadImage(uid);
-          await FirebaseFirestore.instance.collection('users').doc(uid).update({'avatarUrl': imageUrl});
+          await FirebaseFirestore.instance.collection(Collections.users).doc(uid).update({'avatarUrl': imageUrl});
         } catch (e) {
           debugPrint('Could not save the profile photo: $e');
         }
@@ -414,7 +416,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
           await activateFacilityAndGoToDashboard(
             context: context,
             facility: {
-              'facilityId': selected['facilityId'],
+              Fields.facilityId: selected[Fields.facilityId],
               'facilityName': selected['name'],
               'facilityType': selected['type'],
             },
@@ -423,7 +425,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
         } else {
           final facilityList = facilitiesWithId.map((f) {
             return {
-              'facilityId': f['facilityId'],
+              Fields.facilityId: f[Fields.facilityId],
               'facilityName': f['name'],
               'facilityType': f['type']
             };

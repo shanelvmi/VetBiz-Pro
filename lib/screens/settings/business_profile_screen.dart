@@ -7,6 +7,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 
 import '../../providers/facility_provider.dart';
 import '../../theme/app_palette.dart';
+import '../../data/collections.dart';
 
 /// A dedicated home for facility-level branding (currently just the
 /// logo) - built for discoverability, since the drawer's own
@@ -59,7 +60,7 @@ class _BusinessProfileScreenState extends State<BusinessProfileScreen> {
       final downloadUrl = '$rawDownloadUrl&cb=${DateTime.now().millisecondsSinceEpoch}';
 
       await FirebaseFirestore.instance
-          .collection('facilities')
+          .collection(Collections.facilities)
           .doc(facilityId)
           .set({'logoUrl': downloadUrl}, SetOptions(merge: true));
 

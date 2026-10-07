@@ -11,6 +11,7 @@ import '../../services/auth_service.dart';
 import '../../widgets/payment_method_selector.dart';
 import '../../utils/thousands_input_formatter.dart';
 import '../../theme/app_palette.dart';
+import '../../data/collections.dart';
 
 // Expense categories, grouped for the picker - matches the proposed
 // structure exactly. Kept local to this file rather than centralized,
@@ -69,7 +70,7 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
     final user = _authService.getCurrentUser();
     if (user == null) return null;
 
-    final doc = await FirebaseFirestore.instance.collection('users').doc(user.uid).get();
+    final doc = await FirebaseFirestore.instance.collection(Collections.users).doc(user.uid).get();
     if (!doc.exists) return null;
 
     final data = doc.data();
