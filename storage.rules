@@ -60,6 +60,19 @@ service firebase.storage {
           firestore.get(/databases/(default)/documents/users/$(request.auth.uid)).data.get('facilityIds', []);
     }
 
+    // A product's own optional photo/icon - publicly readable (shown
+    // on receipts and catalog views), writable only by a member of the
+    // facility the product belongs to. Same read/write pattern as
+    // payment_proofs, since without a rule here every upload would
+    // silently fail against Storage's own default-deny, exactly like
+    // that one did before its rule was added.
+    match /product_images/{facilityId}/{fileName} {
+      allow read: if true;
+      allow write: if request.auth != null &&
+        facilityId in
+          firestore.get(/databases/(default)/documents/users/$(request.auth.uid)).data.get('facilityIds', []);
+    }
+
     // Everything else stays denied by default - no blanket fallback.
   }
 }
