@@ -51,9 +51,9 @@ class AppText {
   AppText._();
 
   static TextStyle caption(AppColors c) =>
-      TextStyle(fontSize: AppFontSize.f11, color: c.textPrimary);
+      TextStyle(fontSize: AppFontSize.f11, color: c.textMuted);
   static TextStyle bodySm(AppColors c) =>
-      TextStyle(fontSize: AppFontSize.f12_5, color: c.textPrimary);
+      TextStyle(fontSize: AppFontSize.f12_5, color: c.textSecondary);
   static TextStyle body(AppColors c) =>
       TextStyle(fontSize: AppFontSize.f13, color: c.textPrimary);
   static TextStyle bodyLg(AppColors c) =>

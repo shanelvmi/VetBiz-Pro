@@ -14,6 +14,9 @@ class AppMotion {
   /// One cycle of a repeating pulse or shimmer.
   static const Duration loop = Duration(milliseconds: 900);
 
+  /// The dashboard's slow repeating colour cycle (dashboard_screen.dart).
+  static const Duration colorCycle = Duration(milliseconds: 1400);
+
   static const Duration toastShort = Duration(seconds: 2);
   static const Duration toastLong = Duration(seconds: 3);
 }

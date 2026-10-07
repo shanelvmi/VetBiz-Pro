@@ -62,6 +62,15 @@ class AppTimeouts {
   /// debtors, payments screens).
   static const Duration newRecordsPoll = Duration(seconds: 45);
 
+  // Refreshing a screen's summary after a change. Two values on purpose
+  // (decided by the owner, Phase 2 open questions).
+
+  /// Sales summary (sales_screen.dart).
+  static const Duration salesSummaryRefresh = Duration(seconds: 2);
+
+  /// Services summary (services_screen.dart).
+  static const Duration servicesSummaryRefresh = Duration(milliseconds: 500);
+
   // Debounces (wait for a pause in typing).
 
   /// List search boxes (sales, services, clients, debtors, payments).

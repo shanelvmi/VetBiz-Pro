@@ -11,9 +11,9 @@ enum PaymentMethod {
   airtelMoney('Airtel Money'),
   bankTransfer('Bank Transfer'),
 
-  /// Offered only by the subscription payment form today, which still lists
-  /// Tigo Pesa where the rest of the app lists Mixx by Yas. Kept so stored
-  /// subscription requests still match. See design-open-questions.md.
+  /// Tigo Pesa's old name, still offered by the subscription payment form
+  /// until step 2C switches it to Mixx by Yas (owner's decision). Never
+  /// removed: old subscription requests stored this key and must still display.
   tigoPesa('Tigo Pesa');
 
   const PaymentMethod(this.key);

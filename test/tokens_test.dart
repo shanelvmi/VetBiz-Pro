@@ -184,6 +184,7 @@ void main() {
       expect(AppMotion.slower.inMilliseconds, 400);
       expect(AppMotion.slowest.inMilliseconds, 500);
       expect(AppMotion.loop.inMilliseconds, 900);
+      expect(AppMotion.colorCycle.inMilliseconds, 1400);
       expect(AppMotion.toastShort.inSeconds, 2);
       expect(AppMotion.toastLong.inSeconds, 3);
     });

@@ -9,8 +9,4 @@ class SubscriptionKeys {
   static const String active = 'active';
   static const String grace = 'grace';
   static const String locked = 'locked';
-
-  /// Listed by the Phase 2 spec; not found as a stored value in the app at
-  /// the time of writing. See design-open-questions.md.
-  static const String expired = 'expired';
 }
