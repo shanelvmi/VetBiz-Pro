@@ -1,20 +1,8 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 import '../models/product.dart';
+import '../config/restock_rules.dart';
 import '../data/collections.dart';
-
-/// The three day-counts a single restock frequency choice maps to.
-class _RestockDayCounts {
-  final int shelfMinDays;
-  final int lowStockDays;
-  final int reorderDays;
-
-  const _RestockDayCounts({
-    required this.shelfMinDays,
-    required this.lowStockDays,
-    required this.reorderDays,
-  });
-}
 
 /// Computes usage-based suggested stock thresholds from real sales and
 /// service-consumption history, per the agreed design:
@@ -38,43 +26,12 @@ class _RestockDayCounts {
 class UsageCalculatorService {
   UsageCalculatorService._();
 
-  /// How many days of past sales/service history to average usage over.
-  /// 30 days is a reasonable starting point: short enough to react to a
-  /// real change in how a product moves, long enough that one unusually
-  /// busy or quiet week doesn't skew the number on its own.
-  static const int lookbackDays = 30;
-
-  /// A product needs to have moved at least this many total units over
-  /// the lookback window before its calculated usage is trusted. Below
-  /// this, there's too little real history to build a meaningful number
-  /// from, so the product is left alone entirely - its effective*
-  /// getters keep falling back to the flat shared default instead of
-  /// being given a suggestion built on almost nothing.
-  static const int minUnitsForConfidence = 3;
-
-  static const String defaultRestockFrequency = 'Every 2 Weeks';
-
-  static const List<String> restockFrequencyOptions = [
-    'Weekly',
-    'Every 2 Weeks',
-    'Monthly',
-    'Rarely',
-  ];
-
-  /// Days of typical usage each threshold represents, per restock
-  /// frequency a facility's admin can choose in Facility settings.
-  /// Deliberately expressed as a simple, real-world choice ("how often
-  /// do you typically restock") rather than asking an admin to type raw
-  /// day-counts directly - most people don't think in exact numbers of
-  /// days, but do know their own restocking rhythm. "Every 2 Weeks" is
-  /// the default (matches this feature's original starting numbers)
-  /// for any facility that hasn't set a preference.
-  static const Map<String, _RestockDayCounts> _dayCountsByFrequency = {
-    'Weekly': _RestockDayCounts(shelfMinDays: 2, lowStockDays: 5, reorderDays: 7),
-    'Every 2 Weeks': _RestockDayCounts(shelfMinDays: 3, lowStockDays: 7, reorderDays: 14),
-    'Monthly': _RestockDayCounts(shelfMinDays: 5, lowStockDays: 10, reorderDays: 21),
-    'Rarely': _RestockDayCounts(shelfMinDays: 7, lowStockDays: 14, reorderDays: 30),
-  };
+  /// The restock numbers live in RestockRules (lib/config/restock_rules.dart);
+  /// these names are kept for the screens and the code below that use them.
+  static const int lookbackDays = RestockRules.usageLookbackDays;
+  static const int minUnitsForConfidence = RestockRules.minUnitsForConfidence;
+  static const String defaultRestockFrequency = RestockRules.defaultFrequency;
+  static const List<String> restockFrequencyOptions = RestockRules.frequencies;
 
   /// Queries sales and service-consumption history for [facilityId] over
   /// [lookbackDays], and returns average daily usage per product ID.
@@ -84,7 +41,7 @@ class UsageCalculatorService {
   static Future<Map<String, double>> calculateAverageDailyUsage(
     String facilityId,
   ) async {
-    final cutoff = DateTime.now().subtract(const Duration(days: lookbackDays));
+    final cutoff = DateTime.now().subtract(RestockRules.usageLookback);
     final cutoffTimestamp = Timestamp.fromDate(cutoff);
     final totalUnitsByProduct = <String, int>{};
 
@@ -156,8 +113,8 @@ class UsageCalculatorService {
     final usageByProduct = await calculateAverageDailyUsage(facilityId);
     if (usageByProduct.isEmpty) return 0;
 
-    final dayCounts = _dayCountsByFrequency[restockFrequency] ??
-        _dayCountsByFrequency[defaultRestockFrequency]!;
+    final dayCounts = RestockRules.dayCountsByFrequency[restockFrequency] ??
+        RestockRules.dayCountsByFrequency[defaultRestockFrequency]!;
 
     final batch = FirebaseFirestore.instance.batch();
     var updatedCount = 0;

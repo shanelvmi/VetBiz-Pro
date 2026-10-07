@@ -96,9 +96,28 @@ void main() {
     expect(AppRanges.archiveDefaultWindow.inDays, 90);
   });
 
-  test('restock frequencies match UsageCalculatorService', () {
-    expect(RestockRules.frequencies, UsageCalculatorService.restockFrequencyOptions);
-    expect(RestockRules.defaultFrequency, UsageCalculatorService.defaultRestockFrequency);
+  test('restock rules keep their exact numbers, all four frequencies', () {
+    expect(RestockRules.frequencies, ['Weekly', 'Every 2 Weeks', 'Monthly', 'Rarely']);
+    expect(RestockRules.defaultFrequency, 'Every 2 Weeks');
+    final expected = <String, (int, int, int)>{
+      'Weekly': (2, 5, 7),
+      'Every 2 Weeks': (3, 7, 14),
+      'Monthly': (5, 10, 21),
+      'Rarely': (7, 14, 30),
+    };
+    expect(RestockRules.dayCountsByFrequency.keys.toSet(), expected.keys.toSet());
+    expected.forEach((freq, days) {
+      final d = RestockRules.dayCountsByFrequency[freq]!;
+      expect((d.shelfMinDays, d.lowStockDays, d.reorderDays), days, reason: freq);
+    });
+    expect(RestockRules.usageLookbackDays, 30);
+    expect(RestockRules.usageLookback.inDays, 30);
+    expect(RestockRules.minUnitsForConfidence, 3);
+    // The service's public names still say the same thing.
+    expect(UsageCalculatorService.restockFrequencyOptions, RestockRules.frequencies);
+    expect(UsageCalculatorService.defaultRestockFrequency, RestockRules.defaultFrequency);
+    expect(UsageCalculatorService.lookbackDays, 30);
+    expect(UsageCalculatorService.minUnitsForConfidence, 3);
   });
 
   test('attention days match SubscriptionProvider', () {

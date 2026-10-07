@@ -343,7 +343,6 @@
       "lib/screens/transactions/add_transaction_screen.dart": 1,
       "lib/screens/transactions/transactions_screen.dart": 1,
       "lib/services/activity_log_retention.dart": 1,
-      "lib/services/usage_calculator_service.dart": 1,
       "lib/utils/facility_activation.dart": 5,
       "lib/utils/trial_period_helper.dart": 1,
       "lib/widgets/hover_elevate_card.dart": 1,
