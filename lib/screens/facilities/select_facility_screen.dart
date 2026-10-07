@@ -14,6 +14,8 @@ import '../../providers/debt_provider.dart';
 import '../../providers/subscription_provider.dart';
 import '../../providers/user_role_provider.dart';
 import '../../utils/provider_reset.dart';
+import '../../data/collections.dart';
+import '../../data/fields.dart';
 
 
 class AppColors {
@@ -55,7 +57,7 @@ class _SelectFacilityScreenState extends State<SelectFacilityScreen> {
     try {
       final args = ModalRoute.of(context)?.settings.arguments as Map<String, dynamic>?;
       final argFacilities = (args?['facilities'] as List?)?.cast<Map<String, dynamic>>();
-      role = args?['role'] as String?;
+      role = args?[Fields.role] as String?;
 
       if (argFacilities != null && argFacilities.isNotEmpty) {
         facilities = argFacilities;
@@ -63,15 +65,15 @@ class _SelectFacilityScreenState extends State<SelectFacilityScreen> {
         final uid = FirebaseAuth.instance.currentUser?.uid;
         if (uid != null) {
           final userDoc = await FirebaseFirestore.instance
-              .collection('users')
+              .collection(Collections.users)
               .doc(uid)
               .get()
               .timeout(const Duration(seconds: 15));
-          role = userDoc.data()?['role'] ?? role;
+          role = userDoc.data()?[Fields.role] ?? role;
 
           facilities = (userDoc.data()?['facilities'] as List<dynamic>?)
                   ?.map((f) => {
-                        'facilityId': f['facilityId'],
+                        Fields.facilityId: f[Fields.facilityId],
                         'facilityName': f['name'],
                         'facilityType': f['type'],
                       })
@@ -133,7 +135,7 @@ class _SelectFacilityScreenState extends State<SelectFacilityScreen> {
         context,
         '/dashboard',
         arguments: {
-          'role': role,
+          Fields.role: role,
           'facilityId': facility['facilityId'],
           'facilityName': facility['facilityName'],
           'facilityType': facility['facilityType'],
@@ -206,7 +208,7 @@ class _SelectFacilityScreenState extends State<SelectFacilityScreen> {
               label: const Text('Proceed'),
               onPressed: () {
                 final facility = facilities.firstWhere(
-                  (f) => f['facilityId'] == selectedFacilityId,
+                  (f) => f[Fields.facilityId] == selectedFacilityId,
                   orElse: () => {},
                 );
                 if (facility.isEmpty) return;

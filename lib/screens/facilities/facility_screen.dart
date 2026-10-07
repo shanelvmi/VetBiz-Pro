@@ -20,6 +20,8 @@ import '../../utils/force_logout.dart';
 import '../../utils/facility_limit_helper.dart';
 import '../admin/manage_assistants_screen.dart';
 import '../../theme/app_palette.dart';
+import '../../data/collections.dart';
+import '../../data/fields.dart';
 
 const Color deepGreen = AppPalette.primary;
 const Color warmAmber = AppPalette.accent;
@@ -134,16 +136,16 @@ class _FacilityScreenState extends State<FacilityScreen> {
       // four depend on another's result, so there's no reason for
       // each to wait on the previous one to finish before starting.
       final facilityDocFuture =
-          FirebaseFirestore.instance.collection('facilities').doc(facilityId).get();
+          FirebaseFirestore.instance.collection(Collections.facilities).doc(facilityId).get();
       final salesTotalsFuture = _salesSummaryService.getRangeTotals(
         facilityId: facilityId,
         start: monthStart,
         end: now,
       );
       final clientCountFuture = FirebaseFirestore.instance
-          .collection('facilities')
+          .collection(Collections.facilities)
           .doc(facilityId)
-          .collection('clients')
+          .collection(Collections.clients)
           .count()
           .get();
       // Same calculation Dashboard's own "Total Product Value" card
@@ -152,7 +154,7 @@ class _FacilityScreenState extends State<FacilityScreen> {
       // facility is currently active, not every facility a card in
       // this list represents.
       final productsFuture =
-          FirebaseFirestore.instance.collection('facilities').doc(facilityId).collection('products').get();
+          FirebaseFirestore.instance.collection(Collections.facilities).doc(facilityId).collection(Collections.products).get();
 
       final facilityDoc = await facilityDocFuture;
       final logoUrl = facilityDoc.data()?['logoUrl'] as String?;
@@ -164,9 +166,9 @@ class _FacilityScreenState extends State<FacilityScreen> {
       final licenseNo = facilityDoc.data()?['licenseNo'] as String?;
       final tin = facilityDoc.data()?['tin'] as String?;
       final ownership = facilityDoc.data()?['ownership'] as String?;
-      final status = facilityDoc.data()?['status'] as String? ?? 'Active';
-      final createdAtTs = facilityDoc.data()?['createdAt'] as Timestamp?;
-      final updatedAtTs = facilityDoc.data()?['updatedAt'] as Timestamp?;
+      final status = facilityDoc.data()?[Fields.status] as String? ?? 'Active';
+      final createdAtTs = facilityDoc.data()?[Fields.createdAt] as Timestamp?;
+      final updatedAtTs = facilityDoc.data()?[Fields.updatedAt] as Timestamp?;
       final retentionDays = (facilityDoc.data()?['activityLogRetentionDays'] as num?)?.toInt() ?? 90;
       final debtOverdueDays = (facilityDoc.data()?['debtOverdueDays'] as num?)?.toInt() ?? 30;
       final salesTotals = await salesTotalsFuture;
@@ -215,9 +217,9 @@ class _FacilityScreenState extends State<FacilityScreen> {
           'tagline': tagline,
           'licenseNo': licenseNo,
           'tin': tin,
-          'status': status,
-          'createdAt': createdAtTs?.toDate(),
-          'updatedAt': updatedAtTs?.toDate(),
+          Fields.status: status,
+          Fields.createdAt: createdAtTs?.toDate(),
+          Fields.updatedAt: updatedAtTs?.toDate(),
           'activityLogRetentionDays': retentionDays,
           'debtOverdueDays': debtOverdueDays,
         };
@@ -244,7 +246,7 @@ class _FacilityScreenState extends State<FacilityScreen> {
     try {
       final fresh = <String, List<Map<String, dynamic>>>{};
       await Future.wait(facilities.map((f) async {
-        final id = f['facilityId'] as String?;
+        final id = f[Fields.facilityId] as String?;
         if (id == null) return;
         fresh[id] = await _fetchAssistantsForFacility(id);
       }));
@@ -262,10 +264,10 @@ class _FacilityScreenState extends State<FacilityScreen> {
   Future<void> fetchFacilities() async {
     setState(() => isLoading = true);
     try {
-      final userDoc = await FirebaseFirestore.instance.collection('users').doc(currentUser!.uid).get();
+      final userDoc = await FirebaseFirestore.instance.collection(Collections.users).doc(currentUser!.uid).get();
       final userData = userDoc.data();
 
-      if (userData != null && userData['role'] == 'admin') {
+      if (userData != null && userData[Fields.role] == 'admin') {
         final facilityList = List<Map<String, dynamic>>.from(userData['facilities'] ?? []);
         final selectedFacilityId = Provider.of<FacilityProvider>(context, listen: false).selectedFacilityId;
 
@@ -283,7 +285,7 @@ class _FacilityScreenState extends State<FacilityScreen> {
         final assistantsMap = <String, List<Map<String, dynamic>>>{};
         final facilityFutures = <Future<void>>[];
         for (final f in facilityList) {
-          final facilityId = f['facilityId'] as String?;
+          final facilityId = f[Fields.facilityId] as String?;
           if (facilityId == null) continue;
           facilityFutures.add(() async {
             // Assistants and the extras (logo/stats/product value)
@@ -315,9 +317,9 @@ class _FacilityScreenState extends State<FacilityScreen> {
           // (e.g. after editing) doesn't pull the view back to a
           // different facility than the one already being looked at.
           if (_selectedFacilityIdForDetail == null && facilityList.isNotEmpty) {
-            final activeStillExists = facilityList.any((f) => f['facilityId'] == selectedFacilityId);
+            final activeStillExists = facilityList.any((f) => f[Fields.facilityId] == selectedFacilityId);
             _selectedFacilityIdForDetail =
-                activeStillExists ? selectedFacilityId : facilityList.first['facilityId'] as String?;
+                activeStillExists ? selectedFacilityId : facilityList.first[Fields.facilityId] as String?;
           }
         });
       } else {
@@ -334,8 +336,8 @@ class _FacilityScreenState extends State<FacilityScreen> {
 
   Future<List<Map<String, dynamic>>> _fetchAssistantsForFacility(String facilityId) async {
     final snapshot = await FirebaseFirestore.instance
-        .collection('users')
-        .where('role', isEqualTo: 'assistant')
+        .collection(Collections.users)
+        .where(Fields.role, isEqualTo: 'assistant')
         .where('facilityIds', arrayContains: facilityId)
         .get();
 
@@ -531,7 +533,7 @@ class _FacilityScreenState extends State<FacilityScreen> {
     // from the app any more - it's what stopped people writing themselves
     // into facilities that weren't theirs.
     final newFacilityEntry = await MembershipService().addFacility(name: name, type: type);
-    final newFacilityId = newFacilityEntry['facilityId'] as String;
+    final newFacilityId = newFacilityEntry[Fields.facilityId] as String;
 
     // Logo upload needs a facilityId to key the Storage path on, so it can
     // only happen after the facility above already exists. (The logo is an
@@ -543,7 +545,7 @@ class _FacilityScreenState extends State<FacilityScreen> {
         final rawDownloadUrl = await storageRef.getDownloadURL();
         final downloadUrl = '$rawDownloadUrl&cb=${DateTime.now().millisecondsSinceEpoch}';
         await FirebaseFirestore.instance
-            .collection('facilities')
+            .collection(Collections.facilities)
             .doc(newFacilityId)
             .set({'logoUrl': downloadUrl}, SetOptions(merge: true));
       } catch (e) {
@@ -580,7 +582,7 @@ class _FacilityScreenState extends State<FacilityScreen> {
     final taglineController =
         TextEditingController(text: existingDetails?['tagline'] as String? ?? '');
     String? selectedOwnership = existingDetails?['ownership'] as String?;
-    String selectedStatus = existingDetails?['status'] as String? ?? 'Active';
+    String selectedStatus = existingDetails?[Fields.status] as String? ?? 'Active';
     String selectedRestockFrequency = existingDetails?['restockFrequency'] as String? ??
         UsageCalculatorService.defaultRestockFrequency;
     String? selectedType = facility['type'] as String?;
@@ -922,7 +924,7 @@ class _FacilityScreenState extends State<FacilityScreen> {
       // same URL for repeat uploads to the same path, so without this,
       // NetworkImage's own cache would keep showing the old logo.
       final downloadUrl = '$rawDownloadUrl&cb=${DateTime.now().millisecondsSinceEpoch}';
-      await firestore.collection('facilities').doc(facilityId).set(
+      await firestore.collection(Collections.facilities).doc(facilityId).set(
         {'logoUrl': downloadUrl},
         SetOptions(merge: true),
       );
@@ -940,11 +942,11 @@ class _FacilityScreenState extends State<FacilityScreen> {
         // controls what's shown.
         debugPrint('Could not delete logo file (may already be gone): $e');
       }
-      await firestore.collection('facilities').doc(facilityId).update({'logoUrl': FieldValue.delete()});
+      await firestore.collection(Collections.facilities).doc(facilityId).update({'logoUrl': FieldValue.delete()});
       _logoByFacility[facilityId] = null;
     }
 
-    await firestore.collection('facilities').doc(facilityId).update({
+    await firestore.collection(Collections.facilities).doc(facilityId).update({
       'name': name,
       'type': type,
       'email': email,
@@ -955,9 +957,9 @@ class _FacilityScreenState extends State<FacilityScreen> {
       'licenseNo': licenseNo,
       'tin': tin,
       'ownership': ownership,
-      'status': status,
+      Fields.status: status,
       'restockFrequency': restockFrequency,
-      'updatedAt': FieldValue.serverTimestamp(),
+      Fields.updatedAt: FieldValue.serverTimestamp(),
     });
     _contactByFacility[facilityId] = {'email': email, 'phone': phone};
     _detailsByFacility[facilityId] = {
@@ -968,13 +970,13 @@ class _FacilityScreenState extends State<FacilityScreen> {
       'licenseNo': licenseNo,
       'tin': tin,
       'ownership': ownership,
-      'status': status,
+      Fields.status: status,
       'restockFrequency': restockFrequency,
       // The server timestamp itself isn't known client-side until the
       // next fetch re-reads it - using "now" here is a reasonable
       // local approximation so the detail view doesn't show a stale
       // "Last Updated" until fetchFacilities runs again.
-      'updatedAt': DateTime.now(),
+      Fields.updatedAt: DateTime.now(),
     };
 
     // Every member's profile carries a copy of this facility's name and type,
@@ -1303,7 +1305,7 @@ class _FacilityScreenState extends State<FacilityScreen> {
             final code = (f['code'] ?? '').toString().toLowerCase();
             final matchesSearch =
                 _searchQuery.isEmpty || name.contains(_searchQuery) || code.contains(_searchQuery);
-            final status = _detailsByFacility[f['facilityId']]?['status'] as String? ?? 'Active';
+            final status = _detailsByFacility[f[Fields.facilityId]]?[Fields.status] as String? ?? 'Active';
             final matchesStatus = _listStatusFilter == 'All' || status == _listStatusFilter;
             return matchesSearch && matchesStatus;
           }).toList();
@@ -1311,7 +1313,7 @@ class _FacilityScreenState extends State<FacilityScreen> {
           Map<String, dynamic>? selectedFacility;
           if (filtered.isNotEmpty) {
             for (final f in filtered) {
-              if (f['facilityId'] == _selectedFacilityIdForDetail) {
+              if (f[Fields.facilityId] == _selectedFacilityIdForDetail) {
                 selectedFacility = f;
                 break;
               }
@@ -1477,7 +1479,7 @@ class _FacilityScreenState extends State<FacilityScreen> {
     final isSelected = facilityId == _selectedFacilityIdForDetail;
     final logoUrl = _logoByFacility[facilityId];
     final address = _detailsByFacility[facilityId]?['address'] as String?;
-    final status = _detailsByFacility[facilityId]?['status'] as String? ?? 'Active';
+    final status = _detailsByFacility[facilityId]?[Fields.status] as String? ?? 'Active';
 
     return InkWell(
       onTap: () => setState(() {
@@ -1629,8 +1631,8 @@ class _FacilityScreenState extends State<FacilityScreen> {
     final logoUrl = _logoByFacility[facilityId];
     final contact = _contactByFacility[facilityId];
     final details = _detailsByFacility[facilityId];
-    final status = details?['status'] as String? ?? 'Active';
-    final createdAt = details?['createdAt'] as DateTime?;
+    final status = details?[Fields.status] as String? ?? 'Active';
+    final createdAt = details?[Fields.createdAt] as DateTime?;
 
     return Container(
       padding: const EdgeInsets.all(16),
@@ -1844,9 +1846,9 @@ class _FacilityScreenState extends State<FacilityScreen> {
   Widget _buildActivityList(String facilityId, {required int limit}) {
     return StreamBuilder<QuerySnapshot>(
       stream: FirebaseFirestore.instance
-          .collection('facilities')
+          .collection(Collections.facilities)
           .doc(facilityId)
-          .collection('activity_logs')
+          .collection(Collections.activityLogs)
           .orderBy('timestamp', descending: true)
           .limit(limit)
           .snapshots(),
@@ -2129,9 +2131,9 @@ class _FacilityScreenState extends State<FacilityScreen> {
     return _productsFutureByFacility.putIfAbsent(
       facilityId,
       () => FirebaseFirestore.instance
-          .collection('facilities')
+          .collection(Collections.facilities)
           .doc(facilityId)
-          .collection('products')
+          .collection(Collections.products)
           .get(),
     );
   }
@@ -2289,9 +2291,9 @@ class _FacilityScreenState extends State<FacilityScreen> {
     return _recentSalesFutureByFacility.putIfAbsent(
       facilityId,
       () => FirebaseFirestore.instance
-          .collection('facilities')
+          .collection(Collections.facilities)
           .doc(facilityId)
-          .collection('sales')
+          .collection(Collections.sales)
           .orderBy('timestamp', descending: true)
           .limit(8)
           .get(),
@@ -2436,7 +2438,7 @@ class _FacilityScreenState extends State<FacilityScreen> {
   Widget _buildSettingsTab(Map<String, dynamic> facility) {
     final facilityId = facility['facilityId'] as String?;
     final details = _detailsByFacility[facilityId];
-    final status = (details?['status'] as String?) ?? 'Active';
+    final status = (details?[Fields.status] as String?) ?? 'Active';
     final retentionDays = (details?['activityLogRetentionDays'] as int?) ?? 90;
     final debtOverdueDays = (details?['debtOverdueDays'] as int?) ?? 30;
     final isActive = status.toLowerCase() == 'active';
@@ -2625,16 +2627,16 @@ class _FacilityScreenState extends State<FacilityScreen> {
     if (confirmed != true) return;
 
     try {
-      await FirebaseFirestore.instance.collection('facilities').doc(facilityId).update({
-        'status': newStatus,
-        'updatedAt': FieldValue.serverTimestamp(),
+      await FirebaseFirestore.instance.collection(Collections.facilities).doc(facilityId).update({
+        Fields.status: newStatus,
+        Fields.updatedAt: FieldValue.serverTimestamp(),
       });
       if (!mounted) return;
       setState(() {
         _detailsByFacility[facilityId] = {
           ...?_detailsByFacility[facilityId],
-          'status': newStatus,
-          'updatedAt': DateTime.now(),
+          Fields.status: newStatus,
+          Fields.updatedAt: DateTime.now(),
         };
       });
       ScaffoldMessenger.of(context)
@@ -2706,7 +2708,7 @@ class _FacilityScreenState extends State<FacilityScreen> {
 
     try {
       await FirebaseFirestore.instance
-          .collection('facilities')
+          .collection(Collections.facilities)
           .doc(facilityId)
           .set({'activityLogRetentionDays': selected}, SetOptions(merge: true));
 
@@ -2777,7 +2779,7 @@ class _FacilityScreenState extends State<FacilityScreen> {
 
     try {
       await FirebaseFirestore.instance
-          .collection('facilities')
+          .collection(Collections.facilities)
           .doc(facilityId)
           .set({'debtOverdueDays': selected}, SetOptions(merge: true));
 
@@ -2829,8 +2831,8 @@ class _FacilityScreenState extends State<FacilityScreen> {
     final facilityId = facility['facilityId'] as String?;
     final details = _detailsByFacility[facilityId];
     final description = details?['description'] as String?;
-    final createdAt = details?['createdAt'] as DateTime?;
-    final updatedAt = details?['updatedAt'] as DateTime?;
+    final createdAt = details?[Fields.createdAt] as DateTime?;
+    final updatedAt = details?[Fields.updatedAt] as DateTime?;
 
     final aboutCard = Container(
       padding: const EdgeInsets.all(20),
@@ -2850,7 +2852,7 @@ class _FacilityScreenState extends State<FacilityScreen> {
           ],
           _aboutField('Facility Type', facility['type'] as String? ?? '-'),
           _aboutField('Ownership', (details?['ownership'] as String?) ?? 'Not set'),
-          _aboutFieldWithChip('Status', (details?['status'] as String?) ?? 'Active'),
+          _aboutFieldWithChip('Status', (details?[Fields.status] as String?) ?? 'Active'),
           _aboutField('Created By', _adminFullName ?? 'You'),
           if (createdAt != null) _aboutField('Created On', _formatDateTime(createdAt)),
           if (updatedAt != null) _aboutField('Last Updated', _formatDateTime(updatedAt)),

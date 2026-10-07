@@ -9,6 +9,8 @@ import '../../constants/facility_types.dart';
 import '../../widgets/initials_avatar.dart';
 import '../../widgets/vetbiz_loading_indicator.dart';
 import '../../theme/app_palette.dart';
+import '../../data/collections.dart';
+import '../../data/fields.dart';
 
 /// Only ever shown for an Admin managing more than one facility - the
 /// single-facility case (every Assistant, and most Admins) never
@@ -59,7 +61,7 @@ class _FacilityPickerScreenState extends State<FacilityPickerScreen> {
       // Facility details (address, status, logoUrl) - one get per
       // facility, run in parallel rather than one at a time.
       final facilityDocs = await Future.wait(
-        widget.facilities.map((f) => firestore.collection('facilities').doc(f['facilityId'] as String).get()),
+        widget.facilities.map((f) => firestore.collection(Collections.facilities).doc(f[Fields.facilityId] as String).get()),
       );
       for (final doc in facilityDocs) {
         if (doc.exists) {
@@ -70,11 +72,11 @@ class _FacilityPickerScreenState extends State<FacilityPickerScreen> {
       // Staff counts - one query across all facility IDs (Firestore
       // caps arrayContainsAny at 30 values), grouped client-side rather
       // than one query per facility.
-      final facilityIds = widget.facilities.map((f) => f['facilityId'] as String).toList();
+      final facilityIds = widget.facilities.map((f) => f[Fields.facilityId] as String).toList();
       if (facilityIds.isNotEmpty) {
         final assistantsSnap = await firestore
-            .collection('users')
-            .where('role', isEqualTo: 'assistant')
+            .collection(Collections.users)
+            .where(Fields.role, isEqualTo: 'assistant')
             .where('facilityIds', arrayContainsAny: facilityIds.take(30).toList())
             .get();
         for (final doc in assistantsSnap.docs) {
@@ -89,7 +91,7 @@ class _FacilityPickerScreenState extends State<FacilityPickerScreen> {
 
       // Current user's own name/avatar/default-facility choice.
       if (uid != null) {
-        final userDoc = await firestore.collection('users').doc(uid).get();
+        final userDoc = await firestore.collection(Collections.users).doc(uid).get();
         final userData = userDoc.data();
         _currentUserName = userData?['fullName'] as String? ?? '';
         _currentUserAvatarUrl = userData?['avatarUrl'] as String?;
@@ -107,7 +109,7 @@ class _FacilityPickerScreenState extends State<FacilityPickerScreen> {
   Future<void> _setAsDefault(String facilityId) async {
     final uid = FirebaseAuth.instance.currentUser?.uid;
     if (uid == null) return;
-    await FirebaseFirestore.instance.collection('users').doc(uid).update({'defaultFacilityId': facilityId});
+    await FirebaseFirestore.instance.collection(Collections.users).doc(uid).update({'defaultFacilityId': facilityId});
     if (mounted) setState(() => _defaultFacilityId = facilityId);
   }
 
@@ -128,7 +130,7 @@ class _FacilityPickerScreenState extends State<FacilityPickerScreen> {
     return widget.facilities.where((f) {
       final name = (f['facilityName'] as String? ?? '').toLowerCase();
       final type = (f['facilityType'] as String? ?? '').toLowerCase();
-      final details = _detailsByFacility[f['facilityId']];
+      final details = _detailsByFacility[f[Fields.facilityId]];
       final address = (details?['address'] as String? ?? '').toLowerCase();
 
       if (_typeFilter != null && f['facilityType'] != _typeFilter) return false;
@@ -382,7 +384,7 @@ class _FacilityPickerScreenState extends State<FacilityPickerScreen> {
     final details = _detailsByFacility[facilityId];
     final logoUrl = details?['logoUrl'] as String?;
     final address = details?['address'] as String?;
-    final status = details?['status'] as String? ?? 'Active';
+    final status = details?[Fields.status] as String? ?? 'Active';
     final staffCount = _staffCountByFacility[facilityId] ?? 0;
     final isDefault = facilityId == _defaultFacilityId;
     final typeColor = _typeColor(type);
