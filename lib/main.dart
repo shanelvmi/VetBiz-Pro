@@ -123,11 +123,11 @@ List<Map<String, dynamic>> _parseFacilities(Map<String, dynamic>? data) {
   return raw
       .whereType<Map>()
       .map((f) => {
-            'facilityId': f[Fields.facilityId],
+            Fields.facilityId: f[Fields.facilityId],
             'facilityName': f['name'] ?? '',
             'facilityType': f['type'] ?? '',
           })
-      .where((f) => f['facilityId'] != null)
+      .where((f) => f[Fields.facilityId] != null)
       .toList();
 }
 

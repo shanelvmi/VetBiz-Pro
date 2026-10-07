@@ -436,7 +436,7 @@ class SaleProvider extends ChangeNotifier {
       final userInfo = await ActivityLogger.getCurrentUserInfo();
       await ActivityLogger.logActivity(
         facilityId: facilityId,
-        userId: userInfo['userId']!,
+        userId: userInfo[Fields.userId]!,
         userName: userInfo['userName'],
         actionType: 'Sales',
         description: 'Recorded sale to ${saleToSave.clientName ?? 'Walk-in'} - Tsh ${saleToSave.totalAmount.toStringAsFixed(0)}',
@@ -565,7 +565,7 @@ class SaleProvider extends ChangeNotifier {
         final userInfo = await ActivityLogger.getCurrentUserInfo();
         await ActivityLogger.logActivity(
           facilityId: facilityId,
-          userId: userInfo['userId']!,
+          userId: userInfo[Fields.userId]!,
           userName: userInfo['userName'],
           actionType: 'Sales',
           description: 'Deleted sale to ${sale.clientName ?? 'Walk-in'} - Tsh ${sale.totalAmount.toStringAsFixed(0)}',

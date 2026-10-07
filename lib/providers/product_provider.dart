@@ -930,7 +930,7 @@ class ProductProvider with ChangeNotifier {
 
     try {
       final userInfo = await ActivityLogger.getCurrentUserInfo();
-      final userId = userInfo['userId']!;
+      final userId = userInfo[Fields.userId]!;
       final userName = userInfo['userName']!;
 
       late int stockBefore;
@@ -1111,7 +1111,7 @@ class ProductProvider with ChangeNotifier {
 
     try {
       final userInfo = await ActivityLogger.getCurrentUserInfo();
-      final userId = userInfo['userId']!;
+      final userId = userInfo[Fields.userId]!;
       final userName = userInfo['userName']!;
 
       late int oldStockQty;

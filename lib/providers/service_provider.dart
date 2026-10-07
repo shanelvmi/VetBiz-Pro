@@ -337,7 +337,7 @@ class ServiceProvider extends ChangeNotifier {
       final userInfo = await ActivityLogger.getCurrentUserInfo();
       await ActivityLogger.logActivity(
         facilityId: _facilityId!,
-        userId: userInfo['userId']!,
+        userId: userInfo[Fields.userId]!,
         userName: userInfo['userName'],
         actionType: 'Services',
         description: 'Recorded service for ${saved.clientName ?? 'Walk-in'} - Tsh ${saved.totalAmount.toStringAsFixed(0)}',
@@ -412,7 +412,7 @@ class ServiceProvider extends ChangeNotifier {
       final userInfo = await ActivityLogger.getCurrentUserInfo();
       await ActivityLogger.logActivity(
         facilityId: _facilityId!,
-        userId: userInfo['userId']!,
+        userId: userInfo[Fields.userId]!,
         userName: userInfo['userName'],
         actionType: 'Services',
         description: 'Updated service for ${updated.clientName ?? 'Walk-in'} - Tsh ${updated.totalAmount.toStringAsFixed(0)}',
@@ -565,7 +565,7 @@ class ServiceProvider extends ChangeNotifier {
       final userInfo = await ActivityLogger.getCurrentUserInfo();
       await ActivityLogger.logActivity(
         facilityId: _facilityId!,
-        userId: userInfo['userId']!,
+        userId: userInfo[Fields.userId]!,
         userName: userInfo['userName'],
         actionType: 'Services',
         description: 'Deleted service for ${dataForTrash['clientName'] ?? 'Walk-in'} - Tsh ${(dataForTrash['totalAmount'] ?? 0).toString()}',

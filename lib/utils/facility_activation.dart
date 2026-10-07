@@ -14,6 +14,7 @@ import 'provider_reset.dart';
 import 'navigator_key.dart';
 import '../screens/dashboard/dashboard_screen.dart';
 import '../theme/app_palette.dart';
+import '../data/fields.dart';
 
 /// The one place that turns "here's a facility" into "you're now looking
 /// at its Dashboard" - resets every provider, wires up every real-time
@@ -27,7 +28,7 @@ Future<void> activateFacilityAndGoToDashboard({
   required Map<String, dynamic> facility,
   String? role,
 }) async {
-  debugPrint('[NAV] activateFacilityAndGoToDashboard starting for facility=${facility['facilityId']} role=$role');
+  debugPrint('[NAV] activateFacilityAndGoToDashboard starting for facility=${facility[Fields.facilityId]} role=$role');
   if (!context.mounted) {
     debugPrint('[NAV] activateFacilityAndGoToDashboard: context not mounted - aborting');
     return;
@@ -46,22 +47,22 @@ Future<void> activateFacilityAndGoToDashboard({
   // provider_reset.dart), so this can never miss resetting something
   // like UserRoleProvider or SubscriptionProvider.
   resetAllUserProviders(context);
-  debugPrint('[NAV] Previous user\'s providers cleared, wiring up facility=${facility['facilityId']}');
+  debugPrint('[NAV] Previous user\'s providers cleared, wiring up facility=${facility[Fields.facilityId]}');
 
   facilityProvider.setFacility(
-    id: facility['facilityId'],
+    id: facility[Fields.facilityId],
     name: facility['facilityName'],
     type: facility['facilityType'],
   );
-  facilityProvider.listenToFacility(facility['facilityId']);
+  facilityProvider.listenToFacility(facility[Fields.facilityId]);
 
-  productProvider.fetchProducts(facility['facilityId']);
-  saleProvider.init(facility['facilityId']);
-  clientProvider.listenToClients(facility['facilityId']);
-  serviceProvider.listenToServices(facility['facilityId']);
-  transactionProvider.listenToTransactions(facility['facilityId']);
-  debtProvider.listenToDebts(facility['facilityId']);
-  subscriptionProvider.listenToFacility(facility['facilityId']);
+  productProvider.fetchProducts(facility[Fields.facilityId]);
+  saleProvider.init(facility[Fields.facilityId]);
+  clientProvider.listenToClients(facility[Fields.facilityId]);
+  serviceProvider.listenToServices(facility[Fields.facilityId]);
+  transactionProvider.listenToTransactions(facility[Fields.facilityId]);
+  debtProvider.listenToDebts(facility[Fields.facilityId]);
+  subscriptionProvider.listenToFacility(facility[Fields.facilityId]);
   context.read<UserRoleProvider>().listenToCurrentUser();
 
   // Pushes rather than replaces - AppEntryPoint must stay alive
@@ -91,7 +92,7 @@ Future<void> activateFacilityAndGoToDashboard({
   // plausible separate source of the same symptom.
   await Future.delayed(const Duration(milliseconds: 300));
 
-  debugPrint('[NAV] Navigating to /dashboard for facility=${facility['facilityId']} role=$role');
+  debugPrint('[NAV] Navigating to /dashboard for facility=${facility[Fields.facilityId]} role=$role');
   try {
     // pushAndRemoveUntil against a custom route (rather than
     // pushNamedAndRemoveUntil against the static named one) - this is

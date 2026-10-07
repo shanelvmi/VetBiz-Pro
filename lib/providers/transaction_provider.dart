@@ -9,6 +9,7 @@ import '../utils/activity_logger.dart';
 import '../utils/receipt_numbering.dart';
 import '../services/cursor_paginated_list_controller.dart';
 import '../data/collections.dart';
+import '../data/fields.dart';
 
 class TransactionProvider with ChangeNotifier {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
@@ -288,7 +289,7 @@ class TransactionProvider with ChangeNotifier {
       final userInfo = await ActivityLogger.getCurrentUserInfo();
       await ActivityLogger.logActivity(
         facilityId: facilityId,
-        userId: userInfo['userId']!,
+        userId: userInfo[Fields.userId]!,
         userName: userInfo['userName'],
         actionType: 'Transactions',
         description: 'Added ${newTransaction.type}: ${newTransaction.description} - Tsh ${newTransaction.amount.toStringAsFixed(0)}',
@@ -335,7 +336,7 @@ class TransactionProvider with ChangeNotifier {
       final userInfo = await ActivityLogger.getCurrentUserInfo();
       await ActivityLogger.logActivity(
         facilityId: facilityId,
-        userId: userInfo['userId']!,
+        userId: userInfo[Fields.userId]!,
         userName: userInfo['userName'],
         actionType: 'Transactions',
         description: 'Updated ${updatedTransaction.type}: ${updatedTransaction.description} - Tsh ${updatedTransaction.amount.toStringAsFixed(0)}',
@@ -401,7 +402,7 @@ class TransactionProvider with ChangeNotifier {
 
       await ActivityLogger.logActivity(
         facilityId: facilityId,
-        userId: userInfo['userId']!,
+        userId: userInfo[Fields.userId]!,
         userName: userInfo['userName'],
         actionType: 'Transactions',
         description: 'Deleted transaction: $deletedDescription',

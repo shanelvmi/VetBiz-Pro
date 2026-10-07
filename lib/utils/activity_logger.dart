@@ -54,7 +54,7 @@ class ActivityLogger {
   /// Helper to get current FirebaseAuth userId and fullName
   static Future<Map<String, String>> getCurrentUserInfo() async {
     final user = FirebaseAuth.instance.currentUser;
-    if (user == null) return {'userId': '', 'userName': 'Unknown'};
+    if (user == null) return {Fields.userId: '', 'userName': 'Unknown'};
 
     String userName = 'Unknown';
     try {
@@ -65,6 +65,6 @@ class ActivityLogger {
       userName = doc.exists ? (doc.data()?['fullName'] ?? user.email ?? 'Unknown') : user.email ?? 'Unknown';
     } catch (_) {}
 
-    return {'userId': user.uid, 'userName': userName};
+    return {Fields.userId: user.uid, 'userName': userName};
   }
 }
