@@ -18,6 +18,7 @@ import '../../config/money.dart';
 import '../../config/app_rules.dart';
 import '../../config/payment_methods.dart';
 import '../../config/app_date_format.dart';
+import '../../config/app_info.dart';
 
 /// Shows the receipt as it will actually look before doing anything with
 /// it - a real preview, not a blind print. From here it can be shared or
@@ -660,7 +661,7 @@ class _ReceiptPreviewScreenState extends State<ReceiptPreviewScreen> {
             ),
             const SizedBox(height: 2),
             Center(
-              child: Text('Powered by VetBiz Pro', style: TextStyle(fontSize: 9, color: Colors.grey[500])),
+              child: Text('Powered by ${AppInfo.name}', style: TextStyle(fontSize: 9, color: Colors.grey[500])),
             ),
           ],
         ),

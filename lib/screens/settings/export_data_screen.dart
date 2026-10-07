@@ -16,6 +16,7 @@ import '../../data/fields.dart';
 import '../../config/money.dart';
 import '../../config/app_ranges.dart';
 import '../../data/data_keys.dart';
+import '../../config/app_info.dart';
 
 /// One logical table of data - a title (shown as its own line in CSV,
 /// its own sheet/tab name in xlsx), a header row, and the data rows
@@ -327,7 +328,7 @@ class _ExportDataScreenState extends State<ExportDataScreen> {
 
       final xfile = XFile.fromData(bytes, name: fileName, mimeType: mimeType);
 
-      await Share.shareXFiles([xfile], text: 'VetBiz Pro export: $_selectedDataType');
+      await Share.shareXFiles([xfile], text: '${AppInfo.name} export: $_selectedDataType');
 
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(

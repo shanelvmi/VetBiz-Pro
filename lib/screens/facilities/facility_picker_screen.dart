@@ -12,6 +12,7 @@ import '../../theme/app_palette.dart';
 import '../../data/collections.dart';
 import '../../data/fields.dart';
 import '../../data/user_role.dart';
+import '../../config/app_info.dart';
 
 /// Only ever shown for an Admin managing more than one facility - the
 /// single-facility case (every Assistant, and most Admins) never
@@ -204,7 +205,7 @@ class _FacilityPickerScreenState extends State<FacilityPickerScreen> {
           const Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text('VetBiz Pro', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16)),
+              Text(AppInfo.name, style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16)),
               Text('Manage. Care. Grow.', style: TextStyle(color: Colors.white70, fontSize: 10.5)),
             ],
           ),

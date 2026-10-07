@@ -7,6 +7,7 @@ import '../models/sale.dart';
 import '../models/service.dart';
 import '../models/transaction.dart';
 import '../config/money.dart';
+import '../config/app_info.dart';
 
 /// Real Bluetooth thermal-printer integration - connects to a printer
 /// already paired at the OS/Bluetooth-settings level (classic SPP
@@ -96,7 +97,7 @@ class ReceiptPrinterService {
     List<int> bytes = [];
 
     bytes += generator.text(
-      'VetBiz Pro',
+      AppInfo.name,
       styles: const PosStyles(align: PosAlign.center, bold: true, height: PosTextSize.size2, width: PosTextSize.size2),
     );
     bytes += generator.text('Test Print', styles: const PosStyles(align: PosAlign.center));
@@ -116,7 +117,7 @@ class ReceiptPrinterService {
     List<int> bytes = [];
 
     bytes += generator.text(
-      'VetBiz Pro',
+      AppInfo.name,
       styles: const PosStyles(align: PosAlign.center, bold: true, height: PosTextSize.size2, width: PosTextSize.size2),
     );
     bytes += generator.text('Sales Receipt', styles: const PosStyles(align: PosAlign.center));
@@ -183,7 +184,7 @@ class ReceiptPrinterService {
     List<int> bytes = [];
 
     bytes += generator.text(
-      'VetBiz Pro',
+      AppInfo.name,
       styles: const PosStyles(align: PosAlign.center, bold: true, height: PosTextSize.size2, width: PosTextSize.size2),
     );
     bytes += generator.text('Service Receipt', styles: const PosStyles(align: PosAlign.center));
@@ -257,7 +258,7 @@ class ReceiptPrinterService {
         transaction.receiptNumber != null ? '$prefix-${transaction.receiptNumber.toString().padLeft(6, '0')}' : null;
 
     bytes += generator.text(
-      'VetBiz Pro',
+      AppInfo.name,
       styles: const PosStyles(align: PosAlign.center, bold: true, height: PosTextSize.size2, width: PosTextSize.size2),
     );
     bytes += generator.text('Transaction Receipt', styles: const PosStyles(align: PosAlign.center));

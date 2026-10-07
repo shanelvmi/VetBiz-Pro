@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+import 'package:vetbiz_pro/config/app_info.dart';
 import 'package:vetbiz_pro/config/app_links.dart';
 import 'package:vetbiz_pro/config/app_ranges.dart';
 import 'package:vetbiz_pro/config/app_rules.dart';
@@ -94,6 +95,11 @@ void main() {
     expect(AppRanges.archiveCutoffDays, 180);
     expect(AppRanges.archiveCutoff.inDays, 180);
     expect(AppRanges.archiveDefaultWindow.inDays, 90);
+  });
+
+  test('the app name is unchanged', () {
+    expect(AppInfo.name, 'VetBiz Pro');
+    expect(AppInfo.shortName, 'VetBiz');
   });
 
   test('restock rules keep their exact numbers, all four frequencies', () {

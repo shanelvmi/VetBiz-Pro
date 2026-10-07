@@ -23,6 +23,7 @@ import '../data/collections.dart';
 import '../data/fields.dart';
 import '../data/user_role.dart';
 import '../config/app_timeouts.dart';
+import '../config/app_info.dart';
 
 class RegisterScreen extends StatefulWidget {
   final bool isUpdating;
@@ -795,7 +796,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
           const SizedBox(width: 12),
           const Expanded(
             child: Text(
-              'VetBiz Pro System',
+              '${AppInfo.name} System',
               overflow: TextOverflow.ellipsis,
               style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16),
             ),
@@ -861,7 +862,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
           ),
           const SizedBox(height: 8),
           Text(
-            'Set up VetBiz Pro for your agrovet or veterinary centre in a few minutes.',
+            'Set up ${AppInfo.name} for your agrovet or veterinary centre in a few minutes.',
             style: TextStyle(color: Colors.white.withValues(alpha: 0.85), fontSize: 13.5, height: 1.45),
           ),
           const SizedBox(height: 24),

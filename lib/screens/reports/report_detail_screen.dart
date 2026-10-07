@@ -7,6 +7,7 @@ import '../../services/daily_report_pdf_service.dart';
 import 'report_tabbed_content.dart';
 import '../../theme/app_palette.dart';
 import '../../config/app_date_format.dart';
+import '../../config/app_info.dart';
 
 /// Read-only view of a past, already-generated report - the AppBar
 /// (date, submission status, PDF action) plus the shared tabbed
@@ -23,7 +24,7 @@ class ReportDetailScreen extends StatelessWidget {
 
   Future<void> _printOrDownloadPdf(BuildContext context) async {
     final facilityProvider = Provider.of<FacilityProvider>(context, listen: false);
-    final rawName = facilityProvider.selectedFacilityName ?? 'VetBiz Pro Facility';
+    final rawName = facilityProvider.selectedFacilityName ?? '${AppInfo.name} Facility';
     final facilityType = facilityProvider.selectedFacilityType;
     final facilityName = (facilityType != null && facilityType.isNotEmpty) ? '$rawName $facilityType' : rawName;
     await DailyReportPdfService.printOrDownload(report, facilityName: facilityName);

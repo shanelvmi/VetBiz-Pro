@@ -18,6 +18,7 @@ import '../../config/money.dart';
 import '../../config/app_rules.dart';
 import '../../config/payment_methods.dart';
 import '../../config/app_date_format.dart';
+import '../../config/app_info.dart';
 
 /// Shows the service receipt as it will actually look before doing
 /// anything with it - same pattern as Sales' ReceiptPreviewScreen, just
@@ -635,7 +636,7 @@ class _ServiceReceiptPreviewScreenState extends State<ServiceReceiptPreviewScree
             ),
             const SizedBox(height: 2),
             Center(
-              child: Text('Powered by VetBiz Pro', style: TextStyle(fontSize: 9, color: Colors.grey[500])),
+              child: Text('Powered by ${AppInfo.name}', style: TextStyle(fontSize: 9, color: Colors.grey[500])),
             ),
           ],
         ),

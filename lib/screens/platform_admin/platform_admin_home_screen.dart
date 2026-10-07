@@ -17,6 +17,7 @@ import 'platform_settings_screen.dart';
 import '../../theme/app_palette.dart';
 import '../../data/collections.dart';
 import '../../config/app_timeouts.dart';
+import '../../config/app_info.dart';
 
 /// One navigation entry - a simple data record rather than each item
 /// being hand-built inline. Adding a new section (or, later, a nested
@@ -350,7 +351,7 @@ class _PlatformAdminHomeScreenState extends State<PlatformAdminHomeScreen> {
       child: _isSidebarCollapsed
           ? const Icon(Icons.storefront, color: Colors.white, size: 26)
           : const Text(
-              'VetBiz Pro',
+              AppInfo.name,
               style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16, letterSpacing: 0.3),
             ),
     );

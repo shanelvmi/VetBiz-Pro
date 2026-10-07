@@ -36,6 +36,17 @@ Stored keys never change, and both display everywhere. Three places treat them a
 
 - `lib/screens/services/add_edit_service_screen.dart:541`, `DateFormat.yMMMMd()` ("March 5, 2026"), now `AppDateFormat.monthDayYearLong`: the only date format that follows the locale; every other screen uses a fixed pattern such as `dd MMM yyyy` ("05 Mar 2026"). When step 2F turns on Kiswahili this one will change shape and the others won't. Switch it to `AppDateFormat.date` so it matches the rest?
 
+### App name (raised in step 2C)
+
+User-facing "VetBiz Pro" now reads `AppInfo.name` (titles, Settings, support line, register intro, report fallback names, export share text, PDF and thermal-receipt headers and footers). These keep the name typed, on purpose:
+
+- **Must stay literal**: code identifiers (`VetBizProApp`, `VetBizLoadingIndicator`, `VetBizLoadingStyle`); the Dart package `vetbiz_pro` and bundle ids (`com.example.vetbiz_pro`, `com.example.vetbizPro`) across android/ios/linux/macos; the Firebase project id `vetbiz-pro` (`.firebaserc`, `firebase.json`); the asset `assets/vetbizpro_illustration.png`.
+- **Legal text, left as written**: `lib/screens/legal/privacy_policy_screen.dart`, `terms_of_service_screen.dart`, and the "© 2026 VetBiz Pro System. All rights reserved." lines (`login_screen.dart:424, 446`).
+- **The two-tone wordmark**: "VetBiz " and "Pro" as separately styled spans (`receipt_preview_screen.dart:568, 655`, `service_receipt_preview_screen.dart:542, 630`, `receipt_pdf_service.dart:342`). A logo, not a sentence: a new name would need a design decision.
+- **Server text** (not touched in Phase 2): the credential email in `functions/index.js:37-51` says "VetBiz Admin" and "the VetBiz system".
+- **Two names in use**: "VetBiz Pro" and "VetBiz Pro System" (login header, register header, © line). One name?
+- **The version** "v1.0.0" is typed in Settings (`settings_screen.dart:239`); it could come from the build (pubspec) instead.
+
 ## Decided
 
 Decided by the owner after step 2A.

@@ -15,6 +15,7 @@ import '../dashboard/notifications_screen.dart';
 import '../../theme/app_palette.dart';
 import '../../config/app_defaults.dart';
 import '../../config/app_links.dart';
+import '../../config/app_info.dart';
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
@@ -236,7 +237,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               const SizedBox(height: 36),
               const Center(
                 child: Text(
-                  'VetBiz Pro - v1.0.0',
+                  '${AppInfo.name} - v1.0.0',
                   style: TextStyle(
                     fontSize: 12,
                     color: Colors.grey,
@@ -625,7 +626,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            _infoRow('App Name', 'VetBiz Pro'),
+            _infoRow('App Name', AppInfo.name),
             _infoRow('Version', '1.0.0'),
             _infoRow('Built For', 'Veterinary & agrovet business management'),
           ],

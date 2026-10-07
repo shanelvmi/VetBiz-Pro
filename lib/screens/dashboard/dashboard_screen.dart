@@ -66,6 +66,7 @@ import '../../config/app_timeouts.dart';
 import '../../config/app_ranges.dart';
 import '../../config/app_date_format.dart';
 import '../../config/app_links.dart';
+import '../../config/app_info.dart';
 
 class DrawerHoverItem extends StatefulWidget {
   final IconData icon;
@@ -2685,7 +2686,7 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
               // Always shown, regardless of whether any contact
               // details are configured - the statement itself already
               // names Platform Admin explicitly.
-              const Text('For help or support please reach out to VetBiz Pro platform admin.',
+              const Text('For help or support please reach out to ${AppInfo.name} platform admin.',
                   style: TextStyle(fontSize: 13.5)),
               if (email.isNotEmpty || phone.isNotEmpty || whatsapp.isNotEmpty || address.isNotEmpty) ...[
                 const SizedBox(height: 10),
@@ -3092,7 +3093,7 @@ Widget _buildDrawerContent() {
     child: effectivelyCollapsed
         ? const SizedBox.shrink()
         : Text(
-            '@VetBiz Pro',
+            '@${AppInfo.name}',
             style: TextStyle(fontSize: 12, color: offWhite),
           ),
   );

@@ -15,6 +15,7 @@ import '../theme/app_palette.dart';
 import '../data/collections.dart';
 import '../config/app_timeouts.dart';
 import '../config/app_rules.dart';
+import '../config/app_info.dart';
 
 class LoginScreen extends StatefulWidget {
   final String? errorMessage;
@@ -339,7 +340,7 @@ class _LoginScreenState extends State<LoginScreen> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            const Text('VetBiz Pro System',
+                            const Text('${AppInfo.name} System',
                                 style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16)),
                             if (!isNarrow)
                               Text('Smart Business & Vet Services Monitor',
@@ -498,7 +499,7 @@ class _LoginScreenState extends State<LoginScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text('Welcome to', style: TextStyle(color: Colors.white.withValues(alpha: 0.85), fontSize: 13)),
-                Text('VetBiz Pro',
+                Text(AppInfo.name,
                     style: TextStyle(color: Color(0xFF7EE8CB), fontWeight: FontWeight.bold, fontSize: 19)),
                 const SizedBox(height: 8),
                 Text('Stay updated with the latest news and announcements.',

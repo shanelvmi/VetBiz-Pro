@@ -23,6 +23,7 @@ import '../../data/collections.dart';
 import '../../data/fields.dart';
 import '../../data/activity_type.dart';
 import '../../config/app_date_format.dart';
+import '../../config/app_info.dart';
 
 /// The main View Reports screen - shows today's own report directly,
 /// matching the Daily Closing Report mockup, rather than a separate
@@ -196,7 +197,7 @@ class _ViewReportsScreenState extends State<ViewReportsScreen> {
   Future<void> _printOrDownloadPdf() async {
     if (_todaysReport == null) return;
     final facilityProvider = Provider.of<FacilityProvider>(context, listen: false);
-    final rawName = facilityProvider.selectedFacilityName ?? 'VetBiz Pro Facility';
+    final rawName = facilityProvider.selectedFacilityName ?? '${AppInfo.name} Facility';
     final facilityType = facilityProvider.selectedFacilityType;
     final facilityName = (facilityType != null && facilityType.isNotEmpty) ? '$rawName $facilityType' : rawName;
     await DailyReportPdfService.printOrDownload(_todaysReport!, facilityName: facilityName);
@@ -207,7 +208,7 @@ class _ViewReportsScreenState extends State<ViewReportsScreen> {
     Uint8List? bytes;
     try {
       final facilityProvider = Provider.of<FacilityProvider>(context, listen: false);
-      final rawName = facilityProvider.selectedFacilityName ?? 'VetBiz Pro Facility';
+      final rawName = facilityProvider.selectedFacilityName ?? '${AppInfo.name} Facility';
       final facilityType = facilityProvider.selectedFacilityType;
       final facilityName = (facilityType != null && facilityType.isNotEmpty) ? '$rawName $facilityType' : rawName;
 

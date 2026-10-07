@@ -44,6 +44,7 @@ import 'data/user_status.dart';
 import 'config/app_limits.dart';
 import 'config/app_timeouts.dart';
 import 'config/app_rules.dart';
+import 'config/app_info.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -94,7 +95,7 @@ class VetBizProApp extends StatelessWidget {
 
     return MaterialApp(
       navigatorKey: navigatorKey,
-      title: 'VetBiz Pro',
+      title: AppInfo.name,
       theme: AppTheme.build(colorTheme, Brightness.light),
       debugShowCheckedModeBanner: false,
       routes: {
