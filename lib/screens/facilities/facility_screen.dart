@@ -26,6 +26,7 @@ import '../../data/user_role.dart';
 import '../../config/app_defaults.dart';
 import '../../config/app_limits.dart';
 import '../../config/app_ranges.dart';
+import '../../config/app_rules.dart';
 
 const Color deepGreen = AppPalette.primary;
 const Color warmAmber = AppPalette.accent;
@@ -173,7 +174,7 @@ class _FacilityScreenState extends State<FacilityScreen> {
       final status = facilityDoc.data()?[Fields.status] as String? ?? 'Active';
       final createdAtTs = facilityDoc.data()?[Fields.createdAt] as Timestamp?;
       final updatedAtTs = facilityDoc.data()?[Fields.updatedAt] as Timestamp?;
-      final retentionDays = (facilityDoc.data()?['activityLogRetentionDays'] as num?)?.toInt() ?? 90;
+      final retentionDays = (facilityDoc.data()?['activityLogRetentionDays'] as num?)?.toInt() ?? AppRules.activityLogRetentionDefaultDays;
       final debtOverdueDays = (facilityDoc.data()?['debtOverdueDays'] as num?)?.toInt() ?? 30;
       final salesTotals = await salesTotalsFuture;
       final clientCountSnap = await clientCountFuture;
@@ -2443,7 +2444,7 @@ class _FacilityScreenState extends State<FacilityScreen> {
     final facilityId = facility[Fields.facilityId] as String?;
     final details = _detailsByFacility[facilityId];
     final status = (details?[Fields.status] as String?) ?? 'Active';
-    final retentionDays = (details?['activityLogRetentionDays'] as int?) ?? 90;
+    final retentionDays = (details?['activityLogRetentionDays'] as int?) ?? AppRules.activityLogRetentionDefaultDays;
     final debtOverdueDays = (details?['debtOverdueDays'] as int?) ?? 30;
     final isActive = status.toLowerCase() == 'active';
 
@@ -2657,7 +2658,7 @@ class _FacilityScreenState extends State<FacilityScreen> {
   // facility from FacilityProvider (the active one), not a parameter,
   // so this can't just call into it without risking changing the
   // wrong facility's retention setting.
-  static const List<int> _retentionOptions = [14, 30, 60, 90];
+  static const List<int> _retentionOptions = AppRules.activityLogRetentionOptions;
 
   Future<void> _showFacilityRetentionDialog(String facilityId, {required int currentRetention}) async {
     final selected = await showDialog<int>(

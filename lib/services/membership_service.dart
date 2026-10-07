@@ -1,4 +1,5 @@
 import 'package:cloud_functions/cloud_functions.dart';
+import '../config/app_rules.dart';
 
 /// The region the membership functions run in - the same one as the database
 /// (africa-south1, Johannesburg). They make several database round trips each,
@@ -123,7 +124,7 @@ class MembershipService {
     return CreatedInvite(
       code: (data['code'] ?? '').toString(),
       expiresAt: DateTime.tryParse((data['expiresAt'] ?? '').toString())?.toLocal() ??
-          DateTime.now().add(const Duration(hours: 48)),
+          DateTime.now().add(AppRules.inviteValidity),
     );
   }
 

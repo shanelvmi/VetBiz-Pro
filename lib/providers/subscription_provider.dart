@@ -3,8 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:intl/intl.dart';
 
-import '../constants/subscription_plans.dart';
 import '../data/collections.dart';
+import '../config/app_rules.dart';
 
 enum SubscriptionStatus { trial, active, grace, locked }
 
@@ -49,7 +49,7 @@ class SubscriptionProvider with ChangeNotifier {
   /// "needs attention" - the same 7 the Dashboard banner and bell
   /// already use, and kAttentionThresholdDays in the
   /// checkSubscriptionExpiry Cloud Function.
-  static const int attentionThresholdDays = 7;
+  static const int attentionThresholdDays = AppRules.subscriptionAttentionDays;
 
   /// The CALM trial: still in the free trial, with no urgency yet - more than a
   /// week left, or no end date at all.
@@ -175,14 +175,14 @@ class SubscriptionProvider with ChangeNotifier {
 
     if (_expiresAt != null) {
       if (now.isBefore(_expiresAt!)) return SubscriptionStatus.active;
-      final graceEnd = _expiresAt!.add(const Duration(days: kGracePeriodDays));
+      final graceEnd = _expiresAt!.add(AppRules.gracePeriod);
       if (now.isBefore(graceEnd)) return SubscriptionStatus.grace;
       return SubscriptionStatus.locked;
     }
 
     if (_trialExpiresAt != null) {
       if (now.isBefore(_trialExpiresAt!)) return SubscriptionStatus.trial;
-      final graceEnd = _trialExpiresAt!.add(const Duration(days: kGracePeriodDays));
+      final graceEnd = _trialExpiresAt!.add(AppRules.gracePeriod);
       if (now.isBefore(graceEnd)) return SubscriptionStatus.grace;
       return SubscriptionStatus.locked;
     }

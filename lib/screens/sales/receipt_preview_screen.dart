@@ -16,6 +16,7 @@ import '../settings/printer_settings_screen.dart';
 import '../../utils/web_download.dart';
 import '../../theme/app_palette.dart';
 import '../../config/money.dart';
+import '../../config/app_rules.dart';
 
 /// Shows the receipt as it will actually look before doing anything with
 /// it - a real preview, not a blind print. From here it can be shared or
@@ -590,7 +591,7 @@ class _ReceiptPreviewScreenState extends State<ReceiptPreviewScreen> {
             ),
             divider(),
             // ---- Receipt meta ----
-            infoLine('Receipt #', sale.receiptNumber?.toString() ?? sale.id.substring(0, sale.id.length < 6 ? sale.id.length : 6),
+            infoLine('Receipt #', sale.receiptNumber?.toString() ?? sale.id.substring(0, sale.id.length < AppRules.fallbackReceiptIdLength ? sale.id.length : AppRules.fallbackReceiptIdLength),
                 label2: 'Date', value2: DateFormat('dd MMM yyyy, HH:mm').format(sale.timestamp)),
             infoLine('Customer', sale.clientName ?? 'Walk-in'),
             infoLine('Payment Method', sale.paymentMethod ?? 'On Credit'),

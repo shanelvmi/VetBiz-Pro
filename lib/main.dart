@@ -43,6 +43,7 @@ import 'data/user_role.dart';
 import 'data/user_status.dart';
 import 'config/app_limits.dart';
 import 'config/app_timeouts.dart';
+import 'config/app_rules.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -1011,9 +1012,9 @@ class _NoFacilityScreenState extends State<_NoFacilityScreen> {
       _found = null;
       _codeProblem = null;
       _error = null;
-      _checking = letters.length >= 6;
+      _checking = letters.length >= AppRules.inviteCodeLength;
     });
-    if (letters.length < 6) return;
+    if (letters.length < AppRules.inviteCodeLength) return;
 
     _debounce = Timer(AppTimeouts.inviteCodeLookupDebounce, () async {
       try {

@@ -6,6 +6,7 @@ import '../models/service.dart';
 import '../data/collections.dart';
 import '../data/fields.dart';
 import '../config/app_ranges.dart';
+import '../config/app_rules.dart';
 
 class DailyReportService {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
@@ -231,7 +232,7 @@ class DailyReportService {
         .map((s) => SaleLineItem(
               saleId: s.id,
               time: s.timestamp,
-              receiptNo: s.receiptNumber?.toString() ?? s.id.substring(0, s.id.length < 6 ? s.id.length : 6),
+              receiptNo: s.receiptNumber?.toString() ?? s.id.substring(0, s.id.length < AppRules.fallbackReceiptIdLength ? s.id.length : AppRules.fallbackReceiptIdLength),
               customerName: s.clientName ?? 'Walk-in',
               itemCount: s.items.length,
               amount: s.totalAmount,

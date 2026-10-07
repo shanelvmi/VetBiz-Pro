@@ -8,6 +8,7 @@ import 'package:printing/printing.dart';
 import '../models/sale.dart';
 import '../models/service.dart';
 import '../config/money.dart';
+import '../config/app_rules.dart';
 
 /// Builds a genuine A4 PDF receipt for a Sale or a Service - a real,
 /// correctly-sized printable document, not a screenshot of the on-screen
@@ -174,7 +175,7 @@ class ReceiptPdfService {
           ),
           pw.SizedBox(height: 16),
           _metaSection([
-            _kvPair('Receipt #', sale.receiptNumber?.toString() ?? sale.id.substring(0, sale.id.length < 6 ? sale.id.length : 6)),
+            _kvPair('Receipt #', sale.receiptNumber?.toString() ?? sale.id.substring(0, sale.id.length < AppRules.fallbackReceiptIdLength ? sale.id.length : AppRules.fallbackReceiptIdLength)),
             _kvPair('Date', _dateTime.format(sale.timestamp)),
             _kvPair('Customer', sale.clientName ?? 'Walk-in'),
             _kvPair('Payment Method', sale.paymentMethod ?? 'On Credit'),
@@ -250,7 +251,7 @@ class ReceiptPdfService {
           ),
           pw.SizedBox(height: 16),
           _metaSection([
-            _kvPair('Receipt #', service.receiptNumber?.toString() ?? service.id.substring(0, service.id.length < 6 ? service.id.length : 6)),
+            _kvPair('Receipt #', service.receiptNumber?.toString() ?? service.id.substring(0, service.id.length < AppRules.fallbackReceiptIdLength ? service.id.length : AppRules.fallbackReceiptIdLength)),
             _kvPair('Date', _dateTime.format(serviceDate)),
             _kvPair('Customer', service.clientName ?? 'Walk-in'),
             _kvPair('Provided By', service.providedByName ?? 'N/A'),

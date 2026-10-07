@@ -14,6 +14,7 @@ import '../../theme/app_palette.dart';
 import '../../data/collections.dart';
 import '../../data/fields.dart';
 import '../../config/app_limits.dart';
+import '../../config/app_rules.dart';
 
 class ActivityLogScreen extends StatefulWidget {
   final bool isModal;
@@ -66,8 +67,8 @@ class _ActivityLogScreenState extends State<ActivityLogScreen> {
   int? _retentionDays;
   String? _retentionLoadedForFacilityId;
 
-  static const List<int> _retentionOptions = [14, 30, 60, 90];
-  static const int _defaultRetentionDays = 90;
+  static const List<int> _retentionOptions = AppRules.activityLogRetentionOptions;
+  static const int _defaultRetentionDays = AppRules.activityLogRetentionDefaultDays;
 
   // The log query itself - was previously rebuilt fresh inside build()
   // on every rebuild, which handed StreamBuilder a brand-new Stream

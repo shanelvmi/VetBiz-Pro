@@ -1,13 +1,14 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import '../config/app_rules.dart';
 import '../data/collections.dart';
 
 /// Default cap on how many facilities a single Admin account can
 /// create, used only until a Platform Admin configures a different
-/// value via Platform Settings (platform_config/settings). Must match
-/// the fallback used in firestore.rules' isUnderFacilityLimit() - the
-/// rule is the actual enforcement, this is just what the UI shows
+/// value via Platform Settings (platform_config/settings). The server
+/// (functions/membership.js) is the actual enforcement, with the same
+/// fallback (AppRules, test-linked); this is just what the UI shows
 /// before that read completes.
-const int kDefaultMaxFacilitiesPerAdmin = 6;
+const int kDefaultMaxFacilitiesPerAdmin = AppRules.defaultMaxFacilitiesPerAdmin;
 
 /// Reads the currently configured facility limit, or the default if
 /// none has been set yet. Falls back to the default on any read

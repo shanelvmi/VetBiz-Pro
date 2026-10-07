@@ -16,6 +16,7 @@ import '../settings/printer_settings_screen.dart';
 import '../../utils/web_download.dart';
 import '../../theme/app_palette.dart';
 import '../../config/money.dart';
+import '../../config/app_rules.dart';
 
 /// Shows the service receipt as it will actually look before doing
 /// anything with it - same pattern as Sales' ReceiptPreviewScreen, just
@@ -564,7 +565,7 @@ class _ServiceReceiptPreviewScreenState extends State<ServiceReceiptPreviewScree
             ),
             divider(),
             // ---- Receipt meta ----
-            infoLine('Receipt #', service.receiptNumber?.toString() ?? service.id.substring(0, service.id.length < 6 ? service.id.length : 6),
+            infoLine('Receipt #', service.receiptNumber?.toString() ?? service.id.substring(0, service.id.length < AppRules.fallbackReceiptIdLength ? service.id.length : AppRules.fallbackReceiptIdLength),
                 label2: service.serviceDate != null ? 'Date' : null,
                 value2: service.serviceDate != null ? DateFormat('dd MMM yyyy, HH:mm').format(service.serviceDate!) : null),
             infoLine('Customer', service.clientName ?? 'Walk-in'),

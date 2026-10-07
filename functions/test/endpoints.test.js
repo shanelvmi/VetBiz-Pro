@@ -110,3 +110,77 @@ test("UserStatus keys are the statuses the server writes or moves between", () =
   assert.ok(serverStatuses.length > 0, "found no status writes in membership.js");
   assert.deepStrictEqual(appStatuses, serverStatuses);
 });
+
+// ---------------------------------------------------------------------------
+// Business numbers the app shares with the server and the rules (Phase 2,
+// step 2C). Both sides are read as text. Each value MUST be found: a test
+// that passes because a pattern stopped matching would hide exactly the
+// drift it is here to catch, so a missing value fails with what was looked for.
+
+const indexJs = fs.readFileSync(path.join(__dirname, "..", "index.js"), "utf8");
+const rulesText = fs.readFileSync(path.join(__dirname, "..", "..", "firestore.rules"), "utf8");
+const appRules = readDart("config", "app_rules.dart");
+const appRanges = readDart("config", "app_ranges.dart");
+
+// The first capture group of `re` in `src`, or a failed assertion naming the
+// file and the pattern.
+function mustFind(src, re, where) {
+  const m = src.match(re);
+  assert.ok(m && m[1] !== undefined, `could not find ${re} in ${where} - was it renamed or moved?`);
+  return m[1];
+}
+
+// "48 * 60 * 60 * 1000" -> 172800000 (digits and * only, so no eval).
+function product(expr, where) {
+  assert.ok(/^[\d\s*]+$/.test(expr), `${where}: expected a product of numbers, found "${expr}"`);
+  return expr.split("*").reduce((acc, n) => acc * Number(n.trim()), 1);
+}
+
+test("grace period: AppRules = firestore.rules isSubscriptionLocked = functions/index.js", () => {
+  const app = Number(mustFind(appRules, /gracePeriodDays\s*=\s*(\d+)\s*;/, "lib/config/app_rules.dart"));
+  const fnBody = mustFind(rulesText, /function isSubscriptionLocked\([^)]*\)\s*\{([\s\S]*?)\n\s*\}/, "firestore.rules");
+  const ruleValues = [...fnBody.matchAll(/duration\.value\(\s*(\d+)\s*,\s*'d'\s*\)/g)].map((m) => Number(m[1]));
+  assert.ok(ruleValues.length > 0, "found no duration.value(N, 'd') inside isSubscriptionLocked in firestore.rules");
+  const server = Number(mustFind(indexJs, /const kGracePeriodDays\s*=\s*(\d+)\s*;/, "functions/index.js"));
+  for (const r of ruleValues) {
+    assert.strictEqual(r, app, `grace period differs: app ${app} days, firestore.rules ${r} days`);
+  }
+  assert.strictEqual(server, app, `grace period differs: app ${app} days, functions/index.js ${server} days`);
+});
+
+test("invite validity: AppRules.inviteValidity = membership.js INVITE_VALIDITY_MS", () => {
+  const appHours = Number(mustFind(appRules, /inviteValidity\s*=\s*Duration\(\s*hours:\s*(\d+)\s*\)/, "lib/config/app_rules.dart"));
+  const serverMs = product(mustFind(membershipJs, /const INVITE_VALIDITY_MS\s*=\s*([\d\s*]+);/, "functions/membership.js"), "INVITE_VALIDITY_MS");
+  assert.strictEqual(appHours * 60 * 60 * 1000, serverMs,
+    `invite validity differs: app ${appHours} h (${appHours * 3600000} ms), server ${serverMs} ms (${serverMs / 3600000} h)`);
+});
+
+test("trash retention: AppRules = functions/index.js TRASH_RETENTION_DAYS", () => {
+  const app = Number(mustFind(appRules, /trashRetentionDays\s*=\s*(\d+)\s*;/, "lib/config/app_rules.dart"));
+  const server = Number(mustFind(indexJs, /const TRASH_RETENTION_DAYS\s*=\s*(\d+)\s*;/, "functions/index.js"));
+  assert.strictEqual(app, server, `trash retention differs: app ${app} days, server ${server} days`);
+});
+
+test("subscription attention window: AppRules = functions/index.js kAttentionThresholdDays", () => {
+  const app = Number(mustFind(appRules, /subscriptionAttentionDays\s*=\s*(\d+)\s*;/, "lib/config/app_rules.dart"));
+  const server = Number(mustFind(indexJs, /const kAttentionThresholdDays\s*=\s*(\d+)\s*;/, "functions/index.js"));
+  assert.strictEqual(app, server, `attention window differs: app ${app} days, server ${server} days`);
+});
+
+test("archive cutoff: AppRanges.archiveCutoffDays = functions/index.js ARCHIVE_AFTER_DAYS", () => {
+  const app = Number(mustFind(appRanges, /archiveCutoffDays\s*=\s*(\d+)\s*;/, "lib/config/app_ranges.dart"));
+  const server = Number(mustFind(indexJs, /const ARCHIVE_AFTER_DAYS\s*=\s*(\d+)\s*;/, "functions/index.js"));
+  assert.strictEqual(app, server, `archive cutoff differs: app ${app} days, server ${server} days`);
+});
+
+test("facility limit fallback: AppRules = membership.js DEFAULT_MAX_FACILITIES", () => {
+  const app = Number(mustFind(appRules, /defaultMaxFacilitiesPerAdmin\s*=\s*(\d+)\s*;/, "lib/config/app_rules.dart"));
+  const server = Number(mustFind(membershipJs, /const DEFAULT_MAX_FACILITIES\s*=\s*(\d+)\s*;/, "functions/membership.js"));
+  assert.strictEqual(app, server, `facility limit fallback differs: app ${app}, server ${server}`);
+});
+
+test("trial length fallback: AppRules = membership.js DEFAULT_TRIAL_DAYS", () => {
+  const app = Number(mustFind(appRules, /defaultTrialDays\s*=\s*(\d+)\s*;/, "lib/config/app_rules.dart"));
+  const server = Number(mustFind(membershipJs, /const DEFAULT_TRIAL_DAYS\s*=\s*(\d+)\s*;/, "functions/membership.js"));
+  assert.strictEqual(app, server, `trial length fallback differs: app ${app} days, server ${server} days`);
+});

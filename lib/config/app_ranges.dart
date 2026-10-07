@@ -36,6 +36,7 @@ class AppRanges {
 
   /// Sales and services older than this are in the archive; the archive
   /// screens also print the number ("archived after 180 days").
+  // Mirrored in functions/index.js (ARCHIVE_AFTER_DAYS).
   static const int archiveCutoffDays = 180;
   static const Duration archiveCutoff = Duration(days: archiveCutoffDays);
 

@@ -14,6 +14,7 @@ import 'legal/terms_of_service_screen.dart';
 import '../theme/app_palette.dart';
 import '../data/collections.dart';
 import '../config/app_timeouts.dart';
+import '../config/app_rules.dart';
 
 class LoginScreen extends StatefulWidget {
   final String? errorMessage;
@@ -112,7 +113,7 @@ class _LoginScreenState extends State<LoginScreen> {
       isLoggingIn = true;
     });
 
-    if (emailController.text.isEmpty || passwordController.text.length < 6) {
+    if (emailController.text.isEmpty || passwordController.text.length < AppRules.minPasswordLength) {
       setState(() {
         error = "Enter valid email and password (min 6 chars).";
         errorIsAboutCredentials = true;

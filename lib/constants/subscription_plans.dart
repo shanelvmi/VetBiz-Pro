@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../data/collections.dart';
+import '../config/app_rules.dart';
 
 /// Subscription plan definitions. Prices below are the fallback
 /// defaults used only until a Platform Admin sets real ones via the
@@ -126,7 +127,7 @@ Stream<List<SubscriptionPlan>> streamSubscriptionPlans() {
 
 /// How long a facility stays usable after its subscription expires
 /// before being locked to read-only.
-const int kGracePeriodDays = 3;
+const int kGracePeriodDays = AppRules.gracePeriodDays;
 
 /// Default trial length for a brand-new facility, used only if a
 /// Platform Admin hasn't configured a different value yet (see
@@ -134,4 +135,4 @@ const int kGracePeriodDays = 3;
 /// this feature shipped have no trialExpiresAt at all and are
 /// unaffected - this only applies going forward, to facilities created
 /// from now on.
-const int kDefaultTrialDays = 14;
+const int kDefaultTrialDays = AppRules.defaultTrialDays;

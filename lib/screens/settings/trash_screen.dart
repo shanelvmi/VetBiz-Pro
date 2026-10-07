@@ -10,6 +10,7 @@ import '../../data/collections.dart';
 import '../../data/fields.dart';
 import '../../data/activity_type.dart';
 import '../../config/money.dart';
+import '../../config/app_rules.dart';
 
 class TrashScreen extends StatefulWidget {
   const TrashScreen({super.key});
@@ -254,14 +255,12 @@ class _TrashList extends StatelessWidget {
     }
   }
 
-  // Must match TRASH_RETENTION_DAYS in functions/index.js.
-  static const int _retentionDays = 30;
   // Items within this many days of auto-purge trigger the warning banner.
   static const int _warningThresholdDays = 7;
 
   int? _daysRemaining(DateTime? deletedAt) {
     if (deletedAt == null) return null;
-    final purgeDate = deletedAt.add(const Duration(days: _retentionDays));
+    final purgeDate = deletedAt.add(AppRules.trashRetention);
     return purgeDate.difference(DateTime.now()).inDays;
   }
 

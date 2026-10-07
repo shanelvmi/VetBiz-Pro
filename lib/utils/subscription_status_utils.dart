@@ -1,3 +1,5 @@
+import '../config/app_rules.dart';
+
 /// Shared subscription status logic - used by SubscriptionProvider (one
 /// facility's own live status) and the Platform Admin Shops Directory
 /// (every facility at a glance), so the two can never disagree about
@@ -6,14 +8,14 @@ enum SubscriptionStatusKind { trial, active, grace, locked }
 
 // Must match kGracePeriodDays in subscription_plans.dart and the
 // isSubscriptionLocked() function in Firestore rules.
-const int kGracePeriodDaysUtil = 3;
+const int kGracePeriodDaysUtil = AppRules.gracePeriodDays;
 
 SubscriptionStatusKind computeSubscriptionStatus(DateTime? subscriptionExpiresAt, [DateTime? trialExpiresAt]) {
   // A real, paid subscription cycle takes priority whenever it exists.
   if (subscriptionExpiresAt != null) {
     final now = DateTime.now();
     if (now.isBefore(subscriptionExpiresAt)) return SubscriptionStatusKind.active;
-    final graceEnd = subscriptionExpiresAt.add(const Duration(days: kGracePeriodDaysUtil));
+    final graceEnd = subscriptionExpiresAt.add(AppRules.gracePeriod);
     if (now.isBefore(graceEnd)) return SubscriptionStatusKind.grace;
     return SubscriptionStatusKind.locked;
   }
@@ -24,7 +26,7 @@ SubscriptionStatusKind computeSubscriptionStatus(DateTime? subscriptionExpiresAt
   if (trialExpiresAt != null) {
     final now = DateTime.now();
     if (now.isBefore(trialExpiresAt)) return SubscriptionStatusKind.trial;
-    final graceEnd = trialExpiresAt.add(const Duration(days: kGracePeriodDaysUtil));
+    final graceEnd = trialExpiresAt.add(AppRules.gracePeriod);
     if (now.isBefore(graceEnd)) return SubscriptionStatusKind.grace;
     return SubscriptionStatusKind.locked;
   }

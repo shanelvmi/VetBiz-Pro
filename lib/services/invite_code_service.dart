@@ -4,6 +4,7 @@ import 'membership_service.dart';
 import '../data/collections.dart';
 import '../data/fields.dart';
 import '../config/app_limits.dart';
+import '../config/app_rules.dart';
 
 /// Short-lived, single-use codes for inviting a specific Assistant to
 /// join a facility - deliberately separate from the facility's own
@@ -22,7 +23,7 @@ import '../config/app_limits.dart';
 /// their own facility's codes: see the active one, and revoke it.
 class InviteCodeService {
   static const codeLength = 6; // displayed as "XXX-XXX"
-  static const validityDuration = Duration(hours: 48);
+  static const validityDuration = AppRules.inviteValidity;
 
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   final MembershipService _membership = MembershipService();
