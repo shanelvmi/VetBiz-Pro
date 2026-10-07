@@ -15,6 +15,7 @@ import '../../widgets/notification_row.dart';
 import '../../theme/app_palette.dart';
 import '../../data/collections.dart';
 import '../../data/fields.dart';
+import '../../config/app_limits.dart';
 
 /// Everything that needs your attention, facility-wide - subscription
 /// status, urgent announcements, payments, debts, and system messages.
@@ -66,7 +67,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
   // waiting for the next data change.
   Timer? _expiryTicker;
   int _currentPage = 1;
-  int _pageSize = 10;
+  int _pageSize = AppLimits.tablePageSize;
 
   @override
   void initState() {

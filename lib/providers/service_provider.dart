@@ -14,6 +14,7 @@ import '../data/collections.dart';
 import '../data/fields.dart';
 import '../data/activity_type.dart';
 import '../config/money.dart';
+import '../config/app_limits.dart';
 
 class ServiceProvider extends ChangeNotifier {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
@@ -21,7 +22,7 @@ class ServiceProvider extends ChangeNotifier {
 
   ServiceProvider({required this.debtProvider}) {
     servicesListController = CursorPaginatedListController<Service>(
-      pageSize: 25,
+      pageSize: AppLimits.pageSize,
       fetchPage: _fetchServicesListPage,
       countCreatedAfter: _countNewServices,
     );
@@ -32,7 +33,7 @@ class ServiceProvider extends ChangeNotifier {
   /// are fetched on demand via [loadMoreServices]. This used to load a
   /// facility's ENTIRE service history on every app open - same issue we
   /// fixed for sales, fixed here the same way.
-  static const int pageSize = 25;
+  static const int pageSize = AppLimits.pageSize;
 
   List<Service> _liveServices = [];
   final List<Service> _olderServices = [];
@@ -540,7 +541,7 @@ class ServiceProvider extends ChangeNotifier {
               .collection(Collections.debts)
               .where('clientId', isEqualTo: clientId)
               .orderBy('timestamp')
-              .limit(2)
+              .limit(AppLimits.moreThanOneCheck)
               .get();
           final remainingDocs = remainingSnap.docs.where((d) => d.id != debtRefForDeletedService.id).toList();
           final nextTs = remainingDocs.isEmpty ? null : remainingDocs.first.data()['timestamp'];
@@ -687,7 +688,7 @@ class ServiceProvider extends ChangeNotifier {
               .collection(Collections.debts)
               .where('clientId', isEqualTo: service.clientId)
               .orderBy('timestamp')
-              .limit(2)
+              .limit(AppLimits.moreThanOneCheck)
               .get();
           final remainingDocs = remainingSnap.docs.where((d) => d.id != debtRef.id).toList();
           final nextTs = remainingDocs.isEmpty ? null : remainingDocs.first.data()['timestamp'];

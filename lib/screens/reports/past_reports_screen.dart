@@ -10,6 +10,7 @@ import 'report_detail_screen.dart';
 import 'report_review_screen.dart';
 import '../../theme/app_palette.dart';
 import '../../config/money.dart';
+import '../../config/app_limits.dart';
 
 class PastReportsScreen extends StatefulWidget {
   const PastReportsScreen({super.key});
@@ -51,7 +52,7 @@ extension on _TimeFilter {
 class _PastReportsScreenState extends State<PastReportsScreen> {
   static const Color primaryDeepGreen = AppPalette.primary;
   static const Color offWhite = AppPalette.background;
-  static const int _pageSize = 25;
+  static const int _pageSize = AppLimits.pageSize;
 
   final DailyReportService _reportService = DailyReportService();
   final TextEditingController _searchController = TextEditingController();

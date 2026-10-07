@@ -62,6 +62,7 @@ import '../../data/user_role.dart';
 import '../../data/user_status.dart';
 import '../../config/money.dart';
 import '../../config/app_defaults.dart';
+import '../../config/app_limits.dart';
 
 class DrawerHoverItem extends StatefulWidget {
   final IconData icon;
@@ -595,13 +596,13 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
     _recentActivityKey = key;
     final logs = FirebaseFirestore.instance.collection(Collections.facilities).doc(facilityId).collection(Collections.activityLogs);
     if (isAdmin) {
-      return _recentActivityStream = logs.orderBy('timestamp', descending: true).limit(5).snapshots().map((s) => s.docs);
+      return _recentActivityStream = logs.orderBy('timestamp', descending: true).limit(AppLimits.recentActivityCount).snapshots().map((s) => s.docs);
     }
     final uid = FirebaseAuth.instance.currentUser?.uid ?? '';
     return _recentActivityStream = mergedLogStream([
-      logs.where(Fields.userId, isEqualTo: uid).orderBy('timestamp', descending: true).limit(5),
-      logs.where('targetUserId', isEqualTo: uid).orderBy('timestamp', descending: true).limit(5),
-    ], limit: 5);
+      logs.where(Fields.userId, isEqualTo: uid).orderBy('timestamp', descending: true).limit(AppLimits.recentActivityCount),
+      logs.where('targetUserId', isEqualTo: uid).orderBy('timestamp', descending: true).limit(AppLimits.recentActivityCount),
+    ], limit: AppLimits.recentActivityCount);
   }
   String? _lastLoadedFilter;
   StreamSubscription<DashboardPeriodTotals>? _periodTotalsSub;
@@ -2763,7 +2764,7 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
                   .doc(facilityId)
                   .collection(Collections.notifications)
                   .orderBy(Fields.createdAt, descending: true)
-                  .limit(50)
+                  .limit(AppLimits.dashboardNotifications)
                   .snapshots(),
           builder: (context, notifSnapshot) {
             // Only what's meant for this person - the same rule the

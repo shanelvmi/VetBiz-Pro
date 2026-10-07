@@ -10,6 +10,7 @@ import '../../theme/app_palette.dart';
 import '../../data/collections.dart';
 import '../../data/fields.dart';
 import '../../config/money.dart';
+import '../../config/app_limits.dart';
 
 class FacilityDetailScreen extends StatefulWidget {
   final String facilityId;
@@ -357,7 +358,7 @@ class _FacilityDetailScreenState extends State<FacilityDetailScreen> {
                         .doc(widget.facilityId)
                         .collection(Collections.paymentSubmissions)
                         .orderBy('submittedAt', descending: true)
-                        .limit(20)
+                        .limit(AppLimits.facilityPaymentHistory)
                         .snapshots(),
                     builder: (context, subSnapshot) {
                       final subDocs = subSnapshot.data?.docs ?? [];

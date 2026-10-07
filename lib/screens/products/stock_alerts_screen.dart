@@ -13,6 +13,7 @@ import 'add_batch_screen.dart';
 import 'view_batches_screen.dart';
 import 'move_expired_to_stock_dialog.dart';
 import '../../theme/app_palette.dart';
+import '../../config/app_limits.dart';
 
 /// What kind of thing needs attention. Declared in the order they're
 /// shown - most urgent first.
@@ -450,7 +451,7 @@ class _AlertsBodyState extends State<_AlertsBody> {
   StockAlertKind? _kindFilter; // null = all kinds
   String _categoryFilter = 'All';
   int _page = 1;
-  int _pageSize = 10;
+  int _pageSize = AppLimits.tablePageSize;
 
   @override
   void dispose() {

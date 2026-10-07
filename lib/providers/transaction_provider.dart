@@ -12,13 +12,14 @@ import '../data/collections.dart';
 import '../data/fields.dart';
 import '../data/activity_type.dart';
 import '../config/money.dart';
+import '../config/app_limits.dart';
 
 class TransactionProvider with ChangeNotifier {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
   TransactionProvider() {
     transactionsListController = CursorPaginatedListController<TransactionModel>(
-      pageSize: 25,
+      pageSize: AppLimits.pageSize,
       fetchPage: _fetchTransactionsListPage,
       countCreatedAfter: _countNewTransactions,
     );
@@ -28,7 +29,7 @@ class TransactionProvider with ChangeNotifier {
   /// transactions live; older ones page in on demand via
   /// [loadMoreTransactions] instead of loading a facility's entire
   /// transaction history every time.
-  static const int pageSize = 25;
+  static const int pageSize = AppLimits.pageSize;
 
   List<TransactionModel> _liveTransactions = [];
   final List<TransactionModel> _olderTransactions = [];

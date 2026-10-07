@@ -17,6 +17,7 @@ import '../../data/collections.dart';
 import '../../data/fields.dart';
 import '../../data/activity_type.dart';
 import '../../config/money.dart';
+import '../../config/app_limits.dart';
 
 class AddPaymentScreen extends StatefulWidget {
   final Client? preselectedClient;
@@ -264,7 +265,7 @@ class _AddPaymentScreenState extends State<AddPaymentScreen> {
                   .collection(Collections.debts)
                   .where('clientId', isEqualTo: selectedClient!.id)
                   .orderBy('timestamp')
-                  .limit(2)
+                  .limit(AppLimits.moreThanOneCheck)
                   .get();
               final remainingDocs = remainingSnap.docs.where((d) => d.id != debtRef.id).toList();
               final nextTs = remainingDocs.isEmpty ? null : remainingDocs.first.data()['timestamp'];

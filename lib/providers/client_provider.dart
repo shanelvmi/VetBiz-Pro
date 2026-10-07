@@ -7,6 +7,7 @@ import '../utils/paginated_stream_loader.dart';
 import '../services/cursor_paginated_list_controller.dart';
 import '../data/collections.dart';
 import '../data/fields.dart';
+import '../config/app_limits.dart';
 
 /// An existing client that looks like the one being saved - see
 /// [ClientProvider.findSimilarClient].
@@ -40,12 +41,12 @@ class ClientProvider with ChangeNotifier, PaginatedStreamLoader<Client> {
 
   ClientProvider() {
     clientsListController = CursorPaginatedListController<Client>(
-      pageSize: 25,
+      pageSize: AppLimits.pageSize,
       fetchPage: _fetchClientsListPage,
       countCreatedAfter: _countNewClients,
     );
     debtorsListController = CursorPaginatedListController<Client>(
-      pageSize: 25,
+      pageSize: AppLimits.pageSize,
       fetchPage: _fetchDebtorsListPage,
     );
   }
@@ -171,7 +172,7 @@ class ClientProvider with ChangeNotifier, PaginatedStreamLoader<Client> {
       query = query.where('types', arrayContains: typeFilter);
     }
 
-    initStream(query: query, limit: 100);
+    initStream(query: query, limit: AppLimits.clientsFirstPage);
   }
 
   /// Loads the next page of clients, using whichever query (with or
@@ -189,7 +190,7 @@ class ClientProvider with ChangeNotifier, PaginatedStreamLoader<Client> {
       query = query.where('types', arrayContains: _activeTypeFilter);
     }
 
-    await loadMore(query: query, limit: 50);
+    await loadMore(query: query, limit: AppLimits.clientsNextPage);
   }
 
   /// Direct, one-time search against Firestore itself - not a filter
@@ -209,7 +210,7 @@ class ClientProvider with ChangeNotifier, PaginatedStreamLoader<Client> {
         .orderBy('nameLower')
         .where('nameLower', isGreaterThanOrEqualTo: q)
         .where('nameLower', isLessThan: '$q\uf8ff')
-        .limit(50)
+        .limit(AppLimits.clientSearchResults)
         .get();
 
     return snapshot.docs.map((doc) => Client.fromMap(doc.id, doc.data())).toList();
@@ -574,8 +575,8 @@ class ClientProvider with ChangeNotifier, PaginatedStreamLoader<Client> {
         // phoneKey finds every client saved or backfilled since it existed;
         // the variants query finds older ones typed in a common format.
         final snaps = await Future.wait([
-          clients.where('phoneKey', isEqualTo: key).limit(5).get(),
-          clients.where('phone', whereIn: ClientDuplicateMatcher.phoneVariants(phone)).limit(5).get(),
+          clients.where('phoneKey', isEqualTo: key).limit(AppLimits.duplicatePhoneCandidates).get(),
+          clients.where('phone', whereIn: ClientDuplicateMatcher.phoneVariants(phone)).limit(AppLimits.duplicatePhoneCandidates).get(),
         ]);
         for (final snap in snaps) {
           for (final doc in snap.docs) {
@@ -601,7 +602,7 @@ class ClientProvider with ChangeNotifier, PaginatedStreamLoader<Client> {
           return clients
               .where('nameLower', isGreaterThanOrEqualTo: prefix)
               .where('nameLower', isLessThan: '$prefix\uf8ff')
-              .limit(40)
+              .limit(AppLimits.duplicateNameCandidates)
               .get();
         }));
         final seen = <String>{};

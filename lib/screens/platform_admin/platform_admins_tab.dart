@@ -8,6 +8,7 @@ import '../../theme/app_palette.dart';
 import '../../data/collections.dart';
 import '../../data/fields.dart';
 import '../../data/user_role.dart';
+import '../../config/app_limits.dart';
 
 /// Manage who else has platform admin access - previously the only way
 /// to grant this was manually creating a document in Firebase Console.
@@ -42,7 +43,7 @@ class _PlatformAdminsTabState extends State<PlatformAdminsTab> {
       final userQuery = await FirebaseFirestore.instance
           .collection(Collections.users)
           .where('email', isEqualTo: email)
-          .limit(1)
+          .limit(AppLimits.single)
           .get();
 
       if (userQuery.docs.isEmpty) {

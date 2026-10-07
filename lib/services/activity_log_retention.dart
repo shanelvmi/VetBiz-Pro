@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../data/collections.dart';
+import '../config/app_limits.dart';
 
 /// Removes activity logs that have aged out of a facility's "keep logs for
 /// N days" setting.
@@ -32,7 +33,7 @@ class ActivityLogRetention {
 
     var deleted = 0;
     for (var round = 0; round < maxRounds; round++) {
-      final snap = await logs.where('timestamp', isLessThan: cutoff).limit(500).get();
+      final snap = await logs.where('timestamp', isLessThan: cutoff).limit(AppLimits.ledgerQueryCap).get();
       if (snap.docs.isEmpty) break;
 
       final batch = firestore.batch();

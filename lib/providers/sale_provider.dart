@@ -12,6 +12,7 @@ import '../data/collections.dart';
 import '../data/fields.dart';
 import '../data/activity_type.dart';
 import '../config/money.dart';
+import '../config/app_limits.dart';
 
 class SaleProvider extends ChangeNotifier {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
@@ -20,7 +21,7 @@ class SaleProvider extends ChangeNotifier {
   /// most recent [pageSize] sales in real time; older pages are fetched
   /// on demand via [loadMoreSales] and are NOT kept live (they don't need
   /// to be — historical sales don't change).
-  static const int pageSize = 25;
+  static const int pageSize = AppLimits.pageSize;
 
   // Most recent page, kept in sync in real time.
   List<Sale> _liveSales = [];
@@ -42,7 +43,7 @@ class SaleProvider extends ChangeNotifier {
 
   SaleProvider() {
     salesListController = CursorPaginatedListController<Sale>(
-      pageSize: 25,
+      pageSize: AppLimits.pageSize,
       fetchPage: _fetchSalesListPage,
       countCreatedAfter: _countNewSales,
     );

@@ -16,6 +16,7 @@ import '../../data/fields.dart';
 import '../../data/user_role.dart';
 import '../../data/user_status.dart';
 import '../../data/activity_type.dart';
+import '../../config/app_limits.dart';
 
 /// Who someone is on a facility's team, as this screen shows them. Worked out
 /// from the user record (role, previousRole, who created the facility); not
@@ -75,7 +76,7 @@ class _ManageAssistantsScreenState extends State<ManageAssistantsScreen> {
   String? _statusFilter; // 'active' | 'deactivated' | 'pending', null = all
   String _facilityFilter = 'All'; // a facility id, or 'All'
   int _page = 1;
-  int _pageSize = 10;
+  int _pageSize = AppLimits.tablePageSize;
 
   // Whose details are open - in the panel beside the list, or a sheet on a phone.
   String? _selectedUserId;

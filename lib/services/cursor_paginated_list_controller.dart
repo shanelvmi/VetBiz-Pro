@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/foundation.dart';
+import '../config/app_limits.dart';
 
 /// One page's worth of results from a single Firestore fetch, plus the
 /// cursor needed to fetch whatever comes after it. Kept separate from
@@ -50,7 +51,7 @@ class CursorPaginatedListController<T> extends ChangeNotifier {
   CursorPaginatedListController({
     required this.fetchPage,
     this.countCreatedAfter,
-    int pageSize = 25,
+    int pageSize = AppLimits.pageSize,
   }) : _pageSize = pageSize;
 
   /// Runs one Firestore query for a page: applies the caller's own

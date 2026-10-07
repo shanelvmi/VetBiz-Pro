@@ -13,6 +13,7 @@ import '../../widgets/firestore_error_view.dart';
 import '../../theme/app_palette.dart';
 import '../../data/collections.dart';
 import '../../data/fields.dart';
+import '../../config/app_limits.dart';
 
 class ActivityLogScreen extends StatefulWidget {
   final bool isModal;
@@ -211,7 +212,7 @@ class _ActivityLogScreenState extends State<ActivityLogScreen> {
     _actionSummaryStreamFacilityId = facilityId;
 
     if (isAdmin) {
-      _logStream = windowed(logs).limit(500).snapshots().map((s) => s.docs); // performance limit
+      _logStream = windowed(logs).limit(AppLimits.ledgerQueryCap).snapshots().map((s) => s.docs); // performance limit
       // The type counts in the summary row cover only what's visible, and no
       // longer read every log ever stored.
       _actionSummaryStream =
@@ -229,7 +230,7 @@ class _ActivityLogScreenState extends State<ActivityLogScreen> {
       windowed(logs.where(Fields.userId, isEqualTo: uid)),
       windowed(logs.where('targetUserId', isEqualTo: uid)),
     ];
-    _logStream = mergedLogStream(mine.map((q) => q.limit(500)).toList(), limit: 500);
+    _logStream = mergedLogStream(mine.map((q) => q.limit(AppLimits.ledgerQueryCap)).toList(), limit: AppLimits.ledgerQueryCap);
     _actionSummaryStream = mergedLogStream(mine);
   }
 

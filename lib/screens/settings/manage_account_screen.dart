@@ -18,6 +18,7 @@ import '../../theme/app_palette.dart';
 import '../../data/collections.dart';
 import '../../data/fields.dart';
 import '../../data/activity_type.dart';
+import '../../config/app_limits.dart';
 
 class ManageAccountScreen extends StatefulWidget {
   const ManageAccountScreen({super.key});
@@ -97,7 +98,7 @@ class _ManageAccountScreenState extends State<ManageAccountScreen> {
 
     final platformAdminDoc = await FirebaseFirestore.instance.collection(Collections.platformAdmins).doc(uid).get();
     final ownedFacilities =
-        await FirebaseFirestore.instance.collection(Collections.facilities).where('createdBy', isEqualTo: uid).limit(1).get();
+        await FirebaseFirestore.instance.collection(Collections.facilities).where('createdBy', isEqualTo: uid).limit(AppLimits.single).get();
 
     if (!mounted) return;
     setState(() {

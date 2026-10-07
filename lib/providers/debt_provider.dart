@@ -3,6 +3,7 @@ import 'package:flutter/foundation.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../models/debt.dart';
 import '../data/collections.dart';
+import '../config/app_limits.dart';
 
 class DebtProvider with ChangeNotifier {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
@@ -22,7 +23,7 @@ class DebtProvider with ChangeNotifier {
         .collection(Collections.debts)
         .where('clientId', isEqualTo: clientId)
         .orderBy('timestamp')
-        .limit(1)
+        .limit(AppLimits.single)
         .get();
     if (snap.docs.isEmpty) return null;
     final ts = snap.docs.first.data()['timestamp'];

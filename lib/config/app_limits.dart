@@ -30,6 +30,20 @@ class AppLimits {
   /// Notifications read for the dashboard bell.
   static const int dashboardNotifications = 50;
 
+  /// A facility's subscription payment history, as the platform admin sees
+  /// it (facility_detail_screen).
+  static const int facilityPaymentHistory = 20;
+
+  /// The clients list (ClientProvider.listenToClientsPaginated): the first
+  /// page, then each "load more".
+  static const int clientsFirstPage = 100;
+  static const int clientsNextPage = 50;
+
+  /// A facility's activity log in the facility screen: the full panel, and
+  /// the short preview.
+  static const int facilityActivityLog = 50;
+  static const int facilityActivityPreview = 4;
+
   /// Recent sales shown for a facility (facility_screen).
   static const int facilityRecentSales = 8;
 
@@ -42,8 +56,9 @@ class AppLimits {
   /// Candidates when looking for a duplicate client by phone.
   static const int duplicatePhoneCandidates = 5;
 
-  /// "Does at least one exist?" reads.
-  static const int existsCheck = 1;
+  /// A one-document read: "does any exist?", or the first in order (a
+  /// client's oldest debt).
+  static const int single = 1;
 
   /// "Is there more than one?" reads (a client's remaining debts).
   static const int moreThanOneCheck = 2;

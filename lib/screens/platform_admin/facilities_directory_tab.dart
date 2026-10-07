@@ -7,6 +7,7 @@ import '../../widgets/hover_elevate_card.dart';
 import 'facility_detail_screen.dart';
 import '../../theme/app_palette.dart';
 import '../../data/collections.dart';
+import '../../config/app_limits.dart';
 
 /// Every facility across the whole platform, real pagination rather
 /// than one open-ended listener over the entire collection - same
@@ -22,7 +23,7 @@ class FacilitiesDirectoryTab extends StatefulWidget {
 
 class _FacilitiesDirectoryTabState extends State<FacilitiesDirectoryTab> {
   static const Color primaryColor = AppPalette.primary;
-  static const int _pageSize = 50;
+  static const int _pageSize = AppLimits.platformAdminPageSize;
   // Search can't be paginated the same way as plain browsing -
   // Firestore has no native "contains" match on a name field, so this
   // fetches a bounded scan (ordered by name) and filters client-side

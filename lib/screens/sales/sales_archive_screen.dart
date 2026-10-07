@@ -8,6 +8,7 @@ import 'receipt_preview_screen.dart';
 import '../../theme/app_palette.dart';
 import '../../data/collections.dart';
 import '../../config/money.dart';
+import '../../config/app_limits.dart';
 
 class SalesArchiveScreen extends StatefulWidget {
   const SalesArchiveScreen({super.key});
@@ -22,7 +23,7 @@ class _SalesArchiveScreenState extends State<SalesArchiveScreen> {
   final Color offWhite = AppPalette.background;
 
 
-  static const int _pageSize = 30;
+  static const int _pageSize = AppLimits.archivePageSize;
 
   // Must match ARCHIVE_AFTER_DAYS in functions/index.js - anything newer
   // than this hasn't reached the archive yet.

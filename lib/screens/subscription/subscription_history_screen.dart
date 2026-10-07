@@ -7,6 +7,7 @@ import '../../data/collections.dart';
 import '../../data/fields.dart';
 import '../../data/payment_submission_status.dart';
 import '../../config/money.dart';
+import '../../config/app_limits.dart';
 
 /// One payment submission, read from a payment_submissions document.
 class _Submission {
@@ -89,7 +90,7 @@ class _SubscriptionHistoryScreenState extends State<SubscriptionHistoryScreen> {
   String _planFilter = 'All';
   String _methodFilter = 'All';
   int _page = 1;
-  int _pageSize = 10;
+  int _pageSize = AppLimits.tablePageSize;
 
   Color get _primary => widget.primaryColor;
 

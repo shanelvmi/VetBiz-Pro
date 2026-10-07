@@ -11,6 +11,7 @@ import '../../data/collections.dart';
 import '../../data/fields.dart';
 import '../../data/user_role.dart';
 import '../../data/user_status.dart';
+import '../../config/app_limits.dart';
 
 /// Every registered user across the whole platform, not scoped to one
 /// facility - the missing piece that made "an assistant switching
@@ -32,7 +33,7 @@ class UsersTab extends StatefulWidget {
 
 class _UsersTabState extends State<UsersTab> {
   static const Color primaryColor = AppPalette.primary;
-  static const int _pageSize = 50;
+  static const int _pageSize = AppLimits.platformAdminPageSize;
   // Search can't be paginated the same way as plain browsing -
   // Firestore has no native "contains" match across two fields, so
   // this fetches a bounded scan (ordered by name, respecting the role

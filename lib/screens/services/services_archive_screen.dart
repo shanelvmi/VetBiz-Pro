@@ -10,6 +10,7 @@ import 'service_receipt_preview_screen.dart';
 import '../../theme/app_palette.dart';
 import '../../data/collections.dart';
 import '../../config/money.dart';
+import '../../config/app_limits.dart';
 
 class ServicesArchiveScreen extends StatefulWidget {
   const ServicesArchiveScreen({super.key});
@@ -24,7 +25,7 @@ class _ServicesArchiveScreenState extends State<ServicesArchiveScreen> {
   final Color offWhite = AppPalette.background;
 
 
-  static const int _pageSize = 30;
+  static const int _pageSize = AppLimits.archivePageSize;
 
   // Must match ARCHIVE_AFTER_DAYS in functions/index.js - anything newer
   // than this hasn't reached the archive yet.

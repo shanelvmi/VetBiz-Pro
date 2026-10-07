@@ -1,5 +1,6 @@
 import '../models/product.dart';
 import '../constants/product_categories.dart';
+import '../config/app_limits.dart';
 
 /// How the catalog should be sorted. Kept as a closed set of named
 /// options (rather than a raw field name + direction) so the UI layer
@@ -43,7 +44,7 @@ extension ProductSortOptionLabel on ProductSortOption {
 /// original reference design's default; the rest give room to see
 /// more per page without leaving pagination behind entirely.
 const List<int?> kProductCatalogPageSizeOptions = [12, 24, 48, null];
-const int kProductCatalogDefaultPageSize = 12;
+const int kProductCatalogDefaultPageSize = AppLimits.productCatalogPageSize;
 
 /// Everything the catalog view currently wants to see - search,
 /// category/group, status, sort, and pagination - independent of how

@@ -3,6 +3,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'membership_service.dart';
 import '../data/collections.dart';
 import '../data/fields.dart';
+import '../config/app_limits.dart';
 
 /// Short-lived, single-use codes for inviting a specific Assistant to
 /// join a facility - deliberately separate from the facility's own
@@ -58,7 +59,7 @@ class InviteCodeService {
         .collection(Collections.inviteCodes)
         .where(Fields.facilityId, isEqualTo: facilityId)
         .where('usedAt', isNull: true)
-        .limit(1)
+        .limit(AppLimits.single)
         .get();
 
     if (snap.docs.isEmpty) return null;

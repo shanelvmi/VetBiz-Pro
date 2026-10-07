@@ -24,6 +24,7 @@ import '../../data/collections.dart';
 import '../../data/fields.dart';
 import '../../data/user_role.dart';
 import '../../config/app_defaults.dart';
+import '../../config/app_limits.dart';
 
 const Color deepGreen = AppPalette.primary;
 const Color warmAmber = AppPalette.accent;
@@ -2297,7 +2298,7 @@ class _FacilityScreenState extends State<FacilityScreen> {
           .doc(facilityId)
           .collection(Collections.sales)
           .orderBy('timestamp', descending: true)
-          .limit(8)
+          .limit(AppLimits.facilityRecentSales)
           .get(),
     );
   }
@@ -2431,7 +2432,7 @@ class _FacilityScreenState extends State<FacilityScreen> {
         children: [
           const Text('Activity Log', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
           const SizedBox(height: 12),
-          if (facilityId != null) _buildActivityList(facilityId, limit: 50),
+          if (facilityId != null) _buildActivityList(facilityId, limit: AppLimits.facilityActivityLog),
         ],
       ),
     );
@@ -2890,7 +2891,7 @@ class _FacilityScreenState extends State<FacilityScreen> {
             ],
           ),
           const SizedBox(height: 12),
-          if (facilityId != null) _buildActivityList(facilityId, limit: 4),
+          if (facilityId != null) _buildActivityList(facilityId, limit: AppLimits.facilityActivityPreview),
         ],
       ),
     );

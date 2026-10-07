@@ -41,6 +41,7 @@ import 'data/collections.dart';
 import 'data/fields.dart';
 import 'data/user_role.dart';
 import 'data/user_status.dart';
+import 'config/app_limits.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -818,7 +819,7 @@ class _NoFacilityScreenState extends State<_NoFacilityScreen> {
       final owned = await FirebaseFirestore.instance
           .collection(Collections.facilities)
           .where('createdBy', isEqualTo: user.uid)
-          .limit(1)
+          .limit(AppLimits.single)
           .get();
       if (owned.docs.isNotEmpty && mounted) {
         final name = (owned.docs.first.data()['name'] ?? 'a facility').toString();
