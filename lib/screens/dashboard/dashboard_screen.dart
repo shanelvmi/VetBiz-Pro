@@ -65,6 +65,7 @@ import '../../config/app_limits.dart';
 import '../../config/app_timeouts.dart';
 import '../../config/app_ranges.dart';
 import '../../config/app_date_format.dart';
+import '../../config/app_links.dart';
 
 class DrawerHoverItem extends StatefulWidget {
   final IconData icon;
@@ -2694,7 +2695,7 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
                     label: email,
                     onTap: () {
                       Navigator.pop(ctx);
-                      launch(Uri.parse('mailto:$email'), 'your email app');
+                      launch(AppLinks.mailto(email), 'your email app');
                     },
                   ),
                 if (phone.isNotEmpty)
@@ -2703,7 +2704,7 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
                     label: phone,
                     onTap: () {
                       Navigator.pop(ctx);
-                      launch(Uri.parse('tel:$phone'), 'the dialer');
+                      launch(AppLinks.tel(phone), 'the dialer');
                     },
                   ),
                 if (whatsapp.isNotEmpty)
@@ -2713,8 +2714,7 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
                     sublabel: 'WhatsApp',
                     onTap: () {
                       Navigator.pop(ctx);
-                      final digitsOnly = whatsapp.replaceAll(RegExp(r'[^0-9+]'), '').replaceAll('+', '');
-                      launch(Uri.parse('https://wa.me/$digitsOnly'), 'WhatsApp');
+                      launch(AppLinks.whatsApp(whatsapp), 'WhatsApp');
                     },
                   ),
                 if (address.isNotEmpty)

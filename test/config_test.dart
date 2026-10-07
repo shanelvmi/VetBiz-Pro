@@ -9,6 +9,7 @@ import 'package:vetbiz_pro/config/payment_methods.dart';
 import 'package:vetbiz_pro/config/restock_rules.dart';
 import 'package:vetbiz_pro/providers/subscription_provider.dart';
 import 'package:vetbiz_pro/services/usage_calculator_service.dart';
+import 'package:vetbiz_pro/utils/client_duplicate_matcher.dart';
 import 'package:vetbiz_pro/widgets/payment_method_selector.dart';
 
 /// Config values that are still also typed where they are used today (until
@@ -104,9 +105,63 @@ void main() {
     expect(AppRules.subscriptionAttentionDays, SubscriptionProvider.attentionThresholdDays);
   });
 
-  test('WhatsApp link matches the legacy builders', () {
-    expect(AppLinks.whatsApp(AppContact.supportPhone).toString(), 'https://wa.me/255719199916');
-    expect(AppLinks.whatsApp('+255 712-345 678', text: 'Habari, 5,000 & more').toString(),
-        'https://wa.me/255712345678?text=${Uri.encodeComponent('Habari, 5,000 & more')}');
+  group('links are exactly the URLs the screens built by hand', () {
+    // The old expressions, copied from the screens they replaced.
+    String oldDashboardWhatsApp(String whatsapp) {
+      final digitsOnly = whatsapp.replaceAll(RegExp(r'[^0-9+]'), '').replaceAll('+', '');
+      return Uri.parse('https://wa.me/$digitsOnly').toString();
+    }
+
+    (String, String) oldDebtorLinks(String phone, String message) {
+      final digitsOnly = phone.replaceAll(RegExp(r'[^0-9+]'), '');
+      final encodedMessage = Uri.encodeComponent(message);
+      return (
+        Uri.parse('https://wa.me/${digitsOnly.replaceAll('+', '')}?text=$encodedMessage').toString(),
+        Uri.parse('sms:$digitsOnly?body=$encodedMessage').toString(),
+      );
+    }
+
+    const phones = ['+255 712-345 678', '0712345678', '+255719199916', '255 (712) 345.678', ''];
+    const messages = ['Hi Asha, you owe Tsh 5,000 & more. Asante!', '', 'Karibu: 100% / ?=#'];
+
+    test('WhatsApp (dashboard contact)', () {
+      for (final p in phones) {
+        expect(AppLinks.whatsApp(p).toString(), oldDashboardWhatsApp(p), reason: p);
+      }
+    });
+
+    test('WhatsApp and SMS debt reminders', () {
+      for (final p in phones) {
+        for (final m in messages) {
+          final (wa, sms) = oldDebtorLinks(p, m);
+          expect(AppLinks.whatsApp(p, text: m).toString(), wa, reason: '$p / $m');
+          expect(AppLinks.sms(p, body: m).toString(), sms, reason: '$p / $m');
+        }
+      }
+    });
+
+    test('tel and mailto pass the value through', () {
+      for (final p in phones) {
+        expect(AppLinks.tel(p).toString(), Uri.parse('tel:$p').toString(), reason: p);
+      }
+      expect(AppLinks.mailto('a.b@example.com').toString(), Uri.parse('mailto:a.b@example.com').toString());
+    });
+
+    test('Settings support links', () {
+      expect(AppContact.supportPhone, '+255719199916');
+      expect(AppContact.supportEmail, 'shanelvmi@gmail.com');
+      expect(AppLinks.whatsApp(AppContact.supportPhone).toString(), 'https://wa.me/255719199916');
+      expect(AppLinks.tel(AppContact.supportPhone).toString(), Uri.parse('tel:+255719199916').toString());
+      expect(AppLinks.mailto(AppContact.supportEmail).toString(), 'mailto:shanelvmi@gmail.com');
+    });
+
+    test('phone variants for the duplicate check are unchanged', () {
+      expect(ClientDuplicateMatcher.phoneVariants('0712345678').toSet(), {
+        '0712345678', '712345678', '255712345678', '+255712345678', '00255712345678',
+        '712 345 678', '0712 345 678', '0712-345-678', '0712.345.678',
+        '255 712 345 678', '+255 712 345 678', '+255-712-345-678',
+      });
+      expect(ClientDuplicateMatcher.phoneKey('+255 712 345 678'), '712345678');
+    });
   });
 }

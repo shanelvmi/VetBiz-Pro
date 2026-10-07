@@ -21,6 +21,7 @@ import '../../data/collections.dart';
 import '../../config/money.dart';
 import '../../config/app_timeouts.dart';
 import '../../config/app_date_format.dart';
+import '../../config/app_links.dart';
 
 class ClientsScreen extends StatefulWidget {
   const ClientsScreen({super.key});
@@ -516,7 +517,7 @@ class _ClientsScreenState extends State<ClientsScreen> {
                   icon: Icon(Icons.phone_outlined, size: 18, color: accent),
                   tooltip: 'Call',
                   onPressed: () async {
-                    final uri = Uri.parse('tel:${client.phone}');
+                    final uri = AppLinks.tel(client.phone);
                     final launched = await launchUrl(uri, mode: LaunchMode.externalApplication);
                     if (!launched && mounted) {
                       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Could not open dialer')));

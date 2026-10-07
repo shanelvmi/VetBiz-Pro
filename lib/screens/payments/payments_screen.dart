@@ -22,6 +22,7 @@ import '../../config/app_timeouts.dart';
 import '../../config/app_ranges.dart';
 import '../../config/app_date_format.dart';
 import '../../data/data_keys.dart';
+import '../../config/app_links.dart';
 
 class _PaymentMetric {
   final double amount;
@@ -722,7 +723,7 @@ class _PaymentsScreenState extends State<PaymentsScreen> {
                     icon: Icon(Icons.phone_outlined, size: 18, color: primaryDeepGreen),
                     tooltip: 'Call',
                     onPressed: () async {
-                      final uri = Uri.parse('tel:${e.clientPhone}');
+                      final uri = AppLinks.tel(e.clientPhone!);
                       final launched = await launchUrl(uri, mode: LaunchMode.externalApplication);
                       if (!launched && mounted) {
                         ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Could not open dialer')));

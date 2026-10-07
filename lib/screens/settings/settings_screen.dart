@@ -14,6 +14,7 @@ import '../subscription/subscription_screen.dart';
 import '../dashboard/notifications_screen.dart';
 import '../../theme/app_palette.dart';
 import '../../config/app_defaults.dart';
+import '../../config/app_links.dart';
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
@@ -654,8 +655,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
     );
   }
 
-  static const String _supportPhone = '+255719199916';
-  static const String _supportEmail = 'shanelvmi@gmail.com';
 
   void _showHelpSupportDialog(BuildContext context) {
     showDialog(
@@ -676,22 +675,22 @@ class _SettingsScreenState extends State<SettingsScreen> {
               contentPadding: EdgeInsets.zero,
               leading: const Icon(Icons.chat, color: Colors.green),
               title: const Text('WhatsApp'),
-              subtitle: const Text(_supportPhone),
-              onTap: () => _launchUrl('https://wa.me/${_supportPhone.replaceAll('+', '')}'),
+              subtitle: const Text(AppContact.supportPhone),
+              onTap: () => _launchUrl(AppLinks.whatsApp(AppContact.supportPhone).toString()),
             ),
             ListTile(
               contentPadding: EdgeInsets.zero,
               leading: Icon(Icons.call, color: primaryColor),
               title: const Text('Call'),
-              subtitle: const Text(_supportPhone),
-              onTap: () => _launchUrl('tel:$_supportPhone'),
+              subtitle: const Text(AppContact.supportPhone),
+              onTap: () => _launchUrl(AppLinks.tel(AppContact.supportPhone).toString()),
             ),
             ListTile(
               contentPadding: EdgeInsets.zero,
               leading: Icon(Icons.email_outlined, color: primaryColor),
               title: const Text('Email'),
-              subtitle: const Text(_supportEmail),
-              onTap: () => _launchUrl('mailto:$_supportEmail'),
+              subtitle: const Text(AppContact.supportEmail),
+              onTap: () => _launchUrl(AppLinks.mailto(AppContact.supportEmail).toString()),
             ),
           ],
         ),

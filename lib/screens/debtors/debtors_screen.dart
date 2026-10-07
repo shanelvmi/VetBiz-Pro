@@ -23,6 +23,7 @@ import '../../config/money.dart';
 import '../../config/app_timeouts.dart';
 import '../../config/app_date_format.dart';
 import '../../data/data_keys.dart';
+import '../../config/app_links.dart';
 
 class DebtorsScreen extends StatefulWidget {
   const DebtorsScreen({super.key});
@@ -1382,12 +1383,9 @@ class _DebtorsScreenState extends State<DebtorsScreen> {
 
     if (choice == null) return;
 
-    final digitsOnly = phone.replaceAll(RegExp(r'[^0-9+]'), '');
-    final encodedMessage = Uri.encodeComponent(message);
-
     final uri = choice == 'whatsapp'
-        ? Uri.parse('https://wa.me/${digitsOnly.replaceAll('+', '')}?text=$encodedMessage')
-        : Uri.parse('sms:$digitsOnly?body=$encodedMessage');
+        ? AppLinks.whatsApp(phone, text: message)
+        : AppLinks.sms(phone, body: message);
 
     try {
       final launched = await launchUrl(uri, mode: LaunchMode.externalApplication);

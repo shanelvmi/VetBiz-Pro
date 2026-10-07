@@ -1,3 +1,5 @@
+import '../config/app_defaults.dart';
+
 /// Decides whether a new (or edited) client looks like one that already
 /// exists - used to stop the same person being added twice.
 ///
@@ -94,7 +96,7 @@ class ClientDuplicateMatcher {
     var digits = phone.replaceAll(RegExp(r'\D'), '');
     if (digits.startsWith('00')) digits = digits.substring(2);
     if (digits.length < 7) return null;
-    if (digits.length == 12 && digits.startsWith('255')) return digits.substring(3);
+    if (digits.length == 12 && digits.startsWith(AppDefaults.countryCallingCode)) return digits.substring(AppDefaults.countryCallingCode.length);
     if (digits.length == 10 && digits.startsWith('0')) return digits.substring(1);
     return digits;
   }
@@ -111,19 +113,20 @@ class ClientDuplicateMatcher {
       final a = key.substring(0, 3);
       final b = key.substring(3, 6);
       final c = key.substring(6);
+      const cc = AppDefaults.countryCallingCode;
       out.addAll([
         key,
         '0$key',
-        '255$key',
-        '+255$key',
-        '00255$key',
+        '$cc$key',
+        '+$cc$key',
+        '00$cc$key',
         '$a $b $c',
         '0$a $b $c',
         '0$a-$b-$c',
         '0$a.$b.$c',
-        '255 $a $b $c',
-        '+255 $a $b $c',
-        '+255-$a-$b-$c',
+        '$cc $a $b $c',
+        '+$cc $a $b $c',
+        '+$cc-$a-$b-$c',
       ]);
     }
     out.removeWhere((v) => v.isEmpty);
