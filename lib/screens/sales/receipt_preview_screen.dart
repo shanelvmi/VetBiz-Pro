@@ -50,7 +50,7 @@ class _ReceiptPreviewScreenState extends State<ReceiptPreviewScreen> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
       final facilityProvider = Provider.of<FacilityProvider>(context, listen: false);
-      final logoUrl = facilityProvider.selectedFacility?['logoUrl'] as String?;
+      final logoUrl = facilityProvider.selectedFacility?['logoUrl'];
       if (logoUrl != null && logoUrl.isNotEmpty) {
         precacheImage(NetworkImage(logoUrl), context);
       }
@@ -213,14 +213,14 @@ class _ReceiptPreviewScreenState extends State<ReceiptPreviewScreen> {
     final balance = sale.totalAmount - sale.totalPaid;
     final facilityProvider = Provider.of<FacilityProvider>(context, listen: false);
     final facility = facilityProvider.selectedFacility;
-    final facilityName = facility?['name'] as String? ?? 'Facility';
-    final facilityType = facility?['type'] as String?;
-    final logoUrl = facility?['logoUrl'] as String?;
-    final facilityPhone = facility?['phone'] as String?;
-    final facilityEmail = facility?['email'] as String?;
-    final facilityAddress = facility?['address'] as String?;
-    final facilityTagline = facility?['tagline'] as String?;
-    final facilityTin = facility?['tin'] as String?;
+    final facilityName = facility?['name'] ?? 'Facility';
+    final facilityType = facility?['type'];
+    final logoUrl = facility?['logoUrl'];
+    final facilityPhone = facility?['phone'];
+    final facilityEmail = facility?['email'];
+    final facilityAddress = facility?['address'];
+    final facilityTagline = facility?['tagline'];
+    final facilityTin = facility?['tin'];
     final statusText = balance > 0
         ? (sale.totalPaid > 0 ? 'Partially Paid' : 'Balance Due')
         : 'Paid in Full';

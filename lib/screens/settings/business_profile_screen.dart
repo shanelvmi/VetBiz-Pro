@@ -86,8 +86,8 @@ class _BusinessProfileScreenState extends State<BusinessProfileScreen> {
   Widget build(BuildContext context) {
     final facilityProvider = Provider.of<FacilityProvider>(context);
     final selectedFacility = facilityProvider.selectedFacility;
-    final facilityName = selectedFacility?['name'] as String? ?? 'Your facility';
-    final logoUrl = selectedFacility?['logoUrl'] as String?;
+    final facilityName = selectedFacility?['name'] ?? 'Your facility';
+    final logoUrl = selectedFacility?['logoUrl'];
 
     return Scaffold(
       backgroundColor: backgroundColor,

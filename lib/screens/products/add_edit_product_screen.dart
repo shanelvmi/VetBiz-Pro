@@ -22,7 +22,6 @@ import '../../constants/product_categories.dart';
 import '../../constants/product_units.dart';
 import '../../constants/product_types.dart';
 
-import '../store/stockstore_screen.dart';
 import '../../theme/app_palette.dart';
 
 enum ProductDestination {

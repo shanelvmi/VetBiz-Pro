@@ -11,7 +11,6 @@ import '../../models/service.dart';
 import '../../constants/service_categories.dart';
 import '../../utils/thousands_input_formatter.dart';
 import '../../models/client.dart';
-import '../../models/product.dart';
 import '../../providers/client_provider.dart';
 import '../../providers/service_provider.dart';
 import '../../widgets/payment_method_selector.dart';

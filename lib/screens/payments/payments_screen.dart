@@ -12,7 +12,6 @@ import '../../widgets/payment_method_selector.dart';
 import '../../models/sale.dart';
 import '../../models/service.dart';
 import '../../models/ledger_entry.dart';
-import '../../services/snapshot_ledger_controller.dart';
 import '../../widgets/firestore_error_view.dart';
 import '../sales/receipt_preview_screen.dart';
 import '../services/service_receipt_preview_screen.dart';

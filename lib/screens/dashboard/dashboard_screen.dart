@@ -8,7 +8,6 @@ import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:intl/intl.dart';
-import 'package:flutter_speed_dial/flutter_speed_dial.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../providers/product_provider.dart';
@@ -1064,7 +1063,7 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
 
     // Facility is loaded, we can safely access its fields
     final facilityName = selectedFacility['name'] ?? 'Facility';
-    final currentFacilityId = selectedFacility['id'] as String?;
+    final currentFacilityId = selectedFacility['id'];
 
     // Kick off a period-totals fetch whenever the facility or the
     // selected filter chip changes (guarded so it doesn't refire on every
@@ -3098,9 +3097,9 @@ Widget _buildDrawerContent() {
   // the old AppBar title used to show ("{name} {type} Dashboard")
   // before that was restyled; preserved here instead since the
   // sidebar's own logo area is the more natural place for it now.
-  final String facilityDisplayName = selectedFacility?['name'] as String? ?? '';
-  final String facilityDisplayType = selectedFacility?['type'] as String? ?? '';
-  final String? facilityIdForTagline = selectedFacility?['id'] as String?;
+  final String facilityDisplayName = selectedFacility?['name'] ?? '';
+  final String facilityDisplayType = selectedFacility?['type'] ?? '';
+  final String? facilityIdForTagline = selectedFacility?['id'];
   final String combinedNameAndType =
       (facilityDisplayType.isNotEmpty && facilityDisplayType != 'Other')
           ? '$facilityDisplayName $facilityDisplayType'

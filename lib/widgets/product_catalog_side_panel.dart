@@ -71,9 +71,9 @@ class _ProductCatalogSidePanelState extends State<ProductCatalogSidePanel> {
   Widget _buildFilterPanel(BuildContext context) {
     final facilityProvider = Provider.of<FacilityProvider>(context);
     final selectedFacility = facilityProvider.selectedFacility;
-    final facilityName = selectedFacility != null ? (selectedFacility['name'] as String? ?? 'Facility') : 'Facility';
-    final facilityType = selectedFacility != null ? (selectedFacility['type'] as String? ?? '') : '';
-    final logoUrl = selectedFacility != null ? selectedFacility['logoUrl'] as String? : null;
+    final facilityName = selectedFacility != null ? (selectedFacility['name'] ?? 'Facility') : 'Facility';
+    final facilityType = selectedFacility != null ? (selectedFacility['type'] ?? '') : '';
+    final logoUrl = selectedFacility != null ? selectedFacility['logoUrl'] : null;
 
     return Container(
       width: 260,
