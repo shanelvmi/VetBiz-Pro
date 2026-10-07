@@ -8,6 +8,7 @@ import '../../providers/facility_provider.dart';
 import '../../providers/debt_provider.dart';
 import '../../services/dashboard_summary_service.dart';
 import '../../widgets/summary_card.dart' show KpiTrend;
+import '../../theme/app_palette.dart';
 
 /// A simple insights view - a 14-day sales trend and your top 5
 /// products by revenue over the last 30 days. Deliberately kept to two
@@ -21,8 +22,8 @@ class InsightsScreen extends StatefulWidget {
 }
 
 class _InsightsScreenState extends State<InsightsScreen> {
-  static const Color primaryColor = Color(0xFF2F5D62);
-  static const Color warmAmber = Color(0xFFFFB200);
+  static const Color primaryColor = AppPalette.primary;
+  static const Color warmAmber = AppPalette.accent;
   static const List<Color> _servicePalette = [
     Color(0xFF2F5D62), // same deep teal as primaryColor
     Color(0xFF5C7C99), // same muted steel blue used for Services on the main dashboard chart

@@ -6,6 +6,7 @@ import 'package:firebase_storage/firebase_storage.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 import '../../providers/facility_provider.dart';
+import '../../theme/app_palette.dart';
 
 /// A dedicated home for facility-level branding (currently just the
 /// logo) - built for discoverability, since the drawer's own
@@ -21,9 +22,9 @@ class BusinessProfileScreen extends StatefulWidget {
 }
 
 class _BusinessProfileScreenState extends State<BusinessProfileScreen> {
-  static const Color primaryColor = Color(0xFF2F5D62);
-  static const Color warmAmber = Color(0xFFFFB200);
-  static const Color backgroundColor = Color(0xFFFDFDF9);
+  static const Color primaryColor = AppPalette.primary;
+  static const Color warmAmber = AppPalette.accent;
+  static const Color backgroundColor = AppPalette.background;
 
   final ImagePicker _picker = ImagePicker();
   Uint8List? _pendingLogoBytes;

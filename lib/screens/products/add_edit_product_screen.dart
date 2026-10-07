@@ -23,6 +23,7 @@ import '../../constants/product_units.dart';
 import '../../constants/product_types.dart';
 
 import '../store/stockstore_screen.dart';
+import '../../theme/app_palette.dart';
 
 enum ProductDestination {
   sellable,
@@ -111,9 +112,9 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
     decimalDigits: 0,
   );
 
-  final Color primaryDeepTealGreen = const Color(0xFF2F5D62);
-  final Color warmAmber = const Color(0xFFFFB200);
-  final Color offWhite = const Color(0xFFFDFDF9);
+  final Color primaryDeepTealGreen = AppPalette.primary;
+  final Color warmAmber = AppPalette.accent;
+  final Color offWhite = AppPalette.background;
 
   // Optional product photo/icon - a local preview shows immediately
   // after picking, while _imageUrl (the persisted download URL) only

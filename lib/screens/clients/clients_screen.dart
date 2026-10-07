@@ -16,6 +16,8 @@ import '../../providers/user_role_provider.dart';
 import '../../utils/web_download.dart';
 import '../../models/client.dart';
 import 'add_client_screen.dart';
+import '../../services/cursor_paginated_list_controller.dart';
+import '../../theme/app_palette.dart';
 
 class ClientsScreen extends StatefulWidget {
   const ClientsScreen({super.key});
@@ -25,23 +27,19 @@ class ClientsScreen extends StatefulWidget {
 }
 
 class _ClientsScreenState extends State<ClientsScreen> {
-  final Color primaryDeepGreen = const Color(0xFF2F5D62);
-  final Color warmAmber = const Color(0xFFFFB200);
-  final Color offWhite = const Color(0xFFFDFDF9);
+  final Color primaryDeepGreen = AppPalette.primary;
+  final Color warmAmber = AppPalette.accent;
+  final Color offWhite = AppPalette.background;
 
   static const List<String> _clientTypes = ['All', 'Farmer', 'Vet', 'Wholesaler', 'Retailer'];
 
   String _searchQuery = '';
   final TextEditingController _searchController = TextEditingController();
   Timer? _searchDebounce;
-
-  // Search results live separately from the paginated browse list -
-  // searching queries Firestore directly (by name), rather than
-  // filtering whatever's already been paginated in, since that would
-  // only ever find matches among however many clients happen to be
-  // loaded locally so far.
-  List<Client>? _searchResults;
-  bool _isSearchLoading = false;
+  // Periodically checks (never a live listener) whether new clients
+  // have landed since the current browsing session's snapshot moment,
+  // to drive the "N new clients available - Refresh" banner.
+  Timer? _newRecordsCheckTimer;
 
   String _selectedType = 'All';
   String _statusFilter = 'All';
@@ -59,52 +57,53 @@ class _ClientsScreenState extends State<ClientsScreen> {
 
     if (facilityId != null && facilityId.isNotEmpty && facilityId != _facilityId) {
       _facilityId = facilityId;
-      Provider.of<ClientProvider>(context, listen: false)
-          .listenToClientsPaginated(facilityId);
       Provider.of<ClientProvider>(context, listen: false).listenToClients(facilityId);
+      _openClientsListSession();
+      _newRecordsCheckTimer ??= Timer.periodic(
+        const Duration(seconds: 45),
+        (_) => Provider.of<ClientProvider>(context, listen: false).clientsListController.checkForNewRecords(),
+      );
     }
+  }
+
+  /// Records the toolbar's current filters onto ClientProvider, then
+  /// (re)opens the browsing session for them - a no-op if the
+  /// signature hasn't actually changed and a session's already open.
+  void _openClientsListSession({bool forceRefresh = false}) {
+    final facilityId = _facilityId;
+    if (facilityId == null) return;
+    final provider = Provider.of<ClientProvider>(context, listen: false);
+    final signature = provider.updateClientsListFilters(
+      facilityId: facilityId,
+      searchTerm: _searchQuery,
+      typeFilter: _selectedType,
+      statusFilter: _statusFilter,
+    );
+    provider.clientsListController.openSession(signature, forceRefresh: forceRefresh);
   }
 
   @override
   void dispose() {
     _searchController.dispose();
     _searchDebounce?.cancel();
+    _newRecordsCheckTimer?.cancel();
     super.dispose();
   }
 
   void _onSearchChanged(String value) {
-    final trimmed = value.trim();
-    setState(() => _searchQuery = trimmed);
-
+    setState(() => _searchQuery = value.trim());
     _searchDebounce?.cancel();
-    if (trimmed.isEmpty) {
-      setState(() {
-        _searchResults = null;
-        _isSearchLoading = false;
-      });
-      return;
-    }
-
-    setState(() => _isSearchLoading = true);
-    _searchDebounce = Timer(const Duration(milliseconds: 400), () async {
-      if (_facilityId == null) return;
-      final results = await Provider.of<ClientProvider>(context, listen: false)
-          .searchClientsByName(_facilityId!, trimmed);
-      if (!mounted) return;
-      setState(() {
-        _searchResults = results;
-        _isSearchLoading = false;
-      });
-    });
+    _searchDebounce = Timer(const Duration(milliseconds: 400), _openClientsListSession);
   }
 
   void _onTypeSelected(String type) {
     setState(() => _selectedType = type);
-    if (_facilityId == null) return;
-    Provider.of<ClientProvider>(context, listen: false).listenToClientsPaginated(
-      _facilityId!,
-      typeFilter: type == 'All' ? null : type,
-    );
+    _openClientsListSession();
+  }
+
+  void _onStatusFilterChanged(String status) {
+    setState(() => _statusFilter = status);
+    _openClientsListSession();
   }
 
   Widget _buildMetricsRow(List<Client> allClients) {
@@ -290,7 +289,7 @@ class _ClientsScreenState extends State<ClientsScreen> {
                 DropdownMenuItem(value: 'Inactive', child: Text('Inactive')),
               ],
               onChanged: (val) {
-                if (val != null) setState(() => _statusFilter = val);
+                if (val != null) _onStatusFilterChanged(val);
               },
             ),
           ),
@@ -636,11 +635,6 @@ class _ClientsScreenState extends State<ClientsScreen> {
             child: Consumer<ClientProvider>(
         builder: (context, provider, _) {
           final isSearching = _searchQuery.isNotEmpty;
-          final rawClients = isSearching ? (_searchResults ?? []) : provider.items;
-          final clients = _statusFilter == 'All'
-              ? rawClients
-              : rawClients.where((c) => c.status == _statusFilter).toList();
-          final showLoadingSpinner = isSearching ? _isSearchLoading : !provider.hasLoaded;
 
           return Column(
             children: [
@@ -664,22 +658,59 @@ class _ClientsScreenState extends State<ClientsScreen> {
                   ),
                 ),
               Expanded(
-                child: !isSearching && provider.streamError != null
-                    ? Center(
-                        child: Padding(
-                          padding: const EdgeInsets.all(24),
-                          child: _buildErrorMessage(provider.streamError.toString()),
-                        ),
-                      )
-                    : showLoadingSpinner
-                    ? Center(child: CircularProgressIndicator(color: primaryDeepGreen))
-                    : clients.isEmpty
-                        ? Center(
-                            child: Text(
-                              isSearching ? 'No clients match "$_searchQuery"' : 'No clients found',
+                child: ListenableBuilder(
+                  listenable: provider.clientsListController,
+                  builder: (context, _) {
+                    final controller = provider.clientsListController;
+                    final clients = controller.items;
+                    return Column(
+                      children: [
+                        if (controller.newRecordsAvailable > 0)
+                          Container(
+                            width: double.infinity,
+                            color: primaryDeepGreen.withValues(alpha: 0.08),
+                            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                            child: Row(
+                              children: [
+                                Icon(Icons.fiber_new, size: 18, color: primaryDeepGreen),
+                                const SizedBox(width: 8),
+                                Expanded(
+                                  child: Text(
+                                    '${controller.newRecordsAvailable} new client'
+                                    '${controller.newRecordsAvailable == 1 ? '' : 's'} available',
+                                    style: TextStyle(fontSize: 13, color: primaryDeepGreen),
+                                  ),
+                                ),
+                                TextButton(
+                                  onPressed: () => controller.refreshSession(),
+                                  child: const Text('Refresh'),
+                                ),
+                              ],
                             ),
-                          )
-                        : _buildClientsTable(clients, isSearching, provider),
+                          ),
+                        Expanded(
+                          child: controller.error != null
+                              ? Center(
+                                  child: Padding(
+                                    padding: const EdgeInsets.all(24),
+                                    child: _buildErrorMessage(controller.error.toString()),
+                                  ),
+                                )
+                              : controller.isLoading && clients.isEmpty
+                                  ? Center(child: CircularProgressIndicator(color: primaryDeepGreen))
+                                  : clients.isEmpty
+                                      ? Center(
+                                          child: Text(
+                                            isSearching ? 'No clients match "$_searchQuery"' : 'No clients found',
+                                          ),
+                                        )
+                                      : _buildClientsTable(clients),
+                        ),
+                        _buildPaginationBar(controller),
+                      ],
+                    );
+                  },
+                ),
               ),
             ],
           );
@@ -733,8 +764,7 @@ class _ClientsScreenState extends State<ClientsScreen> {
     );
   }
 
-  Widget _buildClientsTable(List<Client> clients, bool isSearching, ClientProvider provider) {
-    final showLoadMore = !isSearching && provider.hasMore;
+  Widget _buildClientsTable(List<Client> clients) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
@@ -754,11 +784,8 @@ class _ClientsScreenState extends State<ClientsScreen> {
         ),
         Expanded(
           child: ListView.builder(
-            itemCount: clients.length + (showLoadMore ? 1 : 0),
-            itemBuilder: (context, index) {
-              if (index >= clients.length) return _buildLoadMoreTile(provider);
-              return _buildClientRow(clients[index]);
-            },
+            itemCount: clients.length,
+            itemBuilder: (context, index) => _buildClientRow(clients[index]),
           ),
         ),
       ],
@@ -948,17 +975,52 @@ class _ClientsScreenState extends State<ClientsScreen> {
     );
   }
 
-  Widget _buildLoadMoreTile(ClientProvider provider) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 12),
-      child: Center(
-        child: provider.isLoading
-            ? CircularProgressIndicator(color: primaryDeepGreen)
-            : OutlinedButton(
-                onPressed: () => provider.loadMorePagedClients(),
-                style: OutlinedButton.styleFrom(foregroundColor: primaryDeepGreen),
-                child: const Text('Load More'),
+  Widget _buildPaginationBar(CursorPaginatedListController<Client> controller) {
+    final pageSize = controller.pageSize;
+    final itemCount = controller.items.length;
+    final pageStart = itemCount == 0 ? 0 : (controller.currentPage - 1) * pageSize + 1;
+    final pageEnd = (controller.currentPage - 1) * pageSize + itemCount;
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      decoration: BoxDecoration(border: Border(top: BorderSide(color: Colors.grey.withValues(alpha: 0.2)))),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(
+            itemCount == 0 ? 'No clients' : 'Showing $pageStart to $pageEnd',
+            style: TextStyle(fontSize: 12.5, color: Colors.grey[600]),
+          ),
+          Row(
+            children: [
+              DropdownButtonHideUnderline(
+                child: DropdownButton<int>(
+                  value: pageSize,
+                  items: const [10, 25, 50]
+                      .map((n) => DropdownMenuItem(value: n, child: Text('$n per page')))
+                      .toList(),
+                  onChanged: (val) {
+                    if (val != null) controller.setPageSize(val);
+                  },
+                ),
               ),
+              const SizedBox(width: 16),
+              IconButton(
+                icon: const Icon(Icons.chevron_left),
+                onPressed: controller.hasPreviousPage ? () => controller.goToPreviousPage() : null,
+              ),
+              Text('Page ${controller.currentPage}', style: const TextStyle(fontSize: 13)),
+              IconButton(
+                icon: controller.isLoading
+                    ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2))
+                    : const Icon(Icons.chevron_right),
+                onPressed: controller.hasNextPage && !controller.isLoading
+                    ? () => controller.goToNextPage()
+                    : null,
+              ),
+            ],
+          ),
+        ],
       ),
     );
   }

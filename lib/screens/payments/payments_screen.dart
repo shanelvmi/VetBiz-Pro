@@ -16,6 +16,7 @@ import '../../services/snapshot_ledger_controller.dart';
 import '../../widgets/firestore_error_view.dart';
 import '../sales/receipt_preview_screen.dart';
 import '../services/service_receipt_preview_screen.dart';
+import '../../theme/app_palette.dart';
 
 class _PaymentMetric {
   final double amount;
@@ -43,9 +44,9 @@ class PaymentsScreen extends StatefulWidget {
 }
 
 class _PaymentsScreenState extends State<PaymentsScreen> {
-  final Color primaryDeepGreen = const Color(0xFF2F5D62);
-  final Color warmAmber = const Color(0xFFFFB200);
-  final Color offWhite = const Color(0xFFFDFDF9);
+  final Color primaryDeepGreen = AppPalette.primary;
+  final Color warmAmber = AppPalette.accent;
+  final Color offWhite = AppPalette.background;
 
   final NumberFormat _moneyFormat = NumberFormat('#,##0', 'en_US');
 

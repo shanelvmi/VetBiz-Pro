@@ -10,6 +10,7 @@ import 'package:markdown/markdown.dart' as md;
 
 import '../../widgets/hover_elevate_card.dart';
 import '../../widgets/announcement_message.dart';
+import '../../theme/app_palette.dart';
 
 /// Manages everything shown on the login screen's left/center panels -
 /// broadcast announcements (the `public_announcements` collection) and
@@ -23,8 +24,8 @@ class AnnouncementsTab extends StatefulWidget {
 }
 
 class _AnnouncementsTabState extends State<AnnouncementsTab> {
-  static const Color primaryColor = Color(0xFF2F5D62);
-  static const Color warmAmber = Color(0xFFFFB200);
+  static const Color primaryColor = AppPalette.primary;
+  static const Color warmAmber = AppPalette.accent;
 
   bool _isUploadingPoster = false;
 
@@ -796,8 +797,8 @@ class _ContactDetailsCard extends StatefulWidget {
 }
 
 class _ContactDetailsCardState extends State<_ContactDetailsCard> {
-  static const Color primaryColor = Color(0xFF2F5D62);
-  static const Color warmAmber = Color(0xFFFFB200);
+  static const Color primaryColor = AppPalette.primary;
+  static const Color warmAmber = AppPalette.accent;
 
   // Loaded once on open (not a live StreamBuilder, since that would
   // fight with whatever the admin is actively typing), edited freely,

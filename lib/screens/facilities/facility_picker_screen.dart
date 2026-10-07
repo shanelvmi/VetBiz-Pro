@@ -8,6 +8,7 @@ import '../../utils/force_logout.dart';
 import '../../constants/facility_types.dart';
 import '../../widgets/initials_avatar.dart';
 import '../../widgets/vetbiz_loading_indicator.dart';
+import '../../theme/app_palette.dart';
 
 /// Only ever shown for an Admin managing more than one facility - the
 /// single-facility case (every Assistant, and most Admins) never
@@ -27,8 +28,8 @@ class FacilityPickerScreen extends StatefulWidget {
 
   const FacilityPickerScreen({super.key, required this.facilities, this.role});
 
-  static const Color primaryColor = Color(0xFF2F5D62);
-  static const Color warmAmber = Color(0xFFFFB200);
+  static const Color primaryColor = AppPalette.primary;
+  static const Color warmAmber = AppPalette.accent;
 
   @override
   State<FacilityPickerScreen> createState() => _FacilityPickerScreenState();

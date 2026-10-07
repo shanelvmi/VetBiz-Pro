@@ -6,6 +6,7 @@ import 'package:intl/intl.dart';
 
 import '../../utils/subscription_status_utils.dart';
 import '../../constants/subscription_plans.dart';
+import '../../theme/app_palette.dart';
 
 class FacilityDetailScreen extends StatefulWidget {
   final String facilityId;
@@ -16,8 +17,8 @@ class FacilityDetailScreen extends StatefulWidget {
 }
 
 class _FacilityDetailScreenState extends State<FacilityDetailScreen> {
-  static const Color primaryColor = Color(0xFF2F5D62);
-  static const Color warmAmber = Color(0xFFFFB200);
+  static const Color primaryColor = AppPalette.primary;
+  static const Color warmAmber = AppPalette.accent;
   final NumberFormat _moneyFormat = NumberFormat('#,##0', 'en_US');
 
   ButtonStyle get _accentButtonStyle => ButtonStyle(

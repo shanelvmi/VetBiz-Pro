@@ -12,13 +12,14 @@ import '../../widgets/payment_method_selector.dart';
 import '../../services/receipt_printer_service.dart';
 import '../settings/printer_settings_screen.dart';
 import 'add_transaction_screen.dart';
+import '../../theme/app_palette.dart';
 
 class TransactionScreen extends StatefulWidget {
   const TransactionScreen({super.key});
 
-  static const Color primaryDeepGreen = Color(0xFF2F5D62);
-  static const Color warmAmber = Color(0xFFFFB200);
-  static const Color offWhite = Color(0xFFFDFDF9);
+  static const Color primaryDeepGreen = AppPalette.primary;
+  static const Color warmAmber = AppPalette.accent;
+  static const Color offWhite = AppPalette.background;
 
   @override
   State<TransactionScreen> createState() => _TransactionScreenState();

@@ -14,6 +14,7 @@ import '../../services/receipt_printer_service.dart';
 import '../../services/receipt_pdf_service.dart';
 import '../settings/printer_settings_screen.dart';
 import '../../utils/web_download.dart';
+import '../../theme/app_palette.dart';
 
 /// Shows the receipt as it will actually look before doing anything with
 /// it - a real preview, not a blind print. From here it can be shared or
@@ -29,7 +30,7 @@ class ReceiptPreviewScreen extends StatefulWidget {
 }
 
 class _ReceiptPreviewScreenState extends State<ReceiptPreviewScreen> {
-  static const Color primaryColor = Color(0xFF2F5D62);
+  static const Color primaryColor = AppPalette.primary;
   final GlobalKey _receiptKey = GlobalKey();
   final NumberFormat _moneyFormat = NumberFormat('#,##0', 'en_US');
 

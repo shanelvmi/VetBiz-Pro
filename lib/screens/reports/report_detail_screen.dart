@@ -6,6 +6,7 @@ import '../../models/daily_report.dart';
 import '../../providers/facility_provider.dart';
 import '../../services/daily_report_pdf_service.dart';
 import 'report_tabbed_content.dart';
+import '../../theme/app_palette.dart';
 
 /// Read-only view of a past, already-generated report - the AppBar
 /// (date, submission status, PDF action) plus the shared tabbed
@@ -17,8 +18,8 @@ class ReportDetailScreen extends StatelessWidget {
 
   const ReportDetailScreen({super.key, required this.report});
 
-  static const Color primaryDeepGreen = Color(0xFF2F5D62);
-  static const Color offWhite = Color(0xFFFDFDF9);
+  static const Color primaryDeepGreen = AppPalette.primary;
+  static const Color offWhite = AppPalette.background;
 
   Future<void> _printOrDownloadPdf(BuildContext context) async {
     final facilityProvider = Provider.of<FacilityProvider>(context, listen: false);

@@ -22,10 +22,11 @@ import '../../utils/force_logout.dart';
 import '../../utils/facility_limit_helper.dart';
 import '../../widgets/hover_elevate_card.dart';
 import '../admin/manage_assistants_screen.dart';
+import '../../theme/app_palette.dart';
 
-const Color deepGreen = Color(0xFF2F5D62);
-const Color warmAmber = Color(0xFFFFB200);
-const Color offWhite = Color(0xFFFDFDF9);
+const Color deepGreen = AppPalette.primary;
+const Color warmAmber = AppPalette.accent;
+const Color offWhite = AppPalette.background;
 
 class FacilityScreen extends StatefulWidget {
   const FacilityScreen({super.key});

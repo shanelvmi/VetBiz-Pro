@@ -13,6 +13,7 @@ import '../../services/auth_service.dart';
 import '../../utils/activity_logger.dart';
 import '../../utils/thousands_input_formatter.dart';
 import '../../widgets/payment_method_selector.dart';
+import '../../theme/app_palette.dart';
 
 class AddPaymentScreen extends StatefulWidget {
   final Client? preselectedClient;
@@ -64,8 +65,8 @@ class _AddPaymentScreenState extends State<AddPaymentScreen> {
   final _formKey = GlobalKey<FormState>();
   final NumberFormat currencyFormat = NumberFormat('#,##0', 'en_US');
 
-  static const Color primaryDeepGreen = Color(0xFF2F5D62);
-  static const Color warmAmber = Color(0xFFFFB200);
+  static const Color primaryDeepGreen = AppPalette.primary;
+  static const Color warmAmber = AppPalette.accent;
 
   @override
   void initState() {

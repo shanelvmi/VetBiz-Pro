@@ -10,6 +10,7 @@ import 'package:excel/excel.dart' as xl;
 
 import '../../providers/facility_provider.dart';
 import '../../utils/web_download.dart';
+import '../../theme/app_palette.dart';
 
 /// One logical table of data - a title (shown as its own line in CSV,
 /// its own sheet/tab name in xlsx), a header row, and the data rows
@@ -45,9 +46,9 @@ class ExportDataScreen extends StatefulWidget {
 }
 
 class _ExportDataScreenState extends State<ExportDataScreen> {
-  final Color primaryColor = const Color(0xFF2F5D62);
-  final Color warmAmber = const Color(0xFFFFB200);
-  final Color backgroundColor = const Color(0xFFFDFDF9);
+  final Color primaryColor = AppPalette.primary;
+  final Color warmAmber = AppPalette.accent;
+  final Color backgroundColor = AppPalette.background;
 
   static const List<Map<String, String>> _dataTypes = [
     {'title': 'Sales & Transactions', 'subtitle': 'Sales (incl. archived) and transaction history'},

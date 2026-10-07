@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 
 import '../../models/daily_report.dart';
 import '../../providers/user_role_provider.dart';
+import '../../theme/app_palette.dart';
 
 /// The full tabbed report layout (Summary through Activity Log) -
 /// extracted as its own reusable widget since both the main "today's
@@ -21,8 +22,8 @@ class ReportTabbedContent extends StatefulWidget {
 }
 
 class _ReportTabbedContentState extends State<ReportTabbedContent> with SingleTickerProviderStateMixin {
-  static const Color primaryDeepGreen = Color(0xFF2F5D62);
-  static const Color warmAmber = Color(0xFFFFB200);
+  static const Color primaryDeepGreen = AppPalette.primary;
+  static const Color warmAmber = AppPalette.accent;
 
   late TabController _tabController;
   final NumberFormat _moneyFormat = NumberFormat.decimalPattern();

@@ -14,6 +14,7 @@ import '../providers/user_role_provider.dart';
 import 'provider_reset.dart';
 import 'navigator_key.dart';
 import '../screens/dashboard/dashboard_screen.dart';
+import '../theme/app_palette.dart';
 
 /// The one place that turns "here's a facility" into "you're now looking
 /// at its Dashboard" - resets every provider, wires up every real-time
@@ -155,8 +156,8 @@ class _DashboardEntryLoader extends StatefulWidget {
 }
 
 class _DashboardEntryLoaderState extends State<_DashboardEntryLoader> {
-  static const Color _primaryDeepGreen = Color(0xFF2F5D62);
-  static const Color _offWhite = Color(0xFFFDFDF9);
+  static const Color _primaryDeepGreen = AppPalette.primary;
+  static const Color _offWhite = AppPalette.background;
 
   bool _ready = false;
 

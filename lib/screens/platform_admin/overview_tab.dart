@@ -6,6 +6,7 @@ import '../../utils/subscription_status_utils.dart';
 import '../../widgets/firestore_error_view.dart';
 import '../../widgets/hover_elevate_card.dart';
 import 'overview_details_screen.dart';
+import '../../theme/app_palette.dart';
 
 /// A snapshot of the whole business - how many facilities, in what state, and
 /// how much has actually been collected this month. Reads every facility
@@ -26,7 +27,7 @@ class OverviewTab extends StatefulWidget {
 }
 
 class _OverviewTabState extends State<OverviewTab> {
-  static const Color primaryColor = Color(0xFF2F5D62);
+  static const Color primaryColor = AppPalette.primary;
   final NumberFormat _moneyFormat = NumberFormat('#,##0', 'en_US');
 
   Map<String, dynamic>? _stats;

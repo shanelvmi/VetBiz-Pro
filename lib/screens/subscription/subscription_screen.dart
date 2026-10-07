@@ -13,6 +13,7 @@ import '../../providers/subscription_provider.dart';
 import '../../constants/subscription_plans.dart';
 import '../../models/promotion.dart';
 import 'subscription_history_screen.dart';
+import '../../theme/app_palette.dart';
 
 class SubscriptionScreen extends StatefulWidget {
   final bool isModal;
@@ -23,9 +24,9 @@ class SubscriptionScreen extends StatefulWidget {
 }
 
 class _SubscriptionScreenState extends State<SubscriptionScreen> {
-  final Color primaryColor = const Color(0xFF2F5D62);
-  final Color warmAmber = const Color(0xFFFFB200);
-  final Color backgroundColor = const Color(0xFFFDFDF9);
+  final Color primaryColor = AppPalette.primary;
+  final Color warmAmber = AppPalette.accent;
+  final Color backgroundColor = AppPalette.background;
 
   final NumberFormat _moneyFormat = NumberFormat('#,##0', 'en_US');
   final ImagePicker _picker = ImagePicker();

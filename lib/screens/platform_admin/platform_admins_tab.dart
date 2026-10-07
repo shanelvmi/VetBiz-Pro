@@ -4,6 +4,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:intl/intl.dart';
 
 import '../../widgets/hover_elevate_card.dart';
+import '../../theme/app_palette.dart';
 
 /// Manage who else has platform admin access - previously the only way
 /// to grant this was manually creating a document in Firebase Console.
@@ -18,7 +19,7 @@ class PlatformAdminsTab extends StatefulWidget {
 }
 
 class _PlatformAdminsTabState extends State<PlatformAdminsTab> {
-  static const Color primaryColor = Color(0xFF2F5D62);
+  static const Color primaryColor = AppPalette.primary;
   final TextEditingController _emailController = TextEditingController();
   bool _isSearching = false;
 

@@ -11,6 +11,7 @@ import '../widgets/announcement_message.dart';
 import '../utils/navigator_key.dart';
 import 'legal/privacy_policy_screen.dart';
 import 'legal/terms_of_service_screen.dart';
+import '../theme/app_palette.dart';
 
 class LoginScreen extends StatefulWidget {
   final String? errorMessage;
@@ -42,11 +43,11 @@ class _LoginScreenState extends State<LoginScreen> {
 
   Timer? _announcementTimer;
 
-  final Color primaryDeepGreen = const Color(0xFF2F5D62);
+  final Color primaryDeepGreen = AppPalette.primary;
   final Color tealAccent = const Color(0xFF3E8E82);
-  final Color warmAmber = const Color(0xFFFFB200);
+  final Color warmAmber = AppPalette.accent;
   final Color tealGlow = const Color(0xFF7EE8CB);
-  final Color offWhite = const Color(0xFFFDFDF9);
+  final Color offWhite = AppPalette.background;
   final Color neutralBlack = Colors.black87;
 
   OutlineInputBorder _fieldBorder(Color color) =>
@@ -1316,7 +1317,7 @@ class _AnimatedLoginButtonState extends State<_AnimatedLoginButton> with SingleT
   // widget class from _LoginScreenState and can't reach that class's
   // own instance field.
   static const Color _tealGlow = Color(0xFF7EE8CB);
-  static const Color _warmAmber = Color(0xFFFFB200);
+  static const Color _warmAmber = AppPalette.accent;
 
   @override
   void initState() {
@@ -1538,7 +1539,7 @@ class _FooterLink extends StatefulWidget {
 }
 
 class _FooterLinkState extends State<_FooterLink> {
-  static const Color _warmAmber = Color(0xFFFFB200);
+  static const Color _warmAmber = AppPalette.accent;
   bool _hovered = false;
 
   @override

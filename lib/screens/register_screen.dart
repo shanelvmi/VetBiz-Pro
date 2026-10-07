@@ -20,6 +20,7 @@ import 'legal/privacy_policy_screen.dart';
 import 'legal/terms_of_service_screen.dart';
 import '../widgets/auth_background.dart';
 import '../services/role_change_service.dart';
+import '../theme/app_palette.dart';
 
 class RegisterScreen extends StatefulWidget {
   final bool isUpdating;
@@ -125,9 +126,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
   String? error;
 
   // Colors & style
-  final Color deepTealGreen = const Color(0xFF2F5D62);
-  final Color warmAmber = const Color(0xFFFFB200);
-  final Color offWhite = const Color(0xFFFDFDF9);
+  final Color deepTealGreen = AppPalette.primary;
+  final Color warmAmber = AppPalette.accent;
+  final Color offWhite = AppPalette.background;
 
   // Facilities
   List<Map<String, dynamic>> facilities = [];
@@ -2089,7 +2090,7 @@ class _LegalLink extends StatefulWidget {
 
 class _LegalLinkState extends State<_LegalLink> {
   static const Color _teal = Color(0xFF3E8E82);
-  static const Color _amber = Color(0xFFFFB200);
+  static const Color _amber = AppPalette.accent;
   bool _hovered = false;
 
   @override

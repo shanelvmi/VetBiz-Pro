@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../theme/app_palette.dart';
 
 /// One heading + body pair within a legal document.
 class LegalSection {
@@ -44,8 +45,8 @@ class LegalDocumentScreen extends StatelessWidget {
     required this.calloutBody,
   });
 
-  static const Color _primaryDeepGreen = Color(0xFF2F5D62);
-  static const Color _offWhite = Color(0xFFFDFDF9);
+  static const Color _primaryDeepGreen = AppPalette.primary;
+  static const Color _offWhite = AppPalette.background;
 
   // The existing section headings already carry their own "1. ", "2. "
   // prefix (needed elsewhere they're used as plain text) - stripped

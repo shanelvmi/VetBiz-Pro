@@ -7,6 +7,7 @@ import '../../models/service.dart';
 import '../../providers/facility_provider.dart';
 import '../../constants/service_categories.dart';
 import 'service_receipt_preview_screen.dart';
+import '../../theme/app_palette.dart';
 
 class ServicesArchiveScreen extends StatefulWidget {
   const ServicesArchiveScreen({super.key});
@@ -16,9 +17,9 @@ class ServicesArchiveScreen extends StatefulWidget {
 }
 
 class _ServicesArchiveScreenState extends State<ServicesArchiveScreen> {
-  final Color primaryDeepGreen = const Color(0xFF2F5D62);
-  final Color warmAmber = const Color(0xFFFFB200);
-  final Color offWhite = const Color(0xFFFDFDF9);
+  final Color primaryDeepGreen = AppPalette.primary;
+  final Color warmAmber = AppPalette.accent;
+  final Color offWhite = AppPalette.background;
 
   final NumberFormat _moneyFormat = NumberFormat.currency(
     locale: 'en_US',

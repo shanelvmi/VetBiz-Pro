@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../../providers/facility_provider.dart';
+import '../../theme/app_palette.dart';
 
 class BusinessHoursScreen extends StatefulWidget {
   const BusinessHoursScreen({super.key});
@@ -12,7 +13,7 @@ class BusinessHoursScreen extends StatefulWidget {
 }
 
 class _BusinessHoursScreenState extends State<BusinessHoursScreen> {
-  static const Color primaryDeepGreen = Color(0xFF2F5D62);
+  static const Color primaryDeepGreen = AppPalette.primary;
 
   TimeOfDay _weekdayTime = const TimeOfDay(hour: 18, minute: 0);
   bool _weekdayClosed = false;

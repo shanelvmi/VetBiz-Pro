@@ -7,6 +7,7 @@ import '../../constants/subscription_plans.dart';
 import '../../models/promotion.dart';
 import '../../widgets/hover_elevate_card.dart';
 import '../../widgets/firestore_error_view.dart';
+import '../../theme/app_palette.dart';
 
 /// Manage subscription discounts/offers - "Nanenane Sale", a
 /// month-end push, a renew-now discount for facilities about to
@@ -19,8 +20,8 @@ class PromotionsScreen extends StatelessWidget {
   final bool isModal;
   const PromotionsScreen({super.key, this.isModal = false});
 
-  static const Color primaryColor = Color(0xFF2F5D62);
-  static const Color warmAmber = Color(0xFFFFB200);
+  static const Color primaryColor = AppPalette.primary;
+  static const Color warmAmber = AppPalette.accent;
 
   @override
   Widget build(BuildContext context) {

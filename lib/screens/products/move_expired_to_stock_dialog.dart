@@ -5,8 +5,9 @@ import 'package:provider/provider.dart';
 import '../../models/product.dart';
 import '../../models/product_batch.dart';
 import '../../providers/product_provider.dart';
+import '../../theme/app_palette.dart';
 
-const Color _primaryDeepGreen = Color(0xFF2F5D62);
+const Color _primaryDeepGreen = AppPalette.primary;
 
 const List<String> _moveReasons = ['Expired', 'Deteriorated', 'Other (specify)'];
 

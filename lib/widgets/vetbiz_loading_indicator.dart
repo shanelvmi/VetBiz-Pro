@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../theme/app_palette.dart';
 
 /// Two weights of the same branded loading treatment - [full] for a
 /// one-time, meaningful wait (right now, only the very first "we're
@@ -33,9 +34,9 @@ class VetBizLoadingIndicator extends StatefulWidget {
   // app (primaryDeepGreen/warmAmber, as seen in facility_picker_screen
   // .dart and elsewhere) - kept here too so this widget doesn't depend
   // on importing a screen file just for its color constants.
-  static const Color primaryColor = Color(0xFF2F5D62);
-  static const Color amberColor = Color(0xFFFFB200);
-  static const Color backgroundColor = Color(0xFFFDFDF9);
+  static const Color primaryColor = AppPalette.primary;
+  static const Color amberColor = AppPalette.accent;
+  static const Color backgroundColor = AppPalette.background;
 
   @override
   State<VetBizLoadingIndicator> createState() => _VetBizLoadingIndicatorState();

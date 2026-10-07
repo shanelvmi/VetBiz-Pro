@@ -24,6 +24,7 @@ import '../../services/auth_service.dart';
 import '../../utils/activity_logger.dart';
 import '../clients/add_client_screen.dart';
 import '../../widgets/product_thumbnail.dart';
+import '../../theme/app_palette.dart';
 
 // --- Custom Formatter ---
 // --- Add Sale Screen ---
@@ -80,9 +81,9 @@ class _AddSaleScreenState extends State<AddSaleScreen> {
   // include the AppBar's own height in that conversion).
   final GlobalKey _stackKey = GlobalKey();
 
-  final Color primaryDeepGreen = const Color(0xFF2F5D62);
-  final Color warmAmber = const Color(0xFFFFB200);
-  final Color offWhite = const Color(0xFFFDFDF9);
+  final Color primaryDeepGreen = AppPalette.primary;
+  final Color warmAmber = AppPalette.accent;
+  final Color offWhite = AppPalette.background;
   final Color deepTeal = const Color(0xFF004D40);
 
   final NumberFormat _thousandsFormat = NumberFormat.decimalPattern('en_US');

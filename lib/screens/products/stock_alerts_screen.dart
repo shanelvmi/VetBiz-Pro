@@ -12,6 +12,7 @@ import '../store/release_to_shop_flow.dart';
 import 'add_batch_screen.dart';
 import 'view_batches_screen.dart';
 import 'move_expired_to_stock_dialog.dart';
+import '../../theme/app_palette.dart';
 
 /// What kind of thing needs attention. Declared in the order they're
 /// shown - most urgent first.
@@ -56,7 +57,7 @@ class StockAlertsScreen extends StatelessWidget {
   final bool isDropdown;
   const StockAlertsScreen({super.key, this.isDropdown = false});
 
-  static const Color primaryColor = Color(0xFF2F5D62);
+  static const Color primaryColor = AppPalette.primary;
   static const int expiryWarningDays = 30;
 
   /// How many alerts the compact dropdown shows before pointing to the

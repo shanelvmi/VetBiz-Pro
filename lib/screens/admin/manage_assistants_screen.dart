@@ -10,6 +10,7 @@ import '../../widgets/initials_avatar.dart';
 import '../../services/role_change_service.dart';
 import '../../services/membership_service.dart';
 import '../../utils/activity_logger.dart';
+import '../../theme/app_palette.dart';
 
 class ManageAssistantsScreen extends StatefulWidget {
   // Set when opened as a deep link from a specific facility's card in
@@ -24,9 +25,9 @@ class ManageAssistantsScreen extends StatefulWidget {
 }
 
 class _ManageAssistantsScreenState extends State<ManageAssistantsScreen> {
-  final Color primaryColor = const Color(0xFF2F5D62);
-  final Color backgroundColor = const Color(0xFFFDFDF9);
-  final Color accentColor = const Color(0xFFFFB200);
+  final Color primaryColor = AppPalette.primary;
+  final Color backgroundColor = AppPalette.background;
+  final Color accentColor = AppPalette.accent;
 
   late final String adminUid;
   List<String> adminFacilityIds = [];

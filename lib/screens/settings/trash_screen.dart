@@ -5,6 +5,7 @@ import 'package:intl/intl.dart';
 
 import '../../providers/facility_provider.dart';
 import '../../utils/activity_logger.dart';
+import '../../theme/app_palette.dart';
 
 class TrashScreen extends StatefulWidget {
   const TrashScreen({super.key});
@@ -14,8 +15,8 @@ class TrashScreen extends StatefulWidget {
 }
 
 class _TrashScreenState extends State<TrashScreen> with SingleTickerProviderStateMixin {
-  final Color primaryColor = const Color(0xFF2F5D62);
-  final Color backgroundColor = const Color(0xFFFDFDF9);
+  final Color primaryColor = AppPalette.primary;
+  final Color backgroundColor = AppPalette.background;
 
   late TabController _tabController;
 

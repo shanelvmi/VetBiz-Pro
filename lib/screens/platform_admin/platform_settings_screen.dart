@@ -9,6 +9,7 @@ import '../../widgets/hover_elevate_card.dart';
 import '../../utils/facility_limit_helper.dart';
 import '../../utils/thousands_input_formatter.dart';
 import 'promotions_screen.dart';
+import '../../theme/app_palette.dart';
 
 /// Platform-wide configuration - currently new-facility trial length and
 /// subscription pricing. Deliberately separate from Overview: Overview
@@ -22,7 +23,7 @@ import 'promotions_screen.dart';
 class PlatformSettingsScreen extends StatelessWidget {
   const PlatformSettingsScreen({super.key});
 
-  static const Color primaryColor = Color(0xFF2F5D62);
+  static const Color primaryColor = AppPalette.primary;
 
   @override
   Widget build(BuildContext context) {
@@ -92,8 +93,8 @@ class _MaintenanceModeCard extends StatefulWidget {
 }
 
 class _MaintenanceModeCardState extends State<_MaintenanceModeCard> {
-  static const Color primaryColor = Color(0xFF2F5D62);
-  static const Color warmAmber = Color(0xFFFFB200);
+  static const Color primaryColor = AppPalette.primary;
+  static const Color warmAmber = AppPalette.accent;
 
   final TextEditingController _messageController = TextEditingController();
   bool _isLoading = true;
@@ -301,8 +302,8 @@ class _TrialSettingsCard extends StatefulWidget {
 }
 
 class _TrialSettingsCardState extends State<_TrialSettingsCard> {
-  static const Color primaryColor = Color(0xFF2F5D62);
-  static const Color warmAmber = Color(0xFFFFB200);
+  static const Color primaryColor = AppPalette.primary;
+  static const Color warmAmber = AppPalette.accent;
 
   final TextEditingController _controller = TextEditingController();
   bool _isLoading = true;
@@ -458,8 +459,8 @@ class _PricingSettingsCard extends StatefulWidget {
 }
 
 class _PricingSettingsCardState extends State<_PricingSettingsCard> {
-  static const Color primaryColor = Color(0xFF2F5D62);
-  static const Color warmAmber = Color(0xFFFFB200);
+  static const Color primaryColor = AppPalette.primary;
+  static const Color warmAmber = AppPalette.accent;
 
   final Map<String, TextEditingController> _controllers = {
     for (final plan in kSubscriptionPlans) plan.id: TextEditingController(),
@@ -617,8 +618,8 @@ class _FacilityLimitSettingsCard extends StatefulWidget {
 }
 
 class _FacilityLimitSettingsCardState extends State<_FacilityLimitSettingsCard> {
-  static const Color primaryColor = Color(0xFF2F5D62);
-  static const Color warmAmber = Color(0xFFFFB200);
+  static const Color primaryColor = AppPalette.primary;
+  static const Color warmAmber = AppPalette.accent;
 
   final TextEditingController _controller = TextEditingController();
   bool _isLoading = true;

@@ -29,11 +29,13 @@ import 'utils/navigator_key.dart';
 import 'utils/force_logout.dart';
 import 'providers/facility_provider.dart';
 import 'providers/settings_provider.dart';
+import 'providers/ui_settings_provider.dart';
 import 'providers/subscription_provider.dart';
 import 'providers/user_role_provider.dart';
 import 'providers/debt_provider.dart';
 import 'providers/payment_provider.dart';
 import 'widgets/vetbiz_loading_indicator.dart';
+import 'theme/app_palette.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -57,6 +59,7 @@ void main() async {
         ChangeNotifierProvider(create: (_) => TransactionProvider()),
         ChangeNotifierProvider(create: (_) => FacilityProvider()),
         ChangeNotifierProvider(create: (_) => SettingsProvider()),
+        ChangeNotifierProvider(create: (_) => UiSettingsProvider()),
         ChangeNotifierProvider(create: (_) => SubscriptionProvider()),
         ChangeNotifierProvider(create: (_) => UserRoleProvider()),
         Provider<AuthService>(create: (_) => AuthService()),
@@ -73,9 +76,9 @@ class VetBizProApp extends StatelessWidget {
   // focus borders, the blinking cursor, date picker selections - uses them
   // automatically, instead of every screen needing to remember to override
   // Flutter's default blue individually.
-  static const Color primaryDeepGreen = Color(0xFF2F5D62);
-  static const Color warmAmber = Color(0xFFFFB200);
-  static const Color offWhite = Color(0xFFFDFDF9);
+  static const Color primaryDeepGreen = AppPalette.primary;
+  static const Color warmAmber = AppPalette.accent;
+  static const Color offWhite = AppPalette.background;
 
   @override
   Widget build(BuildContext context) {
@@ -792,7 +795,7 @@ class _NoFacilityScreen extends StatefulWidget {
 }
 
 class _NoFacilityScreenState extends State<_NoFacilityScreen> {
-  static const Color _deepGreen = Color(0xFF2F5D62);
+  static const Color _deepGreen = AppPalette.primary;
 
   final MembershipService _membership = MembershipService();
   final TextEditingController _codeController = TextEditingController();

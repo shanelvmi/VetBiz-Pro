@@ -7,6 +7,7 @@ import 'package:intl/intl.dart';
 import '../../constants/subscription_plans.dart';
 import '../../widgets/firestore_error_view.dart';
 import '../../widgets/hover_elevate_card.dart';
+import '../../theme/app_palette.dart';
 
 /// Embeddable version of the subscription submissions review list -
 /// same logic as the original standalone Subscription Review screen,
@@ -27,7 +28,7 @@ class SubscriptionRequestsTab extends StatefulWidget {
 }
 
 class _SubscriptionRequestsTabState extends State<SubscriptionRequestsTab> {
-  static const Color primaryColor = Color(0xFF2F5D62);
+  static const Color primaryColor = AppPalette.primary;
 
   bool _showAttended = false;
   int _attendedDays = 30;
@@ -596,7 +597,7 @@ class _ViewToggleChip extends StatelessWidget {
 
   const _ViewToggleChip({required this.label, required this.selected, required this.onTap});
 
-  static const Color primaryColor = Color(0xFF2F5D62);
+  static const Color primaryColor = AppPalette.primary;
 
   @override
   Widget build(BuildContext context) {

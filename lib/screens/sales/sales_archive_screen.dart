@@ -5,6 +5,7 @@ import 'package:provider/provider.dart';
 import '../../models/sale.dart';
 import '../../providers/facility_provider.dart';
 import 'receipt_preview_screen.dart';
+import '../../theme/app_palette.dart';
 
 class SalesArchiveScreen extends StatefulWidget {
   const SalesArchiveScreen({super.key});
@@ -14,9 +15,9 @@ class SalesArchiveScreen extends StatefulWidget {
 }
 
 class _SalesArchiveScreenState extends State<SalesArchiveScreen> {
-  final Color primaryDeepGreen = const Color(0xFF2F5D62);
-  final Color warmAmber = const Color(0xFFFFB200);
-  final Color offWhite = const Color(0xFFFDFDF9);
+  final Color primaryDeepGreen = AppPalette.primary;
+  final Color warmAmber = AppPalette.accent;
+  final Color offWhite = AppPalette.background;
 
   final NumberFormat _moneyFormat = NumberFormat.currency(
     locale: 'en_US',

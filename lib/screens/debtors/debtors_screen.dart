@@ -17,6 +17,7 @@ import '../../services/cursor_paginated_list_controller.dart';
 import '../../widgets/firestore_error_view.dart';
 import 'add_payment_screen.dart';
 import '../payments/payments_screen.dart';
+import '../../theme/app_palette.dart';
 
 class DebtorsScreen extends StatefulWidget {
   const DebtorsScreen({super.key});
@@ -26,9 +27,9 @@ class DebtorsScreen extends StatefulWidget {
 }
 
 class _DebtorsScreenState extends State<DebtorsScreen> {
-  final Color primaryDeepGreen = const Color(0xFF2F5D62);
-  final Color warmAmber = const Color(0xFFFFB200);
-  final Color offWhite = const Color(0xFFFDFDF9);
+  final Color primaryDeepGreen = AppPalette.primary;
+  final Color warmAmber = AppPalette.accent;
+  final Color offWhite = AppPalette.background;
 
   final NumberFormat currencyFormat = NumberFormat('#,##0', 'en_US');
   final NumberFormat _moneyFormat = NumberFormat.currency(

@@ -8,6 +8,7 @@ import '../../models/daily_report.dart';
 import '../../providers/facility_provider.dart';
 import '../../services/daily_report_service.dart';
 import '../../utils/thousands_input_formatter.dart';
+import '../../theme/app_palette.dart';
 
 class ReportReviewScreen extends StatefulWidget {
   final DailyReport report;
@@ -20,8 +21,8 @@ class ReportReviewScreen extends StatefulWidget {
 }
 
 class _ReportReviewScreenState extends State<ReportReviewScreen> {
-  static const Color primaryDeepGreen = Color(0xFF2F5D62);
-  static const Color offWhite = Color(0xFFFDFDF9);
+  static const Color primaryDeepGreen = AppPalette.primary;
+  static const Color offWhite = AppPalette.background;
 
   final DailyReportService _reportService = DailyReportService();
   final NumberFormat _moneyFormat = NumberFormat.decimalPattern();

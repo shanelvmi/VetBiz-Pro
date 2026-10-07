@@ -18,6 +18,7 @@ import '../../widgets/payment_method_selector.dart';
 import '../../providers/product_provider.dart';
 import '../../providers/facility_provider.dart';
 import '../clients/add_client_screen.dart';
+import '../../theme/app_palette.dart';
 
 class AddEditServiceScreen extends StatefulWidget {
   final Service? service;
@@ -47,10 +48,10 @@ class _AddEditServiceScreenState extends State<AddEditServiceScreen> {
   final List<String> _categories = kServiceCategories;
 
   // THEME COLORS
-  final Color primaryDeepGreen = const Color(0xFF2F5D62);
-  final Color warmAmber = const Color(0xFFFFB200);
-  final Color offWhite = const Color(0xFFFDFDF9);
-  final Color darkTeal = const Color(0xFF2F5D62);
+  final Color primaryDeepGreen = AppPalette.primary;
+  final Color warmAmber = AppPalette.accent;
+  final Color offWhite = AppPalette.background;
+  final Color darkTeal = AppPalette.primary;
 
   final NumberFormat _tshFormat =
       NumberFormat.currency(locale: 'en_US', symbol: '', decimalDigits: 0);

@@ -17,6 +17,7 @@ import 'add_batch_screen.dart';
 import 'view_batches_screen.dart';
 import '../sales/add_sale_screen.dart';
 import 'stock_alerts_screen.dart';
+import '../../theme/app_palette.dart';
 
 class ProductsScreen extends StatefulWidget {
   final String? initialSearchQuery;
@@ -27,9 +28,9 @@ class ProductsScreen extends StatefulWidget {
 }
 
 class _ProductsScreenState extends State<ProductsScreen> {
-  final Color primaryDeepGreen = const Color(0xFF2F5D62);
-  final Color warmAmber = const Color(0xFFFFB200);
-  final Color offWhite = const Color(0xFFFDFDF9);
+  final Color primaryDeepGreen = AppPalette.primary;
+  final Color warmAmber = AppPalette.accent;
+  final Color offWhite = AppPalette.background;
   final GlobalKey _bellKey = GlobalKey();
 
   final NumberFormat _moneyFormat = NumberFormat.currency(

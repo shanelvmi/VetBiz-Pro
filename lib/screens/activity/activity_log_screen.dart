@@ -10,6 +10,7 @@ import '../../providers/user_role_provider.dart';
 import '../../utils/merged_query_stream.dart';
 import '../../utils/text_sanitizer.dart';
 import '../../widgets/firestore_error_view.dart';
+import '../../theme/app_palette.dart';
 
 class ActivityLogScreen extends StatefulWidget {
   final bool isModal;
@@ -20,9 +21,9 @@ class ActivityLogScreen extends StatefulWidget {
 }
 
 class _ActivityLogScreenState extends State<ActivityLogScreen> {
-  final Color primaryDeepGreen = const Color(0xFF2F5D62);
-  final Color warmAmber = const Color(0xFFFFB200);
-  final Color offWhite = const Color(0xFFFDFDF9);
+  final Color primaryDeepGreen = AppPalette.primary;
+  final Color warmAmber = AppPalette.accent;
+  final Color offWhite = AppPalette.background;
 
   String selectedFilter = 'All';
   String searchQuery = '';

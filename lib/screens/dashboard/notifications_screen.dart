@@ -12,6 +12,7 @@ import '../../utils/notification_seen_tracker.dart';
 import '../../models/notification_model.dart';
 import '../../widgets/announcement_message.dart';
 import '../../widgets/notification_row.dart';
+import '../../theme/app_palette.dart';
 
 /// Everything that needs your attention, facility-wide - subscription
 /// status, urgent announcements, payments, debts, and system messages.
@@ -23,7 +24,7 @@ class NotificationsScreen extends StatefulWidget {
   final bool isDropdown;
   const NotificationsScreen({super.key, this.isDropdown = false});
 
-  static const Color primaryColor = Color(0xFF2F5D62);
+  static const Color primaryColor = AppPalette.primary;
 
   @override
   State<NotificationsScreen> createState() => _NotificationsScreenState();

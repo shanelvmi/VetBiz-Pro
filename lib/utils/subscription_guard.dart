@@ -4,13 +4,14 @@ import 'package:provider/provider.dart';
 import '../providers/subscription_provider.dart';
 import '../providers/user_role_provider.dart';
 import '../screens/subscription/subscription_screen.dart';
+import '../theme/app_palette.dart';
 
 // Matches the exact values already used in add_sale_screen.dart and
 // add_edit_service_screen.dart - the two screens that actually call
 // this utility - so the dialog's own button colors don't clash with
 // whichever screen triggered it.
-const Color _primaryDeepGreen = Color(0xFF2F5D62);
-const Color _warmAmber = Color(0xFFFFB200);
+const Color _primaryDeepGreen = AppPalette.primary;
+const Color _warmAmber = AppPalette.accent;
 
 /// Navigates to [destination] normally, unless the current facility's
 /// subscription is locked - in that case shows a clear, honest

@@ -8,6 +8,7 @@ import '../../providers/facility_provider.dart';
 import '../../services/daily_report_service.dart';
 import 'report_detail_screen.dart';
 import 'report_review_screen.dart';
+import '../../theme/app_palette.dart';
 
 class PastReportsScreen extends StatefulWidget {
   const PastReportsScreen({super.key});
@@ -47,8 +48,8 @@ extension on _TimeFilter {
 }
 
 class _PastReportsScreenState extends State<PastReportsScreen> {
-  static const Color primaryDeepGreen = Color(0xFF2F5D62);
-  static const Color offWhite = Color(0xFFFDFDF9);
+  static const Color primaryDeepGreen = AppPalette.primary;
+  static const Color offWhite = AppPalette.background;
   static const int _pageSize = 25;
 
   final DailyReportService _reportService = DailyReportService();

@@ -5,6 +5,7 @@ import '../../utils/sentence_capitalization_formatter.dart';
 import '../../utils/activity_logger.dart';
 import '../../models/product.dart';
 import '../../providers/product_provider.dart';
+import '../../theme/app_palette.dart';
 
 // The "release to shelf" flow, shared so it behaves identically wherever it's
 // started from - the Stock Store's own Release button and the Product Alerts
@@ -12,9 +13,9 @@ import '../../providers/product_provider.dart';
 // screen (only what it needed from its old State - the context and the
 // colours - is now passed in / defined here).
 
-const Color _deepTeal = Color(0xFF2F5D62);
-const Color _amber = Color(0xFFFFB200);
-const Color _offWhite = Color(0xFFFDFDF9);
+const Color _deepTeal = AppPalette.primary;
+const Color _amber = AppPalette.accent;
+const Color _offWhite = AppPalette.background;
 
 // Mirrors moveToSellable's own batch-selection logic exactly (same
 // soonest-expiry-first sort, same "take" math) but read-only - just

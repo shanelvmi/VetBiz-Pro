@@ -4,6 +4,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 import '../utils/force_logout.dart';
+import '../theme/app_palette.dart';
 
 /// Wraps the entire app (see main.dart's MaterialApp.builder) so a
 /// maintenance-mode block applies regardless of which screen or dialog
@@ -147,8 +148,8 @@ class MaintenanceScreen extends StatefulWidget {
 }
 
 class _MaintenanceScreenState extends State<MaintenanceScreen> with SingleTickerProviderStateMixin {
-  static const Color primaryDeepGreen = Color(0xFF2F5D62);
-  static const Color offWhite = Color(0xFFFDFDF9);
+  static const Color primaryDeepGreen = AppPalette.primary;
+  static const Color offWhite = AppPalette.background;
 
   late final AnimationController _pulseController;
   late final Animation<double> _pulseAnimation;

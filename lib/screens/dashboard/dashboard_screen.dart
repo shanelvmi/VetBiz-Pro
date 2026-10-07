@@ -41,6 +41,7 @@ import '../payments/payments_screen.dart';
 import '../../providers/subscription_provider.dart';
 import '../../models/promotion.dart';
 import '../../models/notification_model.dart';
+import '../../providers/ui_settings_provider.dart';
 import '../../providers/user_role_provider.dart';
 import '../../utils/merged_query_stream.dart';
 import '../subscription/subscription_screen.dart';
@@ -55,6 +56,7 @@ import '../sales/add_sale_screen.dart';
 import '../products/add_edit_product_screen.dart';
 import '../services/add_edit_service_screen.dart';
 import '../register_screen.dart';
+import '../../theme/app_palette.dart';
 
 class DrawerHoverItem extends StatefulWidget {
   final IconData icon;
@@ -240,7 +242,7 @@ class _HoverableProfileIcon extends StatefulWidget {
 
 class _HoverableProfileIconState extends State<_HoverableProfileIcon> {
   bool _hovered = false;
-  static const Color warmAmber = Color(0xFFFFB200);
+  static const Color warmAmber = AppPalette.accent;
 
   @override
   Widget build(BuildContext context) {
@@ -324,10 +326,10 @@ class DashboardScreen extends StatefulWidget {
 }
 
 class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingObserver {
-  final Color primaryDeepGreen = const Color(0xFF2F5D62);
-  final Color warmAmber = const Color(0xFFFFB200);
+  final Color primaryDeepGreen = AppPalette.primary;
+  final Color warmAmber = AppPalette.accent;
   final Color servicesSteelBlue = const Color(0xFF5C7C99);
-  final Color offWhite = const Color(0xFFFDFDF9);
+  final Color offWhite = AppPalette.background;
 
   final user = FirebaseAuth.instance.currentUser;
   late final userDoc = FirebaseFirestore.instance.collection('users').doc(user?.uid);
@@ -2168,13 +2170,16 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
       ),
       child: Row(
         children: [
-          IconButton(
-            padding: EdgeInsets.zero,
-            constraints: const BoxConstraints(),
-            icon: Icon(_isDrawerCollapsed ? Icons.menu_open : Icons.menu, color: Colors.black87, size: 22),
-            tooltip: _isDrawerCollapsed ? 'Expand menu' : 'Collapse menu',
-            onPressed: _toggleDrawerCollapsed,
-          ),
+          // Hidden in Layout Fixed Mode: the sidebar is held open, so a button
+          // for collapsing it would only do nothing.
+          if (!Provider.of<UiSettingsProvider>(context).layoutFixed)
+            IconButton(
+              padding: EdgeInsets.zero,
+              constraints: const BoxConstraints(),
+              icon: Icon(_isDrawerCollapsed ? Icons.menu_open : Icons.menu, color: Colors.black87, size: 22),
+              tooltip: _isDrawerCollapsed ? 'Expand menu' : 'Collapse menu',
+              onPressed: _toggleDrawerCollapsed,
+            ),
           const Spacer(),
           Container(
             width: 260,
@@ -2828,7 +2833,11 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
 Widget _buildDrawerContent() {
   final facilityProvider = Provider.of<FacilityProvider>(context);
   final selectedFacility = facilityProvider.selectedFacility;
-  final bool collapsed = _isDrawerCollapsed;
+  // Layout Fixed Mode (UI Settings) holds the sidebar open. The person's own
+  // collapsed choice is left untouched, so turning the mode off puts the
+  // sidebar back the way they had it.
+  final bool layoutFixed = Provider.of<UiSettingsProvider>(context).layoutFixed;
+  final bool collapsed = _isDrawerCollapsed && !layoutFixed;
 
   final bool isSmallScreen =
       MediaQuery.of(context).size.height < 600 ||

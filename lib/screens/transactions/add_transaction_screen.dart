@@ -10,6 +10,7 @@ import '../../models/transaction.dart';
 import '../../services/auth_service.dart';
 import '../../widgets/payment_method_selector.dart';
 import '../../utils/thousands_input_formatter.dart';
+import '../../theme/app_palette.dart';
 
 // Expense categories, grouped for the picker - matches the proposed
 // structure exactly. Kept local to this file rather than centralized,
@@ -56,9 +57,9 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
   String? type = 'expense';
   String? paymentMethod;
 
-  final Color primaryDeepGreen = const Color(0xFF2F5D62);
-  final Color warmAmber = const Color(0xFFFFB200);
-  final Color offWhite = const Color(0xFFFDFDF9);
+  final Color primaryDeepGreen = AppPalette.primary;
+  final Color warmAmber = AppPalette.accent;
+  final Color offWhite = AppPalette.background;
 
   final AuthService _authService = AuthService();
 

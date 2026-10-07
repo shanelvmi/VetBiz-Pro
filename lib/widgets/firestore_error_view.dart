@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
+import '../theme/app_palette.dart';
 
 /// Shows a Firestore query error clearly - and if the error contains a
 /// URL (the common case: "this query requires an index, create it here:
@@ -10,7 +11,7 @@ class FirestoreErrorView extends StatelessWidget {
   final Object? error;
   const FirestoreErrorView({super.key, required this.error});
 
-  static const Color primaryColor = Color(0xFF2F5D62);
+  static const Color primaryColor = AppPalette.primary;
 
   @override
   Widget build(BuildContext context) {

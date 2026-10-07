@@ -14,6 +14,7 @@ import '../products/add_batch_screen.dart';
 import '../products/view_batches_screen.dart';
 import '../products/stock_alerts_screen.dart';
 import 'release_to_shop_flow.dart';
+import '../../theme/app_palette.dart';
 
 class StockStoreScreen extends StatefulWidget {
   const StockStoreScreen({super.key});
@@ -36,9 +37,9 @@ class _StockStoreScreenState extends State<StockStoreScreen> {
   // controls at all.
   ProductCatalogQuery _query = const ProductCatalogQuery(pageSize: kProductCatalogDefaultPageSize);
 
-  final Color primaryDeepTealGreen = const Color(0xFF2F5D62);
-  final Color warmAmber = const Color(0xFFFFB200);
-  final Color offWhite = const Color(0xFFFDFDF9);
+  final Color primaryDeepTealGreen = AppPalette.primary;
+  final Color warmAmber = AppPalette.accent;
+  final Color offWhite = AppPalette.background;
 
   // Money formatter with thousand separator
   final NumberFormat _moneyFormat = NumberFormat.currency(

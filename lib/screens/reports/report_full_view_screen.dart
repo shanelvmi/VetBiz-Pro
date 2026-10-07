@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 
 import '../../models/daily_report.dart';
 import '../../providers/user_role_provider.dart';
+import '../../theme/app_palette.dart';
 
 /// Opens the full report as a single continuous scroll, mirroring the
 /// PDF's own section order - this is the "what would the PDF look
@@ -65,8 +66,8 @@ class ReportFullViewScreen extends StatelessWidget {
 
   const ReportFullViewScreen({super.key, required this.report, required this.isModal});
 
-  static const Color primaryDeepGreen = Color(0xFF2F5D62);
-  static const Color offWhite = Color(0xFFFDFDF9);
+  static const Color primaryDeepGreen = AppPalette.primary;
+  static const Color offWhite = AppPalette.background;
 
   String _money(num value) => NumberFormat.decimalPattern().format(value);
 

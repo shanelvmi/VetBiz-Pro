@@ -20,6 +20,7 @@ import 'past_reports_screen.dart';
 import 'report_full_view_screen.dart';
 import 'report_review_screen.dart';
 import 'report_tabbed_content.dart';
+import '../../theme/app_palette.dart';
 
 /// The main View Reports screen - shows today's own report directly,
 /// matching the Daily Closing Report mockup, rather than a separate
@@ -34,8 +35,8 @@ class ViewReportsScreen extends StatefulWidget {
 }
 
 class _ViewReportsScreenState extends State<ViewReportsScreen> {
-  static const Color primaryDeepGreen = Color(0xFF2F5D62);
-  static const Color offWhite = Color(0xFFFDFDF9);
+  static const Color primaryDeepGreen = AppPalette.primary;
+  static const Color offWhite = AppPalette.background;
 
   final DailyReportService _reportService = DailyReportService();
   final AuthService _authService = AuthService();

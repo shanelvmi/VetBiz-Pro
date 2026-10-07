@@ -14,6 +14,7 @@ import '../../providers/debt_provider.dart';
 import '../../providers/user_role_provider.dart';
 import '../../utils/activity_logger.dart';
 import '../../utils/force_logout.dart';
+import '../../theme/app_palette.dart';
 
 class ManageAccountScreen extends StatefulWidget {
   const ManageAccountScreen({super.key});
@@ -23,10 +24,10 @@ class ManageAccountScreen extends StatefulWidget {
 }
 
 class _ManageAccountScreenState extends State<ManageAccountScreen> {
-  final Color primaryColor = const Color(0xFF2F5D62);
+  final Color primaryColor = AppPalette.primary;
   final Color dangerColor = Colors.redAccent;
-  final Color backgroundColor = const Color(0xFFFDFDF9);
-  final Color warmAmber = const Color(0xFFFFB200);
+  final Color backgroundColor = AppPalette.background;
+  final Color warmAmber = AppPalette.accent;
 
   // Comfortably wide on desktop, but never wider than the actual screen
   // on a phone - AlertDialog otherwise defaults to a fairly narrow,

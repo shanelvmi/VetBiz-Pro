@@ -11,6 +11,7 @@ import '../../providers/user_role_provider.dart';
 import 'add_edit_product_screen.dart';
 import 'add_batch_screen.dart';
 import 'move_expired_to_stock_dialog.dart';
+import '../../theme/app_palette.dart';
 
 /// Full management view for one product's stock - every batch on file,
 /// with a way to correct or top up any of them directly, plus a clear
@@ -38,8 +39,8 @@ class ViewBatchesScreen extends StatefulWidget {
 }
 
 class _ViewBatchesScreenState extends State<ViewBatchesScreen> {
-  static const Color primaryColor = Color(0xFF2F5D62);
-  static const Color warmAmber = Color(0xFFFFB200);
+  static const Color primaryColor = AppPalette.primary;
+  static const Color warmAmber = AppPalette.accent;
 
   // Created once here, not on every rebuild - a StreamBuilder given a
   // new stream instance each time resets to its loading state before

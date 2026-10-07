@@ -14,6 +14,7 @@ import '../../services/receipt_printer_service.dart';
 import '../../services/receipt_pdf_service.dart';
 import '../settings/printer_settings_screen.dart';
 import '../../utils/web_download.dart';
+import '../../theme/app_palette.dart';
 
 /// Shows the service receipt as it will actually look before doing
 /// anything with it - same pattern as Sales' ReceiptPreviewScreen, just
@@ -27,7 +28,7 @@ class ServiceReceiptPreviewScreen extends StatefulWidget {
 }
 
 class _ServiceReceiptPreviewScreenState extends State<ServiceReceiptPreviewScreen> {
-  static const Color primaryColor = Color(0xFF2F5D62);
+  static const Color primaryColor = AppPalette.primary;
   final GlobalKey _receiptKey = GlobalKey();
   final NumberFormat _moneyFormat = NumberFormat('#,##0', 'en_US');
 

@@ -14,6 +14,7 @@ import 'announcements_tab.dart';
 import 'platform_admins_tab.dart';
 import 'users_tab.dart';
 import 'platform_settings_screen.dart';
+import '../../theme/app_palette.dart';
 
 /// One navigation entry - a simple data record rather than each item
 /// being hand-built inline. Adding a new section (or, later, a nested
@@ -55,10 +56,10 @@ class PlatformAdminHomeScreen extends StatefulWidget {
 }
 
 class _PlatformAdminHomeScreenState extends State<PlatformAdminHomeScreen> {
-  static const Color primaryColor = Color(0xFF2F5D62);
-  static const Color warmAmber = Color(0xFFFFB200);
+  static const Color primaryColor = AppPalette.primary;
+  static const Color warmAmber = AppPalette.accent;
   static const Color tealGlow = Color(0xFF3E8E82);
-  static const Color offWhite = Color(0xFFFDFDF9);
+  static const Color offWhite = AppPalette.background;
 
   // Same breakpoint the main Dashboard already uses for this exact
   // sidebar-vs-drawer decision - kept consistent with the rest of the

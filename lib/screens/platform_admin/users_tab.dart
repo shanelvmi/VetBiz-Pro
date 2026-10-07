@@ -6,6 +6,7 @@ import '../../widgets/hover_elevate_card.dart';
 import '../../utils/presence_heartbeat.dart';
 import 'user_detail_screen.dart';
 import '../../services/role_change_service.dart';
+import '../../theme/app_palette.dart';
 
 /// Every registered user across the whole platform, not scoped to one
 /// facility - the missing piece that made "an assistant switching
@@ -26,7 +27,7 @@ class UsersTab extends StatefulWidget {
 }
 
 class _UsersTabState extends State<UsersTab> {
-  static const Color primaryColor = Color(0xFF2F5D62);
+  static const Color primaryColor = AppPalette.primary;
   static const int _pageSize = 50;
   // Search can't be paginated the same way as plain browsing -
   // Firestore has no native "contains" match across two fields, so

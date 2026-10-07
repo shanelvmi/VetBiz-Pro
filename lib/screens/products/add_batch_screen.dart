@@ -7,6 +7,7 @@ import '../../models/product.dart';
 import '../../providers/product_provider.dart';
 import '../../providers/facility_provider.dart';
 import '../../utils/thousands_input_formatter.dart';
+import '../../theme/app_palette.dart';
 
 /// Records a new delivery of an existing product as its own batch - a
 /// separate batch number, expiry, and quantity, never overwriting an
@@ -22,7 +23,7 @@ class AddBatchScreen extends StatefulWidget {
 }
 
 class _AddBatchScreenState extends State<AddBatchScreen> {
-  static const Color primaryColor = Color(0xFF2F5D62);
+  static const Color primaryColor = AppPalette.primary;
   final _formKey = GlobalKey<FormState>();
 
   late final TextEditingController _batchController;

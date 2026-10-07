@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:print_bluetooth_thermal/print_bluetooth_thermal.dart';
 
 import '../../services/receipt_printer_service.dart';
+import '../../theme/app_palette.dart';
 
 class PrinterSettingsScreen extends StatefulWidget {
   const PrinterSettingsScreen({super.key});
@@ -11,9 +12,9 @@ class PrinterSettingsScreen extends StatefulWidget {
 }
 
 class _PrinterSettingsScreenState extends State<PrinterSettingsScreen> {
-  final Color primaryColor = const Color(0xFF2F5D62);
-  final Color warmAmber = const Color(0xFFFFB200);
-  final Color backgroundColor = const Color(0xFFFDFDF9);
+  final Color primaryColor = AppPalette.primary;
+  final Color warmAmber = AppPalette.accent;
+  final Color backgroundColor = AppPalette.background;
 
   final ReceiptPrinterService _printerService = ReceiptPrinterService();
 

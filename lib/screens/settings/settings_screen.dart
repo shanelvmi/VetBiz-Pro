@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../providers/settings_provider.dart';
 import '../../providers/user_role_provider.dart';
+import 'ui_settings_dialog.dart';
 
 import 'manage_account_screen.dart';
 import 'printer_settings_screen.dart';
@@ -11,6 +12,7 @@ import 'business_hours_screen.dart';
 import 'trash_screen.dart';
 import '../subscription/subscription_screen.dart';
 import '../dashboard/notifications_screen.dart';
+import '../../theme/app_palette.dart';
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
@@ -20,8 +22,8 @@ class SettingsScreen extends StatefulWidget {
 }
 
 class _SettingsScreenState extends State<SettingsScreen> {
-  final Color primaryColor = const Color(0xFF2F5D62);
-  final Color backgroundColor = const Color(0xFFFDFDF9);
+  final Color primaryColor = AppPalette.primary;
+  final Color backgroundColor = AppPalette.background;
   static const double cardElevation = 2.0;
 
   // Master-detail (desktop/tablet-width) only - which navigable
@@ -207,12 +209,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   children: [
                     _buildSettingsItem(
                       icon: Icons.color_lens_outlined,
-                      label: 'Theme Mode',
-                      trailingText: 'System Defaults',
+                      label: 'UI Settings',
+                      trailingText: 'Theme & layout',
                       isLast: false,
-                      onTap: () {
-                        // TODO: Implement theme switch block smoothly later
-                      },
+                      onTap: () => showUiSettingsDialog(context),
                     ),
                     _buildSettingsItem(
                       icon: Icons.currency_exchange_outlined,
@@ -361,11 +361,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         const SizedBox(height: 4),
                         _buildSidebarItem(
                           icon: Icons.color_lens_outlined,
-                          label: 'Theme Mode',
-                          trailingText: 'System Defaults',
-                          onTapDialog: () {
-                            // TODO: Implement theme switch block smoothly later
-                          },
+                          label: 'UI Settings',
+                          trailingText: 'Theme & layout',
+                          onTapDialog: () => showUiSettingsDialog(context),
                         ),
                         _buildSidebarItem(
                           icon: Icons.currency_exchange_outlined,
