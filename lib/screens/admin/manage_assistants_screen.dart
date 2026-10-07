@@ -1,7 +1,6 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'invite_assistant_dialog.dart';
@@ -18,6 +17,7 @@ import '../../data/user_status.dart';
 import '../../data/activity_type.dart';
 import '../../config/app_limits.dart';
 import '../../config/app_timeouts.dart';
+import '../../config/app_date_format.dart';
 
 /// Who someone is on a facility's team, as this screen shows them. Worked out
 /// from the user record (role, previousRole, who created the facility); not
@@ -1568,7 +1568,7 @@ class _ManageAssistantsScreenState extends State<ManageAssistantsScreen> {
 
   DateTime? _ts(dynamic value) => value is Timestamp ? value.toDate() : null;
 
-  String _when(DateTime? d) => d == null ? 'Not recorded' : DateFormat('dd MMM yyyy, HH:mm').format(d);
+  String _when(DateTime? d) => d == null ? 'Not recorded' : AppDateFormat.dateTime24.format(d);
 
   Widget _panelField(IconData icon, String label, String value, {String? subtitle}) {
     return Padding(

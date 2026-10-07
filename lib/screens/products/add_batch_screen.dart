@@ -11,6 +11,7 @@ import '../../theme/app_palette.dart';
 import '../../config/money.dart';
 import '../../config/app_defaults.dart';
 import '../../config/app_ranges.dart';
+import '../../data/data_keys.dart';
 
 /// Records a new delivery of an existing product as its own batch - a
 /// separate batch number, expiry, and quantity, never overwriting an
@@ -70,7 +71,7 @@ class _AddBatchScreenState extends State<AddBatchScreen> {
     if (picked != null) {
       setState(() {
         _selectedExpiry = picked;
-        _expiryController.text = DateFormat('yyyy-MM-dd').format(picked);
+        _expiryController.text = DateFormat(DataKeys.isoDay).format(picked);
       });
     }
   }

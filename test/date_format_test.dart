@@ -2,6 +2,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:intl/intl.dart';
 
 import 'package:vetbiz_pro/config/app_date_format.dart';
+import 'package:vetbiz_pro/data/data_keys.dart';
 
 /// Each named format must print exactly what its legacy pattern prints.
 void main() {
@@ -41,6 +42,21 @@ void main() {
       }
     });
   }
+
+  test('monthDayYearLong is DateFormat.yMMMMd()', () {
+    for (final m in moments) {
+      expect(AppDateFormat.monthDayYearLong.format(m), DateFormat.yMMMMd().format(m));
+    }
+    expect(AppDateFormat.monthDayYearLong.format(DateTime(2026, 3, 5)), 'March 5, 2026');
+  });
+
+  test('data keys keep their exact patterns (ids and file names were built with them)', () {
+    expect(DataKeys.isoDay, 'yyyy-MM-dd');
+    expect(DataKeys.exportTimestamp, 'yyyy-MM-dd HH:mm');
+    expect(DataKeys.exportFileStamp, 'yyyyMMdd_HHmm');
+    expect(DataKeys.fileDateStamp, 'yyyyMMdd');
+    expect(DateFormat(DataKeys.isoDay).format(DateTime(2026, 3, 5)), '2026-03-05');
+  });
 
   test('a few exact strings', () {
     final m = DateTime(2026, 3, 5, 15, 7, 4);

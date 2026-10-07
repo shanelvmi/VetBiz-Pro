@@ -22,6 +22,7 @@ import '../../config/money.dart';
 import '../../config/app_timeouts.dart';
 import '../../config/app_ranges.dart';
 import '../../config/payment_methods.dart';
+import '../../config/app_date_format.dart';
 
 class ServicesScreen extends StatefulWidget {
   const ServicesScreen({super.key});
@@ -181,9 +182,9 @@ class _ServicesScreenState extends State<ServicesScreen> {
   @override
   Widget build(BuildContext context) {
     final serviceProvider = Provider.of<ServiceProvider>(context);
-    final dateFormatter = DateFormat('dd MMM yyyy, HH:mm');
-    final dateOnlyFormatter = DateFormat('dd MMM yyyy');
-    final timeOnlyFormatter = DateFormat('hh:mm a');
+    final dateFormatter = AppDateFormat.dateTime24;
+    final dateOnlyFormatter = AppDateFormat.date;
+    final timeOnlyFormatter = AppDateFormat.time12;
 
     return Scaffold(
       backgroundColor: offWhite,
@@ -613,7 +614,7 @@ class _ServicesScreenState extends State<ServicesScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(dateFormatter.format(serviceDate).split(',').first, style: const TextStyle(fontSize: 13)),
-                  Text(DateFormat('hh:mm a').format(serviceDate),
+                  Text(AppDateFormat.time12.format(serviceDate),
                       style: TextStyle(fontSize: 11.5, color: Colors.grey[500])),
                 ],
               ),

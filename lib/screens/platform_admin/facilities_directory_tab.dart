@@ -8,6 +8,7 @@ import 'facility_detail_screen.dart';
 import '../../theme/app_palette.dart';
 import '../../data/collections.dart';
 import '../../config/app_limits.dart';
+import '../../config/app_date_format.dart';
 
 /// Every facility across the whole platform, real pagination rather
 /// than one open-ended listener over the entire collection - same
@@ -34,7 +35,7 @@ class _FacilitiesDirectoryTabState extends State<FacilitiesDirectoryTab> {
   // silent one.
   static const int _searchScanLimit = 500;
 
-  final DateFormat _dateFormat = DateFormat('d MMM yyyy');
+  final DateFormat _dateFormat = AppDateFormat.dateNoPad;
   String _searchQuery = '';
 
   final ScrollController _scrollController = ScrollController();

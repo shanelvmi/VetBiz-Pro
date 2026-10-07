@@ -1,6 +1,5 @@
 import 'dart:typed_data';
 
-import 'package:intl/intl.dart';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 import 'package:printing/printing.dart';
@@ -10,6 +9,7 @@ import '../models/service.dart';
 import '../config/money.dart';
 import '../config/app_rules.dart';
 import '../config/payment_methods.dart';
+import '../config/app_date_format.dart';
 
 /// Builds a genuine A4 PDF receipt for a Sale or a Service - a real,
 /// correctly-sized printable document, not a screenshot of the on-screen
@@ -22,8 +22,8 @@ import '../config/payment_methods.dart';
 /// Fetching a network image reliably into a PDF (across web and mobile)
 /// is a separate piece of complexity this doesn't take on.
 class ReceiptPdfService {
-  static final _fullDate = DateFormat('EEEE, d MMMM yyyy');
-  static final _dateTime = DateFormat('d MMM yyyy, h:mm a');
+  static final _fullDate = AppDateFormat.dateLongFull;
+  static final _dateTime = AppDateFormat.dateNoPadTime12Short;
 
   static final _deepGreen = PdfColor.fromInt(0xFF2F5D62);
   static final _amber = PdfColor.fromInt(0xFFE0A32E);

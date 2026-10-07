@@ -3,7 +3,6 @@ import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import 'package:share_plus/share_plus.dart';
 
@@ -23,6 +22,7 @@ import '../../theme/app_palette.dart';
 import '../../data/collections.dart';
 import '../../data/fields.dart';
 import '../../data/activity_type.dart';
+import '../../config/app_date_format.dart';
 
 /// The main View Reports screen - shows today's own report directly,
 /// matching the Daily Closing Report mockup, rather than a separate
@@ -180,7 +180,7 @@ class _ViewReportsScreenState extends State<ViewReportsScreen> {
         userId: userInfo[Fields.userId]!,
         userName: userInfo['userName'],
         actionType: ActivityType.reportDraftDeleted.key,
-        description: 'Draft report for ${DateFormat('d MMM yyyy').format(_todaysReport!.reportDate)} deleted',
+        description: 'Draft report for ${AppDateFormat.dateNoPad.format(_todaysReport!.reportDate)} deleted',
       );
       if (!mounted) return;
       _loadTodaysReport();
@@ -306,7 +306,7 @@ class _ViewReportsScreenState extends State<ViewReportsScreen> {
           : isClosedAllDayToday
               ? "Generate Today's Report (closed today)"
               : closingTime != null
-                  ? "Generate Today's Report (at ${DateFormat('h:mm a').format(closingTime).toLowerCase().replaceAll(' ', '')})"
+                  ? "Generate Today's Report (at ${AppDateFormat.time12Short.format(closingTime).toLowerCase().replaceAll(' ', '')})"
                   : "Generate Today's Report (after closing time)"),
       style: ElevatedButton.styleFrom(
         backgroundColor: primaryDeepGreen,
@@ -323,7 +323,7 @@ class _ViewReportsScreenState extends State<ViewReportsScreen> {
     } else if (isClosedAllDayToday) {
       message = 'This facility is marked closed today.';
     } else if (closingTime != null) {
-      final formatted = DateFormat('h:mm a').format(closingTime).toLowerCase().replaceAll(' ', '');
+      final formatted = AppDateFormat.time12Short.format(closingTime).toLowerCase().replaceAll(' ', '');
       message = 'Available at $formatted.';
     } else {
       message = "Available once today's closing time is reached.";
@@ -380,7 +380,7 @@ class _ViewReportsScreenState extends State<ViewReportsScreen> {
                         children: [
                           Text("Daily Closing Report - Today's Report",
                               style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15, color: primaryDeepGreen)),
-                          Text(DateFormat('EEEE, d MMM yyyy').format(report.reportDate),
+                          Text(AppDateFormat.dateLong.format(report.reportDate),
                               style: TextStyle(fontSize: 12, color: Colors.grey[600])),
                         ],
                       ),
@@ -561,7 +561,7 @@ class _ViewReportsScreenState extends State<ViewReportsScreen> {
           _accountabilityRow(
             Icons.calendar_today_outlined,
             'Date & Time',
-            DateFormat('d MMM yyyy, h:mm a').format(report.submittedAt ?? report.generatedAt),
+            AppDateFormat.dateNoPadTime12Short.format(report.submittedAt ?? report.generatedAt),
           ),
           const SizedBox(height: 10),
           Row(

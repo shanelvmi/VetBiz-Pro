@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 
 import '../../models/daily_report.dart';
 import '../../providers/user_role_provider.dart';
 import '../../theme/app_palette.dart';
 import '../../config/money.dart';
+import '../../config/app_date_format.dart';
 
 /// Opens the full report as a single continuous scroll, mirroring the
 /// PDF's own section order - this is the "what would the PDF look
@@ -156,7 +156,7 @@ class ReportFullViewScreen extends StatelessWidget {
       children: [
         Text('Daily Closing Report', style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: primaryDeepGreen)),
         const SizedBox(height: 6),
-        Text(DateFormat('EEEE, d MMMM yyyy').format(report.reportDate),
+        Text(AppDateFormat.dateLongFull.format(report.reportDate),
             style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600)),
         Text(
           report.status == 'submitted' ? 'Submitted by ${report.generatedByName}' : 'Draft - not yet submitted',
@@ -430,7 +430,7 @@ class ReportFullViewScreen extends StatelessWidget {
           for (final entry in report.activityLogEntries)
             Padding(
               padding: const EdgeInsets.symmetric(vertical: 3),
-              child: Text('${DateFormat('HH:mm').format(entry.time)}  ${entry.description} - ${entry.userName}',
+              child: Text('${AppDateFormat.time24.format(entry.time)}  ${entry.description} - ${entry.userName}',
                   style: const TextStyle(fontSize: 12.5)),
             ),
         ],

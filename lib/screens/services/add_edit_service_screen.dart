@@ -4,7 +4,6 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../../utils/sentence_capitalization_formatter.dart';
-import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 
 import '../../models/service.dart';
@@ -22,6 +21,7 @@ import '../../config/money.dart';
 import '../../config/app_defaults.dart';
 import '../../config/app_timeouts.dart';
 import '../../config/payment_methods.dart';
+import '../../config/app_date_format.dart';
 
 class AddEditServiceScreen extends StatefulWidget {
   final Service? service;
@@ -538,7 +538,7 @@ class _AddEditServiceScreenState extends State<AddEditServiceScreen> {
                       child: InputDecorator(
                         decoration: _inputDecoration('Service Date'),
                         child: Text(
-                          DateFormat.yMMMMd().format(_serviceDate!),
+                          AppDateFormat.monthDayYearLong.format(_serviceDate!),
                           style: TextStyle(color: darkTeal),
                         ),
                       ),

@@ -21,6 +21,8 @@ import '../../theme/app_palette.dart';
 import '../../data/collections.dart';
 import '../../config/money.dart';
 import '../../config/app_timeouts.dart';
+import '../../config/app_date_format.dart';
+import '../../data/data_keys.dart';
 
 class DebtorsScreen extends StatefulWidget {
   const DebtorsScreen({super.key});
@@ -712,7 +714,7 @@ class _DebtorsScreenState extends State<DebtorsScreen> {
               flex: 2,
               child: debtor.client.oldestUnpaidDebtDate != null
                   ? Text(
-                      DateFormat('dd MMM yyyy').format(debtor.client.oldestUnpaidDebtDate!),
+                      AppDateFormat.date.format(debtor.client.oldestUnpaidDebtDate!),
                       style: const TextStyle(fontSize: 13),
                     )
                   : Text('\u2014', style: TextStyle(fontSize: 13, color: Colors.grey[500])),
@@ -961,7 +963,7 @@ class _DebtorsScreenState extends State<DebtorsScreen> {
                   children: [
                     _totalsRow('Overdue Amount', Money.format(overdueAmount), color: Colors.red),
                     if (clientDebts.isNotEmpty)
-                      _totalsRow('Last Transaction', DateFormat('dd MMM yyyy').format(clientDebts.first.timestamp)),
+                      _totalsRow('Last Transaction', AppDateFormat.date.format(clientDebts.first.timestamp)),
                     const SizedBox(height: 20),
                     Text('Outstanding Debts (${clientDebts.length})',
                         style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13.5)),
@@ -1016,7 +1018,7 @@ class _DebtorsScreenState extends State<DebtorsScreen> {
                         children: [
                           Text(note['text'] as String? ?? '', style: const TextStyle(fontSize: 13)),
                           if (ts != null)
-                            Text(DateFormat('dd MMM yyyy, hh:mm a').format(ts.toDate()),
+                            Text(AppDateFormat.dateTime12.format(ts.toDate()),
                                 style: TextStyle(fontSize: 11, color: Colors.grey[500])),
                         ],
                       ),
@@ -1089,7 +1091,7 @@ class _DebtorsScreenState extends State<DebtorsScreen> {
                         ? '${_debtInvoicePrefix(debt)}-${receiptNumber.toString().padLeft(6, '0')}'
                         : '${_debtInvoicePrefix(debt)}-......';
                     return Text(
-                      'Invoice: $invoiceText \u2022 ${DateFormat('dd MMM yyyy').format(debt.timestamp)}',
+                      'Invoice: $invoiceText \u2022 ${AppDateFormat.date.format(debt.timestamp)}',
                       style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
                     );
                   },
@@ -1258,7 +1260,7 @@ class _DebtorsScreenState extends State<DebtorsScreen> {
           d.totalOwed.toStringAsFixed(0),
           d.isOverdue ? '${d.daysSinceOldestDebt}' : '',
           d.client.oldestUnpaidDebtDate != null
-              ? DateFormat('dd MMM yyyy').format(d.client.oldestUnpaidDebtDate!)
+              ? AppDateFormat.date.format(d.client.oldestUnpaidDebtDate!)
               : '',
           d.isOverdue ? 'Overdue' : 'Current',
         ],
@@ -1270,7 +1272,7 @@ class _DebtorsScreenState extends State<DebtorsScreen> {
     try {
       final xfile = XFile.fromData(
         bytes,
-        name: 'active_debts_${DateFormat('yyyyMMdd').format(DateTime.now())}.csv',
+        name: 'active_debts_${DateFormat(DataKeys.fileDateStamp).format(DateTime.now())}.csv',
         mimeType: 'text/csv',
       );
       await Share.shareXFiles([xfile], text: 'Active Debts Export');

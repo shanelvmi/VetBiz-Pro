@@ -3,7 +3,6 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import '../../services/activity_log_retention.dart';
 import 'package:flutter/gestures.dart';
-import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import '../../providers/facility_provider.dart';
 import '../../providers/user_role_provider.dart';
@@ -15,6 +14,7 @@ import '../../data/collections.dart';
 import '../../data/fields.dart';
 import '../../config/app_limits.dart';
 import '../../config/app_rules.dart';
+import '../../config/app_date_format.dart';
 
 class ActivityLogScreen extends StatefulWidget {
   final bool isModal;
@@ -562,7 +562,7 @@ class _ActivityLogScreenState extends State<ActivityLogScreen> {
                         final timestamp = data['timestamp'];
                         String dateStr = '';
                         if (timestamp != null && timestamp is Timestamp) {
-                          dateStr = DateFormat('dd MMM yyyy - HH:mm:ss')
+                          dateStr = AppDateFormat.dateTime24Seconds
                               .format(timestamp.toDate().toLocal());
                         }
 

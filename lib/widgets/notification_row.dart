@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
 
 import '../models/notification_model.dart';
+import '../config/app_date_format.dart';
 
 /// "Just now", "5m ago", "2h ago", "3d ago", or a plain date once it's
 /// more than a week old - shared by every screen that shows a
@@ -14,7 +14,7 @@ String relativeTime(DateTime? dt) {
   if (diff.inMinutes < 60) return '${diff.inMinutes}m ago';
   if (diff.inHours < 24) return '${diff.inHours}h ago';
   if (diff.inDays < 7) return '${diff.inDays}d ago';
-  return DateFormat('d MMM').format(dt);
+  return AppDateFormat.dateShort.format(dt);
 }
 
 /// A single notification row, matching the mockup's card style: a

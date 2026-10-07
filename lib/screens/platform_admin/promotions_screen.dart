@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../utils/sentence_capitalization_formatter.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:intl/intl.dart';
 
 import '../../constants/subscription_plans.dart';
 import '../../models/promotion.dart';
@@ -11,6 +10,7 @@ import '../../theme/app_palette.dart';
 import '../../data/collections.dart';
 import '../../data/fields.dart';
 import '../../config/app_ranges.dart';
+import '../../config/app_date_format.dart';
 
 /// Manage subscription discounts/offers - "Nanenane Sale", a
 /// month-end push, a renew-now discount for facilities about to
@@ -201,7 +201,7 @@ class _PromotionCard extends StatelessWidget {
                           if (promotion.endsAt != null)
                             _InfoChip(
                               icon: Icons.event_outlined,
-                              label: 'Ends ${DateFormat('d MMM yyyy').format(promotion.endsAt!)}',
+                              label: 'Ends ${AppDateFormat.dateNoPad.format(promotion.endsAt!)}',
                             ),
                         ],
                       ),
@@ -468,7 +468,7 @@ Future<void> _showPromotionEditor(BuildContext context, {Promotion? existing}) a
                   children: [
                     Expanded(
                       child: Text(
-                        endsAt != null ? 'Ends ${DateFormat('d MMM yyyy').format(endsAt!)}' : 'No end date set',
+                        endsAt != null ? 'Ends ${AppDateFormat.dateNoPad.format(endsAt!)}' : 'No end date set',
                         style: const TextStyle(fontSize: 13),
                       ),
                     ),

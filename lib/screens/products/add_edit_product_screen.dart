@@ -27,6 +27,7 @@ import '../../data/collections.dart';
 import '../../data/fields.dart';
 import '../../data/activity_type.dart';
 import '../../config/app_defaults.dart';
+import '../../data/data_keys.dart';
 
 enum ProductDestination {
   sellable,
@@ -293,7 +294,7 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
     _selectedExpiry = widget.product?.expiry;
     _expiryController = TextEditingController(
       text: _selectedExpiry != null
-          ? DateFormat('yyyy-MM-dd').format(_selectedExpiry!)
+          ? DateFormat(DataKeys.isoDay).format(_selectedExpiry!)
           : '',
     );
     _buyPriceController = TextEditingController(
@@ -597,7 +598,7 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
     if (pickedDate != null && mounted) {
       setState(() {
         _selectedExpiry = pickedDate;
-        _expiryController.text = DateFormat('yyyy-MM-dd').format(pickedDate);
+        _expiryController.text = DateFormat(DataKeys.isoDay).format(pickedDate);
       });
     }
   }

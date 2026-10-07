@@ -14,6 +14,7 @@ import 'view_batches_screen.dart';
 import 'move_expired_to_stock_dialog.dart';
 import '../../theme/app_palette.dart';
 import '../../config/app_limits.dart';
+import '../../config/app_date_format.dart';
 
 /// What kind of thing needs attention. Declared in the order they're
 /// shown - most urgent first.
@@ -171,7 +172,7 @@ class StockAlertsScreen extends StatelessWidget {
   // One-line summary, used by the compact bell dropdown.
   static String _message(StockAlert a) {
     final p = a.product;
-    final dateFormat = DateFormat('dd MMM yyyy');
+    final dateFormat = AppDateFormat.date;
     switch (a.kind) {
       case StockAlertKind.depleted:
         return '${p.name} - Shelf: ${p.sellableQty} · Store: ${p.stockQty}';
@@ -445,7 +446,7 @@ class _AlertsBodyState extends State<_AlertsBody> {
   };
 
   final TextEditingController _searchController = TextEditingController();
-  final DateFormat _dateFormat = DateFormat('dd MMM yyyy');
+  final DateFormat _dateFormat = AppDateFormat.date;
 
   String _searchQuery = '';
   StockAlertKind? _kindFilter; // null = all kinds

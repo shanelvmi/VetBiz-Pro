@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:intl/intl.dart';
 import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
 import '../../models/product.dart';
 import '../../providers/product_provider.dart';
@@ -16,6 +15,7 @@ import '../products/stock_alerts_screen.dart';
 import 'release_to_shop_flow.dart';
 import '../../theme/app_palette.dart';
 import '../../config/money.dart';
+import '../../config/app_date_format.dart';
 
 class StockStoreScreen extends StatefulWidget {
   const StockStoreScreen({super.key});
@@ -1050,7 +1050,7 @@ class _StockStoreScreenState extends State<StockStoreScreen> {
                               ),
                               if (p.expiry != null)
                                 Text(
-                                  'Expiry: ${DateFormat('dd MMM yyyy').format(p.expiry!)}',
+                                  'Expiry: ${AppDateFormat.date.format(p.expiry!)}',
                                   style: TextStyle(fontSize: 12.5, color: Colors.grey[700]),
                                 ),
                             ],

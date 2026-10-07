@@ -6,7 +6,6 @@ import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/rendering.dart';
 import 'package:provider/provider.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:intl/intl.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:share_plus/share_plus.dart';
 
@@ -21,6 +20,7 @@ import '../../theme/app_palette.dart';
 import '../../data/collections.dart';
 import '../../config/money.dart';
 import '../../config/app_timeouts.dart';
+import '../../config/app_date_format.dart';
 
 class ClientsScreen extends StatefulWidget {
   const ClientsScreen({super.key});
@@ -159,7 +159,7 @@ class _ClientsScreenState extends State<ClientsScreen> {
             child: _metricCard(
               'Last Added',
               lastAdded?.name ?? '-',
-              lastAdded?.createdAt != null ? DateFormat('dd MMM yyyy').format(lastAdded!.createdAt!) : null,
+              lastAdded?.createdAt != null ? AppDateFormat.date.format(lastAdded!.createdAt!) : null,
               Icons.calendar_today_outlined,
               primaryDeepGreen,
             ),
@@ -552,7 +552,7 @@ class _ClientsScreenState extends State<ClientsScreen> {
             const SizedBox(height: 16),
             _detailLabel('Joined On'),
             Text(
-              client.createdAt != null ? DateFormat('dd MMM yyyy').format(client.createdAt!) : '-',
+              client.createdAt != null ? AppDateFormat.date.format(client.createdAt!) : '-',
               style: const TextStyle(fontSize: 14),
             ),
             const SizedBox(height: 16),
@@ -894,7 +894,7 @@ class _ClientsScreenState extends State<ClientsScreen> {
           Expanded(
             flex: 2,
             child: Text(
-              client.createdAt != null ? DateFormat('dd MMM yyyy').format(client.createdAt!) : '-',
+              client.createdAt != null ? AppDateFormat.date.format(client.createdAt!) : '-',
               style: const TextStyle(fontSize: 13),
             ),
           ),

@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:intl/intl.dart';
 import 'package:fl_chart/fl_chart.dart';
 
 import '../../widgets/hover_elevate_card.dart';
@@ -11,6 +10,7 @@ import '../../data/fields.dart';
 import '../../data/payment_submission_status.dart';
 import '../../config/money.dart';
 import '../../config/app_ranges.dart';
+import '../../config/app_date_format.dart';
 
 /// The detail behind Overview's own summary cards - day-to-day earnings,
 /// individual recent payments, revenue by plan, and the
@@ -225,7 +225,7 @@ class _OverviewDetailsScreenState extends State<OverviewDetailsScreen> {
             getTooltipItem: (group, groupIndex, rod, rodIndex) {
               final day = _dailyEarnings[group.x.toInt()].key;
               return BarTooltipItem(
-                '${DateFormat('d MMM').format(day)}\n${Money.symbolPlain(rod.toY)}',
+                '${AppDateFormat.dateShort.format(day)}\n${Money.symbolPlain(rod.toY)}',
                 const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 12),
               );
             },
@@ -253,7 +253,7 @@ class _OverviewDetailsScreenState extends State<OverviewDetailsScreen> {
                 return Padding(
                   padding: const EdgeInsets.only(top: 6),
                   child: Text(
-                    DateFormat('d MMM').format(_dailyEarnings[idx].key),
+                    AppDateFormat.dateShort.format(_dailyEarnings[idx].key),
                     style: const TextStyle(fontSize: 9),
                   ),
                 );
@@ -392,7 +392,7 @@ class _OverviewDetailsScreenState extends State<OverviewDetailsScreen> {
                         overflow: TextOverflow.ellipsis,
                       ),
                       Text(
-                        '${payment['planLabel']} · ${DateFormat('dd MMM yyyy, HH:mm').format(reviewedAt)}',
+                        '${payment['planLabel']} · ${AppDateFormat.dateTime24.format(reviewedAt)}',
                         style: TextStyle(fontSize: 12, color: Colors.grey[600]),
                       ),
                     ],

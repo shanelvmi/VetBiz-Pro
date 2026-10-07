@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_functions/cloud_functions.dart';
-import 'package:intl/intl.dart';
 
 import '../../utils/subscription_status_utils.dart';
 import '../../constants/subscription_plans.dart';
@@ -11,6 +10,7 @@ import '../../data/collections.dart';
 import '../../data/fields.dart';
 import '../../config/money.dart';
 import '../../config/app_limits.dart';
+import '../../config/app_date_format.dart';
 
 class FacilityDetailScreen extends StatefulWidget {
   final String facilityId;
@@ -176,7 +176,7 @@ class _FacilityDetailScreenState extends State<FacilityDetailScreen> {
     if (context.mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Updated ($planLabelForRecord) - now runs until ${DateFormat('dd MMM yyyy').format(newExpiry)}'),
+          content: Text('Updated ($planLabelForRecord) - now runs until ${AppDateFormat.date.format(newExpiry)}'),
           backgroundColor: Colors.green,
         ),
       );
@@ -332,9 +332,9 @@ class _FacilityDetailScreenState extends State<FacilityDetailScreen> {
                           Text('Status: ${subscriptionStatusLabel(status)}',
                               style: const TextStyle(fontWeight: FontWeight.bold)),
                           if (expiresAt != null)
-                            Text('Expires: ${DateFormat('dd MMM yyyy').format(expiresAt)}'),
+                            Text('Expires: ${AppDateFormat.date.format(expiresAt)}'),
                           if (createdAt != null)
-                            Text('Signed up: ${DateFormat('dd MMM yyyy').format(createdAt)}',
+                            Text('Signed up: ${AppDateFormat.date.format(createdAt)}',
                                 style: const TextStyle(fontSize: 12)),
                           if (data['lastPaymentAmount'] != null)
                             Text('Last payment: ${Money.symbolPlain(data['lastPaymentAmount'])}'),
@@ -378,7 +378,7 @@ class _FacilityDetailScreenState extends State<FacilityDetailScreen> {
                               title: Text('${subData['planLabel'] ?? ''} - ${Money.symbolAsStored(subData['amount'] ?? 0)}'),
                               subtitle: Text(
                                 '${subData['method'] ?? ''}'
-                                '${submittedAt != null ? ' - ${DateFormat('dd MMM yyyy').format(submittedAt)}' : ''}',
+                                '${submittedAt != null ? ' - ${AppDateFormat.date.format(submittedAt)}' : ''}',
                                 style: const TextStyle(fontSize: 12),
                               ),
                               trailing: Text(

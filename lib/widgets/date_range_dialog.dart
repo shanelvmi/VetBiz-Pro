@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
+import '../config/app_date_format.dart';
 
 /// Shared date-range picker dialog, used anywhere a screen needs "pick a
 /// custom period" (Payments, Transactions, and anywhere else this comes
@@ -70,7 +70,7 @@ class _DateRangeDialogState extends State<DateRangeDialog> {
                 children: [
                   Icon(Icons.calendar_today, color: widget.primaryDeepGreen),
                   const SizedBox(width: 12),
-                  Text(DateFormat('dd MMM yyyy').format(_start)),
+                  Text(AppDateFormat.date.format(_start)),
                 ],
               ),
             ),
@@ -98,7 +98,7 @@ class _DateRangeDialogState extends State<DateRangeDialog> {
                 children: [
                   Icon(Icons.calendar_today, color: widget.primaryDeepGreen),
                   const SizedBox(width: 12),
-                  Text(DateFormat('dd MMM yyyy').format(_end)),
+                  Text(AppDateFormat.date.format(_end)),
                 ],
               ),
             ),

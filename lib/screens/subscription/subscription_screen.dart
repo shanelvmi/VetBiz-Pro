@@ -6,7 +6,6 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:intl/intl.dart';
 
 import '../../providers/facility_provider.dart';
 import '../../providers/subscription_provider.dart';
@@ -20,6 +19,7 @@ import '../../data/payment_submission_status.dart';
 import '../../config/payment_methods.dart';
 import '../../config/money.dart';
 import '../../config/app_timeouts.dart';
+import '../../config/app_date_format.dart';
 
 class SubscriptionScreen extends StatefulWidget {
   final bool isModal;
@@ -284,10 +284,10 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
                       const SizedBox(height: 6),
                       Text(
                         sub.status == SubscriptionStatus.locked
-                            ? 'Expired on ${DateFormat('dd MMM yyyy, HH:mm').format(sub.expiresAt!)}'
+                            ? 'Expired on ${AppDateFormat.dateTime24.format(sub.expiresAt!)}'
                             : sub.status == SubscriptionStatus.trial
-                                ? 'Trial expires on ${DateFormat('dd MMM yyyy, HH:mm').format(sub.expiresAt!)}'
-                                : 'Renews / expires on ${DateFormat('dd MMM yyyy, HH:mm').format(sub.expiresAt!)}',
+                                ? 'Trial expires on ${AppDateFormat.dateTime24.format(sub.expiresAt!)}'
+                                : 'Renews / expires on ${AppDateFormat.dateTime24.format(sub.expiresAt!)}',
                         style: const TextStyle(fontSize: 13),
                       ),
                     ],
@@ -557,7 +557,7 @@ Widget buildSubmissionCard(Map<String, dynamic> data) {
                     const SizedBox(height: 2),
                     Text(
                       '${data['method'] ?? ''}'
-                      '${submittedAt != null ? ' - ${DateFormat('dd MMM yyyy, HH:mm').format(submittedAt)}' : ''}',
+                      '${submittedAt != null ? ' - ${AppDateFormat.dateTime24.format(submittedAt)}' : ''}',
                       style: TextStyle(fontSize: 12, color: Colors.grey[600]),
                     ),
                   ],

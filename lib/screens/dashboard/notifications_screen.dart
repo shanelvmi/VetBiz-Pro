@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:intl/intl.dart';
 
 import '../../providers/facility_provider.dart';
 import '../../providers/subscription_provider.dart';
@@ -18,6 +17,7 @@ import '../../data/fields.dart';
 import '../../config/app_limits.dart';
 import '../../config/app_timeouts.dart';
 import '../../config/app_ranges.dart';
+import '../../config/app_date_format.dart';
 
 /// Everything that needs your attention, facility-wide - subscription
 /// status, urgent announcements, payments, debts, and system messages.
@@ -694,7 +694,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
   Widget _dateRangeButton({bool expand = false}) {
     final label = _dateRange == null
         ? 'Date: All'
-        : '${DateFormat('d MMM').format(_dateRange!.start)} - ${DateFormat('d MMM y').format(_dateRange!.end)}';
+        : '${AppDateFormat.dateShort.format(_dateRange!.start)} - ${AppDateFormat.dateNoPadY.format(_dateRange!.end)}';
     final labelText = Text(
       label,
       maxLines: 1,
@@ -925,8 +925,8 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                 : Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(DateFormat('dd MMM yyyy').format(created), style: const TextStyle(fontSize: 13)),
-                      Text(DateFormat('hh:mm a').format(created),
+                      Text(AppDateFormat.date.format(created), style: const TextStyle(fontSize: 13)),
+                      Text(AppDateFormat.time12.format(created),
                           style: TextStyle(fontSize: 11.5, color: Colors.grey[500])),
                     ],
                   ),
@@ -989,7 +989,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                   const Spacer(),
                   if (created != null)
                     Text(
-                      DateFormat('dd MMM yyyy, hh:mm a').format(created),
+                      AppDateFormat.dateTime12.format(created),
                       style: TextStyle(fontSize: 11.5, color: Colors.grey[500]),
                     ),
                 ],

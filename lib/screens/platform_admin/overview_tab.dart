@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:intl/intl.dart';
 
 import '../../utils/subscription_status_utils.dart';
 import '../../widgets/firestore_error_view.dart';
@@ -12,6 +11,7 @@ import '../../data/fields.dart';
 import '../../data/subscription_keys.dart';
 import '../../data/payment_submission_status.dart';
 import '../../config/money.dart';
+import '../../config/app_date_format.dart';
 
 /// A snapshot of the whole business - how many facilities, in what state, and
 /// how much has actually been collected this month. Reads every facility
@@ -158,7 +158,7 @@ class _OverviewTabState extends State<OverviewTab> {
                 const Spacer(),
                 if (_lastRefreshed != null)
                   Text(
-                    'Updated ${DateFormat('HH:mm').format(_lastRefreshed!)}',
+                    'Updated ${AppDateFormat.time24.format(_lastRefreshed!)}',
                     style: TextStyle(fontSize: 11.5, color: Colors.grey[500]),
                   ),
                 IconButton(

@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
-import 'package:intl/intl.dart';
 
 import '../../models/product.dart';
 import '../../models/product_batch.dart';
@@ -13,6 +12,7 @@ import 'add_batch_screen.dart';
 import 'move_expired_to_stock_dialog.dart';
 import '../../theme/app_palette.dart';
 import '../../config/money.dart';
+import '../../config/app_date_format.dart';
 
 /// Full management view for one product's stock - every batch on file,
 /// with a way to correct or top up any of them directly, plus a clear
@@ -482,7 +482,7 @@ class _ViewBatchesScreenState extends State<ViewBatchesScreen> {
                                 ),
                                 subtitle: Text(
                                   'Store: ${batch.stockQty} · Shelf: ${batch.sellableQty} · ${Money.symbolWhole(batch.buyPrice)}'
-                                  '${batch.expiry != null ? '\n${isExpired ? 'Expired' : 'Expires'} ${DateFormat('dd MMM yyyy').format(batch.expiry!)}' : ''}',
+                                  '${batch.expiry != null ? '\n${isExpired ? 'Expired' : 'Expires'} ${AppDateFormat.date.format(batch.expiry!)}' : ''}',
                                 ),
                                 isThreeLine: batch.expiry != null,
                                 trailing: Row(

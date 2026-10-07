@@ -1,10 +1,10 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:intl/intl.dart';
 
 import '../data/collections.dart';
 import '../config/app_rules.dart';
+import '../config/app_date_format.dart';
 
 enum SubscriptionStatus { trial, active, grace, locked }
 
@@ -76,7 +76,7 @@ class SubscriptionProvider with ChangeNotifier {
     return (
       title: 'Free Trial',
       message: 'You have $days day${days == 1 ? '' : 's'} left of your free trial, '
-          'ending on ${DateFormat('d MMM yyyy').format(end)}.',
+          'ending on ${AppDateFormat.dateNoPad.format(end)}.',
     );
   }
 

@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 
 import '../../models/daily_report.dart';
 import '../../providers/user_role_provider.dart';
 import '../../theme/app_palette.dart';
 import '../../config/money.dart';
+import '../../config/app_date_format.dart';
 
 /// The full tabbed report layout (Summary through Activity Log) -
 /// extracted as its own reusable widget since both the main "today's
@@ -197,12 +197,12 @@ class _ReportTabbedContentState extends State<ReportTabbedContent> with SingleTi
           const SizedBox(height: 16),
           Expanded(child: _summaryPreviewGrid()),
           const SizedBox(height: 8),
-          Text('Generated at ${DateFormat('d MMM yyyy, h:mm a').format(report.generatedAt)} by ${report.generatedByName}',
+          Text('Generated at ${AppDateFormat.dateNoPadTime12Short.format(report.generatedAt)} by ${report.generatedByName}',
               style: TextStyle(fontSize: 11.5, color: Colors.grey[500])),
           if (report.submittedAt != null)
             Padding(
               padding: const EdgeInsets.only(top: 4),
-              child: Text('Submitted at ${DateFormat('d MMM yyyy, h:mm a').format(report.submittedAt!)}',
+              child: Text('Submitted at ${AppDateFormat.dateNoPadTime12Short.format(report.submittedAt!)}',
                   style: TextStyle(fontSize: 11.5, color: Colors.grey[500])),
             ),
         ],
@@ -436,7 +436,7 @@ class _ReportTabbedContentState extends State<ReportTabbedContent> with SingleTi
                   padding: const EdgeInsets.symmetric(vertical: 8),
                   child: Row(
                     children: [
-                      Expanded(flex: 2, child: Text(DateFormat('HH:mm').format(s.time), style: const TextStyle(fontSize: 12.5))),
+                      Expanded(flex: 2, child: Text(AppDateFormat.time24.format(s.time), style: const TextStyle(fontSize: 12.5))),
                       Expanded(flex: 2, child: Text(s.receiptNo, style: const TextStyle(fontSize: 12.5))),
                       Expanded(flex: 3, child: Text(s.customerName, style: const TextStyle(fontSize: 12.5))),
                       Expanded(flex: 1, child: Text('${s.itemCount}', style: const TextStyle(fontSize: 12.5))),
@@ -734,7 +734,7 @@ class _ReportTabbedContentState extends State<ReportTabbedContent> with SingleTi
                   padding: const EdgeInsets.symmetric(vertical: 8),
                   child: Row(
                     children: [
-                      Expanded(flex: 2, child: Text(DateFormat('HH:mm').format(e.time), style: const TextStyle(fontSize: 12.5))),
+                      Expanded(flex: 2, child: Text(AppDateFormat.time24.format(e.time), style: const TextStyle(fontSize: 12.5))),
                       Expanded(flex: 4, child: Text(e.description, style: const TextStyle(fontSize: 12.5))),
                       Expanded(flex: 3, child: Text(e.category, style: const TextStyle(fontSize: 12.5))),
                       Expanded(flex: 2, child: Text(Money.decimal(e.amount), style: const TextStyle(fontSize: 12.5, fontWeight: FontWeight.w600))),
@@ -779,7 +779,7 @@ class _ReportTabbedContentState extends State<ReportTabbedContent> with SingleTi
                   padding: const EdgeInsets.symmetric(vertical: 8),
                   child: Row(
                     children: [
-                      Expanded(flex: 2, child: Text(DateFormat('HH:mm').format(entry.item.time), style: const TextStyle(fontSize: 12.5))),
+                      Expanded(flex: 2, child: Text(AppDateFormat.time24.format(entry.item.time), style: const TextStyle(fontSize: 12.5))),
                       Expanded(flex: 3, child: Text(entry.item.description, style: const TextStyle(fontSize: 12.5))),
                       Expanded(flex: 2, child: Text(entry.item.category, style: const TextStyle(fontSize: 12.5))),
                       Expanded(
@@ -896,7 +896,7 @@ class _ReportTabbedContentState extends State<ReportTabbedContent> with SingleTi
         children: [
           Expanded(
             flex: 1,
-            child: Text(DateFormat('HH:mm').format(entry.time), style: const TextStyle(fontSize: 12.5, fontWeight: FontWeight.w600)),
+            child: Text(AppDateFormat.time24.format(entry.time), style: const TextStyle(fontSize: 12.5, fontWeight: FontWeight.w600)),
           ),
           Expanded(
             flex: 2,

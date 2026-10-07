@@ -7,7 +7,6 @@ import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:intl/intl.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../providers/product_provider.dart';
@@ -65,6 +64,7 @@ import '../../config/app_defaults.dart';
 import '../../config/app_limits.dart';
 import '../../config/app_timeouts.dart';
 import '../../config/app_ranges.dart';
+import '../../config/app_date_format.dart';
 
 class DrawerHoverItem extends StatefulWidget {
   final IconData icon;
@@ -1288,7 +1288,7 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
                                                   const SizedBox(width: 6),
                                                   Text(
                                                     selectedFilter == 'Today'
-                                                        ? DateFormat('EEE, dd MMM yyyy').format(now)
+                                                        ? AppDateFormat.dateWeekdayShort.format(now)
                                                         : selectedFilter,
                                                     style: TextStyle(fontSize: 12.5, color: Colors.grey[600]),
                                                   ),
@@ -1300,7 +1300,7 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
                                             const SizedBox(width: 14),
                                             Icon(Icons.access_time, size: 14, color: Colors.grey[500]),
                                             const SizedBox(width: 6),
-                                            Text(DateFormat('hh:mm a').format(now),
+                                            Text(AppDateFormat.time12.format(now),
                                                 style: TextStyle(fontSize: 12.5, color: Colors.grey[600])),
                                           ],
                                         );
@@ -1911,7 +1911,7 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
     final timestamp = data['timestamp'];
     String timeStr = '';
     if (timestamp is Timestamp) {
-      timeStr = DateFormat('hh:mm a').format(timestamp.toDate());
+      timeStr = AppDateFormat.time12.format(timestamp.toDate());
     }
     final color = _activityColor(actionType);
 
@@ -2074,7 +2074,7 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
                                   _ => 'Services',
                                 };
                                 return LineTooltipItem(
-                                  '${DateFormat('d MMM').format(day)}\n$label: ${Money.format(spot.y)}',
+                                  '${AppDateFormat.dateShort.format(day)}\n$label: ${Money.format(spot.y)}',
                                   const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 12),
                                 );
                               }).toList();
@@ -2100,7 +2100,7 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
                                 final day = start.add(Duration(days: value.toInt()));
                                 return Padding(
                                   padding: const EdgeInsets.only(top: 6),
-                                  child: Text(DateFormat('d MMM').format(day), style: const TextStyle(fontSize: 9)),
+                                  child: Text(AppDateFormat.dateShort.format(day), style: const TextStyle(fontSize: 9)),
                                 );
                               },
                             ),

@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../../utils/sentence_capitalization_formatter.dart';
-import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 
 import '../../models/daily_report.dart';
@@ -10,6 +9,7 @@ import '../../services/daily_report_service.dart';
 import '../../utils/thousands_input_formatter.dart';
 import '../../theme/app_palette.dart';
 import '../../config/money.dart';
+import '../../config/app_date_format.dart';
 
 class ReportReviewScreen extends StatefulWidget {
   final DailyReport report;
@@ -191,7 +191,7 @@ class _ReportReviewScreenState extends State<ReportReviewScreen> {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             const Text('Review & Submit', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18, color: Colors.black87)),
-            Text(DateFormat('EEEE, d MMM yyyy').format(widget.report.reportDate),
+            Text(AppDateFormat.dateLong.format(widget.report.reportDate),
                 style: const TextStyle(fontSize: 12, color: Colors.black54)),
           ],
         ),

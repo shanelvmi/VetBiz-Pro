@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import '../../utils/sentence_capitalization_formatter.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:intl/intl.dart';
 
 import '../../constants/subscription_plans.dart';
 import '../../widgets/firestore_error_view.dart';
@@ -12,6 +11,7 @@ import '../../data/collections.dart';
 import '../../data/fields.dart';
 import '../../data/payment_submission_status.dart';
 import '../../config/money.dart';
+import '../../config/app_date_format.dart';
 
 /// Embeddable version of the subscription submissions review list -
 /// same logic as the original standalone Subscription Review screen,
@@ -46,7 +46,7 @@ class _SubscriptionRequestsTabState extends State<SubscriptionRequestsTab> {
     if (diff.inMinutes < 60) return '${diff.inMinutes}m ago';
     if (diff.inHours < 24) return '${diff.inHours}h ago';
     if (diff.inDays < 7) return '${diff.inDays}d ago';
-    return DateFormat('d MMM').format(dt);
+    return AppDateFormat.dateShort.format(dt);
   }
 
   // Same reasoning as the relative-time label, but as a color on the
@@ -108,7 +108,7 @@ class _SubscriptionRequestsTabState extends State<SubscriptionRequestsTab> {
     if (context.mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Approved - subscription now runs until ${DateFormat('dd MMM yyyy').format(newExpiry)}'),
+          content: Text('Approved - subscription now runs until ${AppDateFormat.date.format(newExpiry)}'),
           backgroundColor: Colors.green,
         ),
       );
@@ -350,7 +350,7 @@ class _SubscriptionRequestsTabState extends State<SubscriptionRequestsTab> {
                           Padding(
                             padding: const EdgeInsets.only(left: 22),
                             child: Text(
-                              DateFormat('dd MMM yyyy, HH:mm').format(submittedAt),
+                              AppDateFormat.dateTime24.format(submittedAt),
                               style: TextStyle(fontSize: 11, color: Colors.grey[500]),
                             ),
                           ),
@@ -551,7 +551,7 @@ class _SubscriptionRequestsTabState extends State<SubscriptionRequestsTab> {
                             Expanded(
                               child: Text(
                                 'By ${data['reviewedBy'] ?? 'Unknown'}'
-                                '${reviewedAt != null ? ' · ${DateFormat('dd MMM yyyy, HH:mm').format(reviewedAt)}' : ''}',
+                                '${reviewedAt != null ? ' · ${AppDateFormat.dateTime24.format(reviewedAt)}' : ''}',
                                 style: TextStyle(fontSize: 12.5, color: Colors.grey[700]),
                                 overflow: TextOverflow.ellipsis,
                               ),

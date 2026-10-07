@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:intl/intl.dart';
 import 'package:flutter_markdown/flutter_markdown.dart';
 import '../../utils/sentence_capitalization_formatter.dart';
 import 'package:markdown/markdown.dart' as md;
@@ -13,6 +12,7 @@ import '../../widgets/announcement_message.dart';
 import '../../theme/app_palette.dart';
 import '../../data/collections.dart';
 import '../../data/fields.dart';
+import '../../config/app_date_format.dart';
 
 /// Manages everything shown on the login screen's left/center panels -
 /// broadcast announcements (the `public_announcements` collection) and
@@ -727,7 +727,7 @@ class _AnnouncementsTabState extends State<AnnouncementsTab> {
                                         AnnouncementMessage(data: data, fontSize: 14),
                                         if (ts != null) ...[
                                           const SizedBox(height: 6),
-                                          Text(DateFormat('d MMM yyyy').format(ts), style: TextStyle(fontSize: 11, color: Colors.grey[500])),
+                                          Text(AppDateFormat.dateNoPad.format(ts), style: TextStyle(fontSize: 11, color: Colors.grey[500])),
                                         ],
                                       ],
                                     ),

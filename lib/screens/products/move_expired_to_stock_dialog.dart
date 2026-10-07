@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 
 import '../../models/product.dart';
 import '../../models/product_batch.dart';
 import '../../providers/product_provider.dart';
 import '../../theme/app_palette.dart';
+import '../../config/app_date_format.dart';
 
 const Color _primaryDeepGreen = AppPalette.primary;
 
@@ -47,7 +47,7 @@ Future<void> promptQuantityAndMoveToStock(
             children: [
               Text(
                 '${product.name}${batch.batchNo?.isNotEmpty == true ? ' - Batch ${batch.batchNo}' : ''}'
-                '${batch.expiry != null ? ' (${isAlreadyExpired ? 'expired' : 'expires'} ${DateFormat('dd MMM yyyy').format(batch.expiry!)})' : ''}. '
+                '${batch.expiry != null ? ' (${isAlreadyExpired ? 'expired' : 'expires'} ${AppDateFormat.date.format(batch.expiry!)})' : ''}. '
                 'Up to ${batch.sellableQty} ${product.unit} can move back to Stock Store.',
                 style: const TextStyle(fontSize: 13),
               ),

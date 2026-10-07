@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:intl/intl.dart';
 import 'package:fl_chart/fl_chart.dart';
 
 import '../../providers/facility_provider.dart';
@@ -12,6 +11,7 @@ import '../../theme/app_palette.dart';
 import '../../data/collections.dart';
 import '../../config/money.dart';
 import '../../config/app_ranges.dart';
+import '../../config/app_date_format.dart';
 
 /// A simple insights view - a 14-day sales trend and your top 5
 /// products by revenue over the last 30 days. Deliberately kept to two
@@ -544,7 +544,7 @@ class _InsightsScreenState extends State<InsightsScreen> {
               return touchedSpots.map((spot) {
                 final day = _trendStart.add(Duration(days: spot.x.toInt()));
                 return LineTooltipItem(
-                  '${DateFormat('d MMM').format(day)}\n${Money.symbolPlain(spot.y)}',
+                  '${AppDateFormat.dateShort.format(day)}\n${Money.symbolPlain(spot.y)}',
                   const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 12),
                 );
               }).toList();
@@ -570,7 +570,7 @@ class _InsightsScreenState extends State<InsightsScreen> {
                 final day = _trendStart.add(Duration(days: value.toInt()));
                 return Padding(
                   padding: const EdgeInsets.only(top: 6),
-                  child: Text(DateFormat('d/M').format(day), style: const TextStyle(fontSize: 9)),
+                  child: Text(AppDateFormat.dayMonthNumeric.format(day), style: const TextStyle(fontSize: 9)),
                 );
               },
             ),

@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:intl/intl.dart';
 
 import '../../providers/facility_provider.dart';
 import '../../utils/activity_logger.dart';
@@ -11,6 +10,7 @@ import '../../data/fields.dart';
 import '../../data/activity_type.dart';
 import '../../config/money.dart';
 import '../../config/app_rules.dart';
+import '../../config/app_date_format.dart';
 
 class TrashScreen extends StatefulWidget {
   const TrashScreen({super.key});
@@ -371,7 +371,7 @@ class _TrashList extends StatelessWidget {
                         children: [
                           Text(
                             'Deleted by $deletedBy'
-                            '${deletedAt != null ? ' on ${DateFormat('dd MMM yyyy, HH:mm').format(deletedAt)}' : ''}',
+                            '${deletedAt != null ? ' on ${AppDateFormat.dateTime24.format(deletedAt)}' : ''}',
                             style: const TextStyle(fontSize: 12),
                           ),
                           if (expiryText.isNotEmpty)

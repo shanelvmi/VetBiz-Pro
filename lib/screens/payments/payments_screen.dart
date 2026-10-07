@@ -20,6 +20,8 @@ import '../../data/collections.dart';
 import '../../config/money.dart';
 import '../../config/app_timeouts.dart';
 import '../../config/app_ranges.dart';
+import '../../config/app_date_format.dart';
+import '../../data/data_keys.dart';
 
 class _PaymentMetric {
   final double amount;
@@ -411,7 +413,7 @@ class _PaymentsScreenState extends State<PaymentsScreen> {
                 // Group by calendar day, preserving descending order.
                 final Map<String, List<LedgerEntry>> grouped = {};
                 for (final e in filtered) {
-                  final key = DateFormat('yyyy-MM-dd').format(e.timestamp);
+                  final key = DateFormat(DataKeys.isoDay).format(e.timestamp);
                   grouped.putIfAbsent(key, () => []).add(e);
                 }
 
@@ -696,7 +698,7 @@ class _PaymentsScreenState extends State<PaymentsScreen> {
                 Icon(Icons.calendar_today_outlined, size: 12, color: Colors.grey[600]),
                 const SizedBox(width: 4),
                 Text(
-                  '${DateFormat('dd MMM yyyy').format(e.timestamp)}, ${DateFormat('hh:mm a').format(e.timestamp)}',
+                  '${AppDateFormat.date.format(e.timestamp)}, ${AppDateFormat.time12.format(e.timestamp)}',
                   style: TextStyle(fontSize: 12.5, color: Colors.grey[600]),
                 ),
               ],
@@ -942,7 +944,7 @@ class _PaymentsScreenState extends State<PaymentsScreen> {
             onPressed: _showDateRangeDialog,
             icon: const Icon(Icons.date_range_outlined, size: 16),
             label: Text(
-              '${DateFormat('dd MMM yyyy').format(_rangeStart)} - ${DateFormat('dd MMM yyyy').format(_rangeEnd)}',
+              '${AppDateFormat.date.format(_rangeStart)} - ${AppDateFormat.date.format(_rangeEnd)}',
               style: const TextStyle(fontSize: 12.5),
             ),
           ),
@@ -963,7 +965,7 @@ class _PaymentsScreenState extends State<PaymentsScreen> {
     } else if (date == yesterday) {
       label = 'Yesterday';
     } else {
-      label = DateFormat('EEEE, dd MMM yyyy').format(date);
+      label = AppDateFormat.dateLongPadded.format(date);
     }
 
     return Padding(
@@ -979,7 +981,7 @@ class _PaymentsScreenState extends State<PaymentsScreen> {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text(
-                  '$label - ${DateFormat('dd MMM yyyy').format(date)}',
+                  '$label - ${AppDateFormat.date.format(date)}',
                   style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12.5, color: primaryDeepGreen),
                 ),
                 Text(
@@ -1020,7 +1022,7 @@ class _PaymentsScreenState extends State<PaymentsScreen> {
                   child: Icon(_iconFor(e.type), size: 14, color: primaryDeepGreen),
                 ),
                 const SizedBox(width: 8),
-                Text(DateFormat('hh:mm a').format(e.timestamp), style: const TextStyle(fontSize: 13)),
+                Text(AppDateFormat.time12.format(e.timestamp), style: const TextStyle(fontSize: 13)),
               ],
             ),
           ),
@@ -1127,7 +1129,7 @@ class _DateRangeDialogState extends State<_DateRangeDialog> {
                 children: [
                   Icon(Icons.calendar_today, color: widget.primaryDeepGreen),
                   const SizedBox(width: 12),
-                  Text(DateFormat('dd MMM yyyy').format(_start)),
+                  Text(AppDateFormat.date.format(_start)),
                 ],
               ),
             ),
@@ -1155,7 +1157,7 @@ class _DateRangeDialogState extends State<_DateRangeDialog> {
                 children: [
                   Icon(Icons.calendar_today, color: widget.primaryDeepGreen),
                   const SizedBox(width: 12),
-                  Text(DateFormat('dd MMM yyyy').format(_end)),
+                  Text(AppDateFormat.date.format(_end)),
                 ],
               ),
             ),

@@ -15,6 +15,7 @@ import '../../data/collections.dart';
 import '../../data/fields.dart';
 import '../../config/money.dart';
 import '../../config/app_ranges.dart';
+import '../../data/data_keys.dart';
 
 /// One logical table of data - a title (shown as its own line in CSV,
 /// its own sheet/tab name in xlsx), a header row, and the data rows
@@ -87,7 +88,7 @@ class _ExportDataScreenState extends State<ExportDataScreen> {
   bool _isExporting = false;
 
   String _csvField(dynamic value) {
-    if (value is DateTime) return DateFormat('yyyy-MM-dd HH:mm').format(value);
+    if (value is DateTime) return DateFormat(DataKeys.exportTimestamp).format(value);
     final text = (value ?? '').toString();
     if (text.contains(',') || text.contains('"') || text.contains('\n')) {
       return '"${text.replaceAll('"', '""')}"';
@@ -287,11 +288,11 @@ class _ExportDataScreenState extends State<ExportDataScreen> {
           ? null
           : _selectedDateRange == null
               ? 'All Records'
-              : '${DateFormat('yyyy-MM-dd').format(_selectedDateRange!.start)} to '
-                  '${DateFormat('yyyy-MM-dd').format(_selectedDateRange!.end)}';
+              : '${DateFormat(DataKeys.isoDay).format(_selectedDateRange!.start)} to '
+                  '${DateFormat(DataKeys.isoDay).format(_selectedDateRange!.end)}';
 
       final baseName = _selectedDataType.replaceAll(RegExp(r'[^A-Za-z0-9]+'), '_');
-      final timestamp = DateFormat('yyyyMMdd_HHmm').format(DateTime.now());
+      final timestamp = DateFormat(DataKeys.exportFileStamp).format(DateTime.now());
 
       if (_selectedFormat == 'xlsx') {
         bytes = _renderXlsx(sections, dateRangeLabel);
@@ -804,7 +805,7 @@ class _ExportDataScreenState extends State<ExportDataScreen> {
             ? 'Please select a date range below'
             : _selectedDateRange == null
                 ? 'All Records (No Filters Applied)'
-                : '${DateFormat('yyyy-MM-dd').format(_selectedDateRange!.start)}  to  ${DateFormat('yyyy-MM-dd').format(_selectedDateRange!.end)}';
+                : '${DateFormat(DataKeys.isoDay).format(_selectedDateRange!.start)}  to  ${DateFormat(DataKeys.isoDay).format(_selectedDateRange!.end)}';
 
     return Scaffold(
       backgroundColor: backgroundColor,

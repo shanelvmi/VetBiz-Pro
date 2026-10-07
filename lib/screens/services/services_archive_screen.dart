@@ -12,6 +12,7 @@ import '../../data/collections.dart';
 import '../../config/money.dart';
 import '../../config/app_limits.dart';
 import '../../config/app_ranges.dart';
+import '../../config/app_date_format.dart';
 
 class ServicesArchiveScreen extends StatefulWidget {
   const ServicesArchiveScreen({super.key});
@@ -196,9 +197,9 @@ class _ServicesArchiveScreenState extends State<ServicesArchiveScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final dateFormatter = DateFormat('dd MMM yyyy, HH:mm');
-    final dateOnlyFormatter = DateFormat('dd MMM yyyy');
-    final timeOnlyFormatter = DateFormat('hh:mm a');
+    final dateFormatter = AppDateFormat.dateTime24;
+    final dateOnlyFormatter = AppDateFormat.date;
+    final timeOnlyFormatter = AppDateFormat.time12;
 
     final categoryFiltered = _selectedCategory == 'All'
         ? _archivedServices
@@ -348,7 +349,7 @@ class _ServicesArchiveScreenState extends State<ServicesArchiveScreen> {
           Expanded(
             child: Text(
               _searchStart != null && _searchEnd != null
-                  ? 'Period: ${DateFormat('dd MMM yyyy').format(_searchStart!)} \u2013 ${DateFormat('dd MMM yyyy').format(_searchEnd!)}'
+                  ? 'Period: ${AppDateFormat.date.format(_searchStart!)} \u2013 ${AppDateFormat.date.format(_searchEnd!)}'
                   : 'Archived services',
               style: TextStyle(fontSize: 12.5, color: Colors.grey[700]),
             ),
@@ -499,7 +500,7 @@ class _ServicesArchiveScreenState extends State<ServicesArchiveScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(dateFormatter.format(serviceDate).split(',').first, style: const TextStyle(fontSize: 13)),
-                  Text(DateFormat('hh:mm a').format(serviceDate),
+                  Text(AppDateFormat.time12.format(serviceDate),
                       style: TextStyle(fontSize: 11.5, color: Colors.grey[500])),
                 ],
               ),
@@ -807,7 +808,7 @@ class _SearchServicesArchiveDialogState extends State<_SearchServicesArchiveDial
 
   @override
   Widget build(BuildContext context) {
-    final cutoffLabel = DateFormat('dd MMM yyyy').format(_archiveCutoff);
+    final cutoffLabel = AppDateFormat.date.format(_archiveCutoff);
 
     return AlertDialog(
       title: Text('Search Archived Services', style: TextStyle(color: widget.primaryDeepGreen)),
@@ -872,7 +873,7 @@ class _SearchServicesArchiveDialogState extends State<_SearchServicesArchiveDial
                     children: [
                       Icon(Icons.calendar_today, color: widget.primaryDeepGreen),
                       const SizedBox(width: 12),
-                      Text(DateFormat('MMMM yyyy').format(_selectedMonth)),
+                      Text(AppDateFormat.monthYear.format(_selectedMonth)),
                     ],
                   ),
                 ),
@@ -900,7 +901,7 @@ class _SearchServicesArchiveDialogState extends State<_SearchServicesArchiveDial
                     children: [
                       Icon(Icons.calendar_today, color: widget.primaryDeepGreen),
                       const SizedBox(width: 12),
-                      Text(DateFormat('dd MMM yyyy').format(_startDate)),
+                      Text(AppDateFormat.date.format(_startDate)),
                     ],
                   ),
                 ),
@@ -928,7 +929,7 @@ class _SearchServicesArchiveDialogState extends State<_SearchServicesArchiveDial
                     children: [
                       Icon(Icons.calendar_today, color: widget.primaryDeepGreen),
                       const SizedBox(width: 12),
-                      Text(DateFormat('dd MMM yyyy').format(_endDate)),
+                      Text(AppDateFormat.date.format(_endDate)),
                     ],
                   ),
                 ),

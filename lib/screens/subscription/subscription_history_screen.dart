@@ -8,6 +8,7 @@ import '../../data/fields.dart';
 import '../../data/payment_submission_status.dart';
 import '../../config/money.dart';
 import '../../config/app_limits.dart';
+import '../../config/app_date_format.dart';
 
 /// One payment submission, read from a payment_submissions document.
 class _Submission {
@@ -82,8 +83,8 @@ class _SubscriptionHistoryScreenState extends State<SubscriptionHistoryScreen> {
   late final Stream<QuerySnapshot> _stream;
 
   final TextEditingController _searchController = TextEditingController();
-  final DateFormat _dateFormat = DateFormat('dd MMM yyyy');
-  final DateFormat _dateTimeFormat = DateFormat('dd MMM yyyy, HH:mm');
+  final DateFormat _dateFormat = AppDateFormat.date;
+  final DateFormat _dateTimeFormat = AppDateFormat.dateTime24;
 
   String _searchQuery = '';
   String? _statusFilter; // null = all
@@ -594,7 +595,7 @@ class _SubscriptionHistoryScreenState extends State<SubscriptionHistoryScreen> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(_dateFormat.format(submitted), style: const TextStyle(fontSize: 13)),
-                      Text(DateFormat('HH:mm').format(submitted),
+                      Text(AppDateFormat.time24.format(submitted),
                           style: TextStyle(fontSize: 11.5, color: Colors.grey[500])),
                     ],
                   ),

@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 
 import '../../models/daily_report.dart';
@@ -7,6 +6,7 @@ import '../../providers/facility_provider.dart';
 import '../../services/daily_report_pdf_service.dart';
 import 'report_tabbed_content.dart';
 import '../../theme/app_palette.dart';
+import '../../config/app_date_format.dart';
 
 /// Read-only view of a past, already-generated report - the AppBar
 /// (date, submission status, PDF action) plus the shared tabbed
@@ -42,7 +42,7 @@ class ReportDetailScreen extends StatelessWidget {
         title: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Text(DateFormat('EEEE, d MMM yyyy').format(report.reportDate),
+            Text(AppDateFormat.dateLong.format(report.reportDate),
                 style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18, color: Colors.black87)),
             Text(
               report.status == 'submitted'

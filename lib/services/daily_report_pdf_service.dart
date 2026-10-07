@@ -1,4 +1,3 @@
-import 'package:intl/intl.dart';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 import 'package:printing/printing.dart';
@@ -6,11 +5,12 @@ import 'package:printing/printing.dart';
 import '../models/daily_report.dart';
 import '../config/money.dart';
 import '../config/payment_methods.dart';
+import '../config/app_date_format.dart';
 
 class DailyReportPdfService {
-  static final _fullDate = DateFormat('EEEE, d MMMM yyyy');
-  static final _dateTime = DateFormat('d MMM yyyy, h:mm a');
-  static final _time = DateFormat('HH:mm');
+  static final _fullDate = AppDateFormat.dateLongFull;
+  static final _dateTime = AppDateFormat.dateNoPadTime12Short;
+  static final _time = AppDateFormat.time24;
 
   /// Builds the PDF and opens the OS's native print/share preview -
   /// the one shared entry point both the report detail screen and the

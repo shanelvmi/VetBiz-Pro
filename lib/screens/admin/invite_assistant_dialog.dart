@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
-import 'package:intl/intl.dart';
 
 import '../../services/auth_service.dart';
 import '../../services/invite_code_service.dart';
 import '../../services/membership_service.dart';
+import '../../config/app_date_format.dart';
 
 /// Generates a short-lived, single-use code for inviting a new
 /// Assistant to join this facility - shown to the Admin to share
@@ -194,7 +194,7 @@ Future<void> showInviteAssistantDialog(BuildContext context, String facilityId) 
                               const SizedBox(height: 4),
                               if (activeExpiresAt != null)
                                 Text(
-                                  'Expires ${DateFormat('dd MMM, HH:mm').format(activeExpiresAt!)}',
+                                  'Expires ${AppDateFormat.dateDayTime24.format(activeExpiresAt!)}',
                                   style: TextStyle(fontSize: 11, color: Colors.grey[600]),
                                 ),
                             ],

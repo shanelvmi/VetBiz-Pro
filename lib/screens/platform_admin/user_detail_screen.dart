@@ -2,13 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:cloud_functions/cloud_functions.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:intl/intl.dart';
 import '../../services/role_change_service.dart';
 import '../../theme/app_palette.dart';
 import '../../data/collections.dart';
 import '../../data/fields.dart';
 import '../../data/user_role.dart';
 import '../../data/user_status.dart';
+import '../../config/app_date_format.dart';
 
 /// A single user's account, editable by the Platform Admin - the direct
 /// answer to "an assistant migrated to a new facility, and their old
@@ -607,7 +607,7 @@ class _UserDetailScreenState extends State<UserDetailScreen> {
                           final why = (_userData['roleChangeReason'] as String?) ?? '';
                           return Text(
                             'Role changed from $previous by $by (Platform Admin)'
-                            '${changedAt != null ? ' \u00b7 ${DateFormat('dd MMM yyyy, HH:mm').format(changedAt)}' : ''}'
+                            '${changedAt != null ? ' \u00b7 ${AppDateFormat.dateTime24.format(changedAt)}' : ''}'
                             '${why.isEmpty ? '' : ' - "$why"'}',
                             style: TextStyle(fontSize: 11.5, color: Colors.grey[600]),
                           );
@@ -636,7 +636,7 @@ class _UserDetailScreenState extends State<UserDetailScreen> {
                           final by = (_userData['statusChangedBy'] as String?) ?? 'Unknown';
                           return Text(
                             'Changed by $by ($role)'
-                            '${changedAt != null ? ' · ${DateFormat('dd MMM yyyy, HH:mm').format(changedAt)}' : ''}',
+                            '${changedAt != null ? ' · ${AppDateFormat.dateTime24.format(changedAt)}' : ''}',
                             style: TextStyle(fontSize: 11.5, color: Colors.grey[600]),
                           );
                         }),

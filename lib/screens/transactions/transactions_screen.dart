@@ -15,6 +15,8 @@ import 'add_transaction_screen.dart';
 import '../../theme/app_palette.dart';
 import '../../config/money.dart';
 import '../../config/app_ranges.dart';
+import '../../config/app_date_format.dart';
+import '../../data/data_keys.dart';
 
 class TransactionScreen extends StatefulWidget {
   const TransactionScreen({super.key});
@@ -217,7 +219,7 @@ class _TransactionScreenState extends State<TransactionScreen> {
             onPressed: _showDateRangeDialog,
             icon: const Icon(Icons.date_range_outlined, size: 16),
             label: Text(
-              '${DateFormat('dd MMM yyyy').format(_rangeStart)} - ${DateFormat('dd MMM yyyy').format(_rangeEnd)}',
+              '${AppDateFormat.date.format(_rangeStart)} - ${AppDateFormat.date.format(_rangeEnd)}',
               style: const TextStyle(fontSize: 12.5),
             ),
           ),
@@ -387,7 +389,7 @@ class _TransactionScreenState extends State<TransactionScreen> {
       TransactionProvider transactionProvider) {
     final Map<String, List<TransactionModel>> grouped = {};
     for (final tx in transactions) {
-      final key = DateFormat('yyyy-MM-dd').format(tx.date);
+      final key = DateFormat(DataKeys.isoDay).format(tx.date);
       grouped.putIfAbsent(key, () => []).add(tx);
     }
 
@@ -432,7 +434,7 @@ class _TransactionScreenState extends State<TransactionScreen> {
   }
 
   Widget _buildDayGroup(String dayKey, List<TransactionModel> transactions, double dayTotal) {
-    final date = DateFormat('yyyy-MM-dd').parse(dayKey);
+    final date = DateFormat(DataKeys.isoDay).parse(dayKey);
     final isProfit = dayTotal >= 0;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -445,7 +447,7 @@ class _TransactionScreenState extends State<TransactionScreen> {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
-                DateFormat('dd MMM yyyy').format(date),
+                AppDateFormat.date.format(date),
                 style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12.5, color: TransactionScreen.primaryDeepGreen),
               ),
               Text(
@@ -491,7 +493,7 @@ class _TransactionScreenState extends State<TransactionScreen> {
                   child: Icon(isIncome ? Icons.arrow_downward : Icons.arrow_upward, size: 14, color: accentColor),
                 ),
                 const SizedBox(width: 8),
-                Text(DateFormat('hh:mm a').format(tx.date), style: const TextStyle(fontSize: 13)),
+                Text(AppDateFormat.time12.format(tx.date), style: const TextStyle(fontSize: 13)),
               ],
             ),
           ),
@@ -688,7 +690,7 @@ class _TransactionScreenState extends State<TransactionScreen> {
                 Icon(Icons.calendar_today_outlined, size: 12, color: Colors.grey[600]),
                 const SizedBox(width: 4),
                 Text(
-                  '${DateFormat('dd MMM yyyy').format(tx.date)}, ${DateFormat('hh:mm a').format(tx.date)}',
+                  '${AppDateFormat.date.format(tx.date)}, ${AppDateFormat.time12.format(tx.date)}',
                   style: TextStyle(fontSize: 12.5, color: Colors.grey[600]),
                 ),
               ],

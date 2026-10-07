@@ -32,6 +32,10 @@ Stored keys never change, and both display everywhere. Three places treat them a
 - Daily report breakdowns (`daily_report_service.dart`, report screens, PDF): totals are grouped by the stored string, so a day with both shows two rows. Count them as one (display only; the stored keys stay)?
 - Payments ledger filter (`payments_screen.dart:860`) and the subscription history filter: the ledger's method filter lists only current methods, so old 'Tigo Pesa' entries can only be seen under "All"; the history filter lists both as separate choices. Merge?
 
+### Date formats (raised in step 2C)
+
+- `lib/screens/services/add_edit_service_screen.dart:541`, `DateFormat.yMMMMd()` ("March 5, 2026"), now `AppDateFormat.monthDayYearLong`: the only date format that follows the locale; every other screen uses a fixed pattern such as `dd MMM yyyy` ("05 Mar 2026"). When step 2F turns on Kiswahili this one will change shape and the others won't. Switch it to `AppDateFormat.date` so it matches the rest?
+
 ## Decided
 
 Decided by the owner after step 2A.

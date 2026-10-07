@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:intl/intl.dart';
 
 import '../../widgets/hover_elevate_card.dart';
 import '../../theme/app_palette.dart';
@@ -9,6 +8,7 @@ import '../../data/collections.dart';
 import '../../data/fields.dart';
 import '../../data/user_role.dart';
 import '../../config/app_limits.dart';
+import '../../config/app_date_format.dart';
 
 /// Manage who else has platform admin access - previously the only way
 /// to grant this was manually creating a document in Firebase Console.
@@ -270,7 +270,7 @@ class _PlatformAdminsTabState extends State<PlatformAdminsTab> {
                                     if (addedAt != null) ...[
                                       const SizedBox(height: 2),
                                       Text(
-                                        'Added ${DateFormat('d MMM yyyy').format(addedAt)}${addedBy != null ? ' by $addedBy' : ''}',
+                                        'Added ${AppDateFormat.dateNoPad.format(addedAt)}${addedBy != null ? ' by $addedBy' : ''}',
                                         style: TextStyle(fontSize: 11, color: Colors.grey[500]),
                                         overflow: TextOverflow.ellipsis,
                                       ),

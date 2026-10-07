@@ -6,7 +6,6 @@ import 'package:flutter/rendering.dart';
 import 'package:provider/provider.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:printing/printing.dart';
-import 'package:intl/intl.dart';
 
 import '../../models/sale.dart';
 import '../../providers/facility_provider.dart';
@@ -18,6 +17,7 @@ import '../../theme/app_palette.dart';
 import '../../config/money.dart';
 import '../../config/app_rules.dart';
 import '../../config/payment_methods.dart';
+import '../../config/app_date_format.dart';
 
 /// Shows the receipt as it will actually look before doing anything with
 /// it - a real preview, not a blind print. From here it can be shared or
@@ -593,7 +593,7 @@ class _ReceiptPreviewScreenState extends State<ReceiptPreviewScreen> {
             divider(),
             // ---- Receipt meta ----
             infoLine('Receipt #', sale.receiptNumber?.toString() ?? sale.id.substring(0, sale.id.length < AppRules.fallbackReceiptIdLength ? sale.id.length : AppRules.fallbackReceiptIdLength),
-                label2: 'Date', value2: DateFormat('dd MMM yyyy, HH:mm').format(sale.timestamp)),
+                label2: 'Date', value2: AppDateFormat.dateTime24.format(sale.timestamp)),
             infoLine('Customer', sale.clientName ?? 'Walk-in'),
             infoLine('Payment Method', sale.paymentMethod ?? PaymentMethod.onCredit),
             const SizedBox(height: 10),
@@ -787,7 +787,7 @@ class _ReceiptPreviewScreenState extends State<ReceiptPreviewScreen> {
                   : facilityName,
             ),
             field(Icons.person_outline, 'Customer', sale.clientName ?? 'Walk-in'),
-            field(Icons.calendar_today_outlined, 'Date & Time', DateFormat('dd MMM yyyy, HH:mm').format(sale.timestamp)),
+            field(Icons.calendar_today_outlined, 'Date & Time', AppDateFormat.dateTime24.format(sale.timestamp)),
             field(Icons.payment_outlined, 'Payment Method', sale.paymentMethod ?? PaymentMethod.onCredit),
             const Divider(height: 28),
             Row(

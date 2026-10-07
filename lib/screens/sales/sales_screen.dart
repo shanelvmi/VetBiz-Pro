@@ -18,6 +18,7 @@ import '../../theme/app_palette.dart';
 import '../../config/money.dart';
 import '../../config/app_timeouts.dart';
 import '../../config/app_ranges.dart';
+import '../../config/app_date_format.dart';
 
 class SalesScreen extends StatefulWidget {
   const SalesScreen({super.key});
@@ -208,9 +209,9 @@ class _SalesScreenState extends State<SalesScreen> {
   @override
   Widget build(BuildContext context) {
     final saleProvider = Provider.of<SaleProvider>(context);
-    final dateFormatter = DateFormat('dd MMM yyyy, HH:mm');
-    final dateOnlyFormatter = DateFormat('dd MMM yyyy');
-    final timeOnlyFormatter = DateFormat('hh:mm a');
+    final dateFormatter = AppDateFormat.dateTime24;
+    final dateOnlyFormatter = AppDateFormat.date;
+    final timeOnlyFormatter = AppDateFormat.time12;
 
     // A low-stakes dropdown convenience only, not part of search or
     // filter correctness (which is now a real query, further below) -
@@ -663,7 +664,7 @@ class _SalesScreenState extends State<SalesScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(dateFormatter.format(sale.timestamp).split(',').first, style: const TextStyle(fontSize: 13)),
-                  Text(DateFormat('hh:mm a').format(sale.timestamp),
+                  Text(AppDateFormat.time12.format(sale.timestamp),
                       style: TextStyle(fontSize: 11.5, color: Colors.grey[500])),
                 ],
               ),

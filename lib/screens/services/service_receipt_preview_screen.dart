@@ -6,7 +6,6 @@ import 'package:flutter/rendering.dart';
 import 'package:provider/provider.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:printing/printing.dart';
-import 'package:intl/intl.dart';
 
 import '../../models/service.dart';
 import '../../providers/facility_provider.dart';
@@ -18,6 +17,7 @@ import '../../theme/app_palette.dart';
 import '../../config/money.dart';
 import '../../config/app_rules.dart';
 import '../../config/payment_methods.dart';
+import '../../config/app_date_format.dart';
 
 /// Shows the service receipt as it will actually look before doing
 /// anything with it - same pattern as Sales' ReceiptPreviewScreen, just
@@ -568,7 +568,7 @@ class _ServiceReceiptPreviewScreenState extends State<ServiceReceiptPreviewScree
             // ---- Receipt meta ----
             infoLine('Receipt #', service.receiptNumber?.toString() ?? service.id.substring(0, service.id.length < AppRules.fallbackReceiptIdLength ? service.id.length : AppRules.fallbackReceiptIdLength),
                 label2: service.serviceDate != null ? 'Date' : null,
-                value2: service.serviceDate != null ? DateFormat('dd MMM yyyy, HH:mm').format(service.serviceDate!) : null),
+                value2: service.serviceDate != null ? AppDateFormat.dateTime24.format(service.serviceDate!) : null),
             infoLine('Customer', service.clientName ?? 'Walk-in'),
             infoLine('Provided By', service.providedByName ?? 'N/A'),
             infoLine('Payment Method', service.paymentMethod ?? PaymentMethod.onCredit),
@@ -761,7 +761,7 @@ class _ServiceReceiptPreviewScreenState extends State<ServiceReceiptPreviewScree
             field(Icons.person_outline, 'Customer', service.clientName ?? 'Walk-in'),
             field(Icons.badge_outlined, 'Provided By', service.providedByName ?? 'N/A'),
             if (service.serviceDate != null)
-              field(Icons.calendar_today_outlined, 'Date & Time', DateFormat('dd MMM yyyy, HH:mm').format(service.serviceDate!)),
+              field(Icons.calendar_today_outlined, 'Date & Time', AppDateFormat.dateTime24.format(service.serviceDate!)),
             field(Icons.payment_outlined, 'Payment Method', service.paymentMethod ?? PaymentMethod.onCredit),
             const Divider(height: 28),
             Row(

@@ -3,7 +3,6 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:intl/intl.dart';
 import 'package:flutter/services.dart';
 import '../../utils/sentence_capitalization_formatter.dart';
 
@@ -30,6 +29,7 @@ import '../../data/activity_type.dart';
 import '../../config/money.dart';
 import '../../config/app_defaults.dart';
 import '../../config/app_timeouts.dart';
+import '../../config/app_date_format.dart';
 
 // --- Custom Formatter ---
 // --- Add Sale Screen ---
@@ -1429,7 +1429,7 @@ class _AddSaleScreenState extends State<AddSaleScreen> {
   // allocation.
   Widget _buildProductsTable() {
     final productProvider = Provider.of<ProductProvider>(context, listen: false);
-    final dateFormat = DateFormat('dd MMM yyyy');
+    final dateFormat = AppDateFormat.date;
 
     return Column(
       children: [
@@ -1539,7 +1539,7 @@ class _AddSaleScreenState extends State<AddSaleScreen> {
   // columns.
   Widget _buildProductsCompactList() {
     final productProvider = Provider.of<ProductProvider>(context, listen: false);
-    final dateFormat = DateFormat('dd MMM yyyy');
+    final dateFormat = AppDateFormat.date;
 
     return Column(
       children: items.asMap().entries.map((entry) {
