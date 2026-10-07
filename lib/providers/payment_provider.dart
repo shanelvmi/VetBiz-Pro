@@ -6,6 +6,8 @@ import '../models/ledger_entry.dart';
 import '../services/snapshot_ledger_controller.dart';
 import 'sale_provider.dart';
 import 'service_provider.dart';
+import '../data/collections.dart';
+import '../data/fields.dart';
 
 class PaymentProvider with ChangeNotifier {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
@@ -115,7 +117,7 @@ class PaymentProvider with ChangeNotifier {
     // created after the session opened can't enter it even when the
     // date range itself would otherwise include today.
     final effectiveEnd = rangeEnd.isBefore(snapshotAt) ? rangeEnd : snapshotAt;
-    final facilityRef = _firestore.collection('facilities').doc(facilityId);
+    final facilityRef = _firestore.collection(Collections.facilities).doc(facilityId);
 
     final entries = <LedgerEntry>[];
 
@@ -130,7 +132,7 @@ class PaymentProvider with ChangeNotifier {
     final includePayments = q.typeFilter == null || q.typeFilter != 'other_income';
 
     if (includePayments) {
-      Query<Map<String, dynamic>> paymentsQuery = facilityRef.collection('payments');
+      Query<Map<String, dynamic>> paymentsQuery = facilityRef.collection(Collections.payments);
       if (q.initialClientId != null) {
         paymentsQuery = paymentsQuery.where('clientId', isEqualTo: q.initialClientId);
       }
@@ -174,7 +176,7 @@ class PaymentProvider with ChangeNotifier {
 
     if (includeOtherIncome) {
       Query<Map<String, dynamic>> txQuery = facilityRef
-          .collection('transactions')
+          .collection(Collections.transactions)
           .where('type', isEqualTo: 'other income')
           .where('date', isGreaterThanOrEqualTo: Timestamp.fromDate(rangeStart))
           .where('date', isLessThanOrEqualTo: Timestamp.fromDate(effectiveEnd))
@@ -222,7 +224,7 @@ class PaymentProvider with ChangeNotifier {
     final q = _ledgerQuery;
     if (q.searchTerm.isNotEmpty) return 0;
 
-    final facilityRef = _firestore.collection('facilities').doc(facilityId);
+    final facilityRef = _firestore.collection(Collections.facilities).doc(facilityId);
     var total = 0;
 
     final includeOtherIncome = q.initialClientId == null && (q.typeFilter == null || q.typeFilter == 'other_income');
@@ -230,7 +232,7 @@ class PaymentProvider with ChangeNotifier {
 
     if (includePayments) {
       Query<Map<String, dynamic>> paymentsQuery =
-          facilityRef.collection('payments').where('timestamp', isGreaterThan: Timestamp.fromDate(after));
+          facilityRef.collection(Collections.payments).where('timestamp', isGreaterThan: Timestamp.fromDate(after));
       if (q.initialClientId != null) {
         paymentsQuery = paymentsQuery.where('clientId', isEqualTo: q.initialClientId);
       }
@@ -246,7 +248,7 @@ class PaymentProvider with ChangeNotifier {
 
     if (includeOtherIncome) {
       Query<Map<String, dynamic>> txQuery = facilityRef
-          .collection('transactions')
+          .collection(Collections.transactions)
           .where('type', isEqualTo: 'other income')
           .where('date', isGreaterThan: Timestamp.fromDate(after));
       if (q.methodFilter != null) {
@@ -265,9 +267,9 @@ class PaymentProvider with ChangeNotifier {
     if (facilityId.isEmpty) return;
 
     _subscription = _firestore
-        .collection('facilities')
+        .collection(Collections.facilities)
         .doc(facilityId)
-        .collection('payments')
+        .collection(Collections.payments)
         .orderBy('timestamp', descending: true)
         .snapshots()
         .listen((snapshot) {
@@ -294,9 +296,9 @@ class PaymentProvider with ChangeNotifier {
     try {
       // Add payment to Firestore
       final docRef = await _firestore
-          .collection('facilities')
+          .collection(Collections.facilities)
           .doc(facilityId)
-          .collection('payments')
+          .collection(Collections.payments)
           .add({...payment.toMap(), ...payment.searchFields()});
 
       debugPrint(
@@ -347,14 +349,14 @@ class PaymentProvider with ChangeNotifier {
           );
 
           await _firestore
-              .collection('facilities')
+              .collection(Collections.facilities)
               .doc(facilityId)
-              .collection('sales')
+              .collection(Collections.sales)
               .doc(updatedSale.id)
               .update({
             ...updatedSale.toMap(),
             ...updatedSale.searchFields(),
-            'updatedAt': FieldValue.serverTimestamp(),
+            Fields.updatedAt: FieldValue.serverTimestamp(),
           });
         }
       }
@@ -406,9 +408,9 @@ class PaymentProvider with ChangeNotifier {
     try {
       final payment = _payments.firstWhere((p) => p.id == paymentId);
       await _firestore
-          .collection('facilities')
+          .collection(Collections.facilities)
           .doc(facilityId)
-          .collection('payments')
+          .collection(Collections.payments)
           .doc(paymentId)
           .delete();
 
@@ -459,14 +461,14 @@ class PaymentProvider with ChangeNotifier {
           );
 
           await _firestore
-              .collection('facilities')
+              .collection(Collections.facilities)
               .doc(facilityId)
-              .collection('sales')
+              .collection(Collections.sales)
               .doc(updatedSale.id)
               .update({
             ...updatedSale.toMap(),
             ...updatedSale.searchFields(),
-            'updatedAt': FieldValue.serverTimestamp(),
+            Fields.updatedAt: FieldValue.serverTimestamp(),
           });
         }
       }

@@ -7,6 +7,8 @@ import '../models/product.dart';
 import '../models/product_batch.dart';
 import 'facility_provider.dart';
 import '../utils/activity_logger.dart';
+import '../data/collections.dart';
+import '../data/fields.dart';
 
 class ProductProvider with ChangeNotifier {
   final List<Product> _products = [];
@@ -54,9 +56,9 @@ class ProductProvider with ChangeNotifier {
     _subscription?.cancel();
 
     _subscription = FirebaseFirestore.instance
-        .collection('facilities')
+        .collection(Collections.facilities)
         .doc(facilityId)
-        .collection('products')
+        .collection(Collections.products)
         .orderBy('name')
         .snapshots()
         .listen((snapshot) {
@@ -81,9 +83,9 @@ class ProductProvider with ChangeNotifier {
   Future<void> fetchProducts(String facilityId) async {
     try {
       final snapshot = await FirebaseFirestore.instance
-          .collection('facilities')
+          .collection(Collections.facilities)
           .doc(facilityId)
-          .collection('products')
+          .collection(Collections.products)
           .orderBy('name')
           .get();
 
@@ -121,9 +123,9 @@ class ProductProvider with ChangeNotifier {
       if (facilityId == null || facilityId.isEmpty) return;
 
       final docRef = FirebaseFirestore.instance
-          .collection('facilities')
+          .collection(Collections.facilities)
           .doc(facilityId)
-          .collection('products')
+          .collection(Collections.products)
           .doc();
 
       final now = DateTime.now();
@@ -140,7 +142,7 @@ class ProductProvider with ChangeNotifier {
       // The first delivery is itself a batch - recorded from day one, so
       // "add more stock later" always means "add another batch" instead
       // of silently overwriting this one's real expiry.
-      final batchRef = docRef.collection('batches').doc();
+      final batchRef = docRef.collection(Collections.batches).doc();
       final firstBatch = ProductBatch(
         id: batchRef.id,
         productId: docRef.id,
@@ -161,9 +163,9 @@ class ProductProvider with ChangeNotifier {
       // figure with nothing behind it.
       if (product.stockQty > 0 || product.sellableQty > 0) {
         await FirebaseFirestore.instance
-            .collection('facilities')
+            .collection(Collections.facilities)
             .doc(facilityId)
-            .collection('stockAdditions')
+            .collection(Collections.stockAdditions)
             .add({
           'productId': docRef.id,
           'sellableDelta': product.sellableQty,
@@ -212,9 +214,9 @@ class ProductProvider with ChangeNotifier {
     required bool isWatchlisted,
   }) async {
     await FirebaseFirestore.instance
-        .collection('facilities')
+        .collection(Collections.facilities)
         .doc(facilityId)
-        .collection('products')
+        .collection(Collections.products)
         .doc(productId)
         .update({'isWatchlisted': isWatchlisted});
   }
@@ -233,11 +235,11 @@ class ProductProvider with ChangeNotifier {
   }) async {
     try {
       final productRef = FirebaseFirestore.instance
-          .collection('facilities')
+          .collection(Collections.facilities)
           .doc(facilityId)
-          .collection('products')
+          .collection(Collections.products)
           .doc(productId);
-      final batchesRef = productRef.collection('batches');
+      final batchesRef = productRef.collection(Collections.batches);
       final toSellable = destination == 'sellable';
 
       // If this batch number + expiry exactly match a batch that
@@ -315,9 +317,9 @@ class ProductProvider with ChangeNotifier {
       // be trusted to represent only today's addition once it already
       // had stock from before.
       await FirebaseFirestore.instance
-          .collection('facilities')
+          .collection(Collections.facilities)
           .doc(facilityId)
-          .collection('stockAdditions')
+          .collection(Collections.stockAdditions)
           .add({
         'productId': productId,
         'sellableDelta': toSellable ? stockQty : 0,
@@ -368,7 +370,7 @@ class ProductProvider with ChangeNotifier {
           // Kept for quick reference only - the batches subcollection is
           // the real source of truth once more than one batch exists.
           'batchNo': batchNo ?? pData['batchNo'],
-          'updatedAt': FieldValue.serverTimestamp(),
+          Fields.updatedAt: FieldValue.serverTimestamp(),
         });
       });
 
@@ -421,11 +423,11 @@ class ProductProvider with ChangeNotifier {
     required String batchId,
   }) async {
     final productRef = FirebaseFirestore.instance
-        .collection('facilities')
+        .collection(Collections.facilities)
         .doc(facilityId)
-        .collection('products')
+        .collection(Collections.products)
         .doc(productId);
-    final batchesRef = productRef.collection('batches');
+    final batchesRef = productRef.collection(Collections.batches);
 
     final allBatchesSnap = await batchesRef.get();
     final allBatchRefs = allBatchesSnap.docs.map((d) => d.reference).toList();
@@ -462,7 +464,7 @@ class ProductProvider with ChangeNotifier {
         'stockQty': aggregates['stockQty'],
         'sellableQty': aggregates['sellableQty'],
         'expiry': aggregates['expiry'] != null ? Timestamp.fromDate(aggregates['expiry']) : null,
-        'updatedAt': FieldValue.serverTimestamp(),
+        Fields.updatedAt: FieldValue.serverTimestamp(),
       });
     });
 
@@ -571,11 +573,11 @@ class ProductProvider with ChangeNotifier {
     int? sellableQty,
   }) async {
     final productRef = FirebaseFirestore.instance
-        .collection('facilities')
+        .collection(Collections.facilities)
         .doc(facilityId)
-        .collection('products')
+        .collection(Collections.products)
         .doc(productId);
-    final batchesRef = productRef.collection('batches');
+    final batchesRef = productRef.collection(Collections.batches);
 
     // The list of batches to recalculate from - queried outside the
     // transaction, since Firestore transactions can only read specific
@@ -647,7 +649,7 @@ class ProductProvider with ChangeNotifier {
         'stockQty': aggregates['stockQty'],
         'sellableQty': aggregates['sellableQty'],
         'expiry': aggregates['expiry'] != null ? Timestamp.fromDate(aggregates['expiry']) : null,
-        'updatedAt': FieldValue.serverTimestamp(),
+        Fields.updatedAt: FieldValue.serverTimestamp(),
       });
     });
 
@@ -691,11 +693,11 @@ class ProductProvider with ChangeNotifier {
   /// even before Sales enforces that automatically (a later phase).
   Stream<List<ProductBatch>> streamBatchesForProduct(String facilityId, String productId) {
     return FirebaseFirestore.instance
-        .collection('facilities')
+        .collection(Collections.facilities)
         .doc(facilityId)
-        .collection('products')
+        .collection(Collections.products)
         .doc(productId)
-        .collection('batches')
+        .collection(Collections.batches)
         .orderBy('expiry', descending: false)
         .snapshots()
         .map((snapshot) => snapshot.docs
@@ -723,9 +725,9 @@ class ProductProvider with ChangeNotifier {
       );
 
       await FirebaseFirestore.instance
-          .collection('facilities')
+          .collection(Collections.facilities)
           .doc(facilityId)
-          .collection('products')
+          .collection(Collections.products)
           .doc(updated.id)
           .set(updated.toMap());
 
@@ -774,8 +776,8 @@ class ProductProvider with ChangeNotifier {
 
     final firestore = FirebaseFirestore.instance;
     final productRef =
-        firestore.collection('facilities').doc(facilityId).collection('products').doc(productId);
-    final batchesRef = productRef.collection('batches');
+        firestore.collection(Collections.facilities).doc(facilityId).collection(Collections.products).doc(productId);
+    final batchesRef = productRef.collection(Collections.batches);
 
     // Query outside the transaction (Firestore transactions can only
     // read specific documents you already know, not run queries) to
@@ -872,8 +874,8 @@ class ProductProvider with ChangeNotifier {
 
     final firestore = FirebaseFirestore.instance;
     final productRef =
-        firestore.collection('facilities').doc(facilityId).collection('products').doc(productId);
-    final batchesRef = productRef.collection('batches');
+        firestore.collection(Collections.facilities).doc(facilityId).collection(Collections.products).doc(productId);
+    final batchesRef = productRef.collection(Collections.batches);
 
     int totalRestored = 0;
 
@@ -921,9 +923,9 @@ class ProductProvider with ChangeNotifier {
 
     final facilityId = product.facilityId;
     final productRef = FirebaseFirestore.instance
-        .collection('facilities')
+        .collection(Collections.facilities)
         .doc(facilityId)
-        .collection('products')
+        .collection(Collections.products)
         .doc(product.id);
 
     try {
@@ -940,7 +942,7 @@ class ProductProvider with ChangeNotifier {
       // (soonest-expiry warehouse stock first) - falls back to the old
       // aggregate-only behavior below when a product has no batch
       // records yet (created before batch tracking existed).
-      final batchesRef = productRef.collection('batches');
+      final batchesRef = productRef.collection(Collections.batches);
       final candidateSnap = await batchesRef.where('stockQty', isGreaterThan: 0).get();
 
       if (candidateSnap.docs.isNotEmpty) {
@@ -991,7 +993,7 @@ class ProductProvider with ChangeNotifier {
           transaction.update(productRef, {
             'stockQty': newStock,
             'sellableQty': newSellable,
-            'updatedAt': FieldValue.serverTimestamp(),
+            Fields.updatedAt: FieldValue.serverTimestamp(),
           });
         });
       } else {
@@ -1016,7 +1018,7 @@ class ProductProvider with ChangeNotifier {
           transaction.update(productRef, {
             'stockQty': newStock,
             'sellableQty': newSellable,
-            'updatedAt': FieldValue.serverTimestamp(),
+            Fields.updatedAt: FieldValue.serverTimestamp(),
           });
         });
       }
@@ -1039,9 +1041,9 @@ class ProductProvider with ChangeNotifier {
       // lets the Daily Report count it under "Added" instead of an
       // unexplained "Adjusted" figure.
       await FirebaseFirestore.instance
-          .collection('facilities')
+          .collection(Collections.facilities)
           .doc(facilityId)
-          .collection('stockAdditions')
+          .collection(Collections.stockAdditions)
           .add({
         'productId': product.id,
         'sellableDelta': qty,
@@ -1101,11 +1103,11 @@ class ProductProvider with ChangeNotifier {
 
     final facilityId = product.facilityId;
     final productRef = FirebaseFirestore.instance
-        .collection('facilities')
+        .collection(Collections.facilities)
         .doc(facilityId)
-        .collection('products')
+        .collection(Collections.products)
         .doc(product.id);
-    final batchRef = productRef.collection('batches').doc(batch.id);
+    final batchRef = productRef.collection(Collections.batches).doc(batch.id);
 
     try {
       final userInfo = await ActivityLogger.getCurrentUserInfo();
@@ -1139,7 +1141,7 @@ class ProductProvider with ChangeNotifier {
         transaction.update(productRef, {
           'stockQty': newStockQty,
           'sellableQty': newSellableQty,
-          'updatedAt': FieldValue.serverTimestamp(),
+          Fields.updatedAt: FieldValue.serverTimestamp(),
         });
       });
 
@@ -1156,9 +1158,9 @@ class ProductProvider with ChangeNotifier {
       }
 
       await FirebaseFirestore.instance
-          .collection('facilities')
+          .collection(Collections.facilities)
           .doc(facilityId)
-          .collection('stock_adjustments')
+          .collection(Collections.stockAdjustments)
           .add({
         'productId': product.id,
         'productName': product.name,
@@ -1166,7 +1168,7 @@ class ProductProvider with ChangeNotifier {
         'oldSellableQty': oldSellableQty,
         'newStockQty': newStockQty,
         'newSellableQty': newSellableQty,
-        'userId': userId,
+        Fields.userId: userId,
         'userName': userName,
         'source': 'Moved batch to Stock Store',
         'reason': reason,
@@ -1209,9 +1211,9 @@ class ProductProvider with ChangeNotifier {
       if (facilityId == null || facilityId.isEmpty) return;
 
       final docRef = FirebaseFirestore.instance
-          .collection('facilities')
+          .collection(Collections.facilities)
           .doc(facilityId)
-          .collection('products')
+          .collection(Collections.products)
           .doc(productId);
 
       final snapshot = await docRef.get();
@@ -1220,9 +1222,9 @@ class ProductProvider with ChangeNotifier {
       final userInfo = await ActivityLogger.getCurrentUserInfo();
 
       await FirebaseFirestore.instance
-          .collection('facilities')
+          .collection(Collections.facilities)
           .doc(facilityId)
-          .collection('trash_products')
+          .collection(Collections.trashProducts)
           .doc(productId)
           .set({
         ...snapshot.data()!,

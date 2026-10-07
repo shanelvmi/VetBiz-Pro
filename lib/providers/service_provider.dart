@@ -10,6 +10,8 @@ import 'product_provider.dart';
 import '../utils/activity_logger.dart';
 import '../utils/receipt_numbering.dart';
 import '../services/cursor_paginated_list_controller.dart';
+import '../data/collections.dart';
+import '../data/fields.dart';
 
 class ServiceProvider extends ChangeNotifier {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
@@ -74,15 +76,15 @@ class ServiceProvider extends ChangeNotifier {
       services.fold(0.0, (s, x) => s + x.totalServiceProfit);
 
   Query<Map<String, dynamic>> _baseQuery(String facilityId) => _firestore
-      .collection('facilities')
+      .collection(Collections.facilities)
       .doc(facilityId)
-      .collection('services')
+      .collection(Collections.services)
       // Ordered by updatedAt (always present - see Service.toMap, it
       // defaults to serverTimestamp) rather than serviceDate (nullable,
       // user-editable) so pagination has a reliable, always-populated
       // cursor field. serviceDate is used separately for day-bucketing in
       // the dailyServiceSummaries Cloud Function.
-      .orderBy('updatedAt', descending: true);
+      .orderBy(Fields.updatedAt, descending: true);
 
   // ==================== Services list screen: real cursor pagination ====================
   //
@@ -145,7 +147,7 @@ class ServiceProvider extends ChangeNotifier {
     final q = _servicesListQuery;
     final hasSearch = q.searchTerm.isNotEmpty;
     Query<Map<String, dynamic>> query =
-        _firestore.collection('facilities').doc(facilityId).collection('services');
+        _firestore.collection(Collections.facilities).doc(facilityId).collection(Collections.services);
 
     if (q.statusFilter != 'All') {
       query = query.where('paymentStatus', isEqualTo: q.statusFilter);
@@ -191,9 +193,9 @@ class ServiceProvider extends ChangeNotifier {
     if (q.searchTerm.isNotEmpty) return 0;
 
     Query<Map<String, dynamic>> query = _firestore
-        .collection('facilities')
+        .collection(Collections.facilities)
         .doc(facilityId)
-        .collection('services')
+        .collection(Collections.services)
         .where('serviceDate', isGreaterThan: Timestamp.fromDate(after));
     if (q.statusFilter != 'All') {
       query = query.where('paymentStatus', isEqualTo: q.statusFilter);
@@ -275,9 +277,9 @@ class ServiceProvider extends ChangeNotifier {
     if (_facilityId == null) return null;
 
     final ref = _firestore
-        .collection('facilities')
+        .collection(Collections.facilities)
         .doc(_facilityId)
-        .collection('services');
+        .collection(Collections.services);
 
     var serviceToSave = service.copyWith();
     final docRef = ref.doc(); // pre-allocate the ID, no write yet
@@ -298,7 +300,7 @@ class ServiceProvider extends ChangeNotifier {
       await docRef.set({
         ...serviceToSave.toMap(),
         ...serviceToSave.searchFields(),
-        'updatedAt': FieldValue.serverTimestamp(),
+        Fields.updatedAt: FieldValue.serverTimestamp(),
       });
 
       // Local cache (instant UI)
@@ -316,9 +318,9 @@ class ServiceProvider extends ChangeNotifier {
       if (saved.totalPaid > 0) {
         final user = FirebaseAuth.instance.currentUser;
         await _firestore
-            .collection('facilities')
+            .collection(Collections.facilities)
             .doc(_facilityId)
-            .collection('payments')
+            .collection(Collections.payments)
             .add({
           'clientId': saved.clientId,
           'clientName': saved.clientName,
@@ -364,9 +366,9 @@ class ServiceProvider extends ChangeNotifier {
     if (_facilityId == null || service.id.isEmpty) return;
 
     final doc = _firestore
-        .collection('facilities')
+        .collection(Collections.facilities)
         .doc(_facilityId)
-        .collection('services')
+        .collection(Collections.services)
         .doc(service.id);
 
     // Captured before we overwrite the cache - this is what tells us
@@ -390,7 +392,7 @@ class ServiceProvider extends ChangeNotifier {
       await doc.update({
         ...updated.toMap(),
         ...updated.searchFields(),
-        'updatedAt': FieldValue.serverTimestamp(),
+        Fields.updatedAt: FieldValue.serverTimestamp(),
       });
 
       final liveIndex = _liveServices.indexWhere((s) => s.id == service.id);
@@ -449,9 +451,9 @@ class ServiceProvider extends ChangeNotifier {
     final existing = _findCachedService(id);
 
     final doc = _firestore
-        .collection('facilities')
+        .collection(Collections.facilities)
         .doc(_facilityId)
-        .collection('services')
+        .collection(Collections.services)
         .doc(id);
 
     Map<String, dynamic>? dataForTrash;
@@ -465,9 +467,9 @@ class ServiceProvider extends ChangeNotifier {
     if (dataForTrash != null) {
       final user = FirebaseAuth.instance.currentUser;
       await _firestore
-          .collection('facilities')
+          .collection(Collections.facilities)
           .doc(_facilityId)
-          .collection('trash_services')
+          .collection(Collections.trashServices)
           .doc(id)
           .set({
         ...dataForTrash,
@@ -484,9 +486,9 @@ class ServiceProvider extends ChangeNotifier {
 
     // Delete associated transactions
     final tx = _firestore
-        .collection('facilities')
+        .collection(Collections.facilities)
         .doc(_facilityId)
-        .collection('transactions')
+        .collection(Collections.transactions)
         .where('serviceId', isEqualTo: id);
 
     final snap = await tx.get();
@@ -505,12 +507,12 @@ class ServiceProvider extends ChangeNotifier {
     final clientId = existing?.clientId ?? dataForTrash?['clientId'] as String?;
     final owed = totalAmount - totalPaid;
     final debtRefForDeletedService =
-        _firestore.collection('facilities').doc(_facilityId).collection('debts').doc('service_$id');
+        _firestore.collection(Collections.facilities).doc(_facilityId).collection(Collections.debts).doc('service_$id');
     try {
       final cleanupBatch = _firestore.batch();
       if (clientId != null && owed != 0) {
         cleanupBatch.set(
-          _firestore.collection('facilities').doc(_facilityId).collection('clients').doc(clientId),
+          _firestore.collection(Collections.facilities).doc(_facilityId).collection(Collections.clients).doc(clientId),
           {'balance': FieldValue.increment(-owed)},
           SetOptions(merge: true),
         );
@@ -521,7 +523,7 @@ class ServiceProvider extends ChangeNotifier {
         // Same reasoning as _handleServiceDebt's paid-off branch - only
         // worth a recompute if this service's own debt was actually the
         // one holding the client's recorded oldest-unpaid date.
-        final clientRef = _firestore.collection('facilities').doc(_facilityId).collection('clients').doc(clientId);
+        final clientRef = _firestore.collection(Collections.facilities).doc(_facilityId).collection(Collections.clients).doc(clientId);
         final clientDoc = await clientRef.get();
         final rawOldest = clientDoc.data()?['oldestUnpaidDebtDate'];
         final currentOldest = rawOldest is Timestamp ? rawOldest.toDate() : null;
@@ -531,9 +533,9 @@ class ServiceProvider extends ChangeNotifier {
 
         if (currentOldest != null && thisDebtTimestamp != null && thisDebtTimestamp.isAtSameMomentAs(currentOldest)) {
           final remainingSnap = await _firestore
-              .collection('facilities')
+              .collection(Collections.facilities)
               .doc(_facilityId)
-              .collection('debts')
+              .collection(Collections.debts)
               .where('clientId', isEqualTo: clientId)
               .orderBy('timestamp')
               .limit(2)
@@ -586,9 +588,9 @@ class ServiceProvider extends ChangeNotifier {
     // silently accumulating duplicates that inflated a client's
     // apparent debt with every edit.
     final debtRef =
-        _firestore.collection('facilities').doc(_facilityId).collection('debts').doc('service_$serviceId');
+        _firestore.collection(Collections.facilities).doc(_facilityId).collection(Collections.debts).doc('service_$serviceId');
     final clientRef =
-        _firestore.collection('facilities').doc(_facilityId).collection('clients').doc(service.clientId);
+        _firestore.collection(Collections.facilities).doc(_facilityId).collection(Collections.clients).doc(service.clientId);
 
     final batch = _firestore.batch();
 
@@ -678,9 +680,9 @@ class ServiceProvider extends ChangeNotifier {
           // deletion is only queued in the batch below, not yet
           // committed, so it would otherwise still count itself here).
           final remainingSnap = await _firestore
-              .collection('facilities')
+              .collection(Collections.facilities)
               .doc(_facilityId)
-              .collection('debts')
+              .collection(Collections.debts)
               .where('clientId', isEqualTo: service.clientId)
               .orderBy('timestamp')
               .limit(2)
@@ -724,9 +726,9 @@ class ServiceProvider extends ChangeNotifier {
     if (_facilityId == null) return;
 
     final ref = _firestore
-        .collection('facilities')
+        .collection(Collections.facilities)
         .doc(_facilityId)
-        .collection('transactions');
+        .collection(Collections.transactions);
 
     final old = await ref.where('serviceId', isEqualTo: serviceId).get();
     for (var d in old.docs) {
@@ -856,9 +858,9 @@ class ServiceProvider extends ChangeNotifier {
     if (_facilityId == null) return;
 
     final productRef = _firestore
-        .collection('facilities')
+        .collection(Collections.facilities)
         .doc(_facilityId)
-        .collection('products')
+        .collection(Collections.products)
         .doc(productId);
 
     try {

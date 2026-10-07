@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../data/collections.dart';
 
 class FacilityProvider with ChangeNotifier {
   String? _facilityId;
@@ -45,7 +46,7 @@ class FacilityProvider with ChangeNotifier {
   void listenToFacility(String facilityId) {
     _facilitySub?.cancel();
     _facilitySub = FirebaseFirestore.instance
-        .collection('facilities')
+        .collection(Collections.facilities)
         .doc(facilityId)
         .snapshots()
         .listen((doc) async {
@@ -267,7 +268,7 @@ class FacilityProvider with ChangeNotifier {
   Future<void> loadFacility(String facilityId) async {
     try {
       final doc = await FirebaseFirestore.instance
-          .collection('facilities')
+          .collection(Collections.facilities)
           .doc(facilityId)
           .get()
           .timeout(const Duration(seconds: 15));

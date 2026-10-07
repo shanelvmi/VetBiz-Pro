@@ -4,6 +4,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:intl/intl.dart';
 
 import '../constants/subscription_plans.dart';
+import '../data/collections.dart';
 
 enum SubscriptionStatus { trial, active, grace, locked }
 
@@ -142,7 +143,7 @@ class SubscriptionProvider with ChangeNotifier {
     _subscription?.cancel();
 
     _subscription = FirebaseFirestore.instance
-        .collection('facilities')
+        .collection(Collections.facilities)
         .doc(facilityId)
         .snapshots()
         .listen((snapshot) {

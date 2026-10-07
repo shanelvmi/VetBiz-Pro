@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../models/debt.dart';
+import '../data/collections.dart';
 
 class DebtProvider with ChangeNotifier {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
@@ -16,9 +17,9 @@ class DebtProvider with ChangeNotifier {
     required String clientId,
   }) async {
     final snap = await firestore
-        .collection('facilities')
+        .collection(Collections.facilities)
         .doc(facilityId)
-        .collection('debts')
+        .collection(Collections.debts)
         .where('clientId', isEqualTo: clientId)
         .orderBy('timestamp')
         .limit(1)
@@ -53,9 +54,9 @@ class DebtProvider with ChangeNotifier {
     if (facilityId.isEmpty) return;
 
     _subscription = _firestore
-        .collection('facilities')
+        .collection(Collections.facilities)
         .doc(facilityId)
-        .collection('debts')
+        .collection(Collections.debts)
         .orderBy('timestamp', descending: true)
         .snapshots()
         .listen((snapshot) {
@@ -76,9 +77,9 @@ class DebtProvider with ChangeNotifier {
     if (facilityId.isEmpty) return null;
     try {
       final docRef = await _firestore
-          .collection('facilities')
+          .collection(Collections.facilities)
           .doc(facilityId)
-          .collection('debts')
+          .collection(Collections.debts)
           .add(debt.toMap());
       debugPrint(
           'DebtProvider: added debt ${docRef.id} for client ${debt.clientId}');
@@ -94,9 +95,9 @@ class DebtProvider with ChangeNotifier {
     if (facilityId.isEmpty || debt.id.isEmpty) return;
     try {
       await _firestore
-          .collection('facilities')
+          .collection(Collections.facilities)
           .doc(facilityId)
-          .collection('debts')
+          .collection(Collections.debts)
           .doc(debt.id)
           .update(debt.toMap());
       debugPrint('DebtProvider: updated debt ${debt.id}');
@@ -110,9 +111,9 @@ class DebtProvider with ChangeNotifier {
     if (facilityId.isEmpty || debtId.isEmpty) return;
     try {
       await _firestore
-          .collection('facilities')
+          .collection(Collections.facilities)
           .doc(facilityId)
-          .collection('debts')
+          .collection(Collections.debts)
           .doc(debtId)
           .delete();
       debugPrint('DebtProvider: deleted debt $debtId');
@@ -175,9 +176,9 @@ class DebtProvider with ChangeNotifier {
       String clientName = 'Unknown';
       try {
         final doc = await _firestore
-            .collection('facilities')
+            .collection(Collections.facilities)
             .doc(facilityId)
-            .collection('clients')
+            .collection(Collections.clients)
             .doc(clientId)
             .get();
         if (doc.exists) {

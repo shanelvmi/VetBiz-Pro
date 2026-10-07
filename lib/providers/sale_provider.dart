@@ -8,6 +8,8 @@ import '../utils/activity_logger.dart';
 import '../utils/receipt_numbering.dart';
 import 'debt_provider.dart';
 import '../services/cursor_paginated_list_controller.dart';
+import '../data/collections.dart';
+import '../data/fields.dart';
 
 class SaleProvider extends ChangeNotifier {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
@@ -69,9 +71,9 @@ class SaleProvider extends ChangeNotifier {
   }
 
   Query<Map<String, dynamic>> _baseQuery(String facilityId) => _firestore
-      .collection('facilities')
+      .collection(Collections.facilities)
       .doc(facilityId)
-      .collection('sales')
+      .collection(Collections.sales)
       .orderBy('timestamp', descending: true);
 
   // ==================== Sales list screen: real cursor pagination ====================
@@ -170,7 +172,7 @@ class SaleProvider extends ChangeNotifier {
     final q = _salesListQuery;
     final hasSearch = q.searchTerm.isNotEmpty;
     Query<Map<String, dynamic>> query =
-        _firestore.collection('facilities').doc(facilityId).collection('sales');
+        _firestore.collection(Collections.facilities).doc(facilityId).collection(Collections.sales);
 
     if (q.statusFilter != 'All') {
       query = query.where('paymentStatus', isEqualTo: q.statusFilter);
@@ -228,9 +230,9 @@ class SaleProvider extends ChangeNotifier {
     }
 
     Query<Map<String, dynamic>> query = _firestore
-        .collection('facilities')
+        .collection(Collections.facilities)
         .doc(facilityId)
-        .collection('sales')
+        .collection(Collections.sales)
         .where('timestamp', isGreaterThan: Timestamp.fromDate(after));
     if (q.statusFilter != 'All') {
       query = query.where('paymentStatus', isEqualTo: q.statusFilter);
@@ -325,9 +327,9 @@ class SaleProvider extends ChangeNotifier {
           saleToSave.clientId != null &&
           saleToSave.clientId!.isNotEmpty) {
         final clientDoc = await _firestore
-            .collection('facilities')
+            .collection(Collections.facilities)
             .doc(facilityId)
-            .collection('clients')
+            .collection(Collections.clients)
             .doc(saleToSave.clientId)
             .get();
         final name = clientDoc.data()?['name'] as String?;
@@ -389,14 +391,14 @@ class SaleProvider extends ChangeNotifier {
       saleToSave = saleToSave.copyWith(receiptNumber: await nextReceiptNumber(facilityId));
 
       final docRef = await _firestore
-          .collection('facilities')
+          .collection(Collections.facilities)
           .doc(facilityId)
-          .collection('sales')
+          .collection(Collections.sales)
           .add({
         ...saleToSave.toMap(),
         ...saleToSave.searchFields(),
         'timestamp': FieldValue.serverTimestamp(),
-        'updatedAt': FieldValue.serverTimestamp(),
+        Fields.updatedAt: FieldValue.serverTimestamp(),
       });
 
       // Update client balance by the outstanding amount only - no re-scan
@@ -415,9 +417,9 @@ class SaleProvider extends ChangeNotifier {
       // the updateDailyCollections Cloud Function.
       if (saleToSave.totalPaid > 0) {
         await _firestore
-            .collection('facilities')
+            .collection(Collections.facilities)
             .doc(facilityId)
-            .collection('payments')
+            .collection(Collections.payments)
             .add({
           'clientId': saleToSave.clientId,
           'clientName': saleToSave.clientName,
@@ -466,14 +468,14 @@ class SaleProvider extends ChangeNotifier {
 
     // Save to Firestore
     await _firestore
-        .collection('facilities')
+        .collection(Collections.facilities)
         .doc(facilityId)
-        .collection('sales')
+        .collection(Collections.sales)
         .doc(sale.id)
         .update({
       ...sale.toMap(),
       ...sale.searchFields(),
-      'updatedAt': FieldValue.serverTimestamp(),
+      Fields.updatedAt: FieldValue.serverTimestamp(),
     });
 
     if (index != -1) {
@@ -502,9 +504,9 @@ class SaleProvider extends ChangeNotifier {
         sale = _olderSales[olderIndex];
       } else {
         final doc = await _firestore
-            .collection('facilities')
+            .collection(Collections.facilities)
             .doc(facilityId)
-            .collection('sales')
+            .collection(Collections.sales)
             .doc(saleId)
             .get();
         if (doc.exists && doc.data() != null) {
@@ -515,9 +517,9 @@ class SaleProvider extends ChangeNotifier {
       if (sale != null) {
         final user = FirebaseAuth.instance.currentUser;
         await _firestore
-            .collection('facilities')
+            .collection(Collections.facilities)
             .doc(facilityId)
-            .collection('trash_sales')
+            .collection(Collections.trashSales)
             .doc(saleId)
             .set({
           ...sale.toMap(),
@@ -527,9 +529,9 @@ class SaleProvider extends ChangeNotifier {
       }
 
       await _firestore
-          .collection('facilities')
+          .collection(Collections.facilities)
           .doc(facilityId)
-          .collection('sales')
+          .collection(Collections.sales)
           .doc(saleId)
           .delete();
 
@@ -544,9 +546,9 @@ class SaleProvider extends ChangeNotifier {
         // ends up needing one) sees this debt already gone, not a stale
         // entry still counting itself.
         final debtSnap = await _firestore
-            .collection('facilities')
+            .collection(Collections.facilities)
             .doc(facilityId)
-            .collection('debts')
+            .collection(Collections.debts)
             .where('saleId', isEqualTo: saleId)
             .get();
         for (final debtDoc in debtSnap.docs) {
@@ -621,9 +623,9 @@ class SaleProvider extends ChangeNotifier {
         );
       } else {
         final productRef = _firestore
-            .collection('facilities')
+            .collection(Collections.facilities)
             .doc(facilityId)
-            .collection('products')
+            .collection(Collections.products)
             .doc(item.productId);
 
         await _firestore.runTransaction((transaction) async {
@@ -646,9 +648,9 @@ class SaleProvider extends ChangeNotifier {
     if (clientId == null || clientId.isEmpty || delta == 0) return;
 
     final clientRef = _firestore
-        .collection('facilities')
+        .collection(Collections.facilities)
         .doc(facilityId)
-        .collection('clients')
+        .collection(Collections.clients)
         .doc(clientId);
 
     try {

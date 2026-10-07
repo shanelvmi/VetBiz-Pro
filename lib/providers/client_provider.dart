@@ -5,6 +5,8 @@ import '../models/client.dart';
 import '../utils/client_duplicate_matcher.dart';
 import '../utils/paginated_stream_loader.dart';
 import '../services/cursor_paginated_list_controller.dart';
+import '../data/collections.dart';
+import '../data/fields.dart';
 
 /// An existing client that looks like the one being saved - see
 /// [ClientProvider.findSimilarClient].
@@ -74,9 +76,9 @@ class ClientProvider with ChangeNotifier, PaginatedStreamLoader<Client> {
     if (facilityId.isEmpty) return;
 
     final collection = _firestore
-        .collection('facilities')
+        .collection(Collections.facilities)
         .doc(facilityId)
-        .collection('clients');
+        .collection(Collections.clients);
 
     _clientsSubscription = collection.snapshots().listen((snapshot) {
       _clients = snapshot.docs
@@ -104,9 +106,9 @@ class ClientProvider with ChangeNotifier, PaginatedStreamLoader<Client> {
   Future<void> fetchClients(String facilityId) async {
     try {
       final snapshot = await _firestore
-          .collection('facilities')
+          .collection(Collections.facilities)
           .doc(facilityId)
-          .collection('clients')
+          .collection(Collections.clients)
           .orderBy('name')
           .get();
 
@@ -160,9 +162,9 @@ class ClientProvider with ChangeNotifier, PaginatedStreamLoader<Client> {
     _activeTypeFilter = typeFilter;
 
     Query query = _firestore
-        .collection('facilities')
+        .collection(Collections.facilities)
         .doc(facilityId)
-        .collection('clients')
+        .collection(Collections.clients)
         .orderBy('name');
 
     if (typeFilter != null) {
@@ -178,9 +180,9 @@ class ClientProvider with ChangeNotifier, PaginatedStreamLoader<Client> {
     if (_pagedFacilityId == null) return;
 
     Query query = _firestore
-        .collection('facilities')
+        .collection(Collections.facilities)
         .doc(_pagedFacilityId)
-        .collection('clients')
+        .collection(Collections.clients)
         .orderBy('name');
 
     if (_activeTypeFilter != null) {
@@ -201,9 +203,9 @@ class ClientProvider with ChangeNotifier, PaginatedStreamLoader<Client> {
     final q = query.trim().toLowerCase();
 
     final snapshot = await _firestore
-        .collection('facilities')
+        .collection(Collections.facilities)
         .doc(facilityId)
-        .collection('clients')
+        .collection(Collections.clients)
         .orderBy('nameLower')
         .where('nameLower', isGreaterThanOrEqualTo: q)
         .where('nameLower', isLessThan: '$q\uf8ff')
@@ -224,9 +226,9 @@ class ClientProvider with ChangeNotifier, PaginatedStreamLoader<Client> {
   /// deliberately, from Settings.
   Future<int> rebuildSearchIndex(String facilityId) async {
     final snapshot = await _firestore
-        .collection('facilities')
+        .collection(Collections.facilities)
         .doc(facilityId)
-        .collection('clients')
+        .collection(Collections.clients)
         .get();
 
     // Firestore allows at most 500 writes per batch, and every older client
@@ -315,13 +317,13 @@ class ClientProvider with ChangeNotifier, PaginatedStreamLoader<Client> {
     final q = _clientsListQuery;
     final hasSearch = q.searchTerm.isNotEmpty;
     Query<Map<String, dynamic>> query =
-        _firestore.collection('facilities').doc(facilityId).collection('clients');
+        _firestore.collection(Collections.facilities).doc(facilityId).collection(Collections.clients);
 
     if (q.typeFilter != 'All') {
       query = query.where('types', arrayContains: q.typeFilter);
     }
     if (q.statusFilter != 'All') {
-      query = query.where('status', isEqualTo: q.statusFilter);
+      query = query.where(Fields.status, isEqualTo: q.statusFilter);
     }
 
     if (hasSearch) {
@@ -332,8 +334,8 @@ class ClientProvider with ChangeNotifier, PaginatedStreamLoader<Client> {
           .orderBy(FieldPath.documentId);
     } else {
       query = query
-          .where('createdAt', isLessThanOrEqualTo: Timestamp.fromDate(snapshotAt))
-          .orderBy('createdAt', descending: true)
+          .where(Fields.createdAt, isLessThanOrEqualTo: Timestamp.fromDate(snapshotAt))
+          .orderBy(Fields.createdAt, descending: true)
           .orderBy(FieldPath.documentId, descending: true);
     }
 
@@ -357,15 +359,15 @@ class ClientProvider with ChangeNotifier, PaginatedStreamLoader<Client> {
     if (q.searchTerm.isNotEmpty) return 0;
 
     Query<Map<String, dynamic>> query = _firestore
-        .collection('facilities')
+        .collection(Collections.facilities)
         .doc(facilityId)
-        .collection('clients')
-        .where('createdAt', isGreaterThan: Timestamp.fromDate(after));
+        .collection(Collections.clients)
+        .where(Fields.createdAt, isGreaterThan: Timestamp.fromDate(after));
     if (q.typeFilter != 'All') {
       query = query.where('types', arrayContains: q.typeFilter);
     }
     if (q.statusFilter != 'All') {
-      query = query.where('status', isEqualTo: q.statusFilter);
+      query = query.where(Fields.status, isEqualTo: q.statusFilter);
     }
 
     final agg = await query.count().get();
@@ -474,7 +476,7 @@ class ClientProvider with ChangeNotifier, PaginatedStreamLoader<Client> {
     final q = _debtorsListQuery;
     final hasSearch = q.searchTerm.isNotEmpty;
     Query<Map<String, dynamic>> query =
-        _firestore.collection('facilities').doc(facilityId).collection('clients');
+        _firestore.collection(Collections.facilities).doc(facilityId).collection(Collections.clients);
 
     if (hasSearch) {
       query = query
@@ -525,7 +527,7 @@ class ClientProvider with ChangeNotifier, PaginatedStreamLoader<Client> {
   /// whichever page the list has loaded so far.
   Future<({int totalDebtors, double totalOwed, int overdueDebtors})> fetchDebtorsMetrics(
       String facilityId, {required int overdueDays}) async {
-    final clientsRef = _firestore.collection('facilities').doc(facilityId).collection('clients');
+    final clientsRef = _firestore.collection(Collections.facilities).doc(facilityId).collection(Collections.clients);
     final debtorsQuery = clientsRef.where('balance', isGreaterThan: 0);
 
     final countAgg = await debtorsQuery.count().get();
@@ -564,7 +566,7 @@ class ClientProvider with ChangeNotifier, PaginatedStreamLoader<Client> {
     bool checkName = true,
     bool checkPhone = true,
   }) async {
-    final clients = _firestore.collection('facilities').doc(facilityId).collection('clients');
+    final clients = _firestore.collection(Collections.facilities).doc(facilityId).collection(Collections.clients);
 
     if (checkPhone) {
       final key = ClientDuplicateMatcher.phoneKey(phone);
@@ -633,9 +635,9 @@ class ClientProvider with ChangeNotifier, PaginatedStreamLoader<Client> {
     String? notes,
   }) async {
     final clientsCollection = _firestore
-        .collection('facilities')
+        .collection(Collections.facilities)
         .doc(facilityId)
-        .collection('clients');
+        .collection(Collections.clients);
 
     final docRef = await clientsCollection.add({
       'name': name,
@@ -654,8 +656,8 @@ class ClientProvider with ChangeNotifier, PaginatedStreamLoader<Client> {
       'businessName': businessName,
       'vetPracticeType': vetPracticeType,
       'notes': notes,
-      'createdAt': FieldValue.serverTimestamp(),
-      'updatedAt': FieldValue.serverTimestamp(),
+      Fields.createdAt: FieldValue.serverTimestamp(),
+      Fields.updatedAt: FieldValue.serverTimestamp(),
     });
 
     return docRef.id;
@@ -664,9 +666,9 @@ class ClientProvider with ChangeNotifier, PaginatedStreamLoader<Client> {
   /// Update client document
   Future<void> updateClient(String facilityId, Client client) async {
     final docRef = _firestore
-        .collection('facilities')
+        .collection(Collections.facilities)
         .doc(facilityId)
-        .collection('clients')
+        .collection(Collections.clients)
         .doc(client.id);
 
     await docRef.update(client.toMap());
@@ -675,9 +677,9 @@ class ClientProvider with ChangeNotifier, PaginatedStreamLoader<Client> {
   /// Delete a client
   Future<void> deleteClient(String facilityId, String clientId) async {
     final docRef = _firestore
-        .collection('facilities')
+        .collection(Collections.facilities)
         .doc(facilityId)
-        .collection('clients')
+        .collection(Collections.clients)
         .doc(clientId);
 
     await docRef.delete();

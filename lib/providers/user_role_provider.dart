@@ -4,6 +4,8 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
 import '../utils/force_logout.dart';
+import '../data/collections.dart';
+import '../data/fields.dart';
 
 /// Tracks the signed-in user's own role in real time (admin vs
 /// assistant), read from their `users/{uid}` document - the same
@@ -24,11 +26,11 @@ class UserRoleProvider with ChangeNotifier {
 
     _subscription?.cancel();
     _subscription = FirebaseFirestore.instance
-        .collection('users')
+        .collection(Collections.users)
         .doc(user.uid)
         .snapshots()
         .listen((snapshot) {
-      _role = snapshot.data()?['role'] as String?;
+      _role = snapshot.data()?[Fields.role] as String?;
 
       // If someone else (an admin) deactivates this account while it's
       // actively in use, this fires the moment that write lands - no
@@ -36,7 +38,7 @@ class UserRoleProvider with ChangeNotifier {
       // Admins are exempt (checked here as a backup - the rules
       // themselves now prevent a Platform Admin's status from ever
       // being set to deactivated in the first place).
-      final status = (snapshot.data()?['status'] as String?)?.toLowerCase();
+      final status = (snapshot.data()?[Fields.status] as String?)?.toLowerCase();
       if (status == 'deactivated') {
         _handlePossibleDeactivation(user.uid);
         return;
@@ -51,7 +53,7 @@ class UserRoleProvider with ChangeNotifier {
   Future<void> _handlePossibleDeactivation(String uid) async {
     try {
       final platformAdminDoc = await FirebaseFirestore.instance
-          .collection('platform_admins')
+          .collection(Collections.platformAdmins)
           .doc(uid)
           .get()
           .timeout(const Duration(seconds: 10));

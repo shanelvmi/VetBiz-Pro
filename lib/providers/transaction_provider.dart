@@ -8,6 +8,7 @@ import 'facility_provider.dart';
 import '../utils/activity_logger.dart';
 import '../utils/receipt_numbering.dart';
 import '../services/cursor_paginated_list_controller.dart';
+import '../data/collections.dart';
 
 class TransactionProvider with ChangeNotifier {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
@@ -55,9 +56,9 @@ class TransactionProvider with ChangeNotifier {
   }
 
   Query<Map<String, dynamic>> _baseQuery(String facilityId) => _firestore
-      .collection('facilities')
+      .collection(Collections.facilities)
       .doc(facilityId)
-      .collection('transactions')
+      .collection(Collections.transactions)
       .orderBy('date', descending: true);
 
   // ==================== Transactions list screen: real cursor pagination ====================
@@ -96,7 +97,7 @@ class TransactionProvider with ChangeNotifier {
     final q = _transactionsListQuery;
     final hasSearch = q.searchTerm.isNotEmpty;
     Query<Map<String, dynamic>> query =
-        _firestore.collection('facilities').doc(facilityId).collection('transactions');
+        _firestore.collection(Collections.facilities).doc(facilityId).collection(Collections.transactions);
 
     if (q.typeFilter != null) {
       query = query.where('type', isEqualTo: q.typeFilter);
@@ -135,9 +136,9 @@ class TransactionProvider with ChangeNotifier {
     if (q.searchTerm.isNotEmpty) return 0;
 
     Query<Map<String, dynamic>> query = _firestore
-        .collection('facilities')
+        .collection(Collections.facilities)
         .doc(facilityId)
-        .collection('transactions')
+        .collection(Collections.transactions)
         .where('date', isGreaterThan: Timestamp.fromDate(after));
     if (q.typeFilter != null) {
       query = query.where('type', isEqualTo: q.typeFilter);
@@ -265,9 +266,9 @@ class TransactionProvider with ChangeNotifier {
       }
 
       final docRef = _firestore
-          .collection('facilities')
+          .collection(Collections.facilities)
           .doc(facilityId)
-          .collection('transactions')
+          .collection(Collections.transactions)
           .doc();
 
       final counterName =
@@ -315,9 +316,9 @@ class TransactionProvider with ChangeNotifier {
       }
 
       await _firestore
-          .collection('facilities')
+          .collection(Collections.facilities)
           .doc(facilityId)
-          .collection('transactions')
+          .collection(Collections.transactions)
           .doc(updatedTransaction.id)
           .set({...updatedTransaction.toMap(), ...updatedTransaction.searchFields()});
 
@@ -366,9 +367,9 @@ class TransactionProvider with ChangeNotifier {
       }
 
       final docRef = _firestore
-          .collection('facilities')
+          .collection(Collections.facilities)
           .doc(facilityId)
-          .collection('transactions')
+          .collection(Collections.transactions)
           .doc(transactionId);
 
       final snapshot = await docRef.get();
@@ -381,9 +382,9 @@ class TransactionProvider with ChangeNotifier {
       // pattern already used for products/clients/services/sales.
       // Auto-purged after 30 days by a scheduled Cloud Function.
       await _firestore
-          .collection('facilities')
+          .collection(Collections.facilities)
           .doc(facilityId)
-          .collection('trash_transactions')
+          .collection(Collections.trashTransactions)
           .doc(transactionId)
           .set({
         ...snapshot.data()!,
