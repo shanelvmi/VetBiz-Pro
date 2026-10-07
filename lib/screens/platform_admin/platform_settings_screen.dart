@@ -10,6 +10,7 @@ import '../../utils/facility_limit_helper.dart';
 import '../../utils/thousands_input_formatter.dart';
 import 'promotions_screen.dart';
 import '../../theme/app_palette.dart';
+import '../../data/collections.dart';
 
 /// Platform-wide configuration - currently new-facility trial length and
 /// subscription pricing. Deliberately separate from Overview: Overview
@@ -116,7 +117,7 @@ class _MaintenanceModeCardState extends State<_MaintenanceModeCard> {
 
   Future<void> _loadCurrentValue() async {
     try {
-      final doc = await FirebaseFirestore.instance.collection('platform_config').doc('settings').get();
+      final doc = await FirebaseFirestore.instance.collection(Collections.platformConfig).doc('settings').get();
       final data = doc.data();
       if (mounted) {
         setState(() {
@@ -158,7 +159,7 @@ class _MaintenanceModeCardState extends State<_MaintenanceModeCard> {
     setState(() => _isTogglingMode = true);
     try {
       await FirebaseFirestore.instance
-          .collection('platform_config')
+          .collection(Collections.platformConfig)
           .doc('settings')
           .set({'maintenanceMode': value}, SetOptions(merge: true));
       if (!mounted) return;
@@ -185,7 +186,7 @@ class _MaintenanceModeCardState extends State<_MaintenanceModeCard> {
     setState(() => _isSavingMessage = true);
     try {
       await FirebaseFirestore.instance
-          .collection('platform_config')
+          .collection(Collections.platformConfig)
           .doc('settings')
           .set({'maintenanceMessage': _messageController.text.trim()}, SetOptions(merge: true));
       if (!mounted) return;
@@ -325,7 +326,7 @@ class _TrialSettingsCardState extends State<_TrialSettingsCard> {
   Future<void> _loadCurrentValue() async {
     try {
       final doc =
-          await FirebaseFirestore.instance.collection('platform_config').doc('settings').get();
+          await FirebaseFirestore.instance.collection(Collections.platformConfig).doc('settings').get();
       final configured = (doc.data()?['trialDays'] as num?)?.toInt();
       if (mounted) {
         setState(() {
@@ -356,7 +357,7 @@ class _TrialSettingsCardState extends State<_TrialSettingsCard> {
     setState(() => _isSaving = true);
     try {
       await FirebaseFirestore.instance
-          .collection('platform_config')
+          .collection(Collections.platformConfig)
           .doc('settings')
           .set({'trialDays': parsed}, SetOptions(merge: true));
       if (!mounted) return;
@@ -512,7 +513,7 @@ class _PricingSettingsCardState extends State<_PricingSettingsCard> {
     setState(() => _isSaving = true);
     try {
       await FirebaseFirestore.instance
-          .collection('platform_config')
+          .collection(Collections.platformConfig)
           .doc('settings')
           .set(updates, SetOptions(merge: true));
       if (!mounted) return;
@@ -661,7 +662,7 @@ class _FacilityLimitSettingsCardState extends State<_FacilityLimitSettingsCard> 
     setState(() => _isSaving = true);
     try {
       await FirebaseFirestore.instance
-          .collection('platform_config')
+          .collection(Collections.platformConfig)
           .doc('settings')
           .set({'maxFacilitiesPerAdmin': parsed}, SetOptions(merge: true));
       if (!mounted) return;

@@ -7,6 +7,8 @@ import '../../widgets/firestore_error_view.dart';
 import '../../widgets/hover_elevate_card.dart';
 import 'overview_details_screen.dart';
 import '../../theme/app_palette.dart';
+import '../../data/collections.dart';
+import '../../data/fields.dart';
 
 /// A snapshot of the whole business - how many facilities, in what state, and
 /// how much has actually been collected this month. Reads every facility
@@ -70,7 +72,7 @@ class _OverviewTabState extends State<OverviewTab> {
     // All three are independent - none depends on another's result - so
     // they run concurrently instead of one full round trip after another.
     final results = await Future.wait([
-      FirebaseFirestore.instance.collection('facilities').get(),
+      FirebaseFirestore.instance.collection(Collections.facilities).get(),
       // Filtered by date at the query itself now, not after downloading
       // everything - this previously pulled every approved payment ever
       // recorded platform-wide just to sum the ones from this month,
@@ -78,13 +80,13 @@ class _OverviewTabState extends State<OverviewTab> {
       // composite index (status + reviewedAt) - Firestore's error
       // message on first run includes a direct link to create it.
       FirebaseFirestore.instance
-          .collectionGroup('payment_submissions')
-          .where('status', isEqualTo: 'approved')
+          .collectionGroup(Collections.paymentSubmissions)
+          .where(Fields.status, isEqualTo: 'approved')
           .where('reviewedAt', isGreaterThanOrEqualTo: Timestamp.fromDate(monthStart))
           .get(),
       FirebaseFirestore.instance
-          .collectionGroup('payment_submissions')
-          .where('status', isEqualTo: 'pending')
+          .collectionGroup(Collections.paymentSubmissions)
+          .where(Fields.status, isEqualTo: 'pending')
           .get(),
     ]);
     final facilitiesSnap = results[0];

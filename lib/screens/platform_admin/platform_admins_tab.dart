@@ -5,6 +5,8 @@ import 'package:intl/intl.dart';
 
 import '../../widgets/hover_elevate_card.dart';
 import '../../theme/app_palette.dart';
+import '../../data/collections.dart';
+import '../../data/fields.dart';
 
 /// Manage who else has platform admin access - previously the only way
 /// to grant this was manually creating a document in Firebase Console.
@@ -37,7 +39,7 @@ class _PlatformAdminsTabState extends State<PlatformAdminsTab> {
 
     try {
       final userQuery = await FirebaseFirestore.instance
-          .collection('users')
+          .collection(Collections.users)
           .where('email', isEqualTo: email)
           .limit(1)
           .get();
@@ -58,7 +60,7 @@ class _PlatformAdminsTabState extends State<PlatformAdminsTab> {
       // added as a Platform Admin - an Assistant must first be promoted
       // to Admin (Users > their profile > Change role), not silently
       // upgraded as a side effect of this action.
-      if (userData['role'] != 'admin') {
+      if (userData[Fields.role] != 'admin') {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
@@ -71,7 +73,7 @@ class _PlatformAdminsTabState extends State<PlatformAdminsTab> {
         return;
       }
 
-      await FirebaseFirestore.instance.collection('platform_admins').doc(userDoc.id).set({
+      await FirebaseFirestore.instance.collection(Collections.platformAdmins).doc(userDoc.id).set({
         'email': email,
         'fullName': userData['fullName'],
         'addedAt': FieldValue.serverTimestamp(),
@@ -125,7 +127,7 @@ class _PlatformAdminsTabState extends State<PlatformAdminsTab> {
 
     if (confirmed != true) return;
 
-    await FirebaseFirestore.instance.collection('platform_admins').doc(uid).delete();
+    await FirebaseFirestore.instance.collection(Collections.platformAdmins).doc(uid).delete();
   }
 
   @override
@@ -173,7 +175,7 @@ class _PlatformAdminsTabState extends State<PlatformAdminsTab> {
         ),
         Expanded(
           child: StreamBuilder<QuerySnapshot>(
-            stream: FirebaseFirestore.instance.collection('platform_admins').snapshots(),
+            stream: FirebaseFirestore.instance.collection(Collections.platformAdmins).snapshots(),
             builder: (context, snapshot) {
               if (snapshot.connectionState == ConnectionState.waiting) {
                 return const Center(child: CircularProgressIndicator());
@@ -205,7 +207,7 @@ class _PlatformAdminsTabState extends State<PlatformAdminsTab> {
                     // been created with no fields at all (the manual,
                     // one-time bootstrap step for the very first admin
                     // doesn't require any).
-                    future: FirebaseFirestore.instance.collection('users').doc(doc.id).get(),
+                    future: FirebaseFirestore.instance.collection(Collections.users).doc(doc.id).get(),
                     builder: (context, userSnap) {
                       final userData = userSnap.data?.data() as Map<String, dynamic>?;
                       final fullName = userData?['fullName'] as String? ?? data['fullName'] as String?;

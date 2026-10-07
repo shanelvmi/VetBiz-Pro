@@ -8,6 +8,8 @@ import '../../models/promotion.dart';
 import '../../widgets/hover_elevate_card.dart';
 import '../../widgets/firestore_error_view.dart';
 import '../../theme/app_palette.dart';
+import '../../data/collections.dart';
+import '../../data/fields.dart';
 
 /// Manage subscription discounts/offers - "Nanenane Sale", a
 /// month-end push, a renew-now discount for facilities about to
@@ -221,7 +223,7 @@ class _PromotionCard extends StatelessWidget {
                 else
                   TextButton.icon(
                     onPressed: () => FirebaseFirestore.instance
-                        .collection('promotions')
+                        .collection(Collections.promotions)
                         .doc(promotion.id)
                         .update({'active': false}),
                     icon: const Icon(Icons.pause_circle_outline, size: 18),
@@ -252,7 +254,7 @@ class _PromotionCard extends StatelessWidget {
                       ),
                     );
                     if (confirmed == true) {
-                      await FirebaseFirestore.instance.collection('promotions').doc(promotion.id).delete();
+                      await FirebaseFirestore.instance.collection(Collections.promotions).doc(promotion.id).delete();
                     }
                   },
                 ),
@@ -315,7 +317,7 @@ Future<void> _showPromotionEditor(BuildContext context, {Promotion? existing}) a
     // targets, rather than showing raw ids as placeholder labels
     // until someone happens to re-search for them.
     final preselected = await FirebaseFirestore.instance
-        .collection('facilities')
+        .collection(Collections.facilities)
         .where(FieldPath.documentId, whereIn: existing.targetFacilityIds.take(10).toList())
         .get();
     for (final doc in preselected.docs) {
@@ -551,13 +553,13 @@ Future<void> _showPromotionEditor(BuildContext context, {Promotion? existing}) a
   };
 
   if (isEditing) {
-    await FirebaseFirestore.instance.collection('promotions').doc(existing!.id).update(promotionData);
+    await FirebaseFirestore.instance.collection(Collections.promotions).doc(existing!.id).update(promotionData);
     if (activateImmediately) await setActivePromotion(existing!.id);
   } else {
-    final docRef = await FirebaseFirestore.instance.collection('promotions').add({
+    final docRef = await FirebaseFirestore.instance.collection(Collections.promotions).add({
       ...promotionData,
       'active': false,
-      'createdAt': FieldValue.serverTimestamp(),
+      Fields.createdAt: FieldValue.serverTimestamp(),
     });
     if (activateImmediately) await setActivePromotion(docRef.id);
   }
@@ -630,7 +632,7 @@ Future<void> _pickFacilities(
   Map<String, String> selectedFacilities,
   StateSetter setEditorState,
 ) async {
-  final facilitiesSnap = await FirebaseFirestore.instance.collection('facilities').get();
+  final facilitiesSnap = await FirebaseFirestore.instance.collection(Collections.facilities).get();
   if (!context.mounted) return;
 
   final tempSelected = Map<String, String>.from(selectedFacilities);

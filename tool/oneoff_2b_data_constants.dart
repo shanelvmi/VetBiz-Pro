@@ -62,7 +62,8 @@ void main(List<String> args) {
       final notAField = out.contains('prefs.') ||
           out.contains('userInfo[') ||
           out.contains('facility[') ||
-          out.contains('_call(');
+          out.contains('_call(') ||
+          out.contains('callable.call(');
       if (!notAField) {
         out = out.replaceAllMapped(_fieldLiteral, (m) {
           f++;

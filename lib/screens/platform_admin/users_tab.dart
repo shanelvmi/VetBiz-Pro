@@ -7,6 +7,8 @@ import '../../utils/presence_heartbeat.dart';
 import 'user_detail_screen.dart';
 import '../../services/role_change_service.dart';
 import '../../theme/app_palette.dart';
+import '../../data/collections.dart';
+import '../../data/fields.dart';
 
 /// Every registered user across the whole platform, not scoped to one
 /// facility - the missing piece that made "an assistant switching
@@ -93,9 +95,9 @@ class _UsersTabState extends State<UsersTab> {
 
   Query<Map<String, dynamic>> _baseQuery() {
     Query<Map<String, dynamic>> query =
-        FirebaseFirestore.instance.collection('users').orderBy('fullName');
+        FirebaseFirestore.instance.collection(Collections.users).orderBy('fullName');
     if (_roleFilter != null) {
-      query = query.where('role', isEqualTo: _roleFilter);
+      query = query.where(Fields.role, isEqualTo: _roleFilter);
     }
     return query;
   }
@@ -219,7 +221,7 @@ class _UsersTabState extends State<UsersTab> {
         ),
         StreamBuilder<QuerySnapshot>(
           stream: FirebaseFirestore.instance
-              .collection('users')
+              .collection(Collections.users)
               .where(
                 'lastActiveAt',
                 isGreaterThanOrEqualTo:
@@ -311,7 +313,7 @@ class _UsersTabState extends State<UsersTab> {
         ),
         Expanded(
           child: StreamBuilder<QuerySnapshot>(
-            stream: FirebaseFirestore.instance.collection('platform_admins').snapshots(),
+            stream: FirebaseFirestore.instance.collection(Collections.platformAdmins).snapshots(),
             builder: (context, platformAdminsSnapshot) {
               final platformAdminIds =
                   (platformAdminsSnapshot.data?.docs ?? []).map((doc) => doc.id).toSet();
@@ -329,7 +331,7 @@ class _UsersTabState extends State<UsersTab> {
 
               return StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
                 stream: FirebaseFirestore.instance
-                    .collection('users')
+                    .collection(Collections.users)
                     .where(FieldPath.documentId, whereIn: platformAdminIds.take(30).toList())
                     .snapshots(),
                 builder: (context, platformAdminDocsSnapshot) {
@@ -391,8 +393,8 @@ class _UsersTabState extends State<UsersTab> {
 
     var platformAdminDocs = platformAdminDocsRaw.where((doc) {
       final data = _effectiveData(doc);
-      if (_roleFilter != null && data['role'] != _roleFilter) return false;
-      if (_statusFilter != null && (data['status'] ?? 'active') != _statusFilter) {
+      if (_roleFilter != null && data[Fields.role] != _roleFilter) return false;
+      if (_statusFilter != null && (data[Fields.status] ?? 'active') != _statusFilter) {
         return false;
       }
       return _matchesSearch(data);
@@ -409,7 +411,7 @@ class _UsersTabState extends State<UsersTab> {
     if (_statusFilter != null) {
       docs = docs.where((doc) {
         final data = _effectiveData(doc);
-        return (data['status'] ?? 'active') == _statusFilter;
+        return (data[Fields.status] ?? 'active') == _statusFilter;
       }).toList();
     }
     if (_search.isNotEmpty) {
@@ -493,8 +495,8 @@ class _UsersTabState extends State<UsersTab> {
   Widget _buildUserCard(QueryDocumentSnapshot<Map<String, dynamic>> doc, bool isPlatformAdmin) {
     final data = _effectiveData(doc);
     final facilities = (data['facilities'] as List?)?.cast<dynamic>() ?? [];
-    final status = (data['status'] ?? 'active').toString();
-    final role = (data['role'] ?? 'unknown').toString();
+    final status = (data[Fields.status] ?? 'active').toString();
+    final role = (data[Fields.role] ?? 'unknown').toString();
     final name = (data['fullName'] ?? 'Unknown').toString();
     final roleColor = _roleColor(role);
 
@@ -517,7 +519,7 @@ class _UsersTabState extends State<UsersTab> {
             ),
           );
           if (!mounted) return;
-          final freshDoc = await FirebaseFirestore.instance.collection('users').doc(doc.id).get();
+          final freshDoc = await FirebaseFirestore.instance.collection(Collections.users).doc(doc.id).get();
           if (!mounted) return;
           final freshData = freshDoc.data();
           if (freshData != null) {

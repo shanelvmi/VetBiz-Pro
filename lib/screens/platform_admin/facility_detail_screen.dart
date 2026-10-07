@@ -7,6 +7,8 @@ import 'package:intl/intl.dart';
 import '../../utils/subscription_status_utils.dart';
 import '../../constants/subscription_plans.dart';
 import '../../theme/app_palette.dart';
+import '../../data/collections.dart';
+import '../../data/fields.dart';
 
 class FacilityDetailScreen extends StatefulWidget {
   final String facilityId;
@@ -160,7 +162,7 @@ class _FacilityDetailScreenState extends State<FacilityDetailScreen> {
 
     final admin = FirebaseAuth.instance.currentUser;
 
-    await FirebaseFirestore.instance.collection('facilities').doc(widget.facilityId).set({
+    await FirebaseFirestore.instance.collection(Collections.facilities).doc(widget.facilityId).set({
       'subscriptionPlan': planIdForRecord,
       'subscriptionExpiresAt': Timestamp.fromDate(newExpiry),
       'lastPaymentAt': FieldValue.serverTimestamp(),
@@ -283,7 +285,7 @@ class _FacilityDetailScreenState extends State<FacilityDetailScreen> {
         foregroundColor: Colors.white,
       ),
       body: StreamBuilder<DocumentSnapshot>(
-        stream: FirebaseFirestore.instance.collection('facilities').doc(widget.facilityId).snapshots(),
+        stream: FirebaseFirestore.instance.collection(Collections.facilities).doc(widget.facilityId).snapshots(),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return const Center(child: CircularProgressIndicator());
@@ -298,7 +300,7 @@ class _FacilityDetailScreenState extends State<FacilityDetailScreen> {
           final trialExpiresAtField = data['trialExpiresAt'];
           final trialExpiresAt = trialExpiresAtField is Timestamp ? trialExpiresAtField.toDate() : null;
           final status = computeSubscriptionStatus(expiresAt, trialExpiresAt);
-          final createdAtField = data['createdAt'];
+          final createdAtField = data[Fields.createdAt];
           final createdAt = createdAtField is Timestamp ? createdAtField.toDate() : null;
 
           return Center(
@@ -311,7 +313,7 @@ class _FacilityDetailScreenState extends State<FacilityDetailScreen> {
                   Text(data['type'] ?? '', style: TextStyle(color: Colors.grey[600])),
                   if (data['createdBy'] != null)
                     FutureBuilder<DocumentSnapshot>(
-                      future: FirebaseFirestore.instance.collection('users').doc(data['createdBy'] as String).get(),
+                      future: FirebaseFirestore.instance.collection(Collections.users).doc(data['createdBy'] as String).get(),
                       builder: (context, ownerSnap) {
                         final ownerData = ownerSnap.data?.data() as Map<String, dynamic>?;
                         final ownerName = ownerData?['fullName'] as String?;
@@ -351,9 +353,9 @@ class _FacilityDetailScreenState extends State<FacilityDetailScreen> {
                   const SizedBox(height: 8),
                   StreamBuilder<QuerySnapshot>(
                     stream: FirebaseFirestore.instance
-                        .collection('facilities')
+                        .collection(Collections.facilities)
                         .doc(widget.facilityId)
-                        .collection('payment_submissions')
+                        .collection(Collections.paymentSubmissions)
                         .orderBy('submittedAt', descending: true)
                         .limit(20)
                         .snapshots(),
@@ -379,7 +381,7 @@ class _FacilityDetailScreenState extends State<FacilityDetailScreen> {
                                 style: const TextStyle(fontSize: 12),
                               ),
                               trailing: Text(
-                                (subData['status'] as String? ?? '').toUpperCase(),
+                                (subData[Fields.status] as String? ?? '').toUpperCase(),
                                 style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold),
                               ),
                             ),

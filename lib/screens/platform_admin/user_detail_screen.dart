@@ -5,6 +5,8 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:intl/intl.dart';
 import '../../services/role_change_service.dart';
 import '../../theme/app_palette.dart';
+import '../../data/collections.dart';
+import '../../data/fields.dart';
 
 /// A single user's account, editable by the Platform Admin - the direct
 /// answer to "an assistant migrated to a new facility, and their old
@@ -33,7 +35,7 @@ class _UserDetailScreenState extends State<UserDetailScreen> {
 
   Future<void> _refreshUserData() async {
     try {
-      final freshDoc = await FirebaseFirestore.instance.collection('users').doc(widget.userId).get();
+      final freshDoc = await FirebaseFirestore.instance.collection(Collections.users).doc(widget.userId).get();
       if (!mounted || !freshDoc.exists) return;
       setState(() => _userData = Map<String, dynamic>.from(freshDoc.data()!));
     } catch (_) {
@@ -44,7 +46,7 @@ class _UserDetailScreenState extends State<UserDetailScreen> {
   }
 
   Future<void> _addToFacility() async {
-    final facilitiesSnap = await FirebaseFirestore.instance.collection('facilities').get();
+    final facilitiesSnap = await FirebaseFirestore.instance.collection(Collections.facilities).get();
     if (!mounted) return;
 
     final selected = await showDialog<Map<String, dynamic>>(
@@ -59,7 +61,7 @@ class _UserDetailScreenState extends State<UserDetailScreen> {
           }).toList();
 
           return AlertDialog(
-            title: Text((_userData['role'] ?? '') == 'assistant' ? 'Move to Facility' : 'Add to Facility'),
+            title: Text((_userData[Fields.role] ?? '') == 'assistant' ? 'Move to Facility' : 'Add to Facility'),
             content: SizedBox(
               width: 420,
               height: 420,
@@ -85,7 +87,7 @@ class _UserDetailScreenState extends State<UserDetailScreen> {
                                 title: Text(data['name'] ?? ''),
                                 subtitle: Text(data['type'] ?? ''),
                                 onTap: () => Navigator.pop(context, {
-                                  'facilityId': doc.id,
+                                  Fields.facilityId: doc.id,
                                   'name': data['name'],
                                   'type': data['type'],
                                   'code': data['code'],
@@ -107,9 +109,9 @@ class _UserDetailScreenState extends State<UserDetailScreen> {
 
     if (selected == null) return;
 
-    final isAssistant = (_userData['role'] ?? '') == 'assistant';
+    final isAssistant = (_userData[Fields.role] ?? '') == 'assistant';
     final currentFacilities = (_userData['facilities'] as List?)?.cast<dynamic>() ?? [];
-    final alreadyThere = currentFacilities.any((f) => f is Map && f['facilityId'] == selected['facilityId']);
+    final alreadyThere = currentFacilities.any((f) => f is Map && f[Fields.facilityId] == selected[Fields.facilityId]);
     if (alreadyThere) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -125,7 +127,7 @@ class _UserDetailScreenState extends State<UserDetailScreen> {
     // isn't exactly 'admin' would get treated as a lower-privilege
     // account the moment they have any facility at all.
     final isTargetPlatformAdmin =
-        (await FirebaseFirestore.instance.collection('platform_admins').doc(widget.userId).get()).exists;
+        (await FirebaseFirestore.instance.collection(Collections.platformAdmins).doc(widget.userId).get()).exists;
 
     setState(() => _isSaving = true);
     try {
@@ -137,23 +139,23 @@ class _UserDetailScreenState extends State<UserDetailScreen> {
         // once, which the rest of the app isn't built to handle -
         // it would just silently use whichever one happens to be
         // first in the array.
-        await FirebaseFirestore.instance.collection('users').doc(widget.userId).update({
+        await FirebaseFirestore.instance.collection(Collections.users).doc(widget.userId).update({
           'facilities': [selected],
-          'facilityIds': [selected['facilityId']],
-          if (isTargetPlatformAdmin) 'role': 'admin',
+          'facilityIds': [selected[Fields.facilityId]],
+          if (isTargetPlatformAdmin) Fields.role: 'admin',
         });
       } else {
-        await FirebaseFirestore.instance.collection('users').doc(widget.userId).update({
+        await FirebaseFirestore.instance.collection(Collections.users).doc(widget.userId).update({
           'facilities': FieldValue.arrayUnion([selected]),
-          'facilityIds': FieldValue.arrayUnion([selected['facilityId']]),
-          if (isTargetPlatformAdmin) 'role': 'admin',
+          'facilityIds': FieldValue.arrayUnion([selected[Fields.facilityId]]),
+          if (isTargetPlatformAdmin) Fields.role: 'admin',
         });
       }
 
       if (!mounted) return;
       setState(() {
         _userData['facilities'] = isAssistant ? [selected] : [...currentFacilities, selected];
-        if (isTargetPlatformAdmin) _userData['role'] = 'admin';
+        if (isTargetPlatformAdmin) _userData[Fields.role] = 'admin';
       });
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Added to ${selected['name']}'), backgroundColor: Colors.green),
@@ -191,7 +193,7 @@ class _UserDetailScreenState extends State<UserDetailScreen> {
     if (confirm != true) return;
 
     try {
-      await FirebaseFirestore.instance.collection('users').doc(widget.userId).update({
+      await FirebaseFirestore.instance.collection(Collections.users).doc(widget.userId).update({
         'facilities': FieldValue.arrayRemove([facility]),
         'facilityIds': FieldValue.arrayRemove([facility['facilityId']]),
       });
@@ -212,12 +214,12 @@ class _UserDetailScreenState extends State<UserDetailScreen> {
   }
 
   Future<void> _toggleStatus() async {
-    final currentStatus = (_userData['status'] ?? 'active').toString();
+    final currentStatus = (_userData[Fields.status] ?? 'active').toString();
     final newStatus = currentStatus == 'active' ? 'deactivated' : 'active';
 
     if (newStatus == 'deactivated') {
       final platformAdminDoc =
-          await FirebaseFirestore.instance.collection('platform_admins').doc(widget.userId).get();
+          await FirebaseFirestore.instance.collection(Collections.platformAdmins).doc(widget.userId).get();
       if (platformAdminDoc.exists) {
         if (!mounted) return;
         await showDialog<void>(
@@ -267,15 +269,15 @@ class _UserDetailScreenState extends State<UserDetailScreen> {
 
     try {
       final admin = FirebaseAuth.instance.currentUser;
-      await FirebaseFirestore.instance.collection('users').doc(widget.userId).update({
-        'status': newStatus,
+      await FirebaseFirestore.instance.collection(Collections.users).doc(widget.userId).update({
+        Fields.status: newStatus,
         'statusChangedBy': admin?.email ?? admin?.uid ?? 'Unknown',
         'statusChangedByRole': 'Platform Admin',
         'statusChangedAt': FieldValue.serverTimestamp(),
       });
       if (!mounted) return;
       setState(() {
-        _userData['status'] = newStatus;
+        _userData[Fields.status] = newStatus;
         _userData['statusChangedBy'] = admin?.email ?? admin?.uid ?? 'Unknown';
         _userData['statusChangedByRole'] = 'Platform Admin';
         _userData['statusChangedAt'] = Timestamp.now();
@@ -552,8 +554,8 @@ class _UserDetailScreenState extends State<UserDetailScreen> {
   @override
   Widget build(BuildContext context) {
     final facilities = (_userData['facilities'] as List?)?.cast<dynamic>() ?? [];
-    final status = (_userData['status'] ?? 'active').toString();
-    final role = (_userData['role'] ?? '').toString();
+    final status = (_userData[Fields.status] ?? 'active').toString();
+    final role = (_userData[Fields.role] ?? '').toString();
 
     return Scaffold(
       appBar: AppBar(
@@ -648,8 +650,8 @@ class _UserDetailScreenState extends State<UserDetailScreen> {
                   const Text('Facilities', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
                   TextButton.icon(
                     onPressed: _isSaving ? null : _addToFacility,
-                    icon: Icon((_userData['role'] ?? '') == 'assistant' ? Icons.swap_horiz : Icons.add),
-                    label: Text((_userData['role'] ?? '') == 'assistant' ? 'Move to Facility' : 'Add to Facility'),
+                    icon: Icon((_userData[Fields.role] ?? '') == 'assistant' ? Icons.swap_horiz : Icons.add),
+                    label: Text((_userData[Fields.role] ?? '') == 'assistant' ? 'Move to Facility' : 'Add to Facility'),
                   ),
                 ],
               ),

@@ -6,6 +6,8 @@ import 'package:fl_chart/fl_chart.dart';
 import '../../widgets/hover_elevate_card.dart';
 import '../../widgets/firestore_error_view.dart';
 import '../../theme/app_palette.dart';
+import '../../data/collections.dart';
+import '../../data/fields.dart';
 
 /// The detail behind Overview's own summary cards - day-to-day earnings,
 /// individual recent payments, revenue by plan, and the
@@ -64,12 +66,12 @@ class _OverviewDetailsScreenState extends State<OverviewDetailsScreen> {
       // working by Overview's own revenue figure - no new composite
       // index needed.
       final approvedSnap = await FirebaseFirestore.instance
-          .collectionGroup('payment_submissions')
-          .where('status', isEqualTo: 'approved')
+          .collectionGroup(Collections.paymentSubmissions)
+          .where(Fields.status, isEqualTo: 'approved')
           .get();
       final rejectedSnap = await FirebaseFirestore.instance
-          .collectionGroup('payment_submissions')
-          .where('status', isEqualTo: 'rejected')
+          .collectionGroup(Collections.paymentSubmissions)
+          .where(Fields.status, isEqualTo: 'rejected')
           .get();
 
       final dailyTotals = <DateTime, double>{};

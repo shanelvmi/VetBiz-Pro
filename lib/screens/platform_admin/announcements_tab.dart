@@ -11,6 +11,8 @@ import 'package:markdown/markdown.dart' as md;
 import '../../widgets/hover_elevate_card.dart';
 import '../../widgets/announcement_message.dart';
 import '../../theme/app_palette.dart';
+import '../../data/collections.dart';
+import '../../data/fields.dart';
 
 /// Manages everything shown on the login screen's left/center panels -
 /// broadcast announcements (the `public_announcements` collection) and
@@ -416,7 +418,7 @@ class _AnnouncementsTabState extends State<AnnouncementsTab> {
         // together.
       });
     } else {
-      await FirebaseFirestore.instance.collection('public_announcements').add({
+      await FirebaseFirestore.instance.collection(Collections.publicAnnouncements).add({
         'title': titleController.text.trim(),
         'message': messageController.text.trim(),
         // Was previously written as 'createdAt', but the login screen
@@ -444,19 +446,19 @@ class _AnnouncementsTabState extends State<AnnouncementsTab> {
   }
 
   Future<void> _delete(String docId) async {
-    await FirebaseFirestore.instance.collection('public_announcements').doc(docId).delete();
+    await FirebaseFirestore.instance.collection(Collections.publicAnnouncements).doc(docId).delete();
   }
 
   Future<void> _toggleHidden(String docId, bool currentlyHidden) async {
     await FirebaseFirestore.instance
-        .collection('public_announcements')
+        .collection(Collections.publicAnnouncements)
         .doc(docId)
         .update({'hidden': !currentlyHidden});
   }
 
   Future<void> _toggleUrgent(String docId, bool currentlyUrgent) async {
     await FirebaseFirestore.instance
-        .collection('public_announcements')
+        .collection(Collections.publicAnnouncements)
         .doc(docId)
         .update({'urgent': !currentlyUrgent});
   }
@@ -473,9 +475,9 @@ class _AnnouncementsTabState extends State<AnnouncementsTab> {
       await ref.putData(bytes);
       final url = await ref.getDownloadURL();
 
-      await FirebaseFirestore.instance.collection('app_config').doc('login_poster').set({
+      await FirebaseFirestore.instance.collection(Collections.appConfig).doc('login_poster').set({
         'posterUrl': url,
-        'updatedAt': FieldValue.serverTimestamp(),
+        Fields.updatedAt: FieldValue.serverTimestamp(),
       });
 
       if (mounted) {
@@ -512,7 +514,7 @@ class _AnnouncementsTabState extends State<AnnouncementsTab> {
     );
     if (confirm != true) return;
 
-    await FirebaseFirestore.instance.collection('app_config').doc('login_poster').delete();
+    await FirebaseFirestore.instance.collection(Collections.appConfig).doc('login_poster').delete();
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Background image removed'), backgroundColor: Colors.green),
@@ -522,7 +524,7 @@ class _AnnouncementsTabState extends State<AnnouncementsTab> {
 
   Widget _buildPosterSection() {
     return StreamBuilder<DocumentSnapshot>(
-      stream: FirebaseFirestore.instance.collection('app_config').doc('login_poster').snapshots(),
+      stream: FirebaseFirestore.instance.collection(Collections.appConfig).doc('login_poster').snapshots(),
       builder: (context, snapshot) {
         final posterUrl = snapshot.data?.data() != null
             ? (snapshot.data!.data() as Map<String, dynamic>)['posterUrl'] as String?
@@ -622,7 +624,7 @@ class _AnnouncementsTabState extends State<AnnouncementsTab> {
       ),
       body: StreamBuilder<QuerySnapshot>(
         stream: FirebaseFirestore.instance
-            .collection('public_announcements')
+            .collection(Collections.publicAnnouncements)
             .orderBy('timestamp', descending: true)
             .snapshots(),
         builder: (context, snapshot) {
@@ -828,7 +830,7 @@ class _ContactDetailsCardState extends State<_ContactDetailsCard> {
 
   Future<void> _loadContactDetails() async {
     try {
-      final doc = await FirebaseFirestore.instance.collection('app_config').doc('support_contact').get();
+      final doc = await FirebaseFirestore.instance.collection(Collections.appConfig).doc('support_contact').get();
       final data = doc.data();
       if (mounted && data != null) {
         _emailController.text = (data['email'] as String?) ?? '';
@@ -847,12 +849,12 @@ class _ContactDetailsCardState extends State<_ContactDetailsCard> {
   Future<void> _saveContactDetails() async {
     setState(() => _isSaving = true);
     try {
-      await FirebaseFirestore.instance.collection('app_config').doc('support_contact').set({
+      await FirebaseFirestore.instance.collection(Collections.appConfig).doc('support_contact').set({
         'email': _emailController.text.trim(),
         'phone': _phoneController.text.trim(),
         'whatsapp': _whatsappController.text.trim(),
         'address': _addressController.text.trim(),
-        'updatedAt': FieldValue.serverTimestamp(),
+        Fields.updatedAt: FieldValue.serverTimestamp(),
       });
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(

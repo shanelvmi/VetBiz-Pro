@@ -15,6 +15,7 @@ import 'platform_admins_tab.dart';
 import 'users_tab.dart';
 import 'platform_settings_screen.dart';
 import '../../theme/app_palette.dart';
+import '../../data/collections.dart';
 
 /// One navigation entry - a simple data record rather than each item
 /// being hand-built inline. Adding a new section (or, later, a nested
@@ -117,7 +118,7 @@ class _PlatformAdminHomeScreenState extends State<PlatformAdminHomeScreen> {
     final uid = FirebaseAuth.instance.currentUser?.uid;
     if (uid == null) return;
 
-    final userDoc = await FirebaseFirestore.instance.collection('users').doc(uid).get();
+    final userDoc = await FirebaseFirestore.instance.collection(Collections.users).doc(uid).get();
     final facilityIds = (userDoc.data()?['facilityIds'] as List?) ?? [];
 
     if (!mounted) return;
@@ -306,7 +307,7 @@ class _PlatformAdminHomeScreenState extends State<PlatformAdminHomeScreen> {
           const SizedBox(width: 8),
           if (currentUser != null)
             StreamBuilder<DocumentSnapshot<Map<String, dynamic>>>(
-              stream: FirebaseFirestore.instance.collection('users').doc(currentUser.uid).snapshots(),
+              stream: FirebaseFirestore.instance.collection(Collections.users).doc(currentUser.uid).snapshots(),
               builder: (context, snapshot) {
                 final data = snapshot.data?.data();
                 final name = (data?['fullName'] as String?) ?? currentUser.email ?? 'Admin';

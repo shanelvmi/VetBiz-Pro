@@ -6,6 +6,7 @@ import '../../utils/subscription_status_utils.dart';
 import '../../widgets/hover_elevate_card.dart';
 import 'facility_detail_screen.dart';
 import '../../theme/app_palette.dart';
+import '../../data/collections.dart';
 
 /// Every facility across the whole platform, real pagination rather
 /// than one open-ended listener over the entire collection - same
@@ -123,7 +124,7 @@ class _FacilitiesDirectoryTabState extends State<FacilitiesDirectoryTab> {
     if (!_hasMore || _isLoadingMore || _searchQuery.isNotEmpty) return;
     setState(() => _isLoadingMore = true);
     try {
-      var query = FirebaseFirestore.instance.collection('facilities').orderBy('name').limit(_pageSize);
+      var query = FirebaseFirestore.instance.collection(Collections.facilities).orderBy('name').limit(_pageSize);
       if (_lastDoc != null) query = query.startAfterDocument(_lastDoc!);
       final snap = await query.get();
       if (!mounted) return;
@@ -166,7 +167,7 @@ class _FacilitiesDirectoryTabState extends State<FacilitiesDirectoryTab> {
       final chunk = uidList.sublist(i, i + 30 > uidList.length ? uidList.length : i + 30);
       try {
         final snap = await FirebaseFirestore.instance
-            .collection('users')
+            .collection(Collections.users)
             .where(FieldPath.documentId, whereIn: chunk)
             .get();
         for (final userDoc in snap.docs) {
@@ -196,7 +197,7 @@ class _FacilitiesDirectoryTabState extends State<FacilitiesDirectoryTab> {
     });
     try {
       final snap = await FirebaseFirestore.instance
-          .collection('facilities')
+          .collection(Collections.facilities)
           .orderBy('name')
           .limit(_searchScanLimit)
           .get();
@@ -216,7 +217,7 @@ class _FacilitiesDirectoryTabState extends State<FacilitiesDirectoryTab> {
   Future<void> _loadSummary() async {
     setState(() => _isSummaryLoading = true);
     try {
-      final snap = await FirebaseFirestore.instance.collection('facilities').get();
+      final snap = await FirebaseFirestore.instance.collection(Collections.facilities).get();
       if (!mounted) return;
       final counts = <SubscriptionStatusKind, int>{};
       for (final doc in snap.docs) {
