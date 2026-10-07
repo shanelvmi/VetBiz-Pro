@@ -7,6 +7,7 @@ import '../data/collections.dart';
 import '../data/fields.dart';
 import '../config/app_ranges.dart';
 import '../config/app_rules.dart';
+import '../config/payment_methods.dart';
 
 class DailyReportService {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
@@ -236,7 +237,7 @@ class DailyReportService {
               customerName: s.clientName ?? 'Walk-in',
               itemCount: s.items.length,
               amount: s.totalAmount,
-              paymentMethod: s.paymentMethod ?? 'On Credit',
+              paymentMethod: s.paymentMethod ?? PaymentMethod.onCredit,
             ))
         .toList()
       ..sort((a, b) => a.time.compareTo(b.time));
@@ -567,7 +568,7 @@ class DailyReportService {
       return PaymentMethodReconciliation(
         method: method,
         expected: expected,
-        requiresCount: method == 'Cash' || hadIncomeToday,
+        requiresCount: method == PaymentMethod.cash.key || hadIncomeToday,
       );
     }).toList()
       ..sort((a, b) => a.method.compareTo(b.method));

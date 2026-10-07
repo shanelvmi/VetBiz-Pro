@@ -17,6 +17,7 @@ import '../../utils/web_download.dart';
 import '../../theme/app_palette.dart';
 import '../../config/money.dart';
 import '../../config/app_rules.dart';
+import '../../config/payment_methods.dart';
 
 /// Shows the service receipt as it will actually look before doing
 /// anything with it - same pattern as Sales' ReceiptPreviewScreen, just
@@ -570,7 +571,7 @@ class _ServiceReceiptPreviewScreenState extends State<ServiceReceiptPreviewScree
                 value2: service.serviceDate != null ? DateFormat('dd MMM yyyy, HH:mm').format(service.serviceDate!) : null),
             infoLine('Customer', service.clientName ?? 'Walk-in'),
             infoLine('Provided By', service.providedByName ?? 'N/A'),
-            infoLine('Payment Method', service.paymentMethod ?? 'On Credit'),
+            infoLine('Payment Method', service.paymentMethod ?? PaymentMethod.onCredit),
             const SizedBox(height: 10),
             // ---- Items table ----
             itemsTableHeader(),
@@ -597,7 +598,7 @@ class _ServiceReceiptPreviewScreenState extends State<ServiceReceiptPreviewScree
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text('Payment Method', style: TextStyle(fontSize: 10.5, color: Colors.grey[600])),
-                      Text(service.paymentMethod ?? 'On Credit', style: const TextStyle(fontSize: 12.5, fontWeight: FontWeight.w600)),
+                      Text(service.paymentMethod ?? PaymentMethod.onCredit, style: const TextStyle(fontSize: 12.5, fontWeight: FontWeight.w600)),
                     ],
                   ),
                 ),
@@ -761,7 +762,7 @@ class _ServiceReceiptPreviewScreenState extends State<ServiceReceiptPreviewScree
             field(Icons.badge_outlined, 'Provided By', service.providedByName ?? 'N/A'),
             if (service.serviceDate != null)
               field(Icons.calendar_today_outlined, 'Date & Time', DateFormat('dd MMM yyyy, HH:mm').format(service.serviceDate!)),
-            field(Icons.payment_outlined, 'Payment Method', service.paymentMethod ?? 'On Credit'),
+            field(Icons.payment_outlined, 'Payment Method', service.paymentMethod ?? PaymentMethod.onCredit),
             const Divider(height: 28),
             Row(
               children: [

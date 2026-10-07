@@ -20,6 +20,10 @@ enum PaymentMethod {
 
   final String key;
 
+  /// Not a method: what is shown when nothing was paid, and what the daily
+  /// report STORES as a sale row's method in that case (so it never changes).
+  static const String onCredit = 'On Credit';
+
   String get label => key;
 
   /// The methods offered when recording money received (sales, services,

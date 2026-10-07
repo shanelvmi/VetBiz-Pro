@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../data/fields.dart';
+import '../config/payment_methods.dart';
 
 /// One line in the itemized Sales tab.
 class SaleLineItem {
@@ -38,7 +39,7 @@ class SaleLineItem {
         customerName: map['customerName'] as String? ?? 'Walk-in',
         itemCount: (map['itemCount'] as num?)?.toInt() ?? 0,
         amount: (map['amount'] as num?)?.toDouble() ?? 0,
-        paymentMethod: map['paymentMethod'] as String? ?? 'On Credit',
+        paymentMethod: map['paymentMethod'] as String? ?? PaymentMethod.onCredit,
       );
 }
 

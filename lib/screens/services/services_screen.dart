@@ -21,6 +21,7 @@ import '../../data/collections.dart';
 import '../../config/money.dart';
 import '../../config/app_timeouts.dart';
 import '../../config/app_ranges.dart';
+import '../../config/payment_methods.dart';
 
 class ServicesScreen extends StatefulWidget {
   const ServicesScreen({super.key});
@@ -134,7 +135,7 @@ class _ServicesScreenState extends State<ServicesScreen> {
         final totalPaid = (data['totalPaid'] as num?)?.toDouble() ?? 0.0;
         paidAmount += totalPaid;
         outstanding += (totalAmount - totalPaid);
-        if (data['paymentMethod'] != null && data['paymentMethod'] != 'Cash') {
+        if (data['paymentMethod'] != null && data['paymentMethod'] != PaymentMethod.cash.key) {
           nonCashAmount += totalPaid;
         }
       }

@@ -9,6 +9,7 @@ import '../models/sale.dart';
 import '../models/service.dart';
 import '../config/money.dart';
 import '../config/app_rules.dart';
+import '../config/payment_methods.dart';
 
 /// Builds a genuine A4 PDF receipt for a Sale or a Service - a real,
 /// correctly-sized printable document, not a screenshot of the on-screen
@@ -178,7 +179,7 @@ class ReceiptPdfService {
             _kvPair('Receipt #', sale.receiptNumber?.toString() ?? sale.id.substring(0, sale.id.length < AppRules.fallbackReceiptIdLength ? sale.id.length : AppRules.fallbackReceiptIdLength)),
             _kvPair('Date', _dateTime.format(sale.timestamp)),
             _kvPair('Customer', sale.clientName ?? 'Walk-in'),
-            _kvPair('Payment Method', sale.paymentMethod ?? 'On Credit'),
+            _kvPair('Payment Method', sale.paymentMethod ?? PaymentMethod.onCredit),
           ]),
           pw.SizedBox(height: 14),
           _itemsTable(
@@ -255,7 +256,7 @@ class ReceiptPdfService {
             _kvPair('Date', _dateTime.format(serviceDate)),
             _kvPair('Customer', service.clientName ?? 'Walk-in'),
             _kvPair('Provided By', service.providedByName ?? 'N/A'),
-            _kvPair('Payment Method', service.paymentMethod ?? 'On Credit'),
+            _kvPair('Payment Method', service.paymentMethod ?? PaymentMethod.onCredit),
           ]),
           pw.SizedBox(height: 14),
           _itemsTable([

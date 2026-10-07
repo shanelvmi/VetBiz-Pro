@@ -1,3 +1,4 @@
+import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:vetbiz_pro/config/app_links.dart';
@@ -13,8 +14,22 @@ import 'package:vetbiz_pro/widgets/payment_method_selector.dart';
 /// Config values that are still also typed where they are used today (until
 /// step 2C moves those places over) must not drift apart in the meantime.
 void main() {
-  test('PaymentMethod.recordable is kPaymentMethods, same order', () {
-    expect(PaymentMethod.recordable.map((m) => m.key).toList(), kPaymentMethods);
+  test('the stored payment keys never change, and kPaymentMethods lists them in order', () {
+    expect(PaymentMethod.values.map((m) => m.key).toList(),
+        ['Cash', 'M-Pesa', 'Mixx by Yas', 'HaloPesa', 'Airtel Money', 'Bank Transfer', 'Tigo Pesa']);
+    expect(kPaymentMethods, ['Cash', 'M-Pesa', 'Mixx by Yas', 'HaloPesa', 'Airtel Money', 'Bank Transfer']);
+    expect(PaymentMethod.onCredit, 'On Credit');
+  });
+
+  test('payment icons are the ones the old switch gave, for every key', () {
+    expect(iconForPaymentMethod('Cash'), Icons.payments_outlined);
+    for (final k in ['M-Pesa', 'Mixx by Yas', 'HaloPesa', 'Airtel Money']) {
+      expect(iconForPaymentMethod(k), Icons.phone_android, reason: k);
+    }
+    expect(iconForPaymentMethod('Bank Transfer'), Icons.account_balance_outlined);
+    // Old records: Tigo Pesa, and anything unknown, keep the generic icon.
+    expect(iconForPaymentMethod('Tigo Pesa'), Icons.payment);
+    expect(iconForPaymentMethod('Barter'), Icons.payment);
   });
 
   test('PaymentMethod keys are unique and round-trip; unknown is null', () {

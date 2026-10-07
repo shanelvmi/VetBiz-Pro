@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../config/payment_methods.dart';
+
 /// The canonical list of payment methods, used consistently everywhere
 /// money is recorded as received in this app - sales, services, debt
 /// repayments, and other-income transactions. Matches the existing
@@ -7,30 +9,19 @@ import 'package:flutter/material.dart';
 /// language for "how was this paid" across the whole app, rather than
 /// a different list invented separately in every screen that happens
 /// to need one.
-const List<String> kPaymentMethods = [
-  'Cash',
-  'M-Pesa',
-  'Mixx by Yas',
-  'HaloPesa',
-  'Airtel Money',
-  'Bank Transfer',
-];
+/// The stored keys, in the order the chips show them (PaymentMethod.recordable).
+final List<String> kPaymentMethods = [for (final m in PaymentMethod.recordable) m.key];
 
-IconData iconForPaymentMethod(String method) {
-  switch (method) {
-    case 'Cash':
-      return Icons.payments_outlined;
-    case 'M-Pesa':
-    case 'Mixx by Yas':
-    case 'HaloPesa':
-    case 'Airtel Money':
-      return Icons.phone_android;
-    case 'Bank Transfer':
-      return Icons.account_balance_outlined;
-    default:
-      return Icons.payment;
-  }
-}
+IconData iconForPaymentMethod(String method) => switch (PaymentMethod.fromKey(method)) {
+      PaymentMethod.cash => Icons.payments_outlined,
+      PaymentMethod.mPesa || PaymentMethod.mixxByYas || PaymentMethod.haloPesa || PaymentMethod.airtelMoney =>
+        Icons.phone_android,
+      PaymentMethod.bankTransfer => Icons.account_balance_outlined,
+      // Tigo Pesa (only on old records) and any unknown key keep the generic
+      // icon they always had. Giving Tigo Pesa the phone icon is listed in
+      // design-open-questions.md.
+      PaymentMethod.tigoPesa || null => Icons.payment,
+    };
 
 /// A row of selectable chips, each carrying its own icon - one tap to
 /// choose, rather than opening a dropdown first to see the options.

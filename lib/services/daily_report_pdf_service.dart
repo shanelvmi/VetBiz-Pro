@@ -5,6 +5,7 @@ import 'package:printing/printing.dart';
 
 import '../models/daily_report.dart';
 import '../config/money.dart';
+import '../config/payment_methods.dart';
 
 class DailyReportPdfService {
   static final _fullDate = DateFormat('EEEE, d MMMM yyyy');
@@ -189,10 +190,10 @@ class DailyReportPdfService {
 
   static pw.Widget _summarySection(DailyReport report) {
     final revenue = report.salesTotalValue + report.servicesTotalValue + report.totalOtherIncome;
-    final totalCash = (report.salesByPaymentMethod['Cash'] ?? 0) +
-        (report.servicesByPaymentMethod['Cash'] ?? 0) +
-        (report.repaymentsByPaymentMethod['Cash'] ?? 0) +
-        (report.otherIncomeByPaymentMethod['Cash'] ?? 0);
+    final totalCash = (report.salesByPaymentMethod[PaymentMethod.cash.key] ?? 0) +
+        (report.servicesByPaymentMethod[PaymentMethod.cash.key] ?? 0) +
+        (report.repaymentsByPaymentMethod[PaymentMethod.cash.key] ?? 0) +
+        (report.otherIncomeByPaymentMethod[PaymentMethod.cash.key] ?? 0);
     final productsSoldUnits = report.productMovement.fold(0, (sum, p) => sum + p.sold);
 
     return pw.Column(

@@ -13,6 +13,7 @@ import '../../theme/app_palette.dart';
 import '../../data/collections.dart';
 import '../../config/money.dart';
 import '../../config/app_defaults.dart';
+import '../../config/payment_methods.dart';
 
 // Expense categories, grouped for the picker - matches the proposed
 // structure exactly. Kept local to this file rather than centralized,
@@ -456,7 +457,7 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
                       ),
                       child: Row(
                         children: [
-                          Icon(iconForPaymentMethod(paymentMethod ?? 'Cash'), size: 18, color: primaryDeepGreen),
+                          Icon(iconForPaymentMethod(paymentMethod ?? PaymentMethod.cash.key), size: 18, color: primaryDeepGreen),
                           const SizedBox(width: 10),
                           Expanded(child: Text(paymentMethod ?? 'Select method')),
                           Icon(Icons.expand_more, size: 18, color: Colors.grey[600]),

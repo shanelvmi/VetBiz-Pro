@@ -16,6 +16,7 @@ import '../data/activity_type.dart';
 import '../config/money.dart';
 import '../config/app_limits.dart';
 import '../config/app_ranges.dart';
+import '../config/payment_methods.dart';
 
 class ServiceProvider extends ChangeNotifier {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
@@ -769,7 +770,7 @@ class ServiceProvider extends ChangeNotifier {
       'recordedBy': name,
       'type': 'expense',
       'serviceId': serviceId,
-      'paymentMethod': service.paymentMethod ?? 'Cash',
+      'paymentMethod': service.paymentMethod ?? PaymentMethod.cash.key,
     });
   }
 

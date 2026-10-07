@@ -21,6 +21,7 @@ import '../../theme/app_palette.dart';
 import '../../config/money.dart';
 import '../../config/app_defaults.dart';
 import '../../config/app_timeouts.dart';
+import '../../config/payment_methods.dart';
 
 class AddEditServiceScreen extends StatefulWidget {
   final Service? service;
@@ -829,7 +830,7 @@ class _AddEditServiceScreenState extends State<AddEditServiceScreen> {
                       ),
                       child: Row(
                         children: [
-                          Icon(iconForPaymentMethod(_paymentMethod ?? 'Cash'), size: 18, color: primaryDeepGreen),
+                          Icon(iconForPaymentMethod(_paymentMethod ?? PaymentMethod.cash.key), size: 18, color: primaryDeepGreen),
                           const SizedBox(width: 10),
                           Expanded(child: Text(_paymentMethod ?? 'Select method')),
                           Icon(Icons.expand_more, size: 18, color: Colors.grey[600]),
@@ -840,7 +841,7 @@ class _AddEditServiceScreenState extends State<AddEditServiceScreen> {
                 ],
               ),
             ),
-            if (_paymentMethod != null && _paymentMethod != 'Cash') ...[
+            if (_paymentMethod != null && _paymentMethod != PaymentMethod.cash.key) ...[
               const SizedBox(height: 14),
               const Text('Transaction ID (optional)', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 13)),
               const SizedBox(height: 6),
@@ -927,7 +928,7 @@ class _AddEditServiceScreenState extends State<AddEditServiceScreen> {
                       updatedAt: DateTime.now(),
                       itemsUsed: _collectItemsUsed(),
                       paymentMethod: totalPaid > 0 ? _paymentMethod : null,
-                      transactionId: _paymentMethod != null && _paymentMethod != 'Cash' && _transactionIdController.text.trim().isNotEmpty
+                      transactionId: _paymentMethod != null && _paymentMethod != PaymentMethod.cash.key && _transactionIdController.text.trim().isNotEmpty
                           ? _transactionIdController.text.trim()
                           : null,
                     );
