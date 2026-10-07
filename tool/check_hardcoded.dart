@@ -50,7 +50,10 @@ final List<GuardRule> guardRules = [
   // text sits mid-string ('Total: Tsh ${...}'), including the saved activity
   // descriptions, and the spec's start-of-string sketch missed about 50 of them.
   GuardRule('R8', 'raw currency text', [RegExp(r'\bT(sh|Sh|ZS)\b')]),
-  GuardRule('R9', 'raw collection name', [RegExp(r"\.collection\('")]),
+  // Also counts, in scan(), a string literal equal to a Collections value on a
+  // line that mentions "ollection" (collection:, trashCollection, ...): a name
+  // passed through a variable to .collection(x) is just as raw.
+  GuardRule('R9', 'raw collection name', [RegExp(r"\.collection(Group)?\('")]),
   GuardRule(
     'R10',
     'raw user-facing string',
@@ -98,6 +101,8 @@ Map<String, Map<String, int>> scan(Directory root, {List<AllowEntry> allowlist =
       .where((f) => f.path.endsWith('.dart'))
       .toList();
 
+  final namedCollection = collectionNameLiteral(root);
+
   for (final file in files) {
     final rel = file.path
         .substring(root.path.length)
@@ -115,11 +120,28 @@ Map<String, Map<String, int>> scan(Directory root, {List<AllowEntry> allowlist =
         for (final p in rule.patterns) {
           n += p.allMatches(line).where((m) => rule.accept == null || rule.accept!(m)).length;
         }
+        if (rule.id == 'R9' && namedCollection != null && line.contains('ollection')) {
+          n += namedCollection.allMatches(line).length;
+        }
         if (n > 0) counts[rule.id]![rel] = (counts[rule.id]![rel] ?? 0) + n;
       }
     }
   }
   return counts;
+}
+
+/// A quoted string equal to one of the Collections values (read from
+/// lib/data/collections.dart), not counting one written straight inside
+/// .collection(...) / .collectionGroup(...), which R9's pattern already counts.
+RegExp? collectionNameLiteral(Directory root) {
+  final file = File('${root.path}/lib/data/collections.dart');
+  if (!file.existsSync()) return null;
+  final names = RegExp(r"static const String \w+ = '([^']+)';")
+      .allMatches(file.readAsStringSync())
+      .map((m) => RegExp.escape(m.group(1)!))
+      .toList();
+  if (names.isEmpty) return null;
+  return RegExp('(?<!collection\\()(?<!collectionGroup\\()[\'"](${names.join('|')})[\'"]');
 }
 
 class Baseline {

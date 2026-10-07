@@ -152,7 +152,7 @@ class DailyReportService {
     // it and generate it again for the full one. Started here, with the rest,
     // so it still runs in parallel.
     final activityFuture = includeActivityLog
-        ? _labeled('activity_logs', () => facilities
+        ? _labeled(Collections.activityLogs, () => facilities
             .collection(Collections.activityLogs)
             .where('timestamp', isGreaterThanOrEqualTo: todayStart)
             .where('timestamp', isLessThanOrEqualTo: nowStamp)
@@ -160,22 +160,22 @@ class DailyReportService {
             .get())
         : null;
     final querySnapshotsFuture = Future.wait([
-      _labeled('sales', () => facilities
+      _labeled(Collections.sales, () => facilities
           .collection(Collections.sales)
           .where('timestamp', isGreaterThanOrEqualTo: todayStart)
           .where('timestamp', isLessThanOrEqualTo: nowStamp)
           .get()),
-      _labeled('services', () => facilities
+      _labeled(Collections.services, () => facilities
           .collection(Collections.services)
           .where('serviceDate', isGreaterThanOrEqualTo: todayStart)
           .where('serviceDate', isLessThanOrEqualTo: nowStamp)
           .get()),
-      _labeled('payments', () => facilities
+      _labeled(Collections.payments, () => facilities
           .collection(Collections.payments)
           .where('timestamp', isGreaterThanOrEqualTo: todayStart)
           .where('timestamp', isLessThanOrEqualTo: nowStamp)
           .get()),
-      _labeled('transactions', () => facilities
+      _labeled(Collections.transactions, () => facilities
           .collection(Collections.transactions)
           .where('date', isGreaterThanOrEqualTo: todayStart)
           .where('date', isLessThanOrEqualTo: nowStamp)
@@ -186,13 +186,13 @@ class DailyReportService {
           .where('timestamp', isLessThanOrEqualTo: nowStamp)
           .get()),
       _labeled('debts (all)', () => facilities.collection(Collections.debts).get()),
-      _labeled('products', () => facilities.collection(Collections.products).get()),
-      _labeled('stockAdditions', () => facilities
+      _labeled(Collections.products, () => facilities.collection(Collections.products).get()),
+      _labeled(Collections.stockAdditions, () => facilities
           .collection(Collections.stockAdditions)
           .where('timestamp', isGreaterThanOrEqualTo: todayStart)
           .where('timestamp', isLessThanOrEqualTo: nowStamp)
           .get()),
-      _labeled('stock_adjustments', () => facilities
+      _labeled(Collections.stockAdjustments, () => facilities
           .collection(Collections.stockAdjustments)
           .where('timestamp', isGreaterThanOrEqualTo: todayStart)
           .where('timestamp', isLessThanOrEqualTo: nowStamp)
@@ -200,8 +200,8 @@ class DailyReportService {
     ]);
     final docSnapshotsFuture = Future.wait([
       _labeled(
-          'dailySnapshots', () => facilities.collection(Collections.dailySnapshots).doc(_dateKey(yesterday)).get()),
-      _labeled('dailyStockSnapshots',
+          Collections.dailySnapshots, () => facilities.collection(Collections.dailySnapshots).doc(_dateKey(yesterday)).get()),
+      _labeled(Collections.dailyStockSnapshots,
           () => facilities.collection(Collections.dailyStockSnapshots).doc(_dateKey(today)).get()),
     ]);
     final queryResults = await querySnapshotsFuture;

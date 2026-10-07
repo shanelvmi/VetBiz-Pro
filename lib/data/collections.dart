@@ -47,5 +47,6 @@ class Collections {
   static const String trashSales = 'trash_sales';
   static const String trashServices = 'trash_services';
   static const String trashProducts = 'trash_products';
+  static const String trashClients = 'trash_clients';
   static const String trashTransactions = 'trash_transactions';
 }

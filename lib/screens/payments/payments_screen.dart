@@ -197,9 +197,9 @@ class _PaymentsScreenState extends State<PaymentsScreen> {
       if (facilityId == null) return (null, null);
       try {
         if (e.type == 'sale' && e.saleId != null) {
-          return _formattedReceiptWithNotes(facilityId, 'sales', e.saleId!, 'SL', 'notes');
+          return _formattedReceiptWithNotes(facilityId, Collections.sales, e.saleId!, 'SL', 'notes');
         } else if (e.type == 'service' && e.serviceId != null) {
-          return _formattedReceiptWithNotes(facilityId, 'services', e.serviceId!, 'SV', 'description');
+          return _formattedReceiptWithNotes(facilityId, Collections.services, e.serviceId!, 'SV', 'description');
         } else if (e.type == 'debt_repayment' && e.debtId != null) {
           final debtDoc = await FirebaseFirestore.instance
               .collection(Collections.facilities)
@@ -211,9 +211,9 @@ class _PaymentsScreenState extends State<PaymentsScreen> {
           if (debtData == null) return (null, null);
           final source = debtData['source'] as String?;
           if (source == 'Sale' && debtData['saleId'] != null) {
-            return _formattedReceiptWithNotes(facilityId, 'sales', debtData['saleId'] as String, 'SL', 'notes');
+            return _formattedReceiptWithNotes(facilityId, Collections.sales, debtData['saleId'] as String, 'SL', 'notes');
           } else if (source == 'Service' && debtData['serviceId'] != null) {
-            return _formattedReceiptWithNotes(facilityId, 'services', debtData['serviceId'] as String, 'SV', 'description');
+            return _formattedReceiptWithNotes(facilityId, Collections.services, debtData['serviceId'] as String, 'SV', 'description');
           }
         }
       } catch (err) {
@@ -270,7 +270,7 @@ class _PaymentsScreenState extends State<PaymentsScreen> {
         await FirebaseFirestore.instance.collection(Collections.facilities).doc(facilityId).collection(collection).doc(docId).get();
     if (doc.data() == null) return;
     if (!mounted) return;
-    if (collection == 'sales') {
+    if (collection == Collections.sales) {
       final sale = Sale.fromFirestore(doc.data(), doc.id);
       Navigator.push(context, MaterialPageRoute(builder: (_) => ReceiptPreviewScreen(sale: sale)));
     } else {

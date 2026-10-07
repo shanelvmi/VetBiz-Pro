@@ -386,9 +386,9 @@ class _ExportDataScreenState extends State<ExportDataScreen> {
   /// section - two separate sheets/tabs in xlsx, two stacked tables in CSV.
   Future<List<_ExportSection>> _buildSalesAndTransactionsData(String facilityId) async {
     final liveSales =
-        await _fetchWithRange(facilityId: facilityId, collection: 'sales', dateField: 'timestamp');
+        await _fetchWithRange(facilityId: facilityId, collection: Collections.sales, dateField: 'timestamp');
     final archivedSales = await _fetchWithRange(
-        facilityId: facilityId, collection: 'archived_sales', dateField: 'timestamp');
+        facilityId: facilityId, collection: Collections.archivedSales, dateField: 'timestamp');
 
     final allSales = [...liveSales, ...archivedSales];
     allSales.sort((a, b) {
@@ -412,7 +412,7 @@ class _ExportDataScreenState extends State<ExportDataScreen> {
     }).toList();
 
     final transactions =
-        await _fetchWithRange(facilityId: facilityId, collection: 'transactions', dateField: 'date');
+        await _fetchWithRange(facilityId: facilityId, collection: Collections.transactions, dateField: 'date');
     transactions.sort((a, b) {
       final da = _asDate(a['date']) ?? DateTime(0);
       final db = _asDate(b['date']) ?? DateTime(0);
@@ -449,9 +449,9 @@ class _ExportDataScreenState extends State<ExportDataScreen> {
   /// Services (live + archived, merged and sorted by serviceDate).
   Future<List<_ExportSection>> _buildServicesData(String facilityId) async {
     final liveServices = await _fetchWithRange(
-        facilityId: facilityId, collection: 'services', dateField: 'serviceDate');
+        facilityId: facilityId, collection: Collections.services, dateField: 'serviceDate');
     final archivedServices = await _fetchWithRange(
-        facilityId: facilityId, collection: 'archived_services', dateField: 'serviceDate');
+        facilityId: facilityId, collection: Collections.archivedServices, dateField: 'serviceDate');
 
     final allServices = [...liveServices, ...archivedServices];
     allServices.sort((a, b) {
@@ -623,7 +623,7 @@ class _ExportDataScreenState extends State<ExportDataScreen> {
   /// the in-app Payments screen.
   Future<List<_ExportSection>> _buildPaymentsData(String facilityId) async {
     final payments = await _fetchWithRange(
-        facilityId: facilityId, collection: 'payments', dateField: 'timestamp');
+        facilityId: facilityId, collection: Collections.payments, dateField: 'timestamp');
 
     final labelFor = {
       'sale': 'Sale payment',
@@ -641,7 +641,7 @@ class _ExportDataScreenState extends State<ExportDataScreen> {
         .toList();
 
     final transactions =
-        await _fetchWithRange(facilityId: facilityId, collection: 'transactions', dateField: 'date');
+        await _fetchWithRange(facilityId: facilityId, collection: Collections.transactions, dateField: 'date');
     for (final data in transactions) {
       final type = ((data['type'] as String?) ?? '').toLowerCase();
       if (type != 'other income') continue;
@@ -671,7 +671,7 @@ class _ExportDataScreenState extends State<ExportDataScreen> {
 
   Future<List<_ExportSection>> _buildActivityLogData(String facilityId) async {
     final logs = await _fetchWithRange(
-        facilityId: facilityId, collection: 'activity_logs', dateField: 'timestamp');
+        facilityId: facilityId, collection: Collections.activityLogs, dateField: 'timestamp');
     logs.sort((a, b) {
       final da = _asDate(a['timestamp']) ?? DateTime(0);
       final db = _asDate(b['timestamp']) ?? DateTime(0);

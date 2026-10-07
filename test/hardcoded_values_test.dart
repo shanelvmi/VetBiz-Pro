@@ -28,6 +28,19 @@ void main() {
     expect(violations({'R10': {'lib/a.dart': 9}}, base), isEmpty);
   });
 
+  test('R9 also sees a collection name passed through a variable', () {
+    final literal = collectionNameLiteral(Directory.current)!;
+    expect(literal.hasMatch("trashCollection: 'trash_clients',"), isTrue);
+    expect(literal.hasMatch("if (collection == 'sales') {"), isTrue);
+    // Written straight inside .collection(...): R9's own pattern counts it,
+    // so this must not count it a second time.
+    expect(literal.hasMatch(".collection('sales')"), isFalse);
+    expect(literal.hasMatch('collection: Collections.sales,'), isFalse);
+    expect(literal.hasMatch("collection: 'not_a_collection',"), isFalse);
+    final r9 = guardRules.firstWhere((r) => r.id == 'R9');
+    expect(r9.patterns.any((p) => p.hasMatch(".collectionGroup('users')")), isTrue);
+  });
+
   test('the scanner sees what it should', () {
     final r4 = guardRules.firstWhere((r) => r.id == 'R4');
     bool hits(GuardRule rule, String line) =>

@@ -70,26 +70,26 @@ class _TrashScreenState extends State<TrashScreen> with SingleTickerProviderStat
                   children: [
                     _TrashList(
                       facilityId: facilityId,
-                      trashCollection: 'trash_products',
-                      liveCollection: 'products',
+                      trashCollection: Collections.trashProducts,
+                      liveCollection: Collections.products,
                       primaryColor: primaryColor,
                     ),
                     _TrashList(
                       facilityId: facilityId,
-                      trashCollection: 'trash_clients',
-                      liveCollection: 'clients',
+                      trashCollection: Collections.trashClients,
+                      liveCollection: Collections.clients,
                       primaryColor: primaryColor,
                     ),
                     _TrashList(
                       facilityId: facilityId,
-                      trashCollection: 'trash_services',
-                      liveCollection: 'services',
+                      trashCollection: Collections.trashServices,
+                      liveCollection: Collections.services,
                       primaryColor: primaryColor,
                     ),
                     _TrashList(
                       facilityId: facilityId,
-                      trashCollection: 'trash_sales',
-                      liveCollection: 'sales',
+                      trashCollection: Collections.trashSales,
+                      liveCollection: Collections.sales,
                       primaryColor: primaryColor,
                       titleBuilder: (data) {
                         final client = (data['clientName'] as String?) ?? 'Walk-in';
@@ -99,8 +99,8 @@ class _TrashScreenState extends State<TrashScreen> with SingleTickerProviderStat
                     ),
                     _TrashList(
                       facilityId: facilityId,
-                      trashCollection: 'trash_transactions',
-                      liveCollection: 'transactions',
+                      trashCollection: Collections.trashTransactions,
+                      liveCollection: Collections.transactions,
                       primaryColor: primaryColor,
                       titleBuilder: (data) {
                         final description = (data['description'] as String?) ?? '';
@@ -209,7 +209,7 @@ class _TrashList extends StatelessWidget {
       // but permanently deleting it needs to clean this up explicitly,
       // or it's orphaned in Firestore forever with nothing left pointing
       // to it.
-      if (trashCollection == 'trash_products') {
+      if (trashCollection == Collections.trashProducts) {
         final batchesSnap = await FirebaseFirestore.instance
             .collection(Collections.facilities)
             .doc(facilityId)
