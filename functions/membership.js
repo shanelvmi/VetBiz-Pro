@@ -825,5 +825,5 @@ function create({ db, FieldValue, Timestamp, HttpsError, randomInt, now = () => 
 module.exports = {
   create,
   // Exposed for tests.
-  helpers: { normalizeInviteCode, trialExpiry, inviteProblem, FACILITY_TYPES, INVITE_ALPHABET },
+  helpers: { normalizeInviteCode, trialExpiry, inviteProblem, FACILITY_TYPES, INVITE_ALPHABET, INVITE_CODE_LENGTH },
 };

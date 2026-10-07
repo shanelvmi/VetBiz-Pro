@@ -72,3 +72,41 @@ test("the older functions are untouched: still 1st gen in us-central1", () => {
     assert.strictEqual(exported[name].__endpoint.platform, "gcfv1", `${name} changed generation`);
   }
 });
+
+// ---------------------------------------------------------------------------
+// Constants the app and the server both know (Phase 2 spec, section 6). Read
+// from the real Dart source as text, like the region above.
+
+const { helpers } = require("../membership.js");
+const membershipJs = fs.readFileSync(path.join(__dirname, "..", "membership.js"), "utf8");
+const readDart = (...parts) => fs.readFileSync(path.join(LIB, ...parts), "utf8");
+
+// The stored keys of a Dart enum written as `name('key'),`.
+const enumKeys = (src, enumName) => {
+  const body = (src.match(new RegExp(String.raw`enum ${enumName}\s*\{([\s\S]*?);`)) || [])[1] || "";
+  return [...body.matchAll(/\w+\('([^']+)'\)/g)].map((m) => m[1]).sort();
+};
+
+test("invite code length and alphabet match AppRules", () => {
+  const rules = readDart("config", "app_rules.dart");
+  const appLength = Number((rules.match(/inviteCodeLength\s*=\s*(\d+)/) || [])[1]);
+  const appAlphabet = (rules.match(/inviteAlphabet\s*=\s*'([^']+)'/) || [])[1];
+  assert.strictEqual(appLength, helpers.INVITE_CODE_LENGTH, "AppRules.inviteCodeLength differs from INVITE_CODE_LENGTH");
+  assert.strictEqual(appAlphabet, helpers.INVITE_ALPHABET, "AppRules.inviteAlphabet differs from INVITE_ALPHABET");
+});
+
+test("UserRole keys are the roles the server writes", () => {
+  const appRoles = enumKeys(readDart("data", "user_role.dart"), "UserRole");
+  const serverRoles = [...new Set([...membershipJs.matchAll(/\brole:\s*"([a-z_]+)"/g)].map((m) => m[1]))].sort();
+  assert.ok(serverRoles.length > 0, "found no role writes in membership.js");
+  assert.deepStrictEqual(appRoles, serverRoles);
+});
+
+test("UserStatus keys are the statuses the server writes or moves between", () => {
+  const appStatuses = enumKeys(readDart("data", "user_status.dart"), "UserStatus");
+  const written = [...membershipJs.matchAll(/\bstatus:\s*"([a-z_]+)"/g)].map((m) => m[1]);
+  const transitions = [...membershipJs.matchAll(/\b(?:from|to):\s*"([a-z_]+)"/g)].map((m) => m[1]);
+  const serverStatuses = [...new Set([...written, ...transitions])].sort();
+  assert.ok(serverStatuses.length > 0, "found no status writes in membership.js");
+  assert.deepStrictEqual(appStatuses, serverStatuses);
+});
