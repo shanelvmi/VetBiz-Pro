@@ -187,6 +187,16 @@ void main() {
       expect(AppMotion.colorCycle.inMilliseconds, 1400);
       expect(AppMotion.toastShort.inSeconds, 2);
       expect(AppMotion.toastLong.inSeconds, 3);
+      expect([
+        AppMotion.toastSuccess, AppMotion.toastInfo, AppMotion.toastWarning,
+        AppMotion.toastUndo, AppMotion.toastError,
+      ].map((d) => d.inSeconds), [3, 4, 5, 6, 7]);
+    });
+
+    test('feedback sizes', () {
+      expect(AppSizes.toastMax, 400);
+      expect(AppSizes.toastIcon, 28);
+      expect(AppSizes.minTapTarget, 40);
     });
   });
 }

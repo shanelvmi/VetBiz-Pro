@@ -19,4 +19,12 @@ class AppMotion {
 
   static const Duration toastShort = Duration(seconds: 2);
   static const Duration toastLong = Duration(seconds: 3);
+
+  /// How long each AppFeedback type stays up (PHASE2_FEEDBACK_SPEC section
+  /// 3). toastShort and toastLong go once nothing uses them.
+  static const Duration toastSuccess = Duration(seconds: 3);
+  static const Duration toastInfo = Duration(seconds: 4);
+  static const Duration toastWarning = Duration(seconds: 5);
+  static const Duration toastUndo = Duration(seconds: 6);
+  static const Duration toastError = Duration(seconds: 7);
 }

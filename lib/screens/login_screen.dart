@@ -16,6 +16,7 @@ import '../data/collections.dart';
 import '../config/app_timeouts.dart';
 import '../config/app_rules.dart';
 import '../config/app_info.dart';
+import '../ui/feedback/auth_error_messages.dart';
 
 class LoginScreen extends StatefulWidget {
   final String? errorMessage;
@@ -210,30 +211,9 @@ class _LoginScreenState extends State<LoginScreen> {
   // Firebase's own exception messages are technical and inconsistent in
   // tone - this maps the common cases to something a shop owner would
   // actually understand, without guessing at ones not explicitly
-  // handled (those fall through to Firebase's own message).
-  String _friendlyAuthError(FirebaseAuthException e) {
-    switch (e.code) {
-      case 'user-not-found':
-      case 'invalid-email':
-        return 'No account found with that email address.';
-      case 'wrong-password':
-        return 'Incorrect password. Please try again.';
-      case 'invalid-credential':
-        // Recent Firebase SDKs report both "wrong password" and
-        // "no such user" under this one unified code, for security
-        // reasons (so a login form can't be used to check which emails
-        // are registered).
-        return 'Incorrect email or password.';
-      case 'user-disabled':
-        return 'This account has been disabled. Contact your admin.';
-      case 'too-many-requests':
-        return 'Too many attempts. Please wait a moment and try again.';
-      case 'network-request-failed':
-        return 'Network error - check your connection and try again.';
-      default:
-        return e.message ?? 'Login failed. Please try again.';
-    }
-  }
+  // handled (those fall through to Firebase's own message). The mapping
+  // itself is shared with FriendlyError: ui/feedback/auth_error_messages.dart.
+  String _friendlyAuthError(FirebaseAuthException e) => authErrorMessage(e);
 
   Future<void> _forgotPassword() async {
     final email = emailController.text.trim();

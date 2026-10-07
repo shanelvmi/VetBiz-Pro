@@ -47,6 +47,18 @@ User-facing "VetBiz Pro" now reads `AppInfo.name` (titles, Settings, support lin
 - **Two names in use**: "VetBiz Pro" and "VetBiz Pro System" (login header, register header, © line). One name?
 - **The version** "v1.0.0" is typed in Settings (`settings_screen.dart:239`); it could come from the build (pubspec) instead.
 
+### Feedback copy (raised in step 2D-0)
+
+- Sign-in error texts, now shared by the login screen and `FriendlyError` (`lib/ui/feedback/auth_error_messages.dart`), kept word for word. Against the copy rules (PHASE2_FEEDBACK_SPEC section 6) they end with a full stop and some say "Please":
+  - "No account found with that email address."
+  - "Incorrect password. Please try again." ("Please")
+  - "Incorrect email or password."
+  - "This account has been disabled. Contact your admin."
+  - "Too many attempts. Please wait a moment and try again." ("Please")
+  - "Network error - check your connection and try again."
+  - fallback "Login failed. Please try again." ("Please"), and an unknown code shows Firebase's own message.
+  Reword to the copy rules? (The login screen would change too.)
+
 ## Decided
 
 Decided by the owner after step 2A.

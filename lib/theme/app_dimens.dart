@@ -101,6 +101,12 @@ class AppSizes {
   static const double contentXl = 1080;
   static const double pageMax = 1440;
 
+  /// Feedback toasts (lib/ui/feedback): the card's width on wider screens,
+  /// the round icon badge, and the smallest height of a toast button.
+  static const double toastMax = 400;
+  static const double toastIcon = 28;
+  static const double minTapTarget = 40;
+
   /// The dashboard sidebar (dashboard_screen.dart, the sidebar `width:`).
   static const double sidebarExpanded = 250;
   static const double sidebarCollapsed = 72;
