@@ -13,7 +13,7 @@ class _Submission {
   final num amount;
   final String method;
   final String reference;
-  final String status; // PaymentSubmissionStatus.approved.key | PaymentSubmissionStatus.rejected.key | PaymentSubmissionStatus.pending.key
+  final String status; // 'approved' | 'rejected' | 'pending'
   final DateTime? submittedAt;
   final DateTime? reviewedAt;
   final String reviewNote; // the rejection reason - empty if none was given

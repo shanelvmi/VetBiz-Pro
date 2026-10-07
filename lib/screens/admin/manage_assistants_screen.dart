@@ -72,7 +72,7 @@ class _ManageAssistantsScreenState extends State<ManageAssistantsScreen> {
 
   String _searchQuery = ''; // trimmed + lowercased
   final TextEditingController _searchController = TextEditingController();
-  String? _statusFilter; // UserStatus.active.key | UserStatus.deactivated.key | UserStatus.pending.key, null = all
+  String? _statusFilter; // 'active' | 'deactivated' | 'pending', null = all
   String _facilityFilter = 'All'; // a facility id, or 'All'
   int _page = 1;
   int _pageSize = 10;
