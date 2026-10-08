@@ -46,6 +46,8 @@ class AppColors extends ThemeExtension<AppColors> {
     required this.infoStrong,
     required this.trendUp,
     required this.trendDown,
+    required this.scrim,
+    required this.shadow,
   });
 
   // Brand - the only roles that vary by colour theme for now.
@@ -99,6 +101,12 @@ class AppColors extends ThemeExtension<AppColors> {
   final Color trendUp;
   final Color trendDown;
 
+  // Darkening layers, not text: a scrim over a photo, and card shadows.
+  // Kept apart from textStrong because Dark Mode turns text light, and
+  // these must stay dark.
+  final Color scrim;
+  final Color shadow;
+
   /// The roles for a colour theme. Every value is the exact legacy shade.
   static AppColors fromTheme(AppColorTheme theme) => AppColors(
         primary: theme.primary,
@@ -132,6 +140,8 @@ class AppColors extends ThemeExtension<AppColors> {
         infoStrong: Colors.blue.shade700,
         trendUp: const Color(0xFF10B981),
         trendDown: const Color(0xFFEF4444),
+        scrim: Colors.black,
+        shadow: Colors.black,
       );
 
   @override
@@ -167,6 +177,8 @@ class AppColors extends ThemeExtension<AppColors> {
     Color? infoStrong,
     Color? trendUp,
     Color? trendDown,
+    Color? scrim,
+    Color? shadow,
   }) =>
       AppColors(
         primary: primary ?? this.primary,
@@ -200,6 +212,8 @@ class AppColors extends ThemeExtension<AppColors> {
         infoStrong: infoStrong ?? this.infoStrong,
         trendUp: trendUp ?? this.trendUp,
         trendDown: trendDown ?? this.trendDown,
+        scrim: scrim ?? this.scrim,
+        shadow: shadow ?? this.shadow,
       );
 
   @override
@@ -238,6 +252,8 @@ class AppColors extends ThemeExtension<AppColors> {
       infoStrong: l(infoStrong, other.infoStrong),
       trendUp: l(trendUp, other.trendUp),
       trendDown: l(trendDown, other.trendDown),
+      scrim: l(scrim, other.scrim),
+      shadow: l(shadow, other.shadow),
     );
   }
 }

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../theme/app_breakpoints.dart';
 import '../theme/app_dimens.dart';
+import '../theme/app_motion.dart';
 import '../theme/app_palette.dart';
 import '../theme/app_text.dart';
 import '../theme/theme_context.dart';
@@ -61,9 +62,7 @@ class _VetBizLoadingIndicatorState extends State<VetBizLoadingIndicator> with Ti
 
     _entranceController = AnimationController(
       vsync: this,
-      // 900 ms entrance, played once: not a loop, so not AppMotion.loop.
-      // Kept exact (design-open-questions.md).
-      duration: const Duration(milliseconds: 900),
+      duration: AppMotion.emphasis,
     );
 
     // Staggered within the same controller via Interval, rather than
@@ -89,7 +88,7 @@ class _VetBizLoadingIndicatorState extends State<VetBizLoadingIndicator> with Ti
 
     _pulseController = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 1500),
+      duration: AppMotion.float,
     )..repeat(reverse: true);
   }
 

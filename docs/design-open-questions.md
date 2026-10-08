@@ -5,15 +5,11 @@ Format: file, line, value, what it seems to be for.
 
 ## Open
 
-Raised in step 2B. Each stays exactly as it is in the code until decided.
-
-- Facility status, `lib/screens/facilities/facility_screen.dart:1229-1240, 2444, 2606`: `'Active'` / `'active'` / `'pending'` / `'inactive'`, compared case-insensitively. A third kind of "status" (not a user or payment-submission status). Its own enum in `lib/data`?
-- Promotion `active` field, `lib/models/promotion.dart:78-152`, `lib/screens/platform_admin/promotions_screen.dart:228, 561`: `'active'` is a boolean field NAME on `promotions/{id}`, not a status value. Add it to `Fields`, or leave it with the model?
-- Membership-history action keys, `lib/screens/admin/manage_assistants_screen.dart:242, 1650-1656`: `'approved'`, `'rejected'`, `'deactivated'`, `'reactivated'` are the `statusHistory[].action` values written by `functions/membership.js:92-95` (`history:`). Shared with the server, so an enum here would want a link test like UserStatus has.
-- Activity type `'Sale'` vs `'Sales'`, `lib/screens/sales/add_sale_screen.dart:793` vs `lib/providers/sale_provider.dart:441, 570`: two spellings for sale entries, both already stored. The icon/colour readers lower-case and match `'sales'`, so entries written as `'Sale'` get the default icon. Both are kept in `ActivityType` (stored strings never change). Should new entries all write `'Sales'`? Old `'Sale'` entries would still need to display.
-- Activity-type readers, `activity_log_screen.dart:348, 373`, `dashboard_screen.dart:1784, 1807`, `facility_screen.dart:1802, 1825`, `report_tabbed_content.dart:815, 840`: four copies of the same lower-case `switch` for icon and colour, including types nothing writes any more (`clients`, `settings`, `admin`). Keep as is, or one shared helper (a behaviour-neutral change, but outside 2B)?
+For step 2R. Each needs before/after screenshots first; the owner's leanings are noted, not decided.
 
 ### Money (raised in step 2C, for step 2R)
+
+Leanings: one currency spelling, "Tsh"; one decimals rule; one shape for a negative amount.
 
 Every amount below keeps its exact current output through a named `Money` method, so each can be changed in one place later.
 
@@ -24,7 +20,9 @@ Every amount below keeps its exact current output through a named `Money` method
 - **Two shapes for a negative amount**: `Money.format` gives "-Tsh 12,500", `Money.symbolPlain` gives "Tsh -12,500". Each screen keeps the one it had.
 - **Decimals**: reports, PDFs, the dashboard and transactions use `Money.decimal` (up to 3 decimals, "12,500.5"); most other screens round to whole shillings. One rule?
 
-### Payment methods: Tigo Pesa and Mixx by Yas (raised in step 2C)
+### Payment methods: Tigo Pesa and Mixx by Yas (raised in step 2C, for step 2R)
+
+Leaning: merge Tigo Pesa into Mixx by Yas for display, filters and report grouping (stored keys unchanged).
 
 Stored keys never change, and both display everywhere. Three places treat them as two different methods today; each is kept as it is:
 
@@ -32,11 +30,9 @@ Stored keys never change, and both display everywhere. Three places treat them a
 - Daily report breakdowns (`daily_report_service.dart`, report screens, PDF): totals are grouped by the stored string, so a day with both shows two rows. Count them as one (display only; the stored keys stay)?
 - Payments ledger filter (`payments_screen.dart:860`) and the subscription history filter: the ledger's method filter lists only current methods, so old 'Tigo Pesa' entries can only be seen under "All"; the history filter lists both as separate choices. Merge?
 
-### Date formats (raised in step 2C)
+### App name (raised in step 2C, for step 2R)
 
-- `lib/screens/services/add_edit_service_screen.dart:541`, `DateFormat.yMMMMd()` ("March 5, 2026"), now `AppDateFormat.monthDayYearLong`: the only date format that follows the locale; every other screen uses a fixed pattern such as `dd MMM yyyy` ("05 Mar 2026"). When step 2F turns on Kiswahili this one will change shape and the others won't. Switch it to `AppDateFormat.date` so it matches the rest?
-
-### App name (raised in step 2C)
+Leaning: one name, "VetBiz Pro".
 
 User-facing "VetBiz Pro" now reads `AppInfo.name` (titles, Settings, support line, register intro, report fallback names, export share text, PDF and thermal-receipt headers and footers). These keep the name typed, on purpose:
 
@@ -47,23 +43,21 @@ User-facing "VetBiz Pro" now reads `AppInfo.name` (titles, Settings, support lin
 - **Two names in use**: "VetBiz Pro" and "VetBiz Pro System" (login header, register header, © line). One name?
 - **The version** "v1.0.0" is typed in Settings (`settings_screen.dart:239`); it could come from the build (pubspec) instead.
 
-### Feedback copy (raised in step 2D-0)
+## Decided
 
-- Sign-in error texts, now shared by the login screen and `FriendlyError` (`lib/ui/feedback/auth_error_messages.dart`), kept word for word. Against the copy rules (PHASE2_FEEDBACK_SPEC section 6) they end with a full stop and some say "Please":
-  - "No account found with that email address."
-  - "Incorrect password. Please try again." ("Please")
-  - "Incorrect email or password."
-  - "This account has been disabled. Contact your admin."
-  - "Too many attempts. Please wait a moment and try again." ("Please")
-  - "Network error - check your connection and try again."
-  - fallback "Login failed. Please try again." ("Please"), and an unknown code shows Firebase's own message.
-  Reword to the copy rules? (The login screen would change too.)
+### D1 follow-up (decided after batch D1; done in D1c)
 
-- **Make client deletion soft?** `ClientProvider.deleteClient` (`lib/providers/client_provider.dart`) deletes the client document outright, so its message ("Client deleted") has no Undo. Everything else that can be deleted from the app (products, sales, services, transactions) goes to a `trash_*` collection first. `trash_clients` is already supported end to end: `firestore.rules` has a rule for it, `functions/index.js` purges it after 30 days, and the Trash screen lists and restores it. Nothing in the app writes to it. Moving clients to Trash would give them Undo too (a behaviour change, so not done in Phase 2).
+- `scrim` and `shadow` roles (exact `Colors.black`): `auth_background.dart` 0.18 -> `a20`, `notification_row.dart` 0.04 -> `a05`.
+- `AppMotion.pulseSlow` (2 s, maintenance pulse), `emphasis` (900 ms one-shot: summary card glow, loading entrance), `float` (1400 ms: trend arrow; the 1500 ms loading subtitle pulse snaps to it).
+- The 320 ms entry switcher (`facility_activation.dart`) snaps to `AppMotion.slow`.
+- `AppTimeouts.tooltipDelay` (400 ms, trend tooltip).
+- `AppIconSize.i48`; 44 (maintenance) snaps to it; the 11 px trend icon snaps to `i12`.
+- `AppAlpha.a85` (selected-row count text); the animated 0.45 glow snaps to `a50`.
+- Guard allowlist: `trial_period_helper.dart` `Duration(days: days)`, "computed from the configured trial days".
+- The subscription-locked dialog keeps the 340 snap (`AppSizes.dialogXs`); the `dialogFixedWidth` comment now says 340.
+- `trendUp` and `trendDown` stay separate roles; revisit in 2R.
 
-### Values with no token (raised in step 2D, batch D1)
-
-Kept exactly as they are; the guard still counts the raw ones.
+The questions as raised:
 
 - **Black scrim and shadow**, `lib/widgets/auth_background.dart:37` (`Colors.black` at 0.18 over the login photo) and `lib/widgets/notification_row.dart:47` (`Colors.black` at 0.04, a card shadow). The spec maps `Colors.black` to `textStrong`, but these are not text: in Dark Mode a text role turns light, a scrim or shadow should not. Add `scrim` and `shadow` roles (exact `Colors.black`)? 0.18 also has no AppAlpha step.
 - **Maintenance pulse**, `lib/widgets/maintenance_gate.dart:162`: a 2 s repeating pulse. `AppMotion.loop` is 900 ms. Add `AppMotion.pulseSlow` (2 s)?
@@ -79,9 +73,34 @@ Kept exactly as they are; the guard still counts the raw ones.
 - **New colour roles** `trendUp` (`#10B981`) and `trendDown` (`#EF4444`): the trend pill's green and red, more than 12 away from `success` and `danger`. Merge into them in 2R?
 - **Snaps applied here**: amber[700] -> `warning` ("Reorder Soon" dot) and grey[800] -> `textPrimary` (side-panel row labels), both per the 4.1 table; the loading screen's paw marks were the brand at alpha 0x0A (0.039), now `a05`.
 
-## Decided
+### To do in the batch named
 
-Decided by the owner after step 2A.
+- **Services batch:** switch `DateFormat.yMMMMd` in `add_edit_service_screen.dart` to `AppDateFormat.date`, and list it as an output difference. As raised: `lib/screens/services/add_edit_service_screen.dart:541`, `DateFormat.yMMMMd()` ("March 5, 2026"), now `AppDateFormat.monthDayYearLong`: the only date format that follows the locale; every other screen uses a fixed pattern such as `dd MMM yyyy` ("05 Mar 2026"). When step 2F turns on Kiswahili this one will change shape and the others won't. Switch it to `AppDateFormat.date` so it matches the rest?
+- **Login batch:** reword the sign-in texts to the copy rules, and merge "No account found with that email address." into "Incorrect email or password." so the screen does not reveal which emails are registered. Show the owner the before/after list. As raised:
+  Sign-in error texts, now shared by the login screen and `FriendlyError` (`lib/ui/feedback/auth_error_messages.dart`), kept word for word. Against the copy rules (PHASE2_FEEDBACK_SPEC section 6) they end with a full stop and some say "Please":
+  - "No account found with that email address."
+  - "Incorrect password. Please try again." ("Please")
+  - "Incorrect email or password."
+  - "This account has been disabled. Contact your admin."
+  - "Too many attempts. Please wait a moment and try again." ("Please")
+  - "Network error - check your connection and try again."
+  - fallback "Login failed. Please try again." ("Please"), and an unknown code shows Firebase's own message.
+  Reword to the copy rules? (The login screen would change too.)
+
+### For step 2E
+
+- **New activity entries write `'Sales'`.** Both spellings stay readable, which also gives old `'Sale'` rows the right icon. As raised: Activity type `'Sale'` vs `'Sales'`, `lib/screens/sales/add_sale_screen.dart:793` vs `lib/providers/sale_provider.dart:441, 570`: two spellings for sale entries, both already stored. The icon/colour readers lower-case and match `'sales'`, so entries written as `'Sale'` get the default icon. Both are kept in `ActivityType` (stored strings never change). Should new entries all write `'Sales'`? Old `'Sale'` entries would still need to display.
+- **One shared activity-type icon/colour helper** replacing the four copies. As raised: Activity-type readers, `activity_log_screen.dart:348, 373`, `dashboard_screen.dart:1784, 1807`, `facility_screen.dart:1802, 1825`, `report_tabbed_content.dart:815, 840`: four copies of the same lower-case `switch` for icon and colour, including types nothing writes any more (`clients`, `settings`, `admin`). Keep as is, or one shared helper (a behaviour-neutral change, but outside 2B)?
+- **A `FacilityStatus` enum.** As raised: Facility status, `lib/screens/facilities/facility_screen.dart:1229-1240, 2444, 2606`: `'Active'` / `'active'` / `'pending'` / `'inactive'`, compared case-insensitively. A third kind of "status" (not a user or payment-submission status). Its own enum in `lib/data`?
+- **`Fields.active`.** As raised: Promotion `active` field, `lib/models/promotion.dart:78-152`, `lib/screens/platform_admin/promotions_screen.dart:228, 561`: `'active'` is a boolean field NAME on `promotions/{id}`, not a status value. Add it to `Fields`, or leave it with the model?
+- **A membership-history action enum, with a link test against `functions/membership.js`.** As raised: Membership-history action keys, `lib/screens/admin/manage_assistants_screen.dart:242, 1650-1656`: `'approved'`, `'rejected'`, `'deactivated'`, `'reactivated'` are the `statusHistory[].action` values written by `functions/membership.js:92-95` (`history:`). Shared with the server, so an enum here would want a link test like UserStatus has.
+
+### Separate task, after 2D and before 2F
+
+- **Make client deletion soft** (write to `trash_clients`) so it gets Undo. As raised: `ClientProvider.deleteClient` (`lib/providers/client_provider.dart`) deletes the client document outright, so its message ("Client deleted") has no Undo. Everything else that can be deleted from the app (products, sales, services, transactions) goes to a `trash_*` collection first. `trash_clients` is already supported end to end: `firestore.rules` has a rule for it, `functions/index.js` purges it after 30 days, and the Trash screen lists and restores it. Nothing in the app writes to it. Moving clients to Trash would give them Undo too (a behaviour change, so not done in Phase 2).
+
+### Decided after step 2A
+
 
 - `lib/theme/app_text.dart` (`AppText` colours): **caption → `textMuted`, bodySm → `textSecondary`, all others → `textPrimary`.** Applied in 2B-0.
 - `lib/screens/subscription/subscription_screen.dart:395`, `'Tigo Pesa'`: **switch the subscription form to Mixx by Yas in step 2C, as its own commit.** New requests store `'Mixx by Yas'`; `PaymentMethod.tigoPesa` stays so old records still display.

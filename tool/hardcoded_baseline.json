@@ -1,6 +1,13 @@
 {
   "_comment": "Allowed raw-value counts per rule per file (Phase 2 spec, section 9). Counts may only go down: regenerate with `dart run tool/check_hardcoded.dart --update`. allowlist entries skip a known false positive: {rule, file, lineContains, reason}.",
-  "allowlist": [],
+  "allowlist": [
+    {
+      "rule": "R5",
+      "file": "lib/utils/trial_period_helper.dart",
+      "lineContains": "Duration(days: days)",
+      "reason": "computed from the configured trial days"
+    }
+  ],
   "counts": {
     "R1": {
       "lib/main.dart": 27,
@@ -68,9 +75,7 @@
       "lib/screens/subscription/subscription_history_screen.dart": 39,
       "lib/screens/subscription/subscription_screen.dart": 28,
       "lib/screens/transactions/add_transaction_screen.dart": 26,
-      "lib/screens/transactions/transactions_screen.dart": 41,
-      "lib/widgets/auth_background.dart": 1,
-      "lib/widgets/notification_row.dart": 1
+      "lib/screens/transactions/transactions_screen.dart": 41
     },
     "R2": {
       "lib/main.dart": 11,
@@ -307,12 +312,7 @@
       "lib/screens/subscription/subscription_screen.dart": 1,
       "lib/screens/transactions/add_transaction_screen.dart": 1,
       "lib/screens/transactions/transactions_screen.dart": 1,
-      "lib/services/activity_log_retention.dart": 1,
-      "lib/utils/facility_activation.dart": 1,
-      "lib/utils/trial_period_helper.dart": 1,
-      "lib/widgets/maintenance_gate.dart": 1,
-      "lib/widgets/summary_card.dart": 3,
-      "lib/widgets/vetbiz_loading_indicator.dart": 2
+      "lib/services/activity_log_retention.dart": 1
     },
     "R6": {},
     "R7": {

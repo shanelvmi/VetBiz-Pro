@@ -325,8 +325,7 @@ class _ProductCatalogSidePanelState extends State<ProductCatalogSidePanel> {
                 '$count',
                 style: TextStyle(
                   fontSize: AppFontSize.f12,
-                  // 0.85 has no AppAlpha step; kept exact (design-open-questions.md).
-                  color: isSelected ? context.colors.onPrimary.withValues(alpha: 0.85) : context.colors.textHint,
+                  color: isSelected ? context.colors.onPrimary.withValues(alpha: AppAlpha.a85) : context.colors.textHint,
                 ),
               ),
               if (trailing != null) ...[const SizedBox(width: AppSpacing.s2), trailing],

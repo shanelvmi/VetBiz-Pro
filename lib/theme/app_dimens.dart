@@ -55,6 +55,7 @@ class AppIconSize {
   static const double i20 = 20;
   static const double i22 = 22;
   static const double i32 = 32;
+  static const double i48 = 48;
   static const double i56 = 56;
   static const double i64 = 64;
 }
@@ -81,6 +82,7 @@ class AppAlpha {
   static const double a40 = 0.4;
   static const double a50 = 0.5;
   static const double a70 = 0.7;
+  static const double a85 = 0.85;
 }
 
 /// Widths of dialogs, content columns and fixed chrome.

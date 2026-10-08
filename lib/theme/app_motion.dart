@@ -17,6 +17,15 @@ class AppMotion {
   /// The dashboard's slow repeating colour cycle (dashboard_screen.dart).
   static const Duration colorCycle = Duration(milliseconds: 1400);
 
+  /// A one-shot emphasis: an entrance, or a flash when a value changes.
+  static const Duration emphasis = Duration(milliseconds: 900);
+
+  /// One cycle of a slow, gentle repeating float or pulse.
+  static const Duration float = Duration(milliseconds: 1400);
+
+  /// One cycle of the maintenance screen's slow breathing pulse.
+  static const Duration pulseSlow = Duration(seconds: 2);
+
   static const Duration toastShort = Duration(seconds: 2);
   static const Duration toastLong = Duration(seconds: 3);
 

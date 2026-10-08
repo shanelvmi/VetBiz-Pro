@@ -129,4 +129,7 @@ class AppTimeouts {
   /// How long the "Setting up..." screen gives the facility's listeners
   /// before the Dashboard shows (facility_activation.dart).
   static const Duration dashboardEntryGrace = Duration(milliseconds: 900);
+
+  /// Hover time before a tooltip shows (summary_card.dart trend pill).
+  static const Duration tooltipDelay = Duration(milliseconds: 400);
 }

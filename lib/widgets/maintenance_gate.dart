@@ -5,6 +5,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 
 import '../utils/force_logout.dart';
 import '../theme/app_dimens.dart';
+import '../theme/app_motion.dart';
 import '../theme/app_text.dart';
 import '../theme/theme_context.dart';
 import '../data/collections.dart';
@@ -159,7 +160,7 @@ class _MaintenanceScreenState extends State<MaintenanceScreen> with SingleTicker
     super.initState();
     _pulseController = AnimationController(
       vsync: this,
-      duration: const Duration(seconds: 2),
+      duration: AppMotion.pulseSlow,
     )..repeat(reverse: true);
     _pulseAnimation = Tween<double>(begin: 0.94, end: 1.06).animate(
       CurvedAnimation(parent: _pulseController, curve: Curves.easeInOut),
@@ -194,7 +195,7 @@ class _MaintenanceScreenState extends State<MaintenanceScreen> with SingleTicker
                         color: context.colors.primary.withValues(alpha: AppAlpha.a10),
                         shape: BoxShape.circle,
                       ),
-                      child: Icon(Icons.build_rounded, size: 44, color: context.colors.primary),
+                      child: Icon(Icons.build_rounded, size: AppIconSize.i48, color: context.colors.primary),
                     ),
                   ),
                   const SizedBox(height: AppSpacing.s28),

@@ -173,7 +173,7 @@ class _DashboardEntryLoaderState extends State<_DashboardEntryLoader> {
   @override
   Widget build(BuildContext context) {
     return AnimatedSwitcher(
-      duration: const Duration(milliseconds: 320),
+      duration: AppMotion.slow,
       switchInCurve: Curves.easeOut,
       transitionBuilder: (child, animation) => FadeTransition(opacity: animation, child: child),
       child: _ready

@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 
+import '../config/app_timeouts.dart';
 import '../theme/app_breakpoints.dart';
 import '../theme/app_dimens.dart';
+import '../theme/app_motion.dart';
 import '../theme/app_text.dart';
 import '../theme/theme_context.dart';
 
@@ -112,7 +114,7 @@ class _SummaryCardState extends State<SummaryCard> with SingleTickerProviderStat
   @override
   void initState() {
     super.initState();
-    _pulseController = AnimationController(vsync: this, duration: const Duration(milliseconds: 900));
+    _pulseController = AnimationController(vsync: this, duration: AppMotion.emphasis);
     // Ramps up quickly (15% of the duration) then fades slowly (the
     // remaining 85%) - reads as a brief flash rather than a slow
     // build-up, keeping this short and unobtrusive.
@@ -154,7 +156,7 @@ class _SummaryCardState extends State<SummaryCard> with SingleTickerProviderStat
             boxShadow: glow > 0
                 ? [
                     BoxShadow(
-                      color: widget.color.withValues(alpha: 0.45 * glow),
+                      color: widget.color.withValues(alpha: AppAlpha.a50 * glow),
                       blurRadius: 14 * glow,
                       spreadRadius: 1.5 * glow,
                     ),
@@ -313,7 +315,7 @@ class _TrendPillState extends State<_TrendPill> with SingleTickerProviderStateMi
     // A slow, gentle, continuous float - subtle enough not to be
     // distracting with several of these animating on screen at once,
     // but enough to read as "live" rather than a static icon.
-    _controller = AnimationController(vsync: this, duration: const Duration(milliseconds: 1400))
+    _controller = AnimationController(vsync: this, duration: AppMotion.float)
       ..repeat(reverse: true);
   }
 
@@ -333,8 +335,7 @@ class _TrendPillState extends State<_TrendPill> with SingleTickerProviderStateMi
         : (trend.absoluteChange >= 0 ? Icons.arrow_upward_rounded : Icons.arrow_downward_rounded);
     final label = trend.isNewActivity ? 'New' : '${trend.percent.abs().toStringAsFixed(1)}%';
     final fontSize = widget.compact ? AppFontSize.f10 : AppFontSize.f10_5;
-    // 11 has no AppIconSize step and no snap rule; kept exact.
-    final iconSize = widget.compact ? 11.0 : AppIconSize.i12;
+    final iconSize = AppIconSize.i12;
 
     final changeText = trend.absoluteChange >= 0
         ? '+${trend.formatChange(trend.absoluteChange)}'
@@ -342,7 +343,7 @@ class _TrendPillState extends State<_TrendPill> with SingleTickerProviderStateMi
 
     return Tooltip(
       message: '${trend.comparisonLabel}: $changeText',
-      waitDuration: const Duration(milliseconds: 400),
+      waitDuration: AppTimeouts.tooltipDelay,
       child: Container(
         padding: EdgeInsets.symmetric(
             horizontal: widget.compact ? AppSpacing.s6 : AppSpacing.s8,

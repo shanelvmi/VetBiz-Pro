@@ -51,6 +51,8 @@ void main() {
       // summary_card.dart's trend pill, as it was.
       'trendUp': (c.trendUp, const Color(0xFF10B981)),
       'trendDown': (c.trendDown, const Color(0xFFEF4444)),
+      'scrim': (c.scrim, Colors.black),
+      'shadow': (c.shadow, Colors.black),
     };
 
     for (final entry in legacy.entries) {
@@ -170,14 +172,14 @@ void main() {
     test('icon sizes, elevation, alpha', () {
       expect([
         AppIconSize.i12, AppIconSize.i14, AppIconSize.i16, AppIconSize.i18, AppIconSize.i20,
-        AppIconSize.i22, AppIconSize.i32, AppIconSize.i56, AppIconSize.i64,
-      ], [12, 14, 16, 18, 20, 22, 32, 56, 64]);
+        AppIconSize.i22, AppIconSize.i32, AppIconSize.i48, AppIconSize.i56, AppIconSize.i64,
+      ], [12, 14, 16, 18, 20, 22, 32, 48, 56, 64]);
       expect([AppElevation.e0, AppElevation.e1, AppElevation.e2, AppElevation.e6, AppElevation.e8],
           [0, 1, 2, 6, 8]);
       expect([
         AppAlpha.a05, AppAlpha.a10, AppAlpha.a15, AppAlpha.a20,
-        AppAlpha.a30, AppAlpha.a40, AppAlpha.a50, AppAlpha.a70,
-      ], [0.05, 0.1, 0.15, 0.2, 0.3, 0.4, 0.5, 0.7]);
+        AppAlpha.a30, AppAlpha.a40, AppAlpha.a50, AppAlpha.a70, AppAlpha.a85,
+      ], [0.05, 0.1, 0.15, 0.2, 0.3, 0.4, 0.5, 0.7, 0.85]);
     });
 
     test('motion', () {
@@ -188,6 +190,9 @@ void main() {
       expect(AppMotion.slowest.inMilliseconds, 500);
       expect(AppMotion.loop.inMilliseconds, 900);
       expect(AppMotion.colorCycle.inMilliseconds, 1400);
+      expect(AppMotion.emphasis.inMilliseconds, 900);
+      expect(AppMotion.float.inMilliseconds, 1400);
+      expect(AppMotion.pulseSlow.inSeconds, 2);
       expect(AppMotion.toastShort.inSeconds, 2);
       expect(AppMotion.toastLong.inSeconds, 3);
       expect([

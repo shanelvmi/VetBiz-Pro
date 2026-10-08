@@ -25,7 +25,7 @@ class FirestoreErrorView extends StatelessWidget {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(Icons.error_outline, size: 48, color: context.colors.dangerAccent),
+          Icon(Icons.error_outline, size: AppIconSize.i48, color: context.colors.dangerAccent),
           const SizedBox(height: AppSpacing.s12),
           const Text('Could not load data:', style: TextStyle(fontWeight: AppFontWeight.bold)),
           const SizedBox(height: AppSpacing.s8),

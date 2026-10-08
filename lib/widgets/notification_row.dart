@@ -44,7 +44,10 @@ class NotificationRow extends StatelessWidget {
         color: context.colors.surface,
         borderRadius: BorderRadius.circular(AppRadius.r10),
         boxShadow: [
-          BoxShadow(color: Colors.black.withValues(alpha: 0.04), blurRadius: 6, offset: const Offset(0, 2)),
+          BoxShadow(
+              color: context.colors.shadow.withValues(alpha: AppAlpha.a05),
+              blurRadius: 6,
+              offset: const Offset(0, 2)),
         ],
       ),
       child: Padding(

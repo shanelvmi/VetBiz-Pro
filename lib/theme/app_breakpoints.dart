@@ -25,7 +25,8 @@ class AppBreakpoints {
 
   // One-offs, exact.
 
-  /// Above this screen width a confirm dialog is a fixed 360 wide, below it
+  /// Above this screen width a confirm dialog is a fixed 340 wide
+  /// (AppSizes.dialogXs), below it
   /// 85% of the screen (subscription_guard.dart:53, 77;
   /// platform_admin_home_screen.dart:177; user_detail_screen.dart:178, 228, 248).
   static const double dialogFixedWidth = 700;
