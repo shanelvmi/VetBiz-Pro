@@ -14,6 +14,14 @@ import '../products/view_batches_screen.dart';
 import '../products/stock_alerts_screen.dart';
 import 'release_to_shop_flow.dart';
 import '../../theme/app_palette.dart';
+import '../../theme/app_breakpoints.dart';
+import '../../theme/app_dimens.dart';
+import '../../theme/app_motion.dart';
+import '../../theme/app_text.dart';
+import '../../theme/theme_context.dart';
+import '../../ui/feedback/app_feedback.dart';
+import '../../services/trash_service.dart';
+import '../../data/collections.dart';
 import '../../config/money.dart';
 import '../../config/app_date_format.dart';
 
@@ -89,7 +97,7 @@ class _StockStoreScreenState extends State<StockStoreScreen> {
       barrierDismissible: true,
       barrierLabel: 'Notifications',
       barrierColor: Colors.transparent,
-      transitionDuration: const Duration(milliseconds: 180),
+      transitionDuration: AppMotion.fast,
       pageBuilder: (context, animation, secondaryAnimation) {
         return Stack(
           children: [
@@ -97,8 +105,8 @@ class _StockStoreScreenState extends State<StockStoreScreen> {
               top: bellPosition.dy + bellSize.height + 8,
               left: left,
               child: Material(
-                elevation: 8,
-                borderRadius: BorderRadius.circular(12),
+                elevation: AppElevation.e8,
+                borderRadius: BorderRadius.circular(AppRadius.r12),
                 clipBehavior: Clip.antiAlias,
                 child: SizedBox(
                   width: panelWidth,
@@ -134,7 +142,7 @@ class _StockStoreScreenState extends State<StockStoreScreen> {
     required double totalStockValue,
   }) {
     final metrics = [
-      ('Total Products', '$totalCount', Icons.shopping_bag_outlined, primaryDeepTealGreen),
+      ('Total Products', '$totalCount', Icons.shopping_bag_outlined, context.colors.primary),
       (
         'In Stock',
         // 'Unknown' (no expiry set at all) is still genuinely in stock
@@ -142,11 +150,11 @@ class _StockStoreScreenState extends State<StockStoreScreen> {
         // here alongside 'Active' instead of vanishing from the summary.
         '${(statusCounts['Active'] ?? 0) + (statusCounts['Unknown'] ?? 0)}',
         Icons.check_circle_outline,
-        Colors.green,
+        context.colors.success,
       ),
-      ('Low Stock', '${statusCounts['Low Stock'] ?? 0}', Icons.trending_down, Colors.orange),
-      ('Depleted', '${statusCounts['Depleted'] ?? 0}', Icons.remove_shopping_cart_outlined, Colors.red),
-      ('Store Stock Value', Money.format(totalStockValue), Icons.account_balance_wallet_outlined, warmAmber),
+      ('Low Stock', '${statusCounts['Low Stock'] ?? 0}', Icons.trending_down, context.colors.warning),
+      ('Depleted', '${statusCounts['Depleted'] ?? 0}', Icons.remove_shopping_cart_outlined, context.colors.danger),
+      ('Store Stock Value', Money.format(totalStockValue), Icons.account_balance_wallet_outlined, context.colors.accent),
     ];
 
     return LayoutBuilder(
@@ -160,8 +168,8 @@ class _StockStoreScreenState extends State<StockStoreScreen> {
           physics: const NeverScrollableScrollPhysics(),
           crossAxisCount: crossAxisCount,
           childAspectRatio: crossAxisCount <= 2 ? 3.0 : 2.6,
-          crossAxisSpacing: 12,
-          mainAxisSpacing: 12,
+          crossAxisSpacing: AppSpacing.s12,
+          mainAxisSpacing: AppSpacing.s12,
           children: metrics.map((m) => _metricCard(m.$1, m.$2, m.$3, m.$4)).toList(),
         );
       },
@@ -170,13 +178,14 @@ class _StockStoreScreenState extends State<StockStoreScreen> {
 
   Widget _metricCard(String label, String value, IconData icon, Color color) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.s14, vertical: AppSpacing.s10),
       decoration: BoxDecoration(
-        color: offWhite,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.grey.withValues(alpha: 0.15)),
+        color: context.colors.background,
+        borderRadius: BorderRadius.circular(AppRadius.r12),
+        border: Border.all(color: context.colors.textHint.withValues(alpha: AppAlpha.a15)),
         boxShadow: [
-          BoxShadow(color: Colors.black.withValues(alpha: 0.03), blurRadius: 6, offset: const Offset(0, 2)),
+          BoxShadow(
+              color: context.colors.shadow.withValues(alpha: 0.03), blurRadius: 6, offset: const Offset(0, 2)),
         ],
       ),
       child: Row(
@@ -184,10 +193,10 @@ class _StockStoreScreenState extends State<StockStoreScreen> {
           Container(
             width: 38,
             height: 38,
-            decoration: BoxDecoration(color: color.withValues(alpha: 0.12), shape: BoxShape.circle),
-            child: Icon(icon, color: color, size: 19),
+            decoration: BoxDecoration(color: color.withValues(alpha: AppAlpha.a10), shape: BoxShape.circle),
+            child: Icon(icon, color: color, size: AppIconSize.i20),
           ),
-          const SizedBox(width: 10),
+          const SizedBox(width: AppSpacing.s10),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -196,10 +205,10 @@ class _StockStoreScreenState extends State<StockStoreScreen> {
                 FittedBox(
                   fit: BoxFit.scaleDown,
                   alignment: Alignment.centerLeft,
-                  child: Text(value, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 17)),
+                  child: Text(value, style: const TextStyle(fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f17)),
                 ),
                 Text(label,
-                    style: TextStyle(fontSize: 11, color: Colors.grey[600]),
+                    style: TextStyle(fontSize: AppFontSize.f11, color: context.colors.textMuted),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis),
               ],
@@ -217,7 +226,7 @@ class _StockStoreScreenState extends State<StockStoreScreen> {
     if (product.primaryStatus == ProductStockStatus.neverStocked) {
       return {
         'text': 'Not Stocked',
-        'color': Colors.grey,
+        'color': context.colors.textHint,
         'icon': Icons.inventory_2_outlined,
       };
     }
@@ -228,7 +237,7 @@ class _StockStoreScreenState extends State<StockStoreScreen> {
     if (product.primaryStatus == ProductStockStatus.depleted) {
       return {
         'text': 'Depleted',
-        'color': Colors.red,
+        'color': context.colors.danger,
         'icon': Icons.remove_shopping_cart_outlined,
       };
     }
@@ -236,7 +245,7 @@ class _StockStoreScreenState extends State<StockStoreScreen> {
     if (product.expiry != null && product.expiry!.isBefore(DateTime.now())) {
       return {
         'text': 'Expired',
-        'color': Colors.red,
+        'color': context.colors.danger,
         'icon': Icons.warning,
       };
     }
@@ -247,7 +256,7 @@ class _StockStoreScreenState extends State<StockStoreScreen> {
     if (product.primaryStatus == ProductStockStatus.lowStock) {
       return {
         'text': 'Low Stock',
-        'color': Colors.orange,
+        'color': context.colors.warning,
         'icon': Icons.trending_down,
       };
     }
@@ -259,7 +268,7 @@ class _StockStoreScreenState extends State<StockStoreScreen> {
     if (product.primaryStatus == ProductStockStatus.reorderSoon) {
       return {
         'text': 'Reorder Soon',
-        'color': Colors.amber[700],
+        'color': context.colors.warning,
         'icon': Icons.hourglass_bottom,
       };
     }
@@ -267,7 +276,7 @@ class _StockStoreScreenState extends State<StockStoreScreen> {
     if (product.expiry == null) {
       return {
         'text': 'Unknown',
-        'color': Colors.grey,
+        'color': context.colors.textHint,
         'icon': Icons.help_outline,
       };
     }
@@ -278,14 +287,14 @@ class _StockStoreScreenState extends State<StockStoreScreen> {
     if (expiryDate.difference(now).inDays <= 30) {
       return {
         'text': 'Expiring Soon',
-        'color': Colors.orange,
+        'color': context.colors.warning,
         'icon': Icons.schedule,
       };
     }
 
     return {
       'text': 'Active',
-      'color': Colors.green,
+      'color': context.colors.success,
       'icon': Icons.check_circle,
     };
   }
@@ -296,21 +305,21 @@ class _StockStoreScreenState extends State<StockStoreScreen> {
       context: context,
       builder: (_) => AlertDialog(
         title: Text('Confirm Delete',
-            style: TextStyle(color: primaryDeepTealGreen)),
+            style: TextStyle(color: context.colors.primary)),
         content: const Text('Are you sure you want to delete this product?'),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
             style: TextButton.styleFrom(
-              foregroundColor: primaryDeepTealGreen,
+              foregroundColor: context.colors.primary,
             ),
             child: const Text('Cancel'),
           ),
           ElevatedButton(
             onPressed: () => Navigator.pop(context, true),
             style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.red,
-              foregroundColor: offWhite,
+              backgroundColor: context.colors.danger,
+              foregroundColor: context.colors.background,
             ),
             child: const Text('Delete'),
           ),
@@ -318,19 +327,36 @@ class _StockStoreScreenState extends State<StockStoreScreen> {
       ),
     );
 
-    if (confirmed != true) return;
+    if (confirmed != true || !mounted) return;
+
+    // Read before the await: Undo may run after this screen is gone.
+    final facilityId = Provider.of<FacilityProvider>(context, listen: false).selectedFacilityId;
 
     try {
       await provider.deleteProduct(context, productId);
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Product deleted')),
+      // deleteProduct moves the product to Trash (a soft delete), so Undo
+      // puts it back with the Trash screen's own restore, as on Products.
+      AppFeedback.undo(
+        'Product moved to Trash',
+        onUndo: () => _undoDeleteProduct(facilityId, productId),
       );
-    } catch (e) {
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Could not delete: $e'), backgroundColor: Colors.redAccent),
+    } catch (e, st) {
+      AppFeedback.error("Couldn't delete the product", error: e, stackTrace: st);
+    }
+  }
+
+  static Future<void> _undoDeleteProduct(String? facilityId, String productId) async {
+    if (facilityId == null || facilityId.isEmpty) return;
+    try {
+      await TrashService.restoreById(
+        facilityId: facilityId,
+        trashCollection: Collections.trashProducts,
+        liveCollection: Collections.products,
+        id: productId,
       );
+      AppFeedback.success('Product restored');
+    } catch (e, st) {
+      AppFeedback.error("Couldn't restore the product", error: e, stackTrace: st);
     }
   }
 
@@ -395,8 +421,8 @@ class _StockStoreScreenState extends State<StockStoreScreen> {
       totalCount: visibleProductCount,
       categoryCounts: categoryCounts,
       statusCounts: statusCounts,
-      primaryColor: primaryDeepTealGreen,
-      accentColor: warmAmber,
+      primaryColor: context.colors.primary,
+      accentColor: context.colors.accent,
     );
 
     final noFiltersActive = _query.searchQuery.isEmpty &&
@@ -409,7 +435,7 @@ class _StockStoreScreenState extends State<StockStoreScreen> {
     final content = Column(
       children: [
         Padding(
-          padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
+          padding: const EdgeInsets.fromLTRB(AppSpacing.s16, AppSpacing.s16, AppSpacing.s16, 0),
           child: _buildSummaryMetrics(
             totalCount: visibleProductCount,
             statusCounts: statusCounts,
@@ -417,16 +443,16 @@ class _StockStoreScreenState extends State<StockStoreScreen> {
           ),
         ),
         Padding(
-          padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+          padding: const EdgeInsets.fromLTRB(AppSpacing.s16, AppSpacing.s12, AppSpacing.s16, 0),
           child: _buildToolbar(),
         ),
         Padding(
-          padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+          padding: const EdgeInsets.fromLTRB(AppSpacing.s16, AppSpacing.s8, AppSpacing.s16, 0),
           child: Align(
             alignment: Alignment.centerRight,
             child: Text(
               '${result.totalCount} product${result.totalCount == 1 ? '' : 's'} in stock',
-              style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+              style: TextStyle(fontSize: AppFontSize.f12, color: context.colors.textMuted),
             ),
           ),
         ),
@@ -436,30 +462,30 @@ class _StockStoreScreenState extends State<StockStoreScreen> {
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Icon(Icons.inventory_2, size: 64, color: Colors.grey[400]),
-                      const SizedBox(height: 16),
+                      Icon(Icons.inventory_2, size: AppIconSize.i64, color: context.colors.textDisabled),
+                      const SizedBox(height: AppSpacing.s16),
                       Text(
                         noFiltersActive ? 'No products in stock store' : 'No products match your filters',
-                        style: TextStyle(fontSize: 18, color: Colors.grey[600]),
+                        style: TextStyle(fontSize: AppFontSize.f18, color: context.colors.textMuted),
                       ),
                     ],
                   ),
                 )
               : RefreshIndicator(
-                  color: primaryDeepTealGreen,
+                  color: context.colors.primary,
                   onRefresh: _manualRefresh,
                   child: _isGridView ? _buildProductsGrid(result.items) : _buildProductsListView(result.items),
                 ),
         ),
         if (result.needsPaginationControls)
           Padding(
-            padding: const EdgeInsets.fromLTRB(16, 8, 16, 12),
+            padding: const EdgeInsets.fromLTRB(AppSpacing.s16, AppSpacing.s8, AppSpacing.s16, AppSpacing.s12),
             child: _buildPaginationControls(result),
           ),
       ],
     );
 
-    final isWide = MediaQuery.of(context).size.width >= 900;
+    final isWide = context.screenWidth >= AppBreakpoints.medium;
 
     return Scaffold(
       appBar: _buildAppBar(),
@@ -495,10 +521,10 @@ class _StockStoreScreenState extends State<StockStoreScreen> {
 
         if (products.length < columns) {
           return Padding(
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.all(AppSpacing.s16),
             child: Wrap(
-              spacing: 12,
-              runSpacing: 12,
+              spacing: AppSpacing.s12,
+              runSpacing: AppSpacing.s12,
               alignment: WrapAlignment.center,
               children: products
                   .map((p) => SizedBox(width: _idealProductCardWidth, child: _buildProductCard(p)))
@@ -508,10 +534,10 @@ class _StockStoreScreenState extends State<StockStoreScreen> {
         }
 
         return MasonryGridView.count(
-          padding: const EdgeInsets.all(16),
+          padding: const EdgeInsets.all(AppSpacing.s16),
           crossAxisCount: columns,
-          crossAxisSpacing: 12,
-          mainAxisSpacing: 12,
+          crossAxisSpacing: AppSpacing.s12,
+          mainAxisSpacing: AppSpacing.s12,
           itemCount: products.length,
           itemBuilder: (context, index) => _buildProductCard(products[index]),
         );
@@ -524,9 +550,9 @@ class _StockStoreScreenState extends State<StockStoreScreen> {
   // primary value and Release (not Sell) as this screen's own action.
   Widget _buildProductsListView(List<Product> products) {
     return ListView.separated(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(AppSpacing.s16),
       itemCount: products.length,
-      separatorBuilder: (context, index) => const SizedBox(height: 8),
+      separatorBuilder: (context, index) => const SizedBox(height: AppSpacing.s8),
       itemBuilder: (context, index) => _buildProductListRow(products[index]),
     );
   }
@@ -537,12 +563,13 @@ class _StockStoreScreenState extends State<StockStoreScreen> {
     final isAdmin = Provider.of<UserRoleProvider>(context).isAdmin;
 
     return Container(
-      padding: const EdgeInsets.all(10),
+      padding: const EdgeInsets.all(AppSpacing.s10),
       decoration: BoxDecoration(
-        color: offWhite,
-        borderRadius: BorderRadius.circular(12),
+        color: context.colors.background,
+        borderRadius: BorderRadius.circular(AppRadius.r12),
         boxShadow: [
-          BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 6, offset: const Offset(0, 2)),
+          BoxShadow(
+              color: context.colors.shadow.withValues(alpha: AppAlpha.a05), blurRadius: 6, offset: const Offset(0, 2)),
         ],
       ),
       child: Row(
@@ -551,49 +578,51 @@ class _StockStoreScreenState extends State<StockStoreScreen> {
           ProductThumbnail.square(
             imageUrl: p.imageUrl,
             size: 56,
-            backgroundColor: primaryDeepTealGreen.withValues(alpha: 0.08),
-            iconColor: primaryDeepTealGreen,
+            backgroundColor: context.colors.primary.withValues(alpha: AppAlpha.a10),
+            iconColor: context.colors.primary,
           ),
-          const SizedBox(width: 12),
+          const SizedBox(width: AppSpacing.s12),
           Expanded(
             flex: 3,
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(p.name, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14.5),
+                Text(p.name, style: const TextStyle(fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f14_5),
                     maxLines: 1, overflow: TextOverflow.ellipsis),
                 Text('${p.category} \u2022 ${p.type}',
-                    style: TextStyle(fontSize: 12, color: Colors.grey[600]), maxLines: 1, overflow: TextOverflow.ellipsis),
-                const SizedBox(height: 4),
+                    style: TextStyle(fontSize: AppFontSize.f12, color: context.colors.textMuted), maxLines: 1, overflow: TextOverflow.ellipsis),
+                const SizedBox(height: AppSpacing.s4),
                 Wrap(
-                  spacing: 6,
-                  runSpacing: 4,
+                  spacing: AppSpacing.s6,
+                  runSpacing: AppSpacing.s4,
                   children: [
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.s8, vertical: AppSpacing.s2),
                       decoration: BoxDecoration(
-                        color: statusColor.withValues(alpha: 0.1),
-                        borderRadius: BorderRadius.circular(10),
-                        border: Border.all(color: statusColor.withValues(alpha: 0.4)),
+                        color: statusColor.withValues(alpha: AppAlpha.a10),
+                        borderRadius: BorderRadius.circular(AppRadius.r10),
+                        border: Border.all(color: statusColor.withValues(alpha: AppAlpha.a40)),
                       ),
                       child: Text(status['text'] as String,
-                          style: TextStyle(color: statusColor, fontSize: 11, fontWeight: FontWeight.w600)),
+                          style: TextStyle(
+                              color: statusColor, fontSize: AppFontSize.f11, fontWeight: AppFontWeight.semibold)),
                     ),
                     if (p.hasRestockShelfAlert)
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                        padding: const EdgeInsets.symmetric(horizontal: AppSpacing.s8, vertical: AppSpacing.s2),
                         decoration: BoxDecoration(
-                          color: Colors.blue.withValues(alpha: 0.1),
-                          borderRadius: BorderRadius.circular(10),
-                          border: Border.all(color: Colors.blue.withValues(alpha: 0.4)),
+                          color: context.colors.info.withValues(alpha: AppAlpha.a10),
+                          borderRadius: BorderRadius.circular(AppRadius.r10),
+                          border: Border.all(color: context.colors.info.withValues(alpha: AppAlpha.a40)),
                         ),
                         child: Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            Icon(Icons.move_up, size: 11, color: Colors.blue[700]),
-                            const SizedBox(width: 3),
+                            Icon(Icons.move_up, size: 11, color: context.colors.infoStrong),
+                            const SizedBox(width: AppSpacing.s3),
                             Text('Restock Shelf',
-                                style: TextStyle(color: Colors.blue[700], fontSize: 11, fontWeight: FontWeight.w600)),
+                                style: TextStyle(
+                                    color: context.colors.infoStrong, fontSize: AppFontSize.f11, fontWeight: AppFontWeight.semibold)),
                           ],
                         ),
                       ),
@@ -618,17 +647,17 @@ class _StockStoreScreenState extends State<StockStoreScreen> {
                   onPressed: () {
                     showAddEditProductScreen(context, product: p);
                   },
-                  icon: Icon(Icons.edit_outlined, color: primaryDeepTealGreen, size: 20),
+                  icon: Icon(Icons.edit_outlined, color: context.colors.primary, size: AppIconSize.i20),
                   tooltip: 'Edit',
                 ),
               if (isAdmin && p.stockQty > 0)
                 IconButton(
                   onPressed: () => _releaseToShop(p),
-                  icon: Icon(Icons.upload, color: primaryDeepTealGreen, size: 20),
+                  icon: Icon(Icons.upload, color: context.colors.primary, size: AppIconSize.i20),
                   tooltip: 'Release',
                 ),
               PopupMenuButton<String>(
-                icon: Icon(Icons.more_vert, color: primaryDeepTealGreen),
+                icon: Icon(Icons.more_vert, color: context.colors.primary),
                 tooltip: 'More actions',
                 onSelected: (value) {
                   if (value == 'add_batch') {
@@ -645,7 +674,7 @@ class _StockStoreScreenState extends State<StockStoreScreen> {
                   if (isAdmin)
                     PopupMenuItem(
                       value: 'delete',
-                      child: Text('Delete', style: TextStyle(color: Colors.red[400])),
+                      child: Text('Delete', style: TextStyle(color: context.colors.dangerSoft)),
                     ),
                 ],
               ),
