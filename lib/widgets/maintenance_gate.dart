@@ -4,7 +4,9 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 import '../utils/force_logout.dart';
-import '../theme/app_palette.dart';
+import '../theme/app_dimens.dart';
+import '../theme/app_text.dart';
+import '../theme/theme_context.dart';
 import '../data/collections.dart';
 
 /// Wraps the entire app (see main.dart's MaterialApp.builder) so a
@@ -149,9 +151,6 @@ class MaintenanceScreen extends StatefulWidget {
 }
 
 class _MaintenanceScreenState extends State<MaintenanceScreen> with SingleTickerProviderStateMixin {
-  static const Color primaryDeepGreen = AppPalette.primary;
-  static const Color offWhite = AppPalette.background;
-
   late final AnimationController _pulseController;
   late final Animation<double> _pulseAnimation;
 
@@ -176,13 +175,13 @@ class _MaintenanceScreenState extends State<MaintenanceScreen> with SingleTicker
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: offWhite,
+      backgroundColor: context.colors.background,
       body: SafeArea(
         child: Center(
           child: Padding(
-            padding: const EdgeInsets.all(32),
+            padding: const EdgeInsets.all(AppSpacing.s32),
             child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 420),
+              constraints: const BoxConstraints(maxWidth: AppSizes.dialogSm),
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
@@ -192,30 +191,31 @@ class _MaintenanceScreenState extends State<MaintenanceScreen> with SingleTicker
                       width: 96,
                       height: 96,
                       decoration: BoxDecoration(
-                        color: primaryDeepGreen.withValues(alpha: 0.08),
+                        color: context.colors.primary.withValues(alpha: AppAlpha.a10),
                         shape: BoxShape.circle,
                       ),
-                      child: const Icon(Icons.build_rounded, size: 44, color: primaryDeepGreen),
+                      child: Icon(Icons.build_rounded, size: 44, color: context.colors.primary),
                     ),
                   ),
-                  const SizedBox(height: 28),
-                  const Text(
+                  const SizedBox(height: AppSpacing.s28),
+                  Text(
                     "We'll be right back",
                     textAlign: TextAlign.center,
-                    style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: primaryDeepGreen),
+                    style: TextStyle(
+                        fontSize: AppFontSize.f22, fontWeight: AppFontWeight.bold, color: context.colors.primary),
                   ),
-                  const SizedBox(height: 12),
+                  const SizedBox(height: AppSpacing.s12),
                   Text(
                     widget.message,
                     textAlign: TextAlign.center,
-                    style: TextStyle(fontSize: 14.5, color: Colors.grey[700], height: 1.5),
+                    style: TextStyle(fontSize: AppFontSize.f14_5, color: context.colors.textSoft, height: 1.5),
                   ),
-                  const SizedBox(height: 32),
+                  const SizedBox(height: AppSpacing.s32),
                   TextButton.icon(
                     onPressed: () => forceLogoutAndShowLogin(),
-                    icon: const Icon(Icons.logout, size: 18),
+                    icon: const Icon(Icons.logout, size: AppIconSize.i18),
                     label: const Text('Sign out'),
-                    style: TextButton.styleFrom(foregroundColor: Colors.grey[600]),
+                    style: TextButton.styleFrom(foregroundColor: context.colors.textMuted),
                   ),
                 ],
               ),

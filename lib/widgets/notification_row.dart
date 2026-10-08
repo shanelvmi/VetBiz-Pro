@@ -2,6 +2,9 @@ import 'package:flutter/material.dart';
 
 import '../models/notification_model.dart';
 import '../config/app_date_format.dart';
+import '../theme/app_dimens.dart';
+import '../theme/app_text.dart';
+import '../theme/theme_context.dart';
 
 /// "Just now", "5m ago", "2h ago", "3d ago", or a plain date once it's
 /// more than a week old - shared by every screen that shows a
@@ -36,45 +39,46 @@ class NotificationRow extends StatelessWidget {
     final hasTarget = notification.relatedEntityType != null && notification.relatedEntityId != null;
 
     return Container(
-      margin: const EdgeInsets.only(bottom: 8),
+      margin: const EdgeInsets.only(bottom: AppSpacing.s8),
       decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(10),
+        color: context.colors.surface,
+        borderRadius: BorderRadius.circular(AppRadius.r10),
         boxShadow: [
           BoxShadow(color: Colors.black.withValues(alpha: 0.04), blurRadius: 6, offset: const Offset(0, 2)),
         ],
       ),
       child: Padding(
-        padding: const EdgeInsets.all(12),
+        padding: const EdgeInsets.all(AppSpacing.s12),
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Container(
-              padding: const EdgeInsets.all(8),
-              decoration: BoxDecoration(color: color.withValues(alpha: 0.12), shape: BoxShape.circle),
-              child: Icon(notification.type.icon, color: color, size: 18),
+              padding: const EdgeInsets.all(AppSpacing.s8),
+              decoration: BoxDecoration(color: color.withValues(alpha: AppAlpha.a10), shape: BoxShape.circle),
+              child: Icon(notification.type.icon, color: color, size: AppIconSize.i18),
             ),
-            const SizedBox(width: 10),
+            const SizedBox(width: AppSpacing.s10),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(notification.title,
-                      style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13.5)),
-                  const SizedBox(height: 2),
+                      style: const TextStyle(fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f13_5)),
+                  const SizedBox(height: AppSpacing.s2),
                   Text(notification.message,
-                      style: TextStyle(color: Colors.grey[700], fontSize: 12.5)),
+                      style: TextStyle(color: context.colors.textSoft, fontSize: AppFontSize.f12_5)),
                 ],
               ),
             ),
-            const SizedBox(width: 8),
+            const SizedBox(width: AppSpacing.s8),
             Column(
               crossAxisAlignment: CrossAxisAlignment.end,
               children: [
-                Text(relativeTime(notification.createdAt), style: TextStyle(color: Colors.grey[500], fontSize: 11)),
+                Text(relativeTime(notification.createdAt),
+                    style: TextStyle(color: context.colors.textHint, fontSize: AppFontSize.f11)),
                 if (hasTarget) ...[
-                  const SizedBox(height: 4),
-                  Icon(Icons.chevron_right, color: Colors.grey[400], size: 18),
+                  const SizedBox(height: AppSpacing.s4),
+                  Icon(Icons.chevron_right, color: context.colors.textDisabled, size: AppIconSize.i18),
                 ],
               ],
             ),

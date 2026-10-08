@@ -4,14 +4,18 @@ import 'package:provider/provider.dart';
 import '../providers/subscription_provider.dart';
 import '../providers/user_role_provider.dart';
 import '../screens/subscription/subscription_screen.dart';
-import '../theme/app_palette.dart';
+import '../theme/app_breakpoints.dart';
+import '../theme/app_dimens.dart';
+import '../theme/theme_context.dart';
 
-// Matches the exact values already used in add_sale_screen.dart and
-// add_edit_service_screen.dart - the two screens that actually call
-// this utility - so the dialog's own button colors don't clash with
-// whichever screen triggered it.
-const Color _primaryDeepGreen = AppPalette.primary;
-const Color _warmAmber = AppPalette.accent;
+// The dialog's buttons use the brand roles, the same ones add_sale_screen
+// and add_edit_service_screen (the two callers) use, so they don't clash
+// with whichever screen triggered it.
+
+/// Fixed width on a wide screen, 85% of the screen below that.
+double _dialogWidth(BuildContext context) => context.screenWidth > AppBreakpoints.dialogFixedWidth
+    ? AppSizes.dialogXs
+    : context.screenWidth * 0.85;
 
 /// Navigates to [destination] normally, unless the current facility's
 /// subscription is locked - in that case shows a clear, honest
@@ -50,7 +54,7 @@ Future<void> navigateOrShowLockedDialog(
       builder: (context) => AlertDialog(
         title: const Text('Subscription Expired'),
         content: SizedBox(
-          width: MediaQuery.of(context).size.width > 700 ? 360 : MediaQuery.of(context).size.width * 0.85,
+          width: _dialogWidth(context),
           child: const Text(
             'This facility\'s subscription has expired, so new sales and services can\'t be '
             'recorded right now. You can still view all existing data. Please ask your admin '
@@ -60,7 +64,7 @@ Future<void> navigateOrShowLockedDialog(
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            style: TextButton.styleFrom(foregroundColor: _primaryDeepGreen),
+            style: TextButton.styleFrom(foregroundColor: context.colors.primary),
             child: const Text('OK'),
           ),
         ],
@@ -74,7 +78,7 @@ Future<void> navigateOrShowLockedDialog(
     builder: (context) => AlertDialog(
       title: const Text('Subscription Expired'),
       content: SizedBox(
-        width: MediaQuery.of(context).size.width > 700 ? 360 : MediaQuery.of(context).size.width * 0.85,
+        width: _dialogWidth(context),
         child: const Text(
           'Your subscription has expired, so new sales and services can\'t be recorded right now. '
           'You can still view all your existing data. Submit a payment to restore full access.',
@@ -83,17 +87,17 @@ Future<void> navigateOrShowLockedDialog(
       actions: [
         TextButton(
           onPressed: () => Navigator.pop(context, false),
-          style: TextButton.styleFrom(foregroundColor: _primaryDeepGreen),
+          style: TextButton.styleFrom(foregroundColor: context.colors.primary),
           child: const Text('Cancel'),
         ),
         ElevatedButton(
           onPressed: () => Navigator.pop(context, true),
           style: ButtonStyle(
             backgroundColor: WidgetStateProperty.resolveWith<Color>((states) {
-              if (states.contains(WidgetState.hovered)) return _warmAmber;
-              return _primaryDeepGreen;
+              if (states.contains(WidgetState.hovered)) return context.colors.accent;
+              return context.colors.primary;
             }),
-            foregroundColor: WidgetStateProperty.all(Colors.white),
+            foregroundColor: WidgetStateProperty.all(context.colors.onPrimary),
           ),
           child: const Text('Go to Subscription'),
         ),

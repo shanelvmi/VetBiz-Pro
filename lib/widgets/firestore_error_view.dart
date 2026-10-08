@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
-import '../theme/app_palette.dart';
+import '../theme/app_dimens.dart';
+import '../theme/app_text.dart';
+import '../theme/theme_context.dart';
 
 /// Shows a Firestore query error clearly - and if the error contains a
 /// URL (the common case: "this query requires an index, create it here:
@@ -11,8 +13,6 @@ class FirestoreErrorView extends StatelessWidget {
   final Object? error;
   const FirestoreErrorView({super.key, required this.error});
 
-  static const Color primaryColor = AppPalette.primary;
-
   @override
   Widget build(BuildContext context) {
     final message = '$error';
@@ -21,21 +21,21 @@ class FirestoreErrorView extends StatelessWidget {
     final textWithoutUrl = url != null ? message.replaceAll(url, '').trim() : message;
 
     return Padding(
-      padding: const EdgeInsets.all(24),
+      padding: const EdgeInsets.all(AppSpacing.s24),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          const Icon(Icons.error_outline, size: 48, color: Colors.redAccent),
-          const SizedBox(height: 12),
-          const Text('Could not load data:', style: TextStyle(fontWeight: FontWeight.bold)),
-          const SizedBox(height: 8),
+          Icon(Icons.error_outline, size: 48, color: context.colors.dangerAccent),
+          const SizedBox(height: AppSpacing.s12),
+          const Text('Could not load data:', style: TextStyle(fontWeight: AppFontWeight.bold)),
+          const SizedBox(height: AppSpacing.s8),
           SelectableText(
             textWithoutUrl,
-            style: const TextStyle(fontSize: 12, color: Colors.redAccent),
+            style: TextStyle(fontSize: AppFontSize.f12, color: context.colors.dangerAccent),
             textAlign: TextAlign.center,
           ),
           if (url != null) ...[
-            const SizedBox(height: 14),
+            const SizedBox(height: AppSpacing.s14),
             ElevatedButton.icon(
               onPressed: () async {
                 final uri = Uri.parse(url);
@@ -46,14 +46,14 @@ class FirestoreErrorView extends StatelessWidget {
               icon: const Icon(Icons.build_circle_outlined),
               label: const Text('Create Missing Index'),
               style: ElevatedButton.styleFrom(
-                backgroundColor: primaryColor,
-                foregroundColor: Colors.white,
+                backgroundColor: context.colors.primary,
+                foregroundColor: context.colors.onPrimary,
               ),
             ),
-            const SizedBox(height: 6),
+            const SizedBox(height: AppSpacing.s6),
             Text(
               'This opens Firebase Console with the exact index needed already filled in.',
-              style: TextStyle(fontSize: 11, color: Colors.grey[600]),
+              style: TextStyle(fontSize: AppFontSize.f11, color: context.colors.textMuted),
               textAlign: TextAlign.center,
             ),
           ],

@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../theme/app_motion.dart';
+
 /// A product thumbnail - shows the uploaded photo when one exists,
 /// falling back to a generic inventory icon (not initials - products
 /// aren't people) when it doesn't. Also covers a broken or expired
@@ -97,7 +99,7 @@ class ProductThumbnail extends StatelessWidget {
                 if (wasSynchronouslyLoaded) return child;
                 return AnimatedOpacity(
                   opacity: frame == null ? 0 : 1,
-                  duration: const Duration(milliseconds: 250),
+                  duration: AppMotion.normal,
                   curve: Curves.easeOut,
                   child: child,
                 );

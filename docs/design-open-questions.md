@@ -61,6 +61,17 @@ User-facing "VetBiz Pro" now reads `AppInfo.name` (titles, Settings, support lin
 
 - **Make client deletion soft?** `ClientProvider.deleteClient` (`lib/providers/client_provider.dart`) deletes the client document outright, so its message ("Client deleted") has no Undo. Everything else that can be deleted from the app (products, sales, services, transactions) goes to a `trash_*` collection first. `trash_clients` is already supported end to end: `firestore.rules` has a rule for it, `functions/index.js` purges it after 30 days, and the Trash screen lists and restores it. Nothing in the app writes to it. Moving clients to Trash would give them Undo too (a behaviour change, so not done in Phase 2).
 
+### Values with no token (raised in step 2D, batch D1)
+
+Kept exactly as they are; the guard still counts the raw ones.
+
+- **Black scrim and shadow**, `lib/widgets/auth_background.dart:37` (`Colors.black` at 0.18 over the login photo) and `lib/widgets/notification_row.dart:47` (`Colors.black` at 0.04, a card shadow). The spec maps `Colors.black` to `textStrong`, but these are not text: in Dark Mode a text role turns light, a scrim or shadow should not. Add `scrim` and `shadow` roles (exact `Colors.black`)? 0.18 also has no AppAlpha step.
+- **Maintenance pulse**, `lib/widgets/maintenance_gate.dart:162`: a 2 s repeating pulse. `AppMotion.loop` is 900 ms. Add `AppMotion.pulseSlow` (2 s)?
+- **Entry switcher**, `lib/utils/facility_activation.dart:176`: `AnimatedSwitcher` 320 ms. Not in the motion table; nearest is `slow` (300). Snap?
+- **Trial length**, `lib/utils/trial_period_helper.dart:30`: `Duration(days: days)` from the configured trial days. Business date math, not a literal; add a guard allowlist entry?
+- **Icon sizes**: 48 (`firestore_error_view.dart:30`) and 44 (`maintenance_gate.dart:197`) have no `AppIconSize` step and no snap rule. Add `i48` (and snap 44 to it)?
+- **Width snap applied**: the subscription-locked dialog (`lib/utils/subscription_guard.dart`) was 360 wide on wide screens; `AppSizes.dialogXs` makes it 340 (spec 4.10). The `AppBreakpoints.dialogFixedWidth` comment still says 360 and should change if the snap is kept.
+
 ## Decided
 
 Decided by the owner after step 2A.

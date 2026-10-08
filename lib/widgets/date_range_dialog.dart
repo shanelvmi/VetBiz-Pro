@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 import '../config/app_date_format.dart';
+import '../theme/app_dimens.dart';
+import '../theme/app_text.dart';
+import '../theme/theme_context.dart';
 
 /// Shared date-range picker dialog, used anywhere a screen needs "pick a
 /// custom period" (Payments, Transactions, and anywhere else this comes
@@ -48,8 +51,8 @@ class _DateRangeDialogState extends State<DateRangeDialog> {
       content: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          const Text('Start Date:', style: TextStyle(fontWeight: FontWeight.bold)),
-          const SizedBox(height: 8),
+          const Text('Start Date:', style: TextStyle(fontWeight: AppFontWeight.bold)),
+          const SizedBox(height: AppSpacing.s8),
           InkWell(
             onTap: () async {
               final picked = await showDatePicker(
@@ -61,23 +64,23 @@ class _DateRangeDialogState extends State<DateRangeDialog> {
               if (picked != null) setState(() => _start = picked);
             },
             child: Container(
-              padding: const EdgeInsets.all(12),
+              padding: const EdgeInsets.all(AppSpacing.s12),
               decoration: BoxDecoration(
-                border: Border.all(color: Colors.grey[400]!),
-                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: context.colors.borderStrong),
+                borderRadius: BorderRadius.circular(AppRadius.r8),
               ),
               child: Row(
                 children: [
                   Icon(Icons.calendar_today, color: widget.primaryDeepGreen),
-                  const SizedBox(width: 12),
+                  const SizedBox(width: AppSpacing.s12),
                   Text(AppDateFormat.date.format(_start)),
                 ],
               ),
             ),
           ),
-          const SizedBox(height: 12),
-          const Text('End Date:', style: TextStyle(fontWeight: FontWeight.bold)),
-          const SizedBox(height: 8),
+          const SizedBox(height: AppSpacing.s12),
+          const Text('End Date:', style: TextStyle(fontWeight: AppFontWeight.bold)),
+          const SizedBox(height: AppSpacing.s8),
           InkWell(
             onTap: () async {
               final picked = await showDatePicker(
@@ -89,15 +92,15 @@ class _DateRangeDialogState extends State<DateRangeDialog> {
               if (picked != null) setState(() => _end = picked);
             },
             child: Container(
-              padding: const EdgeInsets.all(12),
+              padding: const EdgeInsets.all(AppSpacing.s12),
               decoration: BoxDecoration(
-                border: Border.all(color: Colors.grey[400]!),
-                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: context.colors.borderStrong),
+                borderRadius: BorderRadius.circular(AppRadius.r8),
               ),
               child: Row(
                 children: [
                   Icon(Icons.calendar_today, color: widget.primaryDeepGreen),
-                  const SizedBox(width: 12),
+                  const SizedBox(width: AppSpacing.s12),
                   Text(AppDateFormat.date.format(_end)),
                 ],
               ),

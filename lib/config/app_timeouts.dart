@@ -120,4 +120,13 @@ class AppTimeouts {
 
   /// Looking up a facility while registering (register_screen.dart).
   static const Duration facilityLookupDebounce = Duration(milliseconds: 500);
+
+  /// Pause before opening the Dashboard after picking a facility
+  /// (facility_activation.dart): must clear AppEntryPoint's 220 ms
+  /// switcher, see the comment there.
+  static const Duration dashboardNavDelay = Duration(milliseconds: 300);
+
+  /// How long the "Setting up..." screen gives the facility's listeners
+  /// before the Dashboard shows (facility_activation.dart).
+  static const Duration dashboardEntryGrace = Duration(milliseconds: 900);
 }

@@ -1,5 +1,9 @@
 import 'package:flutter/material.dart';
 
+import '../theme/app_dimens.dart';
+import '../theme/app_motion.dart';
+import '../theme/theme_context.dart';
+
 /// A Card that lifts slightly on mouse hover - higher elevation, a
 /// small upward shift - rather than sitting static regardless of
 /// whether a mouse is over it. Touch devices never fire hover events
@@ -12,16 +16,17 @@ class HoverElevateCard extends StatefulWidget {
   final double baseElevation;
   final double hoverElevation;
   final BorderRadius borderRadius;
-  final Color color;
+  /// The card's fill; the theme's surface when not given.
+  final Color? color;
 
   const HoverElevateCard({
     super.key,
     required this.child,
     this.margin = EdgeInsets.zero,
-    this.baseElevation = 1,
-    this.hoverElevation = 6,
-    this.borderRadius = const BorderRadius.all(Radius.circular(12)),
-    this.color = Colors.white,
+    this.baseElevation = AppElevation.e1,
+    this.hoverElevation = AppElevation.e6,
+    this.borderRadius = const BorderRadius.all(Radius.circular(AppRadius.r12)),
+    this.color,
   });
 
   @override
@@ -37,14 +42,14 @@ class _HoverElevateCardState extends State<HoverElevateCard> {
       onEnter: (_) => setState(() => _isHovering = true),
       onExit: (_) => setState(() => _isHovering = false),
       child: AnimatedContainer(
-        duration: const Duration(milliseconds: 150),
+        duration: AppMotion.fast,
         curve: Curves.easeOut,
         margin: widget.margin,
         transform: _isHovering
             ? (Matrix4.identity()..translate(0.0, -3.0))
             : Matrix4.identity(),
         child: Card(
-          color: widget.color,
+          color: widget.color ?? context.colors.surface,
           elevation: _isHovering ? widget.hoverElevation : widget.baseElevation,
           margin: EdgeInsets.zero,
           shape: RoundedRectangleBorder(borderRadius: widget.borderRadius),

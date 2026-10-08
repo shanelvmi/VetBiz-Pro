@@ -3,6 +3,8 @@ import 'package:flutter_markdown/flutter_markdown.dart';
 import 'package:markdown/markdown.dart' as md;
 import 'package:url_launcher/url_launcher.dart';
 
+import '../theme/theme_context.dart';
+
 /// Custom inline markdown syntax for per-selection color, since
 /// standard markdown has no color syntax at all - {color:#RRGGBB}text{/color}
 /// wraps just the colored portion, the same way **bold** wraps just
@@ -66,7 +68,7 @@ class AnnouncementMessage extends StatelessWidget {
       },
       styleSheet: MarkdownStyleSheet(
         p: TextStyle(fontSize: fontSize),
-        a: TextStyle(fontSize: fontSize, color: Colors.blue, decoration: TextDecoration.underline),
+        a: TextStyle(fontSize: fontSize, color: context.colors.info, decoration: TextDecoration.underline),
       ),
     );
   }

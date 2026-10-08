@@ -13,7 +13,11 @@ import '../providers/user_role_provider.dart';
 import 'provider_reset.dart';
 import 'navigator_key.dart';
 import '../screens/dashboard/dashboard_screen.dart';
-import '../theme/app_palette.dart';
+import '../config/app_timeouts.dart';
+import '../theme/app_dimens.dart';
+import '../theme/app_motion.dart';
+import '../theme/app_text.dart';
+import '../theme/theme_context.dart';
 import '../data/fields.dart';
 
 /// The one place that turns "here's a facility" into "you're now looking
@@ -90,7 +94,7 @@ Future<void> activateFacilityAndGoToDashboard({
   // AnimatedSwitcher transition between its login/deciding states -
   // pushing a new route while that's still mid-flight was a
   // plausible separate source of the same symptom.
-  await Future.delayed(const Duration(milliseconds: 300));
+  await Future.delayed(AppTimeouts.dashboardNavDelay);
 
   debugPrint('[NAV] Navigating to /dashboard for facility=${facility[Fields.facilityId]} role=$role');
   try {
@@ -113,8 +117,8 @@ Future<void> activateFacilityAndGoToDashboard({
       PageRouteBuilder(
         pageBuilder: (context, animation, secondaryAnimation) =>
             _DashboardEntryLoader(facilityName: facility['facilityName'] as String? ?? 'your facility'),
-        transitionDuration: const Duration(milliseconds: 380),
-        reverseTransitionDuration: const Duration(milliseconds: 380),
+        transitionDuration: AppMotion.slower,
+        reverseTransitionDuration: AppMotion.slower,
         transitionsBuilder: (context, animation, secondaryAnimation, child) {
           final curved = CurvedAnimation(parent: animation, curve: Curves.easeOutCubic);
           return FadeTransition(
@@ -156,15 +160,12 @@ class _DashboardEntryLoader extends StatefulWidget {
 }
 
 class _DashboardEntryLoaderState extends State<_DashboardEntryLoader> {
-  static const Color _primaryDeepGreen = AppPalette.primary;
-  static const Color _offWhite = AppPalette.background;
-
   bool _ready = false;
 
   @override
   void initState() {
     super.initState();
-    Future.delayed(const Duration(milliseconds: 900), () {
+    Future.delayed(AppTimeouts.dashboardEntryGrace, () {
       if (mounted) setState(() => _ready = true);
     });
   }
@@ -179,16 +180,17 @@ class _DashboardEntryLoaderState extends State<_DashboardEntryLoader> {
           ? const DashboardScreen(key: ValueKey('dashboard'))
           : Scaffold(
               key: const ValueKey('loading'),
-              backgroundColor: _offWhite,
+              backgroundColor: context.colors.background,
               body: Center(
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    const CircularProgressIndicator(color: _primaryDeepGreen),
-                    const SizedBox(height: 20),
+                    CircularProgressIndicator(color: context.colors.primary),
+                    const SizedBox(height: AppSpacing.s20),
                     Text(
                       'Setting up ${widget.facilityName}...',
-                      style: const TextStyle(color: _primaryDeepGreen, fontWeight: FontWeight.w600, fontSize: 15),
+                      style: TextStyle(
+                          color: context.colors.primary, fontWeight: AppFontWeight.semibold, fontSize: AppFontSize.f15),
                     ),
                   ],
                 ),

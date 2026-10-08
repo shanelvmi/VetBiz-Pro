@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 
 import '../config/payment_methods.dart';
+import '../theme/app_dimens.dart';
+import '../theme/app_text.dart';
+import '../theme/theme_context.dart';
 
 /// The canonical list of payment methods, used consistently everywhere
 /// money is recorded as received in this app - sales, services, debt
@@ -47,12 +50,12 @@ class PaymentMethodSelector extends StatelessWidget {
       children: [
         Text(
           label,
-          style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: Colors.grey[700]),
+          style: TextStyle(fontSize: AppFontSize.f13, fontWeight: AppFontWeight.semibold, color: context.colors.textSoft),
         ),
-        const SizedBox(height: 8),
+        const SizedBox(height: AppSpacing.s8),
         Wrap(
-          spacing: 8,
-          runSpacing: 8,
+          spacing: AppSpacing.s8,
+          runSpacing: AppSpacing.s8,
           children: kPaymentMethods.map((method) {
             final selected = value == method;
             return ChoiceChip(
@@ -62,20 +65,20 @@ class PaymentMethodSelector extends StatelessWidget {
                 children: [
                   Icon(
                     iconForPaymentMethod(method),
-                    size: 16,
-                    color: selected ? Colors.white : activeColor,
+                    size: AppIconSize.i16,
+                    color: selected ? context.colors.onPrimary : activeColor,
                   ),
-                  const SizedBox(width: 6),
+                  const SizedBox(width: AppSpacing.s6),
                   Text(method),
                 ],
               ),
               labelStyle: TextStyle(
-                color: selected ? Colors.white : Colors.black87,
-                fontWeight: selected ? FontWeight.w600 : FontWeight.normal,
+                color: selected ? context.colors.onPrimary : context.colors.textPrimary,
+                fontWeight: selected ? AppFontWeight.semibold : AppFontWeight.regular,
               ),
               selectedColor: activeColor,
-              backgroundColor: activeColor.withValues(alpha: 0.08),
-              side: BorderSide(color: selected ? activeColor : Colors.grey.shade300),
+              backgroundColor: activeColor.withValues(alpha: AppAlpha.a10),
+              side: BorderSide(color: selected ? activeColor : context.colors.border),
               onSelected: (_) => onChanged(method),
             );
           }).toList(),

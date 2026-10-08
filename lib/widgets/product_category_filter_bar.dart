@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 
+import '../theme/app_dimens.dart';
+import '../theme/app_text.dart';
+
 import '../constants/product_categories.dart';
 
 /// Two-level category filter, shared by Products and Stock Store so
@@ -47,8 +50,8 @@ class ProductCategoryFilterBar extends StatelessWidget {
       children: [
         Wrap(
           alignment: WrapAlignment.center,
-          spacing: 8,
-          runSpacing: 8,
+          spacing: AppSpacing.s8,
+          runSpacing: AppSpacing.s8,
           children: groupNames.map((group) {
             return ChoiceChip(
               label: Text(group),
@@ -63,14 +66,14 @@ class ProductCategoryFilterBar extends StatelessWidget {
         // wall of every category we grouped these to avoid in the first
         // place. Only show it once a specific department is picked.
         if (selectedGroup != 'All') ...[
-          const SizedBox(height: 8),
+          const SizedBox(height: AppSpacing.s8),
           Wrap(
             alignment: WrapAlignment.center,
-            spacing: 8,
-            runSpacing: 8,
+            spacing: AppSpacing.s8,
+            runSpacing: AppSpacing.s8,
             children: ['All', ...categoryOptions].map((category) {
               return ChoiceChip(
-                label: Text(category, style: const TextStyle(fontSize: 12.5)),
+                label: Text(category, style: const TextStyle(fontSize: AppFontSize.f12_5)),
                 selected: selectedCategory == category,
                 selectedColor: accentColor,
                 onSelected: (_) => onCategoryChanged(category),
