@@ -9,6 +9,7 @@ import '../../data/payment_submission_status.dart';
 import '../../config/money.dart';
 import '../../config/app_limits.dart';
 import '../../config/app_date_format.dart';
+import '../../theme/theme_context.dart';
 
 /// One payment submission, read from a payment_submissions document.
 class _Submission {
@@ -253,7 +254,7 @@ class _SubscriptionHistoryScreenState extends State<SubscriptionHistoryScreen> {
         value: '${counts[PaymentSubmissionStatus.approved.key] ?? 0}',
         hint: Money.format(approvedTotal),
         icon: Icons.check_circle_outline,
-        color: submissionStatusColor(PaymentSubmissionStatus.approved.key),
+        color: submissionStatusColor(PaymentSubmissionStatus.approved.key, context.colors),
         filter: PaymentSubmissionStatus.approved.key,
       ),
       _card(
@@ -261,7 +262,7 @@ class _SubscriptionHistoryScreenState extends State<SubscriptionHistoryScreen> {
         value: '${counts[PaymentSubmissionStatus.pending.key] ?? 0}',
         hint: 'Awaiting review',
         icon: Icons.hourglass_empty,
-        color: submissionStatusColor(PaymentSubmissionStatus.pending.key),
+        color: submissionStatusColor(PaymentSubmissionStatus.pending.key, context.colors),
         filter: PaymentSubmissionStatus.pending.key,
       ),
       _card(
@@ -269,7 +270,7 @@ class _SubscriptionHistoryScreenState extends State<SubscriptionHistoryScreen> {
         value: '${counts[PaymentSubmissionStatus.rejected.key] ?? 0}',
         hint: 'Not accepted',
         icon: Icons.cancel_outlined,
-        color: submissionStatusColor(PaymentSubmissionStatus.rejected.key),
+        color: submissionStatusColor(PaymentSubmissionStatus.rejected.key, context.colors),
         filter: PaymentSubmissionStatus.rejected.key,
       ),
     ];
@@ -527,7 +528,7 @@ class _SubscriptionHistoryScreenState extends State<SubscriptionHistoryScreen> {
   }
 
   Widget _statusChip(String status) {
-    final color = submissionStatusColor(status);
+    final color = submissionStatusColor(status, context.colors);
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(color: color.withValues(alpha: 0.12), borderRadius: BorderRadius.circular(10)),
@@ -582,7 +583,7 @@ class _SubscriptionHistoryScreenState extends State<SubscriptionHistoryScreen> {
     final submitted = s.submittedAt;
     return Container(
       // Coloured bar down the left edge - the outcome at a glance.
-      decoration: BoxDecoration(border: Border(left: BorderSide(color: submissionStatusColor(s.status), width: 4))),
+      decoration: BoxDecoration(border: Border(left: BorderSide(color: submissionStatusColor(s.status, context.colors), width: 4))),
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.center,
@@ -644,7 +645,7 @@ class _SubscriptionHistoryScreenState extends State<SubscriptionHistoryScreen> {
   // Narrow layout (phones): the same information as a card per submission.
   Widget _buildNarrowCard(_Submission s) {
     final submitted = s.submittedAt;
-    final color = submissionStatusColor(s.status);
+    final color = submissionStatusColor(s.status, context.colors);
     final methodLine = [if (s.method.isNotEmpty) s.method, if (s.reference.isNotEmpty) s.reference].join(' · ');
 
     return Container(

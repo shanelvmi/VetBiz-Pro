@@ -12,7 +12,12 @@ import '../../providers/subscription_provider.dart';
 import '../../constants/subscription_plans.dart';
 import '../../models/promotion.dart';
 import 'subscription_history_screen.dart';
-import '../../theme/app_palette.dart';
+import '../../theme/app_breakpoints.dart';
+import '../../theme/app_colors.dart';
+import '../../theme/app_dimens.dart';
+import '../../theme/app_motion.dart';
+import '../../theme/app_text.dart';
+import '../../theme/theme_context.dart';
 import '../../data/collections.dart';
 import '../../data/fields.dart';
 import '../../data/payment_submission_status.dart';
@@ -31,9 +36,9 @@ class SubscriptionScreen extends StatefulWidget {
 }
 
 class _SubscriptionScreenState extends State<SubscriptionScreen> {
-  final Color primaryColor = AppPalette.primary;
-  final Color warmAmber = AppPalette.accent;
-  final Color backgroundColor = AppPalette.background;
+  // The submit button's height: a size, not spacing (spec 4.3).
+  static const double _submitButtonHeight = 48;
+
 
   final ImagePicker _picker = ImagePicker();
 
@@ -162,8 +167,11 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
             'payment_proofs/$facilityId/${DateTime.now().millisecondsSinceEpoch}.jpg');
         await ref.putData(_proofBytes!).timeout(
           AppTimeouts.proofUpload,
-          onTimeout: () => throw Exception(
-              'The proof image took too long to upload. Please check your connection and try again.'),
+          // A TimeoutException, so FriendlyError shows its "took too long"
+          // sentence and this one appears under Details.
+          onTimeout: () => throw TimeoutException(
+              'The proof image took too long to upload. Please check your connection and try again.',
+              AppTimeouts.proofUpload),
         );
         proofUrl = await ref.getDownloadURL();
       }
@@ -208,16 +216,16 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
     }
   }
 
-  Color _statusColor(SubscriptionStatus status) {
+  Color _statusColor(SubscriptionStatus status, AppColors colors) {
     switch (status) {
       case SubscriptionStatus.active:
-        return Colors.green;
+        return colors.success;
       case SubscriptionStatus.trial:
-        return primaryColor;
+        return colors.primary;
       case SubscriptionStatus.grace:
-        return Colors.orange;
+        return colors.warning;
       case SubscriptionStatus.locked:
-        return Colors.redAccent;
+        return colors.dangerAccent;
     }
   }
 
@@ -226,14 +234,16 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
     final facilityId =
         Provider.of<FacilityProvider>(context, listen: false).selectedFacilityId;
     final sub = Provider.of<SubscriptionProvider>(context);
+    final colors = context.colors;
+    final statusColor = _statusColor(sub.status, colors);
 
     return Scaffold(
-      backgroundColor: backgroundColor,
+      backgroundColor: colors.background,
       appBar: AppBar(
         title: const Text('Subscription'),
         centerTitle: true,
-        backgroundColor: primaryColor,
-        foregroundColor: Colors.white,
+        backgroundColor: colors.primary,
+        foregroundColor: colors.onPrimary,
         automaticallyImplyLeading: !widget.isModal,
         leading: widget.isModal
             ? IconButton(
@@ -245,90 +255,90 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
       ),
       body: Center(
         child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 700),
+          constraints: const BoxConstraints(maxWidth: AppSizes.formMax),
           child: ListView(
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.all(AppSpacing.s16),
             children: [
               Container(
-                padding: const EdgeInsets.all(16),
+                padding: const EdgeInsets.all(AppSpacing.s16),
                 decoration: BoxDecoration(
-                  color: _statusColor(sub.status).withValues(alpha: 0.1),
-                  border: Border.all(color: _statusColor(sub.status)),
-                  borderRadius: BorderRadius.circular(12),
+                  color: statusColor.withValues(alpha: AppAlpha.a10),
+                  border: Border.all(color: statusColor),
+                  borderRadius: BorderRadius.circular(AppRadius.r12),
                 ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Row(
                       children: [
-                        Icon(Icons.workspace_premium, color: _statusColor(sub.status)),
-                        const SizedBox(width: 8),
+                        Icon(Icons.workspace_premium, color: statusColor),
+                        const SizedBox(width: AppSpacing.s8),
                         Text(
                           sub.statusLabel,
                           style: TextStyle(
-                            color: _statusColor(sub.status),
-                            fontWeight: FontWeight.bold,
-                            fontSize: 15,
+                            color: statusColor,
+                            fontWeight: AppFontWeight.bold,
+                            fontSize: AppFontSize.f15,
                           ),
                         ),
                       ],
                     ),
                     if (sub.expiresAt != null) ...[
-                      const SizedBox(height: 6),
+                      const SizedBox(height: AppSpacing.s6),
                       Text(
                         sub.status == SubscriptionStatus.locked
                             ? 'Expired on ${AppDateFormat.dateTime24.format(sub.expiresAt!)}'
                             : sub.status == SubscriptionStatus.trial
                                 ? 'Trial expires on ${AppDateFormat.dateTime24.format(sub.expiresAt!)}'
                                 : 'Renews / expires on ${AppDateFormat.dateTime24.format(sub.expiresAt!)}',
-                        style: const TextStyle(fontSize: 13),
+                        style: const TextStyle(fontSize: AppFontSize.f13),
                       ),
                     ],
                     if (sub.status == SubscriptionStatus.locked)
                       const Padding(
-                        padding: EdgeInsets.only(top: 8),
+                        padding: EdgeInsets.only(top: AppSpacing.s8),
                         child: Text(
                           'Your account is in read-only mode. Submit a payment below to '
                           'restore full access - your data is safe and untouched.',
-                          style: TextStyle(fontSize: 12.5),
+                          style: TextStyle(fontSize: AppFontSize.f12_5),
                         ),
                       ),
                   ],
                 ),
               ),
-              const SizedBox(height: 24),
+              const SizedBox(height: AppSpacing.s24),
 
               if (_activePromotion != null) ...[
                 Container(
                   width: double.infinity,
-                  padding: const EdgeInsets.all(16),
+                  padding: const EdgeInsets.all(AppSpacing.s16),
                   decoration: BoxDecoration(
                     gradient: LinearGradient(
-                      colors: [warmAmber, warmAmber.withValues(alpha: 0.75)],
+                      colors: [colors.accent, colors.accent.withValues(alpha: 0.75)],
                       begin: Alignment.topLeft,
                       end: Alignment.bottomRight,
                     ),
-                    borderRadius: BorderRadius.circular(14),
+                    borderRadius: BorderRadius.circular(AppRadius.r14),
                     boxShadow: [
-                      BoxShadow(color: warmAmber.withValues(alpha: 0.35), blurRadius: 14, offset: const Offset(0, 6)),
+                      BoxShadow(color: colors.accent.withValues(alpha: AppAlpha.a40), blurRadius: 14, offset: const Offset(0, 6)),
                     ],
                   ),
                   child: Row(
                     children: [
-                      const Icon(Icons.local_offer, color: Colors.white, size: 26),
-                      const SizedBox(width: 12),
+                      Icon(Icons.local_offer, color: colors.onPrimary, size: 26),
+                      const SizedBox(width: AppSpacing.s12),
                       Expanded(
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
                               _activePromotion!.label,
-                              style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16),
+                              style: TextStyle(color: colors.onPrimary, fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f16),
                             ),
                             Text(
                               '${_activePromotion!.discountPercent.toStringAsFixed(_activePromotion!.discountPercent % 1 == 0 ? 0 : 1)}% off'
                               '${_activePromotion!.appliesToAllPlans ? ' every plan' : ' select plans'} - applied automatically below.',
-                              style: const TextStyle(color: Colors.white, fontSize: 12.5),
+                              style: TextStyle(color: colors.onPrimary, fontSize: AppFontSize.f12_5),
                             ),
                           ],
                         ),
@@ -336,20 +346,20 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
                     ],
                   ),
                 ),
-                const SizedBox(height: 20),
+                const SizedBox(height: AppSpacing.s20),
               ],
 
-              Text('Choose a Plan', style: TextStyle(fontWeight: FontWeight.bold, color: primaryColor)),
-              const SizedBox(height: 8),
+              Text('Choose a Plan', style: TextStyle(fontWeight: AppFontWeight.bold, color: colors.primary)),
+              const SizedBox(height: AppSpacing.s8),
               ..._plans.map((plan) {
                 final effectivePrice = _effectivePrice(plan);
                 final hasDiscount = effectivePrice < plan.priceTsh;
                 return Card(
-                  margin: const EdgeInsets.only(bottom: 8),
+                  margin: const EdgeInsets.only(bottom: AppSpacing.s8),
                   child: RadioListTile<SubscriptionPlan>(
                     value: plan,
                     groupValue: _selectedPlan,
-                    activeColor: primaryColor,
+                    activeColor: colors.primary,
                     title: Text(plan.label),
                     subtitle: hasDiscount
                         ? Row(
@@ -358,17 +368,17 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
                                 Money.symbolPlain(plan.priceTsh),
                                 style: TextStyle(
                                   decoration: TextDecoration.lineThrough,
-                                  color: Colors.grey[500],
-                                  fontSize: 12.5,
+                                  color: colors.textHint,
+                                  fontSize: AppFontSize.f12_5,
                                 ),
                               ),
-                              const SizedBox(width: 6),
+                              const SizedBox(width: AppSpacing.s6),
                               Text(
                                 Money.symbolPlain(effectivePrice),
-                                style: const TextStyle(
-                                  color: Colors.green,
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 13.5,
+                                style: TextStyle(
+                                  color: colors.success,
+                                  fontWeight: AppFontWeight.bold,
+                                  fontSize: AppFontSize.f13_5,
                                 ),
                               ),
                             ],
@@ -381,9 +391,9 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
                 );
               }),
 
-              const SizedBox(height: 16),
-              Text('Payment Details', style: TextStyle(fontWeight: FontWeight.bold, color: primaryColor)),
-              const SizedBox(height: 8),
+              const SizedBox(height: AppSpacing.s16),
+              Text('Payment Details', style: TextStyle(fontWeight: AppFontWeight.bold, color: colors.primary)),
+              const SizedBox(height: AppSpacing.s8),
 
               DropdownButtonFormField<String>(
                 initialValue: _method,
@@ -398,7 +408,7 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
                   if (value != null) setState(() => _method = value);
                 },
               ),
-              const SizedBox(height: 12),
+              const SizedBox(height: AppSpacing.s12),
               TextField(
                 controller: _referenceController,
                 decoration: const InputDecoration(
@@ -407,16 +417,16 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
                   border: OutlineInputBorder(),
                 ),
               ),
-              const SizedBox(height: 12),
+              const SizedBox(height: AppSpacing.s12),
 
               OutlinedButton.icon(
                 onPressed: _pickProofImage,
                 icon: const Icon(Icons.upload_file),
                 label: Text(_proofBytes == null ? 'Attach Proof (optional)' : 'Proof attached'),
-                style: OutlinedButton.styleFrom(foregroundColor: primaryColor),
+                style: OutlinedButton.styleFrom(foregroundColor: colors.primary),
               ),
 
-              const SizedBox(height: 24),
+              const SizedBox(height: AppSpacing.s24),
               Builder(builder: (context) {
                 final effectivePrice = _effectivePrice(_selectedPlan);
                 final priceUnavailable = effectivePrice <= 0;
@@ -427,22 +437,22 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
                   children: [
                     if (_hasPendingSubmission)
                       Container(
-                        padding: const EdgeInsets.all(12),
-                        margin: const EdgeInsets.only(bottom: 12),
+                        padding: const EdgeInsets.all(AppSpacing.s12),
+                        margin: const EdgeInsets.only(bottom: AppSpacing.s12),
                         decoration: BoxDecoration(
-                          color: Colors.orange.withValues(alpha: 0.08),
-                          borderRadius: BorderRadius.circular(10),
-                          border: Border.all(color: Colors.orange.withValues(alpha: 0.3)),
+                          color: colors.warning.withValues(alpha: AppAlpha.a10),
+                          borderRadius: BorderRadius.circular(AppRadius.r10),
+                          border: Border.all(color: colors.warning.withValues(alpha: AppAlpha.a30)),
                         ),
                         child: Row(
                           children: [
-                            const Icon(Icons.hourglass_top, size: 18, color: Colors.orange),
-                            const SizedBox(width: 10),
+                            Icon(Icons.hourglass_top, size: AppIconSize.i18, color: colors.warning),
+                            const SizedBox(width: AppSpacing.s10),
                             Expanded(
                               child: Text(
                                 'Your last payment is still under review. Please wait for it to be '
                                 'approved or rejected before submitting another.',
-                                style: TextStyle(fontSize: 12.5, color: Colors.orange[800], fontWeight: FontWeight.w600),
+                                style: TextStyle(fontSize: AppFontSize.f12_5, color: colors.warningStrong, fontWeight: AppFontWeight.semibold),
                               ),
                             ),
                           ],
@@ -450,42 +460,42 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
                       ),
                     if (priceUnavailable)
                       Container(
-                        padding: const EdgeInsets.all(12),
-                        margin: const EdgeInsets.only(bottom: 12),
+                        padding: const EdgeInsets.all(AppSpacing.s12),
+                        margin: const EdgeInsets.only(bottom: AppSpacing.s12),
                         decoration: BoxDecoration(
-                          color: Colors.grey.withValues(alpha: 0.08),
-                          borderRadius: BorderRadius.circular(10),
-                          border: Border.all(color: Colors.grey.withValues(alpha: 0.3)),
+                          color: colors.textHint.withValues(alpha: AppAlpha.a10),
+                          borderRadius: BorderRadius.circular(AppRadius.r10),
+                          border: Border.all(color: colors.textHint.withValues(alpha: AppAlpha.a30)),
                         ),
                         child: Row(
                           children: [
-                            Icon(Icons.error_outline, size: 18, color: Colors.grey[700]),
-                            const SizedBox(width: 10),
+                            Icon(Icons.error_outline, size: AppIconSize.i18, color: colors.textSoft),
+                            const SizedBox(width: AppSpacing.s10),
                             Expanded(
                               child: Text(
                                 'Pricing for this plan isn\'t available right now. Please try again '
                                 'shortly or contact support.',
-                                style: TextStyle(fontSize: 12.5, color: Colors.grey[800], fontWeight: FontWeight.w600),
+                                style: TextStyle(fontSize: AppFontSize.f12_5, color: colors.textPrimary, fontWeight: AppFontWeight.semibold),
                               ),
                             ),
                           ],
                         ),
                       ),
                     SizedBox(
-                      height: 48,
+                      height: _submitButtonHeight,
                       child: Opacity(
                         opacity: isBlocked ? 0.5 : 1.0,
                         child: ElevatedButton(
                           onPressed: (_isSubmitting || isBlocked) ? null : _submitPayment,
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: primaryColor,
-                            foregroundColor: Colors.white,
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                            backgroundColor: colors.primary,
+                            foregroundColor: colors.onPrimary,
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadius.r12)),
                           ),
                           child: _isSubmitting
-                              ? const SizedBox(
+                              ? SizedBox(
                                   width: 22, height: 22,
-                                  child: CircularProgressIndicator(strokeWidth: 2.5, color: Colors.white),
+                                  child: CircularProgressIndicator(strokeWidth: 2.5, color: colors.onPrimary),
                                 )
                               : Text(
                                   _hasPendingSubmission
@@ -493,7 +503,7 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
                                       : priceUnavailable
                                           ? 'Pricing Unavailable'
                                           : 'Submit Payment for Review',
-                                  style: const TextStyle(fontWeight: FontWeight.bold),
+                                  style: const TextStyle(fontWeight: AppFontWeight.bold),
                                 ),
                         ),
                       ),
@@ -502,10 +512,10 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
                 );
               }),
 
-              const SizedBox(height: 24),
-              Text('Recent Submissions', style: TextStyle(fontWeight: FontWeight.bold, color: primaryColor)),
-              const SizedBox(height: 8),
-              if (facilityId != null) _SubmissionHistory(facilityId: facilityId, primaryColor: primaryColor),
+              const SizedBox(height: AppSpacing.s24),
+              Text('Recent Submissions', style: TextStyle(fontWeight: AppFontWeight.bold, color: colors.primary)),
+              const SizedBox(height: AppSpacing.s8),
+              if (facilityId != null) _SubmissionHistory(facilityId: facilityId, primaryColor: colors.primary),
             ],
           ),
         ),
@@ -514,18 +524,18 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
   }
 }
 
-Color submissionStatusColor(String status) {
+Color submissionStatusColor(String status, AppColors colors) {
   switch (PaymentSubmissionStatus.fromKey(status)) {
     case PaymentSubmissionStatus.approved:
-      return Colors.green;
+      return colors.success;
     case PaymentSubmissionStatus.rejected:
-      return Colors.redAccent;
+      return colors.dangerAccent;
     default:
-      return Colors.orange;
+      return colors.warning;
   }
 }
 
-Widget buildSubmissionCard(Map<String, dynamic> data) {
+Widget buildSubmissionCard(Map<String, dynamic> data, AppColors colors) {
   final status = (data[Fields.status] as String?) ?? PaymentSubmissionStatus.pending.key;
   final submittedAt =
       data['submittedAt'] is Timestamp ? (data['submittedAt'] as Timestamp).toDate() : null;
@@ -533,9 +543,9 @@ Widget buildSubmissionCard(Map<String, dynamic> data) {
   // (optional) reason blank.
   final reviewNote = ((data['reviewNote'] as String?) ?? '').trim();
   return Card(
-    margin: const EdgeInsets.only(bottom: 6),
+    margin: const EdgeInsets.only(bottom: AppSpacing.s6),
     child: Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.s16, vertical: AppSpacing.s10),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -546,21 +556,21 @@ Widget buildSubmissionCard(Map<String, dynamic> data) {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text('${data['planLabel'] ?? ''} - ${Money.symbolAsStored(data['amount'] ?? 0)}',
-                        style: const TextStyle(fontSize: 14)),
-                    const SizedBox(height: 2),
+                        style: const TextStyle(fontSize: AppFontSize.f14)),
+                    const SizedBox(height: AppSpacing.s2),
                     Text(
                       '${data['method'] ?? ''}'
                       '${submittedAt != null ? ' - ${AppDateFormat.dateTime24.format(submittedAt)}' : ''}',
-                      style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+                      style: TextStyle(fontSize: AppFontSize.f12, color: colors.textMuted),
                     ),
                   ],
                 ),
               ),
-              const SizedBox(width: 8),
+              const SizedBox(width: AppSpacing.s8),
               Chip(
                 label: Text(status[0].toUpperCase() + status.substring(1),
-                    style: const TextStyle(fontSize: 11, color: Colors.white)),
-                backgroundColor: submissionStatusColor(status),
+                    style: TextStyle(fontSize: AppFontSize.f11, color: colors.onPrimary)),
+                backgroundColor: submissionStatusColor(status, colors),
                 padding: EdgeInsets.zero,
                 materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
               ),
@@ -569,12 +579,12 @@ Widget buildSubmissionCard(Map<String, dynamic> data) {
           // Why it was rejected - previously only visible in the one-off
           // notification, gone from the history itself.
           if (status == PaymentSubmissionStatus.rejected.key) ...[
-            const SizedBox(height: 6),
+            const SizedBox(height: AppSpacing.s6),
             Text(
               reviewNote.isNotEmpty ? 'Reason: $reviewNote' : 'No reason was given',
               style: TextStyle(
-                fontSize: 12,
-                color: reviewNote.isNotEmpty ? Colors.red[700] : Colors.grey[600],
+                fontSize: AppFontSize.f12,
+                color: reviewNote.isNotEmpty ? colors.dangerStrong : colors.textMuted,
                 fontStyle: reviewNote.isNotEmpty ? FontStyle.normal : FontStyle.italic,
               ),
             ),
@@ -610,12 +620,12 @@ class _SubmissionHistory extends StatelessWidget {
       builder: (context, snapshot) {
         final docs = snapshot.data?.docs ?? [];
         if (docs.isEmpty) {
-          return Text('No submissions yet.', style: TextStyle(color: Colors.grey[600]));
+          return Text('No submissions yet.', style: TextStyle(color: context.colors.textMuted));
         }
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            ...docs.map((doc) => buildSubmissionCard(doc.data() as Map<String, dynamic>)),
+            ...docs.map((doc) => buildSubmissionCard(doc.data() as Map<String, dynamic>, context.colors)),
             TextButton(
               onPressed: () => Navigator.push(
                 context,
@@ -640,7 +650,7 @@ class _SubmissionHistory extends StatelessWidget {
 /// with the rest of the "modern desktop" screens rather than the
 /// last one still doing an abrupt full-screen navigation.
 Future<void> showSubscriptionScreen(BuildContext context) async {
-  final isWideScreen = MediaQuery.of(context).size.width >= 900;
+  final isWideScreen = context.screenWidth >= AppBreakpoints.medium;
 
   if (!isWideScreen) {
     await Navigator.of(context).push(
@@ -654,7 +664,7 @@ Future<void> showSubscriptionScreen(BuildContext context) async {
     barrierDismissible: true,
     barrierLabel: 'Subscription',
     barrierColor: Colors.black54,
-    transitionDuration: const Duration(milliseconds: 220),
+    transitionDuration: AppMotion.normal,
     pageBuilder: (context, animation, secondaryAnimation) {
       final screenSize = MediaQuery.of(context).size;
       final modalWidth = (screenSize.width * 0.60).clamp(0, 940).toDouble();
@@ -667,7 +677,7 @@ Future<void> showSubscriptionScreen(BuildContext context) async {
           width: modalWidth,
           height: modalHeight,
           child: ClipRRect(
-            borderRadius: BorderRadius.circular(16),
+            borderRadius: BorderRadius.circular(AppRadius.r16),
             child: const Material(
               child: SubscriptionScreen(isModal: true),
             ),

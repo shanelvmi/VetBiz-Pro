@@ -73,7 +73,7 @@
       "lib/screens/store/release_to_shop_flow.dart": 10,
       "lib/screens/store/stockstore_screen.dart": 57,
       "lib/screens/subscription/subscription_history_screen.dart": 39,
-      "lib/screens/subscription/subscription_screen.dart": 28,
+      "lib/screens/subscription/subscription_screen.dart": 1,
       "lib/screens/transactions/add_transaction_screen.dart": 26,
       "lib/screens/transactions/transactions_screen.dart": 41
     },
@@ -140,7 +140,6 @@
       "lib/screens/store/release_to_shop_flow.dart": 2,
       "lib/screens/store/stockstore_screen.dart": 23,
       "lib/screens/subscription/subscription_history_screen.dart": 32,
-      "lib/screens/subscription/subscription_screen.dart": 13,
       "lib/screens/transactions/add_transaction_screen.dart": 10,
       "lib/screens/transactions/transactions_screen.dart": 33,
       "lib/services/daily_report_pdf_service.dart": 25,
@@ -204,7 +203,6 @@
       "lib/screens/store/release_to_shop_flow.dart": 7,
       "lib/screens/store/stockstore_screen.dart": 17,
       "lib/screens/subscription/subscription_history_screen.dart": 7,
-      "lib/screens/subscription/subscription_screen.dart": 6,
       "lib/screens/transactions/add_transaction_screen.dart": 11,
       "lib/screens/transactions/transactions_screen.dart": 8,
       "lib/services/daily_report_pdf_service.dart": 1
@@ -272,7 +270,6 @@
       "lib/screens/store/release_to_shop_flow.dart": 5,
       "lib/screens/store/stockstore_screen.dart": 41,
       "lib/screens/subscription/subscription_history_screen.dart": 34,
-      "lib/screens/subscription/subscription_screen.dart": 30,
       "lib/screens/transactions/add_transaction_screen.dart": 34,
       "lib/screens/transactions/transactions_screen.dart": 42,
       "lib/services/daily_report_pdf_service.dart": 52,
@@ -309,7 +306,6 @@
       "lib/screens/services/add_edit_service_screen.dart": 1,
       "lib/screens/services/service_receipt_preview_screen.dart": 1,
       "lib/screens/store/stockstore_screen.dart": 1,
-      "lib/screens/subscription/subscription_screen.dart": 1,
       "lib/screens/transactions/add_transaction_screen.dart": 1,
       "lib/screens/transactions/transactions_screen.dart": 1,
       "lib/services/activity_log_retention.dart": 1
@@ -353,7 +349,6 @@
       "lib/screens/settings/settings_screen.dart": 1,
       "lib/screens/store/stockstore_screen.dart": 2,
       "lib/screens/subscription/subscription_history_screen.dart": 3,
-      "lib/screens/subscription/subscription_screen.dart": 1,
       "lib/screens/transactions/add_transaction_screen.dart": 2
     },
     "R8": {

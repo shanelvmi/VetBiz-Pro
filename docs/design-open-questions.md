@@ -43,6 +43,14 @@ User-facing "VetBiz Pro" now reads `AppInfo.name` (titles, Settings, support lin
 - **Two names in use**: "VetBiz Pro" and "VetBiz Pro System" (login header, register header, © line). One name?
 - **The version** "v1.0.0" is typed in Settings (`settings_screen.dart:239`); it could come from the build (pubspec) instead.
 
+### Values with no token (raised in step 2D, batch D2)
+
+Kept exactly as they are; the guard still counts the raw ones.
+
+- **Modal barrier** `Colors.black54`, `lib/screens/subscription/subscription_screen.dart` (`showSubscriptionScreen`): the spec maps black54 to `textSecondary`, but this is a scrim. `scrim` at 0.54 has no AppAlpha step. Snap to `scrim` + `a50`, or add `a55`?
+- **Offer banner gradient**, `subscription_screen.dart`: `accent` fading to 0.75. No AppAlpha step and no snap rule. Snap to `a70`, or add `a75`?
+- **Offer icon 26 px**, `subscription_screen.dart`: no `AppIconSize` step and no snap rule.
+
 ## Decided
 
 ### D1 follow-up (decided after batch D1; done in D1c)
