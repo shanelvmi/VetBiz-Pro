@@ -5,7 +5,10 @@ import '../../utils/sentence_capitalization_formatter.dart';
 import '../../utils/activity_logger.dart';
 import '../../models/product.dart';
 import '../../providers/product_provider.dart';
-import '../../theme/app_palette.dart';
+import '../../theme/app_dimens.dart';
+import '../../theme/app_text.dart';
+import '../../theme/theme_context.dart';
+import '../../ui/feedback/app_feedback.dart';
 import '../../data/collections.dart';
 import '../../data/fields.dart';
 import '../../data/activity_type.dart';
@@ -14,11 +17,7 @@ import '../../data/activity_type.dart';
 // started from - the Stock Store's own Release button and the Product Alerts
 // screen's "Move to shelf" button. Moved here unchanged from the Stock Store
 // screen (only what it needed from its old State - the context and the
-// colours - is now passed in / defined here).
-
-const Color _deepTeal = AppPalette.primary;
-const Color _amber = AppPalette.accent;
-const Color _offWhite = AppPalette.background;
+// colours - is now passed in / read from the theme).
 
 // Mirrors moveToSellable's own batch-selection logic exactly (same
 // soonest-expiry-first sort, same "take" math) but read-only - just
@@ -71,12 +70,12 @@ Future<bool?> _showExpiredReleaseWarning(BuildContext context, Product product, 
   return showDialog<bool>(
     context: context,
     builder: (ctx) => AlertDialog(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      title: const Row(
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadius.r16)),
+      title: Row(
         children: [
-          Icon(Icons.warning_amber_rounded, color: Colors.red),
-          SizedBox(width: 8),
-          Text('Expired Stock'),
+          Icon(Icons.warning_amber_rounded, color: ctx.colors.danger),
+          const SizedBox(width: AppSpacing.s8),
+          const Text('Expired Stock'),
         ],
       ),
       content: SizedBox(
@@ -86,12 +85,12 @@ Future<bool?> _showExpiredReleaseWarning(BuildContext context, Product product, 
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text('This product is expired. Do you still want to release it to the shop?',
-                style: const TextStyle(fontSize: 13.5)),
-            const SizedBox(height: 10),
+                style: const TextStyle(fontSize: AppFontSize.f13_5)),
+            const SizedBox(height: AppSpacing.s10),
             ...expiredPortion.map((e) => Padding(
-                  padding: const EdgeInsets.only(bottom: 4),
+                  padding: const EdgeInsets.only(bottom: AppSpacing.s4),
                   child: Text('• ${e.$2} ${product.unit} from ${e.$1}',
-                      style: TextStyle(fontSize: 12.5, color: Colors.red[700])),
+                      style: TextStyle(fontSize: AppFontSize.f12_5, color: ctx.colors.dangerStrong)),
                 )),
           ],
         ),
@@ -99,7 +98,7 @@ Future<bool?> _showExpiredReleaseWarning(BuildContext context, Product product, 
       actions: [
         TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancel')),
         ElevatedButton(
-          style: ElevatedButton.styleFrom(backgroundColor: Colors.red, foregroundColor: Colors.white),
+          style: ElevatedButton.styleFrom(backgroundColor: ctx.colors.danger, foregroundColor: ctx.colors.onPrimary),
           onPressed: () => Navigator.pop(ctx, true),
           child: const Text('Release Anyway'),
         ),
@@ -121,54 +120,54 @@ Future<void> releaseProductToShop(BuildContext context, Product product, {int in
     context: context,
     builder: (_) => AlertDialog(
       title: Text('Release to Shop',
-          style: TextStyle(color: _deepTeal)),
+          style: TextStyle(color: context.colors.primary)),
       content: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
           Text('Available stock: ${product.stockQty} ${product.unit}'),
-          const SizedBox(height: 12),
+          const SizedBox(height: AppSpacing.s12),
           TextField(
             controller: qtyController,
             keyboardType: TextInputType.number,
-            cursorColor: _deepTeal,
+            cursorColor: context.colors.primary,
             decoration: InputDecoration(
               labelText: 'Quantity to release',
-              labelStyle: TextStyle(color: Colors.grey[700]),
-              floatingLabelStyle: TextStyle(color: _deepTeal),
+              labelStyle: TextStyle(color: context.colors.textSoft),
+              floatingLabelStyle: TextStyle(color: context.colors.primary),
               border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(8),
+                borderRadius: BorderRadius.circular(AppRadius.r8),
               ),
               enabledBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(8),
-                borderSide: BorderSide(color: Colors.grey[400]!),
+                borderRadius: BorderRadius.circular(AppRadius.r8),
+                borderSide: BorderSide(color: context.colors.borderStrong),
               ),
               focusedBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(8),
-                borderSide: BorderSide(color: _deepTeal, width: 2),
+                borderRadius: BorderRadius.circular(AppRadius.r8),
+                borderSide: BorderSide(color: context.colors.primary, width: 2),
               ),
             ),
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: AppSpacing.s12),
           TextField(
             controller: notesController,
-            cursorColor: _deepTeal,
+            cursorColor: context.colors.primary,
             textCapitalization: TextCapitalization.sentences,
             inputFormatters: [SentenceCapitalizationFormatter()],
             decoration: InputDecoration(
               labelText: 'Notes (optional)',
               hintText: 'e.g., Quality checked, ready for sale',
-              labelStyle: TextStyle(color: Colors.grey[700]),
-              floatingLabelStyle: TextStyle(color: _deepTeal),
+              labelStyle: TextStyle(color: context.colors.textSoft),
+              floatingLabelStyle: TextStyle(color: context.colors.primary),
               border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(8),
+                borderRadius: BorderRadius.circular(AppRadius.r8),
               ),
               enabledBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(8),
-                borderSide: BorderSide(color: Colors.grey[400]!),
+                borderRadius: BorderRadius.circular(AppRadius.r8),
+                borderSide: BorderSide(color: context.colors.borderStrong),
               ),
               focusedBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(8),
-                borderSide: BorderSide(color: _deepTeal, width: 2),
+                borderRadius: BorderRadius.circular(AppRadius.r8),
+                borderSide: BorderSide(color: context.colors.primary, width: 2),
               ),
             ),
             maxLines: 2,
@@ -179,7 +178,7 @@ Future<void> releaseProductToShop(BuildContext context, Product product, {int in
         TextButton(
           onPressed: () => Navigator.pop(context, false),
           style: TextButton.styleFrom(
-            foregroundColor: _deepTeal,
+            foregroundColor: context.colors.primary,
           ),
           child: const Text('Cancel'),
         ),
@@ -189,12 +188,12 @@ Future<void> releaseProductToShop(BuildContext context, Product product, {int in
             backgroundColor: WidgetStateProperty.resolveWith<Color>(
               (states) {
                 if (states.contains(WidgetState.hovered)) {
-                  return _amber;
+                  return context.colors.accent;
                 }
-                return _deepTeal;
+                return context.colors.primary;
               },
             ),
-            foregroundColor: WidgetStateProperty.all(_offWhite),
+            foregroundColor: WidgetStateProperty.all(context.colors.background),
           ),
           child: const Text('Release'),
         ),
@@ -206,10 +205,7 @@ Future<void> releaseProductToShop(BuildContext context, Product product, {int in
 
   final qty = int.tryParse(qtyController.text.trim()) ?? 0;
   if (qty <= 0 || qty > product.stockQty) {
-    if (!context.mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Invalid quantity')),
-    );
+    AppFeedback.warning('Enter a quantity from 1 to ${product.stockQty}');
     return;
   }
 
@@ -246,23 +242,8 @@ Future<void> releaseProductToShop(BuildContext context, Product product, {int in
       );
     }
 
-    if (!context.mounted) return;
-
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(
-          'Released $qty ${product.unit} of ${product.name} to shop',
-        ),
-        backgroundColor: Colors.green,
-      ),
-    );
-  } catch (e) {
-    if (!context.mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('Failed to release product: $e'),
-        backgroundColor: Colors.red,
-      ),
-    );
+    AppFeedback.success('Released $qty ${product.unit} of ${product.name} to the shelf');
+  } catch (e, st) {
+    AppFeedback.error("Couldn't release the product", error: e, stackTrace: st);
   }
 }

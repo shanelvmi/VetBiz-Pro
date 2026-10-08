@@ -51,6 +51,7 @@ Kept exactly as they are; the guard still counts the raw ones.
 - **Offer banner gradient**, `subscription_screen.dart`: `accent` fading to 0.75. No AppAlpha step and no snap rule. Snap to `a70`, or add `a75`?
 - **Offer icon 26 px**, `subscription_screen.dart`: no `AppIconSize` step and no snap rule.
 - **Icon sizes 11 and 13**, `lib/screens/payments/payments_screen.dart` (the trend-pill arrow, 11, like the summary card's, which was decided to snap to `i12`; the "Payment Received" check, 13). No step and no snap rule. Snap both to `i12`?
+- **"Shop" in the release flow**, `lib/screens/store/release_to_shop_flow.dart`: the dialog title "Release to Shop" and the question "Do you still want to release it to the shop?" call the selling shelf a shop (CLAUDE.md: never call a business a shop). The success message now says "to the shelf"; the two dialog texts are kept until a copy pass. "Release to Shelf"?
 - **Duplicate date-range dialog**, `payments_screen.dart` `_DateRangeDialog`: a line-for-line private copy of `lib/widgets/date_range_dialog.dart` (same parameters, same output), now on the same tokens. Replace it with the shared widget (about 115 lines removed, no visible change)?
 
 ## Decided
