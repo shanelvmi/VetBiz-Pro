@@ -13,7 +13,6 @@ import '../products/add_batch_screen.dart';
 import '../products/view_batches_screen.dart';
 import '../products/stock_alerts_screen.dart';
 import 'release_to_shop_flow.dart';
-import '../../theme/app_palette.dart';
 import '../../theme/app_breakpoints.dart';
 import '../../theme/app_dimens.dart';
 import '../../theme/app_motion.dart';
@@ -45,10 +44,6 @@ class _StockStoreScreenState extends State<StockStoreScreen> {
   // default page size, so a small catalog never shows pagination
   // controls at all.
   ProductCatalogQuery _query = const ProductCatalogQuery(pageSize: kProductCatalogDefaultPageSize);
-
-  final Color primaryDeepTealGreen = AppPalette.primary;
-  final Color warmAmber = AppPalette.accent;
-  final Color offWhite = AppPalette.background;
 
   // Money formatter with thousand separator
 
@@ -689,18 +684,19 @@ class _StockStoreScreenState extends State<StockStoreScreen> {
     final hasStockAlerts = StockAlertsScreen.hasAnyAlert(Provider.of<ProductProvider>(context).products);
 
     return AppBar(
-      backgroundColor: Colors.white,
-      foregroundColor: Colors.black87,
-      elevation: 1,
+      backgroundColor: context.colors.surface,
+      foregroundColor: context.colors.textPrimary,
+      elevation: AppElevation.e1,
       centerTitle: true,
       toolbarHeight: 72,
       title: Column(
         crossAxisAlignment: CrossAxisAlignment.center,
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          const Text('Stock Store',
-              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 19, color: Colors.black87)),
-          Text('Manage your inventory', style: TextStyle(fontSize: 12, color: Colors.grey[600])),
+          Text('Stock Store',
+              style: TextStyle(
+                  fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f19, color: context.colors.textPrimary)),
+          Text('Manage your inventory', style: TextStyle(fontSize: AppFontSize.f12, color: context.colors.textMuted)),
         ],
       ),
       actions: [
@@ -717,7 +713,7 @@ class _StockStoreScreenState extends State<StockStoreScreen> {
               icon: const Icon(Icons.notifications_none),
               tooltip: 'Stock Alerts',
               onPressed: () async {
-                final isWideScreen = MediaQuery.of(context).size.width >= 900;
+                final isWideScreen = context.screenWidth >= AppBreakpoints.medium;
                 if (isWideScreen) {
                   await _showNotificationsDropdown(context);
                 } else {
@@ -733,23 +729,23 @@ class _StockStoreScreenState extends State<StockStoreScreen> {
                 child: Container(
                   width: 9,
                   height: 9,
-                  decoration: const BoxDecoration(color: Colors.red, shape: BoxShape.circle),
+                  decoration: BoxDecoration(color: context.colors.danger, shape: BoxShape.circle),
                 ),
               ),
           ],
         ),
-        const SizedBox(width: 4),
+        const SizedBox(width: AppSpacing.s4),
         Padding(
-          padding: const EdgeInsets.only(right: 12),
+          padding: const EdgeInsets.only(right: AppSpacing.s12),
           child: ElevatedButton.icon(
             onPressed: () => showAddEditProductScreen(context),
-            icon: const Icon(Icons.add, size: 18),
+            icon: const Icon(Icons.add, size: AppIconSize.i18),
             label: const Text('Add Product'),
             style: ElevatedButton.styleFrom(
-              backgroundColor: primaryDeepTealGreen,
-              foregroundColor: offWhite,
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+              backgroundColor: context.colors.primary,
+              foregroundColor: context.colors.background,
+              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.s16, vertical: AppSpacing.s10),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadius.r8)),
             ),
           ),
         ),
@@ -759,8 +755,8 @@ class _StockStoreScreenState extends State<StockStoreScreen> {
 
   Widget _buildToolbar() {
     final border = OutlineInputBorder(
-      borderRadius: BorderRadius.circular(10),
-      borderSide: BorderSide(color: Colors.grey.withValues(alpha: 0.3)),
+      borderRadius: BorderRadius.circular(AppRadius.r10),
+      borderSide: BorderSide(color: context.colors.textHint.withValues(alpha: AppAlpha.a30)),
     );
     return Row(
       children: [
@@ -769,18 +765,18 @@ class _StockStoreScreenState extends State<StockStoreScreen> {
             controller: _searchController,
             decoration: InputDecoration(
               hintText: 'Search stock, brand or batch...',
-              hintStyle: const TextStyle(fontSize: 13),
-              prefixIcon: const Icon(Icons.search, size: 20),
+              hintStyle: const TextStyle(fontSize: AppFontSize.f13),
+              prefixIcon: const Icon(Icons.search, size: AppIconSize.i20),
               filled: true,
-              fillColor: offWhite,
+              fillColor: context.colors.background,
               isDense: true,
-              contentPadding: const EdgeInsets.symmetric(vertical: 12, horizontal: 12),
+              contentPadding: const EdgeInsets.symmetric(vertical: AppSpacing.s12, horizontal: AppSpacing.s12),
               border: border,
               enabledBorder: border,
               suffixIcon: _searchController.text.isEmpty
                   ? null
                   : IconButton(
-                      icon: const Icon(Icons.clear, size: 18),
+                      icon: const Icon(Icons.clear, size: AppIconSize.i18),
                       onPressed: () => setState(() {
                         _searchController.clear();
                         _query = _query.copyWith(searchQuery: '', page: 1);
@@ -790,9 +786,9 @@ class _StockStoreScreenState extends State<StockStoreScreen> {
             onChanged: (val) => setState(() => _query = _query.copyWith(searchQuery: val.trim(), page: 1)),
           ),
         ),
-        const SizedBox(width: 10),
+        const SizedBox(width: AppSpacing.s10),
         _buildSortDropdown(),
-        const SizedBox(width: 10),
+        const SizedBox(width: AppSpacing.s10),
         _buildViewToggle(),
       ],
     );
@@ -800,18 +796,18 @@ class _StockStoreScreenState extends State<StockStoreScreen> {
 
   Widget _buildSortDropdown() {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10),
+      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.s10),
       height: 44,
       decoration: BoxDecoration(
-        color: offWhite,
-        borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: Colors.grey.withValues(alpha: 0.3)),
+        color: context.colors.background,
+        borderRadius: BorderRadius.circular(AppRadius.r10),
+        border: Border.all(color: context.colors.textHint.withValues(alpha: AppAlpha.a30)),
       ),
       child: DropdownButtonHideUnderline(
         child: DropdownButton<ProductSortOption>(
           value: _query.sortOption,
-          icon: Icon(Icons.swap_vert, size: 18, color: primaryDeepTealGreen),
-          style: const TextStyle(color: Colors.black87, fontSize: 13),
+          icon: Icon(Icons.swap_vert, size: AppIconSize.i18, color: context.colors.primary),
+          style: TextStyle(color: context.colors.textPrimary, fontSize: AppFontSize.f13),
           items: ProductSortOption.values
               .map((s) => DropdownMenuItem(value: s, child: Text(s.label)))
               .toList(),
@@ -827,9 +823,9 @@ class _StockStoreScreenState extends State<StockStoreScreen> {
     return Container(
       height: 44,
       decoration: BoxDecoration(
-        color: offWhite,
-        borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: Colors.grey.withValues(alpha: 0.3)),
+        color: context.colors.background,
+        borderRadius: BorderRadius.circular(AppRadius.r10),
+        border: Border.all(color: context.colors.textHint.withValues(alpha: AppAlpha.a30)),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
@@ -845,15 +841,15 @@ class _StockStoreScreenState extends State<StockStoreScreen> {
     final isSelected = _isGridView == isGrid;
     return InkWell(
       onTap: () => setState(() => _isGridView = isGrid),
-      borderRadius: BorderRadius.circular(8),
+      borderRadius: BorderRadius.circular(AppRadius.r8),
       child: Container(
-        margin: const EdgeInsets.all(4),
-        padding: const EdgeInsets.all(6),
+        margin: const EdgeInsets.all(AppSpacing.s4),
+        padding: const EdgeInsets.all(AppSpacing.s6),
         decoration: BoxDecoration(
-          color: isSelected ? primaryDeepTealGreen : Colors.transparent,
-          borderRadius: BorderRadius.circular(8),
+          color: isSelected ? context.colors.primary : Colors.transparent,
+          borderRadius: BorderRadius.circular(AppRadius.r8),
         ),
-        child: Icon(icon, size: 18, color: isSelected ? Colors.white : Colors.grey[600]),
+        child: Icon(icon, size: AppIconSize.i18, color: isSelected ? context.colors.onPrimary : context.colors.textMuted),
       ),
     );
   }
@@ -873,13 +869,13 @@ class _StockStoreScreenState extends State<StockStoreScreen> {
       children: [
         Text(
           'Showing $start to $end of ${result.totalCount} products',
-          style: TextStyle(fontSize: 12.5, color: Colors.grey[600]),
+          style: TextStyle(fontSize: AppFontSize.f12_5, color: context.colors.textMuted),
         ),
         Row(
           mainAxisSize: MainAxisSize.min,
           children: [
             _pageButton(
-              child: const Icon(Icons.chevron_left, size: 18),
+              child: const Icon(Icons.chevron_left, size: AppIconSize.i18),
               onTap: result.currentPage > 1
                   ? () => setState(() => _query = _query.copyWith(page: result.currentPage - 1))
                   : null,
@@ -891,7 +887,7 @@ class _StockStoreScreenState extends State<StockStoreScreen> {
                 onTap: () => setState(() => _query = _query.copyWith(page: i)),
               ),
             _pageButton(
-              child: const Icon(Icons.chevron_right, size: 18),
+              child: const Icon(Icons.chevron_right, size: AppIconSize.i18),
               onTap: result.currentPage < result.totalPages
                   ? () => setState(() => _query = _query.copyWith(page: result.currentPage + 1))
                   : null,
@@ -904,29 +900,32 @@ class _StockStoreScreenState extends State<StockStoreScreen> {
 
   Widget _pageButton({required Widget child, VoidCallback? onTap, bool isSelected = false}) {
     return Padding(
-      padding: const EdgeInsets.only(left: 6),
+      padding: const EdgeInsets.only(left: AppSpacing.s6),
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(8),
+        borderRadius: BorderRadius.circular(AppRadius.r8),
         child: Container(
           width: 34,
           height: 34,
           alignment: Alignment.center,
           decoration: BoxDecoration(
-            color: isSelected ? primaryDeepTealGreen : offWhite,
-            borderRadius: BorderRadius.circular(8),
-            border: Border.all(color: isSelected ? primaryDeepTealGreen : Colors.grey.withValues(alpha: 0.3)),
+            color: isSelected ? context.colors.primary : context.colors.background,
+            borderRadius: BorderRadius.circular(AppRadius.r8),
+            border: Border.all(color: isSelected ? context.colors.primary : context.colors.textHint.withValues(alpha: AppAlpha.a30)),
           ),
           child: DefaultTextStyle(
             style: TextStyle(
               color: onTap == null
-                  ? Colors.grey.shade400
-                  : (isSelected ? Colors.white : Colors.black87),
-              fontSize: 13,
-              fontWeight: FontWeight.w600,
+                  ? context.colors.textDisabled
+                  : (isSelected ? context.colors.onPrimary : context.colors.textPrimary),
+              fontSize: AppFontSize.f13,
+              fontWeight: AppFontWeight.semibold,
             ),
             child: IconTheme(
-              data: IconThemeData(color: onTap == null ? Colors.grey.shade400 : (isSelected ? Colors.white : Colors.black87)),
+              data: IconThemeData(
+                  color: onTap == null
+                      ? context.colors.textDisabled
+                      : (isSelected ? context.colors.onPrimary : context.colors.textPrimary)),
               child: child,
             ),
           ),
@@ -939,11 +938,12 @@ class _StockStoreScreenState extends State<StockStoreScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(label, style: TextStyle(fontSize: 11, color: Colors.grey[600])),
-        const SizedBox(height: 2),
+        Text(label, style: TextStyle(fontSize: AppFontSize.f11, color: context.colors.textMuted)),
+        const SizedBox(height: AppSpacing.s2),
         Text(
           value,
-          style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: valueColor ?? Colors.black87),
+          style: TextStyle(
+              fontSize: AppFontSize.f14, fontWeight: AppFontWeight.bold, color: valueColor ?? context.colors.textPrimary),
         ),
       ],
     );
@@ -955,12 +955,13 @@ class _StockStoreScreenState extends State<StockStoreScreen> {
     final isAdmin = Provider.of<UserRoleProvider>(context).isAdmin;
 
     return Container(
-      padding: const EdgeInsets.all(14),
+      padding: const EdgeInsets.all(AppSpacing.s14),
       decoration: BoxDecoration(
-        color: offWhite,
-        borderRadius: BorderRadius.circular(14),
+        color: context.colors.background,
+        borderRadius: BorderRadius.circular(AppRadius.r14),
         boxShadow: [
-          BoxShadow(color: Colors.black.withValues(alpha: 0.06), blurRadius: 8, offset: const Offset(0, 2)),
+          BoxShadow(
+              color: context.colors.shadow.withValues(alpha: AppAlpha.a05), blurRadius: 8, offset: const Offset(0, 2)),
         ],
       ),
       child: Column(
@@ -981,75 +982,77 @@ class _StockStoreScreenState extends State<StockStoreScreen> {
                   imageUrl: p.imageUrl,
                   width: 140,
                   height: 175,
-                  borderRadius: BorderRadius.circular(10),
-                  backgroundColor: primaryDeepTealGreen.withValues(alpha: 0.08),
-                  iconColor: primaryDeepTealGreen,
+                  borderRadius: BorderRadius.circular(AppRadius.r10),
+                  backgroundColor: context.colors.primary.withValues(alpha: AppAlpha.a10),
+                  iconColor: context.colors.primary,
                 ),
               ),
-              const SizedBox(width: 12),
+              const SizedBox(width: AppSpacing.s12),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
                       p.name,
-                      style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15.5),
+                      style: const TextStyle(fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f16),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                     ),
                     Text(
                       '${p.category} \u2022 ${p.type}',
-                      style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+                      style: TextStyle(fontSize: AppFontSize.f12, color: context.colors.textMuted),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                     ),
-                    const SizedBox(height: 6),
+                    const SizedBox(height: AppSpacing.s6),
                     Wrap(
-                      spacing: 6,
-                      runSpacing: 4,
+                      spacing: AppSpacing.s6,
+                      runSpacing: AppSpacing.s4,
                       children: [
                         Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                          padding: const EdgeInsets.symmetric(horizontal: AppSpacing.s8, vertical: AppSpacing.s3),
                           decoration: BoxDecoration(
-                            color: statusColor.withValues(alpha: 0.1),
-                            borderRadius: BorderRadius.circular(10),
-                            border: Border.all(color: statusColor.withValues(alpha: 0.4)),
+                            color: statusColor.withValues(alpha: AppAlpha.a10),
+                            borderRadius: BorderRadius.circular(AppRadius.r10),
+                            border: Border.all(color: statusColor.withValues(alpha: AppAlpha.a40)),
                           ),
                           child: Row(
                             mainAxisSize: MainAxisSize.min,
                             children: [
-                              Icon(status['icon'] as IconData, size: 12, color: statusColor),
-                              const SizedBox(width: 4),
+                              Icon(status['icon'] as IconData, size: AppIconSize.i12, color: statusColor),
+                              const SizedBox(width: AppSpacing.s4),
                               Text(
                                 status['text'] as String,
-                                style: TextStyle(color: statusColor, fontSize: 11, fontWeight: FontWeight.w600),
+                                style: TextStyle(
+                                    color: statusColor, fontSize: AppFontSize.f11, fontWeight: AppFontWeight.semibold),
                               ),
                             ],
                           ),
                         ),
                         if (p.hasRestockShelfAlert)
                           Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                            padding: const EdgeInsets.symmetric(horizontal: AppSpacing.s8, vertical: AppSpacing.s3),
                             decoration: BoxDecoration(
-                              color: Colors.blue.withValues(alpha: 0.1),
-                              borderRadius: BorderRadius.circular(10),
-                              border: Border.all(color: Colors.blue.withValues(alpha: 0.4)),
+                              color: context.colors.info.withValues(alpha: AppAlpha.a10),
+                              borderRadius: BorderRadius.circular(AppRadius.r10),
+                              border: Border.all(color: context.colors.info.withValues(alpha: AppAlpha.a40)),
                             ),
                             child: Row(
                               mainAxisSize: MainAxisSize.min,
                               children: [
-                                Icon(Icons.move_up, size: 12, color: Colors.blue[700]),
-                                const SizedBox(width: 4),
+                                Icon(Icons.move_up, size: AppIconSize.i12, color: context.colors.infoStrong),
+                                const SizedBox(width: AppSpacing.s4),
                                 Text(
                                   'Restock Shelf',
-                                  style: TextStyle(color: Colors.blue[700], fontSize: 11, fontWeight: FontWeight.w600),
+                                  style: TextStyle(
+                                      color: context.colors.infoStrong, fontSize: AppFontSize.f11, fontWeight: AppFontWeight.semibold),
                                 ),
                               ],
                             ),
                           ),
                       ],
                     ),
-                    const SizedBox(height: 10),
+                    const SizedBox(height: AppSpacing.s10),
                     // Stock / Price - Stock (not Sellable) is this
                     // screen's own primary concern, since this is
                     // the warehouse side of the catalog.
@@ -1061,10 +1064,10 @@ class _StockStoreScreenState extends State<StockStoreScreen> {
                         Expanded(child: _labelValue('Price', Money.format(p.sellPrice))),
                       ],
                     ),
-                    const SizedBox(height: 8),
+                    const SizedBox(height: AppSpacing.s8),
                     Text(
                       'Sellable: ${p.sellableQty} ${p.unit} \u2022 Batch: ${p.batchNo ?? "-"}',
-                      style: TextStyle(fontSize: 12.5, color: Colors.grey[700]),
+                      style: TextStyle(fontSize: AppFontSize.f12_5, color: context.colors.textSoft),
                     ),
                     Row(
                       crossAxisAlignment: CrossAxisAlignment.end,
@@ -1075,12 +1078,12 @@ class _StockStoreScreenState extends State<StockStoreScreen> {
                             children: [
                               Text(
                                 'Buy: ${Money.format(p.buyPrice)}',
-                                style: TextStyle(fontSize: 12.5, color: Colors.grey[700]),
+                                style: TextStyle(fontSize: AppFontSize.f12_5, color: context.colors.textSoft),
                               ),
                               if (p.expiry != null)
                                 Text(
                                   'Expiry: ${AppDateFormat.date.format(p.expiry!)}',
-                                  style: TextStyle(fontSize: 12.5, color: Colors.grey[700]),
+                                  style: TextStyle(fontSize: AppFontSize.f12_5, color: context.colors.textSoft),
                                 ),
                             ],
                           ),
@@ -1095,7 +1098,7 @@ class _StockStoreScreenState extends State<StockStoreScreen> {
                         // their own row without a third, less-used
                         // control crowding it.
                         PopupMenuButton<String>(
-                          icon: Icon(Icons.more_vert, color: primaryDeepTealGreen),
+                          icon: Icon(Icons.more_vert, color: context.colors.primary),
                           tooltip: 'More actions',
                           onSelected: (value) {
                             if (value == 'add_batch') {
@@ -1112,7 +1115,7 @@ class _StockStoreScreenState extends State<StockStoreScreen> {
                             if (isAdmin)
                               PopupMenuItem(
                                 value: 'delete',
-                                child: Text('Delete', style: TextStyle(color: Colors.red[400])),
+                                child: Text('Delete', style: TextStyle(color: context.colors.dangerSoft)),
                               ),
                           ],
                         ),
@@ -1123,7 +1126,7 @@ class _StockStoreScreenState extends State<StockStoreScreen> {
               ),
             ],
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: AppSpacing.s12),
           Row(
             children: [
               if (isAdmin)
@@ -1132,27 +1135,27 @@ class _StockStoreScreenState extends State<StockStoreScreen> {
                     onPressed: () {
                       showAddEditProductScreen(context, product: p);
                     },
-                    icon: Icon(Icons.edit_outlined, size: 16, color: primaryDeepTealGreen),
-                    label: Text('Edit', style: TextStyle(color: primaryDeepTealGreen)),
+                    icon: Icon(Icons.edit_outlined, size: AppIconSize.i16, color: context.colors.primary),
+                    label: Text('Edit', style: TextStyle(color: context.colors.primary)),
                     style: OutlinedButton.styleFrom(
-                      side: BorderSide(color: primaryDeepTealGreen.withValues(alpha: 0.4)),
-                      padding: const EdgeInsets.symmetric(vertical: 10),
+                      side: BorderSide(color: context.colors.primary.withValues(alpha: AppAlpha.a40)),
+                      padding: const EdgeInsets.symmetric(vertical: AppSpacing.s10),
                     ),
                   ),
                 ),
               if (isAdmin && p.stockQty > 0) ...[
-                const SizedBox(width: 8),
+                const SizedBox(width: AppSpacing.s8),
                 Expanded(
                   child: ElevatedButton.icon(
-                    icon: const Icon(Icons.upload, size: 16),
+                    icon: const Icon(Icons.upload, size: AppIconSize.i16),
                     label: const Text('Release'),
                     style: ButtonStyle(
-                      padding: WidgetStateProperty.all(const EdgeInsets.symmetric(vertical: 10)),
+                      padding: WidgetStateProperty.all(const EdgeInsets.symmetric(vertical: AppSpacing.s10)),
                       backgroundColor: WidgetStateProperty.resolveWith<Color>((states) {
-                        if (states.contains(WidgetState.hovered)) return warmAmber;
-                        return primaryDeepTealGreen;
+                        if (states.contains(WidgetState.hovered)) return context.colors.accent;
+                        return context.colors.primary;
                       }),
-                      foregroundColor: WidgetStateProperty.all(offWhite),
+                      foregroundColor: WidgetStateProperty.all(context.colors.background),
                     ),
                     onPressed: () => _releaseToShop(p),
                   ),
