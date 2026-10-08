@@ -72,7 +72,6 @@
       "lib/screens/settings/ui_settings_dialog.dart": 9,
       "lib/screens/store/release_to_shop_flow.dart": 10,
       "lib/screens/store/stockstore_screen.dart": 57,
-      "lib/screens/subscription/subscription_history_screen.dart": 39,
       "lib/screens/subscription/subscription_screen.dart": 1,
       "lib/screens/transactions/add_transaction_screen.dart": 26,
       "lib/screens/transactions/transactions_screen.dart": 41
@@ -139,7 +138,6 @@
       "lib/screens/settings/ui_settings_dialog.dart": 5,
       "lib/screens/store/release_to_shop_flow.dart": 2,
       "lib/screens/store/stockstore_screen.dart": 23,
-      "lib/screens/subscription/subscription_history_screen.dart": 32,
       "lib/screens/transactions/add_transaction_screen.dart": 10,
       "lib/screens/transactions/transactions_screen.dart": 33,
       "lib/services/daily_report_pdf_service.dart": 25,
@@ -202,7 +200,6 @@
       "lib/screens/settings/ui_settings_dialog.dart": 6,
       "lib/screens/store/release_to_shop_flow.dart": 7,
       "lib/screens/store/stockstore_screen.dart": 17,
-      "lib/screens/subscription/subscription_history_screen.dart": 7,
       "lib/screens/transactions/add_transaction_screen.dart": 11,
       "lib/screens/transactions/transactions_screen.dart": 8,
       "lib/services/daily_report_pdf_service.dart": 1
@@ -269,7 +266,6 @@
       "lib/screens/settings/ui_settings_dialog.dart": 14,
       "lib/screens/store/release_to_shop_flow.dart": 5,
       "lib/screens/store/stockstore_screen.dart": 41,
-      "lib/screens/subscription/subscription_history_screen.dart": 34,
       "lib/screens/transactions/add_transaction_screen.dart": 34,
       "lib/screens/transactions/transactions_screen.dart": 42,
       "lib/services/daily_report_pdf_service.dart": 52,
@@ -348,7 +344,6 @@
       "lib/screens/settings/export_data_screen.dart": 1,
       "lib/screens/settings/settings_screen.dart": 1,
       "lib/screens/store/stockstore_screen.dart": 2,
-      "lib/screens/subscription/subscription_history_screen.dart": 3,
       "lib/screens/transactions/add_transaction_screen.dart": 2
     },
     "R8": {
