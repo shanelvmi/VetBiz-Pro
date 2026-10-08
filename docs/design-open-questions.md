@@ -50,6 +50,8 @@ Kept exactly as they are; the guard still counts the raw ones.
 - **Modal barrier** `Colors.black54`, `lib/screens/subscription/subscription_screen.dart` (`showSubscriptionScreen`): the spec maps black54 to `textSecondary`, but this is a scrim. `scrim` at 0.54 has no AppAlpha step. Snap to `scrim` + `a50`, or add `a55`?
 - **Offer banner gradient**, `subscription_screen.dart`: `accent` fading to 0.75. No AppAlpha step and no snap rule. Snap to `a70`, or add `a75`?
 - **Offer icon 26 px**, `subscription_screen.dart`: no `AppIconSize` step and no snap rule.
+- **Icon sizes 11 and 13**, `lib/screens/payments/payments_screen.dart` (the trend-pill arrow, 11, like the summary card's, which was decided to snap to `i12`; the "Payment Received" check, 13). No step and no snap rule. Snap both to `i12`?
+- **Duplicate date-range dialog**, `payments_screen.dart` `_DateRangeDialog`: a line-for-line private copy of `lib/widgets/date_range_dialog.dart` (same parameters, same output), now on the same tokens. Replace it with the shared widget (about 115 lines removed, no visible change)?
 
 ## Decided
 

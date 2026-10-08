@@ -17,7 +17,6 @@ import '../sales/receipt_preview_screen.dart';
 import '../services/service_receipt_preview_screen.dart';
 import '../../theme/app_dimens.dart';
 import '../../theme/app_motion.dart';
-import '../../theme/app_palette.dart';
 import '../../theme/app_text.dart';
 import '../../theme/theme_context.dart';
 import '../../ui/feedback/app_feedback.dart';
@@ -55,10 +54,6 @@ class PaymentsScreen extends StatefulWidget {
 }
 
 class _PaymentsScreenState extends State<PaymentsScreen> {
-  final Color primaryDeepGreen = AppPalette.primary;
-  final Color warmAmber = AppPalette.accent;
-  final Color offWhite = AppPalette.background;
-
 
   String _searchQuery = '';
   late final TextEditingController _searchController;
@@ -804,8 +799,8 @@ class _PaymentsScreenState extends State<PaymentsScreen> {
   Widget _buildToolbarRow(double total) {
     final hasActiveFilters = _selectedTypeFilter != 'All' || _selectedMethodFilter != null;
     final border = OutlineInputBorder(
-      borderRadius: BorderRadius.circular(10),
-      borderSide: BorderSide(color: Colors.grey.withValues(alpha: 0.3)),
+      borderRadius: BorderRadius.circular(AppRadius.r10),
+      borderSide: BorderSide(color: context.colors.textHint.withValues(alpha: AppAlpha.a30)),
     );
     return Row(
       children: [
@@ -815,18 +810,18 @@ class _PaymentsScreenState extends State<PaymentsScreen> {
             controller: _searchController,
             decoration: InputDecoration(
               hintText: 'Search payer, reference, invoice...',
-              hintStyle: const TextStyle(fontSize: 13),
-              prefixIcon: const Icon(Icons.search, size: 20),
+              hintStyle: const TextStyle(fontSize: AppFontSize.f13),
+              prefixIcon: const Icon(Icons.search, size: AppIconSize.i20),
               filled: true,
-              fillColor: Colors.white,
+              fillColor: context.colors.surface,
               isDense: true,
-              contentPadding: const EdgeInsets.symmetric(vertical: 12, horizontal: 12),
+              contentPadding: const EdgeInsets.symmetric(vertical: AppSpacing.s12, horizontal: AppSpacing.s12),
               border: border,
               enabledBorder: border,
               suffixIcon: _searchController.text.isEmpty
                   ? null
                   : IconButton(
-                      icon: const Icon(Icons.clear, size: 18),
+                      icon: const Icon(Icons.clear, size: AppIconSize.i18),
                       onPressed: () {
                         _searchDebounce?.cancel();
                         setState(() => _searchQuery = '');
@@ -843,7 +838,7 @@ class _PaymentsScreenState extends State<PaymentsScreen> {
           ),
         ),
         if (widget.initialClientId == null) ...[
-          const SizedBox(width: 10),
+          const SizedBox(width: AppSpacing.s10),
           _toolbarDropdown<String>(
             value: _selectedTypeFilter,
             items: _typeTabs.map((t) => t.$1).toList(),
@@ -853,21 +848,21 @@ class _PaymentsScreenState extends State<PaymentsScreen> {
               _openLedgerSession();
             },
           ),
-          const SizedBox(width: 10),
+          const SizedBox(width: AppSpacing.s10),
           Container(
-            padding: const EdgeInsets.symmetric(horizontal: 10),
+            padding: const EdgeInsets.symmetric(horizontal: AppSpacing.s10),
             height: 44,
             decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(10),
-              border: Border.all(color: Colors.grey.withValues(alpha: 0.3)),
+              color: context.colors.surface,
+              borderRadius: BorderRadius.circular(AppRadius.r10),
+              border: Border.all(color: context.colors.textHint.withValues(alpha: AppAlpha.a30)),
             ),
             child: DropdownButtonHideUnderline(
               child: DropdownButton<String?>(
                 value: _selectedMethodFilter,
-                hint: const Text('All Methods', style: TextStyle(fontSize: 13)),
-                icon: Icon(Icons.arrow_drop_down, size: 18, color: primaryDeepGreen),
-                style: const TextStyle(color: Colors.black87, fontSize: 13),
+                hint: const Text('All Methods', style: TextStyle(fontSize: AppFontSize.f13)),
+                icon: Icon(Icons.arrow_drop_down, size: AppIconSize.i18, color: context.colors.primary),
+                style: TextStyle(color: context.colors.textPrimary, fontSize: AppFontSize.f13),
                 items: [
                   const DropdownMenuItem<String?>(value: null, child: Text('Method: All')),
                   ...kPaymentMethods.map((m) => DropdownMenuItem<String?>(value: m, child: Text('Method: $m'))),
@@ -880,7 +875,7 @@ class _PaymentsScreenState extends State<PaymentsScreen> {
             ),
           ),
           if (hasActiveFilters) ...[
-            const SizedBox(width: 8),
+            const SizedBox(width: AppSpacing.s8),
             TextButton(
               onPressed: () {
                 setState(() {
@@ -889,14 +884,14 @@ class _PaymentsScreenState extends State<PaymentsScreen> {
                 });
                 _openLedgerSession();
               },
-              child: const Text('Clear', style: TextStyle(fontSize: 13)),
+              child: const Text('Clear', style: TextStyle(fontSize: AppFontSize.f13)),
             ),
           ],
         ],
-        const SizedBox(width: 16),
+        const SizedBox(width: AppSpacing.s16),
         Text(
           'Total: ${Money.symbolPlain(total)}',
-          style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: primaryDeepGreen),
+          style: TextStyle(fontSize: AppFontSize.f13, fontWeight: AppFontWeight.bold, color: context.colors.primary),
         ),
       ],
     );
@@ -909,18 +904,18 @@ class _PaymentsScreenState extends State<PaymentsScreen> {
     required ValueChanged<T> onChanged,
   }) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10),
+      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.s10),
       height: 44,
       decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: Colors.grey.withValues(alpha: 0.3)),
+        color: context.colors.surface,
+        borderRadius: BorderRadius.circular(AppRadius.r10),
+        border: Border.all(color: context.colors.textHint.withValues(alpha: AppAlpha.a30)),
       ),
       child: DropdownButtonHideUnderline(
         child: DropdownButton<T>(
           value: value,
-          icon: Icon(Icons.arrow_drop_down, size: 18, color: primaryDeepGreen),
-          style: const TextStyle(color: Colors.black87, fontSize: 13),
+          icon: Icon(Icons.arrow_drop_down, size: AppIconSize.i18, color: context.colors.primary),
+          style: TextStyle(color: context.colors.textPrimary, fontSize: AppFontSize.f13),
           items: items.map((v) => DropdownMenuItem(value: v, child: Text('$label: $v'))).toList(),
           onChanged: (val) {
             if (val != null) onChanged(val);
@@ -932,9 +927,9 @@ class _PaymentsScreenState extends State<PaymentsScreen> {
 
   PreferredSizeWidget _buildAppBar() {
     return AppBar(
-      backgroundColor: Colors.white,
-      foregroundColor: Colors.black87,
-      elevation: 1,
+      backgroundColor: context.colors.surface,
+      foregroundColor: context.colors.textPrimary,
+      elevation: AppElevation.e1,
       centerTitle: true,
       toolbarHeight: 72,
       title: Column(
@@ -942,21 +937,22 @@ class _PaymentsScreenState extends State<PaymentsScreen> {
         children: [
           Text(
             widget.initialClientName != null ? 'Payments - ${widget.initialClientName}' : 'Payments',
-            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 19, color: Colors.black87),
+            style: TextStyle(
+                fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f19, color: context.colors.textPrimary),
           ),
-          const Text('All payments received across your business',
-              style: TextStyle(fontSize: 12, color: Colors.black54)),
+          Text('All payments received across your business',
+              style: TextStyle(fontSize: AppFontSize.f12, color: context.colors.textSecondary)),
         ],
       ),
       actions: [
         Padding(
-          padding: const EdgeInsets.only(right: 12),
+          padding: const EdgeInsets.only(right: AppSpacing.s12),
           child: OutlinedButton.icon(
             onPressed: _showDateRangeDialog,
-            icon: const Icon(Icons.date_range_outlined, size: 16),
+            icon: const Icon(Icons.date_range_outlined, size: AppIconSize.i16),
             label: Text(
               '${AppDateFormat.date.format(_rangeStart)} - ${AppDateFormat.date.format(_rangeEnd)}',
-              style: const TextStyle(fontSize: 12.5),
+              style: const TextStyle(fontSize: AppFontSize.f12_5),
             ),
           ),
         ),
@@ -980,24 +976,24 @@ class _PaymentsScreenState extends State<PaymentsScreen> {
     }
 
     return Padding(
-      padding: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.only(bottom: AppSpacing.s12),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Container(
             width: double.infinity,
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            color: primaryDeepGreen.withValues(alpha: 0.06),
+            padding: const EdgeInsets.symmetric(horizontal: AppSpacing.s16, vertical: AppSpacing.s8),
+            color: context.colors.primary.withValues(alpha: AppAlpha.a05),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text(
                   '$label - ${AppDateFormat.date.format(date)}',
-                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12.5, color: primaryDeepGreen),
+                  style: TextStyle(fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f12_5, color: context.colors.primary),
                 ),
                 Text(
                   Money.symbolPlain(dayTotal),
-                  style: TextStyle(fontSize: 12.5, fontWeight: FontWeight.bold, color: primaryDeepGreen),
+                  style: TextStyle(fontSize: AppFontSize.f12_5, fontWeight: AppFontWeight.bold, color: context.colors.primary),
                 ),
               ],
             ),
@@ -1014,10 +1010,10 @@ class _PaymentsScreenState extends State<PaymentsScreen> {
     return InkWell(
       onTap: () => setState(() => _selectedEntry = e),
       child: Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.s16, vertical: AppSpacing.s12),
       decoration: BoxDecoration(
-        color: isSelected ? primaryDeepGreen.withValues(alpha: 0.06) : null,
-        border: Border(bottom: BorderSide(color: Colors.grey.withValues(alpha: 0.1))),
+        color: isSelected ? context.colors.primary.withValues(alpha: AppAlpha.a05) : null,
+        border: Border(bottom: BorderSide(color: context.colors.textHint.withValues(alpha: AppAlpha.a10))),
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -1029,24 +1025,26 @@ class _PaymentsScreenState extends State<PaymentsScreen> {
               children: [
                 CircleAvatar(
                   radius: 14,
-                  backgroundColor: primaryDeepGreen.withValues(alpha: 0.1),
-                  child: Icon(_iconFor(e.type), size: 14, color: primaryDeepGreen),
+                  backgroundColor: context.colors.primary.withValues(alpha: AppAlpha.a10),
+                  child: Icon(_iconFor(e.type), size: AppIconSize.i14, color: context.colors.primary),
                 ),
-                const SizedBox(width: 8),
-                Text(AppDateFormat.time12.format(e.timestamp), style: const TextStyle(fontSize: 13)),
+                const SizedBox(width: AppSpacing.s8),
+                Text(AppDateFormat.time12.format(e.timestamp), style: const TextStyle(fontSize: AppFontSize.f13)),
               ],
             ),
           ),
           Expanded(
             flex: 2,
-            child: Text(e.clientName ?? '-', style: const TextStyle(fontSize: 13), maxLines: 1, overflow: TextOverflow.ellipsis),
+            child: Text(e.clientName ?? '-', style: const TextStyle(fontSize: AppFontSize.f13), maxLines: 1, overflow: TextOverflow.ellipsis),
           ),
           Expanded(
             flex: 2,
             child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
-              decoration: BoxDecoration(color: primaryDeepGreen.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(8)),
-              child: Text(e.description, style: TextStyle(fontSize: 10.5, color: primaryDeepGreen, fontWeight: FontWeight.w600)),
+              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.s6, vertical: AppSpacing.s2),
+              decoration: BoxDecoration(
+                  color: context.colors.primary.withValues(alpha: AppAlpha.a10), borderRadius: BorderRadius.circular(AppRadius.r8)),
+              child: Text(e.description, style: TextStyle(
+                  fontSize: AppFontSize.f10_5, color: context.colors.primary, fontWeight: AppFontWeight.semibold)),
             ),
           ),
           Expanded(
@@ -1055,24 +1053,24 @@ class _PaymentsScreenState extends State<PaymentsScreen> {
               future: _getSourceDetailsFuture(e),
               builder: (context, snapshot) {
                 final ref = snapshot.data?.$1;
-                return Text(ref ?? '-', style: const TextStyle(fontSize: 12.5, color: Colors.black54));
+                return Text(ref ?? '-', style: TextStyle(fontSize: AppFontSize.f12_5, color: context.colors.textSecondary));
               },
             ),
           ),
           Expanded(
             flex: 2,
-            child: Text(e.paymentMethod ?? '-', style: const TextStyle(fontSize: 13)),
+            child: Text(e.paymentMethod ?? '-', style: const TextStyle(fontSize: AppFontSize.f13)),
           ),
           Expanded(
             flex: 2,
             child: Text(
               Money.symbolPlain(e.amount),
-              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: primaryDeepGreen),
+              style: TextStyle(fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f13, color: context.colors.primary),
             ),
           ),
           Expanded(
             flex: 2,
-            child: Text(recordedBy ?? '-', style: const TextStyle(fontSize: 13), maxLines: 1, overflow: TextOverflow.ellipsis),
+            child: Text(recordedBy ?? '-', style: const TextStyle(fontSize: AppFontSize.f13), maxLines: 1, overflow: TextOverflow.ellipsis),
           ),
         ],
       ),
@@ -1118,8 +1116,8 @@ class _DateRangeDialogState extends State<_DateRangeDialog> {
       content: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          const Text('Start Date:', style: TextStyle(fontWeight: FontWeight.bold)),
-          const SizedBox(height: 8),
+          const Text('Start Date:', style: TextStyle(fontWeight: AppFontWeight.bold)),
+          const SizedBox(height: AppSpacing.s8),
           InkWell(
             onTap: () async {
               final picked = await showDatePicker(
@@ -1131,23 +1129,23 @@ class _DateRangeDialogState extends State<_DateRangeDialog> {
               if (picked != null) setState(() => _start = picked);
             },
             child: Container(
-              padding: const EdgeInsets.all(12),
+              padding: const EdgeInsets.all(AppSpacing.s12),
               decoration: BoxDecoration(
-                border: Border.all(color: Colors.grey[400]!),
-                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: context.colors.borderStrong),
+                borderRadius: BorderRadius.circular(AppRadius.r8),
               ),
               child: Row(
                 children: [
                   Icon(Icons.calendar_today, color: widget.primaryDeepGreen),
-                  const SizedBox(width: 12),
+                  const SizedBox(width: AppSpacing.s12),
                   Text(AppDateFormat.date.format(_start)),
                 ],
               ),
             ),
           ),
-          const SizedBox(height: 12),
-          const Text('End Date:', style: TextStyle(fontWeight: FontWeight.bold)),
-          const SizedBox(height: 8),
+          const SizedBox(height: AppSpacing.s12),
+          const Text('End Date:', style: TextStyle(fontWeight: AppFontWeight.bold)),
+          const SizedBox(height: AppSpacing.s8),
           InkWell(
             onTap: () async {
               final picked = await showDatePicker(
@@ -1159,15 +1157,15 @@ class _DateRangeDialogState extends State<_DateRangeDialog> {
               if (picked != null) setState(() => _end = picked);
             },
             child: Container(
-              padding: const EdgeInsets.all(12),
+              padding: const EdgeInsets.all(AppSpacing.s12),
               decoration: BoxDecoration(
-                border: Border.all(color: Colors.grey[400]!),
-                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: context.colors.borderStrong),
+                borderRadius: BorderRadius.circular(AppRadius.r8),
               ),
               child: Row(
                 children: [
                   Icon(Icons.calendar_today, color: widget.primaryDeepGreen),
-                  const SizedBox(width: 12),
+                  const SizedBox(width: AppSpacing.s12),
                   Text(AppDateFormat.date.format(_end)),
                 ],
               ),
