@@ -54,10 +54,13 @@ class FriendlyError {
     return fallback;
   }
 
+  // firebase_storage reports its own codes on a plain FirebaseException:
+  // 'unauthorized' is its permission-denied, and 'retry-limit-exceeded'
+  // means the upload or download gave up after its retry window.
   static String _forCode(String code) => switch (code) {
-        'permission-denied' => noPermission,
+        'permission-denied' || 'unauthorized' => noPermission,
         'unavailable' || 'network-request-failed' => noConnection,
-        'deadline-exceeded' => tooSlow,
+        'deadline-exceeded' || 'retry-limit-exceeded' => tooSlow,
         'not-found' => notFound,
         'already-exists' => alreadyExists,
         'resource-exhausted' => tooManyRequests,

@@ -44,6 +44,18 @@ void main() {
         'Too many requests. Wait a moment and try again.');
   });
 
+  test('storage codes: unauthorized and retry-limit-exceeded', () {
+    FirebaseException storage(String code) => FirebaseException(
+          plugin: 'firebase_storage',
+          code: code,
+          message: '[firebase_storage/$code] raw storage text',
+        );
+    expect(FriendlyError.messageFor(storage('unauthorized')), "You don't have permission to do that.");
+    expect(FriendlyError.messageFor(storage('retry-limit-exceeded')), 'That took too long. Try again.');
+    expect(FriendlyError.detailsFor(storage('unauthorized')),
+        'unauthorized: [firebase_storage/unauthorized] raw storage text');
+  });
+
   test("our server's own message is shown unchanged", () {
     const serverText = "You've reached the facility limit for your account (6).";
     expect(FriendlyError.messageFor(_FunctionsError('failed-precondition', serverText)), serverText);
