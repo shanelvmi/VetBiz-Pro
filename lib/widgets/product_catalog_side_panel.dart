@@ -3,6 +3,10 @@ import 'package:provider/provider.dart';
 
 import '../providers/facility_provider.dart';
 import '../constants/product_categories.dart';
+import '../theme/app_dimens.dart';
+import '../theme/app_motion.dart';
+import '../theme/app_text.dart';
+import '../theme/theme_context.dart';
 
 /// The light filter panel shared by Products and Stock Store.
 /// Deliberately NOT a copy of the Dashboard's own sidebar: that one is
@@ -77,9 +81,9 @@ class _ProductCatalogSidePanelState extends State<ProductCatalogSidePanel> {
 
     return Container(
       width: 260,
-      color: const Color(0xFFFDFDF9),
+      color: context.colors.background,
       child: SingleChildScrollView(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
+        padding: const EdgeInsets.symmetric(horizontal: AppSpacing.s16, vertical: AppSpacing.s20),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -93,24 +97,24 @@ class _ProductCatalogSidePanelState extends State<ProductCatalogSidePanel> {
                 Container(
                   width: 36,
                   height: 36,
-                  padding: const EdgeInsets.all(4),
+                  padding: const EdgeInsets.all(AppSpacing.s4),
                   decoration: BoxDecoration(
-                    color: widget.primaryColor.withValues(alpha: 0.08),
-                    borderRadius: BorderRadius.circular(9),
+                    color: widget.primaryColor.withValues(alpha: AppAlpha.a10),
+                    borderRadius: BorderRadius.circular(AppRadius.r8),
                   ),
                   child: (logoUrl != null && logoUrl.isNotEmpty)
                       ? ClipRRect(
-                          borderRadius: BorderRadius.circular(6),
+                          borderRadius: BorderRadius.circular(AppRadius.r6),
                           child: Image.network(
                             logoUrl,
                             fit: BoxFit.contain,
                             errorBuilder: (context, error, stackTrace) =>
-                                Icon(Icons.storefront, color: widget.primaryColor, size: 18),
+                                Icon(Icons.storefront, color: widget.primaryColor, size: AppIconSize.i18),
                           ),
                         )
-                      : Icon(Icons.storefront, color: widget.primaryColor, size: 18),
+                      : Icon(Icons.storefront, color: widget.primaryColor, size: AppIconSize.i18),
                 ),
-                const SizedBox(width: 10),
+                const SizedBox(width: AppSpacing.s10),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -119,14 +123,14 @@ class _ProductCatalogSidePanelState extends State<ProductCatalogSidePanel> {
                         facilityName,
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
+                        style: const TextStyle(fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f15),
                       ),
                       if (facilityType.isNotEmpty)
                         Text(
                           facilityType,
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
-                          style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+                          style: TextStyle(fontSize: AppFontSize.f12, color: context.colors.textMuted),
                         ),
                     ],
                   ),
@@ -138,10 +142,13 @@ class _ProductCatalogSidePanelState extends State<ProductCatalogSidePanel> {
             // ---- Categories ----
             Text('CATEGORIES',
                 style: TextStyle(
-                    fontSize: 11, fontWeight: FontWeight.bold, color: Colors.grey[600], letterSpacing: 0.5)),
-            const SizedBox(height: 8),
+                    fontSize: AppFontSize.f11,
+                    fontWeight: AppFontWeight.bold,
+                    color: context.colors.textMuted,
+                    letterSpacing: 0.5)),
+            const SizedBox(height: AppSpacing.s8),
             _buildAllProductsRow(),
-            const SizedBox(height: 4),
+            const SizedBox(height: AppSpacing.s4),
             ...kProductCategoryGroups.keys.map((group) => _buildGroupSection(group)),
 
             const Divider(height: 28),
@@ -149,14 +156,18 @@ class _ProductCatalogSidePanelState extends State<ProductCatalogSidePanel> {
             // ---- Stock status ----
             Text('STOCK STATUS',
                 style: TextStyle(
-                    fontSize: 11, fontWeight: FontWeight.bold, color: Colors.grey[600], letterSpacing: 0.5)),
-            const SizedBox(height: 8),
+                    fontSize: AppFontSize.f11,
+                    fontWeight: AppFontWeight.bold,
+                    color: context.colors.textMuted,
+                    letterSpacing: 0.5)),
+            const SizedBox(height: AppSpacing.s8),
             _buildStatusRow('All', 'All Status', null, widget.totalCount),
-            _buildStatusRow('Active', 'In Stock', Colors.green, widget.statusCounts['Active'] ?? 0),
-            _buildStatusRow('Low Stock', 'Low Stock', Colors.orange, widget.statusCounts['Low Stock'] ?? 0),
-            _buildStatusRow('Reorder Soon', 'Reorder Soon', Colors.amber[700], widget.statusCounts['Reorder Soon'] ?? 0),
-            _buildStatusRow('Depleted', 'Depleted', Colors.red, widget.statusCounts['Depleted'] ?? 0),
-            _buildStatusRow('Expired', 'Expired', Colors.red, widget.statusCounts['Expired'] ?? 0),
+            _buildStatusRow('Active', 'In Stock', context.colors.success, widget.statusCounts['Active'] ?? 0),
+            _buildStatusRow('Low Stock', 'Low Stock', context.colors.warning, widget.statusCounts['Low Stock'] ?? 0),
+            _buildStatusRow(
+                'Reorder Soon', 'Reorder Soon', context.colors.warning, widget.statusCounts['Reorder Soon'] ?? 0),
+            _buildStatusRow('Depleted', 'Depleted', context.colors.danger, widget.statusCounts['Depleted'] ?? 0),
+            _buildStatusRow('Expired', 'Expired', context.colors.danger, widget.statusCounts['Expired'] ?? 0),
           ],
         ),
       ),
@@ -207,9 +218,9 @@ class _ProductCatalogSidePanelState extends State<ProductCatalogSidePanel> {
           isSelected: false,
           trailing: AnimatedRotation(
             turns: isExpanded ? 0.5 : 0,
-            duration: const Duration(milliseconds: 220),
+            duration: AppMotion.normal,
             curve: Curves.easeInOut,
-            child: Icon(Icons.expand_more, size: 18, color: Colors.grey[600]),
+            child: Icon(Icons.expand_more, size: AppIconSize.i18, color: context.colors.textMuted),
           ),
           onTap: () => setState(() {
             if (isExpanded) {
@@ -220,12 +231,12 @@ class _ProductCatalogSidePanelState extends State<ProductCatalogSidePanel> {
           }),
         ),
         AnimatedSize(
-          duration: const Duration(milliseconds: 220),
+          duration: AppMotion.normal,
           curve: Curves.easeInOut,
           alignment: Alignment.topCenter,
           child: isExpanded
               ? Padding(
-                  padding: const EdgeInsets.only(left: 20),
+                  padding: const EdgeInsets.only(left: AppSpacing.s20),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: allSubcategories.map((category) {
@@ -277,26 +288,26 @@ class _ProductCatalogSidePanelState extends State<ProductCatalogSidePanel> {
       color: Colors.transparent,
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(8),
+        borderRadius: BorderRadius.circular(AppRadius.r8),
         child: Container(
-          margin: const EdgeInsets.symmetric(vertical: 1),
-          padding: EdgeInsets.symmetric(horizontal: 8, vertical: dense ? 6 : 8),
+          margin: const EdgeInsets.symmetric(vertical: AppSpacing.s2),
+          padding: EdgeInsets.symmetric(horizontal: AppSpacing.s8, vertical: dense ? AppSpacing.s6 : AppSpacing.s8),
           decoration: BoxDecoration(
             color: isSelected ? widget.primaryColor : Colors.transparent,
-            borderRadius: BorderRadius.circular(8),
+            borderRadius: BorderRadius.circular(AppRadius.r8),
           ),
           child: Row(
             children: [
               if (icon != null) ...[
-                Icon(icon, size: 16, color: isSelected ? Colors.white : Colors.grey[700]),
-                const SizedBox(width: 8),
+                Icon(icon, size: AppIconSize.i16, color: isSelected ? context.colors.onPrimary : context.colors.textSoft),
+                const SizedBox(width: AppSpacing.s8),
               ] else if (leadingDot != null) ...[
                 Container(
                   width: 8,
                   height: 8,
                   decoration: BoxDecoration(shape: BoxShape.circle, color: leadingDot),
                 ),
-                const SizedBox(width: 10),
+                const SizedBox(width: AppSpacing.s10),
               ],
               Expanded(
                 child: Text(
@@ -304,20 +315,21 @@ class _ProductCatalogSidePanelState extends State<ProductCatalogSidePanel> {
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: TextStyle(
-                    fontSize: dense ? 12.5 : 13.5,
-                    color: isSelected ? Colors.white : Colors.grey[800],
-                    fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+                    fontSize: dense ? AppFontSize.f12_5 : AppFontSize.f13_5,
+                    color: isSelected ? context.colors.onPrimary : context.colors.textPrimary,
+                    fontWeight: isSelected ? AppFontWeight.semibold : AppFontWeight.regular,
                   ),
                 ),
               ),
               Text(
                 '$count',
                 style: TextStyle(
-                  fontSize: 12,
-                  color: isSelected ? Colors.white.withValues(alpha: 0.85) : Colors.grey[500],
+                  fontSize: AppFontSize.f12,
+                  // 0.85 has no AppAlpha step; kept exact (design-open-questions.md).
+                  color: isSelected ? context.colors.onPrimary.withValues(alpha: 0.85) : context.colors.textHint,
                 ),
               ),
-              if (trailing != null) ...[const SizedBox(width: 2), trailing],
+              if (trailing != null) ...[const SizedBox(width: AppSpacing.s2), trailing],
             ],
           ),
         ),

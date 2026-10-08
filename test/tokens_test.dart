@@ -48,6 +48,9 @@ void main() {
       'warningStrong': (c.warningStrong, Colors.orange[800]!),
       'info': (c.info, Colors.blue),
       'infoStrong': (c.infoStrong, Colors.blue[700]!),
+      // summary_card.dart's trend pill, as it was.
+      'trendUp': (c.trendUp, const Color(0xFF10B981)),
+      'trendDown': (c.trendDown, const Color(0xFFEF4444)),
     };
 
     for (final entry in legacy.entries) {

@@ -1,5 +1,9 @@
 import 'package:flutter/material.dart';
+import '../theme/app_breakpoints.dart';
+import '../theme/app_dimens.dart';
 import '../theme/app_palette.dart';
+import '../theme/app_text.dart';
+import '../theme/theme_context.dart';
 
 /// Two weights of the same branded loading treatment - [full] for a
 /// one-time, meaningful wait (right now, only the very first "we're
@@ -30,12 +34,8 @@ class VetBizLoadingIndicator extends StatefulWidget {
     this.recoveryAction,
   });
 
-  // Shared brand colors, matching what's already used throughout the
-  // app (primaryDeepGreen/warmAmber, as seen in facility_picker_screen
-  // .dart and elsewhere) - kept here too so this widget doesn't depend
-  // on importing a screen file just for its color constants.
-  static const Color primaryColor = AppPalette.primary;
-  static const Color amberColor = AppPalette.accent;
+  // The page colour for a Scaffold placed around this indicator
+  // (main.dart). The indicator itself reads the brand roles from the theme.
   static const Color backgroundColor = AppPalette.background;
 
   @override
@@ -61,6 +61,8 @@ class _VetBizLoadingIndicatorState extends State<VetBizLoadingIndicator> with Ti
 
     _entranceController = AnimationController(
       vsync: this,
+      // 900 ms entrance, played once: not a loop, so not AppMotion.loop.
+      // Kept exact (design-open-questions.md).
       duration: const Duration(milliseconds: 900),
     );
 
@@ -101,12 +103,12 @@ class _VetBizLoadingIndicatorState extends State<VetBizLoadingIndicator> with Ti
   @override
   Widget build(BuildContext context) {
     if (widget.style == VetBizLoadingStyle.compact) {
-      return _buildCompact();
+      return _buildCompact(context);
     }
     return _buildFull(context);
   }
 
-  Widget _buildCompact() {
+  Widget _buildCompact(BuildContext context) {
     return Center(
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -115,14 +117,14 @@ class _VetBizLoadingIndicatorState extends State<VetBizLoadingIndicator> with Ti
             opacity: _logoOpacity,
             child: Image.asset('assets/vetbiz_pro_logo.png', height: 40),
           ),
-          const SizedBox(height: 18),
+          const SizedBox(height: AppSpacing.s18),
           SizedBox(
             width: 26,
             height: 26,
             child: CircularProgressIndicator(
               strokeWidth: 2.6,
               strokeCap: StrokeCap.round,
-              valueColor: AlwaysStoppedAnimation<Color>(VetBizLoadingIndicator.primaryColor),
+              valueColor: AlwaysStoppedAnimation<Color>(context.colors.primary),
             ),
           ),
         ],
@@ -131,6 +133,8 @@ class _VetBizLoadingIndicatorState extends State<VetBizLoadingIndicator> with Ti
   }
 
   Widget _buildFull(BuildContext context) {
+    // Was the brand green at alpha 0x0A (about 0.04); 0.04 snaps to a05.
+    final pawColor = context.colors.primary.withValues(alpha: AppAlpha.a05);
     return Stack(
       children: [
         // Decorative teal/amber curved shapes in the corners - large,
@@ -140,18 +144,18 @@ class _VetBizLoadingIndicatorState extends State<VetBizLoadingIndicator> with Ti
         Positioned(
           top: -80,
           left: -80,
-          child: _decorativeBlob(220, VetBizLoadingIndicator.primaryColor.withValues(alpha: 0.06)),
+          child: _decorativeBlob(220, context.colors.primary.withValues(alpha: AppAlpha.a05)),
         ),
         Positioned(
           bottom: -100,
           right: -100,
-          child: _decorativeBlob(260, VetBizLoadingIndicator.amberColor.withValues(alpha: 0.08)),
+          child: _decorativeBlob(260, context.colors.accent.withValues(alpha: AppAlpha.a10)),
         ),
         // Very subtle scattered paw marks - low opacity background
         // texture, not meant to be individually noticed.
-        const Positioned(top: 60, right: 40, child: Icon(Icons.pets, size: 28, color: Color(0x0A2F5D62))),
-        const Positioned(bottom: 140, left: 30, child: Icon(Icons.pets, size: 22, color: Color(0x0A2F5D62))),
-        const Positioned(top: 220, left: 60, child: Icon(Icons.pets, size: 18, color: Color(0x0A2F5D62))),
+        Positioned(top: 60, right: 40, child: Icon(Icons.pets, size: 28, color: pawColor)),
+        Positioned(bottom: 140, left: 30, child: Icon(Icons.pets, size: AppIconSize.i22, color: pawColor)),
+        Positioned(top: 220, left: 60, child: Icon(Icons.pets, size: AppIconSize.i18, color: pawColor)),
 
         Center(
           child: LayoutBuilder(
@@ -159,13 +163,13 @@ class _VetBizLoadingIndicatorState extends State<VetBizLoadingIndicator> with Ti
               // Reduce illustration size and spacing on smaller
               // screens rather than letting content overflow, instead
               // of just shrinking everything uniformly.
-              final isCompact = constraints.maxWidth < 420;
+              final isCompact = constraints.maxWidth < AppBreakpoints.smallPhone;
               final illustrationHeight = isCompact ? 140.0 : 200.0;
 
               return ConstrainedBox(
-                constraints: const BoxConstraints(maxWidth: 560),
+                constraints: const BoxConstraints(maxWidth: AppSizes.dialogLg),
                 child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 24),
+                  padding: const EdgeInsets.symmetric(horizontal: AppSpacing.s24),
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
@@ -173,7 +177,7 @@ class _VetBizLoadingIndicatorState extends State<VetBizLoadingIndicator> with Ti
                         opacity: _logoOpacity,
                         child: Image.asset('assets/vetbiz_pro_logo.png', height: isCompact ? 80 : 100),
                       ),
-                      SizedBox(height: isCompact ? 24 : 32),
+                      SizedBox(height: isCompact ? AppSpacing.s24 : AppSpacing.s32),
                       FadeTransition(
                         opacity: _illustrationOpacity,
                         child: ScaleTransition(
@@ -192,10 +196,10 @@ class _VetBizLoadingIndicatorState extends State<VetBizLoadingIndicator> with Ti
                         child: CircularProgressIndicator(
                           strokeWidth: 3.5,
                           strokeCap: StrokeCap.round,
-                          valueColor: AlwaysStoppedAnimation<Color>(VetBizLoadingIndicator.primaryColor),
+                          valueColor: AlwaysStoppedAnimation<Color>(context.colors.primary),
                         ),
                       ),
-                      const SizedBox(height: 24),
+                      const SizedBox(height: AppSpacing.s24),
                       FadeTransition(
                         opacity: _textOpacity,
                         child: Column(
@@ -203,13 +207,13 @@ class _VetBizLoadingIndicatorState extends State<VetBizLoadingIndicator> with Ti
                             Text(
                               widget.title ?? 'Loading your account...',
                               textAlign: TextAlign.center,
-                              style: const TextStyle(
-                                fontWeight: FontWeight.bold,
-                                fontSize: 16,
-                                color: VetBizLoadingIndicator.primaryColor,
+                              style: TextStyle(
+                                fontWeight: AppFontWeight.bold,
+                                fontSize: AppFontSize.f16,
+                                color: context.colors.primary,
                               ),
                             ),
-                            const SizedBox(height: 6),
+                            const SizedBox(height: AppSpacing.s6),
                             AnimatedBuilder(
                               animation: _pulseController,
                               builder: (context, child) {
@@ -221,14 +225,14 @@ class _VetBizLoadingIndicatorState extends State<VetBizLoadingIndicator> with Ti
                               child: Text(
                                 widget.subtitle ?? 'Preparing your facility data and services',
                                 textAlign: TextAlign.center,
-                                style: TextStyle(fontSize: 12.5, color: Colors.grey[600]),
+                                style: TextStyle(fontSize: AppFontSize.f12_5, color: context.colors.textMuted),
                               ),
                             ),
                           ],
                         ),
                       ),
                       if (widget.recoveryAction != null) ...[
-                        const SizedBox(height: 20),
+                        const SizedBox(height: AppSpacing.s20),
                         FadeTransition(opacity: _textOpacity, child: widget.recoveryAction!),
                       ],
                     ],

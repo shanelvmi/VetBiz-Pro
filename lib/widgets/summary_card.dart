@@ -1,5 +1,10 @@
 import 'package:flutter/material.dart';
 
+import '../theme/app_breakpoints.dart';
+import '../theme/app_dimens.dart';
+import '../theme/app_text.dart';
+import '../theme/theme_context.dart';
+
 /// The result of comparing a KPI's current-period value against the
 /// immediately preceding equivalent period, plus the business-meaning
 /// context needed to color it correctly - a rising number isn't always
@@ -145,7 +150,7 @@ class _SummaryCardState extends State<SummaryCard> with SingleTickerProviderStat
         final glow = _glowAnimation.value;
         return Container(
           decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: BorderRadius.circular(AppRadius.r12),
             boxShadow: glow > 0
                 ? [
                     BoxShadow(
@@ -160,9 +165,9 @@ class _SummaryCardState extends State<SummaryCard> with SingleTickerProviderStat
         );
       },
       child: Card(
-        elevation: widget.shadow ? 6 : 2, // uses shadow parameter
+        elevation: widget.shadow ? AppElevation.e6 : AppElevation.e2, // uses shadow parameter
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(AppRadius.r12),
         ),
         child: LayoutBuilder(
           builder: (context, constraints) {
@@ -170,13 +175,13 @@ class _SummaryCardState extends State<SummaryCard> with SingleTickerProviderStat
             // it stays readable whether it's in a 2-column grid on a small
             // phone or a 4-column grid on a desktop, without the parent
             // screen needing to know anything about it.
-            final isCompact = constraints.maxWidth < 160;
+            final isCompact = constraints.maxWidth < AppBreakpoints.summaryCardCompact;
             final avatarRadius = isCompact ? 16.0 : 20.0;
-            final titleSize = isCompact ? 11.0 : 12.0;
-            final valueSize = isCompact ? 12.0 : 14.0;
+            final titleSize = isCompact ? AppFontSize.f11 : AppFontSize.f12;
+            final valueSize = isCompact ? AppFontSize.f12 : AppFontSize.f14;
 
         return Padding(
-              padding: EdgeInsets.all(isCompact ? 8 : 10),
+              padding: EdgeInsets.all(isCompact ? AppSpacing.s8 : AppSpacing.s10),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 mainAxisSize: MainAxisSize.min,
@@ -186,10 +191,10 @@ class _SummaryCardState extends State<SummaryCard> with SingleTickerProviderStat
                     children: [
                       CircleAvatar(
                         radius: avatarRadius,
-                        backgroundColor: widget.color.withValues(alpha: 0.2),
+                        backgroundColor: widget.color.withValues(alpha: AppAlpha.a20),
                         child: Icon(widget.icon, color: widget.color, size: avatarRadius),
                       ),
-                      SizedBox(width: isCompact ? 8 : 12),
+                      SizedBox(width: isCompact ? AppSpacing.s8 : AppSpacing.s12),
                       Expanded(
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
@@ -204,7 +209,7 @@ class _SummaryCardState extends State<SummaryCard> with SingleTickerProviderStat
                                     maxLines: 1,
                                     overflow: TextOverflow.ellipsis,
                                     style: TextStyle(
-                                      color: Colors.black87,
+                                      color: context.colors.textPrimary,
                                       fontSize: titleSize,
                                     ),
                                   ),
@@ -214,12 +219,12 @@ class _SummaryCardState extends State<SummaryCard> with SingleTickerProviderStat
                                     widget.trend != null &&
                                     !widget.trend!.isLoading &&
                                     !widget.trend!.hasNoChange) ...[
-                                  const SizedBox(width: 6),
+                                  const SizedBox(width: AppSpacing.s6),
                                   _TrendPill(trend: widget.trend!, compact: isCompact),
                                 ],
                               ],
                             ),
-                            const SizedBox(height: 2),
+                            const SizedBox(height: AppSpacing.s2),
                             if (widget.isLoading)
                               SizedBox(
                                 height: valueSize + 4,
@@ -242,8 +247,8 @@ class _SummaryCardState extends State<SummaryCard> with SingleTickerProviderStat
                                   textAlign: TextAlign.start,
                                   maxLines: 1,
                                   style: TextStyle(
-                                    color: Colors.black,
-                                    fontWeight: FontWeight.bold,
+                                    color: context.colors.textStrong,
+                                    fontWeight: AppFontWeight.bold,
                                     fontSize: valueSize,
                                   ),
                                 ),
@@ -255,8 +260,8 @@ class _SummaryCardState extends State<SummaryCard> with SingleTickerProviderStat
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
                                 style: TextStyle(
-                                  fontSize: isCompact ? 9 : 10,
-                                  color: Colors.grey[600],
+                                  fontSize: isCompact ? AppFontSize.f9 : AppFontSize.f10,
+                                  color: context.colors.textMuted,
                                 ),
                               ),
                             if (!widget.trendOnTitleRow &&
@@ -264,7 +269,7 @@ class _SummaryCardState extends State<SummaryCard> with SingleTickerProviderStat
                                 widget.trend != null &&
                                 !widget.trend!.isLoading &&
                                 !widget.trend!.hasNoChange) ...[
-                              SizedBox(height: isCompact ? 3 : 4),
+                              SizedBox(height: isCompact ? AppSpacing.s3 : AppSpacing.s4),
                               _TrendPill(trend: widget.trend!, compact: isCompact),
                             ],
                           ],
@@ -273,7 +278,7 @@ class _SummaryCardState extends State<SummaryCard> with SingleTickerProviderStat
                     ],
                   ),
                   if (!widget.isLoading && widget.footer != null) ...[
-                    SizedBox(height: isCompact ? 2 : 4),
+                    SizedBox(height: isCompact ? AppSpacing.s2 : AppSpacing.s4),
                     widget.footer!,
                   ],
                 ],
@@ -318,20 +323,18 @@ class _TrendPillState extends State<_TrendPill> with SingleTickerProviderStateMi
     super.dispose();
   }
 
-  static const Color _positiveColor = Color(0xFF10B981);
-  static const Color _negativeColor = Color(0xFFEF4444);
-
   @override
   Widget build(BuildContext context) {
     final trend = widget.trend;
     final isPositive = trend.isNewActivity ? true : trend.isPositive;
-    final tintColor = isPositive ? _positiveColor : _negativeColor;
+    final tintColor = isPositive ? context.colors.trendUp : context.colors.trendDown;
     final arrowIcon = trend.isNewActivity
         ? Icons.fiber_new_rounded
         : (trend.absoluteChange >= 0 ? Icons.arrow_upward_rounded : Icons.arrow_downward_rounded);
     final label = trend.isNewActivity ? 'New' : '${trend.percent.abs().toStringAsFixed(1)}%';
-    final fontSize = widget.compact ? 9.5 : 10.5;
-    final iconSize = widget.compact ? 11.0 : 12.0;
+    final fontSize = widget.compact ? AppFontSize.f10 : AppFontSize.f10_5;
+    // 11 has no AppIconSize step and no snap rule; kept exact.
+    final iconSize = widget.compact ? 11.0 : AppIconSize.i12;
 
     final changeText = trend.absoluteChange >= 0
         ? '+${trend.formatChange(trend.absoluteChange)}'
@@ -341,11 +344,13 @@ class _TrendPillState extends State<_TrendPill> with SingleTickerProviderStateMi
       message: '${trend.comparisonLabel}: $changeText',
       waitDuration: const Duration(milliseconds: 400),
       child: Container(
-        padding: EdgeInsets.symmetric(horizontal: widget.compact ? 6 : 8, vertical: widget.compact ? 2 : 3),
+        padding: EdgeInsets.symmetric(
+            horizontal: widget.compact ? AppSpacing.s6 : AppSpacing.s8,
+            vertical: widget.compact ? AppSpacing.s2 : AppSpacing.s3),
         decoration: BoxDecoration(
-          color: tintColor.withValues(alpha: 0.12),
-          borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: tintColor.withValues(alpha: 0.3), width: 1),
+          color: tintColor.withValues(alpha: AppAlpha.a10),
+          borderRadius: BorderRadius.circular(AppRadius.r20),
+          border: Border.all(color: tintColor.withValues(alpha: AppAlpha.a30), width: 1),
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
@@ -369,10 +374,10 @@ class _TrendPillState extends State<_TrendPill> with SingleTickerProviderStateMi
                 },
                 child: Icon(arrowIcon, color: tintColor, size: iconSize),
               ),
-            SizedBox(width: widget.compact ? 2 : 3),
+            SizedBox(width: widget.compact ? AppSpacing.s2 : AppSpacing.s3),
             Text(
               label,
-              style: TextStyle(color: tintColor, fontWeight: FontWeight.bold, fontSize: fontSize),
+              style: TextStyle(color: tintColor, fontWeight: AppFontWeight.bold, fontSize: fontSize),
             ),
           ],
         ),

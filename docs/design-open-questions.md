@@ -71,6 +71,13 @@ Kept exactly as they are; the guard still counts the raw ones.
 - **Trial length**, `lib/utils/trial_period_helper.dart:30`: `Duration(days: days)` from the configured trial days. Business date math, not a literal; add a guard allowlist entry?
 - **Icon sizes**: 48 (`firestore_error_view.dart:30`) and 44 (`maintenance_gate.dart:197`) have no `AppIconSize` step and no snap rule. Add `i48` (and snap 44 to it)?
 - **Width snap applied**: the subscription-locked dialog (`lib/utils/subscription_guard.dart`) was 360 wide on wide screens; `AppSizes.dialogXs` makes it 340 (spec 4.10). The `AppBreakpoints.dialogFixedWidth` comment still says 360 and should change if the snap is kept.
+- **One-shot 900 ms**, `lib/widgets/summary_card.dart:115` (the value-changed glow) and `lib/widgets/vetbiz_loading_indicator.dart:66` (the entrance): both play once, and `AppMotion.loop` (900) is for repeating motion. Add `AppMotion.emphasis` (900)?
+- **Slow repeating floats**, `summary_card.dart:316` (trend arrow, 1400 ms, same value as `AppMotion.colorCycle` but a different purpose) and `vetbiz_loading_indicator.dart:92` (subtitle pulse, 1500 ms). Reuse `colorCycle`, or add a `float` token?
+- **Tooltip delay**, `summary_card.dart:345`: 400 ms before the trend tooltip shows. A delay, not motion; leave inline or add to `AppTimeouts`?
+- **Alphas with no step**: `summary_card.dart` glow `0.45 * glow` (animated) and `product_catalog_side_panel.dart` count text on a selected row (`onPrimary` at 0.85). Add `a85`, or snap to `onPrimaryMuted` (0.7)?
+- **Trend icon 11 px** (`summary_card.dart`, compact pill): no `AppIconSize` step; the 12 px one became `i12`.
+- **New colour roles** `trendUp` (`#10B981`) and `trendDown` (`#EF4444`): the trend pill's green and red, more than 12 away from `success` and `danger`. Merge into them in 2R?
+- **Snaps applied here**: amber[700] -> `warning` ("Reorder Soon" dot) and grey[800] -> `textPrimary` (side-panel row labels), both per the 4.1 table; the loading screen's paw marks were the brand at alpha 0x0A (0.039), now `a05`.
 
 ## Decided
 

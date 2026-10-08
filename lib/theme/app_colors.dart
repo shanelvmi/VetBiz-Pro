@@ -44,6 +44,8 @@ class AppColors extends ThemeExtension<AppColors> {
     required this.warningStrong,
     required this.info,
     required this.infoStrong,
+    required this.trendUp,
+    required this.trendDown,
   });
 
   // Brand - the only roles that vary by colour theme for now.
@@ -92,6 +94,11 @@ class AppColors extends ThemeExtension<AppColors> {
   final Color info;
   final Color infoStrong;
 
+  // The KPI trend pill (summary_card.dart). Its own green and red, not
+  // `success`/`danger`: no existing role is within 12 on every channel.
+  final Color trendUp;
+  final Color trendDown;
+
   /// The roles for a colour theme. Every value is the exact legacy shade.
   static AppColors fromTheme(AppColorTheme theme) => AppColors(
         primary: theme.primary,
@@ -123,6 +130,8 @@ class AppColors extends ThemeExtension<AppColors> {
         warningStrong: Colors.orange.shade800,
         info: Colors.blue,
         infoStrong: Colors.blue.shade700,
+        trendUp: const Color(0xFF10B981),
+        trendDown: const Color(0xFFEF4444),
       );
 
   @override
@@ -156,6 +165,8 @@ class AppColors extends ThemeExtension<AppColors> {
     Color? warningStrong,
     Color? info,
     Color? infoStrong,
+    Color? trendUp,
+    Color? trendDown,
   }) =>
       AppColors(
         primary: primary ?? this.primary,
@@ -187,6 +198,8 @@ class AppColors extends ThemeExtension<AppColors> {
         warningStrong: warningStrong ?? this.warningStrong,
         info: info ?? this.info,
         infoStrong: infoStrong ?? this.infoStrong,
+        trendUp: trendUp ?? this.trendUp,
+        trendDown: trendDown ?? this.trendDown,
       );
 
   @override
@@ -223,6 +236,8 @@ class AppColors extends ThemeExtension<AppColors> {
       warningStrong: l(warningStrong, other.warningStrong),
       info: l(info, other.info),
       infoStrong: l(infoStrong, other.infoStrong),
+      trendUp: l(trendUp, other.trendUp),
+      trendDown: l(trendDown, other.trendDown),
     );
   }
 }

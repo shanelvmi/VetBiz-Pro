@@ -70,10 +70,7 @@
       "lib/screens/transactions/add_transaction_screen.dart": 26,
       "lib/screens/transactions/transactions_screen.dart": 41,
       "lib/widgets/auth_background.dart": 1,
-      "lib/widgets/notification_row.dart": 1,
-      "lib/widgets/product_catalog_side_panel.dart": 16,
-      "lib/widgets/summary_card.dart": 5,
-      "lib/widgets/vetbiz_loading_indicator.dart": 4
+      "lib/widgets/notification_row.dart": 1
     },
     "R2": {
       "lib/main.dart": 11,
@@ -142,9 +139,7 @@
       "lib/screens/transactions/add_transaction_screen.dart": 10,
       "lib/screens/transactions/transactions_screen.dart": 33,
       "lib/services/daily_report_pdf_service.dart": 25,
-      "lib/services/receipt_pdf_service.dart": 17,
-      "lib/widgets/product_catalog_side_panel.dart": 5,
-      "lib/widgets/vetbiz_loading_indicator.dart": 2
+      "lib/services/receipt_pdf_service.dart": 17
     },
     "R3": {
       "lib/main.dart": 6,
@@ -207,9 +202,7 @@
       "lib/screens/subscription/subscription_screen.dart": 6,
       "lib/screens/transactions/add_transaction_screen.dart": 11,
       "lib/screens/transactions/transactions_screen.dart": 8,
-      "lib/services/daily_report_pdf_service.dart": 1,
-      "lib/widgets/product_catalog_side_panel.dart": 4,
-      "lib/widgets/summary_card.dart": 3
+      "lib/services/daily_report_pdf_service.dart": 1
     },
     "R4": {
       "lib/main.dart": 33,
@@ -278,10 +271,7 @@
       "lib/screens/transactions/add_transaction_screen.dart": 34,
       "lib/screens/transactions/transactions_screen.dart": 42,
       "lib/services/daily_report_pdf_service.dart": 52,
-      "lib/services/receipt_pdf_service.dart": 26,
-      "lib/widgets/product_catalog_side_panel.dart": 12,
-      "lib/widgets/summary_card.dart": 4,
-      "lib/widgets/vetbiz_loading_indicator.dart": 5
+      "lib/services/receipt_pdf_service.dart": 26
     },
     "R5": {
       "lib/main.dart": 2,
@@ -321,7 +311,6 @@
       "lib/utils/facility_activation.dart": 1,
       "lib/utils/trial_period_helper.dart": 1,
       "lib/widgets/maintenance_gate.dart": 1,
-      "lib/widgets/product_catalog_side_panel.dart": 2,
       "lib/widgets/summary_card.dart": 3,
       "lib/widgets/vetbiz_loading_indicator.dart": 2
     },
@@ -365,9 +354,7 @@
       "lib/screens/store/stockstore_screen.dart": 2,
       "lib/screens/subscription/subscription_history_screen.dart": 3,
       "lib/screens/subscription/subscription_screen.dart": 1,
-      "lib/screens/transactions/add_transaction_screen.dart": 2,
-      "lib/widgets/summary_card.dart": 1,
-      "lib/widgets/vetbiz_loading_indicator.dart": 1
+      "lib/screens/transactions/add_transaction_screen.dart": 2
     },
     "R8": {
       "lib/providers/settings_provider.dart": 2,
