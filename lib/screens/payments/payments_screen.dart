@@ -15,7 +15,12 @@ import '../../models/ledger_entry.dart';
 import '../../widgets/firestore_error_view.dart';
 import '../sales/receipt_preview_screen.dart';
 import '../services/service_receipt_preview_screen.dart';
+import '../../theme/app_dimens.dart';
+import '../../theme/app_motion.dart';
 import '../../theme/app_palette.dart';
+import '../../theme/app_text.dart';
+import '../../theme/theme_context.dart';
+import '../../ui/feedback/app_feedback.dart';
 import '../../data/collections.dart';
 import '../../config/money.dart';
 import '../../config/app_timeouts.dart';
@@ -265,9 +270,7 @@ class _PaymentsScreenState extends State<PaymentsScreen> {
     if (facilityId == null) return;
     final target = await _resolvePrintTarget(e);
     if (target == null) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('No receipt available for this payment.')));
-      }
+      AppFeedback.info('No receipt available for this payment');
       return;
     }
     final (collection, docId) = target;
@@ -377,9 +380,9 @@ class _PaymentsScreenState extends State<PaymentsScreen> {
       builder: (context) => _DateRangeDialog(
         initialStart: _rangeStart,
         initialEnd: _rangeEnd,
-        primaryDeepGreen: primaryDeepGreen,
-        warmAmber: warmAmber,
-        offWhite: offWhite,
+        primaryDeepGreen: context.colors.primary,
+        warmAmber: context.colors.accent,
+        offWhite: context.colors.background,
       ),
     );
 
@@ -398,7 +401,7 @@ class _PaymentsScreenState extends State<PaymentsScreen> {
     final paymentProvider = Provider.of<PaymentProvider>(context);
 
     return Scaffold(
-      backgroundColor: offWhite,
+      backgroundColor: context.colors.background,
       appBar: _buildAppBar(),
       body: Row(
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -423,31 +426,31 @@ class _PaymentsScreenState extends State<PaymentsScreen> {
                 }
 
                 return controller.isLoading && filtered.isEmpty
-                    ? Center(child: CircularProgressIndicator(color: primaryDeepGreen))
+                    ? Center(child: CircularProgressIndicator(color: context.colors.primary))
                     : Padding(
-                        padding: const EdgeInsets.all(16),
+                        padding: const EdgeInsets.all(AppSpacing.s16),
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             if (widget.initialClientId == null) ...[
                               _buildMetricsRow(),
-                              const SizedBox(height: 16),
+                              const SizedBox(height: AppSpacing.s16),
                             ],
                             if (controller.newEntriesAvailable > 0)
                               Container(
                                 width: double.infinity,
-                                margin: const EdgeInsets.only(bottom: 12),
-                                color: primaryDeepGreen.withValues(alpha: 0.08),
-                                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                                margin: const EdgeInsets.only(bottom: AppSpacing.s12),
+                                color: context.colors.primary.withValues(alpha: AppAlpha.a10),
+                                padding: const EdgeInsets.symmetric(horizontal: AppSpacing.s16, vertical: AppSpacing.s8),
                                 child: Row(
                                   children: [
-                                    Icon(Icons.fiber_new, size: 18, color: primaryDeepGreen),
-                                    const SizedBox(width: 8),
+                                    Icon(Icons.fiber_new, size: AppIconSize.i18, color: context.colors.primary),
+                                    const SizedBox(width: AppSpacing.s8),
                                     Expanded(
                                       child: Text(
                                         '${controller.newEntriesAvailable} new entr'
                                         '${controller.newEntriesAvailable == 1 ? 'y' : 'ies'} available',
-                                        style: TextStyle(fontSize: 13, color: primaryDeepGreen),
+                                        style: TextStyle(fontSize: AppFontSize.f13, color: context.colors.primary),
                                       ),
                                     ),
                                     TextButton(
@@ -458,18 +461,18 @@ class _PaymentsScreenState extends State<PaymentsScreen> {
                                 ),
                               ),
                             _buildToolbarRow(total),
-                            const SizedBox(height: 16),
+                            const SizedBox(height: AppSpacing.s16),
                             Expanded(
                               child: filtered.isEmpty
                                   ? Center(
-                                      child: Text('No payments in this period.', style: TextStyle(color: Colors.grey[600])),
+                                      child: Text('No payments in this period.', style: TextStyle(color: context.colors.textMuted)),
                                     )
                                   : Column(
                                       crossAxisAlignment: CrossAxisAlignment.stretch,
                                       children: [
                                         Container(
-                                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                                          decoration: BoxDecoration(border: Border(bottom: BorderSide(color: Colors.grey.withValues(alpha: 0.2)))),
+                                          padding: const EdgeInsets.symmetric(horizontal: AppSpacing.s16, vertical: AppSpacing.s12),
+                                          decoration: BoxDecoration(border: Border(bottom: BorderSide(color: context.colors.textHint.withValues(alpha: AppAlpha.a20)))),
                                           child: Row(
                                             children: [
                                               _headerCell('Date & Time', flex: 3),
@@ -519,11 +522,11 @@ class _PaymentsScreenState extends State<PaymentsScreen> {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           Expanded(child: _metricCard('Today', _todayMetric)),
-          const SizedBox(width: 12),
+          const SizedBox(width: AppSpacing.s12),
           Expanded(child: _metricCard('This Week', _weekMetric)),
-          const SizedBox(width: 12),
+          const SizedBox(width: AppSpacing.s12),
           Expanded(child: _metricCard('This Month', _monthMetric)),
-          const SizedBox(width: 12),
+          const SizedBox(width: AppSpacing.s12),
           Expanded(child: _outstandingCard()),
         ],
       ),
@@ -533,21 +536,21 @@ class _PaymentsScreenState extends State<PaymentsScreen> {
   Widget _metricCard(String title, _PaymentMetric? metric) {
     final isLoading = _isMetricsLoading && metric == null;
     return Container(
-      padding: const EdgeInsets.all(12),
+      padding: const EdgeInsets.all(AppSpacing.s12),
       decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 8, offset: const Offset(0, 2))],
+        color: context.colors.surface,
+        borderRadius: BorderRadius.circular(AppRadius.r12),
+        boxShadow: [BoxShadow(color: context.colors.shadow.withValues(alpha: AppAlpha.a05), blurRadius: 8, offset: const Offset(0, 2))],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(title, style: TextStyle(fontSize: 12, color: Colors.grey[600])),
-          const SizedBox(height: 4),
+          Text(title, style: TextStyle(fontSize: AppFontSize.f12, color: context.colors.textMuted)),
+          const SizedBox(height: AppSpacing.s4),
           AnimatedSwitcher(
-            duration: const Duration(milliseconds: 300),
+            duration: AppMotion.slow,
             child: isLoading
-                ? SizedBox(key: const ValueKey('loading'), height: 20, width: 20, child: CircularProgressIndicator(strokeWidth: 2, color: primaryDeepGreen))
+                ? SizedBox(key: const ValueKey('loading'), height: 20, width: 20, child: CircularProgressIndicator(strokeWidth: 2, color: context.colors.primary))
                 : Column(
                     key: const ValueKey('loaded'),
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -557,15 +560,15 @@ class _PaymentsScreenState extends State<PaymentsScreen> {
                         children: [
                           Text(
                             Money.symbolPlain(metric?.amount ?? 0),
-                            style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                            style: const TextStyle(fontSize: AppFontSize.f18, fontWeight: AppFontWeight.bold),
                           ),
                           if (metric?.trendPercent != null) ...[
-                            const SizedBox(width: 8),
+                            const SizedBox(width: AppSpacing.s8),
                             _trendPill(metric!.trendPercent!),
                           ],
                         ],
                       ),
-                      Text('${metric?.count ?? 0} payments', style: TextStyle(fontSize: 11, color: Colors.grey[600])),
+                      Text('${metric?.count ?? 0} payments', style: TextStyle(fontSize: AppFontSize.f11, color: context.colors.textMuted)),
                     ],
                   ),
           ),
@@ -580,21 +583,21 @@ class _PaymentsScreenState extends State<PaymentsScreen> {
         : null;
     final isLoading = _isMetricsLoading && _outstandingAmount == null;
     return Container(
-      padding: const EdgeInsets.all(12),
+      padding: const EdgeInsets.all(AppSpacing.s12),
       decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 8, offset: const Offset(0, 2))],
+        color: context.colors.surface,
+        borderRadius: BorderRadius.circular(AppRadius.r12),
+        boxShadow: [BoxShadow(color: context.colors.shadow.withValues(alpha: AppAlpha.a05), blurRadius: 8, offset: const Offset(0, 2))],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('Outstanding', style: TextStyle(fontSize: 12, color: Colors.grey[600])),
-          const SizedBox(height: 4),
+          Text('Outstanding', style: TextStyle(fontSize: AppFontSize.f12, color: context.colors.textMuted)),
+          const SizedBox(height: AppSpacing.s4),
           AnimatedSwitcher(
-            duration: const Duration(milliseconds: 300),
+            duration: AppMotion.slow,
             child: isLoading
-                ? SizedBox(key: const ValueKey('loading'), height: 20, width: 20, child: CircularProgressIndicator(strokeWidth: 2, color: primaryDeepGreen))
+                ? SizedBox(key: const ValueKey('loading'), height: 20, width: 20, child: CircularProgressIndicator(strokeWidth: 2, color: context.colors.primary))
                 : Column(
                     key: const ValueKey('loaded'),
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -604,15 +607,15 @@ class _PaymentsScreenState extends State<PaymentsScreen> {
                         children: [
                           Text(
                             Money.symbolPlain(_outstandingAmount ?? 0),
-                            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: warmAmber),
+                            style: TextStyle(fontSize: AppFontSize.f18, fontWeight: AppFontWeight.bold, color: context.colors.accent),
                           ),
                           if (trendPercent != null) ...[
-                            const SizedBox(width: 8),
+                            const SizedBox(width: AppSpacing.s8),
                             _trendPill(trendPercent, invertColors: true),
                           ],
                         ],
                       ),
-                      Text('${_outstandingCount ?? 0} debts', style: TextStyle(fontSize: 11, color: Colors.grey[600])),
+                      Text('${_outstandingCount ?? 0} debts', style: TextStyle(fontSize: AppFontSize.f11, color: context.colors.textMuted)),
                     ],
                   ),
           ),
@@ -627,16 +630,17 @@ class _PaymentsScreenState extends State<PaymentsScreen> {
   Widget _trendPill(double percent, {bool invertColors = false}) {
     final isUp = percent >= 0;
     final isGood = invertColors ? !isUp : isUp;
-    final color = isGood ? Colors.green[700]! : Colors.red[700]!;
+    final color = isGood ? context.colors.successStrong : context.colors.dangerStrong;
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-      decoration: BoxDecoration(color: color.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(6)),
+      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.s6, vertical: AppSpacing.s2),
+      decoration: BoxDecoration(color: color.withValues(alpha: AppAlpha.a10), borderRadius: BorderRadius.circular(AppRadius.r6)),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
           Icon(isUp ? Icons.arrow_upward : Icons.arrow_downward, size: 11, color: color),
-          const SizedBox(width: 2),
-          Text('${percent.abs().toStringAsFixed(1)}%', style: TextStyle(fontSize: 10.5, color: color, fontWeight: FontWeight.w600)),
+          const SizedBox(width: AppSpacing.s2),
+          Text('${percent.abs().toStringAsFixed(1)}%', style: TextStyle(
+                  fontSize: AppFontSize.f10_5, color: color, fontWeight: AppFontWeight.semibold)),
         ],
       ),
     );
@@ -645,7 +649,8 @@ class _PaymentsScreenState extends State<PaymentsScreen> {
   Widget _headerCell(String label, {required int flex}) {
     return Expanded(
       flex: flex,
-      child: Text(label, style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Colors.grey[600])),
+      child: Text(label, style: TextStyle(
+          fontSize: AppFontSize.f12, fontWeight: AppFontWeight.semibold, color: context.colors.textMuted)),
     );
   }
 
@@ -653,54 +658,58 @@ class _PaymentsScreenState extends State<PaymentsScreen> {
     final recordedBy = e.paidById != null ? _userNames[e.paidById] : null;
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.grey.withValues(alpha: 0.15)),
+        color: context.colors.surface,
+        borderRadius: BorderRadius.circular(AppRadius.r12),
+        border: Border.all(color: context.colors.textHint.withValues(alpha: AppAlpha.a15)),
       ),
       child: SingleChildScrollView(
-        padding: const EdgeInsets.all(20),
+        padding: const EdgeInsets.all(AppSpacing.s20),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                const Text('Payment Details', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                const Text('Payment Details', style: TextStyle(fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f16)),
                 IconButton(
-                  icon: const Icon(Icons.close, size: 20),
+                  icon: const Icon(Icons.close, size: AppIconSize.i20),
                   onPressed: () => setState(() => _selectedEntry = null),
                 ),
               ],
             ),
-            const SizedBox(height: 4),
+            const SizedBox(height: AppSpacing.s4),
             Container(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-              decoration: BoxDecoration(color: Colors.green.withValues(alpha: 0.12), borderRadius: BorderRadius.circular(10)),
+              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.s8, vertical: AppSpacing.s3),
+              decoration: BoxDecoration(
+                  color: context.colors.success.withValues(alpha: AppAlpha.a10), borderRadius: BorderRadius.circular(AppRadius.r10)),
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Icon(Icons.check_circle, size: 13, color: Colors.green[700]),
-                  const SizedBox(width: 4),
-                  Text('Payment Received', style: TextStyle(fontSize: 11.5, color: Colors.green[700], fontWeight: FontWeight.w600)),
+                  Icon(Icons.check_circle, size: 13, color: context.colors.successStrong),
+                  const SizedBox(width: AppSpacing.s4),
+                  Text('Payment Received', style: TextStyle(
+                      fontSize: AppFontSize.f11_5, color: context.colors.successStrong, fontWeight: AppFontWeight.semibold)),
                 ],
               ),
             ),
-            const SizedBox(height: 12),
-            Text(Money.symbolPlain(e.amount), style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 22)),
-            const SizedBox(height: 4),
+            const SizedBox(height: AppSpacing.s12),
+            Text(Money.symbolPlain(e.amount), style: const TextStyle(fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f22)),
+            const SizedBox(height: AppSpacing.s4),
             Container(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-              decoration: BoxDecoration(color: primaryDeepGreen.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(10)),
-              child: Text(e.description, style: TextStyle(fontSize: 11.5, color: primaryDeepGreen, fontWeight: FontWeight.w600)),
+              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.s8, vertical: AppSpacing.s3),
+              decoration: BoxDecoration(
+                  color: context.colors.primary.withValues(alpha: AppAlpha.a10), borderRadius: BorderRadius.circular(AppRadius.r10)),
+              child: Text(e.description, style: TextStyle(
+                  fontSize: AppFontSize.f11_5, color: context.colors.primary, fontWeight: AppFontWeight.semibold)),
             ),
-            const SizedBox(height: 4),
+            const SizedBox(height: AppSpacing.s4),
             Row(
               children: [
-                Icon(Icons.calendar_today_outlined, size: 12, color: Colors.grey[600]),
-                const SizedBox(width: 4),
+                Icon(Icons.calendar_today_outlined, size: AppIconSize.i12, color: context.colors.textMuted),
+                const SizedBox(width: AppSpacing.s4),
                 Text(
                   '${AppDateFormat.date.format(e.timestamp)}, ${AppDateFormat.time12.format(e.timestamp)}',
-                  style: TextStyle(fontSize: 12.5, color: Colors.grey[600]),
+                  style: TextStyle(fontSize: AppFontSize.f12_5, color: context.colors.textMuted),
                 ),
               ],
             ),
@@ -713,26 +722,26 @@ class _PaymentsScreenState extends State<PaymentsScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(e.clientName ?? '-', style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14)),
-                      if (e.clientPhone != null) Text(e.clientPhone!, style: TextStyle(fontSize: 12.5, color: Colors.grey[600])),
+                      Text(e.clientName ?? '-', style: const TextStyle(fontWeight: AppFontWeight.semibold, fontSize: AppFontSize.f14)),
+                      if (e.clientPhone != null) Text(e.clientPhone!, style: TextStyle(fontSize: AppFontSize.f12_5, color: context.colors.textMuted)),
                     ],
                   ),
                 ),
                 if (e.clientPhone != null)
                   IconButton(
-                    icon: Icon(Icons.phone_outlined, size: 18, color: primaryDeepGreen),
+                    icon: Icon(Icons.phone_outlined, size: AppIconSize.i18, color: context.colors.primary),
                     tooltip: 'Call',
                     onPressed: () async {
                       final uri = AppLinks.tel(e.clientPhone!);
                       final launched = await launchUrl(uri, mode: LaunchMode.externalApplication);
-                      if (!launched && mounted) {
-                        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Could not open dialer')));
+                      if (!launched) {
+                        AppFeedback.info("Couldn't open the dialer");
                       }
                     },
                   ),
               ],
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: AppSpacing.s16),
             FutureBuilder<(String?, String?)>(
               future: _getSourceDetailsFuture(e),
               builder: (context, snapshot) {
@@ -742,39 +751,39 @@ class _PaymentsScreenState extends State<PaymentsScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     _detailLabel('Source'),
-                    Text('${e.description}${reference != null ? ' $reference' : ''}', style: const TextStyle(fontSize: 14)),
-                    const SizedBox(height: 16),
+                    Text('${e.description}${reference != null ? ' $reference' : ''}', style: const TextStyle(fontSize: AppFontSize.f14)),
+                    const SizedBox(height: AppSpacing.s16),
                     _detailLabel('Payment Method'),
-                    Text(e.paymentMethod ?? '-', style: const TextStyle(fontSize: 14)),
-                    const SizedBox(height: 16),
+                    Text(e.paymentMethod ?? '-', style: const TextStyle(fontSize: AppFontSize.f14)),
+                    const SizedBox(height: AppSpacing.s16),
                     _detailLabel('Recorded By'),
                     Row(
                       children: [
-                        Icon(Icons.person_outline, size: 16, color: Colors.grey[600]),
-                        const SizedBox(width: 6),
-                        Text(recordedBy ?? '-', style: const TextStyle(fontSize: 14)),
+                        Icon(Icons.person_outline, size: AppIconSize.i16, color: context.colors.textMuted),
+                        const SizedBox(width: AppSpacing.s6),
+                        Text(recordedBy ?? '-', style: const TextStyle(fontSize: AppFontSize.f14)),
                       ],
                     ),
                     if (notes != null && notes.isNotEmpty) ...[
-                      const SizedBox(height: 16),
+                      const SizedBox(height: AppSpacing.s16),
                       _detailLabel('Notes'),
-                      Text(notes, style: const TextStyle(fontSize: 13.5)),
+                      Text(notes, style: const TextStyle(fontSize: AppFontSize.f13_5)),
                     ],
                   ],
                 );
               },
             ),
-            const SizedBox(height: 24),
+            const SizedBox(height: AppSpacing.s24),
             SizedBox(
               width: double.infinity,
               child: ElevatedButton.icon(
                 onPressed: () => _printReceiptFor(e),
-                icon: const Icon(Icons.print_outlined, size: 18),
+                icon: const Icon(Icons.print_outlined, size: AppIconSize.i18),
                 label: const Text('Print Receipt'),
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: primaryDeepGreen,
-                  foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(vertical: 12),
+                  backgroundColor: context.colors.primary,
+                  foregroundColor: context.colors.onPrimary,
+                  padding: const EdgeInsets.symmetric(vertical: AppSpacing.s12),
                 ),
               ),
             ),
@@ -786,8 +795,9 @@ class _PaymentsScreenState extends State<PaymentsScreen> {
 
   Widget _detailLabel(String label) {
     return Padding(
-      padding: const EdgeInsets.only(bottom: 4),
-      child: Text(label, style: TextStyle(fontSize: 11.5, color: Colors.grey[600], fontWeight: FontWeight.w600)),
+      padding: const EdgeInsets.only(bottom: AppSpacing.s4),
+      child: Text(label, style: TextStyle(
+          fontSize: AppFontSize.f11_5, color: context.colors.textMuted, fontWeight: AppFontWeight.semibold)),
     );
   }
 
