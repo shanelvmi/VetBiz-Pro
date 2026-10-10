@@ -22,11 +22,12 @@ import '../../config/app_timeouts.dart';
 import '../../config/app_ranges.dart';
 import '../../config/payment_methods.dart';
 import '../../config/app_date_format.dart';
-import '../../theme/app_palette.dart';
 import '../../theme/app_text.dart';
 import '../../theme/app_dimens.dart';
 import '../../theme/theme_context.dart';
 import '../../theme/app_breakpoints.dart';
+import '../../ui/feedback/app_feedback.dart';
+import '../../services/trash_service.dart';
 
 class ServicesScreen extends StatefulWidget {
   const ServicesScreen({super.key});
@@ -36,9 +37,6 @@ class ServicesScreen extends StatefulWidget {
 }
 
 class _ServicesScreenState extends State<ServicesScreen> {
-  final Color primaryDeepGreen = AppPalette.primary;
-  final Color warmAmber = AppPalette.accent;
-  final Color offWhite = AppPalette.background;
 
 
   String _searchQuery = '';
@@ -508,7 +506,7 @@ class _ServicesScreenState extends State<ServicesScreen> {
           },
         ),
         if (hasActiveFilters) ...[
-          const SizedBox(width: 10),
+          const SizedBox(width: AppSpacing.s10),
           TextButton(
             onPressed: () {
               _searchDebounce?.cancel();
@@ -535,18 +533,18 @@ class _ServicesScreenState extends State<ServicesScreen> {
     required ValueChanged<T> onChanged,
   }) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10),
+      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.s10),
       height: 44,
       decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: Colors.grey.withValues(alpha: 0.3)),
+        color: context.colors.surface,
+        borderRadius: BorderRadius.circular(AppRadius.r10),
+        border: Border.all(color: context.colors.textHint.withValues(alpha: AppAlpha.a30)),
       ),
       child: DropdownButtonHideUnderline(
         child: DropdownButton<T>(
           value: value,
-          icon: Icon(Icons.arrow_drop_down, size: 18, color: primaryDeepGreen),
-          style: const TextStyle(color: Colors.black87, fontSize: 13),
+          icon: Icon(Icons.arrow_drop_down, size: AppIconSize.i18, color: context.colors.primary),
+          style: TextStyle(color: context.colors.textPrimary, fontSize: AppFontSize.f13),
           items: items.map((v) => DropdownMenuItem(value: v, child: Text('$label: $v'))).toList(),
           onChanged: (val) {
             if (val != null) onChanged(val);
@@ -565,8 +563,8 @@ class _ServicesScreenState extends State<ServicesScreen> {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         Container(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-          decoration: BoxDecoration(border: Border(bottom: BorderSide(color: Colors.grey.withValues(alpha: 0.2)))),
+          padding: const EdgeInsets.symmetric(horizontal: AppSpacing.s16, vertical: AppSpacing.s12),
+          decoration: BoxDecoration(border: Border(bottom: BorderSide(color: context.colors.textHint.withValues(alpha: AppAlpha.a20)))),
           child: Row(
             children: [
               _headerCell('Date', flex: 3),
@@ -583,7 +581,7 @@ class _ServicesScreenState extends State<ServicesScreen> {
         Expanded(
           child: ListView.separated(
             itemCount: services.length,
-            separatorBuilder: (context, index) => Divider(height: 1, color: Colors.grey.withValues(alpha: 0.12)),
+            separatorBuilder: (context, index) => Divider(height: 1, color: context.colors.textHint.withValues(alpha: AppAlpha.a10)),
             itemBuilder: (context, index) => _buildServiceRow(services[index], dateFormatter),
           ),
         ),
@@ -594,7 +592,7 @@ class _ServicesScreenState extends State<ServicesScreen> {
   Widget _headerCell(String label, {required int flex}) {
     return Expanded(
       flex: flex,
-      child: Text(label, style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Colors.grey[600])),
+      child: Text(label, style: TextStyle(fontSize: AppFontSize.f12, fontWeight: AppFontWeight.semibold, color: context.colors.textMuted)),
     );
   }
 
@@ -607,8 +605,8 @@ class _ServicesScreenState extends State<ServicesScreen> {
     return InkWell(
       onTap: () => setState(() => _selectedService = service),
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-        color: isSelected ? primaryDeepGreen.withValues(alpha: 0.06) : null,
+        padding: const EdgeInsets.symmetric(horizontal: AppSpacing.s16, vertical: AppSpacing.s12),
+        color: isSelected ? context.colors.primary.withValues(alpha: AppAlpha.a05) : null,
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -617,9 +615,9 @@ class _ServicesScreenState extends State<ServicesScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(dateFormatter.format(serviceDate).split(',').first, style: const TextStyle(fontSize: 13)),
+                  Text(dateFormatter.format(serviceDate).split(',').first, style: const TextStyle(fontSize: AppFontSize.f13)),
                   Text(AppDateFormat.time12.format(serviceDate),
-                      style: TextStyle(fontSize: 11.5, color: Colors.grey[500])),
+                      style: TextStyle(fontSize: AppFontSize.f11_5, color: context.colors.textHint)),
                 ],
               ),
             ),
@@ -628,51 +626,51 @@ class _ServicesScreenState extends State<ServicesScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(service.name, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
+                  Text(service.name, style: const TextStyle(fontSize: AppFontSize.f13, fontWeight: AppFontWeight.semibold),
                       maxLines: 1, overflow: TextOverflow.ellipsis),
-                  const SizedBox(height: 3),
+                  const SizedBox(height: AppSpacing.s3),
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
+                    padding: const EdgeInsets.symmetric(horizontal: AppSpacing.s6, vertical: AppSpacing.s2),
                     decoration: BoxDecoration(
-                      color: primaryDeepGreen.withValues(alpha: 0.1),
-                      borderRadius: BorderRadius.circular(8),
+                      color: context.colors.primary.withValues(alpha: AppAlpha.a10),
+                      borderRadius: BorderRadius.circular(AppRadius.r8),
                     ),
-                    child: Text(service.category, style: TextStyle(fontSize: 10.5, color: primaryDeepGreen, fontWeight: FontWeight.w600)),
+                    child: Text(service.category, style: TextStyle(fontSize: AppFontSize.f10_5, color: context.colors.primary, fontWeight: AppFontWeight.semibold)),
                   ),
                 ],
               ),
             ),
             Expanded(
               flex: 2,
-              child: Text(service.clientName ?? 'Walk-in', style: const TextStyle(fontSize: 13), maxLines: 1, overflow: TextOverflow.ellipsis),
+              child: Text(service.clientName ?? 'Walk-in', style: const TextStyle(fontSize: AppFontSize.f13), maxLines: 1, overflow: TextOverflow.ellipsis),
             ),
             Expanded(
               flex: 2,
-              child: Text(service.providedByName ?? 'Unknown', style: const TextStyle(fontSize: 13), maxLines: 1, overflow: TextOverflow.ellipsis),
+              child: Text(service.providedByName ?? 'Unknown', style: const TextStyle(fontSize: AppFontSize.f13), maxLines: 1, overflow: TextOverflow.ellipsis),
             ),
             Expanded(
               flex: 2,
-              child: Text(Money.format(service.totalAmount), style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600)),
+              child: Text(Money.format(service.totalAmount), style: const TextStyle(fontSize: AppFontSize.f13, fontWeight: AppFontWeight.semibold)),
             ),
             Expanded(
               flex: 2,
               child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                padding: const EdgeInsets.symmetric(horizontal: AppSpacing.s8, vertical: AppSpacing.s3),
                 decoration: BoxDecoration(
-                  color: statusColor.withValues(alpha: 0.12),
-                  borderRadius: BorderRadius.circular(10),
+                  color: statusColor.withValues(alpha: AppAlpha.a10),
+                  borderRadius: BorderRadius.circular(AppRadius.r10),
                 ),
-                child: Text(status, style: TextStyle(color: statusColor, fontSize: 11.5, fontWeight: FontWeight.w600)),
+                child: Text(status, style: TextStyle(color: statusColor, fontSize: AppFontSize.f11_5, fontWeight: AppFontWeight.semibold)),
               ),
             ),
             Expanded(
               flex: 2,
-              child: Text(service.paymentMethod ?? '-', style: const TextStyle(fontSize: 13), maxLines: 1, overflow: TextOverflow.ellipsis),
+              child: Text(service.paymentMethod ?? '-', style: const TextStyle(fontSize: AppFontSize.f13), maxLines: 1, overflow: TextOverflow.ellipsis),
             ),
             Expanded(
               flex: 1,
               child: PopupMenuButton<String>(
-                icon: Icon(Icons.more_vert, size: 18, color: Colors.grey[600]),
+                icon: Icon(Icons.more_vert, size: AppIconSize.i18, color: context.colors.textMuted),
                 onSelected: (value) {
                   if (value == 'view') {
                     setState(() => _selectedService = service);
@@ -686,7 +684,7 @@ class _ServicesScreenState extends State<ServicesScreen> {
                   const PopupMenuItem(value: 'view', child: Text('View Details')),
                   const PopupMenuItem(value: 'edit', child: Text('Edit')),
                   if (Provider.of<UserRoleProvider>(context, listen: false).isAdmin)
-                    PopupMenuItem(value: 'delete', child: Text('Delete', style: TextStyle(color: Colors.red[400]))),
+                    PopupMenuItem(value: 'delete', child: Text('Delete', style: TextStyle(color: context.colors.dangerSoft))),
                 ],
               ),
             ),
@@ -708,14 +706,14 @@ class _ServicesScreenState extends State<ServicesScreen> {
     final pageEnd = (controller.currentPage - 1) * pageSize + itemCount;
 
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-      decoration: BoxDecoration(border: Border(top: BorderSide(color: Colors.grey.withValues(alpha: 0.2)))),
+      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.s16, vertical: AppSpacing.s12),
+      decoration: BoxDecoration(border: Border(top: BorderSide(color: context.colors.textHint.withValues(alpha: AppAlpha.a20)))),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           Text(
             itemCount == 0 ? 'No services' : 'Showing $pageStart to $pageEnd',
-            style: TextStyle(fontSize: 12.5, color: Colors.grey[600]),
+            style: TextStyle(fontSize: AppFontSize.f12_5, color: context.colors.textMuted),
           ),
           Row(
             children: [
@@ -730,15 +728,15 @@ class _ServicesScreenState extends State<ServicesScreen> {
                   },
                 ),
               ),
-              const SizedBox(width: 16),
+              const SizedBox(width: AppSpacing.s16),
               IconButton(
                 icon: const Icon(Icons.chevron_left),
                 onPressed: controller.hasPreviousPage ? () => controller.goToPreviousPage() : null,
               ),
-              Text('Page ${controller.currentPage}', style: const TextStyle(fontSize: 13)),
+              Text('Page ${controller.currentPage}', style: const TextStyle(fontSize: AppFontSize.f13)),
               IconButton(
                 icon: controller.isLoading
-                    ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2))
+                    ? const SizedBox(width: AppSpacing.s16, height: 16, child: CircularProgressIndicator(strokeWidth: 2))
                     : const Icon(Icons.chevron_right),
                 onPressed: controller.hasNextPage && !controller.isLoading
                     ? () => controller.goToNextPage()
@@ -763,24 +761,41 @@ class _ServicesScreenState extends State<ServicesScreen> {
           TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancel')),
           TextButton(
             onPressed: () => Navigator.pop(ctx, true),
-            child: Text('Delete', style: TextStyle(color: Colors.red[400])),
+            child: Text('Delete', style: TextStyle(color: context.colors.dangerSoft)),
           ),
         ],
       ),
     );
-    if (confirmed != true) return;
+    if (confirmed != true || !mounted) return;
+    // Read before the await: Undo may run after this screen is gone.
+    final facilityId = _facilityId;
 
     try {
       await Provider.of<ServiceProvider>(context, listen: false).deleteService(service.id);
       if (!mounted) return;
       if (_selectedService?.id == service.id) setState(() => _selectedService = null);
       _openServicesListSession(forceRefresh: true);
-      ScaffoldMessenger.of(context)
-          .showSnackBar(const SnackBar(content: Text('Service deleted'), backgroundColor: Colors.green));
-    } catch (e) {
-      if (!mounted) return;
-      ScaffoldMessenger.of(context)
-          .showSnackBar(SnackBar(content: Text('Could not delete: $e'), backgroundColor: Colors.redAccent));
+      // deleteService moves it to Trash (a soft delete, same id), so Undo
+      // puts it back with the Trash screen's own restore.
+      AppFeedback.undo('Service moved to Trash', onUndo: () => _undoDeleteService(facilityId, service.id));
+    } catch (e, st) {
+      AppFeedback.error("Couldn't delete the service", error: e, stackTrace: st);
+    }
+  }
+
+  Future<void> _undoDeleteService(String? facilityId, String id) async {
+    if (facilityId == null || facilityId.isEmpty) return;
+    try {
+      await TrashService.restoreById(
+        facilityId: facilityId,
+        trashCollection: Collections.trashServices,
+        liveCollection: Collections.services,
+        id: id,
+      );
+      AppFeedback.success('Service restored');
+      if (mounted) _openServicesListSession(forceRefresh: true);
+    } catch (e, st) {
+      AppFeedback.error("Couldn't restore the service", error: e, stackTrace: st);
     }
   }
 
@@ -792,46 +807,46 @@ class _ServicesScreenState extends State<ServicesScreen> {
         service.clientId != null ? Provider.of<ClientProvider>(context, listen: false).getClientById(service.clientId!) : null;
 
     return Container(
-      color: Colors.white,
+      color: context.colors.surface,
       child: SingleChildScrollView(
-        padding: const EdgeInsets.all(20),
+        padding: const EdgeInsets.all(AppSpacing.s20),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                const Text('Service Details', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                const Text('Service Details', style: TextStyle(fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f16)),
                 IconButton(
-                  icon: const Icon(Icons.close, size: 20),
+                  icon: const Icon(Icons.close, size: AppIconSize.i20),
                   onPressed: () => setState(() => _selectedService = null),
                 ),
               ],
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: AppSpacing.s8),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Expanded(
-                  child: Text(service.name, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
+                  child: Text(service.name, style: const TextStyle(fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f18)),
                 ),
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                  decoration: BoxDecoration(color: statusColor.withValues(alpha: 0.12), borderRadius: BorderRadius.circular(12)),
-                  child: Text(status, style: TextStyle(color: statusColor, fontSize: 12, fontWeight: FontWeight.w600)),
+                  padding: const EdgeInsets.symmetric(horizontal: AppSpacing.s10, vertical: AppSpacing.s4),
+                  decoration: BoxDecoration(color: statusColor.withValues(alpha: AppAlpha.a10), borderRadius: BorderRadius.circular(AppRadius.r12)),
+                  child: Text(status, style: TextStyle(color: statusColor, fontSize: AppFontSize.f12, fontWeight: AppFontWeight.semibold)),
                 ),
               ],
             ),
-            Text(_invoiceNo(service), style: TextStyle(fontSize: 12.5, color: Colors.grey[600], fontWeight: FontWeight.w600)),
+            Text(_invoiceNo(service), style: TextStyle(fontSize: AppFontSize.f12_5, color: context.colors.textMuted, fontWeight: AppFontWeight.semibold)),
             Text('${dateOnlyFormatter.format(serviceDate)}, ${timeOnlyFormatter.format(serviceDate)}',
-                style: TextStyle(fontSize: 12.5, color: Colors.grey[600])),
-            const SizedBox(height: 20),
+                style: TextStyle(fontSize: AppFontSize.f12_5, color: context.colors.textMuted)),
+            const SizedBox(height: AppSpacing.s20),
             Container(
               width: double.infinity,
-              padding: const EdgeInsets.all(14),
+              padding: const EdgeInsets.all(AppSpacing.s14),
               decoration: BoxDecoration(
-                color: offWhite,
-                borderRadius: BorderRadius.circular(10),
+                color: context.colors.background,
+                borderRadius: BorderRadius.circular(AppRadius.r10),
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -839,11 +854,11 @@ class _ServicesScreenState extends State<ServicesScreen> {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      const Text('Payment Information', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13.5)),
-                      Text(status, style: TextStyle(color: statusColor, fontSize: 12.5, fontWeight: FontWeight.w600)),
+                      const Text('Payment Information', style: TextStyle(fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f13_5)),
+                      Text(status, style: TextStyle(color: statusColor, fontSize: AppFontSize.f12_5, fontWeight: AppFontWeight.semibold)),
                     ],
                   ),
-                  const SizedBox(height: 10),
+                  const SizedBox(height: AppSpacing.s10),
                   _totalsRow('Paid Amount', Money.format(service.totalPaid)),
                   _totalsRow('Payment Method', service.paymentMethod ?? 'Not recorded'),
                   if (service.transactionId != null && service.transactionId!.isNotEmpty)
@@ -852,7 +867,7 @@ class _ServicesScreenState extends State<ServicesScreen> {
                 ],
               ),
             ),
-            const SizedBox(height: 20),
+            const SizedBox(height: AppSpacing.s20),
             _detailField(Icons.category_outlined, 'Category', service.category),
             _detailField(Icons.person_outline, 'Client', service.clientName ?? 'Walk-in', subtitle: client?.phone),
             _detailField(Icons.badge_outlined, 'Provided By', service.providedByName ?? 'Unknown'),
@@ -861,7 +876,7 @@ class _ServicesScreenState extends State<ServicesScreen> {
             if (service.updatedAt != null)
               _detailField(Icons.history_outlined, 'Created On',
                   '${dateOnlyFormatter.format(service.updatedAt!)}, ${timeOnlyFormatter.format(service.updatedAt!)}'),
-            const SizedBox(height: 20),
+            const SizedBox(height: AppSpacing.s20),
             Row(
               children: [
                 Expanded(
@@ -869,27 +884,27 @@ class _ServicesScreenState extends State<ServicesScreen> {
                     onPressed: () {
                       Navigator.push(context, MaterialPageRoute(builder: (_) => ServiceReceiptPreviewScreen(service: service)));
                     },
-                    icon: const Icon(Icons.print_outlined, size: 16),
+                    icon: const Icon(Icons.print_outlined, size: AppIconSize.i16),
                     label: const Text('Print'),
                   ),
                 ),
-                const SizedBox(width: 8),
+                const SizedBox(width: AppSpacing.s8),
                 Expanded(
                   child: OutlinedButton.icon(
                     onPressed: () {
                       showAddEditServiceScreen(context, service: service);
                     },
-                    icon: const Icon(Icons.edit_outlined, size: 16),
+                    icon: const Icon(Icons.edit_outlined, size: AppIconSize.i16),
                     label: const Text('Edit'),
                   ),
                 ),
                 if (Provider.of<UserRoleProvider>(context).isAdmin) ...[
-                  const SizedBox(width: 8),
+                  const SizedBox(width: AppSpacing.s8),
                   Expanded(
                     child: OutlinedButton.icon(
                       onPressed: () => _confirmDeleteService(service),
-                      icon: Icon(Icons.delete_outline, size: 16, color: Colors.red[400]),
-                      label: Text('Delete', style: TextStyle(color: Colors.red[400])),
+                      icon: Icon(Icons.delete_outline, size: AppIconSize.i16, color: context.colors.dangerSoft),
+                      label: Text('Delete', style: TextStyle(color: context.colors.dangerSoft)),
                       style: OutlinedButton.styleFrom(side: BorderSide(color: Colors.red[200]!)),
                     ),
                   ),
@@ -904,14 +919,14 @@ class _ServicesScreenState extends State<ServicesScreen> {
 
   Widget _totalsRow(String label, String value, {bool bold = false, Color? color}) {
     return Padding(
-      padding: const EdgeInsets.only(bottom: 6),
+      padding: const EdgeInsets.only(bottom: AppSpacing.s6),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(label, style: TextStyle(fontSize: 13, color: Colors.grey[600])),
+          Text(label, style: TextStyle(fontSize: AppFontSize.f13, color: context.colors.textMuted)),
           Text(
             value,
-            style: TextStyle(fontSize: 13.5, fontWeight: bold ? FontWeight.bold : FontWeight.normal, color: color),
+            style: TextStyle(fontSize: AppFontSize.f13_5, fontWeight: bold ? AppFontWeight.bold : AppFontWeight.regular, color: color),
           ),
         ],
       ),
@@ -920,20 +935,20 @@ class _ServicesScreenState extends State<ServicesScreen> {
 
   Widget _detailField(IconData icon, String label, String value, {String? subtitle}) {
     return Padding(
-      padding: const EdgeInsets.only(bottom: 14),
+      padding: const EdgeInsets.only(bottom: AppSpacing.s14),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(icon, size: 18, color: Colors.grey[600]),
-          const SizedBox(width: 10),
+          Icon(icon, size: AppIconSize.i18, color: context.colors.textMuted),
+          const SizedBox(width: AppSpacing.s10),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(label, style: TextStyle(fontSize: 11.5, color: Colors.grey[600])),
-                Text(value, style: const TextStyle(fontSize: 13.5, fontWeight: FontWeight.w600)),
+                Text(label, style: TextStyle(fontSize: AppFontSize.f11_5, color: context.colors.textMuted)),
+                Text(value, style: const TextStyle(fontSize: AppFontSize.f13_5, fontWeight: AppFontWeight.semibold)),
                 if (subtitle != null && subtitle.isNotEmpty)
-                  Text(subtitle, style: TextStyle(fontSize: 12, color: Colors.grey[600])),
+                  Text(subtitle, style: TextStyle(fontSize: AppFontSize.f12, color: context.colors.textMuted)),
               ],
             ),
           ),
