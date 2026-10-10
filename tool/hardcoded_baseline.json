@@ -68,7 +68,7 @@
       "lib/screens/settings/settings_screen.dart": 15,
       "lib/screens/settings/trash_screen.dart": 19,
       "lib/screens/settings/ui_settings_dialog.dart": 9,
-      "lib/screens/transactions/transactions_screen.dart": 41
+      "lib/screens/transactions/transactions_screen.dart": 25
     },
     "R2": {
       "lib/main.dart": 11,
@@ -128,7 +128,7 @@
       "lib/screens/settings/settings_screen.dart": 12,
       "lib/screens/settings/trash_screen.dart": 3,
       "lib/screens/settings/ui_settings_dialog.dart": 5,
-      "lib/screens/transactions/transactions_screen.dart": 33,
+      "lib/screens/transactions/transactions_screen.dart": 22,
       "lib/services/daily_report_pdf_service.dart": 25,
       "lib/services/receipt_pdf_service.dart": 17
     },
@@ -185,7 +185,7 @@
       "lib/screens/settings/settings_screen.dart": 3,
       "lib/screens/settings/trash_screen.dart": 1,
       "lib/screens/settings/ui_settings_dialog.dart": 6,
-      "lib/screens/transactions/transactions_screen.dart": 8,
+      "lib/screens/transactions/transactions_screen.dart": 3,
       "lib/services/daily_report_pdf_service.dart": 1
     },
     "R4": {
@@ -246,7 +246,7 @@
       "lib/screens/settings/settings_screen.dart": 32,
       "lib/screens/settings/trash_screen.dart": 6,
       "lib/screens/settings/ui_settings_dialog.dart": 14,
-      "lib/screens/transactions/transactions_screen.dart": 42,
+      "lib/screens/transactions/transactions_screen.dart": 25,
       "lib/services/daily_report_pdf_service.dart": 52,
       "lib/services/receipt_pdf_service.dart": 26
     },
@@ -278,7 +278,6 @@
       "lib/screens/sales/receipt_preview_screen.dart": 1,
       "lib/screens/services/add_edit_service_screen.dart": 1,
       "lib/screens/services/service_receipt_preview_screen.dart": 1,
-      "lib/screens/transactions/transactions_screen.dart": 1,
       "lib/services/activity_log_retention.dart": 1
     },
     "R6": {},

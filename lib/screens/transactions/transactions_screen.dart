@@ -12,11 +12,15 @@ import '../../widgets/payment_method_selector.dart';
 import '../../services/receipt_printer_service.dart';
 import '../settings/printer_settings_screen.dart';
 import 'add_transaction_screen.dart';
-import '../../theme/app_palette.dart';
 import '../../config/money.dart';
 import '../../config/app_ranges.dart';
 import '../../config/app_date_format.dart';
 import '../../data/data_keys.dart';
+import '../../theme/app_palette.dart';
+import '../../theme/app_text.dart';
+import '../../theme/app_dimens.dart';
+import '../../theme/theme_context.dart';
+import '../../theme/app_motion.dart';
 
 class TransactionScreen extends StatefulWidget {
   const TransactionScreen({super.key});
@@ -87,9 +91,9 @@ class _TransactionScreenState extends State<TransactionScreen> {
       builder: (context) => DateRangeDialog(
         initialStart: _rangeStart,
         initialEnd: _rangeEnd,
-        primaryDeepGreen: TransactionScreen.primaryDeepGreen,
-        warmAmber: TransactionScreen.warmAmber,
-        offWhite: TransactionScreen.offWhite,
+        primaryDeepGreen: context.colors.primary,
+        warmAmber: context.colors.accent,
+        offWhite: context.colors.background,
       ),
     );
 
@@ -157,27 +161,27 @@ class _TransactionScreenState extends State<TransactionScreen> {
     }).toList();
 
     return Scaffold(
-      backgroundColor: TransactionScreen.offWhite,
+      backgroundColor: context.colors.background,
       appBar: _buildAppBar(),
       body: Row(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           Expanded(
             child: Padding(
-              padding: const EdgeInsets.all(16),
+              padding: const EdgeInsets.all(AppSpacing.s16),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   _buildMetricsRow(subProfit),
-                  const SizedBox(height: 16),
+                  const SizedBox(height: AppSpacing.s16),
                   _buildToolbarRow(filteredTransactions.length),
-                  const SizedBox(height: 16),
+                  const SizedBox(height: AppSpacing.s16),
                   Expanded(
                     child: filteredTransactions.isEmpty
                         ? Center(
                             child: Text(
                               'No transactions${_filterType != null ? ' for ${toTitleCase(_filterType!)}' : ''}.',
-                              style: const TextStyle(fontSize: 16, color: TransactionScreen.primaryDeepGreen),
+                              style: TextStyle(fontSize: AppFontSize.f16, color: context.colors.primary),
                             ),
                           )
                         : _buildTransactionsTable(filteredTransactions, transactionProvider),
@@ -200,44 +204,44 @@ class _TransactionScreenState extends State<TransactionScreen> {
 
   PreferredSizeWidget _buildAppBar() {
     return AppBar(
-      backgroundColor: Colors.white,
-      foregroundColor: Colors.black87,
-      elevation: 1,
+      backgroundColor: context.colors.surface,
+      foregroundColor: context.colors.textPrimary,
+      elevation: AppElevation.e1,
       centerTitle: true,
       toolbarHeight: 72,
-      title: const Column(
+      title: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Text('Transactions', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 19, color: Colors.black87)),
-          Text('All income and expense transactions', style: TextStyle(fontSize: 12, color: Colors.black54)),
+          Text('Transactions', style: TextStyle(fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f19, color: context.colors.textPrimary)),
+          Text('All income and expense transactions', style: TextStyle(fontSize: AppFontSize.f12, color: context.colors.textSecondary)),
         ],
       ),
       actions: [
         Padding(
-          padding: const EdgeInsets.only(right: 8),
+          padding: const EdgeInsets.only(right: AppSpacing.s8),
           child: OutlinedButton.icon(
             onPressed: _showDateRangeDialog,
-            icon: const Icon(Icons.date_range_outlined, size: 16),
+            icon: const Icon(Icons.date_range_outlined, size: AppIconSize.i16),
             label: Text(
               '${AppDateFormat.date.format(_rangeStart)} - ${AppDateFormat.date.format(_rangeEnd)}',
-              style: const TextStyle(fontSize: 12.5),
+              style: const TextStyle(fontSize: AppFontSize.f12_5),
             ),
           ),
         ),
         Padding(
-          padding: const EdgeInsets.only(right: 12),
+          padding: const EdgeInsets.only(right: AppSpacing.s12),
           child: ElevatedButton.icon(
             onPressed: () async {
               await showAddTransactionScreen(context);
               await _loadPeriodTotals();
             },
-            icon: const Icon(Icons.add, size: 18),
+            icon: const Icon(Icons.add, size: AppIconSize.i18),
             label: const Text('Record Transaction'),
             style: ElevatedButton.styleFrom(
-              backgroundColor: TransactionScreen.primaryDeepGreen,
-              foregroundColor: TransactionScreen.offWhite,
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+              backgroundColor: context.colors.primary,
+              foregroundColor: context.colors.background,
+              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.s16, vertical: AppSpacing.s10),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadius.r8)),
             ),
           ),
         ),
@@ -252,18 +256,18 @@ class _TransactionScreenState extends State<TransactionScreen> {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           Expanded(
-            child: _metricCard('Other Income', _otherIncomeTotal, TransactionScreen.warmAmber),
+            child: _metricCard('Other Income', _otherIncomeTotal, context.colors.accent),
           ),
-          const SizedBox(width: 12),
+          const SizedBox(width: AppSpacing.s12),
           Expanded(
-            child: _metricCard('Expenses', _expensesTotal, Colors.red[400]!),
+            child: _metricCard('Expenses', _expensesTotal, context.colors.dangerSoft),
           ),
-          const SizedBox(width: 12),
+          const SizedBox(width: AppSpacing.s12),
           Expanded(
             child: _metricCard(
               'Other Income vs Expenses',
               subProfit,
-              subProfit >= 0 ? Colors.green[700]! : Colors.red[400]!,
+              subProfit >= 0 ? context.colors.successStrong : context.colors.dangerSoft,
             ),
           ),
         ],
@@ -274,11 +278,11 @@ class _TransactionScreenState extends State<TransactionScreen> {
   Widget _metricCard(String title, double amount, Color color) {
     final isLoading = _isSummaryLoading;
     return Container(
-      padding: const EdgeInsets.all(12),
+      padding: const EdgeInsets.all(AppSpacing.s12),
       decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 8, offset: const Offset(0, 2))],
+        color: context.colors.surface,
+        borderRadius: BorderRadius.circular(AppRadius.r12),
+        boxShadow: [BoxShadow(color: context.colors.shadow.withValues(alpha: AppAlpha.a05), blurRadius: 8, offset: const Offset(0, 2))],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -287,25 +291,25 @@ class _TransactionScreenState extends State<TransactionScreen> {
           Row(
             children: [
               Container(
-                padding: const EdgeInsets.all(6),
-                decoration: BoxDecoration(color: color.withValues(alpha: 0.12), borderRadius: BorderRadius.circular(8)),
-                child: Icon(Icons.account_balance_wallet_outlined, size: 14, color: color),
+                padding: const EdgeInsets.all(AppSpacing.s6),
+                decoration: BoxDecoration(color: color.withValues(alpha: AppAlpha.a10), borderRadius: BorderRadius.circular(AppRadius.r8)),
+                child: Icon(Icons.account_balance_wallet_outlined, size: AppIconSize.i14, color: color),
               ),
-              const SizedBox(width: 8),
+              const SizedBox(width: AppSpacing.s8),
               Expanded(
-                child: Text(title, style: TextStyle(fontSize: 12, color: Colors.grey[600]), maxLines: 1, overflow: TextOverflow.ellipsis),
+                child: Text(title, style: TextStyle(fontSize: AppFontSize.f12, color: context.colors.textMuted), maxLines: 1, overflow: TextOverflow.ellipsis),
               ),
             ],
           ),
-          const SizedBox(height: 6),
+          const SizedBox(height: AppSpacing.s6),
           AnimatedSwitcher(
-            duration: const Duration(milliseconds: 300),
+            duration: AppMotion.slow,
             child: isLoading
                 ? SizedBox(key: const ValueKey('loading'), height: 20, width: 20, child: CircularProgressIndicator(strokeWidth: 2, color: color))
                 : Text(
                     Money.symbolDecimal(amount),
                     key: const ValueKey('loaded'),
-                    style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                    style: const TextStyle(fontSize: AppFontSize.f18, fontWeight: AppFontWeight.bold),
                   ),
           ),
         ],
@@ -316,8 +320,8 @@ class _TransactionScreenState extends State<TransactionScreen> {
   Widget _buildToolbarRow(int count) {
     final hasActiveFilter = _filterType != null;
     final border = OutlineInputBorder(
-      borderRadius: BorderRadius.circular(10),
-      borderSide: BorderSide(color: Colors.grey.withValues(alpha: 0.3)),
+      borderRadius: BorderRadius.circular(AppRadius.r10),
+      borderSide: BorderSide(color: context.colors.textHint.withValues(alpha: AppAlpha.a30)),
     );
     return Row(
       children: [
@@ -327,18 +331,18 @@ class _TransactionScreenState extends State<TransactionScreen> {
             controller: _searchController,
             decoration: InputDecoration(
               hintText: 'Search by description, category...',
-              hintStyle: const TextStyle(fontSize: 13),
-              prefixIcon: const Icon(Icons.search, size: 20),
+              hintStyle: const TextStyle(fontSize: AppFontSize.f13),
+              prefixIcon: const Icon(Icons.search, size: AppIconSize.i20),
               filled: true,
-              fillColor: Colors.white,
+              fillColor: context.colors.surface,
               isDense: true,
-              contentPadding: const EdgeInsets.symmetric(vertical: 12, horizontal: 12),
+              contentPadding: const EdgeInsets.symmetric(vertical: AppSpacing.s12, horizontal: AppSpacing.s12),
               border: border,
               enabledBorder: border,
               suffixIcon: _searchController.text.isEmpty
                   ? null
                   : IconButton(
-                      icon: const Icon(Icons.clear, size: 18),
+                      icon: const Icon(Icons.clear, size: AppIconSize.i18),
                       onPressed: () => setState(() {
                         _searchController.clear();
                         _searchQuery = '';
@@ -348,21 +352,21 @@ class _TransactionScreenState extends State<TransactionScreen> {
             onChanged: (val) => setState(() => _searchQuery = val.trim()),
           ),
         ),
-        const SizedBox(width: 10),
+        const SizedBox(width: AppSpacing.s10),
         Container(
-          padding: const EdgeInsets.symmetric(horizontal: 10),
+          padding: const EdgeInsets.symmetric(horizontal: AppSpacing.s10),
           height: 44,
           decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(10),
-            border: Border.all(color: Colors.grey.withValues(alpha: 0.3)),
+            color: context.colors.surface,
+            borderRadius: BorderRadius.circular(AppRadius.r10),
+            border: Border.all(color: context.colors.textHint.withValues(alpha: AppAlpha.a30)),
           ),
           child: DropdownButtonHideUnderline(
             child: DropdownButton<String?>(
               value: _filterType,
-              hint: const Text('Type: All', style: TextStyle(fontSize: 13)),
-              icon: Icon(Icons.arrow_drop_down, size: 18, color: TransactionScreen.primaryDeepGreen),
-              style: const TextStyle(color: Colors.black87, fontSize: 13),
+              hint: const Text('Type: All', style: TextStyle(fontSize: AppFontSize.f13)),
+              icon: Icon(Icons.arrow_drop_down, size: AppIconSize.i18, color: context.colors.primary),
+              style: TextStyle(color: context.colors.textPrimary, fontSize: AppFontSize.f13),
               items: const [
                 DropdownMenuItem<String?>(value: null, child: Text('Type: All')),
                 DropdownMenuItem<String?>(value: 'other income', child: Text('Type: Other Income')),
@@ -373,14 +377,14 @@ class _TransactionScreenState extends State<TransactionScreen> {
           ),
         ),
         if (hasActiveFilter) ...[
-          const SizedBox(width: 8),
+          const SizedBox(width: AppSpacing.s8),
           TextButton(
             onPressed: () => setState(() => _filterType = null),
-            child: const Text('Clear', style: TextStyle(fontSize: 13)),
+            child: const Text('Clear', style: TextStyle(fontSize: AppFontSize.f13)),
           ),
         ],
-        const SizedBox(width: 16),
-        Text('$count transaction${count == 1 ? '' : 's'}', style: TextStyle(fontSize: 12, color: Colors.grey[600])),
+        const SizedBox(width: AppSpacing.s16),
+        Text('$count transaction${count == 1 ? '' : 's'}', style: TextStyle(fontSize: AppFontSize.f12, color: context.colors.textMuted)),
       ],
     );
   }
