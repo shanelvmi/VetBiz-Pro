@@ -56,6 +56,10 @@ class AppIconSize {
   static const double i22 = 22;
   static const double i24 = 24;
   static const double i32 = 32;
+
+  /// Empty-state and placeholder icons (add_sale_screen.dart empty items;
+  /// add_edit_product_screen.dart photo placeholder, 36 snapped up).
+  static const double i40 = 40;
   static const double i48 = 48;
   static const double i56 = 56;
   static const double i64 = 64;

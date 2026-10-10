@@ -51,15 +51,30 @@ Colours are outside the standing snap rule, so this is kept as it is:
 
 ### Raised in step 2D, batch D6
 
+- **Alpha 0.95**, `lib/screens/products/add_edit_product_screen.dart` (the brand-green category and type picker dialogs' background, x2): 0.1 above `a85`, no step. Kept as is (owner, after D6); listed for 2R.
+- **Photo placeholder alpha 0.6**, same file (the `add_photo_alternate_outlined` icon, now `AppIconSize.i40`): 0.1 from `a50`/`a70`, beyond the standing rule. Kept.
+- **No Undo on sale delete**, `lib/screens/sales/sales_screen.dart` `_confirmDeleteSale`: see "Trash and restore: books consistency" below. The message is a plain success ("Sale deleted"); the confirmation still says "permanently deletes ... This cannot be undone." Make sale restore re-apply stock, debt and balance (then add Undo and change the dialog text), or keep it as is?
+
+## Decided
+
+### D6 follow-up (decided after batch D6; done before D7)
+
+- **Info notes:** the three exact roles stay (`infoNote`, `infoNoteText`, `infoNoteTextSoft`). Merging them is a 2R decision.
+- **`Colors.orange[900]`** (add_edit_product_screen's duplicate-name hint titles) snaps to `warningStrong`.
+- **Alpha 0.95** (category and type picker dialogs): kept and listed (see Open, D6).
+- **`AppIconSize.i40`** added. The 40 px empty-items icon (add_sale_screen) uses it exactly; the 36 px photo placeholder (add_edit_product_screen) snaps up to it.
+- **Sizes 80 and 96** stay as the named local constants `_fabClearance` (view_batches_screen) and `_qtyColumnWidth` (add_sale_screen).
+- **`tool/oneoff_2d_tokens.dart`** stays uncommitted for D7 to D10 and is deleted when 2D ends.
+- **CLAUDE.md** analyze baseline: 160 (0/16/144).
+
+The questions as raised:
+
 - **List bottom gap 80**, `lib/screens/products/view_batches_screen.dart` (`_fabClearance`, under the batch list so the floating Add Batch button does not cover the last card): a size above the spacing ladder, no token. Kept exact as a named local constant.
 - **`Colors.orange[900]`**, `lib/screens/products/add_edit_product_screen.dart` (the duplicate-name hint's titles, "... already exists" and "Similar products already exist"): not in the 4.1 table; `warningStrong` (orange[800]) is more than 12 away on green. Snap to `warningStrong`, or a `warningDeep` role?
 - **Alpha 0.95**, same file (the brand-green category and type picker dialogs' background, x2): 0.1 above `a85`, no step. Kept. Snap to full `primary`, or add `a95`?
 - **Photo placeholder icon**, same file: `size: 36` (4 px from `i32`) at alpha 0.6 (0.1 from `a50`/`a70`). Kept, beyond the standing rule.
-- **No Undo on sale delete**, `lib/screens/sales/sales_screen.dart` `_confirmDeleteSale`: `SaleProvider.deleteSale` copies the sale to `trash_sales` (a soft delete), then puts its stock back, deletes its debt and reverses the client's balance. Restoring it from Trash (`TrashService.restore`, the Trash screen) only moves the document back: stock, debt and balance are not re-applied. An Undo would make that easy to hit, so the message is a plain success ("Sale deleted"). The confirmation still says "permanently deletes ... This cannot be undone." Make sale restore re-apply stock, debt and balance (then add Undo and change the dialog text), or keep it as is?
 - **Qty column width 96**, `lib/screens/sales/add_sale_screen.dart` (`_qtyColumnWidth`, the wide items table, header and rows): a size above the spacing ladder. Kept exact as a named local constant.
 - **Empty items icon 40**, same file (`_buildEmptyProductsState`, `Icons.playlist_add_outlined`): 8 px from `i32` and `i48`, beyond the standing rule. Kept.
-
-## Decided
 
 ### D5 follow-up (decided after batch D5; done before D6)
 

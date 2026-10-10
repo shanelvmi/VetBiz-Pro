@@ -1379,7 +1379,7 @@ class _AddSaleScreenState extends State<AddSaleScreen> {
         padding: const EdgeInsets.symmetric(vertical: AppSpacing.s32),
         child: Column(
           children: [
-            Icon(Icons.playlist_add_outlined, size: 40, color: context.colors.border),
+            Icon(Icons.playlist_add_outlined, size: AppIconSize.i40, color: context.colors.border),
             const SizedBox(height: AppSpacing.s10),
             Text('No products added yet',
                 style: TextStyle(fontWeight: AppFontWeight.semibold, color: context.colors.textMuted)),

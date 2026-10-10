@@ -263,7 +263,7 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
     return Column(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        Icon(Icons.add_photo_alternate_outlined, size: 36, color: context.colors.primary.withValues(alpha: 0.6)),
+        Icon(Icons.add_photo_alternate_outlined, size: AppIconSize.i40, color: context.colors.primary.withValues(alpha: 0.6)),
         const SizedBox(height: AppSpacing.s8),
         Text(
           'Add photo',
@@ -1126,7 +1126,7 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
                               Expanded(
                                 child: Text(
                                   '"${match.name}" already exists',
-                                  style: TextStyle(fontWeight: AppFontWeight.bold, color: Colors.orange[900]),
+                                  style: TextStyle(fontWeight: AppFontWeight.bold, color: context.colors.warningStrong),
                                 ),
                               ),
                             ],
@@ -1167,7 +1167,7 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
                               const SizedBox(width: AppSpacing.s6),
                               Text(
                                 'Similar products already exist',
-                                style: TextStyle(fontWeight: AppFontWeight.bold, color: Colors.orange[900], fontSize: AppFontSize.f13),
+                                style: TextStyle(fontWeight: AppFontWeight.bold, color: context.colors.warningStrong, fontSize: AppFontSize.f13),
                               ),
                             ],
                           ),
