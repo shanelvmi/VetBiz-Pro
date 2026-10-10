@@ -23,11 +23,11 @@ import '../../config/app_timeouts.dart';
 import '../../config/app_date_format.dart';
 import '../../data/data_keys.dart';
 import '../../config/app_links.dart';
-import '../../theme/app_palette.dart';
 import '../../theme/app_text.dart';
 import '../../theme/app_dimens.dart';
 import '../../theme/theme_context.dart';
 import '../../theme/app_breakpoints.dart';
+import '../../ui/feedback/app_feedback.dart';
 
 class DebtorsScreen extends StatefulWidget {
   const DebtorsScreen({super.key});
@@ -37,9 +37,6 @@ class DebtorsScreen extends StatefulWidget {
 }
 
 class _DebtorsScreenState extends State<DebtorsScreen> {
-  final Color primaryDeepGreen = AppPalette.primary;
-  final Color warmAmber = AppPalette.accent;
-  final Color offWhite = AppPalette.background;
 
 
   String _searchQuery = '';
@@ -659,7 +656,7 @@ class _DebtorsScreenState extends State<DebtorsScreen> {
   Widget _headerCell(String label, {required int flex}) {
     return Expanded(
       flex: flex,
-      child: Text(label, style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Colors.grey[600])),
+      child: Text(label, style: TextStyle(fontSize: AppFontSize.f12, fontWeight: AppFontWeight.semibold, color: context.colors.textMuted)),
     );
   }
 
@@ -670,8 +667,8 @@ class _DebtorsScreenState extends State<DebtorsScreen> {
     return InkWell(
       onTap: () => setState(() => _selectedClientId = debtor.clientId),
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-        color: isSelected ? primaryDeepGreen.withValues(alpha: 0.06) : null,
+        padding: const EdgeInsets.symmetric(horizontal: AppSpacing.s16, vertical: AppSpacing.s12),
+        color: isSelected ? context.colors.primary.withValues(alpha: AppAlpha.a05) : null,
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -682,21 +679,21 @@ class _DebtorsScreenState extends State<DebtorsScreen> {
                 children: [
                   CircleAvatar(
                     radius: 16,
-                    backgroundColor: primaryDeepGreen.withValues(alpha: 0.15),
+                    backgroundColor: context.colors.primary.withValues(alpha: AppAlpha.a15),
                     child: Text(
                       debtor.clientName.isNotEmpty ? debtor.clientName[0].toUpperCase() : '?',
-                      style: TextStyle(color: primaryDeepGreen, fontWeight: FontWeight.bold, fontSize: 13),
+                      style: TextStyle(color: context.colors.primary, fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f13),
                     ),
                   ),
-                  const SizedBox(width: 10),
+                  const SizedBox(width: AppSpacing.s10),
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(debtor.clientName, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
+                        Text(debtor.clientName, style: const TextStyle(fontSize: AppFontSize.f13, fontWeight: AppFontWeight.semibold),
                             maxLines: 1, overflow: TextOverflow.ellipsis),
                         if (debtor.clientPhone.isNotEmpty)
-                          Text(debtor.clientPhone, style: TextStyle(fontSize: 11.5, color: Colors.grey[600])),
+                          Text(debtor.clientPhone, style: TextStyle(fontSize: AppFontSize.f11_5, color: context.colors.textMuted)),
                       ],
                     ),
                   ),
@@ -706,13 +703,13 @@ class _DebtorsScreenState extends State<DebtorsScreen> {
             Expanded(
               flex: 2,
               child: Text(Money.format(debtor.totalOwed),
-                  style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: Colors.red)),
+                  style: TextStyle(fontSize: AppFontSize.f13, fontWeight: AppFontWeight.semibold, color: context.colors.danger)),
             ),
             Expanded(
               flex: 2,
               child: Text(
                 isOverdue ? '${debtor.daysSinceOldestDebt} days' : '\u2014',
-                style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: isOverdue ? Colors.red : Colors.grey[600]),
+                style: TextStyle(fontSize: AppFontSize.f13, fontWeight: AppFontWeight.semibold, color: isOverdue ? context.colors.danger : context.colors.textMuted),
               ),
             ),
             Expanded(
@@ -720,20 +717,20 @@ class _DebtorsScreenState extends State<DebtorsScreen> {
               child: debtor.client.oldestUnpaidDebtDate != null
                   ? Text(
                       AppDateFormat.date.format(debtor.client.oldestUnpaidDebtDate!),
-                      style: const TextStyle(fontSize: 13),
+                      style: const TextStyle(fontSize: AppFontSize.f13),
                     )
-                  : Text('\u2014', style: TextStyle(fontSize: 13, color: Colors.grey[500])),
+                  : Text('\u2014', style: TextStyle(fontSize: AppFontSize.f13, color: context.colors.textHint)),
             ),
             Expanded(
               flex: 2,
               child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                padding: const EdgeInsets.symmetric(horizontal: AppSpacing.s8, vertical: AppSpacing.s3),
                 decoration: BoxDecoration(
-                  color: (isOverdue ? Colors.red : Colors.green).withValues(alpha: 0.12),
-                  borderRadius: BorderRadius.circular(10),
+                  color: (isOverdue ? context.colors.danger : context.colors.success).withValues(alpha: AppAlpha.a10),
+                  borderRadius: BorderRadius.circular(AppRadius.r10),
                 ),
                 child: Text(isOverdue ? 'Overdue' : 'Current',
-                    style: TextStyle(color: isOverdue ? Colors.red : Colors.green, fontSize: 11.5, fontWeight: FontWeight.w600)),
+                    style: TextStyle(color: isOverdue ? context.colors.danger : context.colors.success, fontSize: AppFontSize.f11_5, fontWeight: AppFontWeight.semibold)),
               ),
             ),
             Expanded(
@@ -742,19 +739,19 @@ class _DebtorsScreenState extends State<DebtorsScreen> {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   IconButton(
-                    icon: Icon(Icons.notifications_active_outlined, size: 18, color: Colors.orange[700]),
+                    icon: Icon(Icons.notifications_active_outlined, size: AppIconSize.i18, color: Colors.orange[700]),
                     tooltip: 'Send Reminder',
                     onPressed: debtor.clientPhone.isEmpty
                         ? null
                         : () => _showReminderOptions(context, debtor.clientName, debtor.clientPhone, debtor.totalOwed),
                   ),
                   IconButton(
-                    icon: Icon(Icons.history, size: 18, color: primaryDeepGreen),
+                    icon: Icon(Icons.history, size: AppIconSize.i18, color: context.colors.primary),
                     tooltip: 'Payment History',
                     onPressed: () => _openPaymentHistory(debtor),
                   ),
                   PopupMenuButton<String>(
-                    icon: Icon(Icons.more_vert, size: 18, color: Colors.grey[600]),
+                    icon: Icon(Icons.more_vert, size: AppIconSize.i18, color: context.colors.textMuted),
                     onSelected: (value) {
                       if (value == 'view') setState(() => _selectedClientId = debtor.clientId);
                     },
@@ -789,14 +786,14 @@ class _DebtorsScreenState extends State<DebtorsScreen> {
     final pageEnd = (controller.currentPage - 1) * pageSize + itemCount;
 
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-      decoration: BoxDecoration(border: Border(top: BorderSide(color: Colors.grey.withValues(alpha: 0.2)))),
+      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.s16, vertical: AppSpacing.s12),
+      decoration: BoxDecoration(border: Border(top: BorderSide(color: context.colors.textHint.withValues(alpha: AppAlpha.a20)))),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           Text(
             itemCount == 0 ? 'No debtors' : 'Showing $pageStart to $pageEnd',
-            style: TextStyle(fontSize: 12.5, color: Colors.grey[600]),
+            style: TextStyle(fontSize: AppFontSize.f12_5, color: context.colors.textMuted),
           ),
           Row(
             children: [
@@ -811,15 +808,15 @@ class _DebtorsScreenState extends State<DebtorsScreen> {
                   },
                 ),
               ),
-              const SizedBox(width: 16),
+              const SizedBox(width: AppSpacing.s16),
               IconButton(
                 icon: const Icon(Icons.chevron_left),
                 onPressed: controller.hasPreviousPage ? () => controller.goToPreviousPage() : null,
               ),
-              Text('Page ${controller.currentPage}', style: const TextStyle(fontSize: 13)),
+              Text('Page ${controller.currentPage}', style: const TextStyle(fontSize: AppFontSize.f13)),
               IconButton(
                 icon: controller.isLoading
-                    ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2))
+                    ? const SizedBox(width: AppSpacing.s16, height: 16, child: CircularProgressIndicator(strokeWidth: 2))
                     : const Icon(Icons.chevron_right),
                 onPressed:
                     controller.hasNextPage && !controller.isLoading ? () => controller.goToNextPage() : null,
@@ -867,56 +864,56 @@ class _DebtorsScreenState extends State<DebtorsScreen> {
     final isOverdue = debtor.isOverdue;
 
     return Container(
-      color: Colors.white,
+      color: context.colors.surface,
       child: SingleChildScrollView(
-        padding: const EdgeInsets.all(20),
+        padding: const EdgeInsets.all(AppSpacing.s20),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                const Text('Debtor Details', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                const Text('Debtor Details', style: TextStyle(fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f16)),
                 IconButton(
-                  icon: const Icon(Icons.close, size: 20),
+                  icon: const Icon(Icons.close, size: AppIconSize.i20),
                   onPressed: () => setState(() => _selectedClientId = null),
                 ),
               ],
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: AppSpacing.s8),
             Row(
               children: [
                 CircleAvatar(
                   radius: 20,
-                  backgroundColor: primaryDeepGreen.withValues(alpha: 0.15),
+                  backgroundColor: context.colors.primary.withValues(alpha: AppAlpha.a15),
                   child: Text(
                     debtor.clientName.isNotEmpty ? debtor.clientName[0].toUpperCase() : '?',
-                    style: TextStyle(color: primaryDeepGreen, fontWeight: FontWeight.bold, fontSize: 16),
+                    style: TextStyle(color: context.colors.primary, fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f16),
                   ),
                 ),
-                const SizedBox(width: 12),
+                const SizedBox(width: AppSpacing.s12),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(debtor.clientName, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                      Text(debtor.clientName, style: const TextStyle(fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f16)),
                       if (debtor.clientPhone.isNotEmpty)
-                        Text(debtor.clientPhone, style: TextStyle(fontSize: 12.5, color: Colors.grey[600])),
+                        Text(debtor.clientPhone, style: TextStyle(fontSize: AppFontSize.f12_5, color: context.colors.textMuted)),
                     ],
                   ),
                 ),
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                  padding: const EdgeInsets.symmetric(horizontal: AppSpacing.s10, vertical: AppSpacing.s4),
                   decoration: BoxDecoration(
-                    color: (isOverdue ? Colors.red : Colors.green).withValues(alpha: 0.12),
-                    borderRadius: BorderRadius.circular(12),
+                    color: (isOverdue ? context.colors.danger : context.colors.success).withValues(alpha: AppAlpha.a10),
+                    borderRadius: BorderRadius.circular(AppRadius.r12),
                   ),
                   child: Text(isOverdue ? 'Overdue' : 'Current',
-                      style: TextStyle(color: isOverdue ? Colors.red : Colors.green, fontSize: 12, fontWeight: FontWeight.w600)),
+                      style: TextStyle(color: isOverdue ? context.colors.danger : context.colors.success, fontSize: AppFontSize.f12, fontWeight: AppFontWeight.semibold)),
                 ),
               ],
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: AppSpacing.s16),
             Row(
               children: [
                 Expanded(
@@ -924,36 +921,36 @@ class _DebtorsScreenState extends State<DebtorsScreen> {
                     onPressed: debtor.clientPhone.isEmpty
                         ? null
                         : () => _showReminderOptions(context, debtor.clientName, debtor.clientPhone, debtor.totalOwed),
-                    icon: const Icon(Icons.send_outlined, size: 15),
-                    label: const Text('Send Reminder', style: TextStyle(fontSize: 12.5)),
+                    icon: const Icon(Icons.send_outlined, size: AppIconSize.i16),
+                    label: const Text('Send Reminder', style: TextStyle(fontSize: AppFontSize.f12_5)),
                   ),
                 ),
-                const SizedBox(width: 8),
+                const SizedBox(width: AppSpacing.s8),
                 Expanded(
                   child: OutlinedButton.icon(
                     onPressed: () => _openPaymentHistory(debtor),
-                    icon: const Icon(Icons.history, size: 15),
-                    label: const Text('Payment History', style: TextStyle(fontSize: 12.5)),
+                    icon: const Icon(Icons.history, size: AppIconSize.i16),
+                    label: const Text('Payment History', style: TextStyle(fontSize: AppFontSize.f12_5)),
                   ),
                 ),
               ],
             ),
-            const SizedBox(height: 20),
-            const Text('Summary', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13.5)),
-            const SizedBox(height: 10),
-            _totalsRow('Total Owed', Money.format(debtor.totalOwed), color: Colors.red),
+            const SizedBox(height: AppSpacing.s20),
+            const Text('Summary', style: TextStyle(fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f13_5)),
+            const SizedBox(height: AppSpacing.s10),
+            _totalsRow('Total Owed', Money.format(debtor.totalOwed), color: context.colors.danger),
             FutureBuilder<List<Debt>>(
               future: _getDetailsDebtsFuture(debtor.clientId),
               builder: (context, snapshot) {
                 if (snapshot.hasError) {
                   return Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 20),
+                    padding: const EdgeInsets.symmetric(vertical: AppSpacing.s20),
                     child: FirestoreErrorView(error: snapshot.error),
                   );
                 }
                 if (!snapshot.hasData) {
                   return const Padding(
-                    padding: EdgeInsets.symmetric(vertical: 20),
+                    padding: EdgeInsets.symmetric(vertical: AppSpacing.s20),
                     child: Center(child: CircularProgressIndicator(strokeWidth: 2)),
                   );
                 }
@@ -966,26 +963,26 @@ class _DebtorsScreenState extends State<DebtorsScreen> {
                 return Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    _totalsRow('Overdue Amount', Money.format(overdueAmount), color: Colors.red),
+                    _totalsRow('Overdue Amount', Money.format(overdueAmount), color: context.colors.danger),
                     if (clientDebts.isNotEmpty)
                       _totalsRow('Last Transaction', AppDateFormat.date.format(clientDebts.first.timestamp)),
-                    const SizedBox(height: 20),
+                    const SizedBox(height: AppSpacing.s20),
                     Text('Outstanding Debts (${clientDebts.length})',
-                        style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13.5)),
-                    const SizedBox(height: 10),
+                        style: const TextStyle(fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f13_5)),
+                    const SizedBox(height: AppSpacing.s10),
                     ...clientDebts.map((debt) => _buildDebtTile(debtor, debt)),
                   ],
                 );
               },
             ),
-            const SizedBox(height: 20),
+            const SizedBox(height: AppSpacing.s20),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                const Text('Notes', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13.5)),
+                const Text('Notes', style: TextStyle(fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f13_5)),
                 TextButton.icon(
                   onPressed: () => _addNote(debtor),
-                  icon: const Icon(Icons.add, size: 16),
+                  icon: const Icon(Icons.add, size: AppIconSize.i16),
                   label: const Text('Add Note'),
                 ),
               ],
@@ -995,15 +992,15 @@ class _DebtorsScreenState extends State<DebtorsScreen> {
               builder: (context, snapshot) {
                 if (!snapshot.hasData) {
                   return const Padding(
-                    padding: EdgeInsets.symmetric(vertical: 12),
+                    padding: EdgeInsets.symmetric(vertical: AppSpacing.s12),
                     child: Center(child: CircularProgressIndicator(strokeWidth: 2)),
                   );
                 }
                 final notes = snapshot.data!;
                 if (notes.isEmpty) {
                   return Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 8),
-                    child: Text('No notes added', style: TextStyle(fontSize: 12.5, color: Colors.grey[600])),
+                    padding: const EdgeInsets.symmetric(vertical: AppSpacing.s8),
+                    child: Text('No notes added', style: TextStyle(fontSize: AppFontSize.f12_5, color: context.colors.textMuted)),
                   );
                 }
                 final sorted = [...notes]
@@ -1017,14 +1014,14 @@ class _DebtorsScreenState extends State<DebtorsScreen> {
                   children: sorted.map((note) {
                     final ts = note['timestamp'] as Timestamp?;
                     return Padding(
-                      padding: const EdgeInsets.only(bottom: 8),
+                      padding: const EdgeInsets.only(bottom: AppSpacing.s8),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(note['text'] as String? ?? '', style: const TextStyle(fontSize: 13)),
+                          Text(note['text'] as String? ?? '', style: const TextStyle(fontSize: AppFontSize.f13)),
                           if (ts != null)
                             Text(AppDateFormat.dateTime12.format(ts.toDate()),
-                                style: TextStyle(fontSize: 11, color: Colors.grey[500])),
+                                style: TextStyle(fontSize: AppFontSize.f11, color: context.colors.textHint)),
                         ],
                       ),
                     );
@@ -1032,7 +1029,7 @@ class _DebtorsScreenState extends State<DebtorsScreen> {
                 );
               },
             ),
-            const SizedBox(height: 20),
+            const SizedBox(height: AppSpacing.s20),
             ElevatedButton.icon(
               onPressed: () async {
                 final selectedClient = Client(
@@ -1057,11 +1054,11 @@ class _DebtorsScreenState extends State<DebtorsScreen> {
                   _loadMetrics();
                 }
               },
-              icon: const Icon(Icons.account_balance_wallet_outlined, size: 16),
+              icon: const Icon(Icons.account_balance_wallet_outlined, size: AppIconSize.i16),
               label: const Text('Record Payment'),
               style: ElevatedButton.styleFrom(
-                backgroundColor: primaryDeepGreen,
-                foregroundColor: offWhite,
+                backgroundColor: context.colors.primary,
+                foregroundColor: context.colors.background,
                 minimumSize: const Size(double.infinity, 44),
               ),
             ),
@@ -1075,11 +1072,11 @@ class _DebtorsScreenState extends State<DebtorsScreen> {
     final overdueDays = Provider.of<FacilityProvider>(context, listen: false).debtOverdueDays;
     final isOverdue = DateTime.now().difference(debt.timestamp).inDays > overdueDays;
     return Container(
-      margin: const EdgeInsets.only(bottom: 10),
-      padding: const EdgeInsets.all(12),
+      margin: const EdgeInsets.only(bottom: AppSpacing.s10),
+      padding: const EdgeInsets.all(AppSpacing.s12),
       decoration: BoxDecoration(
-        color: offWhite,
-        borderRadius: BorderRadius.circular(10),
+        color: context.colors.background,
+        borderRadius: BorderRadius.circular(AppRadius.r10),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -1097,22 +1094,22 @@ class _DebtorsScreenState extends State<DebtorsScreen> {
                         : '${_debtInvoicePrefix(debt)}-......';
                     return Text(
                       'Invoice: $invoiceText \u2022 ${AppDateFormat.date.format(debt.timestamp)}',
-                      style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
+                      style: const TextStyle(fontSize: AppFontSize.f12, fontWeight: AppFontWeight.semibold),
                     );
                   },
                 ),
               ),
               if (isOverdue)
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                  decoration: BoxDecoration(color: Colors.red.withValues(alpha: 0.12), borderRadius: BorderRadius.circular(8)),
-                  child: const Text('Overdue', style: TextStyle(color: Colors.red, fontSize: 10.5, fontWeight: FontWeight.w600)),
+                  padding: const EdgeInsets.symmetric(horizontal: AppSpacing.s8, vertical: AppSpacing.s2),
+                  decoration: BoxDecoration(color: context.colors.danger.withValues(alpha: AppAlpha.a10), borderRadius: BorderRadius.circular(AppRadius.r8)),
+                  child: Text('Overdue', style: TextStyle(color: context.colors.danger, fontSize: AppFontSize.f10_5, fontWeight: AppFontWeight.semibold)),
                 ),
             ],
           ),
-          const SizedBox(height: 4),
-          Text(_debtDescription(debt), style: TextStyle(fontSize: 12.5, color: Colors.grey[700])),
-          const SizedBox(height: 8),
+          const SizedBox(height: AppSpacing.s4),
+          Text(_debtDescription(debt), style: TextStyle(fontSize: AppFontSize.f12_5, color: context.colors.textSoft)),
+          const SizedBox(height: AppSpacing.s8),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             crossAxisAlignment: CrossAxisAlignment.end,
@@ -1120,17 +1117,17 @@ class _DebtorsScreenState extends State<DebtorsScreen> {
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text('Amount', style: TextStyle(fontSize: 11, color: Colors.grey[600])),
+                  Text('Amount', style: TextStyle(fontSize: AppFontSize.f11, color: context.colors.textMuted)),
                   Text(Money.format(debt.amountOwed),
-                      style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: Colors.red)),
+                      style: TextStyle(fontSize: AppFontSize.f14, fontWeight: AppFontWeight.bold, color: context.colors.danger)),
                 ],
               ),
               ElevatedButton(
                 onPressed: () => _payDebt(debtor, debt),
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: primaryDeepGreen,
-                  foregroundColor: offWhite,
-                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                  backgroundColor: context.colors.primary,
+                  foregroundColor: context.colors.background,
+                  padding: const EdgeInsets.symmetric(horizontal: AppSpacing.s20, vertical: AppSpacing.s10),
                 ),
                 child: const Text('Pay'),
               ),
@@ -1281,10 +1278,8 @@ class _DebtorsScreenState extends State<DebtorsScreen> {
         mimeType: 'text/csv',
       );
       await Share.shareXFiles([xfile], text: 'Active Debts Export');
-    } catch (e) {
-      if (!mounted) return;
-      ScaffoldMessenger.of(context)
-          .showSnackBar(SnackBar(content: Text('Could not export: $e'), backgroundColor: Colors.redAccent));
+    } catch (e, st) {
+      AppFeedback.error("Couldn't export the active debts", error: e, stackTrace: st);
     }
   }
 
@@ -1329,23 +1324,21 @@ class _DebtorsScreenState extends State<DebtorsScreen> {
 
       if (!mounted) return;
       setState(() => _notesFutureByClient.remove(debtor.clientId));
-    } catch (e) {
-      if (!mounted) return;
-      ScaffoldMessenger.of(context)
-          .showSnackBar(SnackBar(content: Text('Could not save note: $e'), backgroundColor: Colors.redAccent));
+    } catch (e, st) {
+      AppFeedback.error("Couldn't save the note", error: e, stackTrace: st);
     }
   }
 
   Widget _totalsRow(String label, String value, {bool bold = false, Color? color}) {
     return Padding(
-      padding: const EdgeInsets.only(bottom: 6),
+      padding: const EdgeInsets.only(bottom: AppSpacing.s6),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(label, style: TextStyle(fontSize: 13, color: Colors.grey[600])),
+          Text(label, style: TextStyle(fontSize: AppFontSize.f13, color: context.colors.textMuted)),
           Text(
             value,
-            style: TextStyle(fontSize: 13.5, fontWeight: bold ? FontWeight.bold : FontWeight.normal, color: color),
+            style: TextStyle(fontSize: AppFontSize.f13_5, fontWeight: bold ? AppFontWeight.bold : AppFontWeight.regular, color: color),
           ),
         ],
       ),
@@ -1378,7 +1371,7 @@ class _DebtorsScreenState extends State<DebtorsScreen> {
           ),
           ElevatedButton(
             onPressed: () => Navigator.pop(context, 'whatsapp'),
-            style: ElevatedButton.styleFrom(backgroundColor: Colors.green, foregroundColor: Colors.white),
+            style: ElevatedButton.styleFrom(backgroundColor: context.colors.success, foregroundColor: context.colors.onPrimary),
             child: const Text('WhatsApp'),
           ),
         ],
@@ -1393,17 +1386,11 @@ class _DebtorsScreenState extends State<DebtorsScreen> {
 
     try {
       final launched = await launchUrl(uri, mode: LaunchMode.externalApplication);
-      if (!launched && context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Could not open ${choice == 'whatsapp' ? 'WhatsApp' : 'Messages'}')),
-        );
+      if (!launched) {
+        AppFeedback.info("Couldn't open ${choice == 'whatsapp' ? 'WhatsApp' : 'Messages'}");
       }
-    } catch (e) {
-      if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Could not send reminder: $e')),
-        );
-      }
+    } catch (e, st) {
+      AppFeedback.error("Couldn't send the reminder", error: e, stackTrace: st);
     }
   }
 }
