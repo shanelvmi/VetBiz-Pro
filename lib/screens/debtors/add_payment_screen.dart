@@ -12,12 +12,17 @@ import '../../services/auth_service.dart';
 import '../../utils/activity_logger.dart';
 import '../../utils/thousands_input_formatter.dart';
 import '../../widgets/payment_method_selector.dart';
-import '../../theme/app_palette.dart';
 import '../../data/collections.dart';
 import '../../data/fields.dart';
 import '../../data/activity_type.dart';
 import '../../config/money.dart';
 import '../../config/app_limits.dart';
+import '../../theme/app_text.dart';
+import '../../theme/app_dimens.dart';
+import '../../theme/theme_context.dart';
+import '../../theme/app_breakpoints.dart';
+import '../../theme/app_motion.dart';
+import '../../ui/feedback/app_feedback.dart';
 
 class AddPaymentScreen extends StatefulWidget {
   final Client? preselectedClient;
@@ -68,8 +73,6 @@ class _AddPaymentScreenState extends State<AddPaymentScreen> {
   String? paymentMethod;
   final _formKey = GlobalKey<FormState>();
 
-  static const Color primaryDeepGreen = AppPalette.primary;
-  static const Color warmAmber = AppPalette.accent;
 
   @override
   void initState() {
@@ -118,14 +121,14 @@ class _AddPaymentScreenState extends State<AddPaymentScreen> {
         Expanded(
           child: Text.rich(
             TextSpan(
-              style: const TextStyle(fontSize: 16, color: Colors.black87),
+              style: TextStyle(fontSize: AppFontSize.f16, color: context.colors.textPrimary),
               children: [
-                TextSpan(text: 'Client: ${client.name}', style: const TextStyle(fontWeight: FontWeight.bold)),
+                TextSpan(text: 'Client: ${client.name}', style: const TextStyle(fontWeight: AppFontWeight.bold)),
                 if (owed != null) ...[
-                  TextSpan(text: '  \u00b7  Total owed: ', style: TextStyle(fontSize: 14, color: Colors.grey[700])),
+                  TextSpan(text: '  \u00b7  Total owed: ', style: TextStyle(fontSize: AppFontSize.f14, color: context.colors.textSoft)),
                   TextSpan(
                     text: Money.symbolPlain(owed),
-                    style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.redAccent),
+                    style: TextStyle(fontWeight: AppFontWeight.bold, color: context.colors.dangerAccent),
                   ),
                 ],
               ],
@@ -151,9 +154,7 @@ class _AddPaymentScreenState extends State<AddPaymentScreen> {
     _formKey.currentState!.save();
 
     if (paymentMethod == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Select how this payment was made')),
-      );
+      AppFeedback.warning('Select how this payment was made');
       return;
     }
 
@@ -168,24 +169,18 @@ class _AddPaymentScreenState extends State<AddPaymentScreen> {
 
       final facilityId = widget.facilityId ?? facilityProvider.selectedFacility?['id'];
       if (facilityId == null) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('No facility selected')),
-        );
+        AppFeedback.warning('No facility selected');
         return;
       }
 
       final user = authService.getCurrentUser();
       if (user == null) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('User not authenticated')),
-        );
+        AppFeedback.warning('Sign in again to record this payment');
         return;
       }
 
       if (selectedClient == null) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Select a client')),
-        );
+        AppFeedback.warning('Select a client');
         return;
       }
 
@@ -386,23 +381,10 @@ class _AddPaymentScreenState extends State<AddPaymentScreen> {
       );
 
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-              'Payment of ${Money.symbolPlain(amount)} recorded for ${selectedClient!.name}'),
-          backgroundColor: Colors.green,
-        ),
-      );
+      AppFeedback.success('Payment of ${Money.symbolPlain(amount)} recorded for ${selectedClient!.name}');
       if (mounted) Navigator.pop(context, true);
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Failed to save payment: $e'),
-            backgroundColor: Colors.red,
-          ),
-        );
-      }
+    } catch (e, st) {
+      AppFeedback.error("Couldn't save the payment", error: e, stackTrace: st);
     } finally {
       if (mounted) setState(() => _isSaving = false);
     }
@@ -411,37 +393,37 @@ class _AddPaymentScreenState extends State<AddPaymentScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFFDFDF9),
+      backgroundColor: context.colors.background,
       appBar: PreferredSize(
         preferredSize: const Size.fromHeight(64),
         child: Container(
-          color: primaryDeepGreen,
-          padding: const EdgeInsets.symmetric(horizontal: 20),
+          color: context.colors.primary,
+          padding: const EdgeInsets.symmetric(horizontal: AppSpacing.s20),
           child: SafeArea(
             bottom: false,
             child: Row(
               children: [
-                const Icon(Icons.payments_outlined, color: Colors.white, size: 22),
-                const SizedBox(width: 12),
-                const Expanded(
+                Icon(Icons.payments_outlined, color: context.colors.onPrimary, size: AppIconSize.i22),
+                const SizedBox(width: AppSpacing.s12),
+                Expanded(
                   child: Text('Record Payment',
-                      style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 18)),
+                      style: TextStyle(color: context.colors.onPrimary, fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f18)),
                 ),
                 if (widget.isModal)
                   IconButton(
-                    icon: const Icon(Icons.close, color: Colors.white),
+                    icon: Icon(Icons.close, color: context.colors.onPrimary),
                     tooltip: 'Close',
                     onPressed: () => Navigator.of(context).pop(),
                   )
                 else
-                  const BackButton(color: Colors.white),
+                  BackButton(color: context.colors.onPrimary),
               ],
             ),
           ),
         ),
       ),
       body: Padding(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(AppSpacing.s16),
         child: Form(
           key: _formKey,
           child: ListView(
@@ -500,13 +482,13 @@ class _AddPaymentScreenState extends State<AddPaymentScreen> {
                     );
                   },
                 ),
-              const SizedBox(height: 16),
+              const SizedBox(height: AppSpacing.s16),
               if (widget.amountOwed != null)
                 Text(
                   'Amount owed: ${Money.symbolPlain(widget.amountOwed!)}',
-                  style: const TextStyle(fontSize: 14, color: Colors.redAccent),
+                  style: TextStyle(fontSize: AppFontSize.f14, color: context.colors.dangerAccent),
                 ),
-              const SizedBox(height: 12),
+              const SizedBox(height: AppSpacing.s12),
               TextFormField(
                 decoration: const InputDecoration(
                   labelText: 'Payment Amount',
@@ -531,10 +513,10 @@ class _AddPaymentScreenState extends State<AddPaymentScreen> {
                 },
                 onSaved: (val) => amount = parseThousands(val ?? ''),
               ),
-              const SizedBox(height: 20),
+              const SizedBox(height: AppSpacing.s20),
               PaymentMethodSelector(
                 value: paymentMethod,
-                activeColor: primaryDeepGreen,
+                activeColor: context.colors.primary,
                 onChanged: (method) => setState(() => paymentMethod = method),
               ),
             ],
@@ -547,45 +529,46 @@ class _AddPaymentScreenState extends State<AddPaymentScreen> {
 
   Widget _buildFooter() {
     return Container(
-      padding: EdgeInsets.fromLTRB(20, 14, 20, 14 + MediaQuery.of(context).padding.bottom),
+      padding: EdgeInsets.fromLTRB(
+          AppSpacing.s20, AppSpacing.s14, AppSpacing.s20, AppSpacing.s14 + MediaQuery.of(context).padding.bottom),
       decoration: BoxDecoration(
-        color: Colors.white,
-        border: Border(top: BorderSide(color: Colors.grey.withValues(alpha: 0.15))),
+        color: context.colors.surface,
+        border: Border(top: BorderSide(color: context.colors.textHint.withValues(alpha: AppAlpha.a15))),
       ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           OutlinedButton.icon(
-            icon: const Icon(Icons.close, size: 16),
+            icon: const Icon(Icons.close, size: AppIconSize.i16),
             label: const Text('Cancel'),
             style: OutlinedButton.styleFrom(
-              foregroundColor: Colors.black87,
-              side: BorderSide(color: Colors.grey.withValues(alpha: 0.4)),
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+              foregroundColor: context.colors.textPrimary,
+              side: BorderSide(color: context.colors.textHint.withValues(alpha: AppAlpha.a40)),
+              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.s20, vertical: AppSpacing.s12),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadius.r10)),
             ),
             onPressed: _isSaving ? null : () => Navigator.of(context).pop(),
           ),
           ElevatedButton(
             onPressed: _isSaving ? null : _savePayment,
             style: ElevatedButton.styleFrom(
-              backgroundColor: primaryDeepGreen,
-              foregroundColor: Colors.white,
-              disabledBackgroundColor: primaryDeepGreen.withValues(alpha: 0.5),
-              padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 12),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+              backgroundColor: context.colors.primary,
+              foregroundColor: context.colors.onPrimary,
+              disabledBackgroundColor: context.colors.primary.withValues(alpha: AppAlpha.a50),
+              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.s22, vertical: AppSpacing.s12),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadius.r10)),
             ),
             child: _isSaving
-                ? const SizedBox(
+                ? SizedBox(
                     width: 18,
                     height: 18,
-                    child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                    child: CircularProgressIndicator(strokeWidth: 2, color: context.colors.onPrimary),
                   )
                 : const Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Icon(Icons.payments_outlined, size: 16),
-                      SizedBox(width: 8),
+                      Icon(Icons.payments_outlined, size: AppIconSize.i16),
+                      SizedBox(width: AppSpacing.s8),
                       Text('Save Payment'),
                     ],
                   ),
@@ -611,7 +594,7 @@ Future<bool?> showAddPaymentScreen(
   Map<String, double>? debtorBalances,
   double? totalOwed,
 }) async {
-  final isWideScreen = MediaQuery.of(context).size.width >= 900;
+  final isWideScreen = context.screenWidth >= AppBreakpoints.medium;
 
   if (!isWideScreen) {
     return Navigator.of(context).push<bool>(
@@ -633,8 +616,8 @@ Future<bool?> showAddPaymentScreen(
     context: context,
     barrierDismissible: true,
     barrierLabel: 'Record Payment',
-    barrierColor: Colors.black54,
-    transitionDuration: const Duration(milliseconds: 220),
+    barrierColor: context.colors.scrim.withValues(alpha: AppAlpha.a50),
+    transitionDuration: AppMotion.normal,
     pageBuilder: (context, animation, secondaryAnimation) {
       final screenSize = MediaQuery.of(context).size;
       final modalWidth = (screenSize.width * 0.60).clamp(0, 940).toDouble();
@@ -644,7 +627,7 @@ Future<bool?> showAddPaymentScreen(
           width: modalWidth,
           height: modalHeight,
           child: ClipRRect(
-            borderRadius: BorderRadius.circular(16),
+            borderRadius: BorderRadius.circular(AppRadius.r16),
             child: Material(
               child: AddPaymentScreen(
                 preselectedClient: preselectedClient,
