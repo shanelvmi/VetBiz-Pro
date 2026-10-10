@@ -55,6 +55,10 @@ Colours are outside the standing snap rule, so this is kept as it is:
 - **Photo placeholder alpha 0.6**, same file (the `add_photo_alternate_outlined` icon, now `AppIconSize.i40`): 0.1 from `a50`/`a70`, beyond the standing rule. Kept.
 - **No Undo on sale delete**, `lib/screens/sales/sales_screen.dart` `_confirmDeleteSale`: see "Trash and restore: books consistency" below. The message is a plain success ("Sale deleted"); the confirmation still says "permanently deletes ... This cannot be undone." Make sale restore re-apply stock, debt and balance (then add Undo and change the dialog text), or keep it as is?
 
+### Raised in step 2D, batch D7
+
+- **List bottom gap 80**, `lib/screens/platform_admin/announcements_tab.dart` (`_fabClearance`, under the announcements list, clear of the New Announcement button): a size, same value and purpose as view_batches_screen's. Kept exact as a named local constant.
+
 ### Trash and restore: books consistency (audit after D6, read-only)
 
 `TrashService.restore` (used by the Trash screen and every Undo) only copies the document back from `trash_*` to its live collection, drops `deletedAt`/`deletedBy`, and logs "Restored ...". Anything else the delete changed is reversed only if a server trigger reacts to the document reappearing (the `onDocumentWritten` daily summaries do).

@@ -9,10 +9,15 @@ import 'package:markdown/markdown.dart' as md;
 
 import '../../widgets/hover_elevate_card.dart';
 import '../../widgets/announcement_message.dart';
-import '../../theme/app_palette.dart';
 import '../../data/collections.dart';
 import '../../data/fields.dart';
 import '../../config/app_date_format.dart';
+import '../../theme/app_text.dart';
+import '../../theme/app_dimens.dart';
+import '../../theme/theme_context.dart';
+import '../../theme/app_breakpoints.dart';
+import '../../ui/feedback/app_feedback.dart';
+import '../../ui/feedback/friendly_error.dart';
 
 /// Manages everything shown on the login screen's left/center panels -
 /// broadcast announcements (the `public_announcements` collection) and
@@ -26,8 +31,10 @@ class AnnouncementsTab extends StatefulWidget {
 }
 
 class _AnnouncementsTabState extends State<AnnouncementsTab> {
-  static const Color primaryColor = AppPalette.primary;
-  static const Color warmAmber = AppPalette.accent;
+  // Space under the announcements list so the floating "New Announcement"
+  // button does not cover the last card. A size (above the spacing
+  // ladder), kept exact.
+  static const double _fabClearance = 80;
 
   bool _isUploadingPoster = false;
 
@@ -114,7 +121,7 @@ class _AnnouncementsTabState extends State<AnnouncementsTab> {
               inputFormatters: [SentenceCapitalizationFormatter()],
               decoration: const InputDecoration(labelText: 'Link text'),
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: AppSpacing.s8),
             TextField(
               controller: urlController,
               decoration: const InputDecoration(labelText: 'URL', hintText: 'https://...'),
@@ -185,7 +192,7 @@ class _AnnouncementsTabState extends State<AnnouncementsTab> {
                   decoration: BoxDecoration(
                     color: Color(int.parse(hex.replaceFirst('#', '0xFF'))),
                     shape: BoxShape.circle,
-                    border: Border.all(color: Colors.grey.shade400),
+                    border: Border.all(color: context.colors.borderStrong),
                   ),
                 ),
               );
@@ -248,7 +255,7 @@ class _AnnouncementsTabState extends State<AnnouncementsTab> {
     // Comfortably wide on desktop, but never wider than the actual
     // screen on a phone - AlertDialog otherwise defaults to a fairly
     // narrow, cramped width regardless of how much room is available.
-    final dialogWidth = screenWidth > 700 ? 560.0 : screenWidth * 0.9;
+    final dialogWidth = screenWidth > AppBreakpoints.dialogFixedWidth ? AppSizes.dialogLg : screenWidth * 0.9;
 
     final confirmed = await showDialog<bool>(
       context: context,
@@ -265,26 +272,26 @@ class _AnnouncementsTabState extends State<AnnouncementsTab> {
                 if (validationError != null) ...[
                   Container(
                     width: double.infinity,
-                    padding: const EdgeInsets.all(10),
+                    padding: const EdgeInsets.all(AppSpacing.s10),
                     decoration: BoxDecoration(
-                      color: Colors.red.withValues(alpha: 0.08),
-                      borderRadius: BorderRadius.circular(8),
-                      border: Border.all(color: Colors.red.withValues(alpha: 0.4)),
+                      color: context.colors.danger.withValues(alpha: AppAlpha.a10),
+                      borderRadius: BorderRadius.circular(AppRadius.r8),
+                      border: Border.all(color: context.colors.danger.withValues(alpha: AppAlpha.a40)),
                     ),
                     child: Row(
                       children: [
-                        const Icon(Icons.error_outline, color: Colors.red, size: 18),
-                        const SizedBox(width: 8),
+                        Icon(Icons.error_outline, color: context.colors.danger, size: AppIconSize.i18),
+                        const SizedBox(width: AppSpacing.s8),
                         Expanded(
-                          child: Text(validationError!, style: const TextStyle(color: Colors.red, fontSize: 13)),
+                          child: Text(validationError!, style: TextStyle(color: context.colors.danger, fontSize: AppFontSize.f13)),
                         ),
                       ],
                     ),
                   ),
-                  const SizedBox(height: 12),
+                  const SizedBox(height: AppSpacing.s12),
                 ],
                 TextField(controller: titleController, textCapitalization: TextCapitalization.sentences, inputFormatters: [SentenceCapitalizationFormatter()], decoration: const InputDecoration(labelText: 'Title')),
-                const SizedBox(height: 8),
+                const SizedBox(height: AppSpacing.s8),
                 // Formatting toolbar - select text in the message field
                 // below, then tap one of these to wrap the selection in
                 // the matching markdown syntax (or, with nothing
@@ -325,50 +332,50 @@ class _AnnouncementsTabState extends State<AnnouncementsTab> {
                   maxLines: 6,
                   onChanged: (_) => setDialogState(() {}),
                 ),
-                const SizedBox(height: 12),
+                const SizedBox(height: AppSpacing.s12),
                 Container(
-                  padding: const EdgeInsets.all(10),
+                  padding: const EdgeInsets.all(AppSpacing.s10),
                   decoration: BoxDecoration(
-                    color: urgent ? Colors.red.withValues(alpha: 0.08) : Colors.grey.shade100,
-                    borderRadius: BorderRadius.circular(8),
-                    border: Border.all(color: urgent ? Colors.red.withValues(alpha: 0.4) : Colors.transparent),
+                    color: urgent ? context.colors.danger.withValues(alpha: AppAlpha.a10) : context.colors.surfaceMuted,
+                    borderRadius: BorderRadius.circular(AppRadius.r8),
+                    border: Border.all(color: urgent ? context.colors.danger.withValues(alpha: AppAlpha.a40) : Colors.transparent),
                   ),
                   child: Row(
                     children: [
-                      Icon(Icons.priority_high, color: urgent ? Colors.red : Colors.grey, size: 20),
-                      const SizedBox(width: 8),
+                      Icon(Icons.priority_high, color: urgent ? context.colors.danger : context.colors.textHint, size: AppIconSize.i20),
+                      const SizedBox(width: AppSpacing.s8),
                       Expanded(
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            const Text('Mark as Urgent', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
+                            const Text('Mark as Urgent', style: TextStyle(fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f13)),
                             Text(
                               'While an urgent announcement is active, every other announcement is automatically paused - only urgent ones show, everywhere.',
-                              style: TextStyle(fontSize: 11.5, color: Colors.grey[700]),
+                              style: TextStyle(fontSize: AppFontSize.f11_5, color: context.colors.textSoft),
                             ),
                           ],
                         ),
                       ),
                       Switch(
                         value: urgent,
-                        activeColor: Colors.red,
+                        activeColor: context.colors.danger,
                         onChanged: (v) => setDialogState(() => urgent = v),
                       ),
                     ],
                   ),
                 ),
-                const SizedBox(height: 16),
-                const Text('Preview', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
-                const SizedBox(height: 6),
+                const SizedBox(height: AppSpacing.s16),
+                const Text('Preview', style: TextStyle(fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f13)),
+                const SizedBox(height: AppSpacing.s6),
                 Container(
                   width: double.infinity,
-                  padding: const EdgeInsets.all(10),
+                  padding: const EdgeInsets.all(AppSpacing.s10),
                   decoration: BoxDecoration(
-                    color: Colors.grey.shade100,
-                    borderRadius: BorderRadius.circular(8),
+                    color: context.colors.surfaceMuted,
+                    borderRadius: BorderRadius.circular(AppRadius.r8),
                   ),
                   child: messageController.text.isEmpty
-                      ? Text('Message preview appears here', style: TextStyle(color: Colors.grey[600]))
+                      ? Text('Message preview appears here', style: TextStyle(color: context.colors.textMuted))
                       : MarkdownBody(
                           data: messageController.text,
                           extensionSet: md.ExtensionSet(
@@ -394,10 +401,10 @@ class _AnnouncementsTabState extends State<AnnouncementsTab> {
               },
               style: ButtonStyle(
                 backgroundColor: WidgetStateProperty.resolveWith<Color>((states) {
-                  if (states.contains(WidgetState.hovered)) return warmAmber;
-                  return primaryColor;
+                  if (states.contains(WidgetState.hovered)) return context.colors.accent;
+                  return context.colors.primary;
                 }),
-                foregroundColor: WidgetStateProperty.all(Colors.white),
+                foregroundColor: WidgetStateProperty.all(context.colors.onPrimary),
               ),
               child: Text(isEditing ? 'Save' : 'Publish'),
             ),
@@ -435,14 +442,7 @@ class _AnnouncementsTabState extends State<AnnouncementsTab> {
       });
     }
 
-    if (context.mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(isEditing ? 'Announcement updated' : 'Announcement published'),
-          backgroundColor: Colors.green,
-        ),
-      );
-    }
+    AppFeedback.success(isEditing ? 'Announcement updated' : 'Announcement published');
   }
 
   Future<void> _delete(String docId) async {
@@ -480,17 +480,9 @@ class _AnnouncementsTabState extends State<AnnouncementsTab> {
         Fields.updatedAt: FieldValue.serverTimestamp(),
       });
 
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Background image updated'), backgroundColor: Colors.green),
-        );
-      }
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Could not upload background image: $e'), backgroundColor: Colors.redAccent),
-        );
-      }
+      AppFeedback.success('Background image updated');
+    } catch (e, st) {
+      AppFeedback.error("Couldn't upload the background image", error: e, stackTrace: st);
     } finally {
       if (mounted) setState(() => _isUploadingPoster = false);
     }
@@ -506,7 +498,7 @@ class _AnnouncementsTabState extends State<AnnouncementsTab> {
           TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Cancel')),
           ElevatedButton(
             onPressed: () => Navigator.pop(context, true),
-            style: ElevatedButton.styleFrom(backgroundColor: Colors.red, foregroundColor: Colors.white),
+            style: ElevatedButton.styleFrom(backgroundColor: context.colors.danger, foregroundColor: context.colors.onPrimary),
             child: const Text('Remove'),
           ),
         ],
@@ -515,11 +507,7 @@ class _AnnouncementsTabState extends State<AnnouncementsTab> {
     if (confirm != true) return;
 
     await FirebaseFirestore.instance.collection(Collections.appConfig).doc('login_poster').delete();
-    if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Background image removed'), backgroundColor: Colors.green),
-      );
-    }
+    AppFeedback.success('Background image removed');
   }
 
   Widget _buildPosterSection() {
@@ -531,9 +519,9 @@ class _AnnouncementsTabState extends State<AnnouncementsTab> {
             : null;
 
         return Card(
-          margin: const EdgeInsets.fromLTRB(12, 12, 12, 4),
+          margin: const EdgeInsets.fromLTRB(AppSpacing.s12, AppSpacing.s12, AppSpacing.s12, AppSpacing.s4),
           child: Padding(
-            padding: const EdgeInsets.all(14),
+            padding: const EdgeInsets.all(AppSpacing.s14),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -542,17 +530,17 @@ class _AnnouncementsTabState extends State<AnnouncementsTab> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    const Text('Background Image', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
-                    const SizedBox(height: 4),
+                    const Text('Background Image', style: TextStyle(fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f15)),
+                    const SizedBox(height: AppSpacing.s4),
                     Text(
                       'Shown as the full background of the login screen for every facility. '
                       'Falls back to the default background image if none is set.',
-                      style: TextStyle(fontSize: 12.5, color: Colors.grey[600]),
+                      style: TextStyle(fontSize: AppFontSize.f12_5, color: context.colors.textMuted),
                     ),
-                    const SizedBox(height: 12),
+                    const SizedBox(height: AppSpacing.s12),
                     if (posterUrl != null)
                       ClipRRect(
-                        borderRadius: BorderRadius.circular(8),
+                        borderRadius: BorderRadius.circular(AppRadius.r8),
                         child: Image.network(
                           posterUrl,
                           height: 140,
@@ -569,35 +557,35 @@ class _AnnouncementsTabState extends State<AnnouncementsTab> {
                         height: 100,
                         alignment: Alignment.center,
                         decoration: BoxDecoration(
-                          color: Colors.grey.shade100,
-                          borderRadius: BorderRadius.circular(8),
+                          color: context.colors.surfaceMuted,
+                          borderRadius: BorderRadius.circular(AppRadius.r8),
                         ),
-                        child: Text('No background image set - using default background', style: TextStyle(color: Colors.grey[600])),
+                        child: Text('No background image set - using default background', style: TextStyle(color: context.colors.textMuted)),
                       ),
                   ],
                 ),
-                const SizedBox(height: 12),
+                const SizedBox(height: AppSpacing.s12),
                 Row(
                   children: [
                     ElevatedButton.icon(
                       onPressed: _isUploadingPoster ? null : _uploadPoster,
                       icon: _isUploadingPoster
-                          ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
+                          ? SizedBox(width: AppSpacing.s16, height: 16, child: CircularProgressIndicator(strokeWidth: 2, color: context.colors.onPrimary))
                           : const Icon(Icons.upload),
                       label: Text(posterUrl != null ? 'Replace Background Image' : 'Upload Background Image'),
                       style: ButtonStyle(
                         backgroundColor: WidgetStateProperty.resolveWith<Color>((states) {
-                          if (states.contains(WidgetState.hovered)) return warmAmber;
-                          return primaryColor;
+                          if (states.contains(WidgetState.hovered)) return context.colors.accent;
+                          return context.colors.primary;
                         }),
-                        foregroundColor: WidgetStateProperty.all(Colors.white),
+                        foregroundColor: WidgetStateProperty.all(context.colors.onPrimary),
                       ),
                     ),
                     if (posterUrl != null) ...[
-                      const SizedBox(width: 8),
+                      const SizedBox(width: AppSpacing.s8),
                       TextButton(
                         onPressed: _removePoster,
-                        style: TextButton.styleFrom(foregroundColor: Colors.red),
+                        style: TextButton.styleFrom(foregroundColor: context.colors.danger),
                         child: const Text('Remove'),
                       ),
                     ],
@@ -616,9 +604,9 @@ class _AnnouncementsTabState extends State<AnnouncementsTab> {
     return Scaffold(
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () => _showAnnouncementDialog(context),
-        backgroundColor: primaryColor,
-        foregroundColor: Colors.white,
-        hoverColor: warmAmber,
+        backgroundColor: context.colors.primary,
+        foregroundColor: context.colors.onPrimary,
+        hoverColor: context.colors.accent,
         icon: const Icon(Icons.campaign),
         label: const Text('New Announcement'),
       ),
@@ -632,17 +620,17 @@ class _AnnouncementsTabState extends State<AnnouncementsTab> {
             return const Center(child: CircularProgressIndicator());
           }
           if (snapshot.hasError) {
-            return Center(child: Text('Could not load announcements: ${snapshot.error}'));
+            return Center(child: Text('Could not load announcements: ${FriendlyError.messageFor(snapshot.error!)}'));
           }
 
           final docs = snapshot.data?.docs ?? [];
 
           return ListView(
-            padding: const EdgeInsets.fromLTRB(0, 12, 0, 80),
+            padding: const EdgeInsets.fromLTRB(0, AppSpacing.s12, 0, _fabClearance),
             children: [
               LayoutBuilder(
                 builder: (context, constraints) {
-                  if (constraints.maxWidth < 700) {
+                  if (constraints.maxWidth < AppBreakpoints.stackSections) {
                     return Column(
                       children: [_buildPosterSection(), const _ContactDetailsCard()],
                     );
@@ -659,17 +647,17 @@ class _AnnouncementsTabState extends State<AnnouncementsTab> {
                 },
               ),
               const Padding(
-                padding: EdgeInsets.fromLTRB(12, 16, 12, 4),
-                child: Text('Announcements', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
+                padding: EdgeInsets.fromLTRB(AppSpacing.s12, AppSpacing.s16, AppSpacing.s12, AppSpacing.s4),
+                child: Text('Announcements', style: TextStyle(fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f15)),
               ),
               if (docs.isEmpty)
                 Padding(
-                  padding: const EdgeInsets.all(20),
-                  child: Center(child: Text('No announcements yet.', style: TextStyle(color: Colors.grey[600]))),
+                  padding: const EdgeInsets.all(AppSpacing.s20),
+                  child: Center(child: Text('No announcements yet.', style: TextStyle(color: context.colors.textMuted))),
                 )
               else
                 Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 12),
+                  padding: const EdgeInsets.symmetric(horizontal: AppSpacing.s12),
                   child: Column(
                     children: docs.map((doc) {
                       final data = doc.data() as Map<String, dynamic>;
@@ -677,13 +665,13 @@ class _AnnouncementsTabState extends State<AnnouncementsTab> {
                       final isHidden = data['hidden'] == true;
                       final isUrgent = data['urgent'] == true;
 
-                      final statusColor = isUrgent ? Colors.red : (isHidden ? Colors.grey : primaryColor);
+                      final statusColor = isUrgent ? context.colors.danger : (isHidden ? context.colors.textHint : context.colors.primary);
 
                       return HoverElevateCard(
-                        margin: const EdgeInsets.only(bottom: 8),
-                        color: isHidden ? Colors.grey.shade100 : Colors.white,
+                        margin: const EdgeInsets.only(bottom: AppSpacing.s8),
+                        color: isHidden ? context.colors.surfaceMuted : context.colors.surface,
                         child: Padding(
-                          padding: const EdgeInsets.all(12),
+                          padding: const EdgeInsets.all(AppSpacing.s12),
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
@@ -691,43 +679,43 @@ class _AnnouncementsTabState extends State<AnnouncementsTab> {
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   CircleAvatar(
-                                    backgroundColor: statusColor.withValues(alpha: 0.15),
-                                    child: Icon(Icons.campaign_outlined, color: statusColor, size: 20),
+                                    backgroundColor: statusColor.withValues(alpha: AppAlpha.a15),
+                                    child: Icon(Icons.campaign_outlined, color: statusColor, size: AppIconSize.i20),
                                   ),
-                                  const SizedBox(width: 10),
+                                  const SizedBox(width: AppSpacing.s10),
                                   Expanded(
                                     child: Column(
                                       crossAxisAlignment: CrossAxisAlignment.start,
                                       children: [
                                         if (isUrgent || isHidden)
                                           Padding(
-                                            padding: const EdgeInsets.only(bottom: 4),
+                                            padding: const EdgeInsets.only(bottom: AppSpacing.s4),
                                             child: Wrap(
                                               spacing: 6,
                                               children: [
                                                 if (isUrgent)
-                                                  const Chip(
-                                                    label: Text('URGENT', style: TextStyle(fontSize: 10, color: Colors.white)),
-                                                    backgroundColor: Colors.red,
+                                                  Chip(
+                                                    label: Text('URGENT', style: TextStyle(fontSize: AppFontSize.f10, color: context.colors.onPrimary)),
+                                                    backgroundColor: context.colors.danger,
                                                     visualDensity: VisualDensity.compact,
                                                     padding: EdgeInsets.zero,
                                                   ),
                                                 if (isHidden)
                                                   Chip(
-                                                    label: const Text('Hidden', style: TextStyle(fontSize: 10)),
-                                                    backgroundColor: Colors.grey.shade300,
+                                                    label: const Text('Hidden', style: TextStyle(fontSize: AppFontSize.f10)),
+                                                    backgroundColor: context.colors.border,
                                                     visualDensity: VisualDensity.compact,
                                                     padding: EdgeInsets.zero,
                                                   ),
                                               ],
                                             ),
                                           ),
-                                        Text(data['title'] ?? '', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
-                                        const SizedBox(height: 4),
-                                        AnnouncementMessage(data: data, fontSize: 14),
+                                        Text(data['title'] ?? '', style: const TextStyle(fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f15)),
+                                        const SizedBox(height: AppSpacing.s4),
+                                        AnnouncementMessage(data: data, fontSize: AppFontSize.f14),
                                         if (ts != null) ...[
-                                          const SizedBox(height: 6),
-                                          Text(AppDateFormat.dateNoPad.format(ts), style: TextStyle(fontSize: 11, color: Colors.grey[500])),
+                                          const SizedBox(height: AppSpacing.s6),
+                                          Text(AppDateFormat.dateNoPad.format(ts), style: TextStyle(fontSize: AppFontSize.f11, color: context.colors.textHint)),
                                         ],
                                       ],
                                     ),
@@ -739,15 +727,15 @@ class _AnnouncementsTabState extends State<AnnouncementsTab> {
                                 mainAxisAlignment: MainAxisAlignment.end,
                                 children: [
                                   IconButton(
-                                    icon: Icon(Icons.edit_outlined, color: primaryColor, size: 20),
+                                    icon: Icon(Icons.edit_outlined, color: context.colors.primary, size: AppIconSize.i20),
                                     tooltip: 'Edit',
                                     onPressed: () => _showAnnouncementDialog(context, existingDoc: doc),
                                   ),
                                   IconButton(
                                     icon: Icon(
                                       isHidden ? Icons.visibility_off_outlined : Icons.visibility_outlined,
-                                      color: isHidden ? Colors.grey : primaryColor,
-                                      size: 20,
+                                      color: isHidden ? context.colors.textHint : context.colors.primary,
+                                      size: AppIconSize.i20,
                                     ),
                                     tooltip: isHidden ? 'Show again' : 'Stop showing for now',
                                     onPressed: () => _toggleHidden(doc.id, isHidden),
@@ -755,14 +743,14 @@ class _AnnouncementsTabState extends State<AnnouncementsTab> {
                                   IconButton(
                                     icon: Icon(
                                       Icons.priority_high,
-                                      color: isUrgent ? Colors.red : Colors.grey,
-                                      size: 20,
+                                      color: isUrgent ? context.colors.danger : context.colors.textHint,
+                                      size: AppIconSize.i20,
                                     ),
                                     tooltip: isUrgent ? 'Unmark as urgent' : 'Mark as urgent',
                                     onPressed: () => _toggleUrgent(doc.id, isUrgent),
                                   ),
                                   IconButton(
-                                    icon: const Icon(Icons.delete_outline, color: Colors.redAccent, size: 20),
+                                    icon: Icon(Icons.delete_outline, color: context.colors.dangerAccent, size: AppIconSize.i20),
                                     tooltip: 'Delete',
                                     onPressed: () => _delete(doc.id),
                                   ),
@@ -799,8 +787,6 @@ class _ContactDetailsCard extends StatefulWidget {
 }
 
 class _ContactDetailsCardState extends State<_ContactDetailsCard> {
-  static const Color primaryColor = AppPalette.primary;
-  static const Color warmAmber = AppPalette.accent;
 
   // Loaded once on open (not a live StreamBuilder, since that would
   // fight with whatever the admin is actively typing), edited freely,
@@ -856,17 +842,9 @@ class _ContactDetailsCardState extends State<_ContactDetailsCard> {
         'address': _addressController.text.trim(),
         Fields.updatedAt: FieldValue.serverTimestamp(),
       });
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Contact details saved'), backgroundColor: Colors.green),
-        );
-      }
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Could not save contact details: $e'), backgroundColor: Colors.redAccent),
-        );
-      }
+      AppFeedback.success('Contact details saved');
+    } catch (e, st) {
+      AppFeedback.error("Couldn't save the contact details", error: e, stackTrace: st);
     } finally {
       if (mounted) setState(() => _isSaving = false);
     }
@@ -875,23 +853,23 @@ class _ContactDetailsCardState extends State<_ContactDetailsCard> {
   @override
   Widget build(BuildContext context) {
     return Card(
-      margin: const EdgeInsets.fromLTRB(12, 12, 12, 4),
+      margin: const EdgeInsets.fromLTRB(AppSpacing.s12, AppSpacing.s12, AppSpacing.s12, AppSpacing.s4),
       child: Padding(
-        padding: const EdgeInsets.all(14),
+        padding: const EdgeInsets.all(AppSpacing.s14),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text('Contact Details', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
-            const SizedBox(height: 4),
+            const Text('Contact Details', style: TextStyle(fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f15)),
+            const SizedBox(height: AppSpacing.s4),
             Text(
               'Shown when someone taps Help on the Dashboard. All optional - '
               'at least one filled in is enough for the help dialog to have something to show.',
-              style: TextStyle(fontSize: 12.5, color: Colors.grey[600]),
+              style: TextStyle(fontSize: AppFontSize.f12_5, color: context.colors.textMuted),
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: AppSpacing.s12),
             if (_isLoading)
               const Padding(
-                padding: EdgeInsets.symmetric(vertical: 20),
+                padding: EdgeInsets.symmetric(vertical: AppSpacing.s20),
                 child: Center(child: CircularProgressIndicator()),
               )
             else ...[
@@ -905,7 +883,7 @@ class _ContactDetailsCardState extends State<_ContactDetailsCard> {
                   isDense: true,
                 ),
               ),
-              const SizedBox(height: 12),
+              const SizedBox(height: AppSpacing.s12),
               TextField(
                 controller: _phoneController,
                 keyboardType: TextInputType.phone,
@@ -916,7 +894,7 @@ class _ContactDetailsCardState extends State<_ContactDetailsCard> {
                   isDense: true,
                 ),
               ),
-              const SizedBox(height: 12),
+              const SizedBox(height: AppSpacing.s12),
               TextField(
                 controller: _whatsappController,
                 keyboardType: TextInputType.phone,
@@ -927,7 +905,7 @@ class _ContactDetailsCardState extends State<_ContactDetailsCard> {
                   isDense: true,
                 ),
               ),
-              const SizedBox(height: 12),
+              const SizedBox(height: AppSpacing.s12),
               TextField(
                 controller: _addressController,
                 maxLines: 2,
@@ -939,20 +917,20 @@ class _ContactDetailsCardState extends State<_ContactDetailsCard> {
                   isDense: true,
                 ),
               ),
-              const SizedBox(height: 12),
+              const SizedBox(height: AppSpacing.s12),
               ElevatedButton.icon(
                 onPressed: _isSaving ? null : _saveContactDetails,
                 icon: _isSaving
-                    ? const SizedBox(
-                        width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
+                    ? SizedBox(
+                        width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2, color: context.colors.onPrimary))
                     : const Icon(Icons.save_outlined),
                 label: const Text('Save Contact Details'),
                 style: ButtonStyle(
                   backgroundColor: WidgetStateProperty.resolveWith<Color>((states) {
-                    if (states.contains(WidgetState.hovered)) return warmAmber;
-                    return primaryColor;
+                    if (states.contains(WidgetState.hovered)) return context.colors.accent;
+                    return context.colors.primary;
                   }),
-                  foregroundColor: WidgetStateProperty.all(Colors.white),
+                  foregroundColor: WidgetStateProperty.all(context.colors.onPrimary),
                 ),
               ),
             ],

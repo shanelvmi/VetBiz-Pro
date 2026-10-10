@@ -29,6 +29,8 @@ class AppBreakpoints {
   /// (AppSizes.dialogXs), below it
   /// 85% of the screen (subscription_guard.dart:53, 77;
   /// platform_admin_home_screen.dart:177; user_detail_screen.dart:178, 228, 248).
+  /// announcements_tab.dart:251 uses it the same way for its editor
+  /// dialog, fixed at AppSizes.dialogLg (560) instead.
   static const double dialogFixedWidth = 700;
 
   /// Below this, side-by-side sections stack into one column
