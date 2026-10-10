@@ -6,6 +6,11 @@ import '../../providers/facility_provider.dart';
 import '../../models/client.dart';
 import '../../utils/client_duplicate_matcher.dart';
 import '../../theme/app_palette.dart';
+import '../../theme/app_text.dart';
+import '../../theme/app_dimens.dart';
+import '../../theme/theme_context.dart';
+import '../../theme/app_breakpoints.dart';
+import '../../ui/feedback/app_feedback.dart';
 
 class AddClientScreen extends StatefulWidget {
   final Client? client; // null = add, not null = edit
@@ -111,12 +116,7 @@ class _AddClientScreenState extends State<AddClientScreen> {
         Provider.of<FacilityProvider>(context, listen: false).selectedFacilityId;
 
     if (facilityId == null || facilityId.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('No facility selected. Cannot save client.'),
-          backgroundColor: Colors.red,
-        ),
-      );
+      AppFeedback.error("Couldn't save the client", detail: 'No facility selected');
       return;
     }
 
@@ -168,12 +168,7 @@ class _AddClientScreenState extends State<AddClientScreen> {
           notes: _notes,
         );
         if (!mounted) return;
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Client added successfully'),
-            backgroundColor: Colors.green,
-          ),
-        );
+        AppFeedback.success('Client added');
       } else {
         // EDIT
         final updated = widget.client!.copyWith(
@@ -191,23 +186,12 @@ class _AddClientScreenState extends State<AddClientScreen> {
         );
         await clientProvider.updateClient(facilityId, updated);
         if (!mounted) return;
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Client updated successfully'),
-            backgroundColor: Colors.green,
-          ),
-        );
+        AppFeedback.success('Client updated');
       }
 
       Navigator.pop(context, true);
-    } catch (e) {
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Failed to save client: $e'),
-          backgroundColor: Colors.red,
-        ),
-      );
+    } catch (e, st) {
+      AppFeedback.error("Couldn't save the client", error: e, stackTrace: st);
     } finally {
       if (mounted) setState(() => _isSaving = false);
     }
@@ -221,11 +205,11 @@ class _AddClientScreenState extends State<AddClientScreen> {
     return showDialog<void>(
       context: context,
       builder: (ctx) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: const Row(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadius.r16)),
+        title: Row(
           children: [
-            Icon(Icons.warning_amber_rounded, color: Colors.red),
-            SizedBox(width: 8),
+            Icon(Icons.warning_amber_rounded, color: context.colors.danger),
+            SizedBox(width: AppSpacing.s8),
             Expanded(child: Text('Client already exists')),
           ],
         ),
@@ -239,36 +223,36 @@ class _AddClientScreenState extends State<AddClientScreen> {
                 byPhone
                     ? 'A client with this phone number already exists:'
                     : 'A client with a similar name already exists:',
-                style: const TextStyle(fontSize: 13.5),
+                style: const TextStyle(fontSize: AppFontSize.f13_5),
               ),
-              const SizedBox(height: 12),
+              const SizedBox(height: AppSpacing.s12),
               Container(
                 width: double.infinity,
-                padding: const EdgeInsets.all(12),
+                padding: const EdgeInsets.all(AppSpacing.s12),
                 decoration: BoxDecoration(
-                  color: Colors.red.withValues(alpha: 0.06),
-                  borderRadius: BorderRadius.circular(10),
-                  border: Border.all(color: Colors.red.withValues(alpha: 0.2)),
+                  color: context.colors.danger.withValues(alpha: AppAlpha.a05),
+                  borderRadius: BorderRadius.circular(AppRadius.r10),
+                  border: Border.all(color: context.colors.danger.withValues(alpha: AppAlpha.a20)),
                 ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(existing.name, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14.5)),
-                    const SizedBox(height: 2),
+                    Text(existing.name, style: const TextStyle(fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f14_5)),
+                    const SizedBox(height: AppSpacing.s2),
                     Text(
                       existing.phone.trim().isEmpty ? 'No phone number' : existing.phone,
-                      style: TextStyle(fontSize: 13, color: Colors.grey[700]),
+                      style: TextStyle(fontSize: AppFontSize.f13, color: context.colors.textSoft),
                     ),
                   ],
                 ),
               ),
-              const SizedBox(height: 12),
+              const SizedBox(height: AppSpacing.s12),
               Text(
                 'To avoid duplicate clients, ${isAdding ? 'this client was not saved' : 'your changes were not saved'}. '
                 'If it is the same person, use the existing client from the Clients list. '
                 'If it is a different person, ${byPhone ? 'enter a different phone number' : 'change the name slightly'} '
                 'and try again.',
-                style: TextStyle(fontSize: 12.5, color: Colors.grey[700]),
+                style: TextStyle(fontSize: AppFontSize.f12_5, color: context.colors.textSoft),
               ),
             ],
           ),
@@ -285,30 +269,30 @@ class _AddClientScreenState extends State<AddClientScreen> {
     final isEditing = widget.client != null;
 
     return Scaffold(
-      backgroundColor: offWhite,
+      backgroundColor: context.colors.background,
       appBar: PreferredSize(
         preferredSize: const Size.fromHeight(64),
         child: Container(
-          color: primaryDeepGreen,
-          padding: const EdgeInsets.symmetric(horizontal: 20),
+          color: context.colors.primary,
+          padding: const EdgeInsets.symmetric(horizontal: AppSpacing.s20),
           child: SafeArea(
             bottom: false,
             child: Row(
               children: [
-                const Icon(Icons.people_alt_outlined, color: Colors.white, size: 22),
-                const SizedBox(width: 12),
+                Icon(Icons.people_alt_outlined, color: context.colors.onPrimary, size: AppIconSize.i22),
+                const SizedBox(width: AppSpacing.s12),
                 Expanded(
                   child: Text(isEditing ? 'Edit Client' : 'Add Client',
-                      style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 18)),
+                      style: TextStyle(color: context.colors.onPrimary, fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f18)),
                 ),
                 if (widget.isModal)
                   IconButton(
-                    icon: const Icon(Icons.close, color: Colors.white),
+                    icon: Icon(Icons.close, color: context.colors.onPrimary),
                     tooltip: 'Close',
                     onPressed: () => Navigator.of(context).pop(),
                   )
                 else
-                  const BackButton(color: Colors.white),
+                  BackButton(color: context.colors.onPrimary),
               ],
             ),
           ),
@@ -316,12 +300,12 @@ class _AddClientScreenState extends State<AddClientScreen> {
       ),
       body: LayoutBuilder(
         builder: (context, constraints) {
-          final isTwoColumn = constraints.maxWidth >= 860;
+          final isTwoColumn = constraints.maxWidth >= AppBreakpoints.formTwoColumn;
           return Center(
             child: ConstrainedBox(
               constraints: const BoxConstraints(maxWidth: 1080),
               child: SingleChildScrollView(
-                padding: const EdgeInsets.all(16),
+                padding: const EdgeInsets.all(AppSpacing.s16),
                 child: Form(
                   key: _formKey,
                   child: isTwoColumn
@@ -333,7 +317,7 @@ class _AddClientScreenState extends State<AddClientScreen> {
                                 flex: 2,
                                 child: _buildLeftColumn(),
                               ),
-                              const SizedBox(width: 16),
+                              const SizedBox(width: AppSpacing.s16),
                               Expanded(
                                 flex: 1,
                                 child: _buildRightColumn(),
@@ -344,7 +328,7 @@ class _AddClientScreenState extends State<AddClientScreen> {
                       : Column(
                           children: [
                             _buildLeftColumn(),
-                            const SizedBox(height: 16),
+                            const SizedBox(height: AppSpacing.s16),
                             _buildRightColumn(),
                           ],
                         ),
@@ -361,40 +345,40 @@ class _AddClientScreenState extends State<AddClientScreen> {
   Widget _sectionHeader(IconData icon, String title) {
     return Row(
       children: [
-        Icon(icon, size: 18, color: primaryDeepGreen),
-        const SizedBox(width: 8),
-        Text(title, style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15, color: primaryDeepGreen)),
+        Icon(icon, size: AppIconSize.i18, color: context.colors.primary),
+        const SizedBox(width: AppSpacing.s8),
+        Text(title, style: TextStyle(fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f15, color: context.colors.primary)),
       ],
     );
   }
 
   Widget _fieldLabel(String label) =>
-      Text(label, style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13));
+      Text(label, style: const TextStyle(fontWeight: AppFontWeight.semibold, fontSize: AppFontSize.f13));
 
   InputDecoration _fieldDecoration({String? hintText}) {
     final baseBorder = OutlineInputBorder(
-      borderRadius: BorderRadius.circular(10),
-      borderSide: BorderSide(color: Colors.grey.withValues(alpha: 0.35)),
+      borderRadius: BorderRadius.circular(AppRadius.r10),
+      borderSide: BorderSide(color: context.colors.textHint.withValues(alpha: AppAlpha.a40)),
     );
     return InputDecoration(
       hintText: hintText,
       filled: true,
-      fillColor: Colors.white,
+      fillColor: context.colors.surface,
       isDense: true,
-      contentPadding: const EdgeInsets.symmetric(vertical: 12, horizontal: 12),
+      contentPadding: const EdgeInsets.symmetric(vertical: AppSpacing.s12, horizontal: AppSpacing.s12),
       border: baseBorder,
       enabledBorder: baseBorder,
       focusedBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(10),
-        borderSide: BorderSide(color: primaryDeepGreen, width: 1.5),
+        borderRadius: BorderRadius.circular(AppRadius.r10),
+        borderSide: BorderSide(color: context.colors.primary, width: 1.5),
       ),
       errorBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(10),
-        borderSide: const BorderSide(color: Colors.red, width: 1.5),
+        borderRadius: BorderRadius.circular(AppRadius.r10),
+        borderSide: BorderSide(color: context.colors.danger, width: 1.5),
       ),
       focusedErrorBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(10),
-        borderSide: const BorderSide(color: Colors.red, width: 1.5),
+        borderRadius: BorderRadius.circular(AppRadius.r10),
+        borderSide: BorderSide(color: context.colors.danger, width: 1.5),
       ),
     );
   }
@@ -407,11 +391,11 @@ class _AddClientScreenState extends State<AddClientScreen> {
       children: [
         _buildClientInfoCard(),
         if (_selectedTypes.contains('Farmer')) ...[
-          const SizedBox(height: 16),
+          const SizedBox(height: AppSpacing.s16),
           _buildAnimalCropCard(),
         ],
         if (additionalDetailsCard != null) ...[
-          const SizedBox(height: 16),
+          const SizedBox(height: AppSpacing.s16),
           additionalDetailsCard,
         ],
       ],
@@ -420,23 +404,23 @@ class _AddClientScreenState extends State<AddClientScreen> {
 
   Widget _buildClientInfoCard() {
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(AppSpacing.s16),
       decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.grey.withValues(alpha: 0.2)),
+        color: context.colors.surface,
+        borderRadius: BorderRadius.circular(AppRadius.r12),
+        border: Border.all(color: context.colors.textHint.withValues(alpha: AppAlpha.a20)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           _sectionHeader(Icons.person_outline, 'Client Information'),
-          const SizedBox(height: 12),
+          const SizedBox(height: AppSpacing.s12),
           _fieldLabel('Name *'),
-          const SizedBox(height: 6),
+          const SizedBox(height: AppSpacing.s6),
           TextFormField(
             initialValue: _name,
             decoration: _fieldDecoration(hintText: 'Enter client name'),
-            cursorColor: primaryDeepGreen,
+            cursorColor: context.colors.primary,
             textCapitalization: TextCapitalization.sentences,
             inputFormatters: [SentenceCapitalizationFormatter()],
             validator: (value) =>
@@ -444,26 +428,26 @@ class _AddClientScreenState extends State<AddClientScreen> {
             onChanged: (value) => setState(() => _name = value),
             onSaved: (value) => _name = value!.trim(),
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: AppSpacing.s12),
           _fieldLabel('Phone *'),
-          const SizedBox(height: 6),
+          const SizedBox(height: AppSpacing.s6),
           TextFormField(
             initialValue: _phone,
             decoration: _fieldDecoration(hintText: 'e.g. 07XX XXX XXX'),
-            cursorColor: primaryDeepGreen,
+            cursorColor: context.colors.primary,
             keyboardType: TextInputType.phone,
             validator: (value) =>
                 value == null || value.trim().isEmpty ? 'Required' : null,
             onChanged: (value) => setState(() => _phone = value),
             onSaved: (value) => _phone = value!.trim(),
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: AppSpacing.s12),
           _fieldLabel('Address'),
-          const SizedBox(height: 6),
+          const SizedBox(height: AppSpacing.s6),
           TextFormField(
             initialValue: _address,
             decoration: _fieldDecoration(hintText: 'Enter address'),
-            cursorColor: primaryDeepGreen,
+            cursorColor: context.colors.primary,
             textCapitalization: TextCapitalization.sentences,
             inputFormatters: [SentenceCapitalizationFormatter()],
             validator: (value) =>
@@ -471,27 +455,27 @@ class _AddClientScreenState extends State<AddClientScreen> {
             onChanged: (value) => setState(() => _address = value),
             onSaved: (value) => _address = value!.trim(),
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: AppSpacing.s12),
           _fieldLabel('Notes (optional)'),
-          const SizedBox(height: 6),
+          const SizedBox(height: AppSpacing.s6),
           TextFormField(
             initialValue: _notes,
             maxLength: 500,
             maxLines: 3,
             decoration: _fieldDecoration(hintText: 'Any additional information about the client...'),
-            cursorColor: primaryDeepGreen,
+            cursorColor: context.colors.primary,
             textCapitalization: TextCapitalization.sentences,
             inputFormatters: [SentenceCapitalizationFormatter()],
             onSaved: (value) => _notes = value?.trim(),
           ),
-          const SizedBox(height: 4),
+          const SizedBox(height: AppSpacing.s4),
 
           if (widget.client != null) ...[
             Align(
               alignment: Alignment.centerLeft,
               child: _fieldLabel('Status'),
                     ),
-                    const SizedBox(height: 8),
+                    const SizedBox(height: AppSpacing.s8),
                     Row(
                       children: [
                         ChoiceChip(
