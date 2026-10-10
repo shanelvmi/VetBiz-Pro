@@ -5,11 +5,11 @@ import '../../providers/client_provider.dart';
 import '../../providers/facility_provider.dart';
 import '../../models/client.dart';
 import '../../utils/client_duplicate_matcher.dart';
-import '../../theme/app_palette.dart';
 import '../../theme/app_text.dart';
 import '../../theme/app_dimens.dart';
 import '../../theme/theme_context.dart';
 import '../../theme/app_breakpoints.dart';
+import '../../theme/app_motion.dart';
 import '../../ui/feedback/app_feedback.dart';
 
 class AddClientScreen extends StatefulWidget {
@@ -49,9 +49,6 @@ class _AddClientScreenState extends State<AddClientScreen> {
   String? _typeError;
   String _status = 'Active';
 
-  final Color primaryDeepGreen = AppPalette.primary;
-  final Color warmAmber = AppPalette.accent;
-  final Color offWhite = AppPalette.background;
 
   final List<String> clientTypes = ['Farmer', 'Vet', 'Wholesaler', 'Retailer'];
   final List<String> farmerSubTypes = ['Crop Producer', 'Animal Keeper'];
@@ -482,20 +479,20 @@ class _AddClientScreenState extends State<AddClientScreen> {
                           label: const Text('Active'),
                           selected: _status == 'Active',
                           onSelected: (_) => setState(() => _status = 'Active'),
-                          selectedColor: Colors.green.withValues(alpha: 0.15),
-                          labelStyle: TextStyle(color: _status == 'Active' ? Colors.green[800] : Colors.black87),
+                          selectedColor: context.colors.success.withValues(alpha: AppAlpha.a15),
+                          labelStyle: TextStyle(color: _status == 'Active' ? Colors.green[800] : context.colors.textPrimary),
                         ),
-                        const SizedBox(width: 8),
+                        const SizedBox(width: AppSpacing.s8),
                         ChoiceChip(
                           label: const Text('Inactive'),
                           selected: _status == 'Inactive',
                           onSelected: (_) => setState(() => _status = 'Inactive'),
-                          selectedColor: Colors.grey.withValues(alpha: 0.25),
-                          labelStyle: TextStyle(color: _status == 'Inactive' ? Colors.grey[800] : Colors.black87),
+                          selectedColor: context.colors.textHint.withValues(alpha: AppAlpha.a30),
+                          labelStyle: TextStyle(color: _status == 'Inactive' ? context.colors.textPrimary : context.colors.textPrimary),
                         ),
                       ],
                     ),
-                    const SizedBox(height: 16),
+                    const SizedBox(height: AppSpacing.s16),
                   ],
 
         ],
@@ -508,9 +505,9 @@ class _AddClientScreenState extends State<AddClientScreen> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         _buildClientTypeCard(),
-        const SizedBox(height: 16),
+        const SizedBox(height: AppSpacing.s16),
         _buildQuickSummaryCard(),
-        const SizedBox(height: 16),
+        const SizedBox(height: AppSpacing.s16),
         _buildTipCard(),
       ],
     );
@@ -538,39 +535,39 @@ class _AddClientScreenState extends State<AddClientScreen> {
   // as the ChoiceChips this replaces.
   Widget _buildClientTypeCard() {
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(AppSpacing.s16),
       decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.grey.withValues(alpha: 0.2)),
+        color: context.colors.surface,
+        borderRadius: BorderRadius.circular(AppRadius.r12),
+        border: Border.all(color: context.colors.textHint.withValues(alpha: AppAlpha.a20)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           _sectionHeader(Icons.category_outlined, 'Client Type'),
-          const SizedBox(height: 12),
+          const SizedBox(height: AppSpacing.s12),
           Column(
             children: [
               Row(
                 children: [
                   Expanded(child: _buildClientTypeTile(clientTypes[0])),
-                  const SizedBox(width: 10),
+                  const SizedBox(width: AppSpacing.s10),
                   Expanded(child: _buildClientTypeTile(clientTypes[1])),
                 ],
               ),
-              const SizedBox(height: 10),
+              const SizedBox(height: AppSpacing.s10),
               Row(
                 children: [
                   Expanded(child: _buildClientTypeTile(clientTypes[2])),
-                  const SizedBox(width: 10),
+                  const SizedBox(width: AppSpacing.s10),
                   Expanded(child: _buildClientTypeTile(clientTypes[3])),
                 ],
               ),
             ],
           ),
           if (_typeError != null) ...[
-            const SizedBox(height: 8),
-            Text(_typeError!, style: const TextStyle(color: Colors.red, fontSize: 12)),
+            const SizedBox(height: AppSpacing.s8),
+            Text(_typeError!, style: TextStyle(color: context.colors.danger, fontSize: AppFontSize.f12)),
           ],
         ],
       ),
@@ -582,7 +579,7 @@ class _AddClientScreenState extends State<AddClientScreen> {
     return AspectRatio(
       aspectRatio: 1.3,
       child: InkWell(
-        borderRadius: BorderRadius.circular(10),
+        borderRadius: BorderRadius.circular(AppRadius.r10),
         onTap: () => setState(() {
           if (isSelected) {
             _selectedTypes.remove(type);
@@ -593,9 +590,9 @@ class _AddClientScreenState extends State<AddClientScreen> {
         }),
         child: Container(
           decoration: BoxDecoration(
-            color: isSelected ? primaryDeepGreen : Colors.white,
-            borderRadius: BorderRadius.circular(10),
-            border: Border.all(color: isSelected ? primaryDeepGreen : Colors.grey.withValues(alpha: 0.3)),
+            color: isSelected ? context.colors.primary : context.colors.surface,
+            borderRadius: BorderRadius.circular(AppRadius.r10),
+            border: Border.all(color: isSelected ? context.colors.primary : context.colors.textHint.withValues(alpha: AppAlpha.a30)),
           ),
           child: Stack(
             children: [
@@ -603,13 +600,13 @@ class _AddClientScreenState extends State<AddClientScreen> {
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Icon(_iconForClientType(type), color: isSelected ? Colors.white : primaryDeepGreen, size: 26),
-                    const SizedBox(height: 6),
+                    Icon(_iconForClientType(type), color: isSelected ? context.colors.onPrimary : context.colors.primary, size: AppIconSize.i24),
+                    const SizedBox(height: AppSpacing.s6),
                     Text(type,
                         style: TextStyle(
-                            color: isSelected ? Colors.white : Colors.black87,
-                            fontWeight: FontWeight.w600,
-                            fontSize: 13)),
+                            color: isSelected ? context.colors.onPrimary : context.colors.textPrimary,
+                            fontWeight: AppFontWeight.semibold,
+                            fontSize: AppFontSize.f13)),
                   ],
                 ),
               ),
@@ -618,9 +615,9 @@ class _AddClientScreenState extends State<AddClientScreen> {
                   top: 6,
                   right: 6,
                   child: Container(
-                    padding: const EdgeInsets.all(2),
-                    decoration: const BoxDecoration(color: Colors.white, shape: BoxShape.circle),
-                    child: Icon(Icons.check, size: 12, color: primaryDeepGreen),
+                    padding: const EdgeInsets.all(AppSpacing.s2),
+                    decoration: BoxDecoration(color: context.colors.surface, shape: BoxShape.circle),
+                    child: Icon(Icons.check, size: AppIconSize.i12, color: context.colors.primary),
                   ),
                 ),
             ],
@@ -635,17 +632,17 @@ class _AddClientScreenState extends State<AddClientScreen> {
   // to preview on the right beyond just the Client Type card.
   Widget _buildQuickSummaryCard() {
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(AppSpacing.s16),
       decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.grey.withValues(alpha: 0.2)),
+        color: context.colors.surface,
+        borderRadius: BorderRadius.circular(AppRadius.r12),
+        border: Border.all(color: context.colors.textHint.withValues(alpha: AppAlpha.a20)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           _sectionHeader(Icons.summarize_outlined, 'Quick Summary'),
-          const SizedBox(height: 12),
+          const SizedBox(height: AppSpacing.s12),
           _summaryRow('Name', _name.trim().isEmpty ? '-' : _name.trim()),
           _summaryRow('Phone', _phone.trim().isEmpty ? '-' : _phone.trim()),
           _summaryRow(
@@ -661,21 +658,21 @@ class _AddClientScreenState extends State<AddClientScreen> {
 
   Widget _summaryRow(String label, String value, {bool valueBold = false}) {
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 4),
+      padding: const EdgeInsets.symmetric(vertical: AppSpacing.s4),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           SizedBox(
             width: 70,
-            child: Text(label, style: TextStyle(fontSize: 12.5, color: Colors.grey[600])),
+            child: Text(label, style: TextStyle(fontSize: AppFontSize.f12_5, color: context.colors.textMuted)),
           ),
           Expanded(
             child: Text(
               value,
               style: TextStyle(
-                fontSize: 12.5,
-                fontWeight: valueBold ? FontWeight.w700 : FontWeight.w500,
-                color: Colors.black87,
+                fontSize: AppFontSize.f12_5,
+                fontWeight: valueBold ? AppFontWeight.bold : AppFontWeight.medium,
+                color: context.colors.textPrimary,
               ),
             ),
           ),
@@ -686,21 +683,21 @@ class _AddClientScreenState extends State<AddClientScreen> {
 
   Widget _buildTipCard() {
     return Container(
-      padding: const EdgeInsets.all(14),
+      padding: const EdgeInsets.all(AppSpacing.s14),
       decoration: BoxDecoration(
-        color: primaryDeepGreen.withValues(alpha: 0.06),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: primaryDeepGreen.withValues(alpha: 0.15)),
+        color: context.colors.primary.withValues(alpha: AppAlpha.a05),
+        borderRadius: BorderRadius.circular(AppRadius.r12),
+        border: Border.all(color: context.colors.primary.withValues(alpha: AppAlpha.a15)),
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(Icons.lightbulb_outline, size: 18, color: primaryDeepGreen),
-          const SizedBox(width: 10),
+          Icon(Icons.lightbulb_outline, size: AppIconSize.i18, color: context.colors.primary),
+          const SizedBox(width: AppSpacing.s10),
           Expanded(
             child: Text(
               "You can update this client's animal species or crops anytime by editing their profile.",
-              style: TextStyle(fontSize: 12, color: primaryDeepGreen.withValues(alpha: 0.85)),
+              style: TextStyle(fontSize: AppFontSize.f12, color: context.colors.primary.withValues(alpha: AppAlpha.a85)),
             ),
           ),
         ],
@@ -719,28 +716,28 @@ class _AddClientScreenState extends State<AddClientScreen> {
     final title = isCropProducer ? 'Crop Information (Optional)' : 'Animal Information (Optional)';
 
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(AppSpacing.s16),
       decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.grey.withValues(alpha: 0.2)),
+        color: context.colors.surface,
+        borderRadius: BorderRadius.circular(AppRadius.r12),
+        border: Border.all(color: context.colors.textHint.withValues(alpha: AppAlpha.a20)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           _sectionHeader(Icons.list_alt_outlined, title),
-          const SizedBox(height: 4),
+          const SizedBox(height: AppSpacing.s4),
           Text(
             isCropProducer
                 ? 'Add crops grown by this client if available.'
                 : isAnimalKeeper
                     ? 'Add animals owned by this client if available.'
                     : 'Select a farmer type below to add crops or animals.',
-            style: TextStyle(color: Colors.grey[600], fontSize: 12.5),
+            style: TextStyle(color: context.colors.textMuted, fontSize: AppFontSize.f12_5),
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: AppSpacing.s12),
           _fieldLabel('Farmer Type'),
-          const SizedBox(height: 6),
+          const SizedBox(height: AppSpacing.s6),
           DropdownButtonFormField<String?>(
             initialValue: _farmerSubType,
             decoration: _fieldDecoration(),
@@ -751,33 +748,33 @@ class _AddClientScreenState extends State<AddClientScreen> {
             onChanged: (val) => setState(() => _farmerSubType = val),
           ),
           if (isCropProducer || isAnimalKeeper) ...[
-            const SizedBox(height: 14),
+            const SizedBox(height: AppSpacing.s14),
             Wrap(
-              spacing: 8,
-              runSpacing: 8,
+              spacing: AppSpacing.s8,
+              runSpacing: AppSpacing.s8,
               children: [
                 for (final item in (isCropProducer ? _selectedCrops : _selectedAnimals))
                   Chip(
-                    label: Text(item, style: const TextStyle(fontSize: 12.5)),
-                    backgroundColor: primaryDeepGreen.withValues(alpha: 0.08),
-                    deleteIcon: const Icon(Icons.close, size: 14),
+                    label: Text(item, style: const TextStyle(fontSize: AppFontSize.f12_5)),
+                    backgroundColor: context.colors.primary.withValues(alpha: AppAlpha.a10),
+                    deleteIcon: const Icon(Icons.close, size: AppIconSize.i14),
                     onDeleted: () => setState(() {
                       (isCropProducer ? _selectedCrops : _selectedAnimals).remove(item);
                     }),
                   ),
               ],
             ),
-            const SizedBox(height: 10),
+            const SizedBox(height: AppSpacing.s10),
             SizedBox(
               width: double.infinity,
               child: OutlinedButton.icon(
-                icon: const Icon(Icons.add, size: 16),
+                icon: const Icon(Icons.add, size: AppIconSize.i16),
                 label: Text(isCropProducer ? 'Add Crops' : 'Add Animals'),
                 style: OutlinedButton.styleFrom(
-                  foregroundColor: primaryDeepGreen,
-                  side: BorderSide(color: primaryDeepGreen.withValues(alpha: 0.4)),
-                  padding: const EdgeInsets.symmetric(vertical: 12),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                  foregroundColor: context.colors.primary,
+                  side: BorderSide(color: context.colors.primary.withValues(alpha: AppAlpha.a40)),
+                  padding: const EdgeInsets.symmetric(vertical: AppSpacing.s12),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadius.r10)),
                 ),
                 onPressed: () => _showGroupedMultiSelectDialog(
                   title: isCropProducer ? 'Select Crops' : 'Select Animal Species',
@@ -825,13 +822,13 @@ class _AddClientScreenState extends State<AddClientScreen> {
                     TextField(
                       decoration: InputDecoration(
                         hintText: 'Search...',
-                        prefixIcon: const Icon(Icons.search, size: 20),
+                        prefixIcon: const Icon(Icons.search, size: AppIconSize.i20),
                         isDense: true,
-                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(AppRadius.r10)),
                       ),
                       onChanged: (val) => setDialogState(() => query = val),
                     ),
-                    const SizedBox(height: 12),
+                    const SizedBox(height: AppSpacing.s12),
                     Expanded(
                       child: filteredGroups.isEmpty
                           ? const Center(child: Text('No matches found'))
@@ -839,10 +836,10 @@ class _AddClientScreenState extends State<AddClientScreen> {
                               children: filteredGroups.entries.expand((entry) {
                                 return [
                                   Padding(
-                                    padding: const EdgeInsets.fromLTRB(4, 12, 4, 4),
+                                    padding: const EdgeInsets.fromLTRB(AppSpacing.s4, AppSpacing.s12, AppSpacing.s4, AppSpacing.s4),
                                     child: Text(entry.key,
                                         style: TextStyle(
-                                            fontWeight: FontWeight.bold, fontSize: 12.5, color: primaryDeepGreen)),
+                                            fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f12_5, color: context.colors.primary)),
                                   ),
                                   ...entry.value.map((item) {
                                     final isSelected = selected.contains(item);
@@ -851,7 +848,7 @@ class _AddClientScreenState extends State<AddClientScreen> {
                                       controlAffinity: ListTileControlAffinity.leading,
                                       title: Text(item),
                                       value: isSelected,
-                                      activeColor: primaryDeepGreen,
+                                      activeColor: context.colors.primary,
                                       onChanged: (checked) {
                                         setDialogState(() {
                                           setState(() {
@@ -890,20 +887,20 @@ class _AddClientScreenState extends State<AddClientScreen> {
     if (!showVet && !showBusiness) return null;
 
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(AppSpacing.s16),
       decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.grey.withValues(alpha: 0.2)),
+        color: context.colors.surface,
+        borderRadius: BorderRadius.circular(AppRadius.r12),
+        border: Border.all(color: context.colors.textHint.withValues(alpha: AppAlpha.a20)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           _sectionHeader(Icons.info_outline, 'Additional Details'),
-          const SizedBox(height: 12),
+          const SizedBox(height: AppSpacing.s12),
           if (showVet) ...[
             _fieldLabel('Practice Type'),
-            const SizedBox(height: 6),
+            const SizedBox(height: AppSpacing.s6),
             DropdownButtonFormField<String?>(
               initialValue: _vetPracticeType,
               decoration: _fieldDecoration(),
@@ -913,15 +910,15 @@ class _AddClientScreenState extends State<AddClientScreen> {
               ],
               onChanged: (val) => setState(() => _vetPracticeType = val),
             ),
-            if (showBusiness) const SizedBox(height: 12),
+            if (showBusiness) const SizedBox(height: AppSpacing.s12),
           ],
           if (showBusiness) ...[
             _fieldLabel('Business Name'),
-            const SizedBox(height: 6),
+            const SizedBox(height: AppSpacing.s6),
             TextFormField(
               initialValue: _businessName,
               decoration: _fieldDecoration(hintText: 'Enter business name'),
-              cursorColor: primaryDeepGreen,
+              cursorColor: context.colors.primary,
               textCapitalization: TextCapitalization.sentences,
               inputFormatters: [SentenceCapitalizationFormatter()],
               onSaved: (val) => _businessName = val?.trim(),
@@ -935,45 +932,46 @@ class _AddClientScreenState extends State<AddClientScreen> {
 
   Widget _buildFooter(bool isEditing) {
     return Container(
-      padding: EdgeInsets.fromLTRB(20, 14, 20, 14 + MediaQuery.of(context).padding.bottom),
+      padding: EdgeInsets.fromLTRB(
+          AppSpacing.s20, AppSpacing.s14, AppSpacing.s20, AppSpacing.s14 + MediaQuery.of(context).padding.bottom),
       decoration: BoxDecoration(
-        color: Colors.white,
-        border: Border(top: BorderSide(color: Colors.grey.withValues(alpha: 0.15))),
+        color: context.colors.surface,
+        border: Border(top: BorderSide(color: context.colors.textHint.withValues(alpha: AppAlpha.a15))),
       ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           OutlinedButton.icon(
-            icon: const Icon(Icons.close, size: 16),
+            icon: const Icon(Icons.close, size: AppIconSize.i16),
             label: const Text('Cancel'),
             style: OutlinedButton.styleFrom(
-              foregroundColor: Colors.black87,
-              side: BorderSide(color: Colors.grey.withValues(alpha: 0.4)),
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+              foregroundColor: context.colors.textPrimary,
+              side: BorderSide(color: context.colors.textHint.withValues(alpha: AppAlpha.a40)),
+              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.s20, vertical: AppSpacing.s12),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadius.r10)),
             ),
             onPressed: _isSaving ? null : () => Navigator.of(context).pop(),
           ),
           ElevatedButton(
             onPressed: _isSaving ? null : _saveClient,
             style: ElevatedButton.styleFrom(
-              backgroundColor: primaryDeepGreen,
-              foregroundColor: offWhite,
-              disabledBackgroundColor: primaryDeepGreen.withValues(alpha: 0.5),
-              padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 12),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+              backgroundColor: context.colors.primary,
+              foregroundColor: context.colors.background,
+              disabledBackgroundColor: context.colors.primary.withValues(alpha: AppAlpha.a50),
+              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.s22, vertical: AppSpacing.s12),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadius.r10)),
             ),
             child: _isSaving
-                ? const SizedBox(
+                ? SizedBox(
                     width: 18,
                     height: 18,
-                    child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                    child: CircularProgressIndicator(strokeWidth: 2, color: context.colors.onPrimary),
                   )
                 : Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      const Icon(Icons.save_outlined, size: 16),
-                      const SizedBox(width: 8),
+                      const Icon(Icons.save_outlined, size: AppIconSize.i16),
+                      const SizedBox(width: AppSpacing.s8),
                       Text(isEditing ? 'Update Client' : 'Save Client'),
                     ],
                   ),
@@ -992,7 +990,7 @@ class _AddClientScreenState extends State<AddClientScreen> {
 /// Navigator.push directly - existing callers that check that value
 /// (e.g. add_edit_service_screen.dart) keep working unchanged.
 Future<bool?> showAddClientScreen(BuildContext context, {Client? client}) async {
-  final isWideScreen = MediaQuery.of(context).size.width >= 900;
+  final isWideScreen = context.screenWidth >= AppBreakpoints.medium;
 
   if (!isWideScreen) {
     return Navigator.of(context).push<bool>(
@@ -1004,8 +1002,8 @@ Future<bool?> showAddClientScreen(BuildContext context, {Client? client}) async 
     context: context,
     barrierDismissible: true,
     barrierLabel: client == null ? 'Add Client' : 'Edit Client',
-    barrierColor: Colors.black54,
-    transitionDuration: const Duration(milliseconds: 220),
+    barrierColor: context.colors.scrim.withValues(alpha: AppAlpha.a50),
+    transitionDuration: AppMotion.normal,
     pageBuilder: (context, animation, secondaryAnimation) {
       final screenSize = MediaQuery.of(context).size;
       final modalWidth = (screenSize.width * 0.60).clamp(0, 940).toDouble();
@@ -1015,7 +1013,7 @@ Future<bool?> showAddClientScreen(BuildContext context, {Client? client}) async 
           width: modalWidth,
           height: modalHeight,
           child: ClipRRect(
-            borderRadius: BorderRadius.circular(16),
+            borderRadius: BorderRadius.circular(AppRadius.r16),
             child: Material(
               child: AddClientScreen(client: client, isModal: true),
             ),
