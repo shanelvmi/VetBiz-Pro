@@ -53,6 +53,10 @@ void main() {
       'trendDown': (c.trendDown, const Color(0xFFEF4444)),
       'scrim': (c.scrim, Colors.black),
       'shadow': (c.shadow, Colors.black),
+      // Client-type category colours (clients_screen.dart), as they were.
+      'chart1': (c.chart1, const Color(0xFF3D5A80)),
+      'chart2': (c.chart2, const Color(0xFF6A4C93)),
+      'chart3': (c.chart3, const Color(0xFFB56A00)),
     };
 
     for (final entry in legacy.entries) {

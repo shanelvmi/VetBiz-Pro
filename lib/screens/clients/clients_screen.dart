@@ -16,13 +16,16 @@ import '../../utils/web_download.dart';
 import '../../models/client.dart';
 import 'add_client_screen.dart';
 import '../../services/cursor_paginated_list_controller.dart';
-import '../../theme/app_palette.dart';
 import '../../data/collections.dart';
 import '../../config/money.dart';
 import '../../config/app_timeouts.dart';
 import '../../config/app_date_format.dart';
 import '../../config/app_links.dart';
 import '../../ui/feedback/app_feedback.dart';
+import '../../theme/app_palette.dart';
+import '../../theme/app_text.dart';
+import '../../theme/app_dimens.dart';
+import '../../theme/theme_context.dart';
 
 class ClientsScreen extends StatefulWidget {
   const ClientsScreen({super.key});
@@ -143,27 +146,27 @@ class _ClientsScreenState extends State<ClientsScreen> {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Expanded(child: _metricCard('Total Clients', '${allClients.length}', 'All time', Icons.people_outline, primaryDeepGreen)),
-          const SizedBox(width: 12),
-          Expanded(child: _metricCard('New This Month', '$newThisMonth', null, Icons.person_add_alt_outlined, primaryDeepGreen)),
-          const SizedBox(width: 12),
+          Expanded(child: _metricCard('Total Clients', '${allClients.length}', 'All time', Icons.people_outline, context.colors.primary)),
+          const SizedBox(width: AppSpacing.s12),
+          Expanded(child: _metricCard('New This Month', '$newThisMonth', null, Icons.person_add_alt_outlined, context.colors.primary)),
+          const SizedBox(width: AppSpacing.s12),
           Expanded(
             child: _metricCard(
               'Most Active Type',
               mostActiveType,
               allClients.isEmpty ? null : '${mostActivePercent.toStringAsFixed(0)}% of clients',
               Icons.shopping_cart_outlined,
-              warmAmber,
+              context.colors.accent,
             ),
           ),
-          const SizedBox(width: 12),
+          const SizedBox(width: AppSpacing.s12),
           Expanded(
             child: _metricCard(
               'Last Added',
               lastAdded?.name ?? '-',
               lastAdded?.createdAt != null ? AppDateFormat.date.format(lastAdded!.createdAt!) : null,
               Icons.calendar_today_outlined,
-              primaryDeepGreen,
+              context.colors.primary,
             ),
           ),
         ],
@@ -173,11 +176,11 @@ class _ClientsScreenState extends State<ClientsScreen> {
 
   Widget _metricCard(String title, String value, String? subtitle, IconData icon, Color color) {
     return Container(
-      padding: const EdgeInsets.all(14),
+      padding: const EdgeInsets.all(AppSpacing.s14),
       decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 8, offset: const Offset(0, 2))],
+        color: context.colors.surface,
+        borderRadius: BorderRadius.circular(AppRadius.r12),
+        boxShadow: [BoxShadow(color: context.colors.shadow.withValues(alpha: AppAlpha.a05), blurRadius: 8, offset: const Offset(0, 2))],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -186,28 +189,28 @@ class _ClientsScreenState extends State<ClientsScreen> {
           Row(
             children: [
               Container(
-                padding: const EdgeInsets.all(6),
-                decoration: BoxDecoration(color: color.withValues(alpha: 0.12), borderRadius: BorderRadius.circular(10)),
-                child: Icon(icon, size: 16, color: color),
+                padding: const EdgeInsets.all(AppSpacing.s6),
+                decoration: BoxDecoration(color: color.withValues(alpha: AppAlpha.a10), borderRadius: BorderRadius.circular(AppRadius.r10)),
+                child: Icon(icon, size: AppIconSize.i16, color: color),
               ),
-              const SizedBox(width: 8),
+              const SizedBox(width: AppSpacing.s8),
               Expanded(
-                child: Text(title, style: TextStyle(fontSize: 12, color: Colors.grey[600]), maxLines: 1, overflow: TextOverflow.ellipsis),
+                child: Text(title, style: TextStyle(fontSize: AppFontSize.f12, color: context.colors.textMuted), maxLines: 1, overflow: TextOverflow.ellipsis),
               ),
             ],
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: AppSpacing.s8),
           Row(
             crossAxisAlignment: CrossAxisAlignment.baseline,
             textBaseline: TextBaseline.alphabetic,
             children: [
               Flexible(
-                child: Text(value, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold), maxLines: 1, overflow: TextOverflow.ellipsis),
+                child: Text(value, style: const TextStyle(fontSize: AppFontSize.f18, fontWeight: AppFontWeight.bold), maxLines: 1, overflow: TextOverflow.ellipsis),
               ),
               if (subtitle != null) ...[
-                const SizedBox(width: 6),
+                const SizedBox(width: AppSpacing.s6),
                 Flexible(
-                  child: Text(subtitle, style: TextStyle(fontSize: 11, color: Colors.grey[600]), maxLines: 1, overflow: TextOverflow.ellipsis),
+                  child: Text(subtitle, style: TextStyle(fontSize: AppFontSize.f11, color: context.colors.textMuted), maxLines: 1, overflow: TextOverflow.ellipsis),
                 ),
               ],
             ],
@@ -219,8 +222,8 @@ class _ClientsScreenState extends State<ClientsScreen> {
 
   Widget _buildToolbarRow() {
     final border = OutlineInputBorder(
-      borderRadius: BorderRadius.circular(10),
-      borderSide: BorderSide(color: Colors.grey.withValues(alpha: 0.3)),
+      borderRadius: BorderRadius.circular(AppRadius.r10),
+      borderSide: BorderSide(color: context.colors.textHint.withValues(alpha: AppAlpha.a30)),
     );
     return Row(
       children: [
@@ -230,18 +233,18 @@ class _ClientsScreenState extends State<ClientsScreen> {
             controller: _searchController,
             decoration: InputDecoration(
               hintText: 'Search by name, phone, address...',
-              hintStyle: const TextStyle(fontSize: 13),
-              prefixIcon: const Icon(Icons.search, size: 20),
+              hintStyle: const TextStyle(fontSize: AppFontSize.f13),
+              prefixIcon: const Icon(Icons.search, size: AppIconSize.i20),
               filled: true,
-              fillColor: Colors.white,
+              fillColor: context.colors.surface,
               isDense: true,
-              contentPadding: const EdgeInsets.symmetric(vertical: 12, horizontal: 12),
+              contentPadding: const EdgeInsets.symmetric(vertical: AppSpacing.s12, horizontal: AppSpacing.s12),
               border: border,
               enabledBorder: border,
               suffixIcon: _searchController.text.isEmpty
                   ? null
                   : IconButton(
-                      icon: const Icon(Icons.clear, size: 18),
+                      icon: const Icon(Icons.clear, size: AppIconSize.i18),
                       onPressed: () {
                         _searchController.clear();
                         _onSearchChanged('');
@@ -251,20 +254,20 @@ class _ClientsScreenState extends State<ClientsScreen> {
             onChanged: _onSearchChanged,
           ),
         ),
-        const SizedBox(width: 10),
+        const SizedBox(width: AppSpacing.s10),
         Container(
-          padding: const EdgeInsets.symmetric(horizontal: 10),
+          padding: const EdgeInsets.symmetric(horizontal: AppSpacing.s10),
           height: 44,
           decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(10),
-            border: Border.all(color: Colors.grey.withValues(alpha: 0.3)),
+            color: context.colors.surface,
+            borderRadius: BorderRadius.circular(AppRadius.r10),
+            border: Border.all(color: context.colors.textHint.withValues(alpha: AppAlpha.a30)),
           ),
           child: DropdownButtonHideUnderline(
             child: DropdownButton<String>(
               value: _selectedType,
-              icon: Icon(Icons.arrow_drop_down, size: 18, color: primaryDeepGreen),
-              style: const TextStyle(color: Colors.black87, fontSize: 13),
+              icon: Icon(Icons.arrow_drop_down, size: AppIconSize.i18, color: context.colors.primary),
+              style: TextStyle(color: context.colors.textPrimary, fontSize: AppFontSize.f13),
               items: _clientTypes
                   .map((t) => DropdownMenuItem(value: t, child: Text(t == 'All' ? 'Type: All' : t)))
                   .toList(),
@@ -274,20 +277,20 @@ class _ClientsScreenState extends State<ClientsScreen> {
             ),
           ),
         ),
-        const SizedBox(width: 10),
+        const SizedBox(width: AppSpacing.s10),
         Container(
-          padding: const EdgeInsets.symmetric(horizontal: 10),
+          padding: const EdgeInsets.symmetric(horizontal: AppSpacing.s10),
           height: 44,
           decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(10),
-            border: Border.all(color: Colors.grey.withValues(alpha: 0.3)),
+            color: context.colors.surface,
+            borderRadius: BorderRadius.circular(AppRadius.r10),
+            border: Border.all(color: context.colors.textHint.withValues(alpha: AppAlpha.a30)),
           ),
           child: DropdownButtonHideUnderline(
             child: DropdownButton<String>(
               value: _statusFilter,
-              icon: Icon(Icons.arrow_drop_down, size: 18, color: primaryDeepGreen),
-              style: const TextStyle(color: Colors.black87, fontSize: 13),
+              icon: Icon(Icons.arrow_drop_down, size: AppIconSize.i18, color: context.colors.primary),
+              style: TextStyle(color: context.colors.textPrimary, fontSize: AppFontSize.f13),
               items: const [
                 DropdownMenuItem(value: 'All', child: Text('Status: All')),
                 DropdownMenuItem(value: 'Active', child: Text('Active')),
@@ -321,15 +324,15 @@ class _ClientsScreenState extends State<ClientsScreen> {
   Color _colorForType(String type) {
     switch (type) {
       case 'Farmer':
-        return const Color(0xFF2F5D62);
+        return context.colors.primary;
       case 'Vet':
-        return const Color(0xFF3D5A80);
+        return context.colors.chart1;
       case 'Wholesaler':
-        return const Color(0xFF6A4C93);
+        return context.colors.chart2;
       case 'Retailer':
-        return const Color(0xFFB56A00);
+        return context.colors.chart3;
       default:
-        return Colors.grey.shade600;
+        return context.colors.textMuted;
     }
   }
 
@@ -337,16 +340,16 @@ class _ClientsScreenState extends State<ClientsScreen> {
     final confirm = await showDialog<bool>(
       context: context,
       builder: (_) => AlertDialog(
-        backgroundColor: offWhite,
-        title: Text('Delete Client', style: TextStyle(color: primaryDeepGreen)),
+        backgroundColor: context.colors.background,
+        title: Text('Delete Client', style: TextStyle(color: context.colors.primary)),
         content: Text('Delete "${client.name}" permanently?'),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
             style: ButtonStyle(
               foregroundColor: WidgetStateProperty.resolveWith<Color>((states) {
-                if (states.contains(WidgetState.hovered)) return warmAmber;
-                return primaryDeepGreen;
+                if (states.contains(WidgetState.hovered)) return context.colors.accent;
+                return context.colors.primary;
               }),
             ),
             child: const Text('Cancel'),
@@ -355,8 +358,8 @@ class _ClientsScreenState extends State<ClientsScreen> {
             onPressed: () => Navigator.pop(context, true),
             style: ButtonStyle(
               foregroundColor: WidgetStateProperty.resolveWith<Color>((states) {
-                if (states.contains(WidgetState.hovered)) return Colors.red.shade900;
-                return warmAmber;
+                if (states.contains(WidgetState.hovered)) return context.colors.dangerDeep;
+                return context.colors.accent;
               }),
             ),
             icon: const Icon(Icons.delete),
@@ -433,7 +436,7 @@ class _ClientsScreenState extends State<ClientsScreen> {
       );
 
       await Share.shareXFiles([xfile], text: client.name);
-    } catch (e) {
+    } catch (e, st) {
       if (!mounted) return;
       // Desktop browsers' well-known unreliable support for
       // file-sharing through the Web Share API - not a benign
@@ -443,9 +446,7 @@ class _ClientsScreenState extends State<ClientsScreen> {
         downloadFileWeb(bytes, 'client_${client.id}.png');
         return;
       }
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Could not share client card: $e'), backgroundColor: Colors.redAccent),
-      );
+      AppFeedback.error("Couldn't share the client card", error: e, stackTrace: st);
     } finally {
       if (mounted) setState(() => _isSharing = false);
     }
@@ -458,30 +459,30 @@ class _ClientsScreenState extends State<ClientsScreen> {
 
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.grey.withValues(alpha: 0.15)),
+        color: context.colors.surface,
+        borderRadius: BorderRadius.circular(AppRadius.r12),
+        border: Border.all(color: context.colors.textHint.withValues(alpha: AppAlpha.a15)),
       ),
       child: SingleChildScrollView(
-        padding: const EdgeInsets.all(20),
+        padding: const EdgeInsets.all(AppSpacing.s20),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                const Text('Client Details', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                const Text('Client Details', style: TextStyle(fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f16)),
                 IconButton(
-                  icon: const Icon(Icons.close, size: 20),
+                  icon: const Icon(Icons.close, size: AppIconSize.i20),
                   onPressed: () => setState(() => _selectedClient = null),
                 ),
               ],
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: AppSpacing.s12),
             RepaintBoundary(
               key: _clientCardKey,
               child: Container(
-                color: Colors.white,
+                color: context.colors.surface,
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -489,13 +490,13 @@ class _ClientsScreenState extends State<ClientsScreen> {
               children: [
                 CircleAvatar(
                   radius: 20,
-                  backgroundColor: accent.withValues(alpha: 0.12),
+                  backgroundColor: accent.withValues(alpha: AppAlpha.a10),
                   child: Text(
                     client.name.isNotEmpty ? client.name[0].toUpperCase() : '?',
-                    style: TextStyle(color: accent, fontWeight: FontWeight.bold, fontSize: 16),
+                    style: TextStyle(color: accent, fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f16),
                   ),
                 ),
-                const SizedBox(width: 12),
+                const SizedBox(width: AppSpacing.s12),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,

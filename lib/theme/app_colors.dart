@@ -48,6 +48,9 @@ class AppColors extends ThemeExtension<AppColors> {
     required this.trendDown,
     required this.scrim,
     required this.shadow,
+    required this.chart1,
+    required this.chart2,
+    required this.chart3,
   });
 
   // Brand - the only roles that vary by colour theme for now.
@@ -107,6 +110,14 @@ class AppColors extends ThemeExtension<AppColors> {
   final Color scrim;
   final Color shadow;
 
+  // Category colours, exact legacy values (spec 4.1: "chart or category
+  // colour -> chart1..chartN"). Today: client types Vet, Wholesaler and
+  // Retailer (clients_screen.dart); chart1 is also the dashboard's
+  // services colour (dashboard_screen.dart, not yet migrated).
+  final Color chart1;
+  final Color chart2;
+  final Color chart3;
+
   /// The roles for a colour theme. Every value is the exact legacy shade.
   static AppColors fromTheme(AppColorTheme theme) => AppColors(
         primary: theme.primary,
@@ -142,6 +153,9 @@ class AppColors extends ThemeExtension<AppColors> {
         trendDown: const Color(0xFFEF4444),
         scrim: Colors.black,
         shadow: Colors.black,
+        chart1: const Color(0xFF3D5A80),
+        chart2: const Color(0xFF6A4C93),
+        chart3: const Color(0xFFB56A00),
       );
 
   @override
@@ -179,6 +193,9 @@ class AppColors extends ThemeExtension<AppColors> {
     Color? trendDown,
     Color? scrim,
     Color? shadow,
+    Color? chart1,
+    Color? chart2,
+    Color? chart3,
   }) =>
       AppColors(
         primary: primary ?? this.primary,
@@ -214,6 +231,9 @@ class AppColors extends ThemeExtension<AppColors> {
         trendDown: trendDown ?? this.trendDown,
         scrim: scrim ?? this.scrim,
         shadow: shadow ?? this.shadow,
+        chart1: chart1 ?? this.chart1,
+        chart2: chart2 ?? this.chart2,
+        chart3: chart3 ?? this.chart3,
       );
 
   @override
@@ -254,6 +274,9 @@ class AppColors extends ThemeExtension<AppColors> {
       trendDown: l(trendDown, other.trendDown),
       scrim: l(scrim, other.scrim),
       shadow: l(shadow, other.shadow),
+      chart1: l(chart1, other.chart1),
+      chart2: l(chart2, other.chart2),
+      chart3: l(chart3, other.chart3),
     );
   }
 }
