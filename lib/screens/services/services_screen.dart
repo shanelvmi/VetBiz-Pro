@@ -905,7 +905,7 @@ class _ServicesScreenState extends State<ServicesScreen> {
                       onPressed: () => _confirmDeleteService(service),
                       icon: Icon(Icons.delete_outline, size: AppIconSize.i16, color: context.colors.dangerSoft),
                       label: Text('Delete', style: TextStyle(color: context.colors.dangerSoft)),
-                      style: OutlinedButton.styleFrom(side: BorderSide(color: Colors.red[200]!)),
+                      style: OutlinedButton.styleFrom(side: BorderSide(color: context.colors.danger.withValues(alpha: AppAlpha.a50))),
                     ),
                   ),
                 ],

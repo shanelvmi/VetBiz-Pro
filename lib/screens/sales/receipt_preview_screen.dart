@@ -14,6 +14,7 @@ import '../../services/receipt_pdf_service.dart';
 import '../settings/printer_settings_screen.dart';
 import '../../utils/web_download.dart';
 import '../../theme/app_palette.dart';
+import '../../theme/pdf_palette.dart';
 import '../../config/money.dart';
 import '../../config/app_rules.dart';
 import '../../config/payment_methods.dart';
@@ -567,7 +568,7 @@ class _ReceiptPreviewScreenState extends State<ReceiptPreviewScreen> {
                       style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                       children: [
                         TextSpan(text: 'VetBiz ', style: TextStyle(color: Color(0xFF2F5D62))),
-                        TextSpan(text: 'Pro', style: TextStyle(color: Color(0xFFE0A32E))),
+                        TextSpan(text: 'Pro', style: TextStyle(color: ReceiptPalette.amber)),
                       ],
                     ),
                   ),
@@ -654,7 +655,7 @@ class _ReceiptPreviewScreenState extends State<ReceiptPreviewScreen> {
                   style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold),
                   children: [
                     TextSpan(text: 'VetBiz ', style: TextStyle(color: Color(0xFF2F5D62))),
-                    TextSpan(text: 'Pro', style: TextStyle(color: Color(0xFFE0A32E))),
+                    TextSpan(text: 'Pro', style: TextStyle(color: ReceiptPalette.amber)),
                   ],
                 ),
               ),

@@ -48,6 +48,10 @@ void main() {
       'warningStrong': (c.warningStrong, Colors.orange[800]!),
       'info': (c.info, Colors.blue),
       'infoStrong': (c.infoStrong, Colors.blue[700]!),
+      // Info notes (receipt previews, report review), as they were.
+      'infoNote': (c.infoNote, Colors.blueGrey[400]!),
+      'infoNoteText': (c.infoNoteText, Colors.blueGrey[600]!),
+      'infoNoteTextSoft': (c.infoNoteTextSoft, Colors.blueGrey[500]!),
       // summary_card.dart's trend pill, as it was.
       'trendUp': (c.trendUp, const Color(0xFF10B981)),
       'trendDown': (c.trendDown, const Color(0xFFEF4444)),
@@ -57,6 +61,10 @@ void main() {
       'chart1': (c.chart1, const Color(0xFF3D5A80)),
       'chart2': (c.chart2, const Color(0xFF6A4C93)),
       'chart3': (c.chart3, const Color(0xFFB56A00)),
+      // Report summary tiles (report_tabbed_content.dart), as they were.
+      'chart4': (c.chart4, Colors.purple),
+      'chart5': (c.chart5, Colors.blueGrey),
+      'chart6': (c.chart6, Colors.teal),
       // Team role chips (manage_assistants_screen.dart), as they were.
       'roleOwner': (c.roleOwner, Colors.indigo),
       'roleOwnerStrong': (c.roleOwnerStrong, Colors.indigo[700]!),

@@ -41,14 +41,11 @@
       "lib/screens/products/stock_alerts_screen.dart": 40,
       "lib/screens/products/view_batches_screen.dart": 29,
       "lib/screens/register_screen.dart": 102,
-      "lib/screens/reports/report_review_screen.dart": 2,
-      "lib/screens/reports/report_tabbed_content.dart": 6,
+      "lib/screens/reports/report_tabbed_content.dart": 3,
       "lib/screens/sales/add_sale_screen.dart": 82,
-      "lib/screens/sales/receipt_preview_screen.dart": 53,
+      "lib/screens/sales/receipt_preview_screen.dart": 51,
       "lib/screens/sales/sales_archive_screen.dart": 32,
-      "lib/screens/sales/sales_screen.dart": 47,
-      "lib/screens/services/service_receipt_preview_screen.dart": 4,
-      "lib/screens/services/services_screen.dart": 1
+      "lib/screens/sales/sales_screen.dart": 47
     },
     "R2": {
       "lib/main.dart": 11,

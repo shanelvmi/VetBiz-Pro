@@ -22,9 +22,10 @@ import '../../theme/app_text.dart';
 import '../../theme/app_dimens.dart';
 import '../../theme/theme_context.dart';
 import '../../theme/app_breakpoints.dart';
-// The receipt's brand green is the fixed brand colour, not the theme's:
-// the preview matches the printed receipt (PdfPalette.brand).
+// The receipt's brand green and amber are fixed colours, not the theme's:
+// the preview matches the printed receipt (PdfPalette.brand, .amber).
 import '../../theme/app_palette.dart';
+import '../../theme/pdf_palette.dart';
 import '../../ui/feedback/app_feedback.dart';
 
 /// Shows the service receipt as it will actually look before doing
@@ -535,7 +536,7 @@ class _ServiceReceiptPreviewScreenState extends State<ServiceReceiptPreviewScree
                       style: TextStyle(fontSize: AppFontSize.f16, fontWeight: AppFontWeight.bold),
                       children: [
                         TextSpan(text: 'VetBiz ', style: TextStyle(color: AppPalette.primary)),
-                        TextSpan(text: 'Pro', style: TextStyle(color: Color(0xFFE0A32E))),
+                        TextSpan(text: 'Pro', style: TextStyle(color: ReceiptPalette.amber)),
                       ],
                     ),
                   ),
@@ -623,7 +624,7 @@ class _ServiceReceiptPreviewScreenState extends State<ServiceReceiptPreviewScree
                   style: TextStyle(fontSize: AppFontSize.f13, fontWeight: AppFontWeight.bold),
                   children: [
                     TextSpan(text: 'VetBiz ', style: TextStyle(color: AppPalette.primary)),
-                    TextSpan(text: 'Pro', style: TextStyle(color: Color(0xFFE0A32E))),
+                    TextSpan(text: 'Pro', style: TextStyle(color: ReceiptPalette.amber)),
                   ],
                 ),
               ),
@@ -808,12 +809,12 @@ class _ServiceReceiptPreviewScreenState extends State<ServiceReceiptPreviewScree
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Icon(Icons.info_outline, size: AppIconSize.i16, color: Colors.blueGrey[400]),
+                  Icon(Icons.info_outline, size: AppIconSize.i16, color: context.colors.infoNote),
                   const SizedBox(width: AppSpacing.s8),
                   Expanded(
                     child: Text(
                       'This receipt shows the final amount paid for the selected transaction. You can print or share it for your records.',
-                      style: TextStyle(fontSize: AppFontSize.f11, color: Colors.blueGrey[600], height: 1.4),
+                      style: TextStyle(fontSize: AppFontSize.f11, color: context.colors.infoNoteText, height: 1.4),
                     ),
                   ),
                 ],

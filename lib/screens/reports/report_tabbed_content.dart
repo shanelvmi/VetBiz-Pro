@@ -165,14 +165,14 @@ class _ReportTabbedContentState extends State<ReportTabbedContent> with SingleTi
     final row1 = [
       _summaryTile('Total Sales', Money.symbolDecimal(report.salesTotalValue), Icons.shopping_cart_outlined, context.colors.info),
       _summaryTile('Service Revenue', Money.symbolDecimal(report.servicesTotalValue), Icons.medical_services_outlined, context.colors.success),
-      _summaryTile('Debt Repayments', Money.symbolDecimal(report.repaymentsValue), Icons.people_alt_outlined, Colors.purple),
+      _summaryTile('Debt Repayments', Money.symbolDecimal(report.repaymentsValue), Icons.people_alt_outlined, context.colors.chart4),
       _summaryTile('Expenses', Money.symbolDecimal(report.totalExpenses), Icons.receipt_long_outlined, context.colors.danger),
       _summaryTile('Other Income', Money.symbolDecimal(report.totalOtherIncome), Icons.savings_outlined, context.colors.primary),
     ];
     final row2 = [
       _summaryTile('Outstanding New Debt', Money.symbolDecimal(report.newDebtValue), Icons.warning_amber_outlined, context.colors.warning),
-      _summaryTile('Transactions', '$transactionsCount', Icons.sync_alt_outlined, Colors.blueGrey),
-      _summaryTile('Services Performed', '${report.servicesCount}', Icons.build_outlined, Colors.teal),
+      _summaryTile('Transactions', '$transactionsCount', Icons.sync_alt_outlined, context.colors.chart5),
+      _summaryTile('Services Performed', '${report.servicesCount}', Icons.build_outlined, context.colors.chart6),
       _summaryTile('Products Sold', '$productsSoldUnits units', Icons.inventory_2_outlined, context.colors.accent.withValues(alpha: AppAlpha.a85)),
       _summaryTile('Total Revenue Today', Money.symbolDecimal(revenue), Icons.trending_up_outlined, context.colors.primary),
     ];

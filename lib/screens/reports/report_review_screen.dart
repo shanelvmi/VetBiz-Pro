@@ -421,12 +421,12 @@ class _ReportReviewScreenState extends State<ReportReviewScreen> {
           const SizedBox(height: AppSpacing.s8),
           Row(
             children: [
-              Icon(Icons.info_outline, size: AppIconSize.i16, color: Colors.blueGrey[400]),
+              Icon(Icons.info_outline, size: AppIconSize.i16, color: context.colors.infoNote),
               const SizedBox(width: AppSpacing.s4),
               Expanded(
                 child: Text(
                   'No income came in via ${p.method} today - just an outflow. No physical count needed here.',
-                  style: TextStyle(fontSize: AppFontSize.f12, color: Colors.blueGrey[500]),
+                  style: TextStyle(fontSize: AppFontSize.f12, color: context.colors.infoNoteTextSoft),
                 ),
               ),
             ],

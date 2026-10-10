@@ -44,6 +44,9 @@ class AppColors extends ThemeExtension<AppColors> {
     required this.warningStrong,
     required this.info,
     required this.infoStrong,
+    required this.infoNote,
+    required this.infoNoteText,
+    required this.infoNoteTextSoft,
     required this.trendUp,
     required this.trendDown,
     required this.scrim,
@@ -51,6 +54,9 @@ class AppColors extends ThemeExtension<AppColors> {
     required this.chart1,
     required this.chart2,
     required this.chart3,
+    required this.chart4,
+    required this.chart5,
+    required this.chart6,
     required this.roleOwner,
     required this.roleOwnerStrong,
     required this.roleCoAdmin,
@@ -105,6 +111,15 @@ class AppColors extends ThemeExtension<AppColors> {
   final Color info;
   final Color infoStrong;
 
+  // Quiet info notes (an info_outline icon and a line of help text): the
+  // receipt previews and the report review. Blue-grey, not the textHint
+  // grey; exact legacy shades. `infoNote` is the icon (blueGrey[400]),
+  // `infoNoteText` the receipt notes' text (blueGrey[600]) and
+  // `infoNoteTextSoft` the report review note's text (blueGrey[500]).
+  final Color infoNote;
+  final Color infoNoteText;
+  final Color infoNoteTextSoft;
+
   // The KPI trend pill (summary_card.dart). Its own green and red, not
   // `success`/`danger`: no existing role is within 12 on every channel.
   final Color trendUp;
@@ -119,10 +134,17 @@ class AppColors extends ThemeExtension<AppColors> {
   // Category colours, exact legacy values (spec 4.1: "chart or category
   // colour -> chart1..chartN"). Today: client types Vet, Wholesaler and
   // Retailer (clients_screen.dart); chart1 is also the dashboard's
-  // services colour (dashboard_screen.dart, not yet migrated).
+  // services colour (dashboard_screen.dart, not yet migrated). chart4..6
+  // are the report summary tiles Debt Repayments (purple), Transactions
+  // (blueGrey) and Services Performed (teal) in report_tabbed_content.dart.
+  // chart5 and chart6 hold the same values as roleAssistant and roleCoAdmin,
+  // but for a different purpose, so they are separate roles.
   final Color chart1;
   final Color chart2;
   final Color chart3;
+  final Color chart4;
+  final Color chart5;
+  final Color chart6;
 
   // Team roles (manage_assistants_screen.dart role chips): a light fill of
   // the base colour with the Strong shade as the label. Exact legacy values.
@@ -164,6 +186,9 @@ class AppColors extends ThemeExtension<AppColors> {
         warningStrong: Colors.orange.shade800,
         info: Colors.blue,
         infoStrong: Colors.blue.shade700,
+        infoNote: Colors.blueGrey.shade400,
+        infoNoteText: Colors.blueGrey.shade600,
+        infoNoteTextSoft: Colors.blueGrey.shade500,
         trendUp: const Color(0xFF10B981),
         trendDown: const Color(0xFFEF4444),
         scrim: Colors.black,
@@ -171,6 +196,9 @@ class AppColors extends ThemeExtension<AppColors> {
         chart1: const Color(0xFF3D5A80),
         chart2: const Color(0xFF6A4C93),
         chart3: const Color(0xFFB56A00),
+        chart4: Colors.purple,
+        chart5: Colors.blueGrey,
+        chart6: Colors.teal,
         roleOwner: Colors.indigo,
         roleOwnerStrong: Colors.indigo.shade700,
         roleCoAdmin: Colors.teal,
@@ -210,6 +238,9 @@ class AppColors extends ThemeExtension<AppColors> {
     Color? warningStrong,
     Color? info,
     Color? infoStrong,
+    Color? infoNote,
+    Color? infoNoteText,
+    Color? infoNoteTextSoft,
     Color? trendUp,
     Color? trendDown,
     Color? scrim,
@@ -217,6 +248,9 @@ class AppColors extends ThemeExtension<AppColors> {
     Color? chart1,
     Color? chart2,
     Color? chart3,
+    Color? chart4,
+    Color? chart5,
+    Color? chart6,
     Color? roleOwner,
     Color? roleOwnerStrong,
     Color? roleCoAdmin,
@@ -254,6 +288,9 @@ class AppColors extends ThemeExtension<AppColors> {
         warningStrong: warningStrong ?? this.warningStrong,
         info: info ?? this.info,
         infoStrong: infoStrong ?? this.infoStrong,
+        infoNote: infoNote ?? this.infoNote,
+        infoNoteText: infoNoteText ?? this.infoNoteText,
+        infoNoteTextSoft: infoNoteTextSoft ?? this.infoNoteTextSoft,
         trendUp: trendUp ?? this.trendUp,
         trendDown: trendDown ?? this.trendDown,
         scrim: scrim ?? this.scrim,
@@ -261,6 +298,9 @@ class AppColors extends ThemeExtension<AppColors> {
         chart1: chart1 ?? this.chart1,
         chart2: chart2 ?? this.chart2,
         chart3: chart3 ?? this.chart3,
+        chart4: chart4 ?? this.chart4,
+        chart5: chart5 ?? this.chart5,
+        chart6: chart6 ?? this.chart6,
         roleOwner: roleOwner ?? this.roleOwner,
         roleOwnerStrong: roleOwnerStrong ?? this.roleOwnerStrong,
         roleCoAdmin: roleCoAdmin ?? this.roleCoAdmin,
@@ -303,6 +343,9 @@ class AppColors extends ThemeExtension<AppColors> {
       warningStrong: l(warningStrong, other.warningStrong),
       info: l(info, other.info),
       infoStrong: l(infoStrong, other.infoStrong),
+      infoNote: l(infoNote, other.infoNote),
+      infoNoteText: l(infoNoteText, other.infoNoteText),
+      infoNoteTextSoft: l(infoNoteTextSoft, other.infoNoteTextSoft),
       trendUp: l(trendUp, other.trendUp),
       trendDown: l(trendDown, other.trendDown),
       scrim: l(scrim, other.scrim),
@@ -310,6 +353,9 @@ class AppColors extends ThemeExtension<AppColors> {
       chart1: l(chart1, other.chart1),
       chart2: l(chart2, other.chart2),
       chart3: l(chart3, other.chart3),
+      chart4: l(chart4, other.chart4),
+      chart5: l(chart5, other.chart5),
+      chart6: l(chart6, other.chart6),
       roleOwner: l(roleOwner, other.roleOwner),
       roleOwnerStrong: l(roleOwnerStrong, other.roleOwnerStrong),
       roleCoAdmin: l(roleCoAdmin, other.roleCoAdmin),

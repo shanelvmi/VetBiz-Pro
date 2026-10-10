@@ -45,15 +45,26 @@ User-facing "VetBiz Pro" now reads `AppInfo.name` (titles, Settings, support lin
 
 ### Raised in step 2D, batch D5
 
-Colours are outside the standing snap rule, so these are kept as they are:
+Colours are outside the standing snap rule, so this is kept as it is:
+
+- **Activity-type colours**, `lib/screens/reports/report_tabbed_content.dart` `_activityColor`: services `Colors.purple`, transactions `Colors.indigo`, clients `Colors.teal`. This is one of the four copies the shared activity-type helper replaces in step 2E. Kept for that step.
+
+## Decided
+
+### D5 follow-up (decided after batch D5; done before D6)
+
+- **Info notes:** `infoNote` roles with the exact current values, one role per value: `infoNote` (blueGrey[400], the icon in every note), `infoNoteText` (blueGrey[600], the receipt notes' text) and `infoNoteTextSoft` (blueGrey[500], the report review note's text). The three shades needed three roles to stay exact.
+- **Report summary tiles:** `chart4` (purple, Debt Repayments), `chart5` (blueGrey, Transactions), `chart6` (teal, Services Performed), exact values. They share values with `roleAssistant`/`roleCoAdmin` but not purpose, so they stay separate.
+- **Receipt amber:** `ReceiptPalette.amber = Color(0xFFE0A32E)` in `lib/theme/pdf_palette.dart`; `PdfPalette.amber` is built from it. Both receipt previews use it. Receipts stay unthemed on purpose.
+- **Delete outline `Colors.red[200]`:** `danger` at `AppAlpha.a50` (services_screen, and sales_screen in D6).
+- The standing snap rule (D4 follow-up) keeps applying.
+
+The questions as raised:
 
 - **Info note `Colors.blueGrey[400]` / `[500]`**, `lib/screens/reports/report_review_screen.dart` (the "No income came in via ..." hint under a payment method), and the same note style in `lib/screens/services/service_receipt_preview_screen.dart` (`blueGrey[400]` icon, `blueGrey[600]` text, on the `#EFF5F8` box now `surfaceMuted`): no role. `textHint` is grey[500] (not blue-grey). A `noteMuted` role, or snap to `textHint`/`textDisabled`?
 - **Report summary tiles**, `lib/screens/reports/report_tabbed_content.dart`: Debt Repayments `Colors.purple`, Transactions `Colors.blueGrey`, Services Performed `Colors.teal` (the other tiles already use info/success/danger/primary/warning). Category colours: `chart` roles with exact values? blueGrey and teal match `roleAssistant`/`roleCoAdmin` in value, but not in purpose.
-- **Activity-type colours**, same file `_activityColor`: services `Colors.purple`, transactions `Colors.indigo`, clients `Colors.teal`. This is one of the four copies the shared activity-type helper replaces in step 2E. Kept for that step.
 - **Receipt wordmark amber `#E0A32E`**, `service_receipt_preview_screen.dart` ("Pro" in the on-screen receipt): the same value as `PdfPalette.amber`, which is a `PdfColor` with no Flutter twin. The green half is now `AppPalette.primary` (unthemed, so the preview matches print). A Flutter `receiptAmber` constant next to the brand colours? (The wordmark is also in the 2R "App name" question.)
 - **`Colors.red[200]`**, `lib/screens/services/services_screen.dart` (the Delete button's outline in the details panel): not in the 4.1 table; the lightest danger role is `dangerSoft` (red[400]). A `dangerBorder` role, or snap to `dangerSoft`?
-
-## Decided
 
 ### D4 follow-up (decided after batch D4; done in D4g to D4j)
 
