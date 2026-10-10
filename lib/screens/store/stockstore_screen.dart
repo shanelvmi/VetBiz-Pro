@@ -180,7 +180,7 @@ class _StockStoreScreenState extends State<StockStoreScreen> {
         border: Border.all(color: context.colors.textHint.withValues(alpha: AppAlpha.a15)),
         boxShadow: [
           BoxShadow(
-              color: context.colors.shadow.withValues(alpha: 0.03), blurRadius: 6, offset: const Offset(0, 2)),
+              color: context.colors.shadow.withValues(alpha: AppAlpha.a05), blurRadius: 6, offset: const Offset(0, 2)),
         ],
       ),
       child: Row(
@@ -613,7 +613,7 @@ class _StockStoreScreenState extends State<StockStoreScreen> {
                         child: Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            Icon(Icons.move_up, size: 11, color: context.colors.infoStrong),
+                            Icon(Icons.move_up, size: AppIconSize.i12, color: context.colors.infoStrong),
                             const SizedBox(width: AppSpacing.s3),
                             Text('Restock Shelf',
                                 style: TextStyle(

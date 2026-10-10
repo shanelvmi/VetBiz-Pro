@@ -632,7 +632,7 @@ class _PaymentsScreenState extends State<PaymentsScreen> {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(isUp ? Icons.arrow_upward : Icons.arrow_downward, size: 11, color: color),
+          Icon(isUp ? Icons.arrow_upward : Icons.arrow_downward, size: AppIconSize.i12, color: color),
           const SizedBox(width: AppSpacing.s2),
           Text('${percent.abs().toStringAsFixed(1)}%', style: TextStyle(
                   fontSize: AppFontSize.f10_5, color: color, fontWeight: AppFontWeight.semibold)),
@@ -680,7 +680,7 @@ class _PaymentsScreenState extends State<PaymentsScreen> {
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Icon(Icons.check_circle, size: 13, color: context.colors.successStrong),
+                  Icon(Icons.check_circle, size: AppIconSize.i14, color: context.colors.successStrong),
                   const SizedBox(width: AppSpacing.s4),
                   Text('Payment Received', style: TextStyle(
                       fontSize: AppFontSize.f11_5, color: context.colors.successStrong, fontWeight: AppFontWeight.semibold)),

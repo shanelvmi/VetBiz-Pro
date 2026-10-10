@@ -9,6 +9,7 @@ import '../../data/payment_submission_status.dart';
 import '../../config/money.dart';
 import '../../config/app_limits.dart';
 import '../../config/app_date_format.dart';
+import '../../ui/feedback/friendly_error.dart';
 import '../../theme/app_breakpoints.dart';
 import '../../theme/app_dimens.dart';
 import '../../theme/app_text.dart';
@@ -157,7 +158,7 @@ class _SubscriptionHistoryScreenState extends State<SubscriptionHistoryScreen> {
             return Center(
               child: Padding(
                 padding: const EdgeInsets.all(AppSpacing.s24),
-                child: Text('Could not load history: ${snapshot.error}'),
+                child: Text('Could not load history: ${FriendlyError.messageFor(snapshot.error!)}'),
               ),
             );
           }

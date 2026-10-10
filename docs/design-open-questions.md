@@ -43,9 +43,21 @@ User-facing "VetBiz Pro" now reads `AppInfo.name` (titles, Settings, support lin
 - **Two names in use**: "VetBiz Pro" and "VetBiz Pro System" (login header, register header, © line). One name?
 - **The version** "v1.0.0" is typed in Settings (`settings_screen.dart:239`); it could come from the build (pubspec) instead.
 
-### Values with no token (raised in step 2D, batch D2)
+## Decided
 
-Kept exactly as they are; the guard still counts the raw ones.
+### D2 follow-up (decided after batch D2; done in D2f, the dialog swap in D2g)
+
+- Modal barrier `Colors.black54` -> `scrim` at `AppAlpha.a50`.
+- Offer banner gradient 0.75 -> `a70`.
+- `AppIconSize.i24` added; the 26 px offer icon snaps to it. Icons 11 -> `i12`, 13 -> `i14`.
+- Stock store shadow alpha 0.03 -> `a05`.
+- "Release to Shop" -> "Release to Shelf" in both dialog texts of `release_to_shop_flow.dart` (identifiers and file names stay).
+- `payments_screen.dart`'s private `_DateRangeDialog` is replaced by the shared `lib/widgets/date_range_dialog.dart`.
+- The subscription history's inline load error shows `FriendlyError.messageFor(error)` instead of the raw error.
+
+Other user-facing "shop", for a later copy pass (not changed): none left in `lib/` or `functions/` after the rename. The word remains only in code comments (`facility_screen.dart:1224` "how's this shop doing", `payments_screen.dart` "the whole shop's ledger") and identifiers (`release_to_shop_flow.dart`, `releaseProductToShop`, `_releaseToShop`).
+
+The questions as raised:
 
 - **Modal barrier** `Colors.black54`, `lib/screens/subscription/subscription_screen.dart` (`showSubscriptionScreen`): the spec maps black54 to `textSecondary`, but this is a scrim. `scrim` at 0.54 has no AppAlpha step. Snap to `scrim` + `a50`, or add `a55`?
 - **Offer banner gradient**, `subscription_screen.dart`: `accent` fading to 0.75. No AppAlpha step and no snap rule. Snap to `a70`, or add `a75`?
@@ -54,8 +66,6 @@ Kept exactly as they are; the guard still counts the raw ones.
 - **Shadow alpha 0.03**, `lib/screens/store/stockstore_screen.dart` (metric cards): now the `shadow` role, but 0.03 is not in the snap table (0.04 and 0.06 snap to `a05`). Snap to `a05`?
 - **"Shop" in the release flow**, `lib/screens/store/release_to_shop_flow.dart`: the dialog title "Release to Shop" and the question "Do you still want to release it to the shop?" call the selling shelf a shop (CLAUDE.md: never call a business a shop). The success message now says "to the shelf"; the two dialog texts are kept until a copy pass. "Release to Shelf"?
 - **Duplicate date-range dialog**, `payments_screen.dart` `_DateRangeDialog`: a line-for-line private copy of `lib/widgets/date_range_dialog.dart` (same parameters, same output), now on the same tokens. Replace it with the shared widget (about 115 lines removed, no visible change)?
-
-## Decided
 
 ### D1 follow-up (decided after batch D1; done in D1c)
 

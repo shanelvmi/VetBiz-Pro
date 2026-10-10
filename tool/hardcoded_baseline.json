@@ -69,7 +69,6 @@
       "lib/screens/settings/settings_screen.dart": 15,
       "lib/screens/settings/trash_screen.dart": 19,
       "lib/screens/settings/ui_settings_dialog.dart": 9,
-      "lib/screens/subscription/subscription_screen.dart": 1,
       "lib/screens/transactions/add_transaction_screen.dart": 26,
       "lib/screens/transactions/transactions_screen.dart": 41
     },

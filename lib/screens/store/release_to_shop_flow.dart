@@ -84,7 +84,7 @@ Future<bool?> _showExpiredReleaseWarning(BuildContext context, Product product, 
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('This product is expired. Do you still want to release it to the shop?',
+            Text('This product is expired. Do you still want to release it to the shelf?',
                 style: const TextStyle(fontSize: AppFontSize.f13_5)),
             const SizedBox(height: AppSpacing.s10),
             ...expiredPortion.map((e) => Padding(
@@ -119,7 +119,7 @@ Future<void> releaseProductToShop(BuildContext context, Product product, {int in
   final confirmed = await showDialog<bool>(
     context: context,
     builder: (_) => AlertDialog(
-      title: Text('Release to Shop',
+      title: Text('Release to Shelf',
           style: TextStyle(color: context.colors.primary)),
       content: Column(
         mainAxisSize: MainAxisSize.min,

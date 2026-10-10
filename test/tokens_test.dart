@@ -172,8 +172,8 @@ void main() {
     test('icon sizes, elevation, alpha', () {
       expect([
         AppIconSize.i12, AppIconSize.i14, AppIconSize.i16, AppIconSize.i18, AppIconSize.i20,
-        AppIconSize.i22, AppIconSize.i32, AppIconSize.i48, AppIconSize.i56, AppIconSize.i64,
-      ], [12, 14, 16, 18, 20, 22, 32, 48, 56, 64]);
+        AppIconSize.i22, AppIconSize.i24, AppIconSize.i32, AppIconSize.i48, AppIconSize.i56, AppIconSize.i64,
+      ], [12, 14, 16, 18, 20, 22, 24, 32, 48, 56, 64]);
       expect([AppElevation.e0, AppElevation.e1, AppElevation.e2, AppElevation.e6, AppElevation.e8],
           [0, 1, 2, 6, 8]);
       expect([

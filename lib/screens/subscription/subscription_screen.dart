@@ -314,7 +314,7 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
                   padding: const EdgeInsets.all(AppSpacing.s16),
                   decoration: BoxDecoration(
                     gradient: LinearGradient(
-                      colors: [colors.accent, colors.accent.withValues(alpha: 0.75)],
+                      colors: [colors.accent, colors.accent.withValues(alpha: AppAlpha.a70)],
                       begin: Alignment.topLeft,
                       end: Alignment.bottomRight,
                     ),
@@ -325,7 +325,7 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
                   ),
                   child: Row(
                     children: [
-                      Icon(Icons.local_offer, color: colors.onPrimary, size: 26),
+                      Icon(Icons.local_offer, color: colors.onPrimary, size: AppIconSize.i24),
                       const SizedBox(width: AppSpacing.s12),
                       Expanded(
                         child: Column(
@@ -663,7 +663,7 @@ Future<void> showSubscriptionScreen(BuildContext context) async {
     context: context,
     barrierDismissible: true,
     barrierLabel: 'Subscription',
-    barrierColor: Colors.black54,
+    barrierColor: context.colors.scrim.withValues(alpha: AppAlpha.a50),
     transitionDuration: AppMotion.normal,
     pageBuilder: (context, animation, secondaryAnimation) {
       final screenSize = MediaQuery.of(context).size;
