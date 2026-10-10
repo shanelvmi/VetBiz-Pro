@@ -13,12 +13,19 @@ import '../../services/receipt_printer_service.dart';
 import '../../services/receipt_pdf_service.dart';
 import '../settings/printer_settings_screen.dart';
 import '../../utils/web_download.dart';
-import '../../theme/app_palette.dart';
 import '../../config/money.dart';
 import '../../config/app_rules.dart';
 import '../../config/payment_methods.dart';
 import '../../config/app_date_format.dart';
 import '../../config/app_info.dart';
+import '../../theme/app_text.dart';
+import '../../theme/app_dimens.dart';
+import '../../theme/theme_context.dart';
+import '../../theme/app_breakpoints.dart';
+// The receipt's brand green is the fixed brand colour, not the theme's:
+// the preview matches the printed receipt (PdfPalette.brand).
+import '../../theme/app_palette.dart';
+import '../../ui/feedback/app_feedback.dart';
 
 /// Shows the service receipt as it will actually look before doing
 /// anything with it - same pattern as Sales' ReceiptPreviewScreen, just
@@ -96,13 +103,9 @@ class _ServiceReceiptPreviewScreenState extends State<ServiceReceiptPreviewScree
         return;
       }
       debugPrint('Share receipt failed: ${e.runtimeType} - $e\n$stack');
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: SelectableText('Could not share receipt: $e', style: const TextStyle(color: Colors.white)),
-          backgroundColor: Colors.redAccent,
-          duration: const Duration(seconds: 10),
-        ),
-      );
+      // The raw error used to be shown as selectable text for 10 s; it is
+      // now behind Details (owner's rule: no inline raw error text).
+      AppFeedback.error("Couldn't share the receipt", error: e, stackTrace: stack);
     } finally {
       if (mounted) setState(() => _isSharing = false);
     }
@@ -146,18 +149,13 @@ class _ServiceReceiptPreviewScreenState extends State<ServiceReceiptPreviewScree
       }
 
       final success = await printerService.printServiceReceipt(widget.service);
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(success ? 'Receipt sent to printer' : 'Printer did not accept the receipt'),
-          backgroundColor: success ? Colors.green : Colors.redAccent,
-        ),
-      );
-    } catch (e) {
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Print failed: $e'), backgroundColor: Colors.redAccent),
-      );
+      if (success) {
+        AppFeedback.success('Receipt sent to printer');
+      } else {
+        AppFeedback.error("Couldn't print the receipt", detail: 'The printer did not accept it');
+      }
+    } catch (e, st) {
+      AppFeedback.error("Couldn't print the receipt", error: e, stackTrace: st);
     } finally {
       if (mounted) setState(() => _isPrinting = false);
     }
@@ -185,11 +183,8 @@ class _ServiceReceiptPreviewScreenState extends State<ServiceReceiptPreviewScree
         facilityTagline: facility?['tagline'],
         facilityTin: facility?['tin'],
       );
-    } catch (e) {
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Could not generate PDF: $e'), backgroundColor: Colors.redAccent),
-      );
+    } catch (e, st) {
+      AppFeedback.error("Couldn't generate the PDF", error: e, stackTrace: st);
     } finally {
       if (mounted) {
         setState(() {
@@ -217,22 +212,22 @@ class _ServiceReceiptPreviewScreenState extends State<ServiceReceiptPreviewScree
     final statusText = balance > 0
         ? (service.totalPaid > 0 ? 'Partially Paid' : 'Balance Due')
         : 'Paid in Full';
-    final statusColor = balance > 0 ? Colors.red : Colors.green;
+    final statusColor = balance > 0 ? context.colors.danger : context.colors.success;
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF2F4F4),
+      backgroundColor: context.colors.surfaceMuted,
       appBar: AppBar(
         title: const Text('Receipt Preview'),
         centerTitle: true,
-        backgroundColor: primaryColor,
-        foregroundColor: Colors.white,
+        backgroundColor: context.colors.primary,
+        foregroundColor: context.colors.onPrimary,
       ),
       body: LayoutBuilder(
         builder: (context, constraints) {
-          final isWide = constraints.maxWidth >= 900;
+          final isWide = constraints.maxWidth >= AppBreakpoints.medium;
           final thermalReceipt = Center(
             child: SingleChildScrollView(
-              padding: const EdgeInsets.all(24),
+              padding: const EdgeInsets.all(AppSpacing.s24),
               child: RepaintBoundary(
                 key: _receiptKey,
                 child: _buildReceiptCard(
@@ -256,7 +251,7 @@ class _ServiceReceiptPreviewScreenState extends State<ServiceReceiptPreviewScree
           // action, matching the Sales receipt's identical treatment.
           final receipt = _selectedFormat == 'a4'
               ? Padding(
-                  padding: const EdgeInsets.all(24),
+                  padding: const EdgeInsets.all(AppSpacing.s24),
                   child: PdfPreview(
                     build: (format) => ReceiptPdfService.buildServiceBytes(
                       service,
@@ -316,11 +311,11 @@ class _ServiceReceiptPreviewScreenState extends State<ServiceReceiptPreviewScree
   Widget _buildFormatSidebar() {
     Widget miniLine(double widthFraction, {bool dark = false}) {
       return Padding(
-        padding: const EdgeInsets.symmetric(vertical: 1.5),
+        padding: const EdgeInsets.symmetric(vertical: AppSpacing.s2),
         child: FractionallySizedBox(
           widthFactor: widthFraction,
           alignment: Alignment.centerLeft,
-          child: Container(height: 2.5, color: dark ? Colors.grey[500] : Colors.grey[300]),
+          child: Container(height: 2.5, color: dark ? context.colors.textHint : context.colors.border),
         ),
       );
     }
@@ -329,26 +324,26 @@ class _ServiceReceiptPreviewScreenState extends State<ServiceReceiptPreviewScree
       return Container(
         width: isThermal ? 68 : 98,
         height: 100,
-        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+        padding: const EdgeInsets.symmetric(horizontal: AppSpacing.s8, vertical: AppSpacing.s8),
         decoration: BoxDecoration(
-          color: Colors.white,
-          border: Border.all(color: Colors.grey.withValues(alpha: 0.2)),
+          color: context.colors.surface,
+          border: Border.all(color: context.colors.textHint.withValues(alpha: AppAlpha.a20)),
         ),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.start,
           children: [
-            Icon(Icons.storefront_outlined, size: 12, color: selected ? primaryColor : Colors.grey[400]),
-            const SizedBox(height: 4),
+            Icon(Icons.storefront_outlined, size: AppIconSize.i12, color: selected ? context.colors.primary : context.colors.textDisabled),
+            const SizedBox(height: AppSpacing.s4),
             miniLine(0.8, dark: true),
-            const SizedBox(height: 4),
+            const SizedBox(height: AppSpacing.s4),
             miniLine(1.0),
             miniLine(0.6),
             miniLine(0.9),
-            const SizedBox(height: 5),
+            const SizedBox(height: AppSpacing.s4),
             miniLine(1.0),
             miniLine(1.0),
             miniLine(0.7),
-            const SizedBox(height: 5),
+            const SizedBox(height: AppSpacing.s4),
             miniLine(0.8, dark: true),
           ],
         ),
@@ -358,28 +353,28 @@ class _ServiceReceiptPreviewScreenState extends State<ServiceReceiptPreviewScree
     Widget thumbnail({required String formatKey, required bool isThermal, required String label}) {
       final selected = _selectedFormat == formatKey;
       return Padding(
-        padding: const EdgeInsets.only(bottom: 16),
+        padding: const EdgeInsets.only(bottom: AppSpacing.s16),
         child: InkWell(
           onTap: () => setState(() => _selectedFormat = formatKey),
-          borderRadius: BorderRadius.circular(8),
+          borderRadius: BorderRadius.circular(AppRadius.r8),
           child: Column(
             children: [
               Container(
                 width: 98,
                 height: 115,
                 decoration: BoxDecoration(
-                  color: const Color(0xFFF7F7F7),
-                  borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: selected ? primaryColor : Colors.grey.withValues(alpha: 0.25), width: selected ? 2 : 1),
+                  color: context.colors.surfaceMuted,
+                  borderRadius: BorderRadius.circular(AppRadius.r8),
+                  border: Border.all(color: selected ? context.colors.primary : context.colors.textHint.withValues(alpha: AppAlpha.a30), width: selected ? 2 : 1),
                 ),
                 alignment: Alignment.center,
                 child: ClipRRect(
-                  borderRadius: BorderRadius.circular(2),
+                  borderRadius: BorderRadius.circular(AppRadius.r4),
                   child: miniReceiptPreview(selected: selected, isThermal: isThermal),
                 ),
               ),
-              const SizedBox(height: 6),
-              Text(label, style: TextStyle(fontSize: 11.5, color: selected ? primaryColor : Colors.grey[600], fontWeight: selected ? FontWeight.w600 : FontWeight.normal)),
+              const SizedBox(height: AppSpacing.s6),
+              Text(label, style: TextStyle(fontSize: AppFontSize.f11_5, color: selected ? context.colors.primary : context.colors.textMuted, fontWeight: selected ? AppFontWeight.semibold : AppFontWeight.regular)),
             ],
           ),
         ),
@@ -388,7 +383,7 @@ class _ServiceReceiptPreviewScreenState extends State<ServiceReceiptPreviewScree
 
     return Container(
       width: 148,
-      padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 20),
+      padding: const EdgeInsets.symmetric(vertical: AppSpacing.s20, horizontal: AppSpacing.s20),
       child: Column(
         children: [
           thumbnail(formatKey: 'thermal', isThermal: true, label: 'Receipt (Thermal)'),
