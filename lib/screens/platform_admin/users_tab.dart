@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../theme/app_dimens.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -235,8 +236,8 @@ class _UsersTabState extends State<UsersTab> {
               child: Row(
                 children: [
                   Container(
-                    width: 8,
-                    height: 8,
+                    width: AppSizes.statusDot,
+                    height: AppSizes.statusDot,
                     decoration: const BoxDecoration(color: Colors.green, shape: BoxShape.circle),
                   ),
                   const SizedBox(width: 6),

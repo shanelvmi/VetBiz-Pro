@@ -25,6 +25,7 @@ import '../../ui/feedback/app_feedback.dart';
 import '../../theme/app_text.dart';
 import '../../theme/app_dimens.dart';
 import '../../theme/theme_context.dart';
+import '../../ui/feedback/friendly_error.dart';
 
 class ClientsScreen extends StatefulWidget {
   const ClientsScreen({super.key});
@@ -692,7 +693,7 @@ class _ClientsScreenState extends State<ClientsScreen> {
                               ? Center(
                                   child: Padding(
                                     padding: const EdgeInsets.all(AppSpacing.s24),
-                                    child: _buildErrorMessage(controller.error.toString()),
+                                    child: _buildErrorMessage(controller.error!),
                                   ),
                                 )
                               : controller.isLoading && clients.isEmpty
@@ -873,7 +874,7 @@ class _ClientsScreenState extends State<ClientsScreen> {
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Icon(Icons.circle, size: 8, color: client.status == 'Active' ? context.colors.successStrong : context.colors.textMuted),
+                  Icon(Icons.circle, size: AppSizes.statusDot, color: client.status == 'Active' ? context.colors.successStrong : context.colors.textMuted),
                   const SizedBox(width: AppSpacing.s4),
                   Text(
                     client.status,
@@ -925,7 +926,10 @@ class _ClientsScreenState extends State<ClientsScreen> {
   // messy and hard to read made tappable inline as plain text. Any
   // other kind of error (no URL present) just falls back to showing
   // the message as-is.
-  Widget _buildErrorMessage(String errorText) {
+  Widget _buildErrorMessage(Object error) {
+    // The raw text is still read for the index link; on screen, any other
+    // error shows FriendlyError's sentence, never the exception itself.
+    final errorText = error.toString();
     final urlMatch = RegExp(r'https?://\S+').firstMatch(errorText);
     final url = urlMatch?.group(0);
 
@@ -937,7 +941,7 @@ class _ClientsScreenState extends State<ClientsScreen> {
         Text(
           url != null
               ? 'This filter needs a one-time database index to be created first.'
-              : 'Could not load clients: $errorText',
+              : 'Could not load clients: ${FriendlyError.messageFor(error)}',
           textAlign: TextAlign.center,
           style: const TextStyle(fontSize: AppFontSize.f13),
         ),

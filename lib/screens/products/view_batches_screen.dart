@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../theme/app_dimens.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 
@@ -464,7 +465,7 @@ class _ViewBatchesScreenState extends State<ViewBatchesScreen> {
                                         child: const Row(
                                           mainAxisSize: MainAxisSize.min,
                                           children: [
-                                            Icon(Icons.circle, size: 8, color: Colors.red),
+                                            Icon(Icons.circle, size: AppSizes.statusDot, color: Colors.red),
                                             SizedBox(width: 4),
                                             Text(
                                               'Out of Stock - 0 available',

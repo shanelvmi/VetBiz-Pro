@@ -43,15 +43,23 @@ User-facing "VetBiz Pro" now reads `AppInfo.name` (titles, Settings, support lin
 - **Two names in use**: "VetBiz Pro" and "VetBiz Pro System" (login header, register header, © line). One name?
 - **The version** "v1.0.0" is typed in Settings (`settings_screen.dart:239`); it could come from the build (pubspec) instead.
 
-### Raised in step 2D, batch D3
+## Decided
+
+### D3 follow-up (decided after batch D3; done in D3g)
+
+- Transactions delete dialog: "This cannot be undone." -> "You can restore it from Trash."
+- Debtors bell `Colors.orange[700]` -> `warningStrong`. Active chip label `Colors.green[800]` -> `successStrong`.
+- `AppSizes.statusDot` = 8, used for every 8 px status dot found: clients (Active/Inactive), product catalog side panel (stock status), login and platform-admin users tab (online), view batches (expired), view reports (submitted). The platform-admin bar chart's 8 px bar width is not a dot and is left for its batch.
+- Clients list load error: the raw error is replaced by `FriendlyError.messageFor(error)`; the missing-index text and its Create Index button stay.
+- **Standing rule:** any inline raw error text found in a batch ("Could not load ...: ${error}") is fixed the same way, with `FriendlyError.messageFor`, and listed in the batch report.
+
+The questions as raised:
 
 - **"This cannot be undone."**, `lib/screens/transactions/transactions_screen.dart` (delete confirmation): the delete is a soft delete into `trash_transactions` (restorable from Trash for 30 days), and the message after it now offers Undo (PHASE2_FEEDBACK_SPEC section 8). The dialog sentence is kept as written. Change it to "You can restore it from Trash."?
 - **`Colors.orange[700]`**, `lib/screens/debtors/debtors_screen.dart` (the "send reminder" bell icon): not in the 4.1 table, and no role is within 12 on every channel (`warning` is orange, `warningStrong` is orange[800]). Kept. Snap to `warningStrong`, or add a role?
 - **`Colors.green[800]`**, `lib/screens/clients/add_client_screen.dart` (the selected "Active" status chip's label): not in the 4.1 table, and no role is within 12 (`successStrong` is green[700]). Kept. Snap to `successStrong`, or add a role?
 - **Status dot 8 px**, `lib/screens/clients/clients_screen.dart` (`Icons.circle`, Active/Inactive): no `AppIconSize` step and no snap rule. Kept.
 - **Inline raw error**, `clients_screen.dart`: "Could not load clients: <raw error>" when the list fails to load (the missing-index case has its own text and a Create Index button). Same pattern the owner fixed in the subscription history (D2f). Switch it to `FriendlyError.messageFor(error)` too?
-
-## Decided
 
 ### D2 follow-up (decided after batch D2; done in D2f, the dialog swap in D2g)
 

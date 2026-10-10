@@ -303,8 +303,8 @@ class _ProductCatalogSidePanelState extends State<ProductCatalogSidePanel> {
                 const SizedBox(width: AppSpacing.s8),
               ] else if (leadingDot != null) ...[
                 Container(
-                  width: 8,
-                  height: 8,
+                  width: AppSizes.statusDot,
+                  height: AppSizes.statusDot,
                   decoration: BoxDecoration(shape: BoxShape.circle, color: leadingDot),
                 ),
                 const SizedBox(width: AppSpacing.s10),

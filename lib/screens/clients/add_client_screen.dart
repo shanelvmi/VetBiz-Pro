@@ -480,7 +480,7 @@ class _AddClientScreenState extends State<AddClientScreen> {
                           selected: _status == 'Active',
                           onSelected: (_) => setState(() => _status = 'Active'),
                           selectedColor: context.colors.success.withValues(alpha: AppAlpha.a15),
-                          labelStyle: TextStyle(color: _status == 'Active' ? Colors.green[800] : context.colors.textPrimary),
+                          labelStyle: TextStyle(color: _status == 'Active' ? context.colors.successStrong : context.colors.textPrimary),
                         ),
                         const SizedBox(width: AppSpacing.s8),
                         ChoiceChip(

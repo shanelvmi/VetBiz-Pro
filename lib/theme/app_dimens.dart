@@ -110,6 +110,11 @@ class AppSizes {
   static const double toastIcon = 28;
   static const double minTapTarget = 40;
 
+  /// A small round status indicator (online, stock status, submitted,
+  /// client Active/Inactive): an 8 px dot, as a Container or an
+  /// Icons.circle size.
+  static const double statusDot = 8;
+
   /// The dashboard sidebar (dashboard_screen.dart, the sidebar `width:`).
   static const double sidebarExpanded = 250;
   static const double sidebarCollapsed = 72;

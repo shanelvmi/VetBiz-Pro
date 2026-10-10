@@ -739,7 +739,7 @@ class _DebtorsScreenState extends State<DebtorsScreen> {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   IconButton(
-                    icon: Icon(Icons.notifications_active_outlined, size: AppIconSize.i18, color: Colors.orange[700]),
+                    icon: Icon(Icons.notifications_active_outlined, size: AppIconSize.i18, color: context.colors.warningStrong),
                     tooltip: 'Send Reminder',
                     onPressed: debtor.clientPhone.isEmpty
                         ? null

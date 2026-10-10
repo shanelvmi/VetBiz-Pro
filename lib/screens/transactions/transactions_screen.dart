@@ -570,7 +570,7 @@ class _TransactionScreenState extends State<TransactionScreen> {
         title: const Text('Delete this transaction?'),
         content: Text(
           '"${tx.description.isEmpty ? toTitleCase(tx.type) : tx.description}" - '
-          '${Money.symbolDecimal(tx.amount)}\n\nThis cannot be undone.',
+          '${Money.symbolDecimal(tx.amount)}\n\nYou can restore it from Trash.',
         ),
         actions: [
           TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Cancel')),

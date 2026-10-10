@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import '../../theme/app_dimens.dart';
 import 'package:provider/provider.dart';
 import 'package:share_plus/share_plus.dart';
 
@@ -568,7 +569,7 @@ class _ViewReportsScreenState extends State<ViewReportsScreen> {
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Icon(Icons.circle, size: 8, color: isSubmitted ? Colors.green : Colors.orange),
+              Icon(Icons.circle, size: AppSizes.statusDot, color: isSubmitted ? Colors.green : Colors.orange),
               const SizedBox(width: 10),
               Text(isSubmitted ? 'Submitted' : 'Draft - not yet submitted',
                   style: TextStyle(

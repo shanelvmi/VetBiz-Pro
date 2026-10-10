@@ -207,6 +207,7 @@ void main() {
 
     test('feedback sizes', () {
       expect(AppSizes.toastMax, 400);
+      expect(AppSizes.statusDot, 8);
       expect(AppSizes.toastIcon, 28);
       expect(AppSizes.minTapTarget, 40);
     });

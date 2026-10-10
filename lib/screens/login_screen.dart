@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
+import '../theme/app_dimens.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:smooth_page_indicator/smooth_page_indicator.dart';
@@ -356,8 +357,8 @@ class _LoginScreenState extends State<LoginScreen> {
                           mainAxisSize: MainAxisSize.min,
                           children: [
                             Container(
-                              width: 8,
-                              height: 8,
+                              width: AppSizes.statusDot,
+                              height: AppSizes.statusDot,
                               decoration: const BoxDecoration(color: Colors.greenAccent, shape: BoxShape.circle),
                             ),
                             const SizedBox(width: 6),
