@@ -16,18 +16,17 @@ import '../../config/money.dart';
 import '../../config/app_ranges.dart';
 import '../../config/app_date_format.dart';
 import '../../data/data_keys.dart';
-import '../../theme/app_palette.dart';
 import '../../theme/app_text.dart';
 import '../../theme/app_dimens.dart';
 import '../../theme/theme_context.dart';
 import '../../theme/app_motion.dart';
+import '../../ui/feedback/app_feedback.dart';
+import '../../services/trash_service.dart';
+import '../../data/collections.dart';
 
 class TransactionScreen extends StatefulWidget {
   const TransactionScreen({super.key});
 
-  static const Color primaryDeepGreen = AppPalette.primary;
-  static const Color warmAmber = AppPalette.accent;
-  static const Color offWhite = AppPalette.background;
 
   @override
   State<TransactionScreen> createState() => _TransactionScreenState();
@@ -401,8 +400,8 @@ class _TransactionScreenState extends State<TransactionScreen> {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         Container(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-          decoration: BoxDecoration(border: Border(bottom: BorderSide(color: Colors.grey.withValues(alpha: 0.2)))),
+          padding: const EdgeInsets.symmetric(horizontal: AppSpacing.s16, vertical: AppSpacing.s12),
+          decoration: BoxDecoration(border: Border(bottom: BorderSide(color: context.colors.textHint.withValues(alpha: AppAlpha.a20)))),
           child: Row(
             children: [
               _headerCell('Date & Time', flex: 3),
@@ -433,7 +432,7 @@ class _TransactionScreenState extends State<TransactionScreen> {
   Widget _headerCell(String label, {required int flex}) {
     return Expanded(
       flex: flex,
-      child: Text(label, style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Colors.grey[600])),
+      child: Text(label, style: TextStyle(fontSize: AppFontSize.f12, fontWeight: AppFontWeight.semibold, color: context.colors.textMuted)),
     );
   }
 
@@ -445,21 +444,21 @@ class _TransactionScreenState extends State<TransactionScreen> {
       children: [
         Container(
           width: double.infinity,
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-          color: TransactionScreen.primaryDeepGreen.withValues(alpha: 0.06),
+          padding: const EdgeInsets.symmetric(horizontal: AppSpacing.s16, vertical: AppSpacing.s8),
+          color: context.colors.primary.withValues(alpha: AppAlpha.a05),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
                 AppDateFormat.date.format(date),
-                style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12.5, color: TransactionScreen.primaryDeepGreen),
+                style: TextStyle(fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f12_5, color: context.colors.primary),
               ),
               Text(
                 'Total: ${Money.symbolDecimal(dayTotal)}',
                 style: TextStyle(
-                  fontSize: 12.5,
-                  fontWeight: FontWeight.bold,
-                  color: isProfit ? Colors.green[700] : Colors.red[400],
+                  fontSize: AppFontSize.f12_5,
+                  fontWeight: AppFontWeight.bold,
+                  color: isProfit ? context.colors.successStrong : context.colors.dangerSoft,
                 ),
               ),
             ],
@@ -472,16 +471,16 @@ class _TransactionScreenState extends State<TransactionScreen> {
 
   Widget _buildTransactionRow(TransactionModel tx, {required TransactionProvider transactionProvider}) {
     final isIncome = tx.type.toLowerCase() == 'other income';
-    final accentColor = isIncome ? TransactionScreen.warmAmber : Colors.redAccent;
+    final accentColor = isIncome ? context.colors.accent : context.colors.dangerAccent;
     final isSelected = _selectedTransaction?.id == tx.id;
 
     return InkWell(
       onTap: () => setState(() => _selectedTransaction = tx),
       child: Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.s16, vertical: AppSpacing.s12),
       decoration: BoxDecoration(
-        color: isSelected ? TransactionScreen.primaryDeepGreen.withValues(alpha: 0.06) : null,
-        border: Border(bottom: BorderSide(color: Colors.grey.withValues(alpha: 0.1))),
+        color: isSelected ? context.colors.primary.withValues(alpha: AppAlpha.a05) : null,
+        border: Border(bottom: BorderSide(color: context.colors.textHint.withValues(alpha: AppAlpha.a10))),
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -493,52 +492,52 @@ class _TransactionScreenState extends State<TransactionScreen> {
               children: [
                 CircleAvatar(
                   radius: 14,
-                  backgroundColor: accentColor.withValues(alpha: 0.12),
-                  child: Icon(isIncome ? Icons.arrow_downward : Icons.arrow_upward, size: 14, color: accentColor),
+                  backgroundColor: accentColor.withValues(alpha: AppAlpha.a10),
+                  child: Icon(isIncome ? Icons.arrow_downward : Icons.arrow_upward, size: AppIconSize.i14, color: accentColor),
                 ),
-                const SizedBox(width: 8),
-                Text(AppDateFormat.time12.format(tx.date), style: const TextStyle(fontSize: 13)),
+                const SizedBox(width: AppSpacing.s8),
+                Text(AppDateFormat.time12.format(tx.date), style: const TextStyle(fontSize: AppFontSize.f13)),
               ],
             ),
           ),
           Expanded(
             flex: 2,
             child: tx.category.isEmpty
-                ? const Text('-', style: TextStyle(fontSize: 13))
+                ? const Text('-', style: TextStyle(fontSize: AppFontSize.f13))
                 : Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
-                    decoration: BoxDecoration(color: accentColor.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(8)),
-                    child: Text(tx.category, style: TextStyle(fontSize: 10.5, color: accentColor, fontWeight: FontWeight.w600), maxLines: 1, overflow: TextOverflow.ellipsis),
+                    padding: const EdgeInsets.symmetric(horizontal: AppSpacing.s6, vertical: AppSpacing.s2),
+                    decoration: BoxDecoration(color: accentColor.withValues(alpha: AppAlpha.a10), borderRadius: BorderRadius.circular(AppRadius.r8)),
+                    child: Text(tx.category, style: TextStyle(fontSize: AppFontSize.f10_5, color: accentColor, fontWeight: AppFontWeight.semibold), maxLines: 1, overflow: TextOverflow.ellipsis),
                   ),
           ),
           Expanded(
             flex: 3,
             child: Text(
               tx.description.isEmpty ? toTitleCase(tx.type) : tx.description,
-              style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
+              style: const TextStyle(fontSize: AppFontSize.f13, fontWeight: AppFontWeight.semibold),
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
             ),
           ),
           Expanded(
             flex: 2,
-            child: Text(tx.paymentMethod ?? '-', style: const TextStyle(fontSize: 13)),
+            child: Text(tx.paymentMethod ?? '-', style: const TextStyle(fontSize: AppFontSize.f13)),
           ),
           Expanded(
             flex: 2,
             child: Text(
               Money.symbolDecimal(tx.amount),
-              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: accentColor),
+              style: TextStyle(fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f13, color: accentColor),
             ),
           ),
           Expanded(
             flex: 2,
-            child: Text(tx.recordedBy.isEmpty ? 'Unknown' : tx.recordedBy, style: const TextStyle(fontSize: 13), maxLines: 1, overflow: TextOverflow.ellipsis),
+            child: Text(tx.recordedBy.isEmpty ? 'Unknown' : tx.recordedBy, style: const TextStyle(fontSize: AppFontSize.f13), maxLines: 1, overflow: TextOverflow.ellipsis),
           ),
           Expanded(
             flex: 1,
             child: PopupMenuButton<String>(
-              icon: Icon(Icons.more_vert, size: 18, color: Colors.grey[600]),
+              icon: Icon(Icons.more_vert, size: AppIconSize.i18, color: context.colors.textMuted),
               onSelected: (value) async {
                 if (value == 'view') {
                   setState(() => _selectedTransaction = tx);
@@ -553,7 +552,7 @@ class _TransactionScreenState extends State<TransactionScreen> {
                 const PopupMenuItem(value: 'view', child: Text('View Details')),
                 const PopupMenuItem(value: 'edit', child: Text('Edit')),
                 if (Provider.of<UserRoleProvider>(context, listen: false).isAdmin)
-                  PopupMenuItem(value: 'delete', child: Text('Delete', style: TextStyle(color: Colors.red[400]))),
+                  PopupMenuItem(value: 'delete', child: Text('Delete', style: TextStyle(color: context.colors.dangerSoft))),
               ],
             ),
           ),
@@ -575,25 +574,42 @@ class _TransactionScreenState extends State<TransactionScreen> {
         ),
         actions: [
           TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Cancel')),
-          TextButton(onPressed: () => Navigator.pop(context, true), child: const Text('Delete', style: TextStyle(color: Colors.red))),
+          TextButton(onPressed: () => Navigator.pop(context, true), child: Text('Delete', style: TextStyle(color: context.colors.danger))),
         ],
       ),
     );
     if (confirmed != true) return;
     if (!mounted) return;
+    // Read before the await: Undo may run after this screen is gone.
+    final facilityId = _facilityId;
 
     try {
       await transactionProvider.deleteTransaction(context, tx.id);
       if (!mounted) return;
       if (_selectedTransaction?.id == tx.id) setState(() => _selectedTransaction = null);
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Transaction deleted'), backgroundColor: Colors.green),
+      // deleteTransaction moves it to Trash (a soft delete), so Undo puts
+      // it back with the Trash screen's own restore.
+      AppFeedback.undo(
+        'Transaction moved to Trash',
+        onUndo: () => _undoDeleteTransaction(facilityId, tx.id),
       );
-    } catch (e) {
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Could not delete: $e'), backgroundColor: Colors.redAccent),
+    } catch (e, st) {
+      AppFeedback.error("Couldn't delete the transaction", error: e, stackTrace: st);
+    }
+  }
+
+  static Future<void> _undoDeleteTransaction(String? facilityId, String id) async {
+    if (facilityId == null || facilityId.isEmpty) return;
+    try {
+      await TrashService.restoreById(
+        facilityId: facilityId,
+        trashCollection: Collections.trashTransactions,
+        liveCollection: Collections.transactions,
+        id: id,
       );
+      AppFeedback.success('Transaction restored');
+    } catch (e, st) {
+      AppFeedback.error("Couldn't restore the transaction", error: e, stackTrace: st);
     }
   }
 
@@ -627,18 +643,13 @@ class _TransactionScreenState extends State<TransactionScreen> {
       }
 
       final success = await printerService.printTransactionReceipt(tx);
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(success ? 'Receipt sent to printer' : 'Printer did not accept the receipt'),
-          backgroundColor: success ? Colors.green : Colors.redAccent,
-        ),
-      );
-    } catch (e) {
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Print failed: $e'), backgroundColor: Colors.redAccent),
-      );
+      if (success) {
+        AppFeedback.success('Receipt sent to printer');
+      } else {
+        AppFeedback.error("Couldn't print the receipt", detail: 'The printer did not accept it');
+      }
+    } catch (e, st) {
+      AppFeedback.error("Couldn't print the receipt", error: e, stackTrace: st);
     } finally {
       if (mounted) setState(() => _isPrinting = false);
     }
@@ -646,107 +657,107 @@ class _TransactionScreenState extends State<TransactionScreen> {
 
   Widget _buildDetailsPanel(TransactionModel tx) {
     final isIncome = tx.type.toLowerCase() == 'other income';
-    final accentColor = isIncome ? TransactionScreen.warmAmber : Colors.redAccent;
+    final accentColor = isIncome ? context.colors.accent : context.colors.dangerAccent;
     final reference = tx.receiptNumber != null
         ? '${isIncome ? 'OI' : 'EXP'}-${tx.receiptNumber.toString().padLeft(6, '0')}'
         : null;
 
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.grey.withValues(alpha: 0.15)),
+        color: context.colors.surface,
+        borderRadius: BorderRadius.circular(AppRadius.r12),
+        border: Border.all(color: context.colors.textHint.withValues(alpha: AppAlpha.a15)),
       ),
       child: SingleChildScrollView(
-        padding: const EdgeInsets.all(20),
+        padding: const EdgeInsets.all(AppSpacing.s20),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                const Text('Transaction Details', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                const Text('Transaction Details', style: TextStyle(fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f16)),
                 IconButton(
-                  icon: const Icon(Icons.close, size: 20),
+                  icon: const Icon(Icons.close, size: AppIconSize.i20),
                   onPressed: () => setState(() => _selectedTransaction = null),
                 ),
               ],
             ),
-            const SizedBox(height: 4),
+            const SizedBox(height: AppSpacing.s4),
             Container(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-              decoration: BoxDecoration(color: accentColor.withValues(alpha: 0.12), borderRadius: BorderRadius.circular(10)),
-              child: Text(toTitleCase(tx.type), style: TextStyle(fontSize: 11.5, color: accentColor, fontWeight: FontWeight.w600)),
+              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.s8, vertical: AppSpacing.s3),
+              decoration: BoxDecoration(color: accentColor.withValues(alpha: AppAlpha.a10), borderRadius: BorderRadius.circular(AppRadius.r10)),
+              child: Text(toTitleCase(tx.type), style: TextStyle(fontSize: AppFontSize.f11_5, color: accentColor, fontWeight: AppFontWeight.semibold)),
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: AppSpacing.s12),
             Text(
               Money.symbolDecimal(tx.amount),
-              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 22, color: accentColor),
+              style: TextStyle(fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f22, color: accentColor),
             ),
-            const SizedBox(height: 4),
+            const SizedBox(height: AppSpacing.s4),
             Text(
               tx.description.isEmpty ? toTitleCase(tx.type) : tx.description,
-              style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 16),
+              style: const TextStyle(fontWeight: AppFontWeight.semibold, fontSize: AppFontSize.f16),
             ),
-            const SizedBox(height: 4),
+            const SizedBox(height: AppSpacing.s4),
             Row(
               children: [
-                Icon(Icons.calendar_today_outlined, size: 12, color: Colors.grey[600]),
-                const SizedBox(width: 4),
+                Icon(Icons.calendar_today_outlined, size: AppIconSize.i12, color: context.colors.textMuted),
+                const SizedBox(width: AppSpacing.s4),
                 Text(
                   '${AppDateFormat.date.format(tx.date)}, ${AppDateFormat.time12.format(tx.date)}',
-                  style: TextStyle(fontSize: 12.5, color: Colors.grey[600]),
+                  style: TextStyle(fontSize: AppFontSize.f12_5, color: context.colors.textMuted),
                 ),
               ],
             ),
             const Divider(height: 32),
             if (tx.category.isNotEmpty) ...[
               _detailLabel('Category'),
-              Text(tx.category, style: const TextStyle(fontSize: 14)),
-              const SizedBox(height: 16),
+              Text(tx.category, style: const TextStyle(fontSize: AppFontSize.f14)),
+              const SizedBox(height: AppSpacing.s16),
             ],
             if (tx.paymentMethod != null) ...[
               _detailLabel('Payment Method'),
               Row(
                 children: [
-                  Icon(iconForPaymentMethod(tx.paymentMethod!), size: 16, color: Colors.grey[600]),
-                  const SizedBox(width: 6),
-                  Text(tx.paymentMethod!, style: const TextStyle(fontSize: 14)),
+                  Icon(iconForPaymentMethod(tx.paymentMethod!), size: AppIconSize.i16, color: context.colors.textMuted),
+                  const SizedBox(width: AppSpacing.s6),
+                  Text(tx.paymentMethod!, style: const TextStyle(fontSize: AppFontSize.f14)),
                 ],
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: AppSpacing.s16),
             ],
             _detailLabel('Recorded By'),
             Row(
               children: [
-                Icon(Icons.person_outline, size: 16, color: Colors.grey[600]),
-                const SizedBox(width: 6),
-                Text(tx.recordedBy.isEmpty ? 'Unknown' : tx.recordedBy, style: const TextStyle(fontSize: 14)),
+                Icon(Icons.person_outline, size: AppIconSize.i16, color: context.colors.textMuted),
+                const SizedBox(width: AppSpacing.s6),
+                Text(tx.recordedBy.isEmpty ? 'Unknown' : tx.recordedBy, style: const TextStyle(fontSize: AppFontSize.f14)),
               ],
             ),
             if (reference != null) ...[
-              const SizedBox(height: 16),
+              const SizedBox(height: AppSpacing.s16),
               _detailLabel('Reference'),
-              Text(reference, style: const TextStyle(fontSize: 14)),
+              Text(reference, style: const TextStyle(fontSize: AppFontSize.f14)),
             ],
             if (tx.note != null && tx.note!.trim().isNotEmpty) ...[
-              const SizedBox(height: 16),
+              const SizedBox(height: AppSpacing.s16),
               _detailLabel('Notes'),
-              Text(tx.note!, style: const TextStyle(fontSize: 14)),
+              Text(tx.note!, style: const TextStyle(fontSize: AppFontSize.f14)),
             ],
-            const SizedBox(height: 24),
+            const SizedBox(height: AppSpacing.s24),
             SizedBox(
               width: double.infinity,
               child: ElevatedButton.icon(
                 onPressed: _isPrinting ? null : () => _printTransaction(tx),
                 icon: _isPrinting
-                    ? const SizedBox(height: 16, width: 16, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
-                    : const Icon(Icons.print_outlined, size: 18),
+                    ? SizedBox(height: AppSpacing.s16, width: 16, child: CircularProgressIndicator(strokeWidth: 2, color: context.colors.onPrimary))
+                    : const Icon(Icons.print_outlined, size: AppIconSize.i18),
                 label: const Text('Print'),
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: TransactionScreen.primaryDeepGreen,
-                  foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(vertical: 12),
+                  backgroundColor: context.colors.primary,
+                  foregroundColor: context.colors.onPrimary,
+                  padding: const EdgeInsets.symmetric(vertical: AppSpacing.s12),
                 ),
               ),
             ),
@@ -758,44 +769,44 @@ class _TransactionScreenState extends State<TransactionScreen> {
 
   Widget _detailLabel(String label) {
     return Padding(
-      padding: const EdgeInsets.only(bottom: 4),
-      child: Text(label, style: TextStyle(fontSize: 11.5, color: Colors.grey[600], fontWeight: FontWeight.w600)),
+      padding: const EdgeInsets.only(bottom: AppSpacing.s4),
+      child: Text(label, style: TextStyle(fontSize: AppFontSize.f11_5, color: context.colors.textMuted, fontWeight: AppFontWeight.semibold)),
     );
   }
 
   Widget _buildLoadMoreFooter(TransactionProvider transactionProvider) {
     if (transactionProvider.isLoadingMore) {
       return Padding(
-        padding: const EdgeInsets.symmetric(vertical: 20),
+        padding: const EdgeInsets.symmetric(vertical: AppSpacing.s20),
         child: Center(
           child: SizedBox(
             height: 24,
             width: 24,
             child: CircularProgressIndicator(
-                strokeWidth: 2.5, color: TransactionScreen.primaryDeepGreen),
+                strokeWidth: 2.5, color: context.colors.primary),
           ),
         ),
       );
     }
     if (!transactionProvider.hasMore) {
       return Padding(
-        padding: const EdgeInsets.symmetric(vertical: 20),
+        padding: const EdgeInsets.symmetric(vertical: AppSpacing.s20),
         child: Center(
           child: Text(
             'Showing all recent transactions',
-            style: TextStyle(fontSize: 12, color: Colors.grey[500]),
+            style: TextStyle(fontSize: AppFontSize.f12, color: context.colors.textHint),
           ),
         ),
       );
     }
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 12),
+      padding: const EdgeInsets.symmetric(vertical: AppSpacing.s12),
       child: Center(
         child: OutlinedButton.icon(
           onPressed: () => transactionProvider.loadMoreTransactions(),
           style: OutlinedButton.styleFrom(
-            foregroundColor: TransactionScreen.primaryDeepGreen,
-            side: const BorderSide(color: TransactionScreen.primaryDeepGreen),
+            foregroundColor: context.colors.primary,
+            side: BorderSide(color: context.colors.primary),
           ),
           icon: const Icon(Icons.expand_more),
           label: const Text('Load more transactions'),
