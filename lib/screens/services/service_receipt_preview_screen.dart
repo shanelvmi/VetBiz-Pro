@@ -39,7 +39,6 @@ class ServiceReceiptPreviewScreen extends StatefulWidget {
 }
 
 class _ServiceReceiptPreviewScreenState extends State<ServiceReceiptPreviewScreen> {
-  static const Color primaryColor = AppPalette.primary;
   final GlobalKey _receiptKey = GlobalKey();
 
   bool _isSharing = false;
@@ -416,19 +415,19 @@ class _ServiceReceiptPreviewScreenState extends State<ServiceReceiptPreviewScree
     final serviceFeePortion = service.totalAmount - itemsUsedTotal;
 
     Widget divider() => Padding(
-          padding: const EdgeInsets.symmetric(vertical: 12),
-          child: Divider(height: 1, color: Colors.grey.withValues(alpha: 0.3)),
+          padding: const EdgeInsets.symmetric(vertical: AppSpacing.s12),
+          child: Divider(height: 1, color: context.colors.textHint.withValues(alpha: AppAlpha.a30)),
         );
 
     Widget contactRow(IconData icon, String text) {
       return Padding(
-        padding: const EdgeInsets.only(top: 3),
+        padding: const EdgeInsets.only(top: AppSpacing.s3),
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(icon, size: 12, color: Colors.grey[600]),
-            const SizedBox(width: 5),
-            Text(text, style: TextStyle(fontSize: 11.5, color: Colors.grey[700])),
+            Icon(icon, size: AppIconSize.i12, color: context.colors.textMuted),
+            const SizedBox(width: AppSpacing.s4),
+            Text(text, style: TextStyle(fontSize: AppFontSize.f11_5, color: context.colors.textSoft)),
           ],
         ),
       );
@@ -436,7 +435,7 @@ class _ServiceReceiptPreviewScreenState extends State<ServiceReceiptPreviewScree
 
     Widget infoLine(String label1, String value1, {String? label2, String? value2}) {
       return Padding(
-        padding: const EdgeInsets.only(bottom: 3),
+        padding: const EdgeInsets.only(bottom: AppSpacing.s3),
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -444,9 +443,9 @@ class _ServiceReceiptPreviewScreenState extends State<ServiceReceiptPreviewScree
               flex: 3,
               child: RichText(
                 text: TextSpan(
-                  style: const TextStyle(fontSize: 12, color: Colors.black87),
+                  style: TextStyle(fontSize: AppFontSize.f12, color: context.colors.textPrimary),
                   children: [
-                    TextSpan(text: '$label1: ', style: const TextStyle(fontWeight: FontWeight.w600)),
+                    TextSpan(text: '$label1: ', style: const TextStyle(fontWeight: AppFontWeight.semibold)),
                     TextSpan(text: value1),
                   ],
                 ),
@@ -455,7 +454,7 @@ class _ServiceReceiptPreviewScreenState extends State<ServiceReceiptPreviewScree
             if (label2 != null && value2 != null)
               Expanded(
                 flex: 2,
-                child: Text('$label2: $value2', textAlign: TextAlign.right, style: const TextStyle(fontSize: 12, color: Colors.black87)),
+                child: Text('$label2: $value2', textAlign: TextAlign.right, style: TextStyle(fontSize: AppFontSize.f12, color: context.colors.textPrimary)),
               ),
           ],
         ),
@@ -464,14 +463,14 @@ class _ServiceReceiptPreviewScreenState extends State<ServiceReceiptPreviewScree
 
     Widget itemsTableHeader() {
       return Container(
-        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-        decoration: BoxDecoration(color: primaryColor, borderRadius: BorderRadius.circular(4)),
-        child: const Row(
+        padding: const EdgeInsets.symmetric(horizontal: AppSpacing.s10, vertical: AppSpacing.s8),
+        decoration: BoxDecoration(color: context.colors.primary, borderRadius: BorderRadius.circular(AppRadius.r4)),
+        child: Row(
           children: [
-            Expanded(flex: 4, child: Text('Item / Service', style: TextStyle(color: Colors.white, fontSize: 11.5, fontWeight: FontWeight.w600))),
-            Expanded(flex: 1, child: Text('Qty', style: TextStyle(color: Colors.white, fontSize: 11.5, fontWeight: FontWeight.w600))),
-            Expanded(flex: 2, child: Text('Unit Price', textAlign: TextAlign.right, style: TextStyle(color: Colors.white, fontSize: 11.5, fontWeight: FontWeight.w600))),
-            Expanded(flex: 2, child: Text('Amount', textAlign: TextAlign.right, style: TextStyle(color: Colors.white, fontSize: 11.5, fontWeight: FontWeight.w600))),
+            Expanded(flex: 4, child: Text('Item / Service', style: TextStyle(color: context.colors.onPrimary, fontSize: AppFontSize.f11_5, fontWeight: AppFontWeight.semibold))),
+            Expanded(flex: 1, child: Text('Qty', style: TextStyle(color: context.colors.onPrimary, fontSize: AppFontSize.f11_5, fontWeight: AppFontWeight.semibold))),
+            Expanded(flex: 2, child: Text('Unit Price', textAlign: TextAlign.right, style: TextStyle(color: context.colors.onPrimary, fontSize: AppFontSize.f11_5, fontWeight: AppFontWeight.semibold))),
+            Expanded(flex: 2, child: Text('Amount', textAlign: TextAlign.right, style: TextStyle(color: context.colors.onPrimary, fontSize: AppFontSize.f11_5, fontWeight: AppFontWeight.semibold))),
           ],
         ),
       );
@@ -479,14 +478,14 @@ class _ServiceReceiptPreviewScreenState extends State<ServiceReceiptPreviewScree
 
     Widget lineRow(String name, double amount) {
       return Padding(
-        padding: const EdgeInsets.symmetric(vertical: 8),
+        padding: const EdgeInsets.symmetric(vertical: AppSpacing.s8),
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Expanded(flex: 4, child: Text(name, style: const TextStyle(fontSize: 12.5, fontWeight: FontWeight.w600))),
-            const Expanded(flex: 1, child: Text('1', style: TextStyle(fontSize: 12.5))),
-            Expanded(flex: 2, child: Text(Money.plain(amount), textAlign: TextAlign.right, style: const TextStyle(fontSize: 12.5))),
-            Expanded(flex: 2, child: Text(Money.plain(amount), textAlign: TextAlign.right, style: const TextStyle(fontSize: 12.5, fontWeight: FontWeight.w600))),
+            Expanded(flex: 4, child: Text(name, style: const TextStyle(fontSize: AppFontSize.f12_5, fontWeight: AppFontWeight.semibold))),
+            const Expanded(flex: 1, child: Text('1', style: TextStyle(fontSize: AppFontSize.f12_5))),
+            Expanded(flex: 2, child: Text(Money.plain(amount), textAlign: TextAlign.right, style: const TextStyle(fontSize: AppFontSize.f12_5))),
+            Expanded(flex: 2, child: Text(Money.plain(amount), textAlign: TextAlign.right, style: const TextStyle(fontSize: AppFontSize.f12_5, fontWeight: AppFontWeight.semibold))),
           ],
         ),
       );
@@ -494,12 +493,12 @@ class _ServiceReceiptPreviewScreenState extends State<ServiceReceiptPreviewScree
 
     Widget totalsRow(String label, String value, {bool bold = false, Color? color}) {
       return Padding(
-        padding: const EdgeInsets.symmetric(vertical: 2),
+        padding: const EdgeInsets.symmetric(vertical: AppSpacing.s2),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Text(label, style: TextStyle(fontSize: 12.5, fontWeight: bold ? FontWeight.bold : FontWeight.normal, color: color)),
-            Text(value, style: TextStyle(fontSize: 12.5, fontWeight: bold ? FontWeight.bold : FontWeight.normal, color: color)),
+            Text(label, style: TextStyle(fontSize: AppFontSize.f12_5, fontWeight: bold ? AppFontWeight.bold : AppFontWeight.regular, color: color)),
+            Text(value, style: TextStyle(fontSize: AppFontSize.f12_5, fontWeight: bold ? AppFontWeight.bold : AppFontWeight.regular, color: color)),
           ],
         ),
       );
@@ -509,8 +508,8 @@ class _ServiceReceiptPreviewScreenState extends State<ServiceReceiptPreviewScree
       clipper: _TornEdgeClipper(),
       child: Container(
         width: 400,
-        color: Colors.white,
-        padding: const EdgeInsets.fromLTRB(24, 28, 24, 28),
+        color: context.colors.surface,
+        padding: const EdgeInsets.fromLTRB(AppSpacing.s24, AppSpacing.s28, AppSpacing.s24, AppSpacing.s28),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           mainAxisSize: MainAxisSize.min,
@@ -529,29 +528,29 @@ class _ServiceReceiptPreviewScreenState extends State<ServiceReceiptPreviewScree
                         errorBuilder: (context, error, stackTrace) => const SizedBox.shrink(),
                       ),
                     ),
-                    const SizedBox(height: 6),
+                    const SizedBox(height: AppSpacing.s6),
                   ],
                   RichText(
                     text: const TextSpan(
-                      style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                      style: TextStyle(fontSize: AppFontSize.f16, fontWeight: AppFontWeight.bold),
                       children: [
-                        TextSpan(text: 'VetBiz ', style: TextStyle(color: Color(0xFF2F5D62))),
+                        TextSpan(text: 'VetBiz ', style: TextStyle(color: AppPalette.primary)),
                         TextSpan(text: 'Pro', style: TextStyle(color: Color(0xFFE0A32E))),
                       ],
                     ),
                   ),
-                  const SizedBox(height: 8),
+                  const SizedBox(height: AppSpacing.s8),
                   Text(
                     facilityType != null && facilityType.isNotEmpty && facilityType != 'Other'
                         ? '$facilityName $facilityType'
                         : facilityName,
-                    style: const TextStyle(fontSize: 19, fontWeight: FontWeight.bold, color: Color(0xFF2F5D62)),
+                    style: const TextStyle(fontSize: AppFontSize.f19, fontWeight: AppFontWeight.bold, color: AppPalette.primary),
                     textAlign: TextAlign.center,
                   ),
                   if (facilityTagline != null && facilityTagline.isNotEmpty)
                     Padding(
-                      padding: const EdgeInsets.only(top: 2),
-                      child: Text(facilityTagline, style: TextStyle(fontSize: 11.5, color: Colors.grey[600]), textAlign: TextAlign.center),
+                      padding: const EdgeInsets.only(top: AppSpacing.s2),
+                      child: Text(facilityTagline, style: TextStyle(fontSize: AppFontSize.f11_5, color: context.colors.textMuted), textAlign: TextAlign.center),
                     ),
                   if (facilityPhone != null && facilityPhone.isNotEmpty) contactRow(Icons.phone, facilityPhone),
                   if (facilityEmail != null && facilityEmail.isNotEmpty) contactRow(Icons.email_outlined, facilityEmail),
@@ -568,7 +567,7 @@ class _ServiceReceiptPreviewScreenState extends State<ServiceReceiptPreviewScree
             infoLine('Customer', service.clientName ?? 'Walk-in'),
             infoLine('Provided By', service.providedByName ?? 'N/A'),
             infoLine('Payment Method', service.paymentMethod ?? PaymentMethod.onCredit),
-            const SizedBox(height: 10),
+            const SizedBox(height: AppSpacing.s10),
             // ---- Items table ----
             itemsTableHeader(),
             lineRow(service.name, serviceFeePortion),
@@ -577,61 +576,61 @@ class _ServiceReceiptPreviewScreenState extends State<ServiceReceiptPreviewScree
             divider(),
             // ---- Totals ----
             Container(
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-              color: primaryColor.withValues(alpha: 0.08),
+              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.s10, vertical: AppSpacing.s8),
+              color: context.colors.primary.withValues(alpha: AppAlpha.a10),
               child: totalsRow('TOTAL', 'TSh ${Money.plain(service.totalAmount)}', bold: true),
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: AppSpacing.s8),
             totalsRow('Paid', Money.plain(service.totalPaid)),
-            totalsRow('Balance', Money.plain(balance), bold: balance > 0, color: balance > 0 ? Colors.red : null),
-            const SizedBox(height: 10),
+            totalsRow('Balance', Money.plain(balance), bold: balance > 0, color: balance > 0 ? context.colors.danger : null),
+            const SizedBox(height: AppSpacing.s10),
             Row(
               children: [
-                Icon(Icons.credit_card, size: 15, color: Colors.grey[700]),
-                const SizedBox(width: 6),
+                Icon(Icons.credit_card, size: AppIconSize.i16, color: context.colors.textSoft),
+                const SizedBox(width: AppSpacing.s6),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text('Payment Method', style: TextStyle(fontSize: 10.5, color: Colors.grey[600])),
-                      Text(service.paymentMethod ?? PaymentMethod.onCredit, style: const TextStyle(fontSize: 12.5, fontWeight: FontWeight.w600)),
+                      Text('Payment Method', style: TextStyle(fontSize: AppFontSize.f10_5, color: context.colors.textMuted)),
+                      Text(service.paymentMethod ?? PaymentMethod.onCredit, style: const TextStyle(fontSize: AppFontSize.f12_5, fontWeight: AppFontWeight.semibold)),
                     ],
                   ),
                 ),
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                  decoration: BoxDecoration(color: (balance > 0 ? Colors.red : Colors.green).withValues(alpha: 0.12), borderRadius: BorderRadius.circular(20)),
+                  padding: const EdgeInsets.symmetric(horizontal: AppSpacing.s8, vertical: AppSpacing.s3),
+                  decoration: BoxDecoration(color: (balance > 0 ? context.colors.danger : context.colors.success).withValues(alpha: AppAlpha.a10), borderRadius: BorderRadius.circular(AppRadius.r20)),
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Icon(Icons.check_circle, size: 12, color: balance > 0 ? Colors.red : Colors.green),
-                      const SizedBox(width: 4),
-                      Text(statusText, style: TextStyle(fontSize: 10.5, fontWeight: FontWeight.w600, color: balance > 0 ? Colors.red : Colors.green)),
+                      Icon(Icons.check_circle, size: AppIconSize.i12, color: balance > 0 ? context.colors.danger : context.colors.success),
+                      const SizedBox(width: AppSpacing.s4),
+                      Text(statusText, style: TextStyle(fontSize: AppFontSize.f10_5, fontWeight: AppFontWeight.semibold, color: balance > 0 ? context.colors.danger : context.colors.success)),
                     ],
                   ),
                 ),
               ],
             ),
-            const SizedBox(height: 22),
+            const SizedBox(height: AppSpacing.s22),
             Center(
               child: Text('Thank you for choosing us.',
-                  style: TextStyle(fontSize: 13, fontStyle: FontStyle.italic, color: Colors.grey[700])),
+                  style: TextStyle(fontSize: AppFontSize.f13, fontStyle: FontStyle.italic, color: context.colors.textSoft)),
             ),
-            const SizedBox(height: 10),
+            const SizedBox(height: AppSpacing.s10),
             Center(
               child: RichText(
                 text: const TextSpan(
-                  style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold),
+                  style: TextStyle(fontSize: AppFontSize.f13, fontWeight: AppFontWeight.bold),
                   children: [
-                    TextSpan(text: 'VetBiz ', style: TextStyle(color: Color(0xFF2F5D62))),
+                    TextSpan(text: 'VetBiz ', style: TextStyle(color: AppPalette.primary)),
                     TextSpan(text: 'Pro', style: TextStyle(color: Color(0xFFE0A32E))),
                   ],
                 ),
               ),
             ),
-            const SizedBox(height: 2),
+            const SizedBox(height: AppSpacing.s2),
             Center(
-              child: Text('Powered by ${AppInfo.name}', style: TextStyle(fontSize: 9, color: Colors.grey[500])),
+              child: Text('Powered by ${AppInfo.name}', style: TextStyle(fontSize: AppFontSize.f9, color: context.colors.textHint)),
             ),
           ],
         ),
@@ -641,8 +640,8 @@ class _ServiceReceiptPreviewScreenState extends State<ServiceReceiptPreviewScree
 
   Widget _buildActionBar() {
     return Container(
-      padding: const EdgeInsets.all(16),
-      color: Colors.white,
+      padding: const EdgeInsets.all(AppSpacing.s16),
+      color: context.colors.surface,
       child: Center(
         child: ConstrainedBox(
           constraints: const BoxConstraints(maxWidth: 480),
@@ -652,21 +651,21 @@ class _ServiceReceiptPreviewScreenState extends State<ServiceReceiptPreviewScree
                 child: OutlinedButton.icon(
                   onPressed: _isSharing ? null : _shareOrSave,
                   icon: _isSharing
-                      ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2))
+                      ? const SizedBox(width: AppSpacing.s16, height: 16, child: CircularProgressIndicator(strokeWidth: 2))
                       : const Icon(Icons.share),
                   label: const Text('Share / Save'),
-                  style: OutlinedButton.styleFrom(foregroundColor: primaryColor),
+                  style: OutlinedButton.styleFrom(foregroundColor: context.colors.primary),
                 ),
               ),
-              const SizedBox(width: 12),
+              const SizedBox(width: AppSpacing.s12),
               Expanded(
                 child: ElevatedButton.icon(
                   onPressed: _isPrinting ? null : _print,
                   icon: _isPrinting
-                      ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
+                      ? SizedBox(width: AppSpacing.s16, height: 16, child: CircularProgressIndicator(strokeWidth: 2, color: context.colors.onPrimary))
                       : const Icon(Icons.print),
                   label: const Text('Print'),
-                  style: ElevatedButton.styleFrom(backgroundColor: primaryColor, foregroundColor: Colors.white),
+                  style: ElevatedButton.styleFrom(backgroundColor: context.colors.primary, foregroundColor: context.colors.onPrimary),
                 ),
               ),
             ],
@@ -686,19 +685,19 @@ class _ServiceReceiptPreviewScreenState extends State<ServiceReceiptPreviewScree
   }) {
     Widget field(IconData icon, String label, String value) {
       return Padding(
-        padding: const EdgeInsets.symmetric(vertical: 8),
+        padding: const EdgeInsets.symmetric(vertical: AppSpacing.s8),
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Icon(icon, size: 17, color: primaryColor),
-            const SizedBox(width: 10),
+            Icon(icon, size: AppIconSize.i18, color: context.colors.primary),
+            const SizedBox(width: AppSpacing.s10),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(label, style: TextStyle(fontSize: 11.5, color: Colors.grey[600])),
-                  const SizedBox(height: 1),
-                  Text(value, style: const TextStyle(fontSize: 13.5, fontWeight: FontWeight.w600), maxLines: 2, overflow: TextOverflow.ellipsis),
+                  Text(label, style: TextStyle(fontSize: AppFontSize.f11_5, color: context.colors.textMuted)),
+                  const SizedBox(height: AppSpacing.s2),
+                  Text(value, style: const TextStyle(fontSize: AppFontSize.f13_5, fontWeight: AppFontWeight.semibold), maxLines: 2, overflow: TextOverflow.ellipsis),
                 ],
               ),
             ),
@@ -709,12 +708,12 @@ class _ServiceReceiptPreviewScreenState extends State<ServiceReceiptPreviewScree
 
     return Container(
       width: 340,
-      margin: const EdgeInsets.fromLTRB(0, 20, 20, 20),
-      padding: const EdgeInsets.all(18),
+      margin: const EdgeInsets.fromLTRB(0, AppSpacing.s20, AppSpacing.s20, AppSpacing.s20),
+      padding: const EdgeInsets.all(AppSpacing.s18),
       decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(14),
-        boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.06), blurRadius: 10, offset: const Offset(0, 3))],
+        color: context.colors.surface,
+        borderRadius: BorderRadius.circular(AppRadius.r14),
+        boxShadow: [BoxShadow(color: context.colors.shadow.withValues(alpha: AppAlpha.a05), blurRadius: 10, offset: const Offset(0, 3))],
       ),
       child: SingleChildScrollView(
         child: Column(
@@ -723,27 +722,27 @@ class _ServiceReceiptPreviewScreenState extends State<ServiceReceiptPreviewScree
             Row(
               children: [
                 Container(
-                  padding: const EdgeInsets.all(7),
-                  decoration: BoxDecoration(color: primaryColor.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(8)),
-                  child: Icon(Icons.receipt_long_outlined, size: 18, color: primaryColor),
+                  padding: const EdgeInsets.all(AppSpacing.s6),
+                  decoration: BoxDecoration(color: context.colors.primary.withValues(alpha: AppAlpha.a10), borderRadius: BorderRadius.circular(AppRadius.r8)),
+                  child: Icon(Icons.receipt_long_outlined, size: AppIconSize.i18, color: context.colors.primary),
                 ),
-                const SizedBox(width: 8),
-                const Expanded(child: Text('Receipt Details', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold))),
+                const SizedBox(width: AppSpacing.s8),
+                const Expanded(child: Text('Receipt Details', style: TextStyle(fontSize: AppFontSize.f16, fontWeight: AppFontWeight.bold))),
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
-                  decoration: BoxDecoration(color: statusColor.withValues(alpha: 0.12), borderRadius: BorderRadius.circular(20)),
+                  padding: const EdgeInsets.symmetric(horizontal: AppSpacing.s10, vertical: AppSpacing.s4),
+                  decoration: BoxDecoration(color: statusColor.withValues(alpha: AppAlpha.a10), borderRadius: BorderRadius.circular(AppRadius.r20)),
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Icon(Icons.check_circle, size: 11, color: statusColor),
-                      const SizedBox(width: 3),
-                      Text(statusText, style: TextStyle(fontSize: 10.5, fontWeight: FontWeight.w600, color: statusColor)),
+                      Icon(Icons.check_circle, size: AppIconSize.i12, color: statusColor),
+                      const SizedBox(width: AppSpacing.s3),
+                      Text(statusText, style: TextStyle(fontSize: AppFontSize.f10_5, fontWeight: AppFontWeight.semibold, color: statusColor)),
                     ],
                   ),
                 ),
               ],
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: AppSpacing.s8),
             const Divider(height: 20),
             if (service.receiptNumber != null) field(Icons.tag, 'Receipt Number', '${service.receiptNumber}'),
             field(
@@ -762,59 +761,59 @@ class _ServiceReceiptPreviewScreenState extends State<ServiceReceiptPreviewScree
             const Divider(height: 28),
             Row(
               children: [
-                Icon(Icons.bolt, size: 16, color: primaryColor),
-                const SizedBox(width: 6),
-                const Text('Quick Actions', style: TextStyle(fontSize: 13.5, fontWeight: FontWeight.bold)),
+                Icon(Icons.bolt, size: AppIconSize.i16, color: context.colors.primary),
+                const SizedBox(width: AppSpacing.s6),
+                const Text('Quick Actions', style: TextStyle(fontSize: AppFontSize.f13_5, fontWeight: AppFontWeight.bold)),
               ],
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: AppSpacing.s12),
             Row(
               children: [
                 Expanded(
                   child: OutlinedButton.icon(
                     onPressed: _isSharing ? null : _shareOrSave,
                     icon: _isSharing
-                        ? const SizedBox(width: 14, height: 14, child: CircularProgressIndicator(strokeWidth: 2))
-                        : const Icon(Icons.share_outlined, size: 16),
-                    label: const Text('Share', style: TextStyle(fontSize: 12.5)),
+                        ? const SizedBox(width: AppSpacing.s14, height: 14, child: CircularProgressIndicator(strokeWidth: 2))
+                        : const Icon(Icons.share_outlined, size: AppIconSize.i16),
+                    label: const Text('Share', style: TextStyle(fontSize: AppFontSize.f12_5)),
                     style: OutlinedButton.styleFrom(
-                      foregroundColor: primaryColor,
-                      backgroundColor: primaryColor.withValues(alpha: 0.08),
+                      foregroundColor: context.colors.primary,
+                      backgroundColor: context.colors.primary.withValues(alpha: AppAlpha.a10),
                       side: BorderSide.none,
-                      padding: const EdgeInsets.symmetric(vertical: 10),
+                      padding: const EdgeInsets.symmetric(vertical: AppSpacing.s10),
                     ),
                   ),
                 ),
-                const SizedBox(width: 8),
+                const SizedBox(width: AppSpacing.s8),
                 Expanded(
                   child: ElevatedButton.icon(
                     onPressed: _isPrinting ? null : _print,
                     icon: _isPrinting
-                        ? const SizedBox(width: 14, height: 14, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
-                        : const Icon(Icons.print_outlined, size: 16),
-                    label: const Text('Print Receipt', style: TextStyle(fontSize: 12.5)),
+                        ? SizedBox(width: AppSpacing.s14, height: 14, child: CircularProgressIndicator(strokeWidth: 2, color: context.colors.onPrimary))
+                        : const Icon(Icons.print_outlined, size: AppIconSize.i16),
+                    label: const Text('Print Receipt', style: TextStyle(fontSize: AppFontSize.f12_5)),
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: primaryColor,
-                      foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(vertical: 10),
+                      backgroundColor: context.colors.primary,
+                      foregroundColor: context.colors.onPrimary,
+                      padding: const EdgeInsets.symmetric(vertical: AppSpacing.s10),
                     ),
                   ),
                 ),
               ],
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: AppSpacing.s16),
             Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(color: const Color(0xFFEFF5F8), borderRadius: BorderRadius.circular(10)),
+              padding: const EdgeInsets.all(AppSpacing.s12),
+              decoration: BoxDecoration(color: context.colors.surfaceMuted, borderRadius: BorderRadius.circular(AppRadius.r10)),
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Icon(Icons.info_outline, size: 16, color: Colors.blueGrey[400]),
-                  const SizedBox(width: 8),
+                  Icon(Icons.info_outline, size: AppIconSize.i16, color: Colors.blueGrey[400]),
+                  const SizedBox(width: AppSpacing.s8),
                   Expanded(
                     child: Text(
                       'This receipt shows the final amount paid for the selected transaction. You can print or share it for your records.',
-                      style: TextStyle(fontSize: 11, color: Colors.blueGrey[600], height: 1.4),
+                      style: TextStyle(fontSize: AppFontSize.f11, color: Colors.blueGrey[600], height: 1.4),
                     ),
                   ),
                 ],
