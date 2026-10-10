@@ -43,7 +43,16 @@ User-facing "VetBiz Pro" now reads `AppInfo.name` (titles, Settings, support lin
 - **Two names in use**: "VetBiz Pro" and "VetBiz Pro System" (login header, register header, © line). One name?
 - **The version** "v1.0.0" is typed in Settings (`settings_screen.dart:239`); it could come from the build (pubspec) instead.
 
-### Raised in step 2D, batch D4
+## Decided
+
+### D4 follow-up (decided after batch D4; done in D4g to D4j)
+
+- **Team role colours (D4g):** six roles with exact current values: `roleOwner` (indigo), `roleCoAdmin` (teal), `roleAssistant` (blueGrey), each with a `Strong` variant (shade 700) for the chip label. The Team Members role chip uses them.
+- **`MembershipService.errorMessage` (D4h):** its fallback (anything that is not a Functions error) goes through `FriendlyError.messageFor`. Server-provided messages are unchanged.
+- **`FirestoreErrorView` (D4i):** shows the friendly message, keeps the missing-index detection and its link, and puts the raw error behind a Details action.
+- **Standing snap rule (from D4j on):** a leftover value snaps to the nearest existing token when the shift is at most 0.05 in opacity, 2 px in spacing, radius or icon size, or 1 px in font size; ties go up. Otherwise it is kept and listed here. Applied to the D4 leftovers in D4j: upload overlay black38 -> `scrim` at `a40`; the 9 px team-table dot -> `AppSizes.statusDot`. Kept (beyond the rule): border alpha 0.6 (0.1 from a50/a70), padding 36 (4 px above s32), the 6 px separator dot (no icon step within 2 px), and the Reassign button and empty-team icon teal (colours are not covered by the rule).
+
+The questions as raised:
 
 - **Upload overlay `Colors.black38`**, `lib/screens/settings/business_profile_screen.dart` (over the logo while it uploads): a scrim, but 0.38 has no AppAlpha step and no snap rule. Kept. `scrim` at `a40`?
 - **`FirestoreErrorView` shows raw Firestore text** (`lib/widgets/firestore_error_view.dart`, used by Payments, Team Members and others): by design it shows the error so the missing-index link can be opened, but any other error also appears raw. Show `FriendlyError.messageFor(error)` when there is no index link? It is a shared widget, so this changes every screen that uses it.
@@ -52,8 +61,6 @@ User-facing "VetBiz Pro" now reads `AppInfo.name` (titles, Settings, support lin
 - **Other teal**, same file: the "Reassign" action button (`Colors.teal`) and the empty-team icon (`Colors.teal.shade300`). Teal is also an activity-type colour on four other screens (activity log, dashboard, facility, notifications). Reuse `teamCoAdmin` here, and a separate `chart` role for the activity types?
 - **Border alpha 0.6** (action buttons) and **vertical padding 36** (empty-team state), same file: no AppAlpha step / above the spacing ladder, no snap rule. Kept.
 - **Small dots**, same file: a 6 px `Icons.circle` used as a "·" separator, and a 9 px status dot in the team table (`AppSizes.statusDot` is 8). Snap the 9 px dot to `statusDot`?
-
-## Decided
 
 ### D3 follow-up (decided after batch D3; done in D3g)
 

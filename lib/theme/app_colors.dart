@@ -51,6 +51,12 @@ class AppColors extends ThemeExtension<AppColors> {
     required this.chart1,
     required this.chart2,
     required this.chart3,
+    required this.roleOwner,
+    required this.roleOwnerStrong,
+    required this.roleCoAdmin,
+    required this.roleCoAdminStrong,
+    required this.roleAssistant,
+    required this.roleAssistantStrong,
   });
 
   // Brand - the only roles that vary by colour theme for now.
@@ -118,6 +124,15 @@ class AppColors extends ThemeExtension<AppColors> {
   final Color chart2;
   final Color chart3;
 
+  // Team roles (manage_assistants_screen.dart role chips): a light fill of
+  // the base colour with the Strong shade as the label. Exact legacy values.
+  final Color roleOwner;
+  final Color roleOwnerStrong;
+  final Color roleCoAdmin;
+  final Color roleCoAdminStrong;
+  final Color roleAssistant;
+  final Color roleAssistantStrong;
+
   /// The roles for a colour theme. Every value is the exact legacy shade.
   static AppColors fromTheme(AppColorTheme theme) => AppColors(
         primary: theme.primary,
@@ -156,6 +171,12 @@ class AppColors extends ThemeExtension<AppColors> {
         chart1: const Color(0xFF3D5A80),
         chart2: const Color(0xFF6A4C93),
         chart3: const Color(0xFFB56A00),
+        roleOwner: Colors.indigo,
+        roleOwnerStrong: Colors.indigo.shade700,
+        roleCoAdmin: Colors.teal,
+        roleCoAdminStrong: Colors.teal.shade700,
+        roleAssistant: Colors.blueGrey,
+        roleAssistantStrong: Colors.blueGrey.shade700,
       );
 
   @override
@@ -196,6 +217,12 @@ class AppColors extends ThemeExtension<AppColors> {
     Color? chart1,
     Color? chart2,
     Color? chart3,
+    Color? roleOwner,
+    Color? roleOwnerStrong,
+    Color? roleCoAdmin,
+    Color? roleCoAdminStrong,
+    Color? roleAssistant,
+    Color? roleAssistantStrong,
   }) =>
       AppColors(
         primary: primary ?? this.primary,
@@ -234,6 +261,12 @@ class AppColors extends ThemeExtension<AppColors> {
         chart1: chart1 ?? this.chart1,
         chart2: chart2 ?? this.chart2,
         chart3: chart3 ?? this.chart3,
+        roleOwner: roleOwner ?? this.roleOwner,
+        roleOwnerStrong: roleOwnerStrong ?? this.roleOwnerStrong,
+        roleCoAdmin: roleCoAdmin ?? this.roleCoAdmin,
+        roleCoAdminStrong: roleCoAdminStrong ?? this.roleCoAdminStrong,
+        roleAssistant: roleAssistant ?? this.roleAssistant,
+        roleAssistantStrong: roleAssistantStrong ?? this.roleAssistantStrong,
       );
 
   @override
@@ -277,6 +310,12 @@ class AppColors extends ThemeExtension<AppColors> {
       chart1: l(chart1, other.chart1),
       chart2: l(chart2, other.chart2),
       chart3: l(chart3, other.chart3),
+      roleOwner: l(roleOwner, other.roleOwner),
+      roleOwnerStrong: l(roleOwnerStrong, other.roleOwnerStrong),
+      roleCoAdmin: l(roleCoAdmin, other.roleCoAdmin),
+      roleCoAdminStrong: l(roleCoAdminStrong, other.roleCoAdminStrong),
+      roleAssistant: l(roleAssistant, other.roleAssistant),
+      roleAssistantStrong: l(roleAssistantStrong, other.roleAssistantStrong),
     );
   }
 }

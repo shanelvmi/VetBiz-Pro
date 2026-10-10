@@ -57,6 +57,13 @@ void main() {
       'chart1': (c.chart1, const Color(0xFF3D5A80)),
       'chart2': (c.chart2, const Color(0xFF6A4C93)),
       'chart3': (c.chart3, const Color(0xFFB56A00)),
+      // Team role chips (manage_assistants_screen.dart), as they were.
+      'roleOwner': (c.roleOwner, Colors.indigo),
+      'roleOwnerStrong': (c.roleOwnerStrong, Colors.indigo[700]!),
+      'roleCoAdmin': (c.roleCoAdmin, Colors.teal),
+      'roleCoAdminStrong': (c.roleCoAdminStrong, Colors.teal[700]!),
+      'roleAssistant': (c.roleAssistant, Colors.blueGrey),
+      'roleAssistantStrong': (c.roleAssistantStrong, Colors.blueGrey[700]!),
     };
 
     for (final entry in legacy.entries) {

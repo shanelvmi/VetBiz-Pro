@@ -13,7 +13,7 @@
       "lib/main.dart": 27,
       "lib/models/notification_model.dart": 13,
       "lib/screens/activity/activity_log_screen.dart": 32,
-      "lib/screens/admin/manage_assistants_screen.dart": 5,
+      "lib/screens/admin/manage_assistants_screen.dart": 2,
       "lib/screens/dashboard/dashboard_screen.dart": 111,
       "lib/screens/dashboard/insights_screen.dart": 28,
       "lib/screens/dashboard/notifications_screen.dart": 59,

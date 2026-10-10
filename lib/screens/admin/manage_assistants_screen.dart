@@ -482,15 +482,18 @@ class _ManageAssistantsScreenState extends State<ManageAssistantsScreen> {
       kind == TeamMemberKind.assistant ? 2 : (kind == TeamMemberKind.coAdmin ? 1 : 0);
 
   Widget _roleChip(TeamMemberKind kind) {
-    final MaterialColor color = kind == TeamMemberKind.assistant
-        ? Colors.blueGrey
-        : (kind == TeamMemberKind.coAdmin ? Colors.teal : Colors.indigo);
+    final colors = context.colors;
+    final (color, strong) = switch (kind) {
+      TeamMemberKind.assistant => (colors.roleAssistant, colors.roleAssistantStrong),
+      TeamMemberKind.coAdmin => (colors.roleCoAdmin, colors.roleCoAdminStrong),
+      TeamMemberKind.owner => (colors.roleOwner, colors.roleOwnerStrong),
+    };
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: AppSpacing.s8, vertical: AppSpacing.s4),
       decoration: BoxDecoration(color: color.withValues(alpha: AppAlpha.a10), borderRadius: BorderRadius.circular(AppRadius.r10)),
       child: Text(
         _kindLabel(kind),
-        style: TextStyle(color: color.shade700, fontSize: AppFontSize.f11_5, fontWeight: AppFontWeight.semibold),
+        style: TextStyle(color: strong, fontSize: AppFontSize.f11_5, fontWeight: AppFontWeight.semibold),
       ),
     );
   }
