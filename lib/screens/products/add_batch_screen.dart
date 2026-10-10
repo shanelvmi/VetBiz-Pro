@@ -7,11 +7,16 @@ import '../../models/product.dart';
 import '../../providers/product_provider.dart';
 import '../../providers/facility_provider.dart';
 import '../../utils/thousands_input_formatter.dart';
-import '../../theme/app_palette.dart';
 import '../../config/money.dart';
 import '../../config/app_defaults.dart';
 import '../../config/app_ranges.dart';
 import '../../data/data_keys.dart';
+import '../../theme/app_text.dart';
+import '../../theme/app_dimens.dart';
+import '../../theme/theme_context.dart';
+import '../../theme/app_breakpoints.dart';
+import '../../theme/app_motion.dart';
+import '../../ui/feedback/app_feedback.dart';
 
 /// Records a new delivery of an existing product as its own batch - a
 /// separate batch number, expiry, and quantity, never overwriting an
@@ -27,7 +32,6 @@ class AddBatchScreen extends StatefulWidget {
 }
 
 class _AddBatchScreenState extends State<AddBatchScreen> {
-  static const Color primaryColor = AppPalette.primary;
   final _formKey = GlobalKey<FormState>();
 
   late final TextEditingController _batchController;
@@ -100,21 +104,13 @@ class _AddBatchScreenState extends State<AddBatchScreen> {
 
       if (!mounted) return;
       Navigator.pop(context);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            wasMerged
-                ? 'Added to the existing batch with this number and expiry'
-                : 'New batch added',
-          ),
-          backgroundColor: Colors.green,
-        ),
+      AppFeedback.success(
+        wasMerged
+            ? 'Added to the existing batch with this number and expiry'
+            : 'New batch added',
       );
-    } catch (e) {
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Could not add batch: $e'), backgroundColor: Colors.redAccent),
-      );
+    } catch (e, st) {
+      AppFeedback.error("Couldn't add the batch", error: e, stackTrace: st);
     } finally {
       if (mounted) setState(() => _isSaving = false);
     }
@@ -126,8 +122,8 @@ class _AddBatchScreenState extends State<AddBatchScreen> {
       appBar: AppBar(
         title: const Text('Add New Batch'),
         centerTitle: true,
-        backgroundColor: primaryColor,
-        foregroundColor: Colors.white,
+        backgroundColor: context.colors.primary,
+        foregroundColor: context.colors.onPrimary,
         automaticallyImplyLeading: !widget.isModal,
         leading: widget.isModal
             ? IconButton(
@@ -143,20 +139,20 @@ class _AddBatchScreenState extends State<AddBatchScreen> {
           child: Form(
             key: _formKey,
             child: ListView(
-              padding: const EdgeInsets.all(16),
+              padding: const EdgeInsets.all(AppSpacing.s16),
               children: [
-                Text(widget.product.name, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                Text(widget.product.name, style: const TextStyle(fontSize: AppFontSize.f18, fontWeight: AppFontWeight.bold)),
                 Text(
                   'Choose where this delivery goes - this is recorded as its own batch, '
                   'separate from any existing stock.',
-                  style: TextStyle(fontSize: 12.5, color: Colors.grey[600]),
+                  style: TextStyle(fontSize: AppFontSize.f12_5, color: context.colors.textMuted),
                 ),
-                const SizedBox(height: 20),
+                const SizedBox(height: AppSpacing.s20),
                 TextFormField(
                   controller: _batchController,
                   decoration: const InputDecoration(labelText: 'Batch No (optional)', border: OutlineInputBorder()),
                 ),
-                const SizedBox(height: 12),
+                const SizedBox(height: AppSpacing.s12),
                 TextFormField(
                   controller: _expiryController,
                   readOnly: true,
@@ -167,29 +163,29 @@ class _AddBatchScreenState extends State<AddBatchScreen> {
                     suffixIcon: Icon(Icons.calendar_today),
                   ),
                 ),
-                const SizedBox(height: 12),
-                const Text('Add This Stock To', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 13)),
+                const SizedBox(height: AppSpacing.s12),
+                const Text('Add This Stock To', style: TextStyle(fontWeight: AppFontWeight.semibold, fontSize: AppFontSize.f13)),
                 RadioListTile<String>(
                   contentPadding: EdgeInsets.zero,
                   dense: true,
                   title: const Text('Stock Store'),
-                  subtitle: const Text('Needs a separate "Release" step before it can be sold', style: TextStyle(fontSize: 11.5)),
+                  subtitle: const Text('Needs a separate "Release" step before it can be sold', style: TextStyle(fontSize: AppFontSize.f11_5)),
                   value: 'stock',
                   groupValue: _destination,
-                  activeColor: primaryColor,
+                  activeColor: context.colors.primary,
                   onChanged: (value) => setState(() => _destination = value!),
                 ),
                 RadioListTile<String>(
                   contentPadding: EdgeInsets.zero,
                   dense: true,
                   title: const Text('Sellable (straight to the shelf)'),
-                  subtitle: const Text('Ready to sell immediately', style: TextStyle(fontSize: 11.5)),
+                  subtitle: const Text('Ready to sell immediately', style: TextStyle(fontSize: AppFontSize.f11_5)),
                   value: 'sellable',
                   groupValue: _destination,
-                  activeColor: primaryColor,
+                  activeColor: context.colors.primary,
                   onChanged: (value) => setState(() => _destination = value!),
                 ),
-                const SizedBox(height: 8),
+                const SizedBox(height: AppSpacing.s8),
                 TextFormField(
                   controller: _quantityController,
                   keyboardType: TextInputType.number,
@@ -201,21 +197,21 @@ class _AddBatchScreenState extends State<AddBatchScreen> {
                     return null;
                   },
                 ),
-                const SizedBox(height: 12),
+                const SizedBox(height: AppSpacing.s12),
                 TextFormField(
                   controller: _buyPriceController,
                   keyboardType: TextInputType.number,
                   inputFormatters: [FilteringTextInputFormatter.digitsOnly, ThousandsSeparatorInputFormatter()],
                   decoration: const InputDecoration(labelText: 'Buy Price (${AppDefaults.currencySymbol})', border: OutlineInputBorder()),
                 ),
-                const SizedBox(height: 24),
+                const SizedBox(height: AppSpacing.s24),
                 SizedBox(
                   height: 48,
                   child: ElevatedButton(
                     onPressed: _isSaving ? null : _save,
-                    style: ElevatedButton.styleFrom(backgroundColor: primaryColor, foregroundColor: Colors.white),
+                    style: ElevatedButton.styleFrom(backgroundColor: context.colors.primary, foregroundColor: context.colors.onPrimary),
                     child: _isSaving
-                        ? const SizedBox(width: 22, height: 22, child: CircularProgressIndicator(strokeWidth: 2.5, color: Colors.white))
+                        ? SizedBox(width: AppSpacing.s22, height: 22, child: CircularProgressIndicator(strokeWidth: 2.5, color: context.colors.onPrimary))
                         : const Text('Add Batch'),
                   ),
                 ),
@@ -233,7 +229,7 @@ class _AddBatchScreenState extends State<AddBatchScreen> {
 /// push on mobile, a large, centered, dismissable modal on
 /// desktop/tablet-width screens.
 Future<void> showAddBatchScreen(BuildContext context, {required Product product}) async {
-  final isWideScreen = MediaQuery.of(context).size.width >= 900;
+  final isWideScreen = MediaQuery.of(context).size.width >= AppBreakpoints.medium;
 
   if (!isWideScreen) {
     await Navigator.of(context).push(
@@ -246,8 +242,8 @@ Future<void> showAddBatchScreen(BuildContext context, {required Product product}
     context: context,
     barrierDismissible: true,
     barrierLabel: 'Add Batch',
-    barrierColor: Colors.black54,
-    transitionDuration: const Duration(milliseconds: 220),
+    barrierColor: context.colors.scrim.withValues(alpha: AppAlpha.a50),
+    transitionDuration: AppMotion.normal,
     pageBuilder: (context, animation, secondaryAnimation) {
       final screenSize = MediaQuery.of(context).size;
       final modalWidth = (screenSize.width * 0.60).clamp(0, 940).toDouble();
@@ -260,7 +256,7 @@ Future<void> showAddBatchScreen(BuildContext context, {required Product product}
           width: modalWidth,
           height: modalHeight,
           child: ClipRRect(
-            borderRadius: BorderRadius.circular(16),
+            borderRadius: BorderRadius.circular(AppRadius.r16),
             child: Material(
               child: AddBatchScreen(product: product, isModal: true),
             ),

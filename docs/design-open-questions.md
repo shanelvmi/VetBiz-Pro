@@ -49,6 +49,10 @@ Colours are outside the standing snap rule, so this is kept as it is:
 
 - **Activity-type colours**, `lib/screens/reports/report_tabbed_content.dart` `_activityColor`: services `Colors.purple`, transactions `Colors.indigo`, clients `Colors.teal`. This is one of the four copies the shared activity-type helper replaces in step 2E. Kept for that step.
 
+### Raised in step 2D, batch D6
+
+- **List bottom gap 80**, `lib/screens/products/view_batches_screen.dart` (`_fabClearance`, under the batch list so the floating Add Batch button does not cover the last card): a size above the spacing ladder, no token. Kept exact as a named local constant.
+
 ## Decided
 
 ### D5 follow-up (decided after batch D5; done before D6)

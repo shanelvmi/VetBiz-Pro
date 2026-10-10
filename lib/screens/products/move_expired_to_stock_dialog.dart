@@ -4,10 +4,11 @@ import 'package:provider/provider.dart';
 import '../../models/product.dart';
 import '../../models/product_batch.dart';
 import '../../providers/product_provider.dart';
-import '../../theme/app_palette.dart';
 import '../../config/app_date_format.dart';
-
-const Color _primaryDeepGreen = AppPalette.primary;
+import '../../theme/app_text.dart';
+import '../../theme/app_dimens.dart';
+import '../../theme/theme_context.dart';
+import '../../ui/feedback/app_feedback.dart';
 
 const List<String> _moveReasons = ['Expired', 'Deteriorated', 'Other (specify)'];
 
@@ -49,9 +50,9 @@ Future<void> promptQuantityAndMoveToStock(
                 '${product.name}${batch.batchNo?.isNotEmpty == true ? ' - Batch ${batch.batchNo}' : ''}'
                 '${batch.expiry != null ? ' (${isAlreadyExpired ? 'expired' : 'expires'} ${AppDateFormat.date.format(batch.expiry!)})' : ''}. '
                 'Up to ${batch.sellableQty} ${product.unit} can move back to Stock Store.',
-                style: const TextStyle(fontSize: 13),
+                style: const TextStyle(fontSize: AppFontSize.f13),
               ),
-              const SizedBox(height: 14),
+              const SizedBox(height: AppSpacing.s14),
               TextField(
                 controller: qtyController,
                 keyboardType: TextInputType.number,
@@ -62,7 +63,7 @@ Future<void> promptQuantityAndMoveToStock(
                   errorText: qtyErrorText,
                 ),
               ),
-              const SizedBox(height: 10),
+              const SizedBox(height: AppSpacing.s10),
               DropdownButtonFormField<String>(
                 initialValue: reason,
                 decoration: InputDecoration(
@@ -72,14 +73,14 @@ Future<void> promptQuantityAndMoveToStock(
                   errorText: reasonErrorText,
                 ),
                 items: _moveReasons
-                    .map((r) => DropdownMenuItem(value: r, child: Text(r, style: const TextStyle(fontSize: 13))))
+                    .map((r) => DropdownMenuItem(value: r, child: Text(r, style: const TextStyle(fontSize: AppFontSize.f13))))
                     .toList(),
                 onChanged: (v) => setDialogState(() {
                   reason = v;
                   reasonErrorText = null;
                 }),
               ),
-              const SizedBox(height: 10),
+              const SizedBox(height: AppSpacing.s10),
               TextField(
                 controller: notesController,
                 decoration: InputDecoration(
@@ -95,7 +96,7 @@ Future<void> promptQuantityAndMoveToStock(
         actions: [
           TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancel')),
           ElevatedButton(
-            style: ElevatedButton.styleFrom(backgroundColor: _primaryDeepGreen, foregroundColor: Colors.white),
+            style: ElevatedButton.styleFrom(backgroundColor: context.colors.primary, foregroundColor: context.colors.onPrimary),
             onPressed: () {
               final qty = int.tryParse(qtyController.text.trim()) ?? 0;
               var hasError = false;
@@ -137,21 +138,10 @@ Future<void> promptQuantityAndMoveToStock(
       context,
       notes: notesController.text.trim().isNotEmpty ? notesController.text.trim() : null,
     );
-    if (context.mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(actionLabel == 'Move to Stock'
-              ? 'Moved $qty ${product.unit} back to Stock Store'
-              : 'Removed $qty ${product.unit} from Sellable'),
-          backgroundColor: Colors.green,
-        ),
-      );
-    }
-  } catch (e) {
-    if (context.mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Could not move stock: $e'), backgroundColor: Colors.redAccent),
-      );
-    }
+    AppFeedback.success(actionLabel == 'Move to Stock'
+        ? 'Moved $qty ${product.unit} back to Stock Store'
+        : 'Removed $qty ${product.unit} from Sellable');
+  } catch (e, st) {
+    AppFeedback.error("Couldn't move the stock", error: e, stackTrace: st);
   }
 }
