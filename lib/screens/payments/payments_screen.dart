@@ -13,6 +13,7 @@ import '../../models/sale.dart';
 import '../../models/service.dart';
 import '../../models/ledger_entry.dart';
 import '../../widgets/firestore_error_view.dart';
+import '../../widgets/date_range_dialog.dart';
 import '../sales/receipt_preview_screen.dart';
 import '../services/service_receipt_preview_screen.dart';
 import '../../theme/app_dimens.dart';
@@ -372,7 +373,7 @@ class _PaymentsScreenState extends State<PaymentsScreen> {
   Future<void> _showDateRangeDialog() async {
     final result = await showDialog<Map<String, DateTime>>(
       context: context,
-      builder: (context) => _DateRangeDialog(
+      builder: (context) => DateRangeDialog(
         initialStart: _rangeStart,
         initialEnd: _rangeEnd,
         primaryDeepGreen: context.colors.primary,
@@ -1075,122 +1076,6 @@ class _PaymentsScreenState extends State<PaymentsScreen> {
         ],
       ),
       ),
-    );
-  }
-}
-
-class _DateRangeDialog extends StatefulWidget {
-  final DateTime initialStart;
-  final DateTime initialEnd;
-  final Color primaryDeepGreen;
-  final Color warmAmber;
-  final Color offWhite;
-
-  const _DateRangeDialog({
-    required this.initialStart,
-    required this.initialEnd,
-    required this.primaryDeepGreen,
-    required this.warmAmber,
-    required this.offWhite,
-  });
-
-  @override
-  State<_DateRangeDialog> createState() => _DateRangeDialogState();
-}
-
-class _DateRangeDialogState extends State<_DateRangeDialog> {
-  late DateTime _start;
-  late DateTime _end;
-
-  @override
-  void initState() {
-    super.initState();
-    _start = widget.initialStart;
-    _end = widget.initialEnd;
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return AlertDialog(
-      title: Text('Select Date Range', style: TextStyle(color: widget.primaryDeepGreen)),
-      content: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          const Text('Start Date:', style: TextStyle(fontWeight: AppFontWeight.bold)),
-          const SizedBox(height: AppSpacing.s8),
-          InkWell(
-            onTap: () async {
-              final picked = await showDatePicker(
-                context: context,
-                initialDate: _start,
-                firstDate: DateTime(2020),
-                lastDate: _end,
-              );
-              if (picked != null) setState(() => _start = picked);
-            },
-            child: Container(
-              padding: const EdgeInsets.all(AppSpacing.s12),
-              decoration: BoxDecoration(
-                border: Border.all(color: context.colors.borderStrong),
-                borderRadius: BorderRadius.circular(AppRadius.r8),
-              ),
-              child: Row(
-                children: [
-                  Icon(Icons.calendar_today, color: widget.primaryDeepGreen),
-                  const SizedBox(width: AppSpacing.s12),
-                  Text(AppDateFormat.date.format(_start)),
-                ],
-              ),
-            ),
-          ),
-          const SizedBox(height: AppSpacing.s12),
-          const Text('End Date:', style: TextStyle(fontWeight: AppFontWeight.bold)),
-          const SizedBox(height: AppSpacing.s8),
-          InkWell(
-            onTap: () async {
-              final picked = await showDatePicker(
-                context: context,
-                initialDate: _end,
-                firstDate: _start,
-                lastDate: DateTime.now(),
-              );
-              if (picked != null) setState(() => _end = picked);
-            },
-            child: Container(
-              padding: const EdgeInsets.all(AppSpacing.s12),
-              decoration: BoxDecoration(
-                border: Border.all(color: context.colors.borderStrong),
-                borderRadius: BorderRadius.circular(AppRadius.r8),
-              ),
-              child: Row(
-                children: [
-                  Icon(Icons.calendar_today, color: widget.primaryDeepGreen),
-                  const SizedBox(width: AppSpacing.s12),
-                  Text(AppDateFormat.date.format(_end)),
-                ],
-              ),
-            ),
-          ),
-        ],
-      ),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.pop(context, null),
-          style: TextButton.styleFrom(foregroundColor: widget.primaryDeepGreen),
-          child: const Text('Cancel'),
-        ),
-        ElevatedButton(
-          onPressed: () {
-            final endOfDay = DateTime(_end.year, _end.month, _end.day, 23, 59, 59);
-            Navigator.pop(context, {'start': _start, 'end': endOfDay});
-          },
-          style: ButtonStyle(
-            backgroundColor: WidgetStateProperty.all(widget.primaryDeepGreen),
-            foregroundColor: WidgetStateProperty.all(widget.offWhite),
-          ),
-          child: const Text('Apply'),
-        ),
-      ],
     );
   }
 }
