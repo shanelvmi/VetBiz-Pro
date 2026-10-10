@@ -3,6 +3,10 @@ import 'package:provider/provider.dart';
 
 import '../../providers/client_provider.dart';
 import '../../providers/facility_provider.dart';
+import '../../theme/app_text.dart';
+import '../../theme/app_dimens.dart';
+import '../../theme/theme_context.dart';
+import '../../ui/feedback/friendly_error.dart';
 
 /// One-time, admin-triggered action - not something that runs
 /// automatically, since that would mean re-downloading the entire
@@ -26,8 +30,6 @@ import '../../providers/facility_provider.dart';
 ///     onTap: () => showRebuildSearchIndexDialog(context),
 ///   ),
 Future<void> showRebuildSearchIndexDialog(BuildContext context) async {
-  const primaryDeepGreen = Color(0xFF2F5D62);
-  const warmAmber = Color(0xFFFFB200);
 
   bool isRunning = false;
   String? resultMessage;
@@ -49,13 +51,13 @@ Future<void> showRebuildSearchIndexDialog(BuildContext context) async {
                 'spot a new client whose phone number or name matches one '
                 'you already have. It only needs to be run once - clients '
                 'that are already up to date are left alone.',
-                style: TextStyle(fontSize: 13),
+                style: TextStyle(fontSize: AppFontSize.f13),
               ),
             ] else
-              Text(resultMessage!, style: const TextStyle(fontSize: 13)),
+              Text(resultMessage!, style: const TextStyle(fontSize: AppFontSize.f13)),
             if (isRunning) ...[
-              const SizedBox(height: 16),
-              const Center(child: CircularProgressIndicator(color: primaryDeepGreen)),
+              const SizedBox(height: AppSpacing.s16),
+              Center(child: CircularProgressIndicator(color: dialogContext.colors.primary)),
             ],
           ],
         ),
@@ -65,8 +67,8 @@ Future<void> showRebuildSearchIndexDialog(BuildContext context) async {
               onPressed: isRunning ? null : () => Navigator.pop(dialogContext),
               style: ButtonStyle(
                 foregroundColor: WidgetStateProperty.resolveWith<Color>((states) {
-                  if (states.contains(WidgetState.hovered)) return warmAmber;
-                  return primaryDeepGreen;
+                  if (states.contains(WidgetState.hovered)) return dialogContext.colors.accent;
+                  return dialogContext.colors.primary;
                 }),
               ),
               child: const Text('Cancel'),
@@ -98,16 +100,16 @@ Future<void> showRebuildSearchIndexDialog(BuildContext context) async {
                       } catch (e) {
                         setDialogState(() {
                           isRunning = false;
-                          resultMessage = 'Could not complete: $e';
+                          resultMessage = 'Could not complete: ${FriendlyError.messageFor(e)}';
                         });
                       }
                     },
               style: ButtonStyle(
                 backgroundColor: WidgetStateProperty.resolveWith<Color>((states) {
-                  if (states.contains(WidgetState.hovered)) return warmAmber;
-                  return primaryDeepGreen;
+                  if (states.contains(WidgetState.hovered)) return dialogContext.colors.accent;
+                  return dialogContext.colors.primary;
                 }),
-                foregroundColor: WidgetStateProperty.all(Colors.white),
+                foregroundColor: WidgetStateProperty.all(dialogContext.colors.onPrimary),
               ),
               child: const Text('Run Now'),
             ),
@@ -115,8 +117,8 @@ Future<void> showRebuildSearchIndexDialog(BuildContext context) async {
             ElevatedButton(
               onPressed: () => Navigator.pop(dialogContext),
               style: ButtonStyle(
-                backgroundColor: WidgetStateProperty.all(primaryDeepGreen),
-                foregroundColor: WidgetStateProperty.all(Colors.white),
+                backgroundColor: WidgetStateProperty.all(dialogContext.colors.primary),
+                foregroundColor: WidgetStateProperty.all(dialogContext.colors.onPrimary),
               ),
               child: const Text('Done'),
             ),

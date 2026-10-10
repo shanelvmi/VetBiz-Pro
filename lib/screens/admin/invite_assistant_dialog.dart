@@ -6,6 +6,11 @@ import '../../services/auth_service.dart';
 import '../../services/invite_code_service.dart';
 import '../../services/membership_service.dart';
 import '../../config/app_date_format.dart';
+import '../../theme/app_text.dart';
+import '../../theme/app_dimens.dart';
+import '../../theme/theme_context.dart';
+import '../../ui/feedback/friendly_error.dart';
+import '../../ui/feedback/app_feedback.dart';
 
 /// Generates a short-lived, single-use code for inviting a new
 /// Assistant to join this facility - shown to the Admin to share
@@ -18,8 +23,6 @@ import '../../config/app_date_format.dart';
 ///     onPressed: () => showInviteAssistantDialog(context, facilityId),
 ///   ),
 Future<void> showInviteAssistantDialog(BuildContext context, String facilityId) async {
-  const primaryDeepGreen = Color(0xFF2F5D62);
-  const warmAmber = Color(0xFFFFB200);
 
   final inviteService = InviteCodeService();
   final authService = Provider.of<AuthService>(context, listen: false);
@@ -60,7 +63,7 @@ Future<void> showInviteAssistantDialog(BuildContext context, String facilityId) 
           } catch (e) {
             if (!dialogContext.mounted) return;
             setDialogState(() {
-              errorMessage = 'Could not check for an existing invite: $e';
+              errorMessage = 'Could not check for an existing invite: ${FriendlyError.messageFor(e)}';
               isLoading = false;
             });
           }
@@ -122,7 +125,7 @@ Future<void> showInviteAssistantDialog(BuildContext context, String facilityId) 
           } catch (e) {
             if (!dialogContext.mounted) return;
             setDialogState(() {
-              errorMessage = 'Could not revoke: $e';
+              errorMessage = 'Could not revoke: ${FriendlyError.messageFor(e)}';
               isLoading = false;
             });
           } finally {
@@ -147,11 +150,11 @@ Future<void> showInviteAssistantDialog(BuildContext context, String facilityId) 
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        const CircularProgressIndicator(color: primaryDeepGreen),
-                        const SizedBox(height: 14),
+                        CircularProgressIndicator(color: dialogContext.colors.primary),
+                        const SizedBox(height: AppSpacing.s14),
                         // Says what it's doing - generating a code can take a
                         // few seconds, and a bare spinner looks like nothing is.
-                        Text(loadingMessage, style: TextStyle(fontSize: 13, color: Colors.grey[700])),
+                        Text(loadingMessage, style: TextStyle(fontSize: AppFontSize.f13, color: dialogContext.colors.textSoft)),
                       ],
                     ),
                   )
@@ -161,77 +164,75 @@ Future<void> showInviteAssistantDialog(BuildContext context, String facilityId) 
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       if (errorMessage != null) ...[
-                        Text(errorMessage!, style: const TextStyle(color: Colors.redAccent, fontSize: 13)),
-                        const SizedBox(height: 12),
+                        Text(errorMessage!, style: TextStyle(color: dialogContext.colors.dangerAccent, fontSize: AppFontSize.f13)),
+                        const SizedBox(height: AppSpacing.s12),
                       ],
                       if (formatted != null) ...[
                         const Text(
                           'Share this code with the person you\'re hiring - '
                           'they\'ll enter it when registering as an Assistant.',
-                          style: TextStyle(fontSize: 13),
+                          style: TextStyle(fontSize: AppFontSize.f13),
                         ),
-                        const SizedBox(height: 16),
+                        const SizedBox(height: AppSpacing.s16),
                         Container(
                           width: double.infinity,
-                          padding: const EdgeInsets.symmetric(vertical: 16),
+                          padding: const EdgeInsets.symmetric(vertical: AppSpacing.s16),
                           decoration: BoxDecoration(
-                            color: primaryDeepGreen.withValues(alpha: 0.08),
-                            borderRadius: BorderRadius.circular(10),
-                            border: Border.all(color: primaryDeepGreen.withValues(alpha: 0.3)),
+                            color: dialogContext.colors.primary.withValues(alpha: AppAlpha.a10),
+                            borderRadius: BorderRadius.circular(AppRadius.r10),
+                            border: Border.all(color: dialogContext.colors.primary.withValues(alpha: AppAlpha.a30)),
                           ),
                           child: Column(
                             children: [
                               Text(
                                 formatted,
                                 textAlign: TextAlign.center,
-                                style: const TextStyle(
-                                  fontSize: 28,
-                                  fontWeight: FontWeight.bold,
+                                style: TextStyle(
+                                  fontSize: AppFontSize.f28,
+                                  fontWeight: AppFontWeight.bold,
                                   letterSpacing: 3,
-                                  color: primaryDeepGreen,
+                                  color: dialogContext.colors.primary,
                                 ),
                               ),
-                              const SizedBox(height: 4),
+                              const SizedBox(height: AppSpacing.s4),
                               if (activeExpiresAt != null)
                                 Text(
                                   'Expires ${AppDateFormat.dateDayTime24.format(activeExpiresAt!)}',
-                                  style: TextStyle(fontSize: 11, color: Colors.grey[600]),
+                                  style: TextStyle(fontSize: AppFontSize.f11, color: dialogContext.colors.textMuted),
                                 ),
                             ],
                           ),
                         ),
-                        const SizedBox(height: 12),
+                        const SizedBox(height: AppSpacing.s12),
                         Row(
                           children: [
                             Expanded(
                               child: OutlinedButton.icon(
                                 onPressed: () {
                                   Clipboard.setData(ClipboardData(text: formatted));
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    const SnackBar(content: Text('Copied to clipboard')),
-                                  );
+                                  AppFeedback.success('Copied to clipboard');
                                 },
-                                icon: const Icon(Icons.copy, size: 16),
+                                icon: const Icon(Icons.copy, size: AppIconSize.i16),
                                 label: const Text('Copy'),
-                                style: OutlinedButton.styleFrom(foregroundColor: primaryDeepGreen),
+                                style: OutlinedButton.styleFrom(foregroundColor: dialogContext.colors.primary),
                               ),
                             ),
-                            const SizedBox(width: 8),
+                            const SizedBox(width: AppSpacing.s8),
                             Expanded(
                               child: OutlinedButton.icon(
                                 onPressed: revoke,
-                                icon: const Icon(Icons.cancel_outlined, size: 16),
+                                icon: const Icon(Icons.cancel_outlined, size: AppIconSize.i16),
                                 label: const Text('Revoke'),
-                                style: OutlinedButton.styleFrom(foregroundColor: Colors.redAccent),
+                                style: OutlinedButton.styleFrom(foregroundColor: dialogContext.colors.dangerAccent),
                               ),
                             ),
                           ],
                         ),
-                        const SizedBox(height: 8),
+                        const SizedBox(height: AppSpacing.s8),
                         Center(
                           child: TextButton(
                             onPressed: generateNew,
-                            style: TextButton.styleFrom(foregroundColor: warmAmber),
+                            style: TextButton.styleFrom(foregroundColor: dialogContext.colors.accent),
                             child: const Text('Generate a new one instead'),
                           ),
                         ),
@@ -240,20 +241,20 @@ Future<void> showInviteAssistantDialog(BuildContext context, String facilityId) 
                           'Generate a one-time code for the person you\'re '
                           'hiring - it works for 48 hours or until used once, '
                           'whichever comes first.',
-                          style: TextStyle(fontSize: 13),
+                          style: TextStyle(fontSize: AppFontSize.f13),
                         ),
-                        const SizedBox(height: 16),
+                        const SizedBox(height: AppSpacing.s16),
                         SizedBox(
                           width: double.infinity,
                           child: ElevatedButton(
                             onPressed: generateNew,
                             style: ButtonStyle(
                               backgroundColor: WidgetStateProperty.resolveWith<Color>((states) {
-                                if (states.contains(WidgetState.hovered)) return warmAmber;
-                                return primaryDeepGreen;
+                                if (states.contains(WidgetState.hovered)) return dialogContext.colors.accent;
+                                return dialogContext.colors.primary;
                               }),
-                              foregroundColor: WidgetStateProperty.all(Colors.white),
-                              padding: WidgetStateProperty.all(const EdgeInsets.symmetric(vertical: 12)),
+                              foregroundColor: WidgetStateProperty.all(dialogContext.colors.onPrimary),
+                              padding: WidgetStateProperty.all(const EdgeInsets.symmetric(vertical: AppSpacing.s12)),
                             ),
                             child: const Text('Generate Invite Code'),
                           ),
@@ -268,8 +269,8 @@ Future<void> showInviteAssistantDialog(BuildContext context, String facilityId) 
               onPressed: () => Navigator.pop(dialogContext),
               style: ButtonStyle(
                 foregroundColor: WidgetStateProperty.resolveWith<Color>((states) {
-                  if (states.contains(WidgetState.hovered)) return warmAmber;
-                  return primaryDeepGreen;
+                  if (states.contains(WidgetState.hovered)) return dialogContext.colors.accent;
+                  return dialogContext.colors.primary;
                 }),
               ),
               child: const Text('Close'),
