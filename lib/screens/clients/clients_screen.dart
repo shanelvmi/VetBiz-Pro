@@ -22,7 +22,6 @@ import '../../config/app_timeouts.dart';
 import '../../config/app_date_format.dart';
 import '../../config/app_links.dart';
 import '../../ui/feedback/app_feedback.dart';
-import '../../theme/app_palette.dart';
 import '../../theme/app_text.dart';
 import '../../theme/app_dimens.dart';
 import '../../theme/theme_context.dart';
@@ -35,9 +34,6 @@ class ClientsScreen extends StatefulWidget {
 }
 
 class _ClientsScreenState extends State<ClientsScreen> {
-  final Color primaryDeepGreen = AppPalette.primary;
-  final Color warmAmber = AppPalette.accent;
-  final Color offWhite = AppPalette.background;
 
   static const List<String> _clientTypes = ['All', 'Farmer', 'Vet', 'Wholesaler', 'Retailer'];
 
@@ -501,25 +497,25 @@ class _ClientsScreenState extends State<ClientsScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(client.name, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                      Text(client.name, style: const TextStyle(fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f16)),
                       Row(
                         children: [
-                          Icon(Icons.phone_outlined, size: 12, color: Colors.grey[600]),
-                          const SizedBox(width: 4),
-                          Text(client.phone, style: TextStyle(fontSize: 12.5, color: Colors.grey[600])),
+                          Icon(Icons.phone_outlined, size: AppIconSize.i12, color: context.colors.textMuted),
+                          const SizedBox(width: AppSpacing.s4),
+                          Text(client.phone, style: TextStyle(fontSize: AppFontSize.f12_5, color: context.colors.textMuted)),
                         ],
                       ),
                     ],
                   ),
                 ),
                 IconButton(
-                  icon: Icon(Icons.phone_outlined, size: 18, color: accent),
+                  icon: Icon(Icons.phone_outlined, size: AppIconSize.i18, color: accent),
                   tooltip: 'Call',
                   onPressed: () async {
                     final uri = AppLinks.tel(client.phone);
                     final launched = await launchUrl(uri, mode: LaunchMode.externalApplication);
-                    if (!launched && mounted) {
-                      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Could not open dialer')));
+                    if (!launched) {
+                      AppFeedback.info("Couldn't open the dialer");
                     }
                   },
                 ),
@@ -527,52 +523,52 @@ class _ClientsScreenState extends State<ClientsScreen> {
             ),
             const Divider(height: 32),
             _detailLabel('Address'),
-            Text(client.address, style: const TextStyle(fontSize: 14)),
-            const SizedBox(height: 16),
+            Text(client.address, style: const TextStyle(fontSize: AppFontSize.f14)),
+            const SizedBox(height: AppSpacing.s16),
             _detailLabel('Client Type'),
             Wrap(
-              spacing: 6,
-              runSpacing: 6,
+              spacing: AppSpacing.s6,
+              runSpacing: AppSpacing.s6,
               children: types.map((type) {
                 final typeAccent = _colorForType(type);
                 return Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                  decoration: BoxDecoration(color: typeAccent.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(10)),
+                  padding: const EdgeInsets.symmetric(horizontal: AppSpacing.s8, vertical: AppSpacing.s3),
+                  decoration: BoxDecoration(color: typeAccent.withValues(alpha: AppAlpha.a10), borderRadius: BorderRadius.circular(AppRadius.r10)),
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Icon(_iconForType(type), size: 12, color: typeAccent),
-                      const SizedBox(width: 4),
-                      Text(type, style: TextStyle(fontSize: 11.5, color: typeAccent, fontWeight: FontWeight.w600)),
+                      Icon(_iconForType(type), size: AppIconSize.i12, color: typeAccent),
+                      const SizedBox(width: AppSpacing.s4),
+                      Text(type, style: TextStyle(fontSize: AppFontSize.f11_5, color: typeAccent, fontWeight: AppFontWeight.semibold)),
                     ],
                   ),
                 );
               }).toList(),
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: AppSpacing.s16),
             _detailLabel('Joined On'),
             Text(
               client.createdAt != null ? AppDateFormat.date.format(client.createdAt!) : '-',
-              style: const TextStyle(fontSize: 14),
+              style: const TextStyle(fontSize: AppFontSize.f14),
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: AppSpacing.s16),
             _detailLabel('Status'),
             Container(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.s8, vertical: AppSpacing.s3),
               decoration: BoxDecoration(
-                color: (client.status == 'Active' ? Colors.green : Colors.grey).withValues(alpha: 0.12),
-                borderRadius: BorderRadius.circular(10),
+                color: (client.status == 'Active' ? context.colors.success : context.colors.textHint).withValues(alpha: AppAlpha.a10),
+                borderRadius: BorderRadius.circular(AppRadius.r10),
               ),
               child: Text(
                 client.status,
                 style: TextStyle(
-                  fontSize: 11.5,
-                  color: client.status == 'Active' ? Colors.green[700] : Colors.grey[600],
-                  fontWeight: FontWeight.w600,
+                  fontSize: AppFontSize.f11_5,
+                  color: client.status == 'Active' ? context.colors.successStrong : context.colors.textMuted,
+                  fontWeight: AppFontWeight.semibold,
                 ),
               ),
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: AppSpacing.s16),
             FutureBuilder<(int, double)>(
               future: _getClientStatsFuture(client),
               builder: (context, snapshot) {
@@ -582,34 +578,34 @@ class _ClientsScreenState extends State<ClientsScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     _detailLabel('Total Transactions'),
-                    Text('$count', style: const TextStyle(fontSize: 14)),
-                    const SizedBox(height: 16),
+                    Text('$count', style: const TextStyle(fontSize: AppFontSize.f14)),
+                    const SizedBox(height: AppSpacing.s16),
                     _detailLabel('Total Spent'),
-                    Text(Money.symbolPlain(total), style: const TextStyle(fontSize: 14)),
+                    Text(Money.symbolPlain(total), style: const TextStyle(fontSize: AppFontSize.f14)),
                   ],
                 );
               },
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: AppSpacing.s16),
             _detailLabel('Notes'),
-            Text(latestNote ?? 'No notes added', style: TextStyle(fontSize: 13.5, color: latestNote == null ? Colors.grey[500] : Colors.black87)),
+            Text(latestNote ?? 'No notes added', style: TextStyle(fontSize: AppFontSize.f13_5, color: latestNote == null ? context.colors.textHint : context.colors.textPrimary)),
                   ],
                 ),
               ),
             ),
-            const SizedBox(height: 24),
+            const SizedBox(height: AppSpacing.s24),
             SizedBox(
               width: double.infinity,
               child: ElevatedButton.icon(
                 onPressed: _isSharing ? null : () => _shareOrSaveClientCard(client),
                 icon: _isSharing
-                    ? const SizedBox(height: 16, width: 16, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
-                    : const Icon(Icons.share_outlined, size: 18),
+                    ? SizedBox(height: AppSpacing.s16, width: 16, child: CircularProgressIndicator(strokeWidth: 2, color: context.colors.onPrimary))
+                    : const Icon(Icons.share_outlined, size: AppIconSize.i18),
                 label: const Text('Save / Share'),
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: primaryDeepGreen,
-                  foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(vertical: 12),
+                  backgroundColor: context.colors.primary,
+                  foregroundColor: context.colors.onPrimary,
+                  padding: const EdgeInsets.symmetric(vertical: AppSpacing.s12),
                 ),
               ),
             ),
@@ -621,15 +617,15 @@ class _ClientsScreenState extends State<ClientsScreen> {
 
   Widget _detailLabel(String label) {
     return Padding(
-      padding: const EdgeInsets.only(bottom: 4),
-      child: Text(label, style: TextStyle(fontSize: 11.5, color: Colors.grey[600], fontWeight: FontWeight.w600)),
+      padding: const EdgeInsets.only(bottom: AppSpacing.s4),
+      child: Text(label, style: TextStyle(fontSize: AppFontSize.f11_5, color: context.colors.textMuted, fontWeight: AppFontWeight.semibold)),
     );
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: offWhite,
+      backgroundColor: context.colors.background,
       appBar: _buildAppBar(),
       body: Row(
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -642,21 +638,21 @@ class _ClientsScreenState extends State<ClientsScreen> {
           return Column(
             children: [
               Padding(
-                padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
+                padding: const EdgeInsets.fromLTRB(AppSpacing.s16, AppSpacing.s16, AppSpacing.s16, 0),
                 child: _buildMetricsRow(provider.clients),
               ),
               Padding(
-                padding: const EdgeInsets.all(16),
+                padding: const EdgeInsets.all(AppSpacing.s16),
                 child: _buildToolbarRow(),
               ),
               if (isSearching)
                 Padding(
-                  padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+                  padding: const EdgeInsets.fromLTRB(AppSpacing.s16, 0, AppSpacing.s16, AppSpacing.s8),
                   child: Align(
                     alignment: Alignment.centerLeft,
                     child: Text(
                       'Searching by name (across all types)',
-                      style: TextStyle(fontSize: 11, color: Colors.grey[500], fontStyle: FontStyle.italic),
+                      style: TextStyle(fontSize: AppFontSize.f11, color: context.colors.textHint, fontStyle: FontStyle.italic),
                     ),
                   ),
                 ),
@@ -671,17 +667,17 @@ class _ClientsScreenState extends State<ClientsScreen> {
                         if (controller.newRecordsAvailable > 0)
                           Container(
                             width: double.infinity,
-                            color: primaryDeepGreen.withValues(alpha: 0.08),
-                            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                            color: context.colors.primary.withValues(alpha: AppAlpha.a10),
+                            padding: const EdgeInsets.symmetric(horizontal: AppSpacing.s16, vertical: AppSpacing.s8),
                             child: Row(
                               children: [
-                                Icon(Icons.fiber_new, size: 18, color: primaryDeepGreen),
-                                const SizedBox(width: 8),
+                                Icon(Icons.fiber_new, size: AppIconSize.i18, color: context.colors.primary),
+                                const SizedBox(width: AppSpacing.s8),
                                 Expanded(
                                   child: Text(
                                     '${controller.newRecordsAvailable} new client'
                                     '${controller.newRecordsAvailable == 1 ? '' : 's'} available',
-                                    style: TextStyle(fontSize: 13, color: primaryDeepGreen),
+                                    style: TextStyle(fontSize: AppFontSize.f13, color: context.colors.primary),
                                   ),
                                 ),
                                 TextButton(
@@ -695,12 +691,12 @@ class _ClientsScreenState extends State<ClientsScreen> {
                           child: controller.error != null
                               ? Center(
                                   child: Padding(
-                                    padding: const EdgeInsets.all(24),
+                                    padding: const EdgeInsets.all(AppSpacing.s24),
                                     child: _buildErrorMessage(controller.error.toString()),
                                   ),
                                 )
                               : controller.isLoading && clients.isEmpty
-                                  ? Center(child: CircularProgressIndicator(color: primaryDeepGreen))
+                                  ? Center(child: CircularProgressIndicator(color: context.colors.primary))
                                   : clients.isEmpty
                                       ? Center(
                                           child: Text(
@@ -734,32 +730,32 @@ class _ClientsScreenState extends State<ClientsScreen> {
 
   PreferredSizeWidget _buildAppBar() {
     return AppBar(
-      backgroundColor: Colors.white,
-      foregroundColor: Colors.black87,
-      elevation: 1,
+      backgroundColor: context.colors.surface,
+      foregroundColor: context.colors.textPrimary,
+      elevation: AppElevation.e1,
       centerTitle: true,
       toolbarHeight: 72,
-      title: const Column(
+      title: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Text('Clients', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 19, color: Colors.black87)),
-          Text('Manage all your clients in one place', style: TextStyle(fontSize: 12, color: Colors.black54)),
+          Text('Clients', style: TextStyle(fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f19, color: context.colors.textPrimary)),
+          Text('Manage all your clients in one place', style: TextStyle(fontSize: AppFontSize.f12, color: context.colors.textSecondary)),
         ],
       ),
       actions: [
         Padding(
-          padding: const EdgeInsets.only(right: 12),
+          padding: const EdgeInsets.only(right: AppSpacing.s12),
           child: ElevatedButton.icon(
             onPressed: () async {
               await showAddClientScreen(context);
             },
-            icon: const Icon(Icons.add, size: 18),
+            icon: const Icon(Icons.add, size: AppIconSize.i18),
             label: const Text('Add Client'),
             style: ElevatedButton.styleFrom(
-              backgroundColor: primaryDeepGreen,
-              foregroundColor: offWhite,
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+              backgroundColor: context.colors.primary,
+              foregroundColor: context.colors.background,
+              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.s16, vertical: AppSpacing.s10),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadius.r8)),
             ),
           ),
         ),
@@ -772,8 +768,8 @@ class _ClientsScreenState extends State<ClientsScreen> {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         Container(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-          decoration: BoxDecoration(border: Border(bottom: BorderSide(color: Colors.grey.withValues(alpha: 0.2)))),
+          padding: const EdgeInsets.symmetric(horizontal: AppSpacing.s16, vertical: AppSpacing.s12),
+          decoration: BoxDecoration(border: Border(bottom: BorderSide(color: context.colors.textHint.withValues(alpha: AppAlpha.a20)))),
           child: Row(
             children: [
               _headerCell('Client', flex: 3),
@@ -798,7 +794,7 @@ class _ClientsScreenState extends State<ClientsScreen> {
   Widget _headerCell(String label, {required int flex}) {
     return Expanded(
       flex: flex,
-      child: Text(label, style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Colors.grey[600])),
+      child: Text(label, style: TextStyle(fontSize: AppFontSize.f12, fontWeight: AppFontWeight.semibold, color: context.colors.textMuted)),
     );
   }
 
@@ -812,10 +808,10 @@ class _ClientsScreenState extends State<ClientsScreen> {
     return InkWell(
       onTap: () => setState(() => _selectedClient = client),
       child: Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.s16, vertical: AppSpacing.s12),
       decoration: BoxDecoration(
-        color: isSelected ? primaryDeepGreen.withValues(alpha: 0.06) : null,
-        border: Border(bottom: BorderSide(color: Colors.grey.withValues(alpha: 0.1))),
+        color: isSelected ? context.colors.primary.withValues(alpha: AppAlpha.a05) : null,
+        border: Border(bottom: BorderSide(color: context.colors.textHint.withValues(alpha: AppAlpha.a10))),
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -827,15 +823,15 @@ class _ClientsScreenState extends State<ClientsScreen> {
               children: [
                 CircleAvatar(
                   radius: 16,
-                  backgroundColor: accent.withValues(alpha: 0.12),
+                  backgroundColor: accent.withValues(alpha: AppAlpha.a10),
                   child: Text(
                     client.name.isNotEmpty ? client.name[0].toUpperCase() : '?',
-                    style: TextStyle(color: accent, fontWeight: FontWeight.bold, fontSize: 13),
+                    style: TextStyle(color: accent, fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f13),
                   ),
                 ),
-                const SizedBox(width: 8),
+                const SizedBox(width: AppSpacing.s8),
                 Expanded(
-                  child: Text(client.name, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600), maxLines: 1, overflow: TextOverflow.ellipsis),
+                  child: Text(client.name, style: const TextStyle(fontSize: AppFontSize.f13, fontWeight: AppFontWeight.semibold), maxLines: 1, overflow: TextOverflow.ellipsis),
                 ),
               ],
             ),
@@ -843,19 +839,19 @@ class _ClientsScreenState extends State<ClientsScreen> {
           Expanded(
             flex: 2,
             child: Wrap(
-              spacing: 4,
-              runSpacing: 4,
+              spacing: AppSpacing.s4,
+              runSpacing: AppSpacing.s4,
               children: types.map((type) {
                 final typeAccent = _colorForType(type);
                 return Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
-                  decoration: BoxDecoration(color: typeAccent.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(8)),
+                  padding: const EdgeInsets.symmetric(horizontal: AppSpacing.s6, vertical: AppSpacing.s2),
+                  decoration: BoxDecoration(color: typeAccent.withValues(alpha: AppAlpha.a10), borderRadius: BorderRadius.circular(AppRadius.r8)),
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Icon(_iconForType(type), size: 11, color: typeAccent),
-                      const SizedBox(width: 3),
-                      Text(type, style: TextStyle(fontSize: 10.5, color: typeAccent, fontWeight: FontWeight.w600)),
+                      Icon(_iconForType(type), size: AppIconSize.i12, color: typeAccent),
+                      const SizedBox(width: AppSpacing.s3),
+                      Text(type, style: TextStyle(fontSize: AppFontSize.f10_5, color: typeAccent, fontWeight: AppFontWeight.semibold)),
                     ],
                   ),
                 );
@@ -864,27 +860,27 @@ class _ClientsScreenState extends State<ClientsScreen> {
           ),
           Expanded(
             flex: 2,
-            child: Text(client.phone, style: const TextStyle(fontSize: 13)),
+            child: Text(client.phone, style: const TextStyle(fontSize: AppFontSize.f13)),
           ),
           Expanded(
             flex: 2,
             child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.s8, vertical: AppSpacing.s3),
               decoration: BoxDecoration(
-                color: (client.status == 'Active' ? Colors.green : Colors.grey).withValues(alpha: 0.12),
-                borderRadius: BorderRadius.circular(10),
+                color: (client.status == 'Active' ? context.colors.success : context.colors.textHint).withValues(alpha: AppAlpha.a10),
+                borderRadius: BorderRadius.circular(AppRadius.r10),
               ),
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Icon(Icons.circle, size: 8, color: client.status == 'Active' ? Colors.green[700] : Colors.grey[600]),
-                  const SizedBox(width: 4),
+                  Icon(Icons.circle, size: 8, color: client.status == 'Active' ? context.colors.successStrong : context.colors.textMuted),
+                  const SizedBox(width: AppSpacing.s4),
                   Text(
                     client.status,
                     style: TextStyle(
-                      fontSize: 11.5,
-                      color: client.status == 'Active' ? Colors.green[700] : Colors.grey[600],
-                      fontWeight: FontWeight.w600,
+                      fontSize: AppFontSize.f11_5,
+                      color: client.status == 'Active' ? context.colors.successStrong : context.colors.textMuted,
+                      fontWeight: AppFontWeight.semibold,
                     ),
                   ),
                 ],
@@ -895,13 +891,13 @@ class _ClientsScreenState extends State<ClientsScreen> {
             flex: 2,
             child: Text(
               client.createdAt != null ? AppDateFormat.date.format(client.createdAt!) : '-',
-              style: const TextStyle(fontSize: 13),
+              style: const TextStyle(fontSize: AppFontSize.f13),
             ),
           ),
           Expanded(
             flex: 1,
             child: PopupMenuButton<String>(
-              icon: Icon(Icons.more_vert, size: 18, color: Colors.grey[600]),
+              icon: Icon(Icons.more_vert, size: AppIconSize.i18, color: context.colors.textMuted),
               onSelected: (value) async {
                 if (value == 'edit') {
                   await showAddClientScreen(context, client: client);
@@ -912,7 +908,7 @@ class _ClientsScreenState extends State<ClientsScreen> {
               itemBuilder: (context) => [
                 const PopupMenuItem(value: 'edit', child: Text('Edit')),
                 if (isAdmin)
-                  PopupMenuItem(value: 'delete', child: Text('Delete', style: TextStyle(color: Colors.red[400]))),
+                  PopupMenuItem(value: 'delete', child: Text('Delete', style: TextStyle(color: context.colors.dangerSoft))),
               ],
             ),
           ),
@@ -936,42 +932,40 @@ class _ClientsScreenState extends State<ClientsScreen> {
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
-        const Icon(Icons.error_outline, color: Colors.redAccent, size: 32),
-        const SizedBox(height: 8),
+        Icon(Icons.error_outline, color: context.colors.dangerAccent, size: AppIconSize.i32),
+        const SizedBox(height: AppSpacing.s8),
         Text(
           url != null
               ? 'This filter needs a one-time database index to be created first.'
               : 'Could not load clients: $errorText',
           textAlign: TextAlign.center,
-          style: const TextStyle(fontSize: 13),
+          style: const TextStyle(fontSize: AppFontSize.f13),
         ),
         if (url != null) ...[
-          const SizedBox(height: 14),
+          const SizedBox(height: AppSpacing.s14),
           ElevatedButton.icon(
             onPressed: () async {
               final uri = Uri.parse(url);
               final launched = await launchUrl(uri, mode: LaunchMode.externalApplication);
-              if (!launched && mounted) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Could not open the link - copy it from the error log instead.')),
-                );
+              if (!launched) {
+                AppFeedback.warning("Couldn't open the link", detail: 'Copy it from the error log instead');
               }
             },
-            icon: const Icon(Icons.open_in_new, size: 18),
+            icon: const Icon(Icons.open_in_new, size: AppIconSize.i18),
             label: const Text('Create Index'),
             style: ButtonStyle(
               backgroundColor: WidgetStateProperty.resolveWith<Color>((states) {
-                if (states.contains(WidgetState.hovered)) return warmAmber;
-                return primaryDeepGreen;
+                if (states.contains(WidgetState.hovered)) return context.colors.accent;
+                return context.colors.primary;
               }),
-              foregroundColor: WidgetStateProperty.all(Colors.white),
+              foregroundColor: WidgetStateProperty.all(context.colors.onPrimary),
             ),
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: AppSpacing.s8),
           Text(
             'This takes a minute or two to finish building after you create it - then try this filter again.',
             textAlign: TextAlign.center,
-            style: TextStyle(fontSize: 11, color: Colors.grey[600], fontStyle: FontStyle.italic),
+            style: TextStyle(fontSize: AppFontSize.f11, color: context.colors.textMuted, fontStyle: FontStyle.italic),
           ),
         ],
       ],
@@ -985,14 +979,14 @@ class _ClientsScreenState extends State<ClientsScreen> {
     final pageEnd = (controller.currentPage - 1) * pageSize + itemCount;
 
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-      decoration: BoxDecoration(border: Border(top: BorderSide(color: Colors.grey.withValues(alpha: 0.2)))),
+      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.s16, vertical: AppSpacing.s12),
+      decoration: BoxDecoration(border: Border(top: BorderSide(color: context.colors.textHint.withValues(alpha: AppAlpha.a20)))),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           Text(
             itemCount == 0 ? 'No clients' : 'Showing $pageStart to $pageEnd',
-            style: TextStyle(fontSize: 12.5, color: Colors.grey[600]),
+            style: TextStyle(fontSize: AppFontSize.f12_5, color: context.colors.textMuted),
           ),
           Row(
             children: [
@@ -1007,15 +1001,15 @@ class _ClientsScreenState extends State<ClientsScreen> {
                   },
                 ),
               ),
-              const SizedBox(width: 16),
+              const SizedBox(width: AppSpacing.s16),
               IconButton(
                 icon: const Icon(Icons.chevron_left),
                 onPressed: controller.hasPreviousPage ? () => controller.goToPreviousPage() : null,
               ),
-              Text('Page ${controller.currentPage}', style: const TextStyle(fontSize: 13)),
+              Text('Page ${controller.currentPage}', style: const TextStyle(fontSize: AppFontSize.f13)),
               IconButton(
                 icon: controller.isLoading
-                    ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2))
+                    ? const SizedBox(width: AppSpacing.s16, height: 16, child: CircularProgressIndicator(strokeWidth: 2))
                     : const Icon(Icons.chevron_right),
                 onPressed: controller.hasNextPage && !controller.isLoading
                     ? () => controller.goToNextPage()

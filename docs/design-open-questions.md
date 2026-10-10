@@ -47,6 +47,8 @@ User-facing "VetBiz Pro" now reads `AppInfo.name` (titles, Settings, support lin
 
 - **"This cannot be undone."**, `lib/screens/transactions/transactions_screen.dart` (delete confirmation): the delete is a soft delete into `trash_transactions` (restorable from Trash for 30 days), and the message after it now offers Undo (PHASE2_FEEDBACK_SPEC section 8). The dialog sentence is kept as written. Change it to "You can restore it from Trash."?
 - **`Colors.orange[700]`**, `lib/screens/debtors/debtors_screen.dart` (the "send reminder" bell icon): not in the 4.1 table, and no role is within 12 on every channel (`warning` is orange, `warningStrong` is orange[800]). Kept. Snap to `warningStrong`, or add a role?
+- **Status dot 8 px**, `lib/screens/clients/clients_screen.dart` (`Icons.circle`, Active/Inactive): no `AppIconSize` step and no snap rule. Kept.
+- **Inline raw error**, `clients_screen.dart`: "Could not load clients: <raw error>" when the list fails to load (the missing-index case has its own text and a Create Index button). Same pattern the owner fixed in the subscription history (D2f). Switch it to `FriendlyError.messageFor(error)` too?
 
 ## Decided
 
