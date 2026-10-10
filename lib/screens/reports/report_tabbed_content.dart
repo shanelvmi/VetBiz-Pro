@@ -5,7 +5,6 @@ import '../../models/daily_report.dart';
 import '../../providers/user_role_provider.dart';
 import '../../config/money.dart';
 import '../../config/app_date_format.dart';
-import '../../theme/app_palette.dart';
 import '../../theme/app_text.dart';
 import '../../theme/app_dimens.dart';
 import '../../theme/theme_context.dart';
@@ -26,8 +25,6 @@ class ReportTabbedContent extends StatefulWidget {
 }
 
 class _ReportTabbedContentState extends State<ReportTabbedContent> with SingleTickerProviderStateMixin {
-  static const Color primaryDeepGreen = AppPalette.primary;
-  static const Color warmAmber = AppPalette.accent;
 
   late TabController _tabController;
 
@@ -506,13 +503,13 @@ class _ReportTabbedContentState extends State<ReportTabbedContent> with SingleTi
         ),
       ),
       if (report.servicesByPaymentMethod.isNotEmpty) ...[
-        const SizedBox(height: 16),
+        const SizedBox(height: AppSpacing.s16),
         _card(
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               _sectionHeader(Icons.credit_card_outlined, 'Payment Methods'),
-              const SizedBox(height: 8),
+              const SizedBox(height: AppSpacing.s8),
               for (final e in report.servicesByPaymentMethod.entries)
                 _statRow(e.key, Money.symbolDecimal(e.value)),
             ],
@@ -531,10 +528,10 @@ class _ReportTabbedContentState extends State<ReportTabbedContent> with SingleTi
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             _sectionHeader(Icons.inventory_2_outlined, 'Product Movement'),
-            const SizedBox(height: 4),
+            const SizedBox(height: AppSpacing.s4),
             Text('System-tracked - only products with movement today, or watch-listed products, are shown.',
-                style: TextStyle(fontSize: 12, color: Colors.grey[600])),
-            const SizedBox(height: 10),
+                style: TextStyle(fontSize: AppFontSize.f12, color: context.colors.textMuted)),
+            const SizedBox(height: AppSpacing.s10),
             if (report.productMovement.isEmpty)
               _emptyState('No product movement today.')
             else ...[
@@ -542,11 +539,11 @@ class _ReportTabbedContentState extends State<ReportTabbedContent> with SingleTi
               const Divider(height: 1),
               for (final p in report.productMovement)
                 Container(
-                  padding: const EdgeInsets.symmetric(vertical: 8),
+                  padding: const EdgeInsets.symmetric(vertical: AppSpacing.s8),
                   decoration: p.isWatchlisted
                       ? BoxDecoration(
-                          color: warmAmber.withValues(alpha: 0.06),
-                          borderRadius: BorderRadius.circular(6),
+                          color: context.colors.accent.withValues(alpha: AppAlpha.a05),
+                          borderRadius: BorderRadius.circular(AppRadius.r6),
                         )
                       : null,
                   child: Row(
@@ -556,16 +553,16 @@ class _ReportTabbedContentState extends State<ReportTabbedContent> with SingleTi
                         child: Row(
                           children: [
                             if (p.isWatchlisted) ...[
-                              Icon(Icons.star, size: 13, color: warmAmber.withValues(alpha: 0.9)),
-                              const SizedBox(width: 4),
+                              Icon(Icons.star, size: AppIconSize.i14, color: context.colors.accent.withValues(alpha: AppAlpha.a85)),
+                              const SizedBox(width: AppSpacing.s4),
                             ],
-                            Flexible(child: Text(p.name, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w500))),
+                            Flexible(child: Text(p.name, style: const TextStyle(fontSize: AppFontSize.f13, fontWeight: AppFontWeight.medium))),
                           ],
                         ),
                       ),
-                      Expanded(flex: 2, child: Text(p.unit.isEmpty ? '-' : p.unit, style: const TextStyle(fontSize: 13, color: Colors.grey))),
-                      Expanded(flex: 2, child: Text('${p.opening}', style: const TextStyle(fontSize: 13))),
-                      Expanded(flex: 2, child: Text('${p.added}', style: const TextStyle(fontSize: 13))),
+                      Expanded(flex: 2, child: Text(p.unit.isEmpty ? '-' : p.unit, style: TextStyle(fontSize: AppFontSize.f13, color: context.colors.textHint))),
+                      Expanded(flex: 2, child: Text('${p.opening}', style: const TextStyle(fontSize: AppFontSize.f13))),
+                      Expanded(flex: 2, child: Text('${p.added}', style: const TextStyle(fontSize: AppFontSize.f13))),
                       Expanded(
                         flex: 2,
                         child: Tooltip(
@@ -576,25 +573,25 @@ class _ReportTabbedContentState extends State<ReportTabbedContent> with SingleTi
                               Text(
                                 p.adjustment == 0 ? '-' : '${p.adjustment > 0 ? '+' : ''}${p.adjustment}',
                                 style: TextStyle(
-                                    fontSize: 13,
-                                    color: p.adjustment == 0 ? null : Colors.orange[800],
-                                    fontWeight: p.adjustment == 0 ? FontWeight.normal : FontWeight.w600),
+                                    fontSize: AppFontSize.f13,
+                                    color: p.adjustment == 0 ? null : context.colors.warningStrong,
+                                    fontWeight: p.adjustment == 0 ? AppFontWeight.regular : AppFontWeight.semibold),
                               ),
                               if (p.adjustmentDetail != null) ...[
-                                const SizedBox(width: 3),
-                                Icon(Icons.info_outline, size: 12, color: Colors.grey[500]),
+                                const SizedBox(width: AppSpacing.s3),
+                                Icon(Icons.info_outline, size: AppIconSize.i12, color: context.colors.textHint),
                               ],
                             ],
                           ),
                         ),
                       ),
-                      Expanded(flex: 2, child: Text('${p.sold}', style: const TextStyle(fontSize: 13))),
-                      Expanded(flex: 3, child: Text('${p.expectedClosing}', style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600))),
+                      Expanded(flex: 2, child: Text('${p.sold}', style: const TextStyle(fontSize: AppFontSize.f13))),
+                      Expanded(flex: 3, child: Text('${p.expectedClosing}', style: const TextStyle(fontSize: AppFontSize.f13, fontWeight: AppFontWeight.semibold))),
                     ],
                   ),
                 ),
               const Divider(height: 1),
-              const SizedBox(height: 8),
+              const SizedBox(height: AppSpacing.s8),
               _statRow('Total Units Sold', '${report.productMovement.fold(0, (sum, p) => sum + p.sold)}', bold: true),
             ],
           ],
@@ -615,9 +612,9 @@ class _ReportTabbedContentState extends State<ReportTabbedContent> with SingleTi
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             _sectionHeader(Icons.fact_check_outlined, 'Expected vs Physical Stock'),
-            const SizedBox(height: 4),
-            Text('Watch-listed products only.', style: TextStyle(fontSize: 12, color: Colors.grey[600])),
-            const SizedBox(height: 10),
+            const SizedBox(height: AppSpacing.s4),
+            Text('Watch-listed products only.', style: TextStyle(fontSize: AppFontSize.f12, color: context.colors.textMuted)),
+            const SizedBox(height: AppSpacing.s10),
             if (watchlisted.isEmpty)
               _emptyState('No watch-listed products for this facility.')
             else if (!isSubmitted)
@@ -637,32 +634,32 @@ class _ReportTabbedContentState extends State<ReportTabbedContent> with SingleTi
     final variance = p.variance ?? 0;
     final hasVariance = variance != 0;
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 8),
+      padding: const EdgeInsets.symmetric(vertical: AppSpacing.s8),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
-              Expanded(flex: 3, child: Text(p.name, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w500))),
-              Expanded(flex: 2, child: Text('${p.expectedClosing}', style: const TextStyle(fontSize: 13))),
-              Expanded(flex: 2, child: Text('${p.physicalCount ?? '-'}', style: const TextStyle(fontSize: 13))),
+              Expanded(flex: 3, child: Text(p.name, style: const TextStyle(fontSize: AppFontSize.f13, fontWeight: AppFontWeight.medium))),
+              Expanded(flex: 2, child: Text('${p.expectedClosing}', style: const TextStyle(fontSize: AppFontSize.f13))),
+              Expanded(flex: 2, child: Text('${p.physicalCount ?? '-'}', style: const TextStyle(fontSize: AppFontSize.f13))),
               Expanded(
                 flex: 2,
                 child: Text(hasVariance ? '${variance > 0 ? '+' : ''}$variance' : '0',
-                    style: TextStyle(fontSize: 13, color: hasVariance ? Colors.red[700] : Colors.black87, fontWeight: FontWeight.w600)),
+                    style: TextStyle(fontSize: AppFontSize.f13, color: hasVariance ? context.colors.dangerStrong : context.colors.textPrimary, fontWeight: AppFontWeight.semibold)),
               ),
               Expanded(
                 flex: 2,
                 child: hasVariance
-                    ? Row(children: [Icon(Icons.warning_amber_rounded, size: 14, color: Colors.red[700]), const SizedBox(width: 3), Text('Variance', style: TextStyle(fontSize: 12, color: Colors.red[700]))])
-                    : Row(children: [Icon(Icons.check_circle_outline, size: 14, color: Colors.green[600]), const SizedBox(width: 3), Text('Match', style: TextStyle(fontSize: 12, color: Colors.green[700]))]),
+                    ? Row(children: [Icon(Icons.warning_amber_rounded, size: AppIconSize.i14, color: context.colors.dangerStrong), const SizedBox(width: AppSpacing.s3), Text('Variance', style: TextStyle(fontSize: AppFontSize.f12, color: context.colors.dangerStrong))])
+                    : Row(children: [Icon(Icons.check_circle_outline, size: AppIconSize.i14, color: context.colors.success), const SizedBox(width: AppSpacing.s3), Text('Match', style: TextStyle(fontSize: AppFontSize.f12, color: context.colors.successStrong))]),
               ),
             ],
           ),
           if (hasVariance && (p.varianceReason ?? '').isNotEmpty)
             Padding(
-              padding: const EdgeInsets.only(top: 4),
-              child: Text('Reason: ${p.varianceReason}', style: TextStyle(fontSize: 11.5, color: Colors.grey[600], fontStyle: FontStyle.italic)),
+              padding: const EdgeInsets.only(top: AppSpacing.s4),
+              child: Text('Reason: ${p.varianceReason}', style: TextStyle(fontSize: AppFontSize.f11_5, color: context.colors.textMuted, fontStyle: FontStyle.italic)),
             ),
         ],
       ),
@@ -678,20 +675,20 @@ class _ReportTabbedContentState extends State<ReportTabbedContent> with SingleTi
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             _sectionHeader(Icons.people_alt_outlined, 'Debt Activity'),
-            const SizedBox(height: 10),
+            const SizedBox(height: AppSpacing.s10),
             _statRow('New debt today', Money.symbolDecimal(report.newDebtValue)),
             _statRow('Repayments collected', Money.symbolDecimal(report.repaymentsValue)),
             _statRow('Outstanding change', Money.symbolDecimal(report.outstandingChange), bold: true),
           ],
         ),
       ),
-      const SizedBox(height: 16),
+      const SizedBox(height: AppSpacing.s16),
       _card(
         Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             _sectionHeader(Icons.receipt_long_outlined, 'By Customer'),
-            const SizedBox(height: 8),
+            const SizedBox(height: AppSpacing.s8),
             if (report.clientDebtEntries.isEmpty)
               _emptyState('No debt activity today.')
             else ...[
@@ -699,14 +696,14 @@ class _ReportTabbedContentState extends State<ReportTabbedContent> with SingleTi
               const Divider(height: 1),
               for (final c in report.clientDebtEntries)
                 Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 8),
+                  padding: const EdgeInsets.symmetric(vertical: AppSpacing.s8),
                   child: Row(
                     children: [
-                      Expanded(flex: 3, child: Text(c.clientName, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w500))),
-                      Expanded(flex: 2, child: Text(Money.decimal(c.openingDebt), style: const TextStyle(fontSize: 12.5))),
-                      Expanded(flex: 2, child: Text(Money.decimal(c.newDebt), style: const TextStyle(fontSize: 12.5))),
-                      Expanded(flex: 2, child: Text(Money.decimal(c.repayment), style: const TextStyle(fontSize: 12.5))),
-                      Expanded(flex: 2, child: Text(Money.decimal(c.closingDebt), style: const TextStyle(fontSize: 12.5, fontWeight: FontWeight.w600))),
+                      Expanded(flex: 3, child: Text(c.clientName, style: const TextStyle(fontSize: AppFontSize.f13, fontWeight: AppFontWeight.medium))),
+                      Expanded(flex: 2, child: Text(Money.decimal(c.openingDebt), style: const TextStyle(fontSize: AppFontSize.f12_5))),
+                      Expanded(flex: 2, child: Text(Money.decimal(c.newDebt), style: const TextStyle(fontSize: AppFontSize.f12_5))),
+                      Expanded(flex: 2, child: Text(Money.decimal(c.repayment), style: const TextStyle(fontSize: AppFontSize.f12_5))),
+                      Expanded(flex: 2, child: Text(Money.decimal(c.closingDebt), style: const TextStyle(fontSize: AppFontSize.f12_5, fontWeight: AppFontWeight.semibold))),
                     ],
                   ),
                 ),
@@ -726,7 +723,7 @@ class _ReportTabbedContentState extends State<ReportTabbedContent> with SingleTi
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             _sectionHeader(Icons.receipt_long_outlined, 'Expenses Recorded'),
-            const SizedBox(height: 8),
+            const SizedBox(height: AppSpacing.s8),
             if (report.expenseLineItems.isEmpty)
               _emptyState('No expenses recorded today.')
             else ...[
@@ -734,18 +731,18 @@ class _ReportTabbedContentState extends State<ReportTabbedContent> with SingleTi
               const Divider(height: 1),
               for (final e in report.expenseLineItems)
                 Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 8),
+                  padding: const EdgeInsets.symmetric(vertical: AppSpacing.s8),
                   child: Row(
                     children: [
-                      Expanded(flex: 2, child: Text(AppDateFormat.time24.format(e.time), style: const TextStyle(fontSize: 12.5))),
-                      Expanded(flex: 4, child: Text(e.description, style: const TextStyle(fontSize: 12.5))),
-                      Expanded(flex: 3, child: Text(e.category, style: const TextStyle(fontSize: 12.5))),
-                      Expanded(flex: 2, child: Text(Money.decimal(e.amount), style: const TextStyle(fontSize: 12.5, fontWeight: FontWeight.w600))),
+                      Expanded(flex: 2, child: Text(AppDateFormat.time24.format(e.time), style: const TextStyle(fontSize: AppFontSize.f12_5))),
+                      Expanded(flex: 4, child: Text(e.description, style: const TextStyle(fontSize: AppFontSize.f12_5))),
+                      Expanded(flex: 3, child: Text(e.category, style: const TextStyle(fontSize: AppFontSize.f12_5))),
+                      Expanded(flex: 2, child: Text(Money.decimal(e.amount), style: const TextStyle(fontSize: AppFontSize.f12_5, fontWeight: AppFontWeight.semibold))),
                     ],
                   ),
                 ),
               const Divider(height: 1),
-              const SizedBox(height: 8),
+              const SizedBox(height: AppSpacing.s8),
               _statRow('Total Expenses', Money.symbolDecimal(report.totalExpenses), bold: true),
             ],
           ],
@@ -768,10 +765,10 @@ class _ReportTabbedContentState extends State<ReportTabbedContent> with SingleTi
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             _sectionHeader(Icons.sync_alt_outlined, 'All Transactions'),
-            const SizedBox(height: 4),
+            const SizedBox(height: AppSpacing.s4),
             Text('Income and expenses recorded directly, separate from sales and service revenue.',
-                style: TextStyle(fontSize: 12, color: Colors.grey[600])),
-            const SizedBox(height: 10),
+                style: TextStyle(fontSize: AppFontSize.f12, color: context.colors.textMuted)),
+            const SizedBox(height: AppSpacing.s10),
             if (combined.isEmpty)
               _emptyState('No transactions recorded today.')
             else ...[
@@ -779,27 +776,27 @@ class _ReportTabbedContentState extends State<ReportTabbedContent> with SingleTi
               const Divider(height: 1),
               for (final entry in combined)
                 Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 8),
+                  padding: const EdgeInsets.symmetric(vertical: AppSpacing.s8),
                   child: Row(
                     children: [
-                      Expanded(flex: 2, child: Text(AppDateFormat.time24.format(entry.item.time), style: const TextStyle(fontSize: 12.5))),
-                      Expanded(flex: 3, child: Text(entry.item.description, style: const TextStyle(fontSize: 12.5))),
-                      Expanded(flex: 2, child: Text(entry.item.category, style: const TextStyle(fontSize: 12.5))),
+                      Expanded(flex: 2, child: Text(AppDateFormat.time24.format(entry.item.time), style: const TextStyle(fontSize: AppFontSize.f12_5))),
+                      Expanded(flex: 3, child: Text(entry.item.description, style: const TextStyle(fontSize: AppFontSize.f12_5))),
+                      Expanded(flex: 2, child: Text(entry.item.category, style: const TextStyle(fontSize: AppFontSize.f12_5))),
                       Expanded(
                         flex: 2,
                         child: Text(entry.isExpense ? 'Expense' : 'Other Income',
-                            style: TextStyle(fontSize: 12, color: entry.isExpense ? Colors.red[700] : Colors.green[700])),
+                            style: TextStyle(fontSize: AppFontSize.f12, color: entry.isExpense ? context.colors.dangerStrong : context.colors.successStrong)),
                       ),
                       Expanded(
                         flex: 2,
                         child: Text('${entry.isExpense ? '-' : '+'}${Money.decimal(entry.item.amount)}',
-                            style: TextStyle(fontSize: 12.5, fontWeight: FontWeight.w600, color: entry.isExpense ? Colors.red[700] : Colors.green[700])),
+                            style: TextStyle(fontSize: AppFontSize.f12_5, fontWeight: AppFontWeight.semibold, color: entry.isExpense ? context.colors.dangerStrong : context.colors.successStrong)),
                       ),
                     ],
                   ),
                 ),
               const Divider(height: 1),
-              const SizedBox(height: 8),
+              const SizedBox(height: AppSpacing.s8),
               _statRow('Other Income', Money.symbolDecimal(report.totalOtherIncome)),
               _statRow('Expenses', Money.symbolDecimal(report.totalExpenses), bold: true),
             ],
@@ -842,11 +839,11 @@ class _ReportTabbedContentState extends State<ReportTabbedContent> with SingleTi
   Color _activityColor(String actionType) {
     switch (actionType.toLowerCase()) {
       case 'inventory move':
-        return Colors.blue;
+        return context.colors.info;
       case 'products':
-        return Colors.green;
+        return context.colors.success;
       case 'sales':
-        return warmAmber;
+        return context.colors.accent;
       case 'services':
         return Colors.purple;
       case 'transactions':
@@ -854,13 +851,13 @@ class _ReportTabbedContentState extends State<ReportTabbedContent> with SingleTi
       case 'clients':
         return Colors.teal;
       case 'debtors':
-        return Colors.orange;
+        return context.colors.warning;
       case 'settings':
-        return Colors.grey;
+        return context.colors.textHint;
       case 'admin':
-        return Colors.red;
+        return context.colors.danger;
       default:
-        return primaryDeepGreen;
+        return context.colors.primary;
     }
   }
 
@@ -871,9 +868,9 @@ class _ReportTabbedContentState extends State<ReportTabbedContent> with SingleTi
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             _sectionHeader(Icons.history, 'Activity Log'),
-            const SizedBox(height: 4),
-            Text('Everything recorded today, in order.', style: TextStyle(fontSize: 12, color: Colors.grey[600])),
-            const SizedBox(height: 10),
+            const SizedBox(height: AppSpacing.s4),
+            Text('Everything recorded today, in order.', style: TextStyle(fontSize: AppFontSize.f12, color: context.colors.textMuted)),
+            const SizedBox(height: AppSpacing.s10),
             if (!report.activityLogIncluded)
               _emptyState('Not included - this draft was generated by an assistant, who can only see their own '
                   'activity. Delete the draft and generate it again for the full log.')
@@ -893,26 +890,26 @@ class _ReportTabbedContentState extends State<ReportTabbedContent> with SingleTi
   Widget _buildActivityRow(ActivityLogEntry entry) {
     final color = _activityColor(entry.actionType);
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 8),
+      padding: const EdgeInsets.symmetric(vertical: AppSpacing.s8),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Expanded(
             flex: 1,
-            child: Text(AppDateFormat.time24.format(entry.time), style: const TextStyle(fontSize: 12.5, fontWeight: FontWeight.w600)),
+            child: Text(AppDateFormat.time24.format(entry.time), style: const TextStyle(fontSize: AppFontSize.f12_5, fontWeight: AppFontWeight.semibold)),
           ),
           Expanded(
             flex: 2,
             child: Row(
               children: [
-                Icon(_activityIcon(entry.actionType), size: 14, color: color),
-                const SizedBox(width: 6),
-                Flexible(child: Text(entry.actionType, style: TextStyle(fontSize: 12, color: color), overflow: TextOverflow.ellipsis)),
+                Icon(_activityIcon(entry.actionType), size: AppIconSize.i14, color: color),
+                const SizedBox(width: AppSpacing.s6),
+                Flexible(child: Text(entry.actionType, style: TextStyle(fontSize: AppFontSize.f12, color: color), overflow: TextOverflow.ellipsis)),
               ],
             ),
           ),
-          Expanded(flex: 4, child: Text(entry.description, style: const TextStyle(fontSize: 12.5))),
-          Expanded(flex: 2, child: Text(entry.userName, style: TextStyle(fontSize: 12, color: Colors.grey[600]))),
+          Expanded(flex: 4, child: Text(entry.description, style: const TextStyle(fontSize: AppFontSize.f12_5))),
+          Expanded(flex: 2, child: Text(entry.userName, style: TextStyle(fontSize: AppFontSize.f12, color: context.colors.textMuted))),
         ],
       ),
     );
@@ -943,7 +940,7 @@ class _ReportTabbedContentState extends State<ReportTabbedContent> with SingleTi
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               _sectionHeader(icon, title),
-              const SizedBox(height: 10),
+              const SizedBox(height: AppSpacing.s10),
               if (byMethod.isEmpty)
                 _emptyState(emptyText)
               else
@@ -961,10 +958,10 @@ class _ReportTabbedContentState extends State<ReportTabbedContent> with SingleTi
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             _sectionHeader(Icons.credit_card_outlined, 'Combined - All Payment Methods'),
-            const SizedBox(height: 4),
+            const SizedBox(height: AppSpacing.s4),
             Text('Sales, services, debt repayments, and other income together, by how it was actually received.',
-                style: TextStyle(fontSize: 12, color: Colors.grey[600])),
-            const SizedBox(height: 10),
+                style: TextStyle(fontSize: AppFontSize.f12, color: context.colors.textMuted)),
+            const SizedBox(height: AppSpacing.s10),
             if (combined.isEmpty)
               _emptyState('No payments recorded today.')
             else ...[
@@ -975,24 +972,24 @@ class _ReportTabbedContentState extends State<ReportTabbedContent> with SingleTi
           ],
         ),
       ),
-      const SizedBox(height: 16),
+      const SizedBox(height: AppSpacing.s16),
       IntrinsicHeight(
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             categoryCard(Icons.shopping_cart_outlined, 'Sales', report.salesByPaymentMethod, 'No sales today.'),
-            const SizedBox(width: 16),
+            const SizedBox(width: AppSpacing.s16),
             categoryCard(Icons.medical_services_outlined, 'Services', report.servicesByPaymentMethod, 'No services today.'),
           ],
         ),
       ),
-      const SizedBox(height: 16),
+      const SizedBox(height: AppSpacing.s16),
       IntrinsicHeight(
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             categoryCard(Icons.people_alt_outlined, 'Debt Repayments', report.repaymentsByPaymentMethod, 'No repayments today.'),
-            const SizedBox(width: 16),
+            const SizedBox(width: AppSpacing.s16),
             categoryCard(Icons.savings_outlined, 'Other Income', report.otherIncomeByPaymentMethod, 'No other income today.'),
           ],
         ),
