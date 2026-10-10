@@ -43,6 +43,12 @@ User-facing "VetBiz Pro" now reads `AppInfo.name` (titles, Settings, support lin
 - **Two names in use**: "VetBiz Pro" and "VetBiz Pro System" (login header, register header, © line). One name?
 - **The version** "v1.0.0" is typed in Settings (`settings_screen.dart:239`); it could come from the build (pubspec) instead.
 
+### Raised in step 2D, batch D4
+
+- **Upload overlay `Colors.black38`**, `lib/screens/settings/business_profile_screen.dart` (over the logo while it uploads): a scrim, but 0.38 has no AppAlpha step and no snap rule. Kept. `scrim` at `a40`?
+- **`FirestoreErrorView` shows raw Firestore text** (`lib/widgets/firestore_error_view.dart`, used by Payments, Team Members and others): by design it shows the error so the missing-index link can be opened, but any other error also appears raw. Show `FriendlyError.messageFor(error)` when there is no index link? It is a shared widget, so this changes every screen that uses it.
+- **`MembershipService.errorMessage` falls back to `error.toString()`** (`lib/services/membership_service.dart`, 9 callers, e.g. the invite dialog): anything that isn't a Functions error reaches the screen raw. Route that fallback through `FriendlyError.messageFor`?
+
 ## Decided
 
 ### D3 follow-up (decided after batch D3; done in D3g)

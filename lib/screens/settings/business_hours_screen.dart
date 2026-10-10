@@ -3,8 +3,11 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../../providers/facility_provider.dart';
-import '../../theme/app_palette.dart';
 import '../../data/collections.dart';
+import '../../theme/app_text.dart';
+import '../../theme/app_dimens.dart';
+import '../../theme/theme_context.dart';
+import '../../ui/feedback/app_feedback.dart';
 
 class BusinessHoursScreen extends StatefulWidget {
   const BusinessHoursScreen({super.key});
@@ -14,7 +17,6 @@ class BusinessHoursScreen extends StatefulWidget {
 }
 
 class _BusinessHoursScreenState extends State<BusinessHoursScreen> {
-  static const Color primaryDeepGreen = AppPalette.primary;
 
   TimeOfDay _weekdayTime = const TimeOfDay(hour: 18, minute: 0);
   bool _weekdayClosed = false;
@@ -84,15 +86,9 @@ class _BusinessHoursScreenState extends State<BusinessHoursScreen> {
         },
       });
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Business hours saved'), backgroundColor: Colors.green),
-      );
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Could not save: $e'), backgroundColor: Colors.red),
-        );
-      }
+      AppFeedback.success('Business hours saved');
+    } catch (e, st) {
+      AppFeedback.error("Couldn't save the business hours", error: e, stackTrace: st);
     } finally {
       if (mounted) setState(() => _isSaving = false);
     }
@@ -103,14 +99,14 @@ class _BusinessHoursScreenState extends State<BusinessHoursScreen> {
     return Scaffold(
       appBar: AppBar(
         centerTitle: true,
-        title: const Text('Business Hours', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 20)),
-        backgroundColor: primaryDeepGreen,
-        foregroundColor: Colors.white,
-        elevation: 0,
+        title: const Text('Business Hours', style: TextStyle(fontWeight: AppFontWeight.semibold, fontSize: AppFontSize.f20)),
+        backgroundColor: context.colors.primary,
+        foregroundColor: context.colors.onPrimary,
+        elevation: AppElevation.e0,
       ),
       body: Center(
         child: SingleChildScrollView(
-      padding: const EdgeInsets.all(24),
+      padding: const EdgeInsets.all(AppSpacing.s24),
       child: ConstrainedBox(
         constraints: const BoxConstraints(maxWidth: 700),
         child: Column(
@@ -118,9 +114,9 @@ class _BusinessHoursScreenState extends State<BusinessHoursScreen> {
           children: [
             Text(
               'Sets when the "Generate Today\'s Report" button becomes active in View Reports.',
-              style: TextStyle(fontSize: 13, color: Colors.grey[600]),
+              style: TextStyle(fontSize: AppFontSize.f13, color: context.colors.textMuted),
             ),
-            const SizedBox(height: 20),
+            const SizedBox(height: AppSpacing.s20),
             _dayGroupCard(
               title: 'Weekdays (Mon–Fri)',
               time: _weekdayTime,
@@ -128,7 +124,7 @@ class _BusinessHoursScreenState extends State<BusinessHoursScreen> {
               onTimeTap: () => _pickTime(_weekdayTime, (t) => setState(() => _weekdayTime = t)),
               onClosedChanged: (v) => setState(() => _weekdayClosed = v),
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: AppSpacing.s12),
             _dayGroupCard(
               title: 'Saturday',
               time: _saturdayTime,
@@ -136,7 +132,7 @@ class _BusinessHoursScreenState extends State<BusinessHoursScreen> {
               onTimeTap: () => _pickTime(_saturdayTime, (t) => setState(() => _saturdayTime = t)),
               onClosedChanged: (v) => setState(() => _saturdayClosed = v),
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: AppSpacing.s12),
             _dayGroupCard(
               title: 'Sunday',
               time: _sundayTime,
@@ -144,13 +140,13 @@ class _BusinessHoursScreenState extends State<BusinessHoursScreen> {
               onTimeTap: () => _pickTime(_sundayTime, (t) => setState(() => _sundayTime = t)),
               onClosedChanged: (v) => setState(() => _sundayClosed = v),
             ),
-            const SizedBox(height: 20),
+            const SizedBox(height: AppSpacing.s20),
             Container(
-              padding: const EdgeInsets.all(16),
+              padding: const EdgeInsets.all(AppSpacing.s16),
               decoration: BoxDecoration(
-                color: Colors.orange.withValues(alpha: 0.06),
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: Colors.orange.withValues(alpha: 0.25)),
+                color: context.colors.warning.withValues(alpha: AppAlpha.a05),
+                borderRadius: BorderRadius.circular(AppRadius.r12),
+                border: Border.all(color: context.colors.warning.withValues(alpha: AppAlpha.a30)),
               ),
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -159,39 +155,39 @@ class _BusinessHoursScreenState extends State<BusinessHoursScreen> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const Text('Allow anytime', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
-                        const SizedBox(height: 4),
+                        const Text('Allow anytime', style: TextStyle(fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f14)),
+                        const SizedBox(height: AppSpacing.s4),
                         Text(
                           'Emergency override - makes the report button active regardless of the schedule above. '
                           'Turn this on for an early closure, and back off once things return to normal.',
-                          style: TextStyle(fontSize: 12, color: Colors.grey[700]),
+                          style: TextStyle(fontSize: AppFontSize.f12, color: context.colors.textSoft),
                         ),
                       ],
                     ),
                   ),
                   Switch(
                     value: _allowAnytime,
-                    activeColor: Colors.orange[800],
+                    activeColor: context.colors.warningStrong,
                     onChanged: (v) => setState(() => _allowAnytime = v),
                   ),
                 ],
               ),
             ),
-            const SizedBox(height: 24),
+            const SizedBox(height: AppSpacing.s24),
             SizedBox(
               width: double.infinity,
               child: ElevatedButton(
                 onPressed: _isSaving ? null : _save,
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: primaryDeepGreen,
-                  foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(vertical: 14),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                  backgroundColor: context.colors.primary,
+                  foregroundColor: context.colors.onPrimary,
+                  padding: const EdgeInsets.symmetric(vertical: AppSpacing.s14),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadius.r10)),
                 ),
                 child: _isSaving
-                    ? const SizedBox(
-                        width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
-                    : const Text('Save Business Hours', style: TextStyle(fontWeight: FontWeight.bold)),
+                    ? SizedBox(
+                        width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2, color: context.colors.onPrimary))
+                    : const Text('Save Business Hours', style: TextStyle(fontWeight: AppFontWeight.bold)),
               ),
             ),
           ],
@@ -210,11 +206,11 @@ class _BusinessHoursScreenState extends State<BusinessHoursScreen> {
     required ValueChanged<bool> onClosedChanged,
   }) {
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(AppSpacing.s16),
       decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.grey.withValues(alpha: 0.25)),
+        color: context.colors.surface,
+        borderRadius: BorderRadius.circular(AppRadius.r12),
+        border: Border.all(color: context.colors.textHint.withValues(alpha: AppAlpha.a30)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -222,27 +218,27 @@ class _BusinessHoursScreenState extends State<BusinessHoursScreen> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(title, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
+              Text(title, style: const TextStyle(fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f14)),
               Row(
                 children: [
-                  Text('Closed all day', style: TextStyle(fontSize: 12.5, color: Colors.grey[700])),
-                  Switch(value: closed, activeColor: primaryDeepGreen, onChanged: onClosedChanged),
+                  Text('Closed all day', style: TextStyle(fontSize: AppFontSize.f12_5, color: context.colors.textSoft)),
+                  Switch(value: closed, activeColor: context.colors.primary, onChanged: onClosedChanged),
                 ],
               ),
             ],
           ),
           if (!closed) ...[
-            const SizedBox(height: 4),
+            const SizedBox(height: AppSpacing.s4),
             OutlinedButton.icon(
               onPressed: onTimeTap,
-              icon: Icon(Icons.access_time, size: 16, color: primaryDeepGreen),
-              label: Text('Closes at ${time.format(context)}', style: TextStyle(color: primaryDeepGreen)),
-              style: OutlinedButton.styleFrom(side: BorderSide(color: primaryDeepGreen.withValues(alpha: 0.4))),
+              icon: Icon(Icons.access_time, size: AppIconSize.i16, color: context.colors.primary),
+              label: Text('Closes at ${time.format(context)}', style: TextStyle(color: context.colors.primary)),
+              style: OutlinedButton.styleFrom(side: BorderSide(color: context.colors.primary.withValues(alpha: AppAlpha.a40))),
             ),
           ] else
             Padding(
-              padding: const EdgeInsets.only(top: 4),
-              child: Text('No closing time needed - closed all day.', style: TextStyle(fontSize: 12, color: Colors.grey[500])),
+              padding: const EdgeInsets.only(top: AppSpacing.s4),
+              child: Text('No closing time needed - closed all day.', style: TextStyle(fontSize: AppFontSize.f12, color: context.colors.textHint)),
             ),
         ],
       ),

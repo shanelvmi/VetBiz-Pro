@@ -6,8 +6,11 @@ import 'package:firebase_storage/firebase_storage.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 import '../../providers/facility_provider.dart';
-import '../../theme/app_palette.dart';
 import '../../data/collections.dart';
+import '../../theme/app_text.dart';
+import '../../theme/app_dimens.dart';
+import '../../theme/theme_context.dart';
+import '../../ui/feedback/app_feedback.dart';
 
 /// A dedicated home for facility-level branding (currently just the
 /// logo) - built for discoverability, since the drawer's own
@@ -23,9 +26,6 @@ class BusinessProfileScreen extends StatefulWidget {
 }
 
 class _BusinessProfileScreenState extends State<BusinessProfileScreen> {
-  static const Color primaryColor = AppPalette.primary;
-  static const Color warmAmber = AppPalette.accent;
-  static const Color backgroundColor = AppPalette.background;
 
   final ImagePicker _picker = ImagePicker();
   Uint8List? _pendingLogoBytes;
@@ -66,19 +66,15 @@ class _BusinessProfileScreenState extends State<BusinessProfileScreen> {
 
       if (mounted) {
         setState(() => _isUploading = false);
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Logo updated'), backgroundColor: Colors.green),
-        );
+        AppFeedback.success('Logo updated');
       }
-    } catch (e) {
+    } catch (e, st) {
       if (mounted) {
         setState(() {
           _isUploading = false;
           _pendingLogoBytes = null;
         });
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Could not update logo: $e'), backgroundColor: Colors.redAccent),
-        );
+        AppFeedback.error("Couldn't update the logo", error: e, stackTrace: st);
       }
     }
   }
@@ -91,28 +87,28 @@ class _BusinessProfileScreenState extends State<BusinessProfileScreen> {
     final logoUrl = selectedFacility?['logoUrl'];
 
     return Scaffold(
-      backgroundColor: backgroundColor,
+      backgroundColor: context.colors.background,
       appBar: AppBar(
         title: const Text('Business Profile'),
         centerTitle: true,
-        backgroundColor: primaryColor,
-        foregroundColor: Colors.white,
+        backgroundColor: context.colors.primary,
+        foregroundColor: context.colors.onPrimary,
       ),
       body: Center(
         child: ConstrainedBox(
           constraints: const BoxConstraints(maxWidth: 500),
           child: Padding(
-            padding: const EdgeInsets.all(24),
+            padding: const EdgeInsets.all(AppSpacing.s24),
             child: Column(
               children: [
-                Text(facilityName, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
-                const SizedBox(height: 24),
+                Text(facilityName, style: const TextStyle(fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f18)),
+                const SizedBox(height: AppSpacing.s24),
                 Stack(
                   alignment: Alignment.bottomRight,
                   children: [
                     CircleAvatar(
                       radius: 60,
-                      backgroundColor: Colors.grey.shade200,
+                      backgroundColor: context.colors.divider,
                       backgroundImage: _pendingLogoBytes != null
                           ? MemoryImage(_pendingLogoBytes!)
                           : (logoUrl != null
@@ -120,42 +116,42 @@ class _BusinessProfileScreenState extends State<BusinessProfileScreen> {
                               : const AssetImage('assets/vetbiz_pro_logo.png') as ImageProvider),
                     ),
                     if (_isUploading)
-                      const Positioned.fill(
+                      Positioned.fill(
                         child: CircleAvatar(
                           radius: 60,
                           backgroundColor: Colors.black38,
-                          child: CircularProgressIndicator(color: Colors.white),
+                          child: CircularProgressIndicator(color: context.colors.onPrimary),
                         ),
                       ),
                     Container(
-                      padding: const EdgeInsets.all(6),
+                      padding: const EdgeInsets.all(AppSpacing.s6),
                       decoration: BoxDecoration(
-                        color: warmAmber,
+                        color: context.colors.accent,
                         shape: BoxShape.circle,
-                        border: Border.all(color: backgroundColor, width: 2),
+                        border: Border.all(color: context.colors.background, width: 2),
                       ),
-                      child: const Icon(Icons.camera_alt, size: 16, color: Colors.white),
+                      child: Icon(Icons.camera_alt, size: AppIconSize.i16, color: context.colors.onPrimary),
                     ),
                   ],
                 ),
-                const SizedBox(height: 16),
+                const SizedBox(height: AppSpacing.s16),
                 Text(
                   'This logo appears on the dashboard, receipts, and anywhere your facility is shown throughout the app.',
                   textAlign: TextAlign.center,
-                  style: TextStyle(color: Colors.grey[600], fontSize: 13),
+                  style: TextStyle(color: context.colors.textMuted, fontSize: AppFontSize.f13),
                 ),
-                const SizedBox(height: 24),
+                const SizedBox(height: AppSpacing.s24),
                 ElevatedButton.icon(
                   onPressed: _isUploading ? null : _changeLogo,
                   icon: const Icon(Icons.upload),
                   label: Text(logoUrl != null ? 'Change Logo' : 'Upload Logo'),
                   style: ButtonStyle(
                     backgroundColor: WidgetStateProperty.resolveWith<Color>((states) {
-                      if (states.contains(WidgetState.hovered)) return warmAmber;
-                      return primaryColor;
+                      if (states.contains(WidgetState.hovered)) return context.colors.accent;
+                      return context.colors.primary;
                     }),
-                    foregroundColor: WidgetStateProperty.all(Colors.white),
-                    padding: WidgetStateProperty.all(const EdgeInsets.symmetric(horizontal: 24, vertical: 12)),
+                    foregroundColor: WidgetStateProperty.all(context.colors.onPrimary),
+                    padding: WidgetStateProperty.all(const EdgeInsets.symmetric(horizontal: AppSpacing.s24, vertical: AppSpacing.s12)),
                   ),
                 ),
               ],
