@@ -48,6 +48,10 @@ User-facing "VetBiz Pro" now reads `AppInfo.name` (titles, Settings, support lin
 - **Upload overlay `Colors.black38`**, `lib/screens/settings/business_profile_screen.dart` (over the logo while it uploads): a scrim, but 0.38 has no AppAlpha step and no snap rule. Kept. `scrim` at `a40`?
 - **`FirestoreErrorView` shows raw Firestore text** (`lib/widgets/firestore_error_view.dart`, used by Payments, Team Members and others): by design it shows the error so the missing-index link can be opened, but any other error also appears raw. Show `FriendlyError.messageFor(error)` when there is no index link? It is a shared widget, so this changes every screen that uses it.
 - **`MembershipService.errorMessage` falls back to `error.toString()`** (`lib/services/membership_service.dart`, 9 callers, e.g. the invite dialog): anything that isn't a Functions error reaches the screen raw. Route that fallback through `FriendlyError.messageFor`?
+- **Team role colours**, `lib/screens/admin/manage_assistants_screen.dart` `_roleChip`: Admin = `Colors.indigo`, Co-admin = `Colors.teal`, Assistant = `Colors.blueGrey`, each as a 10% fill with its `shade700` as the label. Spec 4.1 says category colours become roles with exact values. Proposal: `teamAdmin`/`teamAdminStrong`, `teamCoAdmin`/`teamCoAdminStrong`, `teamAssistant`/`teamAssistantStrong` (6 roles). Kept raw until decided. `Colors.blueGrey` is also the Assistant colour in `platform_admin/user_detail_screen.dart`.
+- **Other teal**, same file: the "Reassign" action button (`Colors.teal`) and the empty-team icon (`Colors.teal.shade300`). Teal is also an activity-type colour on four other screens (activity log, dashboard, facility, notifications). Reuse `teamCoAdmin` here, and a separate `chart` role for the activity types?
+- **Border alpha 0.6** (action buttons) and **vertical padding 36** (empty-team state), same file: no AppAlpha step / above the spacing ladder, no snap rule. Kept.
+- **Small dots**, same file: a 6 px `Icons.circle` used as a "·" separator, and a 9 px status dot in the team table (`AppSizes.statusDot` is 8). Snap the 9 px dot to `statusDot`?
 
 ## Decided
 

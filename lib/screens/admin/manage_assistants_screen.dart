@@ -17,11 +17,11 @@ import '../../data/activity_type.dart';
 import '../../config/app_limits.dart';
 import '../../config/app_timeouts.dart';
 import '../../config/app_date_format.dart';
-import '../../theme/app_palette.dart';
 import '../../theme/app_text.dart';
 import '../../theme/app_dimens.dart';
 import '../../theme/theme_context.dart';
 import '../../theme/app_breakpoints.dart';
+import '../../theme/app_motion.dart';
 import '../../ui/feedback/app_feedback.dart';
 
 /// Who someone is on a facility's team, as this screen shows them. Worked out
@@ -49,9 +49,9 @@ class ManageAssistantsScreen extends StatefulWidget {
 }
 
 class _ManageAssistantsScreenState extends State<ManageAssistantsScreen> {
-  final Color primaryColor = AppPalette.primary;
-  final Color backgroundColor = AppPalette.background;
-  final Color accentColor = AppPalette.accent;
+  // The details panel beside the list on wide screens: a size, not spacing.
+  static const double _detailsPanelWidth = 380;
+
 
   late final String adminUid;
   List<String> adminFacilityIds = [];
@@ -977,11 +977,11 @@ class _ManageAssistantsScreenState extends State<ManageAssistantsScreen> {
     final body = Column(
       children: [
         Padding(
-          padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
+          padding: const EdgeInsets.fromLTRB(AppSpacing.s16, AppSpacing.s16, AppSpacing.s16, 0),
           child: _buildCards(all.length, counts),
         ),
         Padding(
-          padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+          padding: const EdgeInsets.fromLTRB(AppSpacing.s16, AppSpacing.s12, AppSpacing.s16, 0),
           child: _buildFilters(facility, hasActiveFilters),
         ),
         Expanded(
@@ -1017,12 +1017,12 @@ class _ManageAssistantsScreenState extends State<ManageAssistantsScreen> {
     final open = selectedDoc; // a final copy, so it can be relied on inside the closure
     return LayoutBuilder(
       builder: (context, constraints) {
-        if (open == null || constraints.maxWidth < 1100) return body;
+        if (open == null || constraints.maxWidth < AppBreakpoints.detailsSidePanel) return body;
         return Row(
           children: [
             Expanded(child: body),
             const VerticalDivider(width: 1),
-            SizedBox(width: 380, child: _buildDetailsPanel(open, showActions: true)),
+            SizedBox(width: _detailsPanelWidth, child: _buildDetailsPanel(open, showActions: true)),
           ],
         );
       },
@@ -1038,7 +1038,7 @@ class _ManageAssistantsScreenState extends State<ManageAssistantsScreen> {
         value: '$totalCount',
         hint: 'Across your facilities',
         icon: Icons.groups_outlined,
-        color: primaryColor,
+        color: context.colors.primary,
         filter: null,
       ),
       _card(
@@ -1073,10 +1073,10 @@ class _ManageAssistantsScreenState extends State<ManageAssistantsScreen> {
           shrinkWrap: true,
           physics: const NeverScrollableScrollPhysics(),
           gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-            crossAxisCount: constraints.maxWidth >= 600 ? 4 : 2,
+            crossAxisCount: constraints.maxWidth >= AppBreakpoints.compact ? 4 : 2,
             mainAxisExtent: 90,
-            crossAxisSpacing: 12,
-            mainAxisSpacing: 12,
+            crossAxisSpacing: AppSpacing.s12,
+            mainAxisSpacing: AppSpacing.s12,
           ),
           children: cards,
         );
@@ -1096,17 +1096,17 @@ class _ManageAssistantsScreenState extends State<ManageAssistantsScreen> {
   }) {
     final selected = filter != null && _statusFilter == filter;
     final shape = RoundedRectangleBorder(
-      borderRadius: BorderRadius.circular(12),
+      borderRadius: BorderRadius.circular(AppRadius.r12),
       side: BorderSide(
-        color: selected ? color.withValues(alpha: 0.7) : Colors.grey.withValues(alpha: 0.15),
+        color: selected ? color.withValues(alpha: AppAlpha.a70) : context.colors.textHint.withValues(alpha: AppAlpha.a15),
         width: selected ? 1.5 : 1,
       ),
     );
     return Material(
-      color: selected ? color.withValues(alpha: 0.06) : Colors.white,
+      color: selected ? color.withValues(alpha: AppAlpha.a05) : context.colors.surface,
       shape: shape,
-      elevation: 1,
-      shadowColor: Colors.black.withValues(alpha: 0.05),
+      elevation: AppElevation.e1,
+      shadowColor: context.colors.shadow.withValues(alpha: AppAlpha.a05),
       child: InkWell(
         customBorder: shape,
         onTap: () => setState(() {
@@ -1114,7 +1114,7 @@ class _ManageAssistantsScreenState extends State<ManageAssistantsScreen> {
           _page = 1;
         }),
         child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+          padding: const EdgeInsets.symmetric(horizontal: AppSpacing.s12, vertical: AppSpacing.s10),
           child: FittedBox(
             fit: BoxFit.scaleDown,
             alignment: Alignment.topLeft,
@@ -1128,16 +1128,16 @@ class _ManageAssistantsScreenState extends State<ManageAssistantsScreen> {
                       width: 26,
                       height: 26,
                       decoration:
-                          BoxDecoration(color: color.withValues(alpha: 0.12), borderRadius: BorderRadius.circular(7)),
-                      child: Icon(icon, color: color, size: 14),
+                          BoxDecoration(color: color.withValues(alpha: AppAlpha.a10), borderRadius: BorderRadius.circular(AppRadius.r7)),
+                      child: Icon(icon, color: color, size: AppIconSize.i14),
                     ),
-                    const SizedBox(width: 8),
-                    Text(value, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                    const SizedBox(width: AppSpacing.s8),
+                    Text(value, style: const TextStyle(fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f16)),
                   ],
                 ),
-                const SizedBox(height: 4),
-                Text(label, style: TextStyle(fontSize: 11.5, color: Colors.grey[600])),
-                Text(hint, style: TextStyle(fontSize: 10.5, color: Colors.grey[400])),
+                const SizedBox(height: AppSpacing.s4),
+                Text(label, style: TextStyle(fontSize: AppFontSize.f11_5, color: context.colors.textMuted)),
+                Text(hint, style: TextStyle(fontSize: AppFontSize.f10_5, color: context.colors.textDisabled)),
               ],
             ),
           ),
@@ -1150,26 +1150,26 @@ class _ManageAssistantsScreenState extends State<ManageAssistantsScreen> {
 
   Widget _buildFilters(String facility, bool hasActiveFilters) {
     final border = OutlineInputBorder(
-      borderRadius: BorderRadius.circular(10),
-      borderSide: BorderSide(color: Colors.grey.withValues(alpha: 0.3)),
+      borderRadius: BorderRadius.circular(AppRadius.r10),
+      borderSide: BorderSide(color: context.colors.textHint.withValues(alpha: AppAlpha.a30)),
     );
 
     final search = TextField(
       controller: _searchController,
       decoration: InputDecoration(
         hintText: 'Search by name, phone or facility...',
-        hintStyle: const TextStyle(fontSize: 13),
-        prefixIcon: const Icon(Icons.search, size: 20),
+        hintStyle: const TextStyle(fontSize: AppFontSize.f13),
+        prefixIcon: const Icon(Icons.search, size: AppIconSize.i20),
         filled: true,
-        fillColor: Colors.white,
+        fillColor: context.colors.surface,
         isDense: true,
-        contentPadding: const EdgeInsets.symmetric(vertical: 12, horizontal: 12),
+        contentPadding: const EdgeInsets.symmetric(vertical: AppSpacing.s12, horizontal: AppSpacing.s12),
         border: border,
         enabledBorder: border,
         suffixIcon: _searchController.text.isEmpty
             ? null
             : IconButton(
-                icon: const Icon(Icons.clear, size: 18),
+                icon: const Icon(Icons.clear, size: AppIconSize.i18),
                 onPressed: () {
                   _searchController.clear();
                   setState(() {
@@ -1191,17 +1191,17 @@ class _ManageAssistantsScreenState extends State<ManageAssistantsScreen> {
 
     return LayoutBuilder(
       builder: (context, constraints) {
-        if (constraints.maxWidth < 640) {
+        if (constraints.maxWidth < AppBreakpoints.filterRow) {
           return Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               search,
               if (showFacility || reset != null) ...[
-                const SizedBox(height: 10),
+                const SizedBox(height: AppSpacing.s10),
                 Row(
                   children: [
                     if (showFacility) Expanded(child: _facilityDropdown(facility, expand: true)) else const Spacer(),
-                    if (reset != null) ...[const SizedBox(width: 6), reset],
+                    if (reset != null) ...[const SizedBox(width: AppSpacing.s6), reset],
                   ],
                 ),
               ],
@@ -1211,8 +1211,8 @@ class _ManageAssistantsScreenState extends State<ManageAssistantsScreen> {
         return Row(
           children: [
             Expanded(flex: 3, child: search),
-            if (showFacility) ...[const SizedBox(width: 10), _facilityDropdown(facility)],
-            if (reset != null) ...[const SizedBox(width: 10), reset],
+            if (showFacility) ...[const SizedBox(width: AppSpacing.s10), _facilityDropdown(facility)],
+            if (reset != null) ...[const SizedBox(width: AppSpacing.s10), reset],
           ],
         );
       },
@@ -1221,19 +1221,19 @@ class _ManageAssistantsScreenState extends State<ManageAssistantsScreen> {
 
   Widget _facilityDropdown(String value, {bool expand = false}) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10),
+      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.s10),
       height: 44,
       decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: Colors.grey.withValues(alpha: 0.3)),
+        color: context.colors.surface,
+        borderRadius: BorderRadius.circular(AppRadius.r10),
+        border: Border.all(color: context.colors.textHint.withValues(alpha: AppAlpha.a30)),
       ),
       child: DropdownButtonHideUnderline(
         child: DropdownButton<String>(
           value: value,
           isExpanded: expand,
-          icon: Icon(Icons.arrow_drop_down, size: 18, color: primaryColor),
-          style: const TextStyle(color: Colors.black87, fontSize: 13),
+          icon: Icon(Icons.arrow_drop_down, size: AppIconSize.i18, color: context.colors.primary),
+          style: TextStyle(color: context.colors.textPrimary, fontSize: AppFontSize.f13),
           items: [
             const DropdownMenuItem(value: 'All', child: Text('Facility: All')),
             ...facilityNames.entries.map(
@@ -1260,12 +1260,12 @@ class _ManageAssistantsScreenState extends State<ManageAssistantsScreen> {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(Icons.groups_outlined, size: 64, color: Colors.grey[400]),
-          const SizedBox(height: 16),
-          Text('No team members yet', style: TextStyle(fontSize: 18, color: Colors.grey[600])),
-          const SizedBox(height: 4),
+          Icon(Icons.groups_outlined, size: AppIconSize.i64, color: context.colors.textDisabled),
+          const SizedBox(height: AppSpacing.s16),
+          Text('No team members yet', style: TextStyle(fontSize: AppFontSize.f18, color: context.colors.textMuted)),
+          const SizedBox(height: AppSpacing.s4),
           Text('Use Invite Assistant to add your first team member.',
-              style: TextStyle(fontSize: 13, color: Colors.grey[500])),
+              style: TextStyle(fontSize: AppFontSize.f13, color: context.colors.textHint)),
         ],
       ),
     );
@@ -1275,27 +1275,27 @@ class _ManageAssistantsScreenState extends State<ManageAssistantsScreen> {
   // than pinned to the bottom of the screen.
   Widget _buildOnlySelfHint() {
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 36),
+      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.s24, vertical: 36),
       child: Center(
         child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 420),
+          constraints: const BoxConstraints(maxWidth: AppSizes.dialogSm),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(Icons.group_add_outlined, size: 44, color: Colors.teal.shade300),
-              const SizedBox(height: 12),
+              Icon(Icons.group_add_outlined, size: AppIconSize.i48, color: Colors.teal.shade300),
+              const SizedBox(height: AppSpacing.s12),
               const Text('No assistants yet',
-                  textAlign: TextAlign.center, style: TextStyle(fontSize: 17, fontWeight: FontWeight.w600)),
-              const SizedBox(height: 6),
+                  textAlign: TextAlign.center, style: TextStyle(fontSize: AppFontSize.f17, fontWeight: AppFontWeight.semibold)),
+              const SizedBox(height: AppSpacing.s6),
               Text(
                 'Use Invite Assistant to add your first team member.',
                 textAlign: TextAlign.center,
-                style: TextStyle(fontSize: 13.5, color: Colors.grey[600]),
+                style: TextStyle(fontSize: AppFontSize.f13_5, color: context.colors.textMuted),
               ),
-              const SizedBox(height: 14),
+              const SizedBox(height: AppSpacing.s14),
               OutlinedButton.icon(
                 onPressed: _startInviteFlow,
-                icon: const Icon(Icons.person_add_alt_1_outlined, size: 18),
+                icon: const Icon(Icons.person_add_alt_1_outlined, size: AppIconSize.i18),
                 label: const Text('Invite Assistant'),
               ),
             ],
@@ -1310,10 +1310,10 @@ class _ManageAssistantsScreenState extends State<ManageAssistantsScreen> {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(Icons.search_off, size: 56, color: Colors.grey[400]),
-          const SizedBox(height: 12),
-          Text('No team members match your filters', style: TextStyle(fontSize: 17, color: Colors.grey[600])),
-          const SizedBox(height: 8),
+          Icon(Icons.search_off, size: AppIconSize.i56, color: context.colors.textDisabled),
+          const SizedBox(height: AppSpacing.s12),
+          Text('No team members match your filters', style: TextStyle(fontSize: AppFontSize.f17, color: context.colors.textMuted)),
+          const SizedBox(height: AppSpacing.s8),
           TextButton(onPressed: _resetFilters, child: const Text('Reset filters')),
         ],
       ),
@@ -1324,11 +1324,11 @@ class _ManageAssistantsScreenState extends State<ManageAssistantsScreen> {
     final extra = showOnlySelfHint ? 1 : 0;
     return LayoutBuilder(
       builder: (context, constraints) {
-        if (constraints.maxWidth < 800) {
+        if (constraints.maxWidth < AppBreakpoints.teamTable) {
           return ListView.separated(
-            padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
+            padding: const EdgeInsets.fromLTRB(AppSpacing.s16, AppSpacing.s12, AppSpacing.s16, AppSpacing.s12),
             itemCount: items.length + extra,
-            separatorBuilder: (context, index) => const SizedBox(height: 10),
+            separatorBuilder: (context, index) => const SizedBox(height: AppSpacing.s10),
             itemBuilder: (context, index) =>
                 index == items.length ? _buildOnlySelfHint() : _buildNarrowCard(items[index]),
           );
@@ -1337,8 +1337,8 @@ class _ManageAssistantsScreenState extends State<ManageAssistantsScreen> {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             Container(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-              decoration: BoxDecoration(border: Border(bottom: BorderSide(color: Colors.grey.withValues(alpha: 0.2)))),
+              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.s16, vertical: AppSpacing.s12),
+              decoration: BoxDecoration(border: Border(bottom: BorderSide(color: context.colors.textHint.withValues(alpha: AppAlpha.a20)))),
               child: Row(
                 children: [
                   _headerCell('User name', flex: 4),
@@ -1353,7 +1353,7 @@ class _ManageAssistantsScreenState extends State<ManageAssistantsScreen> {
             Expanded(
               child: ListView.separated(
                 itemCount: items.length + extra,
-                separatorBuilder: (context, index) => Divider(height: 1, color: Colors.grey.withValues(alpha: 0.12)),
+                separatorBuilder: (context, index) => Divider(height: 1, color: context.colors.textHint.withValues(alpha: AppAlpha.a10)),
                 itemBuilder: (context, index) =>
                     index == items.length ? _buildOnlySelfHint() : _buildRow(items[index]),
               ),
@@ -1367,16 +1367,16 @@ class _ManageAssistantsScreenState extends State<ManageAssistantsScreen> {
   Widget _headerCell(String label, {required int flex}) {
     return Expanded(
       flex: flex,
-      child: Text(label, style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Colors.grey[600])),
+      child: Text(label, style: TextStyle(fontSize: AppFontSize.f12, fontWeight: AppFontWeight.semibold, color: context.colors.textMuted)),
     );
   }
 
   Widget _statusChip(String bucket) {
     final color = _statusColor(bucket);
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-      decoration: BoxDecoration(color: color.withValues(alpha: 0.12), borderRadius: BorderRadius.circular(10)),
-      child: Text(_statusLabel(bucket), style: TextStyle(color: color, fontSize: 11.5, fontWeight: FontWeight.w600)),
+      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.s8, vertical: AppSpacing.s4),
+      decoration: BoxDecoration(color: color.withValues(alpha: AppAlpha.a10), borderRadius: BorderRadius.circular(AppRadius.r10)),
+      child: Text(_statusLabel(bucket), style: TextStyle(color: color, fontSize: AppFontSize.f11_5, fontWeight: AppFontWeight.semibold)),
     );
   }
 
@@ -1396,10 +1396,10 @@ class _ManageAssistantsScreenState extends State<ManageAssistantsScreen> {
         // Coloured bar down the left edge - the account's state at a glance -
         // and a tint when this is the row whose details are open.
         decoration: BoxDecoration(
-          color: selected ? primaryColor.withValues(alpha: 0.06) : null,
+          color: selected ? context.colors.primary.withValues(alpha: AppAlpha.a05) : null,
           border: Border(left: BorderSide(color: _statusColor(bucket), width: 4)),
         ),
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+        padding: const EdgeInsets.symmetric(horizontal: AppSpacing.s12, vertical: AppSpacing.s12),
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
@@ -1411,14 +1411,14 @@ class _ManageAssistantsScreenState extends State<ManageAssistantsScreen> {
                     avatarUrl: data['avatarUrl'] as String?,
                     name: data['fullName'] ?? '',
                     size: 36,
-                    backgroundColor: accentColor.withValues(alpha: 0.15),
-                    foregroundColor: accentColor,
+                    backgroundColor: context.colors.accent.withValues(alpha: AppAlpha.a15),
+                    foregroundColor: context.colors.accent,
                   ),
-                  const SizedBox(width: 10),
+                  const SizedBox(width: AppSpacing.s10),
                   Expanded(
                     child: Text(
                       data['fullName'] ?? '',
-                      style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13.5),
+                      style: const TextStyle(fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f13_5),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                     ),
@@ -1430,19 +1430,19 @@ class _ManageAssistantsScreenState extends State<ManageAssistantsScreen> {
             Expanded(
               flex: 2,
               child: Text('${data['phone'] ?? ''}',
-                  style: const TextStyle(fontSize: 13), maxLines: 1, overflow: TextOverflow.ellipsis),
+                  style: const TextStyle(fontSize: AppFontSize.f13), maxLines: 1, overflow: TextOverflow.ellipsis),
             ),
             Expanded(
               flex: 3,
               child: Text(facilityName,
-                  style: const TextStyle(fontSize: 13), maxLines: 1, overflow: TextOverflow.ellipsis),
+                  style: const TextStyle(fontSize: AppFontSize.f13), maxLines: 1, overflow: TextOverflow.ellipsis),
             ),
             Expanded(flex: 2, child: Align(alignment: Alignment.centerLeft, child: _statusChip(bucket))),
             Expanded(
               flex: 4,
               child: Wrap(
-                spacing: 6,
-                runSpacing: 6,
+                spacing: AppSpacing.s6,
+                runSpacing: AppSpacing.s6,
                 children: _actionsFor(doc, data, rawStatus, facilityId),
               ),
             ),
@@ -1463,19 +1463,19 @@ class _ManageAssistantsScreenState extends State<ManageAssistantsScreen> {
     return Container(
       key: ValueKey(doc.id),
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.grey.withValues(alpha: 0.15)),
+        borderRadius: BorderRadius.circular(AppRadius.r12),
+        border: Border.all(color: context.colors.textHint.withValues(alpha: AppAlpha.a15)),
       ),
       // Clipped so the bar down the left follows the card's rounded corners.
       child: ClipRRect(
-        borderRadius: BorderRadius.circular(11),
+        borderRadius: BorderRadius.circular(AppRadius.r10),
         child: Material(
-          color: Colors.white,
+          color: context.colors.surface,
           child: InkWell(
             onTap: () => _openDetails(doc),
             child: Container(
               decoration: BoxDecoration(border: Border(left: BorderSide(color: _statusColor(bucket), width: 4))),
-              padding: const EdgeInsets.all(12),
+              padding: const EdgeInsets.all(AppSpacing.s12),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -1486,33 +1486,33 @@ class _ManageAssistantsScreenState extends State<ManageAssistantsScreen> {
                         avatarUrl: data['avatarUrl'] as String?,
                         name: data['fullName'] ?? '',
                         size: 44,
-                        backgroundColor: accentColor.withValues(alpha: 0.15),
-                        foregroundColor: accentColor,
+                        backgroundColor: context.colors.accent.withValues(alpha: AppAlpha.a15),
+                        foregroundColor: context.colors.accent,
                       ),
-                      const SizedBox(width: 10),
+                      const SizedBox(width: AppSpacing.s10),
                       Expanded(
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(data['fullName'] ?? '',
-                                style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14.5)),
-                            const SizedBox(height: 2),
-                            Text('${data['phone'] ?? ''}', style: TextStyle(fontSize: 12.5, color: Colors.grey[700])),
-                            const SizedBox(height: 2),
-                            Text(facilityName, style: TextStyle(fontSize: 12, color: Colors.grey[500])),
-                            const SizedBox(height: 6),
+                                style: const TextStyle(fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f14_5)),
+                            const SizedBox(height: AppSpacing.s2),
+                            Text('${data['phone'] ?? ''}', style: TextStyle(fontSize: AppFontSize.f12_5, color: context.colors.textSoft)),
+                            const SizedBox(height: AppSpacing.s2),
+                            Text(facilityName, style: TextStyle(fontSize: AppFontSize.f12, color: context.colors.textHint)),
+                            const SizedBox(height: AppSpacing.s6),
                             _roleChip(_kindOf(doc.id, data)),
                           ],
                         ),
                       ),
-                      const SizedBox(width: 8),
+                      const SizedBox(width: AppSpacing.s8),
                       _statusChip(bucket),
                     ],
                   ),
-                  const SizedBox(height: 10),
+                  const SizedBox(height: AppSpacing.s10),
                   Wrap(
-                    spacing: 8,
-                    runSpacing: 8,
+                    spacing: AppSpacing.s8,
+                    runSpacing: AppSpacing.s8,
                     children: _actionsFor(doc, data, rawStatus, facilityId),
                   ),
                 ],
@@ -1529,7 +1529,7 @@ class _ManageAssistantsScreenState extends State<ManageAssistantsScreen> {
   // A panel beside the list when there's room (like the sales screen), a
   // sheet from the bottom when there isn't.
   void _openDetails(QueryDocumentSnapshot doc) {
-    if (MediaQuery.of(context).size.width >= 1100) {
+    if (context.screenWidth >= AppBreakpoints.detailsSidePanel) {
       setState(() => _selectedUserId = doc.id);
     } else {
       _showDetailsSheet(doc);
@@ -1540,8 +1540,8 @@ class _ManageAssistantsScreenState extends State<ManageAssistantsScreen> {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      backgroundColor: Colors.white,
-      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
+      backgroundColor: context.colors.surface,
+      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(AppRadius.r20))),
       builder: (ctx) => DraggableScrollableSheet(
         expand: false,
         initialChildSize: 0.85,
@@ -1563,20 +1563,20 @@ class _ManageAssistantsScreenState extends State<ManageAssistantsScreen> {
 
   Widget _panelField(IconData icon, String label, String value, {String? subtitle}) {
     return Padding(
-      padding: const EdgeInsets.only(bottom: 14),
+      padding: const EdgeInsets.only(bottom: AppSpacing.s14),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(icon, size: 18, color: Colors.grey[600]),
-          const SizedBox(width: 10),
+          Icon(icon, size: AppIconSize.i18, color: context.colors.textMuted),
+          const SizedBox(width: AppSpacing.s10),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(label, style: TextStyle(fontSize: 11.5, color: Colors.grey[600])),
-                Text(value, style: const TextStyle(fontSize: 13.5, fontWeight: FontWeight.w600)),
+                Text(label, style: TextStyle(fontSize: AppFontSize.f11_5, color: context.colors.textMuted)),
+                Text(value, style: const TextStyle(fontSize: AppFontSize.f13_5, fontWeight: AppFontWeight.semibold)),
                 if (subtitle != null && subtitle.isNotEmpty)
-                  Text(subtitle, style: TextStyle(fontSize: 12, color: Colors.grey[600])),
+                  Text(subtitle, style: TextStyle(fontSize: AppFontSize.f12, color: context.colors.textMuted)),
               ],
             ),
           ),
@@ -1587,21 +1587,21 @@ class _ManageAssistantsScreenState extends State<ManageAssistantsScreen> {
 
   Widget _historyTile(Color color, String title, String subtitle) {
     return Padding(
-      padding: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.only(bottom: AppSpacing.s12),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Padding(
-            padding: const EdgeInsets.only(top: 5),
+            padding: const EdgeInsets.only(top: AppSpacing.s4),
             child: Icon(Icons.circle, size: 9, color: color),
           ),
-          const SizedBox(width: 10),
+          const SizedBox(width: AppSpacing.s10),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(title, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600)),
-                Text(subtitle, style: TextStyle(fontSize: 12, color: Colors.grey[600])),
+                Text(title, style: const TextStyle(fontSize: AppFontSize.f13, fontWeight: AppFontWeight.semibold)),
+                Text(subtitle, style: TextStyle(fontSize: AppFontSize.f12, color: context.colors.textMuted)),
               ],
             ),
           ),
@@ -1637,23 +1637,23 @@ class _ManageAssistantsScreenState extends State<ManageAssistantsScreen> {
     // Newest first. Registration comes from the account itself; everything
     // after it from the history the server keeps with each change.
     final history = <({DateTime? at, Color color, String title, String by})>[
-      (at: created, color: Colors.grey, title: 'Registered', by: ''),
+      (at: created, color: context.colors.textHint, title: 'Registered', by: ''),
     ];
     final rawHistory = data['statusHistory'];
     if (rawHistory is List) {
       const labels = {'approved': 'Approved', 'rejected': 'Rejected', 'deactivated': 'Deactivated', 'reactivated': 'Reactivated'};
-      const colors = {
-        'approved': Colors.green,
-        'rejected': Colors.red,
-        'deactivated': Colors.orange,
-        'reactivated': Colors.green,
+      final colors = {
+        'approved': context.colors.success,
+        'rejected': context.colors.danger,
+        'deactivated': context.colors.warning,
+        'reactivated': context.colors.success,
       };
       for (final h in rawHistory) {
         if (h is! Map) continue;
         final action = (h['action'] ?? '').toString();
         history.add((
           at: _ts(h['at']),
-          color: colors[action] ?? Colors.grey,
+          color: colors[action] ?? context.colors.textHint,
           title: labels[action] ?? action,
           by: (h['by'] ?? '').toString(),
         ));
@@ -1667,52 +1667,52 @@ class _ManageAssistantsScreenState extends State<ManageAssistantsScreen> {
     });
 
     return Container(
-      color: Colors.white,
+      color: context.colors.surface,
       child: SingleChildScrollView(
         controller: scrollController,
-        padding: const EdgeInsets.all(20),
+        padding: const EdgeInsets.all(AppSpacing.s20),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                const Text('Team Member Details', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                const Text('Team Member Details', style: TextStyle(fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f16)),
                 IconButton(
-                  icon: const Icon(Icons.close, size: 20),
+                  icon: const Icon(Icons.close, size: AppIconSize.i20),
                   onPressed: onClose ?? () => setState(() => _selectedUserId = null),
                 ),
               ],
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: AppSpacing.s8),
             Row(
               children: [
                 InitialsAvatar(
                   avatarUrl: data['avatarUrl'] as String?,
                   name: data['fullName'] ?? '',
                   size: 56,
-                  backgroundColor: accentColor.withValues(alpha: 0.15),
-                  foregroundColor: accentColor,
+                  backgroundColor: context.colors.accent.withValues(alpha: AppAlpha.a15),
+                  foregroundColor: context.colors.accent,
                 ),
-                const SizedBox(width: 14),
+                const SizedBox(width: AppSpacing.s14),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
                         '${data['fullName'] ?? ''}${isSelf ? '  (you)' : ''}',
-                        style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 17),
+                        style: const TextStyle(fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f17),
                       ),
-                      const SizedBox(height: 6),
-                      Wrap(spacing: 6, runSpacing: 6, children: [_roleChip(kind), _statusChip(bucket)]),
+                      const SizedBox(height: AppSpacing.s6),
+                      Wrap(spacing: AppSpacing.s6, runSpacing: AppSpacing.s6, children: [_roleChip(kind), _statusChip(bucket)]),
                     ],
                   ),
                 ),
               ],
             ),
             if (showActions && !isSelf) ...[
-              const SizedBox(height: 16),
-              Wrap(spacing: 8, runSpacing: 8, children: _actionsFor(doc, data, rawStatus, facilityId)),
+              const SizedBox(height: AppSpacing.s16),
+              Wrap(spacing: AppSpacing.s8, runSpacing: AppSpacing.s8, children: _actionsFor(doc, data, rawStatus, facilityId)),
             ],
             const Divider(height: 28),
             _panelField(Icons.phone_outlined, 'Phone', '${data['phone'] ?? ''}'.isEmpty ? 'Not recorded' : '${data['phone']}'),
@@ -1744,15 +1744,15 @@ class _ManageAssistantsScreenState extends State<ManageAssistantsScreen> {
             ),
             _panelField(Icons.access_time, 'Last active', _when(lastActive)),
             const Divider(height: 28),
-            const Text('History', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13.5)),
-            const SizedBox(height: 12),
+            const Text('History', style: TextStyle(fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f13_5)),
+            const SizedBox(height: AppSpacing.s12),
             for (final h in history)
               _historyTile(h.color, h.title, '${_when(h.at)}${h.by.isEmpty ? '' : '  \u00b7  by ${h.by}'}'),
             if (!showActions && !isSelf) ...[
-              const SizedBox(height: 4),
+              const SizedBox(height: AppSpacing.s4),
               Text(
                 'Use the buttons on this person\'s card to approve, reject or remove them.',
-                style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+                style: TextStyle(fontSize: AppFontSize.f12, color: context.colors.textMuted),
               ),
             ],
           ],
@@ -1767,24 +1767,24 @@ class _ManageAssistantsScreenState extends State<ManageAssistantsScreen> {
   // instead of a lone spinner - and instead of drawing a half-loaded list.
   Widget _buildLoadingSkeleton() {
     Widget row() => Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+          padding: const EdgeInsets.symmetric(horizontal: AppSpacing.s16, vertical: AppSpacing.s14),
           child: Row(
             children: const [
               _SkeletonBlock(width: 36, height: 36, radius: 18),
-              SizedBox(width: 12),
+              SizedBox(width: AppSpacing.s12),
               Expanded(flex: 4, child: _SkeletonBlock(height: 14)),
-              SizedBox(width: 16),
+              SizedBox(width: AppSpacing.s16),
               Expanded(flex: 2, child: _SkeletonBlock(height: 14)),
-              SizedBox(width: 16),
+              SizedBox(width: AppSpacing.s16),
               Expanded(flex: 2, child: _SkeletonBlock(height: 14)),
-              SizedBox(width: 16),
+              SizedBox(width: AppSpacing.s16),
               Expanded(flex: 3, child: _SkeletonBlock(height: 14)),
             ],
           ),
         );
 
     return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
+      padding: const EdgeInsets.fromLTRB(AppSpacing.s16, AppSpacing.s16, AppSpacing.s16, 0),
       child: Column(
         children: [
           Row(
@@ -1792,21 +1792,21 @@ class _ManageAssistantsScreenState extends State<ManageAssistantsScreen> {
               4,
               (i) => Expanded(
                 child: Padding(
-                  padding: EdgeInsets.only(right: i == 3 ? 0 : 12),
+                  padding: EdgeInsets.only(right: i == AppSpacing.s3 ? 0 : AppSpacing.s12),
                   child: const _SkeletonBlock(height: 78, radius: 14),
                 ),
               ),
             ),
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: AppSpacing.s12),
           const _SkeletonBlock(height: 44, radius: 12),
-          const SizedBox(height: 12),
+          const SizedBox(height: AppSpacing.s12),
           Expanded(
             child: Container(
               decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: Colors.grey.withValues(alpha: 0.15)),
+                color: context.colors.surface,
+                borderRadius: BorderRadius.circular(AppRadius.r12),
+                border: Border.all(color: context.colors.textHint.withValues(alpha: AppAlpha.a15)),
               ),
               child: Column(children: [for (var i = 0; i < 6; i++) row()]),
             ),
@@ -1823,16 +1823,16 @@ class _ManageAssistantsScreenState extends State<ManageAssistantsScreen> {
     final end = (page * _pageSize) > total ? total : page * _pageSize;
 
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-      decoration: BoxDecoration(border: Border(top: BorderSide(color: Colors.grey.withValues(alpha: 0.2)))),
+      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.s16, vertical: AppSpacing.s12),
+      decoration: BoxDecoration(border: Border(top: BorderSide(color: context.colors.textHint.withValues(alpha: AppAlpha.a20)))),
       child: Wrap(
         alignment: WrapAlignment.spaceBetween,
         crossAxisAlignment: WrapCrossAlignment.center,
-        runSpacing: 4,
+        runSpacing: AppSpacing.s4,
         children: [
           Text(
             total == 0 ? 'No assistants' : 'Showing $start to $end of $total assistant${total == 1 ? '' : 's'}',
-            style: TextStyle(fontSize: 12.5, color: Colors.grey[600]),
+            style: TextStyle(fontSize: AppFontSize.f12_5, color: context.colors.textMuted),
           ),
           Row(
             mainAxisSize: MainAxisSize.min,
@@ -1853,12 +1853,12 @@ class _ManageAssistantsScreenState extends State<ManageAssistantsScreen> {
                   },
                 ),
               ),
-              const SizedBox(width: 16),
+              const SizedBox(width: AppSpacing.s16),
               IconButton(
                 icon: const Icon(Icons.chevron_left),
                 onPressed: page > 1 ? () => setState(() => _page = page - 1) : null,
               ),
-              Text('Page $page', style: const TextStyle(fontSize: 13)),
+              Text('Page $page', style: const TextStyle(fontSize: AppFontSize.f13)),
               IconButton(
                 icon: const Icon(Icons.chevron_right),
                 onPressed: page < totalPages ? () => setState(() => _page = page + 1) : null,
@@ -1884,7 +1884,7 @@ class _SkeletonBlock extends StatefulWidget {
 
 class _SkeletonBlockState extends State<_SkeletonBlock> with SingleTickerProviderStateMixin {
   late final AnimationController _controller =
-      AnimationController(vsync: this, duration: const Duration(milliseconds: 900))..repeat(reverse: true);
+      AnimationController(vsync: this, duration: AppMotion.loop)..repeat(reverse: true);
 
   @override
   void dispose() {
@@ -1900,7 +1900,7 @@ class _SkeletonBlockState extends State<_SkeletonBlock> with SingleTickerProvide
         width: widget.width,
         height: widget.height,
         decoration: BoxDecoration(
-          color: Color.lerp(Colors.grey.shade200, Colors.grey.shade300, _controller.value),
+          color: Color.lerp(context.colors.divider, context.colors.border, _controller.value),
           borderRadius: BorderRadius.circular(widget.radius),
         ),
       ),
