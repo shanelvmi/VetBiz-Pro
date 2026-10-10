@@ -19,12 +19,15 @@ import 'past_reports_screen.dart';
 import 'report_full_view_screen.dart';
 import 'report_review_screen.dart';
 import 'report_tabbed_content.dart';
-import '../../theme/app_palette.dart';
 import '../../data/collections.dart';
 import '../../data/fields.dart';
 import '../../data/activity_type.dart';
 import '../../config/app_date_format.dart';
 import '../../config/app_info.dart';
+import '../../theme/app_text.dart';
+import '../../theme/theme_context.dart';
+import '../../theme/app_breakpoints.dart';
+import '../../ui/feedback/app_feedback.dart';
 
 /// The main View Reports screen - shows today's own report directly,
 /// matching the Daily Closing Report mockup, rather than a separate
@@ -39,8 +42,11 @@ class ViewReportsScreen extends StatefulWidget {
 }
 
 class _ViewReportsScreenState extends State<ViewReportsScreen> {
-  static const Color primaryDeepGreen = AppPalette.primary;
-  static const Color offWhite = AppPalette.background;
+  // Wide layout: the side column's width. Narrow layout: the report
+  // column's height above the scrolling side content. Sizes, not spacing.
+  static const double _sideColumnWidth = 320;
+  static const double _narrowReportHeight = 500;
+
 
   final DailyReportService _reportService = DailyReportService();
   final AuthService _authService = AuthService();
@@ -129,12 +135,8 @@ class _ViewReportsScreenState extends State<ViewReportsScreen> {
       // figures directly - Review & Submit is a separate step,
       // reached from the "Continue Closing" action once ready.
       await _loadTodaysReport();
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Could not generate report: $e'), backgroundColor: Colors.red),
-        );
-      }
+    } catch (e, st) {
+      AppFeedback.error("Couldn't generate the report", error: e, stackTrace: st);
     } finally {
       if (mounted) setState(() => _isGenerating = false);
     }
@@ -167,7 +169,7 @@ class _ViewReportsScreenState extends State<ViewReportsScreen> {
           TextButton(onPressed: () => Navigator.pop(dialogContext, false), child: const Text('Cancel')),
           TextButton(
             onPressed: () => Navigator.pop(dialogContext, true),
-            child: const Text('Delete Draft', style: TextStyle(color: Colors.red)),
+            child: Text('Delete Draft', style: TextStyle(color: context.colors.danger)),
           ),
         ],
       ),
@@ -186,12 +188,8 @@ class _ViewReportsScreenState extends State<ViewReportsScreen> {
       );
       if (!mounted) return;
       _loadTodaysReport();
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Could not delete draft: $e'), backgroundColor: Colors.red),
-        );
-      }
+    } catch (e, st) {
+      AppFeedback.error("Couldn't delete the draft", error: e, stackTrace: st);
     }
   }
 
@@ -222,7 +220,7 @@ class _ViewReportsScreenState extends State<ViewReportsScreen> {
         mimeType: 'application/pdf',
       );
       await Share.shareXFiles([xfile], text: 'Daily Closing Report');
-    } catch (e) {
+    } catch (e, st) {
       if (!mounted) return;
       // Same known limitation as elsewhere in this app: desktop
       // browsers' Web Share API is unreliable specifically for files,
@@ -232,9 +230,7 @@ class _ViewReportsScreenState extends State<ViewReportsScreen> {
         downloadFileWeb(bytes, 'daily-closing-report-${_todaysReport!.id}.pdf', mimeType: 'application/pdf');
         return;
       }
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Could not share report: $e'), backgroundColor: Colors.red),
-      );
+      AppFeedback.error("Couldn't share the report", error: e, stackTrace: st);
     }
   }
 
@@ -246,24 +242,24 @@ class _ViewReportsScreenState extends State<ViewReportsScreen> {
     _scheduleClosingTimerIfNeeded(closingTime);
 
     return Scaffold(
-      backgroundColor: offWhite,
+      backgroundColor: context.colors.background,
       appBar: AppBar(
-        backgroundColor: Colors.white,
-        foregroundColor: Colors.black87,
-        elevation: 1,
+        backgroundColor: context.colors.surface,
+        foregroundColor: context.colors.textPrimary,
+        elevation: AppElevation.e1,
         centerTitle: true,
         toolbarHeight: 72,
-        title: const Column(
+        title: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Text('View Reports', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 19, color: Colors.black87)),
+            Text('View Reports', style: TextStyle(fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f19, color: context.colors.textPrimary)),
             Text('Daily closing report for this facility',
-                style: TextStyle(fontSize: 12, color: Colors.black54)),
+                style: TextStyle(fontSize: AppFontSize.f12, color: context.colors.textSecondary)),
           ],
         ),
         actions: [
           Padding(
-            padding: const EdgeInsets.only(right: 12),
+            padding: const EdgeInsets.only(right: AppSpacing.s12),
             child: _buildAppBarAction(isAllowedNow, closingTime, facilityProvider.isClosedAllDayToday),
           ),
         ],
@@ -282,27 +278,27 @@ class _ViewReportsScreenState extends State<ViewReportsScreen> {
     if (status == 'submitted') {
       return OutlinedButton.icon(
         onPressed: null,
-        icon: const Icon(Icons.check_circle_outline, size: 16),
+        icon: const Icon(Icons.check_circle_outline, size: AppIconSize.i16),
         label: const Text("Today's Report - Submitted"),
         style: OutlinedButton.styleFrom(
-          disabledForegroundColor: primaryDeepGreen,
-          side: BorderSide(color: primaryDeepGreen.withValues(alpha: 0.4)),
+          disabledForegroundColor: context.colors.primary,
+          side: BorderSide(color: context.colors.primary.withValues(alpha: AppAlpha.a40)),
         ),
       );
     }
     if (status == 'draft') {
       return ElevatedButton.icon(
         onPressed: _continueClosing,
-        icon: const Icon(Icons.edit_note_outlined, size: 16),
+        icon: const Icon(Icons.edit_note_outlined, size: AppIconSize.i16),
         label: const Text('Continue Closing'),
-        style: ElevatedButton.styleFrom(backgroundColor: primaryDeepGreen, foregroundColor: Colors.white),
+        style: ElevatedButton.styleFrom(backgroundColor: context.colors.primary, foregroundColor: context.colors.onPrimary),
       );
     }
     return ElevatedButton.icon(
       onPressed: _isGenerating || !isAllowedNow ? null : _generateReport,
       icon: _isGenerating
-          ? const SizedBox(width: 14, height: 14, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
-          : const Icon(Icons.summarize_outlined, size: 16),
+          ? SizedBox(width: AppSpacing.s14, height: 14, child: CircularProgressIndicator(strokeWidth: 2, color: context.colors.onPrimary))
+          : const Icon(Icons.summarize_outlined, size: AppIconSize.i16),
       label: Text(isAllowedNow
           ? "Generate Today's Report"
           : isClosedAllDayToday
@@ -311,9 +307,9 @@ class _ViewReportsScreenState extends State<ViewReportsScreen> {
                   ? "Generate Today's Report (at ${AppDateFormat.time12Short.format(closingTime).toLowerCase().replaceAll(' ', '')})"
                   : "Generate Today's Report (after closing time)"),
       style: ElevatedButton.styleFrom(
-        backgroundColor: primaryDeepGreen,
-        foregroundColor: Colors.white,
-        disabledBackgroundColor: primaryDeepGreen.withValues(alpha: 0.35),
+        backgroundColor: context.colors.primary,
+        foregroundColor: context.colors.onPrimary,
+        disabledBackgroundColor: context.colors.primary.withValues(alpha: AppAlpha.a40),
       ),
     );
   }
@@ -333,26 +329,26 @@ class _ViewReportsScreenState extends State<ViewReportsScreen> {
 
     return Center(
       child: Padding(
-        padding: const EdgeInsets.all(24),
+        padding: const EdgeInsets.all(AppSpacing.s24),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(Icons.summarize_outlined, size: 48, color: Colors.grey[350]),
-            const SizedBox(height: 12),
+            Icon(Icons.summarize_outlined, size: AppIconSize.i48, color: context.colors.border),
+            const SizedBox(height: AppSpacing.s12),
             Text('No report generated yet today',
-                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15, color: Colors.grey[700])),
-            const SizedBox(height: 4),
+                style: TextStyle(fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f15, color: context.colors.textSoft)),
+            const SizedBox(height: AppSpacing.s4),
             Text(
               message,
-              style: TextStyle(fontSize: 12.5, color: Colors.grey[500]),
+              style: TextStyle(fontSize: AppFontSize.f12_5, color: context.colors.textHint),
               textAlign: TextAlign.center,
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: AppSpacing.s16),
             OutlinedButton.icon(
               onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const PastReportsScreen())),
-              icon: const Icon(Icons.history, size: 16),
+              icon: const Icon(Icons.history, size: AppIconSize.i16),
               label: const Text('Past Reports'),
-              style: OutlinedButton.styleFrom(foregroundColor: primaryDeepGreen),
+              style: OutlinedButton.styleFrom(foregroundColor: context.colors.primary),
             ),
           ],
         ),
@@ -364,26 +360,26 @@ class _ViewReportsScreenState extends State<ViewReportsScreen> {
     final report = _todaysReport!;
     return LayoutBuilder(
       builder: (context, constraints) {
-        final isWide = constraints.maxWidth >= 860;
+        final isWide = constraints.maxWidth >= AppBreakpoints.formTwoColumn;
         final leftColumn = Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Padding(
-              padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+              padding: const EdgeInsets.fromLTRB(AppSpacing.s16, AppSpacing.s12, AppSpacing.s16, 0),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Row(
                     children: [
-                      Icon(Icons.calendar_today_outlined, size: 18, color: primaryDeepGreen),
-                      const SizedBox(width: 8),
+                      Icon(Icons.calendar_today_outlined, size: AppIconSize.i18, color: context.colors.primary),
+                      const SizedBox(width: AppSpacing.s8),
                       Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text("Daily Closing Report - Today's Report",
-                              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15, color: primaryDeepGreen)),
+                              style: TextStyle(fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f15, color: context.colors.primary)),
                           Text(AppDateFormat.dateLong.format(report.reportDate),
-                              style: TextStyle(fontSize: 12, color: Colors.grey[600])),
+                              style: TextStyle(fontSize: AppFontSize.f12, color: context.colors.textMuted)),
                         ],
                       ),
                     ],
@@ -391,44 +387,44 @@ class _ViewReportsScreenState extends State<ViewReportsScreen> {
                   OutlinedButton.icon(
                     onPressed: () =>
                         Navigator.push(context, MaterialPageRoute(builder: (_) => const PastReportsScreen())),
-                    icon: const Icon(Icons.history, size: 15),
+                    icon: const Icon(Icons.history, size: AppIconSize.i16),
                     label: const Text('Past Reports'),
                     style: OutlinedButton.styleFrom(
-                      foregroundColor: primaryDeepGreen,
-                      side: BorderSide(color: primaryDeepGreen.withValues(alpha: 0.35)),
+                      foregroundColor: context.colors.primary,
+                      side: BorderSide(color: context.colors.primary.withValues(alpha: AppAlpha.a40)),
                     ),
                   ),
                 ],
               ),
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: AppSpacing.s8),
             Expanded(child: ReportTabbedContent(report: report)),
           ],
         );
 
         final rightColumnScrollable = SingleChildScrollView(
-          padding: const EdgeInsets.all(16),
+          padding: const EdgeInsets.all(AppSpacing.s16),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               _buildQuickActionsCard(),
-              const SizedBox(height: 16),
+              const SizedBox(height: AppSpacing.s16),
               _buildAccountabilityCard(report),
-              const SizedBox(height: 16),
+              const SizedBox(height: AppSpacing.s16),
               _buildDeclarationCard(report),
             ],
           ),
         );
 
         final rightColumnFilled = Padding(
-          padding: const EdgeInsets.all(16),
+          padding: const EdgeInsets.all(AppSpacing.s16),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               _buildQuickActionsCard(),
-              const SizedBox(height: 16),
+              const SizedBox(height: AppSpacing.s16),
               _buildAccountabilityCard(report),
-              const SizedBox(height: 16),
+              const SizedBox(height: AppSpacing.s16),
               Expanded(child: _buildDeclarationCard(report)),
             ],
           ),
@@ -439,14 +435,14 @@ class _ViewReportsScreenState extends State<ViewReportsScreen> {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               Expanded(flex: 2, child: leftColumn),
-              SizedBox(width: 320, child: rightColumnFilled),
+              SizedBox(width: _sideColumnWidth, child: rightColumnFilled),
             ],
           );
         }
         return SingleChildScrollView(
           child: Column(
             children: [
-              SizedBox(height: 500, child: leftColumn),
+              SizedBox(height: _narrowReportHeight, child: leftColumn),
               rightColumnScrollable,
             ],
           ),
@@ -457,11 +453,11 @@ class _ViewReportsScreenState extends State<ViewReportsScreen> {
 
   Widget _panelCard(Widget child) {
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(AppSpacing.s16),
       decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.grey.withValues(alpha: 0.2)),
+        color: context.colors.surface,
+        borderRadius: BorderRadius.circular(AppRadius.r12),
+        border: Border.all(color: context.colors.textHint.withValues(alpha: AppAlpha.a20)),
       ),
       child: child,
     );
@@ -470,9 +466,9 @@ class _ViewReportsScreenState extends State<ViewReportsScreen> {
   Widget _panelHeader(IconData icon, String title) {
     return Row(
       children: [
-        Icon(icon, size: 17, color: primaryDeepGreen),
-        const SizedBox(width: 8),
-        Text(title, style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: primaryDeepGreen)),
+        Icon(icon, size: AppIconSize.i18, color: context.colors.primary),
+        const SizedBox(width: AppSpacing.s8),
+        Text(title, style: TextStyle(fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f14, color: context.colors.primary)),
       ],
     );
   }
@@ -486,7 +482,7 @@ class _ViewReportsScreenState extends State<ViewReportsScreen> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           _panelHeader(Icons.flash_on_outlined, 'Quick Actions'),
-          const SizedBox(height: 10),
+          const SizedBox(height: AppSpacing.s10),
           _quickActionTile(
             icon: Icons.visibility_outlined,
             title: 'View Full Report',
@@ -506,7 +502,7 @@ class _ViewReportsScreenState extends State<ViewReportsScreen> {
               icon: Icons.delete_outline,
               title: 'Delete Draft',
               subtitle: 'Clear today\'s draft to restart',
-              iconColor: Colors.red,
+              iconColor: context.colors.danger,
               onTap: _deleteDraft,
             ),
           ] else if (!isAdmin) ...[
@@ -524,24 +520,24 @@ class _ViewReportsScreenState extends State<ViewReportsScreen> {
   }
 
   Widget _quickActionTile({required IconData icon, required String title, required String subtitle, required VoidCallback onTap, Color? iconColor}) {
-    final color = iconColor ?? primaryDeepGreen;
+    final color = iconColor ?? context.colors.primary;
     return InkWell(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(8),
+      borderRadius: BorderRadius.circular(AppRadius.r8),
       child: Row(
         children: [
           Container(
-            padding: const EdgeInsets.all(8),
-            decoration: BoxDecoration(color: color.withValues(alpha: 0.08), borderRadius: BorderRadius.circular(8)),
-            child: Icon(icon, size: 18, color: color),
+            padding: const EdgeInsets.all(AppSpacing.s8),
+            decoration: BoxDecoration(color: color.withValues(alpha: AppAlpha.a10), borderRadius: BorderRadius.circular(AppRadius.r8)),
+            child: Icon(icon, size: AppIconSize.i18, color: color),
           ),
-          const SizedBox(width: 10),
+          const SizedBox(width: AppSpacing.s10),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(title, style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13)),
-                Text(subtitle, style: TextStyle(fontSize: 11.5, color: Colors.grey[600])),
+                Text(title, style: const TextStyle(fontWeight: AppFontWeight.semibold, fontSize: AppFontSize.f13)),
+                Text(subtitle, style: TextStyle(fontSize: AppFontSize.f11_5, color: context.colors.textMuted)),
               ],
             ),
           ),
@@ -557,25 +553,25 @@ class _ViewReportsScreenState extends State<ViewReportsScreen> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           _panelHeader(Icons.verified_user_outlined, 'Accountability'),
-          const SizedBox(height: 10),
+          const SizedBox(height: AppSpacing.s10),
           _accountabilityRow(Icons.person_outline, 'Submitted by', report.generatedByName),
-          const SizedBox(height: 10),
+          const SizedBox(height: AppSpacing.s10),
           _accountabilityRow(
             Icons.calendar_today_outlined,
             'Date & Time',
             AppDateFormat.dateNoPadTime12Short.format(report.submittedAt ?? report.generatedAt),
           ),
-          const SizedBox(height: 10),
+          const SizedBox(height: AppSpacing.s10),
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Icon(Icons.circle, size: AppSizes.statusDot, color: isSubmitted ? Colors.green : Colors.orange),
-              const SizedBox(width: 10),
+              Icon(Icons.circle, size: AppSizes.statusDot, color: isSubmitted ? context.colors.success : context.colors.warning),
+              const SizedBox(width: AppSpacing.s10),
               Text(isSubmitted ? 'Submitted' : 'Draft - not yet submitted',
                   style: TextStyle(
-                      fontSize: 12.5,
-                      fontWeight: FontWeight.w600,
-                      color: isSubmitted ? Colors.green[700] : Colors.orange[800])),
+                      fontSize: AppFontSize.f12_5,
+                      fontWeight: AppFontWeight.semibold,
+                      color: isSubmitted ? context.colors.successStrong : context.colors.warningStrong)),
             ],
           ),
         ],
@@ -587,14 +583,14 @@ class _ViewReportsScreenState extends State<ViewReportsScreen> {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Icon(icon, size: 16, color: Colors.grey[500]),
-        const SizedBox(width: 10),
+        Icon(icon, size: AppIconSize.i16, color: context.colors.textHint),
+        const SizedBox(width: AppSpacing.s10),
         Expanded(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(label, style: TextStyle(fontSize: 11, color: Colors.grey[500])),
-              Text(value, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600)),
+              Text(label, style: TextStyle(fontSize: AppFontSize.f11, color: context.colors.textHint)),
+              Text(value, style: const TextStyle(fontSize: AppFontSize.f13, fontWeight: AppFontWeight.semibold)),
             ],
           ),
         ),
@@ -609,18 +605,18 @@ class _ViewReportsScreenState extends State<ViewReportsScreen> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           _panelHeader(Icons.fact_check_outlined, 'Daily Closing Declaration'),
-          const SizedBox(height: 10),
+          const SizedBox(height: AppSpacing.s10),
           if (isSubmitted)
             Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Icon(Icons.check_circle, size: 18, color: Colors.green[600]),
-                const SizedBox(width: 8),
+                Icon(Icons.check_circle, size: AppIconSize.i18, color: context.colors.success),
+                const SizedBox(width: AppSpacing.s8),
                 Expanded(
                   child: Text(
                     "Confirmed - I have reviewed today's transactions and that the cash and stock figures "
                     'entered represent the closing figures for my shift.',
-                    style: TextStyle(fontSize: 12, color: Colors.grey[800]),
+                    style: TextStyle(fontSize: AppFontSize.f12, color: context.colors.textPrimary),
                   ),
                 ),
               ],
@@ -628,25 +624,25 @@ class _ViewReportsScreenState extends State<ViewReportsScreen> {
           else
             Text(
               'This declaration is confirmed as part of Submit Daily Closing, once physical stock and cash counts have been entered.',
-              style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+              style: TextStyle(fontSize: AppFontSize.f12, color: context.colors.textMuted),
             ),
-          const SizedBox(height: 16),
+          const SizedBox(height: AppSpacing.s16),
           Container(
-            padding: const EdgeInsets.all(10),
+            padding: const EdgeInsets.all(AppSpacing.s10),
             decoration: BoxDecoration(
-              color: Colors.grey.withValues(alpha: 0.06),
-              borderRadius: BorderRadius.circular(8),
+              color: context.colors.textHint.withValues(alpha: AppAlpha.a05),
+              borderRadius: BorderRadius.circular(AppRadius.r8),
             ),
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Icon(Icons.info_outline, size: 15, color: Colors.grey[600]),
-                const SizedBox(width: 8),
+                Icon(Icons.info_outline, size: AppIconSize.i16, color: context.colors.textMuted),
+                const SizedBox(width: AppSpacing.s8),
                 Expanded(
                   child: Text(
                     'The report will be saved in the system and available for you and the admin '
                     'to view or download at any time.',
-                    style: TextStyle(fontSize: 11, color: Colors.grey[600]),
+                    style: TextStyle(fontSize: AppFontSize.f11, color: context.colors.textMuted),
                   ),
                 ),
               ],
