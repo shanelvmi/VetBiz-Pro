@@ -14,11 +14,14 @@ import '../../providers/debt_provider.dart';
 import '../../providers/user_role_provider.dart';
 import '../../utils/activity_logger.dart';
 import '../../utils/force_logout.dart';
-import '../../theme/app_palette.dart';
 import '../../data/collections.dart';
 import '../../data/fields.dart';
 import '../../data/activity_type.dart';
 import '../../config/app_limits.dart';
+import '../../theme/app_text.dart';
+import '../../theme/app_dimens.dart';
+import '../../theme/theme_context.dart';
+import '../../ui/feedback/app_feedback.dart';
 
 class ManageAccountScreen extends StatefulWidget {
   const ManageAccountScreen({super.key});
@@ -28,10 +31,7 @@ class ManageAccountScreen extends StatefulWidget {
 }
 
 class _ManageAccountScreenState extends State<ManageAccountScreen> {
-  final Color primaryColor = AppPalette.primary;
-  final Color dangerColor = Colors.redAccent;
-  final Color backgroundColor = AppPalette.background;
-  final Color warmAmber = AppPalette.accent;
+  Color get dangerColor => context.colors.dangerAccent;
 
   // Comfortably wide on desktop, but never wider than the actual screen
   // on a phone - AlertDialog otherwise defaults to a fairly narrow,
@@ -51,10 +51,10 @@ class _ManageAccountScreenState extends State<ManageAccountScreen> {
   ButtonStyle _actionButtonStyle(Color baseColor) {
     return ButtonStyle(
       backgroundColor: WidgetStateProperty.resolveWith<Color>((states) {
-        if (states.contains(WidgetState.hovered)) return warmAmber;
+        if (states.contains(WidgetState.hovered)) return context.colors.accent;
         return baseColor;
       }),
-      foregroundColor: WidgetStateProperty.all(Colors.white),
+      foregroundColor: WidgetStateProperty.all(context.colors.onPrimary),
     );
   }
 
@@ -119,8 +119,8 @@ class _ManageAccountScreenState extends State<ManageAccountScreen> {
     final confirm = await showDialog<bool>(
       context: context,
       builder: (_) => AlertDialog(
-        backgroundColor: backgroundColor,
-        title: Text('Log Out of All Devices?', style: TextStyle(color: primaryColor, fontWeight: FontWeight.bold)),
+        backgroundColor: context.colors.background,
+        title: Text('Log Out of All Devices?', style: TextStyle(color: context.colors.primary, fontWeight: AppFontWeight.bold)),
         content: SizedBox(
           width: _dialogWidth(context),
           child: const Text(
@@ -129,11 +129,11 @@ class _ManageAccountScreenState extends State<ManageAccountScreen> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: Text('Cancel', style: TextStyle(color: primaryColor)),
+            child: Text('Cancel', style: TextStyle(color: context.colors.primary)),
           ),
           ElevatedButton(
             onPressed: () => Navigator.pop(context, true),
-            style: _actionButtonStyle(primaryColor),
+            style: _actionButtonStyle(context.colors.primary),
             child: const Text('Log Out Everywhere'),
           ),
         ],
@@ -156,22 +156,9 @@ class _ManageAccountScreenState extends State<ManageAccountScreen> {
 
       if (!mounted) return;
       Navigator.of(context).pushNamedAndRemoveUntil('/login', (route) => false);
-    } on FirebaseFunctionsException catch (e) {
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Failed to clear other sessions: ${e.message}'),
-          backgroundColor: dangerColor,
-        ),
-      );
-    } catch (e) {
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Failed to clear other sessions: $e'),
-          backgroundColor: dangerColor,
-        ),
-      );
+    } catch (e, st) {
+      // FriendlyError shows a Functions error's own message, as before.
+      AppFeedback.error("Couldn't clear other sessions", error: e, stackTrace: st);
     } finally {
       if (mounted) setState(() => _isLoggingOutAll = false);
     }
@@ -186,8 +173,8 @@ class _ManageAccountScreenState extends State<ManageAccountScreen> {
     final confirm = await showDialog<bool>(
       context: context,
       builder: (_) => AlertDialog(
-        backgroundColor: backgroundColor,
-        title: Text('Wipe All Data?', style: TextStyle(color: primaryColor, fontWeight: FontWeight.bold)),
+        backgroundColor: context.colors.background,
+        title: Text('Wipe All Data?', style: TextStyle(color: context.colors.primary, fontWeight: AppFontWeight.bold)),
         content: SizedBox(
           width: _dialogWidth(context),
           child: Column(
@@ -198,8 +185,8 @@ class _ManageAccountScreenState extends State<ManageAccountScreen> {
               // one detail that matters most before confirming this,
               // especially for someone with more than one facility.
               Text('Business data for "$facilityName" will be permanently wiped.',
-                  style: TextStyle(color: dangerColor, fontWeight: FontWeight.bold, fontSize: 15)),
-              const SizedBox(height: 10),
+                  style: TextStyle(color: dangerColor, fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f15)),
+              const SizedBox(height: AppSpacing.s10),
               const Text(
                   'All records of sales, products, clients, and transactions for this facility are erased. Other facilities you have are not affected. Your login credentials remain unaffected.'),
             ],
@@ -208,7 +195,7 @@ class _ManageAccountScreenState extends State<ManageAccountScreen> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: Text('Cancel', style: TextStyle(color: primaryColor)),
+            child: Text('Cancel', style: TextStyle(color: context.colors.primary)),
           ),
           ElevatedButton(
             onPressed: () => Navigator.pop(context, true),
@@ -226,8 +213,8 @@ class _ManageAccountScreenState extends State<ManageAccountScreen> {
       builder: (context) {
         final controller = TextEditingController();
         return AlertDialog(
-          backgroundColor: backgroundColor,
-          title: Text('Confirm Action', style: TextStyle(color: primaryColor, fontWeight: FontWeight.bold)),
+          backgroundColor: context.colors.background,
+          title: Text('Confirm Action', style: TextStyle(color: context.colors.primary, fontWeight: AppFontWeight.bold)),
           content: SizedBox(
             width: _dialogWidth(context),
             child: Column(
@@ -235,12 +222,12 @@ class _ManageAccountScreenState extends State<ManageAccountScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               const Text('Please type "ERASE" to finalize clearing all records:'),
-              const SizedBox(height: 12),
+              const SizedBox(height: AppSpacing.s12),
               TextField(
                 controller: controller,
                 autofocus: true,
                 decoration: InputDecoration(
-                  focusedBorder: UnderlineInputBorder(borderSide: BorderSide(color: primaryColor)),
+                  focusedBorder: UnderlineInputBorder(borderSide: BorderSide(color: context.colors.primary)),
                   hintText: 'ERASE',
                 ),
               ),
@@ -250,11 +237,11 @@ class _ManageAccountScreenState extends State<ManageAccountScreen> {
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context, ''),
-              child: Text('Cancel', style: TextStyle(color: primaryColor)),
+              child: Text('Cancel', style: TextStyle(color: context.colors.primary)),
             ),
             ElevatedButton(
               onPressed: () => Navigator.pop(context, controller.text.trim()),
-              style: _actionButtonStyle(primaryColor),
+              style: _actionButtonStyle(context.colors.primary),
               child: const Text('Confirm'),
             ),
           ],
@@ -297,28 +284,10 @@ class _ManageAccountScreenState extends State<ManageAccountScreen> {
         description: 'Wiped all business data for this facility',
       );
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('All business data has been permanently wiped.'),
-          backgroundColor: Colors.green,
-        ),
-      );
-    } on FirebaseFunctionsException catch (e) {
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Failed to clear records: ${e.message}'),
-          backgroundColor: dangerColor,
-        ),
-      );
-    } catch (e) {
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Failed to clear records: $e'),
-          backgroundColor: dangerColor,
-        ),
-      );
+      AppFeedback.success('All business data permanently wiped');
+    } catch (e, st) {
+      // FriendlyError shows a Functions error's own message, as before.
+      AppFeedback.error("Couldn't clear the records", error: e, stackTrace: st);
     } finally {
       if (mounted) setState(() => _isWipingData = false);
     }
@@ -337,8 +306,8 @@ class _ManageAccountScreenState extends State<ManageAccountScreen> {
         await showDialog<void>(
           context: context,
           builder: (_) => AlertDialog(
-            backgroundColor: backgroundColor,
-            title: Text('Cannot Deactivate', style: TextStyle(color: primaryColor, fontWeight: FontWeight.bold)),
+            backgroundColor: context.colors.background,
+            title: Text('Cannot Deactivate', style: TextStyle(color: context.colors.primary, fontWeight: AppFontWeight.bold)),
             content: SizedBox(
               width: _dialogWidth(context),
               child: const Text(
@@ -349,7 +318,7 @@ class _ManageAccountScreenState extends State<ManageAccountScreen> {
             actions: [
               ElevatedButton(
                 onPressed: () => Navigator.pop(context),
-                style: _actionButtonStyle(primaryColor),
+                style: _actionButtonStyle(context.colors.primary),
                 child: const Text('OK'),
               ),
             ],
@@ -362,8 +331,8 @@ class _ManageAccountScreenState extends State<ManageAccountScreen> {
     final confirm = await showDialog<bool>(
       context: context,
       builder: (_) => AlertDialog(
-        backgroundColor: backgroundColor,
-        title: Text('Deactivate Account', style: TextStyle(color: primaryColor, fontWeight: FontWeight.bold)),
+        backgroundColor: context.colors.background,
+        title: Text('Deactivate Account', style: TextStyle(color: context.colors.primary, fontWeight: AppFontWeight.bold)),
         content: SizedBox(
           width: _dialogWidth(context),
           child: const Text(
@@ -374,11 +343,11 @@ class _ManageAccountScreenState extends State<ManageAccountScreen> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: Text('Cancel', style: TextStyle(color: primaryColor)),
+            child: Text('Cancel', style: TextStyle(color: context.colors.primary)),
           ),
           ElevatedButton(
             onPressed: () => Navigator.pop(context, true),
-            style: _actionButtonStyle(primaryColor),
+            style: _actionButtonStyle(context.colors.primary),
             child: const Text('Deactivate'),
           ),
         ],
@@ -396,8 +365,8 @@ class _ManageAccountScreenState extends State<ManageAccountScreen> {
       builder: (context) {
         final controller = TextEditingController();
         return AlertDialog(
-          backgroundColor: backgroundColor,
-          title: Text('Confirm Deactivation', style: TextStyle(color: primaryColor, fontWeight: FontWeight.bold)),
+          backgroundColor: context.colors.background,
+          title: Text('Confirm Deactivation', style: TextStyle(color: context.colors.primary, fontWeight: AppFontWeight.bold)),
           content: SizedBox(
             width: _dialogWidth(context),
             child: Column(
@@ -405,12 +374,12 @@ class _ManageAccountScreenState extends State<ManageAccountScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               const Text('Type "DEACTIVATE" to confirm:'),
-              const SizedBox(height: 12),
+              const SizedBox(height: AppSpacing.s12),
               TextField(
                 controller: controller,
                 autofocus: true,
                 decoration: InputDecoration(
-                  focusedBorder: UnderlineInputBorder(borderSide: BorderSide(color: primaryColor)),
+                  focusedBorder: UnderlineInputBorder(borderSide: BorderSide(color: context.colors.primary)),
                   hintText: 'DEACTIVATE',
                 ),
               ),
@@ -420,11 +389,11 @@ class _ManageAccountScreenState extends State<ManageAccountScreen> {
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context, ''),
-              child: Text('Cancel', style: TextStyle(color: primaryColor)),
+              child: Text('Cancel', style: TextStyle(color: context.colors.primary)),
             ),
             ElevatedButton(
               onPressed: () => Navigator.pop(context, controller.text.trim()),
-              style: _actionButtonStyle(primaryColor),
+              style: _actionButtonStyle(context.colors.primary),
               child: const Text('Confirm'),
             ),
           ],
@@ -453,13 +422,8 @@ class _ManageAccountScreenState extends State<ManageAccountScreen> {
       await forceLogoutAndShowLogin(
         message: 'Your account has been deactivated.',
       );
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Failed to deactivate account: $e'),
-          backgroundColor: dangerColor,
-        ),
-      );
+    } catch (e, st) {
+      AppFeedback.error("Couldn't deactivate the account", error: e, stackTrace: st);
     }
   }
 
@@ -478,8 +442,8 @@ class _ManageAccountScreenState extends State<ManageAccountScreen> {
       context: context,
       barrierDismissible: false,
       builder: (_) => AlertDialog(
-        backgroundColor: backgroundColor,
-        title: Text('Delete Account', style: TextStyle(color: primaryColor, fontWeight: FontWeight.bold)),
+        backgroundColor: context.colors.background,
+        title: Text('Delete Account', style: TextStyle(color: context.colors.primary, fontWeight: AppFontWeight.bold)),
         content: SizedBox(
           width: _dialogWidth(context),
           child: Column(
@@ -487,7 +451,7 @@ class _ManageAccountScreenState extends State<ManageAccountScreen> {
           children: [
             const Text(
                 'Deleting your account is permanent and cannot be undone. All your data will be erased.'),
-            const SizedBox(height: 12),
+            const SizedBox(height: AppSpacing.s12),
             TextField(
               controller: _deleteEmailController,
               decoration: const InputDecoration(
@@ -495,7 +459,7 @@ class _ManageAccountScreenState extends State<ManageAccountScreen> {
                 prefixIcon: Icon(Icons.email),
               ),
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: AppSpacing.s8),
             TextField(
               controller: _deletePasswordController,
               decoration: const InputDecoration(
@@ -514,7 +478,7 @@ class _ManageAccountScreenState extends State<ManageAccountScreen> {
               _deletePasswordController.clear();
               Navigator.pop(context);
             },
-            child: Text('Cancel', style: TextStyle(color: primaryColor)),
+            child: Text('Cancel', style: TextStyle(color: context.colors.primary)),
           ),
           ElevatedButton(
             style: _actionButtonStyle(dangerColor),
@@ -543,30 +507,20 @@ class _ManageAccountScreenState extends State<ManageAccountScreen> {
                       );
                       if (!mounted) return;
                       Navigator.pop(context);
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text('Your account has been deleted.'),
-                          backgroundColor: Colors.redAccent,
-                        ),
-                      );
-                    } catch (e) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content: Text('Failed to delete account: $e'),
-                          backgroundColor: dangerColor,
-                        ),
-                      );
+                      AppFeedback.info('Your account has been deleted');
+                    } catch (e, st) {
+                      AppFeedback.error("Couldn't delete the account", error: e, stackTrace: st);
                     } finally {
                       setState(() => _isDeleting = false);
                     }
                   },
             child: _isDeleting
-                ? const SizedBox(
+                ? SizedBox(
                     width: 20,
                     height: 20,
                     child: CircularProgressIndicator(
                       strokeWidth: 2,
-                      color: Colors.white,
+                      color: context.colors.surface,
                     ),
                   )
                 : const Text('Delete Account'),
@@ -598,49 +552,49 @@ class _ManageAccountScreenState extends State<ManageAccountScreen> {
     }
 
     return Scaffold(
-      backgroundColor: backgroundColor,
+      backgroundColor: context.colors.background,
       appBar: AppBar(
         title: const Text('Manage Account'),
-        backgroundColor: primaryColor,
-        foregroundColor: Colors.white,
+        backgroundColor: context.colors.primary,
+        foregroundColor: context.colors.onPrimary,
         centerTitle: true,
       ),
       body: Center(
         child: ConstrainedBox(
           constraints: const BoxConstraints(maxWidth: 700),
           child: ListView(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(AppSpacing.s16),
         children: [
           Container(
-            padding: const EdgeInsets.all(14),
+            padding: const EdgeInsets.all(AppSpacing.s14),
             decoration: BoxDecoration(
               border: Border.all(color: dangerColor, width: 1.5),
-              borderRadius: BorderRadius.circular(12),
-              color: dangerColor.withValues(alpha: 0.04),
+              borderRadius: BorderRadius.circular(AppRadius.r12),
+              color: dangerColor.withValues(alpha: AppAlpha.a05),
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Row(
                   children: [
-                    Icon(Icons.warning_amber_rounded, color: dangerColor, size: 20),
-                    const SizedBox(width: 8),
+                    Icon(Icons.warning_amber_rounded, color: dangerColor, size: AppIconSize.i20),
+                    const SizedBox(width: AppSpacing.s8),
                     Text(
                       'Danger Zone',
-                      style: TextStyle(color: dangerColor, fontWeight: FontWeight.bold, fontSize: 15),
+                      style: TextStyle(color: dangerColor, fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f15),
                     ),
                   ],
                 ),
-                const SizedBox(height: 4),
+                const SizedBox(height: AppSpacing.s4),
                 Text(
                   'These actions affect your account and business data. Review carefully before proceeding.',
-                  style: TextStyle(fontSize: 12, color: Colors.grey[700]),
+                  style: TextStyle(fontSize: AppFontSize.f12, color: context.colors.textSoft),
                 ),
-                const SizedBox(height: 12),
+                const SizedBox(height: AppSpacing.s12),
                 Card(
-            elevation: 2,
+            elevation: AppElevation.e2,
             child: ListTile(
-              leading: Icon(Icons.devices_other, color: primaryColor),
+              leading: Icon(Icons.devices_other, color: context.colors.primary),
               title: const Text('Log Out of All Devices'),
               subtitle: const Text(
                   'Disconnect your active profile session from all other active platforms.'),
@@ -651,16 +605,16 @@ class _ManageAccountScreenState extends State<ManageAccountScreen> {
                       height: 20,
                       child: CircularProgressIndicator(
                         strokeWidth: 2,
-                        color: primaryColor,
+                        color: context.colors.primary,
                       ),
                     )
                   : null,
             ),
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: AppSpacing.s12),
           if (Provider.of<UserRoleProvider>(context).isAdmin)
           Card(
-            elevation: 2,
+            elevation: AppElevation.e2,
             child: ListTile(
               leading: _isWipingData
                   ? SizedBox(
@@ -668,7 +622,7 @@ class _ManageAccountScreenState extends State<ManageAccountScreen> {
                       height: 24,
                       child: CircularProgressIndicator(strokeWidth: 2, color: dangerColor),
                     )
-                  : Icon(Icons.phonelink_erase, color: primaryColor),
+                  : Icon(Icons.phonelink_erase, color: context.colors.primary),
               title: const Text('Wipe All Business Data'),
               subtitle: Text(
                   _isWipingData
@@ -677,9 +631,9 @@ class _ManageAccountScreenState extends State<ManageAccountScreen> {
               onTap: inputDisabled ? null : _wipeAllData,
             ),
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: AppSpacing.s12),
           Card(
-            elevation: 2,
+            elevation: AppElevation.e2,
             child: ListTile(
               leading: const Icon(Icons.pause_circle_outline),
               title: const Text('Deactivate Account'),
@@ -688,9 +642,9 @@ class _ManageAccountScreenState extends State<ManageAccountScreen> {
               onTap: inputDisabled ? null : _deactivateAccount,
             ),
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: AppSpacing.s12),
           Card(
-            elevation: 2,
+            elevation: AppElevation.e2,
             child: ListTile(
               enabled: !(inputDisabled || deleteAccountBlocked),
               leading: const Icon(Icons.delete_forever),
