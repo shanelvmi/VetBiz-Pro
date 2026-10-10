@@ -7,11 +7,13 @@ import '../../providers/facility_provider.dart';
 import '../../services/daily_report_service.dart';
 import 'report_detail_screen.dart';
 import 'report_review_screen.dart';
-import '../../theme/app_palette.dart';
 import '../../config/money.dart';
 import '../../config/app_limits.dart';
 import '../../config/app_ranges.dart';
 import '../../config/app_date_format.dart';
+import '../../theme/app_text.dart';
+import '../../theme/app_dimens.dart';
+import '../../theme/theme_context.dart';
 
 class PastReportsScreen extends StatefulWidget {
   const PastReportsScreen({super.key});
@@ -51,8 +53,6 @@ extension on _TimeFilter {
 }
 
 class _PastReportsScreenState extends State<PastReportsScreen> {
-  static const Color primaryDeepGreen = AppPalette.primary;
-  static const Color offWhite = AppPalette.background;
   static const int _pageSize = AppLimits.pageSize;
 
   final DailyReportService _reportService = DailyReportService();
@@ -166,19 +166,19 @@ class _PastReportsScreenState extends State<PastReportsScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: offWhite,
+      backgroundColor: context.colors.background,
       appBar: AppBar(
-        backgroundColor: Colors.white,
-        foregroundColor: Colors.black87,
-        elevation: 1,
+        backgroundColor: context.colors.surface,
+        foregroundColor: context.colors.textPrimary,
+        elevation: AppElevation.e1,
         centerTitle: true,
         toolbarHeight: 72,
-        title: const Column(
+        title: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Text('Past Reports', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 19, color: Colors.black87)),
+            Text('Past Reports', style: TextStyle(fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f19, color: context.colors.textPrimary)),
             Text('Every daily closing report for this facility',
-                style: TextStyle(fontSize: 12, color: Colors.black54)),
+                style: TextStyle(fontSize: AppFontSize.f12, color: context.colors.textSecondary)),
           ],
         ),
       ),
@@ -187,11 +187,11 @@ class _PastReportsScreenState extends State<PastReportsScreen> {
           : Column(
               children: [
                 Padding(
-                  padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
+                  padding: const EdgeInsets.fromLTRB(AppSpacing.s16, AppSpacing.s16, AppSpacing.s16, 0),
                   child: _searchAndFilterRow(),
                 ),
                 Padding(
-                  padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+                  padding: const EdgeInsets.fromLTRB(AppSpacing.s16, AppSpacing.s12, AppSpacing.s16, 0),
                   child: _summaryRow(),
                 ),
                 Expanded(
@@ -199,11 +199,11 @@ class _PastReportsScreenState extends State<PastReportsScreen> {
                       ? Center(
                           child: Text(
                             _reports.isEmpty ? 'No reports generated yet.' : 'No reports match your search.',
-                            style: TextStyle(color: Colors.grey[600]),
+                            style: TextStyle(color: context.colors.textMuted),
                           ),
                         )
                       : ListView.builder(
-                          padding: const EdgeInsets.all(16),
+                          padding: const EdgeInsets.all(AppSpacing.s16),
                           itemCount: _filteredReports.length + (_searchQuery.isEmpty && _hasMore ? 1 : 0),
                           itemBuilder: (context, index) {
                             if (index >= _filteredReports.length) {
@@ -220,13 +220,13 @@ class _PastReportsScreenState extends State<PastReportsScreen> {
 
   Widget _loadMoreButton() {
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 12),
+      padding: const EdgeInsets.symmetric(vertical: AppSpacing.s12),
       child: Center(
         child: _isLoadingMore
-            ? const SizedBox(width: 22, height: 22, child: CircularProgressIndicator(strokeWidth: 2.5))
+            ? const SizedBox(width: AppSpacing.s22, height: 22, child: CircularProgressIndicator(strokeWidth: 2.5))
             : OutlinedButton(
                 onPressed: _loadMore,
-                style: OutlinedButton.styleFrom(foregroundColor: primaryDeepGreen),
+                style: OutlinedButton.styleFrom(foregroundColor: context.colors.primary),
                 child: const Text('Load more'),
               ),
       ),
@@ -241,36 +241,36 @@ class _PastReportsScreenState extends State<PastReportsScreen> {
             controller: _searchController,
             decoration: InputDecoration(
               hintText: 'Search reports...',
-              prefixIcon: const Icon(Icons.search, size: 20),
+              prefixIcon: const Icon(Icons.search, size: AppIconSize.i20),
               isDense: true,
-              contentPadding: const EdgeInsets.symmetric(vertical: 12, horizontal: 14),
-              border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+              contentPadding: const EdgeInsets.symmetric(vertical: AppSpacing.s12, horizontal: AppSpacing.s14),
+              border: OutlineInputBorder(borderRadius: BorderRadius.circular(AppRadius.r10)),
               filled: true,
-              fillColor: Colors.white,
+              fillColor: context.colors.surface,
             ),
           ),
         ),
-        const SizedBox(width: 10),
+        const SizedBox(width: AppSpacing.s10),
         Container(
-          padding: const EdgeInsets.symmetric(horizontal: 4),
+          padding: const EdgeInsets.symmetric(horizontal: AppSpacing.s4),
           decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(10),
-            border: Border.all(color: Colors.grey.withValues(alpha: 0.3)),
+            color: context.colors.surface,
+            borderRadius: BorderRadius.circular(AppRadius.r10),
+            border: Border.all(color: context.colors.textHint.withValues(alpha: AppAlpha.a30)),
           ),
           child: DropdownButtonHideUnderline(
             child: DropdownButton<_TimeFilter>(
               value: _timeFilter,
-              icon: const Padding(padding: EdgeInsets.only(right: 8), child: Icon(Icons.expand_more, size: 18)),
-              padding: const EdgeInsets.symmetric(horizontal: 8),
+              icon: const Padding(padding: EdgeInsets.only(right: AppSpacing.s8), child: Icon(Icons.expand_more, size: AppIconSize.i18)),
+              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.s8),
               items: _TimeFilter.values
                   .map((f) => DropdownMenuItem(
                         value: f,
                         child: Row(
                           children: [
-                            const Icon(Icons.calendar_today_outlined, size: 15, color: primaryDeepGreen),
-                            const SizedBox(width: 8),
-                            Text(f.label, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600)),
+                            Icon(Icons.calendar_today_outlined, size: AppIconSize.i16, color: context.colors.primary),
+                            const SizedBox(width: AppSpacing.s8),
+                            Text(f.label, style: const TextStyle(fontSize: AppFontSize.f13, fontWeight: AppFontWeight.semibold)),
                           ],
                         ),
                       ))
@@ -302,11 +302,11 @@ class _PastReportsScreenState extends State<PastReportsScreen> {
     final latestDate = _reports.isEmpty ? null : (_reports.map((r) => r.reportDate).toList()..sort()).last;
 
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.s16, vertical: AppSpacing.s14),
       decoration: BoxDecoration(
-        color: primaryDeepGreen.withValues(alpha: 0.05),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: primaryDeepGreen.withValues(alpha: 0.15)),
+        color: context.colors.primary.withValues(alpha: AppAlpha.a05),
+        borderRadius: BorderRadius.circular(AppRadius.r12),
+        border: Border.all(color: context.colors.primary.withValues(alpha: AppAlpha.a15)),
       ),
       child: Row(
         children: [
@@ -326,23 +326,23 @@ class _PastReportsScreenState extends State<PastReportsScreen> {
     );
   }
 
-  Widget _summaryDivider() => Container(width: 1, height: 34, color: Colors.grey.withValues(alpha: 0.25));
+  Widget _summaryDivider() => Container(width: 1, height: 34, color: context.colors.textHint.withValues(alpha: AppAlpha.a30));
 
   Widget _summaryStat(IconData icon, String value, String label) {
     return Row(
       children: [
         Container(
-          padding: const EdgeInsets.all(8),
-          decoration: BoxDecoration(color: primaryDeepGreen.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(8)),
-          child: Icon(icon, size: 16, color: primaryDeepGreen),
+          padding: const EdgeInsets.all(AppSpacing.s8),
+          decoration: BoxDecoration(color: context.colors.primary.withValues(alpha: AppAlpha.a10), borderRadius: BorderRadius.circular(AppRadius.r8)),
+          child: Icon(icon, size: AppIconSize.i16, color: context.colors.primary),
         ),
-        const SizedBox(width: 10),
+        const SizedBox(width: AppSpacing.s10),
         Expanded(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(value, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14), overflow: TextOverflow.ellipsis),
-              Text(label, style: TextStyle(fontSize: 11, color: Colors.grey[600])),
+              Text(value, style: const TextStyle(fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f14), overflow: TextOverflow.ellipsis),
+              Text(label, style: TextStyle(fontSize: AppFontSize.f11, color: context.colors.textMuted)),
             ],
           ),
         ),
@@ -354,9 +354,9 @@ class _PastReportsScreenState extends State<PastReportsScreen> {
     final revenue = report.salesTotalValue + report.servicesTotalValue;
     final isDraft = report.status == 'draft';
     return Padding(
-      padding: const EdgeInsets.only(bottom: 10),
+      padding: const EdgeInsets.only(bottom: AppSpacing.s10),
       child: InkWell(
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(AppRadius.r12),
         onTap: () async {
           if (isDraft) {
             await showReportReviewScreen(context, report);
@@ -366,64 +366,64 @@ class _PastReportsScreenState extends State<PastReportsScreen> {
           _loadInitialPage();
         },
         child: Container(
-          padding: const EdgeInsets.all(14),
+          padding: const EdgeInsets.all(AppSpacing.s14),
           decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: isDraft ? Colors.orange.withValues(alpha: 0.35) : Colors.grey.withValues(alpha: 0.2)),
+            color: context.colors.surface,
+            borderRadius: BorderRadius.circular(AppRadius.r12),
+            border: Border.all(color: isDraft ? context.colors.warning.withValues(alpha: AppAlpha.a40) : context.colors.textHint.withValues(alpha: AppAlpha.a20)),
           ),
           child: Row(
             children: [
               Container(
-                padding: const EdgeInsets.all(8),
+                padding: const EdgeInsets.all(AppSpacing.s8),
                 decoration: BoxDecoration(
-                  color: primaryDeepGreen.withValues(alpha: 0.08),
-                  borderRadius: BorderRadius.circular(8),
+                  color: context.colors.primary.withValues(alpha: AppAlpha.a10),
+                  borderRadius: BorderRadius.circular(AppRadius.r8),
                 ),
-                child: Icon(Icons.description_outlined, color: primaryDeepGreen, size: 20),
+                child: Icon(Icons.description_outlined, color: context.colors.primary, size: AppIconSize.i20),
               ),
-              const SizedBox(width: 12),
+              const SizedBox(width: AppSpacing.s12),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(AppDateFormat.dateLong.format(report.reportDate),
-                        style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13.5)),
-                    const SizedBox(height: 2),
+                        style: const TextStyle(fontWeight: AppFontWeight.semibold, fontSize: AppFontSize.f13_5)),
+                    const SizedBox(height: AppSpacing.s2),
                     Text('${Money.symbolDecimal(revenue)} total revenue - generated by ${report.generatedByName}',
-                        style: TextStyle(fontSize: 12, color: Colors.grey[600])),
+                        style: TextStyle(fontSize: AppFontSize.f12, color: context.colors.textMuted)),
                   ],
                 ),
               ),
-              const SizedBox(width: 8),
+              const SizedBox(width: AppSpacing.s8),
               if (isDraft)
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  padding: const EdgeInsets.symmetric(horizontal: AppSpacing.s8, vertical: AppSpacing.s4),
                   decoration: BoxDecoration(
-                    color: Colors.orange.withValues(alpha: 0.12),
-                    borderRadius: BorderRadius.circular(20),
+                    color: context.colors.warning.withValues(alpha: AppAlpha.a10),
+                    borderRadius: BorderRadius.circular(AppRadius.r20),
                   ),
                   child: Text('Not submitted',
-                      style: TextStyle(fontSize: 10.5, fontWeight: FontWeight.w600, color: Colors.orange[800])),
+                      style: TextStyle(fontSize: AppFontSize.f10_5, fontWeight: AppFontWeight.semibold, color: context.colors.warningStrong)),
                 )
               else
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  padding: const EdgeInsets.symmetric(horizontal: AppSpacing.s8, vertical: AppSpacing.s4),
                   decoration: BoxDecoration(
-                    color: Colors.green.withValues(alpha: 0.12),
-                    borderRadius: BorderRadius.circular(20),
+                    color: context.colors.success.withValues(alpha: AppAlpha.a10),
+                    borderRadius: BorderRadius.circular(AppRadius.r20),
                   ),
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Icon(Icons.check_circle, size: 13, color: Colors.green[700]),
-                      const SizedBox(width: 4),
-                      Text('Completed', style: TextStyle(fontSize: 10.5, fontWeight: FontWeight.w600, color: Colors.green[700])),
+                      Icon(Icons.check_circle, size: AppIconSize.i14, color: context.colors.successStrong),
+                      const SizedBox(width: AppSpacing.s4),
+                      Text('Completed', style: TextStyle(fontSize: AppFontSize.f10_5, fontWeight: AppFontWeight.semibold, color: context.colors.successStrong)),
                     ],
                   ),
                 ),
-              const SizedBox(width: 8),
-              Icon(Icons.chevron_right, color: Colors.grey[400]),
+              const SizedBox(width: AppSpacing.s8),
+              Icon(Icons.chevron_right, color: context.colors.textDisabled),
             ],
           ),
         ),
