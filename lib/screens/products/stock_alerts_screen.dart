@@ -12,9 +12,13 @@ import '../store/release_to_shop_flow.dart';
 import 'add_batch_screen.dart';
 import 'view_batches_screen.dart';
 import 'move_expired_to_stock_dialog.dart';
-import '../../theme/app_palette.dart';
 import '../../config/app_limits.dart';
 import '../../config/app_date_format.dart';
+import '../../theme/app_text.dart';
+import '../../theme/app_dimens.dart';
+import '../../theme/app_colors.dart';
+import '../../theme/theme_context.dart';
+import '../../theme/app_breakpoints.dart';
 
 /// What kind of thing needs attention. Declared in the order they're
 /// shown - most urgent first.
@@ -59,7 +63,6 @@ class StockAlertsScreen extends StatelessWidget {
   final bool isDropdown;
   const StockAlertsScreen({super.key, this.isDropdown = false});
 
-  static const Color primaryColor = AppPalette.primary;
   static const int expiryWarningDays = 30;
 
   /// How many alerts the compact dropdown shows before pointing to the
@@ -140,7 +143,7 @@ class StockAlertsScreen extends StatelessWidget {
 
   // Same colors and icons the notification system uses for these same
   // situations, so an alert looks the same wherever it appears.
-  static Color _color(StockAlertKind k) {
+  static Color _color(StockAlertKind k, AppColors colors) {
     switch (k) {
       case StockAlertKind.depleted:
         return NotificationType.criticalStock.color;
@@ -149,7 +152,7 @@ class StockAlertsScreen extends StatelessWidget {
       case StockAlertKind.lowStock:
         return NotificationType.lowStock.color;
       case StockAlertKind.expiringSoon:
-        return Colors.orange;
+        return colors.warning;
       case StockAlertKind.restockShelf:
         return NotificationType.restockShelf.color;
     }
@@ -199,18 +202,18 @@ class StockAlertsScreen extends StatelessWidget {
     }
 
     return Scaffold(
-      backgroundColor: const Color(0xFFFDFDF9),
+      backgroundColor: context.colors.background,
       appBar: AppBar(
-        backgroundColor: Colors.white,
-        foregroundColor: Colors.black87,
-        elevation: 1,
+        backgroundColor: context.colors.surface,
+        foregroundColor: context.colors.textPrimary,
+        elevation: AppElevation.e1,
         centerTitle: true,
         toolbarHeight: 72,
-        title: const Column(
+        title: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Text('Product Alerts', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 19, color: Colors.black87)),
-            Text('Stock and expiry problems that need action', style: TextStyle(fontSize: 12, color: Colors.black54)),
+            Text('Product Alerts', style: TextStyle(fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f19, color: context.colors.textPrimary)),
+            Text('Stock and expiry problems that need action', style: TextStyle(fontSize: AppFontSize.f12, color: context.colors.textSecondary)),
           ],
         ),
       ),
@@ -227,29 +230,29 @@ class StockAlertsScreen extends StatelessWidget {
       mainAxisSize: MainAxisSize.min,
       children: [
         Container(
-          padding: const EdgeInsets.fromLTRB(16, 14, 8, 14),
+          padding: const EdgeInsets.fromLTRB(AppSpacing.s16, AppSpacing.s14, AppSpacing.s8, AppSpacing.s14),
           decoration: BoxDecoration(
-            color: primaryColor,
-            borderRadius: const BorderRadius.vertical(top: Radius.circular(12)),
+            color: context.colors.primary,
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(AppRadius.r12)),
           ),
           child: Row(
             children: [
-              const Text(
+              Text(
                 'Product Alerts',
-                style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 15),
+                style: TextStyle(color: context.colors.onPrimary, fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f15),
               ),
               if (alerts.isNotEmpty) ...[
-                const SizedBox(width: 8),
+                const SizedBox(width: AppSpacing.s8),
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                  decoration: BoxDecoration(color: Colors.orange, borderRadius: BorderRadius.circular(10)),
+                  padding: const EdgeInsets.symmetric(horizontal: AppSpacing.s8, vertical: AppSpacing.s2),
+                  decoration: BoxDecoration(color: context.colors.warning, borderRadius: BorderRadius.circular(AppRadius.r10)),
                   child: Text('${alerts.length}',
-                      style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 11)),
+                      style: TextStyle(color: context.colors.onPrimary, fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f11)),
                 ),
               ],
               const Spacer(),
               IconButton(
-                icon: const Icon(Icons.close, color: Colors.white, size: 20),
+                icon: Icon(Icons.close, color: context.colors.onPrimary, size: AppIconSize.i20),
                 tooltip: 'Close',
                 onPressed: () => Navigator.of(context).pop(),
               ),
@@ -258,7 +261,7 @@ class StockAlertsScreen extends StatelessWidget {
         ),
         Flexible(
           child: SingleChildScrollView(
-            padding: const EdgeInsets.all(12),
+            padding: const EdgeInsets.all(AppSpacing.s12),
             child: _buildDropdownList(context, alerts),
           ),
         ),
@@ -270,7 +273,7 @@ class StockAlertsScreen extends StatelessWidget {
     // The dropdown already sits inside its own SingleChildScrollView,
     // which offers unbounded height to its child - so this must size
     // itself naturally rather than try to fill/centre in a viewport.
-    if (alerts.isEmpty) return Center(child: _caughtUpContent());
+    if (alerts.isEmpty) return Center(child: _caughtUpContent(context));
 
     final shown = alerts.take(dropdownLimit).toList();
 
@@ -292,16 +295,16 @@ class StockAlertsScreen extends StatelessWidget {
           navigator.pop();
           navigator.push(MaterialPageRoute(builder: (_) => const StockAlertsScreen()));
         },
-        style: TextButton.styleFrom(foregroundColor: primaryColor),
+        style: TextButton.styleFrom(foregroundColor: context.colors.primary),
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
             Text(
               alerts.length > shown.length ? 'View all ${alerts.length} alerts' : 'View all alerts',
-              style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
+              style: const TextStyle(fontSize: AppFontSize.f13, fontWeight: AppFontWeight.semibold),
             ),
-            const SizedBox(width: 4),
-            const Icon(Icons.arrow_forward, size: 15),
+            const SizedBox(width: AppSpacing.s4),
+            const Icon(Icons.arrow_forward, size: AppIconSize.i16),
           ],
         ),
       ),
@@ -310,63 +313,63 @@ class StockAlertsScreen extends StatelessWidget {
     return ListView.builder(
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
-      padding: const EdgeInsets.fromLTRB(4, 4, 4, 8),
+      padding: const EdgeInsets.fromLTRB(AppSpacing.s4, AppSpacing.s4, AppSpacing.s4, AppSpacing.s8),
       itemCount: entries.length + 1,
       itemBuilder: (context, index) {
         if (index == entries.length) return footer;
         final entry = entries[index];
-        if (entry is _SectionHeader) return _buildSectionHeader(entry);
-        return _buildAlertTile(entry as StockAlert);
+        if (entry is _SectionHeader) return _buildSectionHeader(context, entry);
+        return _buildAlertTile(context, entry as StockAlert);
       },
     );
   }
 
-  Widget _buildSectionHeader(_SectionHeader h) {
-    final color = _color(h.kind);
+  Widget _buildSectionHeader(BuildContext context, _SectionHeader h) {
+    final color = _color(h.kind, context.colors);
     return Padding(
-      padding: const EdgeInsets.fromLTRB(2, 6, 2, 8),
+      padding: const EdgeInsets.fromLTRB(AppSpacing.s2, AppSpacing.s6, AppSpacing.s2, AppSpacing.s8),
       child: Row(
         children: [
           Text(
             _title(h.kind).toUpperCase(),
-            style: TextStyle(fontSize: 11.5, fontWeight: FontWeight.w700, letterSpacing: 0.6, color: color),
+            style: TextStyle(fontSize: AppFontSize.f11_5, fontWeight: AppFontWeight.bold, letterSpacing: 0.6, color: color),
           ),
-          const SizedBox(width: 6),
-          Text('${h.count}', style: TextStyle(fontSize: 11.5, color: Colors.grey[600])),
+          const SizedBox(width: AppSpacing.s6),
+          Text('${h.count}', style: TextStyle(fontSize: AppFontSize.f11_5, color: context.colors.textMuted)),
         ],
       ),
     );
   }
 
-  Widget _buildAlertTile(StockAlert alert) {
-    final color = _color(alert.kind);
+  Widget _buildAlertTile(BuildContext context, StockAlert alert) {
+    final color = _color(alert.kind, context.colors);
     return Container(
-      margin: const EdgeInsets.only(bottom: 8),
+      margin: const EdgeInsets.only(bottom: AppSpacing.s8),
       decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(10),
+        color: context.colors.surface,
+        borderRadius: BorderRadius.circular(AppRadius.r10),
         boxShadow: [
-          BoxShadow(color: Colors.black.withValues(alpha: 0.04), blurRadius: 6, offset: const Offset(0, 2)),
+          BoxShadow(color: context.colors.shadow.withValues(alpha: AppAlpha.a05), blurRadius: 6, offset: const Offset(0, 2)),
         ],
       ),
       child: Padding(
-        padding: const EdgeInsets.all(12),
+        padding: const EdgeInsets.all(AppSpacing.s12),
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Container(
-              padding: const EdgeInsets.all(8),
-              decoration: BoxDecoration(color: color.withValues(alpha: 0.12), shape: BoxShape.circle),
-              child: Icon(_icon(alert.kind), color: color, size: 18),
+              padding: const EdgeInsets.all(AppSpacing.s8),
+              decoration: BoxDecoration(color: color.withValues(alpha: AppAlpha.a10), shape: BoxShape.circle),
+              child: Icon(_icon(alert.kind), color: color, size: AppIconSize.i18),
             ),
-            const SizedBox(width: 10),
+            const SizedBox(width: AppSpacing.s10),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(_title(alert.kind), style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13.5)),
-                  const SizedBox(height: 2),
-                  Text(_message(alert), style: TextStyle(color: Colors.grey[700], fontSize: 12.5)),
+                  Text(_title(alert.kind), style: const TextStyle(fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f13_5)),
+                  const SizedBox(height: AppSpacing.s2),
+                  Text(_message(alert), style: TextStyle(color: context.colors.textSoft, fontSize: AppFontSize.f12_5)),
                 ],
               ),
             ),
@@ -379,27 +382,27 @@ class StockAlertsScreen extends StatelessWidget {
 
 /// Shared "nothing to report" content - used by the dropdown and by the
 /// full screen when there are no alerts at all.
-Widget _caughtUpContent() {
+Widget _caughtUpContent(BuildContext context) {
   return Padding(
-    padding: const EdgeInsets.all(32),
+    padding: const EdgeInsets.all(AppSpacing.s32),
     child: Column(
       mainAxisSize: MainAxisSize.min,
       children: [
         Container(
-          padding: const EdgeInsets.all(20),
+          padding: const EdgeInsets.all(AppSpacing.s20),
           decoration: BoxDecoration(
-            color: Colors.green.withValues(alpha: 0.1),
+            color: context.colors.success.withValues(alpha: AppAlpha.a10),
             shape: BoxShape.circle,
           ),
-          child: const Icon(Icons.check_circle_outline, color: Colors.green, size: 48),
+          child: Icon(Icons.check_circle_outline, color: context.colors.success, size: AppIconSize.i48),
         ),
-        const SizedBox(height: 16),
-        const Text("You're all caught up!", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 17)),
-        const SizedBox(height: 6),
+        const SizedBox(height: AppSpacing.s16),
+        const Text("You're all caught up!", style: TextStyle(fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f17)),
+        const SizedBox(height: AppSpacing.s6),
         Text(
           'No stock alerts right now.',
           textAlign: TextAlign.center,
-          style: TextStyle(color: Colors.grey[600], fontSize: 13),
+          style: TextStyle(color: context.colors.textMuted, fontSize: AppFontSize.f13),
         ),
       ],
     ),
@@ -425,7 +428,6 @@ class _AlertsBody extends StatefulWidget {
 }
 
 class _AlertsBodyState extends State<_AlertsBody> {
-  static const Color _primary = StockAlertsScreen.primaryColor;
 
   // Card order as requested. The table itself always lists the most
   // urgent first (see StockAlertsScreen.currentAlerts).
@@ -604,16 +606,16 @@ class _AlertsBodyState extends State<_AlertsBody> {
     return Column(
       children: [
         Padding(
-          padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
+          padding: const EdgeInsets.fromLTRB(AppSpacing.s16, AppSpacing.s16, AppSpacing.s16, 0),
           child: _buildCards(counts),
         ),
         Padding(
-          padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+          padding: const EdgeInsets.fromLTRB(AppSpacing.s16, AppSpacing.s12, AppSpacing.s16, 0),
           child: _buildFilters(categories, category, hasActiveFilters),
         ),
         Expanded(
           child: all.isEmpty
-              ? Center(child: SingleChildScrollView(child: _caughtUpContent()))
+              ? Center(child: SingleChildScrollView(child: _caughtUpContent(context)))
               : filtered.isEmpty
                   ? _buildNoMatches()
                   : _buildResults(pageItems, isAdmin),
@@ -628,7 +630,7 @@ class _AlertsBodyState extends State<_AlertsBody> {
   Widget _buildCards(Map<StockAlertKind, int> counts) {
     return LayoutBuilder(
       builder: (context, constraints) {
-        final columns = constraints.maxWidth >= 720 ? 5 : 3;
+        final columns = constraints.maxWidth >= AppBreakpoints.fiveColumnCards ? 5 : 3;
         return GridView.builder(
           shrinkWrap: true,
           physics: const NeverScrollableScrollPhysics(),
@@ -651,20 +653,20 @@ class _AlertsBodyState extends State<_AlertsBody> {
   // Same small card as the Sales screen's, but tappable: it filters the
   // table to that kind, and tapping it again clears the filter.
   Widget _alertCard(StockAlertKind kind, int count) {
-    final color = StockAlertsScreen._color(kind);
+    final color = StockAlertsScreen._color(kind, context.colors);
     final selected = _kindFilter == kind;
     final shape = RoundedRectangleBorder(
-      borderRadius: BorderRadius.circular(12),
+      borderRadius: BorderRadius.circular(AppRadius.r12),
       side: BorderSide(
-        color: selected ? color.withValues(alpha: 0.7) : Colors.grey.withValues(alpha: 0.15),
+        color: selected ? color.withValues(alpha: AppAlpha.a70) : context.colors.textHint.withValues(alpha: AppAlpha.a15),
         width: selected ? 1.5 : 1,
       ),
     );
     return Material(
-      color: selected ? color.withValues(alpha: 0.06) : Colors.white,
+      color: selected ? color.withValues(alpha: AppAlpha.a05) : context.colors.surface,
       shape: shape,
-      elevation: 1,
-      shadowColor: Colors.black.withValues(alpha: 0.05),
+      elevation: AppElevation.e1,
+      shadowColor: context.colors.shadow.withValues(alpha: AppAlpha.a05),
       child: InkWell(
         customBorder: shape,
         onTap: () => setState(() {
@@ -672,7 +674,7 @@ class _AlertsBodyState extends State<_AlertsBody> {
           _page = 1;
         }),
         child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+          padding: const EdgeInsets.symmetric(horizontal: AppSpacing.s12, vertical: AppSpacing.s10),
           child: FittedBox(
             fit: BoxFit.scaleDown,
             alignment: Alignment.topLeft,
@@ -686,16 +688,16 @@ class _AlertsBodyState extends State<_AlertsBody> {
                       width: 26,
                       height: 26,
                       decoration:
-                          BoxDecoration(color: color.withValues(alpha: 0.12), borderRadius: BorderRadius.circular(7)),
-                      child: Icon(StockAlertsScreen._icon(kind), color: color, size: 14),
+                          BoxDecoration(color: color.withValues(alpha: AppAlpha.a10), borderRadius: BorderRadius.circular(AppRadius.r7)),
+                      child: Icon(StockAlertsScreen._icon(kind), color: color, size: AppIconSize.i14),
                     ),
-                    const SizedBox(width: 8),
-                    Text('$count', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                    const SizedBox(width: AppSpacing.s8),
+                    Text('$count', style: const TextStyle(fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f16)),
                   ],
                 ),
-                const SizedBox(height: 4),
-                Text(StockAlertsScreen._title(kind), style: TextStyle(fontSize: 11.5, color: Colors.grey[600])),
-                Text(_cardHint[kind] ?? '', style: TextStyle(fontSize: 10.5, color: Colors.grey[400])),
+                const SizedBox(height: AppSpacing.s4),
+                Text(StockAlertsScreen._title(kind), style: TextStyle(fontSize: AppFontSize.f11_5, color: context.colors.textMuted)),
+                Text(_cardHint[kind] ?? '', style: TextStyle(fontSize: AppFontSize.f10_5, color: context.colors.textDisabled)),
               ],
             ),
           ),
@@ -708,26 +710,26 @@ class _AlertsBodyState extends State<_AlertsBody> {
 
   Widget _buildFilters(List<String> categories, String category, bool hasActiveFilters) {
     final border = OutlineInputBorder(
-      borderRadius: BorderRadius.circular(10),
-      borderSide: BorderSide(color: Colors.grey.withValues(alpha: 0.3)),
+      borderRadius: BorderRadius.circular(AppRadius.r10),
+      borderSide: BorderSide(color: context.colors.textHint.withValues(alpha: AppAlpha.a30)),
     );
 
     final search = TextField(
       controller: _searchController,
       decoration: InputDecoration(
         hintText: 'Search by product, category or alert...',
-        hintStyle: const TextStyle(fontSize: 13),
-        prefixIcon: const Icon(Icons.search, size: 20),
+        hintStyle: const TextStyle(fontSize: AppFontSize.f13),
+        prefixIcon: const Icon(Icons.search, size: AppIconSize.i20),
         filled: true,
-        fillColor: Colors.white,
+        fillColor: context.colors.surface,
         isDense: true,
-        contentPadding: const EdgeInsets.symmetric(vertical: 12, horizontal: 12),
+        contentPadding: const EdgeInsets.symmetric(vertical: AppSpacing.s12, horizontal: AppSpacing.s12),
         border: border,
         enabledBorder: border,
         suffixIcon: _searchController.text.isEmpty
             ? null
             : IconButton(
-                icon: const Icon(Icons.clear, size: 18),
+                icon: const Icon(Icons.clear, size: AppIconSize.i18),
                 onPressed: () {
                   _searchController.clear();
                   setState(() {
@@ -745,7 +747,7 @@ class _AlertsBodyState extends State<_AlertsBody> {
 
     return LayoutBuilder(
       builder: (context, constraints) {
-        final narrow = constraints.maxWidth < 640;
+        final narrow = constraints.maxWidth < AppBreakpoints.filterRow;
         final reset = hasActiveFilters ? TextButton(onPressed: _resetFilters, child: const Text('Reset')) : null;
 
         if (narrow) {
@@ -753,11 +755,11 @@ class _AlertsBodyState extends State<_AlertsBody> {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               search,
-              const SizedBox(height: 10),
+              const SizedBox(height: AppSpacing.s10),
               Row(
                 children: [
                   Expanded(child: _categoryDropdown(categories, category, expand: true)),
-                  if (reset != null) ...[const SizedBox(width: 10), reset],
+                  if (reset != null) ...[const SizedBox(width: AppSpacing.s10), reset],
                 ],
               ),
             ],
@@ -767,9 +769,9 @@ class _AlertsBodyState extends State<_AlertsBody> {
         return Row(
           children: [
             Expanded(flex: 3, child: search),
-            const SizedBox(width: 10),
+            const SizedBox(width: AppSpacing.s10),
             _categoryDropdown(categories, category),
-            if (reset != null) ...[const SizedBox(width: 10), reset],
+            if (reset != null) ...[const SizedBox(width: AppSpacing.s10), reset],
           ],
         );
       },
@@ -779,19 +781,19 @@ class _AlertsBodyState extends State<_AlertsBody> {
   Widget _categoryDropdown(List<String> categories, String value, {bool expand = false}) {
     final items = ['All', ...categories];
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10),
+      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.s10),
       height: 44,
       decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: Colors.grey.withValues(alpha: 0.3)),
+        color: context.colors.surface,
+        borderRadius: BorderRadius.circular(AppRadius.r10),
+        border: Border.all(color: context.colors.textHint.withValues(alpha: AppAlpha.a30)),
       ),
       child: DropdownButtonHideUnderline(
         child: DropdownButton<String>(
           value: value,
           isExpanded: expand,
-          icon: const Icon(Icons.arrow_drop_down, size: 18, color: _primary),
-          style: const TextStyle(color: Colors.black87, fontSize: 13),
+          icon: Icon(Icons.arrow_drop_down, size: AppIconSize.i18, color: context.colors.primary),
+          style: TextStyle(color: context.colors.textPrimary, fontSize: AppFontSize.f13),
           items: items
               .map((v) => DropdownMenuItem(value: v, child: Text('Category: $v', overflow: TextOverflow.ellipsis)))
               .toList(),
@@ -815,10 +817,10 @@ class _AlertsBodyState extends State<_AlertsBody> {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(Icons.search_off, size: 56, color: Colors.grey[400]),
-          const SizedBox(height: 12),
-          Text('No alerts match your filters', style: TextStyle(fontSize: 17, color: Colors.grey[600])),
-          const SizedBox(height: 8),
+          Icon(Icons.search_off, size: AppIconSize.i56, color: context.colors.textDisabled),
+          const SizedBox(height: AppSpacing.s12),
+          Text('No alerts match your filters', style: TextStyle(fontSize: AppFontSize.f17, color: context.colors.textMuted)),
+          const SizedBox(height: AppSpacing.s8),
           TextButton(onPressed: _resetFilters, child: const Text('Reset filters')),
         ],
       ),
@@ -828,11 +830,11 @@ class _AlertsBodyState extends State<_AlertsBody> {
   Widget _buildResults(List<StockAlert> items, bool isAdmin) {
     return LayoutBuilder(
       builder: (context, constraints) {
-        if (constraints.maxWidth < 760) {
+        if (constraints.maxWidth < AppBreakpoints.resultsTable) {
           return ListView.separated(
-            padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
+            padding: const EdgeInsets.fromLTRB(AppSpacing.s16, AppSpacing.s12, AppSpacing.s16, AppSpacing.s12),
             itemCount: items.length,
-            separatorBuilder: (context, index) => const SizedBox(height: 10),
+            separatorBuilder: (context, index) => const SizedBox(height: AppSpacing.s10),
             itemBuilder: (context, index) => _buildNarrowCard(items[index], isAdmin),
           );
         }
@@ -840,8 +842,8 @@ class _AlertsBodyState extends State<_AlertsBody> {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             Container(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-              decoration: BoxDecoration(border: Border(bottom: BorderSide(color: Colors.grey.withValues(alpha: 0.2)))),
+              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.s16, vertical: AppSpacing.s12),
+              decoration: BoxDecoration(border: Border(bottom: BorderSide(color: context.colors.textHint.withValues(alpha: AppAlpha.a20)))),
               child: Row(
                 children: [
                   _headerCell('Product', flex: 4),
@@ -856,7 +858,7 @@ class _AlertsBodyState extends State<_AlertsBody> {
             Expanded(
               child: ListView.separated(
                 itemCount: items.length,
-                separatorBuilder: (context, index) => Divider(height: 1, color: Colors.grey.withValues(alpha: 0.12)),
+                separatorBuilder: (context, index) => Divider(height: 1, color: context.colors.textHint.withValues(alpha: AppAlpha.a10)),
                 itemBuilder: (context, index) => _buildRow(items[index], isAdmin),
               ),
             ),
@@ -869,7 +871,7 @@ class _AlertsBodyState extends State<_AlertsBody> {
   Widget _headerCell(String label, {required int flex}) {
     return Expanded(
       flex: flex,
-      child: Text(label, style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Colors.grey[600])),
+      child: Text(label, style: TextStyle(fontSize: AppFontSize.f12, fontWeight: AppFontWeight.semibold, color: context.colors.textMuted)),
     );
   }
 
@@ -877,24 +879,24 @@ class _AlertsBodyState extends State<_AlertsBody> {
     return ProductThumbnail.square(
       imageUrl: p.imageUrl,
       size: size,
-      backgroundColor: _primary.withValues(alpha: 0.08),
-      iconColor: _primary,
+      backgroundColor: context.colors.primary.withValues(alpha: AppAlpha.a10),
+      iconColor: context.colors.primary,
     );
   }
 
   Widget _alertChip(StockAlertKind kind) {
-    final color = StockAlertsScreen._color(kind);
+    final color = StockAlertsScreen._color(kind, context.colors);
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-      decoration: BoxDecoration(color: color.withValues(alpha: 0.12), borderRadius: BorderRadius.circular(10)),
+      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.s8, vertical: AppSpacing.s4),
+      decoration: BoxDecoration(color: color.withValues(alpha: AppAlpha.a10), borderRadius: BorderRadius.circular(AppRadius.r10)),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(StockAlertsScreen._icon(kind), size: 13, color: color),
-          const SizedBox(width: 4),
+          Icon(StockAlertsScreen._icon(kind), size: AppIconSize.i14, color: color),
+          const SizedBox(width: AppSpacing.s4),
           Text(
             StockAlertsScreen._title(kind),
-            style: TextStyle(color: color, fontSize: 11.5, fontWeight: FontWeight.w600),
+            style: TextStyle(color: color, fontSize: AppFontSize.f11_5, fontWeight: AppFontWeight.semibold),
           ),
         ],
       ),
@@ -903,13 +905,13 @@ class _AlertsBodyState extends State<_AlertsBody> {
 
   Widget _categoryChip(String category) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-      decoration: BoxDecoration(color: _primary.withValues(alpha: 0.08), borderRadius: BorderRadius.circular(10)),
+      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.s8, vertical: AppSpacing.s4),
+      decoration: BoxDecoration(color: context.colors.primary.withValues(alpha: AppAlpha.a10), borderRadius: BorderRadius.circular(AppRadius.r10)),
       child: Text(
         category,
         maxLines: 1,
         overflow: TextOverflow.ellipsis,
-        style: const TextStyle(color: _primary, fontSize: 11.5, fontWeight: FontWeight.w600),
+        style: TextStyle(color: context.colors.primary, fontSize: AppFontSize.f11_5, fontWeight: AppFontWeight.semibold),
       ),
     );
   }
@@ -918,14 +920,14 @@ class _AlertsBodyState extends State<_AlertsBody> {
     final action = _actionFor(a, isAdmin);
     final button = OutlinedButton.icon(
       onPressed: action.onPressed,
-      icon: Icon(action.icon, size: 15),
-      label: Text(action.label, style: const TextStyle(fontSize: 12.5)),
+      icon: Icon(action.icon, size: AppIconSize.i16),
+      label: Text(action.label, style: const TextStyle(fontSize: AppFontSize.f12_5)),
       style: OutlinedButton.styleFrom(
-        foregroundColor: _primary,
-        side: BorderSide(color: _primary.withValues(alpha: action.onPressed == null ? 0.2 : 0.4)),
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+        foregroundColor: context.colors.primary,
+        side: BorderSide(color: context.colors.primary.withValues(alpha: action.onPressed == null ? AppAlpha.a20 : AppAlpha.a40)),
+        padding: const EdgeInsets.symmetric(horizontal: AppSpacing.s12, vertical: AppSpacing.s8),
         minimumSize: const Size(0, 34),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadius.r10)),
       ),
     );
     return action.tooltip == null ? button : Tooltip(message: action.tooltip!, child: button);
@@ -935,9 +937,9 @@ class _AlertsBodyState extends State<_AlertsBody> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(primary, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w500)),
-        const SizedBox(height: 2),
-        Text(secondary, style: TextStyle(fontSize: 11.5, color: Colors.grey[500])),
+        Text(primary, style: const TextStyle(fontSize: AppFontSize.f13, fontWeight: AppFontWeight.medium)),
+        const SizedBox(height: AppSpacing.s2),
+        Text(secondary, style: TextStyle(fontSize: AppFontSize.f11_5, color: context.colors.textHint)),
       ],
     );
   }
@@ -945,14 +947,14 @@ class _AlertsBodyState extends State<_AlertsBody> {
   // Wide layout: one table row.
   Widget _buildRow(StockAlert a, bool isAdmin) {
     final p = a.product;
-    final color = StockAlertsScreen._color(a.kind);
+    final color = StockAlertsScreen._color(a.kind, context.colors);
     final details = _details(a);
 
     return Container(
       key: ValueKey('${a.kind.name}-${p.id}'),
       // Coloured bar down the left edge - severity at a glance.
       decoration: BoxDecoration(border: Border(left: BorderSide(color: color, width: 4))),
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.s12, vertical: AppSpacing.s12),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
@@ -961,7 +963,7 @@ class _AlertsBodyState extends State<_AlertsBody> {
             child: Row(
               children: [
                 _thumb(p, 40),
-                const SizedBox(width: 10),
+                const SizedBox(width: AppSpacing.s10),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -969,12 +971,12 @@ class _AlertsBodyState extends State<_AlertsBody> {
                       Text(p.name,
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
-                          style: const TextStyle(fontSize: 13.5, fontWeight: FontWeight.bold)),
-                      const SizedBox(height: 2),
+                          style: const TextStyle(fontSize: AppFontSize.f13_5, fontWeight: AppFontWeight.bold)),
+                      const SizedBox(height: AppSpacing.s2),
                       Text(_subtitleOf(p),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
-                          style: TextStyle(fontSize: 11.5, color: Colors.grey[500])),
+                          style: TextStyle(fontSize: AppFontSize.f11_5, color: context.colors.textHint)),
                     ],
                   ),
                 ),
@@ -998,9 +1000,9 @@ class _AlertsBodyState extends State<_AlertsBody> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('Store: ${p.stockQty}', style: const TextStyle(fontSize: 12.5)),
-                const SizedBox(height: 2),
-                Text('Shelf: ${p.sellableQty}', style: const TextStyle(fontSize: 12.5)),
+                Text('Store: ${p.stockQty}', style: const TextStyle(fontSize: AppFontSize.f12_5)),
+                const SizedBox(height: AppSpacing.s2),
+                Text('Shelf: ${p.sellableQty}', style: const TextStyle(fontSize: AppFontSize.f12_5)),
               ],
             ),
           ),
@@ -1019,32 +1021,32 @@ class _AlertsBodyState extends State<_AlertsBody> {
   // Narrow layout (phones): the same information as a card per alert.
   Widget _buildNarrowCard(StockAlert a, bool isAdmin) {
     final p = a.product;
-    final color = StockAlertsScreen._color(a.kind);
+    final color = StockAlertsScreen._color(a.kind, context.colors);
     final details = _details(a);
 
     return Container(
       key: ValueKey('${a.kind.name}-${p.id}'),
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.grey.withValues(alpha: 0.15)),
+        borderRadius: BorderRadius.circular(AppRadius.r12),
+        border: Border.all(color: context.colors.textHint.withValues(alpha: AppAlpha.a15)),
       ),
       // Clipped so the severity bar down the left follows the card's
       // rounded corners.
       child: ClipRRect(
-        borderRadius: BorderRadius.circular(11),
+        borderRadius: BorderRadius.circular(AppRadius.r10),
         child: Container(
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: context.colors.surface,
             border: Border(left: BorderSide(color: color, width: 4)),
           ),
-          padding: const EdgeInsets.all(12),
+          padding: const EdgeInsets.all(AppSpacing.s12),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Row(
                 children: [
                   _thumb(p, 44),
-                  const SizedBox(width: 10),
+                  const SizedBox(width: AppSpacing.s10),
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -1052,29 +1054,29 @@ class _AlertsBodyState extends State<_AlertsBody> {
                         Text(p.name,
                             maxLines: 2,
                             overflow: TextOverflow.ellipsis,
-                            style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold)),
-                        const SizedBox(height: 2),
+                            style: const TextStyle(fontSize: AppFontSize.f14, fontWeight: AppFontWeight.bold)),
+                        const SizedBox(height: AppSpacing.s2),
                         Text(_subtitleOf(p),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
-                            style: TextStyle(fontSize: 11.5, color: Colors.grey[500])),
+                            style: TextStyle(fontSize: AppFontSize.f11_5, color: context.colors.textHint)),
                       ],
                     ),
                   ),
                 ],
               ),
-              const SizedBox(height: 10),
+              const SizedBox(height: AppSpacing.s10),
               Wrap(
                 spacing: 6,
                 runSpacing: 6,
                 children: [_alertChip(a.kind), _categoryChip(_categoryOf(p))],
               ),
-              const SizedBox(height: 10),
+              const SizedBox(height: AppSpacing.s10),
               _twoLine(details.$1, details.$2),
-              const SizedBox(height: 6),
+              const SizedBox(height: AppSpacing.s6),
               Text('Store: ${p.stockQty}  ·  Shelf: ${p.sellableQty}',
-                  style: TextStyle(fontSize: 12, color: Colors.grey[700])),
-              const SizedBox(height: 10),
+                  style: TextStyle(fontSize: AppFontSize.f12, color: context.colors.textSoft)),
+              const SizedBox(height: AppSpacing.s10),
               Align(alignment: Alignment.centerRight, child: _actionButton(a, isAdmin)),
             ],
           ),
@@ -1090,8 +1092,8 @@ class _AlertsBodyState extends State<_AlertsBody> {
     final end = (page * _pageSize) > total ? total : page * _pageSize;
 
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-      decoration: BoxDecoration(border: Border(top: BorderSide(color: Colors.grey.withValues(alpha: 0.2)))),
+      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.s16, vertical: AppSpacing.s12),
+      decoration: BoxDecoration(border: Border(top: BorderSide(color: context.colors.textHint.withValues(alpha: AppAlpha.a20)))),
       child: Wrap(
         alignment: WrapAlignment.spaceBetween,
         crossAxisAlignment: WrapCrossAlignment.center,
@@ -1099,7 +1101,7 @@ class _AlertsBodyState extends State<_AlertsBody> {
         children: [
           Text(
             total == 0 ? 'No alerts' : 'Showing $start to $end of $total alert${total == 1 ? '' : 's'}',
-            style: TextStyle(fontSize: 12.5, color: Colors.grey[600]),
+            style: TextStyle(fontSize: AppFontSize.f12_5, color: context.colors.textMuted),
           ),
           Row(
             mainAxisSize: MainAxisSize.min,
@@ -1120,12 +1122,12 @@ class _AlertsBodyState extends State<_AlertsBody> {
                   },
                 ),
               ),
-              const SizedBox(width: 16),
+              const SizedBox(width: AppSpacing.s16),
               IconButton(
                 icon: const Icon(Icons.chevron_left),
                 onPressed: page > 1 ? () => setState(() => _page = page - 1) : null,
               ),
-              Text('Page $page', style: const TextStyle(fontSize: 13)),
+              Text('Page $page', style: const TextStyle(fontSize: AppFontSize.f13)),
               IconButton(
                 icon: const Icon(Icons.chevron_right),
                 onPressed: page < totalPages ? () => setState(() => _page = page + 1) : null,
