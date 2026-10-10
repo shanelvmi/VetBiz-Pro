@@ -21,11 +21,12 @@ import '../../config/app_defaults.dart';
 import '../../config/app_timeouts.dart';
 import '../../config/payment_methods.dart';
 import '../../config/app_date_format.dart';
-import '../../theme/app_palette.dart';
 import '../../theme/app_text.dart';
 import '../../theme/app_dimens.dart';
 import '../../theme/theme_context.dart';
 import '../../theme/app_breakpoints.dart';
+import '../../theme/app_motion.dart';
+import '../../ui/feedback/app_feedback.dart';
 
 class AddEditServiceScreen extends StatefulWidget {
   final Service? service;
@@ -55,10 +56,6 @@ class _AddEditServiceScreenState extends State<AddEditServiceScreen> {
   final List<String> _categories = kServiceCategories;
 
   // THEME COLORS
-  final Color primaryDeepGreen = AppPalette.primary;
-  final Color warmAmber = AppPalette.accent;
-  final Color offWhite = AppPalette.background;
-  final Color darkTeal = AppPalette.primary;
 
 
   bool _isLoading = false;
@@ -572,13 +569,13 @@ class _AddEditServiceScreenState extends State<AddEditServiceScreen> {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   const Text('Expenses (Items Used)',
-                      style: TextStyle(fontWeight: FontWeight.bold)),
+                      style: TextStyle(fontWeight: AppFontWeight.bold)),
                   TextButton.icon(
-                    icon: Icon(Icons.add, color: darkTeal),
-                    label: Text('Add Item', style: TextStyle(color: darkTeal)),
+                    icon: Icon(Icons.add, color: context.colors.primary),
+                    label: Text('Add Item', style: TextStyle(color: context.colors.primary)),
                     style: ButtonStyle(
                       overlayColor: WidgetStateProperty.all(
-                        warmAmber.withValues(alpha: 0.2),
+                        context.colors.accent.withValues(alpha: AppAlpha.a20),
                       ),
                     ),
                     onPressed: _addItem,
@@ -593,7 +590,7 @@ class _AddEditServiceScreenState extends State<AddEditServiceScreen> {
                 final matchedProductId = _itemsUsedProductIds[index];
 
                 return Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 4),
+                  padding: const EdgeInsets.symmetric(vertical: AppSpacing.s4),
                   child: Row(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -635,19 +632,19 @@ class _AddEditServiceScreenState extends State<AddEditServiceScreen> {
 
                                 if (matches.isEmpty) {
                                   return Padding(
-                                    padding: const EdgeInsets.only(top: 4, left: 4),
+                                    padding: const EdgeInsets.only(top: AppSpacing.s4, left: AppSpacing.s4),
                                     child: Text(
                                       'No matching product - will be recorded as a plain expense.',
-                                      style: TextStyle(fontSize: 11, color: Colors.grey[600]),
+                                      style: TextStyle(fontSize: AppFontSize.f11, color: context.colors.textMuted),
                                     ),
                                   );
                                 }
 
                                 return Container(
-                                  margin: const EdgeInsets.only(top: 4),
+                                  margin: const EdgeInsets.only(top: AppSpacing.s4),
                                   decoration: BoxDecoration(
-                                    border: Border.all(color: Colors.grey[300]!),
-                                    borderRadius: BorderRadius.circular(8),
+                                    border: Border.all(color: context.colors.border),
+                                    borderRadius: BorderRadius.circular(AppRadius.r8),
                                   ),
                                   child: Column(
                                     mainAxisSize: MainAxisSize.min,
@@ -657,7 +654,7 @@ class _AddEditServiceScreenState extends State<AddEditServiceScreen> {
                                         title: Text(product.name),
                                         subtitle: Text(
                                           'Sellable: ${product.sellableQty} ${product.unit}',
-                                          style: const TextStyle(fontSize: 11),
+                                          style: const TextStyle(fontSize: AppFontSize.f11),
                                         ),
                                         onTap: () {
                                           item['name']!.text = product.name;
@@ -675,15 +672,15 @@ class _AddEditServiceScreenState extends State<AddEditServiceScreen> {
                               }),
                             if (matchedProductId != null)
                               Padding(
-                                padding: const EdgeInsets.only(top: 2, left: 4),
+                                padding: const EdgeInsets.only(top: AppSpacing.s2, left: AppSpacing.s4),
                                 child: Row(
                                   mainAxisSize: MainAxisSize.min,
                                   children: [
-                                    Icon(Icons.check_circle, size: 13, color: Colors.green[700]),
-                                    const SizedBox(width: 4),
+                                    Icon(Icons.check_circle, size: AppIconSize.i14, color: context.colors.successStrong),
+                                    const SizedBox(width: AppSpacing.s4),
                                     Text(
                                       'In stock - will deduct, no expense recorded',
-                                      style: TextStyle(fontSize: 11, color: Colors.green[700]),
+                                      style: TextStyle(fontSize: AppFontSize.f11, color: context.colors.successStrong),
                                     ),
                                   ],
                                 ),
@@ -691,7 +688,7 @@ class _AddEditServiceScreenState extends State<AddEditServiceScreen> {
                           ],
                         ),
                       ),
-                      const SizedBox(width: 6),
+                      const SizedBox(width: AppSpacing.s6),
                       Expanded(
                         flex: 1,
                         child: TextFormField(
@@ -708,7 +705,7 @@ class _AddEditServiceScreenState extends State<AddEditServiceScreen> {
                       ),
                       IconButton(
                         icon:
-                            const Icon(Icons.delete, color: Colors.redAccent),
+                            Icon(Icons.delete, color: context.colors.dangerAccent),
                         onPressed: () => _removeItem(index),
                       ),
                     ],
@@ -716,17 +713,17 @@ class _AddEditServiceScreenState extends State<AddEditServiceScreen> {
                 );
               }),
 
-              const SizedBox(height: 8),
+              const SizedBox(height: AppSpacing.s8),
 
               // TOTAL ITEM COST LIVE
               Align(
                 alignment: Alignment.centerRight,
                 child: Text(
                   'Total Items Cost: ${Money.symbolDecimal(itemsTotal)}',
-                  style: const TextStyle(
-                    fontSize: 12,
-                    color: Colors.grey,
-                    fontWeight: FontWeight.w500,
+                  style: TextStyle(
+                    fontSize: AppFontSize.f12,
+                    color: context.colors.textHint,
+                    fontWeight: AppFontWeight.medium,
                   ),
                 ),
               ),
@@ -737,19 +734,19 @@ class _AddEditServiceScreenState extends State<AddEditServiceScreen> {
 
   Widget _buildVisitSummaryCard() {
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(AppSpacing.s16),
       decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.grey.withValues(alpha: 0.2)),
+        color: context.colors.surface,
+        borderRadius: BorderRadius.circular(AppRadius.r12),
+        border: Border.all(color: context.colors.textHint.withValues(alpha: AppAlpha.a20)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           _sectionHeader(Icons.receipt_long_outlined, 'Visit Summary'),
-          const SizedBox(height: 14),
-          const Text('Total Amount (${AppDefaults.currencySymbol}) *', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 13)),
-          const SizedBox(height: 6),
+          const SizedBox(height: AppSpacing.s14),
+          const Text('Total Amount (${AppDefaults.currencySymbol}) *', style: TextStyle(fontWeight: AppFontWeight.semibold, fontSize: AppFontSize.f13)),
+          const SizedBox(height: AppSpacing.s6),
           TextFormField(
             controller: _totalAmountController,
             keyboardType: TextInputType.number,
@@ -757,19 +754,19 @@ class _AddEditServiceScreenState extends State<AddEditServiceScreen> {
             decoration: InputDecoration(
               hintText: '0.00',
               filled: true,
-              fillColor: Colors.white,
+              fillColor: context.colors.surface,
               isDense: true,
-              contentPadding: const EdgeInsets.symmetric(vertical: 12, horizontal: 12),
+              contentPadding: const EdgeInsets.symmetric(vertical: AppSpacing.s12, horizontal: AppSpacing.s12),
               border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(10),
-                borderSide: BorderSide(color: Colors.grey.withValues(alpha: 0.35)),
+                borderRadius: BorderRadius.circular(AppRadius.r10),
+                borderSide: BorderSide(color: context.colors.textHint.withValues(alpha: AppAlpha.a40)),
               ),
             ),
             validator: (v) => v == null || v.isEmpty ? 'Enter total amount' : null,
           ),
-          const SizedBox(height: 14),
-          const Text('Total Paid (${AppDefaults.currencySymbol}) *', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 13)),
-          const SizedBox(height: 6),
+          const SizedBox(height: AppSpacing.s14),
+          const Text('Total Paid (${AppDefaults.currencySymbol}) *', style: TextStyle(fontWeight: AppFontWeight.semibold, fontSize: AppFontSize.f13)),
+          const SizedBox(height: AppSpacing.s6),
           TextFormField(
             controller: _totalPaidController,
             keyboardType: TextInputType.number,
@@ -777,38 +774,38 @@ class _AddEditServiceScreenState extends State<AddEditServiceScreen> {
             decoration: InputDecoration(
               hintText: '0.00',
               filled: true,
-              fillColor: Colors.white,
+              fillColor: context.colors.surface,
               isDense: true,
-              contentPadding: const EdgeInsets.symmetric(vertical: 12, horizontal: 12),
+              contentPadding: const EdgeInsets.symmetric(vertical: AppSpacing.s12, horizontal: AppSpacing.s12),
               border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(10),
-                borderSide: BorderSide(color: Colors.grey.withValues(alpha: 0.35)),
+                borderRadius: BorderRadius.circular(AppRadius.r10),
+                borderSide: BorderSide(color: context.colors.textHint.withValues(alpha: AppAlpha.a40)),
               ),
             ),
             validator: (v) => v == null || v.isEmpty ? 'Enter paid amount' : null,
           ),
           if (_parseAmount(_totalPaidController.text) > 0) ...[
-            const SizedBox(height: 16),
+            const SizedBox(height: AppSpacing.s16),
             Container(
               width: double.infinity,
-              padding: const EdgeInsets.all(16),
+              padding: const EdgeInsets.all(AppSpacing.s16),
               decoration: BoxDecoration(
-                color: primaryDeepGreen.withValues(alpha: 0.04),
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: primaryDeepGreen.withValues(alpha: 0.15)),
+                color: context.colors.primary.withValues(alpha: AppAlpha.a05),
+                borderRadius: BorderRadius.circular(AppRadius.r12),
+                border: Border.all(color: context.colors.primary.withValues(alpha: AppAlpha.a15)),
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Row(
                     children: [
-                      Icon(Icons.credit_card_outlined, size: 16, color: primaryDeepGreen),
-                      const SizedBox(width: 8),
+                      Icon(Icons.credit_card_outlined, size: AppIconSize.i16, color: context.colors.primary),
+                      const SizedBox(width: AppSpacing.s8),
                       Text('Payment Method',
-                          style: TextStyle(fontWeight: FontWeight.w600, fontSize: 13, color: primaryDeepGreen)),
+                          style: TextStyle(fontWeight: AppFontWeight.semibold, fontSize: AppFontSize.f13, color: context.colors.primary)),
                     ],
                   ),
-                  const SizedBox(height: 10),
+                  const SizedBox(height: AppSpacing.s10),
                   PopupMenuButton<String>(
                     initialValue: _paymentMethod,
                     onSelected: (method) => setState(() => _paymentMethod = method),
@@ -817,8 +814,8 @@ class _AddEditServiceScreenState extends State<AddEditServiceScreen> {
                         value: method,
                         child: Row(
                           children: [
-                            Icon(iconForPaymentMethod(method), size: 18, color: primaryDeepGreen),
-                            const SizedBox(width: 10),
+                            Icon(iconForPaymentMethod(method), size: AppIconSize.i18, color: context.colors.primary),
+                            const SizedBox(width: AppSpacing.s10),
                             Text(method),
                           ],
                         ),
@@ -826,18 +823,18 @@ class _AddEditServiceScreenState extends State<AddEditServiceScreen> {
                     }).toList(),
                     child: Container(
                       width: double.infinity,
-                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.s14, vertical: AppSpacing.s12),
                       decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(10),
-                        border: Border.all(color: Colors.grey.withValues(alpha: 0.3)),
+                        color: context.colors.surface,
+                        borderRadius: BorderRadius.circular(AppRadius.r10),
+                        border: Border.all(color: context.colors.textHint.withValues(alpha: AppAlpha.a30)),
                       ),
                       child: Row(
                         children: [
-                          Icon(iconForPaymentMethod(_paymentMethod ?? PaymentMethod.cash.key), size: 18, color: primaryDeepGreen),
-                          const SizedBox(width: 10),
+                          Icon(iconForPaymentMethod(_paymentMethod ?? PaymentMethod.cash.key), size: AppIconSize.i18, color: context.colors.primary),
+                          const SizedBox(width: AppSpacing.s10),
                           Expanded(child: Text(_paymentMethod ?? 'Select method')),
-                          Icon(Icons.expand_more, size: 18, color: Colors.grey[600]),
+                          Icon(Icons.expand_more, size: AppIconSize.i18, color: context.colors.textMuted),
                         ],
                       ),
                     ),
@@ -846,19 +843,19 @@ class _AddEditServiceScreenState extends State<AddEditServiceScreen> {
               ),
             ),
             if (_paymentMethod != null && _paymentMethod != PaymentMethod.cash.key) ...[
-              const SizedBox(height: 14),
-              const Text('Transaction ID (optional)', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 13)),
-              const SizedBox(height: 6),
+              const SizedBox(height: AppSpacing.s14),
+              const Text('Transaction ID (optional)', style: TextStyle(fontWeight: AppFontWeight.semibold, fontSize: AppFontSize.f13)),
+              const SizedBox(height: AppSpacing.s6),
               TextFormField(
                 controller: _transactionIdController,
                 decoration: InputDecoration(
                   filled: true,
-                  fillColor: Colors.white,
+                  fillColor: context.colors.surface,
                   isDense: true,
-                  contentPadding: const EdgeInsets.symmetric(vertical: 12, horizontal: 12),
+                  contentPadding: const EdgeInsets.symmetric(vertical: AppSpacing.s12, horizontal: AppSpacing.s12),
                   border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(10),
-                    borderSide: BorderSide(color: Colors.grey.withValues(alpha: 0.35)),
+                    borderRadius: BorderRadius.circular(AppRadius.r10),
+                    borderSide: BorderSide(color: context.colors.textHint.withValues(alpha: AppAlpha.a40)),
                   ),
                 ),
               ),
@@ -871,22 +868,23 @@ class _AddEditServiceScreenState extends State<AddEditServiceScreen> {
 
   Widget _buildFooter(bool isEditing, ServiceProvider serviceProvider, FacilityProvider facilityProvider) {
     return Container(
-      padding: EdgeInsets.fromLTRB(20, 14, 20, 14 + MediaQuery.of(context).padding.bottom),
+      padding: EdgeInsets.fromLTRB(
+          AppSpacing.s20, AppSpacing.s14, AppSpacing.s20, AppSpacing.s14 + MediaQuery.of(context).padding.bottom),
       decoration: BoxDecoration(
-        color: Colors.white,
-        border: Border(top: BorderSide(color: Colors.grey.withValues(alpha: 0.15))),
+        color: context.colors.surface,
+        border: Border(top: BorderSide(color: context.colors.textHint.withValues(alpha: AppAlpha.a15))),
       ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           OutlinedButton.icon(
-            icon: const Icon(Icons.close, size: 16),
+            icon: const Icon(Icons.close, size: AppIconSize.i16),
             label: const Text('Cancel'),
             style: OutlinedButton.styleFrom(
-              foregroundColor: Colors.black87,
-              side: BorderSide(color: Colors.grey.withValues(alpha: 0.4)),
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+              foregroundColor: context.colors.textPrimary,
+              side: BorderSide(color: context.colors.textHint.withValues(alpha: AppAlpha.a40)),
+              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.s20, vertical: AppSpacing.s12),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadius.r10)),
             ),
             onPressed: _isLoading ? null : () => Navigator.of(context).pop(),
           ),
@@ -903,17 +901,13 @@ class _AddEditServiceScreenState extends State<AddEditServiceScreen> {
                     final totalPaid = _parseAmount(_totalPaidController.text);
 
                     if (totalPaid > totalAmount) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Total Paid cannot exceed Total Amount')),
-                      );
+                      AppFeedback.warning('Total Paid cannot exceed Total Amount');
                       setState(() => _isLoading = false);
                       return;
                     }
 
                     if (totalPaid > 0 && _paymentMethod == null) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Select how this payment was made')),
-                      );
+                      AppFeedback.warning('Select how this payment was made');
                       setState(() => _isLoading = false);
                       return;
                     }
@@ -941,9 +935,7 @@ class _AddEditServiceScreenState extends State<AddEditServiceScreen> {
                       final facilityId = facilityProvider.selectedFacilityId;
 
                       if (facilityId == null) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text('No facility selected')),
-                        );
+                        AppFeedback.warning('No facility selected');
                         setState(() => _isLoading = false);
                         return;
                       }
@@ -957,46 +949,35 @@ class _AddEditServiceScreenState extends State<AddEditServiceScreen> {
                       }
 
                       if (!mounted) return;
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content: Text(isEditing ? 'Service updated' : 'Service added'),
-                          backgroundColor: Colors.green,
-                        ),
-                      );
+                      AppFeedback.success(isEditing ? 'Service updated' : 'Service added');
                       Navigator.pop(context);
-                    } catch (e) {
-                      if (!mounted) return;
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content: Text('Failed to save service: $e'),
-                          backgroundColor: Colors.red,
-                        ),
-                      );
+                    } catch (e, st) {
+                      AppFeedback.error("Couldn't save the service", error: e, stackTrace: st);
                     } finally {
                       setState(() => _isLoading = false);
                     }
                   },
             style: ElevatedButton.styleFrom(
-              backgroundColor: darkTeal,
-              foregroundColor: offWhite,
-              disabledBackgroundColor: darkTeal.withValues(alpha: 0.5),
-              padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 12),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+              backgroundColor: context.colors.primary,
+              foregroundColor: context.colors.background,
+              disabledBackgroundColor: context.colors.primary.withValues(alpha: AppAlpha.a50),
+              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.s22, vertical: AppSpacing.s12),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadius.r10)),
             ),
             child: _isLoading
-                ? const SizedBox(
+                ? SizedBox(
                     width: 18,
                     height: 18,
-                    child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                    child: CircularProgressIndicator(strokeWidth: 2, color: context.colors.onPrimary),
                   )
                 : Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      const Icon(Icons.medical_services_outlined, size: 16),
-                      const SizedBox(width: 8),
+                      const Icon(Icons.medical_services_outlined, size: AppIconSize.i16),
+                      const SizedBox(width: AppSpacing.s8),
                       Text(isEditing ? 'Update Visit' : 'Record Visit'),
-                      const SizedBox(width: 6),
-                      const Icon(Icons.arrow_forward, size: 16),
+                      const SizedBox(width: AppSpacing.s6),
+                      const Icon(Icons.arrow_forward, size: AppIconSize.i16),
                     ],
                   ),
           ),
@@ -1045,19 +1026,19 @@ class _AddEditServiceScreenState extends State<AddEditServiceScreen> {
       left: localLeft,
       width: fieldSize.width,
       child: Material(
-        elevation: 6,
-        borderRadius: BorderRadius.circular(8),
+        elevation: AppElevation.e6,
+        borderRadius: BorderRadius.circular(AppRadius.r8),
         child: Container(
           constraints: const BoxConstraints(maxHeight: 260),
           decoration: BoxDecoration(
-            border: Border.all(color: Colors.grey[300]!),
-            borderRadius: BorderRadius.circular(8),
-            color: offWhite,
+            border: Border.all(color: context.colors.border),
+            borderRadius: BorderRadius.circular(AppRadius.r8),
+            color: context.colors.background,
           ),
           child: _isSearchingClients && _clientSearchResults.isEmpty
               ? const Padding(
-                  padding: EdgeInsets.symmetric(vertical: 16),
-                  child: Center(child: SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2))),
+                  padding: EdgeInsets.symmetric(vertical: AppSpacing.s16),
+                  child: Center(child: SizedBox(width: AppSpacing.s18, height: 18, child: CircularProgressIndicator(strokeWidth: 2))),
                 )
               : _clientSearchResults.isEmpty
                   ? ListTile(
@@ -1074,7 +1055,7 @@ class _AddEditServiceScreenState extends State<AddEditServiceScreen> {
                         return ListTile(
                           title: Text(client.name),
                           subtitle: Text(client.phone),
-                          hoverColor: warmAmber.withValues(alpha: 0.15),
+                          hoverColor: context.colors.accent.withValues(alpha: AppAlpha.a15),
                           onTap: () {
                             setState(() {
                               _selectedClient = client;
@@ -1097,7 +1078,7 @@ class _AddEditServiceScreenState extends State<AddEditServiceScreen> {
 /// a quick, frequent action shouldn't need a full page navigation away
 /// from wherever it was triggered.
 Future<void> showAddEditServiceScreen(BuildContext context, {Service? service}) async {
-  final isWideScreen = MediaQuery.of(context).size.width >= 900;
+  final isWideScreen = context.screenWidth >= AppBreakpoints.medium;
 
   if (!isWideScreen) {
     await Navigator.of(context).push(
@@ -1110,8 +1091,8 @@ Future<void> showAddEditServiceScreen(BuildContext context, {Service? service}) 
     context: context,
     barrierDismissible: true,
     barrierLabel: service != null ? 'Edit Visit' : 'Record Visit',
-    barrierColor: Colors.black54,
-    transitionDuration: const Duration(milliseconds: 220),
+    barrierColor: context.colors.scrim.withValues(alpha: AppAlpha.a50),
+    transitionDuration: AppMotion.normal,
     pageBuilder: (context, animation, secondaryAnimation) {
       final screenSize = MediaQuery.of(context).size;
       final modalWidth = (screenSize.width * 0.60).clamp(0, 940).toDouble();
@@ -1121,7 +1102,7 @@ Future<void> showAddEditServiceScreen(BuildContext context, {Service? service}) 
           width: modalWidth,
           height: modalHeight,
           child: ClipRRect(
-            borderRadius: BorderRadius.circular(16),
+            borderRadius: BorderRadius.circular(AppRadius.r16),
             child: Material(
               child: AddEditServiceScreen(service: service, isModal: true),
             ),
