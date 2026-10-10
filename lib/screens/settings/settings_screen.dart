@@ -12,10 +12,13 @@ import 'business_hours_screen.dart';
 import 'trash_screen.dart';
 import '../subscription/subscription_screen.dart';
 import '../dashboard/notifications_screen.dart';
-import '../../theme/app_palette.dart';
 import '../../config/app_defaults.dart';
 import '../../config/app_links.dart';
 import '../../config/app_info.dart';
+import '../../theme/app_text.dart';
+import '../../theme/app_dimens.dart';
+import '../../theme/theme_context.dart';
+import '../../theme/app_breakpoints.dart';
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
@@ -25,8 +28,10 @@ class SettingsScreen extends StatefulWidget {
 }
 
 class _SettingsScreenState extends State<SettingsScreen> {
-  final Color primaryColor = AppPalette.primary;
-  final Color backgroundColor = AppPalette.background;
+  // The gap above the version footer on phones: a size, not spacing
+  // (above the 32 px spacing ladder, spec 4.3).
+  static const double _footerGap = 36;
+
   static const double cardElevation = 2.0;
 
   // Master-detail (desktop/tablet-width) only - which navigable
@@ -38,7 +43,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final isWideScreen = MediaQuery.of(context).size.width >= 900;
+    final isWideScreen = context.screenWidth >= AppBreakpoints.medium;
 
     if (!isWideScreen) {
       return _buildMobileLayout(context);
@@ -62,23 +67,23 @@ class _SettingsScreenState extends State<SettingsScreen> {
       appBar: AppBar(
         title: const Text(
           'Settings',
-          style: TextStyle(fontWeight: FontWeight.w600, fontSize: 20),
+          style: TextStyle(fontWeight: AppFontWeight.semibold, fontSize: AppFontSize.f20),
         ),
-        backgroundColor: primaryColor,
-        foregroundColor: Colors.white,
+        backgroundColor: context.colors.primary,
+        foregroundColor: context.colors.onPrimary,
         centerTitle: true,
-        elevation: 0,
+        elevation: AppElevation.e0,
       ),
-      backgroundColor: backgroundColor,
+      backgroundColor: context.colors.background,
       body: Center(
         child: ConstrainedBox(
           constraints: const BoxConstraints(maxWidth: 700),
           child: ListView(
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.all(AppSpacing.s16),
             children: [
               if (isAdmin) ...[
                 _buildSectionTitle('Subscription'),
-                const SizedBox(height: 6),
+                const SizedBox(height: AppSpacing.s6),
                 Card(
                   elevation: cardElevation,
                   margin: EdgeInsets.zero,
@@ -99,9 +104,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   ),
                 ),
               ],
-              const SizedBox(height: 20),
+              const SizedBox(height: AppSpacing.s20),
               _buildSectionTitle('Account & Data'),
-              const SizedBox(height: 6),
+              const SizedBox(height: AppSpacing.s6),
               Card(
                 elevation: cardElevation,
                 margin: EdgeInsets.zero,
@@ -157,9 +162,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   ],
                 ),
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: AppSpacing.s16),
               _buildSectionTitle('General'),
-              const SizedBox(height: 6),
+              const SizedBox(height: AppSpacing.s6),
               Card(
                 elevation: cardElevation,
                 margin: EdgeInsets.zero,
@@ -202,9 +207,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   ],
                 ),
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: AppSpacing.s16),
               _buildSectionTitle('Preferences'),
-              const SizedBox(height: 6),
+              const SizedBox(height: AppSpacing.s6),
               Card(
                 elevation: cardElevation,
                 margin: EdgeInsets.zero,
@@ -234,18 +239,18 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   ],
                 ),
               ),
-              const SizedBox(height: 36),
-              const Center(
+              const SizedBox(height: _footerGap),
+              Center(
                 child: Text(
                   '${AppInfo.name} - v1.0.0',
                   style: TextStyle(
-                    fontSize: 12,
-                    color: Colors.grey,
+                    fontSize: AppFontSize.f12,
+                    color: context.colors.textHint,
                     letterSpacing: 0.5,
                   ),
                 ),
               ),
-              const SizedBox(height: 20),
+              const SizedBox(height: AppSpacing.s20),
             ],
           ),
         ),
@@ -276,43 +281,43 @@ class _SettingsScreenState extends State<SettingsScreen> {
     );
 
     return Scaffold(
-      backgroundColor: backgroundColor,
+      backgroundColor: context.colors.background,
       body: Row(
         children: [
           SizedBox(
             width: 300,
             child: Container(
-              color: Colors.white,
+              color: context.colors.surface,
               child: Column(
                 children: [
                   Container(
                     width: double.infinity,
-                    padding: const EdgeInsets.fromLTRB(20, 24, 20, 16),
+                    padding: const EdgeInsets.fromLTRB(AppSpacing.s20, AppSpacing.s24, AppSpacing.s20, AppSpacing.s16),
                     child: Text(
                       'Settings',
                       style: TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 22,
-                        color: primaryColor,
+                        fontWeight: AppFontWeight.bold,
+                        fontSize: AppFontSize.f22,
+                        color: context.colors.primary,
                       ),
                     ),
                   ),
                   Expanded(
                     child: ListView(
-                      padding: const EdgeInsets.symmetric(horizontal: 12),
+                      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.s12),
                       children: [
                         if (isAdmin) ...[
                           _buildSectionTitle('Subscription'),
-                          const SizedBox(height: 4),
+                          const SizedBox(height: AppSpacing.s4),
                           _buildSidebarItem(
                             icon: Icons.workspace_premium_outlined,
                             label: 'Subscription & Billing',
                             navigateKey: 'subscription',
                           ),
-                          const SizedBox(height: 16),
+                          const SizedBox(height: AppSpacing.s16),
                         ],
                         _buildSectionTitle('Account & Data'),
-                        const SizedBox(height: 4),
+                        const SizedBox(height: AppSpacing.s4),
                         if (isAdmin)
                           _buildSidebarItem(
                             icon: Icons.delete_outline,
@@ -336,9 +341,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
                           label: 'Manage Account',
                           navigateKey: 'manage_account',
                         ),
-                        const SizedBox(height: 16),
+                        const SizedBox(height: AppSpacing.s16),
                         _buildSectionTitle('General'),
-                        const SizedBox(height: 4),
+                        const SizedBox(height: AppSpacing.s4),
                         _buildSidebarItem(
                           icon: Icons.notifications_none,
                           label: 'Notifications',
@@ -359,9 +364,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
                           label: 'App Info',
                           onTapDialog: () => _showAppInfoDialog(context),
                         ),
-                        const SizedBox(height: 16),
+                        const SizedBox(height: AppSpacing.s16),
                         _buildSectionTitle('Preferences'),
-                        const SizedBox(height: 4),
+                        const SizedBox(height: AppSpacing.s4),
                         _buildSidebarItem(
                           icon: Icons.color_lens_outlined,
                           label: 'UI Settings',
@@ -380,7 +385,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                           trailingText: currentLanguageMap['name'],
                           onTapDialog: () => _showLanguageSelection(context, settings),
                         ),
-                        const SizedBox(height: 20),
+                        const SizedBox(height: AppSpacing.s20),
                       ],
                     ),
                   ),
@@ -423,11 +428,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(Icons.settings_outlined, size: 56, color: Colors.grey.shade300),
-          const SizedBox(height: 12),
+          Icon(Icons.settings_outlined, size: AppIconSize.i56, color: context.colors.border),
+          const SizedBox(height: AppSpacing.s12),
           Text(
             'Select a setting from the left',
-            style: TextStyle(color: Colors.grey.shade500, fontSize: 14),
+            style: TextStyle(color: context.colors.textHint, fontSize: AppFontSize.f14),
           ),
         ],
       ),
@@ -448,39 +453,39 @@ class _SettingsScreenState extends State<SettingsScreen> {
   }) {
     final isSelected = navigateKey != null && _selectedKey == navigateKey;
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 1),
+      padding: const EdgeInsets.symmetric(vertical: AppSpacing.s2),
       child: Material(
-        color: isSelected ? primaryColor.withValues(alpha: 0.08) : Colors.transparent,
-        borderRadius: BorderRadius.circular(8),
+        color: isSelected ? context.colors.primary.withValues(alpha: AppAlpha.a10) : Colors.transparent,
+        borderRadius: BorderRadius.circular(AppRadius.r8),
         child: InkWell(
-          borderRadius: BorderRadius.circular(8),
+          borderRadius: BorderRadius.circular(AppRadius.r8),
           onTap: navigateKey != null
               ? () => setState(() => _selectedKey = navigateKey)
               : onTapDialog,
           child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+            padding: const EdgeInsets.symmetric(horizontal: AppSpacing.s12, vertical: AppSpacing.s10),
             child: Row(
               children: [
                 Icon(
                   icon,
-                  size: 19,
-                  color: isSelected ? primaryColor : Colors.black54,
+                  size: AppIconSize.i20,
+                  color: isSelected ? context.colors.primary : context.colors.textSecondary,
                 ),
-                const SizedBox(width: 12),
+                const SizedBox(width: AppSpacing.s12),
                 Expanded(
                   child: Text(
                     label,
                     style: TextStyle(
-                      fontSize: 13.5,
-                      fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
-                      color: isSelected ? primaryColor : Colors.black87,
+                      fontSize: AppFontSize.f13_5,
+                      fontWeight: isSelected ? AppFontWeight.semibold : AppFontWeight.medium,
+                      color: isSelected ? context.colors.primary : context.colors.textPrimary,
                     ),
                   ),
                 ),
                 if (trailingText != null)
                   Text(
                     trailingText,
-                    style: TextStyle(fontSize: 11.5, color: Colors.grey.shade600),
+                    style: TextStyle(fontSize: AppFontSize.f11_5, color: context.colors.textMuted),
                   ),
               ],
             ),
@@ -495,27 +500,27 @@ class _SettingsScreenState extends State<SettingsScreen> {
   void _showLanguageSelection(BuildContext context, SettingsProvider settings) {
     showModalBottomSheet(
       context: context,
-      backgroundColor: backgroundColor,
+      backgroundColor: context.colors.background,
       shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+        borderRadius: BorderRadius.vertical(top: Radius.circular(AppRadius.r16)),
       ),
       builder: (context) {
         return Padding(
-          padding: const EdgeInsets.all(20),
+          padding: const EdgeInsets.all(AppSpacing.s20),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
                 'SELECT LANGUAGE / CHAGUA LUGHA',
-                style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: primaryColor, letterSpacing: 1.1),
+                style: TextStyle(fontSize: AppFontSize.f11, fontWeight: AppFontWeight.bold, color: context.colors.primary, letterSpacing: 1.1),
               ),
-              const SizedBox(height: 10),
+              const SizedBox(height: AppSpacing.s10),
               Flexible(
                 child: ListView.separated(
                   shrinkWrap: true,
                   itemCount: settings.supportedLanguages.length,
-                  separatorBuilder: (_, __) => Divider(height: 1, color: Colors.grey.shade200),
+                  separatorBuilder: (_, __) => Divider(height: 1, color: context.colors.divider),
                   itemBuilder: (context, index) {
                     final lang = settings.supportedLanguages[index];
                     final bool isSelected = lang['code'] == settings.selectedLanguage;
@@ -525,7 +530,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       title: Text(lang['name']!),
                       trailing: Icon(
                         isSelected ? Icons.check_circle : Icons.circle_outlined,
-                        color: isSelected ? primaryColor : Colors.grey.shade300,
+                        color: isSelected ? context.colors.primary : context.colors.border,
                       ),
                       onTap: () {
                         settings.setLanguage(lang['code']!);
@@ -555,14 +560,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
       mainAxisSize: MainAxisSize.min,
       children: [
         ListTile(
-          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 2),
-          leading: Icon(icon, color: primaryColor.withValues(alpha: 0.85), size: 24),
+          contentPadding: const EdgeInsets.symmetric(horizontal: AppSpacing.s16, vertical: AppSpacing.s2),
+          leading: Icon(icon, color: context.colors.primary.withValues(alpha: AppAlpha.a85), size: AppIconSize.i24),
           title: Text(
             label,
-            style: const TextStyle(
-              color: Colors.black87,
-              fontSize: 15,
-              fontWeight: FontWeight.w500,
+            style: TextStyle(
+              color: context.colors.textPrimary,
+              fontSize: AppFontSize.f15,
+              fontWeight: AppFontWeight.medium,
             ),
           ),
           trailing: Row(
@@ -571,13 +576,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
               if (trailingText != null) ...[
                 Text(
                   trailingText,
-                  style: TextStyle(color: Colors.grey.shade600, fontSize: 13),
+                  style: TextStyle(color: context.colors.textMuted, fontSize: AppFontSize.f13),
                 ),
-                const SizedBox(width: 4),
+                const SizedBox(width: AppSpacing.s4),
               ],
-              const Icon(
+              Icon(
                 Icons.chevron_right_rounded,
-                color: Colors.grey,
+                color: context.colors.textHint,
                 size: 20,
               ),
             ],
@@ -588,7 +593,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
           Divider(
             height: 1,
             thickness: 0.5,
-            color: Colors.grey.shade200,
+            color: context.colors.divider,
             indent: 54,
           ),
       ],
@@ -597,13 +602,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
   Widget _buildSectionTitle(String title) {
     return Padding(
-      padding: const EdgeInsets.only(left: 4, bottom: 2),
+      padding: const EdgeInsets.only(left: AppSpacing.s4, bottom: AppSpacing.s2),
       child: Text(
         title.toUpperCase(),
         style: TextStyle(
-          fontWeight: FontWeight.bold,
-          fontSize: 11,
-          color: primaryColor.withValues(alpha: 0.75),
+          fontWeight: AppFontWeight.bold,
+          fontSize: AppFontSize.f11,
+          color: context.colors.primary.withValues(alpha: AppAlpha.a70),
           letterSpacing: 1.1,
         ),
       ),
@@ -614,11 +619,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        backgroundColor: backgroundColor,
+        backgroundColor: context.colors.background,
         title: Row(
           children: [
-            Icon(Icons.info_outline, color: primaryColor),
-            const SizedBox(width: 8),
+            Icon(Icons.info_outline, color: context.colors.primary),
+            const SizedBox(width: AppSpacing.s8),
             const Text('App Info'),
           ],
         ),
@@ -634,7 +639,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: Text('Close', style: TextStyle(color: primaryColor)),
+            child: Text('Close', style: TextStyle(color: context.colors.primary)),
           ),
         ],
       ),
@@ -643,14 +648,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
   Widget _infoRow(String label, String value) {
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 4),
+      padding: const EdgeInsets.symmetric(vertical: AppSpacing.s4),
       child: Row(
         children: [
           SizedBox(
             width: 90,
-            child: Text(label, style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13)),
+            child: Text(label, style: const TextStyle(fontWeight: AppFontWeight.semibold, fontSize: AppFontSize.f13)),
           ),
-          Expanded(child: Text(value, style: const TextStyle(fontSize: 13))),
+          Expanded(child: Text(value, style: const TextStyle(fontSize: AppFontSize.f13))),
         ],
       ),
     );
@@ -661,11 +666,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        backgroundColor: backgroundColor,
+        backgroundColor: context.colors.background,
         title: Row(
           children: [
-            Icon(Icons.help_outline, color: primaryColor),
-            const SizedBox(width: 8),
+            Icon(Icons.help_outline, color: context.colors.primary),
+            const SizedBox(width: AppSpacing.s8),
             const Text('Help & Support'),
           ],
         ),
@@ -674,21 +679,21 @@ class _SettingsScreenState extends State<SettingsScreen> {
           children: [
             ListTile(
               contentPadding: EdgeInsets.zero,
-              leading: const Icon(Icons.chat, color: Colors.green),
+              leading: Icon(Icons.chat, color: context.colors.success),
               title: const Text('WhatsApp'),
               subtitle: const Text(AppContact.supportPhone),
               onTap: () => _launchUrl(AppLinks.whatsApp(AppContact.supportPhone).toString()),
             ),
             ListTile(
               contentPadding: EdgeInsets.zero,
-              leading: Icon(Icons.call, color: primaryColor),
+              leading: Icon(Icons.call, color: context.colors.primary),
               title: const Text('Call'),
               subtitle: const Text(AppContact.supportPhone),
               onTap: () => _launchUrl(AppLinks.tel(AppContact.supportPhone).toString()),
             ),
             ListTile(
               contentPadding: EdgeInsets.zero,
-              leading: Icon(Icons.email_outlined, color: primaryColor),
+              leading: Icon(Icons.email_outlined, color: context.colors.primary),
               title: const Text('Email'),
               subtitle: const Text(AppContact.supportEmail),
               onTap: () => _launchUrl(AppLinks.mailto(AppContact.supportEmail).toString()),
@@ -698,7 +703,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: Text('Close', style: TextStyle(color: primaryColor)),
+            child: Text('Close', style: TextStyle(color: context.colors.primary)),
           ),
         ],
       ),

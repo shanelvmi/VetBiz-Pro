@@ -4,7 +4,6 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 
 import '../../providers/facility_provider.dart';
 import '../../utils/activity_logger.dart';
-import '../../theme/app_palette.dart';
 import '../../data/collections.dart';
 import '../../data/fields.dart';
 import '../../data/activity_type.dart';
@@ -12,6 +11,10 @@ import '../../config/money.dart';
 import '../../config/app_rules.dart';
 import '../../config/app_date_format.dart';
 import '../../services/trash_service.dart';
+import '../../theme/app_text.dart';
+import '../../theme/app_dimens.dart';
+import '../../theme/theme_context.dart';
+import '../../ui/feedback/app_feedback.dart';
 
 class TrashScreen extends StatefulWidget {
   const TrashScreen({super.key});
@@ -21,8 +24,6 @@ class TrashScreen extends StatefulWidget {
 }
 
 class _TrashScreenState extends State<TrashScreen> with SingleTickerProviderStateMixin {
-  final Color primaryColor = AppPalette.primary;
-  final Color backgroundColor = AppPalette.background;
 
   late TabController _tabController;
 
@@ -44,17 +45,17 @@ class _TrashScreenState extends State<TrashScreen> with SingleTickerProviderStat
         Provider.of<FacilityProvider>(context, listen: false).selectedFacilityId;
 
     return Scaffold(
-      backgroundColor: backgroundColor,
+      backgroundColor: context.colors.background,
       appBar: AppBar(
         title: const Text('Trash'),
         centerTitle: true,
-        backgroundColor: primaryColor,
-        foregroundColor: Colors.white,
+        backgroundColor: context.colors.primary,
+        foregroundColor: context.colors.onPrimary,
         bottom: TabBar(
           controller: _tabController,
-          indicatorColor: Colors.white,
-          labelColor: Colors.white,
-          unselectedLabelColor: Colors.white70,
+          indicatorColor: context.colors.onPrimary,
+          labelColor: context.colors.onPrimary,
+          unselectedLabelColor: context.colors.onPrimaryMuted,
           tabs: const [
             Tab(text: 'Products'),
             Tab(text: 'Clients'),
@@ -76,25 +77,21 @@ class _TrashScreenState extends State<TrashScreen> with SingleTickerProviderStat
                       facilityId: facilityId,
                       trashCollection: Collections.trashProducts,
                       liveCollection: Collections.products,
-                      primaryColor: primaryColor,
                     ),
                     _TrashList(
                       facilityId: facilityId,
                       trashCollection: Collections.trashClients,
                       liveCollection: Collections.clients,
-                      primaryColor: primaryColor,
                     ),
                     _TrashList(
                       facilityId: facilityId,
                       trashCollection: Collections.trashServices,
                       liveCollection: Collections.services,
-                      primaryColor: primaryColor,
                     ),
                     _TrashList(
                       facilityId: facilityId,
                       trashCollection: Collections.trashSales,
                       liveCollection: Collections.sales,
-                      primaryColor: primaryColor,
                       titleBuilder: (data) {
                         final client = (data['clientName'] as String?) ?? 'Walk-in';
                         final amount = (data['totalAmount'] as num?) ?? 0;
@@ -105,7 +102,6 @@ class _TrashScreenState extends State<TrashScreen> with SingleTickerProviderStat
                       facilityId: facilityId,
                       trashCollection: Collections.trashTransactions,
                       liveCollection: Collections.transactions,
-                      primaryColor: primaryColor,
                       titleBuilder: (data) {
                         final description = (data['description'] as String?) ?? '';
                         final type = (data['type'] as String?) ?? '';
@@ -126,14 +122,12 @@ class _TrashList extends StatelessWidget {
   final String facilityId;
   final String trashCollection;
   final String liveCollection;
-  final Color primaryColor;
   final String Function(Map<String, dynamic> data)? titleBuilder;
 
   const _TrashList({
     required this.facilityId,
     required this.trashCollection,
     required this.liveCollection,
-    required this.primaryColor,
     this.titleBuilder,
   });
 
@@ -147,17 +141,9 @@ class _TrashList extends StatelessWidget {
         data: data,
       );
 
-      if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Restored'), backgroundColor: Colors.green),
-        );
-      }
-    } catch (e) {
-      if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Could not restore: $e'), backgroundColor: Colors.redAccent),
-        );
-      }
+      AppFeedback.success('Item restored');
+    } catch (e, st) {
+      AppFeedback.error("Couldn't restore the item", error: e, stackTrace: st);
     }
   }
 
@@ -171,7 +157,7 @@ class _TrashList extends StatelessWidget {
           TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Cancel')),
           TextButton(
             onPressed: () => Navigator.pop(context, true),
-            child: const Text('Delete Forever', style: TextStyle(color: Colors.red)),
+            child: Text('Delete Forever', style: TextStyle(color: context.colors.danger)),
           ),
         ],
       ),
@@ -216,17 +202,10 @@ class _TrashList extends StatelessWidget {
         description: 'Permanently deleted: $label',
       );
 
-      if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Permanently deleted'), backgroundColor: Colors.redAccent),
-        );
-      }
-    } catch (e) {
-      if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Could not delete permanently: $e'), backgroundColor: Colors.redAccent),
-        );
-      }
+      // A hard delete: plain success, no Undo (PHASE2_FEEDBACK_SPEC section 8).
+      AppFeedback.success('Permanently deleted');
+    } catch (e, st) {
+      AppFeedback.error("Couldn't delete the item permanently", error: e, stackTrace: st);
     }
   }
 
@@ -250,7 +229,7 @@ class _TrashList extends StatelessWidget {
           .snapshots(),
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
-          return Center(child: CircularProgressIndicator(color: primaryColor));
+          return Center(child: CircularProgressIndicator(color: context.colors.primary));
         }
 
         final docs = snapshot.data?.docs ?? [];
@@ -260,9 +239,9 @@ class _TrashList extends StatelessWidget {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Icon(Icons.delete_outline, size: 56, color: Colors.grey[400]),
-                const SizedBox(height: 12),
-                Text('Trash is empty', style: TextStyle(color: Colors.grey[600])),
+                Icon(Icons.delete_outline, size: AppIconSize.i56, color: context.colors.textDisabled),
+                const SizedBox(height: AppSpacing.s12),
+                Text('Trash is empty', style: TextStyle(color: context.colors.textMuted)),
               ],
             ),
           );
@@ -282,23 +261,23 @@ class _TrashList extends StatelessWidget {
             if (soonToExpireCount > 0)
               Container(
                 width: double.infinity,
-                margin: const EdgeInsets.fromLTRB(4, 4, 4, 0),
-                padding: const EdgeInsets.all(10),
+                margin: const EdgeInsets.fromLTRB(AppSpacing.s4, AppSpacing.s4, AppSpacing.s4, 0),
+                padding: const EdgeInsets.all(AppSpacing.s10),
                 decoration: BoxDecoration(
-                  color: Colors.orange.withValues(alpha: 0.1),
-                  border: Border.all(color: Colors.orange),
-                  borderRadius: BorderRadius.circular(8),
+                  color: context.colors.warning.withValues(alpha: AppAlpha.a10),
+                  border: Border.all(color: context.colors.warning),
+                  borderRadius: BorderRadius.circular(AppRadius.r8),
                 ),
                 child: Row(
                   children: [
-                    const Icon(Icons.warning_amber_rounded, color: Colors.orange, size: 20),
-                    const SizedBox(width: 8),
+                    Icon(Icons.warning_amber_rounded, color: context.colors.warning, size: AppIconSize.i20),
+                    const SizedBox(width: AppSpacing.s8),
                     Expanded(
                       child: Text(
                         '$soonToExpireCount item${soonToExpireCount == 1 ? '' : 's'} will be '
                         'permanently deleted within $_warningThresholdDays days. '
                         'Restore now if you still need ${soonToExpireCount == 1 ? 'it' : 'them'}.',
-                        style: const TextStyle(fontSize: 12.5, fontWeight: FontWeight.w500),
+                        style: const TextStyle(fontSize: AppFontSize.f12_5, fontWeight: AppFontWeight.medium),
                       ),
                     ),
                   ],
@@ -306,7 +285,7 @@ class _TrashList extends StatelessWidget {
               ),
             Expanded(
               child: ListView.builder(
-                padding: const EdgeInsets.all(12),
+                padding: const EdgeInsets.all(AppSpacing.s12),
                 itemCount: docs.length,
                 itemBuilder: (context, index) {
                   final doc = docs[index];
@@ -321,38 +300,38 @@ class _TrashList extends StatelessWidget {
                   final remaining = _daysRemaining(deletedAt);
 
                   String expiryText;
-                  Color expiryColor = Colors.grey[600]!;
+                  Color expiryColor = context.colors.textMuted;
                   if (remaining == null) {
                     expiryText = '';
                   } else if (remaining <= 0) {
                     expiryText = 'Deleting soon';
-                    expiryColor = Colors.redAccent;
+                    expiryColor = context.colors.dangerAccent;
                   } else if (remaining == 1) {
                     expiryText = 'Expires tomorrow';
-                    expiryColor = Colors.redAccent;
+                    expiryColor = context.colors.dangerAccent;
                   } else if (remaining <= _warningThresholdDays) {
                     expiryText = 'Expires in $remaining days';
-                    expiryColor = Colors.orange[800]!;
+                    expiryColor = context.colors.warningStrong;
                   } else {
                     expiryText = 'Expires in $remaining days';
                   }
 
                   return Card(
-                    margin: const EdgeInsets.only(bottom: 8),
+                    margin: const EdgeInsets.only(bottom: AppSpacing.s8),
                     child: ListTile(
-                      title: Text(name, style: const TextStyle(fontWeight: FontWeight.w600)),
+                      title: Text(name, style: const TextStyle(fontWeight: AppFontWeight.semibold)),
                       subtitle: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
                             'Deleted by $deletedBy'
                             '${deletedAt != null ? ' on ${AppDateFormat.dateTime24.format(deletedAt)}' : ''}',
-                            style: const TextStyle(fontSize: 12),
+                            style: const TextStyle(fontSize: AppFontSize.f12),
                           ),
                           if (expiryText.isNotEmpty)
                             Text(
                               expiryText,
-                              style: TextStyle(fontSize: 11.5, color: expiryColor, fontWeight: FontWeight.w600),
+                              style: TextStyle(fontSize: AppFontSize.f11_5, color: expiryColor, fontWeight: AppFontWeight.semibold),
                             ),
                         ],
                       ),
@@ -360,12 +339,12 @@ class _TrashList extends StatelessWidget {
                         mainAxisSize: MainAxisSize.min,
                         children: [
                           IconButton(
-                            icon: Icon(Icons.restore, color: primaryColor),
+                            icon: Icon(Icons.restore, color: context.colors.primary),
                             tooltip: 'Restore',
                             onPressed: () => _restore(context, doc.id, data),
                           ),
                           IconButton(
-                            icon: const Icon(Icons.delete_forever, color: Colors.redAccent),
+                            icon: Icon(Icons.delete_forever, color: context.colors.dangerAccent),
                             tooltip: 'Delete Forever',
                             onPressed: () => _deleteForever(context, doc.id, name),
                           ),
