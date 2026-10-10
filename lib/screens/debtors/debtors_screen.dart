@@ -17,13 +17,17 @@ import '../../services/cursor_paginated_list_controller.dart';
 import '../../widgets/firestore_error_view.dart';
 import 'add_payment_screen.dart';
 import '../payments/payments_screen.dart';
-import '../../theme/app_palette.dart';
 import '../../data/collections.dart';
 import '../../config/money.dart';
 import '../../config/app_timeouts.dart';
 import '../../config/app_date_format.dart';
 import '../../data/data_keys.dart';
 import '../../config/app_links.dart';
+import '../../theme/app_palette.dart';
+import '../../theme/app_text.dart';
+import '../../theme/app_dimens.dart';
+import '../../theme/theme_context.dart';
+import '../../theme/app_breakpoints.dart';
 
 class DebtorsScreen extends StatefulWidget {
   const DebtorsScreen({super.key});
@@ -184,7 +188,7 @@ class _DebtorsScreenState extends State<DebtorsScreen> {
     final overdueDays = Provider.of<FacilityProvider>(context).debtOverdueDays;
 
     return Scaffold(
-      backgroundColor: offWhite,
+      backgroundColor: context.colors.background,
       appBar: _buildAppBar(),
       body: ListenableBuilder(
         listenable: clientProvider.debtorsListController,
@@ -209,28 +213,28 @@ class _DebtorsScreenState extends State<DebtorsScreen> {
                       child: Column(
                         children: [
                           Padding(
-                            padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
+                            padding: const EdgeInsets.fromLTRB(AppSpacing.s16, AppSpacing.s16, AppSpacing.s16, 0),
                             child: _buildMetricsRow(),
                           ),
                           Padding(
-                            padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+                            padding: const EdgeInsets.fromLTRB(AppSpacing.s16, AppSpacing.s12, AppSpacing.s16, 0),
                             child: _buildFiltersToolbar(),
                           ),
                           if (controller.newRecordsAvailable > 0)
                             Container(
                               width: double.infinity,
-                              margin: const EdgeInsets.fromLTRB(16, 12, 16, 0),
-                              color: primaryDeepGreen.withValues(alpha: 0.08),
-                              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                              margin: const EdgeInsets.fromLTRB(AppSpacing.s16, AppSpacing.s12, AppSpacing.s16, 0),
+                              color: context.colors.primary.withValues(alpha: AppAlpha.a10),
+                              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.s16, vertical: AppSpacing.s8),
                               child: Row(
                                 children: [
-                                  Icon(Icons.fiber_new, size: 18, color: primaryDeepGreen),
-                                  const SizedBox(width: 8),
+                                  Icon(Icons.fiber_new, size: AppIconSize.i18, color: context.colors.primary),
+                                  const SizedBox(width: AppSpacing.s8),
                                   Expanded(
                                     child: Text(
                                       '${controller.newRecordsAvailable} new debtor'
                                       '${controller.newRecordsAvailable == 1 ? '' : 's'} available',
-                                      style: TextStyle(fontSize: 13, color: primaryDeepGreen),
+                                      style: TextStyle(fontSize: AppFontSize.f13, color: context.colors.primary),
                                     ),
                                   ),
                                   TextButton(
@@ -250,13 +254,13 @@ class _DebtorsScreenState extends State<DebtorsScreen> {
                                         child: Column(
                                           mainAxisAlignment: MainAxisAlignment.center,
                                           children: [
-                                            Icon(Icons.people_outline, size: 64, color: Colors.grey[400]),
-                                            const SizedBox(height: 16),
+                                            Icon(Icons.people_outline, size: AppIconSize.i64, color: context.colors.textDisabled),
+                                            const SizedBox(height: AppSpacing.s16),
                                             Text(
                                               _searchQuery.isEmpty
                                                   ? 'No outstanding debts'
                                                   : 'No debtors match your search',
-                                              style: TextStyle(fontSize: 18, color: Colors.grey[600]),
+                                              style: TextStyle(fontSize: AppFontSize.f18, color: context.colors.textMuted),
                                             ),
                                           ],
                                         ),
@@ -294,7 +298,7 @@ class _DebtorsScreenState extends State<DebtorsScreen> {
         'Total Debtors',
         isMetricsLoading ? '' : '${facilityMetrics?.totalDebtors ?? 0}',
         Icons.people_outline,
-        primaryDeepGreen,
+        context.colors.primary,
         'With outstanding balance',
         isMetricsLoading,
       ),
@@ -302,7 +306,7 @@ class _DebtorsScreenState extends State<DebtorsScreen> {
         'Total Owed',
         isMetricsLoading ? '' : Money.format(facilityMetrics?.totalOwed ?? 0),
         Icons.account_balance_wallet_outlined,
-        Colors.orange,
+        context.colors.warning,
         'Outstanding balance',
         isMetricsLoading,
       ),
@@ -310,7 +314,7 @@ class _DebtorsScreenState extends State<DebtorsScreen> {
         'Overdue Debtors',
         isMetricsLoading ? '' : '${facilityMetrics?.overdueDebtors ?? 0}',
         Icons.error_outline,
-        Colors.red,
+        context.colors.danger,
         'Over $overdueDays days',
         isMetricsLoading,
       ),
@@ -318,7 +322,7 @@ class _DebtorsScreenState extends State<DebtorsScreen> {
         'Paid This Month',
         Money.format(_paidThisMonth ?? 0),
         Icons.account_balance_outlined,
-        Colors.green,
+        context.colors.success,
         'From debt payments',
         isPaidLoading,
       ),
@@ -326,15 +330,15 @@ class _DebtorsScreenState extends State<DebtorsScreen> {
 
     return LayoutBuilder(
       builder: (context, constraints) {
-        final isNarrow = constraints.maxWidth < 600;
+        final isNarrow = constraints.maxWidth < AppBreakpoints.compact;
         return GridView.builder(
           shrinkWrap: true,
           physics: const NeverScrollableScrollPhysics(),
           gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
             crossAxisCount: isNarrow ? 2 : 4,
             mainAxisExtent: 90,
-            crossAxisSpacing: 12,
-            mainAxisSpacing: 12,
+            crossAxisSpacing: AppSpacing.s12,
+            mainAxisSpacing: AppSpacing.s12,
           ),
           itemCount: metrics.length,
           itemBuilder: (context, index) {
@@ -348,13 +352,13 @@ class _DebtorsScreenState extends State<DebtorsScreen> {
 
   Widget _metricCard(String label, String value, IconData icon, Color color, String subtitle, bool isLoading) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.s12, vertical: AppSpacing.s10),
       decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.grey.withValues(alpha: 0.15)),
+        color: context.colors.surface,
+        borderRadius: BorderRadius.circular(AppRadius.r12),
+        border: Border.all(color: context.colors.textHint.withValues(alpha: AppAlpha.a15)),
         boxShadow: [
-          BoxShadow(color: Colors.black.withValues(alpha: 0.03), blurRadius: 6, offset: const Offset(0, 2)),
+          BoxShadow(color: context.colors.shadow.withValues(alpha: AppAlpha.a05), blurRadius: 6, offset: const Offset(0, 2)),
         ],
       ),
       child: FittedBox(
@@ -370,22 +374,22 @@ class _DebtorsScreenState extends State<DebtorsScreen> {
                   width: 26,
                   height: 26,
                   decoration:
-                      BoxDecoration(color: color.withValues(alpha: 0.12), borderRadius: BorderRadius.circular(7)),
-                  child: Icon(icon, color: color, size: 14),
+                      BoxDecoration(color: color.withValues(alpha: AppAlpha.a10), borderRadius: BorderRadius.circular(AppRadius.r7)),
+                  child: Icon(icon, color: color, size: AppIconSize.i14),
                 ),
-                const SizedBox(width: 8),
+                const SizedBox(width: AppSpacing.s8),
                 isLoading
                     ? const SizedBox(
                         width: 14,
                         height: 14,
                         child: CircularProgressIndicator(strokeWidth: 2),
                       )
-                    : Text(value, style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: color)),
+                    : Text(value, style: TextStyle(fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f16, color: color)),
               ],
             ),
-            const SizedBox(height: 4),
-            Text(label, style: TextStyle(fontSize: 11.5, color: Colors.grey[600])),
-            Text(subtitle, style: TextStyle(fontSize: 10.5, color: Colors.grey[400])),
+            const SizedBox(height: AppSpacing.s4),
+            Text(label, style: TextStyle(fontSize: AppFontSize.f11_5, color: context.colors.textMuted)),
+            Text(subtitle, style: TextStyle(fontSize: AppFontSize.f10_5, color: context.colors.textDisabled)),
           ],
         ),
       ),
@@ -411,21 +415,21 @@ class _DebtorsScreenState extends State<DebtorsScreen> {
 
   PreferredSizeWidget _buildAppBar() {
     return AppBar(
-      backgroundColor: Colors.white,
-      foregroundColor: Colors.black87,
-      elevation: 1,
+      backgroundColor: context.colors.surface,
+      foregroundColor: context.colors.textPrimary,
+      elevation: AppElevation.e1,
       centerTitle: true,
       toolbarHeight: 72,
-      title: const Column(
+      title: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Text('Active Debts', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 19, color: Colors.black87)),
-          Text('Track and manage all outstanding debts', style: TextStyle(fontSize: 12, color: Colors.black54)),
+          Text('Active Debts', style: TextStyle(fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f19, color: context.colors.textPrimary)),
+          Text('Track and manage all outstanding debts', style: TextStyle(fontSize: AppFontSize.f12, color: context.colors.textSecondary)),
         ],
       ),
       actions: [
         Padding(
-          padding: const EdgeInsets.only(right: 12),
+          padding: const EdgeInsets.only(right: AppSpacing.s12),
           child: ElevatedButton.icon(
             onPressed: () async {
               final debtorClients = await _fetchAllDebtorClients();
@@ -444,13 +448,13 @@ class _DebtorsScreenState extends State<DebtorsScreen> {
                 _loadMetrics();
               }
             },
-            icon: const Icon(Icons.add, size: 18),
+            icon: const Icon(Icons.add, size: AppIconSize.i18),
             label: const Text('Record Payment'),
             style: ElevatedButton.styleFrom(
-              backgroundColor: primaryDeepGreen,
-              foregroundColor: offWhite,
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+              backgroundColor: context.colors.primary,
+              foregroundColor: context.colors.background,
+              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.s16, vertical: AppSpacing.s10),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadius.r8)),
             ),
           ),
         ),
@@ -484,8 +488,8 @@ class _DebtorsScreenState extends State<DebtorsScreen> {
 
   Widget _buildFiltersToolbar() {
     final border = OutlineInputBorder(
-      borderRadius: BorderRadius.circular(10),
-      borderSide: BorderSide(color: Colors.grey.withValues(alpha: 0.3)),
+      borderRadius: BorderRadius.circular(AppRadius.r10),
+      borderSide: BorderSide(color: context.colors.textHint.withValues(alpha: AppAlpha.a30)),
     );
     final hasActiveFilters = _searchQuery.isNotEmpty || _statusFilter != 'All' || _overdueRangeFilter != 'All';
     final overdueDays = Provider.of<FacilityProvider>(context, listen: false).debtOverdueDays;
@@ -498,18 +502,18 @@ class _DebtorsScreenState extends State<DebtorsScreen> {
             controller: _searchController,
             decoration: InputDecoration(
               hintText: 'Search debtor by name...',
-              hintStyle: const TextStyle(fontSize: 13),
-              prefixIcon: const Icon(Icons.search, size: 20),
+              hintStyle: const TextStyle(fontSize: AppFontSize.f13),
+              prefixIcon: const Icon(Icons.search, size: AppIconSize.i20),
               filled: true,
-              fillColor: Colors.white,
+              fillColor: context.colors.surface,
               isDense: true,
-              contentPadding: const EdgeInsets.symmetric(vertical: 12, horizontal: 12),
+              contentPadding: const EdgeInsets.symmetric(vertical: AppSpacing.s12, horizontal: AppSpacing.s12),
               border: border,
               enabledBorder: border,
               suffixIcon: _searchController.text.isEmpty
                   ? null
                   : IconButton(
-                      icon: const Icon(Icons.clear, size: 18),
+                      icon: const Icon(Icons.clear, size: AppIconSize.i18),
                       onPressed: () {
                         _searchDebounce?.cancel();
                         setState(() => _searchQuery = '');
@@ -525,7 +529,7 @@ class _DebtorsScreenState extends State<DebtorsScreen> {
             },
           ),
         ),
-        const SizedBox(width: 10),
+        const SizedBox(width: AppSpacing.s10),
         _toolbarDropdown<String>(
           value: _statusFilter,
           items: _statusFilterOptions,
@@ -535,20 +539,20 @@ class _DebtorsScreenState extends State<DebtorsScreen> {
             _openDebtorsListSession();
           },
         ),
-        const SizedBox(width: 10),
+        const SizedBox(width: AppSpacing.s10),
         Container(
-          padding: const EdgeInsets.symmetric(horizontal: 10),
+          padding: const EdgeInsets.symmetric(horizontal: AppSpacing.s10),
           height: 44,
           decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(10),
-            border: Border.all(color: Colors.grey.withValues(alpha: 0.3)),
+            color: context.colors.surface,
+            borderRadius: BorderRadius.circular(AppRadius.r10),
+            border: Border.all(color: context.colors.textHint.withValues(alpha: AppAlpha.a30)),
           ),
           child: DropdownButtonHideUnderline(
             child: DropdownButton<String>(
               value: _overdueRangeFilter,
-              icon: Icon(Icons.arrow_drop_down, size: 18, color: primaryDeepGreen),
-              style: const TextStyle(color: Colors.black87, fontSize: 13),
+              icon: Icon(Icons.arrow_drop_down, size: AppIconSize.i18, color: context.colors.primary),
+              style: TextStyle(color: context.colors.textPrimary, fontSize: AppFontSize.f13),
               items: _overdueRangeOptions
                   .map((key) => DropdownMenuItem(
                         value: key,
@@ -564,7 +568,7 @@ class _DebtorsScreenState extends State<DebtorsScreen> {
           ),
         ),
         if (hasActiveFilters) ...[
-          const SizedBox(width: 10),
+          const SizedBox(width: AppSpacing.s10),
           TextButton(
             onPressed: () {
               _searchDebounce?.cancel();
@@ -579,14 +583,14 @@ class _DebtorsScreenState extends State<DebtorsScreen> {
             child: const Text('Reset'),
           ),
         ],
-        const SizedBox(width: 10),
+        const SizedBox(width: AppSpacing.s10),
         OutlinedButton.icon(
           onPressed: () => _exportDebtors(),
-          icon: const Icon(Icons.download_outlined, size: 16),
+          icon: const Icon(Icons.download_outlined, size: AppIconSize.i16),
           label: const Text('Export'),
           style: OutlinedButton.styleFrom(
-            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-            side: BorderSide(color: Colors.grey.withValues(alpha: 0.3)),
+            padding: const EdgeInsets.symmetric(horizontal: AppSpacing.s14, vertical: AppSpacing.s12),
+            side: BorderSide(color: context.colors.textHint.withValues(alpha: AppAlpha.a30)),
           ),
         ),
       ],
@@ -600,18 +604,18 @@ class _DebtorsScreenState extends State<DebtorsScreen> {
     required ValueChanged<T> onChanged,
   }) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10),
+      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.s10),
       height: 44,
       decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: Colors.grey.withValues(alpha: 0.3)),
+        color: context.colors.surface,
+        borderRadius: BorderRadius.circular(AppRadius.r10),
+        border: Border.all(color: context.colors.textHint.withValues(alpha: AppAlpha.a30)),
       ),
       child: DropdownButtonHideUnderline(
         child: DropdownButton<T>(
           value: value,
-          icon: Icon(Icons.arrow_drop_down, size: 18, color: primaryDeepGreen),
-          style: const TextStyle(color: Colors.black87, fontSize: 13),
+          icon: Icon(Icons.arrow_drop_down, size: AppIconSize.i18, color: context.colors.primary),
+          style: TextStyle(color: context.colors.textPrimary, fontSize: AppFontSize.f13),
           items: items.map((v) => DropdownMenuItem(value: v, child: Text('$label: $v'))).toList(),
           onChanged: (val) {
             if (val != null) onChanged(val);
@@ -628,8 +632,8 @@ class _DebtorsScreenState extends State<DebtorsScreen> {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         Container(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-          decoration: BoxDecoration(border: Border(bottom: BorderSide(color: Colors.grey.withValues(alpha: 0.2)))),
+          padding: const EdgeInsets.symmetric(horizontal: AppSpacing.s16, vertical: AppSpacing.s12),
+          decoration: BoxDecoration(border: Border(bottom: BorderSide(color: context.colors.textHint.withValues(alpha: AppAlpha.a20)))),
           child: Row(
             children: [
               _headerCell('Debtor', flex: 3),
@@ -644,7 +648,7 @@ class _DebtorsScreenState extends State<DebtorsScreen> {
         Expanded(
           child: ListView.separated(
             itemCount: debtors.length,
-            separatorBuilder: (context, index) => Divider(height: 1, color: Colors.grey.withValues(alpha: 0.12)),
+            separatorBuilder: (context, index) => Divider(height: 1, color: context.colors.textHint.withValues(alpha: AppAlpha.a10)),
             itemBuilder: (context, index) => _buildDebtorRow(debtors[index]),
           ),
         ),
