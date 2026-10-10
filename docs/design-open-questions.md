@@ -55,6 +55,27 @@ Colours are outside the standing snap rule, so this is kept as it is:
 - **Photo placeholder alpha 0.6**, same file (the `add_photo_alternate_outlined` icon, now `AppIconSize.i40`): 0.1 from `a50`/`a70`, beyond the standing rule. Kept.
 - **No Undo on sale delete**, `lib/screens/sales/sales_screen.dart` `_confirmDeleteSale`: see "Trash and restore: books consistency" below. The message is a plain success ("Sale deleted"); the confirmation still says "permanently deletes ... This cannot be undone." Make sale restore re-apply stock, debt and balance (then add Undo and change the dialog text), or keep it as is?
 
+### Trash and restore: books consistency (audit after D6, read-only)
+
+`TrashService.restore` (used by the Trash screen and every Undo) only copies the document back from `trash_*` to its live collection, drops `deletedAt`/`deletedBy`, and logs "Restored ...". Anything else the delete changed is reversed only if a server trigger reacts to the document reappearing (the `onDocumentWritten` daily summaries do).
+
+| Item | What deleting it changes besides moving the document | Reversed by Restore / Undo? |
+|---|---|---|
+| Product (`ProductProvider.deleteProduct`; Undo on Products and Stock Store) | Nothing else. Its batches stay at `products/{id}/batches` while it is in Trash | Yes: the restored product finds its batches again. Complete |
+| Sale (`SaleProvider.deleteSale`; no Undo) | Stock put back on the products it sold (`_restoreStock`) | **No**: the stock stays added back |
+| | Its debt record(s) deleted (`debts` where `saleId`) | **No**: the debt is not re-created |
+| | Client balance reduced by the unpaid part (`_adjustClientBalance`) | **No**: the balance stays reduced |
+| | Daily sales summary reversed (server trigger `updateDailySalesSummary`) | Yes: the trigger counts it again on restore |
+| | Upfront payment (`payments`, `dailyCollections`) | Not touched by the delete (the cash stays counted even while the sale is in Trash) |
+| Service (`ServiceProvider.deleteService`; **Undo offered** on Services) | Stock it used put back (`_restoreStockForItems`) | **No** |
+| | Its debt `service_{id}` deleted; client balance reversed; `oldestUnpaidDebtDate` recomputed | **No** |
+| | Its expense transaction(s) (`transactions` where `serviceId`) **hard-deleted**, so the daily transaction summary drops them | **No**: gone for good, not in Trash |
+| | Daily service summary reversed (server trigger) | Yes, on restore |
+| | Upfront payment (`payments`, `dailyCollections`) | Not touched by the delete |
+| Transaction (`TransactionProvider.deleteTransaction`; Undo on Transactions) | Daily transaction summary reversed (server trigger) | Yes, on restore. Complete |
+
+Incomplete: **sales** and **services**. After restoring either one, stock is too high and the client's balance and debts are too low. The Trash screen's Restore now asks for confirmation for these two and says what it will not change (behaviour unchanged). Open: make `TrashService` re-apply stock, debt and balance for sales and services (and decide what to do about the hard-deleted service expenses), and until then, should the Services Undo be withdrawn, as it was never added for sales?
+
 ## Decided
 
 ### D6 follow-up (decided after batch D6; done before D7)

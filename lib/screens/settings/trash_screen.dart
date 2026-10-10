@@ -131,7 +131,56 @@ class _TrashList extends StatelessWidget {
     this.titleBuilder,
   });
 
+  /// What Restore will NOT put back, for the types whose delete changed
+  /// more than the document itself (design-open-questions.md, "Trash and
+  /// restore: books consistency"). Null where Restore is complete.
+  /// Restore only moves the document back; these lines just say so before
+  /// the user commits to it.
+  ({String title, String body})? get _restoreWarning {
+    if (liveCollection == Collections.sales) {
+      return (
+        title: 'Restore this sale?',
+        body: 'The sale will be back in your sales list, but restoring will NOT change:\n'
+            '• stock: the items stay back on the shelf, as they were put back when the sale was deleted\n'
+            "• debt: the client's debt for this sale is not re-created\n"
+            "• client balance: it stays as it is now\n\n"
+            'Adjust these by hand if the sale really happened.',
+      );
+    }
+    if (liveCollection == Collections.services) {
+      return (
+        title: 'Restore this service?',
+        body: 'The service will be back in your services list, but restoring will NOT change:\n'
+            '• stock: the items it used stay back in stock\n'
+            "• debt: the client's debt for this service is not re-created\n"
+            "• client balance: it stays as it is now\n"
+            '• expenses: its expense transaction was deleted for good and does not come back\n\n'
+            'Adjust these by hand if the service really happened.',
+      );
+    }
+    return null;
+  }
+
   Future<void> _restore(BuildContext context, String id, Map<String, dynamic> data) async {
+    final warning = _restoreWarning;
+    if (warning != null) {
+      final confirm = await showDialog<bool>(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: Text(warning.title),
+          content: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: AppSizes.dialogSm),
+            child: Text(warning.body),
+          ),
+          actions: [
+            TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Cancel')),
+            TextButton(onPressed: () => Navigator.pop(context, true), child: const Text('Restore')),
+          ],
+        ),
+      );
+      if (confirm != true) return;
+    }
+
     try {
       await TrashService.restore(
         facilityId: facilityId,
