@@ -22,12 +22,18 @@ import '../../constants/product_categories.dart';
 import '../../constants/product_units.dart';
 import '../../constants/product_types.dart';
 
-import '../../theme/app_palette.dart';
 import '../../data/collections.dart';
 import '../../data/fields.dart';
 import '../../data/activity_type.dart';
 import '../../config/app_defaults.dart';
 import '../../data/data_keys.dart';
+import '../../theme/app_text.dart';
+import '../../theme/app_dimens.dart';
+import '../../theme/theme_context.dart';
+import '../../theme/app_breakpoints.dart';
+import '../../theme/app_motion.dart';
+import '../../config/app_timeouts.dart';
+import '../../ui/feedback/app_feedback.dart';
 
 enum ProductDestination {
   sellable,
@@ -110,11 +116,6 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
 
   final List<String> _categories = kProductCategories;
 
-
-  final Color primaryDeepTealGreen = AppPalette.primary;
-  final Color warmAmber = AppPalette.accent;
-  final Color offWhite = AppPalette.background;
-
   // Optional product photo/icon - a local preview shows immediately
   // after picking, while _imageUrl (the persisted download URL) only
   // updates once the upload actually finishes. When editing an
@@ -127,9 +128,7 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
   Future<void> _pickProductImage() async {
     final facilityId = Provider.of<FacilityProvider>(context, listen: false).selectedFacilityId;
     if (facilityId == null || facilityId.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('No facility selected. Please select a facility first.')),
-      );
+      AppFeedback.warning('Select a facility first');
       return;
     }
 
@@ -158,30 +157,28 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
         _imageUrl = downloadUrl;
         _isUploadingImage = false;
       });
-    } catch (e) {
+    } catch (e, st) {
       if (!mounted) return;
       setState(() => _isUploadingImage = false);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Could not upload image: $e')),
-      );
+      AppFeedback.error("Couldn't upload the image", error: e, stackTrace: st);
     }
   }
 
   Widget _sectionHeader(String title, IconData icon) {
     return Padding(
-      padding: const EdgeInsets.only(bottom: 10),
+      padding: const EdgeInsets.only(bottom: AppSpacing.s10),
       child: Row(
         children: [
           Container(
-            padding: const EdgeInsets.all(6),
+            padding: const EdgeInsets.all(AppSpacing.s6),
             decoration: BoxDecoration(
               shape: BoxShape.circle,
-              color: primaryDeepTealGreen.withValues(alpha: 0.1),
+              color: context.colors.primary.withValues(alpha: AppAlpha.a10),
             ),
-            child: Icon(icon, size: 16, color: primaryDeepTealGreen),
+            child: Icon(icon, size: AppIconSize.i16, color: context.colors.primary),
           ),
-          const SizedBox(width: 8),
-          Text(title, style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15, color: primaryDeepTealGreen)),
+          const SizedBox(width: AppSpacing.s8),
+          Text(title, style: TextStyle(fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f15, color: context.colors.primary)),
         ],
       ),
     );
@@ -204,14 +201,14 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
           // Dashed outline only while empty - a chosen photo gets a
           // plain, thin border instead.
           foregroundPainter:
-              hasImage ? null : _DashedRectPainter(color: primaryDeepTealGreen.withValues(alpha: 0.5)),
+              hasImage ? null : _DashedRectPainter(color: context.colors.primary.withValues(alpha: AppAlpha.a50)),
           child: Container(
             width: double.infinity,
             height: 150,
             decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(12),
-              color: primaryDeepTealGreen.withValues(alpha: 0.08),
-              border: hasImage ? Border.all(color: Colors.grey.withValues(alpha: 0.3)) : null,
+              borderRadius: BorderRadius.circular(AppRadius.r12),
+              color: context.colors.primary.withValues(alpha: AppAlpha.a10),
+              border: hasImage ? Border.all(color: context.colors.textHint.withValues(alpha: AppAlpha.a30)) : null,
             ),
             clipBehavior: Clip.antiAlias,
             child: Stack(
@@ -229,12 +226,12 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
                   _photoPlaceholder(),
                 if (_isUploadingImage)
                   Container(
-                    color: Colors.black.withValues(alpha: 0.35),
-                    child: const Center(
+                    color: context.colors.scrim.withValues(alpha: AppAlpha.a40),
+                    child: Center(
                       child: SizedBox(
                         width: 24,
                         height: 24,
-                        child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                        child: CircularProgressIndicator(strokeWidth: 2, color: context.colors.onPrimary),
                       ),
                     ),
                   ),
@@ -243,13 +240,13 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
                     right: 8,
                     bottom: 8,
                     child: Container(
-                      padding: const EdgeInsets.all(6),
+                      padding: const EdgeInsets.all(AppSpacing.s6),
                       decoration: BoxDecoration(
                         shape: BoxShape.circle,
-                        color: primaryDeepTealGreen,
-                        border: Border.all(color: Colors.white, width: 2),
+                        color: context.colors.primary,
+                        border: Border.all(color: context.colors.surface, width: 2),
                       ),
-                      child: const Icon(Icons.camera_alt, size: 14, color: Colors.white),
+                      child: Icon(Icons.camera_alt, size: AppIconSize.i14, color: context.colors.onPrimary),
                     ),
                   ),
               ],
@@ -266,13 +263,13 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
     return Column(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        Icon(Icons.add_photo_alternate_outlined, size: 36, color: primaryDeepTealGreen.withValues(alpha: 0.6)),
-        const SizedBox(height: 8),
+        Icon(Icons.add_photo_alternate_outlined, size: 36, color: context.colors.primary.withValues(alpha: 0.6)),
+        const SizedBox(height: AppSpacing.s8),
         Text(
           'Add photo',
-          style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: primaryDeepTealGreen),
+          style: TextStyle(fontSize: AppFontSize.f13, fontWeight: AppFontWeight.bold, color: context.colors.primary),
         ),
-        Text('Optional', style: TextStyle(fontSize: 11, color: Colors.grey[600])),
+        Text('Optional', style: TextStyle(fontSize: AppFontSize.f11, color: context.colors.textMuted)),
       ],
     );
   }
@@ -390,24 +387,24 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
     final batchField = TextFormField(
       controller: _batchController,
       decoration: _inputDecoration('Batch No'),
-      cursorColor: primaryDeepTealGreen,
+      cursorColor: context.colors.primary,
     );
     final expiryField = TextFormField(
       controller: _expiryController,
       readOnly: true,
       decoration: _inputDecoration('Expiry').copyWith(
-          suffixIcon: Icon(Icons.calendar_today, color: primaryDeepTealGreen)),
+          suffixIcon: Icon(Icons.calendar_today, color: context.colors.primary)),
       onTap: _pickExpiryDate,
-      cursorColor: primaryDeepTealGreen,
+      cursorColor: context.colors.primary,
     );
 
     if (isNarrow) {
       return Column(
         children: [
           supplierField,
-          const SizedBox(height: 12),
+          const SizedBox(height: AppSpacing.s12),
           batchField,
-          const SizedBox(height: 12),
+          const SizedBox(height: AppSpacing.s12),
           expiryField,
         ],
       );
@@ -417,11 +414,11 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
       return Column(
         children: [
           supplierField,
-          const SizedBox(height: 12),
+          const SizedBox(height: AppSpacing.s12),
           Row(
             children: [
               Expanded(child: batchField),
-              const SizedBox(width: 12),
+              const SizedBox(width: AppSpacing.s12),
               Expanded(child: expiryField),
             ],
           ),
@@ -432,9 +429,9 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
     return Row(
       children: [
         Expanded(child: supplierField),
-        const SizedBox(width: 12),
+        const SizedBox(width: AppSpacing.s12),
         Expanded(child: batchField),
-        const SizedBox(width: 12),
+        const SizedBox(width: AppSpacing.s12),
         Expanded(child: expiryField),
       ],
     );
@@ -447,7 +444,7 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
         decoration: _inputDecoration('Type', required: true),
         child: Text(
           _type.isEmpty ? 'Select Type' : _type,
-          style: TextStyle(color: _type.isEmpty ? Colors.grey : (enabled ? Colors.black87 : Colors.grey[600])),
+          style: TextStyle(color: _type.isEmpty ? context.colors.textHint : (enabled ? context.colors.textPrimary : context.colors.textMuted)),
         ),
       ),
     );
@@ -473,7 +470,7 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
             child: Text(
               _category.isEmpty ? 'Select Category' : _category,
               style: TextStyle(
-                  color: _category.isEmpty ? Colors.grey : (enabled ? Colors.black87 : Colors.grey[600])),
+                  color: _category.isEmpty ? context.colors.textHint : (enabled ? context.colors.textPrimary : context.colors.textMuted)),
             ),
           ),
         );
@@ -506,7 +503,7 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
           decoration: _inputDecoration('Supplier'),
           textCapitalization: TextCapitalization.sentences,
           inputFormatters: [SentenceCapitalizationFormatter()],
-          cursorColor: primaryDeepTealGreen,
+          cursorColor: context.colors.primary,
           enabled: enabled,
           onChanged: (value) => _supplierController.text = value,
         );
@@ -520,7 +517,7 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
       decoration: _inputDecoration('Buying Price (${AppDefaults.currencySymbol})', required: true),
       keyboardType: TextInputType.number,
       inputFormatters: [FilteringTextInputFormatter.digitsOnly, ThousandsSeparatorInputFormatter()],
-      cursorColor: primaryDeepTealGreen,
+      cursorColor: context.colors.primary,
       enabled: !fieldsLocked,
       validator: (value) {
         final parsed = parseThousands(value ?? '');
@@ -536,7 +533,7 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
       decoration: _inputDecoration('Selling Price (${AppDefaults.currencySymbol})', required: true),
       keyboardType: TextInputType.number,
       inputFormatters: [FilteringTextInputFormatter.digitsOnly, ThousandsSeparatorInputFormatter()],
-      cursorColor: primaryDeepTealGreen,
+      cursorColor: context.colors.primary,
       enabled: !fieldsLocked,
       validator: (value) {
         final parsed = parseThousands(value ?? '');
@@ -551,7 +548,7 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
       controller: _stockController,
       decoration: _inputDecoration('Quantity', required: true),
       keyboardType: TextInputType.number,
-      cursorColor: primaryDeepTealGreen,
+      cursorColor: context.colors.primary,
       validator: (value) {
         final parsed = int.tryParse((value ?? '').trim());
         if (parsed == null) return 'Enter a valid quantity';
@@ -573,16 +570,16 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
   InputDecoration _inputDecoration(String label, {bool required = false}) {
     return InputDecoration(
       labelText: required ? '$label *' : label,
-      labelStyle: TextStyle(color: Colors.grey[700]),
-      floatingLabelStyle: TextStyle(color: primaryDeepTealGreen),
-      border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+      labelStyle: TextStyle(color: context.colors.textSoft),
+      floatingLabelStyle: TextStyle(color: context.colors.primary),
+      border: OutlineInputBorder(borderRadius: BorderRadius.circular(AppRadius.r8)),
       enabledBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(8),
-        borderSide: BorderSide(color: Colors.grey[400]!),
+        borderRadius: BorderRadius.circular(AppRadius.r8),
+        borderSide: BorderSide(color: context.colors.borderStrong),
       ),
       focusedBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(8),
-        borderSide: BorderSide(color: primaryDeepTealGreen, width: 2),
+        borderRadius: BorderRadius.circular(AppRadius.r8),
+        borderSide: BorderSide(color: context.colors.primary, width: 2),
       ),
     );
   }
@@ -607,10 +604,10 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
     return showDialog(
       context: context,
       builder: (context) => Dialog(
-        backgroundColor: primaryDeepTealGreen.withValues(alpha: 0.95),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        backgroundColor: context.colors.primary.withValues(alpha: 0.95),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadius.r12)),
         child: Container(
-          padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
+          padding: const EdgeInsets.symmetric(vertical: AppSpacing.s12, horizontal: AppSpacing.s8),
           constraints: const BoxConstraints(
             maxHeight: 340,
             maxWidth: 340,
@@ -619,17 +616,17 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
             mainAxisSize: MainAxisSize.min,
             children: [
               Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 8),
+                padding: const EdgeInsets.symmetric(horizontal: AppSpacing.s8),
                 child: Text(
                   'Select Category',
                   style: TextStyle(
-                    color: offWhite,
-                    fontSize: 15,
-                    fontWeight: FontWeight.bold,
+                    color: context.colors.background,
+                    fontSize: AppFontSize.f15,
+                    fontWeight: AppFontWeight.bold,
                   ),
                 ),
               ),
-              const SizedBox(height: 8),
+              const SizedBox(height: AppSpacing.s8),
               Flexible(
                 child: ListView(
                   shrinkWrap: true,
@@ -637,10 +634,10 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
                     return ListTile(
                       dense: true,
                       visualDensity: const VisualDensity(vertical: -3),
-                      contentPadding: const EdgeInsets.symmetric(horizontal: 8),
+                      contentPadding: const EdgeInsets.symmetric(horizontal: AppSpacing.s8),
                       title: Text(
                         cat,
-                        style: TextStyle(color: offWhite, fontSize: 13),
+                        style: TextStyle(color: context.colors.background, fontSize: AppFontSize.f13),
                       ),
                       onTap: () {
                         if (!mounted) return;
@@ -664,10 +661,10 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
     return showDialog(
       context: context,
       builder: (context) => Dialog(
-        backgroundColor: primaryDeepTealGreen.withValues(alpha: 0.95),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        backgroundColor: context.colors.primary.withValues(alpha: 0.95),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadius.r12)),
         child: Container(
-          padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
+          padding: const EdgeInsets.symmetric(vertical: AppSpacing.s12, horizontal: AppSpacing.s8),
           constraints: const BoxConstraints(
             maxHeight: 340,
             maxWidth: 340,
@@ -676,17 +673,17 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
             mainAxisSize: MainAxisSize.min,
             children: [
               Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 8),
+                padding: const EdgeInsets.symmetric(horizontal: AppSpacing.s8),
                 child: Text(
                   'Select Type',
                   style: TextStyle(
-                    color: offWhite,
-                    fontSize: 15,
-                    fontWeight: FontWeight.bold,
+                    color: context.colors.background,
+                    fontSize: AppFontSize.f15,
+                    fontWeight: AppFontWeight.bold,
                   ),
                 ),
               ),
-              const SizedBox(height: 8),
+              const SizedBox(height: AppSpacing.s8),
               Flexible(
                 child: ListView(
                   shrinkWrap: true,
@@ -694,10 +691,10 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
                     return ListTile(
                       dense: true,
                       visualDensity: const VisualDensity(vertical: -3),
-                      contentPadding: const EdgeInsets.symmetric(horizontal: 8),
+                      contentPadding: const EdgeInsets.symmetric(horizontal: AppSpacing.s8),
                       title: Text(
                         t,
-                        style: TextStyle(color: offWhite, fontSize: 13),
+                        style: TextStyle(color: context.colors.background, fontSize: AppFontSize.f13),
                       ),
                       onTap: () {
                         if (!mounted) return;
@@ -744,7 +741,7 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
             mainAxisSize: MainAxisSize.min,
             children: [
               RadioListTile<ProductDestination>(
-                activeColor: primaryDeepTealGreen,
+                activeColor: context.colors.primary,
                 title: const Text('Sellable Product Catalog'),
                 subtitle: const Text('Available for sales and transactions'),
                 value: ProductDestination.sellable,
@@ -752,7 +749,7 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
                 onChanged: (val) => setDialogState(() => selected = val!),
               ),
               RadioListTile<ProductDestination>(
-                activeColor: primaryDeepTealGreen,
+                activeColor: context.colors.primary,
                 title: const Text('Stock Store'),
                 subtitle: const Text('Stored but not sellable yet'),
                 value: ProductDestination.stockStore,
@@ -765,7 +762,7 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
             TextButton(
               onPressed: () => Navigator.pop(context, null),
               style: TextButton.styleFrom(
-                foregroundColor: primaryDeepTealGreen,
+                foregroundColor: context.colors.primary,
               ),
               child: const Text('Cancel'),
             ),
@@ -774,10 +771,10 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
               style: ButtonStyle(
                 backgroundColor: WidgetStateProperty.resolveWith(
                   (states) => states.contains(WidgetState.hovered)
-                      ? warmAmber
-                      : primaryDeepTealGreen,
+                      ? context.colors.accent
+                      : context.colors.primary,
                 ),
-                foregroundColor: WidgetStateProperty.all(offWhite),
+                foregroundColor: WidgetStateProperty.all(context.colors.background),
               ),
               child: const Text('Continue'),
             ),
@@ -801,9 +798,7 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
       // Prevent duplicate names (new product only)
       if (widget.product == null &&
           existingNames.contains(_nameController.text.trim().toLowerCase())) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Product name already exists!')),
-        );
+        AppFeedback.warning('Product name already exists');
         return;
       }
 
@@ -816,12 +811,7 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
               .selectedFacilityId;
 
       if (facilityId == null || facilityId.isEmpty) {
-        if (!mounted) return;
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('No facility selected. Please select a facility first.'),
-          ),
-        );
+        AppFeedback.warning('Select a facility first');
         return;
       }
 
@@ -1010,26 +1000,18 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
 
       if (!mounted) return;
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            widget.product == null
-                ? (destination == ProductDestination.sellable
-                    ? 'Product added to Sellable Catalog'
-                    : 'Product added to Stock Store')
-                : 'Product updated successfully',
-          ),
-          backgroundColor: Colors.green,
-        ),
+      AppFeedback.success(
+        widget.product == null
+            ? (destination == ProductDestination.sellable
+                ? 'Product added to Sellable Catalog'
+                : 'Product added to Stock Store')
+            : 'Product updated',
       );
 
       // Navigate back (don't redirect, just pop)
       Navigator.pop(context);
-    } catch (e) {
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Failed to save product: $e')),
-      );
+    } catch (e, st) {
+      AppFeedback.error("Couldn't save the product", error: e, stackTrace: st);
     } finally {
       if (mounted) setState(() => _isSaving = false);
     }
@@ -1051,35 +1033,35 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: primaryDeepTealGreen,
-        iconTheme: IconThemeData(color: offWhite),
+        backgroundColor: context.colors.primary,
+        iconTheme: IconThemeData(color: context.colors.background),
         centerTitle: false,
         // Icon before the title, same as Add Sale's header.
         title: Row(
           children: [
-            Icon(Icons.inventory_2_outlined, color: offWhite, size: 22),
-            const SizedBox(width: 12),
-            Text(appBarTitle, style: TextStyle(color: offWhite, fontWeight: FontWeight.bold, fontSize: 18)),
+            Icon(Icons.inventory_2_outlined, color: context.colors.background, size: AppIconSize.i22),
+            const SizedBox(width: AppSpacing.s12),
+            Text(appBarTitle, style: TextStyle(color: context.colors.background, fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f18)),
           ],
         ),
         automaticallyImplyLeading: !widget.isModal,
         actions: widget.isModal
             ? [
                 IconButton(
-                  icon: Icon(Icons.close, color: offWhite),
+                  icon: Icon(Icons.close, color: context.colors.background),
                   tooltip: 'Close',
                   onPressed: () => Navigator.of(context).pop(),
                 ),
               ]
             : null,
       ),
-      backgroundColor: offWhite,
+      backgroundColor: context.colors.background,
       body: LayoutBuilder(
         builder: (context, constraints) {
-          final isNarrow = constraints.maxWidth < 480;
+          final isNarrow = constraints.maxWidth < AppBreakpoints.phoneNarrow;
           // Same breakpoint Add Sale uses for its own two-column layout,
           // so the two modals always switch layouts at the same width.
-          final isTwoColumn = constraints.maxWidth >= 860;
+          final isTwoColumn = constraints.maxWidth >= AppBreakpoints.formTwoColumn;
 
           final List<Widget> imageItems = [
             Center(child: _buildImagePicker()),
@@ -1101,7 +1083,7 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
                 inputFormatters: [SentenceCapitalizationFormatter()],
                 validator: (value) =>
                     value == null || value.trim().isEmpty ? 'Product name is required' : null,
-                cursorColor: primaryDeepTealGreen,
+                cursorColor: context.colors.primary,
                 enabled: !fieldsLocked,
                 autofillHints: const [],
                 onChanged: (_) => setState(() {}),
@@ -1126,12 +1108,12 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
                   final match = exactMatch.isNotEmpty ? exactMatch.first : null;
 
                   return Container(
-                    margin: const EdgeInsets.only(top: 10),
-                    padding: const EdgeInsets.all(14),
+                    margin: const EdgeInsets.only(top: AppSpacing.s10),
+                    padding: const EdgeInsets.all(AppSpacing.s14),
                     decoration: BoxDecoration(
-                      color: warmAmber.withValues(alpha: 0.10),
-                      borderRadius: BorderRadius.circular(10),
-                      border: Border(left: BorderSide(color: warmAmber, width: 4)),
+                      color: context.colors.accent.withValues(alpha: AppAlpha.a10),
+                      borderRadius: BorderRadius.circular(AppRadius.r10),
+                      border: Border(left: BorderSide(color: context.colors.accent, width: 4)),
                     ),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -1139,73 +1121,73 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
                         if (match != null) ...[
                           Row(
                             children: [
-                              Icon(Icons.info_outline, size: 18, color: Colors.orange[800]),
-                              const SizedBox(width: 6),
+                              Icon(Icons.info_outline, size: AppIconSize.i18, color: context.colors.warningStrong),
+                              const SizedBox(width: AppSpacing.s6),
                               Expanded(
                                 child: Text(
                                   '"${match.name}" already exists',
-                                  style: TextStyle(fontWeight: FontWeight.bold, color: Colors.orange[900]),
+                                  style: TextStyle(fontWeight: AppFontWeight.bold, color: Colors.orange[900]),
                                 ),
                               ),
                             ],
                           ),
-                          const SizedBox(height: 4),
+                          const SizedBox(height: AppSpacing.s4),
                           Text(
                             'Adding new stock for it, or updating its quantity? Open it below - '
                             'you can edit its details and quantity right there.',
-                            style: TextStyle(fontSize: 12.5, color: Colors.grey[700]),
+                            style: TextStyle(fontSize: AppFontSize.f12_5, color: context.colors.textSoft),
                           ),
-                          const SizedBox(height: 10),
+                          const SizedBox(height: AppSpacing.s10),
                           SizedBox(
                             width: double.infinity,
                             child: ElevatedButton.icon(
                               onPressed: () async {
                                 Navigator.pop(context);
-                                await Future.delayed(const Duration(milliseconds: 300));
+                                await Future.delayed(AppTimeouts.productFormReopenDelay);
                                 final rootContext = navigatorKey.currentContext;
                                 if (rootContext != null) {
                                   showAddEditProductScreen(rootContext, product: match);
                                 }
                               },
-                              icon: const Icon(Icons.edit_outlined, size: 18),
+                              icon: const Icon(Icons.edit_outlined, size: AppIconSize.i18),
                               label: const Text('Open This Product'),
                               style: ButtonStyle(
                                 backgroundColor: WidgetStateProperty.resolveWith<Color>((states) {
-                                  if (states.contains(WidgetState.hovered)) return warmAmber;
-                                  return primaryDeepTealGreen;
+                                  if (states.contains(WidgetState.hovered)) return context.colors.accent;
+                                  return context.colors.primary;
                                 }),
-                                foregroundColor: WidgetStateProperty.all(offWhite),
+                                foregroundColor: WidgetStateProperty.all(context.colors.background),
                               ),
                             ),
                           ),
                         ] else ...[
                           Row(
                             children: [
-                              Icon(Icons.search, size: 18, color: Colors.orange[800]),
-                              const SizedBox(width: 6),
+                              Icon(Icons.search, size: AppIconSize.i18, color: context.colors.warningStrong),
+                              const SizedBox(width: AppSpacing.s6),
                               Text(
                                 'Similar products already exist',
-                                style: TextStyle(fontWeight: FontWeight.bold, color: Colors.orange[900], fontSize: 13),
+                                style: TextStyle(fontWeight: AppFontWeight.bold, color: Colors.orange[900], fontSize: AppFontSize.f13),
                               ),
                             ],
                           ),
-                          const SizedBox(height: 6),
+                          const SizedBox(height: AppSpacing.s6),
                           ...similar.map((p) => Padding(
-                                padding: const EdgeInsets.symmetric(vertical: 3),
+                                padding: const EdgeInsets.symmetric(vertical: AppSpacing.s3),
                                 child: Row(
                                   children: [
-                                    Expanded(child: Text(p.name, style: const TextStyle(fontSize: 13))),
+                                    Expanded(child: Text(p.name, style: const TextStyle(fontSize: AppFontSize.f13))),
                                     TextButton(
                                       style: TextButton.styleFrom(padding: EdgeInsets.zero, minimumSize: const Size(0, 0)),
                                       onPressed: () async {
                                         Navigator.pop(context);
-                                        await Future.delayed(const Duration(milliseconds: 300));
+                                        await Future.delayed(AppTimeouts.productFormReopenDelay);
                                         final rootContext = navigatorKey.currentContext;
                                         if (rootContext != null) {
                                           showAddEditProductScreen(rootContext, product: p);
                                         }
                                       },
-                                      child: const Text('Open', style: TextStyle(fontSize: 12)),
+                                      child: const Text('Open', style: TextStyle(fontSize: AppFontSize.f12)),
                                     ),
                                   ],
                                 ),
@@ -1215,18 +1197,18 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
                     ),
                   );
                 }),
-              const SizedBox(height: 12),
+              const SizedBox(height: AppSpacing.s12),
 
               // Type & Category
               Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Expanded(child: _typeField(enabled: !fieldsLocked)),
-                  const SizedBox(width: 12),
+                  const SizedBox(width: AppSpacing.s12),
                   Expanded(child: _categoryField(enabled: !fieldsLocked)),
                 ],
               ),
-              const SizedBox(height: 12),
+              const SizedBox(height: AppSpacing.s12),
 
           ];
 
@@ -1240,12 +1222,12 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
                         ? _supplierField(enabled: !fieldsLocked)
                         : _buildSupplierBatchExpiryFields(isNarrow, compact: isTwoColumn),
                     if (isEditing) ...[
-                      const SizedBox(height: 14),
-                      const Text('Current Quantity', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
-                      const SizedBox(height: 8),
+                      const SizedBox(height: AppSpacing.s14),
+                      const Text('Current Quantity', style: TextStyle(fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f14)),
+                      const SizedBox(height: AppSpacing.s8),
                       if (_loadingBatches)
                         const Padding(
-                          padding: EdgeInsets.symmetric(vertical: 8),
+                          padding: EdgeInsets.symmetric(vertical: AppSpacing.s8),
                           child: Center(child: CircularProgressIndicator(strokeWidth: 2)),
                         )
                       else if (_batches.length <= 1) ...[
@@ -1256,7 +1238,7 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
                                 controller: _storeQtyController,
                                 decoration: _inputDecoration('Store Qty', required: true),
                                 keyboardType: TextInputType.number,
-                                cursorColor: primaryDeepTealGreen,
+                                cursorColor: context.colors.primary,
                                 validator: (value) {
                                   final parsed = int.tryParse((value ?? '').trim());
                                   if (parsed == null) return 'Invalid';
@@ -1265,13 +1247,13 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
                                 },
                               ),
                             ),
-                            const SizedBox(width: 12),
+                            const SizedBox(width: AppSpacing.s12),
                             Expanded(
                               child: TextFormField(
                                 controller: _shelfQtyController,
                                 decoration: _inputDecoration('Shelf Qty', required: true),
                                 keyboardType: TextInputType.number,
-                                cursorColor: primaryDeepTealGreen,
+                                cursorColor: context.colors.primary,
                                 validator: (value) {
                                   final parsed = int.tryParse((value ?? '').trim());
                                   if (parsed == null) return 'Invalid';
@@ -1282,24 +1264,24 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
                             ),
                           ],
                         ),
-                        const SizedBox(height: 6),
+                        const SizedBox(height: AppSpacing.s6),
                         Text(
                           'Editing these corrects the actual quantity on hand right now.',
-                          style: TextStyle(fontSize: 11.5, color: Colors.grey[600]),
+                          style: TextStyle(fontSize: AppFontSize.f11_5, color: context.colors.textMuted),
                         ),
                       ] else ...[
                         Container(
-                          padding: const EdgeInsets.all(12),
+                          padding: const EdgeInsets.all(AppSpacing.s12),
                           decoration: BoxDecoration(
-                            color: Colors.grey.shade100,
-                            borderRadius: BorderRadius.circular(8),
+                            color: context.colors.surfaceMuted,
+                            borderRadius: BorderRadius.circular(AppRadius.r8),
                           ),
                           child: Row(
                             children: [
                               Expanded(
                                 child: Text(
                                   'This product has ${_batches.length} separate batches - manage them individually for accuracy.',
-                                  style: const TextStyle(fontSize: 12.5),
+                                  style: const TextStyle(fontSize: AppFontSize.f12_5),
                                 ),
                               ),
                               TextButton(
@@ -1312,17 +1294,17 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
                           ),
                         ),
                       ],
-                      const SizedBox(height: 10),
+                      const SizedBox(height: AppSpacing.s10),
                       OutlinedButton.icon(
                         onPressed: () {
                           showAddBatchScreen(context, product: widget.product!);
                         },
-                        icon: const Icon(Icons.add, size: 18),
+                        icon: const Icon(Icons.add, size: AppIconSize.i18),
                         label: const Text('Add New Batch (new delivery, different expiry)'),
-                        style: OutlinedButton.styleFrom(foregroundColor: primaryDeepTealGreen),
+                        style: OutlinedButton.styleFrom(foregroundColor: context.colors.primary),
                       ),
                     ],
-                    const SizedBox(height: 12),
+                    const SizedBox(height: AppSpacing.s12),
                     TextFormField(
                       controller: _descriptionController,
                       decoration: _inputDecoration('Description').copyWith(alignLabelWithHint: true),
@@ -1336,7 +1318,7 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
                       // the columns on their own.
                       minLines: (isTwoColumn && !isEditing) ? 5 : 2,
                       maxLines: (isTwoColumn && !isEditing) ? 9 : 4,
-                      cursorColor: primaryDeepTealGreen,
+                      cursorColor: context.colors.primary,
                       enabled: !fieldsLocked,
                     ),
                   ],
@@ -1352,22 +1334,22 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
                     _sectionHeader('Pricing & Stock', Icons.attach_money),
                     isNarrow
                         ? Column(
-                            children: [_buyPriceField(fieldsLocked), const SizedBox(height: 12), _sellPriceField(fieldsLocked)],
+                            children: [_buyPriceField(fieldsLocked), const SizedBox(height: AppSpacing.s12), _sellPriceField(fieldsLocked)],
                           )
                         : Row(
                             children: [
                               Expanded(child: _buyPriceField(fieldsLocked)),
-                              const SizedBox(width: 12),
+                              const SizedBox(width: AppSpacing.s12),
                               Expanded(child: _sellPriceField(fieldsLocked)),
                             ],
                           ),
-                    const SizedBox(height: 12),
+                    const SizedBox(height: AppSpacing.s12),
                     isNarrow
                         ? Column(
                             children: [
                               if (!isEditing) ...[
                                 _quantityField(),
-                                const SizedBox(height: 12),
+                                const SizedBox(height: AppSpacing.s12),
                               ],
                               _unitDropdown(fieldsLocked),
                             ],
@@ -1376,7 +1358,7 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
                             children: [
                               if (!isEditing) ...[
                                 Expanded(child: _quantityField()),
-                                const SizedBox(width: 12),
+                                const SizedBox(width: AppSpacing.s12),
                               ],
                               Expanded(child: _unitDropdown(fieldsLocked)),
                             ],
@@ -1402,7 +1384,7 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
                   hintText: 'e.g. 5 (defaults to ${Product.defaultLowStockThreshold} if left blank)',
                 ),
                 keyboardType: TextInputType.number,
-                cursorColor: primaryDeepTealGreen,
+                cursorColor: context.colors.primary,
                 enabled: !fieldsLocked,
                 validator: (value) {
                   final trimmed = (value ?? '').trim();
@@ -1413,17 +1395,17 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
                   return null;
                 },
               ),
-                  const SizedBox(height: 12),
+                  const SizedBox(height: AppSpacing.s12),
                   SwitchListTile(
                     contentPadding: EdgeInsets.zero,
-                    title: const Text('Track in Daily Reports', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600)),
+                    title: const Text('Track in Daily Reports', style: TextStyle(fontSize: AppFontSize.f14, fontWeight: AppFontWeight.semibold)),
                     subtitle: const Text(
                       'Watch-listed products need a physical stock count before the daily closing report can be submitted.',
-                      style: TextStyle(fontSize: 12),
+                      style: TextStyle(fontSize: AppFontSize.f12),
                     ),
-                    secondary: Icon(Icons.star_outline, color: primaryDeepTealGreen),
+                    secondary: Icon(Icons.star_outline, color: context.colors.primary),
                     value: _isWatchlisted,
-                    activeColor: primaryDeepTealGreen,
+                    activeColor: context.colors.primary,
                     onChanged: fieldsLocked ? null : (value) => setState(() => _isWatchlisted = value),
                   ),
                   ],
@@ -1448,16 +1430,16 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
                         ],
                       ),
                     ),
-                    const SizedBox(width: 16),
+                    const SizedBox(width: AppSpacing.s16),
                     // Right: picture, money, and settings.
                     Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           group(imageItems),
-                          const SizedBox(height: 16),
+                          const SizedBox(height: AppSpacing.s16),
                           group(pricingItems),
-                          const SizedBox(height: 12),
+                          const SizedBox(height: AppSpacing.s12),
                           group(additionalItems),
                         ],
                       ),
@@ -1468,12 +1450,12 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     group(imageItems),
-                    const SizedBox(height: 20),
+                    const SizedBox(height: AppSpacing.s20),
                     group(basicInfoItems),
                     group(detailsItems),
-                    const SizedBox(height: 12),
+                    const SizedBox(height: AppSpacing.s12),
                     group(pricingItems),
-                    const SizedBox(height: 12),
+                    const SizedBox(height: AppSpacing.s12),
                     group(additionalItems),
                   ],
                 );
@@ -1486,7 +1468,7 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
                 // was capped at 700, leaving dead space on both sides.
                 constraints: const BoxConstraints(maxWidth: 1080),
                 child: SingleChildScrollView(
-                  padding: const EdgeInsets.all(16),
+                  padding: const EdgeInsets.all(AppSpacing.s16),
                   child: content,
                 ),
               ),
@@ -1504,43 +1486,43 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
     return Container(
       padding: EdgeInsets.fromLTRB(20, 14, 20, 14 + MediaQuery.of(context).padding.bottom),
       decoration: BoxDecoration(
-        color: Colors.white,
-        border: Border(top: BorderSide(color: Colors.grey.withValues(alpha: 0.15))),
+        color: context.colors.surface,
+        border: Border(top: BorderSide(color: context.colors.textHint.withValues(alpha: AppAlpha.a15))),
       ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           OutlinedButton.icon(
-            icon: const Icon(Icons.close, size: 16),
+            icon: const Icon(Icons.close, size: AppIconSize.i16),
             label: const Text('Cancel'),
             style: OutlinedButton.styleFrom(
-              foregroundColor: Colors.black87,
-              side: BorderSide(color: Colors.grey.withValues(alpha: 0.4)),
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+              foregroundColor: context.colors.textPrimary,
+              side: BorderSide(color: context.colors.textHint.withValues(alpha: AppAlpha.a40)),
+              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.s20, vertical: AppSpacing.s12),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadius.r10)),
             ),
             onPressed: _isSaving ? null : () => Navigator.of(context).pop(),
           ),
           ElevatedButton(
             onPressed: _isSaving ? null : _saveProduct,
             style: ElevatedButton.styleFrom(
-              backgroundColor: primaryDeepTealGreen,
-              foregroundColor: offWhite,
-              disabledBackgroundColor: primaryDeepTealGreen.withValues(alpha: 0.5),
-              padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 12),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+              backgroundColor: context.colors.primary,
+              foregroundColor: context.colors.background,
+              disabledBackgroundColor: context.colors.primary.withValues(alpha: AppAlpha.a50),
+              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.s22, vertical: AppSpacing.s12),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadius.r10)),
             ),
             child: _isSaving
-                ? const SizedBox(
+                ? SizedBox(
                     width: 18,
                     height: 18,
-                    child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                    child: CircularProgressIndicator(strokeWidth: 2, color: context.colors.onPrimary),
                   )
                 : Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Icon(isEditing ? Icons.update : Icons.save, size: 16),
-                      const SizedBox(width: 8),
+                      Icon(isEditing ? Icons.update : Icons.save, size: AppIconSize.i16),
+                      const SizedBox(width: AppSpacing.s8),
                       Text(buttonText),
                     ],
                   ),
@@ -1560,7 +1542,7 @@ Future<void> showAddEditProductScreen(
   Product? product,
   ProductDestination? presetDestination,
 }) async {
-  final isWideScreen = MediaQuery.of(context).size.width >= 900;
+  final isWideScreen = MediaQuery.of(context).size.width >= AppBreakpoints.medium;
 
   if (!isWideScreen) {
     await Navigator.of(context).push(
@@ -1575,8 +1557,8 @@ Future<void> showAddEditProductScreen(
     context: context,
     barrierDismissible: true,
     barrierLabel: product != null ? 'Edit Product' : 'Add Product',
-    barrierColor: Colors.black54,
-    transitionDuration: const Duration(milliseconds: 220),
+    barrierColor: context.colors.scrim.withValues(alpha: AppAlpha.a50),
+    transitionDuration: AppMotion.normal,
     pageBuilder: (context, animation, secondaryAnimation) {
       final screenSize = MediaQuery.of(context).size;
       // Same formula as showAddSaleScreen's modal, for consistency
@@ -1591,7 +1573,7 @@ Future<void> showAddEditProductScreen(
           width: modalWidth,
           height: modalHeight,
           child: ClipRRect(
-            borderRadius: BorderRadius.circular(16),
+            borderRadius: BorderRadius.circular(AppRadius.r16),
             child: Material(
               child: AddEditProductScreen(
                 product: product,

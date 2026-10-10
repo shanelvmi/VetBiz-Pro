@@ -130,6 +130,12 @@ class AppTimeouts {
   /// before the Dashboard shows (facility_activation.dart).
   static const Duration dashboardEntryGrace = Duration(milliseconds: 900);
 
+  /// Pause after closing the product form before opening the existing
+  /// product's form from the duplicate-name hint
+  /// (add_edit_product_screen.dart), so the closing dialog's 220 ms
+  /// transition has finished first.
+  static const Duration productFormReopenDelay = Duration(milliseconds: 300);
+
   /// Hover time before a tooltip shows (summary_card.dart trend pill).
   static const Duration tooltipDelay = Duration(milliseconds: 400);
 }

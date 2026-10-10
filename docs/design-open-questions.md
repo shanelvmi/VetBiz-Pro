@@ -52,6 +52,9 @@ Colours are outside the standing snap rule, so this is kept as it is:
 ### Raised in step 2D, batch D6
 
 - **List bottom gap 80**, `lib/screens/products/view_batches_screen.dart` (`_fabClearance`, under the batch list so the floating Add Batch button does not cover the last card): a size above the spacing ladder, no token. Kept exact as a named local constant.
+- **`Colors.orange[900]`**, `lib/screens/products/add_edit_product_screen.dart` (the duplicate-name hint's titles, "... already exists" and "Similar products already exist"): not in the 4.1 table; `warningStrong` (orange[800]) is more than 12 away on green. Snap to `warningStrong`, or a `warningDeep` role?
+- **Alpha 0.95**, same file (the brand-green category and type picker dialogs' background, x2): 0.1 above `a85`, no step. Kept. Snap to full `primary`, or add `a95`?
+- **Photo placeholder icon**, same file: `size: 36` (4 px from `i32`) at alpha 0.6 (0.1 from `a50`/`a70`). Kept, beyond the standing rule.
 
 ## Decided
 
