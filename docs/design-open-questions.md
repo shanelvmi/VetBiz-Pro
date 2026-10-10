@@ -56,6 +56,8 @@ Colours are outside the standing snap rule, so this is kept as it is:
 - **Alpha 0.95**, same file (the brand-green category and type picker dialogs' background, x2): 0.1 above `a85`, no step. Kept. Snap to full `primary`, or add `a95`?
 - **Photo placeholder icon**, same file: `size: 36` (4 px from `i32`) at alpha 0.6 (0.1 from `a50`/`a70`). Kept, beyond the standing rule.
 - **No Undo on sale delete**, `lib/screens/sales/sales_screen.dart` `_confirmDeleteSale`: `SaleProvider.deleteSale` copies the sale to `trash_sales` (a soft delete), then puts its stock back, deletes its debt and reverses the client's balance. Restoring it from Trash (`TrashService.restore`, the Trash screen) only moves the document back: stock, debt and balance are not re-applied. An Undo would make that easy to hit, so the message is a plain success ("Sale deleted"). The confirmation still says "permanently deletes ... This cannot be undone." Make sale restore re-apply stock, debt and balance (then add Undo and change the dialog text), or keep it as is?
+- **Qty column width 96**, `lib/screens/sales/add_sale_screen.dart` (`_qtyColumnWidth`, the wide items table, header and rows): a size above the spacing ladder. Kept exact as a named local constant.
+- **Empty items icon 40**, same file (`_buildEmptyProductsState`, `Icons.playlist_add_outlined`): 8 px from `i32` and `i48`, beyond the standing rule. Kept.
 
 ## Decided
 

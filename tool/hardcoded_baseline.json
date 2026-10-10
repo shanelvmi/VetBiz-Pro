@@ -36,8 +36,7 @@
       "lib/screens/platform_admin/users_tab.dart": 24,
       "lib/screens/products/add_edit_product_screen.dart": 2,
       "lib/screens/register_screen.dart": 102,
-      "lib/screens/reports/report_tabbed_content.dart": 3,
-      "lib/screens/sales/add_sale_screen.dart": 37
+      "lib/screens/reports/report_tabbed_content.dart": 3
     },
     "R2": {
       "lib/main.dart": 11,
@@ -63,7 +62,6 @@
       "lib/screens/platform_admin/user_detail_screen.dart": 14,
       "lib/screens/platform_admin/users_tab.dart": 10,
       "lib/screens/register_screen.dart": 35,
-      "lib/screens/sales/add_sale_screen.dart": 21,
       "lib/services/daily_report_pdf_service.dart": 25,
       "lib/services/receipt_pdf_service.dart": 17
     },
@@ -90,7 +88,6 @@
       "lib/screens/platform_admin/user_detail_screen.dart": 2,
       "lib/screens/platform_admin/users_tab.dart": 7,
       "lib/screens/register_screen.dart": 17,
-      "lib/screens/sales/add_sale_screen.dart": 19,
       "lib/services/daily_report_pdf_service.dart": 1
     },
     "R4": {
@@ -119,7 +116,7 @@
       "lib/screens/platform_admin/users_tab.dart": 29,
       "lib/screens/products/add_edit_product_screen.dart": 1,
       "lib/screens/register_screen.dart": 83,
-      "lib/screens/sales/add_sale_screen.dart": 37,
+      "lib/screens/sales/add_sale_screen.dart": 1,
       "lib/services/daily_report_pdf_service.dart": 52,
       "lib/services/receipt_pdf_service.dart": 26
     },
@@ -139,7 +136,6 @@
       "lib/screens/platform_admin/promotions_screen.dart": 1,
       "lib/screens/platform_admin/subscription_requests_tab.dart": 2,
       "lib/screens/register_screen.dart": 7,
-      "lib/screens/sales/add_sale_screen.dart": 1,
       "lib/services/activity_log_retention.dart": 1
     },
     "R6": {},
@@ -158,8 +154,7 @@
       "lib/screens/platform_admin/platform_admin_home_screen.dart": 1,
       "lib/screens/platform_admin/promotions_screen.dart": 1,
       "lib/screens/platform_admin/user_detail_screen.dart": 3,
-      "lib/screens/register_screen.dart": 3,
-      "lib/screens/sales/add_sale_screen.dart": 1
+      "lib/screens/register_screen.dart": 3
     },
     "R8": {
       "lib/providers/settings_provider.dart": 2,
