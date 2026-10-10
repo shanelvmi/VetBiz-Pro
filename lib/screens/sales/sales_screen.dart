@@ -14,11 +14,15 @@ import 'add_sale_screen.dart';
 import 'receipt_preview_screen.dart';
 import 'sales_archive_screen.dart';
 import '../../utils/subscription_guard.dart';
-import '../../theme/app_palette.dart';
 import '../../config/money.dart';
 import '../../config/app_timeouts.dart';
 import '../../config/app_ranges.dart';
 import '../../config/app_date_format.dart';
+import '../../theme/app_text.dart';
+import '../../theme/app_dimens.dart';
+import '../../theme/theme_context.dart';
+import '../../theme/app_breakpoints.dart';
+import '../../ui/feedback/app_feedback.dart';
 
 class SalesScreen extends StatefulWidget {
   const SalesScreen({super.key});
@@ -28,9 +32,6 @@ class SalesScreen extends StatefulWidget {
 }
 
 class _SalesScreenState extends State<SalesScreen> {
-  final Color primaryDeepGreen = AppPalette.primary;
-  final Color warmAmber = AppPalette.accent;
-  final Color offWhite = AppPalette.background;
 
 
   String _searchQuery = '';
@@ -201,9 +202,9 @@ class _SalesScreenState extends State<SalesScreen> {
   }
 
   Color _statusColor(double paid, double total) {
-    if (paid >= total) return Colors.green;
-    if (paid > 0) return Colors.orange;
-    return Colors.red;
+    if (paid >= total) return context.colors.success;
+    if (paid > 0) return context.colors.warning;
+    return context.colors.danger;
   }
 
   @override
@@ -222,7 +223,7 @@ class _SalesScreenState extends State<SalesScreen> {
     final availableSellers = saleProvider.sales.map((s) => s.soldByName).toSet().toList()..sort();
 
     return Scaffold(
-      backgroundColor: offWhite,
+      backgroundColor: context.colors.background,
       appBar: _buildAppBar(),
       body: Row(
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -231,18 +232,18 @@ class _SalesScreenState extends State<SalesScreen> {
             child: Column(
               children: [
                 Padding(
-                  padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
+                  padding: const EdgeInsets.fromLTRB(AppSpacing.s16, AppSpacing.s16, AppSpacing.s16, 0),
                   child: Row(
                     crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
                       Expanded(child: _buildMetricsRow()),
-                      const SizedBox(width: 12),
+                      const SizedBox(width: AppSpacing.s12),
                       _buildArchiveButton(),
                     ],
                   ),
                 ),
                 Padding(
-                  padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+                  padding: const EdgeInsets.fromLTRB(AppSpacing.s16, AppSpacing.s12, AppSpacing.s16, 0),
                   child: _buildFiltersToolbar(availableSellers),
                 ),
                 Expanded(
@@ -256,17 +257,17 @@ class _SalesScreenState extends State<SalesScreen> {
                           if (controller.newRecordsAvailable > 0)
                             Container(
                               width: double.infinity,
-                              color: primaryDeepGreen.withValues(alpha: 0.08),
-                              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                              color: context.colors.primary.withValues(alpha: AppAlpha.a10),
+                              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.s16, vertical: AppSpacing.s8),
                               child: Row(
                                 children: [
-                                  Icon(Icons.fiber_new, size: 18, color: primaryDeepGreen),
-                                  const SizedBox(width: 8),
+                                  Icon(Icons.fiber_new, size: AppIconSize.i18, color: context.colors.primary),
+                                  const SizedBox(width: AppSpacing.s8),
                                   Expanded(
                                     child: Text(
                                       '${controller.newRecordsAvailable} new sale'
                                       '${controller.newRecordsAvailable == 1 ? '' : 's'} available',
-                                      style: TextStyle(fontSize: 13, color: primaryDeepGreen),
+                                      style: TextStyle(fontSize: AppFontSize.f13, color: context.colors.primary),
                                     ),
                                   ),
                                   TextButton(
@@ -286,11 +287,11 @@ class _SalesScreenState extends State<SalesScreen> {
                                         child: Column(
                                           mainAxisAlignment: MainAxisAlignment.center,
                                           children: [
-                                            Icon(Icons.shopping_cart_outlined, size: 64, color: Colors.grey[400]),
-                                            const SizedBox(height: 16),
+                                            Icon(Icons.shopping_cart_outlined, size: AppIconSize.i64, color: context.colors.textDisabled),
+                                            const SizedBox(height: AppSpacing.s16),
                                             Text(
                                               _searchQuery.isEmpty ? 'No sales yet' : 'No sales match your filters',
-                                              style: TextStyle(fontSize: 18, color: Colors.grey[600]),
+                                              style: TextStyle(fontSize: AppFontSize.f18, color: context.colors.textMuted),
                                             ),
                                           ],
                                         ),
@@ -342,15 +343,15 @@ class _SalesScreenState extends State<SalesScreen> {
     final collected = summary?['totalCollected'] ?? 0.0;
 
     final metrics = [
-      ('Total Sales', '$count', Icons.receipt_long_outlined, primaryDeepGreen),
-      ('Revenue', Money.format(total), Icons.bar_chart, Colors.blue),
-      ('Collected', Money.format(collected), Icons.account_balance_wallet_outlined, Colors.green),
-      ('Pending', Money.format(pending), Icons.pending_actions_outlined, warmAmber),
+      ('Total Sales', '$count', Icons.receipt_long_outlined, context.colors.primary),
+      ('Revenue', Money.format(total), Icons.bar_chart, context.colors.info),
+      ('Collected', Money.format(collected), Icons.account_balance_wallet_outlined, context.colors.success),
+      ('Pending', Money.format(pending), Icons.pending_actions_outlined, context.colors.accent),
     ];
 
     return LayoutBuilder(
       builder: (context, constraints) {
-        final isNarrow = constraints.maxWidth < 600;
+        final isNarrow = constraints.maxWidth < AppBreakpoints.compact;
         return GridView.builder(
           shrinkWrap: true,
           physics: const NeverScrollableScrollPhysics(),
@@ -372,13 +373,13 @@ class _SalesScreenState extends State<SalesScreen> {
 
   Widget _metricCard(String label, String value, IconData icon, Color color, bool isLoading) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.s12, vertical: AppSpacing.s10),
       decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.grey.withValues(alpha: 0.15)),
+        color: context.colors.surface,
+        borderRadius: BorderRadius.circular(AppRadius.r12),
+        border: Border.all(color: context.colors.textHint.withValues(alpha: AppAlpha.a15)),
         boxShadow: [
-          BoxShadow(color: Colors.black.withValues(alpha: 0.03), blurRadius: 6, offset: const Offset(0, 2)),
+          BoxShadow(color: context.colors.shadow.withValues(alpha: AppAlpha.a05), blurRadius: 6, offset: const Offset(0, 2)),
         ],
       ),
       child: FittedBox(
@@ -394,22 +395,22 @@ class _SalesScreenState extends State<SalesScreen> {
                   width: 26,
                   height: 26,
                   decoration:
-                      BoxDecoration(color: color.withValues(alpha: 0.12), borderRadius: BorderRadius.circular(7)),
-                  child: Icon(icon, color: color, size: 14),
+                      BoxDecoration(color: color.withValues(alpha: AppAlpha.a10), borderRadius: BorderRadius.circular(AppRadius.r7)),
+                  child: Icon(icon, color: color, size: AppIconSize.i14),
                 ),
-                const SizedBox(width: 8),
+                const SizedBox(width: AppSpacing.s8),
                 isLoading
                     ? const SizedBox(
                         width: 14,
                         height: 14,
                         child: CircularProgressIndicator(strokeWidth: 2),
                       )
-                    : Text(value, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                    : Text(value, style: const TextStyle(fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f16)),
               ],
             ),
-            const SizedBox(height: 4),
-            Text(label, style: TextStyle(fontSize: 11.5, color: Colors.grey[600])),
-            Text('Last 30 days', style: TextStyle(fontSize: 10.5, color: Colors.grey[400])),
+            const SizedBox(height: AppSpacing.s4),
+            Text(label, style: TextStyle(fontSize: AppFontSize.f11_5, color: context.colors.textMuted)),
+            Text('Last 30 days', style: TextStyle(fontSize: AppFontSize.f10_5, color: context.colors.textDisabled)),
           ],
         ),
       ),
@@ -421,11 +422,11 @@ class _SalesScreenState extends State<SalesScreen> {
       onPressed: () {
         Navigator.push(context, MaterialPageRoute(builder: (_) => const SalesArchiveScreen()));
       },
-      icon: const Icon(Icons.archive_outlined, size: 16),
+      icon: const Icon(Icons.archive_outlined, size: AppIconSize.i16),
       label: const Text('Archive'),
       style: OutlinedButton.styleFrom(
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-        side: BorderSide(color: Colors.grey.withValues(alpha: 0.3)),
+        padding: const EdgeInsets.symmetric(horizontal: AppSpacing.s14, vertical: AppSpacing.s12),
+        side: BorderSide(color: context.colors.textHint.withValues(alpha: AppAlpha.a30)),
       ),
     );
   }
@@ -437,8 +438,8 @@ class _SalesScreenState extends State<SalesScreen> {
 
   Widget _buildFiltersToolbar(List<String> availableSellers) {
     final border = OutlineInputBorder(
-      borderRadius: BorderRadius.circular(10),
-      borderSide: BorderSide(color: Colors.grey.withValues(alpha: 0.3)),
+      borderRadius: BorderRadius.circular(AppRadius.r10),
+      borderSide: BorderSide(color: context.colors.textHint.withValues(alpha: AppAlpha.a30)),
     );
     final hasActiveFilters =
         _searchQuery.isNotEmpty || _filterStatus != 'All' || _dateFilter != 'Last 30 days' || _sellerFilter != 'All';
@@ -451,18 +452,18 @@ class _SalesScreenState extends State<SalesScreen> {
             controller: _searchController,
             decoration: InputDecoration(
               hintText: 'Search sale by product, client, invoice...',
-              hintStyle: const TextStyle(fontSize: 13),
-              prefixIcon: const Icon(Icons.search, size: 20),
+              hintStyle: const TextStyle(fontSize: AppFontSize.f13),
+              prefixIcon: const Icon(Icons.search, size: AppIconSize.i20),
               filled: true,
-              fillColor: Colors.white,
+              fillColor: context.colors.surface,
               isDense: true,
-              contentPadding: const EdgeInsets.symmetric(vertical: 12, horizontal: 12),
+              contentPadding: const EdgeInsets.symmetric(vertical: AppSpacing.s12, horizontal: AppSpacing.s12),
               border: border,
               enabledBorder: border,
               suffixIcon: _searchController.text.isEmpty
                   ? null
                   : IconButton(
-                      icon: const Icon(Icons.clear, size: 18),
+                      icon: const Icon(Icons.clear, size: AppIconSize.i18),
                       onPressed: () {
                         _searchDebounce?.cancel();
                         setState(() => _searchQuery = '');
@@ -478,7 +479,7 @@ class _SalesScreenState extends State<SalesScreen> {
             },
           ),
         ),
-        const SizedBox(width: 10),
+        const SizedBox(width: AppSpacing.s10),
         _toolbarDropdown<String>(
           value: _dateFilter,
           items: _dateFilterOptions,
@@ -488,7 +489,7 @@ class _SalesScreenState extends State<SalesScreen> {
             _openSalesListSession();
           },
         ),
-        const SizedBox(width: 10),
+        const SizedBox(width: AppSpacing.s10),
         _toolbarDropdown<String>(
           value: _filterStatus,
           items: _statusFilterOptions,
@@ -498,7 +499,7 @@ class _SalesScreenState extends State<SalesScreen> {
             _openSalesListSession();
           },
         ),
-        const SizedBox(width: 10),
+        const SizedBox(width: AppSpacing.s10),
         _toolbarDropdown<String>(
           value: _sellerFilter,
           items: ['All', ...availableSellers],
@@ -509,7 +510,7 @@ class _SalesScreenState extends State<SalesScreen> {
           },
         ),
         if (hasActiveFilters) ...[
-          const SizedBox(width: 10),
+          const SizedBox(width: AppSpacing.s10),
           TextButton(
             onPressed: () {
               _searchDebounce?.cancel();
@@ -536,18 +537,18 @@ class _SalesScreenState extends State<SalesScreen> {
     required ValueChanged<T> onChanged,
   }) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10),
+      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.s10),
       height: 44,
       decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: Colors.grey.withValues(alpha: 0.3)),
+        color: context.colors.surface,
+        borderRadius: BorderRadius.circular(AppRadius.r10),
+        border: Border.all(color: context.colors.textHint.withValues(alpha: AppAlpha.a30)),
       ),
       child: DropdownButtonHideUnderline(
         child: DropdownButton<T>(
           value: value,
-          icon: Icon(Icons.arrow_drop_down, size: 18, color: primaryDeepGreen),
-          style: const TextStyle(color: Colors.black87, fontSize: 13),
+          icon: Icon(Icons.arrow_drop_down, size: AppIconSize.i18, color: context.colors.primary),
+          style: TextStyle(color: context.colors.textPrimary, fontSize: AppFontSize.f13),
           items: items.map((v) => DropdownMenuItem(value: v, child: Text('$label: $v'))).toList(),
           onChanged: (val) {
             if (val != null) onChanged(val);
@@ -559,16 +560,16 @@ class _SalesScreenState extends State<SalesScreen> {
 
   PreferredSizeWidget _buildAppBar() {
     return AppBar(
-      backgroundColor: Colors.white,
-      foregroundColor: Colors.black87,
-      elevation: 1,
+      backgroundColor: context.colors.surface,
+      foregroundColor: context.colors.textPrimary,
+      elevation: AppElevation.e1,
       centerTitle: true,
       toolbarHeight: 72,
-      title: const Column(
+      title: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Text('Sales Records', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 19, color: Colors.black87)),
-          Text('Track and manage all sales transactions', style: TextStyle(fontSize: 12, color: Colors.black54)),
+          Text('Sales Records', style: TextStyle(fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f19, color: context.colors.textPrimary)),
+          Text('Track and manage all sales transactions', style: TextStyle(fontSize: AppFontSize.f12, color: context.colors.textSecondary)),
         ],
       ),
       actions: [
@@ -578,7 +579,7 @@ class _SalesScreenState extends State<SalesScreen> {
           onPressed: _loadRangeSummary,
         ),
         Padding(
-          padding: const EdgeInsets.only(right: 12),
+          padding: const EdgeInsets.only(right: AppSpacing.s12),
           child: ElevatedButton.icon(
             onPressed: () => navigateOrShowLockedDialog(
               context,
@@ -588,13 +589,13 @@ class _SalesScreenState extends State<SalesScreen> {
                 if (mounted) _openSalesListSession(forceRefresh: true);
               },
             ),
-            icon: const Icon(Icons.add, size: 18),
+            icon: const Icon(Icons.add, size: AppIconSize.i18),
             label: const Text('Record Sale'),
             style: ElevatedButton.styleFrom(
-              backgroundColor: primaryDeepGreen,
-              foregroundColor: offWhite,
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+              backgroundColor: context.colors.primary,
+              foregroundColor: context.colors.background,
+              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.s16, vertical: AppSpacing.s10),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadius.r8)),
             ),
           ),
         ),
@@ -611,8 +612,8 @@ class _SalesScreenState extends State<SalesScreen> {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         Container(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-          decoration: BoxDecoration(border: Border(bottom: BorderSide(color: Colors.grey.withValues(alpha: 0.2)))),
+          padding: const EdgeInsets.symmetric(horizontal: AppSpacing.s16, vertical: AppSpacing.s12),
+          decoration: BoxDecoration(border: Border(bottom: BorderSide(color: context.colors.textHint.withValues(alpha: AppAlpha.a20)))),
           child: Row(
             children: [
               _headerCell('Date', flex: 3),
@@ -629,7 +630,7 @@ class _SalesScreenState extends State<SalesScreen> {
         Expanded(
           child: ListView.separated(
             itemCount: sales.length,
-            separatorBuilder: (context, index) => Divider(height: 1, color: Colors.grey.withValues(alpha: 0.12)),
+            separatorBuilder: (context, index) => Divider(height: 1, color: context.colors.textHint.withValues(alpha: AppAlpha.a10)),
             itemBuilder: (context, index) => _buildSaleRow(sales[index], dateFormatter),
           ),
         ),
@@ -640,7 +641,7 @@ class _SalesScreenState extends State<SalesScreen> {
   Widget _headerCell(String label, {required int flex}) {
     return Expanded(
       flex: flex,
-      child: Text(label, style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Colors.grey[600])),
+      child: Text(label, style: TextStyle(fontSize: AppFontSize.f12, fontWeight: AppFontWeight.semibold, color: context.colors.textMuted)),
     );
   }
 
@@ -653,8 +654,8 @@ class _SalesScreenState extends State<SalesScreen> {
     return InkWell(
       onTap: () => setState(() => _selectedSale = sale),
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-        color: isSelected ? primaryDeepGreen.withValues(alpha: 0.06) : null,
+        padding: const EdgeInsets.symmetric(horizontal: AppSpacing.s16, vertical: AppSpacing.s12),
+        color: isSelected ? context.colors.primary.withValues(alpha: AppAlpha.a05) : null,
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -663,9 +664,9 @@ class _SalesScreenState extends State<SalesScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(dateFormatter.format(sale.timestamp).split(',').first, style: const TextStyle(fontSize: 13)),
+                  Text(dateFormatter.format(sale.timestamp).split(',').first, style: const TextStyle(fontSize: AppFontSize.f13)),
                   Text(AppDateFormat.time12.format(sale.timestamp),
-                      style: TextStyle(fontSize: 11.5, color: Colors.grey[500])),
+                      style: TextStyle(fontSize: AppFontSize.f11_5, color: context.colors.textHint)),
                 ],
               ),
             ),
@@ -673,50 +674,50 @@ class _SalesScreenState extends State<SalesScreen> {
               flex: 2,
               child: Text(
                 _invoiceNo(sale),
-                style: TextStyle(fontSize: 13, color: primaryDeepGreen, fontWeight: FontWeight.w600),
+                style: TextStyle(fontSize: AppFontSize.f13, color: context.colors.primary, fontWeight: AppFontWeight.semibold),
               ),
             ),
             Expanded(
               flex: 2,
-              child: Text(sale.clientName ?? 'Walk-in', style: const TextStyle(fontSize: 13), maxLines: 1, overflow: TextOverflow.ellipsis),
+              child: Text(sale.clientName ?? 'Walk-in', style: const TextStyle(fontSize: AppFontSize.f13), maxLines: 1, overflow: TextOverflow.ellipsis),
             ),
             Expanded(
               flex: 3,
               child: firstItem == null
-                  ? const Text('-', style: TextStyle(fontSize: 13))
+                  ? const Text('-', style: TextStyle(fontSize: AppFontSize.f13))
                   : Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text('${firstItem.name} \u00d7 ${firstItem.quantity}',
-                            style: const TextStyle(fontSize: 13), maxLines: 1, overflow: TextOverflow.ellipsis),
+                            style: const TextStyle(fontSize: AppFontSize.f13), maxLines: 1, overflow: TextOverflow.ellipsis),
                         Text('${sale.items.length} item${sale.items.length == 1 ? '' : 's'}',
-                            style: TextStyle(fontSize: 11.5, color: Colors.grey[500])),
+                            style: TextStyle(fontSize: AppFontSize.f11_5, color: context.colors.textHint)),
                       ],
                     ),
             ),
             Expanded(
               flex: 2,
-              child: Text(Money.format(sale.totalAmount), style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600)),
+              child: Text(Money.format(sale.totalAmount), style: const TextStyle(fontSize: AppFontSize.f13, fontWeight: AppFontWeight.semibold)),
             ),
             Expanded(
               flex: 2,
               child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                padding: const EdgeInsets.symmetric(horizontal: AppSpacing.s8, vertical: AppSpacing.s3),
                 decoration: BoxDecoration(
-                  color: statusColor.withValues(alpha: 0.12),
-                  borderRadius: BorderRadius.circular(10),
+                  color: statusColor.withValues(alpha: AppAlpha.a10),
+                  borderRadius: BorderRadius.circular(AppRadius.r10),
                 ),
-                child: Text(status, style: TextStyle(color: statusColor, fontSize: 11.5, fontWeight: FontWeight.w600)),
+                child: Text(status, style: TextStyle(color: statusColor, fontSize: AppFontSize.f11_5, fontWeight: AppFontWeight.semibold)),
               ),
             ),
             Expanded(
               flex: 2,
-              child: Text(sale.soldByName, style: const TextStyle(fontSize: 13), maxLines: 1, overflow: TextOverflow.ellipsis),
+              child: Text(sale.soldByName, style: const TextStyle(fontSize: AppFontSize.f13), maxLines: 1, overflow: TextOverflow.ellipsis),
             ),
             Expanded(
               flex: 1,
               child: PopupMenuButton<String>(
-                icon: Icon(Icons.more_vert, size: 18, color: Colors.grey[600]),
+                icon: Icon(Icons.more_vert, size: AppIconSize.i18, color: context.colors.textMuted),
                 onSelected: (value) {
                   if (value == 'view') {
                     setState(() => _selectedSale = sale);
@@ -727,7 +728,7 @@ class _SalesScreenState extends State<SalesScreen> {
                 itemBuilder: (context) => [
                   const PopupMenuItem(value: 'view', child: Text('View Details')),
                   if (Provider.of<UserRoleProvider>(context, listen: false).isAdmin)
-                    PopupMenuItem(value: 'delete', child: Text('Delete', style: TextStyle(color: Colors.red[400]))),
+                    PopupMenuItem(value: 'delete', child: Text('Delete', style: TextStyle(color: context.colors.dangerSoft))),
                 ],
               ),
             ),
@@ -749,14 +750,14 @@ class _SalesScreenState extends State<SalesScreen> {
     final pageEnd = (controller.currentPage - 1) * pageSize + itemCount;
 
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-      decoration: BoxDecoration(border: Border(top: BorderSide(color: Colors.grey.withValues(alpha: 0.2)))),
+      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.s16, vertical: AppSpacing.s12),
+      decoration: BoxDecoration(border: Border(top: BorderSide(color: context.colors.textHint.withValues(alpha: AppAlpha.a20)))),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           Text(
             itemCount == 0 ? 'No sales' : 'Showing $pageStart to $pageEnd',
-            style: TextStyle(fontSize: 12.5, color: Colors.grey[600]),
+            style: TextStyle(fontSize: AppFontSize.f12_5, color: context.colors.textMuted),
           ),
           Row(
             children: [
@@ -771,15 +772,15 @@ class _SalesScreenState extends State<SalesScreen> {
                   },
                 ),
               ),
-              const SizedBox(width: 16),
+              const SizedBox(width: AppSpacing.s16),
               IconButton(
                 icon: const Icon(Icons.chevron_left),
                 onPressed: controller.hasPreviousPage ? () => controller.goToPreviousPage() : null,
               ),
-              Text('Page ${controller.currentPage}', style: const TextStyle(fontSize: 13)),
+              Text('Page ${controller.currentPage}', style: const TextStyle(fontSize: AppFontSize.f13)),
               IconButton(
                 icon: controller.isLoading
-                    ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2))
+                    ? const SizedBox(width: AppSpacing.s16, height: 16, child: CircularProgressIndicator(strokeWidth: 2))
                     : const Icon(Icons.chevron_right),
                 onPressed: controller.hasNextPage && !controller.isLoading
                     ? () => controller.goToNextPage()
@@ -804,7 +805,7 @@ class _SalesScreenState extends State<SalesScreen> {
           TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancel')),
           TextButton(
             onPressed: () => Navigator.pop(ctx, true),
-            child: Text('Delete', style: TextStyle(color: Colors.red[400])),
+            child: Text('Delete', style: TextStyle(color: context.colors.dangerSoft)),
           ),
         ],
       ),
@@ -818,12 +819,12 @@ class _SalesScreenState extends State<SalesScreen> {
       if (!mounted) return;
       if (_selectedSale?.id == sale.id) setState(() => _selectedSale = null);
       _openSalesListSession(forceRefresh: true);
-      ScaffoldMessenger.of(context)
-          .showSnackBar(const SnackBar(content: Text('Sale deleted'), backgroundColor: Colors.green));
-    } catch (e) {
-      if (!mounted) return;
-      ScaffoldMessenger.of(context)
-          .showSnackBar(SnackBar(content: Text('Could not delete: $e'), backgroundColor: Colors.redAccent));
+      // A soft delete into trash_sales, but no Undo: restoring from Trash
+      // puts the sale back without taking its stock out again or
+      // re-creating its debt (listed in design-open-questions.md).
+      AppFeedback.success('Sale deleted');
+    } catch (e, st) {
+      AppFeedback.error("Couldn't delete the sale", error: e, stackTrace: st);
     }
   }
 
@@ -837,48 +838,48 @@ class _SalesScreenState extends State<SalesScreen> {
         sale.clientId != null ? Provider.of<ClientProvider>(context, listen: false).getClientById(sale.clientId!) : null;
 
     return Container(
-      color: Colors.white,
+      color: context.colors.surface,
       child: SingleChildScrollView(
-        padding: const EdgeInsets.all(20),
+        padding: const EdgeInsets.all(AppSpacing.s20),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                const Text('Sale Details', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                const Text('Sale Details', style: TextStyle(fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f16)),
                 IconButton(
-                  icon: const Icon(Icons.close, size: 20),
+                  icon: const Icon(Icons.close, size: AppIconSize.i20),
                   onPressed: () => setState(() => _selectedSale = null),
                 ),
               ],
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: AppSpacing.s8),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text(_invoiceNo(sale), style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
+                Text(_invoiceNo(sale), style: const TextStyle(fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f18)),
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                  decoration: BoxDecoration(color: statusColor.withValues(alpha: 0.12), borderRadius: BorderRadius.circular(12)),
-                  child: Text(status, style: TextStyle(color: statusColor, fontSize: 12, fontWeight: FontWeight.w600)),
+                  padding: const EdgeInsets.symmetric(horizontal: AppSpacing.s10, vertical: AppSpacing.s4),
+                  decoration: BoxDecoration(color: statusColor.withValues(alpha: AppAlpha.a10), borderRadius: BorderRadius.circular(AppRadius.r12)),
+                  child: Text(status, style: TextStyle(color: statusColor, fontSize: AppFontSize.f12, fontWeight: AppFontWeight.semibold)),
                 ),
               ],
             ),
             Text('${dateOnlyFormatter.format(sale.timestamp)}, ${timeOnlyFormatter.format(sale.timestamp)}',
-                style: TextStyle(fontSize: 12.5, color: Colors.grey[600])),
-            const SizedBox(height: 20),
+                style: TextStyle(fontSize: AppFontSize.f12_5, color: context.colors.textMuted)),
+            const SizedBox(height: AppSpacing.s20),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                const Text('Items', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13.5)),
+                const Text('Items', style: TextStyle(fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f13_5)),
                 Text('${sale.items.length} item${sale.items.length == 1 ? '' : 's'}',
-                    style: TextStyle(fontSize: 12, color: Colors.grey[600])),
+                    style: TextStyle(fontSize: AppFontSize.f12, color: context.colors.textMuted)),
               ],
             ),
-            const SizedBox(height: 10),
+            const SizedBox(height: AppSpacing.s10),
             ...sale.items.map((item) => Padding(
-                  padding: const EdgeInsets.only(bottom: 8),
+                  padding: const EdgeInsets.only(bottom: AppSpacing.s8),
                   child: Row(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -886,17 +887,17 @@ class _SalesScreenState extends State<SalesScreen> {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text(item.name, style: const TextStyle(fontSize: 13.5, fontWeight: FontWeight.w600)),
-                            Text('\u00d7 ${item.quantity}', style: TextStyle(fontSize: 12, color: Colors.grey[600])),
+                            Text(item.name, style: const TextStyle(fontSize: AppFontSize.f13_5, fontWeight: AppFontWeight.semibold)),
+                            Text('\u00d7 ${item.quantity}', style: TextStyle(fontSize: AppFontSize.f12, color: context.colors.textMuted)),
                           ],
                         ),
                       ),
                       Column(
                         crossAxisAlignment: CrossAxisAlignment.end,
                         children: [
-                          Text(Money.format(item.unitPrice * item.quantity), style: const TextStyle(fontSize: 13.5)),
+                          Text(Money.format(item.unitPrice * item.quantity), style: const TextStyle(fontSize: AppFontSize.f13_5)),
                           Text(Money.format(item.unitPrice * item.quantity),
-                              style: TextStyle(fontSize: 12, color: Colors.grey[500])),
+                              style: TextStyle(fontSize: AppFontSize.f12, color: context.colors.textHint)),
                         ],
                       ),
                     ],
@@ -905,16 +906,16 @@ class _SalesScreenState extends State<SalesScreen> {
             const Divider(height: 24),
             _totalsRow('Subtotal', Money.format(subtotal)),
             _totalsRow('Discount', Money.format(totalDiscount)),
-            _totalsRow('Total Amount', Money.format(sale.totalAmount), bold: true, color: primaryDeepGreen),
-            const SizedBox(height: 10),
-            _totalsRow('Paid', Money.format(sale.totalPaid), color: Colors.green),
+            _totalsRow('Total Amount', Money.format(sale.totalAmount), bold: true, color: context.colors.primary),
+            const SizedBox(height: AppSpacing.s10),
+            _totalsRow('Paid', Money.format(sale.totalPaid), color: context.colors.success),
             _totalsRow('Balance', Money.format(balance), bold: true),
             const Divider(height: 24),
             _detailField(Icons.person_outline, 'Client', sale.clientName ?? 'Walk-in', subtitle: client?.phone),
             _detailField(Icons.badge_outlined, 'Seller', sale.soldByName),
             _detailField(Icons.payment_outlined, 'Payment Method', sale.paymentMethod ?? 'Not recorded'),
             _detailField(Icons.edit_note_outlined, 'Notes', (sale.notes?.isNotEmpty == true) ? sale.notes! : '-'),
-            const SizedBox(height: 20),
+            const SizedBox(height: AppSpacing.s20),
             Row(
               children: [
                 Expanded(
@@ -922,28 +923,28 @@ class _SalesScreenState extends State<SalesScreen> {
                     onPressed: () {
                       Navigator.push(context, MaterialPageRoute(builder: (_) => ReceiptPreviewScreen(sale: sale)));
                     },
-                    icon: const Icon(Icons.print_outlined, size: 16),
+                    icon: const Icon(Icons.print_outlined, size: AppIconSize.i16),
                     label: const Text('Print'),
                   ),
                 ),
-                const SizedBox(width: 8),
+                const SizedBox(width: AppSpacing.s8),
                 Expanded(
                   child: OutlinedButton.icon(
                     onPressed: () {
                       Navigator.push(context, MaterialPageRoute(builder: (_) => ReceiptPreviewScreen(sale: sale)));
                     },
-                    icon: const Icon(Icons.share_outlined, size: 16),
+                    icon: const Icon(Icons.share_outlined, size: AppIconSize.i16),
                     label: const Text('Share'),
                   ),
                 ),
                 if (Provider.of<UserRoleProvider>(context).isAdmin) ...[
-                  const SizedBox(width: 8),
+                  const SizedBox(width: AppSpacing.s8),
                   Expanded(
                     child: OutlinedButton.icon(
                       onPressed: () => _confirmDeleteSale(sale),
-                      icon: Icon(Icons.delete_outline, size: 16, color: Colors.red[400]),
-                      label: Text('Delete', style: TextStyle(color: Colors.red[400])),
-                      style: OutlinedButton.styleFrom(side: BorderSide(color: Colors.red[200]!)),
+                      icon: Icon(Icons.delete_outline, size: AppIconSize.i16, color: context.colors.dangerSoft),
+                      label: Text('Delete', style: TextStyle(color: context.colors.dangerSoft)),
+                      style: OutlinedButton.styleFrom(side: BorderSide(color: context.colors.danger.withValues(alpha: AppAlpha.a50))),
                     ),
                   ),
                 ],
@@ -957,16 +958,16 @@ class _SalesScreenState extends State<SalesScreen> {
 
   Widget _totalsRow(String label, String value, {bool bold = false, Color? color}) {
     return Padding(
-      padding: const EdgeInsets.only(bottom: 6),
+      padding: const EdgeInsets.only(bottom: AppSpacing.s6),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(label, style: TextStyle(fontSize: 13, color: Colors.grey[600])),
+          Text(label, style: TextStyle(fontSize: AppFontSize.f13, color: context.colors.textMuted)),
           Text(
             value,
             style: TextStyle(
-              fontSize: 13.5,
-              fontWeight: bold ? FontWeight.bold : FontWeight.normal,
+              fontSize: AppFontSize.f13_5,
+              fontWeight: bold ? AppFontWeight.bold : AppFontWeight.regular,
               color: color,
             ),
           ),
@@ -977,20 +978,20 @@ class _SalesScreenState extends State<SalesScreen> {
 
   Widget _detailField(IconData icon, String label, String value, {String? subtitle}) {
     return Padding(
-      padding: const EdgeInsets.only(bottom: 14),
+      padding: const EdgeInsets.only(bottom: AppSpacing.s14),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(icon, size: 18, color: Colors.grey[600]),
-          const SizedBox(width: 10),
+          Icon(icon, size: AppIconSize.i18, color: context.colors.textMuted),
+          const SizedBox(width: AppSpacing.s10),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(label, style: TextStyle(fontSize: 11.5, color: Colors.grey[600])),
-                Text(value, style: const TextStyle(fontSize: 13.5, fontWeight: FontWeight.w600)),
+                Text(label, style: TextStyle(fontSize: AppFontSize.f11_5, color: context.colors.textMuted)),
+                Text(value, style: const TextStyle(fontSize: AppFontSize.f13_5, fontWeight: AppFontWeight.semibold)),
                 if (subtitle != null && subtitle.isNotEmpty)
-                  Text(subtitle, style: TextStyle(fontSize: 12, color: Colors.grey[600])),
+                  Text(subtitle, style: TextStyle(fontSize: AppFontSize.f12, color: context.colors.textMuted)),
               ],
             ),
           ),
