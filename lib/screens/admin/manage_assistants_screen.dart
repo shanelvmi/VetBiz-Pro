@@ -1596,7 +1596,7 @@ class _ManageAssistantsScreenState extends State<ManageAssistantsScreen> {
         children: [
           Padding(
             padding: const EdgeInsets.only(top: AppSpacing.s4),
-            child: Icon(Icons.circle, size: 9, color: color),
+            child: Icon(Icons.circle, size: AppSizes.statusDot, color: color),
           ),
           const SizedBox(width: AppSpacing.s10),
           Expanded(

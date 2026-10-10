@@ -119,7 +119,7 @@ class _BusinessProfileScreenState extends State<BusinessProfileScreen> {
                       Positioned.fill(
                         child: CircleAvatar(
                           radius: 60,
-                          backgroundColor: Colors.black38,
+                          backgroundColor: context.colors.scrim.withValues(alpha: AppAlpha.a40),
                           child: CircularProgressIndicator(color: context.colors.onPrimary),
                         ),
                       ),

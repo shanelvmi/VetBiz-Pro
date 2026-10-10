@@ -54,8 +54,7 @@
       "lib/screens/services/add_edit_service_screen.dart": 40,
       "lib/screens/services/service_receipt_preview_screen.dart": 56,
       "lib/screens/services/services_archive_screen.dart": 33,
-      "lib/screens/services/services_screen.dart": 43,
-      "lib/screens/settings/business_profile_screen.dart": 1
+      "lib/screens/services/services_screen.dart": 43
     },
     "R2": {
       "lib/main.dart": 11,
