@@ -31,6 +31,11 @@ import '../../config/app_defaults.dart';
 import '../../config/app_timeouts.dart';
 import '../../config/app_date_format.dart';
 import '../../ui/feedback/app_feedback.dart';
+import '../../theme/app_text.dart';
+import '../../theme/app_dimens.dart';
+import '../../theme/theme_context.dart';
+import '../../theme/app_breakpoints.dart';
+import '../../theme/app_motion.dart';
 
 // --- Custom Formatter ---
 // --- Add Sale Screen ---
@@ -195,7 +200,7 @@ class _AddSaleScreenState extends State<AddSaleScreen> {
             autofocus: true,
             decoration: InputDecoration(
               labelText: 'Discount Amount (${AppDefaults.currencySymbol})',
-              border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+              border: OutlineInputBorder(borderRadius: BorderRadius.circular(AppRadius.r10)),
             ),
           ),
           actions: [
@@ -209,7 +214,7 @@ class _AddSaleScreenState extends State<AddSaleScreen> {
                 setState(() => saleDiscount = value.clamp(0.0, subtotal));
                 Navigator.pop(dialogContext);
               },
-              style: ElevatedButton.styleFrom(backgroundColor: primaryDeepGreen, foregroundColor: Colors.white),
+              style: ElevatedButton.styleFrom(backgroundColor: context.colors.primary, foregroundColor: context.colors.onPrimary),
               child: const Text('Apply'),
             ),
           ],
@@ -268,8 +273,8 @@ class _AddSaleScreenState extends State<AddSaleScreen> {
       context: context,
       barrierDismissible: true,
       barrierLabel: 'Browse Products',
-      barrierColor: Colors.black54,
-      transitionDuration: const Duration(milliseconds: 180),
+      barrierColor: context.colors.scrim.withValues(alpha: AppAlpha.a50),
+      transitionDuration: AppMotion.fast,
       pageBuilder: (dialogContext, animation, secondaryAnimation) {
         return StatefulBuilder(
           builder: (dialogContext, setDialogState) {
@@ -291,9 +296,9 @@ class _AddSaleScreenState extends State<AddSaleScreen> {
                     width: 480,
                     constraints: const BoxConstraints(maxHeight: 560),
                     decoration: BoxDecoration(
-                      color: offWhite,
-                      borderRadius: BorderRadius.circular(16),
-                      boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.25), blurRadius: 20)],
+                      color: context.colors.background,
+                      borderRadius: BorderRadius.circular(AppRadius.r16),
+                      boxShadow: [BoxShadow(color: context.colors.shadow.withValues(alpha: AppAlpha.a30), blurRadius: 20)],
                     ),
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
@@ -306,21 +311,21 @@ class _AddSaleScreenState extends State<AddSaleScreen> {
                             dialogOffset += details.delta;
                           }),
                           child: Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                            padding: const EdgeInsets.symmetric(horizontal: AppSpacing.s16, vertical: AppSpacing.s12),
                             decoration: BoxDecoration(
-                              color: primaryDeepGreen,
-                              borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
+                              color: context.colors.primary,
+                              borderRadius: const BorderRadius.vertical(top: Radius.circular(AppRadius.r16)),
                             ),
                             child: Row(
                               children: [
-                                const Icon(Icons.open_with, color: Colors.white70, size: 16),
-                                const SizedBox(width: 10),
-                                const Expanded(
+                                Icon(Icons.open_with, color: context.colors.onPrimaryMuted, size: AppIconSize.i16),
+                                const SizedBox(width: AppSpacing.s10),
+                                Expanded(
                                   child: Text('Browse Products',
-                                      style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16)),
+                                      style: TextStyle(color: context.colors.onPrimary, fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f16)),
                                 ),
                                 IconButton(
-                                  icon: const Icon(Icons.close, color: Colors.white, size: 20),
+                                  icon: Icon(Icons.close, color: context.colors.onPrimary, size: AppIconSize.i20),
                                   padding: EdgeInsets.zero,
                                   constraints: const BoxConstraints(),
                                   onPressed: () => Navigator.pop(dialogContext),
@@ -330,7 +335,7 @@ class _AddSaleScreenState extends State<AddSaleScreen> {
                           ),
                         ),
                         Padding(
-                          padding: const EdgeInsets.all(16),
+                          padding: const EdgeInsets.all(AppSpacing.s16),
                           child: SizedBox(
                             width: 448,
                             height: 480,
@@ -343,15 +348,15 @@ class _AddSaleScreenState extends State<AddSaleScreen> {
                                       child: TextField(
                                         decoration: InputDecoration(
                                           hintText: 'Filter by name, batch no or category...',
-                                          prefixIcon: const Icon(Icons.search, size: 20),
+                                          prefixIcon: const Icon(Icons.search, size: AppIconSize.i20),
                                           isDense: true,
-                                          contentPadding: const EdgeInsets.symmetric(vertical: 12, horizontal: 12),
-                                          border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+                                          contentPadding: const EdgeInsets.symmetric(vertical: AppSpacing.s12, horizontal: AppSpacing.s12),
+                                          border: OutlineInputBorder(borderRadius: BorderRadius.circular(AppRadius.r10)),
                                         ),
                                         onChanged: (val) => setDialogState(() => dialogQuery = val),
                                       ),
                                     ),
-                                    const SizedBox(width: 8),
+                                    const SizedBox(width: AppSpacing.s8),
                                     PopupMenuButton<String?>(
                                       initialValue: selectedCategory,
                                       tooltip: 'Filter by category',
@@ -361,25 +366,25 @@ class _AddSaleScreenState extends State<AddSaleScreen> {
                                         ...categories.map((c) => PopupMenuItem(value: c, child: Text(c))),
                                       ],
                                       child: Container(
-                                        padding: const EdgeInsets.all(12),
+                                        padding: const EdgeInsets.all(AppSpacing.s12),
                                         decoration: BoxDecoration(
                                           color: selectedCategory != null
-                                              ? primaryDeepGreen.withValues(alpha: 0.1)
-                                              : Colors.white,
-                                          borderRadius: BorderRadius.circular(10),
+                                              ? context.colors.primary.withValues(alpha: AppAlpha.a10)
+                                              : context.colors.surface,
+                                          borderRadius: BorderRadius.circular(AppRadius.r10),
                                           border: Border.all(
                                             color: selectedCategory != null
-                                                ? primaryDeepGreen
-                                                : Colors.grey.withValues(alpha: 0.35),
+                                                ? context.colors.primary
+                                                : context.colors.textHint.withValues(alpha: AppAlpha.a40),
                                           ),
                                         ),
-                                        child: Icon(Icons.filter_list, size: 20,
-                                            color: selectedCategory != null ? primaryDeepGreen : Colors.black54),
+                                        child: Icon(Icons.filter_list, size: AppIconSize.i20,
+                                            color: selectedCategory != null ? context.colors.primary : context.colors.textSecondary),
                                       ),
                                     ),
                                   ],
                                 ),
-                                const SizedBox(height: 12),
+                                const SizedBox(height: AppSpacing.s12),
                                 Expanded(
                                   child: filtered.isEmpty
                                       ? const Center(child: Text('No products found'))
@@ -398,37 +403,37 @@ class _AddSaleScreenState extends State<AddSaleScreen> {
                                             final canAddMore = !outOfStock && remainingAvailable > 0;
 
                                             return Padding(
-                                              padding: const EdgeInsets.symmetric(vertical: 6),
+                                              padding: const EdgeInsets.symmetric(vertical: AppSpacing.s6),
                                               child: Row(
                                                 children: [
                                                   ProductThumbnail.square(
                                                     imageUrl: product.imageUrl,
                                                     size: 44,
-                                                    backgroundColor: primaryDeepGreen.withValues(alpha: 0.08),
-                                                    iconColor: primaryDeepGreen,
+                                                    backgroundColor: context.colors.primary.withValues(alpha: AppAlpha.a10),
+                                                    iconColor: context.colors.primary,
                                                   ),
-                                                  const SizedBox(width: 12),
+                                                  const SizedBox(width: AppSpacing.s12),
                                                   Expanded(
                                                     child: Column(
                                                       crossAxisAlignment: CrossAxisAlignment.start,
                                                       children: [
                                                         Text(product.name,
-                                                            style: const TextStyle(fontWeight: FontWeight.w600),
+                                                            style: const TextStyle(fontWeight: AppFontWeight.semibold),
                                                             overflow: TextOverflow.ellipsis),
-                                                        const SizedBox(height: 2),
+                                                        const SizedBox(height: AppSpacing.s2),
                                                         Text(
                                                           outOfStock
                                                               ? 'Out of stock'
                                                               : '$remainingAvailable ${product.unit} available · ${Money.symbolDecimal(product.sellPrice)}',
                                                           style: TextStyle(
-                                                            fontSize: 12,
-                                                            color: outOfStock ? Colors.red : Colors.grey[600],
+                                                            fontSize: AppFontSize.f12,
+                                                            color: outOfStock ? context.colors.danger : context.colors.textMuted,
                                                           ),
                                                         ),
                                                       ],
                                                     ),
                                                   ),
-                                                  const SizedBox(width: 8),
+                                                  const SizedBox(width: AppSpacing.s8),
                                                   SizedBox(
                                                     width: 92,
                                                     child: outOfStock
@@ -437,36 +442,36 @@ class _AddSaleScreenState extends State<AddSaleScreen> {
                                                             ? Align(
                                                                 alignment: Alignment.centerRight,
                                                                 child: InkWell(
-                                                                  borderRadius: BorderRadius.circular(20),
+                                                                  borderRadius: BorderRadius.circular(AppRadius.r20),
                                                                   onTap: () => _dialogIncrement(product, setDialogState),
-                                                                  child: Icon(Icons.add_circle, color: primaryDeepGreen, size: 26),
+                                                                  child: Icon(Icons.add_circle, color: context.colors.primary, size: AppIconSize.i24),
                                                                 ),
                                                               )
                                                             : Row(
                                                                 mainAxisAlignment: MainAxisAlignment.end,
                                                                 children: [
                                                                   InkWell(
-                                                                    borderRadius: BorderRadius.circular(20),
+                                                                    borderRadius: BorderRadius.circular(AppRadius.r20),
                                                                     onTap: () => _dialogDecrement(product, setDialogState),
                                                                     child: Icon(Icons.remove_circle_outline,
-                                                                        color: Colors.grey[700], size: 22),
+                                                                        color: context.colors.textSoft, size: AppIconSize.i22),
                                                                   ),
                                                                   SizedBox(
                                                                     width: 26,
                                                                     child: Text(
                                                                       '$qtyInSale',
                                                                       textAlign: TextAlign.center,
-                                                                      style: const TextStyle(fontWeight: FontWeight.w600),
+                                                                      style: const TextStyle(fontWeight: AppFontWeight.semibold),
                                                                     ),
                                                                   ),
                                                                   InkWell(
-                                                                    borderRadius: BorderRadius.circular(20),
+                                                                    borderRadius: BorderRadius.circular(AppRadius.r20),
                                                                     onTap: canAddMore
                                                                         ? () => _dialogIncrement(product, setDialogState)
                                                                         : null,
                                                                     child: Icon(Icons.add_circle,
-                                                                        color: canAddMore ? primaryDeepGreen : Colors.grey[350],
-                                                                        size: 22),
+                                                                        color: canAddMore ? context.colors.primary : context.colors.border,
+                                                                        size: AppIconSize.i22),
                                                                   ),
                                                                 ],
                                                               )),
@@ -613,11 +618,11 @@ class _AddSaleScreenState extends State<AddSaleScreen> {
     return showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: const Row(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadius.r16)),
+        title: Row(
           children: [
-            Icon(Icons.warning_amber_rounded, color: Colors.red),
-            SizedBox(width: 8),
+            Icon(Icons.warning_amber_rounded, color: context.colors.danger),
+            SizedBox(width: AppSpacing.s8),
             Text('Expired Stock'),
           ],
         ),
@@ -628,12 +633,12 @@ class _AddSaleScreenState extends State<AddSaleScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               const Text('This product is expired. Do you still want to sell it?',
-                  style: TextStyle(fontSize: 13.5)),
-              const SizedBox(height: 10),
+                  style: TextStyle(fontSize: AppFontSize.f13_5)),
+              const SizedBox(height: AppSpacing.s10),
               ...expiredPortion.map((e) => Padding(
-                    padding: const EdgeInsets.only(bottom: 4),
+                    padding: const EdgeInsets.only(bottom: AppSpacing.s4),
                     child: Text('• ${e.$3} ${e.$2} of ${e.$1}',
-                        style: TextStyle(fontSize: 12.5, color: Colors.red[700])),
+                        style: TextStyle(fontSize: AppFontSize.f12_5, color: context.colors.dangerStrong)),
                   )),
             ],
           ),
@@ -641,7 +646,7 @@ class _AddSaleScreenState extends State<AddSaleScreen> {
         actions: [
           TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancel')),
           ElevatedButton(
-            style: ElevatedButton.styleFrom(backgroundColor: Colors.red, foregroundColor: Colors.white),
+            style: ElevatedButton.styleFrom(backgroundColor: context.colors.danger, foregroundColor: context.colors.onPrimary),
             onPressed: () => Navigator.pop(ctx, true),
             child: const Text('Sell Anyway'),
           ),
@@ -844,30 +849,30 @@ class _AddSaleScreenState extends State<AddSaleScreen> {
     final productProvider = Provider.of<ProductProvider>(context);
 
     return Scaffold(
-      backgroundColor: offWhite,
+      backgroundColor: context.colors.background,
       appBar: PreferredSize(
         preferredSize: const Size.fromHeight(64),
         child: Container(
-          color: primaryDeepGreen,
-          padding: const EdgeInsets.symmetric(horizontal: 20),
+          color: context.colors.primary,
+          padding: const EdgeInsets.symmetric(horizontal: AppSpacing.s20),
           child: SafeArea(
             bottom: false,
             child: Row(
               children: [
-                const Icon(Icons.shopping_cart_outlined, color: Colors.white, size: 22),
-                const SizedBox(width: 12),
-                const Expanded(
+                Icon(Icons.shopping_cart_outlined, color: context.colors.onPrimary, size: AppIconSize.i22),
+                const SizedBox(width: AppSpacing.s12),
+                Expanded(
                   child: Text('Record Sale',
-                      style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 18)),
+                      style: TextStyle(color: context.colors.onPrimary, fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f18)),
                 ),
                 if (widget.isModal)
                   IconButton(
-                    icon: const Icon(Icons.close, color: Colors.white),
+                    icon: Icon(Icons.close, color: context.colors.onPrimary),
                     tooltip: 'Close',
                     onPressed: () => Navigator.of(context).pop(),
                   )
                 else
-                  const BackButton(color: Colors.white),
+                  BackButton(color: context.colors.onPrimary),
               ],
             ),
           ),
@@ -875,8 +880,8 @@ class _AddSaleScreenState extends State<AddSaleScreen> {
       ),
       body: LayoutBuilder(
         builder: (context, constraints) {
-          final isNarrow = constraints.maxWidth < 480;
-          final isTwoColumn = constraints.maxWidth >= 860;
+          final isNarrow = constraints.maxWidth < AppBreakpoints.phoneNarrow;
+          final isTwoColumn = constraints.maxWidth >= AppBreakpoints.formTwoColumn;
           return Stack(
             key: _stackKey,
             children: [
@@ -884,14 +889,14 @@ class _AddSaleScreenState extends State<AddSaleScreen> {
                 child: ConstrainedBox(
                   constraints: const BoxConstraints(maxWidth: 1080),
                   child: SingleChildScrollView(
-                    padding: const EdgeInsets.all(16),
+                    padding: const EdgeInsets.all(AppSpacing.s16),
                     child: isTwoColumn
                         ? IntrinsicHeight(
                             child: Row(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Expanded(flex: 2, child: _buildLeftColumn(isNarrow)),
-                                const SizedBox(width: 16),
+                                const SizedBox(width: AppSpacing.s16),
                                 Expanded(flex: 1, child: _buildSaleSummarySidebar()),
                               ],
                             ),
@@ -899,7 +904,7 @@ class _AddSaleScreenState extends State<AddSaleScreen> {
                         : Column(
                             children: [
                               _buildLeftColumn(isNarrow),
-                              const SizedBox(height: 16),
+                              const SizedBox(height: AppSpacing.s16),
                               _buildSaleSummarySidebar(),
                             ],
                           ),
@@ -920,46 +925,46 @@ class _AddSaleScreenState extends State<AddSaleScreen> {
     return Container(
       padding: EdgeInsets.fromLTRB(20, 14, 20, 14 + MediaQuery.of(context).padding.bottom),
       decoration: BoxDecoration(
-        color: Colors.white,
-        border: Border(top: BorderSide(color: Colors.grey.withValues(alpha: 0.15))),
+        color: context.colors.surface,
+        border: Border(top: BorderSide(color: context.colors.textHint.withValues(alpha: AppAlpha.a15))),
       ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           OutlinedButton.icon(
-            icon: const Icon(Icons.close, size: 16),
+            icon: const Icon(Icons.close, size: AppIconSize.i16),
             label: const Text('Cancel'),
             style: OutlinedButton.styleFrom(
-              foregroundColor: Colors.black87,
-              side: BorderSide(color: Colors.grey.withValues(alpha: 0.4)),
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+              foregroundColor: context.colors.textPrimary,
+              side: BorderSide(color: context.colors.textHint.withValues(alpha: AppAlpha.a40)),
+              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.s20, vertical: AppSpacing.s12),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadius.r10)),
             ),
             onPressed: _isSaving ? null : () => Navigator.of(context).pop(),
           ),
           ElevatedButton(
             onPressed: _isSaving ? null : _saveSale,
             style: ElevatedButton.styleFrom(
-              backgroundColor: primaryDeepGreen,
-              foregroundColor: Colors.white,
-              disabledBackgroundColor: primaryDeepGreen.withValues(alpha: 0.5),
-              padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 12),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+              backgroundColor: context.colors.primary,
+              foregroundColor: context.colors.onPrimary,
+              disabledBackgroundColor: context.colors.primary.withValues(alpha: AppAlpha.a50),
+              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.s22, vertical: AppSpacing.s12),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadius.r10)),
             ),
             child: _isSaving
-                ? const SizedBox(
+                ? SizedBox(
                     width: 18,
                     height: 18,
-                    child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                    child: CircularProgressIndicator(strokeWidth: 2, color: context.colors.onPrimary),
                   )
                 : const Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Icon(Icons.receipt_long_outlined, size: 16),
-                      SizedBox(width: 8),
+                      Icon(Icons.receipt_long_outlined, size: AppIconSize.i16),
+                      SizedBox(width: AppSpacing.s8),
                       Text('Record Sale'),
-                      SizedBox(width: 6),
-                      Icon(Icons.arrow_forward, size: 16),
+                      SizedBox(width: AppSpacing.s6),
+                      Icon(Icons.arrow_forward, size: AppIconSize.i16),
                     ],
                   ),
           ),
@@ -971,9 +976,9 @@ class _AddSaleScreenState extends State<AddSaleScreen> {
   Widget _sectionHeader(IconData icon, String title) {
     return Row(
       children: [
-        Icon(icon, size: 18, color: primaryDeepGreen),
-        const SizedBox(width: 8),
-        Text(title, style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15, color: primaryDeepGreen)),
+        Icon(icon, size: AppIconSize.i18, color: context.colors.primary),
+        const SizedBox(width: AppSpacing.s8),
+        Text(title, style: TextStyle(fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f15, color: context.colors.primary)),
       ],
     );
   }
@@ -986,34 +991,34 @@ class _AddSaleScreenState extends State<AddSaleScreen> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Container(
-          padding: const EdgeInsets.all(16),
+          padding: const EdgeInsets.all(AppSpacing.s16),
           decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: Colors.grey.withValues(alpha: 0.2)),
+            color: context.colors.surface,
+            borderRadius: BorderRadius.circular(AppRadius.r12),
+            border: Border.all(color: context.colors.textHint.withValues(alpha: AppAlpha.a20)),
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               _sectionHeader(Icons.receipt_long_outlined, 'Sale Summary'),
-              const SizedBox(height: 14),
+              const SizedBox(height: AppSpacing.s14),
               _summaryRow('Total Items', '$totalItemCount'),
-              const SizedBox(height: 10),
+              const SizedBox(height: AppSpacing.s10),
               _summaryRow('Subtotal', Money.decimal(subtotal)),
-              const SizedBox(height: 10),
+              const SizedBox(height: AppSpacing.s10),
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Text('Discount', style: TextStyle(fontSize: 13, color: Colors.grey[700])),
+                  Text('Discount', style: TextStyle(fontSize: AppFontSize.f13, color: context.colors.textSoft)),
                   Row(
                     children: [
                       Text(Money.decimal(saleDiscount),
-                          style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13)),
-                      const SizedBox(width: 6),
+                          style: const TextStyle(fontWeight: AppFontWeight.semibold, fontSize: AppFontSize.f13)),
+                      const SizedBox(width: AppSpacing.s6),
                       InkWell(
-                        borderRadius: BorderRadius.circular(4),
+                        borderRadius: BorderRadius.circular(AppRadius.r4),
                         onTap: items.isEmpty ? null : _showEditDiscountDialog,
-                        child: Icon(Icons.edit_outlined, size: 15, color: items.isEmpty ? Colors.grey[300] : Colors.grey[500]),
+                        child: Icon(Icons.edit_outlined, size: AppIconSize.i16, color: items.isEmpty ? context.colors.border : context.colors.textHint),
                       ),
                     ],
                   ),
@@ -1022,46 +1027,46 @@ class _AddSaleScreenState extends State<AddSaleScreen> {
             ],
           ),
         ),
-        const SizedBox(height: 12),
+        const SizedBox(height: AppSpacing.s12),
         Container(
           width: double.infinity,
-          padding: const EdgeInsets.all(16),
+          padding: const EdgeInsets.all(AppSpacing.s16),
           decoration: BoxDecoration(
-            color: primaryDeepGreen.withValues(alpha: 0.06),
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: primaryDeepGreen.withValues(alpha: 0.2)),
+            color: context.colors.primary.withValues(alpha: AppAlpha.a05),
+            borderRadius: BorderRadius.circular(AppRadius.r12),
+            border: Border.all(color: context.colors.primary.withValues(alpha: AppAlpha.a20)),
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text('Total Amount', style: TextStyle(fontSize: 12.5, color: Colors.grey[700])),
-              const SizedBox(height: 4),
+              Text('Total Amount', style: TextStyle(fontSize: AppFontSize.f12_5, color: context.colors.textSoft)),
+              const SizedBox(height: AppSpacing.s4),
               Text(Money.symbolDecimal(totalAmount),
-                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 24, color: primaryDeepGreen)),
+                  style: TextStyle(fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f24, color: context.colors.primary)),
             ],
           ),
         ),
-        const SizedBox(height: 12),
+        const SizedBox(height: AppSpacing.s12),
         Container(
           width: double.infinity,
-          padding: const EdgeInsets.all(16),
+          padding: const EdgeInsets.all(AppSpacing.s16),
           decoration: BoxDecoration(
-            color: primaryDeepGreen.withValues(alpha: 0.04),
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: primaryDeepGreen.withValues(alpha: 0.15)),
+            color: context.colors.primary.withValues(alpha: AppAlpha.a05),
+            borderRadius: BorderRadius.circular(AppRadius.r12),
+            border: Border.all(color: context.colors.primary.withValues(alpha: AppAlpha.a15)),
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Row(
                 children: [
-                  Icon(Icons.credit_card_outlined, size: 16, color: primaryDeepGreen),
-                  const SizedBox(width: 8),
+                  Icon(Icons.credit_card_outlined, size: AppIconSize.i16, color: context.colors.primary),
+                  const SizedBox(width: AppSpacing.s8),
                   Text('Payment Method',
-                      style: TextStyle(fontWeight: FontWeight.w600, fontSize: 13, color: primaryDeepGreen)),
+                      style: TextStyle(fontWeight: AppFontWeight.semibold, fontSize: AppFontSize.f13, color: context.colors.primary)),
                 ],
               ),
-              const SizedBox(height: 10),
+              const SizedBox(height: AppSpacing.s10),
               PopupMenuButton<String>(
                 initialValue: paymentMethod,
                 onSelected: (method) => setState(() {
@@ -1073,8 +1078,8 @@ class _AddSaleScreenState extends State<AddSaleScreen> {
                     value: method,
                     child: Row(
                       children: [
-                        Icon(iconForPaymentMethod(method), size: 18, color: primaryDeepGreen),
-                        const SizedBox(width: 10),
+                        Icon(iconForPaymentMethod(method), size: AppIconSize.i18, color: context.colors.primary),
+                        const SizedBox(width: AppSpacing.s10),
                         Text(method),
                       ],
                     ),
@@ -1082,27 +1087,27 @@ class _AddSaleScreenState extends State<AddSaleScreen> {
                 }).toList(),
                 child: Container(
                   width: double.infinity,
-                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                  padding: const EdgeInsets.symmetric(horizontal: AppSpacing.s14, vertical: AppSpacing.s12),
                   decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(10),
+                    color: context.colors.surface,
+                    borderRadius: BorderRadius.circular(AppRadius.r10),
                     border: Border.all(
-                      color: _paymentMethodMissing ? Colors.red : Colors.grey.withValues(alpha: 0.3),
+                      color: _paymentMethodMissing ? context.colors.danger : context.colors.textHint.withValues(alpha: AppAlpha.a30),
                       width: _paymentMethodMissing ? 1.5 : 1,
                     ),
                   ),
                   child: Row(
                     children: [
                       Icon(paymentMethod == null ? Icons.payment_outlined : iconForPaymentMethod(paymentMethod!),
-                          size: 18, color: _paymentMethodMissing ? Colors.red : primaryDeepGreen),
-                      const SizedBox(width: 10),
+                          size: AppIconSize.i18, color: _paymentMethodMissing ? context.colors.danger : context.colors.primary),
+                      const SizedBox(width: AppSpacing.s10),
                       Expanded(
                         child: Text(
                           paymentMethod ?? 'Select Method',
-                          style: TextStyle(color: _paymentMethodMissing ? Colors.red : (paymentMethod == null ? Colors.grey[600] : null)),
+                          style: TextStyle(color: _paymentMethodMissing ? context.colors.danger : (paymentMethod == null ? context.colors.textMuted : null)),
                         ),
                       ),
-                      Icon(Icons.expand_more, size: 18, color: Colors.grey[600]),
+                      Icon(Icons.expand_more, size: AppIconSize.i18, color: context.colors.textMuted),
                     ],
                   ),
                 ),
@@ -1110,9 +1115,9 @@ class _AddSaleScreenState extends State<AddSaleScreen> {
             ],
           ),
         ),
-        const SizedBox(height: 16),
-        const Text('Amount Received (${AppDefaults.currencySymbol}) *', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 13)),
-        const SizedBox(height: 6),
+        const SizedBox(height: AppSpacing.s16),
+        const Text('Amount Received (${AppDefaults.currencySymbol}) *', style: TextStyle(fontWeight: AppFontWeight.semibold, fontSize: AppFontSize.f13)),
+        const SizedBox(height: AppSpacing.s6),
         TextFormField(
           controller: totalPaidController,
           enabled: items.isNotEmpty,
@@ -1121,12 +1126,12 @@ class _AddSaleScreenState extends State<AddSaleScreen> {
           decoration: InputDecoration(
             hintText: '0.00',
             filled: true,
-            fillColor: Colors.white,
+            fillColor: context.colors.surface,
             isDense: true,
-            contentPadding: const EdgeInsets.symmetric(vertical: 12, horizontal: 12),
+            contentPadding: const EdgeInsets.symmetric(vertical: AppSpacing.s12, horizontal: AppSpacing.s12),
             border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(10),
-              borderSide: BorderSide(color: Colors.grey.withValues(alpha: 0.35)),
+              borderRadius: BorderRadius.circular(AppRadius.r10),
+              borderSide: BorderSide(color: context.colors.textHint.withValues(alpha: AppAlpha.a40)),
             ),
           ),
           onChanged: (val) {
@@ -1134,18 +1139,18 @@ class _AddSaleScreenState extends State<AddSaleScreen> {
             setState(() => totalPaid = paid);
           },
         ),
-        const SizedBox(height: 14),
-        const Text('Change (${AppDefaults.currencySymbol})', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 13)),
-        const SizedBox(height: 6),
+        const SizedBox(height: AppSpacing.s14),
+        const Text('Change (${AppDefaults.currencySymbol})', style: TextStyle(fontWeight: AppFontWeight.semibold, fontSize: AppFontSize.f13)),
+        const SizedBox(height: AppSpacing.s6),
         Container(
           width: double.infinity,
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+          padding: const EdgeInsets.symmetric(horizontal: AppSpacing.s12, vertical: AppSpacing.s12),
           decoration: BoxDecoration(
-            color: Colors.grey.withValues(alpha: 0.08),
-            borderRadius: BorderRadius.circular(10),
-            border: Border.all(color: Colors.grey.withValues(alpha: 0.25)),
+            color: context.colors.textHint.withValues(alpha: AppAlpha.a10),
+            borderRadius: BorderRadius.circular(AppRadius.r10),
+            border: Border.all(color: context.colors.textHint.withValues(alpha: AppAlpha.a30)),
           ),
-          child: Text(Money.decimal(change), style: TextStyle(color: Colors.grey[600])),
+          child: Text(Money.decimal(change), style: TextStyle(color: context.colors.textMuted)),
         ),
       ],
     );
