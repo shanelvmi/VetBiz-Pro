@@ -3,12 +3,16 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
 import '../../widgets/hover_elevate_card.dart';
-import '../../theme/app_palette.dart';
 import '../../data/collections.dart';
 import '../../data/fields.dart';
 import '../../data/user_role.dart';
 import '../../config/app_limits.dart';
 import '../../config/app_date_format.dart';
+import '../../theme/app_text.dart';
+import '../../theme/app_dimens.dart';
+import '../../theme/theme_context.dart';
+import '../../ui/feedback/app_feedback.dart';
+import '../../ui/feedback/friendly_error.dart';
 
 /// Manage who else has platform admin access - previously the only way
 /// to grant this was manually creating a document in Firebase Console.
@@ -23,7 +27,6 @@ class PlatformAdminsTab extends StatefulWidget {
 }
 
 class _PlatformAdminsTabState extends State<PlatformAdminsTab> {
-  static const Color primaryColor = AppPalette.primary;
   final TextEditingController _emailController = TextEditingController();
   bool _isSearching = false;
 
@@ -47,11 +50,7 @@ class _PlatformAdminsTabState extends State<PlatformAdminsTab> {
           .get();
 
       if (userQuery.docs.isEmpty) {
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('No user found with email "$email"'), backgroundColor: Colors.redAccent),
-          );
-        }
+        AppFeedback.warning('No user found with email "$email"');
         return;
       }
 
@@ -63,15 +62,10 @@ class _PlatformAdminsTabState extends State<PlatformAdminsTab> {
       // to Admin (Users > their profile > Change role), not silently
       // upgraded as a side effect of this action.
       if (userData[Fields.role] != UserRole.admin.key) {
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('"$email" is an Assistant and cannot be added as a Platform Admin. '
-                  'Change their role to Admin first (Users > their profile > Change role).'),
-              backgroundColor: Colors.redAccent,
-            ),
-          );
-        }
+        AppFeedback.warning(
+          '"$email" is an Assistant and cannot be added as a Platform Admin',
+          detail: 'Change their role to Admin first (Users > their profile > Change role)',
+        );
         return;
       }
 
@@ -84,17 +78,9 @@ class _PlatformAdminsTabState extends State<PlatformAdminsTab> {
 
       _emailController.clear();
 
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('$email is now a platform admin'), backgroundColor: Colors.green),
-        );
-      }
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed: $e'), backgroundColor: Colors.redAccent),
-        );
-      }
+      AppFeedback.success('$email is now a platform admin');
+    } catch (e, st) {
+      AppFeedback.error("Couldn't add the platform admin", error: e, stackTrace: st);
     } finally {
       if (mounted) setState(() => _isSearching = false);
     }
@@ -103,11 +89,9 @@ class _PlatformAdminsTabState extends State<PlatformAdminsTab> {
   Future<void> _removeAdmin(String uid, String? email) async {
     final currentUid = FirebaseAuth.instance.currentUser?.uid;
     if (uid == currentUid) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text("You can't remove your own admin access from here - ask another platform admin, or do it directly in Firebase Console."),
-          backgroundColor: Colors.orange,
-        ),
+      AppFeedback.warning(
+        "You can't remove your own admin access from here",
+        detail: 'Ask another platform admin, or do it directly in Firebase Console',
       );
       return;
     }
@@ -121,7 +105,7 @@ class _PlatformAdminsTabState extends State<PlatformAdminsTab> {
           TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Cancel')),
           TextButton(
             onPressed: () => Navigator.pop(context, true),
-            child: const Text('Remove', style: TextStyle(color: Colors.red)),
+            child: Text('Remove', style: TextStyle(color: context.colors.danger)),
           ),
         ],
       ),
@@ -137,15 +121,15 @@ class _PlatformAdminsTabState extends State<PlatformAdminsTab> {
     return Column(
       children: [
         Padding(
-          padding: const EdgeInsets.all(16),
+          padding: const EdgeInsets.all(AppSpacing.s16),
           child: Card(
-            elevation: 1,
+            elevation: AppElevation.e1,
             child: Padding(
-              padding: const EdgeInsets.all(12),
+              padding: const EdgeInsets.all(AppSpacing.s12),
               child: Row(
                 children: [
-                  Icon(Icons.person_add_alt_1, color: primaryColor, size: 22),
-                  const SizedBox(width: 10),
+                  Icon(Icons.person_add_alt_1, color: context.colors.primary, size: AppIconSize.i22),
+                  const SizedBox(width: AppSpacing.s10),
                   Expanded(
                     child: TextField(
                       controller: _emailController,
@@ -156,18 +140,18 @@ class _PlatformAdminsTabState extends State<PlatformAdminsTab> {
                       ),
                     ),
                   ),
-                  const SizedBox(width: 8),
+                  const SizedBox(width: AppSpacing.s8),
                   ElevatedButton(
                     onPressed: _isSearching ? null : _addAdminByEmail,
                     style: ButtonStyle(
                       backgroundColor: WidgetStateProperty.resolveWith<Color>((states) {
-                        if (states.contains(WidgetState.hovered)) return const Color(0xFFFFB200);
-                        return primaryColor;
+                        if (states.contains(WidgetState.hovered)) return context.colors.accent;
+                        return context.colors.primary;
                       }),
-                      foregroundColor: WidgetStateProperty.all(Colors.white),
+                      foregroundColor: WidgetStateProperty.all(context.colors.onPrimary),
                     ),
                     child: _isSearching
-                        ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
+                        ? SizedBox(width: AppSpacing.s18, height: 18, child: CircularProgressIndicator(strokeWidth: 2, color: context.colors.onPrimary))
                         : const Text('Add'),
                   ),
                 ],
@@ -183,7 +167,7 @@ class _PlatformAdminsTabState extends State<PlatformAdminsTab> {
                 return const Center(child: CircularProgressIndicator());
               }
               if (snapshot.hasError) {
-                return Center(child: Text('Could not load admins: ${snapshot.error}'));
+                return Center(child: Text('Could not load admins: ${FriendlyError.messageFor(snapshot.error!)}'));
               }
 
               final docs = snapshot.data?.docs ?? [];
@@ -195,7 +179,7 @@ class _PlatformAdminsTabState extends State<PlatformAdminsTab> {
                 child: ConstrainedBox(
                   constraints: const BoxConstraints(maxWidth: 700),
                   child: ListView.builder(
-                    padding: const EdgeInsets.symmetric(horizontal: 12),
+                    padding: const EdgeInsets.symmetric(horizontal: AppSpacing.s12),
                     itemCount: docs.length,
                     itemBuilder: (context, index) {
                       final doc = docs[index];
@@ -222,19 +206,19 @@ class _PlatformAdminsTabState extends State<PlatformAdminsTab> {
                       final addedBy = data['addedBy'] as String?;
 
                       return HoverElevateCard(
-                        margin: const EdgeInsets.only(bottom: 8),
+                        margin: const EdgeInsets.only(bottom: AppSpacing.s8),
                         child: Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                          padding: const EdgeInsets.symmetric(horizontal: AppSpacing.s16, vertical: AppSpacing.s10),
                           child: Row(
                             children: [
                               CircleAvatar(
-                                backgroundColor: primaryColor,
+                                backgroundColor: context.colors.primary,
                                 child: Text(
                                   title.isNotEmpty ? title[0].toUpperCase() : '?',
-                                  style: const TextStyle(color: Colors.white),
+                                  style: TextStyle(color: context.colors.onPrimary),
                                 ),
                               ),
-                              const SizedBox(width: 12),
+                              const SizedBox(width: AppSpacing.s12),
                               Expanded(
                                 child: Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -244,34 +228,34 @@ class _PlatformAdminsTabState extends State<PlatformAdminsTab> {
                                         Flexible(
                                           child: Text(
                                             title,
-                                            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
+                                            style: const TextStyle(fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f15),
                                             overflow: TextOverflow.ellipsis,
                                           ),
                                         ),
                                         if (isYou) ...[
-                                          const SizedBox(width: 6),
+                                          const SizedBox(width: AppSpacing.s6),
                                           Container(
-                                            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                            padding: const EdgeInsets.symmetric(horizontal: AppSpacing.s6, vertical: AppSpacing.s2),
                                             decoration: BoxDecoration(
-                                              color: primaryColor.withValues(alpha: 0.12),
-                                              borderRadius: BorderRadius.circular(8),
+                                              color: context.colors.primary.withValues(alpha: AppAlpha.a10),
+                                              borderRadius: BorderRadius.circular(AppRadius.r8),
                                             ),
-                                            child: Text('You', style: TextStyle(fontSize: 10.5, color: primaryColor, fontWeight: FontWeight.w600)),
+                                            child: Text('You', style: TextStyle(fontSize: AppFontSize.f10_5, color: context.colors.primary, fontWeight: AppFontWeight.semibold)),
                                           ),
                                         ],
                                       ],
                                     ),
-                                    const SizedBox(height: 2),
+                                    const SizedBox(height: AppSpacing.s2),
                                     Text(
                                       email ?? 'No email on record',
-                                      style: TextStyle(fontSize: 12.5, color: Colors.grey[600]),
+                                      style: TextStyle(fontSize: AppFontSize.f12_5, color: context.colors.textMuted),
                                       overflow: TextOverflow.ellipsis,
                                     ),
                                     if (addedAt != null) ...[
-                                      const SizedBox(height: 2),
+                                      const SizedBox(height: AppSpacing.s2),
                                       Text(
                                         'Added ${AppDateFormat.dateNoPad.format(addedAt)}${addedBy != null ? ' by $addedBy' : ''}',
-                                        style: TextStyle(fontSize: 11, color: Colors.grey[500]),
+                                        style: TextStyle(fontSize: AppFontSize.f11, color: context.colors.textHint),
                                         overflow: TextOverflow.ellipsis,
                                       ),
                                     ],
@@ -280,7 +264,7 @@ class _PlatformAdminsTabState extends State<PlatformAdminsTab> {
                               ),
                               if (!isYou)
                                 IconButton(
-                                  icon: const Icon(Icons.remove_circle_outline, color: Colors.redAccent),
+                                  icon: Icon(Icons.remove_circle_outline, color: context.colors.dangerAccent),
                                   tooltip: 'Remove admin access',
                                   onPressed: () => _removeAdmin(doc.id, email),
                                 ),

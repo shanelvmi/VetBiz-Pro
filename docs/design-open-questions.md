@@ -58,6 +58,8 @@ Colours are outside the standing snap rule, so this is kept as it is:
 ### Raised in step 2D, batch D7
 
 - **List bottom gap 80**, `lib/screens/platform_admin/announcements_tab.dart` (`_fabClearance`, under the announcements list, clear of the New Announcement button): a size, same value and purpose as view_batches_screen's. Kept exact as a named local constant.
+- **`Colors.redAccent[700]`**, `lib/screens/platform_admin/subscription_requests_tab.dart` (a small bold label in the request card): not in the 4.1 table; no danger role is within 12 on every channel (`dangerAccent` is redAccent, `dangerStrong` red[700]). Kept. Snap to `dangerAccent`, or a role?
+- **Computed `Duration(days: ...)`**, same file: the approved plan's length (`plan.durationDays`, from the plan) and the "attended" window (`_attendedDays`). Business date maths, not literals; still counted by guard R5. Add guard allowlist entries, as for `trial_period_helper.dart`?
 
 ### Trash and restore: books consistency (audit after D6, read-only)
 

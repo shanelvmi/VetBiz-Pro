@@ -5,10 +5,13 @@ import 'package:intl/intl.dart';
 import '../../utils/subscription_status_utils.dart';
 import '../../widgets/hover_elevate_card.dart';
 import 'facility_detail_screen.dart';
-import '../../theme/app_palette.dart';
 import '../../data/collections.dart';
 import '../../config/app_limits.dart';
 import '../../config/app_date_format.dart';
+import '../../theme/app_text.dart';
+import '../../theme/app_dimens.dart';
+import '../../theme/theme_context.dart';
+import '../../ui/feedback/friendly_error.dart';
 
 /// Every facility across the whole platform, real pagination rather
 /// than one open-ended listener over the entire collection - same
@@ -23,7 +26,6 @@ class FacilitiesDirectoryTab extends StatefulWidget {
 }
 
 class _FacilitiesDirectoryTabState extends State<FacilitiesDirectoryTab> {
-  static const Color primaryColor = AppPalette.primary;
   static const int _pageSize = AppLimits.platformAdminPageSize;
   // Search can't be paginated the same way as plain browsing -
   // Firestore has no native "contains" match on a name field, so this
@@ -45,6 +47,8 @@ class _FacilitiesDirectoryTabState extends State<FacilitiesDirectoryTab> {
   bool _hasMore = true;
   bool _isLoadingMore = false;
   bool _isInitialLoading = true;
+  // A friendly message (FriendlyError), never the raw exception: it is
+  // shown on screen. The raw error goes to the debug log.
   String? _loadError;
 
   // Deliberately a one-time fetch, not a live listener - this needs
@@ -101,13 +105,13 @@ class _FacilitiesDirectoryTabState extends State<FacilitiesDirectoryTab> {
   Color _statusColor(SubscriptionStatusKind status) {
     switch (status) {
       case SubscriptionStatusKind.active:
-        return Colors.green;
+        return context.colors.success;
       case SubscriptionStatusKind.trial:
-        return primaryColor;
+        return context.colors.primary;
       case SubscriptionStatusKind.grace:
-        return Colors.orange;
+        return context.colors.warning;
       case SubscriptionStatusKind.locked:
-        return Colors.redAccent;
+        return context.colors.dangerAccent;
     }
   }
 
@@ -137,7 +141,8 @@ class _FacilitiesDirectoryTabState extends State<FacilitiesDirectoryTab> {
       });
       await _loadOwnerNames(snap.docs);
     } catch (e) {
-      if (mounted) setState(() => _loadError = '$e');
+      debugPrint('Facilities directory load failed: $e');
+      if (mounted) setState(() => _loadError = FriendlyError.messageFor(e));
     } finally {
       if (mounted) {
         setState(() {
@@ -210,7 +215,8 @@ class _FacilitiesDirectoryTabState extends State<FacilitiesDirectoryTab> {
       });
       await _loadOwnerNames(snap.docs);
     } catch (e) {
-      if (mounted) setState(() => _loadError = '$e');
+      debugPrint('Facilities directory load failed: $e');
+      if (mounted) setState(() => _loadError = FriendlyError.messageFor(e));
     } finally {
       if (mounted) setState(() => _isInitialLoading = false);
     }
@@ -262,16 +268,16 @@ class _FacilitiesDirectoryTabState extends State<FacilitiesDirectoryTab> {
     return Column(
       children: [
         Padding(
-          padding: const EdgeInsets.all(12),
+          padding: const EdgeInsets.all(AppSpacing.s12),
           child: TextField(
-            cursorColor: primaryColor,
+            cursorColor: context.colors.primary,
             decoration: InputDecoration(
               hintText: 'Search facilities by name...',
               prefixIcon: const Icon(Icons.search),
-              border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+              border: OutlineInputBorder(borderRadius: BorderRadius.circular(AppRadius.r10)),
               focusedBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(10),
-                borderSide: const BorderSide(color: primaryColor, width: 2),
+                borderRadius: BorderRadius.circular(AppRadius.r10),
+                borderSide: BorderSide(color: context.colors.primary, width: 2),
               ),
               isDense: true,
             ),
@@ -279,7 +285,7 @@ class _FacilitiesDirectoryTabState extends State<FacilitiesDirectoryTab> {
           ),
         ),
         Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 12),
+          padding: const EdgeInsets.symmetric(horizontal: AppSpacing.s12),
           child: Row(
             children: [
               Expanded(
@@ -293,15 +299,15 @@ class _FacilitiesDirectoryTabState extends State<FacilitiesDirectoryTab> {
               ),
               IconButton(
                 icon: _isSummaryLoading
-                    ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2))
-                    : const Icon(Icons.refresh, size: 20),
+                    ? const SizedBox(width: AppSpacing.s16, height: 16, child: CircularProgressIndicator(strokeWidth: 2))
+                    : const Icon(Icons.refresh, size: AppIconSize.i20),
                 tooltip: 'Refresh totals',
                 onPressed: _isSummaryLoading ? null : _loadSummary,
               ),
             ],
           ),
         ),
-        const SizedBox(height: 4),
+        const SizedBox(height: AppSpacing.s4),
         Expanded(
           child: _isInitialLoading && _docs.isEmpty
               ? const Center(child: CircularProgressIndicator())
@@ -327,12 +333,12 @@ class _FacilitiesDirectoryTabState extends State<FacilitiesDirectoryTab> {
                             if (crossAxisCount == 1) {
                               return ListView.builder(
                                 controller: _scrollController,
-                                padding: const EdgeInsets.symmetric(horizontal: 12),
+                                padding: const EdgeInsets.symmetric(horizontal: AppSpacing.s12),
                                 itemCount: docs.length + (_isLoadingMore ? 1 : 0),
                                 itemBuilder: (context, index) {
                                   if (index >= docs.length) {
                                     return const Padding(
-                                      padding: EdgeInsets.symmetric(vertical: 16),
+                                      padding: EdgeInsets.symmetric(vertical: AppSpacing.s16),
                                       child: Center(child: CircularProgressIndicator()),
                                     );
                                   }
@@ -343,7 +349,7 @@ class _FacilitiesDirectoryTabState extends State<FacilitiesDirectoryTab> {
 
                             return GridView.builder(
                               controller: _scrollController,
-                              padding: const EdgeInsets.symmetric(horizontal: 12),
+                              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.s12),
                               gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
                                 crossAxisCount: crossAxisCount,
                                 crossAxisSpacing: 12,
@@ -377,9 +383,9 @@ class _FacilitiesDirectoryTabState extends State<FacilitiesDirectoryTab> {
     final ownerName = createdBy != null ? _ownerNameByUid[createdBy] : null;
 
     return HoverElevateCard(
-      margin: const EdgeInsets.only(bottom: 8),
+      margin: const EdgeInsets.only(bottom: AppSpacing.s8),
       child: InkWell(
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(AppRadius.r12),
         onTap: () {
           Navigator.push(
             context,
@@ -387,54 +393,54 @@ class _FacilitiesDirectoryTabState extends State<FacilitiesDirectoryTab> {
           );
         },
         child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          padding: const EdgeInsets.symmetric(horizontal: AppSpacing.s16, vertical: AppSpacing.s12),
           child: Row(
             children: [
               CircleAvatar(
-                backgroundColor: color.withValues(alpha: 0.15),
-                child: Icon(Icons.storefront_outlined, color: color, size: 20),
+                backgroundColor: color.withValues(alpha: AppAlpha.a15),
+                child: Icon(Icons.storefront_outlined, color: color, size: AppIconSize.i20),
               ),
-              const SizedBox(width: 12),
+              const SizedBox(width: AppSpacing.s12),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
                       data['name'] ?? 'Unnamed facility',
-                      style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
+                      style: const TextStyle(fontWeight: AppFontWeight.semibold, fontSize: AppFontSize.f14),
                       overflow: TextOverflow.ellipsis,
                     ),
-                    const SizedBox(height: 2),
+                    const SizedBox(height: AppSpacing.s2),
                     Text(
                       [
                         if ((data['type'] as String?)?.isNotEmpty == true) data['type'],
                         if ((data['code'] as String?)?.isNotEmpty == true) data['code'],
                         if (ownerName != null && ownerName.isNotEmpty) ownerName,
                       ].join(' · '),
-                      style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+                      style: TextStyle(fontSize: AppFontSize.f12, color: context.colors.textMuted),
                       overflow: TextOverflow.ellipsis,
                     ),
                     if (relevantDate != null) ...[
-                      const SizedBox(height: 2),
+                      const SizedBox(height: AppSpacing.s2),
                       Text(
                         '${status == SubscriptionStatusKind.trial ? 'Trial ends' : 'Expires'} ${_dateFormat.format(relevantDate)}',
-                        style: TextStyle(fontSize: 11, color: Colors.grey[500]),
+                        style: TextStyle(fontSize: AppFontSize.f11, color: context.colors.textHint),
                       ),
                     ],
                   ],
                 ),
               ),
-              const SizedBox(width: 8),
+              const SizedBox(width: AppSpacing.s8),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                padding: const EdgeInsets.symmetric(horizontal: AppSpacing.s10, vertical: AppSpacing.s4),
                 decoration: BoxDecoration(
-                  color: color.withValues(alpha: 0.12),
-                  borderRadius: BorderRadius.circular(12),
+                  color: color.withValues(alpha: AppAlpha.a10),
+                  borderRadius: BorderRadius.circular(AppRadius.r12),
                   border: Border.all(color: color),
                 ),
                 child: Text(
                   subscriptionStatusLabel(status),
-                  style: TextStyle(color: color, fontSize: 12, fontWeight: FontWeight.w600),
+                  style: TextStyle(color: color, fontSize: AppFontSize.f12, fontWeight: AppFontWeight.semibold),
                 ),
               ),
             ],
@@ -461,7 +467,7 @@ class _SummaryRow extends StatelessWidget {
       scrollDirection: Axis.horizontal,
       child: Row(
         children: [
-          _chip('$total total', const Color(0xFF2F5D62)),
+          _chip('$total total', context.colors.primary),
           for (final status in SubscriptionStatusKind.values)
             if ((counts[status] ?? 0) > 0)
               _chip('${counts[status]} ${subscriptionStatusLabel(status)}', statusColor(status)),
@@ -472,14 +478,14 @@ class _SummaryRow extends StatelessWidget {
 
   Widget _chip(String label, Color color) {
     return Padding(
-      padding: const EdgeInsets.only(right: 8, bottom: 8),
+      padding: const EdgeInsets.only(right: AppSpacing.s8, bottom: AppSpacing.s8),
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+        padding: const EdgeInsets.symmetric(horizontal: AppSpacing.s12, vertical: AppSpacing.s6),
         decoration: BoxDecoration(
-          color: color.withValues(alpha: 0.1),
-          borderRadius: BorderRadius.circular(20),
+          color: color.withValues(alpha: AppAlpha.a10),
+          borderRadius: BorderRadius.circular(AppRadius.r20),
         ),
-        child: Text(label, style: TextStyle(color: color, fontSize: 12, fontWeight: FontWeight.w600)),
+        child: Text(label, style: TextStyle(color: color, fontSize: AppFontSize.f12, fontWeight: AppFontWeight.semibold)),
       ),
     );
   }
