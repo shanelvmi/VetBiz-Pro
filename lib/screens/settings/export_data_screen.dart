@@ -10,13 +10,17 @@ import 'package:excel/excel.dart' as xl;
 
 import '../../providers/facility_provider.dart';
 import '../../utils/web_download.dart';
-import '../../theme/app_palette.dart';
 import '../../data/collections.dart';
 import '../../data/fields.dart';
 import '../../config/money.dart';
 import '../../config/app_ranges.dart';
 import '../../data/data_keys.dart';
 import '../../config/app_info.dart';
+import '../../theme/app_text.dart';
+import '../../theme/app_dimens.dart';
+import '../../theme/theme_context.dart';
+import '../../theme/app_breakpoints.dart';
+import '../../ui/feedback/app_feedback.dart';
 
 /// One logical table of data - a title (shown as its own line in CSV,
 /// its own sheet/tab name in xlsx), a header row, and the data rows
@@ -52,9 +56,6 @@ class ExportDataScreen extends StatefulWidget {
 }
 
 class _ExportDataScreenState extends State<ExportDataScreen> {
-  final Color primaryColor = AppPalette.primary;
-  final Color warmAmber = AppPalette.accent;
-  final Color backgroundColor = AppPalette.background;
 
   static const List<Map<String, String>> _dataTypes = [
     {'title': 'Sales & Transactions', 'subtitle': 'Sales (incl. archived) and transaction history'},
@@ -315,14 +316,11 @@ class _ExportDataScreenState extends State<ExportDataScreen> {
       // trying it first and falling back on failure, avoids making the
       // user wait out a doomed attempt before the fast download path
       // ever runs.
-      final isDesktopWeb = kIsWeb && MediaQuery.of(context).size.width >= 900;
+      final isDesktopWeb = kIsWeb && context.screenWidth >= AppBreakpoints.medium;
 
       if (isDesktopWeb) {
         downloadFileWeb(bytes, fileName, mimeType: mimeType);
-        if (!mounted) return;
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Exported $_selectedDataType'), backgroundColor: Colors.green),
-        );
+        AppFeedback.success('Exported $_selectedDataType');
         return;
       }
 
@@ -330,11 +328,8 @@ class _ExportDataScreenState extends State<ExportDataScreen> {
 
       await Share.shareXFiles([xfile], text: '${AppInfo.name} export: $_selectedDataType');
 
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Exported $_selectedDataType'), backgroundColor: Colors.green),
-      );
-    } catch (e) {
+      AppFeedback.success('Exported $_selectedDataType');
+    } catch (e, st) {
       if (!mounted) return;
       // Confirmed on the receipt screens: desktop browsers' well-known
       // unreliable support for file-sharing through the Web Share API
@@ -347,9 +342,7 @@ class _ExportDataScreenState extends State<ExportDataScreen> {
         downloadFileWeb(bytes, fileName, mimeType: mimeType);
         return;
       }
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Export failed: $e'), backgroundColor: Colors.redAccent),
-      );
+      AppFeedback.error("Couldn't export $_selectedDataType", error: e, stackTrace: st);
     } finally {
       if (mounted) setState(() => _isExporting = false);
     }
@@ -745,16 +738,16 @@ class _ExportDataScreenState extends State<ExportDataScreen> {
       builder: (context) {
         Widget presetTile(String label, DateTimeRange? Function() rangeBuilder, {IconData? icon}) {
           return ListTile(
-            leading: icon != null ? Icon(icon, color: primaryColor, size: 20) : null,
+            leading: icon != null ? Icon(icon, color: context.colors.primary, size: AppIconSize.i20) : null,
             title: Text(label),
-            hoverColor: warmAmber.withValues(alpha: 0.12),
+            hoverColor: context.colors.accent.withValues(alpha: AppAlpha.a10),
             onTap: () => apply(rangeBuilder()),
           );
         }
 
         return AlertDialog(
           title: const Text('Date Range'),
-          contentPadding: const EdgeInsets.symmetric(vertical: 12),
+          contentPadding: const EdgeInsets.symmetric(vertical: AppSpacing.s12),
           content: SizedBox(
             width: 320,
             child: Column(
@@ -776,9 +769,9 @@ class _ExportDataScreenState extends State<ExportDataScreen> {
                 presetTile('All Time', () => null),
                 const Divider(height: 16),
                 ListTile(
-                  leading: Icon(Icons.edit_calendar_outlined, color: primaryColor, size: 20),
+                  leading: Icon(Icons.edit_calendar_outlined, color: context.colors.primary, size: AppIconSize.i20),
                   title: const Text('Custom Range...'),
-                  hoverColor: warmAmber.withValues(alpha: 0.12),
+                  hoverColor: context.colors.accent.withValues(alpha: AppAlpha.a10),
                   onTap: pickCustomRange,
                 ),
               ],
@@ -787,7 +780,7 @@ class _ExportDataScreenState extends State<ExportDataScreen> {
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context),
-              child: Text('Cancel', style: TextStyle(color: primaryColor)),
+              child: Text('Cancel', style: TextStyle(color: context.colors.primary)),
             ),
           ],
         );
@@ -809,44 +802,44 @@ class _ExportDataScreenState extends State<ExportDataScreen> {
                 : '${DateFormat(DataKeys.isoDay).format(_selectedDateRange!.start)}  to  ${DateFormat(DataKeys.isoDay).format(_selectedDateRange!.end)}';
 
     return Scaffold(
-      backgroundColor: backgroundColor,
+      backgroundColor: context.colors.background,
       appBar: AppBar(
         centerTitle: true,
-        title: const Text('Export Center', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 20)),
-        backgroundColor: primaryColor,
-        foregroundColor: Colors.white,
-        elevation: 0,
+        title: const Text('Export Center', style: TextStyle(fontWeight: AppFontWeight.semibold, fontSize: AppFontSize.f20)),
+        backgroundColor: context.colors.primary,
+        foregroundColor: context.colors.onPrimary,
+        elevation: AppElevation.e0,
       ),
       body: Center(
         child: ConstrainedBox(
           constraints: const BoxConstraints(maxWidth: 700),
           child: ListView(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(AppSpacing.s16),
         children: [
           _buildSectionTitle('1. Select Dataset Category'),
-          const SizedBox(height: 6),
+          const SizedBox(height: AppSpacing.s6),
           Card(
             elevation: cardElevation,
             margin: EdgeInsets.zero,
             child: Column(
               children: [
                 for (int i = 0; i < _dataTypes.length; i++) ...[
-                  if (i > 0) Divider(height: 1, color: Colors.grey.shade200, indent: 56),
+                  if (i > 0) Divider(height: 1, color: context.colors.divider, indent: 56),
                   _buildRadioTile(_dataTypes[i]['title']!, _dataTypes[i]['subtitle']!),
                 ],
               ],
             ),
           ),
-          const SizedBox(height: 20),
+          const SizedBox(height: AppSpacing.s20),
 
           _buildSectionTitle('2. Scope & Date Range Filtering'),
-          const SizedBox(height: 6),
+          const SizedBox(height: AppSpacing.s6),
           Card(
             elevation: cardElevation,
             margin: EdgeInsets.zero,
             child: ListTile(
-              leading: Icon(Icons.calendar_today_outlined, color: primaryColor),
-              title: const Text('Date Selection Scope', style: TextStyle(fontWeight: FontWeight.w500, fontSize: 15)),
+              leading: Icon(Icons.calendar_today_outlined, color: context.colors.primary),
+              title: const Text('Date Selection Scope', style: TextStyle(fontWeight: AppFontWeight.medium, fontSize: AppFontSize.f15)),
               subtitle: Text(dateRangeText),
               trailing: isSnapshot
                   ? null
@@ -854,18 +847,18 @@ class _ExportDataScreenState extends State<ExportDataScreen> {
                       onPressed: _pickDateRange,
                       style: ButtonStyle(
                         foregroundColor: WidgetStateProperty.resolveWith<Color>((states) {
-                          if (states.contains(WidgetState.hovered)) return warmAmber;
-                          return primaryColor;
+                          if (states.contains(WidgetState.hovered)) return context.colors.accent;
+                          return context.colors.primary;
                         }),
                       ),
-                      child: const Text('Modify', style: TextStyle(fontWeight: FontWeight.bold)),
+                      child: const Text('Modify', style: TextStyle(fontWeight: AppFontWeight.bold)),
                     ),
             ),
           ),
-          const SizedBox(height: 20),
+          const SizedBox(height: AppSpacing.s20),
 
           _buildSectionTitle('3. Output Document Layout'),
-          const SizedBox(height: 6),
+          const SizedBox(height: AppSpacing.s6),
           Card(
             elevation: cardElevation,
             margin: EdgeInsets.zero,
@@ -876,7 +869,7 @@ class _ExportDataScreenState extends State<ExportDataScreen> {
                   title: 'Excel Workbook (.xlsx)',
                   subtitle: 'Bolded headers, multiple sheets, real dates - opens clean, ready to keep',
                 ),
-                Divider(height: 1, color: Colors.grey.shade200, indent: 56),
+                Divider(height: 1, color: context.colors.divider, indent: 56),
                 _buildFormatTile(
                   value: 'csv',
                   title: 'CSV (Plain Text)',
@@ -885,14 +878,14 @@ class _ExportDataScreenState extends State<ExportDataScreen> {
               ],
             ),
           ),
-          const SizedBox(height: 32),
+          const SizedBox(height: AppSpacing.s32),
 
           if (!isSnapshot && !_hasChosenDateRange) ...[
             Padding(
-              padding: const EdgeInsets.only(bottom: 8, left: 4),
+              padding: const EdgeInsets.only(bottom: AppSpacing.s8, left: AppSpacing.s4),
               child: Text(
                 'Select a date range above before exporting.',
-                style: TextStyle(fontSize: 12.5, color: Colors.grey[700]),
+                style: TextStyle(fontSize: AppFontSize.f12_5, color: context.colors.textSoft),
               ),
             ),
           ],
@@ -903,31 +896,27 @@ class _ExportDataScreenState extends State<ExportDataScreen> {
                   ? null
                   : () {
                       if (!isSnapshot && !_hasChosenDateRange) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                            content: Text('Please select a date range before exporting.'),
-                          ),
-                        );
+                        AppFeedback.warning('Select a date range before exporting');
                         return;
                       }
                       _triggerExportPipeline();
                     },
               style: ButtonStyle(
                 backgroundColor: WidgetStateProperty.resolveWith<Color>((states) {
-                  if (states.contains(WidgetState.hovered)) return warmAmber;
-                  return primaryColor;
+                  if (states.contains(WidgetState.hovered)) return context.colors.accent;
+                  return context.colors.primary;
                 }),
-                foregroundColor: WidgetStateProperty.all(Colors.white),
-                shape: WidgetStateProperty.all(RoundedRectangleBorder(borderRadius: BorderRadius.circular(12))),
+                foregroundColor: WidgetStateProperty.all(context.colors.onPrimary),
+                shape: WidgetStateProperty.all(RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadius.r12))),
                 elevation: WidgetStateProperty.all(1),
               ),
               child: _isExporting
-                  ? const SizedBox(
+                  ? SizedBox(
                       width: 24, height: 24,
-                      child: CircularProgressIndicator(strokeWidth: 2.5, color: Colors.white),
+                      child: CircularProgressIndicator(strokeWidth: 2.5, color: context.colors.onPrimary),
                     )
                   : const Text('Generate & Export Data',
-                      style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold, letterSpacing: 0.5)),
+                      style: TextStyle(fontSize: AppFontSize.f15, fontWeight: AppFontWeight.bold, letterSpacing: 0.5)),
             ),
           ),
         ],
@@ -939,12 +928,12 @@ class _ExportDataScreenState extends State<ExportDataScreen> {
 
   Widget _buildRadioTile(String title, String subtitle) {
     return RadioListTile<String>(
-      title: Text(title, style: const TextStyle(fontWeight: FontWeight.w500, fontSize: 15)),
-      subtitle: Text(subtitle, style: const TextStyle(fontSize: 13)),
+      title: Text(title, style: const TextStyle(fontWeight: AppFontWeight.medium, fontSize: AppFontSize.f15)),
+      subtitle: Text(subtitle, style: const TextStyle(fontSize: AppFontSize.f13)),
       value: title,
       groupValue: _selectedDataType,
-      activeColor: primaryColor,
-      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+      activeColor: context.colors.primary,
+      contentPadding: const EdgeInsets.symmetric(horizontal: AppSpacing.s16, vertical: AppSpacing.s4),
       onChanged: (value) {
         if (value != null) setState(() => _selectedDataType = value);
       },
@@ -953,12 +942,12 @@ class _ExportDataScreenState extends State<ExportDataScreen> {
 
   Widget _buildFormatTile({required String value, required String title, required String subtitle}) {
     return RadioListTile<String>(
-      title: Text(title, style: const TextStyle(fontWeight: FontWeight.w500, fontSize: 15)),
-      subtitle: Text(subtitle, style: const TextStyle(fontSize: 13)),
+      title: Text(title, style: const TextStyle(fontWeight: AppFontWeight.medium, fontSize: AppFontSize.f15)),
+      subtitle: Text(subtitle, style: const TextStyle(fontSize: AppFontSize.f13)),
       value: value,
       groupValue: _selectedFormat,
-      activeColor: primaryColor,
-      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+      activeColor: context.colors.primary,
+      contentPadding: const EdgeInsets.symmetric(horizontal: AppSpacing.s16, vertical: AppSpacing.s4),
       onChanged: (val) {
         if (val != null) setState(() => _selectedFormat = val);
       },
@@ -967,13 +956,13 @@ class _ExportDataScreenState extends State<ExportDataScreen> {
 
   Widget _buildSectionTitle(String title) {
     return Padding(
-      padding: const EdgeInsets.only(left: 4, bottom: 4),
+      padding: const EdgeInsets.only(left: AppSpacing.s4, bottom: AppSpacing.s4),
       child: Text(
         title.toUpperCase(),
         style: TextStyle(
-          fontWeight: FontWeight.bold,
-          fontSize: 11,
-          color: primaryColor.withValues(alpha: 0.75),
+          fontWeight: AppFontWeight.bold,
+          fontSize: AppFontSize.f11,
+          color: context.colors.primary.withValues(alpha: AppAlpha.a70),
           letterSpacing: 1.1,
         ),
       ),

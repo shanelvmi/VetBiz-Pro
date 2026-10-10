@@ -2,7 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:print_bluetooth_thermal/print_bluetooth_thermal.dart';
 
 import '../../services/receipt_printer_service.dart';
-import '../../theme/app_palette.dart';
+import '../../theme/app_text.dart';
+import '../../theme/app_dimens.dart';
+import '../../theme/theme_context.dart';
+import '../../ui/feedback/app_feedback.dart';
 
 class PrinterSettingsScreen extends StatefulWidget {
   const PrinterSettingsScreen({super.key});
@@ -12,9 +15,6 @@ class PrinterSettingsScreen extends StatefulWidget {
 }
 
 class _PrinterSettingsScreenState extends State<PrinterSettingsScreen> {
-  final Color primaryColor = AppPalette.primary;
-  final Color warmAmber = AppPalette.accent;
-  final Color backgroundColor = AppPalette.background;
 
   final ReceiptPrinterService _printerService = ReceiptPrinterService();
 
@@ -106,20 +106,12 @@ class _PrinterSettingsScreenState extends State<PrinterSettingsScreen> {
           _isConnected = true;
           _lastPrinter = {'mac': device.macAdress, 'name': device.name};
         });
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Connected to ${device.name}'), backgroundColor: Colors.green),
-        );
+        AppFeedback.success('Connected to ${device.name}');
       } else {
-        if (!mounted) return;
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Could not connect to ${device.name}'), backgroundColor: Colors.redAccent),
-        );
+        AppFeedback.error("Couldn't connect to ${device.name}");
       }
-    } catch (e) {
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Connection failed: $e'), backgroundColor: Colors.redAccent),
-      );
+    } catch (e, st) {
+      AppFeedback.error("Couldn't connect to the printer", error: e, stackTrace: st);
     } finally {
       if (mounted) setState(() => _isConnecting = false);
     }
@@ -130,11 +122,8 @@ class _PrinterSettingsScreenState extends State<PrinterSettingsScreen> {
       await _printerService.disconnect();
       if (!mounted) return;
       setState(() => _isConnected = false);
-    } catch (e) {
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Disconnect failed: $e'), backgroundColor: Colors.redAccent),
-      );
+    } catch (e, st) {
+      AppFeedback.error("Couldn't disconnect the printer", error: e, stackTrace: st);
     }
   }
 
@@ -147,18 +136,13 @@ class _PrinterSettingsScreenState extends State<PrinterSettingsScreen> {
     setState(() => _isTestPrinting = true);
     try {
       final success = await _printerService.printTestPage();
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(success ? 'Test page sent to printer' : 'Printer did not accept the test page'),
-          backgroundColor: success ? Colors.green : Colors.redAccent,
-        ),
-      );
-    } catch (e) {
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Test print failed: $e'), backgroundColor: Colors.redAccent),
-      );
+      if (success) {
+        AppFeedback.success('Test page sent to printer');
+      } else {
+        AppFeedback.error("Couldn't print the test page", detail: 'The printer did not accept it');
+      }
+    } catch (e, st) {
+      AppFeedback.error("Couldn't print the test page", error: e, stackTrace: st);
     } finally {
       if (mounted) setState(() => _isTestPrinting = false);
     }
@@ -167,35 +151,35 @@ class _PrinterSettingsScreenState extends State<PrinterSettingsScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: backgroundColor,
+      backgroundColor: context.colors.background,
       appBar: AppBar(
         title: const Text('Printer & Receipt Settings'),
-        backgroundColor: primaryColor,
-        foregroundColor: Colors.white,
+        backgroundColor: context.colors.primary,
+        foregroundColor: context.colors.onPrimary,
         centerTitle: true,
       ),
       body: Center(
         child: ConstrainedBox(
           constraints: const BoxConstraints(maxWidth: 700),
           child: ListView(
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.all(AppSpacing.s16),
             children: [
               if (_platformError != null)
                 Container(
-                  margin: const EdgeInsets.only(bottom: 16),
-                  padding: const EdgeInsets.all(12),
+                  margin: const EdgeInsets.only(bottom: AppSpacing.s16),
+                  padding: const EdgeInsets.all(AppSpacing.s12),
                   decoration: BoxDecoration(
-                    color: Colors.orange.withValues(alpha: 0.1),
-                    border: Border.all(color: Colors.orange),
-                    borderRadius: BorderRadius.circular(8),
+                    color: context.colors.warning.withValues(alpha: AppAlpha.a10),
+                    border: Border.all(color: context.colors.warning),
+                    borderRadius: BorderRadius.circular(AppRadius.r8),
                   ),
                   child: Row(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Icon(Icons.info_outline, color: Colors.orange),
-                      const SizedBox(width: 8),
+                      Icon(Icons.info_outline, color: context.colors.warning),
+                      const SizedBox(width: AppSpacing.s8),
                       Expanded(
-                        child: Text(_platformError!, style: const TextStyle(fontSize: 13)),
+                        child: Text(_platformError!, style: const TextStyle(fontSize: AppFontSize.f13)),
                       ),
                     ],
                   ),
@@ -203,21 +187,21 @@ class _PrinterSettingsScreenState extends State<PrinterSettingsScreen> {
 
               if (_lastPrinter != null) ...[
                 Card(
-                  elevation: 2,
+                  elevation: AppElevation.e2,
                   child: ListTile(
                     leading: Icon(
                       _isConnected ? Icons.bluetooth_connected : Icons.bluetooth_disabled,
-                      color: _isConnected ? Colors.green : Colors.grey,
+                      color: _isConnected ? context.colors.success : context.colors.textHint,
                     ),
                     title: Text(_lastPrinter!['name'] ?? 'Saved printer'),
                     subtitle: Text(_isConnected ? 'Connected' : 'Not connected'),
                     trailing: Wrap(
-                      spacing: 4,
+                      spacing: AppSpacing.s4,
                       children: [
                         if (_isConnected)
                           TextButton(onPressed: _disconnect, child: const Text('Disconnect')),
                         IconButton(
-                          icon: const Icon(Icons.close, size: 18),
+                          icon: const Icon(Icons.close, size: AppIconSize.i18),
                           tooltip: 'Forget this printer',
                           onPressed: _forgetPrinter,
                         ),
@@ -225,55 +209,55 @@ class _PrinterSettingsScreenState extends State<PrinterSettingsScreen> {
                     ),
                   ),
                 ),
-                const SizedBox(height: 16),
+                const SizedBox(height: AppSpacing.s16),
               ],
 
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Text('Paired Devices', style: TextStyle(fontWeight: FontWeight.bold, color: primaryColor)),
+                  Text('Paired Devices', style: TextStyle(fontWeight: AppFontWeight.bold, color: context.colors.primary)),
                   TextButton.icon(
                     onPressed: _isLoadingDevices ? null : _refreshPairedDevices,
                     icon: _isLoadingDevices
                         ? SizedBox(
                             width: 14,
                             height: 14,
-                            child: CircularProgressIndicator(strokeWidth: 2, color: primaryColor),
+                            child: CircularProgressIndicator(strokeWidth: 2, color: context.colors.primary),
                           )
-                        : const Icon(Icons.refresh, size: 18),
+                        : const Icon(Icons.refresh, size: AppIconSize.i18),
                     label: const Text('Refresh'),
                   ),
                 ],
               ),
               Padding(
-                padding: const EdgeInsets.only(bottom: 8),
+                padding: const EdgeInsets.only(bottom: AppSpacing.s8),
                 child: Text(
                   'Pair your printer in your device\'s Bluetooth settings first - this list only shows devices already paired there.',
-                  style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+                  style: TextStyle(fontSize: AppFontSize.f12, color: context.colors.textMuted),
                 ),
               ),
 
               if (_pairedDevices.isEmpty && _platformError == null)
                 Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 12),
-                  child: Text('No paired devices found.', style: TextStyle(color: Colors.grey[600])),
+                  padding: const EdgeInsets.symmetric(vertical: AppSpacing.s12),
+                  child: Text('No paired devices found.', style: TextStyle(color: context.colors.textMuted)),
                 )
               else
                 ..._pairedDevices.map((device) {
                   final isThisConnected = _isConnected && _lastPrinter?['mac'] == device.macAdress;
                   return Card(
-                    elevation: 1,
+                    elevation: AppElevation.e1,
                     child: ListTile(
                       leading: Icon(
                         isThisConnected ? Icons.bluetooth_connected : Icons.print_outlined,
-                        color: isThisConnected ? Colors.green : primaryColor,
+                        color: isThisConnected ? context.colors.success : context.colors.primary,
                       ),
                       title: Text(device.name),
                       subtitle: Text(device.macAdress),
                       trailing: _isConnecting
-                          ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2))
+                          ? const SizedBox(width: AppSpacing.s18, height: 18, child: CircularProgressIndicator(strokeWidth: 2))
                           : (isThisConnected
-                              ? const Icon(Icons.check_circle, color: Colors.green)
+                              ? Icon(Icons.check_circle, color: context.colors.success)
                               : TextButton(
                                   onPressed: () => _connectTo(device),
                                   child: const Text('Connect'),
@@ -282,11 +266,11 @@ class _PrinterSettingsScreenState extends State<PrinterSettingsScreen> {
                   );
                 }),
 
-              const SizedBox(height: 20),
-              Text('Print Options', style: TextStyle(fontWeight: FontWeight.bold, color: primaryColor)),
-              const SizedBox(height: 8),
+              const SizedBox(height: AppSpacing.s20),
+              Text('Print Options', style: TextStyle(fontWeight: AppFontWeight.bold, color: context.colors.primary)),
+              const SizedBox(height: AppSpacing.s8),
               Card(
-                elevation: 2,
+                elevation: AppElevation.e2,
                 child: Column(
                   children: [
                     ListTile(
@@ -308,7 +292,7 @@ class _PrinterSettingsScreenState extends State<PrinterSettingsScreen> {
                     SwitchListTile(
                       title: const Text('Auto-print receipt after each sale'),
                       value: _autoPrint,
-                      activeColor: primaryColor,
+                      activeColor: context.colors.primary,
                       onChanged: (value) async {
                         await _printerService.setAutoPrint(value);
                         if (mounted) setState(() => _autoPrint = value);
@@ -318,31 +302,31 @@ class _PrinterSettingsScreenState extends State<PrinterSettingsScreen> {
                 ),
               ),
 
-              const SizedBox(height: 20),
+              const SizedBox(height: AppSpacing.s20),
               SizedBox(
                 height: 48,
                 child: ElevatedButton.icon(
                   onPressed: (_isConnected && !_isTestPrinting) ? _testPrint : null,
                   icon: _isTestPrinting
-                      ? const SizedBox(
+                      ? SizedBox(
                           width: 18, height: 18,
-                          child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                          child: CircularProgressIndicator(strokeWidth: 2, color: context.colors.onPrimary),
                         )
                       : const Icon(Icons.print),
                   label: Text(_isTestPrinting ? 'Sending...' : 'Send Test Print'),
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: primaryColor,
-                    foregroundColor: Colors.white,
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    backgroundColor: context.colors.primary,
+                    foregroundColor: context.colors.onPrimary,
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadius.r12)),
                   ),
                 ),
               ),
               if (!_isConnected)
                 Padding(
-                  padding: const EdgeInsets.only(top: 8),
+                  padding: const EdgeInsets.only(top: AppSpacing.s8),
                   child: Text(
                     'Connect a printer above before testing.',
-                    style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+                    style: TextStyle(fontSize: AppFontSize.f12, color: context.colors.textMuted),
                     textAlign: TextAlign.center,
                   ),
                 ),
