@@ -47,7 +47,7 @@
       "lib/screens/sales/receipt_preview_screen.dart": 53,
       "lib/screens/sales/sales_archive_screen.dart": 32,
       "lib/screens/sales/sales_screen.dart": 47,
-      "lib/screens/services/add_edit_service_screen.dart": 40,
+      "lib/screens/services/add_edit_service_screen.dart": 26,
       "lib/screens/services/service_receipt_preview_screen.dart": 56,
       "lib/screens/services/services_screen.dart": 1
     },
@@ -85,7 +85,7 @@
       "lib/screens/sales/receipt_preview_screen.dart": 32,
       "lib/screens/sales/sales_archive_screen.dart": 36,
       "lib/screens/sales/sales_screen.dart": 37,
-      "lib/screens/services/add_edit_service_screen.dart": 12,
+      "lib/screens/services/add_edit_service_screen.dart": 8,
       "lib/screens/services/service_receipt_preview_screen.dart": 31,
       "lib/services/daily_report_pdf_service.dart": 25,
       "lib/services/receipt_pdf_service.dart": 17
@@ -122,7 +122,7 @@
       "lib/screens/sales/receipt_preview_screen.dart": 9,
       "lib/screens/sales/sales_archive_screen.dart": 8,
       "lib/screens/sales/sales_screen.dart": 7,
-      "lib/screens/services/add_edit_service_screen.dart": 17,
+      "lib/screens/services/add_edit_service_screen.dart": 12,
       "lib/screens/services/service_receipt_preview_screen.dart": 9,
       "lib/services/daily_report_pdf_service.dart": 1
     },
@@ -161,7 +161,7 @@
       "lib/screens/sales/receipt_preview_screen.dart": 57,
       "lib/screens/sales/sales_archive_screen.dart": 44,
       "lib/screens/sales/sales_screen.dart": 37,
-      "lib/screens/services/add_edit_service_screen.dart": 52,
+      "lib/screens/services/add_edit_service_screen.dart": 31,
       "lib/screens/services/service_receipt_preview_screen.dart": 56,
       "lib/services/daily_report_pdf_service.dart": 52,
       "lib/services/receipt_pdf_service.dart": 26
@@ -217,7 +217,7 @@
       "lib/screens/sales/add_sale_screen.dart": 3,
       "lib/screens/sales/receipt_preview_screen.dart": 1,
       "lib/screens/sales/sales_screen.dart": 1,
-      "lib/screens/services/add_edit_service_screen.dart": 2,
+      "lib/screens/services/add_edit_service_screen.dart": 1,
       "lib/screens/services/service_receipt_preview_screen.dart": 1
     },
     "R8": {

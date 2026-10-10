@@ -55,9 +55,4 @@ class AppDateFormat {
   static DateFormat get dateNoPadY => DateFormat(dateNoPadYPattern);
   static DateFormat get dayMonthNumeric => DateFormat(dayMonthNumericPattern);
 
-  /// "March 5, 2026": the locale's own long month-day-year skeleton
-  /// (`DateFormat.yMMMMd()`), used by the service form. Unlike the patterns
-  /// above it follows the locale, so it will change shape when the app's
-  /// language does (step 2F).
-  static DateFormat get monthDayYearLong => DateFormat.yMMMMd();
 }

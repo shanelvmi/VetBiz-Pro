@@ -43,13 +43,6 @@ void main() {
     });
   }
 
-  test('monthDayYearLong is DateFormat.yMMMMd()', () {
-    for (final m in moments) {
-      expect(AppDateFormat.monthDayYearLong.format(m), DateFormat.yMMMMd().format(m));
-    }
-    expect(AppDateFormat.monthDayYearLong.format(DateTime(2026, 3, 5)), 'March 5, 2026');
-  });
-
   test('data keys keep their exact patterns (ids and file names were built with them)', () {
     expect(DataKeys.isoDay, 'yyyy-MM-dd');
     expect(DataKeys.exportTimestamp, 'yyyy-MM-dd HH:mm');

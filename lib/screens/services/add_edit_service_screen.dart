@@ -16,12 +16,16 @@ import '../../widgets/payment_method_selector.dart';
 import '../../providers/product_provider.dart';
 import '../../providers/facility_provider.dart';
 import '../clients/add_client_screen.dart';
-import '../../theme/app_palette.dart';
 import '../../config/money.dart';
 import '../../config/app_defaults.dart';
 import '../../config/app_timeouts.dart';
 import '../../config/payment_methods.dart';
 import '../../config/app_date_format.dart';
+import '../../theme/app_palette.dart';
+import '../../theme/app_text.dart';
+import '../../theme/app_dimens.dart';
+import '../../theme/theme_context.dart';
+import '../../theme/app_breakpoints.dart';
 
 class AddEditServiceScreen extends StatefulWidget {
   final Service? service;
@@ -211,9 +215,9 @@ class _AddEditServiceScreenState extends State<AddEditServiceScreen> {
       labelText: label,
       border: const OutlineInputBorder(),
       focusedBorder: OutlineInputBorder(
-        borderSide: BorderSide(color: darkTeal, width: 2),
+        borderSide: BorderSide(color: context.colors.primary, width: 2),
       ),
-      labelStyle: TextStyle(color: darkTeal),
+      labelStyle: TextStyle(color: context.colors.primary),
     );
   }
 
@@ -289,36 +293,36 @@ class _AddEditServiceScreenState extends State<AddEditServiceScreen> {
     return Theme(
       data: Theme.of(context).copyWith(
         textSelectionTheme: TextSelectionThemeData(
-          cursorColor: darkTeal,
-          selectionColor: darkTeal.withValues(alpha: 0.3),
-          selectionHandleColor: darkTeal,
+          cursorColor: context.colors.primary,
+          selectionColor: context.colors.primary.withValues(alpha: AppAlpha.a30),
+          selectionHandleColor: context.colors.primary,
         ),
       ),
       child: Scaffold(
-        backgroundColor: offWhite,
+        backgroundColor: context.colors.background,
         appBar: PreferredSize(
           preferredSize: const Size.fromHeight(64),
           child: Container(
-            color: primaryDeepGreen,
-            padding: const EdgeInsets.symmetric(horizontal: 20),
+            color: context.colors.primary,
+            padding: const EdgeInsets.symmetric(horizontal: AppSpacing.s20),
             child: SafeArea(
               bottom: false,
               child: Row(
                 children: [
-                  const Icon(Icons.medical_services_outlined, color: Colors.white, size: 22),
-                  const SizedBox(width: 12),
+                  Icon(Icons.medical_services_outlined, color: context.colors.onPrimary, size: AppIconSize.i22),
+                  const SizedBox(width: AppSpacing.s12),
                   Expanded(
                     child: Text(isEditing ? 'Edit Visit' : 'Record Visit',
-                        style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 18)),
+                        style: TextStyle(color: context.colors.onPrimary, fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f18)),
                   ),
                   if (widget.isModal)
                     IconButton(
-                      icon: const Icon(Icons.close, color: Colors.white),
+                      icon: Icon(Icons.close, color: context.colors.onPrimary),
                       tooltip: 'Close',
                       onPressed: () => Navigator.of(context).pop(),
                     )
                   else
-                    const BackButton(color: Colors.white),
+                    BackButton(color: context.colors.onPrimary),
                 ],
               ),
             ),
@@ -326,7 +330,7 @@ class _AddEditServiceScreenState extends State<AddEditServiceScreen> {
         ),
         body: LayoutBuilder(
           builder: (context, constraints) {
-            final isTwoColumn = constraints.maxWidth >= 860;
+            final isTwoColumn = constraints.maxWidth >= AppBreakpoints.formTwoColumn;
             return Stack(
               key: _stackKey,
               children: [
@@ -334,7 +338,7 @@ class _AddEditServiceScreenState extends State<AddEditServiceScreen> {
                   child: ConstrainedBox(
                     constraints: const BoxConstraints(maxWidth: 1080),
                     child: SingleChildScrollView(
-                      padding: const EdgeInsets.all(16),
+                      padding: const EdgeInsets.all(AppSpacing.s16),
                       child: Form(
                         key: _formKey,
                         child: isTwoColumn
@@ -343,7 +347,7 @@ class _AddEditServiceScreenState extends State<AddEditServiceScreen> {
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
                                     Expanded(flex: 2, child: _buildLeftColumn(itemsTotal)),
-                                    const SizedBox(width: 16),
+                                    const SizedBox(width: AppSpacing.s16),
                                     Expanded(flex: 1, child: _buildVisitSummaryCard()),
                                   ],
                                 ),
@@ -351,7 +355,7 @@ class _AddEditServiceScreenState extends State<AddEditServiceScreen> {
                             : Column(
                                 children: [
                                   _buildLeftColumn(itemsTotal),
-                                  const SizedBox(height: 16),
+                                  const SizedBox(height: AppSpacing.s16),
                                   _buildVisitSummaryCard(),
                                 ],
                               ),
@@ -372,28 +376,28 @@ class _AddEditServiceScreenState extends State<AddEditServiceScreen> {
   Widget _sectionHeader(IconData icon, String title) {
     return Row(
       children: [
-        Icon(icon, size: 18, color: primaryDeepGreen),
-        const SizedBox(width: 8),
-        Text(title, style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15, color: primaryDeepGreen)),
+        Icon(icon, size: AppIconSize.i18, color: context.colors.primary),
+        const SizedBox(width: AppSpacing.s8),
+        Text(title, style: TextStyle(fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f15, color: context.colors.primary)),
       ],
     );
   }
 
   Widget _buildClientInfoCard() {
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(AppSpacing.s16),
       decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.grey.withValues(alpha: 0.2)),
+        color: context.colors.surface,
+        borderRadius: BorderRadius.circular(AppRadius.r12),
+        border: Border.all(color: context.colors.textHint.withValues(alpha: AppAlpha.a20)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           _sectionHeader(Icons.person_outline, 'Client Information'),
-          const SizedBox(height: 12),
-          const Text('Select Client *', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 13)),
-          const SizedBox(height: 6),
+          const SizedBox(height: AppSpacing.s12),
+          const Text('Select Client *', style: TextStyle(fontWeight: AppFontWeight.semibold, fontSize: AppFontSize.f13)),
+          const SizedBox(height: AppSpacing.s6),
           Row(
             key: _clientFieldKey,
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -403,16 +407,16 @@ class _AddEditServiceScreenState extends State<AddEditServiceScreen> {
                   controller: _clientTextController,
                   decoration: InputDecoration(
                     hintText: 'Search or select client...',
-                    hintStyle: const TextStyle(fontSize: 14),
+                    hintStyle: const TextStyle(fontSize: AppFontSize.f14),
                     filled: true,
-                    fillColor: Colors.white,
+                    fillColor: context.colors.surface,
                     isDense: true,
-                    contentPadding: const EdgeInsets.symmetric(vertical: 12, horizontal: 12),
+                    contentPadding: const EdgeInsets.symmetric(vertical: AppSpacing.s12, horizontal: AppSpacing.s12),
                     border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(10),
-                      borderSide: BorderSide(color: Colors.grey.withValues(alpha: 0.35)),
+                      borderRadius: BorderRadius.circular(AppRadius.r10),
+                      borderSide: BorderSide(color: context.colors.textHint.withValues(alpha: AppAlpha.a40)),
                     ),
-                    prefixIcon: const Icon(Icons.person_outline, color: Colors.black54),
+                    prefixIcon: Icon(Icons.person_outline, color: context.colors.textSecondary),
                   ),
                   onTap: () => setState(() {
                     _showClientSuggestions = _clientTextController.text.trim().length >= 2;
@@ -432,17 +436,17 @@ class _AddEditServiceScreenState extends State<AddEditServiceScreen> {
                   },
                 ),
               ),
-              const SizedBox(width: 8),
+              const SizedBox(width: AppSpacing.s8),
               IconButton(
-                icon: const Icon(Icons.add, color: Colors.white),
+                icon: Icon(Icons.add, color: context.colors.onPrimary),
                 tooltip: 'Add New Client',
-                padding: const EdgeInsets.all(10),
+                padding: const EdgeInsets.all(AppSpacing.s10),
                 constraints: const BoxConstraints(),
                 style: ButtonStyle(
-                  shape: WidgetStateProperty.all(RoundedRectangleBorder(borderRadius: BorderRadius.circular(10))),
+                  shape: WidgetStateProperty.all(RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadius.r10))),
                   backgroundColor: WidgetStateProperty.resolveWith<Color>((states) {
-                    if (states.contains(WidgetState.hovered)) return warmAmber;
-                    return primaryDeepGreen;
+                    if (states.contains(WidgetState.hovered)) return context.colors.accent;
+                    return context.colors.primary;
                   }),
                 ),
                 onPressed: () => _addNewClient(context),
@@ -459,9 +463,9 @@ class _AddEditServiceScreenState extends State<AddEditServiceScreen> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         _buildClientInfoCard(),
-        const SizedBox(height: 16),
+        const SizedBox(height: AppSpacing.s16),
         _buildVisitDetailsCard(),
-        const SizedBox(height: 16),
+        const SizedBox(height: AppSpacing.s16),
         _buildExpensesCard(itemsTotal),
       ],
     );
@@ -469,17 +473,17 @@ class _AddEditServiceScreenState extends State<AddEditServiceScreen> {
 
   Widget _buildVisitDetailsCard() {
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(AppSpacing.s16),
       decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.grey.withValues(alpha: 0.2)),
+        color: context.colors.surface,
+        borderRadius: BorderRadius.circular(AppRadius.r12),
+        border: Border.all(color: context.colors.textHint.withValues(alpha: AppAlpha.a20)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           _sectionHeader(Icons.description_outlined, 'Visit Details'),
-          const SizedBox(height: 12),
+          const SizedBox(height: AppSpacing.s12),
               // SERVICE NAME
               TextFormField(
                 controller: _nameController,
@@ -490,7 +494,7 @@ class _AddEditServiceScreenState extends State<AddEditServiceScreen> {
                     v == null || v.isEmpty ? 'Enter service name' : null,
               ),
 
-              const SizedBox(height: 10),
+              const SizedBox(height: AppSpacing.s10),
 
               // DESCRIPTION
               TextFormField(
@@ -501,7 +505,7 @@ class _AddEditServiceScreenState extends State<AddEditServiceScreen> {
                 maxLines: 3,
               ),
 
-              const SizedBox(height: 10),
+              const SizedBox(height: AppSpacing.s10),
 
               // CATEGORY
               DropdownButtonFormField<String>(
@@ -514,7 +518,7 @@ class _AddEditServiceScreenState extends State<AddEditServiceScreen> {
                 onChanged: (value) => setState(() => _selectedCategory = value),
               ),
 
-              const SizedBox(height: 20),
+              const SizedBox(height: AppSpacing.s20),
 
               // PROVIDED BY + DATE
               Row(
@@ -531,15 +535,15 @@ class _AddEditServiceScreenState extends State<AddEditServiceScreen> {
                               : null,
                     ),
                   ),
-                  const SizedBox(width: 10),
+                  const SizedBox(width: AppSpacing.s10),
                   Expanded(
                     child: InkWell(
                       onTap: () => _pickServiceDate(context),
                       child: InputDecorator(
                         decoration: _inputDecoration('Service Date'),
                         child: Text(
-                          AppDateFormat.monthDayYearLong.format(_serviceDate!),
-                          style: TextStyle(color: darkTeal),
+                          AppDateFormat.date.format(_serviceDate!),
+                          style: TextStyle(color: context.colors.primary),
                         ),
                       ),
                     ),
@@ -554,11 +558,11 @@ class _AddEditServiceScreenState extends State<AddEditServiceScreen> {
 
   Widget _buildExpensesCard(double itemsTotal) {
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(AppSpacing.s16),
       decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.grey.withValues(alpha: 0.2)),
+        color: context.colors.surface,
+        borderRadius: BorderRadius.circular(AppRadius.r12),
+        border: Border.all(color: context.colors.textHint.withValues(alpha: AppAlpha.a20)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
