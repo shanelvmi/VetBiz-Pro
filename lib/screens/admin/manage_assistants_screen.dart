@@ -9,7 +9,6 @@ import '../../widgets/initials_avatar.dart';
 import '../../services/role_change_service.dart';
 import '../../services/membership_service.dart';
 import '../../utils/activity_logger.dart';
-import '../../theme/app_palette.dart';
 import '../../data/collections.dart';
 import '../../data/fields.dart';
 import '../../data/user_role.dart';
@@ -18,6 +17,12 @@ import '../../data/activity_type.dart';
 import '../../config/app_limits.dart';
 import '../../config/app_timeouts.dart';
 import '../../config/app_date_format.dart';
+import '../../theme/app_palette.dart';
+import '../../theme/app_text.dart';
+import '../../theme/app_dimens.dart';
+import '../../theme/theme_context.dart';
+import '../../theme/app_breakpoints.dart';
+import '../../ui/feedback/app_feedback.dart';
 
 /// Who someone is on a facility's team, as this screen shows them. Worked out
 /// from the user record (role, previousRole, who created the facility); not
@@ -218,9 +223,9 @@ class _ManageAssistantsScreenState extends State<ManageAssistantsScreen> {
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2)),
-        const SizedBox(width: 8),
-        Text('Working...', style: TextStyle(fontSize: 12.5, color: Colors.grey[600])),
+        const SizedBox(width: AppSpacing.s16, height: 16, child: CircularProgressIndicator(strokeWidth: 2)),
+        const SizedBox(width: AppSpacing.s8),
+        Text('Working...', style: TextStyle(fontSize: AppFontSize.f12_5, color: context.colors.textMuted)),
       ],
     );
   }
@@ -262,11 +267,12 @@ class _ManageAssistantsScreenState extends State<ManageAssistantsScreen> {
       }
       if (!mounted) return;
       if (action == 'reject' && _selectedUserId == userId) setState(() => _selectedUserId = null);
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('$name ${past[action]}')));
-    } catch (e) {
+      AppFeedback.success('$name ${past[action]}');
+    } catch (e, st) {
       debugPrint('Error ($action) for assistant: $e');
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(MembershipService.errorMessage(e))));
+      // FriendlyError shows the server's own message for a Functions error,
+      // as MembershipService.errorMessage did, and never the raw text.
+      AppFeedback.error("Couldn't update the assistant", error: e, stackTrace: st);
     }
   }
 
@@ -283,31 +289,20 @@ class _ManageAssistantsScreenState extends State<ManageAssistantsScreen> {
   Future<void> _removeFromFacility(String userId, String facilityId) async {
     try {
       await MembershipService().removeAssistantFromFacility(assistantUid: userId, facilityId: facilityId);
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Assistant removed from this facility')),
-      );
-    } catch (e) {
+      AppFeedback.success('Assistant removed from this facility');
+    } catch (e, st) {
       debugPrint('Error removing assistant from facility: $e');
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Failed to remove: ${MembershipService.errorMessage(e)}')),
-      );
+      AppFeedback.error("Couldn't remove the assistant", error: e, stackTrace: st);
     }
   }
 
   Future<void> _reassignAssistant(String userId, String newFacilityId) async {
     try {
       await MembershipService().reassignAssistant(assistantUid: userId, newFacilityId: newFacilityId);
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Assistant reassigned successfully')));
-    } catch (e) {
+      AppFeedback.success('Assistant reassigned');
+    } catch (e, st) {
       debugPrint('Error reassigning assistant: $e');
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Failed to reassign: ${MembershipService.errorMessage(e)}')),
-      );
+      AppFeedback.error("Couldn't reassign the assistant", error: e, stackTrace: st);
     }
   }
 
@@ -318,49 +313,49 @@ class _ManageAssistantsScreenState extends State<ManageAssistantsScreen> {
     showDialog(
       context: context,
       builder: (ctx) => Dialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadius.r16)),
         child: ConstrainedBox(
           constraints: const BoxConstraints(maxWidth: 400),
           child: Padding(
-            padding: const EdgeInsets.fromLTRB(22, 22, 22, 14),
+            padding: const EdgeInsets.fromLTRB(AppSpacing.s22, AppSpacing.s22, AppSpacing.s22, AppSpacing.s14),
             child: Column(
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('Move $name', style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w700)),
-                const SizedBox(height: 6),
+                Text('Move $name', style: const TextStyle(fontSize: AppFontSize.f17, fontWeight: AppFontWeight.bold)),
+                const SizedBox(height: AppSpacing.s6),
                 Text(
                   'Choose the facility they should work in. They keep their account and their approval.',
-                  style: TextStyle(fontSize: 13, color: Colors.grey[600], height: 1.35),
+                  style: TextStyle(fontSize: AppFontSize.f13, color: context.colors.textMuted, height: 1.35),
                 ),
-                const SizedBox(height: 16),
+                const SizedBox(height: AppSpacing.s16),
                 if (options.isEmpty)
                   Text("You don't run any other facility to move them to.",
-                      style: TextStyle(fontSize: 13, color: Colors.grey[700]))
+                      style: TextStyle(fontSize: AppFontSize.f13, color: context.colors.textSoft))
                 else
                   ...options.map(
                     (e) => Padding(
-                      padding: const EdgeInsets.only(bottom: 8),
+                      padding: const EdgeInsets.only(bottom: AppSpacing.s8),
                       child: Material(
                         color: Colors.transparent,
                         child: InkWell(
-                          borderRadius: BorderRadius.circular(12),
+                          borderRadius: BorderRadius.circular(AppRadius.r12),
                           onTap: () {
                             Navigator.of(ctx).pop();
                             reassignAssistant(userId, e.key);
                           },
                           child: Container(
-                            padding: const EdgeInsets.all(14),
+                            padding: const EdgeInsets.all(AppSpacing.s14),
                             decoration: BoxDecoration(
-                              borderRadius: BorderRadius.circular(12),
-                              border: Border.all(color: Colors.grey.withValues(alpha: 0.3)),
+                              borderRadius: BorderRadius.circular(AppRadius.r12),
+                              border: Border.all(color: context.colors.textHint.withValues(alpha: AppAlpha.a30)),
                             ),
                             child: Row(
                               children: [
-                                Icon(Icons.storefront_outlined, size: 20, color: primaryColor),
-                                const SizedBox(width: 12),
-                                Expanded(child: Text(e.value, style: const TextStyle(fontWeight: FontWeight.w600))),
-                                Icon(Icons.chevron_right, color: Colors.grey[500]),
+                                Icon(Icons.storefront_outlined, size: AppIconSize.i20, color: context.colors.primary),
+                                const SizedBox(width: AppSpacing.s12),
+                                Expanded(child: Text(e.value, style: const TextStyle(fontWeight: AppFontWeight.semibold))),
+                                Icon(Icons.chevron_right, color: context.colors.textHint),
                               ],
                             ),
                           ),
@@ -430,11 +425,11 @@ class _ManageAssistantsScreenState extends State<ManageAssistantsScreen> {
   }) {
     return OutlinedButton.icon(
       onPressed: onPressed,
-      icon: Icon(icon, size: 15),
-      label: Text(label, style: const TextStyle(fontSize: 12.5)),
+      icon: Icon(icon, size: AppIconSize.i16),
+      label: Text(label, style: const TextStyle(fontSize: AppFontSize.f12_5)),
       style: ButtonStyle(
         foregroundColor: WidgetStateProperty.resolveWith<Color>((states) {
-          if (states.contains(WidgetState.hovered)) return Colors.white;
+          if (states.contains(WidgetState.hovered)) return context.colors.onPrimary;
           return color;
         }),
         backgroundColor: WidgetStateProperty.resolveWith<Color?>((states) {
@@ -442,9 +437,9 @@ class _ManageAssistantsScreenState extends State<ManageAssistantsScreen> {
           return null;
         }),
         side: WidgetStateProperty.all(BorderSide(color: color.withValues(alpha: 0.6))),
-        padding: WidgetStateProperty.all(const EdgeInsets.symmetric(horizontal: 10, vertical: 8)),
+        padding: WidgetStateProperty.all(const EdgeInsets.symmetric(horizontal: AppSpacing.s10, vertical: AppSpacing.s8)),
         minimumSize: WidgetStateProperty.all(const Size(0, 34)),
-        shape: WidgetStateProperty.all(RoundedRectangleBorder(borderRadius: BorderRadius.circular(10))),
+        shape: WidgetStateProperty.all(RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadius.r10))),
       ),
     );
   }
@@ -491,11 +486,11 @@ class _ManageAssistantsScreenState extends State<ManageAssistantsScreen> {
         ? Colors.blueGrey
         : (kind == TeamMemberKind.coAdmin ? Colors.teal : Colors.indigo);
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-      decoration: BoxDecoration(color: color.withValues(alpha: 0.12), borderRadius: BorderRadius.circular(10)),
+      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.s8, vertical: AppSpacing.s4),
+      decoration: BoxDecoration(color: color.withValues(alpha: AppAlpha.a10), borderRadius: BorderRadius.circular(AppRadius.r10)),
       child: Text(
         _kindLabel(kind),
-        style: TextStyle(color: color.shade700, fontSize: 11.5, fontWeight: FontWeight.w600),
+        style: TextStyle(color: color.shade700, fontSize: AppFontSize.f11_5, fontWeight: AppFontWeight.semibold),
       ),
     );
   }
@@ -505,8 +500,8 @@ class _ManageAssistantsScreenState extends State<ManageAssistantsScreen> {
       text,
       style: TextStyle(
         fontSize: strong ? 13 : 12.5,
-        fontWeight: strong ? FontWeight.w700 : FontWeight.w500,
-        color: strong ? primaryColor : Colors.grey[600],
+        fontWeight: strong ? AppFontWeight.bold : AppFontWeight.medium,
+        color: strong ? context.colors.primary : context.colors.textMuted,
       ),
     );
   }
@@ -534,14 +529,14 @@ class _ManageAssistantsScreenState extends State<ManageAssistantsScreen> {
           _actionButton(
             label: 'Deactivate',
             icon: Icons.pause_circle_outline,
-            color: Colors.orange,
+            color: context.colors.warning,
             onPressed: () => _confirmDeactivateCoAdmin(doc, data),
           ),
         if (bucket == UserStatus.deactivated.key)
           _actionButton(
             label: 'Reactivate',
             icon: Icons.play_circle_outline,
-            color: Colors.green,
+            color: context.colors.success,
             onPressed: () => _setCoAdminStatus(doc, data, UserStatus.active.key),
           ),
         if (bucket == UserStatus.pending.key) _note('Co-admin'),
@@ -561,13 +556,13 @@ class _ManageAssistantsScreenState extends State<ManageAssistantsScreen> {
           child: const Text(
             'They\'ll be signed out straight away and can\'t log in until you reactivate them. '
             'This doesn\'t change their role - only the platform administrator can do that.',
-            style: TextStyle(fontSize: 13),
+            style: TextStyle(fontSize: AppFontSize.f13),
           ),
         ),
         actions: [
           TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancel')),
           ElevatedButton(
-            style: ElevatedButton.styleFrom(backgroundColor: Colors.orange, foregroundColor: Colors.white),
+            style: ElevatedButton.styleFrom(backgroundColor: context.colors.warning, foregroundColor: context.colors.onPrimary),
             onPressed: () => Navigator.pop(ctx, true),
             child: const Text('Deactivate'),
           ),
@@ -605,14 +600,10 @@ class _ManageAssistantsScreenState extends State<ManageAssistantsScreen> {
           description: '${activating ? 'Reactivated' : 'Deactivated'} co-admin $name',
         );
       }
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('$name ${activating ? 'reactivated' : 'deactivated'}')),
-      );
-    } catch (e) {
+      AppFeedback.success('$name ${activating ? 'reactivated' : 'deactivated'}');
+    } catch (e, st) {
       debugPrint('Error updating co-admin status: $e');
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Failed to update status: $e')));
+      AppFeedback.error("Couldn't update the status", error: e, stackTrace: st);
     }
   }
 
@@ -640,9 +631,9 @@ class _ManageAssistantsScreenState extends State<ManageAssistantsScreen> {
   // Anything that isn't active or deactivated shows as pending - including an
   // unknown value, which fromKey reads as pending.
   Color _statusColor(String bucket) => switch (UserStatus.fromKey(bucket)) {
-        UserStatus.active => Colors.green,
-        UserStatus.deactivated => Colors.red,
-        UserStatus.pending || UserStatus.rejected => Colors.orange,
+        UserStatus.active => context.colors.success,
+        UserStatus.deactivated => context.colors.danger,
+        UserStatus.pending || UserStatus.rejected => context.colors.warning,
       };
 
   String _statusLabel(String bucket) => switch (UserStatus.fromKey(bucket)) {
@@ -667,7 +658,7 @@ class _ManageAssistantsScreenState extends State<ManageAssistantsScreen> {
         _actionButton(
           label: 'Approve',
           icon: Icons.check_circle_outline,
-          color: Colors.green,
+          color: context.colors.success,
           onPressed: () => _assistantAction(doc.id, data, 'approve'),
         ),
         // For someone you don't recognise. They're taken out of the facility
@@ -676,7 +667,7 @@ class _ManageAssistantsScreenState extends State<ManageAssistantsScreen> {
         _actionButton(
           label: 'Reject',
           icon: Icons.cancel_outlined,
-          color: Colors.red,
+          color: context.colors.danger,
           onPressed: () => _confirmReject(doc.id, data),
         ),
       ],
@@ -684,7 +675,7 @@ class _ManageAssistantsScreenState extends State<ManageAssistantsScreen> {
         _actionButton(
           label: 'Deactivate',
           icon: Icons.pause_circle_outline,
-          color: Colors.orange,
+          color: context.colors.warning,
           onPressed: () => _assistantAction(doc.id, data, 'deactivate'),
         ),
         _actionButton(
@@ -702,13 +693,13 @@ class _ManageAssistantsScreenState extends State<ManageAssistantsScreen> {
         _actionButton(
           label: 'Reactivate',
           icon: Icons.play_circle_outline,
-          color: Colors.green,
+          color: context.colors.success,
           onPressed: () => _assistantAction(doc.id, data, 'reactivate'),
         ),
         _actionButton(
           label: 'Remove from Facility',
           icon: Icons.person_remove_outlined,
-          color: Colors.grey[700]!,
+          color: context.colors.textSoft,
           onPressed: () => _confirmRemoveFromFacility(doc.id, data, facilityId),
         ),
       ],
@@ -728,11 +719,11 @@ class _ManageAssistantsScreenState extends State<ManageAssistantsScreen> {
     final ok = await showDialog<bool>(
       context: context,
       builder: (ctx) => Dialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadius.r16)),
         child: ConstrainedBox(
           constraints: const BoxConstraints(maxWidth: 440),
           child: Padding(
-            padding: const EdgeInsets.all(24),
+            padding: const EdgeInsets.all(AppSpacing.s24),
             child: Column(
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -742,37 +733,37 @@ class _ManageAssistantsScreenState extends State<ManageAssistantsScreen> {
                     Container(
                       width: 40,
                       height: 40,
-                      decoration: BoxDecoration(color: color.withValues(alpha: 0.12), shape: BoxShape.circle),
-                      child: Icon(icon, color: color, size: 22),
+                      decoration: BoxDecoration(color: color.withValues(alpha: AppAlpha.a10), shape: BoxShape.circle),
+                      child: Icon(icon, color: color, size: AppIconSize.i22),
                     ),
-                    const SizedBox(width: 12),
-                    Expanded(child: Text(title, style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w700))),
+                    const SizedBox(width: AppSpacing.s12),
+                    Expanded(child: Text(title, style: const TextStyle(fontSize: AppFontSize.f17, fontWeight: AppFontWeight.bold))),
                   ],
                 ),
-                const SizedBox(height: 16),
+                const SizedBox(height: AppSpacing.s16),
                 for (final p in points)
                   Padding(
-                    padding: const EdgeInsets.only(bottom: 10),
+                    padding: const EdgeInsets.only(bottom: AppSpacing.s10),
                     child: Row(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Padding(
-                          padding: const EdgeInsets.only(top: 7),
-                          child: Icon(Icons.circle, size: 6, color: Colors.grey[500]),
+                          padding: const EdgeInsets.only(top: AppSpacing.s6),
+                          child: Icon(Icons.circle, size: 6, color: context.colors.textHint),
                         ),
-                        const SizedBox(width: 10),
-                        Expanded(child: Text(p, style: const TextStyle(fontSize: 13.5, height: 1.4))),
+                        const SizedBox(width: AppSpacing.s10),
+                        Expanded(child: Text(p, style: const TextStyle(fontSize: AppFontSize.f13_5, height: 1.4))),
                       ],
                     ),
                   ),
-                const SizedBox(height: 8),
+                const SizedBox(height: AppSpacing.s8),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.end,
                   children: [
                     TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancel')),
-                    const SizedBox(width: 8),
+                    const SizedBox(width: AppSpacing.s8),
                     ElevatedButton(
-                      style: ElevatedButton.styleFrom(backgroundColor: color, foregroundColor: Colors.white),
+                      style: ElevatedButton.styleFrom(backgroundColor: color, foregroundColor: context.colors.onPrimary),
                       onPressed: () => Navigator.pop(ctx, true),
                       child: Text(confirmLabel),
                     ),
@@ -792,7 +783,7 @@ class _ManageAssistantsScreenState extends State<ManageAssistantsScreen> {
     final facility = facilityNames[facilityId] ?? 'your facility';
     final ok = await _confirm(
       icon: Icons.person_remove_outlined,
-      color: Colors.red,
+      color: context.colors.danger,
       title: 'Remove $name from $facility?',
       points: [
         "$name will no longer be part of $facility, and won't see its records.",
@@ -809,7 +800,7 @@ class _ManageAssistantsScreenState extends State<ManageAssistantsScreen> {
     final facility = facilityNames[_facilityIdOf(data)] ?? 'your facility';
     final ok = await _confirm(
       icon: Icons.cancel_outlined,
-      color: Colors.red,
+      color: context.colors.danger,
       title: 'Reject $name?',
       points: [
         '$name is removed from $facility and is no longer waiting for approval.',
@@ -832,18 +823,18 @@ class _ManageAssistantsScreenState extends State<ManageAssistantsScreen> {
   }
 
   PreferredSizeWidget _buildAppBar() {
-    final narrow = MediaQuery.of(context).size.width < 600;
+    final narrow = context.screenWidth < AppBreakpoints.compact;
     return AppBar(
-      backgroundColor: Colors.white,
-      foregroundColor: Colors.black87,
-      elevation: 1,
+      backgroundColor: context.colors.surface,
+      foregroundColor: context.colors.textPrimary,
+      elevation: AppElevation.e1,
       centerTitle: true,
       toolbarHeight: 72,
-      title: const Column(
+      title: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Text('Team Members', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 19, color: Colors.black87)),
-          Text("Manage your team's access and status", style: TextStyle(fontSize: 12, color: Colors.black54)),
+          Text('Team Members', style: TextStyle(fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f19, color: context.colors.textPrimary)),
+          Text("Manage your team's access and status", style: TextStyle(fontSize: AppFontSize.f12, color: context.colors.textSecondary)),
         ],
       ),
       actions: [
@@ -862,16 +853,16 @@ class _ManageAssistantsScreenState extends State<ManageAssistantsScreen> {
           )
         else
           Padding(
-            padding: const EdgeInsets.only(right: 12),
+            padding: const EdgeInsets.only(right: AppSpacing.s12),
             child: ElevatedButton.icon(
               onPressed: _startInviteFlow,
-              icon: const Icon(Icons.person_add_alt, size: 18),
+              icon: const Icon(Icons.person_add_alt, size: AppIconSize.i18),
               label: const Text('Invite Assistant'),
               style: ElevatedButton.styleFrom(
-                backgroundColor: primaryColor,
-                foregroundColor: backgroundColor,
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                backgroundColor: context.colors.primary,
+                foregroundColor: context.colors.background,
+                padding: const EdgeInsets.symmetric(horizontal: AppSpacing.s16, vertical: AppSpacing.s10),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadius.r8)),
               ),
             ),
           ),
@@ -883,14 +874,14 @@ class _ManageAssistantsScreenState extends State<ManageAssistantsScreen> {
   Widget build(BuildContext context) {
     if (adminUid.isEmpty) {
       return Scaffold(
-        backgroundColor: backgroundColor,
+        backgroundColor: context.colors.background,
         appBar: _buildAppBar(),
         body: const Center(child: Text('No logged in admin user found')),
       );
     }
 
     return Scaffold(
-      backgroundColor: backgroundColor,
+      backgroundColor: context.colors.background,
       appBar: _buildAppBar(),
       body: !_facilitiesLoaded
           ? _buildLoadingSkeleton()
@@ -900,10 +891,10 @@ class _ManageAssistantsScreenState extends State<ManageAssistantsScreen> {
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       FirestoreErrorView(error: _facilitiesError),
-                      const SizedBox(height: 12),
+                      const SizedBox(height: AppSpacing.s12),
                       OutlinedButton.icon(
                         onPressed: _fetchAdminFacilities,
-                        icon: const Icon(Icons.refresh, size: 18),
+                        icon: const Icon(Icons.refresh, size: AppIconSize.i18),
                         label: const Text('Try again'),
                       ),
                     ],

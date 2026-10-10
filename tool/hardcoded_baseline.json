@@ -13,7 +13,7 @@
       "lib/main.dart": 27,
       "lib/models/notification_model.dart": 13,
       "lib/screens/activity/activity_log_screen.dart": 32,
-      "lib/screens/admin/manage_assistants_screen.dart": 74,
+      "lib/screens/admin/manage_assistants_screen.dart": 47,
       "lib/screens/dashboard/dashboard_screen.dart": 111,
       "lib/screens/dashboard/insights_screen.dart": 28,
       "lib/screens/dashboard/notifications_screen.dart": 59,
@@ -60,7 +60,7 @@
     "R2": {
       "lib/main.dart": 11,
       "lib/screens/activity/activity_log_screen.dart": 10,
-      "lib/screens/admin/manage_assistants_screen.dart": 40,
+      "lib/screens/admin/manage_assistants_screen.dart": 29,
       "lib/screens/dashboard/dashboard_screen.dart": 40,
       "lib/screens/dashboard/insights_screen.dart": 18,
       "lib/screens/dashboard/notifications_screen.dart": 34,
@@ -108,7 +108,7 @@
     "R3": {
       "lib/main.dart": 6,
       "lib/screens/activity/activity_log_screen.dart": 6,
-      "lib/screens/admin/manage_assistants_screen.dart": 16,
+      "lib/screens/admin/manage_assistants_screen.dart": 9,
       "lib/screens/dashboard/dashboard_screen.dart": 25,
       "lib/screens/dashboard/insights_screen.dart": 6,
       "lib/screens/dashboard/notifications_screen.dart": 14,
@@ -152,7 +152,7 @@
     "R4": {
       "lib/main.dart": 33,
       "lib/screens/activity/activity_log_screen.dart": 22,
-      "lib/screens/admin/manage_assistants_screen.dart": 77,
+      "lib/screens/admin/manage_assistants_screen.dart": 56,
       "lib/screens/dashboard/dashboard_screen.dart": 99,
       "lib/screens/dashboard/insights_screen.dart": 19,
       "lib/screens/dashboard/notifications_screen.dart": 63,
@@ -229,7 +229,7 @@
     "R6": {},
     "R7": {
       "lib/screens/activity/activity_log_screen.dart": 1,
-      "lib/screens/admin/manage_assistants_screen.dart": 6,
+      "lib/screens/admin/manage_assistants_screen.dart": 5,
       "lib/screens/dashboard/dashboard_screen.dart": 4,
       "lib/screens/dashboard/insights_screen.dart": 1,
       "lib/screens/dashboard/notifications_screen.dart": 3,
@@ -341,7 +341,6 @@
     },
     "R11": {
       "lib/screens/activity/activity_log_screen.dart": 6,
-      "lib/screens/admin/manage_assistants_screen.dart": 24,
       "lib/screens/dashboard/dashboard_screen.dart": 15,
       "lib/screens/facilities/facility_screen.dart": 40,
       "lib/screens/login_screen.dart": 6,
