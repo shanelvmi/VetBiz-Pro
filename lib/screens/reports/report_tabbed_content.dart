@@ -3,9 +3,12 @@ import 'package:provider/provider.dart';
 
 import '../../models/daily_report.dart';
 import '../../providers/user_role_provider.dart';
-import '../../theme/app_palette.dart';
 import '../../config/money.dart';
 import '../../config/app_date_format.dart';
+import '../../theme/app_palette.dart';
+import '../../theme/app_text.dart';
+import '../../theme/app_dimens.dart';
+import '../../theme/theme_context.dart';
 
 /// The full tabbed report layout (Summary through Activity Log) -
 /// extracted as its own reusable widget since both the main "today's
@@ -56,14 +59,14 @@ class _ReportTabbedContentState extends State<ReportTabbedContent> with SingleTi
     return Column(
       children: [
         Material(
-          color: Colors.white,
+          color: context.colors.surface,
           child: TabBar(
             controller: _tabController,
             isScrollable: true,
-            labelColor: primaryDeepGreen,
-            unselectedLabelColor: Colors.grey[600],
-            indicatorColor: primaryDeepGreen,
-            labelStyle: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13),
+            labelColor: context.colors.primary,
+            unselectedLabelColor: context.colors.textMuted,
+            indicatorColor: context.colors.primary,
+            labelStyle: const TextStyle(fontWeight: AppFontWeight.semibold, fontSize: AppFontSize.f13),
             tabs: _tabTitles.map((t) => Tab(text: t)).toList(),
           ),
         ),
@@ -89,16 +92,16 @@ class _ReportTabbedContentState extends State<ReportTabbedContent> with SingleTi
   }
 
   Widget _tabScroll(List<Widget> children) {
-    return ListView(padding: const EdgeInsets.all(16), children: children);
+    return ListView(padding: const EdgeInsets.all(AppSpacing.s16), children: children);
   }
 
   Widget _card(Widget child) {
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(AppSpacing.s16),
       decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.grey.withValues(alpha: 0.2)),
+        color: context.colors.surface,
+        borderRadius: BorderRadius.circular(AppRadius.r12),
+        border: Border.all(color: context.colors.textHint.withValues(alpha: AppAlpha.a20)),
       ),
       child: child,
     );
@@ -107,23 +110,23 @@ class _ReportTabbedContentState extends State<ReportTabbedContent> with SingleTi
   Widget _sectionHeader(IconData icon, String title) {
     return Row(
       children: [
-        Icon(icon, size: 18, color: primaryDeepGreen),
-        const SizedBox(width: 8),
-        Text(title, style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15, color: primaryDeepGreen)),
+        Icon(icon, size: AppIconSize.i18, color: context.colors.primary),
+        const SizedBox(width: AppSpacing.s8),
+        Text(title, style: TextStyle(fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f15, color: context.colors.primary)),
       ],
     );
   }
 
   Widget _statRow(String label, String value, {bool bold = false, Color? valueColor}) {
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 3),
+      padding: const EdgeInsets.symmetric(vertical: AppSpacing.s3),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(label, style: TextStyle(fontSize: 13, color: Colors.grey[700])),
+          Text(label, style: TextStyle(fontSize: AppFontSize.f13, color: context.colors.textSoft)),
           Text(value,
               style: TextStyle(
-                  fontSize: 13, fontWeight: bold ? FontWeight.bold : FontWeight.w500, color: valueColor)),
+                  fontSize: AppFontSize.f13, fontWeight: bold ? AppFontWeight.bold : AppFontWeight.medium, color: valueColor)),
         ],
       ),
     );
@@ -131,13 +134,13 @@ class _ReportTabbedContentState extends State<ReportTabbedContent> with SingleTi
 
   Widget _tableHeaderRow(List<String> labels, List<int> flexes) {
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 8),
+      padding: const EdgeInsets.symmetric(vertical: AppSpacing.s8),
       child: Row(
         children: List.generate(labels.length, (i) {
           return Expanded(
             flex: flexes[i],
             child: Text(labels[i],
-                style: TextStyle(fontSize: 11.5, fontWeight: FontWeight.w700, color: Colors.grey[600])),
+                style: TextStyle(fontSize: AppFontSize.f11_5, fontWeight: AppFontWeight.bold, color: context.colors.textMuted)),
           );
         }),
       ),
@@ -146,8 +149,8 @@ class _ReportTabbedContentState extends State<ReportTabbedContent> with SingleTi
 
   Widget _emptyState(String message) {
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 32),
-      child: Center(child: Text(message, style: TextStyle(color: Colors.grey[500], fontSize: 13))),
+      padding: const EdgeInsets.symmetric(vertical: AppSpacing.s32),
+      child: Center(child: Text(message, style: TextStyle(color: context.colors.textHint, fontSize: AppFontSize.f13))),
     );
   }
 
@@ -163,22 +166,22 @@ class _ReportTabbedContentState extends State<ReportTabbedContent> with SingleTi
     // plain Row/Expanded instead, same as the count is fixed and
     // known ahead of time.
     final row1 = [
-      _summaryTile('Total Sales', Money.symbolDecimal(report.salesTotalValue), Icons.shopping_cart_outlined, Colors.blue),
-      _summaryTile('Service Revenue', Money.symbolDecimal(report.servicesTotalValue), Icons.medical_services_outlined, Colors.green),
+      _summaryTile('Total Sales', Money.symbolDecimal(report.salesTotalValue), Icons.shopping_cart_outlined, context.colors.info),
+      _summaryTile('Service Revenue', Money.symbolDecimal(report.servicesTotalValue), Icons.medical_services_outlined, context.colors.success),
       _summaryTile('Debt Repayments', Money.symbolDecimal(report.repaymentsValue), Icons.people_alt_outlined, Colors.purple),
-      _summaryTile('Expenses', Money.symbolDecimal(report.totalExpenses), Icons.receipt_long_outlined, Colors.red),
-      _summaryTile('Other Income', Money.symbolDecimal(report.totalOtherIncome), Icons.savings_outlined, primaryDeepGreen),
+      _summaryTile('Expenses', Money.symbolDecimal(report.totalExpenses), Icons.receipt_long_outlined, context.colors.danger),
+      _summaryTile('Other Income', Money.symbolDecimal(report.totalOtherIncome), Icons.savings_outlined, context.colors.primary),
     ];
     final row2 = [
-      _summaryTile('Outstanding New Debt', Money.symbolDecimal(report.newDebtValue), Icons.warning_amber_outlined, Colors.orange),
+      _summaryTile('Outstanding New Debt', Money.symbolDecimal(report.newDebtValue), Icons.warning_amber_outlined, context.colors.warning),
       _summaryTile('Transactions', '$transactionsCount', Icons.sync_alt_outlined, Colors.blueGrey),
       _summaryTile('Services Performed', '${report.servicesCount}', Icons.build_outlined, Colors.teal),
-      _summaryTile('Products Sold', '$productsSoldUnits units', Icons.inventory_2_outlined, warmAmber.withValues(alpha: 0.9)),
-      _summaryTile('Total Revenue Today', Money.symbolDecimal(revenue), Icons.trending_up_outlined, primaryDeepGreen),
+      _summaryTile('Products Sold', '$productsSoldUnits units', Icons.inventory_2_outlined, context.colors.accent.withValues(alpha: AppAlpha.a85)),
+      _summaryTile('Total Revenue Today', Money.symbolDecimal(revenue), Icons.trending_up_outlined, context.colors.primary),
     ];
 
     return Padding(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(AppSpacing.s16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -187,23 +190,23 @@ class _ReportTabbedContentState extends State<ReportTabbedContent> with SingleTi
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 _sectionHeader(Icons.dashboard_outlined, 'Daily Summary'),
-                const SizedBox(height: 14),
+                const SizedBox(height: AppSpacing.s14),
                 _tileRow(row1),
-                const SizedBox(height: 12),
+                const SizedBox(height: AppSpacing.s12),
                 _tileRow(row2),
               ],
             ),
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: AppSpacing.s16),
           Expanded(child: _summaryPreviewGrid()),
-          const SizedBox(height: 8),
+          const SizedBox(height: AppSpacing.s8),
           Text('Generated at ${AppDateFormat.dateNoPadTime12Short.format(report.generatedAt)} by ${report.generatedByName}',
-              style: TextStyle(fontSize: 11.5, color: Colors.grey[500])),
+              style: TextStyle(fontSize: AppFontSize.f11_5, color: context.colors.textHint)),
           if (report.submittedAt != null)
             Padding(
-              padding: const EdgeInsets.only(top: 4),
+              padding: const EdgeInsets.only(top: AppSpacing.s4),
               child: Text('Submitted at ${AppDateFormat.dateNoPadTime12Short.format(report.submittedAt!)}',
-                  style: TextStyle(fontSize: 11.5, color: Colors.grey[500])),
+                  style: TextStyle(fontSize: AppFontSize.f11_5, color: context.colors.textHint)),
             ),
         ],
       ),
@@ -214,7 +217,7 @@ class _ReportTabbedContentState extends State<ReportTabbedContent> with SingleTi
     return Row(
       children: [
         for (var i = 0; i < tiles.length; i++) ...[
-          if (i > 0) const SizedBox(width: 10),
+          if (i > 0) const SizedBox(width: AppSpacing.s10),
           Expanded(child: tiles[i]),
         ],
       ],
@@ -238,18 +241,18 @@ class _ReportTabbedContentState extends State<ReportTabbedContent> with SingleTi
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               Expanded(child: _salesPreviewCard()),
-              const SizedBox(width: 16),
+              const SizedBox(width: AppSpacing.s16),
               Expanded(child: _servicesPreviewCard()),
             ],
           ),
         ),
-        const SizedBox(height: 16),
+        const SizedBox(height: AppSpacing.s16),
         Expanded(
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               Expanded(child: _productsPreviewCard()),
-              const SizedBox(width: 16),
+              const SizedBox(width: AppSpacing.s16),
               Expanded(child: _debtPreviewCard()),
             ],
           ),
@@ -274,11 +277,11 @@ class _ReportTabbedContentState extends State<ReportTabbedContent> with SingleTi
               _sectionHeader(icon, title),
               InkWell(
                 onTap: onViewAll,
-                child: Text('View all', style: TextStyle(fontSize: 12, color: primaryDeepGreen, fontWeight: FontWeight.w600)),
+                child: Text('View all', style: TextStyle(fontSize: AppFontSize.f12, color: context.colors.primary, fontWeight: AppFontWeight.semibold)),
               ),
             ],
           ),
-          const SizedBox(height: 10),
+          const SizedBox(height: AppSpacing.s10),
           Expanded(child: SingleChildScrollView(child: content)),
         ],
       ),
@@ -297,12 +300,12 @@ class _ReportTabbedContentState extends State<ReportTabbedContent> with SingleTi
               children: [
                 for (final s in preview)
                   Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 4),
+                    padding: const EdgeInsets.symmetric(vertical: AppSpacing.s4),
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Expanded(child: Text(s.customerName, style: const TextStyle(fontSize: 12.5), overflow: TextOverflow.ellipsis)),
-                        Text(Money.symbolDecimal(s.amount), style: const TextStyle(fontSize: 12.5, fontWeight: FontWeight.w600)),
+                        Expanded(child: Text(s.customerName, style: const TextStyle(fontSize: AppFontSize.f12_5), overflow: TextOverflow.ellipsis)),
+                        Text(Money.symbolDecimal(s.amount), style: const TextStyle(fontSize: AppFontSize.f12_5, fontWeight: AppFontWeight.semibold)),
                       ],
                     ),
                   ),
@@ -323,12 +326,12 @@ class _ReportTabbedContentState extends State<ReportTabbedContent> with SingleTi
               children: [
                 for (final s in preview)
                   Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 4),
+                    padding: const EdgeInsets.symmetric(vertical: AppSpacing.s4),
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Expanded(child: Text(s.serviceName, style: const TextStyle(fontSize: 12.5), overflow: TextOverflow.ellipsis)),
-                        Text(Money.symbolDecimal(s.revenue), style: const TextStyle(fontSize: 12.5, fontWeight: FontWeight.w600)),
+                        Expanded(child: Text(s.serviceName, style: const TextStyle(fontSize: AppFontSize.f12_5), overflow: TextOverflow.ellipsis)),
+                        Text(Money.symbolDecimal(s.revenue), style: const TextStyle(fontSize: AppFontSize.f12_5, fontWeight: AppFontWeight.semibold)),
                       ],
                     ),
                   ),
@@ -349,12 +352,12 @@ class _ReportTabbedContentState extends State<ReportTabbedContent> with SingleTi
               children: [
                 for (final p in preview)
                   Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 4),
+                    padding: const EdgeInsets.symmetric(vertical: AppSpacing.s4),
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Expanded(child: Text(p.name, style: const TextStyle(fontSize: 12.5), overflow: TextOverflow.ellipsis)),
-                        Text('Sold: ${p.sold}', style: const TextStyle(fontSize: 12.5, fontWeight: FontWeight.w600)),
+                        Expanded(child: Text(p.name, style: const TextStyle(fontSize: AppFontSize.f12_5), overflow: TextOverflow.ellipsis)),
+                        Text('Sold: ${p.sold}', style: const TextStyle(fontSize: AppFontSize.f12_5, fontWeight: AppFontWeight.semibold)),
                       ],
                     ),
                   ),
@@ -375,12 +378,12 @@ class _ReportTabbedContentState extends State<ReportTabbedContent> with SingleTi
               children: [
                 for (final c in preview)
                   Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 4),
+                    padding: const EdgeInsets.symmetric(vertical: AppSpacing.s4),
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Expanded(child: Text(c.clientName, style: const TextStyle(fontSize: 12.5), overflow: TextOverflow.ellipsis)),
-                        Text(Money.symbolDecimal(c.closingDebt), style: const TextStyle(fontSize: 12.5, fontWeight: FontWeight.w600)),
+                        Expanded(child: Text(c.clientName, style: const TextStyle(fontSize: AppFontSize.f12_5), overflow: TextOverflow.ellipsis)),
+                        Text(Money.symbolDecimal(c.closingDebt), style: const TextStyle(fontSize: AppFontSize.f12_5, fontWeight: AppFontWeight.semibold)),
                       ],
                     ),
                   ),
@@ -391,23 +394,23 @@ class _ReportTabbedContentState extends State<ReportTabbedContent> with SingleTi
 
   Widget _summaryTile(String label, String value, IconData icon, Color color) {
     return Container(
-      padding: const EdgeInsets.all(12),
+      padding: const EdgeInsets.all(AppSpacing.s12),
       decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.06),
-        borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: color.withValues(alpha: 0.2)),
+        color: color.withValues(alpha: AppAlpha.a05),
+        borderRadius: BorderRadius.circular(AppRadius.r10),
+        border: Border.all(color: color.withValues(alpha: AppAlpha.a20)),
       ),
       child: Row(
         children: [
-          Icon(icon, size: 20, color: color),
-          const SizedBox(width: 10),
+          Icon(icon, size: AppIconSize.i20, color: color),
+          const SizedBox(width: AppSpacing.s10),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(label, style: TextStyle(fontSize: 11, color: Colors.grey[700])),
-                const SizedBox(height: 2),
-                Text(value, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold)),
+                Text(label, style: TextStyle(fontSize: AppFontSize.f11, color: context.colors.textSoft)),
+                const SizedBox(height: AppSpacing.s2),
+                Text(value, style: const TextStyle(fontSize: AppFontSize.f14, fontWeight: AppFontWeight.bold)),
               ],
             ),
           ),
@@ -425,7 +428,7 @@ class _ReportTabbedContentState extends State<ReportTabbedContent> with SingleTi
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             _sectionHeader(Icons.shopping_cart_outlined, 'Sales'),
-            const SizedBox(height: 8),
+            const SizedBox(height: AppSpacing.s8),
             if (report.salesLineItems.isEmpty)
               _emptyState('No sales recorded today.')
             else ...[
@@ -433,33 +436,33 @@ class _ReportTabbedContentState extends State<ReportTabbedContent> with SingleTi
               const Divider(height: 1),
               for (final s in report.salesLineItems)
                 Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 8),
+                  padding: const EdgeInsets.symmetric(vertical: AppSpacing.s8),
                   child: Row(
                     children: [
-                      Expanded(flex: 2, child: Text(AppDateFormat.time24.format(s.time), style: const TextStyle(fontSize: 12.5))),
-                      Expanded(flex: 2, child: Text(s.receiptNo, style: const TextStyle(fontSize: 12.5))),
-                      Expanded(flex: 3, child: Text(s.customerName, style: const TextStyle(fontSize: 12.5))),
-                      Expanded(flex: 1, child: Text('${s.itemCount}', style: const TextStyle(fontSize: 12.5))),
-                      Expanded(flex: 2, child: Text(Money.decimal(s.amount), style: const TextStyle(fontSize: 12.5, fontWeight: FontWeight.w600))),
-                      Expanded(flex: 2, child: Text(s.paymentMethod, style: const TextStyle(fontSize: 12.5))),
+                      Expanded(flex: 2, child: Text(AppDateFormat.time24.format(s.time), style: const TextStyle(fontSize: AppFontSize.f12_5))),
+                      Expanded(flex: 2, child: Text(s.receiptNo, style: const TextStyle(fontSize: AppFontSize.f12_5))),
+                      Expanded(flex: 3, child: Text(s.customerName, style: const TextStyle(fontSize: AppFontSize.f12_5))),
+                      Expanded(flex: 1, child: Text('${s.itemCount}', style: const TextStyle(fontSize: AppFontSize.f12_5))),
+                      Expanded(flex: 2, child: Text(Money.decimal(s.amount), style: const TextStyle(fontSize: AppFontSize.f12_5, fontWeight: AppFontWeight.semibold))),
+                      Expanded(flex: 2, child: Text(s.paymentMethod, style: const TextStyle(fontSize: AppFontSize.f12_5))),
                     ],
                   ),
                 ),
               const Divider(height: 1),
-              const SizedBox(height: 8),
+              const SizedBox(height: AppSpacing.s8),
               _statRow('Total Sales', Money.symbolDecimal(report.salesTotalValue), bold: true),
             ],
           ],
         ),
       ),
       if (report.salesByPaymentMethod.isNotEmpty) ...[
-        const SizedBox(height: 16),
+        const SizedBox(height: AppSpacing.s16),
         _card(
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               _sectionHeader(Icons.credit_card_outlined, 'Payment Methods'),
-              const SizedBox(height: 8),
+              const SizedBox(height: AppSpacing.s8),
               for (final e in report.salesByPaymentMethod.entries)
                 _statRow(e.key, Money.symbolDecimal(e.value)),
             ],
@@ -478,7 +481,7 @@ class _ReportTabbedContentState extends State<ReportTabbedContent> with SingleTi
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             _sectionHeader(Icons.medical_services_outlined, 'Veterinary Services'),
-            const SizedBox(height: 8),
+            const SizedBox(height: AppSpacing.s8),
             if (report.serviceBreakdown.isEmpty)
               _emptyState('No services provided today.')
             else ...[
@@ -486,17 +489,17 @@ class _ReportTabbedContentState extends State<ReportTabbedContent> with SingleTi
               const Divider(height: 1),
               for (final s in report.serviceBreakdown)
                 Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 8),
+                  padding: const EdgeInsets.symmetric(vertical: AppSpacing.s8),
                   child: Row(
                     children: [
-                      Expanded(flex: 4, child: Text(s.serviceName, style: const TextStyle(fontSize: 13))),
-                      Expanded(flex: 2, child: Text('${s.count}', style: const TextStyle(fontSize: 13))),
-                      Expanded(flex: 2, child: Text(Money.symbolDecimal(s.revenue), style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600))),
+                      Expanded(flex: 4, child: Text(s.serviceName, style: const TextStyle(fontSize: AppFontSize.f13))),
+                      Expanded(flex: 2, child: Text('${s.count}', style: const TextStyle(fontSize: AppFontSize.f13))),
+                      Expanded(flex: 2, child: Text(Money.symbolDecimal(s.revenue), style: const TextStyle(fontSize: AppFontSize.f13, fontWeight: AppFontWeight.semibold))),
                     ],
                   ),
                 ),
               const Divider(height: 1),
-              const SizedBox(height: 8),
+              const SizedBox(height: AppSpacing.s8),
               _statRow('Total Service Revenue', Money.symbolDecimal(report.servicesTotalValue), bold: true),
             ],
           ],
