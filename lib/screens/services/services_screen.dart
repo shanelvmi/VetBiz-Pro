@@ -16,13 +16,17 @@ import 'add_edit_service_screen.dart';
 import 'services_archive_screen.dart';
 import 'service_receipt_preview_screen.dart';
 import '../../utils/subscription_guard.dart';
-import '../../theme/app_palette.dart';
 import '../../data/collections.dart';
 import '../../config/money.dart';
 import '../../config/app_timeouts.dart';
 import '../../config/app_ranges.dart';
 import '../../config/payment_methods.dart';
 import '../../config/app_date_format.dart';
+import '../../theme/app_palette.dart';
+import '../../theme/app_text.dart';
+import '../../theme/app_dimens.dart';
+import '../../theme/theme_context.dart';
+import '../../theme/app_breakpoints.dart';
 
 class ServicesScreen extends StatefulWidget {
   const ServicesScreen({super.key});
@@ -174,9 +178,9 @@ class _ServicesScreenState extends State<ServicesScreen> {
   }
 
   Color _statusColor(double paid, double total) {
-    if (paid >= total) return Colors.green;
-    if (paid > 0) return Colors.orange;
-    return Colors.red;
+    if (paid >= total) return context.colors.success;
+    if (paid > 0) return context.colors.warning;
+    return context.colors.danger;
   }
 
   @override
@@ -187,7 +191,7 @@ class _ServicesScreenState extends State<ServicesScreen> {
     final timeOnlyFormatter = AppDateFormat.time12;
 
     return Scaffold(
-      backgroundColor: offWhite,
+      backgroundColor: context.colors.background,
       appBar: _buildAppBar(),
       body: Row(
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -196,18 +200,18 @@ class _ServicesScreenState extends State<ServicesScreen> {
             child: Column(
               children: [
                 Padding(
-                  padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
+                  padding: const EdgeInsets.fromLTRB(AppSpacing.s16, AppSpacing.s16, AppSpacing.s16, 0),
                   child: Row(
                     crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
                       Expanded(child: _buildMetricsRow()),
-                      const SizedBox(width: 12),
+                      const SizedBox(width: AppSpacing.s12),
                       _buildArchiveButton(),
                     ],
                   ),
                 ),
                 Padding(
-                  padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+                  padding: const EdgeInsets.fromLTRB(AppSpacing.s16, AppSpacing.s12, AppSpacing.s16, 0),
                   child: _buildFiltersToolbar(),
                 ),
                 Expanded(
@@ -221,17 +225,17 @@ class _ServicesScreenState extends State<ServicesScreen> {
                           if (controller.newRecordsAvailable > 0)
                             Container(
                               width: double.infinity,
-                              color: primaryDeepGreen.withValues(alpha: 0.08),
-                              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                              color: context.colors.primary.withValues(alpha: AppAlpha.a10),
+                              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.s16, vertical: AppSpacing.s8),
                               child: Row(
                                 children: [
-                                  Icon(Icons.fiber_new, size: 18, color: primaryDeepGreen),
-                                  const SizedBox(width: 8),
+                                  Icon(Icons.fiber_new, size: AppIconSize.i18, color: context.colors.primary),
+                                  const SizedBox(width: AppSpacing.s8),
                                   Expanded(
                                     child: Text(
                                       '${controller.newRecordsAvailable} new service'
                                       '${controller.newRecordsAvailable == 1 ? '' : 's'} available',
-                                      style: TextStyle(fontSize: 13, color: primaryDeepGreen),
+                                      style: TextStyle(fontSize: AppFontSize.f13, color: context.colors.primary),
                                     ),
                                   ),
                                   TextButton(
@@ -251,11 +255,11 @@ class _ServicesScreenState extends State<ServicesScreen> {
                                         child: Column(
                                           mainAxisAlignment: MainAxisAlignment.center,
                                           children: [
-                                            Icon(Icons.medical_services_outlined, size: 64, color: Colors.grey[400]),
-                                            const SizedBox(height: 16),
+                                            Icon(Icons.medical_services_outlined, size: AppIconSize.i64, color: context.colors.textDisabled),
+                                            const SizedBox(height: AppSpacing.s16),
                                             Text(
                                               _searchQuery.isEmpty ? 'No services yet' : 'No services match your filters',
-                                              style: TextStyle(fontSize: 18, color: Colors.grey[600]),
+                                              style: TextStyle(fontSize: AppFontSize.f18, color: context.colors.textMuted),
                                             ),
                                           ],
                                         ),
@@ -295,23 +299,23 @@ class _ServicesScreenState extends State<ServicesScreen> {
     final nonCashAmount = summary?['nonCashAmount'] ?? 0.0;
 
     final metrics = [
-      ('Total Services', '$count', Icons.medical_services_outlined, primaryDeepGreen),
-      ('Paid Amount', Money.format(paidAmount), Icons.account_balance_wallet_outlined, Colors.blue),
-      ('Outstanding', Money.format(outstanding), Icons.pending_actions_outlined, warmAmber),
-      ('Digital Payments', Money.format(nonCashAmount), Icons.phone_iphone_outlined, Colors.green),
+      ('Total Services', '$count', Icons.medical_services_outlined, context.colors.primary),
+      ('Paid Amount', Money.format(paidAmount), Icons.account_balance_wallet_outlined, context.colors.info),
+      ('Outstanding', Money.format(outstanding), Icons.pending_actions_outlined, context.colors.accent),
+      ('Digital Payments', Money.format(nonCashAmount), Icons.phone_iphone_outlined, context.colors.success),
     ];
 
     return LayoutBuilder(
       builder: (context, constraints) {
-        final isNarrow = constraints.maxWidth < 600;
+        final isNarrow = constraints.maxWidth < AppBreakpoints.compact;
         return GridView.builder(
           shrinkWrap: true,
           physics: const NeverScrollableScrollPhysics(),
           gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
             crossAxisCount: isNarrow ? 2 : 4,
             mainAxisExtent: 90,
-            crossAxisSpacing: 12,
-            mainAxisSpacing: 12,
+            crossAxisSpacing: AppSpacing.s12,
+            mainAxisSpacing: AppSpacing.s12,
           ),
           itemCount: metrics.length,
           itemBuilder: (context, index) {
@@ -325,13 +329,13 @@ class _ServicesScreenState extends State<ServicesScreen> {
 
   Widget _metricCard(String label, String value, IconData icon, Color color, bool isLoading) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.s12, vertical: AppSpacing.s10),
       decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.grey.withValues(alpha: 0.15)),
+        color: context.colors.surface,
+        borderRadius: BorderRadius.circular(AppRadius.r12),
+        border: Border.all(color: context.colors.textHint.withValues(alpha: AppAlpha.a15)),
         boxShadow: [
-          BoxShadow(color: Colors.black.withValues(alpha: 0.03), blurRadius: 6, offset: const Offset(0, 2)),
+          BoxShadow(color: context.colors.shadow.withValues(alpha: AppAlpha.a05), blurRadius: 6, offset: const Offset(0, 2)),
         ],
       ),
       child: FittedBox(
@@ -347,22 +351,22 @@ class _ServicesScreenState extends State<ServicesScreen> {
                   width: 26,
                   height: 26,
                   decoration:
-                      BoxDecoration(color: color.withValues(alpha: 0.12), borderRadius: BorderRadius.circular(7)),
-                  child: Icon(icon, color: color, size: 14),
+                      BoxDecoration(color: color.withValues(alpha: AppAlpha.a10), borderRadius: BorderRadius.circular(AppRadius.r7)),
+                  child: Icon(icon, color: color, size: AppIconSize.i14),
                 ),
-                const SizedBox(width: 8),
+                const SizedBox(width: AppSpacing.s8),
                 isLoading
                     ? const SizedBox(
                         width: 14,
                         height: 14,
                         child: CircularProgressIndicator(strokeWidth: 2),
                       )
-                    : Text(value, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                    : Text(value, style: const TextStyle(fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f16)),
               ],
             ),
-            const SizedBox(height: 4),
-            Text(label, style: TextStyle(fontSize: 11.5, color: Colors.grey[600])),
-            Text('Last 30 days', style: TextStyle(fontSize: 10.5, color: Colors.grey[400])),
+            const SizedBox(height: AppSpacing.s4),
+            Text(label, style: TextStyle(fontSize: AppFontSize.f11_5, color: context.colors.textMuted)),
+            Text('Last 30 days', style: TextStyle(fontSize: AppFontSize.f10_5, color: context.colors.textDisabled)),
           ],
         ),
       ),
@@ -371,21 +375,21 @@ class _ServicesScreenState extends State<ServicesScreen> {
 
   PreferredSizeWidget _buildAppBar() {
     return AppBar(
-      backgroundColor: Colors.white,
-      foregroundColor: Colors.black87,
-      elevation: 1,
+      backgroundColor: context.colors.surface,
+      foregroundColor: context.colors.textPrimary,
+      elevation: AppElevation.e1,
       centerTitle: true,
       toolbarHeight: 72,
-      title: const Column(
+      title: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Text('Service Records', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 19, color: Colors.black87)),
-          Text('Track all services provided to your clients', style: TextStyle(fontSize: 12, color: Colors.black54)),
+          Text('Service Records', style: TextStyle(fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f19, color: context.colors.textPrimary)),
+          Text('Track all services provided to your clients', style: TextStyle(fontSize: AppFontSize.f12, color: context.colors.textSecondary)),
         ],
       ),
       actions: [
         Padding(
-          padding: const EdgeInsets.only(right: 12),
+          padding: const EdgeInsets.only(right: AppSpacing.s12),
           child: ElevatedButton.icon(
             onPressed: () => navigateOrShowLockedDialog(
               context,
@@ -395,13 +399,13 @@ class _ServicesScreenState extends State<ServicesScreen> {
                 if (mounted) _openServicesListSession(forceRefresh: true);
               },
             ),
-            icon: const Icon(Icons.add, size: 18),
+            icon: const Icon(Icons.add, size: AppIconSize.i18),
             label: const Text('Record Visit'),
             style: ElevatedButton.styleFrom(
-              backgroundColor: primaryDeepGreen,
-              foregroundColor: offWhite,
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+              backgroundColor: context.colors.primary,
+              foregroundColor: context.colors.background,
+              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.s16, vertical: AppSpacing.s10),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadius.r8)),
             ),
           ),
         ),
@@ -416,11 +420,11 @@ class _ServicesScreenState extends State<ServicesScreen> {
       onPressed: () {
         Navigator.push(context, MaterialPageRoute(builder: (_) => const ServicesArchiveScreen()));
       },
-      icon: const Icon(Icons.archive_outlined, size: 16),
+      icon: const Icon(Icons.archive_outlined, size: AppIconSize.i16),
       label: const Text('Archive'),
       style: OutlinedButton.styleFrom(
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-        side: BorderSide(color: Colors.grey.withValues(alpha: 0.3)),
+        padding: const EdgeInsets.symmetric(horizontal: AppSpacing.s14, vertical: AppSpacing.s12),
+        side: BorderSide(color: context.colors.textHint.withValues(alpha: AppAlpha.a30)),
       ),
     );
   }
@@ -432,8 +436,8 @@ class _ServicesScreenState extends State<ServicesScreen> {
 
   Widget _buildFiltersToolbar() {
     final border = OutlineInputBorder(
-      borderRadius: BorderRadius.circular(10),
-      borderSide: BorderSide(color: Colors.grey.withValues(alpha: 0.3)),
+      borderRadius: BorderRadius.circular(AppRadius.r10),
+      borderSide: BorderSide(color: context.colors.textHint.withValues(alpha: AppAlpha.a30)),
     );
     final hasActiveFilters =
         _searchQuery.isNotEmpty || _selectedCategory != 'All' || _dateFilter != 'Last 30 days' || _statusFilter != 'All';
@@ -446,18 +450,18 @@ class _ServicesScreenState extends State<ServicesScreen> {
             controller: _searchController,
             decoration: InputDecoration(
               hintText: 'Search service by client, category, note...',
-              hintStyle: const TextStyle(fontSize: 13),
-              prefixIcon: const Icon(Icons.search, size: 20),
+              hintStyle: const TextStyle(fontSize: AppFontSize.f13),
+              prefixIcon: const Icon(Icons.search, size: AppIconSize.i20),
               filled: true,
-              fillColor: Colors.white,
+              fillColor: context.colors.surface,
               isDense: true,
-              contentPadding: const EdgeInsets.symmetric(vertical: 12, horizontal: 12),
+              contentPadding: const EdgeInsets.symmetric(vertical: AppSpacing.s12, horizontal: AppSpacing.s12),
               border: border,
               enabledBorder: border,
               suffixIcon: _searchController.text.isEmpty
                   ? null
                   : IconButton(
-                      icon: const Icon(Icons.clear, size: 18),
+                      icon: const Icon(Icons.clear, size: AppIconSize.i18),
                       onPressed: () {
                         _searchDebounce?.cancel();
                         setState(() => _searchQuery = '');
@@ -473,7 +477,7 @@ class _ServicesScreenState extends State<ServicesScreen> {
             },
           ),
         ),
-        const SizedBox(width: 10),
+        const SizedBox(width: AppSpacing.s10),
         _toolbarDropdown<String>(
           value: _dateFilter,
           items: _dateFilterOptions,
@@ -483,7 +487,7 @@ class _ServicesScreenState extends State<ServicesScreen> {
             _openServicesListSession();
           },
         ),
-        const SizedBox(width: 10),
+        const SizedBox(width: AppSpacing.s10),
         _toolbarDropdown<String>(
           value: _selectedCategory,
           items: ['All', ...kServiceCategories],
@@ -493,7 +497,7 @@ class _ServicesScreenState extends State<ServicesScreen> {
             _openServicesListSession();
           },
         ),
-        const SizedBox(width: 10),
+        const SizedBox(width: AppSpacing.s10),
         _toolbarDropdown<String>(
           value: _statusFilter,
           items: _statusFilterOptions,
