@@ -13,6 +13,8 @@ import '../../services/receipt_printer_service.dart';
 import '../../services/receipt_pdf_service.dart';
 import '../settings/printer_settings_screen.dart';
 import '../../utils/web_download.dart';
+// The receipt's brand green and amber are fixed colours, not the theme's:
+// the preview matches the printed receipt (PdfPalette.brand, .amber).
 import '../../theme/app_palette.dart';
 import '../../theme/pdf_palette.dart';
 import '../../config/money.dart';
@@ -20,6 +22,11 @@ import '../../config/app_rules.dart';
 import '../../config/payment_methods.dart';
 import '../../config/app_date_format.dart';
 import '../../config/app_info.dart';
+import '../../theme/app_text.dart';
+import '../../theme/app_dimens.dart';
+import '../../theme/theme_context.dart';
+import '../../theme/app_breakpoints.dart';
+import '../../ui/feedback/app_feedback.dart';
 
 /// Shows the receipt as it will actually look before doing anything with
 /// it - a real preview, not a blind print. From here it can be shared or
@@ -35,7 +42,6 @@ class ReceiptPreviewScreen extends StatefulWidget {
 }
 
 class _ReceiptPreviewScreenState extends State<ReceiptPreviewScreen> {
-  static const Color primaryColor = AppPalette.primary;
   final GlobalKey _receiptKey = GlobalKey();
 
   bool _isSharing = false;
@@ -107,13 +113,9 @@ class _ReceiptPreviewScreenState extends State<ReceiptPreviewScreen> {
         return;
       }
       debugPrint('Share receipt failed: ${e.runtimeType} - $e\n$stack');
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: SelectableText('Could not share receipt: $e', style: const TextStyle(color: Colors.white)),
-          backgroundColor: Colors.redAccent,
-          duration: const Duration(seconds: 10),
-        ),
-      );
+      // The raw error used to be shown as selectable text for 10 s; it is
+      // now behind Details (owner's rule: no inline raw error text).
+      AppFeedback.error("Couldn't share the receipt", error: e, stackTrace: stack);
     } finally {
       if (mounted) setState(() => _isSharing = false);
     }
@@ -157,18 +159,13 @@ class _ReceiptPreviewScreenState extends State<ReceiptPreviewScreen> {
       }
 
       final success = await printerService.printSaleReceipt(widget.sale);
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(success ? 'Receipt sent to printer' : 'Printer did not accept the receipt'),
-          backgroundColor: success ? Colors.green : Colors.redAccent,
-        ),
-      );
-    } catch (e) {
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Print failed: $e'), backgroundColor: Colors.redAccent),
-      );
+      if (success) {
+        AppFeedback.success('Receipt sent to printer');
+      } else {
+        AppFeedback.error("Couldn't print the receipt", detail: 'The printer did not accept it');
+      }
+    } catch (e, st) {
+      AppFeedback.error("Couldn't print the receipt", error: e, stackTrace: st);
     } finally {
       if (mounted) setState(() => _isPrinting = false);
     }
@@ -196,11 +193,8 @@ class _ReceiptPreviewScreenState extends State<ReceiptPreviewScreen> {
         facilityTagline: facility?['tagline'],
         facilityTin: facility?['tin'],
       );
-    } catch (e) {
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Could not generate PDF: $e'), backgroundColor: Colors.redAccent),
-      );
+    } catch (e, st) {
+      AppFeedback.error("Couldn't generate the PDF", error: e, stackTrace: st);
     } finally {
       if (mounted) {
         setState(() {
@@ -228,22 +222,22 @@ class _ReceiptPreviewScreenState extends State<ReceiptPreviewScreen> {
     final statusText = balance > 0
         ? (sale.totalPaid > 0 ? 'Partially Paid' : 'Balance Due')
         : 'Paid in Full';
-    final statusColor = balance > 0 ? Colors.red : Colors.green;
+    final statusColor = balance > 0 ? context.colors.danger : context.colors.success;
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF2F4F4),
+      backgroundColor: context.colors.surfaceMuted,
       appBar: AppBar(
         title: const Text('Receipt Preview'),
         centerTitle: true,
-        backgroundColor: primaryColor,
-        foregroundColor: Colors.white,
+        backgroundColor: context.colors.primary,
+        foregroundColor: context.colors.onPrimary,
       ),
       body: LayoutBuilder(
         builder: (context, constraints) {
-          final isWide = constraints.maxWidth >= 900;
+          final isWide = constraints.maxWidth >= AppBreakpoints.medium;
           final thermalReceipt = Center(
             child: SingleChildScrollView(
-              padding: const EdgeInsets.all(24),
+              padding: const EdgeInsets.all(AppSpacing.s24),
               child: RepaintBoundary(
                 key: _receiptKey,
                 child: _buildReceiptCard(
@@ -271,7 +265,7 @@ class _ReceiptPreviewScreenState extends State<ReceiptPreviewScreen> {
           // one consistent way to trigger them, for both formats.
           final receipt = _selectedFormat == 'a4'
               ? Padding(
-                  padding: const EdgeInsets.all(24),
+                  padding: const EdgeInsets.all(AppSpacing.s24),
                   child: PdfPreview(
                     build: (format) => ReceiptPdfService.buildSaleBytes(
                       sale,
@@ -339,11 +333,11 @@ class _ReceiptPreviewScreenState extends State<ReceiptPreviewScreen> {
   Widget _buildFormatSidebar() {
     Widget miniLine(double widthFraction, {bool dark = false}) {
       return Padding(
-        padding: const EdgeInsets.symmetric(vertical: 1.5),
+        padding: const EdgeInsets.symmetric(vertical: AppSpacing.s2),
         child: FractionallySizedBox(
           widthFactor: widthFraction,
           alignment: Alignment.centerLeft,
-          child: Container(height: 2.5, color: dark ? Colors.grey[500] : Colors.grey[300]),
+          child: Container(height: 2.5, color: dark ? context.colors.textHint : context.colors.border),
         ),
       );
     }
@@ -352,26 +346,26 @@ class _ReceiptPreviewScreenState extends State<ReceiptPreviewScreen> {
       return Container(
         width: isThermal ? 68 : 98,
         height: 100,
-        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+        padding: const EdgeInsets.symmetric(horizontal: AppSpacing.s8, vertical: AppSpacing.s8),
         decoration: BoxDecoration(
-          color: Colors.white,
-          border: Border.all(color: Colors.grey.withValues(alpha: 0.2)),
+          color: context.colors.surface,
+          border: Border.all(color: context.colors.textHint.withValues(alpha: AppAlpha.a20)),
         ),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.start,
           children: [
-            Icon(Icons.storefront_outlined, size: 12, color: selected ? primaryColor : Colors.grey[400]),
-            const SizedBox(height: 4),
+            Icon(Icons.storefront_outlined, size: AppIconSize.i12, color: selected ? context.colors.primary : context.colors.textDisabled),
+            const SizedBox(height: AppSpacing.s4),
             miniLine(0.8, dark: true),
-            const SizedBox(height: 4),
+            const SizedBox(height: AppSpacing.s4),
             miniLine(1.0),
             miniLine(0.6),
             miniLine(0.9),
-            const SizedBox(height: 5),
+            const SizedBox(height: AppSpacing.s4),
             miniLine(1.0),
             miniLine(1.0),
             miniLine(0.7),
-            const SizedBox(height: 5),
+            const SizedBox(height: AppSpacing.s4),
             miniLine(0.8, dark: true),
           ],
         ),
@@ -381,28 +375,28 @@ class _ReceiptPreviewScreenState extends State<ReceiptPreviewScreen> {
     Widget thumbnail({required String formatKey, required bool isThermal, required String label}) {
       final selected = _selectedFormat == formatKey;
       return Padding(
-        padding: const EdgeInsets.only(bottom: 16),
+        padding: const EdgeInsets.only(bottom: AppSpacing.s16),
         child: InkWell(
           onTap: () => setState(() => _selectedFormat = formatKey),
-          borderRadius: BorderRadius.circular(8),
+          borderRadius: BorderRadius.circular(AppRadius.r8),
           child: Column(
             children: [
               Container(
                 width: 98,
                 height: 115,
                 decoration: BoxDecoration(
-                  color: const Color(0xFFF7F7F7),
-                  borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: selected ? primaryColor : Colors.grey.withValues(alpha: 0.25), width: selected ? 2 : 1),
+                  color: context.colors.surfaceMuted,
+                  borderRadius: BorderRadius.circular(AppRadius.r8),
+                  border: Border.all(color: selected ? context.colors.primary : context.colors.textHint.withValues(alpha: AppAlpha.a30), width: selected ? 2 : 1),
                 ),
                 alignment: Alignment.center,
                 child: ClipRRect(
-                  borderRadius: BorderRadius.circular(2),
+                  borderRadius: BorderRadius.circular(AppRadius.r4),
                   child: miniReceiptPreview(selected: selected, isThermal: isThermal),
                 ),
               ),
-              const SizedBox(height: 6),
-              Text(label, style: TextStyle(fontSize: 11.5, color: selected ? primaryColor : Colors.grey[600], fontWeight: selected ? FontWeight.w600 : FontWeight.normal)),
+              const SizedBox(height: AppSpacing.s6),
+              Text(label, style: TextStyle(fontSize: AppFontSize.f11_5, color: selected ? context.colors.primary : context.colors.textMuted, fontWeight: selected ? AppFontWeight.semibold : AppFontWeight.regular)),
             ],
           ),
         ),
@@ -411,7 +405,7 @@ class _ReceiptPreviewScreenState extends State<ReceiptPreviewScreen> {
 
     return Container(
       width: 148,
-      padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 20),
+      padding: const EdgeInsets.symmetric(vertical: AppSpacing.s20, horizontal: AppSpacing.s20),
       child: Column(
         children: [
           thumbnail(formatKey: 'thermal', isThermal: true, label: 'Receipt (Thermal)'),
@@ -434,22 +428,22 @@ class _ReceiptPreviewScreenState extends State<ReceiptPreviewScreen> {
     required String? facilityTin,
     required String statusText,
   }) {
-    final statusColor = balance > 0 ? Colors.red : Colors.green;
+    final statusColor = balance > 0 ? context.colors.danger : context.colors.success;
 
     Widget divider() => Padding(
-          padding: const EdgeInsets.symmetric(vertical: 12),
-          child: Divider(height: 1, color: Colors.grey.withValues(alpha: 0.3)),
+          padding: const EdgeInsets.symmetric(vertical: AppSpacing.s12),
+          child: Divider(height: 1, color: context.colors.textHint.withValues(alpha: AppAlpha.a30)),
         );
 
     Widget contactRow(IconData icon, String text) {
       return Padding(
-        padding: const EdgeInsets.only(top: 3),
+        padding: const EdgeInsets.only(top: AppSpacing.s3),
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(icon, size: 12, color: Colors.grey[600]),
-            const SizedBox(width: 5),
-            Text(text, style: TextStyle(fontSize: 11.5, color: Colors.grey[700])),
+            Icon(icon, size: AppIconSize.i12, color: context.colors.textMuted),
+            const SizedBox(width: AppSpacing.s4),
+            Text(text, style: TextStyle(fontSize: AppFontSize.f11_5, color: context.colors.textSoft)),
           ],
         ),
       );
@@ -457,7 +451,7 @@ class _ReceiptPreviewScreenState extends State<ReceiptPreviewScreen> {
 
     Widget infoLine(String label1, String value1, {String? label2, String? value2}) {
       return Padding(
-        padding: const EdgeInsets.only(bottom: 3),
+        padding: const EdgeInsets.only(bottom: AppSpacing.s3),
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -465,9 +459,9 @@ class _ReceiptPreviewScreenState extends State<ReceiptPreviewScreen> {
               flex: 3,
               child: RichText(
                 text: TextSpan(
-                  style: const TextStyle(fontSize: 12, color: Colors.black87),
+                  style: TextStyle(fontSize: AppFontSize.f12, color: context.colors.textPrimary),
                   children: [
-                    TextSpan(text: '$label1: ', style: const TextStyle(fontWeight: FontWeight.w600)),
+                    TextSpan(text: '$label1: ', style: const TextStyle(fontWeight: AppFontWeight.semibold)),
                     TextSpan(text: value1),
                   ],
                 ),
@@ -476,7 +470,7 @@ class _ReceiptPreviewScreenState extends State<ReceiptPreviewScreen> {
             if (label2 != null && value2 != null)
               Expanded(
                 flex: 2,
-                child: Text('$label2: $value2', textAlign: TextAlign.right, style: const TextStyle(fontSize: 12, color: Colors.black87)),
+                child: Text('$label2: $value2', textAlign: TextAlign.right, style: TextStyle(fontSize: AppFontSize.f12, color: context.colors.textPrimary)),
               ),
           ],
         ),
@@ -485,14 +479,14 @@ class _ReceiptPreviewScreenState extends State<ReceiptPreviewScreen> {
 
     Widget itemsTableHeader() {
       return Container(
-        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-        decoration: BoxDecoration(color: primaryColor, borderRadius: BorderRadius.circular(4)),
-        child: const Row(
+        padding: const EdgeInsets.symmetric(horizontal: AppSpacing.s10, vertical: AppSpacing.s8),
+        decoration: BoxDecoration(color: context.colors.primary, borderRadius: BorderRadius.circular(AppRadius.r4)),
+        child: Row(
           children: [
-            Expanded(flex: 4, child: Text('Item / Service', style: TextStyle(color: Colors.white, fontSize: 11.5, fontWeight: FontWeight.w600))),
-            Expanded(flex: 1, child: Text('Qty', style: TextStyle(color: Colors.white, fontSize: 11.5, fontWeight: FontWeight.w600))),
-            Expanded(flex: 2, child: Text('Unit Price', textAlign: TextAlign.right, style: TextStyle(color: Colors.white, fontSize: 11.5, fontWeight: FontWeight.w600))),
-            Expanded(flex: 2, child: Text('Amount', textAlign: TextAlign.right, style: TextStyle(color: Colors.white, fontSize: 11.5, fontWeight: FontWeight.w600))),
+            Expanded(flex: 4, child: Text('Item / Service', style: TextStyle(color: context.colors.onPrimary, fontSize: AppFontSize.f11_5, fontWeight: AppFontWeight.semibold))),
+            Expanded(flex: 1, child: Text('Qty', style: TextStyle(color: context.colors.onPrimary, fontSize: AppFontSize.f11_5, fontWeight: AppFontWeight.semibold))),
+            Expanded(flex: 2, child: Text('Unit Price', textAlign: TextAlign.right, style: TextStyle(color: context.colors.onPrimary, fontSize: AppFontSize.f11_5, fontWeight: AppFontWeight.semibold))),
+            Expanded(flex: 2, child: Text('Amount', textAlign: TextAlign.right, style: TextStyle(color: context.colors.onPrimary, fontSize: AppFontSize.f11_5, fontWeight: AppFontWeight.semibold))),
           ],
         ),
       );
@@ -501,7 +495,7 @@ class _ReceiptPreviewScreenState extends State<ReceiptPreviewScreen> {
     Widget itemRow(SaleItem item) {
       final lineTotal = item.quantity * item.unitPrice - item.discount;
       return Padding(
-        padding: const EdgeInsets.symmetric(vertical: 8),
+        padding: const EdgeInsets.symmetric(vertical: AppSpacing.s8),
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -510,15 +504,15 @@ class _ReceiptPreviewScreenState extends State<ReceiptPreviewScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(item.name, style: const TextStyle(fontSize: 12.5, fontWeight: FontWeight.w600)),
+                  Text(item.name, style: const TextStyle(fontSize: AppFontSize.f12_5, fontWeight: AppFontWeight.semibold)),
                   if (item.category.isNotEmpty)
-                    Text(item.category, style: TextStyle(fontSize: 10.5, color: Colors.grey[600])),
+                    Text(item.category, style: TextStyle(fontSize: AppFontSize.f10_5, color: context.colors.textMuted)),
                 ],
               ),
             ),
-            Expanded(flex: 1, child: Text('${item.quantity}', style: const TextStyle(fontSize: 12.5))),
-            Expanded(flex: 2, child: Text(Money.plain(item.unitPrice), textAlign: TextAlign.right, style: const TextStyle(fontSize: 12.5))),
-            Expanded(flex: 2, child: Text(Money.plain(lineTotal), textAlign: TextAlign.right, style: const TextStyle(fontSize: 12.5, fontWeight: FontWeight.w600))),
+            Expanded(flex: 1, child: Text('${item.quantity}', style: const TextStyle(fontSize: AppFontSize.f12_5))),
+            Expanded(flex: 2, child: Text(Money.plain(item.unitPrice), textAlign: TextAlign.right, style: const TextStyle(fontSize: AppFontSize.f12_5))),
+            Expanded(flex: 2, child: Text(Money.plain(lineTotal), textAlign: TextAlign.right, style: const TextStyle(fontSize: AppFontSize.f12_5, fontWeight: AppFontWeight.semibold))),
           ],
         ),
       );
@@ -526,12 +520,12 @@ class _ReceiptPreviewScreenState extends State<ReceiptPreviewScreen> {
 
     Widget totalsRow(String label, String value, {bool bold = false, Color? color}) {
       return Padding(
-        padding: const EdgeInsets.symmetric(vertical: 2),
+        padding: const EdgeInsets.symmetric(vertical: AppSpacing.s2),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Text(label, style: TextStyle(fontSize: 12.5, fontWeight: bold ? FontWeight.bold : FontWeight.normal, color: color)),
-            Text(value, style: TextStyle(fontSize: 12.5, fontWeight: bold ? FontWeight.bold : FontWeight.normal, color: color)),
+            Text(label, style: TextStyle(fontSize: AppFontSize.f12_5, fontWeight: bold ? AppFontWeight.bold : AppFontWeight.regular, color: color)),
+            Text(value, style: TextStyle(fontSize: AppFontSize.f12_5, fontWeight: bold ? AppFontWeight.bold : AppFontWeight.regular, color: color)),
           ],
         ),
       );
@@ -541,8 +535,8 @@ class _ReceiptPreviewScreenState extends State<ReceiptPreviewScreen> {
       clipper: _TornEdgeClipper(),
       child: Container(
         width: 400,
-        color: Colors.white,
-        padding: const EdgeInsets.fromLTRB(24, 28, 24, 28),
+        color: context.colors.surface,
+        padding: const EdgeInsets.fromLTRB(AppSpacing.s24, AppSpacing.s28, AppSpacing.s24, AppSpacing.s28),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           mainAxisSize: MainAxisSize.min,
@@ -561,29 +555,29 @@ class _ReceiptPreviewScreenState extends State<ReceiptPreviewScreen> {
                         errorBuilder: (context, error, stackTrace) => const SizedBox.shrink(),
                       ),
                     ),
-                    const SizedBox(height: 6),
+                    const SizedBox(height: AppSpacing.s6),
                   ],
                   RichText(
                     text: const TextSpan(
-                      style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                      style: TextStyle(fontSize: AppFontSize.f16, fontWeight: AppFontWeight.bold),
                       children: [
-                        TextSpan(text: 'VetBiz ', style: TextStyle(color: Color(0xFF2F5D62))),
+                        TextSpan(text: 'VetBiz ', style: TextStyle(color: AppPalette.primary)),
                         TextSpan(text: 'Pro', style: TextStyle(color: ReceiptPalette.amber)),
                       ],
                     ),
                   ),
-                  const SizedBox(height: 8),
+                  const SizedBox(height: AppSpacing.s8),
                   Text(
                     facilityType != null && facilityType.isNotEmpty && facilityType != 'Other'
                         ? '$facilityName $facilityType'
                         : facilityName,
-                    style: const TextStyle(fontSize: 19, fontWeight: FontWeight.bold, color: Color(0xFF2F5D62)),
+                    style: const TextStyle(fontSize: AppFontSize.f19, fontWeight: AppFontWeight.bold, color: AppPalette.primary),
                     textAlign: TextAlign.center,
                   ),
                   if (facilityTagline != null && facilityTagline.isNotEmpty)
                     Padding(
-                      padding: const EdgeInsets.only(top: 2),
-                      child: Text(facilityTagline, style: TextStyle(fontSize: 11.5, color: Colors.grey[600]), textAlign: TextAlign.center),
+                      padding: const EdgeInsets.only(top: AppSpacing.s2),
+                      child: Text(facilityTagline, style: TextStyle(fontSize: AppFontSize.f11_5, color: context.colors.textMuted), textAlign: TextAlign.center),
                     ),
                   if (facilityPhone != null && facilityPhone.isNotEmpty) contactRow(Icons.phone, facilityPhone),
                   if (facilityEmail != null && facilityEmail.isNotEmpty) contactRow(Icons.email_outlined, facilityEmail),
@@ -598,7 +592,7 @@ class _ReceiptPreviewScreenState extends State<ReceiptPreviewScreen> {
                 label2: 'Date', value2: AppDateFormat.dateTime24.format(sale.timestamp)),
             infoLine('Customer', sale.clientName ?? 'Walk-in'),
             infoLine('Payment Method', sale.paymentMethod ?? PaymentMethod.onCredit),
-            const SizedBox(height: 10),
+            const SizedBox(height: AppSpacing.s10),
             // ---- Items table ----
             itemsTableHeader(),
             for (final item in sale.items) itemRow(item),
@@ -606,63 +600,63 @@ class _ReceiptPreviewScreenState extends State<ReceiptPreviewScreen> {
             // ---- Totals ----
             totalsRow('Subtotal', Money.plain(sale.totalAmount + sale.items.fold(0.0, (sum, i) => sum + i.discount))),
             totalsRow('Discount', Money.plain(sale.items.fold(0.0, (sum, i) => sum + i.discount))),
-            const SizedBox(height: 8),
+            const SizedBox(height: AppSpacing.s8),
             Container(
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-              color: primaryColor.withValues(alpha: 0.08),
+              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.s10, vertical: AppSpacing.s8),
+              color: context.colors.primary.withValues(alpha: AppAlpha.a10),
               child: totalsRow('TOTAL', 'TSh ${Money.plain(sale.totalAmount)}', bold: true),
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: AppSpacing.s8),
             totalsRow('Paid', Money.plain(sale.totalPaid)),
-            totalsRow('Balance', Money.plain(balance), bold: balance > 0, color: balance > 0 ? Colors.red : null),
-            const SizedBox(height: 10),
+            totalsRow('Balance', Money.plain(balance), bold: balance > 0, color: balance > 0 ? context.colors.danger : null),
+            const SizedBox(height: AppSpacing.s10),
             Row(
               children: [
-                Icon(Icons.credit_card, size: 15, color: Colors.grey[700]),
-                const SizedBox(width: 6),
+                Icon(Icons.credit_card, size: AppIconSize.i16, color: context.colors.textSoft),
+                const SizedBox(width: AppSpacing.s6),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text('Payment Method', style: TextStyle(fontSize: 10.5, color: Colors.grey[600])),
-                      Text(sale.paymentMethod ?? PaymentMethod.onCredit, style: const TextStyle(fontSize: 12.5, fontWeight: FontWeight.w600)),
+                      Text('Payment Method', style: TextStyle(fontSize: AppFontSize.f10_5, color: context.colors.textMuted)),
+                      Text(sale.paymentMethod ?? PaymentMethod.onCredit, style: const TextStyle(fontSize: AppFontSize.f12_5, fontWeight: AppFontWeight.semibold)),
                     ],
                   ),
                 ),
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                  decoration: BoxDecoration(color: statusColor.withValues(alpha: 0.12), borderRadius: BorderRadius.circular(20)),
+                  padding: const EdgeInsets.symmetric(horizontal: AppSpacing.s8, vertical: AppSpacing.s3),
+                  decoration: BoxDecoration(color: statusColor.withValues(alpha: AppAlpha.a10), borderRadius: BorderRadius.circular(AppRadius.r20)),
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Icon(Icons.check_circle, size: 12, color: statusColor),
-                      const SizedBox(width: 4),
-                      Text(statusText, style: TextStyle(fontSize: 10.5, fontWeight: FontWeight.w600, color: statusColor)),
+                      Icon(Icons.check_circle, size: AppIconSize.i12, color: statusColor),
+                      const SizedBox(width: AppSpacing.s4),
+                      Text(statusText, style: TextStyle(fontSize: AppFontSize.f10_5, fontWeight: AppFontWeight.semibold, color: statusColor)),
                     ],
                   ),
                 ),
               ],
             ),
-            const SizedBox(height: 22),
+            const SizedBox(height: AppSpacing.s22),
             Center(
               child: Text('Thank you for choosing us.',
-                  style: TextStyle(fontSize: 13, fontStyle: FontStyle.italic, color: Colors.grey[700])),
+                  style: TextStyle(fontSize: AppFontSize.f13, fontStyle: FontStyle.italic, color: context.colors.textSoft)),
             ),
-            const SizedBox(height: 10),
+            const SizedBox(height: AppSpacing.s10),
             Center(
               child: RichText(
                 text: const TextSpan(
-                  style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold),
+                  style: TextStyle(fontSize: AppFontSize.f13, fontWeight: AppFontWeight.bold),
                   children: [
-                    TextSpan(text: 'VetBiz ', style: TextStyle(color: Color(0xFF2F5D62))),
+                    TextSpan(text: 'VetBiz ', style: TextStyle(color: AppPalette.primary)),
                     TextSpan(text: 'Pro', style: TextStyle(color: ReceiptPalette.amber)),
                   ],
                 ),
               ),
             ),
-            const SizedBox(height: 2),
+            const SizedBox(height: AppSpacing.s2),
             Center(
-              child: Text('Powered by ${AppInfo.name}', style: TextStyle(fontSize: 9, color: Colors.grey[500])),
+              child: Text('Powered by ${AppInfo.name}', style: TextStyle(fontSize: AppFontSize.f9, color: context.colors.textHint)),
             ),
           ],
         ),
@@ -672,8 +666,8 @@ class _ReceiptPreviewScreenState extends State<ReceiptPreviewScreen> {
 
   Widget _buildActionBar() {
     return Container(
-      padding: const EdgeInsets.all(16),
-      color: Colors.white,
+      padding: const EdgeInsets.all(AppSpacing.s16),
+      color: context.colors.surface,
       child: Center(
         child: ConstrainedBox(
           constraints: const BoxConstraints(maxWidth: 480),
@@ -683,21 +677,21 @@ class _ReceiptPreviewScreenState extends State<ReceiptPreviewScreen> {
                 child: OutlinedButton.icon(
                   onPressed: _isSharing ? null : _shareOrSave,
                   icon: _isSharing
-                      ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2))
+                      ? const SizedBox(width: AppSpacing.s16, height: 16, child: CircularProgressIndicator(strokeWidth: 2))
                       : const Icon(Icons.share),
                   label: const Text('Share / Save'),
-                  style: OutlinedButton.styleFrom(foregroundColor: primaryColor),
+                  style: OutlinedButton.styleFrom(foregroundColor: context.colors.primary),
                 ),
               ),
-              const SizedBox(width: 12),
+              const SizedBox(width: AppSpacing.s12),
               Expanded(
                 child: ElevatedButton.icon(
                   onPressed: _isPrinting ? null : _print,
                   icon: _isPrinting
-                      ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
+                      ? SizedBox(width: AppSpacing.s16, height: 16, child: CircularProgressIndicator(strokeWidth: 2, color: context.colors.onPrimary))
                       : const Icon(Icons.print),
                   label: const Text('Print'),
-                  style: ElevatedButton.styleFrom(backgroundColor: primaryColor, foregroundColor: Colors.white),
+                  style: ElevatedButton.styleFrom(backgroundColor: context.colors.primary, foregroundColor: context.colors.onPrimary),
                 ),
               ),
             ],
@@ -721,19 +715,19 @@ class _ReceiptPreviewScreenState extends State<ReceiptPreviewScreen> {
   }) {
     Widget field(IconData icon, String label, String value) {
       return Padding(
-        padding: const EdgeInsets.symmetric(vertical: 8),
+        padding: const EdgeInsets.symmetric(vertical: AppSpacing.s8),
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Icon(icon, size: 17, color: primaryColor),
-            const SizedBox(width: 10),
+            Icon(icon, size: AppIconSize.i18, color: context.colors.primary),
+            const SizedBox(width: AppSpacing.s10),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(label, style: TextStyle(fontSize: 11.5, color: Colors.grey[600])),
-                  const SizedBox(height: 1),
-                  Text(value, style: const TextStyle(fontSize: 13.5, fontWeight: FontWeight.w600), maxLines: 2, overflow: TextOverflow.ellipsis),
+                  Text(label, style: TextStyle(fontSize: AppFontSize.f11_5, color: context.colors.textMuted)),
+                  const SizedBox(height: AppSpacing.s2),
+                  Text(value, style: const TextStyle(fontSize: AppFontSize.f13_5, fontWeight: AppFontWeight.semibold), maxLines: 2, overflow: TextOverflow.ellipsis),
                 ],
               ),
             ),
@@ -744,12 +738,12 @@ class _ReceiptPreviewScreenState extends State<ReceiptPreviewScreen> {
 
     return Container(
       width: 340,
-      margin: const EdgeInsets.fromLTRB(0, 20, 20, 20),
-      padding: const EdgeInsets.all(18),
+      margin: const EdgeInsets.fromLTRB(0, AppSpacing.s20, AppSpacing.s20, AppSpacing.s20),
+      padding: const EdgeInsets.all(AppSpacing.s18),
       decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(14),
-        boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.06), blurRadius: 10, offset: const Offset(0, 3))],
+        color: context.colors.surface,
+        borderRadius: BorderRadius.circular(AppRadius.r14),
+        boxShadow: [BoxShadow(color: context.colors.shadow.withValues(alpha: AppAlpha.a05), blurRadius: 10, offset: const Offset(0, 3))],
       ),
       child: SingleChildScrollView(
         child: Column(
@@ -758,27 +752,27 @@ class _ReceiptPreviewScreenState extends State<ReceiptPreviewScreen> {
             Row(
               children: [
                 Container(
-                  padding: const EdgeInsets.all(7),
-                  decoration: BoxDecoration(color: primaryColor.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(8)),
-                  child: Icon(Icons.receipt_long_outlined, size: 18, color: primaryColor),
+                  padding: const EdgeInsets.all(AppSpacing.s6),
+                  decoration: BoxDecoration(color: context.colors.primary.withValues(alpha: AppAlpha.a10), borderRadius: BorderRadius.circular(AppRadius.r8)),
+                  child: Icon(Icons.receipt_long_outlined, size: AppIconSize.i18, color: context.colors.primary),
                 ),
-                const SizedBox(width: 8),
-                const Expanded(child: Text('Receipt Details', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold))),
+                const SizedBox(width: AppSpacing.s8),
+                const Expanded(child: Text('Receipt Details', style: TextStyle(fontSize: AppFontSize.f16, fontWeight: AppFontWeight.bold))),
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
-                  decoration: BoxDecoration(color: statusColor.withValues(alpha: 0.12), borderRadius: BorderRadius.circular(20)),
+                  padding: const EdgeInsets.symmetric(horizontal: AppSpacing.s10, vertical: AppSpacing.s4),
+                  decoration: BoxDecoration(color: statusColor.withValues(alpha: AppAlpha.a10), borderRadius: BorderRadius.circular(AppRadius.r20)),
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Icon(Icons.check_circle, size: 11, color: statusColor),
-                      const SizedBox(width: 3),
-                      Text(statusText, style: TextStyle(fontSize: 10.5, fontWeight: FontWeight.w600, color: statusColor)),
+                      Icon(Icons.check_circle, size: AppIconSize.i12, color: statusColor),
+                      const SizedBox(width: AppSpacing.s3),
+                      Text(statusText, style: TextStyle(fontSize: AppFontSize.f10_5, fontWeight: AppFontWeight.semibold, color: statusColor)),
                     ],
                   ),
                 ),
               ],
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: AppSpacing.s8),
             const Divider(height: 20),
             if (sale.receiptNumber != null) field(Icons.tag, 'Receipt Number', '${sale.receiptNumber}'),
             field(
@@ -794,59 +788,59 @@ class _ReceiptPreviewScreenState extends State<ReceiptPreviewScreen> {
             const Divider(height: 28),
             Row(
               children: [
-                Icon(Icons.bolt, size: 16, color: primaryColor),
-                const SizedBox(width: 6),
-                const Text('Quick Actions', style: TextStyle(fontSize: 13.5, fontWeight: FontWeight.bold)),
+                Icon(Icons.bolt, size: AppIconSize.i16, color: context.colors.primary),
+                const SizedBox(width: AppSpacing.s6),
+                const Text('Quick Actions', style: TextStyle(fontSize: AppFontSize.f13_5, fontWeight: AppFontWeight.bold)),
               ],
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: AppSpacing.s12),
             Row(
               children: [
                 Expanded(
                   child: OutlinedButton.icon(
                     onPressed: _isSharing ? null : _shareOrSave,
                     icon: _isSharing
-                        ? const SizedBox(width: 14, height: 14, child: CircularProgressIndicator(strokeWidth: 2))
-                        : const Icon(Icons.share_outlined, size: 16),
-                    label: const Text('Share', style: TextStyle(fontSize: 12.5)),
+                        ? const SizedBox(width: AppSpacing.s14, height: 14, child: CircularProgressIndicator(strokeWidth: 2))
+                        : const Icon(Icons.share_outlined, size: AppIconSize.i16),
+                    label: const Text('Share', style: TextStyle(fontSize: AppFontSize.f12_5)),
                     style: OutlinedButton.styleFrom(
-                      foregroundColor: primaryColor,
-                      backgroundColor: primaryColor.withValues(alpha: 0.08),
+                      foregroundColor: context.colors.primary,
+                      backgroundColor: context.colors.primary.withValues(alpha: AppAlpha.a10),
                       side: BorderSide.none,
-                      padding: const EdgeInsets.symmetric(vertical: 10),
+                      padding: const EdgeInsets.symmetric(vertical: AppSpacing.s10),
                     ),
                   ),
                 ),
-                const SizedBox(width: 8),
+                const SizedBox(width: AppSpacing.s8),
                 Expanded(
                   child: ElevatedButton.icon(
                     onPressed: _isPrinting ? null : _print,
                     icon: _isPrinting
-                        ? const SizedBox(width: 14, height: 14, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
-                        : const Icon(Icons.print_outlined, size: 16),
-                    label: const Text('Print Receipt', style: TextStyle(fontSize: 12.5)),
+                        ? SizedBox(width: AppSpacing.s14, height: 14, child: CircularProgressIndicator(strokeWidth: 2, color: context.colors.onPrimary))
+                        : const Icon(Icons.print_outlined, size: AppIconSize.i16),
+                    label: const Text('Print Receipt', style: TextStyle(fontSize: AppFontSize.f12_5)),
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: primaryColor,
-                      foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(vertical: 10),
+                      backgroundColor: context.colors.primary,
+                      foregroundColor: context.colors.onPrimary,
+                      padding: const EdgeInsets.symmetric(vertical: AppSpacing.s10),
                     ),
                   ),
                 ),
               ],
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: AppSpacing.s16),
             Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(color: const Color(0xFFEFF5F8), borderRadius: BorderRadius.circular(10)),
+              padding: const EdgeInsets.all(AppSpacing.s12),
+              decoration: BoxDecoration(color: context.colors.surfaceMuted, borderRadius: BorderRadius.circular(AppRadius.r10)),
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Icon(Icons.info_outline, size: 16, color: Colors.blueGrey[400]),
-                  const SizedBox(width: 8),
+                  Icon(Icons.info_outline, size: AppIconSize.i16, color: context.colors.infoNote),
+                  const SizedBox(width: AppSpacing.s8),
                   Expanded(
                     child: Text(
                       'This receipt shows the final amount paid for the selected transaction. You can print or share it for your records.',
-                      style: TextStyle(fontSize: 11, color: Colors.blueGrey[600], height: 1.4),
+                      style: TextStyle(fontSize: AppFontSize.f11, color: context.colors.infoNoteText, height: 1.4),
                     ),
                   ),
                 ],
