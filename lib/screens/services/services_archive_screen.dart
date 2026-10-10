@@ -7,12 +7,14 @@ import '../../models/service.dart';
 import '../../providers/facility_provider.dart';
 import '../../constants/service_categories.dart';
 import 'service_receipt_preview_screen.dart';
-import '../../theme/app_palette.dart';
 import '../../data/collections.dart';
 import '../../config/money.dart';
 import '../../config/app_limits.dart';
 import '../../config/app_ranges.dart';
 import '../../config/app_date_format.dart';
+import '../../theme/app_text.dart';
+import '../../theme/app_dimens.dart';
+import '../../theme/theme_context.dart';
 
 class ServicesArchiveScreen extends StatefulWidget {
   const ServicesArchiveScreen({super.key});
@@ -22,9 +24,6 @@ class ServicesArchiveScreen extends StatefulWidget {
 }
 
 class _ServicesArchiveScreenState extends State<ServicesArchiveScreen> {
-  final Color primaryDeepGreen = AppPalette.primary;
-  final Color warmAmber = AppPalette.accent;
-  final Color offWhite = AppPalette.background;
 
 
   static const int _pageSize = AppLimits.archivePageSize;
@@ -80,9 +79,9 @@ class _ServicesArchiveScreenState extends State<ServicesArchiveScreen> {
     final result = await showDialog<Map<String, dynamic>>(
       context: context,
       builder: (context) => _SearchServicesArchiveDialog(
-        primaryDeepGreen: primaryDeepGreen,
-        warmAmber: warmAmber,
-        offWhite: offWhite,
+        primaryDeepGreen: context.colors.primary,
+        warmAmber: context.colors.accent,
+        offWhite: context.colors.background,
       ),
     );
 
@@ -190,9 +189,9 @@ class _ServicesArchiveScreenState extends State<ServicesArchiveScreen> {
   }
 
   Color _statusColor(double paid, double total) {
-    if (paid >= total) return Colors.green;
-    if (paid > 0) return Colors.orange;
-    return Colors.red;
+    if (paid >= total) return context.colors.success;
+    if (paid > 0) return context.colors.warning;
+    return context.colors.danger;
   }
 
   @override
@@ -240,10 +239,10 @@ class _ServicesArchiveScreenState extends State<ServicesArchiveScreen> {
     final pageServices = filteredServices.sublist(pageStart.clamp(0, filteredServices.length), pageEnd);
 
     return Scaffold(
-      backgroundColor: offWhite,
+      backgroundColor: context.colors.background,
       appBar: _buildAppBar(),
       body: _isLoading
-          ? Center(child: CircularProgressIndicator(color: primaryDeepGreen))
+          ? Center(child: CircularProgressIndicator(color: context.colors.primary))
           : Row(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
@@ -251,16 +250,16 @@ class _ServicesArchiveScreenState extends State<ServicesArchiveScreen> {
                   child: Column(
                     children: [
                       Padding(
-                        padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
+                        padding: const EdgeInsets.fromLTRB(AppSpacing.s16, AppSpacing.s16, AppSpacing.s16, 0),
                         child: _buildInfoBanner(filteredServices.length, totalAmount),
                       ),
                       if (sortedCategories.length > 1)
                         Padding(
-                          padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+                          padding: const EdgeInsets.fromLTRB(AppSpacing.s16, AppSpacing.s12, AppSpacing.s16, 0),
                           child: _buildCategoryChipsRow(sortedCategories),
                         ),
                       Padding(
-                        padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+                        padding: const EdgeInsets.fromLTRB(AppSpacing.s16, AppSpacing.s12, AppSpacing.s16, 0),
                         child: _buildSearchBar(),
                       ),
                       Expanded(
@@ -269,16 +268,16 @@ class _ServicesArchiveScreenState extends State<ServicesArchiveScreen> {
                                 child: Column(
                                   mainAxisAlignment: MainAxisAlignment.center,
                                   children: [
-                                    Icon(Icons.archive_outlined, size: 64, color: Colors.grey[400]),
-                                    const SizedBox(height: 16),
+                                    Icon(Icons.archive_outlined, size: AppIconSize.i64, color: context.colors.textDisabled),
+                                    const SizedBox(height: AppSpacing.s16),
                                     Text(
                                       'No archived services found',
-                                      style: TextStyle(fontSize: 18, color: Colors.grey[600]),
+                                      style: TextStyle(fontSize: AppFontSize.f18, color: context.colors.textMuted),
                                     ),
-                                    const SizedBox(height: 8),
+                                    const SizedBox(height: AppSpacing.s8),
                                     Text(
                                       'Try a different search, category, or date range',
-                                      style: TextStyle(fontSize: 14, color: Colors.grey[500]),
+                                      style: TextStyle(fontSize: AppFontSize.f14, color: context.colors.textHint),
                                     ),
                                   ],
                                 ),
@@ -308,24 +307,24 @@ class _ServicesArchiveScreenState extends State<ServicesArchiveScreen> {
 
   PreferredSizeWidget _buildAppBar() {
     return AppBar(
-      backgroundColor: Colors.white,
-      foregroundColor: Colors.black87,
-      elevation: 1,
+      backgroundColor: context.colors.surface,
+      foregroundColor: context.colors.textPrimary,
+      elevation: AppElevation.e1,
       centerTitle: true,
       toolbarHeight: 72,
       title: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          const Text('Services Archive', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 19, color: Colors.black87)),
-          Text('Services archived after $_archiveCutoffDays days', style: const TextStyle(fontSize: 12, color: Colors.black54)),
+          Text('Services Archive', style: TextStyle(fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f19, color: context.colors.textPrimary)),
+          Text('Services archived after $_archiveCutoffDays days', style: TextStyle(fontSize: AppFontSize.f12, color: context.colors.textSecondary)),
         ],
       ),
       actions: [
         Padding(
-          padding: const EdgeInsets.only(right: 12),
+          padding: const EdgeInsets.only(right: AppSpacing.s12),
           child: OutlinedButton.icon(
             onPressed: _showSearchDialog,
-            icon: const Icon(Icons.date_range_outlined, size: 16),
+            icon: const Icon(Icons.date_range_outlined, size: AppIconSize.i16),
             label: const Text('Date Range'),
           ),
         ),
@@ -336,27 +335,27 @@ class _ServicesArchiveScreenState extends State<ServicesArchiveScreen> {
   Widget _buildInfoBanner(int foundCount, double totalAmount) {
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(14),
+      padding: const EdgeInsets.all(AppSpacing.s14),
       decoration: BoxDecoration(
-        color: primaryDeepGreen.withValues(alpha: 0.06),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: primaryDeepGreen.withValues(alpha: 0.2)),
+        color: context.colors.primary.withValues(alpha: AppAlpha.a05),
+        borderRadius: BorderRadius.circular(AppRadius.r12),
+        border: Border.all(color: context.colors.primary.withValues(alpha: AppAlpha.a20)),
       ),
       child: Row(
         children: [
-          Icon(Icons.info_outline, color: primaryDeepGreen, size: 18),
-          const SizedBox(width: 8),
+          Icon(Icons.info_outline, color: context.colors.primary, size: AppIconSize.i18),
+          const SizedBox(width: AppSpacing.s8),
           Expanded(
             child: Text(
               _searchStart != null && _searchEnd != null
                   ? 'Period: ${AppDateFormat.date.format(_searchStart!)} \u2013 ${AppDateFormat.date.format(_searchEnd!)}'
                   : 'Archived services',
-              style: TextStyle(fontSize: 12.5, color: Colors.grey[700]),
+              style: TextStyle(fontSize: AppFontSize.f12_5, color: context.colors.textSoft),
             ),
           ),
-          Text('$foundCount found', style: TextStyle(fontSize: 12.5, fontWeight: FontWeight.w600, color: primaryDeepGreen)),
-          const SizedBox(width: 12),
-          Text(Money.format(totalAmount), style: TextStyle(fontSize: 12.5, fontWeight: FontWeight.bold, color: primaryDeepGreen)),
+          Text('$foundCount found', style: TextStyle(fontSize: AppFontSize.f12_5, fontWeight: AppFontWeight.semibold, color: context.colors.primary)),
+          const SizedBox(width: AppSpacing.s12),
+          Text(Money.format(totalAmount), style: TextStyle(fontSize: AppFontSize.f12_5, fontWeight: AppFontWeight.bold, color: context.colors.primary)),
         ],
       ),
     );
@@ -368,7 +367,7 @@ class _ServicesArchiveScreenState extends State<ServicesArchiveScreen> {
       child: ListView.separated(
         scrollDirection: Axis.horizontal,
         itemCount: categories.length,
-        separatorBuilder: (context, index) => const SizedBox(width: 8),
+        separatorBuilder: (context, index) => const SizedBox(width: AppSpacing.s8),
         itemBuilder: (context, index) => _categoryChip(categories[index]),
       ),
     );
@@ -381,20 +380,20 @@ class _ServicesArchiveScreenState extends State<ServicesArchiveScreen> {
         _selectedCategory = category;
         _currentPageIndex = 0;
       }),
-      borderRadius: BorderRadius.circular(20),
+      borderRadius: BorderRadius.circular(AppRadius.r20),
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+        padding: const EdgeInsets.symmetric(horizontal: AppSpacing.s14, vertical: AppSpacing.s8),
         decoration: BoxDecoration(
-          color: isSelected ? primaryDeepGreen : Colors.white,
-          borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: isSelected ? primaryDeepGreen : Colors.grey.withValues(alpha: 0.3)),
+          color: isSelected ? context.colors.primary : context.colors.surface,
+          borderRadius: BorderRadius.circular(AppRadius.r20),
+          border: Border.all(color: isSelected ? context.colors.primary : context.colors.textHint.withValues(alpha: AppAlpha.a30)),
         ),
         child: Text(
           category,
           style: TextStyle(
-            fontSize: 12.5,
-            color: isSelected ? Colors.white : Colors.black87,
-            fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+            fontSize: AppFontSize.f12_5,
+            color: isSelected ? context.colors.surface : context.colors.textPrimary,
+            fontWeight: isSelected ? AppFontWeight.semibold : AppFontWeight.regular,
           ),
         ),
       ),
@@ -403,25 +402,25 @@ class _ServicesArchiveScreenState extends State<ServicesArchiveScreen> {
 
   Widget _buildSearchBar() {
     final border = OutlineInputBorder(
-      borderRadius: BorderRadius.circular(10),
-      borderSide: BorderSide(color: Colors.grey.withValues(alpha: 0.3)),
+      borderRadius: BorderRadius.circular(AppRadius.r10),
+      borderSide: BorderSide(color: context.colors.textHint.withValues(alpha: AppAlpha.a30)),
     );
     return TextField(
       controller: _searchController,
       decoration: InputDecoration(
         hintText: 'Search service by client, category, note...',
-        hintStyle: const TextStyle(fontSize: 13),
-        prefixIcon: const Icon(Icons.search, size: 20),
+        hintStyle: const TextStyle(fontSize: AppFontSize.f13),
+        prefixIcon: const Icon(Icons.search, size: AppIconSize.i20),
         filled: true,
-        fillColor: Colors.white,
+        fillColor: context.colors.surface,
         isDense: true,
-        contentPadding: const EdgeInsets.symmetric(vertical: 12, horizontal: 12),
+        contentPadding: const EdgeInsets.symmetric(vertical: AppSpacing.s12, horizontal: AppSpacing.s12),
         border: border,
         enabledBorder: border,
         suffixIcon: _searchController.text.isEmpty
             ? null
             : IconButton(
-                icon: const Icon(Icons.clear, size: 18),
+                icon: const Icon(Icons.clear, size: AppIconSize.i18),
                 onPressed: () => setState(() {
                   _searchController.clear();
                   _searchQuery = '';
@@ -443,8 +442,8 @@ class _ServicesArchiveScreenState extends State<ServicesArchiveScreen> {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         Container(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-          decoration: BoxDecoration(border: Border(bottom: BorderSide(color: Colors.grey.withValues(alpha: 0.2)))),
+          padding: const EdgeInsets.symmetric(horizontal: AppSpacing.s16, vertical: AppSpacing.s12),
+          decoration: BoxDecoration(border: Border(bottom: BorderSide(color: context.colors.textHint.withValues(alpha: AppAlpha.a20)))),
           child: Row(
             children: [
               _headerCell('Date', flex: 3),
@@ -460,7 +459,7 @@ class _ServicesArchiveScreenState extends State<ServicesArchiveScreen> {
         Expanded(
           child: ListView.separated(
             itemCount: services.length,
-            separatorBuilder: (context, index) => Divider(height: 1, color: Colors.grey.withValues(alpha: 0.12)),
+            separatorBuilder: (context, index) => Divider(height: 1, color: context.colors.textHint.withValues(alpha: AppAlpha.a10)),
             itemBuilder: (context, index) => _buildArchiveRow(services[index], dateFormatter),
           ),
         ),
@@ -471,7 +470,7 @@ class _ServicesArchiveScreenState extends State<ServicesArchiveScreen> {
   Widget _headerCell(String label, {required int flex}) {
     return Expanded(
       flex: flex,
-      child: Text(label, style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Colors.grey[600])),
+      child: Text(label, style: TextStyle(fontSize: AppFontSize.f12, fontWeight: AppFontWeight.semibold, color: context.colors.textMuted)),
     );
   }
 
@@ -489,8 +488,8 @@ class _ServicesArchiveScreenState extends State<ServicesArchiveScreen> {
     return InkWell(
       onTap: () => setState(() => _selectedService = service),
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-        color: isSelected ? primaryDeepGreen.withValues(alpha: 0.06) : null,
+        padding: const EdgeInsets.symmetric(horizontal: AppSpacing.s16, vertical: AppSpacing.s12),
+        color: isSelected ? context.colors.primary.withValues(alpha: AppAlpha.a05) : null,
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -499,9 +498,9 @@ class _ServicesArchiveScreenState extends State<ServicesArchiveScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(dateFormatter.format(serviceDate).split(',').first, style: const TextStyle(fontSize: 13)),
+                  Text(dateFormatter.format(serviceDate).split(',').first, style: const TextStyle(fontSize: AppFontSize.f13)),
                   Text(AppDateFormat.time12.format(serviceDate),
-                      style: TextStyle(fontSize: 11.5, color: Colors.grey[500])),
+                      style: TextStyle(fontSize: AppFontSize.f11_5, color: context.colors.textHint)),
                 ],
               ),
             ),
@@ -511,25 +510,25 @@ class _ServicesArchiveScreenState extends State<ServicesArchiveScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text((service['name'] as String?) ?? 'Service',
-                      style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
+                      style: const TextStyle(fontSize: AppFontSize.f13, fontWeight: AppFontWeight.semibold),
                       maxLines: 1, overflow: TextOverflow.ellipsis),
-                  const SizedBox(height: 3),
+                  const SizedBox(height: AppSpacing.s3),
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
+                    padding: const EdgeInsets.symmetric(horizontal: AppSpacing.s6, vertical: AppSpacing.s2),
                     decoration: BoxDecoration(
-                      color: primaryDeepGreen.withValues(alpha: 0.1),
-                      borderRadius: BorderRadius.circular(8),
+                      color: context.colors.primary.withValues(alpha: AppAlpha.a10),
+                      borderRadius: BorderRadius.circular(AppRadius.r8),
                     ),
                     child: Text(
                       ((service['category'] as String?)?.isNotEmpty ?? false) ? service['category'] as String : 'Other',
-                      style: TextStyle(fontSize: 10.5, color: primaryDeepGreen, fontWeight: FontWeight.w600),
+                      style: TextStyle(fontSize: AppFontSize.f10_5, color: context.colors.primary, fontWeight: AppFontWeight.semibold),
                     ),
                   ),
                   if (description.isNotEmpty)
                     Padding(
-                      padding: const EdgeInsets.only(top: 3),
+                      padding: const EdgeInsets.only(top: AppSpacing.s3),
                       child: Text('Notes: $description',
-                          style: TextStyle(fontSize: 11.5, color: Colors.grey[600]),
+                          style: TextStyle(fontSize: AppFontSize.f11_5, color: context.colors.textMuted),
                           maxLines: 1, overflow: TextOverflow.ellipsis),
                     ),
                 ],
@@ -537,30 +536,30 @@ class _ServicesArchiveScreenState extends State<ServicesArchiveScreen> {
             ),
             Expanded(
               flex: 2,
-              child: Text(service['clientName'] ?? 'Walk-in', style: const TextStyle(fontSize: 13), maxLines: 1, overflow: TextOverflow.ellipsis),
+              child: Text(service['clientName'] ?? 'Walk-in', style: const TextStyle(fontSize: AppFontSize.f13), maxLines: 1, overflow: TextOverflow.ellipsis),
             ),
             Expanded(
               flex: 2,
-              child: Text(service['providedByName'] ?? 'Unknown', style: const TextStyle(fontSize: 13), maxLines: 1, overflow: TextOverflow.ellipsis),
+              child: Text(service['providedByName'] ?? 'Unknown', style: const TextStyle(fontSize: AppFontSize.f13), maxLines: 1, overflow: TextOverflow.ellipsis),
             ),
             Expanded(
               flex: 2,
-              child: Text(Money.format(totalAmount), style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600)),
+              child: Text(Money.format(totalAmount), style: const TextStyle(fontSize: AppFontSize.f13, fontWeight: AppFontWeight.semibold)),
             ),
             Expanded(
               flex: 2,
               child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                padding: const EdgeInsets.symmetric(horizontal: AppSpacing.s8, vertical: AppSpacing.s3),
                 decoration: BoxDecoration(
-                  color: statusColor.withValues(alpha: 0.12),
-                  borderRadius: BorderRadius.circular(10),
+                  color: statusColor.withValues(alpha: AppAlpha.a10),
+                  borderRadius: BorderRadius.circular(AppRadius.r10),
                 ),
-                child: Text(status, style: TextStyle(color: statusColor, fontSize: 11.5, fontWeight: FontWeight.w600)),
+                child: Text(status, style: TextStyle(color: statusColor, fontSize: AppFontSize.f11_5, fontWeight: AppFontWeight.semibold)),
               ),
             ),
             Expanded(
               flex: 2,
-              child: Text(service['paymentMethod'] ?? '-', style: const TextStyle(fontSize: 13), maxLines: 1, overflow: TextOverflow.ellipsis),
+              child: Text(service['paymentMethod'] ?? '-', style: const TextStyle(fontSize: AppFontSize.f13), maxLines: 1, overflow: TextOverflow.ellipsis),
             ),
           ],
         ),
@@ -579,8 +578,8 @@ class _ServicesArchiveScreenState extends State<ServicesArchiveScreen> {
     final canGoNext = _currentPageIndex < totalPages - 1 || _hasMore;
 
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-      decoration: BoxDecoration(border: Border(top: BorderSide(color: Colors.grey.withValues(alpha: 0.2)))),
+      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.s16, vertical: AppSpacing.s12),
+      decoration: BoxDecoration(border: Border(top: BorderSide(color: context.colors.textHint.withValues(alpha: AppAlpha.a20)))),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
@@ -588,7 +587,7 @@ class _ServicesArchiveScreenState extends State<ServicesArchiveScreen> {
             totalFiltered == 0
                 ? 'No services'
                 : 'Showing ${pageStart + 1} to $pageEnd of $totalFiltered${_hasMore ? '+' : ''} services',
-            style: TextStyle(fontSize: 12.5, color: Colors.grey[600]),
+            style: TextStyle(fontSize: AppFontSize.f12_5, color: context.colors.textMuted),
           ),
           Row(
             children: [
@@ -606,15 +605,15 @@ class _ServicesArchiveScreenState extends State<ServicesArchiveScreen> {
                   },
                 ),
               ),
-              const SizedBox(width: 16),
+              const SizedBox(width: AppSpacing.s16),
               IconButton(
                 icon: const Icon(Icons.chevron_left),
                 onPressed: _currentPageIndex > 0 ? () => setState(() => _currentPageIndex--) : null,
               ),
-              Text('Page ${_currentPageIndex + 1} of $totalPages', style: const TextStyle(fontSize: 13)),
+              Text('Page ${_currentPageIndex + 1} of $totalPages', style: const TextStyle(fontSize: AppFontSize.f13)),
               IconButton(
                 icon: _isLoadingMore
-                    ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2))
+                    ? const SizedBox(width: AppSpacing.s16, height: 16, child: CircularProgressIndicator(strokeWidth: 2))
                     : const Icon(Icons.chevron_right),
                 onPressed: canGoNext && !_isLoadingMore
                     ? () async {
@@ -647,46 +646,46 @@ class _ServicesArchiveScreenState extends State<ServicesArchiveScreen> {
     final description = (service['description'] as String?) ?? '';
 
     return Container(
-      color: Colors.white,
+      color: context.colors.surface,
       child: SingleChildScrollView(
-        padding: const EdgeInsets.all(20),
+        padding: const EdgeInsets.all(AppSpacing.s20),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                const Text('Service Details', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                const Text('Service Details', style: TextStyle(fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f16)),
                 IconButton(
-                  icon: const Icon(Icons.close, size: 20),
+                  icon: const Icon(Icons.close, size: AppIconSize.i20),
                   onPressed: () => setState(() => _selectedService = null),
                 ),
               ],
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: AppSpacing.s8),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Expanded(
                   child: Text((service['name'] as String?) ?? 'Service',
-                      style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
+                      style: const TextStyle(fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f18)),
                 ),
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                  decoration: BoxDecoration(color: statusColor.withValues(alpha: 0.12), borderRadius: BorderRadius.circular(12)),
-                  child: Text(status, style: TextStyle(color: statusColor, fontSize: 12, fontWeight: FontWeight.w600)),
+                  padding: const EdgeInsets.symmetric(horizontal: AppSpacing.s10, vertical: AppSpacing.s4),
+                  decoration: BoxDecoration(color: statusColor.withValues(alpha: AppAlpha.a10), borderRadius: BorderRadius.circular(AppRadius.r12)),
+                  child: Text(status, style: TextStyle(color: statusColor, fontSize: AppFontSize.f12, fontWeight: AppFontWeight.semibold)),
                 ),
               ],
             ),
             Text('${dateOnlyFormatter.format(serviceDate)}, ${timeOnlyFormatter.format(serviceDate)}',
-                style: TextStyle(fontSize: 12.5, color: Colors.grey[600])),
-            const SizedBox(height: 20),
+                style: TextStyle(fontSize: AppFontSize.f12_5, color: context.colors.textMuted)),
+            const SizedBox(height: AppSpacing.s20),
             Container(
               width: double.infinity,
-              padding: const EdgeInsets.all(14),
+              padding: const EdgeInsets.all(AppSpacing.s14),
               decoration: BoxDecoration(
-                color: offWhite,
-                borderRadius: BorderRadius.circular(10),
+                color: context.colors.background,
+                borderRadius: BorderRadius.circular(AppRadius.r10),
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -694,11 +693,11 @@ class _ServicesArchiveScreenState extends State<ServicesArchiveScreen> {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      const Text('Payment Information', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13.5)),
-                      Text(status, style: TextStyle(color: statusColor, fontSize: 12.5, fontWeight: FontWeight.w600)),
+                      const Text('Payment Information', style: TextStyle(fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f13_5)),
+                      Text(status, style: TextStyle(color: statusColor, fontSize: AppFontSize.f12_5, fontWeight: AppFontWeight.semibold)),
                     ],
                   ),
-                  const SizedBox(height: 10),
+                  const SizedBox(height: AppSpacing.s10),
                   _totalsRow('Paid Amount', Money.format(totalPaid)),
                   _totalsRow('Payment Method', service['paymentMethod'] ?? 'Not recorded'),
                   if (transactionId != null && transactionId.isNotEmpty)
@@ -706,17 +705,17 @@ class _ServicesArchiveScreenState extends State<ServicesArchiveScreen> {
                 ],
               ),
             ),
-            const SizedBox(height: 20),
+            const SizedBox(height: AppSpacing.s20),
             _detailField(Icons.category_outlined, 'Category',
                 ((service['category'] as String?)?.isNotEmpty ?? false) ? service['category'] as String : 'Other'),
             _detailField(Icons.person_outline, 'Client', service['clientName'] ?? 'Walk-in'),
             _detailField(Icons.badge_outlined, 'Provided By', service['providedByName'] ?? 'Unknown'),
             _detailField(Icons.calendar_today_outlined, 'Service Date', dateOnlyFormatter.format(serviceDate)),
             _detailField(Icons.edit_note_outlined, 'Notes', description.isNotEmpty ? description : '-'),
-            const SizedBox(height: 20),
+            const SizedBox(height: AppSpacing.s20),
             OutlinedButton.icon(
               onPressed: () => _openReceipt(service),
-              icon: const Icon(Icons.print_outlined, size: 16),
+              icon: const Icon(Icons.print_outlined, size: AppIconSize.i16),
               label: const Text('Print'),
               style: OutlinedButton.styleFrom(minimumSize: const Size(double.infinity, 44)),
             ),
@@ -737,14 +736,14 @@ class _ServicesArchiveScreenState extends State<ServicesArchiveScreen> {
 
   Widget _totalsRow(String label, String value, {bool bold = false, Color? color}) {
     return Padding(
-      padding: const EdgeInsets.only(bottom: 6),
+      padding: const EdgeInsets.only(bottom: AppSpacing.s6),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(label, style: TextStyle(fontSize: 13, color: Colors.grey[600])),
+          Text(label, style: TextStyle(fontSize: AppFontSize.f13, color: context.colors.textMuted)),
           Text(
             value,
-            style: TextStyle(fontSize: 13.5, fontWeight: bold ? FontWeight.bold : FontWeight.normal, color: color),
+            style: TextStyle(fontSize: AppFontSize.f13_5, fontWeight: bold ? AppFontWeight.bold : AppFontWeight.regular, color: color),
           ),
         ],
       ),
@@ -753,18 +752,18 @@ class _ServicesArchiveScreenState extends State<ServicesArchiveScreen> {
 
   Widget _detailField(IconData icon, String label, String value) {
     return Padding(
-      padding: const EdgeInsets.only(bottom: 14),
+      padding: const EdgeInsets.only(bottom: AppSpacing.s14),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(icon, size: 18, color: Colors.grey[600]),
-          const SizedBox(width: 10),
+          Icon(icon, size: AppIconSize.i18, color: context.colors.textMuted),
+          const SizedBox(width: AppSpacing.s10),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(label, style: TextStyle(fontSize: 11.5, color: Colors.grey[600])),
-                Text(value, style: const TextStyle(fontSize: 13.5, fontWeight: FontWeight.w600)),
+                Text(label, style: TextStyle(fontSize: AppFontSize.f11_5, color: context.colors.textMuted)),
+                Text(value, style: const TextStyle(fontSize: AppFontSize.f13_5, fontWeight: AppFontWeight.semibold)),
               ],
             ),
           ),
@@ -817,8 +816,8 @@ class _SearchServicesArchiveDialogState extends State<_SearchServicesArchiveDial
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text('Search By:', style: TextStyle(fontWeight: FontWeight.bold)),
-            const SizedBox(height: 8),
+            const Text('Search By:', style: TextStyle(fontWeight: AppFontWeight.bold)),
+            const SizedBox(height: AppSpacing.s8),
             Row(
               children: [
                 Expanded(
@@ -828,10 +827,10 @@ class _SearchServicesArchiveDialogState extends State<_SearchServicesArchiveDial
                     onSelected: (selected) {
                       if (selected) setState(() => _dateMode = 'month');
                     },
-                    selectedColor: widget.primaryDeepGreen.withValues(alpha: 0.2),
+                    selectedColor: widget.primaryDeepGreen.withValues(alpha: AppAlpha.a20),
                   ),
                 ),
-                const SizedBox(width: 8),
+                const SizedBox(width: AppSpacing.s8),
                 Expanded(
                   child: ChoiceChip(
                     label: const Text('Date Range'),
@@ -839,20 +838,20 @@ class _SearchServicesArchiveDialogState extends State<_SearchServicesArchiveDial
                     onSelected: (selected) {
                       if (selected) setState(() => _dateMode = 'range');
                     },
-                    selectedColor: widget.primaryDeepGreen.withValues(alpha: 0.2),
+                    selectedColor: widget.primaryDeepGreen.withValues(alpha: AppAlpha.a20),
                   ),
                 ),
               ],
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: AppSpacing.s8),
             Text(
               'Only services before $cutoffLabel have reached the archive.',
-              style: TextStyle(fontSize: 11, color: Colors.grey[600]),
+              style: TextStyle(fontSize: AppFontSize.f11, color: context.colors.textMuted),
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: AppSpacing.s16),
             if (_dateMode == 'month') ...[
-              const Text('Select Month:', style: TextStyle(fontWeight: FontWeight.bold)),
-              const SizedBox(height: 8),
+              const Text('Select Month:', style: TextStyle(fontWeight: AppFontWeight.bold)),
+              const SizedBox(height: AppSpacing.s8),
               InkWell(
                 onTap: () async {
                   final picked = await showDatePicker(
@@ -864,23 +863,23 @@ class _SearchServicesArchiveDialogState extends State<_SearchServicesArchiveDial
                   if (picked != null) setState(() => _selectedMonth = picked);
                 },
                 child: Container(
-                  padding: const EdgeInsets.all(12),
+                  padding: const EdgeInsets.all(AppSpacing.s12),
                   decoration: BoxDecoration(
-                    border: Border.all(color: Colors.grey[400]!),
-                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: context.colors.borderStrong),
+                    borderRadius: BorderRadius.circular(AppRadius.r8),
                   ),
                   child: Row(
                     children: [
                       Icon(Icons.calendar_today, color: widget.primaryDeepGreen),
-                      const SizedBox(width: 12),
+                      const SizedBox(width: AppSpacing.s12),
                       Text(AppDateFormat.monthYear.format(_selectedMonth)),
                     ],
                   ),
                 ),
               ),
             ] else ...[
-              const Text('Start Date:', style: TextStyle(fontWeight: FontWeight.bold)),
-              const SizedBox(height: 8),
+              const Text('Start Date:', style: TextStyle(fontWeight: AppFontWeight.bold)),
+              const SizedBox(height: AppSpacing.s8),
               InkWell(
                 onTap: () async {
                   final picked = await showDatePicker(
@@ -892,23 +891,23 @@ class _SearchServicesArchiveDialogState extends State<_SearchServicesArchiveDial
                   if (picked != null) setState(() => _startDate = picked);
                 },
                 child: Container(
-                  padding: const EdgeInsets.all(12),
+                  padding: const EdgeInsets.all(AppSpacing.s12),
                   decoration: BoxDecoration(
-                    border: Border.all(color: Colors.grey[400]!),
-                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: context.colors.borderStrong),
+                    borderRadius: BorderRadius.circular(AppRadius.r8),
                   ),
                   child: Row(
                     children: [
                       Icon(Icons.calendar_today, color: widget.primaryDeepGreen),
-                      const SizedBox(width: 12),
+                      const SizedBox(width: AppSpacing.s12),
                       Text(AppDateFormat.date.format(_startDate)),
                     ],
                   ),
                 ),
               ),
-              const SizedBox(height: 12),
-              const Text('End Date:', style: TextStyle(fontWeight: FontWeight.bold)),
-              const SizedBox(height: 8),
+              const SizedBox(height: AppSpacing.s12),
+              const Text('End Date:', style: TextStyle(fontWeight: AppFontWeight.bold)),
+              const SizedBox(height: AppSpacing.s8),
               InkWell(
                 onTap: () async {
                   final picked = await showDatePicker(
@@ -920,15 +919,15 @@ class _SearchServicesArchiveDialogState extends State<_SearchServicesArchiveDial
                   if (picked != null) setState(() => _endDate = picked);
                 },
                 child: Container(
-                  padding: const EdgeInsets.all(12),
+                  padding: const EdgeInsets.all(AppSpacing.s12),
                   decoration: BoxDecoration(
-                    border: Border.all(color: Colors.grey[400]!),
-                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: context.colors.borderStrong),
+                    borderRadius: BorderRadius.circular(AppRadius.r8),
                   ),
                   child: Row(
                     children: [
                       Icon(Icons.calendar_today, color: widget.primaryDeepGreen),
-                      const SizedBox(width: 12),
+                      const SizedBox(width: AppSpacing.s12),
                       Text(AppDateFormat.date.format(_endDate)),
                     ],
                   ),
