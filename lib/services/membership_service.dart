@@ -1,5 +1,6 @@
 import 'package:cloud_functions/cloud_functions.dart';
 import '../config/app_rules.dart';
+import '../ui/feedback/friendly_error.dart';
 
 /// The region the membership functions run in - the same one as the database
 /// (africa-south1, Johannesburg). They make several database round trips each,
@@ -167,6 +168,8 @@ class MembershipService {
       if (message != null && message.isNotEmpty && message.toUpperCase() != 'INTERNAL') return message;
       return 'Something went wrong. Please try again.';
     }
-    return error.toString();
+    // Anything else (Firestore, a timeout, a plain exception) used to reach
+    // the screen as raw text; FriendlyError turns it into a sentence.
+    return FriendlyError.messageFor(error);
   }
 }
