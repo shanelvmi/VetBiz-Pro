@@ -11,6 +11,8 @@ import '../config/app_rules.dart';
 import '../config/payment_methods.dart';
 import '../config/app_date_format.dart';
 import '../config/app_info.dart';
+import '../theme/app_text.dart';
+import '../theme/app_dimens.dart';
 
 /// Builds a genuine A4 PDF receipt for a Sale or a Service - a real,
 /// correctly-sized printable document, not a screenshot of the on-screen
@@ -162,7 +164,7 @@ class ReceiptPdfService {
     doc.addPage(
       pw.MultiPage(
         pageFormat: PdfPageFormat.a4,
-        margin: const pw.EdgeInsets.fromLTRB(32, 28, 32, 28),
+        margin: const pw.EdgeInsets.fromLTRB(AppSpacing.s32, AppSpacing.s28, AppSpacing.s32, AppSpacing.s28),
         header: (context) => _pageHeader('Sale Receipt', facilityName, sale.timestamp, context.pageNumber, context.pagesCount),
         footer: (context) => _pageFooter(context.pageNumber, context.pagesCount),
         build: (context) => [
@@ -175,14 +177,14 @@ class ReceiptPdfService {
             facilityTagline: facilityTagline,
             facilityTin: facilityTin,
           ),
-          pw.SizedBox(height: 16),
+          pw.SizedBox(height: AppSpacing.s16),
           _metaSection([
             _kvPair('Receipt #', sale.receiptNumber?.toString() ?? sale.id.substring(0, sale.id.length < AppRules.fallbackReceiptIdLength ? sale.id.length : AppRules.fallbackReceiptIdLength)),
             _kvPair('Date', _dateTime.format(sale.timestamp)),
             _kvPair('Customer', sale.clientName ?? 'Walk-in'),
             _kvPair('Payment Method', sale.paymentMethod ?? PaymentMethod.onCredit),
           ]),
-          pw.SizedBox(height: 14),
+          pw.SizedBox(height: AppSpacing.s14),
           _itemsTable(
             sale.items
                 .map((item) => [
@@ -193,7 +195,7 @@ class ReceiptPdfService {
                     ])
                 .toList(),
           ),
-          pw.SizedBox(height: 12),
+          pw.SizedBox(height: AppSpacing.s12),
           _totalsBlock(
             subtotal: subtotal,
             discount: discountTotal,
@@ -203,7 +205,7 @@ class ReceiptPdfService {
             statusText: statusText,
             statusColor: statusColor,
           ),
-          pw.SizedBox(height: 20),
+          pw.SizedBox(height: AppSpacing.s20),
           _thankYouBlock(),
         ],
       ),
@@ -238,7 +240,7 @@ class ReceiptPdfService {
     doc.addPage(
       pw.MultiPage(
         pageFormat: PdfPageFormat.a4,
-        margin: const pw.EdgeInsets.fromLTRB(32, 28, 32, 28),
+        margin: const pw.EdgeInsets.fromLTRB(AppSpacing.s32, AppSpacing.s28, AppSpacing.s32, AppSpacing.s28),
         header: (context) => _pageHeader('Service Receipt', facilityName, serviceDate, context.pageNumber, context.pagesCount),
         footer: (context) => _pageFooter(context.pageNumber, context.pagesCount),
         build: (context) => [
@@ -251,7 +253,7 @@ class ReceiptPdfService {
             facilityTagline: facilityTagline,
             facilityTin: facilityTin,
           ),
-          pw.SizedBox(height: 16),
+          pw.SizedBox(height: AppSpacing.s16),
           _metaSection([
             _kvPair('Receipt #', service.receiptNumber?.toString() ?? service.id.substring(0, service.id.length < AppRules.fallbackReceiptIdLength ? service.id.length : AppRules.fallbackReceiptIdLength)),
             _kvPair('Date', _dateTime.format(serviceDate)),
@@ -259,7 +261,7 @@ class ReceiptPdfService {
             _kvPair('Provided By', service.providedByName ?? 'N/A'),
             _kvPair('Payment Method', service.paymentMethod ?? PaymentMethod.onCredit),
           ]),
-          pw.SizedBox(height: 14),
+          pw.SizedBox(height: AppSpacing.s14),
           _itemsTable([
             [service.name, '1', Money.decimal(serviceFeePortion), Money.decimal(serviceFeePortion)],
             for (final item in service.itemsUsed)
@@ -270,7 +272,7 @@ class ReceiptPdfService {
                 Money.decimal((item['price'] is num) ? (item['price'] as num).toDouble() : 0.0),
               ],
           ]),
-          pw.SizedBox(height: 12),
+          pw.SizedBox(height: AppSpacing.s12),
           _totalsBlock(
             subtotal: service.totalAmount,
             discount: 0,
@@ -280,7 +282,7 @@ class ReceiptPdfService {
             statusText: statusText,
             statusColor: statusColor,
           ),
-          pw.SizedBox(height: 20),
+          pw.SizedBox(height: AppSpacing.s20),
           _thankYouBlock(),
         ],
       ),
@@ -293,14 +295,14 @@ class ReceiptPdfService {
 
   static pw.Widget _pageHeader(String kind, String facilityName, DateTime date, int pageNumber, int pagesCount) {
     return pw.Container(
-      padding: const pw.EdgeInsets.only(bottom: 8),
+      padding: const pw.EdgeInsets.only(bottom: AppSpacing.s8),
       decoration: const pw.BoxDecoration(border: pw.Border(bottom: pw.BorderSide(color: PdfColors.grey300, width: 0.75))),
       child: pw.Row(
         mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
         children: [
-          pw.Text('${AppInfo.name} - $kind', style: pw.TextStyle(fontSize: 9, color: _grey, fontWeight: pw.FontWeight.bold)),
+          pw.Text('${AppInfo.name} - $kind', style: pw.TextStyle(fontSize: AppFontSize.f9, color: _grey, fontWeight: pw.FontWeight.bold)),
           pw.Text('$facilityName - ${_fullDate.format(date)}  |  Page $pageNumber of $pagesCount',
-              style: pw.TextStyle(fontSize: 9, color: _grey)),
+              style: pw.TextStyle(fontSize: AppFontSize.f9, color: _grey)),
         ],
       ),
     );
@@ -308,9 +310,9 @@ class ReceiptPdfService {
 
   static pw.Widget _pageFooter(int pageNumber, int pagesCount) {
     return pw.Container(
-      padding: const pw.EdgeInsets.only(top: 6),
+      padding: const pw.EdgeInsets.only(top: AppSpacing.s6),
       decoration: const pw.BoxDecoration(border: pw.Border(top: pw.BorderSide(color: PdfColors.grey300, width: 0.75))),
-      child: pw.Text('Generated by ${AppInfo.name}', style: pw.TextStyle(fontSize: 8, color: PdfColors.grey500)),
+      child: pw.Text('Generated by ${AppInfo.name}', style: pw.TextStyle(fontSize: AppFontSize.f9, color: PdfColors.grey500)),
     );
   }
 
@@ -340,20 +342,20 @@ class ReceiptPdfService {
           pw.RichText(
             text: pw.TextSpan(
               children: [
-                pw.TextSpan(text: 'VetBiz ', style: pw.TextStyle(fontSize: 14, fontWeight: pw.FontWeight.bold, color: _deepGreen)),
-                pw.TextSpan(text: 'Pro', style: pw.TextStyle(fontSize: 14, fontWeight: pw.FontWeight.bold, color: _amber)),
+                pw.TextSpan(text: 'VetBiz ', style: pw.TextStyle(fontSize: AppFontSize.f14, fontWeight: pw.FontWeight.bold, color: _deepGreen)),
+                pw.TextSpan(text: 'Pro', style: pw.TextStyle(fontSize: AppFontSize.f14, fontWeight: pw.FontWeight.bold, color: _amber)),
               ],
             ),
           ),
-          pw.SizedBox(height: 8),
-          pw.Text(displayName, style: pw.TextStyle(fontSize: 20, fontWeight: pw.FontWeight.bold, color: _deepGreen)),
+          pw.SizedBox(height: AppSpacing.s8),
+          pw.Text(displayName, style: pw.TextStyle(fontSize: AppFontSize.f20, fontWeight: pw.FontWeight.bold, color: _deepGreen)),
           if (facilityTagline != null && facilityTagline.isNotEmpty) ...[
-            pw.SizedBox(height: 2),
-            pw.Text(facilityTagline, style: pw.TextStyle(fontSize: 10, color: _grey)),
+            pw.SizedBox(height: AppSpacing.s2),
+            pw.Text(facilityTagline, style: pw.TextStyle(fontSize: AppFontSize.f10, color: _grey)),
           ],
           if (contactLines.isNotEmpty) ...[
-            pw.SizedBox(height: 6),
-            pw.Text(contactLines.join('   |   '), style: const pw.TextStyle(fontSize: 9, color: PdfColors.grey700)),
+            pw.SizedBox(height: AppSpacing.s6),
+            pw.Text(contactLines.join('   |   '), style: const pw.TextStyle(fontSize: AppFontSize.f9, color: PdfColors.grey700)),
           ],
         ],
       ),
@@ -362,11 +364,11 @@ class ReceiptPdfService {
 
   static pw.Widget _kvPair(String label, String value) {
     return pw.Padding(
-      padding: const pw.EdgeInsets.symmetric(vertical: 1.5),
+      padding: const pw.EdgeInsets.symmetric(vertical: AppSpacing.s2),
       child: pw.Row(
         children: [
-          pw.SizedBox(width: 100, child: pw.Text(label, style: pw.TextStyle(fontSize: 10.5, color: _grey))),
-          pw.Text(value, style: pw.TextStyle(fontSize: 10.5, fontWeight: pw.FontWeight.bold)),
+          pw.SizedBox(width: 100, child: pw.Text(label, style: pw.TextStyle(fontSize: AppFontSize.f10_5, color: _grey))),
+          pw.Text(value, style: pw.TextStyle(fontSize: AppFontSize.f10_5, fontWeight: pw.FontWeight.bold)),
         ],
       ),
     );
@@ -374,7 +376,7 @@ class ReceiptPdfService {
 
   static pw.Widget _metaSection(List<pw.Widget> rows) {
     return pw.Container(
-      padding: const pw.EdgeInsets.symmetric(vertical: 8),
+      padding: const pw.EdgeInsets.symmetric(vertical: AppSpacing.s8),
       decoration: const pw.BoxDecoration(border: pw.Border(top: pw.BorderSide(color: PdfColors.grey300, width: 0.75))),
       child: pw.Column(crossAxisAlignment: pw.CrossAxisAlignment.start, children: rows),
     );
@@ -391,10 +393,10 @@ class ReceiptPdfService {
               .asMap()
               .entries
               .map((e) => pw.Padding(
-                    padding: const pw.EdgeInsets.symmetric(horizontal: 6, vertical: 6),
+                    padding: const pw.EdgeInsets.symmetric(horizontal: AppSpacing.s6, vertical: AppSpacing.s6),
                     child: pw.Text(e.value,
                         textAlign: e.key == 0 ? pw.TextAlign.left : pw.TextAlign.right,
-                        style: pw.TextStyle(fontSize: 9.5, fontWeight: pw.FontWeight.bold, color: PdfColors.white)),
+                        style: pw.TextStyle(fontSize: AppFontSize.f10, fontWeight: pw.FontWeight.bold, color: PdfColors.white)),
                   ))
               .toList(),
         ),
@@ -404,10 +406,10 @@ class ReceiptPdfService {
                 .asMap()
                 .entries
                 .map((e) => pw.Padding(
-                      padding: const pw.EdgeInsets.symmetric(horizontal: 6, vertical: 5),
+                      padding: const pw.EdgeInsets.symmetric(horizontal: AppSpacing.s6, vertical: AppSpacing.s4),
                       child: pw.Text(e.value,
                           textAlign: e.key == 0 ? pw.TextAlign.left : pw.TextAlign.right,
-                          style: pw.TextStyle(fontSize: 9.5, color: e.key == 0 ? PdfColors.grey700 : PdfColors.black)),
+                          style: pw.TextStyle(fontSize: AppFontSize.f10, color: e.key == 0 ? PdfColors.grey700 : PdfColors.black)),
                     ))
                 .toList(),
           ),
@@ -426,12 +428,12 @@ class ReceiptPdfService {
   }) {
     pw.Widget row(String label, String value, {bool bold = false, PdfColor? color}) {
       return pw.Padding(
-        padding: const pw.EdgeInsets.symmetric(vertical: 2),
+        padding: const pw.EdgeInsets.symmetric(vertical: AppSpacing.s2),
         child: pw.Row(
           mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
           children: [
-            pw.Text(label, style: pw.TextStyle(fontSize: 10, fontWeight: bold ? pw.FontWeight.bold : pw.FontWeight.normal, color: color)),
-            pw.Text(value, style: pw.TextStyle(fontSize: 10, fontWeight: bold ? pw.FontWeight.bold : pw.FontWeight.normal, color: color)),
+            pw.Text(label, style: pw.TextStyle(fontSize: AppFontSize.f10, fontWeight: bold ? pw.FontWeight.bold : pw.FontWeight.normal, color: color)),
+            pw.Text(value, style: pw.TextStyle(fontSize: AppFontSize.f10, fontWeight: bold ? pw.FontWeight.bold : pw.FontWeight.normal, color: color)),
           ],
         ),
       );
@@ -449,20 +451,20 @@ class ReceiptPdfService {
               row('Discount', '- ${Money.symbolDecimal(discount)}'),
             ],
             pw.Container(
-              margin: const pw.EdgeInsets.symmetric(vertical: 4),
-              padding: const pw.EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+              margin: const pw.EdgeInsets.symmetric(vertical: AppSpacing.s4),
+              padding: const pw.EdgeInsets.symmetric(horizontal: AppSpacing.s8, vertical: AppSpacing.s6),
               color: _lightGrey,
               child: row('TOTAL', Money.symbolDecimal(total), bold: true),
             ),
             row('Paid', Money.symbolDecimal(paid)),
             if (balance > 0) row('Balance', Money.symbolDecimal(balance), bold: true, color: _red),
-            pw.SizedBox(height: 6),
+            pw.SizedBox(height: AppSpacing.s6),
             pw.Align(
               alignment: pw.Alignment.centerRight,
               child: pw.Container(
-                padding: const pw.EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                padding: const pw.EdgeInsets.symmetric(horizontal: AppSpacing.s8, vertical: AppSpacing.s3),
                 decoration: pw.BoxDecoration(color: statusColor == _red ? _redPillBg : _greenPillBg),
-                child: pw.Text(statusText, style: pw.TextStyle(fontSize: 9.5, fontWeight: pw.FontWeight.bold, color: statusColor)),
+                child: pw.Text(statusText, style: pw.TextStyle(fontSize: AppFontSize.f10, fontWeight: pw.FontWeight.bold, color: statusColor)),
               ),
             ),
           ],
@@ -475,9 +477,9 @@ class ReceiptPdfService {
     return pw.Center(
       child: pw.Column(
         children: [
-          pw.Text('Thank you for choosing us.', style: pw.TextStyle(fontSize: 11, fontStyle: pw.FontStyle.italic, color: _grey)),
-          pw.SizedBox(height: 4),
-          pw.Text('Powered by ${AppInfo.name}', style: pw.TextStyle(fontSize: 8, color: PdfColors.grey500)),
+          pw.Text('Thank you for choosing us.', style: pw.TextStyle(fontSize: AppFontSize.f11, fontStyle: pw.FontStyle.italic, color: _grey)),
+          pw.SizedBox(height: AppSpacing.s4),
+          pw.Text('Powered by ${AppInfo.name}', style: pw.TextStyle(fontSize: AppFontSize.f9, color: PdfColors.grey500)),
         ],
       ),
     );
