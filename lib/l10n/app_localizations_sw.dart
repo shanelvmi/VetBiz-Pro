@@ -614,4 +614,76 @@ class AppLocalizationsSw extends AppLocalizations {
 
   @override
   String get plan_yearly => 'Kila Mwaka';
+
+  @override
+  String get clientType_farmer => 'Mkulima';
+
+  @override
+  String get clientType_vet => 'Daktari wa Mifugo';
+
+  @override
+  String get clientType_wholesaler => 'Muuzaji wa Jumla';
+
+  @override
+  String get clientType_retailer => 'Muuzaji wa Rejareja';
+
+  @override
+  String get clientType_other => 'Mwingine';
+
+  @override
+  String get farmerSubType_cropProducer => 'Mkulima wa Mazao';
+
+  @override
+  String get farmerSubType_animalKeeper => 'Mfugaji';
+
+  @override
+  String get animal_cattle => 'Ng\'ombe';
+
+  @override
+  String get animal_goat => 'Mbuzi';
+
+  @override
+  String get animal_sheep => 'Kondoo';
+
+  @override
+  String get animal_pig => 'Nguruwe';
+
+  @override
+  String get animal_donkey => 'Punda';
+
+  @override
+  String get animal_chicken => 'Kuku';
+
+  @override
+  String get animal_duck => 'Bata';
+
+  @override
+  String get animal_turkey => 'Bata Mzinga';
+
+  @override
+  String get animal_guineaFowl => 'Kanga';
+
+  @override
+  String get animal_bees => 'Nyuki';
+
+  @override
+  String get animal_dog => 'Mbwa';
+
+  @override
+  String get animal_cat => 'Paka';
+
+  @override
+  String get animal_rabbit => 'Sungura';
+
+  @override
+  String get animalGroup_livestock => 'Mifugo';
+
+  @override
+  String get animalGroup_poultry => 'Ndege wa Kufugwa';
+
+  @override
+  String get animalGroup_other => 'Wengine';
+
+  @override
+  String get vetPractice_clinic => 'Kliniki';
 }

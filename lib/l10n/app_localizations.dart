@@ -1273,6 +1273,150 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Yearly'**
   String get plan_yearly;
+
+  /// Client type: client form type tiles, Clients type filter and badges (stored value 'Farmer').
+  ///
+  /// In en, this message translates to:
+  /// **'Farmer'**
+  String get clientType_farmer;
+
+  /// Client type: client form type tiles, Clients type filter and badges (stored value 'Vet').
+  ///
+  /// In en, this message translates to:
+  /// **'Vet'**
+  String get clientType_vet;
+
+  /// Client type: client form type tiles, Clients type filter and badges (stored value 'Wholesaler').
+  ///
+  /// In en, this message translates to:
+  /// **'Wholesaler'**
+  String get clientType_wholesaler;
+
+  /// Client type: client form type tiles, Clients type filter and badges (stored value 'Retailer').
+  ///
+  /// In en, this message translates to:
+  /// **'Retailer'**
+  String get clientType_retailer;
+
+  /// Client type shown for a client saved with no type (not offered in the form): Clients badges and filter.
+  ///
+  /// In en, this message translates to:
+  /// **'Other'**
+  String get clientType_other;
+
+  /// Farmer type: client form dropdown (stored value 'Crop Producer').
+  ///
+  /// In en, this message translates to:
+  /// **'Crop Producer'**
+  String get farmerSubType_cropProducer;
+
+  /// Farmer type: client form dropdown (stored value 'Animal Keeper').
+  ///
+  /// In en, this message translates to:
+  /// **'Animal Keeper'**
+  String get farmerSubType_animalKeeper;
+
+  /// Animal species: client form animal picker and chips (stored value 'Cattle').
+  ///
+  /// In en, this message translates to:
+  /// **'Cattle'**
+  String get animal_cattle;
+
+  /// Animal species: client form animal picker and chips (stored value 'Goat').
+  ///
+  /// In en, this message translates to:
+  /// **'Goat'**
+  String get animal_goat;
+
+  /// Animal species: client form animal picker and chips (stored value 'Sheep').
+  ///
+  /// In en, this message translates to:
+  /// **'Sheep'**
+  String get animal_sheep;
+
+  /// Animal species: client form animal picker and chips (stored value 'Pig').
+  ///
+  /// In en, this message translates to:
+  /// **'Pig'**
+  String get animal_pig;
+
+  /// Animal species: client form animal picker and chips (stored value 'Donkey').
+  ///
+  /// In en, this message translates to:
+  /// **'Donkey'**
+  String get animal_donkey;
+
+  /// Animal species: client form animal picker and chips (stored value 'Chicken').
+  ///
+  /// In en, this message translates to:
+  /// **'Chicken'**
+  String get animal_chicken;
+
+  /// Animal species: client form animal picker and chips (stored value 'Duck').
+  ///
+  /// In en, this message translates to:
+  /// **'Duck'**
+  String get animal_duck;
+
+  /// Animal species: client form animal picker and chips (stored value 'Turkey').
+  ///
+  /// In en, this message translates to:
+  /// **'Turkey'**
+  String get animal_turkey;
+
+  /// Animal species: client form animal picker and chips (stored value 'Guinea Fowl').
+  ///
+  /// In en, this message translates to:
+  /// **'Guinea Fowl'**
+  String get animal_guineaFowl;
+
+  /// Animal species: client form animal picker and chips (stored value 'Bees').
+  ///
+  /// In en, this message translates to:
+  /// **'Bees'**
+  String get animal_bees;
+
+  /// Animal species: client form animal picker and chips (stored value 'Dog').
+  ///
+  /// In en, this message translates to:
+  /// **'Dog'**
+  String get animal_dog;
+
+  /// Animal species: client form animal picker and chips (stored value 'Cat').
+  ///
+  /// In en, this message translates to:
+  /// **'Cat'**
+  String get animal_cat;
+
+  /// Animal species: client form animal picker and chips (stored value 'Rabbit').
+  ///
+  /// In en, this message translates to:
+  /// **'Rabbit'**
+  String get animal_rabbit;
+
+  /// Heading in the client form's animal picker: the 'Livestock' group (not stored).
+  ///
+  /// In en, this message translates to:
+  /// **'Livestock'**
+  String get animalGroup_livestock;
+
+  /// Heading in the client form's animal picker: the 'Poultry' group (not stored).
+  ///
+  /// In en, this message translates to:
+  /// **'Poultry'**
+  String get animalGroup_poultry;
+
+  /// Heading in the client form's animal picker: the 'Other' group (not stored).
+  ///
+  /// In en, this message translates to:
+  /// **'Other'**
+  String get animalGroup_other;
+
+  /// Vet practice type: client form dropdown (stored value 'Clinic').
+  ///
+  /// In en, this message translates to:
+  /// **'Clinic'**
+  String get vetPractice_clinic;
 }
 
 class _AppLocalizationsDelegate

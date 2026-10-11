@@ -613,4 +613,76 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get plan_yearly => 'Yearly';
+
+  @override
+  String get clientType_farmer => 'Farmer';
+
+  @override
+  String get clientType_vet => 'Vet';
+
+  @override
+  String get clientType_wholesaler => 'Wholesaler';
+
+  @override
+  String get clientType_retailer => 'Retailer';
+
+  @override
+  String get clientType_other => 'Other';
+
+  @override
+  String get farmerSubType_cropProducer => 'Crop Producer';
+
+  @override
+  String get farmerSubType_animalKeeper => 'Animal Keeper';
+
+  @override
+  String get animal_cattle => 'Cattle';
+
+  @override
+  String get animal_goat => 'Goat';
+
+  @override
+  String get animal_sheep => 'Sheep';
+
+  @override
+  String get animal_pig => 'Pig';
+
+  @override
+  String get animal_donkey => 'Donkey';
+
+  @override
+  String get animal_chicken => 'Chicken';
+
+  @override
+  String get animal_duck => 'Duck';
+
+  @override
+  String get animal_turkey => 'Turkey';
+
+  @override
+  String get animal_guineaFowl => 'Guinea Fowl';
+
+  @override
+  String get animal_bees => 'Bees';
+
+  @override
+  String get animal_dog => 'Dog';
+
+  @override
+  String get animal_cat => 'Cat';
+
+  @override
+  String get animal_rabbit => 'Rabbit';
+
+  @override
+  String get animalGroup_livestock => 'Livestock';
+
+  @override
+  String get animalGroup_poultry => 'Poultry';
+
+  @override
+  String get animalGroup_other => 'Other';
+
+  @override
+  String get vetPractice_clinic => 'Clinic';
 }
