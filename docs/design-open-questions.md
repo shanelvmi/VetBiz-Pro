@@ -53,12 +53,10 @@ User-facing "VetBiz Pro" now reads `AppInfo.name` (titles, Settings, support lin
 
 - **List bottom gap 80**, `lib/screens/platform_admin/announcements_tab.dart` (`_fabClearance`, under the announcements list, clear of the New Announcement button): a size, same value and purpose as view_batches_screen's. Kept exact as a named local constant.
 - **`Colors.redAccent[700]`**, `lib/screens/platform_admin/subscription_requests_tab.dart` (a small bold label in the request card): not in the 4.1 table; no danger role is within 12 on every channel (`dangerAccent` is redAccent, `dangerStrong` red[700]). Kept. Snap to `dangerAccent`, or a role?
-- **Computed `Duration(days: ...)`**, same file: the approved plan's length (`plan.durationDays`, from the plan) and the "attended" window (`_attendedDays`). Business date maths, not literals; still counted by guard R5. Add guard allowlist entries, as for `trial_period_helper.dart`?
 - **Platform-admin badge `Colors.deepPurple`** (x6), `lib/screens/platform_admin/users_tab.dart` (the "Platform Admin" chip, its icon and the avatar fill): no role; a category colour. A `rolePlatformAdmin` role with the exact value?
 - **Status chip fills `Colors.blue.shade100` / `Colors.orange.shade100`**, same file (pending / other status chips): not in the 4.1 table, no role within 12. Kept. Roles, or `info`/`warning` at an alpha?
 - **`tealGlow` `#3E8E82`**, `lib/screens/platform_admin/platform_admin_home_screen.dart` (the sidebar's facility badge: fill at a15, border at a50, icon): more than 12 from every role. Kept as the named constant. A role named for it, or snap to `roleCoAdmin`/teal?
 - **Chart height 220**, `lib/screens/platform_admin/overview_details_screen.dart` (`_chartHeight`, the daily earnings chart): a size. Kept exact as a named local constant.
-- **More computed `Duration(days: ...)`**: `overview_details_screen.dart` (the last N days for the chart) and `facility_detail_screen.dart` (a manual subscription override's length). Same allowlist question as subscription_requests_tab above.
 
 ### Raised in step 2D, batch D8
 
@@ -69,7 +67,6 @@ User-facing "VetBiz Pro" now reads `AppInfo.name` (titles, Settings, support lin
 - **Register timings and sizes**, `register_screen.dart`, kept exact as named constants: `_alertSwitch` 260 ms and `_alertHoverGrace` 3 s (as on login), `_scrollToField` 350 ms (scroll to the first field in error; 50 from `slow` and `slower`), `_welcomePanelWidth` 290 (the welcome panel beside the form).
 - **Outline alpha 0.6**, `register_screen.dart` (the welcome panel's "Log in" button outline, `onPrimary` at 0.6): 0.1 from `a50`/`a70`, as in D4. Kept.
 - **Login card widths 1100 / 480**, `login_screen.dart` (`targetWidth`, wide and narrow): content widths, not in 4.10 (480 is `dialogMd`'s snap source, but this is a page card, not a dialog). Kept.
-- **Computed alert time**, `login_screen.dart` `_errorDisplayDuration`: 4 s plus 1 s per 20 characters, clamped to 5 to 12 s. A computed UI timeout; still counted by guard R5. Same allowlist question as the computed `Duration(days: ...)` in D7.
 
 ### Raised in step 2D, batch D9
 
@@ -92,13 +89,16 @@ User-facing "VetBiz Pro" now reads `AppInfo.name` (titles, Settings, support lin
 - **Facility type `Colors.purple`** (any type other than agrovet or vet), `lib/screens/facilities/facility_picker_screen.dart` `_typeColor`: same value as `chart4`, different purpose. Kept.
 - **Loading gaps 40**, `facility_screen.dart` (`EdgeInsets.symmetric(vertical: 40)`, inventory and sales tabs): 8 above `s32`. Kept. List panel sizes `_listPanelHeight` 360 and `_listPanelWidth` 340 kept exact as named constants.
 
+### Raised in step 2D, batch D11
+
+- **`Colors.blue.shade900`**, `lib/screens/activity/activity_log_screen.dart` `_buildScopeNote` (the text of the assistant's "You see your own activity" note): no role (`infoStrong` is blue 700). On the guard allowlist with that reason. Snap to `infoStrong`, or a role?
+- **Everything still raw in `lib/screens` is allowlisted** (`tool/hardcoded_baseline.json`), each entry naming the question above (D4, D7 to D10, Money) or the owner's D9 rule it belongs to. Deciding a question in 2R means removing its entry.
+
 ### Raised in step 2E
 
 - **`Colors.orange.shade900`**, `lib/main.dart` (the text of the "removed from facility" note on the no-facility screen): no role (`warningStrong` is orange 800). On the guard allowlist with that reason. Snap to `warningStrong`, or a role?
 - **New category roles `chart8` (amber 700) and `chart9` (deep orange)**, `lib/theme/app_colors.dart`, for the Reorder Soon and Debt Reminder notification colours (spec 4.1: category colour -> chartN), next to `chart7` (indigo, Transactions activity). Exact legacy values; for review in 2R with the other chart roles.
 - **PDF snaps (output difference)**, `daily_report_pdf_service.dart` and `receipt_pdf_service.dart`: font 8 and 8.5 -> 9, 9.5 -> 10, spacing 1.5 -> 2, 3.5 and 5 -> 4 (spec tables and the standing rule). Printed text in those spots grows by up to 1pt. Check one printed daily report and receipt.
-- **Never in a 2D batch**: `lib/screens/activity/activity_log_screen.dart` (62 guard hits left) and `lib/screens/legal/legal_document_screen.dart` (54). Neither folder is in the D1 to D10 list. One more batch for both?
-- **Screen allowlist candidates**: the computed `Duration(days: ...)` in `subscription_requests_tab.dart`, `overview_details_screen.dart`, `facility_detail_screen.dart` and login's `_errorDisplayDuration` (raised in D7/D8) are the same kind as the ones allowlisted in 2E for `client_provider.dart` and `activity_log_retention.dart`. Allowlist them too?
 
 ### Trash and restore: books consistency (audit after D6, read-only)
 
@@ -122,6 +122,13 @@ User-facing "VetBiz Pro" now reads `AppInfo.name` (titles, Settings, support lin
 Incomplete: **sales** and **services**. After restoring either one, stock is too high and the client's balance and debts are too low. The Trash screen's Restore now asks for confirmation for these two and says what it will not change (behaviour unchanged). Open: make `TrashService` re-apply stock, debt and balance for sales and services (and decide what to do about the hard-deleted service expenses). The Services Undo is withdrawn until then (see Decided, "Undo after the Trash audit").
 
 ## Decided
+
+### D11 (decided and done in batch D11)
+
+- **Standing snap rule applied to the D7 to D10 open questions:** none falls within it. All are colours (not covered), durations or sizes (not covered), or beyond the limits (alpha 0.97, 0.92 and 0.6; icon 28; gaps 40). They stay Open for 2R.
+- **Computed durations allowlisted** (`tool/hardcoded_baseline.json`, one reason each): the D7 questions (`subscription_requests_tab.dart` plan length and attended window; `overview_details_screen.dart` chart days; `facility_detail_screen.dart` manual override) and the D8 one (login's `_errorDisplayDuration`; its method name was also an R5 false positive). Same kind, also allowlisted: register's computed alert time and the dashboard and insights date maths.
+- **The two screens never in a 2D batch** (raised in 2E): `activity_log_screen.dart` and `legal_document_screen.dart` are on the tokens. Snaps: alpha 0.06/0.04 -> `a05`, 0.12 -> `a10`, the black54 barrier -> `scrim` at `a50`, 250 ms -> `AppMotion.normal`, font 16.5 -> `f17`, icon 17 -> `i18`.
+- **Guard:** R1 to R9 are at zero in `lib/`, with everything kept on the allowlist.
 
 ### D8 follow-up (decided after batch D8; done before D9)
 
