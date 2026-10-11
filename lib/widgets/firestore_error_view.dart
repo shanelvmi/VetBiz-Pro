@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
+import '../l10n/l10n.dart';
 import '../theme/app_dimens.dart';
 import '../theme/app_text.dart';
 import '../theme/theme_context.dart';
@@ -33,7 +34,7 @@ class _FirestoreErrorViewState extends State<FirestoreErrorView> {
     final urlMatch = RegExp(r'https?://\S+').firstMatch('$error');
     final url = urlMatch?.group(0);
     final friendly = url != null
-        ? 'This view needs a one-time database index to be created first.'
+        ? context.l10n.error_indexNeeded
         : (error == null ? FriendlyError.fallback : FriendlyError.messageFor(error));
 
     return Padding(
@@ -43,7 +44,7 @@ class _FirestoreErrorViewState extends State<FirestoreErrorView> {
         children: [
           Icon(Icons.error_outline, size: AppIconSize.i48, color: context.colors.dangerAccent),
           const SizedBox(height: AppSpacing.s12),
-          const Text('Could not load data', style: TextStyle(fontWeight: AppFontWeight.bold)),
+          Text(context.l10n.error_couldNotLoad, style: const TextStyle(fontWeight: AppFontWeight.bold)),
           const SizedBox(height: AppSpacing.s8),
           Text(
             friendly,
@@ -60,7 +61,7 @@ class _FirestoreErrorViewState extends State<FirestoreErrorView> {
                 }
               },
               icon: const Icon(Icons.build_circle_outlined),
-              label: const Text('Create Missing Index'),
+              label: Text(context.l10n.error_createIndex),
               style: ElevatedButton.styleFrom(
                 backgroundColor: context.colors.primary,
                 foregroundColor: context.colors.onPrimary,
@@ -68,7 +69,7 @@ class _FirestoreErrorViewState extends State<FirestoreErrorView> {
             ),
             const SizedBox(height: AppSpacing.s6),
             Text(
-              'This opens Firebase Console with the exact index needed already filled in.',
+              context.l10n.error_createIndexHint,
               style: TextStyle(fontSize: AppFontSize.f11, color: context.colors.textMuted),
               textAlign: TextAlign.center,
             ),
@@ -77,7 +78,7 @@ class _FirestoreErrorViewState extends State<FirestoreErrorView> {
             const SizedBox(height: AppSpacing.s8),
             TextButton(
               onPressed: () => setState(() => _showDetails = !_showDetails),
-              child: Text(_showDetails ? 'Hide details' : 'Details'),
+              child: Text(_showDetails ? context.l10n.common_hideDetails : context.l10n.common_details),
             ),
             if (_showDetails)
               SelectableText(

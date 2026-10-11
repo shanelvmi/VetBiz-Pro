@@ -531,13 +531,7 @@
       "lib/screens/transactions/add_transaction_screen.dart": 21,
       "lib/screens/transactions/transactions_screen.dart": 33,
       "lib/services/role_change_service.dart": 1,
-      "lib/services/session_validity_service.dart": 1,
-      "lib/utils/facility_activation.dart": 1,
-      "lib/utils/subscription_guard.dart": 7,
-      "lib/widgets/date_range_dialog.dart": 5,
-      "lib/widgets/firestore_error_view.dart": 3,
-      "lib/widgets/maintenance_gate.dart": 2,
-      "lib/widgets/product_catalog_side_panel.dart": 3
+      "lib/services/session_validity_service.dart": 1
     },
     "R11": {}
   }

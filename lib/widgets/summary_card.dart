@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../config/app_timeouts.dart';
+import '../l10n/l10n.dart';
 import '../theme/app_breakpoints.dart';
 import '../theme/app_dimens.dart';
 import '../theme/app_motion.dart';
@@ -333,7 +334,7 @@ class _TrendPillState extends State<_TrendPill> with SingleTickerProviderStateMi
     final arrowIcon = trend.isNewActivity
         ? Icons.fiber_new_rounded
         : (trend.absoluteChange >= 0 ? Icons.arrow_upward_rounded : Icons.arrow_downward_rounded);
-    final label = trend.isNewActivity ? 'New' : '${trend.percent.abs().toStringAsFixed(1)}%';
+    final label = trend.isNewActivity ? context.l10n.summary_trendNew : '${trend.percent.abs().toStringAsFixed(1)}%';
     final fontSize = widget.compact ? AppFontSize.f10 : AppFontSize.f10_5;
     final iconSize = AppIconSize.i12;
 

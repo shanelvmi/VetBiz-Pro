@@ -14,6 +14,7 @@ import 'provider_reset.dart';
 import 'navigator_key.dart';
 import '../screens/dashboard/dashboard_screen.dart';
 import '../config/app_timeouts.dart';
+import '../l10n/l10n.dart';
 import '../theme/app_dimens.dart';
 import '../theme/app_motion.dart';
 import '../theme/app_text.dart';
@@ -116,7 +117,7 @@ Future<void> activateFacilityAndGoToDashboard({
     navState.pushAndRemoveUntil(
       PageRouteBuilder(
         pageBuilder: (context, animation, secondaryAnimation) =>
-            _DashboardEntryLoader(facilityName: facility['facilityName'] as String? ?? 'your facility'),
+            _DashboardEntryLoader(facilityName: facility['facilityName'] as String?),
         transitionDuration: AppMotion.slower,
         reverseTransitionDuration: AppMotion.slower,
         transitionsBuilder: (context, animation, secondaryAnimation, child) {
@@ -152,8 +153,9 @@ Future<void> activateFacilityAndGoToDashboard({
 /// listener has reported back yet - an unusually slow connection should
 /// never leave someone stuck here longer than this.
 class _DashboardEntryLoader extends StatefulWidget {
-  final String facilityName;
-  const _DashboardEntryLoader({required this.facilityName});
+  // Null: no name stored; the text then says "your facility".
+  final String? facilityName;
+  const _DashboardEntryLoader({this.facilityName});
 
   @override
   State<_DashboardEntryLoader> createState() => _DashboardEntryLoaderState();
@@ -188,7 +190,7 @@ class _DashboardEntryLoaderState extends State<_DashboardEntryLoader> {
                     CircularProgressIndicator(color: context.colors.primary),
                     const SizedBox(height: AppSpacing.s20),
                     Text(
-                      'Setting up ${widget.facilityName}...',
+                      context.l10n.facilities_settingUp(widget.facilityName ?? context.l10n.facilities_yourFacility),
                       style: TextStyle(
                           color: context.colors.primary, fontWeight: AppFontWeight.semibold, fontSize: AppFontSize.f15),
                     ),

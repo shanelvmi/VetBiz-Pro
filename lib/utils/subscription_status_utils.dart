@@ -37,6 +37,8 @@ SubscriptionStatusKind computeSubscriptionStatus(DateTime? subscriptionExpiresAt
   return SubscriptionStatusKind.trial;
 }
 
+// English on purpose: only the platform-admin console shows it, and that
+// console stays English (docs/PHASE2_LOCALISATION_SPEC.md section 2.8).
 String subscriptionStatusLabel(SubscriptionStatusKind status) {
   switch (status) {
     case SubscriptionStatusKind.trial:

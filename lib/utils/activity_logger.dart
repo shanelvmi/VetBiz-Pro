@@ -22,6 +22,8 @@ class ActivityLogger {
   }) async {
     try {
       // Fetch fullName from Firestore if userName not provided
+      // 'Unknown' is stored in the log entry, so it stays English
+      // (stored data is never translated, PHASE2_LOCALISATION_SPEC 2.5).
       if (userName == null || userName.isEmpty) {
         final userDoc = await FirebaseFirestore.instance
             .collection(Collections.users)

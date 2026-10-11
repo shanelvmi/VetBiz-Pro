@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../models/notification_model.dart';
 import '../config/app_date_format.dart';
+import '../l10n/l10n.dart';
 import '../theme/app_dimens.dart';
 import '../theme/app_text.dart';
 import '../theme/theme_context.dart';
@@ -13,10 +14,10 @@ import '../theme/theme_context.dart';
 String relativeTime(DateTime? dt) {
   if (dt == null) return '';
   final diff = DateTime.now().difference(dt);
-  if (diff.inMinutes < 1) return 'Just now';
-  if (diff.inMinutes < 60) return '${diff.inMinutes}m ago';
-  if (diff.inHours < 24) return '${diff.inHours}h ago';
-  if (diff.inDays < 7) return '${diff.inDays}d ago';
+  if (diff.inMinutes < 1) return L10n.current.time_justNow;
+  if (diff.inMinutes < 60) return L10n.current.time_minutesAgo(diff.inMinutes);
+  if (diff.inHours < 24) return L10n.current.time_hoursAgo(diff.inHours);
+  if (diff.inDays < 7) return L10n.current.time_daysAgo(diff.inDays);
   return AppDateFormat.dateShort.format(dt);
 }
 

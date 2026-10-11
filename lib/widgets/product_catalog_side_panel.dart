@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../l10n/l10n.dart';
 import '../providers/facility_provider.dart';
 import '../constants/product_categories.dart';
 import '../theme/app_dimens.dart';
@@ -75,7 +76,8 @@ class _ProductCatalogSidePanelState extends State<ProductCatalogSidePanel> {
   Widget _buildFilterPanel(BuildContext context) {
     final facilityProvider = Provider.of<FacilityProvider>(context);
     final selectedFacility = facilityProvider.selectedFacility;
-    final facilityName = selectedFacility != null ? (selectedFacility['name'] ?? 'Facility') : 'Facility';
+    final l10n = context.l10n;
+    final facilityName = selectedFacility?['name'] ?? l10n.common_facility;
     final facilityType = selectedFacility != null ? (selectedFacility['type'] ?? '') : '';
     final logoUrl = selectedFacility != null ? selectedFacility['logoUrl'] : null;
 
@@ -140,7 +142,7 @@ class _ProductCatalogSidePanelState extends State<ProductCatalogSidePanel> {
             const Divider(height: 28),
 
             // ---- Categories ----
-            Text('CATEGORIES',
+            Text(context.l10n.products_categoriesHeading,
                 style: TextStyle(
                     fontSize: AppFontSize.f11,
                     fontWeight: AppFontWeight.bold,
@@ -154,20 +156,24 @@ class _ProductCatalogSidePanelState extends State<ProductCatalogSidePanel> {
             const Divider(height: 28),
 
             // ---- Stock status ----
-            Text('STOCK STATUS',
+            Text(context.l10n.products_stockStatusHeading,
                 style: TextStyle(
                     fontSize: AppFontSize.f11,
                     fontWeight: AppFontWeight.bold,
                     color: context.colors.textMuted,
                     letterSpacing: 0.5)),
             const SizedBox(height: AppSpacing.s8),
-            _buildStatusRow('All', 'All Status', null, widget.totalCount),
-            _buildStatusRow('Active', 'In Stock', context.colors.success, widget.statusCounts['Active'] ?? 0),
-            _buildStatusRow('Low Stock', 'Low Stock', context.colors.warning, widget.statusCounts['Low Stock'] ?? 0),
+            _buildStatusRow('All', l10n.products_statusAll, null, widget.totalCount),
             _buildStatusRow(
-                'Reorder Soon', 'Reorder Soon', context.colors.warning, widget.statusCounts['Reorder Soon'] ?? 0),
-            _buildStatusRow('Depleted', 'Depleted', context.colors.danger, widget.statusCounts['Depleted'] ?? 0),
-            _buildStatusRow('Expired', 'Expired', context.colors.danger, widget.statusCounts['Expired'] ?? 0),
+                'Active', l10n.products_statusInStock, context.colors.success, widget.statusCounts['Active'] ?? 0),
+            _buildStatusRow(
+                'Low Stock', l10n.products_statusLowStock, context.colors.warning, widget.statusCounts['Low Stock'] ?? 0),
+            _buildStatusRow('Reorder Soon', l10n.products_statusReorderSoon, context.colors.warning,
+                widget.statusCounts['Reorder Soon'] ?? 0),
+            _buildStatusRow(
+                'Depleted', l10n.products_statusDepleted, context.colors.danger, widget.statusCounts['Depleted'] ?? 0),
+            _buildStatusRow(
+                'Expired', l10n.products_statusExpired, context.colors.danger, widget.statusCounts['Expired'] ?? 0),
           ],
         ),
       ),
@@ -178,7 +184,7 @@ class _ProductCatalogSidePanelState extends State<ProductCatalogSidePanel> {
     final isSelected = widget.selectedGroup == 'All';
     return _selectableRow(
       icon: Icons.grid_view_rounded,
-      label: 'All Products',
+      label: context.l10n.products_allProducts,
       count: widget.totalCount,
       isSelected: isSelected,
       onTap: () {
@@ -201,6 +207,7 @@ class _ProductCatalogSidePanelState extends State<ProductCatalogSidePanel> {
       'Agro' => Icons.eco_outlined,
       _ => Icons.category_outlined,
     };
+    // Group names are stored values; their labels come with step 2F-3.
     final label = group == 'Vet' ? 'Veterinary' : group;
 
     return Column(

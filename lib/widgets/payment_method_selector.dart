@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../config/payment_methods.dart';
+import '../l10n/l10n.dart';
 import '../theme/app_dimens.dart';
 import '../theme/app_text.dart';
 import '../theme/theme_context.dart';
@@ -33,14 +34,15 @@ class PaymentMethodSelector extends StatelessWidget {
   final String? value;
   final ValueChanged<String> onChanged;
   final Color activeColor;
-  final String label;
+  /// Null: "Payment Method" in the current language.
+  final String? label;
 
   const PaymentMethodSelector({
     super.key,
     required this.value,
     required this.onChanged,
     required this.activeColor,
-    this.label = 'Payment Method',
+    this.label,
   });
 
   @override
@@ -49,7 +51,7 @@ class PaymentMethodSelector extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          label,
+          label ?? context.l10n.payments_method,
           style: TextStyle(fontSize: AppFontSize.f13, fontWeight: AppFontWeight.semibold, color: context.colors.textSoft),
         ),
         const SizedBox(height: AppSpacing.s8),

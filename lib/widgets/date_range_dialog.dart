@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../config/app_date_format.dart';
+import '../l10n/l10n.dart';
 import '../theme/app_dimens.dart';
 import '../theme/app_text.dart';
 import '../theme/theme_context.dart';
@@ -47,11 +48,11 @@ class _DateRangeDialogState extends State<DateRangeDialog> {
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
-      title: Text('Select Date Range', style: TextStyle(color: widget.primaryDeepGreen)),
+      title: Text(context.l10n.dateRange_title, style: TextStyle(color: widget.primaryDeepGreen)),
       content: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          const Text('Start Date:', style: TextStyle(fontWeight: AppFontWeight.bold)),
+          Text(context.l10n.dateRange_start, style: const TextStyle(fontWeight: AppFontWeight.bold)),
           const SizedBox(height: AppSpacing.s8),
           InkWell(
             onTap: () async {
@@ -79,7 +80,7 @@ class _DateRangeDialogState extends State<DateRangeDialog> {
             ),
           ),
           const SizedBox(height: AppSpacing.s12),
-          const Text('End Date:', style: TextStyle(fontWeight: AppFontWeight.bold)),
+          Text(context.l10n.dateRange_end, style: const TextStyle(fontWeight: AppFontWeight.bold)),
           const SizedBox(height: AppSpacing.s8),
           InkWell(
             onTap: () async {
@@ -112,7 +113,7 @@ class _DateRangeDialogState extends State<DateRangeDialog> {
         TextButton(
           onPressed: () => Navigator.pop(context, null),
           style: TextButton.styleFrom(foregroundColor: widget.primaryDeepGreen),
-          child: const Text('Cancel'),
+          child: Text(context.l10n.common_cancel),
         ),
         ElevatedButton(
           onPressed: () {
@@ -123,7 +124,7 @@ class _DateRangeDialogState extends State<DateRangeDialog> {
             backgroundColor: WidgetStateProperty.all(widget.primaryDeepGreen),
             foregroundColor: WidgetStateProperty.all(widget.offWhite),
           ),
-          child: const Text('Apply'),
+          child: Text(context.l10n.common_apply),
         ),
       ],
     );

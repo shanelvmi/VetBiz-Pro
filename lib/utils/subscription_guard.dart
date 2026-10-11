@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../l10n/l10n.dart';
 import '../providers/subscription_provider.dart';
 import '../providers/user_role_provider.dart';
 import '../screens/subscription/subscription_screen.dart';
@@ -52,20 +53,16 @@ Future<void> navigateOrShowLockedDialog(
     await showDialog<void>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Subscription Expired'),
+        title: Text(context.l10n.subscription_expiredTitle),
         content: SizedBox(
           width: _dialogWidth(context),
-          child: const Text(
-            'This facility\'s subscription has expired, so new sales and services can\'t be '
-            'recorded right now. You can still view all existing data. Please ask your admin '
-            'to renew the subscription.',
-          ),
+          child: Text(context.l10n.subscription_expiredAssistant),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
             style: TextButton.styleFrom(foregroundColor: context.colors.primary),
-            child: const Text('OK'),
+            child: Text(context.l10n.common_ok),
           ),
         ],
       ),
@@ -76,19 +73,16 @@ Future<void> navigateOrShowLockedDialog(
   final goToSubscription = await showDialog<bool>(
     context: context,
     builder: (context) => AlertDialog(
-      title: const Text('Subscription Expired'),
+      title: Text(context.l10n.subscription_expiredTitle),
       content: SizedBox(
         width: _dialogWidth(context),
-        child: const Text(
-          'Your subscription has expired, so new sales and services can\'t be recorded right now. '
-          'You can still view all your existing data. Submit a payment to restore full access.',
-        ),
+        child: Text(context.l10n.subscription_expiredAdmin),
       ),
       actions: [
         TextButton(
           onPressed: () => Navigator.pop(context, false),
           style: TextButton.styleFrom(foregroundColor: context.colors.primary),
-          child: const Text('Cancel'),
+          child: Text(context.l10n.common_cancel),
         ),
         ElevatedButton(
           onPressed: () => Navigator.pop(context, true),
@@ -99,7 +93,7 @@ Future<void> navigateOrShowLockedDialog(
             }),
             foregroundColor: WidgetStateProperty.all(context.colors.onPrimary),
           ),
-          child: const Text('Go to Subscription'),
+          child: Text(context.l10n.subscription_goTo),
         ),
       ],
     ),

@@ -2,6 +2,7 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+import 'package:vetbiz_pro/l10n/l10n.dart';
 import 'package:vetbiz_pro/theme/app_palette.dart';
 import 'package:vetbiz_pro/theme/app_theme.dart';
 import 'package:vetbiz_pro/ui/feedback/friendly_error.dart';
@@ -9,6 +10,8 @@ import 'package:vetbiz_pro/widgets/firestore_error_view.dart';
 
 Future<void> _show(WidgetTester tester, Object? error) => tester.pumpWidget(MaterialApp(
       theme: AppTheme.build(AppColorTheme.kilimanjaro, Brightness.light),
+      localizationsDelegates: AppLocalizations.localizationsDelegates,
+      supportedLocales: AppLocalizations.supportedLocales,
       home: Scaffold(body: SingleChildScrollView(child: FirestoreErrorView(error: error))),
     ));
 

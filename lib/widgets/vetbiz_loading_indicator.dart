@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../l10n/l10n.dart';
 import '../theme/app_breakpoints.dart';
 import '../theme/app_dimens.dart';
 import '../theme/app_motion.dart';
@@ -204,7 +205,7 @@ class _VetBizLoadingIndicatorState extends State<VetBizLoadingIndicator> with Ti
                         child: Column(
                           children: [
                             Text(
-                              widget.title ?? 'Loading your account...',
+                              widget.title ?? context.l10n.loading_accountTitle,
                               textAlign: TextAlign.center,
                               style: TextStyle(
                                 fontWeight: AppFontWeight.bold,
@@ -222,7 +223,7 @@ class _VetBizLoadingIndicatorState extends State<VetBizLoadingIndicator> with Ti
                                 );
                               },
                               child: Text(
-                                widget.subtitle ?? 'Preparing your facility data and services',
+                                widget.subtitle ?? context.l10n.loading_accountSubtitle,
                                 textAlign: TextAlign.center,
                                 style: TextStyle(fontSize: AppFontSize.f12_5, color: context.colors.textMuted),
                               ),

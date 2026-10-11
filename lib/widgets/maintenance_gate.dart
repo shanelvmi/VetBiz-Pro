@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
+import '../l10n/l10n.dart';
 import '../utils/force_logout.dart';
 import '../theme/app_dimens.dart';
 import '../theme/app_motion.dart';
@@ -133,8 +134,7 @@ class _MaintenanceGateState extends State<MaintenanceGate> {
     return MaintenanceScreen(
       message: (customMessage != null && customMessage.isNotEmpty)
           ? customMessage
-          : "We're currently performing scheduled maintenance. "
-              "Please try again shortly.",
+          : context.l10n.maintenance_defaultMessage,
     );
   }
 }
@@ -200,7 +200,7 @@ class _MaintenanceScreenState extends State<MaintenanceScreen> with SingleTicker
                   ),
                   const SizedBox(height: AppSpacing.s28),
                   Text(
-                    "We'll be right back",
+                    context.l10n.maintenance_title,
                     textAlign: TextAlign.center,
                     style: TextStyle(
                         fontSize: AppFontSize.f22, fontWeight: AppFontWeight.bold, color: context.colors.primary),
@@ -215,7 +215,7 @@ class _MaintenanceScreenState extends State<MaintenanceScreen> with SingleTicker
                   TextButton.icon(
                     onPressed: () => forceLogoutAndShowLogin(),
                     icon: const Icon(Icons.logout, size: AppIconSize.i18),
-                    label: const Text('Sign out'),
+                    label: Text(context.l10n.common_signOut),
                     style: TextButton.styleFrom(foregroundColor: context.colors.textMuted),
                   ),
                 ],
