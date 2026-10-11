@@ -164,4 +164,123 @@ class AppLocalizationsSw extends AppLocalizations {
 
   @override
   String get login_signInFailed => 'Imeshindikana kuingia. Jaribu tena.';
+
+  @override
+  String get common_facility => 'Kituo';
+
+  @override
+  String get common_signOut => 'Toka';
+
+  @override
+  String get common_hideDetails => 'Ficha maelezo';
+
+  @override
+  String get dateRange_title => 'Chagua Kipindi cha Tarehe';
+
+  @override
+  String get dateRange_start => 'Tarehe ya Kuanza:';
+
+  @override
+  String get dateRange_end => 'Tarehe ya Mwisho:';
+
+  @override
+  String get error_couldNotLoad => 'Imeshindikana kupakia taarifa';
+
+  @override
+  String get error_indexNeeded =>
+      'Ukurasa huu unahitaji faharasa ya hifadhidata itengenezwe mara moja kwanza.';
+
+  @override
+  String get error_createIndex => 'Tengeneza Faharasa Inayokosekana';
+
+  @override
+  String get error_createIndexHint =>
+      'Hii inafungua Firebase Console ikiwa na faharasa inayohitajika tayari imejazwa.';
+
+  @override
+  String get maintenance_title => 'Tutarudi hivi punde';
+
+  @override
+  String get maintenance_defaultMessage =>
+      'Tunafanya matengenezo yaliyopangwa kwa sasa. Tafadhali jaribu tena baada ya muda mfupi.';
+
+  @override
+  String get time_justNow => 'Sasa hivi';
+
+  @override
+  String time_minutesAgo(int count) {
+    return 'dakika $count zilizopita';
+  }
+
+  @override
+  String time_hoursAgo(int count) {
+    return 'saa $count zilizopita';
+  }
+
+  @override
+  String time_daysAgo(int count) {
+    return 'siku $count zilizopita';
+  }
+
+  @override
+  String get payments_method => 'Njia ya Malipo';
+
+  @override
+  String get products_categoriesHeading => 'MAKUNDI';
+
+  @override
+  String get products_stockStatusHeading => 'HALI YA STOO';
+
+  @override
+  String get products_allProducts => 'Bidhaa Zote';
+
+  @override
+  String get products_statusAll => 'Hali Zote';
+
+  @override
+  String get products_statusInStock => 'Ipo Stoo';
+
+  @override
+  String get products_statusLowStock => 'Stoo Chache';
+
+  @override
+  String get products_statusReorderSoon => 'Agiza Karibuni';
+
+  @override
+  String get products_statusDepleted => 'Imeisha';
+
+  @override
+  String get products_statusExpired => 'Muda Umepita';
+
+  @override
+  String get summary_trendNew => 'Mpya';
+
+  @override
+  String get loading_accountTitle => 'Inapakia akaunti yako...';
+
+  @override
+  String get loading_accountSubtitle =>
+      'Inaandaa taarifa na huduma za kituo chako';
+
+  @override
+  String facilities_settingUp(String facilityName) {
+    return 'Inaandaa $facilityName...';
+  }
+
+  @override
+  String get facilities_yourFacility => 'kituo chako';
+
+  @override
+  String get subscription_expiredTitle => 'Usajili Umekwisha';
+
+  @override
+  String get subscription_expiredAssistant =>
+      'Usajili wa kituo hiki umekwisha, kwa hiyo mauzo na huduma mpya haziwezi kurekodiwa kwa sasa. Bado unaweza kuona taarifa zote zilizopo. Tafadhali muombe msimamizi wako ahuishe usajili.';
+
+  @override
+  String get subscription_expiredAdmin =>
+      'Usajili wako umekwisha, kwa hiyo mauzo na huduma mpya haziwezi kurekodiwa kwa sasa. Bado unaweza kuona taarifa zako zote zilizopo. Tuma malipo ili kurejesha huduma kamili.';
+
+  @override
+  String get subscription_goTo => 'Nenda kwenye Usajili';
 }
