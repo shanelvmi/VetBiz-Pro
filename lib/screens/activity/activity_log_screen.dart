@@ -11,9 +11,10 @@ import '../../utils/text_sanitizer.dart';
 import '../../widgets/firestore_error_view.dart';
 import '../../theme/activity_type_style.dart';
 import '../../theme/theme_context.dart';
-import '../../theme/app_palette.dart';
 import '../../theme/app_dimens.dart';
 import '../../theme/app_text.dart';
+import '../../theme/app_motion.dart';
+import '../../theme/app_breakpoints.dart';
 import '../../ui/feedback/app_feedback.dart';
 import '../../data/activity_type.dart';
 import '../../data/collections.dart';
@@ -31,10 +32,6 @@ class ActivityLogScreen extends StatefulWidget {
 }
 
 class _ActivityLogScreenState extends State<ActivityLogScreen> {
-  final Color primaryDeepGreen = AppPalette.primary;
-  final Color warmAmber = AppPalette.accent;
-  final Color offWhite = AppPalette.background;
-
   String selectedFilter = 'All';
   String searchQuery = '';
 
@@ -630,9 +627,9 @@ class _ActivityLogScreenState extends State<ActivityLogScreen> {
 
   PreferredSizeWidget _buildAppBar() {
     return AppBar(
-      backgroundColor: Colors.white,
-      foregroundColor: Colors.black87,
-      elevation: 1,
+      backgroundColor: context.colors.surface,
+      foregroundColor: context.colors.textPrimary,
+      elevation: AppElevation.e1,
       centerTitle: true,
       toolbarHeight: 72,
       automaticallyImplyLeading: !widget.isModal,
@@ -643,11 +640,11 @@ class _ActivityLogScreenState extends State<ActivityLogScreen> {
               onPressed: () => Navigator.of(context).pop(),
             )
           : null,
-      title: const Column(
+      title: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Text('Activity Log', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 19, color: Colors.black87)),
-          Text('Every recorded action for this facility', style: TextStyle(fontSize: 12, color: Colors.black54)),
+          Text('Activity Log', style: TextStyle(fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f19, color: context.colors.textPrimary)),
+          Text('Every recorded action for this facility', style: TextStyle(fontSize: AppFontSize.f12, color: context.colors.textSecondary)),
         ],
       ),
     );
@@ -674,7 +671,7 @@ class _ActivityLogScreenState extends State<ActivityLogScreen> {
     if (targetContext != null) {
       Scrollable.ensureVisible(
         targetContext,
-        duration: const Duration(milliseconds: 250),
+        duration: AppMotion.normal,
         curve: Curves.easeOut,
         alignment: 0.5,
       );
@@ -685,21 +682,21 @@ class _ActivityLogScreenState extends State<ActivityLogScreen> {
   Widget _buildScopeNote() {
     return Container(
       width: double.infinity,
-      margin: const EdgeInsets.fromLTRB(12, 10, 12, 0),
-      padding: const EdgeInsets.all(10),
+      margin: const EdgeInsets.fromLTRB(AppSpacing.s12, AppSpacing.s10, AppSpacing.s12, 0),
+      padding: const EdgeInsets.all(AppSpacing.s10),
       decoration: BoxDecoration(
-        color: Colors.blue.withValues(alpha: 0.06),
-        borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: Colors.blue.withValues(alpha: 0.2)),
+        color: context.colors.info.withValues(alpha: AppAlpha.a05),
+        borderRadius: BorderRadius.circular(AppRadius.r10),
+        border: Border.all(color: context.colors.info.withValues(alpha: AppAlpha.a20)),
       ),
       child: Row(
         children: [
-          Icon(Icons.lock_outline, size: 16, color: Colors.blue.shade700),
-          const SizedBox(width: 8),
+          Icon(Icons.lock_outline, size: AppIconSize.i16, color: context.colors.infoStrong),
+          const SizedBox(width: AppSpacing.s8),
           Expanded(
             child: Text(
               'You see your own activity, and anything about you. Other team matters are only visible to admins.',
-              style: TextStyle(fontSize: 12.5, color: Colors.blue.shade900),
+              style: TextStyle(fontSize: AppFontSize.f12_5, color: Colors.blue.shade900),
             ),
           ),
         ],
@@ -728,11 +725,11 @@ class _ActivityLogScreenState extends State<ActivityLogScreen> {
           ..sort((a, b) => typeCounts[b]!.compareTo(typeCounts[a]!));
 
         return Container(
-          margin: const EdgeInsets.fromLTRB(12, 10, 12, 6),
-          padding: const EdgeInsets.symmetric(vertical: 8),
+          margin: const EdgeInsets.fromLTRB(AppSpacing.s12, AppSpacing.s10, AppSpacing.s12, AppSpacing.s6),
+          padding: const EdgeInsets.symmetric(vertical: AppSpacing.s8),
           decoration: BoxDecoration(
-            color: primaryDeepGreen.withValues(alpha: 0.06),
-            borderRadius: BorderRadius.circular(10),
+            color: context.colors.primary.withValues(alpha: AppAlpha.a05),
+            borderRadius: BorderRadius.circular(AppRadius.r10),
           ),
           child: SizedBox(
             height: 44,
@@ -757,29 +754,29 @@ class _ActivityLogScreenState extends State<ActivityLogScreen> {
                   child: SingleChildScrollView(
                 controller: _chipScrollController,
                 scrollDirection: Axis.horizontal,
-                padding: const EdgeInsets.symmetric(horizontal: 8),
+                padding: const EdgeInsets.symmetric(horizontal: AppSpacing.s8),
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     Padding(
-                      padding: const EdgeInsets.only(right: 8),
+                      padding: const EdgeInsets.only(right: AppSpacing.s8),
                       child: ChoiceChip(
                         key: _keyFor('All'),
                         label: Text('All · $totalLogs'),
                         selected: selectedFilter == 'All',
                         onSelected: (_) => _selectFilterAndScrollIntoView('All'),
-                        selectedColor: warmAmber,
+                        selectedColor: context.colors.accent,
                       ),
                     ),
                     ...sortedTypes.map((type) {
                       return Padding(
-                        padding: const EdgeInsets.only(right: 8),
+                        padding: const EdgeInsets.only(right: AppSpacing.s8),
                         child: ChoiceChip(
                           key: _keyFor(type),
                           label: Text('$type · ${typeCounts[type]}'),
                           selected: selectedFilter == type,
                           onSelected: (_) => _selectFilterAndScrollIntoView(type),
-                          selectedColor: warmAmber,
+                          selectedColor: context.colors.accent,
                         ),
                       );
                     }),
@@ -804,7 +801,7 @@ class _ActivityLogScreenState extends State<ActivityLogScreen> {
 /// rather than "navigated away from"). Same threshold already used
 /// elsewhere in this app for "is this desktop-width".
 Future<void> showActivityLog(BuildContext context) async {
-  final isWideScreen = MediaQuery.of(context).size.width >= 900;
+  final isWideScreen = MediaQuery.of(context).size.width >= AppBreakpoints.medium;
 
   if (!isWideScreen) {
     await Navigator.of(context).push(
@@ -817,21 +814,21 @@ Future<void> showActivityLog(BuildContext context) async {
     context: context,
     barrierDismissible: true,
     barrierLabel: 'Activity Log',
-    barrierColor: Colors.black54,
-    transitionDuration: const Duration(milliseconds: 220),
+    barrierColor: context.colors.scrim.withValues(alpha: AppAlpha.a50),
+    transitionDuration: AppMotion.normal,
     pageBuilder: (context, animation, secondaryAnimation) {
       final screenSize = MediaQuery.of(context).size;
       return Center(
         child: ConstrainedBox(
           constraints: BoxConstraints(
-            maxWidth: 1000,
+            maxWidth: AppSizes.contentLg,
             maxHeight: screenSize.height * 0.85,
           ),
           child: SizedBox(
             width: screenSize.width * 0.85,
             height: screenSize.height * 0.85,
             child: ClipRRect(
-              borderRadius: BorderRadius.circular(16),
+              borderRadius: BorderRadius.circular(AppRadius.r16),
               child: const Material(
                 child: ActivityLogScreen(isModal: true),
               ),

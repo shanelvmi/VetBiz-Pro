@@ -48,11 +48,16 @@
       "file": "lib/main.dart",
       "lineContains": "color: Colors.orange.shade900",
       "reason": "no colour role for orange 900 (removed-from-facility note text); in design-open-questions.md for 2R"
+    },
+    {
+      "rule": "R1",
+      "file": "lib/screens/activity/activity_log_screen.dart",
+      "lineContains": "color: Colors.blue.shade900",
+      "reason": "no colour role for blue 900 (assistant scope note text); in design-open-questions.md for 2R"
     }
   ],
   "counts": {
     "R1": {
-      "lib/screens/activity/activity_log_screen.dart": 9,
       "lib/screens/admin/manage_assistants_screen.dart": 2,
       "lib/screens/dashboard/dashboard_screen.dart": 12,
       "lib/screens/dashboard/insights_screen.dart": 5,
@@ -67,15 +72,12 @@
       "lib/screens/register_screen.dart": 2
     },
     "R2": {
-      "lib/screens/activity/activity_log_screen.dart": 3,
       "lib/screens/legal/legal_document_screen.dart": 13
     },
     "R3": {
-      "lib/screens/activity/activity_log_screen.dart": 3,
       "lib/screens/legal/legal_document_screen.dart": 3
     },
     "R4": {
-      "lib/screens/activity/activity_log_screen.dart": 8,
       "lib/screens/admin/manage_assistants_screen.dart": 1,
       "lib/screens/dashboard/dashboard_screen.dart": 1,
       "lib/screens/facilities/facility_screen.dart": 2,
@@ -84,7 +86,6 @@
       "lib/screens/sales/add_sale_screen.dart": 1
     },
     "R5": {
-      "lib/screens/activity/activity_log_screen.dart": 2,
       "lib/screens/dashboard/dashboard_screen.dart": 14,
       "lib/screens/dashboard/insights_screen.dart": 4,
       "lib/screens/login_screen.dart": 10,
@@ -95,7 +96,6 @@
     },
     "R6": {},
     "R7": {
-      "lib/screens/activity/activity_log_screen.dart": 1,
       "lib/screens/dashboard/dashboard_screen.dart": 2,
       "lib/screens/legal/legal_document_screen.dart": 1
     },
