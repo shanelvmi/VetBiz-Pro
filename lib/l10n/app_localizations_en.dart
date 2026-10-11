@@ -974,4 +974,87 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get payments_allMethods => 'All Methods';
+
+  @override
+  String get payments_searchHint => 'Search payer, reference, invoice...';
+
+  @override
+  String payments_newEntries(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count new entries available',
+      one: '1 new entry available',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get payments_emptyPeriod => 'No payments in this period.';
+
+  @override
+  String get payments_colDateTime => 'Date & Time';
+
+  @override
+  String get payments_payer => 'Payer';
+
+  @override
+  String get payments_source => 'Source';
+
+  @override
+  String get payments_reference => 'Reference';
+
+  @override
+  String get payments_recordedBy => 'Recorded By';
+
+  @override
+  String get payments_thisWeek => 'This Week';
+
+  @override
+  String get payments_thisMonth => 'This Month';
+
+  @override
+  String payments_paymentCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count payments',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get payments_outstanding => 'Outstanding';
+
+  @override
+  String payments_debtCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count debts',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get payments_detailsTitle => 'Payment Details';
+
+  @override
+  String get payments_received => 'Payment Received';
+
+  @override
+  String get payments_noReceipt => 'No receipt available for this payment';
+
+  @override
+  String get subscription_title => 'Subscription';
+
+  @override
+  String get subscription_statusTrial => 'Trial';
+
+  @override
+  String get subscription_statusTrialNoSetup =>
+      'Trial - no subscription set up yet';
+
+  @override
+  String get subscription_statusActive => 'Active';
 }

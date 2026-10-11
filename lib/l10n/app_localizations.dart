@@ -1975,6 +1975,126 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'All Methods'**
   String get payments_allMethods;
+
+  /// Payments search box hint.
+  ///
+  /// In en, this message translates to:
+  /// **'Search payer, reference, invoice...'**
+  String get payments_searchHint;
+
+  /// Banner when new payments arrived while the list was open.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 new entry available} other{{count} new entries available}}'**
+  String payments_newEntries(int count);
+
+  /// Payments list when the chosen dates have none.
+  ///
+  /// In en, this message translates to:
+  /// **'No payments in this period.'**
+  String get payments_emptyPeriod;
+
+  /// Payments table header.
+  ///
+  /// In en, this message translates to:
+  /// **'Date & Time'**
+  String get payments_colDateTime;
+
+  /// Payments table header and detail label: who paid.
+  ///
+  /// In en, this message translates to:
+  /// **'Payer'**
+  String get payments_payer;
+
+  /// Payments table header and detail label: what the payment was for.
+  ///
+  /// In en, this message translates to:
+  /// **'Source'**
+  String get payments_source;
+
+  /// Payments table header: receipt or invoice number.
+  ///
+  /// In en, this message translates to:
+  /// **'Reference'**
+  String get payments_reference;
+
+  /// Payments table header and detail label: staff member who recorded it.
+  ///
+  /// In en, this message translates to:
+  /// **'Recorded By'**
+  String get payments_recordedBy;
+
+  /// Payments metric card.
+  ///
+  /// In en, this message translates to:
+  /// **'This Week'**
+  String get payments_thisWeek;
+
+  /// Payments metric card.
+  ///
+  /// In en, this message translates to:
+  /// **'This Month'**
+  String get payments_thisMonth;
+
+  /// Number of payments under a metric card. English is always 'payments', as before.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, other{{count} payments}}'**
+  String payments_paymentCount(int count);
+
+  /// Payments metric card: money still owed.
+  ///
+  /// In en, this message translates to:
+  /// **'Outstanding'**
+  String get payments_outstanding;
+
+  /// Number of open debts under the Outstanding card. English is always 'debts', as before.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, other{{count} debts}}'**
+  String payments_debtCount(int count);
+
+  /// Title of the payment detail panel, and the payment section of the Subscription form.
+  ///
+  /// In en, this message translates to:
+  /// **'Payment Details'**
+  String get payments_detailsTitle;
+
+  /// Badge on the payment detail panel.
+  ///
+  /// In en, this message translates to:
+  /// **'Payment Received'**
+  String get payments_received;
+
+  /// Message when a payment has no receipt to print.
+  ///
+  /// In en, this message translates to:
+  /// **'No receipt available for this payment'**
+  String get payments_noReceipt;
+
+  /// Subscription screen title.
+  ///
+  /// In en, this message translates to:
+  /// **'Subscription'**
+  String get subscription_title;
+
+  /// Subscription status: in a free trial.
+  ///
+  /// In en, this message translates to:
+  /// **'Trial'**
+  String get subscription_statusTrial;
+
+  /// Subscription status: trial with no end date set.
+  ///
+  /// In en, this message translates to:
+  /// **'Trial - no subscription set up yet'**
+  String get subscription_statusTrialNoSetup;
+
+  /// Subscription status: paid and active.
+  ///
+  /// In en, this message translates to:
+  /// **'Active'**
+  String get subscription_statusActive;
 }
 
 class _AppLocalizationsDelegate

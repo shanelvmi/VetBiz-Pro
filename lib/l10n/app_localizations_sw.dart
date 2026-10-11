@@ -976,4 +976,89 @@ class AppLocalizationsSw extends AppLocalizations {
 
   @override
   String get payments_allMethods => 'Njia Zote';
+
+  @override
+  String get payments_searchHint => 'Tafuta mlipaji, kumbukumbu, ankara...';
+
+  @override
+  String payments_newEntries(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Maingizo $count mapya yapo',
+      one: 'Ingizo 1 jipya lipo',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get payments_emptyPeriod => 'Hakuna malipo katika kipindi hiki.';
+
+  @override
+  String get payments_colDateTime => 'Tarehe na Saa';
+
+  @override
+  String get payments_payer => 'Mlipaji';
+
+  @override
+  String get payments_source => 'Chanzo';
+
+  @override
+  String get payments_reference => 'Kumbukumbu';
+
+  @override
+  String get payments_recordedBy => 'Imerekodiwa na';
+
+  @override
+  String get payments_thisWeek => 'Wiki Hii';
+
+  @override
+  String get payments_thisMonth => 'Mwezi Huu';
+
+  @override
+  String payments_paymentCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'malipo $count',
+      one: 'malipo 1',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get payments_outstanding => 'Yanayodaiwa';
+
+  @override
+  String payments_debtCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'madeni $count',
+      one: 'deni 1',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get payments_detailsTitle => 'Maelezo ya Malipo';
+
+  @override
+  String get payments_received => 'Malipo Yamepokelewa';
+
+  @override
+  String get payments_noReceipt => 'Hakuna risiti ya malipo haya';
+
+  @override
+  String get subscription_title => 'Usajili';
+
+  @override
+  String get subscription_statusTrial => 'Majaribio';
+
+  @override
+  String get subscription_statusTrialNoSetup =>
+      'Majaribio - bado hakuna usajili';
+
+  @override
+  String get subscription_statusActive => 'Hai';
 }
