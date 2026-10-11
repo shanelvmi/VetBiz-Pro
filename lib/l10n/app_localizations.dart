@@ -1045,6 +1045,150 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Airtel Money'**
   String get paymentMethod_airtelMoney;
+
+  /// Payment method: payment chips and menus, payment filters (stored value 'Bank Transfer').
+  ///
+  /// In en, this message translates to:
+  /// **'Bank Transfer'**
+  String get paymentMethod_bankTransfer;
+
+  /// Payment method: payment chips and menus, payment filters (stored value 'Tigo Pesa').
+  ///
+  /// In en, this message translates to:
+  /// **'Tigo Pesa'**
+  String get paymentMethod_tigoPesa;
+
+  /// Payment method: payment chips and menus, payment filters (stored value 'On Credit').
+  ///
+  /// In en, this message translates to:
+  /// **'On Credit'**
+  String get paymentMethod_onCredit;
+
+  /// Activity type: Activity Log filter chips and entry badges, activity lists (stored value 'Account').
+  ///
+  /// In en, this message translates to:
+  /// **'Account'**
+  String get activityType_account;
+
+  /// Activity type: Activity Log filter chips and entry badges, activity lists (stored value 'Debtors').
+  ///
+  /// In en, this message translates to:
+  /// **'Debtors'**
+  String get activityType_debtors;
+
+  /// Activity type: Activity Log filter chips and entry badges, activity lists (stored value 'Products').
+  ///
+  /// In en, this message translates to:
+  /// **'Products'**
+  String get activityType_products;
+
+  /// Activity type: Activity Log filter chips and entry badges, activity lists (stored value 'Inventory Move').
+  ///
+  /// In en, this message translates to:
+  /// **'Inventory Move'**
+  String get activityType_inventoryMove;
+
+  /// Activity type: Activity Log filter chips and entry badges, activity lists (stored value 'Sales').
+  ///
+  /// In en, this message translates to:
+  /// **'Sales'**
+  String get activityType_sales;
+
+  /// Activity type: Activity Log filter chips and entry badges, activity lists (stored value 'Sale').
+  ///
+  /// In en, this message translates to:
+  /// **'Sale'**
+  String get activityType_sale;
+
+  /// Activity type: Activity Log filter chips and entry badges, activity lists (stored value 'Services').
+  ///
+  /// In en, this message translates to:
+  /// **'Services'**
+  String get activityType_services;
+
+  /// Activity type: Activity Log filter chips and entry badges, activity lists (stored value 'Transactions').
+  ///
+  /// In en, this message translates to:
+  /// **'Transactions'**
+  String get activityType_transactions;
+
+  /// Activity type: Activity Log filter chips and entry badges, activity lists (stored value 'Trash').
+  ///
+  /// In en, this message translates to:
+  /// **'Trash'**
+  String get activityType_trash;
+
+  /// Activity type: Activity Log filter chips and entry badges, activity lists (stored value 'Report Draft Deleted').
+  ///
+  /// In en, this message translates to:
+  /// **'Report Draft Deleted'**
+  String get activityType_reportDraftDeleted;
+
+  /// Restock frequency: Facility settings dropdown (stored value 'Weekly').
+  ///
+  /// In en, this message translates to:
+  /// **'Weekly'**
+  String get restockFrequency_weekly;
+
+  /// Restock frequency: Facility settings dropdown (stored value 'Every 2 Weeks').
+  ///
+  /// In en, this message translates to:
+  /// **'Every 2 Weeks'**
+  String get restockFrequency_everyTwoWeeks;
+
+  /// Restock frequency: Facility settings dropdown (stored value 'Monthly').
+  ///
+  /// In en, this message translates to:
+  /// **'Monthly'**
+  String get restockFrequency_monthly;
+
+  /// Restock frequency: Facility settings dropdown (stored value 'Rarely').
+  ///
+  /// In en, this message translates to:
+  /// **'Rarely'**
+  String get restockFrequency_rarely;
+
+  /// User role (stored value 'admin'): team list, dashboard profile, registration.
+  ///
+  /// In en, this message translates to:
+  /// **'Admin'**
+  String get role_admin;
+
+  /// User role (stored value 'assistant'): team list, dashboard profile, registration.
+  ///
+  /// In en, this message translates to:
+  /// **'Assistant'**
+  String get role_assistant;
+
+  /// Shown role of a promoted assistant (stored as 'admin' with previousRole 'assistant'): team list, dashboard, registration.
+  ///
+  /// In en, this message translates to:
+  /// **'Co-admin'**
+  String get role_coAdmin;
+
+  /// A team member's status (stored value 'pending'): team list cards and badges.
+  ///
+  /// In en, this message translates to:
+  /// **'Pending'**
+  String get userStatus_pending;
+
+  /// A team member's status (stored value 'active'): team list cards and badges.
+  ///
+  /// In en, this message translates to:
+  /// **'Active'**
+  String get userStatus_active;
+
+  /// A team member's status (stored value 'deactivated'): team list cards and badges.
+  ///
+  /// In en, this message translates to:
+  /// **'Deactivated'**
+  String get userStatus_deactivated;
+
+  /// A team member's status (stored value 'rejected'): team list cards and badges.
+  ///
+  /// In en, this message translates to:
+  /// **'Rejected'**
+  String get userStatus_rejected;
 }
 
 class _AppLocalizationsDelegate

@@ -500,4 +500,76 @@ class AppLocalizationsSw extends AppLocalizations {
 
   @override
   String get paymentMethod_airtelMoney => 'Airtel Money';
+
+  @override
+  String get paymentMethod_bankTransfer => 'Uhamisho wa Benki';
+
+  @override
+  String get paymentMethod_tigoPesa => 'Tigo Pesa';
+
+  @override
+  String get paymentMethod_onCredit => 'Kwa Mkopo';
+
+  @override
+  String get activityType_account => 'Akaunti';
+
+  @override
+  String get activityType_debtors => 'Wadaiwa';
+
+  @override
+  String get activityType_products => 'Bidhaa';
+
+  @override
+  String get activityType_inventoryMove => 'Uhamisho wa Stoo';
+
+  @override
+  String get activityType_sales => 'Mauzo';
+
+  @override
+  String get activityType_sale => 'Mauzo';
+
+  @override
+  String get activityType_services => 'Huduma';
+
+  @override
+  String get activityType_transactions => 'Miamala';
+
+  @override
+  String get activityType_trash => 'Takataka';
+
+  @override
+  String get activityType_reportDraftDeleted => 'Rasimu ya Ripoti Imefutwa';
+
+  @override
+  String get restockFrequency_weekly => 'Kila Wiki';
+
+  @override
+  String get restockFrequency_everyTwoWeeks => 'Kila Wiki 2';
+
+  @override
+  String get restockFrequency_monthly => 'Kila Mwezi';
+
+  @override
+  String get restockFrequency_rarely => 'Mara Chache';
+
+  @override
+  String get role_admin => 'Msimamizi';
+
+  @override
+  String get role_assistant => 'Msaidizi';
+
+  @override
+  String get role_coAdmin => 'Msimamizi Mwenza';
+
+  @override
+  String get userStatus_pending => 'Anasubiri';
+
+  @override
+  String get userStatus_active => 'Hai';
+
+  @override
+  String get userStatus_deactivated => 'Amesimamishwa';
+
+  @override
+  String get userStatus_rejected => 'Amekataliwa';
 }

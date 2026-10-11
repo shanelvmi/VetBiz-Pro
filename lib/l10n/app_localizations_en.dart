@@ -499,4 +499,76 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get paymentMethod_airtelMoney => 'Airtel Money';
+
+  @override
+  String get paymentMethod_bankTransfer => 'Bank Transfer';
+
+  @override
+  String get paymentMethod_tigoPesa => 'Tigo Pesa';
+
+  @override
+  String get paymentMethod_onCredit => 'On Credit';
+
+  @override
+  String get activityType_account => 'Account';
+
+  @override
+  String get activityType_debtors => 'Debtors';
+
+  @override
+  String get activityType_products => 'Products';
+
+  @override
+  String get activityType_inventoryMove => 'Inventory Move';
+
+  @override
+  String get activityType_sales => 'Sales';
+
+  @override
+  String get activityType_sale => 'Sale';
+
+  @override
+  String get activityType_services => 'Services';
+
+  @override
+  String get activityType_transactions => 'Transactions';
+
+  @override
+  String get activityType_trash => 'Trash';
+
+  @override
+  String get activityType_reportDraftDeleted => 'Report Draft Deleted';
+
+  @override
+  String get restockFrequency_weekly => 'Weekly';
+
+  @override
+  String get restockFrequency_everyTwoWeeks => 'Every 2 Weeks';
+
+  @override
+  String get restockFrequency_monthly => 'Monthly';
+
+  @override
+  String get restockFrequency_rarely => 'Rarely';
+
+  @override
+  String get role_admin => 'Admin';
+
+  @override
+  String get role_assistant => 'Assistant';
+
+  @override
+  String get role_coAdmin => 'Co-admin';
+
+  @override
+  String get userStatus_pending => 'Pending';
+
+  @override
+  String get userStatus_active => 'Active';
+
+  @override
+  String get userStatus_deactivated => 'Deactivated';
+
+  @override
+  String get userStatus_rejected => 'Rejected';
 }
