@@ -27,7 +27,6 @@ import '../../theme/app_dimens.dart';
 import '../../theme/theme_context.dart';
 import '../../theme/app_breakpoints.dart';
 import '../../ui/feedback/app_feedback.dart';
-import '../../services/trash_service.dart';
 
 class ServicesScreen extends StatefulWidget {
   const ServicesScreen({super.key});
@@ -767,35 +766,18 @@ class _ServicesScreenState extends State<ServicesScreen> {
       ),
     );
     if (confirmed != true || !mounted) return;
-    // Read before the await: Undo may run after this screen is gone.
-    final facilityId = _facilityId;
 
     try {
       await Provider.of<ServiceProvider>(context, listen: false).deleteService(service.id);
       if (!mounted) return;
       if (_selectedService?.id == service.id) setState(() => _selectedService = null);
       _openServicesListSession(forceRefresh: true);
-      // deleteService moves it to Trash (a soft delete, same id), so Undo
-      // puts it back with the Trash screen's own restore.
-      AppFeedback.undo('Service moved to Trash', onUndo: () => _undoDeleteService(facilityId, service.id));
+      // No Undo: deleteService also puts stock back, removes the debt and
+      // hard-deletes the service's expenses, and a restore reverses none of
+      // that (design-open-questions.md, "Trash and restore"). Same as sales.
+      AppFeedback.success('Service moved to Trash');
     } catch (e, st) {
       AppFeedback.error("Couldn't delete the service", error: e, stackTrace: st);
-    }
-  }
-
-  Future<void> _undoDeleteService(String? facilityId, String id) async {
-    if (facilityId == null || facilityId.isEmpty) return;
-    try {
-      await TrashService.restoreById(
-        facilityId: facilityId,
-        trashCollection: Collections.trashServices,
-        liveCollection: Collections.services,
-        id: id,
-      );
-      AppFeedback.success('Service restored');
-      if (mounted) _openServicesListSession(forceRefresh: true);
-    } catch (e, st) {
-      AppFeedback.error("Couldn't restore the service", error: e, stackTrace: st);
     }
   }
 

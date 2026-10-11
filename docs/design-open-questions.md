@@ -78,16 +78,21 @@ Colours are outside the standing snap rule, so this is kept as it is:
 | | Client balance reduced by the unpaid part (`_adjustClientBalance`) | **No**: the balance stays reduced |
 | | Daily sales summary reversed (server trigger `updateDailySalesSummary`) | Yes: the trigger counts it again on restore |
 | | Upfront payment (`payments`, `dailyCollections`) | Not touched by the delete (the cash stays counted even while the sale is in Trash) |
-| Service (`ServiceProvider.deleteService`; **Undo offered** on Services) | Stock it used put back (`_restoreStockForItems`) | **No** |
+| Service (`ServiceProvider.deleteService`; Undo withdrawn after this audit) | Stock it used put back (`_restoreStockForItems`) | **No** |
 | | Its debt `service_{id}` deleted; client balance reversed; `oldestUnpaidDebtDate` recomputed | **No** |
 | | Its expense transaction(s) (`transactions` where `serviceId`) **hard-deleted**, so the daily transaction summary drops them | **No**: gone for good, not in Trash |
 | | Daily service summary reversed (server trigger) | Yes, on restore |
 | | Upfront payment (`payments`, `dailyCollections`) | Not touched by the delete |
 | Transaction (`TransactionProvider.deleteTransaction`; Undo on Transactions) | Daily transaction summary reversed (server trigger) | Yes, on restore. Complete |
 
-Incomplete: **sales** and **services**. After restoring either one, stock is too high and the client's balance and debts are too low. The Trash screen's Restore now asks for confirmation for these two and says what it will not change (behaviour unchanged). Open: make `TrashService` re-apply stock, debt and balance for sales and services (and decide what to do about the hard-deleted service expenses), and until then, should the Services Undo be withdrawn, as it was never added for sales?
+Incomplete: **sales** and **services**. After restoring either one, stock is too high and the client's balance and debts are too low. The Trash screen's Restore now asks for confirmation for these two and says what it will not change (behaviour unchanged). Open: make `TrashService` re-apply stock, debt and balance for sales and services (and decide what to do about the hard-deleted service expenses). The Services Undo is withdrawn until then (see Decided, "Undo after the Trash audit").
 
 ## Decided
+
+### Undo after the Trash audit (decided after D7; done before D8)
+
+- **Services: Undo withdrawn.** Deleting a service shows "Service moved to Trash" with no Undo (`services_screen.dart` `_confirmDeleteService`), because a service restore is incomplete (see "Trash and restore: books consistency"). The Trash screen's confirmed Restore stays.
+- **Products and transactions: Undo kept.** Their restore is complete.
 
 ### D6 follow-up (decided after batch D6; done before D7)
 
