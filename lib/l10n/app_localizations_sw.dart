@@ -572,4 +572,46 @@ class AppLocalizationsSw extends AppLocalizations {
 
   @override
   String get userStatus_rejected => 'Amekataliwa';
+
+  @override
+  String get membershipAction_approved => 'Ameidhinishwa';
+
+  @override
+  String get membershipAction_rejected => 'Amekataliwa';
+
+  @override
+  String get membershipAction_deactivated => 'Amesimamishwa';
+
+  @override
+  String get membershipAction_reactivated => 'Amerejeshwa';
+
+  @override
+  String get facilityStatus_active => 'Inafanya Kazi';
+
+  @override
+  String get facilityStatus_inactive => 'Haifanyi Kazi';
+
+  @override
+  String get facilityStatus_pending => 'Inasubiri';
+
+  @override
+  String get submissionStatus_pending => 'Inasubiri';
+
+  @override
+  String get submissionStatus_approved => 'Imeidhinishwa';
+
+  @override
+  String get submissionStatus_rejected => 'Imekataliwa';
+
+  @override
+  String get plan_daily => 'Kila Siku';
+
+  @override
+  String get plan_weekly => 'Kila Wiki';
+
+  @override
+  String get plan_monthly => 'Kila Mwezi';
+
+  @override
+  String get plan_yearly => 'Kila Mwaka';
 }

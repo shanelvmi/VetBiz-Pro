@@ -1189,6 +1189,90 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Rejected'**
   String get userStatus_rejected;
+
+  /// A step in a team member's history (stored value 'approved'): team member panel.
+  ///
+  /// In en, this message translates to:
+  /// **'Approved'**
+  String get membershipAction_approved;
+
+  /// A step in a team member's history (stored value 'rejected'): team member panel.
+  ///
+  /// In en, this message translates to:
+  /// **'Rejected'**
+  String get membershipAction_rejected;
+
+  /// A step in a team member's history (stored value 'deactivated'): team member panel.
+  ///
+  /// In en, this message translates to:
+  /// **'Deactivated'**
+  String get membershipAction_deactivated;
+
+  /// A step in a team member's history (stored value 'reactivated'): team member panel.
+  ///
+  /// In en, this message translates to:
+  /// **'Reactivated'**
+  String get membershipAction_reactivated;
+
+  /// A facility's status (stored value 'Active', any case): Facilities screen and picker.
+  ///
+  /// In en, this message translates to:
+  /// **'Active'**
+  String get facilityStatus_active;
+
+  /// A facility's status (stored value 'Inactive', any case): Facilities screen and picker.
+  ///
+  /// In en, this message translates to:
+  /// **'Inactive'**
+  String get facilityStatus_inactive;
+
+  /// A facility's status (stored value 'pending', any case): Facilities screen and picker.
+  ///
+  /// In en, this message translates to:
+  /// **'Pending'**
+  String get facilityStatus_pending;
+
+  /// A subscription payment's review status (stored value 'pending'): Subscription history.
+  ///
+  /// In en, this message translates to:
+  /// **'Pending'**
+  String get submissionStatus_pending;
+
+  /// A subscription payment's review status (stored value 'approved'): Subscription history.
+  ///
+  /// In en, this message translates to:
+  /// **'Approved'**
+  String get submissionStatus_approved;
+
+  /// A subscription payment's review status (stored value 'rejected'): Subscription history.
+  ///
+  /// In en, this message translates to:
+  /// **'Rejected'**
+  String get submissionStatus_rejected;
+
+  /// Subscription plan name (plan id 'daily'): Subscription screen and history.
+  ///
+  /// In en, this message translates to:
+  /// **'Daily'**
+  String get plan_daily;
+
+  /// Subscription plan name (plan id 'weekly'): Subscription screen and history.
+  ///
+  /// In en, this message translates to:
+  /// **'Weekly'**
+  String get plan_weekly;
+
+  /// Subscription plan name (plan id 'monthly'): Subscription screen and history.
+  ///
+  /// In en, this message translates to:
+  /// **'Monthly'**
+  String get plan_monthly;
+
+  /// Subscription plan name (plan id 'yearly'): Subscription screen and history.
+  ///
+  /// In en, this message translates to:
+  /// **'Yearly'**
+  String get plan_yearly;
 }
 
 class _AppLocalizationsDelegate

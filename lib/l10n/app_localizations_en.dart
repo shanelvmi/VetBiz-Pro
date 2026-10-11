@@ -571,4 +571,46 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get userStatus_rejected => 'Rejected';
+
+  @override
+  String get membershipAction_approved => 'Approved';
+
+  @override
+  String get membershipAction_rejected => 'Rejected';
+
+  @override
+  String get membershipAction_deactivated => 'Deactivated';
+
+  @override
+  String get membershipAction_reactivated => 'Reactivated';
+
+  @override
+  String get facilityStatus_active => 'Active';
+
+  @override
+  String get facilityStatus_inactive => 'Inactive';
+
+  @override
+  String get facilityStatus_pending => 'Pending';
+
+  @override
+  String get submissionStatus_pending => 'Pending';
+
+  @override
+  String get submissionStatus_approved => 'Approved';
+
+  @override
+  String get submissionStatus_rejected => 'Rejected';
+
+  @override
+  String get plan_daily => 'Daily';
+
+  @override
+  String get plan_weekly => 'Weekly';
+
+  @override
+  String get plan_monthly => 'Monthly';
+
+  @override
+  String get plan_yearly => 'Yearly';
 }
