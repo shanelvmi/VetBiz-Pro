@@ -500,6 +500,7 @@ class _ServicesScreenState extends State<ServicesScreen> {
           value: _statusFilter,
           items: _statusFilterOptions,
           label: 'Status',
+          display: (v) => v == 'All' ? context.l10n.common_all : context.l10n.paymentStatusLabel(v),
           onChanged: (val) {
             setState(() => _statusFilter = val);
             _openServicesListSession();
@@ -662,7 +663,7 @@ class _ServicesScreenState extends State<ServicesScreen> {
                   color: statusColor.withValues(alpha: AppAlpha.a10),
                   borderRadius: BorderRadius.circular(AppRadius.r10),
                 ),
-                child: Text(status, style: TextStyle(color: statusColor, fontSize: AppFontSize.f11_5, fontWeight: AppFontWeight.semibold)),
+                child: Text(context.l10n.paymentStatusLabel(status), style: TextStyle(color: statusColor, fontSize: AppFontSize.f11_5, fontWeight: AppFontWeight.semibold)),
               ),
             ),
             Expanded(
@@ -820,7 +821,7 @@ class _ServicesScreenState extends State<ServicesScreen> {
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: AppSpacing.s10, vertical: AppSpacing.s4),
                   decoration: BoxDecoration(color: statusColor.withValues(alpha: AppAlpha.a10), borderRadius: BorderRadius.circular(AppRadius.r12)),
-                  child: Text(status, style: TextStyle(color: statusColor, fontSize: AppFontSize.f12, fontWeight: AppFontWeight.semibold)),
+                  child: Text(context.l10n.paymentStatusLabel(status), style: TextStyle(color: statusColor, fontSize: AppFontSize.f12, fontWeight: AppFontWeight.semibold)),
                 ),
               ],
             ),
@@ -842,7 +843,7 @@ class _ServicesScreenState extends State<ServicesScreen> {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       const Text('Payment Information', style: TextStyle(fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f13_5)),
-                      Text(status, style: TextStyle(color: statusColor, fontSize: AppFontSize.f12_5, fontWeight: AppFontWeight.semibold)),
+                      Text(context.l10n.paymentStatusLabel(status), style: TextStyle(color: statusColor, fontSize: AppFontSize.f12_5, fontWeight: AppFontWeight.semibold)),
                     ],
                   ),
                   const SizedBox(height: AppSpacing.s10),

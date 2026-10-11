@@ -10,6 +10,7 @@ import '../../theme/app_dimens.dart';
 import '../../theme/theme_context.dart';
 import '../../ui/feedback/app_feedback.dart';
 import '../../constants/batch_move_reasons.dart';
+import '../../l10n/l10n.dart';
 
 
 /// Prompts for a quantity and a reason, then moves a sellable batch
@@ -73,7 +74,9 @@ Future<void> promptQuantityAndMoveToStock(
                   errorText: reasonErrorText,
                 ),
                 items: kBatchMoveReasons
-                    .map((r) => DropdownMenuItem(value: r, child: Text(r, style: const TextStyle(fontSize: AppFontSize.f13))))
+                    // Shows the label; saves the stored reason (English, also in the activity entry).
+                    .map((r) => DropdownMenuItem(
+                        value: r, child: Text(context.l10n.batchMoveReasonLabel(r), style: const TextStyle(fontSize: AppFontSize.f13))))
                     .toList(),
                 onChanged: (v) => setDialogState(() {
                   reason = v;

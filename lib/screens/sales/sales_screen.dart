@@ -494,6 +494,7 @@ class _SalesScreenState extends State<SalesScreen> {
           value: _filterStatus,
           items: _statusFilterOptions,
           label: 'Payment Status',
+          display: (v) => v == 'All' ? context.l10n.common_all : context.l10n.paymentStatusLabel(v),
           onChanged: (val) {
             setState(() => _filterStatus = val);
             _openSalesListSession();
@@ -535,6 +536,8 @@ class _SalesScreenState extends State<SalesScreen> {
     required List<T> items,
     required String label,
     required ValueChanged<T> onChanged,
+    // What an item shows; the dropdown still holds and returns the item.
+    String Function(T value)? display,
   }) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: AppSpacing.s10),
@@ -549,7 +552,7 @@ class _SalesScreenState extends State<SalesScreen> {
           value: value,
           icon: Icon(Icons.arrow_drop_down, size: AppIconSize.i18, color: context.colors.primary),
           style: TextStyle(color: context.colors.textPrimary, fontSize: AppFontSize.f13),
-          items: items.map((v) => DropdownMenuItem(value: v, child: Text('$label: $v'))).toList(),
+          items: items.map((v) => DropdownMenuItem(value: v, child: Text('$label: ${display?.call(v) ?? v}'))).toList(),
           onChanged: (val) {
             if (val != null) onChanged(val);
           },
@@ -707,7 +710,7 @@ class _SalesScreenState extends State<SalesScreen> {
                   color: statusColor.withValues(alpha: AppAlpha.a10),
                   borderRadius: BorderRadius.circular(AppRadius.r10),
                 ),
-                child: Text(status, style: TextStyle(color: statusColor, fontSize: AppFontSize.f11_5, fontWeight: AppFontWeight.semibold)),
+                child: Text(context.l10n.paymentStatusLabel(status), style: TextStyle(color: statusColor, fontSize: AppFontSize.f11_5, fontWeight: AppFontWeight.semibold)),
               ),
             ),
             Expanded(
@@ -864,7 +867,7 @@ class _SalesScreenState extends State<SalesScreen> {
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: AppSpacing.s10, vertical: AppSpacing.s4),
                   decoration: BoxDecoration(color: statusColor.withValues(alpha: AppAlpha.a10), borderRadius: BorderRadius.circular(AppRadius.r12)),
-                  child: Text(status, style: TextStyle(color: statusColor, fontSize: AppFontSize.f12, fontWeight: AppFontWeight.semibold)),
+                  child: Text(context.l10n.paymentStatusLabel(status), style: TextStyle(color: statusColor, fontSize: AppFontSize.f12, fontWeight: AppFontWeight.semibold)),
                 ),
               ],
             ),

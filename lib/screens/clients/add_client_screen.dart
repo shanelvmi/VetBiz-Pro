@@ -12,6 +12,7 @@ import '../../theme/app_breakpoints.dart';
 import '../../theme/app_motion.dart';
 import '../../ui/feedback/app_feedback.dart';
 import '../../constants/client_options.dart';
+import '../../l10n/l10n.dart';
 
 class AddClientScreen extends StatefulWidget {
   final Client? client; // null = add, not null = edit
@@ -471,7 +472,7 @@ class _AddClientScreenState extends State<AddClientScreen> {
                     Row(
                       children: [
                         ChoiceChip(
-                          label: const Text('Active'),
+                          label: Text(context.l10n.clientStatusLabel('Active')),
                           selected: _status == 'Active',
                           onSelected: (_) => setState(() => _status = 'Active'),
                           selectedColor: context.colors.success.withValues(alpha: AppAlpha.a15),
@@ -479,7 +480,7 @@ class _AddClientScreenState extends State<AddClientScreen> {
                         ),
                         const SizedBox(width: AppSpacing.s8),
                         ChoiceChip(
-                          label: const Text('Inactive'),
+                          label: Text(context.l10n.clientStatusLabel('Inactive')),
                           selected: _status == 'Inactive',
                           onSelected: (_) => setState(() => _status = 'Inactive'),
                           selectedColor: context.colors.textHint.withValues(alpha: AppAlpha.a30),
@@ -597,7 +598,7 @@ class _AddClientScreenState extends State<AddClientScreen> {
                   children: [
                     Icon(_iconForClientType(type), color: isSelected ? context.colors.onPrimary : context.colors.primary, size: AppIconSize.i24),
                     const SizedBox(height: AppSpacing.s6),
-                    Text(type,
+                    Text(context.l10n.clientTypeLabel(type),
                         style: TextStyle(
                             color: isSelected ? context.colors.onPrimary : context.colors.textPrimary,
                             fontWeight: AppFontWeight.semibold,
@@ -642,7 +643,7 @@ class _AddClientScreenState extends State<AddClientScreen> {
           _summaryRow('Phone', _phone.trim().isEmpty ? '-' : _phone.trim()),
           _summaryRow(
             'Type',
-            _selectedTypes.isEmpty ? '-' : _selectedTypes.join(', '),
+            _selectedTypes.isEmpty ? '-' : _selectedTypes.map(context.l10n.clientTypeLabel).join(', '),
             valueBold: true,
           ),
           _summaryRow('Address', _address.trim().isEmpty ? '-' : _address.trim()),
@@ -738,7 +739,7 @@ class _AddClientScreenState extends State<AddClientScreen> {
             decoration: _fieldDecoration(),
             items: [
               const DropdownMenuItem(value: null, child: Text('None')),
-              ...farmerSubTypes.map((sub) => DropdownMenuItem(value: sub, child: Text(sub))),
+              ...farmerSubTypes.map((sub) => DropdownMenuItem(value: sub, child: Text(context.l10n.farmerSubTypeLabel(sub)))),
             ],
             onChanged: (val) => setState(() => _farmerSubType = val),
           ),
@@ -750,7 +751,7 @@ class _AddClientScreenState extends State<AddClientScreen> {
               children: [
                 for (final item in (isCropProducer ? _selectedCrops : _selectedAnimals))
                   Chip(
-                    label: Text(item, style: const TextStyle(fontSize: AppFontSize.f12_5)),
+                    label: Text(isCropProducer ? item : context.l10n.animalLabel(item), style: const TextStyle(fontSize: AppFontSize.f12_5)),
                     backgroundColor: context.colors.primary.withValues(alpha: AppAlpha.a10),
                     deleteIcon: const Icon(Icons.close, size: AppIconSize.i14),
                     onDeleted: () => setState(() {
@@ -775,6 +776,8 @@ class _AddClientScreenState extends State<AddClientScreen> {
                   title: isCropProducer ? 'Select Crops' : 'Select Animal Species',
                   groups: isCropProducer ? cropGroups : animalGroups,
                   selected: isCropProducer ? _selectedCrops : _selectedAnimals,
+                  groupLabel: isCropProducer ? (g) => g : context.l10n.animalGroupLabel,
+                  itemLabel: isCropProducer ? (c) => c : context.l10n.animalLabel,
                 ),
               ),
             ),
@@ -792,6 +795,9 @@ class _AddClientScreenState extends State<AddClientScreen> {
     required String title,
     required Map<String, List<String>> groups,
     required List<String> selected,
+    // What a heading and an item show; [selected] still gets the stored item.
+    required String Function(String group) groupLabel,
+    required String Function(String item) itemLabel,
   }) async {
     String query = '';
 
@@ -803,7 +809,10 @@ class _AddClientScreenState extends State<AddClientScreen> {
             final lowerQuery = query.trim().toLowerCase();
             final filteredGroups = <String, List<String>>{};
             for (final entry in groups.entries) {
-              final matches = entry.value.where((c) => c.toLowerCase().contains(lowerQuery)).toList();
+              // Typed text matches the stored name, as before, or the label shown.
+              final matches = entry.value
+                  .where((c) => c.toLowerCase().contains(lowerQuery) || itemLabel(c).toLowerCase().contains(lowerQuery))
+                  .toList();
               if (matches.isNotEmpty) filteredGroups[entry.key] = matches;
             }
 
@@ -832,7 +841,7 @@ class _AddClientScreenState extends State<AddClientScreen> {
                                 return [
                                   Padding(
                                     padding: const EdgeInsets.fromLTRB(AppSpacing.s4, AppSpacing.s12, AppSpacing.s4, AppSpacing.s4),
-                                    child: Text(entry.key,
+                                    child: Text(groupLabel(entry.key),
                                         style: TextStyle(
                                             fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f12_5, color: context.colors.primary)),
                                   ),
@@ -841,7 +850,7 @@ class _AddClientScreenState extends State<AddClientScreen> {
                                     return CheckboxListTile(
                                       dense: true,
                                       controlAffinity: ListTileControlAffinity.leading,
-                                      title: Text(item),
+                                      title: Text(itemLabel(item)),
                                       value: isSelected,
                                       activeColor: context.colors.primary,
                                       onChanged: (checked) {
@@ -901,7 +910,7 @@ class _AddClientScreenState extends State<AddClientScreen> {
               decoration: _fieldDecoration(),
               items: [
                 const DropdownMenuItem(value: null, child: Text('None')),
-                ...vetPracticeTypes.map((v) => DropdownMenuItem(value: v, child: Text(v))),
+                ...vetPracticeTypes.map((v) => DropdownMenuItem(value: v, child: Text(context.l10n.vetPracticeTypeLabel(v)))),
               ],
               onChanged: (val) => setState(() => _vetPracticeType = val),
             ),

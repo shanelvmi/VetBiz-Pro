@@ -493,7 +493,7 @@ class _SalesArchiveScreenState extends State<SalesArchiveScreen> {
                   color: statusColor.withValues(alpha: AppAlpha.a10),
                   borderRadius: BorderRadius.circular(AppRadius.r10),
                 ),
-                child: Text(status, style: TextStyle(color: statusColor, fontSize: AppFontSize.f11_5, fontWeight: AppFontWeight.semibold)),
+                child: Text(context.l10n.paymentStatusLabel(status), style: TextStyle(color: statusColor, fontSize: AppFontSize.f11_5, fontWeight: AppFontWeight.semibold)),
               ),
             ),
             Expanded(
@@ -613,7 +613,7 @@ class _SalesArchiveScreenState extends State<SalesArchiveScreen> {
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: AppSpacing.s10, vertical: AppSpacing.s4),
                   decoration: BoxDecoration(color: statusColor.withValues(alpha: AppAlpha.a10), borderRadius: BorderRadius.circular(AppRadius.r12)),
-                  child: Text(status, style: TextStyle(color: statusColor, fontSize: AppFontSize.f12, fontWeight: AppFontWeight.semibold)),
+                  child: Text(context.l10n.paymentStatusLabel(status), style: TextStyle(color: statusColor, fontSize: AppFontSize.f12, fontWeight: AppFontWeight.semibold)),
                 ),
               ],
             ),

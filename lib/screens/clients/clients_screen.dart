@@ -27,6 +27,7 @@ import '../../theme/app_dimens.dart';
 import '../../theme/theme_context.dart';
 import '../../ui/feedback/friendly_error.dart';
 import '../../constants/client_options.dart';
+import '../../l10n/l10n.dart';
 
 class ClientsScreen extends StatefulWidget {
   const ClientsScreen({super.key});
@@ -267,7 +268,7 @@ class _ClientsScreenState extends State<ClientsScreen> {
               icon: Icon(Icons.arrow_drop_down, size: AppIconSize.i18, color: context.colors.primary),
               style: TextStyle(color: context.colors.textPrimary, fontSize: AppFontSize.f13),
               items: _clientTypes
-                  .map((t) => DropdownMenuItem(value: t, child: Text(t == 'All' ? 'Type: All' : t)))
+                  .map((t) => DropdownMenuItem(value: t, child: Text(t == 'All' ? 'Type: All' : context.l10n.clientTypeLabel(t))))
                   .toList(),
               onChanged: (val) {
                 if (val != null) _onTypeSelected(val);
@@ -289,10 +290,10 @@ class _ClientsScreenState extends State<ClientsScreen> {
               value: _statusFilter,
               icon: Icon(Icons.arrow_drop_down, size: AppIconSize.i18, color: context.colors.primary),
               style: TextStyle(color: context.colors.textPrimary, fontSize: AppFontSize.f13),
-              items: const [
-                DropdownMenuItem(value: 'All', child: Text('Status: All')),
-                DropdownMenuItem(value: 'Active', child: Text('Active')),
-                DropdownMenuItem(value: 'Inactive', child: Text('Inactive')),
+              // Shows the label; the filter queries the stored status.
+              items: [
+                const DropdownMenuItem(value: 'All', child: Text('Status: All')),
+                for (final s in kClientStatuses) DropdownMenuItem(value: s, child: Text(context.l10n.clientStatusLabel(s))),
               ],
               onChanged: (val) {
                 if (val != null) _onStatusFilterChanged(val);
@@ -543,7 +544,7 @@ class _ClientsScreenState extends State<ClientsScreen> {
                     children: [
                       Icon(_iconForType(type), size: AppIconSize.i12, color: typeAccent),
                       const SizedBox(width: AppSpacing.s4),
-                      Text(type, style: TextStyle(fontSize: AppFontSize.f11_5, color: typeAccent, fontWeight: AppFontWeight.semibold)),
+                      Text(context.l10n.clientTypeLabel(type), style: TextStyle(fontSize: AppFontSize.f11_5, color: typeAccent, fontWeight: AppFontWeight.semibold)),
                     ],
                   ),
                 );
@@ -564,7 +565,7 @@ class _ClientsScreenState extends State<ClientsScreen> {
                 borderRadius: BorderRadius.circular(AppRadius.r10),
               ),
               child: Text(
-                client.status,
+                context.l10n.clientStatusLabel(client.status),
                 style: TextStyle(
                   fontSize: AppFontSize.f11_5,
                   color: client.status == 'Active' ? context.colors.successStrong : context.colors.textMuted,
@@ -855,7 +856,7 @@ class _ClientsScreenState extends State<ClientsScreen> {
                     children: [
                       Icon(_iconForType(type), size: AppIconSize.i12, color: typeAccent),
                       const SizedBox(width: AppSpacing.s3),
-                      Text(type, style: TextStyle(fontSize: AppFontSize.f10_5, color: typeAccent, fontWeight: AppFontWeight.semibold)),
+                      Text(context.l10n.clientTypeLabel(type), style: TextStyle(fontSize: AppFontSize.f10_5, color: typeAccent, fontWeight: AppFontWeight.semibold)),
                     ],
                   ),
                 );
@@ -880,7 +881,7 @@ class _ClientsScreenState extends State<ClientsScreen> {
                   Icon(Icons.circle, size: AppSizes.statusDot, color: client.status == 'Active' ? context.colors.successStrong : context.colors.textMuted),
                   const SizedBox(width: AppSpacing.s4),
                   Text(
-                    client.status,
+                    context.l10n.clientStatusLabel(client.status),
                     style: TextStyle(
                       fontSize: AppFontSize.f11_5,
                       color: client.status == 'Active' ? context.colors.successStrong : context.colors.textMuted,
