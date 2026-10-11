@@ -11,6 +11,7 @@ import '../../utils/text_sanitizer.dart';
 import '../../widgets/firestore_error_view.dart';
 import '../../theme/app_palette.dart';
 import '../../ui/feedback/app_feedback.dart';
+import '../../data/activity_type.dart';
 import '../../data/collections.dart';
 import '../../data/fields.dart';
 import '../../config/app_limits.dart';
@@ -531,11 +532,11 @@ class _ActivityLogScreenState extends State<ActivityLogScreen> {
                 // Filter logs
                 final logs = snapshot.data!.where((doc) {
                   final data = doc.data();
-                  final actionType = data['actionType'] ?? '';
+                  final actionType = ActivityType.canonicalKey((data['actionType'] ?? '').toString());
                   final description = data['description'] ?? '';
 
                   final matchesType = selectedFilter == 'All' ||
-                      actionType.toString().toLowerCase() ==
+                      actionType.toLowerCase() ==
                           selectedFilter.toLowerCase();
                   final matchesSearch =
                       description.toLowerCase().contains(searchQuery.toLowerCase());
@@ -763,7 +764,7 @@ class _ActivityLogScreenState extends State<ActivityLogScreen> {
 
         final typeCounts = <String, int>{};
         for (final doc in docs) {
-          final type = (doc['actionType'] ?? 'Unknown').toString();
+          final type = ActivityType.canonicalKey((doc['actionType'] ?? 'Unknown').toString());
           typeCounts[type] = (typeCounts[type] ?? 0) + 1;
         }
 

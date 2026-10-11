@@ -784,7 +784,7 @@ class _AddSaleScreenState extends State<AddSaleScreen> {
           facilityId: facilityId,
           userId: soldById,
           userName: soldByName,
-          actionType: ActivityType.sale.key,
+          actionType: ActivityType.sales.key,
           description: "Sale included expired stock ($unitsSummary), confirmed by $soldByName",
         );
       }

@@ -12,9 +12,9 @@ enum ActivityType {
   inventoryMove('Inventory Move'),
   sales('Sales'),
 
-  /// Written by the add-sale screen; sale_provider writes [sales]. Two
-  /// spellings for the same kind of entry, both already stored, so both are
-  /// kept. See design-open-questions.md.
+  /// Read only: older sale entries were written as 'Sale' by the add-sale
+  /// screen while sale_provider wrote [sales]. Since step 2E everything
+  /// writes [sales]; the old spelling stays readable through [canonicalKey].
   sale('Sale'),
   services('Services'),
   transactions('Transactions'),
@@ -24,4 +24,9 @@ enum ActivityType {
   const ActivityType(this.key);
 
   final String key;
+
+  /// The type a stored entry is shown, counted and filtered under, so old
+  /// 'Sale' entries sit with the 'Sales' ones. Anything else is unchanged.
+  static String canonicalKey(String stored) =>
+      stored.toLowerCase() == sale.key.toLowerCase() ? sales.key : stored;
 }

@@ -42,6 +42,14 @@ void main() {
     ]);
   });
 
+  test("old 'Sale' entries read as 'Sales'; other types are unchanged", () {
+    expect(ActivityType.canonicalKey('Sale'), 'Sales');
+    expect(ActivityType.canonicalKey('sale'), 'Sales');
+    expect(ActivityType.canonicalKey('Sales'), 'Sales');
+    expect(ActivityType.canonicalKey('Services'), 'Services');
+    expect(ActivityType.canonicalKey('Unknown'), 'Unknown');
+  });
+
   test('UserStatus.fromKey round-trips and defaults to pending', () {
     for (final s in UserStatus.values) {
       expect(UserStatus.fromKey(s.key), s);
