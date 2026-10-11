@@ -80,7 +80,9 @@ Colours are outside the standing snap rule, so this is kept as it is:
 ### Raised in step 2D, batch D9
 
 - **Services steel blue `#5C7C99`**, `lib/screens/dashboard/dashboard_screen.dart` (`servicesSteelBlue`): no role within 12 (`roleAssistant` is 14 off on blue). Kept as a named constant. A role for it?
-- **Drawer hover fill `Colors.teal.shade700`**, `dashboard_screen.dart` (`DrawerHoverItem`): same value as `roleCoAdminStrong`, different purpose. Kept.
+- **Drawer hover fills `Colors.teal.shade700` / `shade800`**, `dashboard_screen.dart` (`DrawerHoverItem`, the drawer's platform-admin button hover and press, the end drawer's Logout hover): `shade700` has the value of `roleCoAdminStrong`, a different purpose. Kept.
+- **End drawer close icon 28**, `dashboard_screen.dart`: 4 px from `i24`/`i32`. Kept. `_logoutClearance` 80 (gap under the profile panel) kept exact as a named constant.
+- **Small-screen check `height < 600 || width < 1024`**, `dashboard_screen.dart` `_buildDrawerContent`: sits with the Layout Fixed Mode collapse logic, so left as written (owner's D9 rule) although `AppBreakpoints.compact`/`expanded` hold the same values.
 - **Drawer item timings**, `dashboard_screen.dart`, kept as named constants: `_hoverFade` 200 ms (between `fast` and `normal`), `_tooltipWait` 300 ms (`tooltipDelay` is 400).
 - **Subscription banner**, `dashboard_screen.dart` `_buildSubscriptionBanner`: `deepAmber` `#C77800` and `cream` `#FFF6E7` (local consts; no role within 12), the cream at alpha 0.92 (no step within 0.05), and `_bannerSwitch` 550 ms (50 above `slowest`). All kept.
 - **Quick action tints `#E3F0EC` (Record Visit) and `#FCEFD9` (Add Product)**, `dashboard_screen.dart` `_buildQuickActionCards`: `#E3F0EC` is within 12 of `divider`, but snapping a tinted fill to a grey is what the owner reversed for the alerts after D8, so both are kept exact. Tint roles (like `dangerSurface`)?

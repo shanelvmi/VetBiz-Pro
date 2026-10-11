@@ -350,6 +350,9 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
   // The subscription banner's fade-and-scale switch: 550 ms, 50 above
   // AppMotion.slowest. Kept exact and listed (D9).
   static const Duration _bannerSwitch = Duration(milliseconds: 550);
+  // Space under the profile panel so the Logout button does not cover it: a
+  // size, kept exact (D9).
+  static const double _logoutClearance = 80;
 
   final user = FirebaseAuth.instance.currentUser;
   late final userDoc = FirebaseFirestore.instance.collection(Collections.users).doc(user?.uid);
@@ -2617,7 +2620,7 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
     Future<void> launch(Uri uri, String failureLabel) async {
       final launched = await launchUrl(uri, mode: LaunchMode.externalApplication);
       if (!launched && context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Could not open $failureLabel')));
+        AppFeedback.info("Couldn't open $failureLabel");
       }
     }
 
@@ -2633,40 +2636,40 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
     }) {
       final row = Row(
         children: [
-          Icon(icon, size: 18, color: context.colors.primary),
-          const SizedBox(width: 10),
+          Icon(icon, size: AppIconSize.i18, color: context.colors.primary),
+          const SizedBox(width: AppSpacing.s10),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               mainAxisSize: MainAxisSize.min,
               children: [
-                Text(label, style: const TextStyle(fontSize: 13.5)),
+                Text(label, style: const TextStyle(fontSize: AppFontSize.f13_5)),
                 if (sublabel != null)
-                  Text(sublabel, style: TextStyle(fontSize: 11, color: Colors.grey[600])),
+                  Text(sublabel, style: TextStyle(fontSize: AppFontSize.f11, color: context.colors.textMuted)),
               ],
             ),
           ),
-          if (onTap != null) Icon(Icons.chevron_right, size: 18, color: Colors.grey[400]),
+          if (onTap != null) Icon(Icons.chevron_right, size: AppIconSize.i18, color: context.colors.textDisabled),
         ],
       );
 
       if (onTap == null) {
         return Padding(
-          padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
+          padding: const EdgeInsets.symmetric(vertical: AppSpacing.s8, horizontal: AppSpacing.s4),
           child: row,
         );
       }
 
       return Padding(
-        padding: const EdgeInsets.symmetric(vertical: 3),
+        padding: const EdgeInsets.symmetric(vertical: AppSpacing.s3),
         child: Material(
-          color: context.colors.primary.withValues(alpha: 0.06),
-          borderRadius: BorderRadius.circular(8),
+          color: context.colors.primary.withValues(alpha: AppAlpha.a05),
+          borderRadius: BorderRadius.circular(AppRadius.r8),
           child: InkWell(
-            borderRadius: BorderRadius.circular(8),
+            borderRadius: BorderRadius.circular(AppRadius.r8),
             onTap: onTap,
             child: Padding(
-              padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 8),
+              padding: const EdgeInsets.symmetric(vertical: AppSpacing.s8, horizontal: AppSpacing.s8),
               child: row,
             ),
           ),
@@ -2677,7 +2680,7 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadius.r16)),
         title: const Text('Contact Support'),
         content: SizedBox(
           width: 320,
@@ -2689,9 +2692,9 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
               // details are configured - the statement itself already
               // names Platform Admin explicitly.
               const Text('For help or support please reach out to ${AppInfo.name} platform admin.',
-                  style: TextStyle(fontSize: 13.5)),
+                  style: TextStyle(fontSize: AppFontSize.f13_5)),
               if (email.isNotEmpty || phone.isNotEmpty || whatsapp.isNotEmpty || address.isNotEmpty) ...[
-                const SizedBox(height: 10),
+                const SizedBox(height: AppSpacing.s10),
                 if (email.isNotEmpty)
                   contactRow(
                     icon: Icons.email_outlined,
@@ -2864,21 +2867,21 @@ Widget _buildDrawerContent() {
   final double _logoSize = effectivelyCollapsed ? 36 : 60;
   Widget logoSection = Container(
     width: double.infinity,
-    padding: const EdgeInsets.only(top: 18, bottom: 12),
+    padding: const EdgeInsets.only(top: AppSpacing.s18, bottom: AppSpacing.s12),
     alignment: Alignment.center,
     child: AnimatedContainer(
       // Kept in step with the sidebar width's own animation below
       // (same duration and curve) - this shrinks at the same time as
       // the panel narrows, so the two don't visibly drift out of sync
       // mid-slide.
-      duration: const Duration(milliseconds: 380),
+      duration: AppMotion.slower,
       curve: Curves.easeInOutCubic,
       width: _logoSize,
       height: _logoSize,
-      padding: const EdgeInsets.all(4),
+      padding: const EdgeInsets.all(AppSpacing.s4),
       decoration: BoxDecoration(
         color: context.colors.background,
-        borderRadius: BorderRadius.circular(10),
+        borderRadius: BorderRadius.circular(AppRadius.r10),
       ),
       // BoxFit.contain rather than a forced circular crop, so a
       // rectangular or text-wordmark logo isn't cropped or distorted.
@@ -2910,7 +2913,7 @@ Widget _buildDrawerContent() {
                 if (wasSynchronouslyLoaded) return child;
                 return AnimatedOpacity(
                   opacity: frame == null ? 0 : 1,
-                  duration: const Duration(milliseconds: 150),
+                  duration: AppMotion.fast,
                   child: child,
                 );
               },
@@ -3051,30 +3054,30 @@ Widget _buildDrawerContent() {
       if (snapshot.data != true) return const SizedBox.shrink();
       final canShowLabel = !effectivelyCollapsed;
       final content = Padding(
-        padding: EdgeInsets.symmetric(horizontal: effectivelyCollapsed ? 4 : 8),
+        padding: EdgeInsets.symmetric(horizontal: effectivelyCollapsed ? AppSpacing.s4 : AppSpacing.s8),
         child: InkWell(
-          borderRadius: BorderRadius.circular(8),
+          borderRadius: BorderRadius.circular(AppRadius.r8),
           onTap: () => Navigator.push(
             context,
             MaterialPageRoute(builder: (_) => const PlatformAdminHomeScreen()),
           ),
           child: Container(
-            padding: EdgeInsets.symmetric(vertical: 10, horizontal: effectivelyCollapsed ? 12 : 16),
+            padding: EdgeInsets.symmetric(vertical: AppSpacing.s10, horizontal: effectivelyCollapsed ? AppSpacing.s12 : AppSpacing.s16),
             decoration: BoxDecoration(
-              color: context.colors.accent.withValues(alpha: 0.12),
-              borderRadius: BorderRadius.circular(8),
-              border: Border.all(color: context.colors.accent.withValues(alpha: 0.35), width: 1),
+              color: context.colors.accent.withValues(alpha: AppAlpha.a10),
+              borderRadius: BorderRadius.circular(AppRadius.r8),
+              border: Border.all(color: context.colors.accent.withValues(alpha: AppAlpha.a40), width: 1),
             ),
             child: Row(
               mainAxisAlignment: effectivelyCollapsed ? MainAxisAlignment.center : MainAxisAlignment.start,
               children: [
                 Icon(Icons.admin_panel_settings_outlined, color: context.colors.accent),
                 if (canShowLabel) ...[
-                  const SizedBox(width: 16),
-                  const Expanded(
+                  const SizedBox(width: AppSpacing.s16),
+                  Expanded(
                     child: Text(
                       'Platform Admin',
-                      style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600),
+                      style: TextStyle(color: context.colors.onPrimary, fontWeight: AppFontWeight.semibold),
                       overflow: TextOverflow.ellipsis,
                     ),
                   ),
@@ -3085,18 +3088,18 @@ Widget _buildDrawerContent() {
         ),
       );
       if (!effectivelyCollapsed) return content;
-      return Tooltip(message: 'Platform Admin', waitDuration: const Duration(milliseconds: 300), child: content);
+      return Tooltip(message: 'Platform Admin', waitDuration: _DrawerHoverItemState._tooltipWait, child: content);
     },
   );
 
   // ---------- FOOTER ----------
   Widget footer = Padding(
-    padding: const EdgeInsets.symmetric(vertical: 8),
+    padding: const EdgeInsets.symmetric(vertical: AppSpacing.s8),
     child: effectivelyCollapsed
         ? const SizedBox.shrink()
         : Text(
             '@${AppInfo.name}',
-            style: TextStyle(fontSize: 12, color: context.colors.background),
+            style: TextStyle(fontSize: AppFontSize.f12, color: context.colors.background),
           ),
   );
 
@@ -3115,7 +3118,7 @@ Widget _buildDrawerContent() {
   Widget facilityNameSection = effectivelyCollapsed || facilityDisplayName.isEmpty
       ? const SizedBox.shrink()
       : Padding(
-          padding: const EdgeInsets.only(bottom: 12),
+          padding: const EdgeInsets.only(bottom: AppSpacing.s12),
           child: Column(
             children: [
               Text(
@@ -3123,7 +3126,7 @@ Widget _buildDrawerContent() {
                 textAlign: TextAlign.center,
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
-                style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: context.colors.background),
+                style: TextStyle(fontSize: AppFontSize.f15, fontWeight: AppFontWeight.bold, color: context.colors.background),
               ),
               if (facilityIdForTagline != null)
                 StreamBuilder<DocumentSnapshot>(
@@ -3132,13 +3135,13 @@ Widget _buildDrawerContent() {
                     final tagline = (snapshot.data?.data() as Map<String, dynamic>?)?['tagline'] as String?;
                     if (tagline == null || tagline.isEmpty) return const SizedBox.shrink();
                     return Padding(
-                      padding: const EdgeInsets.only(top: 2),
+                      padding: const EdgeInsets.only(top: AppSpacing.s2),
                       child: Text(
                         tagline,
                         textAlign: TextAlign.center,
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
-                        style: TextStyle(fontSize: 11, color: context.colors.background.withValues(alpha: 0.7)),
+                        style: TextStyle(fontSize: AppFontSize.f11, color: context.colors.background.withValues(alpha: AppAlpha.a70)),
                       ),
                     );
                   },
@@ -3152,9 +3155,9 @@ Widget _buildDrawerContent() {
     children: [
       logoSection,
       facilityNameSection,
-      Divider(thickness: 1.2, color: Colors.white54),
+      Divider(thickness: 1.2, color: context.colors.onPrimary.withValues(alpha: AppAlpha.a50)),
       items,
-      Divider(thickness: 1.2, color: Colors.white54),
+      Divider(thickness: 1.2, color: context.colors.onPrimary.withValues(alpha: AppAlpha.a50)),
       settings,
       platformAdminItem,
     ],
@@ -3166,7 +3169,7 @@ Widget _buildDrawerContent() {
     // easeInOutCubic eases in and out more gradually at both ends than
     // easeInOut (which is close to linear through its middle), reading
     // as a deliberate glide rather than a snap.
-    duration: const Duration(milliseconds: 380),
+    duration: AppMotion.slower,
     curve: Curves.easeInOutCubic,
     width: effectivelyCollapsed ? 72 : 250,
     color: context.colors.primary,
@@ -3188,8 +3191,8 @@ Widget _buildDrawerContent() {
     final buttonStyle = ElevatedButton.styleFrom(
       backgroundColor: context.colors.primary,
       foregroundColor: context.colors.background,
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.s20, vertical: AppSpacing.s14),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadius.r8)),
     ).copyWith(
       overlayColor: WidgetStateProperty.resolveWith<Color?>(
         (states) {
@@ -3213,7 +3216,7 @@ Widget _buildDrawerContent() {
         return Stack(
           children: [
             ListView(
-              padding: const EdgeInsets.all(16),
+              padding: const EdgeInsets.all(AppSpacing.s16),
               children: [
                 // Avatar with grey border
                 Center(
@@ -3221,9 +3224,9 @@ Widget _buildDrawerContent() {
                     alignment: Alignment.bottomRight,
                     children: [
                       Container(
-                        padding: const EdgeInsets.all(2),
+                        padding: const EdgeInsets.all(AppSpacing.s2),
                         decoration: BoxDecoration(
-                          color: Colors.grey.shade400,
+                          color: context.colors.borderStrong,
                           shape: BoxShape.circle,
                         ),
                         child: _profileBytes != null
@@ -3244,7 +3247,7 @@ Widget _buildDrawerContent() {
                           radius: 16,
                           backgroundColor: context.colors.accent,
                           child: IconButton(
-                            icon: const Icon(Icons.camera_alt, size: 16, color: Colors.white),
+                            icon: Icon(Icons.camera_alt, size: AppIconSize.i16, color: context.colors.onPrimary),
                             onPressed: pickProfileImage,
                           ),
                         ),
@@ -3252,43 +3255,43 @@ Widget _buildDrawerContent() {
                     ],
                   ),
                 ),
-                const SizedBox(height: 12),
-                Divider(thickness: 1.2, color: Colors.grey.shade400),
-                const SizedBox(height: 12),
+                const SizedBox(height: AppSpacing.s12),
+                Divider(thickness: 1.2, color: context.colors.borderStrong),
+                const SizedBox(height: AppSpacing.s12),
 
                 // User Info
                 RichText(
                   text: TextSpan(
-                    style: const TextStyle(color: Colors.black),
+                    style: TextStyle(color: context.colors.textStrong),
                     children: [
-                      const TextSpan(text: "Full Name: ", style: TextStyle(fontWeight: FontWeight.bold)),
+                      const TextSpan(text: "Full Name: ", style: TextStyle(fontWeight: AppFontWeight.bold)),
                       TextSpan(text: data['fullName'] ?? ''),
                     ],
                   ),
                 ),
                 RichText(
                   text: TextSpan(
-                    style: const TextStyle(color: Colors.black),
+                    style: TextStyle(color: context.colors.textStrong),
                     children: [
-                      const TextSpan(text: "Email: ", style: TextStyle(fontWeight: FontWeight.bold)),
+                      const TextSpan(text: "Email: ", style: TextStyle(fontWeight: AppFontWeight.bold)),
                       TextSpan(text: data['email'] ?? ''),
                     ],
                   ),
                 ),
                 RichText(
                   text: TextSpan(
-                    style: const TextStyle(color: Colors.black),
+                    style: TextStyle(color: context.colors.textStrong),
                     children: [
-                      const TextSpan(text: "Phone: ", style: TextStyle(fontWeight: FontWeight.bold)),
+                      const TextSpan(text: "Phone: ", style: TextStyle(fontWeight: AppFontWeight.bold)),
                       TextSpan(text: data['phone'] ?? ''),
                     ],
                   ),
                 ),
                 RichText(
                   text: TextSpan(
-                    style: const TextStyle(color: Colors.black),
+                    style: TextStyle(color: context.colors.textStrong),
                     children: [
-                      const TextSpan(text: "Role: ", style: TextStyle(fontWeight: FontWeight.bold)),
+                      const TextSpan(text: "Role: ", style: TextStyle(fontWeight: AppFontWeight.bold)),
                       // A promoted Assistant is a Co-admin, not just "Admin".
                       TextSpan(
                           text: (role == UserRole.admin.key && data['previousRole'] == UserRole.assistant.key)
@@ -3297,9 +3300,9 @@ Widget _buildDrawerContent() {
                     ],
                   ),
                 ),
-                const SizedBox(height: 12),
-                Divider(thickness: 1.2, color: Colors.grey.shade400),
-                const SizedBox(height: 12),
+                const SizedBox(height: AppSpacing.s12),
+                Divider(thickness: 1.2, color: context.colors.borderStrong),
+                const SizedBox(height: AppSpacing.s12),
 
                 // Buttons
                 ElevatedButton(
@@ -3319,7 +3322,7 @@ Widget _buildDrawerContent() {
                     showEditProfileScreen(context, userData: userData);
                   },
                 ),
-                const SizedBox(height: 12),
+                const SizedBox(height: AppSpacing.s12),
 
                 if (Provider.of<UserRoleProvider>(context).isAdmin) ...[
                   ElevatedButton(
@@ -3331,7 +3334,7 @@ Widget _buildDrawerContent() {
                       );
                     },
                   ),
-                  const SizedBox(height: 12),
+                  const SizedBox(height: AppSpacing.s12),
                   ElevatedButton(
                     style: buttonStyle,
                     child: const Text('View Facilities'),
@@ -3341,7 +3344,7 @@ Widget _buildDrawerContent() {
                       );
                     },
                   ),
-                  const SizedBox(height: 12),
+                  const SizedBox(height: AppSpacing.s12),
                 ],
 
                 ElevatedButton(
@@ -3353,7 +3356,7 @@ Widget _buildDrawerContent() {
                   },
                 ),
                 if (Provider.of<UserRoleProvider>(context).isAdmin) ...[
-                  const SizedBox(height: 12),
+                  const SizedBox(height: AppSpacing.s12),
                   ElevatedButton(
                     style: buttonStyle,
                     child: const Text('Activity Log'),
@@ -3366,9 +3369,9 @@ Widget _buildDrawerContent() {
                     },
                   ),
                 ],
-                const SizedBox(height: 12),
-                Divider(thickness: 1.2, color: Colors.grey.shade400),
-                const SizedBox(height: 80),
+                const SizedBox(height: AppSpacing.s12),
+                Divider(thickness: 1.2, color: context.colors.borderStrong),
+                const SizedBox(height: _logoutClearance),
               ],
             ),
 
@@ -3379,7 +3382,7 @@ Widget _buildDrawerContent() {
               child: Tooltip(
                 message: 'Close',
                 child: IconButton(
-                  icon: const Icon(Icons.close, size: 28, color: Colors.black54),
+                  icon: Icon(Icons.close, size: 28, color: context.colors.textSecondary),
                   onPressed: () => Navigator.of(context).pop(),
                 ),
               ),
@@ -3392,13 +3395,13 @@ Widget _buildDrawerContent() {
               child: Tooltip(
                 message: 'Logout',
                 child: InkWell(
-                  borderRadius: BorderRadius.circular(30),
+                  borderRadius: BorderRadius.circular(AppRadius.pill),
                   hoverColor: Colors.teal.shade700,
                   onTap: () {
                     showDialog(
                       context: context,
                       builder: (ctx) => AlertDialog(
-                        backgroundColor: Colors.white,
+                        backgroundColor: context.colors.surface,
                         title: Text('Logout', style: TextStyle(color: context.colors.primary)),
                         content: const Text('Are you sure you want to logout?'),
                         actions: [
@@ -3411,20 +3414,20 @@ Widget _buildDrawerContent() {
                               Navigator.of(ctx).pop();
                               await forceLogoutAndShowLogin();
                             },
-                            child: const Text('Logout', style: TextStyle(color: Colors.red)),
+                            child: Text('Logout', style: TextStyle(color: context.colors.danger)),
                           ),
                         ],
                       ),
                     );
                   },
                   child: Ink(
-                    decoration: const ShapeDecoration(
-                      color: Color(0xFF2F5D62),
+                    decoration: ShapeDecoration(
+                      color: context.colors.primary,
                       shape: CircleBorder(),
                     ),
-                    child: const Padding(
-                      padding: EdgeInsets.all(8.0),
-                      child: Icon(Icons.power_settings_new, size: 16, color: Colors.white),
+                    child: Padding(
+                      padding: EdgeInsets.all(AppSpacing.s8),
+                      child: Icon(Icons.power_settings_new, size: AppIconSize.i16, color: context.colors.onPrimary),
                     ),
                   ),
                 ),
