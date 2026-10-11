@@ -58,7 +58,7 @@
   "@common_call": {"x-review":"draft"},
   "common_moreActions": "Vitendo zaidi",
   "@common_moreActions": {"x-review":"draft"},
-  "common_loading": "Inapakia...",
+  "common_loading": "Inapakia…",
   "@common_loading": {"x-review":"draft"},
   "common_optional": "Si lazima",
   "@common_optional": {"x-review":"draft"},

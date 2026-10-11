@@ -58,7 +58,7 @@
   "@common_call": {"description":"Call button (phones a client)."},
   "common_moreActions": "More actions",
   "@common_moreActions": {"description":"Tooltip of the three-dot menu."},
-  "common_loading": "Loading...",
+  "common_loading": "Loading…",
   "@common_loading": {"description":"Shown while something loads."},
   "common_optional": "Optional",
   "@common_optional": {"description":"Marks a form field that may be left empty."},
