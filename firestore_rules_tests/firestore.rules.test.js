@@ -21,6 +21,10 @@ const assert = require('node:assert');
 const fs = require('node:fs');
 const path = require('node:path');
 const { initializeTestEnvironment, assertSucceeds, assertFails } = require('@firebase/rules-unit-testing');
+// The compat SDK the test contexts use, for FieldValue.serverTimestamp().
+const firebase = require('firebase/compat/app');
+require('firebase/compat/firestore');
+const serverTime = () => firebase.firestore.FieldValue.serverTimestamp();
 
 let env;
 
@@ -482,6 +486,45 @@ test('activity log: an admin of ANOTHER business can not read this one', async (
 });
 
 test('activity log: members can still WRITE entries (an assistant logging their own sale)', async () => {
-  await assertSucceeds(logsOf('assistant').add({ userId: 'assistant', userName: 'Neema', actionType: 'Sale', description: 'Sale recorded', timestamp: new Date() }));
+  await assertSucceeds(logsOf('assistant').add({ userId: 'assistant', userName: 'Neema', actionType: 'Sale', description: 'Sale recorded', timestamp: serverTime() }));
 });
 
+
+// ----------------------------------------------------------------------
+// Activity log CREATE. It used to be "any signed-in user", so anyone could
+// forge an entry in any facility, under anyone's name, at any date. Now:
+// a member of the facility (or a Platform Admin), in their own name, with
+// the server's clock - which is what ActivityLogger.logActivity sends.
+// ----------------------------------------------------------------------
+const entry = (userId, timestamp = serverTime()) =>
+  ({ userId, userName: 'x', actionType: 'Sale', description: 'Sale recorded', timestamp });
+
+test('activity log create: a member (assistant) CAN add an entry in their own name with the server time', async () => {
+  await assertSucceeds(logsOf('assistant').add(entry('assistant')));
+});
+
+test('activity log create: a member can NOT add an entry under someone else\'s name', async () => {
+  await assertFails(logsOf('assistant').add(entry('owner')));
+  await assertFails(logsOf('owner').add(entry('assistant')));
+});
+
+test('activity log create: someone NOT in the facility can NOT add one (not even an admin of another facility)', async () => {
+  await assertFails(logsOf('outsider', 'F1').add(entry('outsider')));
+  await assertSucceeds(logsOf('outsider', 'F2').add(entry('outsider'))); // ...but in their own, yes
+});
+
+test('activity log create: a signed-out visitor can NOT add one', async () => {
+  await assertFails(signedOut().collection('facilities').doc('F1').collection('activity_logs').add(entry('assistant')));
+});
+
+test('activity log create: a Platform Admin CAN add one in any facility, in their own name', async () => {
+  await assertSucceeds(logsOf('pa', 'F1').add(entry('pa')));
+  await assertSucceeds(logsOf('pa', 'F2').add(entry('pa')));
+  await assertFails(logsOf('pa', 'F1').add(entry('owner')));
+});
+
+test('activity log create: a member can NOT backdate an entry (a device date instead of the server time)', async () => {
+  await assertFails(logsOf('assistant').add(entry('assistant', new Date())));
+  await assertFails(logsOf('assistant').add(entry('assistant', new Date(2020, 0, 1))));
+  await assertFails(logsOf('assistant').add({ userId: 'assistant', userName: 'x', actionType: 'Sale', description: 'no time' }));
+});

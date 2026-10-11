@@ -354,8 +354,14 @@ service cloud.firestore {
       }
       // ========== 📝 Activity Logs (Nested) ==========
       match /activity_logs/{logId} {
-        // Any authenticated user can create logs
-        allow create: if isAuthenticated();
+        // Only someone in this facility (or a Platform Admin) can add an
+        // entry, only in their own name, and only with the server's clock.
+        // This used to be "any signed-in user", so anyone could forge an
+        // entry in any facility, put it under someone else's name, or
+        // backdate it. Every app writer (ActivityLogger.logActivity) sends
+        // the signed-in user's uid and FieldValue.serverTimestamp(); the
+        // server writes with the Admin SDK, which these rules don't apply to.
+        allow create: if isAuthenticated() && (isInFacility(facilityId) || isPlatformAdmin()) && request.resource.data.userId == request.auth.uid && request.resource.data.timestamp == request.time;
         // Who can read an entry. An ADMIN of the facility (the owner, or a
         // Co-admin) reads all of them. An ASSISTANT reads only the entries
         // that are THEIRS: ones they did (userId), or that are ABOUT them
