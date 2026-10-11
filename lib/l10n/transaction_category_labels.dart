@@ -45,9 +45,17 @@ class TransactionCategoryLabels {
     'Business': (l) => l.expenseGroup_business,
     'Other': (l) => l.expenseGroup_other,
   });
+
+  /// A transaction's type, stored lower-case ("other income", "expense");
+  /// the screens compare it ignoring case, so this does too.
+  static final type = StoredLabelTable({
+    'other income': (l) => l.payments_typeOtherIncome,
+    'expense': (l) => l.transactionType_expense,
+  }, ignoreCase: true);
 }
 
 extension TransactionCategoryLabelsOf on AppLocalizations {
   String transactionCategoryLabel(String stored) => TransactionCategoryLabels.category.labelOf(this, stored);
   String expenseGroupLabel(String stored) => TransactionCategoryLabels.expenseGroup.labelOf(this, stored);
+  String transactionTypeLabel(String stored) => TransactionCategoryLabels.type.labelOf(this, stored);
 }

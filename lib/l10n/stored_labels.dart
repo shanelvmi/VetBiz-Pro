@@ -265,6 +265,12 @@ class StoredValueLabels {
     'Deteriorated': (l) => l.moveReason_deteriorated,
     kBatchMoveReasonOther: (l) => l.moveReason_other,
   });
+
+  /// What a debt came from (Debt.source).
+  static final debtSource = StoredLabelTable({
+    'Sale': (l) => l.activityType_sale,
+    'Service': (l) => l.debtSource_service,
+  });
 }
 
 /// `context.l10n.productCategoryLabel(stored)` in widgets,
@@ -293,4 +299,5 @@ extension StoredLabels on AppLocalizations {
   String clientStatusLabel(String stored) => StoredValueLabels.clientStatus.labelOf(this, stored);
   String paymentStatusLabel(String stored) => StoredValueLabels.paymentStatus.labelOf(this, stored);
   String batchMoveReasonLabel(String stored) => StoredValueLabels.batchMoveReason.labelOf(this, stored);
+  String debtSourceLabel(String stored) => StoredValueLabels.debtSource.labelOf(this, stored);
 }

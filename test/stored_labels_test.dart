@@ -138,4 +138,9 @@ void main() {
   test('batch move reasons', () {
     checkStoredList(StoredValueLabels.batchMoveReason, kBatchMoveReasons, (l, v) => l.batchMoveReasonLabel(v));
   });
+
+  test('debt sources', () {
+    // No shared list exists; these are the two values Debt.source holds.
+    checkStoredList(StoredValueLabels.debtSource, ['Sale', 'Service'], (l, v) => l.debtSourceLabel(v));
+  });
 }

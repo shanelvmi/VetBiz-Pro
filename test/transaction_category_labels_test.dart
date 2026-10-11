@@ -17,4 +17,13 @@ void main() {
   test('expense picker headings', () {
     checkStoredList(TransactionCategoryLabels.expenseGroup, kExpenseCategoryGroups.keys.toList(), (l, v) => l.expenseGroupLabel(v));
   });
+
+  test('transaction types, shown title-cased as before', () {
+    checkStoredList(
+      TransactionCategoryLabels.type,
+      ['other income', 'expense'],
+      (l, v) => l.transactionTypeLabel(v),
+      english: {'other income': 'Other Income', 'expense': 'Expense'},
+    );
+  });
 }
