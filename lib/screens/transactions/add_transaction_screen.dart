@@ -70,12 +70,12 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
     final note = noteController.text.trim().isEmpty ? null : noteController.text.trim();
 
     if (description.isEmpty || amount <= 0 || type == null || category.isEmpty) {
-      AppFeedback.warning('Fill in all required fields correctly');
+      AppFeedback.warning(L10n.current.transactions_fillRequired);
       return;
     }
 
     if (paymentMethod == null) {
-      AppFeedback.warning('Select how this transaction was paid');
+      AppFeedback.warning(L10n.current.transactions_selectPaymentMethod);
       return;
     }
 
@@ -106,10 +106,10 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
       try {
         await provider.updateTransaction(updated, context);
         if (!context.mounted) return;
-        AppFeedback.success('Transaction updated');
+        AppFeedback.success(L10n.current.transactions_updated);
         Navigator.pop(context);
       } catch (e, st) {
-        AppFeedback.error("Couldn't update the transaction", error: e, stackTrace: st);
+        AppFeedback.error(L10n.current.transactions_updateFailed, error: e, stackTrace: st);
       } finally {
         if (mounted) setState(() => _isSaving = false);
       }
@@ -137,11 +137,11 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
       await provider.addTransaction(newTx, facilityId);
       if (!context.mounted) return;
 
-      AppFeedback.success('Transaction saved');
+      AppFeedback.success(L10n.current.transactions_saved);
 
       Navigator.pop(context);
     } catch (e, st) {
-      AppFeedback.error("Couldn't save the transaction", error: e, stackTrace: st);
+      AppFeedback.error(L10n.current.transactions_saveFailed, error: e, stackTrace: st);
     } finally {
       if (mounted) setState(() => _isSaving = false);
     }
@@ -188,13 +188,13 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
                 Icon(Icons.receipt_long_outlined, color: context.colors.onPrimary, size: AppIconSize.i22),
                 const SizedBox(width: AppSpacing.s12),
                 Expanded(
-                  child: Text(isEditing ? 'Edit Transaction' : 'Record Transaction',
+                  child: Text(isEditing ? context.l10n.transactions_edit : context.l10n.transactions_record,
                       style: TextStyle(color: context.colors.onPrimary, fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f18)),
                 ),
                 if (widget.isModal)
                   IconButton(
                     icon: Icon(Icons.close, color: context.colors.onPrimary),
-                    tooltip: 'Close',
+                    tooltip: context.l10n.common_close,
                     onPressed: () => Navigator.of(context).pop(),
                   )
                 else
@@ -283,14 +283,14 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _sectionHeader(Icons.swap_horiz, 'Transaction Details'),
+          _sectionHeader(Icons.swap_horiz, context.l10n.transactions_detailsTitle),
           const SizedBox(height: AppSpacing.s14),
-          const Text('Type *', style: TextStyle(fontWeight: AppFontWeight.semibold, fontSize: AppFontSize.f13)),
+          Text(context.l10n.common_requiredLabel(context.l10n.common_type), style: const TextStyle(fontWeight: AppFontWeight.semibold, fontSize: AppFontSize.f13)),
           const SizedBox(height: AppSpacing.s6),
           DropdownButtonFormField<String>(
             initialValue: type,
             items: dropdownOptions.map((val) {
-              return DropdownMenuItem(value: val, child: Text(_toTitleCase(val)));
+              return DropdownMenuItem(value: val, child: Text(_toTitleCase(context.l10n.transactionTypeLabel(val))));
             }).toList(),
             onChanged: (val) => setState(() {
               type = val;
@@ -303,7 +303,7 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
             decoration: _fieldDecoration(),
           ),
           const SizedBox(height: AppSpacing.s14),
-          const Text('Category *', style: TextStyle(fontWeight: AppFontWeight.semibold, fontSize: AppFontSize.f13)),
+          Text(context.l10n.common_requiredLabel(context.l10n.common_category), style: const TextStyle(fontWeight: AppFontWeight.semibold, fontSize: AppFontSize.f13)),
           const SizedBox(height: AppSpacing.s6),
           InkWell(
             borderRadius: BorderRadius.circular(AppRadius.r10),
@@ -320,7 +320,7 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
                 children: [
                   Expanded(
                     child: Text(
-                      selectedCategory == null ? 'Select category...' : context.l10n.transactionCategoryLabel(selectedCategory!),
+                      selectedCategory == null ? context.l10n.transactions_selectCategory : context.l10n.transactionCategoryLabel(selectedCategory!),
                       style: TextStyle(
                         fontSize: AppFontSize.f14,
                         color: selectedCategory != null ? context.colors.textPrimary : context.colors.textHint,
@@ -333,16 +333,16 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
             ),
           ),
           const SizedBox(height: AppSpacing.s14),
-          const Text('Description *', style: TextStyle(fontWeight: AppFontWeight.semibold, fontSize: AppFontSize.f13)),
+          Text(context.l10n.common_requiredLabel(context.l10n.common_description), style: const TextStyle(fontWeight: AppFontWeight.semibold, fontSize: AppFontSize.f13)),
           const SizedBox(height: AppSpacing.s6),
           TextField(
             controller: descriptionController,
             textCapitalization: TextCapitalization.sentences,
             inputFormatters: [SentenceCapitalizationFormatter()],
-            decoration: _fieldDecoration(hintText: 'What was this for?'),
+            decoration: _fieldDecoration(hintText: context.l10n.transactions_descriptionHint),
           ),
           const SizedBox(height: AppSpacing.s14),
-          const Text('Reference/Note (optional)', style: TextStyle(fontWeight: AppFontWeight.semibold, fontSize: AppFontSize.f13)),
+          Text(context.l10n.transactions_noteLabel, style: const TextStyle(fontWeight: AppFontWeight.semibold, fontSize: AppFontSize.f13)),
           const SizedBox(height: AppSpacing.s6),
           TextField(
             controller: noteController,
@@ -350,7 +350,7 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
             minLines: 4,
             textCapitalization: TextCapitalization.sentences,
             inputFormatters: [SentenceCapitalizationFormatter()],
-            decoration: _fieldDecoration(hintText: 'Add any additional information'),
+            decoration: _fieldDecoration(hintText: context.l10n.transactions_noteHint),
           ),
         ],
       ),
@@ -368,9 +368,9 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _sectionHeader(Icons.receipt_long_outlined, 'Amount & Payment'),
+          _sectionHeader(Icons.receipt_long_outlined, context.l10n.transactions_amountPayment),
           const SizedBox(height: AppSpacing.s14),
-          const Text('Amount (${AppDefaults.currencySymbol}) *', style: TextStyle(fontWeight: AppFontWeight.semibold, fontSize: AppFontSize.f13)),
+          Text(context.l10n.transactions_amountRequired(AppDefaults.currencySymbol), style: const TextStyle(fontWeight: AppFontWeight.semibold, fontSize: AppFontSize.f13)),
           const SizedBox(height: AppSpacing.s6),
           TextField(
             controller: amountController,
@@ -394,7 +394,7 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
                     children: [
                       Icon(Icons.credit_card_outlined, size: AppIconSize.i16, color: context.colors.primary),
                       const SizedBox(width: AppSpacing.s8),
-                      Text('Payment Method',
+                      Text(context.l10n.payments_method,
                           style: TextStyle(fontWeight: AppFontWeight.semibold, fontSize: AppFontSize.f13, color: context.colors.primary)),
                     ],
                   ),
@@ -426,7 +426,7 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
                         children: [
                           Icon(iconForPaymentMethod(paymentMethod ?? PaymentMethod.cash.key), size: AppIconSize.i18, color: context.colors.primary),
                           const SizedBox(width: AppSpacing.s10),
-                          Expanded(child: Text(paymentMethod == null ? 'Select method' : context.l10n.paymentMethodLabel(paymentMethod!))),
+                          Expanded(child: Text(paymentMethod == null ? context.l10n.transactions_selectMethod : context.l10n.paymentMethodLabel(paymentMethod!))),
                           Icon(Icons.expand_more, size: AppIconSize.i18, color: context.colors.textMuted),
                         ],
                       ),
@@ -469,7 +469,7 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
                 if (matches.isNotEmpty) filteredGroups[entry.key] = matches;
               }
               content = filteredGroups.isEmpty
-                  ? const Center(child: Text('No categories found'))
+                  ? Center(child: Text(context.l10n.transactions_noCategories))
                   : ListView(
                       children: filteredGroups.entries.expand((entry) {
                         return [
@@ -495,7 +495,7 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
             } else {
               final filtered = kIncomeCategories.where(matchesQuery).toList();
               content = filtered.isEmpty
-                  ? const Center(child: Text('No categories found'))
+                  ? Center(child: Text(context.l10n.transactions_noCategories))
                   : ListView(
                       children: filtered
                           .map((category) => ListTile(
@@ -514,7 +514,7 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
             }
 
             return AlertDialog(
-              title: const Text('Select Category'),
+              title: Text(context.l10n.transactions_selectCategoryTitle),
               content: SizedBox(
                 width: 420,
                 height: 440,
@@ -522,7 +522,7 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
                   children: [
                     TextField(
                       decoration: InputDecoration(
-                        hintText: 'Search categories...',
+                        hintText: context.l10n.transactions_searchCategories,
                         prefixIcon: const Icon(Icons.search, size: AppIconSize.i20),
                         isDense: true,
                         border: OutlineInputBorder(borderRadius: BorderRadius.circular(AppRadius.r10)),
@@ -535,7 +535,7 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
                 ),
               ),
               actions: [
-                TextButton(onPressed: () => Navigator.pop(dialogContext), child: const Text('Cancel')),
+                TextButton(onPressed: () => Navigator.pop(dialogContext), child: Text(context.l10n.common_cancel)),
               ],
             );
           },
@@ -557,7 +557,7 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
         children: [
           OutlinedButton.icon(
             icon: const Icon(Icons.close, size: AppIconSize.i16),
-            label: const Text('Cancel'),
+            label: Text(context.l10n.common_cancel),
             style: OutlinedButton.styleFrom(
               foregroundColor: context.colors.textPrimary,
               side: BorderSide(color: context.colors.textHint.withValues(alpha: AppAlpha.a40)),
@@ -586,7 +586,7 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
                     children: [
                       const Icon(Icons.receipt_long_outlined, size: AppIconSize.i16),
                       const SizedBox(width: AppSpacing.s8),
-                      Text(isEditing ? 'Update Transaction' : 'Record Transaction'),
+                      Text(isEditing ? context.l10n.transactions_update : context.l10n.transactions_record),
                       const SizedBox(width: AppSpacing.s6),
                       const Icon(Icons.arrow_forward, size: AppIconSize.i16),
                     ],
@@ -615,7 +615,7 @@ Future<void> showAddTransactionScreen(BuildContext context, {TransactionModel? t
   await showGeneralDialog(
     context: context,
     barrierDismissible: true,
-    barrierLabel: transaction != null ? 'Edit Transaction' : 'Record Transaction',
+    barrierLabel: transaction != null ? context.l10n.transactions_edit : context.l10n.transactions_record,
     barrierColor: context.colors.scrim.withValues(alpha: AppAlpha.a50),
     transitionDuration: AppMotion.normal,
     pageBuilder: (context, animation, secondaryAnimation) {

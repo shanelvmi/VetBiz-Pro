@@ -143,6 +143,10 @@ class _TransactionScreenState extends State<TransactionScreen> {
         .join(' ');
   }
 
+  // A stored type ('other income', 'expense') as shown: its label,
+  // title-cased as before for a type the lookup doesn't know.
+  String _typeLabel(String type) => toTitleCase(context.l10n.transactionTypeLabel(type));
+
   @override
   Widget build(BuildContext context) {
     final transactionProvider = Provider.of<TransactionProvider>(context);
@@ -180,7 +184,9 @@ class _TransactionScreenState extends State<TransactionScreen> {
                     child: filteredTransactions.isEmpty
                         ? Center(
                             child: Text(
-                              'No transactions${_filterType != null ? ' for ${toTitleCase(_filterType!)}' : ''}.',
+                              _filterType != null
+                                  ? context.l10n.transactions_emptyForType(_typeLabel(_filterType!))
+                                  : context.l10n.transactions_empty,
                               style: TextStyle(fontSize: AppFontSize.f16, color: context.colors.primary),
                             ),
                           )
@@ -212,8 +218,8 @@ class _TransactionScreenState extends State<TransactionScreen> {
       title: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Text('Transactions', style: TextStyle(fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f19, color: context.colors.textPrimary)),
-          Text('All income and expense transactions', style: TextStyle(fontSize: AppFontSize.f12, color: context.colors.textSecondary)),
+          Text(context.l10n.transactions_title, style: TextStyle(fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f19, color: context.colors.textPrimary)),
+          Text(context.l10n.transactions_subtitle, style: TextStyle(fontSize: AppFontSize.f12, color: context.colors.textSecondary)),
         ],
       ),
       actions: [
@@ -236,7 +242,7 @@ class _TransactionScreenState extends State<TransactionScreen> {
               await _loadPeriodTotals();
             },
             icon: const Icon(Icons.add, size: AppIconSize.i18),
-            label: const Text('Record Transaction'),
+            label: Text(context.l10n.transactions_record),
             style: ElevatedButton.styleFrom(
               backgroundColor: context.colors.primary,
               foregroundColor: context.colors.background,
@@ -256,16 +262,16 @@ class _TransactionScreenState extends State<TransactionScreen> {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           Expanded(
-            child: _metricCard('Other Income', _otherIncomeTotal, context.colors.accent),
+            child: _metricCard(context.l10n.payments_typeOtherIncome, _otherIncomeTotal, context.colors.accent),
           ),
           const SizedBox(width: AppSpacing.s12),
           Expanded(
-            child: _metricCard('Expenses', _expensesTotal, context.colors.dangerSoft),
+            child: _metricCard(context.l10n.transactions_expenses, _expensesTotal, context.colors.dangerSoft),
           ),
           const SizedBox(width: AppSpacing.s12),
           Expanded(
             child: _metricCard(
-              'Other Income vs Expenses',
+              context.l10n.transactions_incomeVsExpenses,
               subProfit,
               subProfit >= 0 ? context.colors.successStrong : context.colors.dangerSoft,
             ),
@@ -330,7 +336,7 @@ class _TransactionScreenState extends State<TransactionScreen> {
           child: TextField(
             controller: _searchController,
             decoration: InputDecoration(
-              hintText: 'Search by description, category...',
+              hintText: context.l10n.transactions_searchHint,
               hintStyle: const TextStyle(fontSize: AppFontSize.f13),
               prefixIcon: const Icon(Icons.search, size: AppIconSize.i20),
               filled: true,
@@ -364,13 +370,14 @@ class _TransactionScreenState extends State<TransactionScreen> {
           child: DropdownButtonHideUnderline(
             child: DropdownButton<String?>(
               value: _filterType,
-              hint: const Text('Type: All', style: TextStyle(fontSize: AppFontSize.f13)),
+              hint: Text(context.l10n.common_filterValue(context.l10n.common_type, context.l10n.common_all), style: const TextStyle(fontSize: AppFontSize.f13)),
               icon: Icon(Icons.arrow_drop_down, size: AppIconSize.i18, color: context.colors.primary),
               style: TextStyle(color: context.colors.textPrimary, fontSize: AppFontSize.f13),
-              items: const [
-                DropdownMenuItem<String?>(value: null, child: Text('Type: All')),
-                DropdownMenuItem<String?>(value: 'other income', child: Text('Type: Other Income')),
-                DropdownMenuItem<String?>(value: 'expense', child: Text('Type: Expense')),
+              items: [
+                DropdownMenuItem<String?>(value: null, child: Text(context.l10n.common_filterValue(context.l10n.common_type, context.l10n.common_all))),
+                // Shows the label; the filter compares the stored type.
+                for (final t in const ['other income', 'expense'])
+                  DropdownMenuItem<String?>(value: t, child: Text(context.l10n.common_filterValue(context.l10n.common_type, _typeLabel(t)))),
               ],
               onChanged: (val) => setState(() => _filterType = val),
             ),
@@ -380,11 +387,11 @@ class _TransactionScreenState extends State<TransactionScreen> {
           const SizedBox(width: AppSpacing.s8),
           TextButton(
             onPressed: () => setState(() => _filterType = null),
-            child: const Text('Clear', style: TextStyle(fontSize: AppFontSize.f13)),
+            child: Text(context.l10n.common_clear, style: const TextStyle(fontSize: AppFontSize.f13)),
           ),
         ],
         const SizedBox(width: AppSpacing.s16),
-        Text('$count transaction${count == 1 ? '' : 's'}', style: TextStyle(fontSize: AppFontSize.f12, color: context.colors.textMuted)),
+        Text(context.l10n.transactions_count(count), style: TextStyle(fontSize: AppFontSize.f12, color: context.colors.textMuted)),
       ],
     );
   }
@@ -405,12 +412,12 @@ class _TransactionScreenState extends State<TransactionScreen> {
           decoration: BoxDecoration(border: Border(bottom: BorderSide(color: context.colors.textHint.withValues(alpha: AppAlpha.a20)))),
           child: Row(
             children: [
-              _headerCell('Date & Time', flex: 3),
-              _headerCell('Category', flex: 2),
-              _headerCell('Description', flex: 3),
-              _headerCell('Method', flex: 2),
-              _headerCell('Amount', flex: 2),
-              _headerCell('Recorded By', flex: 2),
+              _headerCell(context.l10n.payments_colDateTime, flex: 3),
+              _headerCell(context.l10n.common_category, flex: 2),
+              _headerCell(context.l10n.common_description, flex: 3),
+              _headerCell(context.l10n.common_method, flex: 2),
+              _headerCell(context.l10n.common_amount, flex: 2),
+              _headerCell(context.l10n.payments_recordedBy, flex: 2),
               _headerCell('', flex: 1),
             ],
           ),
@@ -455,7 +462,7 @@ class _TransactionScreenState extends State<TransactionScreen> {
                 style: TextStyle(fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f12_5, color: context.colors.primary),
               ),
               Text(
-                'Total: ${Money.symbolDecimal(dayTotal)}',
+                context.l10n.common_totalValue(Money.symbolDecimal(dayTotal)),
                 style: TextStyle(
                   fontSize: AppFontSize.f12_5,
                   fontWeight: AppFontWeight.bold,
@@ -514,7 +521,7 @@ class _TransactionScreenState extends State<TransactionScreen> {
           Expanded(
             flex: 3,
             child: Text(
-              tx.description.isEmpty ? toTitleCase(tx.type) : tx.description,
+              tx.description.isEmpty ? _typeLabel(tx.type) : tx.description,
               style: const TextStyle(fontSize: AppFontSize.f13, fontWeight: AppFontWeight.semibold),
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
@@ -533,7 +540,7 @@ class _TransactionScreenState extends State<TransactionScreen> {
           ),
           Expanded(
             flex: 2,
-            child: Text(tx.recordedBy.isEmpty ? 'Unknown' : tx.recordedBy, style: const TextStyle(fontSize: AppFontSize.f13), maxLines: 1, overflow: TextOverflow.ellipsis),
+            child: Text(tx.recordedBy.isEmpty ? context.l10n.common_unknown : tx.recordedBy, style: const TextStyle(fontSize: AppFontSize.f13), maxLines: 1, overflow: TextOverflow.ellipsis),
           ),
           Expanded(
             flex: 1,
@@ -550,10 +557,10 @@ class _TransactionScreenState extends State<TransactionScreen> {
                 }
               },
               itemBuilder: (context) => [
-                const PopupMenuItem(value: 'view', child: Text('View Details')),
-                const PopupMenuItem(value: 'edit', child: Text('Edit')),
+                PopupMenuItem(value: 'view', child: Text(context.l10n.common_viewDetails)),
+                PopupMenuItem(value: 'edit', child: Text(context.l10n.common_edit)),
                 if (Provider.of<UserRoleProvider>(context, listen: false).isAdmin)
-                  PopupMenuItem(value: 'delete', child: Text('Delete', style: TextStyle(color: context.colors.dangerSoft))),
+                  PopupMenuItem(value: 'delete', child: Text(context.l10n.common_delete, style: TextStyle(color: context.colors.dangerSoft))),
               ],
             ),
           ),
@@ -568,14 +575,16 @@ class _TransactionScreenState extends State<TransactionScreen> {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Delete this transaction?'),
+        title: Text(context.l10n.transactions_deleteTitle),
         content: Text(
-          '"${tx.description.isEmpty ? toTitleCase(tx.type) : tx.description}" - '
-          '${Money.symbolDecimal(tx.amount)}\n\nYou can restore it from Trash.',
+          context.l10n.transactions_deleteBody(
+            tx.description.isEmpty ? _typeLabel(tx.type) : tx.description,
+            Money.symbolDecimal(tx.amount),
+          ),
         ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Cancel')),
-          TextButton(onPressed: () => Navigator.pop(context, true), child: Text('Delete', style: TextStyle(color: context.colors.danger))),
+          TextButton(onPressed: () => Navigator.pop(context, false), child: Text(context.l10n.common_cancel)),
+          TextButton(onPressed: () => Navigator.pop(context, true), child: Text(context.l10n.common_delete, style: TextStyle(color: context.colors.danger))),
         ],
       ),
     );
@@ -591,11 +600,11 @@ class _TransactionScreenState extends State<TransactionScreen> {
       // deleteTransaction moves it to Trash (a soft delete), so Undo puts
       // it back with the Trash screen's own restore.
       AppFeedback.undo(
-        'Transaction moved to Trash',
+        L10n.current.transactions_movedToTrash,
         onUndo: () => _undoDeleteTransaction(facilityId, tx.id),
       );
     } catch (e, st) {
-      AppFeedback.error("Couldn't delete the transaction", error: e, stackTrace: st);
+      AppFeedback.error(L10n.current.transactions_deleteFailed, error: e, stackTrace: st);
     }
   }
 
@@ -608,9 +617,9 @@ class _TransactionScreenState extends State<TransactionScreen> {
         liveCollection: Collections.transactions,
         id: id,
       );
-      AppFeedback.success('Transaction restored');
+      AppFeedback.success(L10n.current.transactions_restored);
     } catch (e, st) {
-      AppFeedback.error("Couldn't restore the transaction", error: e, stackTrace: st);
+      AppFeedback.error(L10n.current.transactions_restoreFailed, error: e, stackTrace: st);
     }
   }
 
@@ -626,13 +635,13 @@ class _TransactionScreenState extends State<TransactionScreen> {
         final goToSettings = await showDialog<bool>(
           context: context,
           builder: (context) => AlertDialog(
-            title: const Text('No Printer Connected'),
-            content: const Text('Connect a Bluetooth receipt printer in Printer Settings first.'),
+            title: Text(context.l10n.common_noPrinterTitle),
+            content: Text(context.l10n.common_noPrinterBody),
             actions: [
-              TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Cancel')),
+              TextButton(onPressed: () => Navigator.pop(context, false), child: Text(context.l10n.common_cancel)),
               ElevatedButton(
                 onPressed: () => Navigator.pop(context, true),
-                child: const Text('Go to Printer Settings'),
+                child: Text(context.l10n.common_goToPrinterSettings),
               ),
             ],
           ),
@@ -645,12 +654,12 @@ class _TransactionScreenState extends State<TransactionScreen> {
 
       final success = await printerService.printTransactionReceipt(tx);
       if (success) {
-        AppFeedback.success('Receipt sent to printer');
+        AppFeedback.success(L10n.current.common_receiptSentToPrinter);
       } else {
-        AppFeedback.error("Couldn't print the receipt", detail: 'The printer did not accept it');
+        AppFeedback.error(L10n.current.common_printFailed, detail: L10n.current.common_printFailedDetail);
       }
     } catch (e, st) {
-      AppFeedback.error("Couldn't print the receipt", error: e, stackTrace: st);
+      AppFeedback.error(L10n.current.common_printFailed, error: e, stackTrace: st);
     } finally {
       if (mounted) setState(() => _isPrinting = false);
     }
@@ -677,7 +686,7 @@ class _TransactionScreenState extends State<TransactionScreen> {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                const Text('Transaction Details', style: TextStyle(fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f16)),
+                Text(context.l10n.transactions_detailsTitle, style: const TextStyle(fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f16)),
                 IconButton(
                   icon: const Icon(Icons.close, size: AppIconSize.i20),
                   onPressed: () => setState(() => _selectedTransaction = null),
@@ -688,7 +697,7 @@ class _TransactionScreenState extends State<TransactionScreen> {
             Container(
               padding: const EdgeInsets.symmetric(horizontal: AppSpacing.s8, vertical: AppSpacing.s3),
               decoration: BoxDecoration(color: accentColor.withValues(alpha: AppAlpha.a10), borderRadius: BorderRadius.circular(AppRadius.r10)),
-              child: Text(toTitleCase(tx.type), style: TextStyle(fontSize: AppFontSize.f11_5, color: accentColor, fontWeight: AppFontWeight.semibold)),
+              child: Text(_typeLabel(tx.type), style: TextStyle(fontSize: AppFontSize.f11_5, color: accentColor, fontWeight: AppFontWeight.semibold)),
             ),
             const SizedBox(height: AppSpacing.s12),
             Text(
@@ -697,7 +706,7 @@ class _TransactionScreenState extends State<TransactionScreen> {
             ),
             const SizedBox(height: AppSpacing.s4),
             Text(
-              tx.description.isEmpty ? toTitleCase(tx.type) : tx.description,
+              tx.description.isEmpty ? _typeLabel(tx.type) : tx.description,
               style: const TextStyle(fontWeight: AppFontWeight.semibold, fontSize: AppFontSize.f16),
             ),
             const SizedBox(height: AppSpacing.s4),
@@ -713,12 +722,12 @@ class _TransactionScreenState extends State<TransactionScreen> {
             ),
             const Divider(height: 32),
             if (tx.category.isNotEmpty) ...[
-              _detailLabel('Category'),
+              _detailLabel(context.l10n.common_category),
               Text(context.l10n.transactionCategoryLabel(tx.category), style: const TextStyle(fontSize: AppFontSize.f14)),
               const SizedBox(height: AppSpacing.s16),
             ],
             if (tx.paymentMethod != null) ...[
-              _detailLabel('Payment Method'),
+              _detailLabel(context.l10n.payments_method),
               Row(
                 children: [
                   Icon(iconForPaymentMethod(tx.paymentMethod!), size: AppIconSize.i16, color: context.colors.textMuted),
@@ -728,22 +737,22 @@ class _TransactionScreenState extends State<TransactionScreen> {
               ),
               const SizedBox(height: AppSpacing.s16),
             ],
-            _detailLabel('Recorded By'),
+            _detailLabel(context.l10n.payments_recordedBy),
             Row(
               children: [
                 Icon(Icons.person_outline, size: AppIconSize.i16, color: context.colors.textMuted),
                 const SizedBox(width: AppSpacing.s6),
-                Text(tx.recordedBy.isEmpty ? 'Unknown' : tx.recordedBy, style: const TextStyle(fontSize: AppFontSize.f14)),
+                Text(tx.recordedBy.isEmpty ? context.l10n.common_unknown : tx.recordedBy, style: const TextStyle(fontSize: AppFontSize.f14)),
               ],
             ),
             if (reference != null) ...[
               const SizedBox(height: AppSpacing.s16),
-              _detailLabel('Reference'),
+              _detailLabel(context.l10n.payments_reference),
               Text(reference, style: const TextStyle(fontSize: AppFontSize.f14)),
             ],
             if (tx.note != null && tx.note!.trim().isNotEmpty) ...[
               const SizedBox(height: AppSpacing.s16),
-              _detailLabel('Notes'),
+              _detailLabel(context.l10n.common_notes),
               Text(tx.note!, style: const TextStyle(fontSize: AppFontSize.f14)),
             ],
             const SizedBox(height: AppSpacing.s24),
@@ -754,7 +763,7 @@ class _TransactionScreenState extends State<TransactionScreen> {
                 icon: _isPrinting
                     ? SizedBox(height: AppSpacing.s16, width: 16, child: CircularProgressIndicator(strokeWidth: 2, color: context.colors.onPrimary))
                     : const Icon(Icons.print_outlined, size: AppIconSize.i18),
-                label: const Text('Print'),
+                label: Text(context.l10n.common_print),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: context.colors.primary,
                   foregroundColor: context.colors.onPrimary,
@@ -794,7 +803,7 @@ class _TransactionScreenState extends State<TransactionScreen> {
         padding: const EdgeInsets.symmetric(vertical: AppSpacing.s20),
         child: Center(
           child: Text(
-            'Showing all recent transactions',
+            context.l10n.transactions_allShown,
             style: TextStyle(fontSize: AppFontSize.f12, color: context.colors.textHint),
           ),
         ),
@@ -810,7 +819,7 @@ class _TransactionScreenState extends State<TransactionScreen> {
             side: BorderSide(color: context.colors.primary),
           ),
           icon: const Icon(Icons.expand_more),
-          label: const Text('Load more transactions'),
+          label: Text(context.l10n.transactions_loadMore),
         ),
       ),
     );
