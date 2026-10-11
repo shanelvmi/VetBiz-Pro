@@ -1840,4 +1840,82 @@ class AppLocalizationsEn extends AppLocalizations {
   String clients_percentOfClients(String percent) {
     return '$percent% of clients';
   }
+
+  @override
+  String get clients_lastAdded => 'Last Added';
+
+  @override
+  String get clients_searchHint => 'Search by name, phone, address...';
+
+  @override
+  String get clients_deleteTitle => 'Delete Client';
+
+  @override
+  String clients_deleteBody(String name) {
+    return 'Delete \"$name\" permanently?';
+  }
+
+  @override
+  String get clients_deleted => 'Client deleted';
+
+  @override
+  String get clients_deleteFailed => 'Couldn\'t delete the client';
+
+  @override
+  String get clients_shareFailed => 'Couldn\'t share the client card';
+
+  @override
+  String get clients_detailsTitle => 'Client Details';
+
+  @override
+  String get clients_clientType => 'Client Type';
+
+  @override
+  String get clients_joinedOn => 'Joined On';
+
+  @override
+  String get clients_totalTransactions => 'Total Transactions';
+
+  @override
+  String get clients_totalSpent => 'Total Spent';
+
+  @override
+  String get clients_saveShare => 'Save / Share';
+
+  @override
+  String get clients_searchingNote => 'Searching by name (across all types)';
+
+  @override
+  String clients_newRecords(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count new clients available',
+      one: '1 new client available',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String clients_emptySearch(String query) {
+    return 'No clients match \"$query\"';
+  }
+
+  @override
+  String get clients_empty => 'No clients found';
+
+  @override
+  String get clients_client => 'Client';
+
+  @override
+  String get clients_indexNeeded =>
+      'This filter needs a one-time database index to be created first.';
+
+  @override
+  String clients_loadError(String error) {
+    return 'Could not load clients: $error';
+  }
+
+  @override
+  String get clients_createIndex => 'Create Index';
 }

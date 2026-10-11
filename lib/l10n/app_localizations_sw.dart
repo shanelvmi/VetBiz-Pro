@@ -1853,4 +1853,82 @@ class AppLocalizationsSw extends AppLocalizations {
   String clients_percentOfClients(String percent) {
     return '$percent% ya wateja';
   }
+
+  @override
+  String get clients_lastAdded => 'Aliyeongezwa Mwisho';
+
+  @override
+  String get clients_searchHint => 'Tafuta kwa jina, simu, anwani...';
+
+  @override
+  String get clients_deleteTitle => 'Futa Mteja';
+
+  @override
+  String clients_deleteBody(String name) {
+    return 'Futa \"$name\" kabisa?';
+  }
+
+  @override
+  String get clients_deleted => 'Mteja amefutwa';
+
+  @override
+  String get clients_deleteFailed => 'Imeshindwa kufuta mteja';
+
+  @override
+  String get clients_shareFailed => 'Imeshindwa kushiriki kadi ya mteja';
+
+  @override
+  String get clients_detailsTitle => 'Maelezo ya Mteja';
+
+  @override
+  String get clients_clientType => 'Aina ya Mteja';
+
+  @override
+  String get clients_joinedOn => 'Alijiunga Tarehe';
+
+  @override
+  String get clients_totalTransactions => 'Jumla ya Miamala';
+
+  @override
+  String get clients_totalSpent => 'Jumla Aliyotumia';
+
+  @override
+  String get clients_saveShare => 'Hifadhi / Shiriki';
+
+  @override
+  String get clients_searchingNote => 'Inatafuta kwa jina (katika aina zote)';
+
+  @override
+  String clients_newRecords(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Wateja $count wapya wapo',
+      one: 'Mteja 1 mpya yupo',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String clients_emptySearch(String query) {
+    return 'Hakuna wateja wanaolingana na \"$query\"';
+  }
+
+  @override
+  String get clients_empty => 'Hakuna wateja waliopatikana';
+
+  @override
+  String get clients_client => 'Mteja';
+
+  @override
+  String get clients_indexNeeded =>
+      'Kichujio hiki kinahitaji faharasa ya hifadhidata itengenezwe mara moja kwanza.';
+
+  @override
+  String clients_loadError(String error) {
+    return 'Imeshindwa kupakia wateja: $error';
+  }
+
+  @override
+  String get clients_createIndex => 'Tengeneza Faharasa';
 }

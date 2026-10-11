@@ -3409,6 +3409,132 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{percent}% of clients'**
   String clients_percentOfClients(String percent);
+
+  /// Clients metric card: the newest client.
+  ///
+  /// In en, this message translates to:
+  /// **'Last Added'**
+  String get clients_lastAdded;
+
+  /// Clients search box hint.
+  ///
+  /// In en, this message translates to:
+  /// **'Search by name, phone, address...'**
+  String get clients_searchHint;
+
+  /// Delete confirmation title.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete Client'**
+  String get clients_deleteTitle;
+
+  /// Delete confirmation text.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete \"{name}\" permanently?'**
+  String clients_deleteBody(String name);
+
+  /// Message after deleting a client.
+  ///
+  /// In en, this message translates to:
+  /// **'Client deleted'**
+  String get clients_deleted;
+
+  /// Message when deleting failed.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t delete the client'**
+  String get clients_deleteFailed;
+
+  /// Message when sharing the client card failed.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t share the client card'**
+  String get clients_shareFailed;
+
+  /// Details panel title.
+  ///
+  /// In en, this message translates to:
+  /// **'Client Details'**
+  String get clients_detailsTitle;
+
+  /// Details label and form section heading.
+  ///
+  /// In en, this message translates to:
+  /// **'Client Type'**
+  String get clients_clientType;
+
+  /// Table header and details label: when the client was added.
+  ///
+  /// In en, this message translates to:
+  /// **'Joined On'**
+  String get clients_joinedOn;
+
+  /// Details label: the client's number of payments.
+  ///
+  /// In en, this message translates to:
+  /// **'Total Transactions'**
+  String get clients_totalTransactions;
+
+  /// Details label: what the client has paid in total.
+  ///
+  /// In en, this message translates to:
+  /// **'Total Spent'**
+  String get clients_totalSpent;
+
+  /// Button that saves or shares the client card image.
+  ///
+  /// In en, this message translates to:
+  /// **'Save / Share'**
+  String get clients_saveShare;
+
+  /// Note under the search box while searching.
+  ///
+  /// In en, this message translates to:
+  /// **'Searching by name (across all types)'**
+  String get clients_searchingNote;
+
+  /// Banner when new clients arrived while the list was open.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 new client available} other{{count} new clients available}}'**
+  String clients_newRecords(int count);
+
+  /// Clients list when the search finds nobody.
+  ///
+  /// In en, this message translates to:
+  /// **'No clients match \"{query}\"'**
+  String clients_emptySearch(String query);
+
+  /// Clients list when it is empty.
+  ///
+  /// In en, this message translates to:
+  /// **'No clients found'**
+  String get clients_empty;
+
+  /// Clients table header.
+  ///
+  /// In en, this message translates to:
+  /// **'Client'**
+  String get clients_client;
+
+  /// Clients list error when a database index is missing.
+  ///
+  /// In en, this message translates to:
+  /// **'This filter needs a one-time database index to be created first.'**
+  String get clients_indexNeeded;
+
+  /// Clients list error; error is FriendlyError's sentence.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not load clients: {error}'**
+  String clients_loadError(String error);
+
+  /// Button that opens the console to create the missing index.
+  ///
+  /// In en, this message translates to:
+  /// **'Create Index'**
+  String get clients_createIndex;
 }
 
 class _AppLocalizationsDelegate
