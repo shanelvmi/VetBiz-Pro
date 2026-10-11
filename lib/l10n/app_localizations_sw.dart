@@ -1387,4 +1387,79 @@ class AppLocalizationsSw extends AppLocalizations {
 
   @override
   String get store_releaseFailed => 'Imeshindwa kutoa bidhaa';
+
+  @override
+  String get common_unknown => 'Haijulikani';
+
+  @override
+  String common_showingRange(int start, int end) {
+    return 'Inaonyesha $start hadi $end';
+  }
+
+  @override
+  String get common_phone => 'Simu';
+
+  @override
+  String get common_address => 'Anwani';
+
+  @override
+  String get common_name => 'Jina';
+
+  @override
+  String get common_description => 'Maelezo';
+
+  @override
+  String get common_category => 'Kundi';
+
+  @override
+  String get common_required => 'Inahitajika';
+
+  @override
+  String common_requiredLabel(String label) {
+    return '$label *';
+  }
+
+  @override
+  String get common_export => 'Hamisha';
+
+  @override
+  String get common_actions => 'Vitendo';
+
+  @override
+  String get common_summary => 'Muhtasari';
+
+  @override
+  String get common_noNotes => 'Hakuna maelezo yaliyoongezwa';
+
+  @override
+  String get common_none => 'Hakuna';
+
+  @override
+  String get common_searchEllipsis => 'Tafuta...';
+
+  @override
+  String get common_noFacility => 'Hakuna kituo kilichochaguliwa';
+
+  @override
+  String get common_linkFailed => 'Imeshindwa kufungua kiungo';
+
+  @override
+  String get common_linkFailedDetail =>
+      'Nakili kutoka kwenye kumbukumbu ya hitilafu badala yake';
+
+  @override
+  String get common_noPrinterTitle => 'Hakuna Printa Iliyounganishwa';
+
+  @override
+  String get common_noPrinterBody =>
+      'Unganisha printa ya risiti ya Bluetooth kwenye Mipangilio ya Printa kwanza.';
+
+  @override
+  String get common_goToPrinterSettings => 'Nenda kwenye Mipangilio ya Printa';
+
+  @override
+  String get common_receiptSentToPrinter => 'Risiti imetumwa kwa printa';
+
+  @override
+  String get common_printFailed => 'Imeshindwa kuchapisha risiti';
 }

@@ -1380,4 +1380,78 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get store_releaseFailed => 'Couldn\'t release the product';
+
+  @override
+  String get common_unknown => 'Unknown';
+
+  @override
+  String common_showingRange(int start, int end) {
+    return 'Showing $start to $end';
+  }
+
+  @override
+  String get common_phone => 'Phone';
+
+  @override
+  String get common_address => 'Address';
+
+  @override
+  String get common_name => 'Name';
+
+  @override
+  String get common_description => 'Description';
+
+  @override
+  String get common_category => 'Category';
+
+  @override
+  String get common_required => 'Required';
+
+  @override
+  String common_requiredLabel(String label) {
+    return '$label *';
+  }
+
+  @override
+  String get common_export => 'Export';
+
+  @override
+  String get common_actions => 'Actions';
+
+  @override
+  String get common_summary => 'Summary';
+
+  @override
+  String get common_noNotes => 'No notes added';
+
+  @override
+  String get common_none => 'None';
+
+  @override
+  String get common_searchEllipsis => 'Search...';
+
+  @override
+  String get common_noFacility => 'No facility selected';
+
+  @override
+  String get common_linkFailed => 'Couldn\'t open the link';
+
+  @override
+  String get common_linkFailedDetail => 'Copy it from the error log instead';
+
+  @override
+  String get common_noPrinterTitle => 'No Printer Connected';
+
+  @override
+  String get common_noPrinterBody =>
+      'Connect a Bluetooth receipt printer in Printer Settings first.';
+
+  @override
+  String get common_goToPrinterSettings => 'Go to Printer Settings';
+
+  @override
+  String get common_receiptSentToPrinter => 'Receipt sent to printer';
+
+  @override
+  String get common_printFailed => 'Couldn\'t print the receipt';
 }

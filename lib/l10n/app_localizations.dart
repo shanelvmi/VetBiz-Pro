@@ -2611,6 +2611,144 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Couldn\'t release the product'**
   String get store_releaseFailed;
+
+  /// Shown when a name is missing (who recorded an entry).
+  ///
+  /// In en, this message translates to:
+  /// **'Unknown'**
+  String get common_unknown;
+
+  /// Pagination bar: which rows of the list are shown.
+  ///
+  /// In en, this message translates to:
+  /// **'Showing {start} to {end}'**
+  String common_showingRange(int start, int end);
+
+  /// Phone number label or column header.
+  ///
+  /// In en, this message translates to:
+  /// **'Phone'**
+  String get common_phone;
+
+  /// Address label or column header.
+  ///
+  /// In en, this message translates to:
+  /// **'Address'**
+  String get common_address;
+
+  /// Name label.
+  ///
+  /// In en, this message translates to:
+  /// **'Name'**
+  String get common_name;
+
+  /// Description column header or label.
+  ///
+  /// In en, this message translates to:
+  /// **'Description'**
+  String get common_description;
+
+  /// Category column header or label.
+  ///
+  /// In en, this message translates to:
+  /// **'Category'**
+  String get common_category;
+
+  /// Error under a form field left empty.
+  ///
+  /// In en, this message translates to:
+  /// **'Required'**
+  String get common_required;
+
+  /// A form field's label with the required-field star.
+  ///
+  /// In en, this message translates to:
+  /// **'{label} *'**
+  String common_requiredLabel(String label);
+
+  /// Export button (downloads the list as a file).
+  ///
+  /// In en, this message translates to:
+  /// **'Export'**
+  String get common_export;
+
+  /// Table column header for the row's action buttons.
+  ///
+  /// In en, this message translates to:
+  /// **'Actions'**
+  String get common_actions;
+
+  /// Heading of a summary section.
+  ///
+  /// In en, this message translates to:
+  /// **'Summary'**
+  String get common_summary;
+
+  /// Notes section when there are none.
+  ///
+  /// In en, this message translates to:
+  /// **'No notes added'**
+  String get common_noNotes;
+
+  /// Dropdown choice meaning nothing is chosen.
+  ///
+  /// In en, this message translates to:
+  /// **'None'**
+  String get common_none;
+
+  /// Search box hint in a picker.
+  ///
+  /// In en, this message translates to:
+  /// **'Search...'**
+  String get common_searchEllipsis;
+
+  /// Message (or its second line) when no facility is chosen.
+  ///
+  /// In en, this message translates to:
+  /// **'No facility selected'**
+  String get common_noFacility;
+
+  /// Message when a web link could not be opened.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t open the link'**
+  String get common_linkFailed;
+
+  /// Second line of the could-not-open-link message.
+  ///
+  /// In en, this message translates to:
+  /// **'Copy it from the error log instead'**
+  String get common_linkFailedDetail;
+
+  /// Dialog title when printing with no receipt printer connected.
+  ///
+  /// In en, this message translates to:
+  /// **'No Printer Connected'**
+  String get common_noPrinterTitle;
+
+  /// Dialog text when no receipt printer is connected.
+  ///
+  /// In en, this message translates to:
+  /// **'Connect a Bluetooth receipt printer in Printer Settings first.'**
+  String get common_noPrinterBody;
+
+  /// Button that opens Printer Settings.
+  ///
+  /// In en, this message translates to:
+  /// **'Go to Printer Settings'**
+  String get common_goToPrinterSettings;
+
+  /// Message after a receipt was printed.
+  ///
+  /// In en, this message translates to:
+  /// **'Receipt sent to printer'**
+  String get common_receiptSentToPrinter;
+
+  /// Message when printing a receipt failed.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t print the receipt'**
+  String get common_printFailed;
 }
 
 class _AppLocalizationsDelegate
