@@ -1356,4 +1356,28 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get store_releaseTitle => 'Release to Shelf';
+
+  @override
+  String store_availableStock(String quantity, String unit) {
+    return 'Available stock: $quantity $unit';
+  }
+
+  @override
+  String get store_quantityToRelease => 'Quantity to release';
+
+  @override
+  String get store_notesHint => 'e.g., Quality checked, ready for sale';
+
+  @override
+  String store_quantityRange(String max) {
+    return 'Enter a quantity from 1 to $max';
+  }
+
+  @override
+  String store_released(String quantity, String unit, String product) {
+    return 'Released $quantity $unit of $product to the shelf';
+  }
+
+  @override
+  String get store_releaseFailed => 'Couldn\'t release the product';
 }

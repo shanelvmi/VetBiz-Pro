@@ -2575,6 +2575,42 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Release to Shelf'**
   String get store_releaseTitle;
+
+  /// Release dialog (unit already in the current language).
+  ///
+  /// In en, this message translates to:
+  /// **'Available stock: {quantity} {unit}'**
+  String store_availableStock(String quantity, String unit);
+
+  /// Release dialog quantity field.
+  ///
+  /// In en, this message translates to:
+  /// **'Quantity to release'**
+  String get store_quantityToRelease;
+
+  /// Release dialog notes hint.
+  ///
+  /// In en, this message translates to:
+  /// **'e.g., Quality checked, ready for sale'**
+  String get store_notesHint;
+
+  /// Message when the release quantity is out of range.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter a quantity from 1 to {max}'**
+  String store_quantityRange(String max);
+
+  /// Message after releasing stock (unit already in the current language).
+  ///
+  /// In en, this message translates to:
+  /// **'Released {quantity} {unit} of {product} to the shelf'**
+  String store_released(String quantity, String unit, String product);
+
+  /// Message when releasing stock failed.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t release the product'**
+  String get store_releaseFailed;
 }
 
 class _AppLocalizationsDelegate

@@ -1363,4 +1363,28 @@ class AppLocalizationsSw extends AppLocalizations {
 
   @override
   String get store_releaseTitle => 'Toa Kwenda Rafuni';
+
+  @override
+  String store_availableStock(String quantity, String unit) {
+    return 'Stoo iliyopo: $quantity $unit';
+  }
+
+  @override
+  String get store_quantityToRelease => 'Kiasi cha kutoa';
+
+  @override
+  String get store_notesHint => 'mf., Ubora umekaguliwa, tayari kuuzwa';
+
+  @override
+  String store_quantityRange(String max) {
+    return 'Weka kiasi kuanzia 1 hadi $max';
+  }
+
+  @override
+  String store_released(String quantity, String unit, String product) {
+    return 'Umetoa $quantity $unit za $product kwenda rafuni';
+  }
+
+  @override
+  String get store_releaseFailed => 'Imeshindwa kutoa bidhaa';
 }
