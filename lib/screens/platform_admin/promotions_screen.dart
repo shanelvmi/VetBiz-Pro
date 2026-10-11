@@ -225,7 +225,7 @@ class _PromotionCard extends StatelessWidget {
                     onPressed: () => FirebaseFirestore.instance
                         .collection(Collections.promotions)
                         .doc(promotion.id)
-                        .update({'active': false}),
+                        .update({Fields.active: false}),
                     icon: const Icon(Icons.pause_circle_outline, size: AppIconSize.i18),
                     label: const Text('Deactivate'),
                     style: TextButton.styleFrom(foregroundColor: context.colors.warning),
@@ -558,7 +558,7 @@ Future<void> _showPromotionEditor(BuildContext context, {Promotion? existing}) a
   } else {
     final docRef = await FirebaseFirestore.instance.collection(Collections.promotions).add({
       ...promotionData,
-      'active': false,
+      Fields.active: false,
       Fields.createdAt: FieldValue.serverTimestamp(),
     });
     if (activateImmediately) await setActivePromotion(docRef.id);

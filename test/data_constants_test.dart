@@ -2,6 +2,7 @@ import 'package:flutter_test/flutter_test.dart';
 
 import 'package:vetbiz_pro/data/activity_type.dart';
 import 'package:vetbiz_pro/data/facility_status.dart';
+import 'package:vetbiz_pro/data/fields.dart';
 import 'package:vetbiz_pro/data/payment_submission_status.dart';
 import 'package:vetbiz_pro/data/user_role.dart';
 import 'package:vetbiz_pro/data/user_status.dart';
@@ -67,5 +68,9 @@ void main() {
     expect(FacilityStatus.fromKey('Pending'), FacilityStatus.pending);
     expect(FacilityStatus.fromKey(null), FacilityStatus.active);
     expect(FacilityStatus.fromKey('closed'), isNull);
+  });
+  test('Fields.active is the stored promotions field name', () {
+    // Stored on every promotions/{id} and queried by name: never rename.
+    expect(Fields.active, 'active');
   });
 }

@@ -75,7 +75,7 @@ class Promotion {
     return Promotion(
       id: doc.id,
       label: (data['label'] as String?) ?? 'Untitled Offer',
-      active: data['active'] == true,
+      active: data[Fields.active] == true,
       discountPercent: (data['discountPercent'] as num?)?.toDouble() ?? 0,
       appliesToPlans: (data['appliesToPlans'] as List?)?.map((e) => e.toString()).toList() ?? [],
       targetExpiringOnly: data['targetExpiringOnly'] == true,
@@ -87,7 +87,7 @@ class Promotion {
 
   Map<String, dynamic> toFirestore() => {
         'label': label,
-        'active': active,
+        Fields.active: active,
         'discountPercent': discountPercent,
         'appliesToPlans': appliesToPlans,
         'targetExpiringOnly': targetExpiringOnly,
@@ -118,7 +118,7 @@ Stream<List<Promotion>> streamAllPromotions() {
 Stream<Promotion?> streamApplicablePromotion({required String facilityId, required bool isExpiringSoon}) {
   return FirebaseFirestore.instance
       .collection(Collections.promotions)
-      .where('active', isEqualTo: true)
+      .where(Fields.active, isEqualTo: true)
       .snapshots()
       .map((snap) {
     if (snap.docs.isEmpty) return null;
@@ -141,15 +141,15 @@ Stream<Promotion?> streamApplicablePromotion({required String facilityId, requir
 /// already supports it as-is.
 Future<void> setActivePromotion(String promoId) async {
   final collection = FirebaseFirestore.instance.collection(Collections.promotions);
-  final currentlyActive = await collection.where('active', isEqualTo: true).get();
+  final currentlyActive = await collection.where(Fields.active, isEqualTo: true).get();
 
   final batch = FirebaseFirestore.instance.batch();
   for (final doc in currentlyActive.docs) {
     if (doc.id != promoId) {
-      batch.update(doc.reference, {'active': false});
+      batch.update(doc.reference, {Fields.active: false});
     }
   }
-  batch.update(collection.doc(promoId), {'active': true});
+  batch.update(collection.doc(promoId), {Fields.active: true});
   await batch.commit();
 
   final promoDoc = await collection.doc(promoId).get();
