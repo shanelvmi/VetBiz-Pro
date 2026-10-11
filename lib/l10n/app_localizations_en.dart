@@ -1199,4 +1199,83 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get subscription_colSubmitted => 'Submitted';
+
+  @override
+  String subscription_rejectedOn(String date) {
+    return 'Rejected $date';
+  }
+
+  @override
+  String get subscription_noSubmissions => 'No submissions';
+
+  @override
+  String subscription_showingRange(int total, int start, int end) {
+    String _temp0 = intl.Intl.pluralLogic(
+      total,
+      locale: localeName,
+      other: 'Showing $start to $end of $total submissions',
+      one: 'Showing $start to $end of 1 submission',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get store_title => 'Stock Store';
+
+  @override
+  String get store_subtitle => 'Manage your inventory';
+
+  @override
+  String get store_stockValue => 'Store Stock Value';
+
+  @override
+  String get store_searchHint => 'Search stock, brand or batch...';
+
+  @override
+  String store_productsInStock(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count products in stock',
+      one: '1 product in stock',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get store_empty => 'No products in stock store';
+
+  @override
+  String get products_totalProducts => 'Total Products';
+
+  @override
+  String get products_statusActive => 'Active';
+
+  @override
+  String get products_statusNotStocked => 'Not Stocked';
+
+  @override
+  String get products_statusUnknown => 'Unknown';
+
+  @override
+  String get products_statusExpiringSoon => 'Expiring Soon';
+
+  @override
+  String get products_confirmDeleteTitle => 'Confirm Delete';
+
+  @override
+  String get products_confirmDeleteBody =>
+      'Are you sure you want to delete this product?';
+
+  @override
+  String get products_movedToTrash => 'Product moved to Trash';
+
+  @override
+  String get products_deleteFailed => 'Couldn\'t delete the product';
+
+  @override
+  String get products_restored => 'Product restored';
+
+  @override
+  String get products_restoreFailed => 'Couldn\'t restore the product';
 }

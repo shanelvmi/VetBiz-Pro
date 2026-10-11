@@ -2335,6 +2335,126 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Submitted'**
   String get subscription_colSubmitted;
+
+  /// Subscription history: when a payment was rejected (date already formatted).
+  ///
+  /// In en, this message translates to:
+  /// **'Rejected {date}'**
+  String subscription_rejectedOn(String date);
+
+  /// Subscription history pagination with nothing to show.
+  ///
+  /// In en, this message translates to:
+  /// **'No submissions'**
+  String get subscription_noSubmissions;
+
+  /// Subscription history pagination.
+  ///
+  /// In en, this message translates to:
+  /// **'{total, plural, =1{Showing {start} to {end} of 1 submission} other{Showing {start} to {end} of {total} submissions}}'**
+  String subscription_showingRange(int total, int start, int end);
+
+  /// Stock Store screen title.
+  ///
+  /// In en, this message translates to:
+  /// **'Stock Store'**
+  String get store_title;
+
+  /// Stock Store subtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Manage your inventory'**
+  String get store_subtitle;
+
+  /// Stock Store metric card: value of what is in the store.
+  ///
+  /// In en, this message translates to:
+  /// **'Store Stock Value'**
+  String get store_stockValue;
+
+  /// Stock Store search hint.
+  ///
+  /// In en, this message translates to:
+  /// **'Search stock, brand or batch...'**
+  String get store_searchHint;
+
+  /// Stock Store: how many products the filters show.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 product in stock} other{{count} products in stock}}'**
+  String store_productsInStock(int count);
+
+  /// Stock Store with no products at all.
+  ///
+  /// In en, this message translates to:
+  /// **'No products in stock store'**
+  String get store_empty;
+
+  /// Metric card (Stock Store, Products).
+  ///
+  /// In en, this message translates to:
+  /// **'Total Products'**
+  String get products_totalProducts;
+
+  /// Product stock status: in stock and not near expiry.
+  ///
+  /// In en, this message translates to:
+  /// **'Active'**
+  String get products_statusActive;
+
+  /// Product stock status: never had stock.
+  ///
+  /// In en, this message translates to:
+  /// **'Not Stocked'**
+  String get products_statusNotStocked;
+
+  /// Product stock status: no expiry date recorded.
+  ///
+  /// In en, this message translates to:
+  /// **'Unknown'**
+  String get products_statusUnknown;
+
+  /// Product stock status: expires within 30 days.
+  ///
+  /// In en, this message translates to:
+  /// **'Expiring Soon'**
+  String get products_statusExpiringSoon;
+
+  /// Title of the delete-product dialog.
+  ///
+  /// In en, this message translates to:
+  /// **'Confirm Delete'**
+  String get products_confirmDeleteTitle;
+
+  /// Delete-product dialog text.
+  ///
+  /// In en, this message translates to:
+  /// **'Are you sure you want to delete this product?'**
+  String get products_confirmDeleteBody;
+
+  /// Message after deleting a product (with Undo).
+  ///
+  /// In en, this message translates to:
+  /// **'Product moved to Trash'**
+  String get products_movedToTrash;
+
+  /// Message when deleting a product failed.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t delete the product'**
+  String get products_deleteFailed;
+
+  /// Message after Undo restores a product.
+  ///
+  /// In en, this message translates to:
+  /// **'Product restored'**
+  String get products_restored;
+
+  /// Message when restoring a product failed.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t restore the product'**
+  String get products_restoreFailed;
 }
 
 class _AppLocalizationsDelegate

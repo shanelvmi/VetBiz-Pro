@@ -1205,4 +1205,83 @@ class AppLocalizationsSw extends AppLocalizations {
 
   @override
   String get subscription_colSubmitted => 'Yalitumwa';
+
+  @override
+  String subscription_rejectedOn(String date) {
+    return 'Yalikataliwa $date';
+  }
+
+  @override
+  String get subscription_noSubmissions => 'Hakuna malipo';
+
+  @override
+  String subscription_showingRange(int total, int start, int end) {
+    String _temp0 = intl.Intl.pluralLogic(
+      total,
+      locale: localeName,
+      other: 'Inaonyesha $start hadi $end kati ya malipo $total',
+      one: 'Inaonyesha $start hadi $end kati ya malipo 1',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get store_title => 'Stoo';
+
+  @override
+  String get store_subtitle => 'Simamia bidhaa zako za stoo';
+
+  @override
+  String get store_stockValue => 'Thamani ya Stoo';
+
+  @override
+  String get store_searchHint => 'Tafuta bidhaa, chapa au bechi...';
+
+  @override
+  String store_productsInStock(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Bidhaa $count ziko stoo',
+      one: 'Bidhaa 1 iko stoo',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get store_empty => 'Hakuna bidhaa stoo';
+
+  @override
+  String get products_totalProducts => 'Jumla ya Bidhaa';
+
+  @override
+  String get products_statusActive => 'Hai';
+
+  @override
+  String get products_statusNotStocked => 'Haijawahi Kuwekwa';
+
+  @override
+  String get products_statusUnknown => 'Haijulikani';
+
+  @override
+  String get products_statusExpiringSoon => 'Inakaribia Kuisha Muda';
+
+  @override
+  String get products_confirmDeleteTitle => 'Thibitisha Kufuta';
+
+  @override
+  String get products_confirmDeleteBody =>
+      'Una uhakika unataka kufuta bidhaa hii?';
+
+  @override
+  String get products_movedToTrash => 'Bidhaa imehamishiwa Takataka';
+
+  @override
+  String get products_deleteFailed => 'Imeshindwa kufuta bidhaa';
+
+  @override
+  String get products_restored => 'Bidhaa imerejeshwa';
+
+  @override
+  String get products_restoreFailed => 'Imeshindwa kurejesha bidhaa';
 }
