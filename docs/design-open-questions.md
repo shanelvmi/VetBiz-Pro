@@ -105,6 +105,13 @@ User-facing "VetBiz Pro" now reads `AppInfo.name` (titles, Settings, support lin
 - **"All Status"**, `lib/widgets/product_catalog_side_panel.dart` (key `products_statusAll`): the no-filter row of the STOCK STATUS list. Reads oddly ("All statuses"? "Any status"? "All"?). The Kiswahili draft says "Hali Zote".
 - **Short relative times are much longer in Kiswahili**, `lib/widgets/notification_row.dart` `relativeTime()` (keys `time_minutesAgo`, `time_hoursAgo`, `time_daysAgo`): "5m ago", "2h ago", "3d ago" become "dakika 5 zilizopita", "saa 2 zilizopita", "siku 3 zilizopita" in the draft. Check the notification row at a narrow width; a short Kiswahili form (for example "dak. 5"), or a longer English one to match, is the owner's call.
 
+### Raised in step 2F, batch 2F-3 (stored-value labels; stored values unchanged)
+
+- **`planLabel` is saved as English display text.** `lib/screens/subscription/subscription_screen.dart` saves `'planLabel': _selectedPlan.label` ("Daily", "Weekly"...) on every payment submission, next to `planId`. Since 2F-3 the app shows a plan's name from `planId` (`subscriptionPlanLabel`), and falls back to the saved `planLabel` only for an unknown id. The Subscription history's plan filter still lists and compares the saved `planLabel` values. `planLabel` was left as saved, as decided. Open: keep writing it, or stop and filter on `planId` (old submissions would still need `planLabel`). The platform-admin console still shows `planLabel` as stored.
+- **"Vet" and "Veterinary" name the same product group.** The category filter chips show "Vet" (`productGroup_vet`), and the catalog side panel shows "Veterinary" (`productGroup_veterinary`). Both English texts were kept as they were. One name, or both on purpose?
+- **Older lower-case facility statuses now show capitalised.** The facility status chip used to show the stored text as-is ("active", "pending"). It now shows the label, matched ignoring case ("Active", "Pending"). This is the only English display change in 2F-3.
+- **Facility name with its type**, `facility_screen.dart` `_nameWithType` ("Ukuli Agrovet"): it joins the name and the stored type, so it stays English. In Kiswahili the type would read better before the name ("Kliniki ya Mifugo Ukuli"). This belongs to the Facilities screen batch.
+
 ### Trash and restore: books consistency (audit after D6, read-only)
 
 `TrashService.restore` (used by the Trash screen and every Undo) only copies the document back from `trash_*` to its live collection, drops `deletedAt`/`deletedBy`, and logs "Restored ...". Anything else the delete changed is reversed only if a server trigger reacts to the document reappearing (the `onDocumentWritten` daily summaries do).
