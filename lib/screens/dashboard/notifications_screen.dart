@@ -794,11 +794,11 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
   Widget _buildResults(List<FacilityNotification> items) {
     return LayoutBuilder(
       builder: (context, constraints) {
-        if (constraints.maxWidth < 760) {
+        if (constraints.maxWidth < AppBreakpoints.resultsTable) {
           return ListView.separated(
-            padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
+            padding: const EdgeInsets.fromLTRB(AppSpacing.s16, AppSpacing.s12, AppSpacing.s16, AppSpacing.s12),
             itemCount: items.length,
-            separatorBuilder: (context, index) => const SizedBox(height: 10),
+            separatorBuilder: (context, index) => const SizedBox(height: AppSpacing.s10),
             itemBuilder: (context, index) => _buildNarrowCard(items[index]),
           );
         }
@@ -806,8 +806,8 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             Container(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-              decoration: BoxDecoration(border: Border(bottom: BorderSide(color: Colors.grey.withValues(alpha: 0.2)))),
+              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.s16, vertical: AppSpacing.s12),
+              decoration: BoxDecoration(border: Border(bottom: BorderSide(color: context.colors.textHint.withValues(alpha: AppAlpha.a20)))),
               child: Row(
                 children: [
                   _headerCell('Notification', flex: 6),
@@ -820,7 +820,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
             Expanded(
               child: ListView.separated(
                 itemCount: items.length,
-                separatorBuilder: (context, index) => Divider(height: 1, color: Colors.grey.withValues(alpha: 0.12)),
+                separatorBuilder: (context, index) => Divider(height: 1, color: context.colors.textHint.withValues(alpha: AppAlpha.a10)),
                 itemBuilder: (context, index) => _buildRow(items[index]),
               ),
             ),
@@ -833,7 +833,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
   Widget _headerCell(String label, {required int flex}) {
     return Expanded(
       flex: flex,
-      child: Text(label, style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Colors.grey[600])),
+      child: Text(label, style: TextStyle(fontSize: AppFontSize.f12, fontWeight: AppFontWeight.semibold, color: context.colors.textMuted)),
     );
   }
 
@@ -842,7 +842,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
     return Container(
       width: size,
       height: size,
-      decoration: BoxDecoration(color: color.withValues(alpha: 0.12), shape: BoxShape.circle),
+      decoration: BoxDecoration(color: color.withValues(alpha: AppAlpha.a10), shape: BoxShape.circle),
       child: Icon(n.type.icon, color: color, size: size * 0.5),
     );
   }
@@ -850,25 +850,25 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
   Widget _categoryChip(FacilityNotification n) {
     final color = _categoryColor(n.category);
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-      decoration: BoxDecoration(color: color.withValues(alpha: 0.12), borderRadius: BorderRadius.circular(10)),
+      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.s8, vertical: AppSpacing.s4),
+      decoration: BoxDecoration(color: color.withValues(alpha: AppAlpha.a10), borderRadius: BorderRadius.circular(AppRadius.r10)),
       child: Text(
         n.type.categoryLabel,
         maxLines: 1,
         overflow: TextOverflow.ellipsis,
-        style: TextStyle(color: color, fontSize: 11.5, fontWeight: FontWeight.w600),
+        style: TextStyle(color: color, fontSize: AppFontSize.f11_5, fontWeight: AppFontWeight.semibold),
       ),
     );
   }
 
   Widget _statusChip(FacilityNotification n) {
-    final color = n.isRead ? Colors.grey : context.colors.primary;
+    final color = n.isRead ? context.colors.textHint : context.colors.primary;
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-      decoration: BoxDecoration(color: color.withValues(alpha: 0.12), borderRadius: BorderRadius.circular(10)),
+      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.s8, vertical: AppSpacing.s4),
+      decoration: BoxDecoration(color: color.withValues(alpha: AppAlpha.a10), borderRadius: BorderRadius.circular(AppRadius.r10)),
       child: Text(
         n.isRead ? 'Read' : 'New',
-        style: TextStyle(color: color, fontSize: 11.5, fontWeight: FontWeight.w600),
+        style: TextStyle(color: color, fontSize: AppFontSize.f11_5, fontWeight: AppFontWeight.semibold),
       ),
     );
   }
@@ -882,10 +882,10 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
       key: ValueKey(n.id),
       // Coloured bar down the left edge, tinted while unread.
       decoration: BoxDecoration(
-        color: unread ? context.colors.primary.withValues(alpha: 0.04) : null,
+        color: unread ? context.colors.primary.withValues(alpha: AppAlpha.a05) : null,
         border: Border(left: BorderSide(color: _categoryColor(n.category), width: 4)),
       ),
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.s12, vertical: AppSpacing.s12),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
@@ -894,7 +894,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
             child: Row(
               children: [
                 _typeIcon(n, 36),
-                const SizedBox(width: 12),
+                const SizedBox(width: AppSpacing.s12),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -903,14 +903,14 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                         n.title,
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
-                        style: TextStyle(fontSize: 13.5, fontWeight: unread ? FontWeight.bold : FontWeight.w600),
+                        style: TextStyle(fontSize: AppFontSize.f13_5, fontWeight: unread ? AppFontWeight.bold : AppFontWeight.semibold),
                       ),
-                      const SizedBox(height: 2),
+                      const SizedBox(height: AppSpacing.s2),
                       Text(
                         n.message,
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis,
-                        style: TextStyle(fontSize: 12.5, color: Colors.grey[700]),
+                        style: TextStyle(fontSize: AppFontSize.f12_5, color: context.colors.textSoft),
                       ),
                     ],
                   ),
@@ -922,13 +922,13 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
           Expanded(
             flex: 2,
             child: created == null
-                ? const Text('-', style: TextStyle(fontSize: 13))
+                ? const Text('-', style: TextStyle(fontSize: AppFontSize.f13))
                 : Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(AppDateFormat.date.format(created), style: const TextStyle(fontSize: 13)),
+                      Text(AppDateFormat.date.format(created), style: const TextStyle(fontSize: AppFontSize.f13)),
                       Text(AppDateFormat.time12.format(created),
-                          style: TextStyle(fontSize: 11.5, color: Colors.grey[500])),
+                          style: TextStyle(fontSize: AppFontSize.f11_5, color: context.colors.textHint)),
                     ],
                   ),
           ),
@@ -946,18 +946,18 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
     return Container(
       key: ValueKey(n.id),
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.grey.withValues(alpha: 0.15)),
+        borderRadius: BorderRadius.circular(AppRadius.r12),
+        border: Border.all(color: context.colors.textHint.withValues(alpha: AppAlpha.a15)),
       ),
       // Clipped so the bar down the left follows the card's rounded corners.
       child: ClipRRect(
-        borderRadius: BorderRadius.circular(11),
+        borderRadius: BorderRadius.circular(AppRadius.r10),
         child: Container(
           decoration: BoxDecoration(
-            color: unread ? Color.alphaBlend(context.colors.primary.withValues(alpha: 0.04), Colors.white) : Colors.white,
+            color: unread ? Color.alphaBlend(context.colors.primary.withValues(alpha: AppAlpha.a05), context.colors.surface) : context.colors.surface,
             border: Border(left: BorderSide(color: _categoryColor(n.category), width: 4)),
           ),
-          padding: const EdgeInsets.all(12),
+          padding: const EdgeInsets.all(AppSpacing.s12),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -965,33 +965,33 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   _typeIcon(n, 36),
-                  const SizedBox(width: 10),
+                  const SizedBox(width: AppSpacing.s10),
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
                           n.title,
-                          style: TextStyle(fontSize: 14, fontWeight: unread ? FontWeight.bold : FontWeight.w600),
+                          style: TextStyle(fontSize: AppFontSize.f14, fontWeight: unread ? AppFontWeight.bold : AppFontWeight.semibold),
                         ),
-                        const SizedBox(height: 2),
-                        Text(n.message, style: TextStyle(fontSize: 12.5, color: Colors.grey[700])),
+                        const SizedBox(height: AppSpacing.s2),
+                        Text(n.message, style: TextStyle(fontSize: AppFontSize.f12_5, color: context.colors.textSoft)),
                       ],
                     ),
                   ),
                 ],
               ),
-              const SizedBox(height: 10),
+              const SizedBox(height: AppSpacing.s10),
               Row(
                 children: [
                   _categoryChip(n),
-                  const SizedBox(width: 6),
+                  const SizedBox(width: AppSpacing.s6),
                   _statusChip(n),
                   const Spacer(),
                   if (created != null)
                     Text(
                       AppDateFormat.dateTime12.format(created),
-                      style: TextStyle(fontSize: 11.5, color: Colors.grey[500]),
+                      style: TextStyle(fontSize: AppFontSize.f11_5, color: context.colors.textHint),
                     ),
                 ],
               ),
@@ -1009,8 +1009,8 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
     final end = (page * _pageSize) > total ? total : page * _pageSize;
 
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-      decoration: BoxDecoration(border: Border(top: BorderSide(color: Colors.grey.withValues(alpha: 0.2)))),
+      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.s16, vertical: AppSpacing.s12),
+      decoration: BoxDecoration(border: Border(top: BorderSide(color: context.colors.textHint.withValues(alpha: AppAlpha.a20)))),
       child: Wrap(
         alignment: WrapAlignment.spaceBetween,
         crossAxisAlignment: WrapCrossAlignment.center,
@@ -1020,7 +1020,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
             total == 0
                 ? 'No notifications'
                 : 'Showing $start to $end of $total notification${total == 1 ? '' : 's'}',
-            style: TextStyle(fontSize: 12.5, color: Colors.grey[600]),
+            style: TextStyle(fontSize: AppFontSize.f12_5, color: context.colors.textMuted),
           ),
           Row(
             mainAxisSize: MainAxisSize.min,
@@ -1041,12 +1041,12 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                   },
                 ),
               ),
-              const SizedBox(width: 16),
+              const SizedBox(width: AppSpacing.s16),
               IconButton(
                 icon: const Icon(Icons.chevron_left),
                 onPressed: page > 1 ? () => setState(() => _currentPage = page - 1) : null,
               ),
-              Text('Page $page', style: const TextStyle(fontSize: 13)),
+              Text('Page $page', style: const TextStyle(fontSize: AppFontSize.f13)),
               IconButton(
                 icon: const Icon(Icons.chevron_right),
                 onPressed: page < totalPages ? () => setState(() => _currentPage = page + 1) : null,
@@ -1069,37 +1069,37 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
       mainAxisSize: MainAxisSize.min,
       children: [
         Container(
-          padding: const EdgeInsets.fromLTRB(16, 14, 8, 14),
+          padding: const EdgeInsets.fromLTRB(AppSpacing.s16, AppSpacing.s14, AppSpacing.s8, AppSpacing.s14),
           decoration: BoxDecoration(
             color: context.colors.primary,
-            borderRadius: const BorderRadius.vertical(top: Radius.circular(12)),
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(AppRadius.r12)),
           ),
           child: Row(
             children: [
-              const Text(
+              Text(
                 'Notifications',
-                style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 15),
+                style: TextStyle(color: context.colors.onPrimary, fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f15),
               ),
               if (totalUnread > 0) ...[
-                const SizedBox(width: 8),
+                const SizedBox(width: AppSpacing.s8),
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                  decoration: BoxDecoration(color: Colors.orange, borderRadius: BorderRadius.circular(10)),
+                  padding: const EdgeInsets.symmetric(horizontal: AppSpacing.s8, vertical: AppSpacing.s2),
+                  decoration: BoxDecoration(color: context.colors.warning, borderRadius: BorderRadius.circular(AppRadius.r10)),
                   child: Text('$totalUnread',
-                      style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 11)),
+                      style: TextStyle(color: context.colors.onPrimary, fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f11)),
                 ),
               ],
               const Spacer(),
               TextButton(
                 onPressed: totalUnread > 0 ? _markAllAsRead : null,
                 style: TextButton.styleFrom(
-                  foregroundColor: Colors.white,
-                  disabledForegroundColor: Colors.white.withValues(alpha: 0.4),
+                  foregroundColor: context.colors.onPrimary,
+                  disabledForegroundColor: context.colors.onPrimary.withValues(alpha: AppAlpha.a40),
                 ),
-                child: const Text('Mark all as read', style: TextStyle(fontSize: 12.5, fontWeight: FontWeight.w600)),
+                child: const Text('Mark all as read', style: TextStyle(fontSize: AppFontSize.f12_5, fontWeight: AppFontWeight.semibold)),
               ),
               IconButton(
-                icon: const Icon(Icons.close, color: Colors.white, size: 20),
+                icon: Icon(Icons.close, color: context.colors.onPrimary, size: AppIconSize.i20),
                 tooltip: 'Close',
                 onPressed: () => Navigator.of(context).pop(),
               ),
@@ -1109,16 +1109,16 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
         Flexible(
           child: _isLoading
               ? const Padding(
-                  padding: EdgeInsets.all(32),
+                  padding: EdgeInsets.all(AppSpacing.s32),
                   child: Center(child: CircularProgressIndicator()),
                 )
               : _error != null
                   ? Padding(
-                      padding: const EdgeInsets.all(24),
+                      padding: const EdgeInsets.all(AppSpacing.s24),
                       child: Text('Could not load alerts: $_error'),
                     )
                   : SingleChildScrollView(
-                      padding: const EdgeInsets.all(12),
+                      padding: const EdgeInsets.all(AppSpacing.s12),
                       child: _buildAlertsList(nothingToShow),
                     ),
         ),
@@ -1134,26 +1134,26 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
     return ListView(
       shrinkWrap: true,
       physics: widget.isDropdown ? const NeverScrollableScrollPhysics() : null,
-      padding: const EdgeInsets.fromLTRB(16, 16, 16, 32),
+      padding: const EdgeInsets.fromLTRB(AppSpacing.s16, AppSpacing.s16, AppSpacing.s16, AppSpacing.s32),
       children: [
         _buildUrgentAnnouncements(),
         if (_planNotices.isNotEmpty) ...[
-          _sectionHeader(Icons.workspace_premium_outlined, 'Your Plan', _planNotices.length, Colors.blue),
-          const SizedBox(height: 8),
+          _sectionHeader(Icons.workspace_premium_outlined, 'Your Plan', _planNotices.length, context.colors.info),
+          const SizedBox(height: AppSpacing.s8),
           ..._planNotices.map((n) => NotificationRow(notification: n)),
-          const SizedBox(height: 20),
+          const SizedBox(height: AppSpacing.s20),
         ],
         if (_needsAttention.isNotEmpty) ...[
-          _sectionHeader(Icons.priority_high, 'Needs Attention', _needsAttention.length, Colors.orange),
-          const SizedBox(height: 8),
+          _sectionHeader(Icons.priority_high, 'Needs Attention', _needsAttention.length, context.colors.warning),
+          const SizedBox(height: AppSpacing.s8),
           ..._needsAttention.map((n) => NotificationRow(notification: n)),
-          const SizedBox(height: 20),
+          const SizedBox(height: AppSpacing.s20),
         ],
         if (_earlier.isNotEmpty) ...[
-          _sectionHeader(Icons.history, 'Earlier', _earlier.length, Colors.grey),
-          const SizedBox(height: 8),
+          _sectionHeader(Icons.history, 'Earlier', _earlier.length, context.colors.textHint),
+          const SizedBox(height: AppSpacing.s8),
           ..._earlier.map((n) => NotificationRow(notification: n)),
-          const SizedBox(height: 12),
+          const SizedBox(height: AppSpacing.s12),
         ],
         if (widget.isDropdown)
           Center(
@@ -1167,9 +1167,9 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
               child: const Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Text('View all notifications', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600)),
-                  SizedBox(width: 4),
-                  Icon(Icons.arrow_forward, size: 15),
+                  Text('View all notifications', style: TextStyle(fontSize: AppFontSize.f13, fontWeight: AppFontWeight.semibold)),
+                  SizedBox(width: AppSpacing.s4),
+                  Icon(Icons.arrow_forward, size: AppIconSize.i16),
                 ],
               ),
             ),
@@ -1180,25 +1180,25 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
 
   Widget _buildAllCaughtUp() {
     final content = Padding(
-      padding: const EdgeInsets.all(32),
+      padding: const EdgeInsets.all(AppSpacing.s32),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
           Container(
-            padding: const EdgeInsets.all(20),
+            padding: const EdgeInsets.all(AppSpacing.s20),
             decoration: BoxDecoration(
-              color: Colors.green.withValues(alpha: 0.1),
+              color: context.colors.success.withValues(alpha: AppAlpha.a10),
               shape: BoxShape.circle,
             ),
-            child: const Icon(Icons.check_circle_outline, color: Colors.green, size: 48),
+            child: Icon(Icons.check_circle_outline, color: context.colors.success, size: AppIconSize.i48),
           ),
-          const SizedBox(height: 16),
-          const Text("You're all caught up!", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 17)),
-          const SizedBox(height: 6),
+          const SizedBox(height: AppSpacing.s16),
+          const Text("You're all caught up!", style: TextStyle(fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f17)),
+          const SizedBox(height: AppSpacing.s6),
           Text(
             'No urgent announcements, subscription issues, or stock alerts right now.',
             textAlign: TextAlign.center,
-            style: TextStyle(color: Colors.grey[600], fontSize: 13),
+            style: TextStyle(color: context.colors.textMuted, fontSize: AppFontSize.f13),
           ),
         ],
       ),
@@ -1240,20 +1240,20 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
         if (urgentDocs.isEmpty) return const SizedBox.shrink();
 
         return Padding(
-          padding: const EdgeInsets.only(bottom: 20),
+          padding: const EdgeInsets.only(bottom: AppSpacing.s20),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              _sectionHeader(Icons.campaign_outlined, 'Urgent Announcements', urgentDocs.length, Colors.red),
-              const SizedBox(height: 8),
+              _sectionHeader(Icons.campaign_outlined, 'Urgent Announcements', urgentDocs.length, context.colors.danger),
+              const SizedBox(height: AppSpacing.s8),
               ...urgentDocs.map((doc) {
                 final data = doc.data() as Map<String, dynamic>;
                 return _AccentCard(
-                  color: Colors.red,
+                  color: context.colors.danger,
                   icon: Icons.priority_high,
                   title: data['title'] ?? '',
-                  margin: const EdgeInsets.only(bottom: 8),
-                  child: AnnouncementMessage(data: data, fontSize: 13),
+                  margin: const EdgeInsets.only(bottom: AppSpacing.s8),
+                  child: AnnouncementMessage(data: data, fontSize: AppFontSize.f13),
                 );
               }),
             ],
@@ -1266,16 +1266,16 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
   Widget _sectionHeader(IconData icon, String title, int count, Color color) {
     return Row(
       children: [
-        Icon(icon, size: 16, color: context.colors.primary),
-        const SizedBox(width: 6),
+        Icon(icon, size: AppIconSize.i16, color: context.colors.primary),
+        const SizedBox(width: AppSpacing.s6),
         Expanded(
           child: Text(title,
-              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: context.colors.primary)),
+              style: TextStyle(fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f14, color: context.colors.primary)),
         ),
         Container(
-          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
-          decoration: BoxDecoration(color: color.withValues(alpha: 0.15), borderRadius: BorderRadius.circular(12)),
-          child: Text('$count', style: TextStyle(color: color, fontWeight: FontWeight.bold, fontSize: 12)),
+          padding: const EdgeInsets.symmetric(horizontal: AppSpacing.s10, vertical: AppSpacing.s3),
+          decoration: BoxDecoration(color: color.withValues(alpha: AppAlpha.a15), borderRadius: BorderRadius.circular(AppRadius.r12)),
+          child: Text('$count', style: TextStyle(color: color, fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f12)),
         ),
       ],
     );
@@ -1306,25 +1306,25 @@ class _AccentCard extends StatelessWidget {
     return Container(
       margin: margin,
       decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(10),
+        color: context.colors.surface,
+        borderRadius: BorderRadius.circular(AppRadius.r10),
         border: Border(left: BorderSide(color: color, width: 4)),
         boxShadow: [
-          BoxShadow(color: Colors.black.withValues(alpha: 0.04), blurRadius: 6, offset: const Offset(0, 2)),
+          BoxShadow(color: context.colors.shadow.withValues(alpha: AppAlpha.a05), blurRadius: 6, offset: const Offset(0, 2)),
         ],
       ),
-      padding: const EdgeInsets.all(14),
+      padding: const EdgeInsets.all(AppSpacing.s14),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(icon, color: color, size: 20),
-          const SizedBox(width: 10),
+          Icon(icon, color: color, size: AppIconSize.i20),
+          const SizedBox(width: AppSpacing.s10),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(title, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
-                const SizedBox(height: 4),
+                Text(title, style: const TextStyle(fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f14)),
+                const SizedBox(height: AppSpacing.s4),
                 child,
               ],
             ),

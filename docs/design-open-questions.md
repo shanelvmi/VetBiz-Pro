@@ -90,6 +90,7 @@ Colours are outside the standing snap rule, so this is kept as it is:
 - **Chart loading gap 40**, `dashboard_screen.dart` (`EdgeInsets.symmetric(vertical: 40)` around the chart spinner): 8 above `s32`. Kept.
 - **Service breakdown palette**, `lib/screens/dashboard/insights_screen.dart` `_servicePalette`: steel blue `#5C7C99`, sage `#8FA998`, terracotta `#B98B6F`, lavender `#9B8AA6` (the brand teal and amber now read `AppPalette`). A fixed chart palette with no roles. `chart` roles with the exact values?
 - **Inline raw error**, `insights_screen.dart`: "Could not load insights: $_error". Not fixed in D9 (the owner limited D9 to tokens and snackbars). `FriendlyError.messageFor` in a later pass?
+- **Debt category `#E59A00`**, `lib/screens/dashboard/notifications_screen.dart` `_categoryColor`: no role within 12 (`warning` is 26 off). Kept.
 - **Left as written on purpose (owner's D9 rule):** the bell's `_BlinkingDot` class (its 700/1400/400 ms timings, 9 px dot, red default), and the 900 ms delay before the subscription pill shows.
 
 ### Trash and restore: books consistency (audit after D6, read-only)
