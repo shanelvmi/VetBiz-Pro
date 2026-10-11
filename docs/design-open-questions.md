@@ -112,6 +112,12 @@ User-facing "VetBiz Pro" now reads `AppInfo.name` (titles, Settings, support lin
 - **Older lower-case facility statuses and activity types now show capitalised.** The facility status chip and the Activity Log's type badge used to show the stored text as-is ("active", "pending", "sales"). They now show the label, matched ignoring case as their readers already did ("Active", "Pending", "Sales"). These are the only English display changes in 2F-3.
 - **Facility name with its type**, `facility_screen.dart` `_nameWithType` ("Ukuli Agrovet"): it joins the name and the stored type, so it stays English. In Kiswahili the type would read better before the name ("Kliniki ya Mifugo Ukuli"). This belongs to the Facilities screen batch.
 
+### Raised in step 2F, batch 2F-4 (wording; English kept as it was)
+
+- **"1 payments", "1 debts", "of 1 products".** The Payments metric cards (`payments_paymentCount`, `payments_debtCount`) and the Stock Store pagination (`products_showingRange`) never had a singular form in English. The keys are ICU plurals with one `other` branch, so the English reads exactly as before; the Kiswahili already has its own forms. Adding `=1{...}` English branches is a one-line change per key once agreed.
+- **"Payment Details"** is one key (`payments_detailsTitle`) for the Payments detail panel and the Subscription form's payment section. The Kiswahili ("Maelezo ya Malipo") fits both; split it if either should read differently.
+- **"No submissions yet." and "No submissions yet"** (Subscription screen with a full stop, Subscription history without) are two keys because the English differs.
+
 ### Trash and restore: books consistency (audit after D6, read-only)
 
 `TrashService.restore` (used by the Trash screen and every Undo) only copies the document back from `trash_*` to its live collection, drops `deletedAt`/`deletedBy`, and logs "Restored ...". Anything else the delete changed is reversed only if a server trigger reacts to the document reappearing (the `onDocumentWritten` daily summaries do).
