@@ -54,7 +54,6 @@ import '../sales/add_sale_screen.dart';
 import '../products/add_edit_product_screen.dart';
 import '../services/add_edit_service_screen.dart';
 import '../register_screen.dart';
-import '../../theme/app_palette.dart';
 import '../../data/collections.dart';
 import '../../data/fields.dart';
 import '../../data/user_role.dart';
@@ -67,6 +66,10 @@ import '../../config/app_ranges.dart';
 import '../../config/app_date_format.dart';
 import '../../config/app_links.dart';
 import '../../config/app_info.dart';
+import '../../theme/app_dimens.dart';
+import '../../theme/theme_context.dart';
+import '../../theme/app_text.dart';
+import '../../theme/app_motion.dart';
 
 class DrawerHoverItem extends StatefulWidget {
   final IconData icon;
@@ -88,6 +91,10 @@ class DrawerHoverItem extends StatefulWidget {
 
 class _DrawerHoverItemState extends State<DrawerHoverItem> {
   bool _hovered = false;
+  // No token (D9, listed): the hover fill's fade (200 ms, between fast and
+  // normal) and the collapsed-label tooltip wait (300 ms; tooltipDelay is 400).
+  static const Duration _hoverFade = Duration(milliseconds: 200);
+  static const Duration _tooltipWait = Duration(milliseconds: 300);
 
   @override
   Widget build(BuildContext context) {
@@ -105,17 +112,17 @@ class _DrawerHoverItemState extends State<DrawerHoverItem> {
         return Row(
           mainAxisAlignment: canShowLabel ? MainAxisAlignment.start : MainAxisAlignment.center,
           children: [
-            Icon(widget.icon, color: offWhite),
+            Icon(widget.icon, color: context.colors.background),
             if (canShowLabel) ...[
-              const SizedBox(width: 16),
+              const SizedBox(width: AppSpacing.s16),
               Expanded(
                 child: Opacity(
                   opacity: labelOpacity,
                   child: Text(
                     widget.title,
                     style: TextStyle(
-                      color: offWhite,
-                      fontWeight: FontWeight.w500,
+                      color: context.colors.background,
+                      fontWeight: AppFontWeight.medium,
                     ),
                     overflow: TextOverflow.ellipsis,
                   ),
@@ -128,21 +135,21 @@ class _DrawerHoverItemState extends State<DrawerHoverItem> {
     );
 
     final content = Padding(
-      padding: EdgeInsets.symmetric(horizontal: widget.isCollapsed ? 4 : 8),
+      padding: EdgeInsets.symmetric(horizontal: widget.isCollapsed ? AppSpacing.s4 : AppSpacing.s8),
       child: MouseRegion(
         cursor: SystemMouseCursors.click,
         onEnter: (_) => setState(() => _hovered = true),
         onExit: (_) => setState(() => _hovered = false),
         child: InkWell(
-          borderRadius: BorderRadius.circular(8),
+          borderRadius: BorderRadius.circular(AppRadius.r8),
           onTap: widget.onTap,
           child: AnimatedContainer(
-            duration: const Duration(milliseconds: 200),
+            duration: _hoverFade,
             curve: Curves.easeInOut,
-            padding: EdgeInsets.symmetric(vertical: 10, horizontal: widget.isCollapsed ? 12 : 16),
+            padding: EdgeInsets.symmetric(vertical: AppSpacing.s10, horizontal: widget.isCollapsed ? AppSpacing.s12 : AppSpacing.s16),
             decoration: BoxDecoration(
               color: _hovered ? Colors.teal.shade700 : Colors.transparent,
-              borderRadius: BorderRadius.circular(8),
+              borderRadius: BorderRadius.circular(AppRadius.r8),
             ),
             child: row,
           ),
@@ -156,7 +163,7 @@ class _DrawerHoverItemState extends State<DrawerHoverItem> {
     if (!widget.isCollapsed) return content;
     return Tooltip(
       message: widget.title,
-      waitDuration: const Duration(milliseconds: 300),
+      waitDuration: _tooltipWait,
       child: content,
     );
   }
@@ -252,7 +259,6 @@ class _HoverableProfileIcon extends StatefulWidget {
 
 class _HoverableProfileIconState extends State<_HoverableProfileIcon> {
   bool _hovered = false;
-  static const Color warmAmber = AppPalette.accent;
 
   @override
   Widget build(BuildContext context) {
@@ -263,12 +269,12 @@ class _HoverableProfileIconState extends State<_HoverableProfileIcon> {
       child: GestureDetector(
         onTap: widget.onTap,
         child: AnimatedContainer(
-          duration: const Duration(milliseconds: 150),
-          padding: const EdgeInsets.all(4),
+          duration: AppMotion.fast,
+          padding: const EdgeInsets.all(AppSpacing.s4),
           decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(20),
+            borderRadius: BorderRadius.circular(AppRadius.r20),
             border: Border.all(
-              color: _hovered ? warmAmber : Colors.transparent,
+              color: _hovered ? context.colors.accent : Colors.transparent,
               width: 2,
             ),
           ),
@@ -311,7 +317,7 @@ class _HoverFabState extends State<HoverFab> {
       onEnter: (_) => setState(() => _hovered = true),
       onExit: (_) => setState(() => _hovered = false),
       child: AnimatedContainer(
-        duration: const Duration(milliseconds: 150),
+        duration: AppMotion.fast,
         curve: Curves.easeOut,
         transform: _hovered
             ? (Matrix4.identity()..scale(0.97)) // Slight shrink on hover
@@ -319,8 +325,8 @@ class _HoverFabState extends State<HoverFab> {
         child: FloatingActionButton.extended(
           heroTag: widget.heroTag,
           backgroundColor: _hovered ? widget.hoverColor : widget.color,
-          icon: Icon(widget.icon, color: Colors.white),
-          label: Text(widget.label, style: const TextStyle(color: Colors.white)),
+          icon: Icon(widget.icon, color: context.colors.onPrimary),
+          label: Text(widget.label, style: TextStyle(color: context.colors.onPrimary)),
           onPressed: widget.onPressed,
         ),
       ),
@@ -336,10 +342,9 @@ class DashboardScreen extends StatefulWidget {
 }
 
 class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingObserver {
-  final Color primaryDeepGreen = AppPalette.primary;
-  final Color warmAmber = AppPalette.accent;
-  final Color servicesSteelBlue = const Color(0xFF5C7C99);
-  final Color offWhite = AppPalette.background;
+  // The Services colour (glance strip, chart, quick actions): no role within
+  // 12; kept exact and listed in design-open-questions.md (D9).
+  static const Color servicesSteelBlue = Color(0xFF5C7C99);
 
   final user = FirebaseAuth.instance.currentUser;
   late final userDoc = FirebaseFirestore.instance.collection(Collections.users).doc(user?.uid);
@@ -1003,15 +1008,15 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
     showDialog(
       context: context,
       builder: (_) => AlertDialog(
-        title: Text(title, style: TextStyle(color: primaryDeepGreen)),
+        title: Text(title, style: TextStyle(color: context.colors.primary)),
         content: Text(content),
         actions: [
           TextButton(
-            child: Text('Cancel', style: TextStyle(color: primaryDeepGreen)),
+            child: Text('Cancel', style: TextStyle(color: context.colors.primary)),
             onPressed: () => Navigator.pop(context),
           ),
           ElevatedButton(
-            style: ElevatedButton.styleFrom(backgroundColor: warmAmber),
+            style: ElevatedButton.styleFrom(backgroundColor: context.colors.accent),
             child: Text('Confirm'),
             onPressed: () {
               Navigator.pop(context);
@@ -1035,7 +1040,7 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
             child: const Text("Cancel"),
           ),
           ElevatedButton(
-            style: ElevatedButton.styleFrom(backgroundColor: primaryDeepGreen),
+            style: ElevatedButton.styleFrom(backgroundColor: context.colors.primary),
             onPressed: () async {
               try {
                 await FirebaseAuth.instance.sendPasswordResetEmail(email: email);
@@ -1050,7 +1055,7 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
                 );
               }
             },
-            child: Text("Send Link", style: TextStyle(color: offWhite)),
+            child: Text("Send Link", style: TextStyle(color: context.colors.background)),
           ),
         ],
       ),
@@ -1123,7 +1128,7 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
         bool isLargeScreen = constraints.maxWidth >= 1024;
 
         return Scaffold(
-          backgroundColor: offWhite,
+          backgroundColor: context.colors.background,
           appBar: isLargeScreen ? null : AppBar(
             backgroundColor: Colors.white,
             elevation: 1,
@@ -1147,7 +1152,7 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
                   margin: const EdgeInsets.only(right: 12),
                   padding: const EdgeInsets.symmetric(horizontal: 12),
                   decoration: BoxDecoration(
-                    color: offWhite,
+                    color: context.colors.background,
                     borderRadius: BorderRadius.circular(8),
                     border: Border.all(color: Colors.grey.withValues(alpha: 0.25)),
                   ),
@@ -1195,8 +1200,8 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
                                 avatarUrl: avatarUrl,
                                 name: fullNameForAvatar,
                                 size: 32,
-                                backgroundColor: primaryDeepGreen.withValues(alpha: 0.12),
-                                foregroundColor: primaryDeepGreen,
+                                backgroundColor: context.colors.primary.withValues(alpha: 0.12),
+                                foregroundColor: context.colors.primary,
                               );
 
                         if (!isLargeScreen) return avatar;
@@ -1243,7 +1248,7 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
                               if (isLargeScreen) _buildTopBar(context),
                               Expanded(
                                 child: Container(
-                                  color: offWhite,
+                                  color: context.colors.background,
                                   child: Padding(
                                   padding: const EdgeInsets.all(16),
                                   child: SingleChildScrollView(
@@ -1346,7 +1351,7 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
                                         title: 'Total Product Value',
                                         value: Money.symbolDecimal(productProvider.totalProductValue),
                                         icon: Icons.inventory,
-                                        color: primaryDeepGreen,
+                                        color: context.colors.primary,
                                         shadow: true,
                                         subtitle: 'as of now',
                                         trend: KpiTrend(
@@ -1363,7 +1368,7 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
                                         title: 'Total Sales ($selectedFilter)',
                                         value: Money.symbolDecimal(_periodTotals.totalSales),
                                         icon: Icons.shopping_cart,
-                                        color: warmAmber,
+                                        color: context.colors.accent,
                                         shadow: true,
                                         isLoading: _isPeriodLoading,
                                         trend: KpiTrend(
@@ -1379,7 +1384,7 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
                                         title: 'Total Collected ($selectedFilter)',
                                         value: Money.symbolDecimal(_periodTotals.totalCollected),
                                         icon: Icons.attach_money,
-                                        color: primaryDeepGreen,
+                                        color: context.colors.primary,
                                         shadow: true,
                                         isLoading: _isPeriodLoading,
                                         trend: KpiTrend(
@@ -1397,7 +1402,7 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
                                             ? Money.symbolDecimal(_periodTotals.netProfit)
                                             : '*****',
                                         icon: Icons.trending_up,
-                                        color: primaryDeepGreen,
+                                        color: context.colors.primary,
                                         shadow: true,
                                         isLoading: _isPeriodLoading,
                                         trendOnTitleRow: true,
@@ -1450,7 +1455,7 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
                                         title: 'Outstanding Payment',
                                         value: Money.symbolDecimal(debtProvider.totalOutstanding()),
                                         icon: Icons.account_balance_wallet,
-                                        color: warmAmber,
+                                        color: context.colors.accent,
                                         shadow: true,
                                         subtitle: 'as of now',
                                         trend: KpiTrend(
@@ -1469,7 +1474,7 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
                                         title: 'Total Clients',
                                         value: '${clientProvider.clients.length}',
                                         icon: Icons.people,
-                                        color: warmAmber,
+                                        color: context.colors.accent,
                                         shadow: true,
                                         subtitle: 'as of now',
                                         trend: KpiTrend(
@@ -1606,7 +1611,7 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
     final isTrial = sub.status == SubscriptionStatus.trial;
     // The accent - carried by the icon, the text, and a thin border -
     // rather than a full background fill. Same deepened, burnt-amber
-    // reasoning as before: the brand's own warmAmber is too close to
+    // reasoning as before: the brand's own context.colors.accent is too close to
     // yellow to read cleanly as an accent on a cream background.
     const Color deepAmber = Color(0xFFC77800);
     final accent = isLocked ? Colors.redAccent : (isInTrialInfo ? Colors.blue : deepAmber);
@@ -1815,7 +1820,7 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
       case 'products':
         return Colors.green;
       case 'sales':
-        return warmAmber;
+        return context.colors.accent;
       case 'services':
         return Colors.purple;
       case 'clients':
@@ -1827,7 +1832,7 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
       case 'admin':
         return Colors.red;
       default:
-        return primaryDeepGreen;
+        return context.colors.primary;
     }
   }
 
@@ -1849,7 +1854,7 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
             children: [
               Row(
                 children: [
-                  Icon(Icons.history, size: 18, color: primaryDeepGreen),
+                  Icon(Icons.history, size: 18, color: context.colors.primary),
                   const SizedBox(width: 8),
                   const Text('Recent Activity', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14.5)),
                 ],
@@ -1977,7 +1982,7 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
             children: [
               Row(
                 children: [
-                  Icon(Icons.show_chart, size: 18, color: primaryDeepGreen),
+                  Icon(Icons.show_chart, size: 18, color: context.colors.primary),
                   const SizedBox(width: 8),
                   const Text('Sales & Revenue Overview', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14.5)),
                 ],
@@ -2113,19 +2118,19 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
                             spots: [for (int i = 0; i < salesByDay.length; i++) FlSpot(i.toDouble(), salesByDay[i])],
                             isCurved: true,
                             preventCurveOverShooting: true,
-                            color: primaryDeepGreen,
+                            color: context.colors.primary,
                             barWidth: 3,
                             dotData: const FlDotData(show: false),
-                            belowBarData: BarAreaData(show: true, color: primaryDeepGreen.withValues(alpha: 0.1)),
+                            belowBarData: BarAreaData(show: true, color: context.colors.primary.withValues(alpha: 0.1)),
                           ),
                           LineChartBarData(
                             spots: [for (int i = 0; i < collectionsByDay.length; i++) FlSpot(i.toDouble(), collectionsByDay[i])],
                             isCurved: true,
                             preventCurveOverShooting: true,
-                            color: warmAmber,
+                            color: context.colors.accent,
                             barWidth: 3,
                             dotData: const FlDotData(show: false),
-                            belowBarData: BarAreaData(show: true, color: warmAmber.withValues(alpha: 0.1)),
+                            belowBarData: BarAreaData(show: true, color: context.colors.accent.withValues(alpha: 0.1)),
                           ),
                           LineChartBarData(
                             spots: [for (int i = 0; i < servicesByDay.length; i++) FlSpot(i.toDouble(), servicesByDay[i])],
@@ -2143,9 +2148,9 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
             const SizedBox(height: 12),
             Row(
               children: [
-                _chartLegendItem(primaryDeepGreen, 'Sales (${AppDefaults.currencySymbol})'),
+                _chartLegendItem(context.colors.primary, 'Sales (${AppDefaults.currencySymbol})'),
                 const SizedBox(width: 20),
-                _chartLegendItem(warmAmber, 'Collections (${AppDefaults.currencySymbol})'),
+                _chartLegendItem(context.colors.accent, 'Collections (${AppDefaults.currencySymbol})'),
                 const SizedBox(width: 20),
                 _chartLegendItem(servicesSteelBlue, 'Services (${AppDefaults.currencySymbol})'),
               ],
@@ -2233,7 +2238,7 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
                   height: 38,
                   padding: const EdgeInsets.symmetric(horizontal: 12),
                   decoration: BoxDecoration(
-                    color: offWhite,
+                    color: context.colors.background,
                     borderRadius: BorderRadius.circular(8),
                     border: Border.all(color: Colors.grey.withValues(alpha: 0.25)),
                   ),
@@ -2273,7 +2278,7 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
                           final r = list[index];
                           return ListTile(
                             dense: true,
-                            leading: Icon(r.icon, size: 18, color: primaryDeepGreen),
+                            leading: Icon(r.icon, size: 18, color: context.colors.primary),
                             title: Text(r.title, style: const TextStyle(fontSize: 13)),
                             subtitle: Text(r.subtitle, style: const TextStyle(fontSize: 11)),
                             onTap: () => onSelected(r),
@@ -2318,8 +2323,8 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
                             avatarUrl: avatarUrl,
                             name: fullNameForAvatar,
                             size: 32,
-                            backgroundColor: primaryDeepGreen.withValues(alpha: 0.12),
-                            foregroundColor: primaryDeepGreen,
+                            backgroundColor: context.colors.primary.withValues(alpha: 0.12),
+                            foregroundColor: context.colors.primary,
                           );
 
                     return Row(
@@ -2366,16 +2371,16 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
           if (_glanceSaleCount == null && _isGlanceLoading)
             const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2))
           else ...[
-            _glanceStat(Icons.shopping_cart_outlined, '${_glanceSaleCount ?? 0}', 'Sales', primaryDeepGreen),
+            _glanceStat(Icons.shopping_cart_outlined, '${_glanceSaleCount ?? 0}', 'Sales', context.colors.primary),
             _glanceStat(Icons.build_outlined, '${_glanceServiceCount ?? 0}', 'Services', const Color(0xFF3D5A80)),
-            _glanceStat(Icons.payments_outlined, Money.symbolDecimal(_glanceCollected ?? 0), 'Collected', primaryDeepGreen),
+            _glanceStat(Icons.payments_outlined, Money.symbolDecimal(_glanceCollected ?? 0), 'Collected', context.colors.primary),
           ],
-          _glanceStat(Icons.folder_outlined, '$debtorCount', debtorCount == 1 ? 'Outstanding Debt' : 'Outstanding Debts', warmAmber),
+          _glanceStat(Icons.folder_outlined, '$debtorCount', debtorCount == 1 ? 'Outstanding Debt' : 'Outstanding Debts', context.colors.accent),
           OutlinedButton.icon(
             onPressed: () => showInsightsScreen(context),
-            icon: Icon(Icons.insights, size: 16, color: primaryDeepGreen),
-            label: Text('Insights', style: TextStyle(color: primaryDeepGreen)),
-            style: OutlinedButton.styleFrom(side: BorderSide(color: primaryDeepGreen)),
+            icon: Icon(Icons.insights, size: 16, color: context.colors.primary),
+            label: Text('Insights', style: TextStyle(color: context.colors.primary)),
+            style: OutlinedButton.styleFrom(side: BorderSide(color: context.colors.primary)),
           ),
         ],
       ),
@@ -2417,7 +2422,7 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
                 Expanded(
                   child: Padding(
                     padding: const EdgeInsets.only(left: 16),
-                    child: _profitBreakdownDot('Pending', pending, warmAmber),
+                    child: _profitBreakdownDot('Pending', pending, context.colors.accent),
                   ),
                 ),
               ],
@@ -2480,8 +2485,8 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
         icon: Icons.add_shopping_cart,
         title: 'Record Sale',
         subtitle: 'Create a new sale',
-        backgroundColor: primaryDeepGreen,
-        accentColor: primaryDeepGreen,
+        backgroundColor: context.colors.primary,
+        accentColor: context.colors.primary,
         isDark: true,
         onTap: () async {
           await navigateOrShowLockedDialog(
@@ -2497,7 +2502,7 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
         title: 'Record Visit',
         subtitle: 'Add a new service record',
         backgroundColor: const Color(0xFFE3F0EC),
-        accentColor: primaryDeepGreen,
+        accentColor: context.colors.primary,
         isDark: false,
         onTap: () async {
           await navigateOrShowLockedDialog(
@@ -2513,7 +2518,7 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
         title: 'Add Product',
         subtitle: 'Add new product to store',
         backgroundColor: const Color(0xFFFCEFD9),
-        accentColor: warmAmber,
+        accentColor: context.colors.accent,
         isDark: false,
         onTap: () => showAddEditProductScreen(context),
       ),
@@ -2631,7 +2636,7 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
     }) {
       final row = Row(
         children: [
-          Icon(icon, size: 18, color: primaryDeepGreen),
+          Icon(icon, size: 18, color: context.colors.primary),
           const SizedBox(width: 10),
           Expanded(
             child: Column(
@@ -2658,7 +2663,7 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
       return Padding(
         padding: const EdgeInsets.symmetric(vertical: 3),
         child: Material(
-          color: primaryDeepGreen.withValues(alpha: 0.06),
+          color: context.colors.primary.withValues(alpha: 0.06),
           borderRadius: BorderRadius.circular(8),
           child: InkWell(
             borderRadius: BorderRadius.circular(8),
@@ -2794,7 +2799,7 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
             final activeCategories = <Color>[
               if (hasNew || hasUnreadFacilityNotification) Colors.redAccent,
               if (isInTrialInfo) Colors.blue,
-              if (hasActivePromotion) warmAmber,
+              if (hasActivePromotion) context.colors.accent,
             ];
 
             return Stack(
@@ -2875,7 +2880,7 @@ Widget _buildDrawerContent() {
       height: _logoSize,
       padding: const EdgeInsets.all(4),
       decoration: BoxDecoration(
-        color: offWhite,
+        color: context.colors.background,
         borderRadius: BorderRadius.circular(10),
       ),
       // BoxFit.contain rather than a forced circular crop, so a
@@ -3059,14 +3064,14 @@ Widget _buildDrawerContent() {
           child: Container(
             padding: EdgeInsets.symmetric(vertical: 10, horizontal: effectivelyCollapsed ? 12 : 16),
             decoration: BoxDecoration(
-              color: warmAmber.withValues(alpha: 0.12),
+              color: context.colors.accent.withValues(alpha: 0.12),
               borderRadius: BorderRadius.circular(8),
-              border: Border.all(color: warmAmber.withValues(alpha: 0.35), width: 1),
+              border: Border.all(color: context.colors.accent.withValues(alpha: 0.35), width: 1),
             ),
             child: Row(
               mainAxisAlignment: effectivelyCollapsed ? MainAxisAlignment.center : MainAxisAlignment.start,
               children: [
-                Icon(Icons.admin_panel_settings_outlined, color: warmAmber),
+                Icon(Icons.admin_panel_settings_outlined, color: context.colors.accent),
                 if (canShowLabel) ...[
                   const SizedBox(width: 16),
                   const Expanded(
@@ -3094,7 +3099,7 @@ Widget _buildDrawerContent() {
         ? const SizedBox.shrink()
         : Text(
             '@${AppInfo.name}',
-            style: TextStyle(fontSize: 12, color: offWhite),
+            style: TextStyle(fontSize: 12, color: context.colors.background),
           ),
   );
 
@@ -3121,7 +3126,7 @@ Widget _buildDrawerContent() {
                 textAlign: TextAlign.center,
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
-                style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: offWhite),
+                style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: context.colors.background),
               ),
               if (facilityIdForTagline != null)
                 StreamBuilder<DocumentSnapshot>(
@@ -3136,7 +3141,7 @@ Widget _buildDrawerContent() {
                         textAlign: TextAlign.center,
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
-                        style: TextStyle(fontSize: 11, color: offWhite.withValues(alpha: 0.7)),
+                        style: TextStyle(fontSize: 11, color: context.colors.background.withValues(alpha: 0.7)),
                       ),
                     );
                   },
@@ -3167,7 +3172,7 @@ Widget _buildDrawerContent() {
     duration: const Duration(milliseconds: 380),
     curve: Curves.easeInOutCubic,
     width: effectivelyCollapsed ? 72 : 250,
-    color: primaryDeepGreen,
+    color: context.colors.primary,
     child: Column(
       children: [
         Expanded(
@@ -3184,8 +3189,8 @@ Widget _buildDrawerContent() {
   // --------------------- END DRAWER ---------------------
   Widget _buildEndDrawerContent() {
     final buttonStyle = ElevatedButton.styleFrom(
-      backgroundColor: primaryDeepGreen,
-      foregroundColor: offWhite,
+      backgroundColor: context.colors.primary,
+      foregroundColor: context.colors.background,
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
     ).copyWith(
@@ -3226,13 +3231,13 @@ Widget _buildDrawerContent() {
                         ),
                         child: _profileBytes != null
                             ? CircleAvatar(
-                                radius: 50, backgroundColor: offWhite, backgroundImage: MemoryImage(_profileBytes!))
+                                radius: 50, backgroundColor: context.colors.background, backgroundImage: MemoryImage(_profileBytes!))
                             : InitialsAvatar(
                                 avatarUrl: avatarUrl,
                                 name: data['fullName'] ?? '',
                                 size: 100,
-                                backgroundColor: offWhite,
-                                foregroundColor: primaryDeepGreen,
+                                backgroundColor: context.colors.background,
+                                foregroundColor: context.colors.primary,
                               ),
                       ),
                       Positioned(
@@ -3240,7 +3245,7 @@ Widget _buildDrawerContent() {
                         right: 0,
                         child: CircleAvatar(
                           radius: 16,
-                          backgroundColor: warmAmber,
+                          backgroundColor: context.colors.accent,
                           child: IconButton(
                             icon: const Icon(Icons.camera_alt, size: 16, color: Colors.white),
                             onPressed: pickProfileImage,
@@ -3397,12 +3402,12 @@ Widget _buildDrawerContent() {
                       context: context,
                       builder: (ctx) => AlertDialog(
                         backgroundColor: Colors.white,
-                        title: Text('Logout', style: TextStyle(color: primaryDeepGreen)),
+                        title: Text('Logout', style: TextStyle(color: context.colors.primary)),
                         content: const Text('Are you sure you want to logout?'),
                         actions: [
                           TextButton(
                             onPressed: () => Navigator.of(ctx).pop(),
-                            child: Text('Cancel', style: TextStyle(color: primaryDeepGreen)),
+                            child: Text('Cancel', style: TextStyle(color: context.colors.primary)),
                           ),
                           TextButton(
                             onPressed: () async {
@@ -3437,8 +3442,8 @@ Widget _buildDrawerContent() {
   // --------------------- DRAWER ITEM ---------------------
   Widget _drawerItem(IconData icon, String title, Widget page) {
     return ListTile(
-      leading: Icon(icon, color: offWhite),
-      title: Text(title, style: TextStyle(color: offWhite)),
+      leading: Icon(icon, color: context.colors.background),
+      title: Text(title, style: TextStyle(color: context.colors.background)),
       onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => page)),
     );
   }
