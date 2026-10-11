@@ -24,8 +24,45 @@ void main() {
     expect(violations({'R1': {'lib/a.dart': 2}}, base), isEmpty);
     expect(violations({'R1': {'lib/a.dart': 4}}, base), hasLength(1));
     expect(violations({'R1': {'lib/new.dart': 1}}, base), hasLength(1));
-    // R10 is off until step 2F.
-    expect(violations({'R10': {'lib/a.dart': 9}}, base), isEmpty);
+    // R10 is on since step 2F-1.
+    expect(violations({'R10': {'lib/a.dart': 9}}, base), hasLength(1));
+  });
+
+  test('R10 counts texts a person reads, and only those', () {
+    final r10 = guardRules.firstWhere((r) => r.id == 'R10');
+    expect(r10.count("const Text('Save'),"), 1);
+    expect(r10.count('SelectableText("Don\'t worry"),'), 1);
+    expect(r10.count("AppFeedback.success('Product saved');"), 1);
+    expect(r10.count("decoration: InputDecoration(labelText: 'Name', hintText: 'e.g. Juma'),"), 2);
+    expect(r10.count("IconButton(tooltip: 'Close', onPressed: close),"), 1);
+    expect(r10.count("title: const Text('Sold \$n items'),"), 1, reason: 'not counted twice');
+    expect(r10.count("Text('Sold \${sale.count}'),"), 1);
+    // Interpolation and punctuation alone are not words.
+    expect(r10.count("Text('\${client.name}'),"), 0);
+    expect(r10.count("Text(': \$count'),"), 0);
+    expect(r10.count('Text(context.l10n.common_save),'), 0);
+    expect(r10.count("debugPrint('[UI] saved');"), 0);
+    // The literal alone on the line after its opener.
+    expect(r10.opens('child: Text('), isTrue);
+    expect(r10.opens('message:'), isTrue);
+    expect(r10.count("  'Business hours saved',", afterOpener: true), 1);
+    expect(r10.count("  'Business hours saved',"), 0);
+  });
+
+  test('a folder allowlist entry covers every file in it', () {
+    final folder = AllowEntry('R10', 'lib/screens/legal/', '', 'reason');
+    expect(folder.covers('lib/screens/legal/terms_screen.dart'), isTrue);
+    expect(folder.covers('lib/screens/legally.dart'), isFalse);
+    expect(AllowEntry('R5', 'lib/a.dart', 'x', 'r').covers('lib/a.dart.bak'), isFalse);
+  });
+
+  test('every R10 allowlist entry is a whole folder or file, with a reason', () {
+    final r10 = Baseline.load(Directory.current)!.allowlist.where((a) => a.rule == 'R10').toList();
+    expect(r10.map((a) => a.file), containsAll(['lib/screens/platform_admin/', 'lib/screens/legal/']));
+    for (final a in r10) {
+      expect(a.lineContains, isEmpty, reason: a.file);
+      expect(a.reason, contains('2.8'), reason: a.file);
+    }
   });
 
   test('R9 also sees a collection name passed through a variable', () {

@@ -28,8 +28,42 @@ class GuardRule {
   /// exclusions in [isExcluded]).
   final List<String> alsoExcludes;
 
+  /// For a value that can sit on the line after its opener: a line ending
+  /// in [opensAtLineEnd] makes the next line be tested with [continues]
+  /// (one count at most), as well as with [patterns].
+  final RegExp? opensAtLineEnd;
+  final RegExp? continues;
+
   const GuardRule(this.id, this.description, this.patterns,
-      {this.accept, this.enabled = true, this.alsoExcludes = const []});
+      {this.accept, this.enabled = true, this.alsoExcludes = const [], this.opensAtLineEnd, this.continues});
+
+  bool _hits(RegExp p, String line) => p.allMatches(line).any((m) => accept == null || accept!(m));
+
+  /// Matches on [line]; [afterOpener] says the previous line ended in an opener.
+  int count(String line, {bool afterOpener = false}) {
+    var n = 0;
+    for (final p in patterns) {
+      n += p.allMatches(line).where((m) => accept == null || accept!(m)).length;
+    }
+    if (afterOpener && continues != null && _hits(continues!, line)) n++;
+    return n;
+  }
+
+  bool opens(String line) => opensAtLineEnd?.hasMatch(line) ?? false;
+}
+
+// R10: the parameters that carry text a person reads. A string literal
+// follows (on the same line, or alone on the next one).
+const _r10Openers = r'(?:\b(?:Selectable)?Text\(|\bTextSpan\(\s*text:|\bAppFeedback\.(?:success|info|warning|error|undo)\(|'
+    r'\b(?:labelText|hintText|helperText|errorText|prefixText|suffixText|title|subtitle|tooltip|'
+    r'semanticLabel|semanticsLabel|label|message|content|text|confirmText|cancelText):)';
+const _r10Literal = r'''\s*(?:const\s+)?['"](?<s>(?:\\.|[^'"\\])*)''';
+
+/// R10 counts a literal only if it has a letter outside interpolations:
+/// '${a.name}' or ': $count' are not words to translate.
+bool _hasWords(RegExpMatch m) {
+  final s = m.namedGroup('s') ?? '';
+  return RegExp('[A-Za-z]').hasMatch(s.replaceAll(RegExp(r'\$\{[^}]*\}?|\$\w+'), ''));
 }
 
 final _nonZeroNumber = RegExp(r'(?<![\w.])(0*[1-9]\d*(\.\d+)?|0?\.\d*[1-9]\d*)(?![\w.])');
@@ -60,16 +94,16 @@ final List<GuardRule> guardRules = [
   // line that mentions "ollection" (collection:, trashCollection, ...): a name
   // passed through a variable to .collection(x) is just as raw.
   GuardRule('R9', 'raw collection name', [RegExp(r"\.collection(Group)?\('")]),
+  // docs/PHASE2_LOCALISATION_SPEC.md section 7: texts come from the ARB
+  // files (context.l10n / L10n.current). Out-of-scope files are allowlisted
+  // with their reason in the baseline.
   GuardRule(
     'R10',
     'raw user-facing string',
-    [
-      RegExp(r"""Text\(\s*(const\s+)?['"]"""),
-      RegExp(r'SnackBar'),
-      RegExp(r"""labelText:\s*['"]"""),
-      RegExp(r"""hintText:\s*['"]"""),
-    ],
-    enabled: false,
+    [RegExp(_r10Openers + _r10Literal)],
+    accept: _hasWords,
+    opensAtLineEnd: RegExp('$_r10Openers\\s*(?:const\\s*)?\$'),
+    continues: RegExp('^$_r10Literal'),
   ),
   // docs/PHASE2_FEEDBACK_SPEC.md section 9: messages go through AppFeedback;
   // only lib/ui/feedback/ may talk to the SnackBar machinery. Falls to 0 by
@@ -101,6 +135,10 @@ class AllowEntry {
 
   AllowEntry(this.rule, this.file, this.lineContains, this.reason);
 
+  /// A [file] ending in '/' is a whole folder; with an empty [lineContains]
+  /// every line of it is allowed (out-of-scope folders, with their reason).
+  bool covers(String path) => file.endsWith('/') ? path.startsWith(file) : file == path;
+
   factory AllowEntry.fromJson(Map<String, dynamic> j) => AllowEntry(
       j['rule'] as String, j['file'] as String, j['lineContains'] as String, j['reason'] as String);
 }
@@ -125,17 +163,18 @@ Map<String, Map<String, int>> scan(Directory root, {List<AllowEntry> allowlist =
         .replaceFirst(RegExp(r'^/'), '');
     if (isExcluded(rel)) continue;
 
+    // Rules whose opener ended the previous code line.
+    var opened = <String>{};
     for (final line in file.readAsLinesSync()) {
       // Whole-line comments (including doc comments) are explanations, not code.
       if (line.trimLeft().startsWith('//')) continue;
+      final openedBefore = opened;
+      opened = {for (final r in guardRules) if (r.opens(line)) r.id};
       for (final rule in guardRules) {
         if (rule.alsoExcludes.any(rel.startsWith)) continue;
-        final allowed = allowlist.any((a) => a.rule == rule.id && a.file == rel && line.contains(a.lineContains));
+        final allowed = allowlist.any((a) => a.rule == rule.id && a.covers(rel) && line.contains(a.lineContains));
         if (allowed) continue;
-        var n = 0;
-        for (final p in rule.patterns) {
-          n += p.allMatches(line).where((m) => rule.accept == null || rule.accept!(m)).length;
-        }
+        var n = rule.count(line, afterOpener: openedBefore.contains(rule.id));
         if (rule.id == 'R9' && namedCollection != null && line.contains('ollection')) {
           n += namedCollection.allMatches(line).length;
         }
@@ -209,7 +248,8 @@ String _encode(Map<String, Map<String, int>> counts, List<dynamic> allowlistRaw)
   final sorted = <String, dynamic>{
     '_comment': 'Allowed raw-value counts per rule per file (Phase 2 spec, section 9). '
         'Counts may only go down: regenerate with `dart run tool/check_hardcoded.dart --update`. '
-        'allowlist entries skip a known false positive: {rule, file, lineContains, reason}.',
+        'allowlist entries skip a known false positive: {rule, file, lineContains, reason}; '
+        'a file ending in / is a folder, and an empty lineContains allows every line.',
     'allowlist': allowlistRaw,
     'counts': {
       for (final rule in guardRules)
