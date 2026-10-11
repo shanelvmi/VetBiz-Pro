@@ -820,4 +820,76 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get crop_watermelon => 'Watermelon';
+
+  @override
+  String get expenseGroup_administration => 'Administration';
+
+  @override
+  String get expenseGroup_premisesUtilities => 'Premises & Utilities';
+
+  @override
+  String get expenseGroup_operations => 'Operations';
+
+  @override
+  String get expenseGroup_transport => 'Transport';
+
+  @override
+  String get expenseGroup_business => 'Business';
+
+  @override
+  String get expenseGroup_other => 'Other';
+
+  @override
+  String get expenseCategory_mealsRefreshments => 'Meals & Refreshments';
+
+  @override
+  String get expenseCategory_salariesWages => 'Salaries & Wages';
+
+  @override
+  String get expenseCategory_officeSupplies => 'Office Supplies';
+
+  @override
+  String get expenseCategory_electricity => 'Electricity';
+
+  @override
+  String get expenseCategory_water => 'Water';
+
+  @override
+  String get expenseCategory_rent => 'Rent';
+
+  @override
+  String get expenseCategory_drugsMedicines => 'Drugs & Medicines';
+
+  @override
+  String get expenseCategory_veterinarySupplies => 'Veterinary Supplies';
+
+  @override
+  String get expenseCategory_fuel => 'Fuel';
+
+  @override
+  String get expenseCategory_vehicleMaintenance => 'Vehicle Maintenance';
+
+  @override
+  String get expenseCategory_marketing => 'Marketing';
+
+  @override
+  String get expenseCategory_licencesRegistration => 'Licences & Registration';
+
+  @override
+  String get incomeCategory_commission => 'Commission Income';
+
+  @override
+  String get incomeCategory_delivery => 'Delivery Income';
+
+  @override
+  String get incomeCategory_training => 'Training Income';
+
+  @override
+  String get incomeCategory_consultancy => 'Consultancy Income';
+
+  @override
+  String get incomeCategory_rental => 'Rental Income';
+
+  @override
+  String get incomeCategory_interest => 'Interest Income';
 }

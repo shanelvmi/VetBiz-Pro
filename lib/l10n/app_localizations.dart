@@ -1687,6 +1687,150 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Watermelon'**
   String get crop_watermelon;
+
+  /// Heading in Add Transaction's expense category picker: the 'Administration' group (not stored).
+  ///
+  /// In en, this message translates to:
+  /// **'Administration'**
+  String get expenseGroup_administration;
+
+  /// Heading in Add Transaction's expense category picker: the 'Premises & Utilities' group (not stored).
+  ///
+  /// In en, this message translates to:
+  /// **'Premises & Utilities'**
+  String get expenseGroup_premisesUtilities;
+
+  /// Heading in Add Transaction's expense category picker: the 'Operations' group (not stored).
+  ///
+  /// In en, this message translates to:
+  /// **'Operations'**
+  String get expenseGroup_operations;
+
+  /// Heading in Add Transaction's expense category picker: the 'Transport' group (not stored).
+  ///
+  /// In en, this message translates to:
+  /// **'Transport'**
+  String get expenseGroup_transport;
+
+  /// Heading in Add Transaction's expense category picker: the 'Business' group (not stored).
+  ///
+  /// In en, this message translates to:
+  /// **'Business'**
+  String get expenseGroup_business;
+
+  /// Heading in Add Transaction's expense category picker: the 'Other' group (not stored).
+  ///
+  /// In en, this message translates to:
+  /// **'Other'**
+  String get expenseGroup_other;
+
+  /// Expense category: Add Transaction picker, Transactions list and details (stored value 'Meals & Refreshments').
+  ///
+  /// In en, this message translates to:
+  /// **'Meals & Refreshments'**
+  String get expenseCategory_mealsRefreshments;
+
+  /// Expense category: Add Transaction picker, Transactions list and details (stored value 'Salaries & Wages').
+  ///
+  /// In en, this message translates to:
+  /// **'Salaries & Wages'**
+  String get expenseCategory_salariesWages;
+
+  /// Expense category: Add Transaction picker, Transactions list and details (stored value 'Office Supplies').
+  ///
+  /// In en, this message translates to:
+  /// **'Office Supplies'**
+  String get expenseCategory_officeSupplies;
+
+  /// Expense category: Add Transaction picker, Transactions list and details (stored value 'Electricity').
+  ///
+  /// In en, this message translates to:
+  /// **'Electricity'**
+  String get expenseCategory_electricity;
+
+  /// Expense category: Add Transaction picker, Transactions list and details (stored value 'Water').
+  ///
+  /// In en, this message translates to:
+  /// **'Water'**
+  String get expenseCategory_water;
+
+  /// Expense category: Add Transaction picker, Transactions list and details (stored value 'Rent').
+  ///
+  /// In en, this message translates to:
+  /// **'Rent'**
+  String get expenseCategory_rent;
+
+  /// Expense category: Add Transaction picker, Transactions list and details (stored value 'Drugs & Medicines').
+  ///
+  /// In en, this message translates to:
+  /// **'Drugs & Medicines'**
+  String get expenseCategory_drugsMedicines;
+
+  /// Expense category: Add Transaction picker, Transactions list and details (stored value 'Veterinary Supplies').
+  ///
+  /// In en, this message translates to:
+  /// **'Veterinary Supplies'**
+  String get expenseCategory_veterinarySupplies;
+
+  /// Expense category: Add Transaction picker, Transactions list and details (stored value 'Fuel').
+  ///
+  /// In en, this message translates to:
+  /// **'Fuel'**
+  String get expenseCategory_fuel;
+
+  /// Expense category: Add Transaction picker, Transactions list and details (stored value 'Vehicle Maintenance').
+  ///
+  /// In en, this message translates to:
+  /// **'Vehicle Maintenance'**
+  String get expenseCategory_vehicleMaintenance;
+
+  /// Expense category: Add Transaction picker, Transactions list and details (stored value 'Marketing').
+  ///
+  /// In en, this message translates to:
+  /// **'Marketing'**
+  String get expenseCategory_marketing;
+
+  /// Expense category: Add Transaction picker, Transactions list and details (stored value 'Licences & Registration').
+  ///
+  /// In en, this message translates to:
+  /// **'Licences & Registration'**
+  String get expenseCategory_licencesRegistration;
+
+  /// Income category: Add Transaction picker, Transactions list and details (stored value 'Commission Income').
+  ///
+  /// In en, this message translates to:
+  /// **'Commission Income'**
+  String get incomeCategory_commission;
+
+  /// Income category: Add Transaction picker, Transactions list and details (stored value 'Delivery Income').
+  ///
+  /// In en, this message translates to:
+  /// **'Delivery Income'**
+  String get incomeCategory_delivery;
+
+  /// Income category: Add Transaction picker, Transactions list and details (stored value 'Training Income').
+  ///
+  /// In en, this message translates to:
+  /// **'Training Income'**
+  String get incomeCategory_training;
+
+  /// Income category: Add Transaction picker, Transactions list and details (stored value 'Consultancy Income').
+  ///
+  /// In en, this message translates to:
+  /// **'Consultancy Income'**
+  String get incomeCategory_consultancy;
+
+  /// Income category: Add Transaction picker, Transactions list and details (stored value 'Rental Income').
+  ///
+  /// In en, this message translates to:
+  /// **'Rental Income'**
+  String get incomeCategory_rental;
+
+  /// Income category: Add Transaction picker, Transactions list and details (stored value 'Interest Income').
+  ///
+  /// In en, this message translates to:
+  /// **'Interest Income'**
+  String get incomeCategory_interest;
 }
 
 class _AppLocalizationsDelegate

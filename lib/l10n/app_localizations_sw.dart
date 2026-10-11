@@ -821,4 +821,76 @@ class AppLocalizationsSw extends AppLocalizations {
 
   @override
   String get crop_watermelon => 'Tikiti Maji';
+
+  @override
+  String get expenseGroup_administration => 'Utawala';
+
+  @override
+  String get expenseGroup_premisesUtilities => 'Majengo na Huduma';
+
+  @override
+  String get expenseGroup_operations => 'Uendeshaji';
+
+  @override
+  String get expenseGroup_transport => 'Usafiri';
+
+  @override
+  String get expenseGroup_business => 'Biashara';
+
+  @override
+  String get expenseGroup_other => 'Mengineyo';
+
+  @override
+  String get expenseCategory_mealsRefreshments => 'Chakula na Viburudisho';
+
+  @override
+  String get expenseCategory_salariesWages => 'Mishahara na Ujira';
+
+  @override
+  String get expenseCategory_officeSupplies => 'Vifaa vya Ofisi';
+
+  @override
+  String get expenseCategory_electricity => 'Umeme';
+
+  @override
+  String get expenseCategory_water => 'Maji';
+
+  @override
+  String get expenseCategory_rent => 'Kodi ya Pango';
+
+  @override
+  String get expenseCategory_drugsMedicines => 'Dawa';
+
+  @override
+  String get expenseCategory_veterinarySupplies => 'Vifaa vya Mifugo';
+
+  @override
+  String get expenseCategory_fuel => 'Mafuta';
+
+  @override
+  String get expenseCategory_vehicleMaintenance => 'Matengenezo ya Gari';
+
+  @override
+  String get expenseCategory_marketing => 'Matangazo';
+
+  @override
+  String get expenseCategory_licencesRegistration => 'Leseni na Usajili';
+
+  @override
+  String get incomeCategory_commission => 'Mapato ya Kamisheni';
+
+  @override
+  String get incomeCategory_delivery => 'Mapato ya Usafirishaji';
+
+  @override
+  String get incomeCategory_training => 'Mapato ya Mafunzo';
+
+  @override
+  String get incomeCategory_consultancy => 'Mapato ya Ushauri';
+
+  @override
+  String get incomeCategory_rental => 'Mapato ya Kodi ya Pango';
+
+  @override
+  String get incomeCategory_interest => 'Mapato ya Riba';
 }
