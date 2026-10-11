@@ -403,6 +403,216 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Couldn\'t sign in. Try again.'**
   String get login_signInFailed;
+
+  /// The word Facility, as a fallback name when a facility has none.
+  ///
+  /// In en, this message translates to:
+  /// **'Facility'**
+  String get common_facility;
+
+  /// Sign out button.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign out'**
+  String get common_signOut;
+
+  /// Hides the technical text shown by Details.
+  ///
+  /// In en, this message translates to:
+  /// **'Hide details'**
+  String get common_hideDetails;
+
+  /// Title of the custom date range dialog (Payments, Transactions).
+  ///
+  /// In en, this message translates to:
+  /// **'Select Date Range'**
+  String get dateRange_title;
+
+  /// Label above the start date in the date range dialog.
+  ///
+  /// In en, this message translates to:
+  /// **'Start Date:'**
+  String get dateRange_start;
+
+  /// Label above the end date in the date range dialog.
+  ///
+  /// In en, this message translates to:
+  /// **'End Date:'**
+  String get dateRange_end;
+
+  /// Heading of the error shown when a list fails to load (FirestoreErrorView).
+  ///
+  /// In en, this message translates to:
+  /// **'Could not load data'**
+  String get error_couldNotLoad;
+
+  /// Error shown when a Firestore query needs an index (FirestoreErrorView).
+  ///
+  /// In en, this message translates to:
+  /// **'This view needs a one-time database index to be created first.'**
+  String get error_indexNeeded;
+
+  /// Button that opens Firebase Console to create a missing index (FirestoreErrorView).
+  ///
+  /// In en, this message translates to:
+  /// **'Create Missing Index'**
+  String get error_createIndex;
+
+  /// Small text under Create Missing Index (FirestoreErrorView).
+  ///
+  /// In en, this message translates to:
+  /// **'This opens Firebase Console with the exact index needed already filled in.'**
+  String get error_createIndexHint;
+
+  /// Heading of the maintenance screen.
+  ///
+  /// In en, this message translates to:
+  /// **'We\'ll be right back'**
+  String get maintenance_title;
+
+  /// Maintenance screen text when the platform admin set no message of their own.
+  ///
+  /// In en, this message translates to:
+  /// **'We\'re currently performing scheduled maintenance. Please try again shortly.'**
+  String get maintenance_defaultMessage;
+
+  /// Age of a notification under one minute.
+  ///
+  /// In en, this message translates to:
+  /// **'Just now'**
+  String get time_justNow;
+
+  /// Age of a notification in minutes (short form).
+  ///
+  /// In en, this message translates to:
+  /// **'{count}m ago'**
+  String time_minutesAgo(int count);
+
+  /// Age of a notification in hours (short form).
+  ///
+  /// In en, this message translates to:
+  /// **'{count}h ago'**
+  String time_hoursAgo(int count);
+
+  /// Age of a notification in days (short form).
+  ///
+  /// In en, this message translates to:
+  /// **'{count}d ago'**
+  String time_daysAgo(int count);
+
+  /// Label above the payment method chips.
+  ///
+  /// In en, this message translates to:
+  /// **'Payment Method'**
+  String get payments_method;
+
+  /// Upper-case heading of the categories list in the product catalog side panel.
+  ///
+  /// In en, this message translates to:
+  /// **'CATEGORIES'**
+  String get products_categoriesHeading;
+
+  /// Upper-case heading of the stock status list in the product catalog side panel.
+  ///
+  /// In en, this message translates to:
+  /// **'STOCK STATUS'**
+  String get products_stockStatusHeading;
+
+  /// Row that shows every product (product catalog side panel).
+  ///
+  /// In en, this message translates to:
+  /// **'All Products'**
+  String get products_allProducts;
+
+  /// Stock status filter: no filter (product catalog side panel).
+  ///
+  /// In en, this message translates to:
+  /// **'All Status'**
+  String get products_statusAll;
+
+  /// Stock status filter: in stock.
+  ///
+  /// In en, this message translates to:
+  /// **'In Stock'**
+  String get products_statusInStock;
+
+  /// Stock status filter: low stock.
+  ///
+  /// In en, this message translates to:
+  /// **'Low Stock'**
+  String get products_statusLowStock;
+
+  /// Stock status filter: should be reordered soon.
+  ///
+  /// In en, this message translates to:
+  /// **'Reorder Soon'**
+  String get products_statusReorderSoon;
+
+  /// Stock status filter: none left.
+  ///
+  /// In en, this message translates to:
+  /// **'Depleted'**
+  String get products_statusDepleted;
+
+  /// Stock status filter: past its expiry date.
+  ///
+  /// In en, this message translates to:
+  /// **'Expired'**
+  String get products_statusExpired;
+
+  /// Badge on a summary card when there was nothing in the previous period to compare with.
+  ///
+  /// In en, this message translates to:
+  /// **'New'**
+  String get summary_trendNew;
+
+  /// Title of the full loading screen after sign-in.
+  ///
+  /// In en, this message translates to:
+  /// **'Loading your account...'**
+  String get loading_accountTitle;
+
+  /// Second line of the full loading screen after sign-in.
+  ///
+  /// In en, this message translates to:
+  /// **'Preparing your facility data and services'**
+  String get loading_accountSubtitle;
+
+  /// Shown while the dashboard opens for a chosen facility.
+  ///
+  /// In en, this message translates to:
+  /// **'Setting up {facilityName}...'**
+  String facilities_settingUp(String facilityName);
+
+  /// Stands for the facility name in "Setting up ..." when it has none.
+  ///
+  /// In en, this message translates to:
+  /// **'your facility'**
+  String get facilities_yourFacility;
+
+  /// Title of the dialog shown when a locked facility tries to record a sale or service.
+  ///
+  /// In en, this message translates to:
+  /// **'Subscription Expired'**
+  String get subscription_expiredTitle;
+
+  /// Subscription Expired dialog text for an assistant.
+  ///
+  /// In en, this message translates to:
+  /// **'This facility\'s subscription has expired, so new sales and services can\'t be recorded right now. You can still view all existing data. Please ask your admin to renew the subscription.'**
+  String get subscription_expiredAssistant;
+
+  /// Subscription Expired dialog text for an admin.
+  ///
+  /// In en, this message translates to:
+  /// **'Your subscription has expired, so new sales and services can\'t be recorded right now. You can still view all your existing data. Submit a payment to restore full access.'**
+  String get subscription_expiredAdmin;
+
+  /// Button in the Subscription Expired dialog (admins).
+  ///
+  /// In en, this message translates to:
+  /// **'Go to Subscription'**
+  String get subscription_goTo;
 }
 
 class _AppLocalizationsDelegate
