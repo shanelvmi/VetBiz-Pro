@@ -2521,4 +2521,85 @@ class AppLocalizationsSw extends AppLocalizations {
 
   @override
   String get hours_saturday => 'Jumamosi';
+
+  @override
+  String get hours_sunday => 'Jumapili';
+
+  @override
+  String get hours_allowAnytime => 'Ruhusu wakati wowote';
+
+  @override
+  String get hours_allowAnytimeHint =>
+      'Ruhusa ya dharura - huwezesha kitufe cha ripoti bila kujali ratiba hapo juu. Iwashe mnapofunga mapema, na uizime mambo yakirudi kawaida.';
+
+  @override
+  String get hours_save => 'Hifadhi Saa za Biashara';
+
+  @override
+  String get hours_closedAllDay => 'Imefungwa siku nzima';
+
+  @override
+  String hours_closesAt(String time) {
+    return 'Inafungwa saa $time';
+  }
+
+  @override
+  String get hours_noClosingTime =>
+      'Hakuna muda wa kufunga unaohitajika - imefungwa siku nzima.';
+
+  @override
+  String get profile_logoUpdated => 'Nembo imesasishwa';
+
+  @override
+  String get profile_logoFailed => 'Imeshindwa kusasisha nembo';
+
+  @override
+  String get profile_yourFacility => 'Kituo chako';
+
+  @override
+  String get profile_title => 'Wasifu wa Biashara';
+
+  @override
+  String get profile_logoHint =>
+      'Nembo hii inaonekana kwenye dashibodi, risiti, na popote kituo chako kinapoonyeshwa ndani ya programu.';
+
+  @override
+  String get profile_changeLogo => 'Badilisha Nembo';
+
+  @override
+  String get profile_uploadLogo => 'Pakia Nembo';
+
+  @override
+  String get searchIndex_title => 'Jenga Upya Faharasa ya Kutafuta Wateja';
+
+  @override
+  String get searchIndex_body =>
+      'Hii huwafanya wateja walioongezwa kabla utafutaji haujakuwepo waonekane vizuri wanapotafutwa kwa jina, na huiwezesha programu kumtambua mteja mpya ambaye namba ya simu au jina lake linalingana na mteja uliye naye. Inahitaji kuendeshwa mara moja tu - wateja ambao tayari wako sawa hawaguswi.';
+
+  @override
+  String get searchIndex_nothing =>
+      'Hakuna cha kusasisha - kila mteja tayari anatafutika.';
+
+  @override
+  String searchIndex_done(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Imekamilika. Wateja $count wamesasishwa na sasa wanatafutika.',
+      one: 'Imekamilika. Mteja 1 amesasishwa na sasa anatafutika.',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String searchIndex_failed(String error) {
+    return 'Imeshindwa kukamilisha: $error';
+  }
+
+  @override
+  String get searchIndex_run => 'Endesha Sasa';
+
+  @override
+  String get printer_unavailableConnect =>
+      'Uchapishaji kwa Bluetooth haupatikani kwenye jukwaa hili. Skrini hii inahitaji programu halisi ya Android au iOS yenye Bluetooth - haiwezi kuunganisha printa kutoka kwenye kivinjari.';
 }

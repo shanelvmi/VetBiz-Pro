@@ -4531,6 +4531,132 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Saturday'**
   String get hours_saturday;
+
+  /// Business Hours row title.
+  ///
+  /// In en, this message translates to:
+  /// **'Sunday'**
+  String get hours_sunday;
+
+  /// Business Hours override switch.
+  ///
+  /// In en, this message translates to:
+  /// **'Allow anytime'**
+  String get hours_allowAnytime;
+
+  /// Under the override switch.
+  ///
+  /// In en, this message translates to:
+  /// **'Emergency override - makes the report button active regardless of the schedule above. Turn this on for an early closure, and back off once things return to normal.'**
+  String get hours_allowAnytimeHint;
+
+  /// Save button.
+  ///
+  /// In en, this message translates to:
+  /// **'Save Business Hours'**
+  String get hours_save;
+
+  /// Switch label on a day row.
+  ///
+  /// In en, this message translates to:
+  /// **'Closed all day'**
+  String get hours_closedAllDay;
+
+  /// Button showing the closing time.
+  ///
+  /// In en, this message translates to:
+  /// **'Closes at {time}'**
+  String hours_closesAt(String time);
+
+  /// Day row when the day is closed.
+  ///
+  /// In en, this message translates to:
+  /// **'No closing time needed - closed all day.'**
+  String get hours_noClosingTime;
+
+  /// Message after uploading a logo.
+  ///
+  /// In en, this message translates to:
+  /// **'Logo updated'**
+  String get profile_logoUpdated;
+
+  /// Message when uploading failed.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t update the logo'**
+  String get profile_logoFailed;
+
+  /// Shown when the facility has no name.
+  ///
+  /// In en, this message translates to:
+  /// **'Your facility'**
+  String get profile_yourFacility;
+
+  /// Business Profile screen title.
+  ///
+  /// In en, this message translates to:
+  /// **'Business Profile'**
+  String get profile_title;
+
+  /// Under the logo.
+  ///
+  /// In en, this message translates to:
+  /// **'This logo appears on the dashboard, receipts, and anywhere your facility is shown throughout the app.'**
+  String get profile_logoHint;
+
+  /// Button when a logo exists.
+  ///
+  /// In en, this message translates to:
+  /// **'Change Logo'**
+  String get profile_changeLogo;
+
+  /// Button when there is no logo.
+  ///
+  /// In en, this message translates to:
+  /// **'Upload Logo'**
+  String get profile_uploadLogo;
+
+  /// Rebuild dialog title.
+  ///
+  /// In en, this message translates to:
+  /// **'Rebuild Client Search Index'**
+  String get searchIndex_title;
+
+  /// Rebuild dialog text.
+  ///
+  /// In en, this message translates to:
+  /// **'This makes clients added before search was available show up correctly when searched by name, and lets the app spot a new client whose phone number or name matches one you already have. It only needs to be run once - clients that are already up to date are left alone.'**
+  String get searchIndex_body;
+
+  /// Rebuild result when nothing changed.
+  ///
+  /// In en, this message translates to:
+  /// **'Nothing to update - every client is already searchable.'**
+  String get searchIndex_nothing;
+
+  /// Rebuild result.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{Done. 1 client updated and now searchable.} other{Done. {count} clients updated and now searchable.}}'**
+  String searchIndex_done(int count);
+
+  /// Rebuild error; error is a friendly sentence.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not complete: {error}'**
+  String searchIndex_failed(String error);
+
+  /// Button that starts the rebuild.
+  ///
+  /// In en, this message translates to:
+  /// **'Run Now'**
+  String get searchIndex_run;
+
+  /// Printer screen when Bluetooth is missing (checking the connection).
+  ///
+  /// In en, this message translates to:
+  /// **'Bluetooth printing isn\'t available on this platform. This screen needs a real Android or iOS build with Bluetooth hardware - it can\'t connect to a printer from a web browser.'**
+  String get printer_unavailableConnect;
 }
 
 class _AppLocalizationsDelegate

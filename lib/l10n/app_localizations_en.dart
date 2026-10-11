@@ -2507,4 +2507,84 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get hours_saturday => 'Saturday';
+
+  @override
+  String get hours_sunday => 'Sunday';
+
+  @override
+  String get hours_allowAnytime => 'Allow anytime';
+
+  @override
+  String get hours_allowAnytimeHint =>
+      'Emergency override - makes the report button active regardless of the schedule above. Turn this on for an early closure, and back off once things return to normal.';
+
+  @override
+  String get hours_save => 'Save Business Hours';
+
+  @override
+  String get hours_closedAllDay => 'Closed all day';
+
+  @override
+  String hours_closesAt(String time) {
+    return 'Closes at $time';
+  }
+
+  @override
+  String get hours_noClosingTime => 'No closing time needed - closed all day.';
+
+  @override
+  String get profile_logoUpdated => 'Logo updated';
+
+  @override
+  String get profile_logoFailed => 'Couldn\'t update the logo';
+
+  @override
+  String get profile_yourFacility => 'Your facility';
+
+  @override
+  String get profile_title => 'Business Profile';
+
+  @override
+  String get profile_logoHint =>
+      'This logo appears on the dashboard, receipts, and anywhere your facility is shown throughout the app.';
+
+  @override
+  String get profile_changeLogo => 'Change Logo';
+
+  @override
+  String get profile_uploadLogo => 'Upload Logo';
+
+  @override
+  String get searchIndex_title => 'Rebuild Client Search Index';
+
+  @override
+  String get searchIndex_body =>
+      'This makes clients added before search was available show up correctly when searched by name, and lets the app spot a new client whose phone number or name matches one you already have. It only needs to be run once - clients that are already up to date are left alone.';
+
+  @override
+  String get searchIndex_nothing =>
+      'Nothing to update - every client is already searchable.';
+
+  @override
+  String searchIndex_done(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Done. $count clients updated and now searchable.',
+      one: 'Done. 1 client updated and now searchable.',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String searchIndex_failed(String error) {
+    return 'Could not complete: $error';
+  }
+
+  @override
+  String get searchIndex_run => 'Run Now';
+
+  @override
+  String get printer_unavailableConnect =>
+      'Bluetooth printing isn\'t available on this platform. This screen needs a real Android or iOS build with Bluetooth hardware - it can\'t connect to a printer from a web browser.';
 }
