@@ -46,6 +46,10 @@ import 'config/app_timeouts.dart';
 import 'config/app_rules.dart';
 import 'config/app_info.dart';
 import 'ui/feedback/app_feedback.dart';
+import 'theme/app_text.dart';
+import 'theme/app_dimens.dart';
+import 'theme/theme_context.dart';
+import 'theme/app_motion.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -550,7 +554,7 @@ class _AppEntryPointState extends State<AppEntryPoint> {
             inner = snap.data!;
           }
           return AnimatedSwitcher(
-            duration: const Duration(milliseconds: 220),
+            duration: AppMotion.normal,
             switchInCurve: Curves.easeOut,
             switchOutCurve: Curves.easeIn,
             transitionBuilder: (child, animation) => FadeTransition(opacity: animation, child: child),
@@ -564,7 +568,7 @@ class _AppEntryPointState extends State<AppEntryPoint> {
         // specifically about smoothing the loading-spinner-to-login-
         // screen-with-error transition, not adding a flashy animation.
         return AnimatedSwitcher(
-          duration: const Duration(milliseconds: 220),
+          duration: AppMotion.normal,
           switchInCurve: Curves.easeOut,
           switchOutCurve: Curves.easeIn,
           transitionBuilder: (child, animation) => FadeTransition(opacity: animation, child: child),
@@ -623,14 +627,14 @@ class _AuthLoadingScreenState extends State<_AuthLoadingScreen> {
               ? Column(
                   children: [
                     Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 32),
+                      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.s32),
                       child: Text(
                         'Taking longer than expected to load.',
                         textAlign: TextAlign.center,
-                        style: TextStyle(color: Colors.grey[700]),
+                        style: TextStyle(color: context.colors.textSoft),
                       ),
                     ),
-                    const SizedBox(height: 12),
+                    const SizedBox(height: AppSpacing.s12),
                     OutlinedButton.icon(
                       // The same explicit, navigatorKey-based navigation this
                       // app already relies on elsewhere for stuck-state
@@ -690,28 +694,28 @@ class _DecisionErrorScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFFDFDF9),
+      backgroundColor: context.colors.background,
       body: Center(
         child: Padding(
-          padding: const EdgeInsets.all(32),
+          padding: const EdgeInsets.all(AppSpacing.s32),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const Icon(Icons.error_outline, size: 48, color: Colors.grey),
-              const SizedBox(height: 16),
+              Icon(Icons.error_outline, size: AppIconSize.i48, color: context.colors.textHint),
+              const SizedBox(height: AppSpacing.s16),
               const Text('Could Not Load Your Account',
-                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 17)),
-              const SizedBox(height: 8),
+                  style: TextStyle(fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f17)),
+              const SizedBox(height: AppSpacing.s8),
               Text(
                 _explanation,
                 textAlign: TextAlign.center,
-                style: TextStyle(color: Colors.grey[700]),
+                style: TextStyle(color: context.colors.textSoft),
               ),
               if (_tag != null) ...[
-                const SizedBox(height: 8),
-                Text(_tag!, style: TextStyle(fontSize: 11, color: Colors.grey[500])),
+                const SizedBox(height: AppSpacing.s8),
+                Text(_tag!, style: TextStyle(fontSize: AppFontSize.f11, color: context.colors.textHint)),
               ],
-              const SizedBox(height: 24),
+              const SizedBox(height: AppSpacing.s24),
               Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
@@ -720,7 +724,7 @@ class _DecisionErrorScreen extends StatelessWidget {
                     icon: const Icon(Icons.refresh),
                     label: const Text('Try Again'),
                   ),
-                  const SizedBox(width: 12),
+                  const SizedBox(width: AppSpacing.s12),
                   OutlinedButton.icon(
                     onPressed: () => forceLogoutAndShowLogin(),
                     icon: const Icon(Icons.logout),
@@ -872,22 +876,22 @@ class _NoFacilityScreenState extends State<_NoFacilityScreen> {
                 const Text(
                   'This is permanent and cannot be undone. Your account and profile will be erased, '
                   'and you will not be able to sign in with this email again.',
-                  style: TextStyle(fontSize: 13),
+                  style: TextStyle(fontSize: AppFontSize.f13),
                 ),
-                const SizedBox(height: 14),
+                const SizedBox(height: AppSpacing.s14),
                 TextField(
                   controller: emailController,
                   decoration: const InputDecoration(labelText: 'Email', prefixIcon: Icon(Icons.email_outlined)),
                 ),
-                const SizedBox(height: 8),
+                const SizedBox(height: AppSpacing.s8),
                 TextField(
                   controller: passwordController,
                   obscureText: true,
                   decoration: const InputDecoration(labelText: 'Password', prefixIcon: Icon(Icons.lock_outline)),
                 ),
                 if (dialogError != null) ...[
-                  const SizedBox(height: 10),
-                  Text(dialogError!, style: const TextStyle(color: Colors.redAccent, fontSize: 12.5)),
+                  const SizedBox(height: AppSpacing.s10),
+                  Text(dialogError!, style: TextStyle(color: context.colors.dangerAccent, fontSize: AppFontSize.f12_5)),
                 ],
               ],
             ),
@@ -895,7 +899,7 @@ class _NoFacilityScreenState extends State<_NoFacilityScreen> {
           actions: [
             TextButton(onPressed: deleting ? null : () => Navigator.pop(ctx), child: const Text('Cancel')),
             ElevatedButton(
-              style: ElevatedButton.styleFrom(backgroundColor: Colors.redAccent, foregroundColor: Colors.white),
+              style: ElevatedButton.styleFrom(backgroundColor: context.colors.dangerAccent, foregroundColor: context.colors.onPrimary),
               onPressed: deleting
                   ? null
                   : () async {
@@ -923,10 +927,10 @@ class _NoFacilityScreenState extends State<_NoFacilityScreen> {
                       }
                     },
               child: deleting
-                  ? const SizedBox(
-                      width: 18,
-                      height: 18,
-                      child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                  ? SizedBox(
+                      width: AppIconSize.i18,
+                      height: AppIconSize.i18,
+                      child: CircularProgressIndicator(strokeWidth: 2, color: context.colors.onPrimary),
                     )
                   : const Text('Delete account'),
             ),
@@ -940,7 +944,7 @@ class _NoFacilityScreenState extends State<_NoFacilityScreen> {
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
-        const SizedBox(height: 22),
+        const SizedBox(height: AppSpacing.s22),
         TextField(
           controller: _facilityNameController,
           enabled: !_adding,
@@ -950,16 +954,16 @@ class _NoFacilityScreenState extends State<_NoFacilityScreen> {
             labelText: 'Facility name',
             hintText: 'e.g. Ukuli',
             prefixIcon: const Icon(Icons.storefront_outlined),
-            border: OutlineInputBorder(borderRadius: BorderRadius.circular(14)),
+            border: OutlineInputBorder(borderRadius: BorderRadius.circular(AppRadius.r14)),
           ),
         ),
-        const SizedBox(height: 12),
+        const SizedBox(height: AppSpacing.s12),
         DropdownButtonFormField<String>(
           initialValue: _facilityType,
           isExpanded: true,
           decoration: InputDecoration(
             labelText: 'Type',
-            border: OutlineInputBorder(borderRadius: BorderRadius.circular(14)),
+            border: OutlineInputBorder(borderRadius: BorderRadius.circular(AppRadius.r14)),
           ),
           items: kFacilityTypes.map((t) => DropdownMenuItem(value: t, child: Text(t))).toList(),
           onChanged: _adding
@@ -970,10 +974,10 @@ class _NoFacilityScreenState extends State<_NoFacilityScreen> {
                   }),
         ),
         if (_addError != null) ...[
-          const SizedBox(height: 10),
-          Text(_addError!, textAlign: TextAlign.center, style: const TextStyle(color: Colors.redAccent, fontSize: 12.5)),
+          const SizedBox(height: AppSpacing.s10),
+          Text(_addError!, textAlign: TextAlign.center, style: TextStyle(color: context.colors.dangerAccent, fontSize: AppFontSize.f12_5)),
         ],
-        const SizedBox(height: 16),
+        const SizedBox(height: AppSpacing.s16),
         SizedBox(
           width: double.infinity,
           height: 46,
@@ -981,25 +985,25 @@ class _NoFacilityScreenState extends State<_NoFacilityScreen> {
             onPressed: _adding ? null : _addFacility,
             style: ElevatedButton.styleFrom(
               backgroundColor: _deepGreen,
-              foregroundColor: Colors.white,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+              foregroundColor: context.colors.onPrimary,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadius.r14)),
             ),
             child: _adding
-                ? const Row(
+                ? Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white)),
-                      SizedBox(width: 10),
+                      SizedBox(width: AppIconSize.i18, height: AppIconSize.i18, child: CircularProgressIndicator(strokeWidth: 2, color: context.colors.onPrimary)),
+                      SizedBox(width: AppSpacing.s10),
                       Text('Adding facility...'),
                     ],
                   )
                 : const Text('Add facility'),
           ),
         ),
-        const SizedBox(height: 8),
+        const SizedBox(height: AppSpacing.s8),
         TextButton(
           onPressed: _adding ? null : _confirmDeleteAccount,
-          style: TextButton.styleFrom(foregroundColor: Colors.redAccent),
+          style: TextButton.styleFrom(foregroundColor: context.colors.dangerAccent),
           child: const Text('Delete my account instead'),
         ),
       ],
@@ -1076,48 +1080,48 @@ class _NoFacilityScreenState extends State<_NoFacilityScreen> {
   Widget build(BuildContext context) {
     final found = _found;
     return Scaffold(
-      backgroundColor: const Color(0xFFFDFDF9),
+      backgroundColor: context.colors.background,
       body: Center(
         child: SingleChildScrollView(
-          padding: const EdgeInsets.all(32),
+          padding: const EdgeInsets.all(AppSpacing.s32),
           child: ConstrainedBox(
             constraints: const BoxConstraints(maxWidth: 420),
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                const Icon(Icons.storefront_outlined, size: 48, color: Colors.grey),
-                const SizedBox(height: 16),
+                Icon(Icons.storefront_outlined, size: AppIconSize.i48, color: context.colors.textHint),
+                const SizedBox(height: AppSpacing.s16),
                 Text(
                   _isAssistant ? "You're not in a facility right now" : "You don't have a facility right now",
                   textAlign: TextAlign.center,
-                  style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 17),
+                  style: const TextStyle(fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f17),
                 ),
                 if (widget.notice != null) ...[
-                  const SizedBox(height: 14),
+                  const SizedBox(height: AppSpacing.s14),
                   Container(
                     width: double.infinity,
-                    padding: const EdgeInsets.all(12),
+                    padding: const EdgeInsets.all(AppSpacing.s12),
                     decoration: BoxDecoration(
-                      color: Colors.orange.withValues(alpha: 0.10),
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: Colors.orange.withValues(alpha: 0.35)),
+                      color: context.colors.warning.withValues(alpha: AppAlpha.a10),
+                      borderRadius: BorderRadius.circular(AppRadius.r12),
+                      border: Border.all(color: context.colors.warning.withValues(alpha: AppAlpha.a40)),
                     ),
                     child: Row(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Icon(Icons.info_outline, size: 18, color: Colors.orange.shade800),
-                        const SizedBox(width: 8),
+                        Icon(Icons.info_outline, size: AppIconSize.i18, color: context.colors.warningStrong),
+                        const SizedBox(width: AppSpacing.s8),
                         Expanded(
                           child: Text(
                             '${widget.notice} If you think that was a mistake, ask for a new invite code.',
-                            style: TextStyle(fontSize: 13, color: Colors.orange.shade900, height: 1.35),
+                            style: TextStyle(fontSize: AppFontSize.f13, color: Colors.orange.shade900, height: 1.35),
                           ),
                         ),
                       ],
                     ),
                   ),
                 ],
-                const SizedBox(height: 8),
+                const SizedBox(height: AppSpacing.s8),
                 Text(
                   _isAssistant
                       ? 'You may have been removed from your facility, or not added to one yet. '
@@ -1126,10 +1130,10 @@ class _NoFacilityScreenState extends State<_NoFacilityScreen> {
                       : 'Your account is kept. Add a facility to carry on, or delete your account '
                           'if you no longer need it.',
                   textAlign: TextAlign.center,
-                  style: TextStyle(color: Colors.grey[700], height: 1.4),
+                  style: TextStyle(color: context.colors.textSoft, height: 1.4),
                 ),
                 if (_isAssistant) ...[
-                  const SizedBox(height: 22),
+                  const SizedBox(height: AppSpacing.s22),
                   TextField(
                     controller: _codeController,
                     enabled: !_joining,
@@ -1141,30 +1145,30 @@ class _NoFacilityScreenState extends State<_NoFacilityScreen> {
                       prefixIcon: const Icon(Icons.vpn_key_outlined),
                       suffixIcon: _checking
                           ? const Padding(
-                              padding: EdgeInsets.all(12),
-                              child: SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2)),
+                              padding: EdgeInsets.all(AppSpacing.s12),
+                              child: SizedBox(width: AppIconSize.i18, height: AppIconSize.i18, child: CircularProgressIndicator(strokeWidth: 2)),
                             )
-                          : (found != null ? const Icon(Icons.check_circle, color: Colors.green) : null),
-                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(14)),
+                          : (found != null ? Icon(Icons.check_circle, color: context.colors.success) : null),
+                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(AppRadius.r14)),
                     ),
                   ),
-                  const SizedBox(height: 10),
+                  const SizedBox(height: AppSpacing.s10),
                   if (found != null)
                     Text(
                       "You'll be asking to join: ${found.facilityName}"
                       '${found.facilityType.isEmpty ? '' : ' (${found.facilityType})'}',
                       textAlign: TextAlign.center,
-                      style: const TextStyle(color: Colors.green, fontWeight: FontWeight.w600, fontSize: 13),
+                      style: TextStyle(color: context.colors.success, fontWeight: AppFontWeight.semibold, fontSize: AppFontSize.f13),
                     )
                   else if (_codeProblem != null)
                     Text(_codeProblem!,
-                        textAlign: TextAlign.center, style: const TextStyle(color: Colors.redAccent, fontSize: 12.5)),
+                        textAlign: TextAlign.center, style: TextStyle(color: context.colors.dangerAccent, fontSize: AppFontSize.f12_5)),
                   if (_error != null) ...[
-                    const SizedBox(height: 8),
+                    const SizedBox(height: AppSpacing.s8),
                     Text(_error!,
-                        textAlign: TextAlign.center, style: const TextStyle(color: Colors.redAccent, fontSize: 12.5)),
+                        textAlign: TextAlign.center, style: TextStyle(color: context.colors.dangerAccent, fontSize: AppFontSize.f12_5)),
                   ],
-                  const SizedBox(height: 16),
+                  const SizedBox(height: AppSpacing.s16),
                   SizedBox(
                     width: double.infinity,
                     height: 46,
@@ -1172,35 +1176,35 @@ class _NoFacilityScreenState extends State<_NoFacilityScreen> {
                       onPressed: (found != null && !_joining) ? _join : null,
                       style: ElevatedButton.styleFrom(
                         backgroundColor: _deepGreen,
-                        foregroundColor: Colors.white,
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                        foregroundColor: context.colors.onPrimary,
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadius.r14)),
                       ),
                       child: _joining
-                          ? const Row(
+                          ? Row(
                               mainAxisSize: MainAxisSize.min,
                               children: [
                                 SizedBox(
-                                  width: 18,
-                                  height: 18,
-                                  child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                                  width: AppIconSize.i18,
+                                  height: AppIconSize.i18,
+                                  child: CircularProgressIndicator(strokeWidth: 2, color: context.colors.onPrimary),
                                 ),
-                                SizedBox(width: 10),
+                                SizedBox(width: AppSpacing.s10),
                                 Text('Sending your request...'),
                               ],
                             )
                           : const Text('Request to join'),
                     ),
                   ),
-                  const SizedBox(height: 10),
+                  const SizedBox(height: AppSpacing.s10),
                   Text(
                     "The facility's admin has to approve you, as with any new assistant. "
                     'Or ask your previous admin to add you back.',
                     textAlign: TextAlign.center,
-                    style: TextStyle(color: Colors.grey[600], fontSize: 12, height: 1.4),
+                    style: TextStyle(color: context.colors.textMuted, fontSize: AppFontSize.f12, height: 1.4),
                   ),
                 ],
                 if (!_isAssistant) _adminSection(),
-                const SizedBox(height: 20),
+                const SizedBox(height: AppSpacing.s20),
                 _logoutButton(),
               ],
             ),
