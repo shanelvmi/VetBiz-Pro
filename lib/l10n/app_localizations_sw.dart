@@ -283,4 +283,76 @@ class AppLocalizationsSw extends AppLocalizations {
 
   @override
   String get subscription_goTo => 'Nenda kwenye Usajili';
+
+  @override
+  String get productCategory_antibiotic => 'Antibiotiki';
+
+  @override
+  String get productCategory_anthelmintics => 'Dawa za Minyoo';
+
+  @override
+  String get productCategory_vitaminsSupplements => 'Vitamini na Virutubisho';
+
+  @override
+  String get productCategory_hormonesReproductive => 'Homoni na Uzazi';
+
+  @override
+  String get productCategory_vaccines => 'Chanjo';
+
+  @override
+  String get productCategory_disinfectant => 'Dawa za Kuua Vijidudu';
+
+  @override
+  String get productCategory_feeds => 'Vyakula vya Mifugo';
+
+  @override
+  String get productCategory_antiInflammatory => 'Dawa za Kupunguza Uvimbe';
+
+  @override
+  String get productCategory_ectoparasiticides => 'Dawa za Kupe na Viroboto';
+
+  @override
+  String get productCategory_woundManagement => 'Matibabu ya Vidonda';
+
+  @override
+  String get productCategory_surgicalSupplies => 'Vifaa vya Upasuaji';
+
+  @override
+  String get productCategory_farmToolsEquipment => 'Zana na Vifaa vya Shamba';
+
+  @override
+  String get productCategory_seeds => 'Mbegu';
+
+  @override
+  String get productCategory_fertilizers => 'Mbolea';
+
+  @override
+  String get productCategory_cropPesticides => 'Viuatilifu vya Mazao';
+
+  @override
+  String get productCategory_miscellaneous => 'Mengineyo';
+
+  @override
+  String get productCategory_uncategorized => 'Bila Kundi';
+
+  @override
+  String get productGroup_vet => 'Mifugo';
+
+  @override
+  String get productGroup_agro => 'Kilimo';
+
+  @override
+  String get productGroup_veterinary => 'Tiba ya Mifugo';
+
+  @override
+  String get productType_injectable => 'Sindano';
+
+  @override
+  String get productType_oralLiquid => 'Maji ya Kunywa';
+
+  @override
+  String get productType_powder => 'Unga';
+
+  @override
+  String get productType_tabletBolus => 'Vidonge/Bolus';
 }

@@ -283,4 +283,76 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get subscription_goTo => 'Go to Subscription';
+
+  @override
+  String get productCategory_antibiotic => 'Antibiotic';
+
+  @override
+  String get productCategory_anthelmintics => 'Anthelmintics';
+
+  @override
+  String get productCategory_vitaminsSupplements => 'Vitamin & Supplements';
+
+  @override
+  String get productCategory_hormonesReproductive => 'Hormones & Reproductive';
+
+  @override
+  String get productCategory_vaccines => 'Vaccines';
+
+  @override
+  String get productCategory_disinfectant => 'Disinfectant';
+
+  @override
+  String get productCategory_feeds => 'Feeds';
+
+  @override
+  String get productCategory_antiInflammatory => 'Anti-inflammatory';
+
+  @override
+  String get productCategory_ectoparasiticides => 'Ectoparasiticides';
+
+  @override
+  String get productCategory_woundManagement => 'Wound Management';
+
+  @override
+  String get productCategory_surgicalSupplies => 'Surgical Supplies';
+
+  @override
+  String get productCategory_farmToolsEquipment => 'Farm Tools & Equipment';
+
+  @override
+  String get productCategory_seeds => 'Seeds';
+
+  @override
+  String get productCategory_fertilizers => 'Fertilizers';
+
+  @override
+  String get productCategory_cropPesticides => 'Crop Pesticides';
+
+  @override
+  String get productCategory_miscellaneous => 'Miscellaneous';
+
+  @override
+  String get productCategory_uncategorized => 'Uncategorized';
+
+  @override
+  String get productGroup_vet => 'Vet';
+
+  @override
+  String get productGroup_agro => 'Agro';
+
+  @override
+  String get productGroup_veterinary => 'Veterinary';
+
+  @override
+  String get productType_injectable => 'Injectable';
+
+  @override
+  String get productType_oralLiquid => 'Oral Liquid';
+
+  @override
+  String get productType_powder => 'Powder';
+
+  @override
+  String get productType_tabletBolus => 'Tablet/Bolus';
 }

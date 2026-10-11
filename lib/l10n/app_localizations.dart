@@ -613,6 +613,150 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Go to Subscription'**
   String get subscription_goTo;
+
+  /// Product category: product form, category filters and lists (stored value 'Antibiotic').
+  ///
+  /// In en, this message translates to:
+  /// **'Antibiotic'**
+  String get productCategory_antibiotic;
+
+  /// Product category: product form, category filters and lists (stored value 'Anthelmintics').
+  ///
+  /// In en, this message translates to:
+  /// **'Anthelmintics'**
+  String get productCategory_anthelmintics;
+
+  /// Product category: product form, category filters and lists (stored value 'Vitamin & Supplements').
+  ///
+  /// In en, this message translates to:
+  /// **'Vitamin & Supplements'**
+  String get productCategory_vitaminsSupplements;
+
+  /// Product category: product form, category filters and lists (stored value 'Hormones & Reproductive').
+  ///
+  /// In en, this message translates to:
+  /// **'Hormones & Reproductive'**
+  String get productCategory_hormonesReproductive;
+
+  /// Product category: product form, category filters and lists (stored value 'Vaccines').
+  ///
+  /// In en, this message translates to:
+  /// **'Vaccines'**
+  String get productCategory_vaccines;
+
+  /// Product category: product form, category filters and lists (stored value 'Disinfectant').
+  ///
+  /// In en, this message translates to:
+  /// **'Disinfectant'**
+  String get productCategory_disinfectant;
+
+  /// Product category: product form, category filters and lists (stored value 'Feeds').
+  ///
+  /// In en, this message translates to:
+  /// **'Feeds'**
+  String get productCategory_feeds;
+
+  /// Product category: product form, category filters and lists (stored value 'Anti-inflammatory').
+  ///
+  /// In en, this message translates to:
+  /// **'Anti-inflammatory'**
+  String get productCategory_antiInflammatory;
+
+  /// Product category: product form, category filters and lists (stored value 'Ectoparasiticides').
+  ///
+  /// In en, this message translates to:
+  /// **'Ectoparasiticides'**
+  String get productCategory_ectoparasiticides;
+
+  /// Product category: product form, category filters and lists (stored value 'Wound Management').
+  ///
+  /// In en, this message translates to:
+  /// **'Wound Management'**
+  String get productCategory_woundManagement;
+
+  /// Product category: product form, category filters and lists (stored value 'Surgical Supplies').
+  ///
+  /// In en, this message translates to:
+  /// **'Surgical Supplies'**
+  String get productCategory_surgicalSupplies;
+
+  /// Product category: product form, category filters and lists (stored value 'Farm Tools & Equipment').
+  ///
+  /// In en, this message translates to:
+  /// **'Farm Tools & Equipment'**
+  String get productCategory_farmToolsEquipment;
+
+  /// Product category: product form, category filters and lists (stored value 'Seeds').
+  ///
+  /// In en, this message translates to:
+  /// **'Seeds'**
+  String get productCategory_seeds;
+
+  /// Product category: product form, category filters and lists (stored value 'Fertilizers').
+  ///
+  /// In en, this message translates to:
+  /// **'Fertilizers'**
+  String get productCategory_fertilizers;
+
+  /// Product category: product form, category filters and lists (stored value 'Crop Pesticides').
+  ///
+  /// In en, this message translates to:
+  /// **'Crop Pesticides'**
+  String get productCategory_cropPesticides;
+
+  /// Product category: product form, category filters and lists (stored value 'Miscellaneous').
+  ///
+  /// In en, this message translates to:
+  /// **'Miscellaneous'**
+  String get productCategory_miscellaneous;
+
+  /// Product category shown for a product saved with no category (not stored): filters and lists.
+  ///
+  /// In en, this message translates to:
+  /// **'Uncategorized'**
+  String get productCategory_uncategorized;
+
+  /// Product department filter chip (Products, Stock Store): the 'Vet' group (not stored).
+  ///
+  /// In en, this message translates to:
+  /// **'Vet'**
+  String get productGroup_vet;
+
+  /// Product department filter chip and side panel: the 'Agro' group (not stored).
+  ///
+  /// In en, this message translates to:
+  /// **'Agro'**
+  String get productGroup_agro;
+
+  /// Product catalog side panel: long name of the 'Vet' group (not stored).
+  ///
+  /// In en, this message translates to:
+  /// **'Veterinary'**
+  String get productGroup_veterinary;
+
+  /// Product type (form): product form and product lists (stored value 'Injectable').
+  ///
+  /// In en, this message translates to:
+  /// **'Injectable'**
+  String get productType_injectable;
+
+  /// Product type (form): product form and product lists (stored value 'Oral Liquid').
+  ///
+  /// In en, this message translates to:
+  /// **'Oral Liquid'**
+  String get productType_oralLiquid;
+
+  /// Product type (form): product form and product lists (stored value 'Powder').
+  ///
+  /// In en, this message translates to:
+  /// **'Powder'**
+  String get productType_powder;
+
+  /// Product type (form): product form and product lists (stored value 'Tablet/Bolus').
+  ///
+  /// In en, this message translates to:
+  /// **'Tablet/Bolus'**
+  String get productType_tabletBolus;
 }
 
 class _AppLocalizationsDelegate
