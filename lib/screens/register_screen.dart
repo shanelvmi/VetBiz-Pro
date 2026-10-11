@@ -18,7 +18,6 @@ import 'legal/privacy_policy_screen.dart';
 import 'legal/terms_of_service_screen.dart';
 import '../widgets/auth_background.dart';
 import '../services/role_change_service.dart';
-import '../theme/app_palette.dart';
 import '../data/collections.dart';
 import '../data/fields.dart';
 import '../data/user_role.dart';
@@ -28,6 +27,7 @@ import '../theme/app_text.dart';
 import '../theme/app_dimens.dart';
 import '../theme/theme_context.dart';
 import '../theme/app_breakpoints.dart';
+import '../theme/app_motion.dart';
 import '../ui/feedback/app_feedback.dart';
 import '../ui/feedback/friendly_error.dart';
 
@@ -1409,14 +1409,14 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   height: 20,
                   child: CircularProgressIndicator(strokeWidth: 2.2, color: context.colors.background),
                 ),
-                const SizedBox(width: 12),
+                const SizedBox(width: AppSpacing.s12),
                 Text(
                   widget.isUpdating ? 'Saving...' : 'Creating your account...',
-                  style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
+                  style: const TextStyle(fontSize: AppFontSize.f15, fontWeight: AppFontWeight.semibold),
                 ),
               ],
             )
-          : Text(label, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
+          : Text(label, style: const TextStyle(fontSize: AppFontSize.f16, fontWeight: AppFontWeight.semibold)),
     );
     return fullWidth ? SizedBox(width: double.infinity, child: button) : button;
   }
@@ -1432,10 +1432,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
     return _section(
       icon: Icons.person_outline,
       title: 'Personal details',
-      trailing: Text('* Required', style: TextStyle(fontSize: 12, color: Colors.grey.shade600)),
+      trailing: Text('* Required', style: TextStyle(fontSize: AppFontSize.f12, color: context.colors.textMuted)),
       children: [
         _buildAvatarPicker(),
-        const SizedBox(height: 18),
+        const SizedBox(height: AppSpacing.s18),
         Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -1452,7 +1452,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 ),
               ),
             ),
-            const SizedBox(width: 12),
+            const SizedBox(width: AppSpacing.s12),
             Expanded(
               child: _labeled(
                 'Full name',
@@ -1473,14 +1473,14 @@ class _RegisterScreenState extends State<RegisterScreen> {
             ),
           ],
         ),
-        const SizedBox(height: 14),
+        const SizedBox(height: AppSpacing.s14),
         _labeled(
           'Email',
           TextField(
             controller: emailController,
             readOnly: lockEmail,
             keyboardType: TextInputType.emailAddress,
-            style: TextStyle(color: lockEmail ? Colors.grey.shade600 : Colors.black87),
+            style: TextStyle(color: lockEmail ? context.colors.textMuted : context.colors.textPrimary),
             onChanged: (_) => _onFieldChanged(),
             decoration: _decoration(
               hint: 'name@example.com',
@@ -1492,7 +1492,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
           required: !lockEmail,
           fieldKey: _fieldKeys['email'],
         ),
-        const SizedBox(height: 14),
+        const SizedBox(height: AppSpacing.s14),
         _labeled(
           'Phone number',
           TextField(
@@ -1527,37 +1527,37 @@ class _RegisterScreenState extends State<RegisterScreen> {
               children: [
                 CircleAvatar(
                   radius: 34,
-                  backgroundColor: tealGlow.withValues(alpha: 0.25),
+                  backgroundColor: tealGlow.withValues(alpha: AppAlpha.a30),
                   backgroundImage: _imageBytes != null
                       ? MemoryImage(_imageBytes!)
                       : (hasUploaded ? NetworkImage(avatarUrl!) as ImageProvider : null),
-                  child: hasImage ? null : Icon(Icons.person_outline, size: 32, color: context.colors.primary),
+                  child: hasImage ? null : Icon(Icons.person_outline, size: AppIconSize.i32, color: context.colors.primary),
                 ),
                 Positioned(
                   right: -2,
                   bottom: -2,
                   child: Container(
-                    padding: const EdgeInsets.all(6),
+                    padding: const EdgeInsets.all(AppSpacing.s6),
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
                       color: context.colors.primary,
-                      border: Border.all(color: Colors.white, width: 2),
+                      border: Border.all(color: context.colors.surface, width: 2),
                     ),
-                    child: const Icon(Icons.camera_alt, size: 13, color: Colors.white),
+                    child: Icon(Icons.camera_alt, size: AppIconSize.i14, color: context.colors.onPrimary),
                   ),
                 ),
               ],
             ),
-            const SizedBox(width: 16),
+            const SizedBox(width: AppSpacing.s16),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text('Profile photo', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600)),
-                  const SizedBox(height: 2),
+                  const Text('Profile photo', style: TextStyle(fontSize: AppFontSize.f14, fontWeight: AppFontWeight.semibold)),
+                  const SizedBox(height: AppSpacing.s2),
                   Text(
                     hasImage ? 'Tap to change your photo' : 'Optional - tap to add a photo',
-                    style: TextStyle(fontSize: 12.5, color: Colors.grey.shade600),
+                    style: TextStyle(fontSize: AppFontSize.f12_5, color: context.colors.textMuted),
                   ),
                 ],
               ),
@@ -1610,7 +1610,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   subtitle: isCoAdmin ? 'I help manage a facility' : 'I own or manage a facility',
                 ),
               ),
-              const SizedBox(width: 12),
+              const SizedBox(width: AppSpacing.s12),
               Expanded(
                 child: _roleCard(
                   role: 'Assistant',
@@ -1628,16 +1628,16 @@ class _RegisterScreenState extends State<RegisterScreen> {
         // facility with nobody able to manage it. The Firestore rule enforces
         // this at the data layer too; this is the corresponding honest UI.
         if (locked) ...[
-          const SizedBox(height: 12),
+          const SizedBox(height: AppSpacing.s12),
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Icon(Icons.lock_outline, size: 14, color: Colors.grey.shade500),
-              const SizedBox(width: 6),
+              Icon(Icons.lock_outline, size: AppIconSize.i14, color: context.colors.textHint),
+              const SizedBox(width: AppSpacing.s6),
               Expanded(
                 child: Text(
                   "Your role can't be changed here.",
-                  style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
+                  style: TextStyle(fontSize: AppFontSize.f12, color: context.colors.textMuted),
                 ),
               ),
             ],
@@ -1657,23 +1657,23 @@ class _RegisterScreenState extends State<RegisterScreen> {
     final locked = widget.isUpdating;
     // A locked card keeps its selected state but in grey - clearly "this is
     // yours", clearly "not changeable here".
-    final accent = locked ? Colors.grey.shade600 : context.colors.primary;
+    final accent = locked ? context.colors.textMuted : context.colors.primary;
     final shape = RoundedRectangleBorder(
-      borderRadius: BorderRadius.circular(14),
+      borderRadius: BorderRadius.circular(AppRadius.r14),
       side: BorderSide(
-        color: selected ? (locked ? Colors.grey.shade400 : context.colors.primary) : const Color(0xFFE2E8E6),
+        color: selected ? (locked ? context.colors.borderStrong : context.colors.primary) : context.colors.border,
         width: selected ? 1.6 : 1,
       ),
     );
 
     return Material(
-      color: selected ? accent.withValues(alpha: 0.07) : Colors.white,
+      color: selected ? accent.withValues(alpha: AppAlpha.a05) : context.colors.surface,
       shape: shape,
       child: InkWell(
         customBorder: shape,
         onTap: locked ? null : () => _selectRole(role),
         child: Padding(
-          padding: const EdgeInsets.all(14),
+          padding: const EdgeInsets.all(AppSpacing.s14),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisSize: MainAxisSize.min,
@@ -1684,19 +1684,19 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     width: 34,
                     height: 34,
                     decoration: BoxDecoration(
-                      color: selected ? accent.withValues(alpha: 0.14) : const Color(0xFFF1F4F3),
+                      color: selected ? accent.withValues(alpha: AppAlpha.a15) : context.colors.surfaceMuted,
                       shape: BoxShape.circle,
                     ),
-                    child: Icon(icon, size: 18, color: selected ? accent : Colors.grey.shade600),
+                    child: Icon(icon, size: AppIconSize.i18, color: selected ? accent : context.colors.textMuted),
                   ),
                   const Spacer(),
-                  if (selected) Icon(Icons.check_circle, size: 20, color: accent),
+                  if (selected) Icon(Icons.check_circle, size: AppIconSize.i20, color: accent),
                 ],
               ),
-              const SizedBox(height: 10),
-              Text(title, style: const TextStyle(fontSize: 14.5, fontWeight: FontWeight.w700)),
-              const SizedBox(height: 2),
-              Text(subtitle, style: TextStyle(fontSize: 12, color: Colors.grey.shade600, height: 1.3)),
+              const SizedBox(height: AppSpacing.s10),
+              Text(title, style: const TextStyle(fontSize: AppFontSize.f14_5, fontWeight: AppFontWeight.bold)),
+              const SizedBox(height: AppSpacing.s2),
+              Text(subtitle, style: TextStyle(fontSize: AppFontSize.f12, color: context.colors.textMuted, height: 1.3)),
             ],
           ),
         ),
@@ -1730,22 +1730,22 @@ class _RegisterScreenState extends State<RegisterScreen> {
     return [
       Container(
         width: double.infinity,
-        padding: const EdgeInsets.all(12),
+        padding: const EdgeInsets.all(AppSpacing.s12),
         decoration: BoxDecoration(
-          color: const Color(0xFFF0F2F1),
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: const Color(0xFFE2E8E6)),
+          color: context.colors.divider,
+          borderRadius: BorderRadius.circular(AppRadius.r12),
+          border: Border.all(color: context.colors.border),
         ),
         child: Row(
           children: [
-            Icon(Icons.storefront_outlined, color: Colors.grey.shade600, size: 18),
-            const SizedBox(width: 8),
+            Icon(Icons.storefront_outlined, color: context.colors.textMuted, size: AppIconSize.i18),
+            const SizedBox(width: AppSpacing.s8),
             Expanded(
               child: Text(
                 facilities.isNotEmpty
                     ? '${facilities.first['name'] ?? ''} (${facilities.first['type'] ?? ''})'
                     : 'Unknown facility',
-                style: TextStyle(color: Colors.grey.shade700, fontWeight: FontWeight.w600, fontSize: 13.5),
+                style: TextStyle(color: context.colors.textSoft, fontWeight: AppFontWeight.semibold, fontSize: AppFontSize.f13_5),
               ),
             ),
           ],
@@ -1761,9 +1761,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
     return [
       Text(
         'Ask your facility Admin for an invite code to join their team.',
-        style: TextStyle(fontSize: 12.5, color: context.colors.primary, fontStyle: FontStyle.italic),
+        style: TextStyle(fontSize: AppFontSize.f12_5, color: context.colors.primary, fontStyle: FontStyle.italic),
       ),
-      const SizedBox(height: 12),
+      const SizedBox(height: AppSpacing.s12),
       _labeled(
         'Invite code',
         TextField(
@@ -1778,33 +1778,33 @@ class _RegisterScreenState extends State<RegisterScreen> {
             errorText: inviteError,
             suffix: _isLookingUpFacility
                 ? const Padding(
-                    padding: EdgeInsets.all(12),
-                    child: SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2)),
+                    padding: EdgeInsets.all(AppSpacing.s12),
+                    child: SizedBox(width: AppSpacing.s16, height: 16, child: CircularProgressIndicator(strokeWidth: 2)),
                   )
-                : (_foundFacility != null ? const Icon(Icons.check_circle, color: Colors.green) : null),
+                : (_foundFacility != null ? Icon(Icons.check_circle, color: context.colors.success) : null),
           ),
         ),
         required: true,
         fieldKey: _fieldKeys['invite'],
       ),
-      const SizedBox(height: 10),
+      const SizedBox(height: AppSpacing.s10),
       if (_foundFacility != null)
         Container(
           width: double.infinity,
-          padding: const EdgeInsets.all(12),
+          padding: const EdgeInsets.all(AppSpacing.s12),
           decoration: BoxDecoration(
-            color: Colors.green.withValues(alpha: 0.08),
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: Colors.green.withValues(alpha: 0.3)),
+            color: context.colors.success.withValues(alpha: AppAlpha.a10),
+            borderRadius: BorderRadius.circular(AppRadius.r12),
+            border: Border.all(color: context.colors.success.withValues(alpha: AppAlpha.a30)),
           ),
           child: Row(
             children: [
-              const Icon(Icons.storefront_outlined, color: Colors.green, size: 18),
-              const SizedBox(width: 8),
+              Icon(Icons.storefront_outlined, color: context.colors.success, size: AppIconSize.i18),
+              const SizedBox(width: AppSpacing.s8),
               Expanded(
                 child: Text(
                   'Joining: ${_foundFacility!['name']} (${_foundFacility!['type']})',
-                  style: const TextStyle(color: Colors.green, fontWeight: FontWeight.w600, fontSize: 13),
+                  style: TextStyle(color: context.colors.success, fontWeight: AppFontWeight.semibold, fontSize: AppFontSize.f13),
                 ),
               ),
             ],
@@ -1813,7 +1813,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
       // Not shown twice: once Register has been pressed the same message is
       // already on the field itself.
       else if (_facilityLookupError != null && inviteError == null)
-        Text(_facilityLookupError!, style: const TextStyle(color: Colors.redAccent, fontSize: 12.5)),
+        Text(_facilityLookupError!, style: TextStyle(color: context.colors.dangerAccent, fontSize: AppFontSize.f12_5)),
     ];
   }
 
@@ -1821,22 +1821,22 @@ class _RegisterScreenState extends State<RegisterScreen> {
     final f = facilities[index];
     final locked = widget.isUpdating;
     return Container(
-      margin: const EdgeInsets.only(bottom: 8),
-      padding: const EdgeInsets.fromLTRB(12, 10, 6, 10),
+      margin: const EdgeInsets.only(bottom: AppSpacing.s8),
+      padding: const EdgeInsets.fromLTRB(AppSpacing.s12, AppSpacing.s10, AppSpacing.s6, AppSpacing.s10),
       decoration: BoxDecoration(
-        color: locked ? const Color(0xFFF6F8F7) : Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: const Color(0xFFE2E8E6)),
+        color: locked ? context.colors.surfaceMuted : context.colors.surface,
+        borderRadius: BorderRadius.circular(AppRadius.r12),
+        border: Border.all(color: context.colors.border),
       ),
       child: Row(
         children: [
           Container(
             width: 36,
             height: 36,
-            decoration: BoxDecoration(color: tealGlow.withValues(alpha: 0.22), shape: BoxShape.circle),
-            child: Icon(Icons.storefront_outlined, color: context.colors.primary, size: 18),
+            decoration: BoxDecoration(color: tealGlow.withValues(alpha: AppAlpha.a20), shape: BoxShape.circle),
+            child: Icon(Icons.storefront_outlined, color: context.colors.primary, size: AppIconSize.i18),
           ),
-          const SizedBox(width: 12),
+          const SizedBox(width: AppSpacing.s12),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -1846,24 +1846,24 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w700,
-                    color: locked ? Colors.grey.shade700 : Colors.black87,
+                    fontSize: AppFontSize.f14,
+                    fontWeight: AppFontWeight.bold,
+                    color: locked ? context.colors.textSoft : context.colors.textPrimary,
                   ),
                 ),
-                const SizedBox(height: 3),
+                const SizedBox(height: AppSpacing.s3),
                 Text(
                   '${f['type'] ?? ''}  \u00b7  Code: ${f['code'] ?? ''}',
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
+                  style: TextStyle(fontSize: AppFontSize.f12, color: context.colors.textMuted),
                 ),
               ],
             ),
           ),
           if (!locked)
             IconButton(
-              icon: const Icon(Icons.delete_outline, color: Colors.redAccent, size: 20),
+              icon: Icon(Icons.delete_outline, color: context.colors.dangerAccent, size: AppIconSize.i20),
               tooltip: 'Remove',
               onPressed: () => removeFacility(index),
             ),
@@ -1885,31 +1885,31 @@ class _RegisterScreenState extends State<RegisterScreen> {
         for (var i = 0; i < facilities.length; i++) _facilityTile(i)
       else if (!widget.isUpdating && facilityError == null)
         Padding(
-          padding: const EdgeInsets.only(bottom: 12),
+          padding: const EdgeInsets.only(bottom: AppSpacing.s12),
           child: Text(
             'Add at least one facility to continue.',
-            style: TextStyle(fontSize: 12.5, color: Colors.grey.shade600),
+            style: TextStyle(fontSize: AppFontSize.f12_5, color: context.colors.textMuted),
           ),
         ),
       if (facilityError != null)
         Container(
           key: _fieldKeys['facility'],
-          margin: const EdgeInsets.only(bottom: 12),
-          padding: const EdgeInsets.all(12),
+          margin: const EdgeInsets.only(bottom: AppSpacing.s12),
+          padding: const EdgeInsets.all(AppSpacing.s12),
           decoration: BoxDecoration(
-            color: Colors.redAccent.withValues(alpha: 0.07),
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: Colors.redAccent.withValues(alpha: 0.4)),
+            color: context.colors.dangerAccent.withValues(alpha: AppAlpha.a05),
+            borderRadius: BorderRadius.circular(AppRadius.r12),
+            border: Border.all(color: context.colors.dangerAccent.withValues(alpha: AppAlpha.a40)),
           ),
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Icon(Icons.error_outline, color: Colors.redAccent, size: 18),
-              const SizedBox(width: 8),
+              Icon(Icons.error_outline, color: context.colors.dangerAccent, size: AppIconSize.i18),
+              const SizedBox(width: AppSpacing.s8),
               Expanded(
                 child: Text(
                   facilityError,
-                  style: const TextStyle(color: Color(0xFFB3261E), fontSize: 12.5, height: 1.35),
+                  style: TextStyle(color: context.colors.dangerDeep, fontSize: AppFontSize.f12_5, height: 1.35),
                 ),
               ),
             ],
@@ -1918,14 +1918,14 @@ class _RegisterScreenState extends State<RegisterScreen> {
       if (widget.isUpdating)
         Text(
           'To add or change facilities, use View Facilities.',
-          style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
+          style: TextStyle(fontSize: AppFontSize.f12, color: context.colors.textMuted),
         )
       else ...[
         Padding(
-          padding: const EdgeInsets.only(bottom: 10),
+          padding: const EdgeInsets.only(bottom: AppSpacing.s10),
           child: Text(
             '${facilities.length} of $_maxFacilities facilities added',
-            style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
+            style: TextStyle(fontSize: AppFontSize.f12, color: context.colors.textMuted),
           ),
         ),
         _labeled(
@@ -1939,7 +1939,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
           ),
           required: needsFirst,
         ),
-        const SizedBox(height: 12),
+        const SizedBox(height: AppSpacing.s12),
         Row(
           crossAxisAlignment: CrossAxisAlignment.end,
           children: [
@@ -1966,7 +1966,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 required: needsFirst,
               ),
             ),
-            const SizedBox(width: 10),
+            const SizedBox(width: AppSpacing.s10),
             Tooltip(
               message: atLimit ? 'Maximum of $_maxFacilities facilities reached' : '',
               child: SizedBox(
@@ -1974,16 +1974,16 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 child: ElevatedButton.icon(
                   onPressed: (_isAddingFacility || atLimit) ? null : addFacility,
                   icon: _isAddingFacility
-                      ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2))
-                      : const Icon(Icons.add, size: 18),
+                      ? const SizedBox(width: AppSpacing.s16, height: 16, child: CircularProgressIndicator(strokeWidth: 2))
+                      : const Icon(Icons.add, size: AppIconSize.i18),
                   label: const Text('Add'),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: context.colors.accent,
-                    foregroundColor: Colors.black87,
-                    disabledBackgroundColor: Colors.grey.shade200,
-                    elevation: 0,
-                    padding: const EdgeInsets.symmetric(horizontal: 16),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    foregroundColor: context.colors.textPrimary,
+                    disabledBackgroundColor: context.colors.divider,
+                    elevation: AppElevation.e0,
+                    padding: const EdgeInsets.symmetric(horizontal: AppSpacing.s16),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadius.r12)),
                   ),
                 ),
               ),
@@ -2017,8 +2017,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
               suffix: IconButton(
                 icon: Icon(
                   _obscurePassword ? Icons.visibility_outlined : Icons.visibility_off_outlined,
-                  size: 20,
-                  color: Colors.grey.shade500,
+                  size: AppIconSize.i20,
+                  color: context.colors.textHint,
                 ),
                 onPressed: () => setState(() => _obscurePassword = !_obscurePassword),
               ),
@@ -2026,15 +2026,15 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   ? 'At least 8 characters, with a letter and a number'
                   : (_passwordIssue(password) ?? 'Looks good'),
               helperColor: password.isEmpty
-                  ? Colors.grey.shade600
-                  : (_passwordIssue(password) == null ? Colors.green : Colors.redAccent),
+                  ? context.colors.textMuted
+                  : (_passwordIssue(password) == null ? context.colors.success : context.colors.dangerAccent),
               errorText: _fieldErrors['password'],
             ),
           ),
           required: true,
           fieldKey: _fieldKeys['password'],
         ),
-        const SizedBox(height: 14),
+        const SizedBox(height: AppSpacing.s14),
         _labeled(
           'Confirm password',
           TextField(
@@ -2050,21 +2050,21 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   if (confirm.isNotEmpty)
                     Icon(
                       matches ? Icons.check_circle : Icons.error_outline,
-                      size: 19,
-                      color: matches ? Colors.green : Colors.redAccent,
+                      size: AppIconSize.i20,
+                      color: matches ? context.colors.success : context.colors.dangerAccent,
                     ),
                   IconButton(
                     icon: Icon(
                       _obscureConfirm ? Icons.visibility_outlined : Icons.visibility_off_outlined,
-                      size: 20,
-                      color: Colors.grey.shade500,
+                      size: AppIconSize.i20,
+                      color: context.colors.textHint,
                     ),
                     onPressed: () => setState(() => _obscureConfirm = !_obscureConfirm),
                   ),
                 ],
               ),
               helper: confirm.isEmpty ? null : (matches ? 'Passwords match' : 'Passwords do not match'),
-              helperColor: matches ? Colors.green : Colors.redAccent,
+              helperColor: matches ? context.colors.success : context.colors.dangerAccent,
               errorText: _fieldErrors['confirm'],
             ),
           ),
@@ -2090,13 +2090,11 @@ class _LegalLink extends StatefulWidget {
 }
 
 class _LegalLinkState extends State<_LegalLink> {
-  static const Color _teal = Color(0xFF3E8E82);
-  static const Color _amber = AppPalette.accent;
   bool _hovered = false;
 
   @override
   Widget build(BuildContext context) {
-    final color = _hovered ? _amber : _teal;
+    final color = _hovered ? context.colors.accent : _RegisterScreenState.tealAccent;
     return MouseRegion(
       cursor: SystemMouseCursors.click,
       onEnter: (_) => setState(() => _hovered = true),
@@ -2106,8 +2104,8 @@ class _LegalLinkState extends State<_LegalLink> {
         child: Text(
           widget.label,
           style: TextStyle(
-            fontSize: 12.5,
-            fontWeight: FontWeight.w700,
+            fontSize: AppFontSize.f12_5,
+            fontWeight: AppFontWeight.bold,
             color: color,
             decoration: TextDecoration.underline,
             decorationColor: color,
@@ -2126,7 +2124,7 @@ class _LegalLinkState extends State<_LegalLink> {
 /// streams, so closing the modal after a save is all it takes for the name
 /// and photo to update - there is nothing to reload.
 Future<bool?> showEditProfileScreen(BuildContext context, {required Map<String, dynamic> userData}) {
-  final isWideScreen = MediaQuery.of(context).size.width >= 900;
+  final isWideScreen = MediaQuery.of(context).size.width >= AppBreakpoints.medium;
 
   if (!isWideScreen) {
     return Navigator.of(context).push<bool>(
@@ -2138,8 +2136,8 @@ Future<bool?> showEditProfileScreen(BuildContext context, {required Map<String, 
     context: context,
     barrierDismissible: true,
     barrierLabel: 'Edit Profile',
-    barrierColor: Colors.black54,
-    transitionDuration: const Duration(milliseconds: 220),
+    barrierColor: context.colors.scrim.withValues(alpha: AppAlpha.a50),
+    transitionDuration: AppMotion.normal,
     pageBuilder: (context, animation, secondaryAnimation) {
       final screenSize = MediaQuery.of(context).size;
       final modalWidth = (screenSize.width * 0.60).clamp(0, 940).toDouble();
@@ -2149,7 +2147,7 @@ Future<bool?> showEditProfileScreen(BuildContext context, {required Map<String, 
           width: modalWidth,
           height: modalHeight,
           child: ClipRRect(
-            borderRadius: BorderRadius.circular(16),
+            borderRadius: BorderRadius.circular(AppRadius.r16),
             child: Material(
               child: RegisterScreen(userData: userData, isUpdating: true, isModal: true),
             ),
