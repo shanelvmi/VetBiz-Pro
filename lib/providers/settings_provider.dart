@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../config/app_defaults.dart';
+
 class SettingsProvider with ChangeNotifier {
   // --- Your Existing States ---
   bool _isDarkMode = false;
@@ -12,7 +14,7 @@ class SettingsProvider with ChangeNotifier {
   String get exportFormat => _exportFormat;
 
   // --- New Scalable Preference States ---
-  String _selectedCurrency = 'TZS';
+  String _selectedCurrency = AppDefaults.currencyCode;
   String _selectedLanguage = 'en';
 
   String get selectedCurrency => _selectedCurrency;
@@ -20,7 +22,7 @@ class SettingsProvider with ChangeNotifier {
 
   // Centralized, scalable matrix definitions
   final List<Map<String, String>> supportedCurrencies = [
-    {'code': 'TZS', 'name': 'Tanzanian Shilling'},
+    {'code': AppDefaults.currencyCode, 'name': 'Tanzanian Shilling'},
     {'code': 'KES', 'name': 'Kenyan Shilling'},
     {'code': 'UGX', 'name': 'Ugandan Shilling'},
     {'code': 'USD', 'name': 'United States Dollar'},

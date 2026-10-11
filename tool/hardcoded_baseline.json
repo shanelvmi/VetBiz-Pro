@@ -6,6 +6,24 @@
       "file": "lib/utils/trial_period_helper.dart",
       "lineContains": "Duration(days: days)",
       "reason": "computed from the configured trial days"
+    },
+    {
+      "rule": "R5",
+      "file": "lib/providers/client_provider.dart",
+      "lineContains": "Duration(days: q.overdueDays",
+      "reason": "computed from the facility's overdue-days setting (debt age buckets)"
+    },
+    {
+      "rule": "R5",
+      "file": "lib/providers/client_provider.dart",
+      "lineContains": "Duration(days: overdueDays)",
+      "reason": "computed from the facility's overdue-days setting (overdue query cutoff)"
+    },
+    {
+      "rule": "R5",
+      "file": "lib/services/activity_log_retention.dart",
+      "lineContains": "Duration(days: retentionDays)",
+      "reason": "computed from the facility's log retention setting"
     }
   ],
   "counts": {
@@ -52,7 +70,6 @@
     },
     "R5": {
       "lib/main.dart": 2,
-      "lib/providers/client_provider.dart": 7,
       "lib/screens/activity/activity_log_screen.dart": 2,
       "lib/screens/dashboard/dashboard_screen.dart": 14,
       "lib/screens/dashboard/insights_screen.dart": 4,
@@ -60,8 +77,7 @@
       "lib/screens/platform_admin/facility_detail_screen.dart": 1,
       "lib/screens/platform_admin/overview_details_screen.dart": 1,
       "lib/screens/platform_admin/subscription_requests_tab.dart": 2,
-      "lib/screens/register_screen.dart": 4,
-      "lib/services/activity_log_retention.dart": 1
+      "lib/screens/register_screen.dart": 4
     },
     "R6": {},
     "R7": {
@@ -70,7 +86,6 @@
       "lib/screens/legal/legal_document_screen.dart": 1
     },
     "R8": {
-      "lib/providers/settings_provider.dart": 2,
       "lib/screens/sales/receipt_preview_screen.dart": 1,
       "lib/screens/services/service_receipt_preview_screen.dart": 1
     },
