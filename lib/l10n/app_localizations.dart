@@ -1627,6 +1627,66 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Cloves'**
   String get crop_cloves;
+
+  /// Crop: client form crop picker and chips (stored value 'Sesame').
+  ///
+  /// In en, this message translates to:
+  /// **'Sesame'**
+  String get crop_sesame;
+
+  /// Crop: client form crop picker and chips (stored value 'Sunflower').
+  ///
+  /// In en, this message translates to:
+  /// **'Sunflower'**
+  String get crop_sunflower;
+
+  /// Crop: client form crop picker and chips (stored value 'Tomatoes').
+  ///
+  /// In en, this message translates to:
+  /// **'Tomatoes'**
+  String get crop_tomatoes;
+
+  /// Crop: client form crop picker and chips (stored value 'Onions').
+  ///
+  /// In en, this message translates to:
+  /// **'Onions'**
+  String get crop_onions;
+
+  /// Crop: client form crop picker and chips (stored value 'Cabbage').
+  ///
+  /// In en, this message translates to:
+  /// **'Cabbage'**
+  String get crop_cabbage;
+
+  /// Crop: client form crop picker and chips (stored value 'Okra').
+  ///
+  /// In en, this message translates to:
+  /// **'Okra'**
+  String get crop_okra;
+
+  /// Crop: client form crop picker and chips (stored value 'Mangoes').
+  ///
+  /// In en, this message translates to:
+  /// **'Mangoes'**
+  String get crop_mangoes;
+
+  /// Crop: client form crop picker and chips (stored value 'Oranges').
+  ///
+  /// In en, this message translates to:
+  /// **'Oranges'**
+  String get crop_oranges;
+
+  /// Crop: client form crop picker and chips (stored value 'Avocado').
+  ///
+  /// In en, this message translates to:
+  /// **'Avocado'**
+  String get crop_avocado;
+
+  /// Crop: client form crop picker and chips (stored value 'Watermelon').
+  ///
+  /// In en, this message translates to:
+  /// **'Watermelon'**
+  String get crop_watermelon;
 }
 
 class _AppLocalizationsDelegate

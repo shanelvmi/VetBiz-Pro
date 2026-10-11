@@ -790,4 +790,34 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get crop_cloves => 'Cloves';
+
+  @override
+  String get crop_sesame => 'Sesame';
+
+  @override
+  String get crop_sunflower => 'Sunflower';
+
+  @override
+  String get crop_tomatoes => 'Tomatoes';
+
+  @override
+  String get crop_onions => 'Onions';
+
+  @override
+  String get crop_cabbage => 'Cabbage';
+
+  @override
+  String get crop_okra => 'Okra';
+
+  @override
+  String get crop_mangoes => 'Mangoes';
+
+  @override
+  String get crop_oranges => 'Oranges';
+
+  @override
+  String get crop_avocado => 'Avocado';
+
+  @override
+  String get crop_watermelon => 'Watermelon';
 }

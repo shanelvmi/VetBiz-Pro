@@ -791,4 +791,34 @@ class AppLocalizationsSw extends AppLocalizations {
 
   @override
   String get crop_cloves => 'Karafuu';
+
+  @override
+  String get crop_sesame => 'Ufuta';
+
+  @override
+  String get crop_sunflower => 'Alizeti';
+
+  @override
+  String get crop_tomatoes => 'Nyanya';
+
+  @override
+  String get crop_onions => 'Vitunguu';
+
+  @override
+  String get crop_cabbage => 'Kabichi';
+
+  @override
+  String get crop_okra => 'Bamia';
+
+  @override
+  String get crop_mangoes => 'Maembe';
+
+  @override
+  String get crop_oranges => 'Machungwa';
+
+  @override
+  String get crop_avocado => 'Parachichi';
+
+  @override
+  String get crop_watermelon => 'Tikiti Maji';
 }
