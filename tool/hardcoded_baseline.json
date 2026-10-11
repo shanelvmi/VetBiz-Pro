@@ -54,6 +54,96 @@
       "file": "lib/screens/activity/activity_log_screen.dart",
       "lineContains": "color: Colors.blue.shade900",
       "reason": "no colour role for blue 900 (assistant scope note text); in design-open-questions.md for 2R"
+    },
+    {
+      "rule": "R5",
+      "file": "lib/screens/platform_admin/subscription_requests_tab.dart",
+      "lineContains": "Duration(days: plan.durationDays)",
+      "reason": "computed from the approved plan's length (new expiry date)"
+    },
+    {
+      "rule": "R5",
+      "file": "lib/screens/platform_admin/subscription_requests_tab.dart",
+      "lineContains": "Duration(days: _attendedDays)",
+      "reason": "computed from the attended-requests window (how far back the Attended list reads)"
+    },
+    {
+      "rule": "R5",
+      "file": "lib/screens/platform_admin/overview_details_screen.dart",
+      "lineContains": "Duration(days: i)",
+      "reason": "computed: day i of the earnings chart, counting back from today"
+    },
+    {
+      "rule": "R5",
+      "file": "lib/screens/platform_admin/facility_detail_screen.dart",
+      "lineContains": "Duration(days: durationDays)",
+      "reason": "computed from the length the platform admin enters (manual subscription override)"
+    },
+    {
+      "rule": "R5",
+      "file": "lib/screens/login_screen.dart",
+      "lineContains": "Duration(seconds: seconds)",
+      "reason": "computed alert time: 4 s plus 1 s per 20 characters, clamped to 5-12 s"
+    },
+    {
+      "rule": "R5",
+      "file": "lib/screens/login_screen.dart",
+      "lineContains": "_errorDisplayDuration(",
+      "reason": "false positive: the method name _errorDisplayDuration( matches the pattern"
+    },
+    {
+      "rule": "R5",
+      "file": "lib/screens/register_screen.dart",
+      "lineContains": "Duration(seconds: seconds)",
+      "reason": "computed alert time, same formula as login (4 s plus 1 s per 20 characters, 5-12 s)"
+    },
+    {
+      "rule": "R5",
+      "file": "lib/screens/dashboard/dashboard_screen.dart",
+      "lineContains": "Duration(days: now.weekday - 1)",
+      "reason": "computed: back to Monday of this week (date maths, x2)"
+    },
+    {
+      "rule": "R5",
+      "file": "lib/screens/dashboard/dashboard_screen.dart",
+      "lineContains": "Duration(days: days - 1)",
+      "reason": "computed: start of the selected N-day range and of the range before it"
+    },
+    {
+      "rule": "R5",
+      "file": "lib/screens/dashboard/dashboard_screen.dart",
+      "lineContains": "Duration(days: i)",
+      "reason": "computed: day i of the chart range"
+    },
+    {
+      "rule": "R5",
+      "file": "lib/screens/dashboard/dashboard_screen.dart",
+      "lineContains": "start.add(Duration(days: spot.x.toInt()))",
+      "reason": "computed: the chart point's day (tooltip)"
+    },
+    {
+      "rule": "R5",
+      "file": "lib/screens/dashboard/dashboard_screen.dart",
+      "lineContains": "start.add(Duration(days: value.toInt()))",
+      "reason": "computed: the chart axis label's day"
+    },
+    {
+      "rule": "R5",
+      "file": "lib/screens/dashboard/insights_screen.dart",
+      "lineContains": "Duration(days: today.weekday - 1)",
+      "reason": "computed: this week so far vs the same days last week (date maths, x2)"
+    },
+    {
+      "rule": "R5",
+      "file": "lib/screens/dashboard/insights_screen.dart",
+      "lineContains": "_trendStart.add(Duration(days: spot.x.toInt()))",
+      "reason": "computed: the trend chart point's day (tooltip)"
+    },
+    {
+      "rule": "R5",
+      "file": "lib/screens/dashboard/insights_screen.dart",
+      "lineContains": "_trendStart.add(Duration(days: value.toInt()))",
+      "reason": "computed: the trend chart axis label's day"
     }
   ],
   "counts": {
@@ -78,13 +168,9 @@
       "lib/screens/facilities/facility_screen.dart": 2
     },
     "R5": {
-      "lib/screens/dashboard/dashboard_screen.dart": 14,
-      "lib/screens/dashboard/insights_screen.dart": 4,
-      "lib/screens/login_screen.dart": 10,
-      "lib/screens/platform_admin/facility_detail_screen.dart": 1,
-      "lib/screens/platform_admin/overview_details_screen.dart": 1,
-      "lib/screens/platform_admin/subscription_requests_tab.dart": 2,
-      "lib/screens/register_screen.dart": 4
+      "lib/screens/dashboard/dashboard_screen.dart": 7,
+      "lib/screens/login_screen.dart": 7,
+      "lib/screens/register_screen.dart": 3
     },
     "R6": {},
     "R7": {
