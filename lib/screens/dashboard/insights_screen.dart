@@ -12,6 +12,11 @@ import '../../data/collections.dart';
 import '../../config/money.dart';
 import '../../config/app_ranges.dart';
 import '../../config/app_date_format.dart';
+import '../../theme/app_text.dart';
+import '../../theme/app_dimens.dart';
+import '../../theme/theme_context.dart';
+import '../../theme/app_motion.dart';
+import '../../theme/app_breakpoints.dart';
 
 /// A simple insights view - a 14-day sales trend and your top 5
 /// products by revenue over the last 30 days. Deliberately kept to two
@@ -25,16 +30,19 @@ class InsightsScreen extends StatefulWidget {
 }
 
 class _InsightsScreenState extends State<InsightsScreen> {
-  static const Color primaryColor = AppPalette.primary;
-  static const Color warmAmber = AppPalette.accent;
+  // The service breakdown slices: a fixed chart palette, not themed. The
+  // four muted hexes have no role (listed in design-open-questions.md, D9).
   static const List<Color> _servicePalette = [
-    Color(0xFF2F5D62), // same deep teal as primaryColor
+    AppPalette.primary, // the brand teal
     Color(0xFF5C7C99), // same muted steel blue used for Services on the main dashboard chart
-    Color(0xFFFFB200), // same warm amber
+    AppPalette.accent, // the brand amber
     Color(0xFF8FA998), // muted sage green
     Color(0xFFB98B6F), // muted terracotta
     Color(0xFF9B8AA6), // muted lavender - reserved for the "Other" slice
   ];
+
+  // The header gradient's second teal, as on the login page (no role; D8).
+  static const Color _tealAccent = Color(0xFF3E8E82);
 
   bool _isLoading = true;
   String? _error;
@@ -344,18 +352,18 @@ class _InsightsScreenState extends State<InsightsScreen> {
 
   Widget _buildBusinessPulseCard() {
     return AnimatedSwitcher(
-      duration: const Duration(milliseconds: 220),
+      duration: AppMotion.normal,
       switchInCurve: Curves.easeOut,
       switchOutCurve: Curves.easeIn,
       transitionBuilder: (child, animation) => FadeTransition(opacity: animation, child: child),
       child: _isPulseLoading
           ? Container(
               key: const ValueKey('pulse-loading'),
-              padding: const EdgeInsets.all(20),
+              padding: const EdgeInsets.all(AppSpacing.s20),
               decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(16),
-                boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 8, offset: const Offset(0, 4))],
+                color: context.colors.surface,
+                borderRadius: BorderRadius.circular(AppRadius.r16),
+                boxShadow: [BoxShadow(color: context.colors.shadow.withValues(alpha: AppAlpha.a05), blurRadius: 8, offset: const Offset(0, 4))],
               ),
               child: const Center(child: CircularProgressIndicator(strokeWidth: 2)),
             )
@@ -369,15 +377,15 @@ class _InsightsScreenState extends State<InsightsScreen> {
 
     return Container(
       key: const ValueKey('pulse-content'),
-      padding: const EdgeInsets.all(20),
+      padding: const EdgeInsets.all(AppSpacing.s20),
       decoration: BoxDecoration(
         gradient: LinearGradient(
-          colors: [primaryColor, const Color(0xFF3E8E82)],
+          colors: [context.colors.primary, _tealAccent],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [BoxShadow(color: primaryColor.withValues(alpha: 0.25), blurRadius: 16, offset: const Offset(0, 6))],
+        borderRadius: BorderRadius.circular(AppRadius.r16),
+        boxShadow: [BoxShadow(color: context.colors.primary.withValues(alpha: AppAlpha.a30), blurRadius: 16, offset: const Offset(0, 6))],
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -385,22 +393,22 @@ class _InsightsScreenState extends State<InsightsScreen> {
           Container(
             width: 44,
             height: 44,
-            decoration: BoxDecoration(color: Colors.white.withValues(alpha: 0.15), borderRadius: BorderRadius.circular(12)),
-            child: const Icon(Icons.monitor_heart_outlined, color: Colors.white, size: 22),
+            decoration: BoxDecoration(color: context.colors.surface.withValues(alpha: AppAlpha.a15), borderRadius: BorderRadius.circular(AppRadius.r12)),
+            child: Icon(Icons.monitor_heart_outlined, color: context.colors.onPrimary, size: AppIconSize.i22),
           ),
-          const SizedBox(width: 14),
+          const SizedBox(width: AppSpacing.s14),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text('Business Pulse',
-                    style: TextStyle(color: Colors.white.withValues(alpha: 0.85), fontSize: 13, fontWeight: FontWeight.w600)),
-                const SizedBox(height: 4),
+                    style: TextStyle(color: context.colors.onPrimary.withValues(alpha: AppAlpha.a85), fontSize: AppFontSize.f13, fontWeight: AppFontWeight.semibold)),
+                const SizedBox(height: AppSpacing.s4),
                 Text(_pulseHeadline(),
-                    style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold)),
-                const SizedBox(height: 6),
+                    style: TextStyle(color: context.colors.onPrimary, fontSize: AppFontSize.f18, fontWeight: AppFontWeight.bold)),
+                const SizedBox(height: AppSpacing.s6),
                 Text(_pulseSentence(),
-                    style: TextStyle(color: Colors.white.withValues(alpha: 0.9), fontSize: 13, height: 1.4)),
+                    style: TextStyle(color: context.colors.onPrimary.withValues(alpha: AppAlpha.a85), fontSize: AppFontSize.f13, height: 1.4)),
               ],
             ),
           ),
@@ -412,12 +420,12 @@ class _InsightsScreenState extends State<InsightsScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFFDFDF9),
+      backgroundColor: context.colors.background,
       appBar: AppBar(
         title: const Text('Insights'),
         centerTitle: true,
-        backgroundColor: primaryColor,
-        foregroundColor: Colors.white,
+        backgroundColor: context.colors.primary,
+        foregroundColor: context.colors.onPrimary,
         automaticallyImplyLeading: !widget.isModal,
         leading: widget.isModal
             ? IconButton(
@@ -430,29 +438,29 @@ class _InsightsScreenState extends State<InsightsScreen> {
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
           : _error != null
-              ? Center(child: Padding(padding: const EdgeInsets.all(24), child: Text('Could not load insights: $_error')))
+              ? Center(child: Padding(padding: const EdgeInsets.all(AppSpacing.s24), child: Text('Could not load insights: $_error')))
               : Center(
                   child: ConstrainedBox(
                     constraints: const BoxConstraints(maxWidth: 800),
                     child: ListView(
-                      padding: const EdgeInsets.all(16),
+                      padding: const EdgeInsets.all(AppSpacing.s16),
                       children: [
                         _buildBusinessPulseCard(),
-                        const SizedBox(height: 20),
+                        const SizedBox(height: AppSpacing.s20),
                         _buildChartCard(
                           title: 'Sales - Last 14 Days',
                           summary: _trendSummary(),
                           chartHeight: 220,
                           chart: _buildTrendChart(),
                         ),
-                        const SizedBox(height: 20),
+                        const SizedBox(height: AppSpacing.s20),
                         _buildChartCard(
                           title: 'Top 5 Products - Last 30 Days',
                           summary: _topProductSummary(),
                           chartHeight: 260,
                           chart: _buildTopProductsChart(),
                         ),
-                        const SizedBox(height: 20),
+                        const SizedBox(height: AppSpacing.s20),
                         _buildChartCard(
                           title: 'Services by Type - Last 30 Days',
                           summary: _serviceBreakdownSummary(),
@@ -477,13 +485,13 @@ class _InsightsScreenState extends State<InsightsScreen> {
     required Widget chart,
   }) {
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(AppSpacing.s16),
       decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
+        color: context.colors.surface,
+        borderRadius: BorderRadius.circular(AppRadius.r16),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.06),
+            color: context.colors.shadow.withValues(alpha: AppAlpha.a05),
             blurRadius: 12,
             offset: const Offset(0, 4),
           ),
@@ -492,12 +500,12 @@ class _InsightsScreenState extends State<InsightsScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(title, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+          Text(title, style: const TextStyle(fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f16)),
           if (summary != null) ...[
-            const SizedBox(height: 4),
-            Text(summary, style: TextStyle(fontSize: 13, color: primaryColor, fontWeight: FontWeight.w600)),
+            const SizedBox(height: AppSpacing.s4),
+            Text(summary, style: TextStyle(fontSize: AppFontSize.f13, color: context.colors.primary, fontWeight: AppFontWeight.semibold)),
           ],
-          const SizedBox(height: 16),
+          const SizedBox(height: AppSpacing.s16),
           SizedBox(height: chartHeight, child: chart),
         ],
       ),
@@ -524,7 +532,7 @@ class _InsightsScreenState extends State<InsightsScreen> {
 
   Widget _buildTrendChart() {
     if (_dailyTotals.every((v) => v == 0)) {
-      return Center(child: Text('No sales in the last 14 days.', style: TextStyle(color: Colors.grey[600])));
+      return Center(child: Text('No sales in the last 14 days.', style: TextStyle(color: context.colors.textMuted)));
     }
 
     return LineChart(
@@ -534,7 +542,7 @@ class _InsightsScreenState extends State<InsightsScreen> {
         // on top of preventCurveOverShooting below.
         minY: 0,
         gridData: const FlGridData(show: true, drawVerticalLine: false),
-        borderData: FlBorderData(show: true, border: Border.all(color: Colors.grey.shade300)),
+        borderData: FlBorderData(show: true, border: Border.all(color: context.colors.border)),
         // Hover/tap a point to see its exact date and amount - was
         // entirely absent before, a genuinely expected desktop touch
         // for a chart like this.
@@ -545,7 +553,7 @@ class _InsightsScreenState extends State<InsightsScreen> {
                 final day = _trendStart.add(Duration(days: spot.x.toInt()));
                 return LineTooltipItem(
                   '${AppDateFormat.dateShort.format(day)}\n${Money.symbolPlain(spot.y)}',
-                  const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 12),
+                  TextStyle(color: context.colors.onPrimary, fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f12),
                 );
               }).toList();
             },
@@ -559,7 +567,7 @@ class _InsightsScreenState extends State<InsightsScreen> {
               showTitles: true,
               reservedSize: 48,
               getTitlesWidget: (value, meta) =>
-                  Text(Money.plain(value), style: const TextStyle(fontSize: 9)),
+                  Text(Money.plain(value), style: const TextStyle(fontSize: AppFontSize.f9)),
             ),
           ),
           bottomTitles: AxisTitles(
@@ -569,8 +577,8 @@ class _InsightsScreenState extends State<InsightsScreen> {
               getTitlesWidget: (value, meta) {
                 final day = _trendStart.add(Duration(days: value.toInt()));
                 return Padding(
-                  padding: const EdgeInsets.only(top: 6),
-                  child: Text(AppDateFormat.dayMonthNumeric.format(day), style: const TextStyle(fontSize: 9)),
+                  padding: const EdgeInsets.only(top: AppSpacing.s6),
+                  child: Text(AppDateFormat.dayMonthNumeric.format(day), style: const TextStyle(fontSize: AppFontSize.f9)),
                 );
               },
             ),
@@ -585,10 +593,10 @@ class _InsightsScreenState extends State<InsightsScreen> {
             // below zero when a high day is immediately followed by a
             // much lower one.
             preventCurveOverShooting: true,
-            color: primaryColor,
+            color: context.colors.primary,
             barWidth: 3,
             dotData: const FlDotData(show: false),
-            belowBarData: BarAreaData(show: true, color: primaryColor.withValues(alpha: 0.12)),
+            belowBarData: BarAreaData(show: true, color: context.colors.primary.withValues(alpha: AppAlpha.a10)),
           ),
         ],
       ),
@@ -597,7 +605,7 @@ class _InsightsScreenState extends State<InsightsScreen> {
 
   Widget _buildTopProductsChart() {
     if (_topProducts.isEmpty) {
-      return Center(child: Text('No sales in the last 30 days.', style: TextStyle(color: Colors.grey[600])));
+      return Center(child: Text('No sales in the last 30 days.', style: TextStyle(color: context.colors.textMuted)));
     }
 
     final maxValue = _topProducts.first.value;
@@ -618,7 +626,7 @@ class _InsightsScreenState extends State<InsightsScreen> {
               final name = _topProducts[group.x.toInt()].key;
               return BarTooltipItem(
                 '$name\n${Money.symbolPlain(rod.toY)}',
-                const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 12),
+                TextStyle(color: context.colors.onPrimary, fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f12),
               );
             },
           ),
@@ -636,10 +644,10 @@ class _InsightsScreenState extends State<InsightsScreen> {
                 final idx = value.toInt();
                 if (idx < 0 || idx >= _topProducts.length) return const SizedBox.shrink();
                 return Padding(
-                  padding: const EdgeInsets.only(bottom: 4),
+                  padding: const EdgeInsets.only(bottom: AppSpacing.s4),
                   child: Text(
                     Money.plain(_topProducts[idx].value),
-                    style: TextStyle(fontSize: 9, fontWeight: FontWeight.w600, color: primaryColor),
+                    style: TextStyle(fontSize: AppFontSize.f9, fontWeight: AppFontWeight.semibold, color: context.colors.primary),
                   ),
                 );
               },
@@ -651,7 +659,7 @@ class _InsightsScreenState extends State<InsightsScreen> {
               showTitles: true,
               reservedSize: 48,
               getTitlesWidget: (value, meta) =>
-                  Text(Money.plain(value), style: const TextStyle(fontSize: 9)),
+                  Text(Money.plain(value), style: const TextStyle(fontSize: AppFontSize.f9)),
             ),
           ),
           bottomTitles: AxisTitles(
@@ -664,8 +672,8 @@ class _InsightsScreenState extends State<InsightsScreen> {
                 final name = _topProducts[idx].key;
                 final shortName = name.length > 9 ? '${name.substring(0, 9)}...' : name;
                 return Padding(
-                  padding: const EdgeInsets.only(top: 6),
-                  child: Text(shortName, style: const TextStyle(fontSize: 9), textAlign: TextAlign.center),
+                  padding: const EdgeInsets.only(top: AppSpacing.s6),
+                  child: Text(shortName, style: const TextStyle(fontSize: AppFontSize.f9), textAlign: TextAlign.center),
                 );
               },
             ),
@@ -676,9 +684,9 @@ class _InsightsScreenState extends State<InsightsScreen> {
             BarChartGroupData(x: i, barRods: [
               BarChartRodData(
                 toY: _topProducts[i].value,
-                color: warmAmber,
+                color: context.colors.accent,
                 width: 22,
-                borderRadius: BorderRadius.circular(4),
+                borderRadius: BorderRadius.circular(AppRadius.r4),
               ),
             ]),
         ],
@@ -688,7 +696,7 @@ class _InsightsScreenState extends State<InsightsScreen> {
 
   Widget _buildServicesDonutChart() {
     if (_serviceBreakdown.isEmpty) {
-      return Center(child: Text('No services in the last 30 days.', style: TextStyle(color: Colors.grey[600])));
+      return Center(child: Text('No services in the last 30 days.', style: TextStyle(color: context.colors.textMuted)));
     }
 
     final total = _serviceBreakdown.fold<double>(0.0, (sum, e) => sum + e.value);
@@ -738,29 +746,29 @@ class _InsightsScreenState extends State<InsightsScreen> {
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     Text(centerLabel.key,
-                        style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold),
+                        style: const TextStyle(fontSize: AppFontSize.f11, fontWeight: AppFontWeight.bold),
                         textAlign: TextAlign.center,
                         overflow: TextOverflow.ellipsis),
                     Text(Money.symbolPlain(centerLabel.value),
-                        style: TextStyle(fontSize: 10, color: Colors.grey[600])),
+                        style: TextStyle(fontSize: AppFontSize.f10, color: context.colors.textMuted)),
                     if (centerPercent != null)
                       Text('${centerPercent.toStringAsFixed(0)}%',
-                          style: TextStyle(fontSize: 10, color: Colors.grey[600])),
+                          style: TextStyle(fontSize: AppFontSize.f10, color: context.colors.textMuted)),
                   ],
                 )
               else
                 Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Text('Total', style: TextStyle(fontSize: 10, color: Colors.grey[600])),
+                    Text('Total', style: TextStyle(fontSize: AppFontSize.f10, color: context.colors.textMuted)),
                     Text(Money.symbolPlain(total),
-                        style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
+                        style: const TextStyle(fontSize: AppFontSize.f12, fontWeight: AppFontWeight.bold)),
                   ],
                 ),
             ],
           ),
         ),
-        const SizedBox(width: 12),
+        const SizedBox(width: AppSpacing.s12),
         Expanded(
           flex: 2,
           child: Column(
@@ -769,7 +777,7 @@ class _InsightsScreenState extends State<InsightsScreen> {
             children: [
               for (int i = 0; i < _serviceBreakdown.length; i++)
                 Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 3),
+                  padding: const EdgeInsets.symmetric(vertical: AppSpacing.s3),
                   child: Row(
                     children: [
                       Container(
@@ -780,11 +788,11 @@ class _InsightsScreenState extends State<InsightsScreen> {
                           shape: BoxShape.circle,
                         ),
                       ),
-                      const SizedBox(width: 6),
+                      const SizedBox(width: AppSpacing.s6),
                       Expanded(
                         child: Text(
                           _serviceBreakdown[i].key,
-                          style: const TextStyle(fontSize: 11),
+                          style: const TextStyle(fontSize: AppFontSize.f11),
                           overflow: TextOverflow.ellipsis,
                         ),
                       ),
@@ -808,7 +816,7 @@ class _InsightsScreenState extends State<InsightsScreen> {
 /// Activity Log, so it belongs in the same modal category rather than
 /// staying a full-screen navigation.
 Future<void> showInsightsScreen(BuildContext context) async {
-  final isWideScreen = MediaQuery.of(context).size.width >= 900;
+  final isWideScreen = MediaQuery.of(context).size.width >= AppBreakpoints.medium;
 
   if (!isWideScreen) {
     await Navigator.of(context).push(
@@ -821,8 +829,8 @@ Future<void> showInsightsScreen(BuildContext context) async {
     context: context,
     barrierDismissible: true,
     barrierLabel: 'Insights',
-    barrierColor: Colors.black54,
-    transitionDuration: const Duration(milliseconds: 220),
+    barrierColor: context.colors.scrim.withValues(alpha: AppAlpha.a50),
+    transitionDuration: AppMotion.normal,
     pageBuilder: (context, animation, secondaryAnimation) {
       final screenSize = MediaQuery.of(context).size;
       final modalWidth = (screenSize.width * 0.60).clamp(0, 940).toDouble();
@@ -835,7 +843,7 @@ Future<void> showInsightsScreen(BuildContext context) async {
           width: modalWidth,
           height: modalHeight,
           child: ClipRRect(
-            borderRadius: BorderRadius.circular(16),
+            borderRadius: BorderRadius.circular(AppRadius.r16),
             child: const Material(
               child: InsightsScreen(isModal: true),
             ),

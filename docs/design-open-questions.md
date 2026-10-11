@@ -88,6 +88,8 @@ Colours are outside the standing snap rule, so this is kept as it is:
 - **Quick action tints `#E3F0EC` (Record Visit) and `#FCEFD9` (Add Product)**, `dashboard_screen.dart` `_buildQuickActionCards`: `#E3F0EC` is within 12 of `divider`, but snapping a tinted fill to a grey is what the owner reversed for the alerts after D8, so both are kept exact. Tint roles (like `dangerSurface`)?
 - **Activity colours `Colors.purple` (services) and `Colors.teal` (clients)**, `dashboard_screen.dart` `_activityColor`: one of the four copies the 2E helper replaces; kept for that step, as in D5.
 - **Chart loading gap 40**, `dashboard_screen.dart` (`EdgeInsets.symmetric(vertical: 40)` around the chart spinner): 8 above `s32`. Kept.
+- **Service breakdown palette**, `lib/screens/dashboard/insights_screen.dart` `_servicePalette`: steel blue `#5C7C99`, sage `#8FA998`, terracotta `#B98B6F`, lavender `#9B8AA6` (the brand teal and amber now read `AppPalette`). A fixed chart palette with no roles. `chart` roles with the exact values?
+- **Inline raw error**, `insights_screen.dart`: "Could not load insights: $_error". Not fixed in D9 (the owner limited D9 to tokens and snackbars). `FriendlyError.messageFor` in a later pass?
 - **Left as written on purpose (owner's D9 rule):** the bell's `_BlinkingDot` class (its 700/1400/400 ms timings, 9 px dot, red default), and the 900 ms delay before the subscription pill shows.
 
 ### Trash and restore: books consistency (audit after D6, read-only)
