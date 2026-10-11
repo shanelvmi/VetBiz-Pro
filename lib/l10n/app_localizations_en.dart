@@ -2587,4 +2587,78 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get printer_unavailableConnect =>
       'Bluetooth printing isn\'t available on this platform. This screen needs a real Android or iOS build with Bluetooth hardware - it can\'t connect to a printer from a web browser.';
+
+  @override
+  String get printer_unavailableList =>
+      'Bluetooth printing isn\'t available on this platform. This screen needs a real Android or iOS build with Bluetooth hardware - it can\'t list paired devices from a web browser.';
+
+  @override
+  String printer_connected(String name) {
+    return 'Connected to $name';
+  }
+
+  @override
+  String printer_connectFailedNamed(String name) {
+    return 'Couldn\'t connect to $name';
+  }
+
+  @override
+  String get printer_connectFailed => 'Couldn\'t connect to the printer';
+
+  @override
+  String get printer_disconnectFailed => 'Couldn\'t disconnect the printer';
+
+  @override
+  String get printer_testSent => 'Test page sent to printer';
+
+  @override
+  String get printer_testFailed => 'Couldn\'t print the test page';
+
+  @override
+  String get printer_savedPrinter => 'Saved printer';
+
+  @override
+  String get printer_statusConnected => 'Connected';
+
+  @override
+  String get printer_statusNotConnected => 'Not connected';
+
+  @override
+  String get printer_disconnect => 'Disconnect';
+
+  @override
+  String get printer_forget => 'Forget this printer';
+
+  @override
+  String get printer_paired => 'Paired Devices';
+
+  @override
+  String get printer_pairHint =>
+      'Pair your printer in your device\'s Bluetooth settings first - this list only shows devices already paired there.';
+
+  @override
+  String get printer_noPaired => 'No paired devices found.';
+
+  @override
+  String get printer_connect => 'Connect';
+
+  @override
+  String get printer_printOptions => 'Print Options';
+
+  @override
+  String get printer_paperSize => 'Paper Size';
+
+  @override
+  String printer_paperWidth(String width) {
+    return '${width}mm';
+  }
+
+  @override
+  String get printer_autoPrint => 'Auto-print receipt after each sale';
+
+  @override
+  String get printer_sending => 'Sending...';
+
+  @override
+  String get printer_sendTest => 'Send Test Print';
 }

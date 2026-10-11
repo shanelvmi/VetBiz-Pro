@@ -2602,4 +2602,80 @@ class AppLocalizationsSw extends AppLocalizations {
   @override
   String get printer_unavailableConnect =>
       'Uchapishaji kwa Bluetooth haupatikani kwenye jukwaa hili. Skrini hii inahitaji programu halisi ya Android au iOS yenye Bluetooth - haiwezi kuunganisha printa kutoka kwenye kivinjari.';
+
+  @override
+  String get printer_unavailableList =>
+      'Uchapishaji kwa Bluetooth haupatikani kwenye jukwaa hili. Skrini hii inahitaji programu halisi ya Android au iOS yenye Bluetooth - haiwezi kuonyesha vifaa vilivyounganishwa kutoka kwenye kivinjari.';
+
+  @override
+  String printer_connected(String name) {
+    return 'Imeunganishwa na $name';
+  }
+
+  @override
+  String printer_connectFailedNamed(String name) {
+    return 'Imeshindwa kuunganisha na $name';
+  }
+
+  @override
+  String get printer_connectFailed => 'Imeshindwa kuunganisha printa';
+
+  @override
+  String get printer_disconnectFailed => 'Imeshindwa kutenganisha printa';
+
+  @override
+  String get printer_testSent => 'Ukurasa wa majaribio umetumwa kwa printa';
+
+  @override
+  String get printer_testFailed => 'Imeshindwa kuchapisha ukurasa wa majaribio';
+
+  @override
+  String get printer_savedPrinter => 'Printa iliyohifadhiwa';
+
+  @override
+  String get printer_statusConnected => 'Imeunganishwa';
+
+  @override
+  String get printer_statusNotConnected => 'Haijaunganishwa';
+
+  @override
+  String get printer_disconnect => 'Tenganisha';
+
+  @override
+  String get printer_forget => 'Sahau printa hii';
+
+  @override
+  String get printer_paired => 'Vifaa Vilivyounganishwa';
+
+  @override
+  String get printer_pairHint =>
+      'Unganisha printa yako kwenye mipangilio ya Bluetooth ya kifaa chako kwanza - orodha hii inaonyesha tu vifaa vilivyokwisha unganishwa huko.';
+
+  @override
+  String get printer_noPaired =>
+      'Hakuna vifaa vilivyounganishwa vilivyopatikana.';
+
+  @override
+  String get printer_connect => 'Unganisha';
+
+  @override
+  String get printer_printOptions => 'Chaguo za Kuchapisha';
+
+  @override
+  String get printer_paperSize => 'Ukubwa wa Karatasi';
+
+  @override
+  String printer_paperWidth(String width) {
+    return '${width}mm';
+  }
+
+  @override
+  String get printer_autoPrint =>
+      'Chapisha risiti kiotomatiki baada ya kila mauzo';
+
+  @override
+  String get printer_sending => 'Inatuma...';
+
+  @override
+  String get printer_sendTest => 'Tuma Jaribio la Kuchapisha';
 }

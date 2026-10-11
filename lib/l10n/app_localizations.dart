@@ -4657,6 +4657,138 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Bluetooth printing isn\'t available on this platform. This screen needs a real Android or iOS build with Bluetooth hardware - it can\'t connect to a printer from a web browser.'**
   String get printer_unavailableConnect;
+
+  /// Printer screen when Bluetooth is missing (listing devices).
+  ///
+  /// In en, this message translates to:
+  /// **'Bluetooth printing isn\'t available on this platform. This screen needs a real Android or iOS build with Bluetooth hardware - it can\'t list paired devices from a web browser.'**
+  String get printer_unavailableList;
+
+  /// Message after connecting a printer.
+  ///
+  /// In en, this message translates to:
+  /// **'Connected to {name}'**
+  String printer_connected(String name);
+
+  /// Message when a printer refused to connect.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t connect to {name}'**
+  String printer_connectFailedNamed(String name);
+
+  /// Message when connecting failed.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t connect to the printer'**
+  String get printer_connectFailed;
+
+  /// Message when disconnecting failed.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t disconnect the printer'**
+  String get printer_disconnectFailed;
+
+  /// Message after a test print.
+  ///
+  /// In en, this message translates to:
+  /// **'Test page sent to printer'**
+  String get printer_testSent;
+
+  /// Message when the test print failed.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t print the test page'**
+  String get printer_testFailed;
+
+  /// A saved printer with no name.
+  ///
+  /// In en, this message translates to:
+  /// **'Saved printer'**
+  String get printer_savedPrinter;
+
+  /// Saved printer status.
+  ///
+  /// In en, this message translates to:
+  /// **'Connected'**
+  String get printer_statusConnected;
+
+  /// Saved printer status.
+  ///
+  /// In en, this message translates to:
+  /// **'Not connected'**
+  String get printer_statusNotConnected;
+
+  /// Button.
+  ///
+  /// In en, this message translates to:
+  /// **'Disconnect'**
+  String get printer_disconnect;
+
+  /// Tooltip.
+  ///
+  /// In en, this message translates to:
+  /// **'Forget this printer'**
+  String get printer_forget;
+
+  /// Section heading.
+  ///
+  /// In en, this message translates to:
+  /// **'Paired Devices'**
+  String get printer_paired;
+
+  /// Under Paired Devices.
+  ///
+  /// In en, this message translates to:
+  /// **'Pair your printer in your device\'s Bluetooth settings first - this list only shows devices already paired there.'**
+  String get printer_pairHint;
+
+  /// Paired list when it is empty.
+  ///
+  /// In en, this message translates to:
+  /// **'No paired devices found.'**
+  String get printer_noPaired;
+
+  /// Button that connects a device.
+  ///
+  /// In en, this message translates to:
+  /// **'Connect'**
+  String get printer_connect;
+
+  /// Section heading.
+  ///
+  /// In en, this message translates to:
+  /// **'Print Options'**
+  String get printer_printOptions;
+
+  /// Option label.
+  ///
+  /// In en, this message translates to:
+  /// **'Paper Size'**
+  String get printer_paperSize;
+
+  /// Paper size choice; width is the stored size ("58" or "80").
+  ///
+  /// In en, this message translates to:
+  /// **'{width}mm'**
+  String printer_paperWidth(String width);
+
+  /// Option label.
+  ///
+  /// In en, this message translates to:
+  /// **'Auto-print receipt after each sale'**
+  String get printer_autoPrint;
+
+  /// Test print button while sending.
+  ///
+  /// In en, this message translates to:
+  /// **'Sending...'**
+  String get printer_sending;
+
+  /// Test print button.
+  ///
+  /// In en, this message translates to:
+  /// **'Send Test Print'**
+  String get printer_sendTest;
 }
 
 class _AppLocalizationsDelegate
