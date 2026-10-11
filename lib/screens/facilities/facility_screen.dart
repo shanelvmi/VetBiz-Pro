@@ -45,6 +45,8 @@ class _FacilityScreenState extends State<FacilityScreen> {
   // them on a wide one. Sizes, kept exact (D10).
   static const double _listPanelHeight = 360;
   static const double _listPanelWidth = 340;
+  // The Total Products metric's teal, as on the login page (no role; D8).
+  static const Color _tealAccent = Color(0xFF3E8E82);
 
   final FirebaseAuth _auth = FirebaseAuth.instance;
   late final User? currentUser;
@@ -1550,7 +1552,7 @@ class _FacilityScreenState extends State<FacilityScreen> {
 
   Widget _buildDetailPanel(Map<String, dynamic> facility) {
     return SingleChildScrollView(
-      padding: const EdgeInsets.all(20),
+      padding: const EdgeInsets.all(AppSpacing.s20),
       child: _buildDetailPanelContent(facility),
     );
   }
@@ -1560,13 +1562,13 @@ class _FacilityScreenState extends State<FacilityScreen> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         _buildBreadcrumbAndActions(facility),
-        const SizedBox(height: 16),
+        const SizedBox(height: AppSpacing.s16),
         _buildHeaderCard(facility),
-        const SizedBox(height: 20),
+        const SizedBox(height: AppSpacing.s20),
         _buildMetricsRow(facility),
-        const SizedBox(height: 20),
+        const SizedBox(height: AppSpacing.s20),
         _buildTabsRow(),
-        const SizedBox(height: 16),
+        const SizedBox(height: AppSpacing.s16),
         _buildTabContent(facility),
       ],
     );
@@ -1580,11 +1582,11 @@ class _FacilityScreenState extends State<FacilityScreen> {
           child: Wrap(
             crossAxisAlignment: WrapCrossAlignment.center,
             children: [
-              Text('Facilities', style: TextStyle(color: Colors.grey[600], fontSize: 14)),
-              Icon(Icons.chevron_right, size: 16, color: Colors.grey[600]),
+              Text('Facilities', style: TextStyle(color: context.colors.textMuted, fontSize: AppFontSize.f14)),
+              Icon(Icons.chevron_right, size: AppIconSize.i16, color: context.colors.textMuted),
               Text(
                 facility['name'] ?? 'Facility',
-                style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+                style: const TextStyle(fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f14),
               ),
             ],
           ),
@@ -1592,17 +1594,17 @@ class _FacilityScreenState extends State<FacilityScreen> {
         PopupMenuButton<String>(
           tooltip: 'More actions',
           child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+            padding: const EdgeInsets.symmetric(horizontal: AppSpacing.s12, vertical: AppSpacing.s8),
             decoration: BoxDecoration(
-              border: Border.all(color: Colors.grey.withValues(alpha: 0.3)),
-              borderRadius: BorderRadius.circular(8),
+              border: Border.all(color: context.colors.textHint.withValues(alpha: AppAlpha.a30)),
+              borderRadius: BorderRadius.circular(AppRadius.r8),
             ),
             child: const Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Icon(Icons.more_vert, size: 18),
-                SizedBox(width: 4),
-                Text('More Actions', style: TextStyle(fontSize: 13)),
+                Icon(Icons.more_vert, size: AppIconSize.i18),
+                SizedBox(width: AppSpacing.s4),
+                Text('More Actions', style: TextStyle(fontSize: AppFontSize.f13)),
               ],
             ),
           ),
@@ -1621,7 +1623,7 @@ class _FacilityScreenState extends State<FacilityScreen> {
               const PopupMenuItem(value: 'switch', child: Text('Switch to This Facility')),
             PopupMenuItem(
               value: 'delete',
-              child: Text('Delete Facility', style: TextStyle(color: Colors.red[400])),
+              child: Text('Delete Facility', style: TextStyle(color: context.colors.dangerSoft)),
             ),
           ],
         ),
@@ -1638,13 +1640,13 @@ class _FacilityScreenState extends State<FacilityScreen> {
     final createdAt = details?[Fields.createdAt] as DateTime?;
 
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(AppSpacing.s16),
       decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: Colors.grey.withValues(alpha: 0.15)),
+        color: context.colors.surface,
+        borderRadius: BorderRadius.circular(AppRadius.r14),
+        border: Border.all(color: context.colors.textHint.withValues(alpha: AppAlpha.a15)),
         boxShadow: [
-          BoxShadow(color: Colors.black.withValues(alpha: 0.04), blurRadius: 8, offset: const Offset(0, 2)),
+          BoxShadow(color: context.colors.shadow.withValues(alpha: AppAlpha.a05), blurRadius: 8, offset: const Offset(0, 2)),
         ],
       ),
       child: Row(
@@ -1657,20 +1659,20 @@ class _FacilityScreenState extends State<FacilityScreen> {
             width: 140,
             height: 140,
             decoration: BoxDecoration(
-              color: Colors.grey.shade100,
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: Colors.grey.shade300),
+              color: context.colors.surfaceMuted,
+              borderRadius: BorderRadius.circular(AppRadius.r12),
+              border: Border.all(color: context.colors.border),
             ),
-            padding: const EdgeInsets.all(10),
+            padding: const EdgeInsets.all(AppSpacing.s10),
             child: logoUrl != null
                 ? Image.network(
                     logoUrl,
                     fit: BoxFit.contain,
-                    errorBuilder: (context, error, stackTrace) => Icon(Icons.business, color: context.colors.primary, size: 40),
+                    errorBuilder: (context, error, stackTrace) => Icon(Icons.business, color: context.colors.primary, size: AppIconSize.i40),
                   )
-                : Icon(Icons.business, color: context.colors.primary, size: 40),
+                : Icon(Icons.business, color: context.colors.primary, size: AppIconSize.i40),
           ),
-          const SizedBox(width: 20),
+          const SizedBox(width: AppSpacing.s20),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -1680,7 +1682,7 @@ class _FacilityScreenState extends State<FacilityScreen> {
                     Flexible(
                       child: Text(
                         _nameWithType(facility),
-                        style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 22),
+                        style: const TextStyle(fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f22),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                       ),
@@ -1688,7 +1690,7 @@ class _FacilityScreenState extends State<FacilityScreen> {
                     buildStatusChip(status),
                   ],
                 ),
-                const SizedBox(height: 10),
+                const SizedBox(height: AppSpacing.s10),
                 if (details?['address'] != null && (details!['address'] as String).isNotEmpty)
                   _infoRow(Icons.location_on_outlined, details['address'] as String),
                 if (contact?['phone'] != null && contact!['phone']!.isNotEmpty)
@@ -1701,56 +1703,54 @@ class _FacilityScreenState extends State<FacilityScreen> {
               ],
             ),
           ),
-          const SizedBox(width: 20),
+          const SizedBox(width: AppSpacing.s20),
           Container(
             width: 170,
-            padding: const EdgeInsets.all(14),
+            padding: const EdgeInsets.all(AppSpacing.s14),
             decoration: BoxDecoration(
               color: context.colors.background,
-              borderRadius: BorderRadius.circular(10),
+              borderRadius: BorderRadius.circular(AppRadius.r10),
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               mainAxisSize: MainAxisSize.min,
               children: [
-                Text('Facility Code', style: TextStyle(fontSize: 11, color: Colors.grey[600])),
+                Text('Facility Code', style: TextStyle(fontSize: AppFontSize.f11, color: context.colors.textMuted)),
                 Row(
                   children: [
                     Text(
                       facility['code'] ?? '-',
-                      style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+                      style: const TextStyle(fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f14),
                     ),
                     IconButton(
-                      icon: const Icon(Icons.copy, size: 15),
+                      icon: const Icon(Icons.copy, size: AppIconSize.i16),
                       padding: EdgeInsets.zero,
                       constraints: const BoxConstraints(),
                       onPressed: () {
                         Clipboard.setData(ClipboardData(text: facility['code'] ?? ''));
-                        ScaffoldMessenger.of(context)
-                            .showSnackBar(const SnackBar(content: Text('Copied to clipboard!')));
+                        AppFeedback.success('Copied to clipboard');
                       },
                     ),
                   ],
                 ),
-                const SizedBox(height: 10),
-                Text('License No.', style: TextStyle(fontSize: 11, color: Colors.grey[600])),
+                const SizedBox(height: AppSpacing.s10),
+                Text('License No.', style: TextStyle(fontSize: AppFontSize.f11, color: context.colors.textMuted)),
                 Row(
                   children: [
                     Text(
                       (details?['licenseNo'] as String?)?.isNotEmpty == true
                           ? details!['licenseNo'] as String
                           : 'Not set',
-                      style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+                      style: const TextStyle(fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f14),
                     ),
                     if ((details?['licenseNo'] as String?)?.isNotEmpty == true)
                       IconButton(
-                        icon: const Icon(Icons.copy, size: 15),
+                        icon: const Icon(Icons.copy, size: AppIconSize.i16),
                         padding: EdgeInsets.zero,
                         constraints: const BoxConstraints(),
                         onPressed: () {
                           Clipboard.setData(ClipboardData(text: details!['licenseNo'] as String));
-                          ScaffoldMessenger.of(context)
-                              .showSnackBar(const SnackBar(content: Text('Copied to clipboard!')));
+                          AppFeedback.success('Copied to clipboard');
                         },
                       ),
                   ],
@@ -1765,13 +1765,13 @@ class _FacilityScreenState extends State<FacilityScreen> {
 
   Widget _infoRow(IconData icon, String text) {
     return Padding(
-      padding: const EdgeInsets.only(bottom: 6),
+      padding: const EdgeInsets.only(bottom: AppSpacing.s6),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(icon, size: 15, color: Colors.grey[600]),
-          const SizedBox(width: 8),
-          Expanded(child: Text(text, style: const TextStyle(fontSize: 13.5))),
+          Icon(icon, size: AppIconSize.i16, color: context.colors.textMuted),
+          const SizedBox(width: AppSpacing.s8),
+          Expanded(child: Text(text, style: const TextStyle(fontSize: AppFontSize.f13_5))),
         ],
       ),
     );
@@ -1826,9 +1826,9 @@ class _FacilityScreenState extends State<FacilityScreen> {
   Color _activityColor(String actionType) {
     switch (actionType.toLowerCase()) {
       case 'inventory move':
-        return Colors.blue;
+        return context.colors.info;
       case 'products':
-        return Colors.green;
+        return context.colors.success;
       case 'sales':
         return context.colors.accent;
       case 'services':
@@ -1836,11 +1836,11 @@ class _FacilityScreenState extends State<FacilityScreen> {
       case 'clients':
         return Colors.teal;
       case 'debtors':
-        return Colors.orange;
+        return context.colors.warning;
       case 'settings':
-        return Colors.grey;
+        return context.colors.textHint;
       case 'admin':
-        return Colors.red;
+        return context.colors.danger;
       default:
         return context.colors.primary;
     }
@@ -1858,7 +1858,7 @@ class _FacilityScreenState extends State<FacilityScreen> {
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting && !snapshot.hasData) {
           return const Padding(
-            padding: EdgeInsets.symmetric(vertical: 24),
+            padding: EdgeInsets.symmetric(vertical: AppSpacing.s24),
             child: Center(child: CircularProgressIndicator(strokeWidth: 2)),
           );
         }
@@ -1866,8 +1866,8 @@ class _FacilityScreenState extends State<FacilityScreen> {
         final docs = snapshot.data?.docs ?? [];
         if (docs.isEmpty) {
           return Padding(
-            padding: const EdgeInsets.symmetric(vertical: 16),
-            child: Text('No activity yet.', style: TextStyle(color: Colors.grey[600], fontSize: 13)),
+            padding: const EdgeInsets.symmetric(vertical: AppSpacing.s16),
+            child: Text('No activity yet.', style: TextStyle(color: context.colors.textMuted, fontSize: AppFontSize.f13)),
           );
         }
 
@@ -1880,33 +1880,33 @@ class _FacilityScreenState extends State<FacilityScreen> {
             final color = _activityColor(actionType);
 
             return Padding(
-              padding: const EdgeInsets.only(bottom: 14),
+              padding: const EdgeInsets.only(bottom: AppSpacing.s14),
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Container(
                     width: 34,
                     height: 34,
-                    decoration: BoxDecoration(color: color.withValues(alpha: 0.15), shape: BoxShape.circle),
-                    child: Icon(_activityIcon(actionType), color: color, size: 17),
+                    decoration: BoxDecoration(color: color.withValues(alpha: AppAlpha.a15), shape: BoxShape.circle),
+                    child: Icon(_activityIcon(actionType), color: color, size: AppIconSize.i18),
                   ),
-                  const SizedBox(width: 10),
+                  const SizedBox(width: AppSpacing.s10),
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
                           actionType.isEmpty ? 'Activity' : actionType,
-                          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+                          style: const TextStyle(fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f13),
                         ),
-                        Text(description, style: TextStyle(fontSize: 12.5, color: Colors.grey[700])),
+                        Text(description, style: TextStyle(fontSize: AppFontSize.f12_5, color: context.colors.textSoft)),
                       ],
                     ),
                   ),
                   if (timestampTs != null)
                     Text(
                       _formatDateTime(timestampTs.toDate()),
-                      style: TextStyle(fontSize: 11, color: Colors.grey[500]),
+                      style: TextStyle(fontSize: AppFontSize.f11, color: context.colors.textHint),
                     ),
                 ],
               ),
@@ -1929,10 +1929,10 @@ class _FacilityScreenState extends State<FacilityScreen> {
     final totalAmount = stats?['totalAmount'] as double? ?? 0.0;
 
     final metrics = [
-      ('Total Products', '$totalProducts', Icons.inventory_2_outlined, const Color(0xFF3E8E82), 'View Products', 2),
-      ('Sellable Products', '$sellableProducts', Icons.shopping_cart_outlined, Colors.green, 'View All', 2),
-      ('Low Stock Items', '$lowStockCount', Icons.warning_amber_outlined, Colors.orange, 'View Items', 2),
-      ('Expired Items', '$expiredCount', Icons.remove_shopping_cart_outlined, Colors.red, 'View Items', 2),
+      ('Total Products', '$totalProducts', Icons.inventory_2_outlined, _tealAccent, 'View Products', 2),
+      ('Sellable Products', '$sellableProducts', Icons.shopping_cart_outlined, context.colors.success, 'View All', 2),
+      ('Low Stock Items', '$lowStockCount', Icons.warning_amber_outlined, context.colors.warning, 'View Items', 2),
+      ('Expired Items', '$expiredCount', Icons.remove_shopping_cart_outlined, context.colors.danger, 'View Items', 2),
       (
         'Total Sales (This Month)',
         '${AppDefaults.currencyCode} ${_formatCompact(totalAmount)}',
@@ -1945,7 +1945,7 @@ class _FacilityScreenState extends State<FacilityScreen> {
 
     return LayoutBuilder(
       builder: (context, constraints) {
-        final isNarrow = constraints.maxWidth < 700;
+        final isNarrow = constraints.maxWidth < AppBreakpoints.stackSections;
         return GridView.count(
           shrinkWrap: true,
           physics: const NeverScrollableScrollPhysics(),
@@ -1977,13 +1977,13 @@ class _FacilityScreenState extends State<FacilityScreen> {
     required int linkTabIndex,
   }) {
     return Container(
-      padding: const EdgeInsets.all(14),
+      padding: const EdgeInsets.all(AppSpacing.s14),
       decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.grey.withValues(alpha: 0.15)),
+        color: context.colors.surface,
+        borderRadius: BorderRadius.circular(AppRadius.r12),
+        border: Border.all(color: context.colors.textHint.withValues(alpha: AppAlpha.a15)),
         boxShadow: [
-          BoxShadow(color: Colors.black.withValues(alpha: 0.03), blurRadius: 6, offset: const Offset(0, 2)),
+          BoxShadow(color: context.colors.shadow.withValues(alpha: AppAlpha.a05), blurRadius: 6, offset: const Offset(0, 2)),
         ],
       ),
       child: Column(
@@ -1996,29 +1996,29 @@ class _FacilityScreenState extends State<FacilityScreen> {
                 width: 32,
                 height: 32,
                 decoration:
-                    BoxDecoration(color: color.withValues(alpha: 0.12), borderRadius: BorderRadius.circular(8)),
-                child: Icon(icon, color: color, size: 16),
+                    BoxDecoration(color: color.withValues(alpha: AppAlpha.a10), borderRadius: BorderRadius.circular(AppRadius.r8)),
+                child: Icon(icon, color: color, size: AppIconSize.i16),
               ),
-              const SizedBox(width: 8),
+              const SizedBox(width: AppSpacing.s8),
               Expanded(
                 child: FittedBox(
                   fit: BoxFit.scaleDown,
                   alignment: Alignment.centerLeft,
-                  child: Text(value, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 19)),
+                  child: Text(value, style: const TextStyle(fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f19)),
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 6),
-          Text(label, style: TextStyle(fontSize: 11.5, color: Colors.grey[600]), maxLines: 1, overflow: TextOverflow.ellipsis),
-          const SizedBox(height: 4),
+          const SizedBox(height: AppSpacing.s6),
+          Text(label, style: TextStyle(fontSize: AppFontSize.f11_5, color: context.colors.textMuted), maxLines: 1, overflow: TextOverflow.ellipsis),
+          const SizedBox(height: AppSpacing.s4),
           InkWell(
             onTap: () => setState(() => _selectedTabIndex = linkTabIndex),
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Text(linkLabel, style: TextStyle(fontSize: 11.5, color: context.colors.primary, fontWeight: FontWeight.w600)),
-                Icon(Icons.arrow_forward, size: 12, color: context.colors.primary),
+                Text(linkLabel, style: TextStyle(fontSize: AppFontSize.f11_5, color: context.colors.primary, fontWeight: AppFontWeight.semibold)),
+                Icon(Icons.arrow_forward, size: AppIconSize.i12, color: context.colors.primary),
               ],
             ),
           ),
@@ -2051,7 +2051,7 @@ class _FacilityScreenState extends State<FacilityScreen> {
           return InkWell(
             onTap: () => setState(() => _selectedTabIndex = index),
             child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.s14, vertical: AppSpacing.s10),
               decoration: BoxDecoration(
                 border: Border(
                   bottom: BorderSide(
@@ -2066,20 +2066,20 @@ class _FacilityScreenState extends State<FacilityScreen> {
                   Text(
                     label,
                     style: TextStyle(
-                      fontSize: 13.5,
-                      fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-                      color: isSelected ? context.colors.primary : Colors.black87,
+                      fontSize: AppFontSize.f13_5,
+                      fontWeight: isSelected ? AppFontWeight.bold : AppFontWeight.regular,
+                      color: isSelected ? context.colors.primary : context.colors.textPrimary,
                     ),
                   ),
                   if (label == 'Team Members' && assistantCount > 0) ...[
-                    const SizedBox(width: 6),
+                    const SizedBox(width: AppSpacing.s6),
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
+                      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.s6, vertical: AppSpacing.s2),
                       decoration: BoxDecoration(
-                        color: Colors.grey.shade200,
-                        borderRadius: BorderRadius.circular(10),
+                        color: context.colors.divider,
+                        borderRadius: BorderRadius.circular(AppRadius.r10),
                       ),
-                      child: Text('$assistantCount', style: const TextStyle(fontSize: 11)),
+                      child: Text('$assistantCount', style: const TextStyle(fontSize: AppFontSize.f11)),
                     ),
                   ],
                 ],
@@ -2158,13 +2158,13 @@ class _FacilityScreenState extends State<FacilityScreen> {
         final docs = snapshot.data!.docs;
         if (docs.isEmpty) {
           return Container(
-            padding: const EdgeInsets.all(20),
+            padding: const EdgeInsets.all(AppSpacing.s20),
             decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(14),
-              border: Border.all(color: Colors.grey.withValues(alpha: 0.15)),
+              color: context.colors.surface,
+              borderRadius: BorderRadius.circular(AppRadius.r14),
+              border: Border.all(color: context.colors.textHint.withValues(alpha: AppAlpha.a15)),
             ),
-            child: Text('No products in this facility yet.', style: TextStyle(color: Colors.grey[600])),
+            child: Text('No products in this facility yet.', style: TextStyle(color: context.colors.textMuted)),
           );
         }
 
@@ -2210,60 +2210,60 @@ class _FacilityScreenState extends State<FacilityScreen> {
           children: [
             Container(
               width: double.infinity,
-              padding: const EdgeInsets.all(20),
+              padding: const EdgeInsets.all(AppSpacing.s20),
               decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(14),
-                border: Border.all(color: Colors.grey.withValues(alpha: 0.15)),
+                color: context.colors.surface,
+                borderRadius: BorderRadius.circular(AppRadius.r14),
+                border: Border.all(color: context.colors.textHint.withValues(alpha: AppAlpha.a15)),
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text('By Category', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
-                  const SizedBox(height: 12),
+                  const Text('By Category', style: TextStyle(fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f15)),
+                  const SizedBox(height: AppSpacing.s12),
                   ...sortedCategories.map((e) => Padding(
-                        padding: const EdgeInsets.only(bottom: 8),
+                        padding: const EdgeInsets.only(bottom: AppSpacing.s8),
                         child: Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
-                            Text(e.key, style: const TextStyle(fontSize: 13.5)),
+                            Text(e.key, style: const TextStyle(fontSize: AppFontSize.f13_5)),
                             Text('${e.value}',
-                                style: const TextStyle(fontSize: 13.5, fontWeight: FontWeight.bold)),
+                                style: const TextStyle(fontSize: AppFontSize.f13_5, fontWeight: AppFontWeight.bold)),
                           ],
                         ),
                       )),
                 ],
               ),
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: AppSpacing.s16),
             Container(
               width: double.infinity,
-              padding: const EdgeInsets.all(20),
+              padding: const EdgeInsets.all(AppSpacing.s20),
               decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(14),
-                border: Border.all(color: Colors.grey.withValues(alpha: 0.15)),
+                color: context.colors.surface,
+                borderRadius: BorderRadius.circular(AppRadius.r14),
+                border: Border.all(color: context.colors.textHint.withValues(alpha: AppAlpha.a15)),
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text('Needs Attention', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
-                  const SizedBox(height: 12),
+                  const Text('Needs Attention', style: TextStyle(fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f15)),
+                  const SizedBox(height: AppSpacing.s12),
                   if (needsAttention.isEmpty)
                     Text('Nothing low on stock or expired right now.',
-                        style: TextStyle(color: Colors.grey[600], fontSize: 13))
+                        style: TextStyle(color: context.colors.textMuted, fontSize: AppFontSize.f13))
                   else
                     ...needsAttention.take(10).map((p) => Padding(
-                          padding: const EdgeInsets.only(bottom: 10),
+                          padding: const EdgeInsets.only(bottom: AppSpacing.s10),
                           child: Row(
                             children: [
                               Expanded(
-                                child: Text(p['name'] as String, style: const TextStyle(fontSize: 13.5)),
+                                child: Text(p['name'] as String, style: const TextStyle(fontSize: AppFontSize.f13_5)),
                               ),
                               if (p['isExpired'] as bool)
-                                _miniBadge('Expired', Colors.red)
+                                _miniBadge('Expired', context.colors.danger)
                               else if (p['isLow'] as bool)
-                                _miniBadge('Low Stock', Colors.orange),
+                                _miniBadge('Low Stock', context.colors.warning),
                             ],
                           ),
                         )),
@@ -2278,13 +2278,13 @@ class _FacilityScreenState extends State<FacilityScreen> {
 
   Widget _miniBadge(String label, Color color) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.s8, vertical: AppSpacing.s3),
       decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.1),
-        borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: color.withValues(alpha: 0.4)),
+        color: color.withValues(alpha: AppAlpha.a10),
+        borderRadius: BorderRadius.circular(AppRadius.r10),
+        border: Border.all(color: color.withValues(alpha: AppAlpha.a40)),
       ),
-      child: Text(label, style: TextStyle(color: color, fontSize: 11, fontWeight: FontWeight.w600)),
+      child: Text(label, style: TextStyle(color: color, fontSize: AppFontSize.f11, fontWeight: AppFontWeight.semibold)),
     );
   }
 
