@@ -26,6 +26,7 @@ import '../../config/money.dart';
 import '../../config/app_timeouts.dart';
 import '../../config/app_date_format.dart';
 import '../../ui/feedback/app_feedback.dart';
+import '../../l10n/l10n.dart';
 
 class SubscriptionScreen extends StatefulWidget {
   final bool isModal;
@@ -402,7 +403,7 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
                 // old 'Tigo Pesa'); old requests keep what they stored.
                 items: [
                   for (final m in PaymentMethod.subscription)
-                    DropdownMenuItem(value: m.key, child: Text(m.label)),
+                    DropdownMenuItem(value: m.key, child: Text(context.l10n.paymentMethodLabel(m.key))),
                 ],
                 onChanged: (value) {
                   if (value != null) setState(() => _method = value);

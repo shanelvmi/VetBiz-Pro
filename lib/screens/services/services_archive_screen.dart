@@ -557,7 +557,7 @@ class _ServicesArchiveScreenState extends State<ServicesArchiveScreen> {
             ),
             Expanded(
               flex: 2,
-              child: Text(service['paymentMethod'] ?? '-', style: const TextStyle(fontSize: AppFontSize.f13), maxLines: 1, overflow: TextOverflow.ellipsis),
+              child: Text(context.l10n.paymentMethodLabel((service['paymentMethod'] as String?) ?? '-'), style: const TextStyle(fontSize: AppFontSize.f13), maxLines: 1, overflow: TextOverflow.ellipsis),
             ),
           ],
         ),
@@ -699,7 +699,7 @@ class _ServicesArchiveScreenState extends State<ServicesArchiveScreen> {
                   ),
                   const SizedBox(height: AppSpacing.s10),
                   _totalsRow('Paid Amount', Money.format(totalPaid)),
-                  _totalsRow('Payment Method', service['paymentMethod'] ?? 'Not recorded'),
+                  _totalsRow('Payment Method', context.l10n.paymentMethodLabel((service['paymentMethod'] as String?) ?? 'Not recorded')),
                   if (transactionId != null && transactionId.isNotEmpty)
                     _totalsRow('Transaction ID', transactionId),
                 ],

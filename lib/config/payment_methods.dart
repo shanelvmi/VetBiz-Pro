@@ -1,8 +1,8 @@
 /// How a payment was made.
 ///
 /// [key] is what is SAVED (in records, and as map keys in reports) and must
-/// never change. What is shown on screen is [label], which is translated
-/// later (step 2F); for now it is the same English text as the key.
+/// never change. What is shown on screen is its label in the current
+/// language: `context.l10n.paymentMethodLabel(key)` (lib/l10n/stored_labels.dart).
 enum PaymentMethod {
   cash('Cash'),
   mPesa('M-Pesa'),
@@ -23,8 +23,6 @@ enum PaymentMethod {
   /// Not a method: what is shown when nothing was paid, and what the daily
   /// report STORES as a sale row's method in that case (so it never changes).
   static const String onCredit = 'On Credit';
-
-  String get label => key;
 
   /// The methods offered when recording money received (sales, services,
   /// repayments, other income) - kPaymentMethods, in the same order.

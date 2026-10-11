@@ -20,6 +20,7 @@ import '../../theme/theme_context.dart';
 import '../../theme/app_breakpoints.dart';
 import '../../theme/app_motion.dart';
 import '../../ui/feedback/app_feedback.dart';
+import '../../l10n/l10n.dart';
 
 // Expense categories, grouped for the picker - matches the proposed
 // structure exactly. Kept local to this file rather than centralized,
@@ -433,7 +434,7 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
                           children: [
                             Icon(iconForPaymentMethod(method), size: AppIconSize.i18, color: context.colors.primary),
                             const SizedBox(width: AppSpacing.s10),
-                            Text(method),
+                            Text(context.l10n.paymentMethodLabel(method)),
                           ],
                         ),
                       );
@@ -450,7 +451,7 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
                         children: [
                           Icon(iconForPaymentMethod(paymentMethod ?? PaymentMethod.cash.key), size: AppIconSize.i18, color: context.colors.primary),
                           const SizedBox(width: AppSpacing.s10),
-                          Expanded(child: Text(paymentMethod ?? 'Select method')),
+                          Expanded(child: Text(paymentMethod == null ? 'Select method' : context.l10n.paymentMethodLabel(paymentMethod!))),
                           Icon(Icons.expand_more, size: AppIconSize.i18, color: context.colors.textMuted),
                         ],
                       ),

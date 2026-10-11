@@ -668,7 +668,7 @@ class _ServicesScreenState extends State<ServicesScreen> {
             ),
             Expanded(
               flex: 2,
-              child: Text(service.paymentMethod ?? '-', style: const TextStyle(fontSize: AppFontSize.f13), maxLines: 1, overflow: TextOverflow.ellipsis),
+              child: Text(context.l10n.paymentMethodLabel(service.paymentMethod ?? '-'), style: const TextStyle(fontSize: AppFontSize.f13), maxLines: 1, overflow: TextOverflow.ellipsis),
             ),
             Expanded(
               flex: 1,
@@ -848,7 +848,7 @@ class _ServicesScreenState extends State<ServicesScreen> {
                   ),
                   const SizedBox(height: AppSpacing.s10),
                   _totalsRow('Paid Amount', Money.format(service.totalPaid)),
-                  _totalsRow('Payment Method', service.paymentMethod ?? 'Not recorded'),
+                  _totalsRow('Payment Method', context.l10n.paymentMethodLabel(service.paymentMethod ?? 'Not recorded')),
                   if (service.transactionId != null && service.transactionId!.isNotEmpty)
                     _totalsRow('Transaction ID', service.transactionId!),
                   _totalsRow('Paid On', service.updatedAt != null ? dateOnlyFormatter.format(service.updatedAt!) : '-'),

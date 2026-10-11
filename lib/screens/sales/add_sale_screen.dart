@@ -1078,7 +1078,7 @@ class _AddSaleScreenState extends State<AddSaleScreen> {
                       children: [
                         Icon(iconForPaymentMethod(method), size: AppIconSize.i18, color: context.colors.primary),
                         const SizedBox(width: AppSpacing.s10),
-                        Text(method),
+                        Text(context.l10n.paymentMethodLabel(method)),
                       ],
                     ),
                   );
@@ -1101,7 +1101,7 @@ class _AddSaleScreenState extends State<AddSaleScreen> {
                       const SizedBox(width: AppSpacing.s10),
                       Expanded(
                         child: Text(
-                          paymentMethod ?? 'Select Method',
+                          paymentMethod == null ? 'Select Method' : context.l10n.paymentMethodLabel(paymentMethod!),
                           style: TextStyle(color: _paymentMethodMissing ? context.colors.danger : (paymentMethod == null ? context.colors.textMuted : null)),
                         ),
                       ),

@@ -28,6 +28,7 @@ import '../../config/app_ranges.dart';
 import '../../config/app_date_format.dart';
 import '../../data/data_keys.dart';
 import '../../config/app_links.dart';
+import '../../l10n/l10n.dart';
 
 class _PaymentMetric {
   final double amount;
@@ -750,7 +751,7 @@ class _PaymentsScreenState extends State<PaymentsScreen> {
                     Text('${e.description}${reference != null ? ' $reference' : ''}', style: const TextStyle(fontSize: AppFontSize.f14)),
                     const SizedBox(height: AppSpacing.s16),
                     _detailLabel('Payment Method'),
-                    Text(e.paymentMethod ?? '-', style: const TextStyle(fontSize: AppFontSize.f14)),
+                    Text(context.l10n.paymentMethodLabel(e.paymentMethod ?? '-'), style: const TextStyle(fontSize: AppFontSize.f14)),
                     const SizedBox(height: AppSpacing.s16),
                     _detailLabel('Recorded By'),
                     Row(
@@ -866,7 +867,8 @@ class _PaymentsScreenState extends State<PaymentsScreen> {
                 style: TextStyle(color: context.colors.textPrimary, fontSize: AppFontSize.f13),
                 items: [
                   const DropdownMenuItem<String?>(value: null, child: Text('Method: All')),
-                  ...kPaymentMethods.map((m) => DropdownMenuItem<String?>(value: m, child: Text('Method: $m'))),
+                  // Shows the label; filters on the stored method.
+                  ...kPaymentMethods.map((m) => DropdownMenuItem<String?>(value: m, child: Text('Method: ${context.l10n.paymentMethodLabel(m)}'))),
                 ],
                 onChanged: (val) {
                   setState(() => _selectedMethodFilter = val);
@@ -1060,7 +1062,7 @@ class _PaymentsScreenState extends State<PaymentsScreen> {
           ),
           Expanded(
             flex: 2,
-            child: Text(e.paymentMethod ?? '-', style: const TextStyle(fontSize: AppFontSize.f13)),
+            child: Text(context.l10n.paymentMethodLabel(e.paymentMethod ?? '-'), style: const TextStyle(fontSize: AppFontSize.f13)),
           ),
           Expanded(
             flex: 2,

@@ -23,6 +23,7 @@ import '../../theme/app_motion.dart';
 import '../../ui/feedback/app_feedback.dart';
 import '../../services/trash_service.dart';
 import '../../data/collections.dart';
+import '../../l10n/l10n.dart';
 
 class TransactionScreen extends StatefulWidget {
   const TransactionScreen({super.key});
@@ -521,7 +522,7 @@ class _TransactionScreenState extends State<TransactionScreen> {
           ),
           Expanded(
             flex: 2,
-            child: Text(tx.paymentMethod ?? '-', style: const TextStyle(fontSize: AppFontSize.f13)),
+            child: Text(context.l10n.paymentMethodLabel(tx.paymentMethod ?? '-'), style: const TextStyle(fontSize: AppFontSize.f13)),
           ),
           Expanded(
             flex: 2,
@@ -722,7 +723,7 @@ class _TransactionScreenState extends State<TransactionScreen> {
                 children: [
                   Icon(iconForPaymentMethod(tx.paymentMethod!), size: AppIconSize.i16, color: context.colors.textMuted),
                   const SizedBox(width: AppSpacing.s6),
-                  Text(tx.paymentMethod!, style: const TextStyle(fontSize: AppFontSize.f14)),
+                  Text(context.l10n.paymentMethodLabel(tx.paymentMethod!), style: const TextStyle(fontSize: AppFontSize.f14)),
                 ],
               ),
               const SizedBox(height: AppSpacing.s16),

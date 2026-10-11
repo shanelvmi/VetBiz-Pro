@@ -817,7 +817,7 @@ class _AddEditServiceScreenState extends State<AddEditServiceScreen> {
                           children: [
                             Icon(iconForPaymentMethod(method), size: AppIconSize.i18, color: context.colors.primary),
                             const SizedBox(width: AppSpacing.s10),
-                            Text(method),
+                            Text(context.l10n.paymentMethodLabel(method)),
                           ],
                         ),
                       );
@@ -834,7 +834,7 @@ class _AddEditServiceScreenState extends State<AddEditServiceScreen> {
                         children: [
                           Icon(iconForPaymentMethod(_paymentMethod ?? PaymentMethod.cash.key), size: AppIconSize.i18, color: context.colors.primary),
                           const SizedBox(width: AppSpacing.s10),
-                          Expanded(child: Text(_paymentMethod ?? 'Select method')),
+                          Expanded(child: Text(_paymentMethod == null ? 'Select method' : context.l10n.paymentMethodLabel(_paymentMethod!))),
                           Icon(Icons.expand_more, size: AppIconSize.i18, color: context.colors.textMuted),
                         ],
                       ),

@@ -13,6 +13,7 @@ import '../../config/app_date_format.dart';
 import '../../theme/app_text.dart';
 import '../../theme/app_dimens.dart';
 import '../../theme/theme_context.dart';
+import '../../l10n/l10n.dart';
 
 class SalesArchiveScreen extends StatefulWidget {
   const SalesArchiveScreen({super.key});
@@ -661,7 +662,7 @@ class _SalesArchiveScreenState extends State<SalesArchiveScreen> {
             const Divider(height: 24),
             _detailField(Icons.person_outline, 'Client', sale['clientName'] ?? 'Walk-in'),
             _detailField(Icons.badge_outlined, 'Seller', sale['soldByName'] ?? 'Unknown'),
-            _detailField(Icons.payment_outlined, 'Payment Method', sale['paymentMethod'] ?? 'Not recorded'),
+            _detailField(Icons.payment_outlined, 'Payment Method', context.l10n.paymentMethodLabel((sale['paymentMethod'] as String?) ?? 'Not recorded')),
             _detailField(Icons.edit_note_outlined, 'Notes',
                 (sale['notes'] as String?)?.isNotEmpty == true ? sale['notes'] as String : '-'),
             const SizedBox(height: AppSpacing.s20),

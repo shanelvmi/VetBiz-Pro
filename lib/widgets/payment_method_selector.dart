@@ -71,7 +71,8 @@ class PaymentMethodSelector extends StatelessWidget {
                     color: selected ? context.colors.onPrimary : activeColor,
                   ),
                   const SizedBox(width: AppSpacing.s6),
-                  Text(method),
+                  // Shows the label; the chip selects the stored method.
+                  Text(context.l10n.paymentMethodLabel(method)),
                 ],
               ),
               labelStyle: TextStyle(

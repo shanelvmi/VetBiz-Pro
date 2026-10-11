@@ -9,6 +9,7 @@ import '../../theme/activity_type_style.dart';
 import '../../theme/app_text.dart';
 import '../../theme/app_dimens.dart';
 import '../../theme/theme_context.dart';
+import '../../l10n/l10n.dart';
 
 /// The full tabbed report layout (Summary through Activity Log) -
 /// extracted as its own reusable widget since both the main "today's
@@ -442,7 +443,7 @@ class _ReportTabbedContentState extends State<ReportTabbedContent> with SingleTi
                       Expanded(flex: 3, child: Text(s.customerName, style: const TextStyle(fontSize: AppFontSize.f12_5))),
                       Expanded(flex: 1, child: Text('${s.itemCount}', style: const TextStyle(fontSize: AppFontSize.f12_5))),
                       Expanded(flex: 2, child: Text(Money.decimal(s.amount), style: const TextStyle(fontSize: AppFontSize.f12_5, fontWeight: AppFontWeight.semibold))),
-                      Expanded(flex: 2, child: Text(s.paymentMethod, style: const TextStyle(fontSize: AppFontSize.f12_5))),
+                      Expanded(flex: 2, child: Text(context.l10n.paymentMethodLabel(s.paymentMethod), style: const TextStyle(fontSize: AppFontSize.f12_5))),
                     ],
                   ),
                 ),

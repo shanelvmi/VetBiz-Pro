@@ -23,6 +23,7 @@ import '../../theme/app_dimens.dart';
 import '../../theme/theme_context.dart';
 import '../../theme/app_breakpoints.dart';
 import '../../ui/feedback/app_feedback.dart';
+import '../../l10n/l10n.dart';
 
 class SalesScreen extends StatefulWidget {
   const SalesScreen({super.key});
@@ -915,7 +916,7 @@ class _SalesScreenState extends State<SalesScreen> {
             const Divider(height: 24),
             _detailField(Icons.person_outline, 'Client', sale.clientName ?? 'Walk-in', subtitle: client?.phone),
             _detailField(Icons.badge_outlined, 'Seller', sale.soldByName),
-            _detailField(Icons.payment_outlined, 'Payment Method', sale.paymentMethod ?? 'Not recorded'),
+            _detailField(Icons.payment_outlined, 'Payment Method', context.l10n.paymentMethodLabel(sale.paymentMethod ?? 'Not recorded')),
             _detailField(Icons.edit_note_outlined, 'Notes', (sale.notes?.isNotEmpty == true) ? sale.notes! : '-'),
             const SizedBox(height: AppSpacing.s20),
             Row(
