@@ -111,17 +111,13 @@ class ProductProvider with ChangeNotifier {
   /// ADD PRODUCT
   /// -------------------------------
   /// New products usually start in STOCK
-  Future<void> addProduct(
-    Product product,
-    BuildContext context,
-  ) async {
+  /// The product must carry its facilityId (the caller reads it before any
+  /// await, so no BuildContext is needed here).
+  Future<void> addProduct(Product product) async {
     try {
-      final facilityId = product.facilityId.isNotEmpty
-          ? product.facilityId
-          : Provider.of<FacilityProvider>(context, listen: false)
-              .selectedFacilityId;
+      final facilityId = product.facilityId;
 
-      if (facilityId == null || facilityId.isEmpty) return;
+      if (facilityId.isEmpty) return;
 
       final docRef = FirebaseFirestore.instance
           .collection(Collections.facilities)
@@ -709,17 +705,12 @@ class ProductProvider with ChangeNotifier {
   /// -------------------------------
   /// UPDATE PRODUCT
   /// -------------------------------
-  Future<void> updateProduct(
-    Product updatedProduct,
-    BuildContext context,
-  ) async {
+  /// Like addProduct, the product must carry its facilityId.
+  Future<void> updateProduct(Product updatedProduct) async {
     try {
-      final facilityId = updatedProduct.facilityId.isNotEmpty
-          ? updatedProduct.facilityId
-          : Provider.of<FacilityProvider>(context, listen: false)
-              .selectedFacilityId;
+      final facilityId = updatedProduct.facilityId;
 
-      if (facilityId == null || facilityId.isEmpty) return;
+      if (facilityId.isEmpty) return;
 
       final updated = updatedProduct.copyWith(
         updatedAt: DateTime.now(),

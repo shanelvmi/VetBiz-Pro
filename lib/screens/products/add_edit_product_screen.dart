@@ -889,7 +889,7 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
       final userName = userInfo['userName']!;
 
       if (widget.product == null) {
-        await provider.addProduct(newProduct, context);
+        await provider.addProduct(newProduct);
         await ActivityLogger.logActivity(
           facilityId: facilityId,
           userId: userId,
@@ -898,7 +898,7 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
           description: "Added new product: ${newProduct.name}",
         );
       } else {
-        await provider.updateProduct(newProduct, context);
+        await provider.updateProduct(newProduct);
 
         // Persist the quantity fields from the simple editor above - but
         // only if the person actually changed one of them. These

@@ -5,6 +5,7 @@ import 'package:provider/provider.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 import '../../providers/transaction_provider.dart';
+import '../../providers/facility_provider.dart';
 import '../../models/transaction.dart';
 import '../../services/auth_service.dart';
 import '../../widgets/payment_method_selector.dart';
@@ -105,6 +106,8 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
     setState(() => _isSaving = true);
 
     final provider = Provider.of<TransactionProvider>(context, listen: false);
+    // Read before the awaits below, so the save still uses this facility.
+    final facilityId = Provider.of<FacilityProvider>(context, listen: false).selectedFacilityId;
 
     if (widget.transaction != null) {
       // Editing - keep the original id, date, and who recorded it; only
@@ -155,7 +158,7 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
     );
 
     try {
-      await provider.addTransaction(newTx, context);
+      await provider.addTransaction(newTx, facilityId);
       if (!context.mounted) return;
 
       AppFeedback.success('Transaction saved');

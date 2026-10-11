@@ -258,12 +258,8 @@ class TransactionProvider with ChangeNotifier {
   /// ADD TRANSACTION
   /// ---------------------------------------------------
   Future<void> addTransaction(
-      TransactionModel transaction, BuildContext context) async {
+      TransactionModel transaction, String? facilityId) async {
     try {
-      final facilityId =
-          Provider.of<FacilityProvider>(context, listen: false)
-              .selectedFacilityId;
-
       if (facilityId == null || facilityId.isEmpty) {
         debugPrint('Facility ID missing, cannot save transaction.');
         return;
