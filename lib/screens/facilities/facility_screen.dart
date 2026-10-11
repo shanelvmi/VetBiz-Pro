@@ -19,7 +19,6 @@ import '../../services/sales_summary_service.dart';
 import '../../utils/force_logout.dart';
 import '../../utils/facility_limit_helper.dart';
 import '../admin/manage_assistants_screen.dart';
-import '../../theme/app_palette.dart';
 import '../../data/collections.dart';
 import '../../data/fields.dart';
 import '../../data/user_role.dart';
@@ -27,10 +26,11 @@ import '../../config/app_defaults.dart';
 import '../../config/app_limits.dart';
 import '../../config/app_ranges.dart';
 import '../../config/app_rules.dart';
-
-const Color deepGreen = AppPalette.primary;
-const Color warmAmber = AppPalette.accent;
-const Color offWhite = AppPalette.background;
+import '../../theme/app_text.dart';
+import '../../theme/app_dimens.dart';
+import '../../theme/theme_context.dart';
+import '../../ui/feedback/app_feedback.dart';
+import '../../ui/feedback/friendly_error.dart';
 
 class FacilityScreen extends StatefulWidget {
   const FacilityScreen({super.key});
@@ -332,7 +332,7 @@ class _FacilityScreenState extends State<FacilityScreen> {
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Failed to load facilities: $e")));
+        AppFeedback.error("Couldn't load facilities", error: e);
       }
     } finally {
       if (mounted) setState(() => isLoading = false);
@@ -378,7 +378,7 @@ class _FacilityScreenState extends State<FacilityScreen> {
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context),
-              child: Text('OK', style: TextStyle(color: deepGreen)),
+              child: Text('OK', style: TextStyle(color: context.colors.primary)),
             ),
           ],
         ),
@@ -425,32 +425,32 @@ class _FacilityScreenState extends State<FacilityScreen> {
                       width: 72,
                       height: 72,
                       decoration: BoxDecoration(
-                        color: Colors.grey.shade100,
-                        borderRadius: BorderRadius.circular(12),
-                        border: Border.all(color: Colors.grey.shade300),
+                        color: context.colors.surfaceMuted,
+                        borderRadius: BorderRadius.circular(AppRadius.r12),
+                        border: Border.all(color: context.colors.border),
                       ),
-                      padding: const EdgeInsets.all(6),
+                      padding: const EdgeInsets.all(AppSpacing.s6),
                       child: pendingLogoBytes != null
                           ? Image.memory(pendingLogoBytes!, fit: BoxFit.contain)
-                          : Icon(Icons.add_a_photo_outlined, color: Colors.grey[500], size: 26),
+                          : Icon(Icons.add_a_photo_outlined, color: context.colors.textHint, size: AppIconSize.i24),
                     ),
                   ),
                 ),
-                const SizedBox(height: 4),
+                const SizedBox(height: AppSpacing.s4),
                 Center(
                   child: Text(
                     'Logo (optional)',
-                    style: TextStyle(fontSize: 11, color: Colors.grey[600]),
+                    style: TextStyle(fontSize: AppFontSize.f11, color: context.colors.textMuted),
                   ),
                 ),
-                const SizedBox(height: 16),
+                const SizedBox(height: AppSpacing.s16),
                 TextField(
                   controller: nameController,
                   textCapitalization: TextCapitalization.sentences,
                   inputFormatters: [SentenceCapitalizationFormatter()],
                   decoration: const InputDecoration(labelText: 'Facility Name'),
                 ),
-                const SizedBox(height: 12),
+                const SizedBox(height: AppSpacing.s12),
                 DropdownButtonFormField<String>(
                   initialValue: selectedType,
                   decoration: const InputDecoration(labelText: 'Type'),
@@ -458,8 +458,8 @@ class _FacilityScreenState extends State<FacilityScreen> {
                   onChanged: (val) => setDialogState(() => selectedType = val),
                 ),
                 if (dialogError != null) ...[
-                  const SizedBox(height: 8),
-                  Text(dialogError!, style: const TextStyle(color: Colors.redAccent, fontSize: 12.5)),
+                  const SizedBox(height: AppSpacing.s8),
+                  Text(dialogError!, style: TextStyle(color: context.colors.dangerAccent, fontSize: AppFontSize.f12_5)),
                 ],
               ],
             ),
@@ -470,8 +470,8 @@ class _FacilityScreenState extends State<FacilityScreen> {
               onPressed: _isAddingFacility ? null : () => Navigator.pop(dialogContext),
               style: ButtonStyle(
                 foregroundColor: WidgetStateProperty.resolveWith<Color>((states) {
-                  if (states.contains(WidgetState.hovered)) return warmAmber;
-                  return deepGreen;
+                  if (states.contains(WidgetState.hovered)) return context.colors.accent;
+                  return context.colors.primary;
                 }),
               ),
               child: const Text('Cancel'),
@@ -507,20 +507,20 @@ class _FacilityScreenState extends State<FacilityScreen> {
                     },
               style: ButtonStyle(
                 backgroundColor: WidgetStateProperty.resolveWith<Color>((states) {
-                  if (states.contains(WidgetState.hovered)) return warmAmber;
-                  return deepGreen;
+                  if (states.contains(WidgetState.hovered)) return context.colors.accent;
+                  return context.colors.primary;
                 }),
-                foregroundColor: WidgetStateProperty.all(Colors.white),
+                foregroundColor: WidgetStateProperty.all(context.colors.onPrimary),
               ),
               child: _isAddingFacility
-                  ? const Row(
+                  ? Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         SizedBox(
                           width: 16, height: 16,
-                          child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                          child: CircularProgressIndicator(strokeWidth: 2, color: context.colors.onPrimary),
                         ),
-                        SizedBox(width: 8),
+                        SizedBox(width: AppSpacing.s8),
                         Text('Adding...'),
                       ],
                     )
@@ -562,9 +562,7 @@ class _FacilityScreenState extends State<FacilityScreen> {
     }
 
     if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Facility added'), backgroundColor: Colors.green),
-      );
+      AppFeedback.success('Facility added');
       await fetchFacilities();
     }
 
@@ -642,11 +640,11 @@ class _FacilityScreenState extends State<FacilityScreen> {
                           width: 72,
                           height: 72,
                           decoration: BoxDecoration(
-                            color: Colors.grey.shade100,
-                            borderRadius: BorderRadius.circular(12),
-                            border: Border.all(color: Colors.grey.shade300),
+                            color: context.colors.surfaceMuted,
+                            borderRadius: BorderRadius.circular(AppRadius.r12),
+                            border: Border.all(color: context.colors.border),
                           ),
-                          padding: const EdgeInsets.all(6),
+                          padding: const EdgeInsets.all(AppSpacing.s6),
                           child: pendingLogoBytes != null
                               ? Image.memory(pendingLogoBytes!, fit: BoxFit.contain)
                               : (existingLogoUrl != null && !logoMarkedForRemoval
@@ -654,36 +652,36 @@ class _FacilityScreenState extends State<FacilityScreen> {
                                       existingLogoUrl,
                                       fit: BoxFit.contain,
                                       errorBuilder: (context, error, stackTrace) =>
-                                          Icon(Icons.business, color: deepGreen, size: 32),
+                                          Icon(Icons.business, color: context.colors.primary, size: AppIconSize.i32),
                                     )
-                                  : Icon(Icons.business, color: deepGreen, size: 32)),
+                                  : Icon(Icons.business, color: context.colors.primary, size: AppIconSize.i32)),
                         ),
                         Container(
-                          padding: const EdgeInsets.all(3),
+                          padding: const EdgeInsets.all(AppSpacing.s3),
                           decoration: BoxDecoration(
-                            color: warmAmber,
+                            color: context.colors.accent,
                             shape: BoxShape.circle,
-                            border: Border.all(color: Colors.white, width: 1.5),
+                            border: Border.all(color: context.colors.surface, width: 1.5),
                           ),
-                          child: const Icon(Icons.camera_alt, size: 12, color: Colors.white),
+                          child: Icon(Icons.camera_alt, size: AppIconSize.i12, color: context.colors.onPrimary),
                         ),
                       ],
                     ),
                   ),
                 ),
-                const SizedBox(height: 4),
+                const SizedBox(height: AppSpacing.s4),
                 Center(
                   child: Text(
                     'Tap to change logo',
-                    style: TextStyle(fontSize: 11, color: Colors.grey[600]),
+                    style: TextStyle(fontSize: AppFontSize.f11, color: context.colors.textMuted),
                   ),
                 ),
                 if ((pendingLogoBytes != null || existingLogoUrl != null) && !logoMarkedForRemoval) ...[
-                  const SizedBox(height: 2),
+                  const SizedBox(height: AppSpacing.s2),
                   Center(
                     child: TextButton(
                       style: TextButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                        padding: const EdgeInsets.symmetric(horizontal: AppSpacing.s8, vertical: AppSpacing.s2),
                         minimumSize: Size.zero,
                         tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                       ),
@@ -693,28 +691,28 @@ class _FacilityScreenState extends State<FacilityScreen> {
                                 pendingLogoBytes = null;
                                 logoMarkedForRemoval = true;
                               }),
-                      child: const Text(
+                      child: Text(
                         'Remove logo',
-                        style: TextStyle(fontSize: 11, color: Colors.redAccent),
+                        style: TextStyle(fontSize: AppFontSize.f11, color: context.colors.dangerAccent),
                       ),
                     ),
                   ),
                 ],
-                const SizedBox(height: 16),
+                const SizedBox(height: AppSpacing.s16),
                 TextField(
                   controller: nameController,
                   textCapitalization: TextCapitalization.sentences,
                   inputFormatters: [SentenceCapitalizationFormatter()],
                   decoration: const InputDecoration(labelText: 'Facility Name'),
                 ),
-                const SizedBox(height: 12),
+                const SizedBox(height: AppSpacing.s12),
                 DropdownButtonFormField<String>(
                   initialValue: selectedType,
                   decoration: const InputDecoration(labelText: 'Type'),
                   items: kFacilityTypes.map((t) => DropdownMenuItem(value: t, child: Text(t))).toList(),
                   onChanged: (val) => setDialogState(() => selectedType = val),
                 ),
-                const SizedBox(height: 12),
+                const SizedBox(height: AppSpacing.s12),
                 TextField(
                   controller: emailController,
                   keyboardType: TextInputType.emailAddress,
@@ -722,7 +720,7 @@ class _FacilityScreenState extends State<FacilityScreen> {
                     labelText: 'Business Email (optional)',
                   ),
                 ),
-                const SizedBox(height: 12),
+                const SizedBox(height: AppSpacing.s12),
                 TextField(
                   controller: phoneController,
                   keyboardType: TextInputType.phone,
@@ -730,7 +728,7 @@ class _FacilityScreenState extends State<FacilityScreen> {
                     labelText: 'Business Phone (optional)',
                   ),
                 ),
-                const SizedBox(height: 12),
+                const SizedBox(height: AppSpacing.s12),
                 TextField(
                   controller: addressController,
                   textCapitalization: TextCapitalization.sentences,
@@ -739,7 +737,7 @@ class _FacilityScreenState extends State<FacilityScreen> {
                     labelText: 'Address (optional)',
                   ),
                 ),
-                const SizedBox(height: 12),
+                const SizedBox(height: AppSpacing.s12),
                 TextField(
                   controller: descriptionController,
                   textCapitalization: TextCapitalization.sentences,
@@ -749,7 +747,7 @@ class _FacilityScreenState extends State<FacilityScreen> {
                     labelText: 'Description (optional)',
                   ),
                 ),
-                const SizedBox(height: 12),
+                const SizedBox(height: AppSpacing.s12),
                 TextField(
                   controller: taglineController,
                   textCapitalization: TextCapitalization.sentences,
@@ -759,14 +757,14 @@ class _FacilityScreenState extends State<FacilityScreen> {
                     hintText: 'e.g. Agrovet & Animal Care',
                   ),
                 ),
-                const SizedBox(height: 12),
+                const SizedBox(height: AppSpacing.s12),
                 TextField(
                   controller: licenseController,
                   decoration: const InputDecoration(
                     labelText: 'License Number (optional)',
                   ),
                 ),
-                const SizedBox(height: 12),
+                const SizedBox(height: AppSpacing.s12),
                 TextField(
                   controller: tinController,
                   decoration: const InputDecoration(
@@ -774,7 +772,7 @@ class _FacilityScreenState extends State<FacilityScreen> {
                     hintText: 'Tax Identification Number',
                   ),
                 ),
-                const SizedBox(height: 12),
+                const SizedBox(height: AppSpacing.s12),
                 DropdownButtonFormField<String>(
                   initialValue: selectedOwnership,
                   decoration: const InputDecoration(labelText: 'Ownership (optional)'),
@@ -784,7 +782,7 @@ class _FacilityScreenState extends State<FacilityScreen> {
                   ],
                   onChanged: (val) => setDialogState(() => selectedOwnership = val),
                 ),
-                const SizedBox(height: 12),
+                const SizedBox(height: AppSpacing.s12),
                 DropdownButtonFormField<String>(
                   initialValue: selectedStatus,
                   decoration: const InputDecoration(labelText: 'Status'),
@@ -796,7 +794,7 @@ class _FacilityScreenState extends State<FacilityScreen> {
                     if (val != null) setDialogState(() => selectedStatus = val);
                   },
                 ),
-                const SizedBox(height: 12),
+                const SizedBox(height: AppSpacing.s12),
                 DropdownButtonFormField<String>(
                   initialValue: selectedRestockFrequency,
                   decoration: const InputDecoration(
@@ -812,8 +810,8 @@ class _FacilityScreenState extends State<FacilityScreen> {
                   },
                 ),
                 if (dialogError != null) ...[
-                  const SizedBox(height: 8),
-                  Text(dialogError!, style: const TextStyle(color: Colors.redAccent, fontSize: 12.5)),
+                  const SizedBox(height: AppSpacing.s8),
+                  Text(dialogError!, style: TextStyle(color: context.colors.dangerAccent, fontSize: AppFontSize.f12_5)),
                 ],
               ],
             ),
@@ -824,8 +822,8 @@ class _FacilityScreenState extends State<FacilityScreen> {
               onPressed: isSaving ? null : () => Navigator.pop(dialogContext),
               style: ButtonStyle(
                 foregroundColor: WidgetStateProperty.resolveWith<Color>((states) {
-                  if (states.contains(WidgetState.hovered)) return warmAmber;
-                  return deepGreen;
+                  if (states.contains(WidgetState.hovered)) return context.colors.accent;
+                  return context.colors.primary;
                 }),
               ),
               child: const Text('Cancel'),
@@ -870,21 +868,21 @@ class _FacilityScreenState extends State<FacilityScreen> {
                       } catch (e) {
                         setDialogState(() {
                           isSaving = false;
-                          dialogError = 'Could not save changes: $e';
+                          dialogError = "Couldn't save the changes. ${FriendlyError.messageFor(e)}";
                         });
                       }
                     },
               style: ButtonStyle(
                 backgroundColor: WidgetStateProperty.resolveWith<Color>((states) {
-                  if (states.contains(WidgetState.hovered)) return warmAmber;
-                  return deepGreen;
+                  if (states.contains(WidgetState.hovered)) return context.colors.accent;
+                  return context.colors.primary;
                 }),
-                foregroundColor: WidgetStateProperty.all(Colors.white),
+                foregroundColor: WidgetStateProperty.all(context.colors.onPrimary),
               ),
               child: isSaving
-                  ? const SizedBox(
+                  ? SizedBox(
                       width: 18, height: 18,
-                      child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                      child: CircularProgressIndicator(strokeWidth: 2, color: context.colors.onPrimary),
                     )
                   : const Text('Save'),
             ),
@@ -1052,8 +1050,8 @@ class _FacilityScreenState extends State<FacilityScreen> {
               onPressed: () => Navigator.pop(context),
               style: ButtonStyle(
                 foregroundColor: WidgetStateProperty.resolveWith<Color>((states) {
-                  if (states.contains(WidgetState.hovered)) return warmAmber;
-                  return deepGreen;
+                  if (states.contains(WidgetState.hovered)) return context.colors.accent;
+                  return context.colors.primary;
                 }),
               ),
               child: const Text('OK'),
@@ -1127,8 +1125,8 @@ class _FacilityScreenState extends State<FacilityScreen> {
               onPressed: isDeleting ? null : () => Navigator.pop(dialogContext),
               style: ButtonStyle(
                 foregroundColor: WidgetStateProperty.resolveWith<Color>((states) {
-                  if (states.contains(WidgetState.hovered)) return warmAmber;
-                  return deepGreen;
+                  if (states.contains(WidgetState.hovered)) return context.colors.accent;
+                  return context.colors.primary;
                 }),
               ),
               child: const Text('Cancel'),
@@ -1153,7 +1151,7 @@ class _FacilityScreenState extends State<FacilityScreen> {
                     },
               style: ButtonStyle(
                 backgroundColor: WidgetStateProperty.all(Colors.redAccent),
-                foregroundColor: WidgetStateProperty.all(Colors.white),
+                foregroundColor: WidgetStateProperty.all(context.colors.onPrimary),
               ),
               child: isDeleting
                   ? const SizedBox(
@@ -1212,7 +1210,7 @@ class _FacilityScreenState extends State<FacilityScreen> {
   Widget _statColumn(String value, String label) {
     return Column(
       children: [
-        Text(value, style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: deepGreen)),
+        Text(value, style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: context.colors.primary)),
         const SizedBox(height: 2),
         Text(label, style: TextStyle(fontSize: 11, color: Colors.grey[600]), textAlign: TextAlign.center),
       ],
@@ -1284,8 +1282,8 @@ class _FacilityScreenState extends State<FacilityScreen> {
             icon: const Icon(Icons.add, size: 18),
             label: const Text('Add Facility'),
             style: ElevatedButton.styleFrom(
-              backgroundColor: deepGreen,
-              foregroundColor: offWhite,
+              backgroundColor: context.colors.primary,
+              foregroundColor: context.colors.background,
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
             ),
@@ -1298,7 +1296,7 @@ class _FacilityScreenState extends State<FacilityScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: offWhite,
+      backgroundColor: context.colors.background,
       appBar: _buildAppBar(),
       body: Builder(
         builder: (context) {
@@ -1381,7 +1379,7 @@ class _FacilityScreenState extends State<FacilityScreen> {
 
   Widget _buildListPanel(List<Map<String, dynamic>> filtered) {
     return Container(
-      color: offWhite,
+      color: context.colors.background,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
@@ -1454,9 +1452,9 @@ class _FacilityScreenState extends State<FacilityScreen> {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
         decoration: BoxDecoration(
-          color: isSelected ? deepGreen : Colors.white,
+          color: isSelected ? context.colors.primary : Colors.white,
           borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: isSelected ? deepGreen : Colors.grey.withValues(alpha: 0.3)),
+          border: Border.all(color: isSelected ? context.colors.primary : Colors.grey.withValues(alpha: 0.3)),
         ),
         child: Text(
           value,
@@ -1496,9 +1494,9 @@ class _FacilityScreenState extends State<FacilityScreen> {
         margin: const EdgeInsets.only(bottom: 6),
         padding: const EdgeInsets.all(10),
         decoration: BoxDecoration(
-          color: isSelected ? deepGreen.withValues(alpha: 0.08) : Colors.transparent,
+          color: isSelected ? context.colors.primary.withValues(alpha: 0.08) : Colors.transparent,
           borderRadius: BorderRadius.circular(10),
-          border: isSelected ? Border.all(color: deepGreen.withValues(alpha: 0.3)) : null,
+          border: isSelected ? Border.all(color: context.colors.primary.withValues(alpha: 0.3)) : null,
         ),
         child: Row(
           children: [
@@ -1515,9 +1513,9 @@ class _FacilityScreenState extends State<FacilityScreen> {
                   ? Image.network(
                       logoUrl,
                       fit: BoxFit.contain,
-                      errorBuilder: (context, error, stackTrace) => Icon(Icons.business, color: deepGreen, size: 18),
+                      errorBuilder: (context, error, stackTrace) => Icon(Icons.business, color: context.colors.primary, size: 18),
                     )
-                  : Icon(Icons.business, color: deepGreen, size: 18),
+                  : Icon(Icons.business, color: context.colors.primary, size: 18),
             ),
             const SizedBox(width: 10),
             Expanded(
@@ -1668,9 +1666,9 @@ class _FacilityScreenState extends State<FacilityScreen> {
                 ? Image.network(
                     logoUrl,
                     fit: BoxFit.contain,
-                    errorBuilder: (context, error, stackTrace) => Icon(Icons.business, color: deepGreen, size: 40),
+                    errorBuilder: (context, error, stackTrace) => Icon(Icons.business, color: context.colors.primary, size: 40),
                   )
-                : Icon(Icons.business, color: deepGreen, size: 40),
+                : Icon(Icons.business, color: context.colors.primary, size: 40),
           ),
           const SizedBox(width: 20),
           Expanded(
@@ -1708,7 +1706,7 @@ class _FacilityScreenState extends State<FacilityScreen> {
             width: 170,
             padding: const EdgeInsets.all(14),
             decoration: BoxDecoration(
-              color: offWhite,
+              color: context.colors.background,
               borderRadius: BorderRadius.circular(10),
             ),
             child: Column(
@@ -1832,7 +1830,7 @@ class _FacilityScreenState extends State<FacilityScreen> {
       case 'products':
         return Colors.green;
       case 'sales':
-        return warmAmber;
+        return context.colors.accent;
       case 'services':
         return Colors.purple;
       case 'clients':
@@ -1844,7 +1842,7 @@ class _FacilityScreenState extends State<FacilityScreen> {
       case 'admin':
         return Colors.red;
       default:
-        return deepGreen;
+        return context.colors.primary;
     }
   }
 
@@ -1939,7 +1937,7 @@ class _FacilityScreenState extends State<FacilityScreen> {
         'Total Sales (This Month)',
         '${AppDefaults.currencyCode} ${_formatCompact(totalAmount)}',
         Icons.trending_up,
-        deepGreen,
+        context.colors.primary,
         'View Report',
         3,
       ),
@@ -2019,8 +2017,8 @@ class _FacilityScreenState extends State<FacilityScreen> {
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Text(linkLabel, style: TextStyle(fontSize: 11.5, color: deepGreen, fontWeight: FontWeight.w600)),
-                Icon(Icons.arrow_forward, size: 12, color: deepGreen),
+                Text(linkLabel, style: TextStyle(fontSize: 11.5, color: context.colors.primary, fontWeight: FontWeight.w600)),
+                Icon(Icons.arrow_forward, size: 12, color: context.colors.primary),
               ],
             ),
           ),
@@ -2057,7 +2055,7 @@ class _FacilityScreenState extends State<FacilityScreen> {
               decoration: BoxDecoration(
                 border: Border(
                   bottom: BorderSide(
-                    color: isSelected ? deepGreen : Colors.transparent,
+                    color: isSelected ? context.colors.primary : Colors.transparent,
                     width: 2,
                   ),
                 ),
@@ -2070,7 +2068,7 @@ class _FacilityScreenState extends State<FacilityScreen> {
                     style: TextStyle(
                       fontSize: 13.5,
                       fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-                      color: isSelected ? deepGreen : Colors.black87,
+                      color: isSelected ? context.colors.primary : Colors.black87,
                     ),
                   ),
                   if (label == 'Team Members' && assistantCount > 0) ...[
@@ -2526,7 +2524,7 @@ class _FacilityScreenState extends State<FacilityScreen> {
                 onPressed: facilityId == null
                     ? null
                     : () => _showFacilityRetentionDialog(facilityId, currentRetention: retentionDays),
-                style: OutlinedButton.styleFrom(foregroundColor: deepGreen),
+                style: OutlinedButton.styleFrom(foregroundColor: context.colors.primary),
                 child: const Text('Change'),
               ),
             ],
@@ -2563,7 +2561,7 @@ class _FacilityScreenState extends State<FacilityScreen> {
                 onPressed: facilityId == null
                     ? null
                     : () => _showDebtOverdueDialog(facilityId, currentThreshold: debtOverdueDays),
-                style: OutlinedButton.styleFrom(foregroundColor: deepGreen),
+                style: OutlinedButton.styleFrom(foregroundColor: context.colors.primary),
                 child: const Text('Change'),
               ),
             ],
@@ -2587,7 +2585,7 @@ class _FacilityScreenState extends State<FacilityScreen> {
         padding: const EdgeInsets.symmetric(vertical: 6),
         child: Row(
           children: [
-            Icon(icon, color: iconColor ?? deepGreen, size: 20),
+            Icon(icon, color: iconColor ?? context.colors.primary, size: 20),
             const SizedBox(width: 12),
             Expanded(
               child: Column(
@@ -2671,7 +2669,7 @@ class _FacilityScreenState extends State<FacilityScreen> {
             return RadioListTile<int>(
               value: days,
               groupValue: currentRetention,
-              activeColor: deepGreen,
+              activeColor: context.colors.primary,
               title: Text('$days days'),
               onChanged: (val) => Navigator.pop(ctx, val),
             );
@@ -2768,7 +2766,7 @@ class _FacilityScreenState extends State<FacilityScreen> {
             return RadioListTile<int>(
               value: days,
               groupValue: currentThreshold,
-              activeColor: deepGreen,
+              activeColor: context.colors.primary,
               title: Text('$days days'),
               onChanged: (val) => Navigator.pop(ctx, val),
             );
@@ -2823,7 +2821,7 @@ class _FacilityScreenState extends State<FacilityScreen> {
             const SizedBox(height: 12),
             OutlinedButton(
               onPressed: onAction,
-              style: OutlinedButton.styleFrom(foregroundColor: deepGreen),
+              style: OutlinedButton.styleFrom(foregroundColor: context.colors.primary),
               child: Text(actionLabel),
             ),
           ],
@@ -2885,8 +2883,8 @@ class _FacilityScreenState extends State<FacilityScreen> {
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     Text('View all activity',
-                        style: TextStyle(fontSize: 12.5, color: deepGreen, fontWeight: FontWeight.w600)),
-                    Icon(Icons.arrow_forward, size: 12, color: deepGreen),
+                        style: TextStyle(fontSize: 12.5, color: context.colors.primary, fontWeight: FontWeight.w600)),
+                    Icon(Icons.arrow_forward, size: 12, color: context.colors.primary),
                   ],
                 ),
               ),
