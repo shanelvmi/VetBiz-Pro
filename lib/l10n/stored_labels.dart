@@ -1,8 +1,11 @@
 import '../config/payment_methods.dart';
 import '../config/restock_rules.dart';
+import '../constants/batch_move_reasons.dart';
+import '../constants/client_options.dart';
 import '../data/activity_type.dart';
 import '../data/facility_status.dart';
 import '../data/membership_history_action.dart';
+import '../data/payment_status.dart';
 import '../data/payment_submission_status.dart';
 import '../data/user_role.dart';
 import '../data/user_status.dart';
@@ -201,6 +204,67 @@ class StoredValueLabels {
     'monthly': (l) => l.plan_monthly,
     'yearly': (l) => l.plan_yearly,
   });
+
+  static final clientType = StoredLabelTable({
+    'Farmer': (l) => l.clientType_farmer,
+    'Vet': (l) => l.clientType_vet,
+    'Wholesaler': (l) => l.clientType_wholesaler,
+    'Retailer': (l) => l.clientType_retailer,
+    // Not offered in the form: what a client with no type is shown as.
+    kClientTypeOther: (l) => l.clientType_other,
+  });
+
+  static final farmerSubType = StoredLabelTable({
+    'Crop Producer': (l) => l.farmerSubType_cropProducer,
+    'Animal Keeper': (l) => l.farmerSubType_animalKeeper,
+  });
+
+  static final animal = StoredLabelTable({
+    'Cattle': (l) => l.animal_cattle,
+    'Goat': (l) => l.animal_goat,
+    'Sheep': (l) => l.animal_sheep,
+    'Pig': (l) => l.animal_pig,
+    'Donkey': (l) => l.animal_donkey,
+    'Chicken': (l) => l.animal_chicken,
+    'Duck': (l) => l.animal_duck,
+    'Turkey': (l) => l.animal_turkey,
+    'Guinea Fowl': (l) => l.animal_guineaFowl,
+    'Bees': (l) => l.animal_bees,
+    'Dog': (l) => l.animal_dog,
+    'Cat': (l) => l.animal_cat,
+    'Rabbit': (l) => l.animal_rabbit,
+  });
+
+  /// The picker's headings (kAnimalGroups keys); not stored.
+  static final animalGroup = StoredLabelTable({
+    'Livestock': (l) => l.animalGroup_livestock,
+    'Poultry': (l) => l.animalGroup_poultry,
+    'Other': (l) => l.animalGroup_other,
+  });
+
+  static final vetPracticeType = StoredLabelTable({
+    'Clinic': (l) => l.vetPractice_clinic,
+    'Consultant': (l) => l.vetPractice_consultant,
+    'Hospital': (l) => l.vetPractice_hospital,
+    'Ambulatory': (l) => l.vetPractice_ambulatory,
+  });
+
+  static final clientStatus = StoredLabelTable({
+    'Active': (l) => l.clientStatus_active,
+    'Inactive': (l) => l.clientStatus_inactive,
+  });
+
+  static final paymentStatus = StoredLabelTable({
+    PaymentStatus.paid: (l) => l.paymentStatus_paid,
+    PaymentStatus.partial: (l) => l.paymentStatus_partial,
+    PaymentStatus.unpaid: (l) => l.paymentStatus_unpaid,
+  });
+
+  static final batchMoveReason = StoredLabelTable({
+    kBatchMoveReasonExpired: (l) => l.moveReason_expired,
+    'Deteriorated': (l) => l.moveReason_deteriorated,
+    kBatchMoveReasonOther: (l) => l.moveReason_other,
+  });
 }
 
 /// `context.l10n.productCategoryLabel(stored)` in widgets,
@@ -221,4 +285,12 @@ extension StoredLabels on AppLocalizations {
   String facilityStatusLabel(String stored) => StoredValueLabels.facilityStatus.labelOf(this, stored);
   String submissionStatusLabel(String stored) => StoredValueLabels.submissionStatus.labelOf(this, stored);
   String subscriptionPlanLabel(String planId) => StoredValueLabels.subscriptionPlan.labelOf(this, planId);
+  String clientTypeLabel(String stored) => StoredValueLabels.clientType.labelOf(this, stored);
+  String farmerSubTypeLabel(String stored) => StoredValueLabels.farmerSubType.labelOf(this, stored);
+  String animalLabel(String stored) => StoredValueLabels.animal.labelOf(this, stored);
+  String animalGroupLabel(String stored) => StoredValueLabels.animalGroup.labelOf(this, stored);
+  String vetPracticeTypeLabel(String stored) => StoredValueLabels.vetPracticeType.labelOf(this, stored);
+  String clientStatusLabel(String stored) => StoredValueLabels.clientStatus.labelOf(this, stored);
+  String paymentStatusLabel(String stored) => StoredValueLabels.paymentStatus.labelOf(this, stored);
+  String batchMoveReasonLabel(String stored) => StoredValueLabels.batchMoveReason.labelOf(this, stored);
 }

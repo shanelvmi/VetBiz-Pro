@@ -2,6 +2,8 @@ import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:vetbiz_pro/config/payment_methods.dart';
 import 'package:vetbiz_pro/config/restock_rules.dart';
+import 'package:vetbiz_pro/constants/batch_move_reasons.dart';
+import 'package:vetbiz_pro/constants/client_options.dart';
 import 'package:vetbiz_pro/constants/facility_types.dart';
 import 'package:vetbiz_pro/constants/product_categories.dart';
 import 'package:vetbiz_pro/constants/product_types.dart';
@@ -11,6 +13,7 @@ import 'package:vetbiz_pro/constants/subscription_plans.dart';
 import 'package:vetbiz_pro/data/activity_type.dart';
 import 'package:vetbiz_pro/data/facility_status.dart';
 import 'package:vetbiz_pro/data/membership_history_action.dart';
+import 'package:vetbiz_pro/data/payment_status.dart';
 import 'package:vetbiz_pro/data/payment_submission_status.dart';
 import 'package:vetbiz_pro/data/user_role.dart';
 import 'package:vetbiz_pro/data/user_status.dart';
@@ -101,5 +104,38 @@ void main() {
     checkStoredList(StoredValueLabels.subscriptionPlan, [for (final p in kSubscriptionPlans) p.id],
         (l, v) => l.subscriptionPlanLabel(v),
         english: {for (final p in kSubscriptionPlans) p.id: p.label});
+  });
+
+  test('client types, and the Other shown for a client with no type', () {
+    checkStoredList(StoredValueLabels.clientType, kClientTypes, (l, v) => l.clientTypeLabel(v),
+        extra: const {kClientTypeOther: 'Other'});
+  });
+
+  test('farmer sub-types', () {
+    checkStoredList(StoredValueLabels.farmerSubType, kFarmerSubTypes, (l, v) => l.farmerSubTypeLabel(v));
+  });
+
+  test('animal species', () {
+    checkStoredList(StoredValueLabels.animal, [for (final g in kAnimalGroups.values) ...g], (l, v) => l.animalLabel(v));
+  });
+
+  test('animal picker headings', () {
+    checkStoredList(StoredValueLabels.animalGroup, kAnimalGroups.keys.toList(), (l, v) => l.animalGroupLabel(v));
+  });
+
+  test('vet practice types', () {
+    checkStoredList(StoredValueLabels.vetPracticeType, kVetPracticeTypes, (l, v) => l.vetPracticeTypeLabel(v));
+  });
+
+  test('client statuses', () {
+    checkStoredList(StoredValueLabels.clientStatus, kClientStatuses, (l, v) => l.clientStatusLabel(v));
+  });
+
+  test('payment statuses', () {
+    checkStoredList(StoredValueLabels.paymentStatus, PaymentStatus.values, (l, v) => l.paymentStatusLabel(v));
+  });
+
+  test('batch move reasons', () {
+    checkStoredList(StoredValueLabels.batchMoveReason, kBatchMoveReasons, (l, v) => l.batchMoveReasonLabel(v));
   });
 }
