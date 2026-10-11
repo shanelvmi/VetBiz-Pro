@@ -232,6 +232,7 @@ class _UserDetailScreenState extends State<UserDetailScreen> {
       }
     }
 
+    if (!mounted) return;
     final confirm = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(

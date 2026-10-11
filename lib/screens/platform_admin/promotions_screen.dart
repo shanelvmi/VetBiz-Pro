@@ -328,6 +328,7 @@ Future<void> _showPromotionEditor(BuildContext context, {Promotion? existing}) a
   bool activateImmediately = existing?.active ?? false;
   String? validationError;
 
+  if (!context.mounted) return;
   final confirmed = await showDialog<bool>(
     context: context,
     builder: (context) => StatefulBuilder(builder: (context, setDialogState) {
