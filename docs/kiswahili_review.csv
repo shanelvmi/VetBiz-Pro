@@ -85,3 +85,210 @@ subscription_expiredTitle,Subscription Expired,Usajili Umekwisha,Title of the di
 subscription_expiredAssistant,"This facility's subscription has expired, so new sales and services can't be recorded right now. You can still view all existing data. Please ask your admin to renew the subscription.","Usajili wa kituo hiki umekwisha, kwa hiyo mauzo na huduma mpya haziwezi kurekodiwa kwa sasa. Bado unaweza kuona taarifa zote zilizopo. Tafadhali muombe msimamizi wako ahuishe usajili.",Subscription Expired dialog text for an assistant.,draft
 subscription_expiredAdmin,"Your subscription has expired, so new sales and services can't be recorded right now. You can still view all your existing data. Submit a payment to restore full access.","Usajili wako umekwisha, kwa hiyo mauzo na huduma mpya haziwezi kurekodiwa kwa sasa. Bado unaweza kuona taarifa zako zote zilizopo. Tuma malipo ili kurejesha huduma kamili.",Subscription Expired dialog text for an admin.,draft
 subscription_goTo,Go to Subscription,Nenda kwenye Usajili,Button in the Subscription Expired dialog (admins).,draft
+productCategory_antibiotic,Antibiotic,Antibiotiki,"Product category: product form, category filters and lists (stored value 'Antibiotic').",draft
+productCategory_anthelmintics,Anthelmintics,Dawa za Minyoo,"Product category: product form, category filters and lists (stored value 'Anthelmintics').",draft
+productCategory_vitaminsSupplements,Vitamin & Supplements,Vitamini na Virutubisho,"Product category: product form, category filters and lists (stored value 'Vitamin & Supplements').",draft
+productCategory_hormonesReproductive,Hormones & Reproductive,Homoni na Uzazi,"Product category: product form, category filters and lists (stored value 'Hormones & Reproductive').",draft
+productCategory_vaccines,Vaccines,Chanjo,"Product category: product form, category filters and lists (stored value 'Vaccines').",draft
+productCategory_disinfectant,Disinfectant,Dawa za Kuua Vijidudu,"Product category: product form, category filters and lists (stored value 'Disinfectant').",draft
+productCategory_feeds,Feeds,Vyakula vya Mifugo,"Product category: product form, category filters and lists (stored value 'Feeds').",draft
+productCategory_antiInflammatory,Anti-inflammatory,Dawa za Kupunguza Uvimbe,"Product category: product form, category filters and lists (stored value 'Anti-inflammatory').",draft
+productCategory_ectoparasiticides,Ectoparasiticides,Dawa za Kupe na Viroboto,"Product category: product form, category filters and lists (stored value 'Ectoparasiticides'). Reviewer note: Ectoparasites = ticks, fleas, lice, mites. Is there a shorter everyday word?",draft
+productCategory_woundManagement,Wound Management,Matibabu ya Vidonda,"Product category: product form, category filters and lists (stored value 'Wound Management').",draft
+productCategory_surgicalSupplies,Surgical Supplies,Vifaa vya Upasuaji,"Product category: product form, category filters and lists (stored value 'Surgical Supplies').",draft
+productCategory_farmToolsEquipment,Farm Tools & Equipment,Zana na Vifaa vya Shamba,"Product category: product form, category filters and lists (stored value 'Farm Tools & Equipment').",draft
+productCategory_seeds,Seeds,Mbegu,"Product category: product form, category filters and lists (stored value 'Seeds').",draft
+productCategory_fertilizers,Fertilizers,Mbolea,"Product category: product form, category filters and lists (stored value 'Fertilizers').",draft
+productCategory_cropPesticides,Crop Pesticides,Viuatilifu vya Mazao,"Product category: product form, category filters and lists (stored value 'Crop Pesticides').",draft
+productCategory_miscellaneous,Miscellaneous,Mengineyo,"Product category: product form, category filters and lists (stored value 'Miscellaneous').",draft
+productCategory_uncategorized,Uncategorized,Bila Kundi,Product category shown for a product saved with no category (not stored): filters and lists.,draft
+productGroup_vet,Vet,Mifugo,"Product department filter chip (Products, Stock Store): the 'Vet' group (not stored).",draft
+productGroup_agro,Agro,Kilimo,Product department filter chip and side panel: the 'Agro' group (not stored).,draft
+productGroup_veterinary,Veterinary,Tiba ya Mifugo,Product catalog side panel: long name of the 'Vet' group (not stored).,draft
+productType_injectable,Injectable,Sindano,Product type (form): product form and product lists (stored value 'Injectable').,draft
+productType_oralLiquid,Oral Liquid,Maji ya Kunywa,Product type (form): product form and product lists (stored value 'Oral Liquid').,draft
+productType_powder,Powder,Unga,Product type (form): product form and product lists (stored value 'Powder').,draft
+productType_tabletBolus,Tablet/Bolus,Vidonge/Bolus,Product type (form): product form and product lists (stored value 'Tablet/Bolus').,draft
+productType_topical,Topical,Ya Kupaka,Product type (form): product form and product lists (stored value 'Topical').,draft
+productType_intramammary,Intramammary,Ya Kiwele,Product type (form): product form and product lists (stored value 'Intramammary').,draft
+productType_spray,Spray,Ya Kunyunyiza,Product type (form): product form and product lists (stored value 'Spray').,draft
+productType_granules,Granules,Chembechembe,Product type (form): product form and product lists (stored value 'Granules').,draft
+productType_wettablePowder,Wettable Powder,Unga wa Kuchanganya na Maji,Product type (form): product form and product lists (stored value 'Wettable Powder').,draft
+productType_emulsifiableConcentrate,Emulsifiable Concentrate,Kimiminika cha Kuchanganya (EC),Product type (form): product form and product lists (stored value 'Emulsifiable Concentrate'). Reviewer note: Farmers often know this only as 'EC'.,draft
+productType_seed,Seed,Mbegu,Product type (form): product form and product lists (stored value 'Seed').,draft
+productType_fertilizer,Fertilizer,Mbolea,Product type (form): product form and product lists (stored value 'Fertilizer').,draft
+productType_feed,Feed,Chakula cha Mifugo,Product type (form): product form and product lists (stored value 'Feed').,draft
+productType_equipment,Equipment,Kifaa,Product type (form): product form and product lists (stored value 'Equipment').,draft
+productType_other,Other,Nyingine,Product type (form): product form and product lists (stored value 'Other').,draft
+unit_pcs,pcs,pcs,Product unit: product form unit picker (stored value 'pcs'). Reviewer note: Kept as 'pcs' on purpose (owner's decision).,draft
+unit_kg,kg,kg,Product unit: product form unit picker (stored value 'kg').,draft
+unit_g,g,g,Product unit: product form unit picker (stored value 'g').,draft
+unit_litres,litres,lita,Product unit: product form unit picker (stored value 'litres').,draft
+unit_ml,ml,ml,Product unit: product form unit picker (stored value 'ml').,draft
+unit_vials,vials,vichupa,Product unit: product form unit picker (stored value 'vials').,draft
+unit_ampoules,ampoules,ampuli,Product unit: product form unit picker (stored value 'ampoules').,draft
+unit_bottles,bottles,chupa,Product unit: product form unit picker (stored value 'bottles').,draft
+unit_sachets,sachets,sacheti,Product unit: product form unit picker (stored value 'sachets').,draft
+unit_sacks,sacks,magunia,Product unit: product form unit picker (stored value 'sacks').,draft
+unit_bags,bags,mifuko,Product unit: product form unit picker (stored value 'bags').,draft
+unit_boxes,boxes,maboksi,Product unit: product form unit picker (stored value 'boxes').,draft
+unit_cartons,cartons,katoni,Product unit: product form unit picker (stored value 'cartons').,draft
+unit_packs,packs,pakiti,Product unit: product form unit picker (stored value 'packs').,draft
+unit_strips,strips,kadi,"Product unit: product form unit picker (stored value 'strips'). Reviewer note: A strip (blister card) of tablets; is 'kadi' what people say?",draft
+unit_tablets,tablets,vidonge,Product unit: product form unit picker (stored value 'tablets').,draft
+unit_tubes,tubes,tyubu,Product unit: product form unit picker (stored value 'tubes').,draft
+unit_rolls,rolls,roli,Product unit: product form unit picker (stored value 'rolls').,draft
+unit_pairs,pairs,jozi,Product unit: product form unit picker (stored value 'pairs').,draft
+unit_others,others,nyinginezo,Product unit: product form unit picker (stored value 'others').,draft
+serviceCategory_surgical,Surgical,Upasuaji,"Service category: service form, Services filters and lists (stored value 'Surgical').",draft
+serviceCategory_treatment,Treatment,Matibabu,"Service category: service form, Services filters and lists (stored value 'Treatment').",draft
+serviceCategory_management,Management,Usimamizi,"Service category: service form, Services filters and lists (stored value 'Management'). Reviewer note: Herd and farm management services.",draft
+serviceCategory_consultation,Consultation,Ushauri,"Service category: service form, Services filters and lists (stored value 'Consultation').",draft
+serviceCategory_diagnostics,Diagnostics,Uchunguzi,"Service category: service form, Services filters and lists (stored value 'Diagnostics').",draft
+serviceCategory_preventive,Preventive,Kinga,"Service category: service form, Services filters and lists (stored value 'Preventive').",draft
+serviceCategory_other,Other,Nyingine,"Service category: service form, Services filters and lists (stored value 'Other').",draft
+facilityType_agrovet,Agrovet,Agrovet,"Facility type: registration, Facilities screen, facility picker filter (stored value 'Agrovet'). Reviewer note: Kept as 'Agrovet', the word used in Tanzania.",draft
+facilityType_vetClinic,Vet Clinic,Kliniki ya Mifugo,"Facility type: registration, Facilities screen, facility picker filter (stored value 'Vet Clinic').",draft
+facilityType_vetHospital,Vet Hospital,Hospitali ya Mifugo,"Facility type: registration, Facilities screen, facility picker filter (stored value 'Vet Hospital').",draft
+facilityType_ambulatoryVet,Ambulatory Vet,Daktari wa Mifugo wa Kutembelea,"Facility type: registration, Facilities screen, facility picker filter (stored value 'Ambulatory Vet').",draft
+facilityType_other,Other,Nyingine,"Facility type: registration, Facilities screen, facility picker filter (stored value 'Other').",draft
+paymentMethod_cash,Cash,Taslimu,"Payment method: payment chips and menus, payment filters (stored value 'Cash').",draft
+paymentMethod_mPesa,M-Pesa,M-Pesa,"Payment method: payment chips and menus, payment filters (stored value 'M-Pesa').",draft
+paymentMethod_mixxByYas,Mixx by Yas,Mixx by Yas,"Payment method: payment chips and menus, payment filters (stored value 'Mixx by Yas').",draft
+paymentMethod_haloPesa,HaloPesa,HaloPesa,"Payment method: payment chips and menus, payment filters (stored value 'HaloPesa').",draft
+paymentMethod_airtelMoney,Airtel Money,Airtel Money,"Payment method: payment chips and menus, payment filters (stored value 'Airtel Money').",draft
+paymentMethod_bankTransfer,Bank Transfer,Uhamisho wa Benki,"Payment method: payment chips and menus, payment filters (stored value 'Bank Transfer').",draft
+paymentMethod_tigoPesa,Tigo Pesa,Tigo Pesa,"Payment method: payment chips and menus, payment filters (stored value 'Tigo Pesa').",draft
+paymentMethod_onCredit,On Credit,Kwa Mkopo,"Payment method: payment chips and menus, payment filters (stored value 'On Credit').",draft
+activityType_account,Account,Akaunti,"Activity type: Activity Log filter chips and entry badges, activity lists (stored value 'Account').",draft
+activityType_debtors,Debtors,Wadaiwa,"Activity type: Activity Log filter chips and entry badges, activity lists (stored value 'Debtors').",draft
+activityType_products,Products,Bidhaa,"Activity type: Activity Log filter chips and entry badges, activity lists (stored value 'Products').",draft
+activityType_inventoryMove,Inventory Move,Uhamisho wa Stoo,"Activity type: Activity Log filter chips and entry badges, activity lists (stored value 'Inventory Move').",draft
+activityType_sales,Sales,Mauzo,"Activity type: Activity Log filter chips and entry badges, activity lists (stored value 'Sales').",draft
+activityType_sale,Sale,Mauzo,"Activity type: Activity Log filter chips and entry badges, activity lists (stored value 'Sale'). Reviewer note: Older entries were saved as 'Sale'; they are shown with 'Sales'.",draft
+activityType_services,Services,Huduma,"Activity type: Activity Log filter chips and entry badges, activity lists (stored value 'Services').",draft
+activityType_transactions,Transactions,Miamala,"Activity type: Activity Log filter chips and entry badges, activity lists (stored value 'Transactions').",draft
+activityType_trash,Trash,Takataka,"Activity type: Activity Log filter chips and entry badges, activity lists (stored value 'Trash').",draft
+activityType_reportDraftDeleted,Report Draft Deleted,Rasimu ya Ripoti Imefutwa,"Activity type: Activity Log filter chips and entry badges, activity lists (stored value 'Report Draft Deleted').",draft
+restockFrequency_weekly,Weekly,Kila Wiki,Restock frequency: Facility settings dropdown (stored value 'Weekly').,draft
+restockFrequency_everyTwoWeeks,Every 2 Weeks,Kila Wiki 2,Restock frequency: Facility settings dropdown (stored value 'Every 2 Weeks').,draft
+restockFrequency_monthly,Monthly,Kila Mwezi,Restock frequency: Facility settings dropdown (stored value 'Monthly').,draft
+restockFrequency_rarely,Rarely,Mara Chache,Restock frequency: Facility settings dropdown (stored value 'Rarely').,draft
+role_admin,Admin,Msimamizi,"User role (stored value 'admin'): team list, dashboard profile, registration.",draft
+role_assistant,Assistant,Msaidizi,"User role (stored value 'assistant'): team list, dashboard profile, registration.",draft
+role_coAdmin,Co-admin,Msimamizi Mwenza,"Shown role of a promoted assistant (stored as 'admin' with previousRole 'assistant'): team list, dashboard, registration.",draft
+userStatus_pending,Pending,Anasubiri,A team member's status (stored value 'pending'): team list cards and badges.,draft
+userStatus_active,Active,Hai,A team member's status (stored value 'active'): team list cards and badges.,draft
+userStatus_deactivated,Deactivated,Amesimamishwa,A team member's status (stored value 'deactivated'): team list cards and badges.,draft
+userStatus_rejected,Rejected,Amekataliwa,A team member's status (stored value 'rejected'): team list cards and badges.,draft
+membershipAction_approved,Approved,Ameidhinishwa,A step in a team member's history (stored value 'approved'): team member panel.,draft
+membershipAction_rejected,Rejected,Amekataliwa,A step in a team member's history (stored value 'rejected'): team member panel.,draft
+membershipAction_deactivated,Deactivated,Amesimamishwa,A step in a team member's history (stored value 'deactivated'): team member panel.,draft
+membershipAction_reactivated,Reactivated,Amerejeshwa,A step in a team member's history (stored value 'reactivated'): team member panel.,draft
+facilityStatus_active,Active,Inafanya Kazi,"A facility's status (stored value 'Active', any case): Facilities screen and picker.",draft
+facilityStatus_inactive,Inactive,Haifanyi Kazi,"A facility's status (stored value 'Inactive', any case): Facilities screen and picker.",draft
+facilityStatus_pending,Pending,Inasubiri,"A facility's status (stored value 'pending', any case): Facilities screen and picker.",draft
+submissionStatus_pending,Pending,Inasubiri,A subscription payment's review status (stored value 'pending'): Subscription history.,draft
+submissionStatus_approved,Approved,Imeidhinishwa,A subscription payment's review status (stored value 'approved'): Subscription history.,draft
+submissionStatus_rejected,Rejected,Imekataliwa,A subscription payment's review status (stored value 'rejected'): Subscription history.,draft
+plan_daily,Daily,Kila Siku,Subscription plan name (plan id 'daily'): Subscription screen and history.,draft
+plan_weekly,Weekly,Kila Wiki,Subscription plan name (plan id 'weekly'): Subscription screen and history.,draft
+plan_monthly,Monthly,Kila Mwezi,Subscription plan name (plan id 'monthly'): Subscription screen and history.,draft
+plan_yearly,Yearly,Kila Mwaka,Subscription plan name (plan id 'yearly'): Subscription screen and history.,draft
+clientType_farmer,Farmer,Mkulima,"Client type: client form type tiles, Clients type filter and badges (stored value 'Farmer'). Reviewer note: Covers both crop and animal farmers.",draft
+clientType_vet,Vet,Daktari wa Mifugo,"Client type: client form type tiles, Clients type filter and badges (stored value 'Vet').",draft
+clientType_wholesaler,Wholesaler,Muuzaji wa Jumla,"Client type: client form type tiles, Clients type filter and badges (stored value 'Wholesaler').",draft
+clientType_retailer,Retailer,Muuzaji wa Rejareja,"Client type: client form type tiles, Clients type filter and badges (stored value 'Retailer').",draft
+clientType_other,Other,Mwingine,Client type shown for a client saved with no type (not offered in the form): Clients badges and filter.,draft
+farmerSubType_cropProducer,Crop Producer,Mkulima wa Mazao,Farmer type: client form dropdown (stored value 'Crop Producer').,draft
+farmerSubType_animalKeeper,Animal Keeper,Mfugaji,Farmer type: client form dropdown (stored value 'Animal Keeper').,draft
+animal_cattle,Cattle,Ng'ombe,Animal species: client form animal picker and chips (stored value 'Cattle').,draft
+animal_goat,Goat,Mbuzi,Animal species: client form animal picker and chips (stored value 'Goat').,draft
+animal_sheep,Sheep,Kondoo,Animal species: client form animal picker and chips (stored value 'Sheep').,draft
+animal_pig,Pig,Nguruwe,Animal species: client form animal picker and chips (stored value 'Pig').,draft
+animal_donkey,Donkey,Punda,Animal species: client form animal picker and chips (stored value 'Donkey').,draft
+animal_chicken,Chicken,Kuku,Animal species: client form animal picker and chips (stored value 'Chicken').,draft
+animal_duck,Duck,Bata,Animal species: client form animal picker and chips (stored value 'Duck').,draft
+animal_turkey,Turkey,Bata Mzinga,Animal species: client form animal picker and chips (stored value 'Turkey').,draft
+animal_guineaFowl,Guinea Fowl,Kanga,Animal species: client form animal picker and chips (stored value 'Guinea Fowl').,draft
+animal_bees,Bees,Nyuki,Animal species: client form animal picker and chips (stored value 'Bees').,draft
+animal_dog,Dog,Mbwa,Animal species: client form animal picker and chips (stored value 'Dog').,draft
+animal_cat,Cat,Paka,Animal species: client form animal picker and chips (stored value 'Cat').,draft
+animal_rabbit,Rabbit,Sungura,Animal species: client form animal picker and chips (stored value 'Rabbit').,draft
+animalGroup_livestock,Livestock,Mifugo,Heading in the client form's animal picker: the 'Livestock' group (not stored).,draft
+animalGroup_poultry,Poultry,Ndege wa Kufugwa,Heading in the client form's animal picker: the 'Poultry' group (not stored).,draft
+animalGroup_other,Other,Wengine,Heading in the client form's animal picker: the 'Other' group (not stored).,draft
+vetPractice_clinic,Clinic,Kliniki,Vet practice type: client form dropdown (stored value 'Clinic').,draft
+vetPractice_consultant,Consultant,Mshauri,Vet practice type: client form dropdown (stored value 'Consultant').,draft
+vetPractice_hospital,Hospital,Hospitali,Vet practice type: client form dropdown (stored value 'Hospital').,draft
+vetPractice_ambulatory,Ambulatory,Huduma ya Kutembelea,Vet practice type: client form dropdown (stored value 'Ambulatory').,draft
+clientStatus_active,Active,Hai,"A client's status: client form chips, Clients status filter and badges (stored value 'Active').",draft
+clientStatus_inactive,Inactive,Hayuko Hai,"A client's status: client form chips, Clients status filter and badges (stored value 'Inactive'). Reviewer note: A customer who no longer buys. Is there a better everyday word?",draft
+paymentStatus_paid,Paid,Imelipwa,A sale's or service's payment status: Sales and Services status filters and badges (stored value 'Paid').,draft
+paymentStatus_partial,Partial,Imelipwa Sehemu,A sale's or service's payment status: Sales and Services status filters and badges (stored value 'Partial').,draft
+paymentStatus_unpaid,Unpaid,Haijalipwa,A sale's or service's payment status: Sales and Services status filters and badges (stored value 'Unpaid').,draft
+moveReason_expired,Expired,Imeisha Muda,Why a batch is moved back to the Stock Store or off Sellable: move dialog dropdown (stored value 'Expired').,draft
+moveReason_deteriorated,Deteriorated,Imeharibika,Why a batch is moved back to the Stock Store or off Sellable: move dialog dropdown (stored value 'Deteriorated').,draft
+moveReason_other,Other (specify),Nyingine (eleza),Why a batch is moved back to the Stock Store or off Sellable: move dialog dropdown (stored value 'Other (specify)').,draft
+cropGroup_foodCrops,Food Crops,Mazao ya Chakula,Heading in the client form's crop picker: the 'Food Crops' group (not stored).,draft
+cropGroup_cashCrops,Cash Crops,Mazao ya Biashara,Heading in the client form's crop picker: the 'Cash Crops' group (not stored).,draft
+cropGroup_vegetables,Vegetables,Mboga,Heading in the client form's crop picker: the 'Vegetables' group (not stored).,draft
+cropGroup_fruits,Fruits,Matunda,Heading in the client form's crop picker: the 'Fruits' group (not stored).,draft
+crop_maize,Maize,Mahindi,Crop: client form crop picker and chips (stored value 'Maize').,draft
+crop_rice,Rice,Mpunga,"Crop: client form crop picker and chips (stored value 'Rice'). Reviewer note: The crop in the field (mpunga), not cooked rice (wali) or grain (mchele).",draft
+crop_wheat,Wheat,Ngano,Crop: client form crop picker and chips (stored value 'Wheat').,draft
+crop_cassava,Cassava,Muhogo,Crop: client form crop picker and chips (stored value 'Cassava').,draft
+crop_sorghum,Sorghum,Mtama,Crop: client form crop picker and chips (stored value 'Sorghum').,draft
+crop_millet,Millet,Uwele,Crop: client form crop picker and chips (stored value 'Millet').,draft
+crop_beans,Beans,Maharage,Crop: client form crop picker and chips (stored value 'Beans').,draft
+crop_bananas,Bananas,Ndizi,Crop: client form crop picker and chips (stored value 'Bananas').,draft
+crop_sweetPotatoes,Sweet Potatoes,Viazi Vitamu,Crop: client form crop picker and chips (stored value 'Sweet Potatoes').,draft
+crop_irishPotatoes,Irish Potatoes,Viazi Mviringo,Crop: client form crop picker and chips (stored value 'Irish Potatoes').,draft
+crop_groundnuts,Groundnuts,Karanga,Crop: client form crop picker and chips (stored value 'Groundnuts').,draft
+crop_coffee,Coffee,Kahawa,Crop: client form crop picker and chips (stored value 'Coffee').,draft
+crop_cotton,Cotton,Pamba,Crop: client form crop picker and chips (stored value 'Cotton').,draft
+crop_tobacco,Tobacco,Tumbaku,Crop: client form crop picker and chips (stored value 'Tobacco').,draft
+crop_cashewNuts,Cashew Nuts,Korosho,Crop: client form crop picker and chips (stored value 'Cashew Nuts').,draft
+crop_sisal,Sisal,Mkonge,Crop: client form crop picker and chips (stored value 'Sisal').,draft
+crop_tea,Tea,Chai,Crop: client form crop picker and chips (stored value 'Tea').,draft
+crop_pyrethrum,Pyrethrum,Pareto,Crop: client form crop picker and chips (stored value 'Pyrethrum').,draft
+crop_sugarcane,Sugarcane,Miwa,Crop: client form crop picker and chips (stored value 'Sugarcane').,draft
+crop_cloves,Cloves,Karafuu,Crop: client form crop picker and chips (stored value 'Cloves').,draft
+crop_sesame,Sesame,Ufuta,Crop: client form crop picker and chips (stored value 'Sesame').,draft
+crop_sunflower,Sunflower,Alizeti,Crop: client form crop picker and chips (stored value 'Sunflower').,draft
+crop_tomatoes,Tomatoes,Nyanya,Crop: client form crop picker and chips (stored value 'Tomatoes').,draft
+crop_onions,Onions,Vitunguu,Crop: client form crop picker and chips (stored value 'Onions').,draft
+crop_cabbage,Cabbage,Kabichi,Crop: client form crop picker and chips (stored value 'Cabbage').,draft
+crop_okra,Okra,Bamia,Crop: client form crop picker and chips (stored value 'Okra').,draft
+crop_mangoes,Mangoes,Maembe,Crop: client form crop picker and chips (stored value 'Mangoes').,draft
+crop_oranges,Oranges,Machungwa,Crop: client form crop picker and chips (stored value 'Oranges').,draft
+crop_avocado,Avocado,Parachichi,Crop: client form crop picker and chips (stored value 'Avocado').,draft
+crop_watermelon,Watermelon,Tikiti Maji,Crop: client form crop picker and chips (stored value 'Watermelon').,draft
+expenseGroup_administration,Administration,Utawala,Heading in Add Transaction's expense category picker: the 'Administration' group (not stored).,draft
+expenseGroup_premisesUtilities,Premises & Utilities,Majengo na Huduma,Heading in Add Transaction's expense category picker: the 'Premises & Utilities' group (not stored).,draft
+expenseGroup_operations,Operations,Uendeshaji,Heading in Add Transaction's expense category picker: the 'Operations' group (not stored).,draft
+expenseGroup_transport,Transport,Usafiri,Heading in Add Transaction's expense category picker: the 'Transport' group (not stored).,draft
+expenseGroup_business,Business,Biashara,Heading in Add Transaction's expense category picker: the 'Business' group (not stored).,draft
+expenseGroup_other,Other,Mengineyo,Heading in Add Transaction's expense category picker: the 'Other' group (not stored).,draft
+expenseCategory_mealsRefreshments,Meals & Refreshments,Chakula na Viburudisho,"Expense category: Add Transaction picker, Transactions list and details (stored value 'Meals & Refreshments').",draft
+expenseCategory_salariesWages,Salaries & Wages,Mishahara na Ujira,"Expense category: Add Transaction picker, Transactions list and details (stored value 'Salaries & Wages').",draft
+expenseCategory_officeSupplies,Office Supplies,Vifaa vya Ofisi,"Expense category: Add Transaction picker, Transactions list and details (stored value 'Office Supplies').",draft
+expenseCategory_electricity,Electricity,Umeme,"Expense category: Add Transaction picker, Transactions list and details (stored value 'Electricity').",draft
+expenseCategory_water,Water,Maji,"Expense category: Add Transaction picker, Transactions list and details (stored value 'Water').",draft
+expenseCategory_rent,Rent,Kodi ya Pango,"Expense category: Add Transaction picker, Transactions list and details (stored value 'Rent'). Reviewer note: 'Kodi' alone also means tax.",draft
+expenseCategory_drugsMedicines,Drugs & Medicines,Dawa,"Expense category: Add Transaction picker, Transactions list and details (stored value 'Drugs & Medicines').",draft
+expenseCategory_veterinarySupplies,Veterinary Supplies,Vifaa vya Mifugo,"Expense category: Add Transaction picker, Transactions list and details (stored value 'Veterinary Supplies').",draft
+expenseCategory_fuel,Fuel,Mafuta,"Expense category: Add Transaction picker, Transactions list and details (stored value 'Fuel').",draft
+expenseCategory_vehicleMaintenance,Vehicle Maintenance,Matengenezo ya Gari,"Expense category: Add Transaction picker, Transactions list and details (stored value 'Vehicle Maintenance').",draft
+expenseCategory_marketing,Marketing,Matangazo,"Expense category: Add Transaction picker, Transactions list and details (stored value 'Marketing').",draft
+expenseCategory_licencesRegistration,Licences & Registration,Leseni na Usajili,"Expense category: Add Transaction picker, Transactions list and details (stored value 'Licences & Registration').",draft
+incomeCategory_commission,Commission Income,Mapato ya Kamisheni,"Income category: Add Transaction picker, Transactions list and details (stored value 'Commission Income').",draft
+incomeCategory_delivery,Delivery Income,Mapato ya Usafirishaji,"Income category: Add Transaction picker, Transactions list and details (stored value 'Delivery Income').",draft
+incomeCategory_training,Training Income,Mapato ya Mafunzo,"Income category: Add Transaction picker, Transactions list and details (stored value 'Training Income').",draft
+incomeCategory_consultancy,Consultancy Income,Mapato ya Ushauri,"Income category: Add Transaction picker, Transactions list and details (stored value 'Consultancy Income').",draft
+incomeCategory_rental,Rental Income,Mapato ya Kodi ya Pango,"Income category: Add Transaction picker, Transactions list and details (stored value 'Rental Income'). Reviewer note: 'Kodi' alone also means tax.",draft
+incomeCategory_interest,Interest Income,Mapato ya Riba,"Income category: Add Transaction picker, Transactions list and details (stored value 'Interest Income').",draft
+incomeCategory_refundsReceived,Refunds Received,Marejesho Yaliyopokelewa,"Income category: Add Transaction picker, Transactions list and details (stored value 'Refunds Received').",draft
+incomeCategory_discountsReceived,Discounts Received,Punguzo Lililopokelewa,"Income category: Add Transaction picker, Transactions list and details (stored value 'Discounts Received').",draft
+incomeCategory_assetDisposal,Asset Disposal Income,Mapato ya Kuuza Mali,"Income category: Add Transaction picker, Transactions list and details (stored value 'Asset Disposal Income').",draft
+incomeCategory_other,Other Income,Mapato Mengine,"Income category: Add Transaction picker, Transactions list and details (stored value 'Other Income').",draft
