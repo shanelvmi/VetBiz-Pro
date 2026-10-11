@@ -693,6 +693,7 @@ class _AddSaleScreenState extends State<AddSaleScreen> {
       if (proceedAnyway != true) return;
     }
 
+    if (!mounted) return;
     setState(() => _isSaving = true);
 
     try {
