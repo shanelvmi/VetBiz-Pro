@@ -90,7 +90,7 @@ class _AddClientScreenState extends State<AddClientScreen> {
     // separately here, same principle as before: at least one type
     // must be picked, since the whole app (icons, colors, filtering)
     // depends on a client actually being categorized as something.
-    setState(() => _typeError = _selectedTypes.isEmpty ? 'Select at least one client type' : null);
+    setState(() => _typeError = _selectedTypes.isEmpty ? context.l10n.clients_errSelectType : null);
     if (!_formKey.currentState!.validate()) return;
     if (_selectedTypes.isEmpty) return;
     _formKey.currentState!.save();
@@ -99,7 +99,7 @@ class _AddClientScreenState extends State<AddClientScreen> {
         Provider.of<FacilityProvider>(context, listen: false).selectedFacilityId;
 
     if (facilityId == null || facilityId.isEmpty) {
-      AppFeedback.error("Couldn't save the client", detail: 'No facility selected');
+      AppFeedback.error(L10n.current.clients_saveFailed, detail: L10n.current.common_noFacility);
       return;
     }
 
@@ -151,7 +151,7 @@ class _AddClientScreenState extends State<AddClientScreen> {
           notes: _notes,
         );
         if (!mounted) return;
-        AppFeedback.success('Client added');
+        AppFeedback.success(L10n.current.clients_added);
       } else {
         // EDIT
         final updated = widget.client!.copyWith(
@@ -169,12 +169,12 @@ class _AddClientScreenState extends State<AddClientScreen> {
         );
         await clientProvider.updateClient(facilityId, updated);
         if (!mounted) return;
-        AppFeedback.success('Client updated');
+        AppFeedback.success(L10n.current.clients_updated);
       }
 
       Navigator.pop(context, true);
     } catch (e, st) {
-      AppFeedback.error("Couldn't save the client", error: e, stackTrace: st);
+      AppFeedback.error(L10n.current.clients_saveFailed, error: e, stackTrace: st);
     } finally {
       if (mounted) setState(() => _isSaving = false);
     }
@@ -193,7 +193,7 @@ class _AddClientScreenState extends State<AddClientScreen> {
           children: [
             Icon(Icons.warning_amber_rounded, color: context.colors.danger),
             SizedBox(width: AppSpacing.s8),
-            Expanded(child: Text('Client already exists')),
+            Expanded(child: Text(context.l10n.clients_duplicateTitle)),
           ],
         ),
         content: SizedBox(
@@ -204,8 +204,8 @@ class _AddClientScreenState extends State<AddClientScreen> {
             children: [
               Text(
                 byPhone
-                    ? 'A client with this phone number already exists:'
-                    : 'A client with a similar name already exists:',
+                    ? context.l10n.clients_duplicateByPhone
+                    : context.l10n.clients_duplicateByName,
                 style: const TextStyle(fontSize: AppFontSize.f13_5),
               ),
               const SizedBox(height: AppSpacing.s12),
@@ -223,7 +223,7 @@ class _AddClientScreenState extends State<AddClientScreen> {
                     Text(existing.name, style: const TextStyle(fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f14_5)),
                     const SizedBox(height: AppSpacing.s2),
                     Text(
-                      existing.phone.trim().isEmpty ? 'No phone number' : existing.phone,
+                      existing.phone.trim().isEmpty ? context.l10n.clients_noPhone : existing.phone,
                       style: TextStyle(fontSize: AppFontSize.f13, color: context.colors.textSoft),
                     ),
                   ],
@@ -231,17 +231,14 @@ class _AddClientScreenState extends State<AddClientScreen> {
               ),
               const SizedBox(height: AppSpacing.s12),
               Text(
-                'To avoid duplicate clients, ${isAdding ? 'this client was not saved' : 'your changes were not saved'}. '
-                'If it is the same person, use the existing client from the Clients list. '
-                'If it is a different person, ${byPhone ? 'enter a different phone number' : 'change the name slightly'} '
-                'and try again.',
+                context.l10n.clients_duplicateBody(isAdding ? 'add' : 'edit', byPhone ? 'phone' : 'name'),
                 style: TextStyle(fontSize: AppFontSize.f12_5, color: context.colors.textSoft),
               ),
             ],
           ),
         ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('OK')),
+          TextButton(onPressed: () => Navigator.pop(ctx), child: Text(context.l10n.common_ok)),
         ],
       ),
     );
@@ -265,13 +262,13 @@ class _AddClientScreenState extends State<AddClientScreen> {
                 Icon(Icons.people_alt_outlined, color: context.colors.onPrimary, size: AppIconSize.i22),
                 const SizedBox(width: AppSpacing.s12),
                 Expanded(
-                  child: Text(isEditing ? 'Edit Client' : 'Add Client',
+                  child: Text(isEditing ? context.l10n.clients_edit : context.l10n.clients_add,
                       style: TextStyle(color: context.colors.onPrimary, fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f18)),
                 ),
                 if (widget.isModal)
                   IconButton(
                     icon: Icon(Icons.close, color: context.colors.onPrimary),
-                    tooltip: 'Close',
+                    tooltip: context.l10n.common_close,
                     onPressed: () => Navigator.of(context).pop(),
                   )
                 else
@@ -396,56 +393,56 @@ class _AddClientScreenState extends State<AddClientScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _sectionHeader(Icons.person_outline, 'Client Information'),
+          _sectionHeader(Icons.person_outline, context.l10n.clients_infoSection),
           const SizedBox(height: AppSpacing.s12),
-          _fieldLabel('Name *'),
+          _fieldLabel(context.l10n.common_requiredLabel(context.l10n.common_name)),
           const SizedBox(height: AppSpacing.s6),
           TextFormField(
             initialValue: _name,
-            decoration: _fieldDecoration(hintText: 'Enter client name'),
+            decoration: _fieldDecoration(hintText: context.l10n.clients_nameHint),
             cursorColor: context.colors.primary,
             textCapitalization: TextCapitalization.sentences,
             inputFormatters: [SentenceCapitalizationFormatter()],
             validator: (value) =>
-                value == null || value.trim().isEmpty ? 'Required' : null,
+                value == null || value.trim().isEmpty ? context.l10n.common_required : null,
             onChanged: (value) => setState(() => _name = value),
             onSaved: (value) => _name = value!.trim(),
           ),
           const SizedBox(height: AppSpacing.s12),
-          _fieldLabel('Phone *'),
+          _fieldLabel(context.l10n.common_requiredLabel(context.l10n.common_phone)),
           const SizedBox(height: AppSpacing.s6),
           TextFormField(
             initialValue: _phone,
-            decoration: _fieldDecoration(hintText: 'e.g. 07XX XXX XXX'),
+            decoration: _fieldDecoration(hintText: context.l10n.clients_phoneHint),
             cursorColor: context.colors.primary,
             keyboardType: TextInputType.phone,
             validator: (value) =>
-                value == null || value.trim().isEmpty ? 'Required' : null,
+                value == null || value.trim().isEmpty ? context.l10n.common_required : null,
             onChanged: (value) => setState(() => _phone = value),
             onSaved: (value) => _phone = value!.trim(),
           ),
           const SizedBox(height: AppSpacing.s12),
-          _fieldLabel('Address'),
+          _fieldLabel(context.l10n.common_address),
           const SizedBox(height: AppSpacing.s6),
           TextFormField(
             initialValue: _address,
-            decoration: _fieldDecoration(hintText: 'Enter address'),
+            decoration: _fieldDecoration(hintText: context.l10n.clients_addressHint),
             cursorColor: context.colors.primary,
             textCapitalization: TextCapitalization.sentences,
             inputFormatters: [SentenceCapitalizationFormatter()],
             validator: (value) =>
-                value == null || value.trim().isEmpty ? 'Required' : null,
+                value == null || value.trim().isEmpty ? context.l10n.common_required : null,
             onChanged: (value) => setState(() => _address = value),
             onSaved: (value) => _address = value!.trim(),
           ),
           const SizedBox(height: AppSpacing.s12),
-          _fieldLabel('Notes (optional)'),
+          _fieldLabel(context.l10n.common_notesOptional),
           const SizedBox(height: AppSpacing.s6),
           TextFormField(
             initialValue: _notes,
             maxLength: 500,
             maxLines: 3,
-            decoration: _fieldDecoration(hintText: 'Any additional information about the client...'),
+            decoration: _fieldDecoration(hintText: context.l10n.clients_notesHint),
             cursorColor: context.colors.primary,
             textCapitalization: TextCapitalization.sentences,
             inputFormatters: [SentenceCapitalizationFormatter()],
@@ -456,7 +453,7 @@ class _AddClientScreenState extends State<AddClientScreen> {
           if (widget.client != null) ...[
             Align(
               alignment: Alignment.centerLeft,
-              child: _fieldLabel('Status'),
+              child: _fieldLabel(context.l10n.common_status),
                     ),
                     const SizedBox(height: AppSpacing.s8),
                     Row(
@@ -530,7 +527,7 @@ class _AddClientScreenState extends State<AddClientScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _sectionHeader(Icons.category_outlined, 'Client Type'),
+          _sectionHeader(Icons.category_outlined, context.l10n.clients_clientType),
           const SizedBox(height: AppSpacing.s12),
           Column(
             children: [
@@ -627,16 +624,16 @@ class _AddClientScreenState extends State<AddClientScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _sectionHeader(Icons.summarize_outlined, 'Quick Summary'),
+          _sectionHeader(Icons.summarize_outlined, context.l10n.clients_quickSummary),
           const SizedBox(height: AppSpacing.s12),
-          _summaryRow('Name', _name.trim().isEmpty ? '-' : _name.trim()),
-          _summaryRow('Phone', _phone.trim().isEmpty ? '-' : _phone.trim()),
+          _summaryRow(context.l10n.common_name, _name.trim().isEmpty ? '-' : _name.trim()),
+          _summaryRow(context.l10n.common_phone, _phone.trim().isEmpty ? '-' : _phone.trim()),
           _summaryRow(
-            'Type',
+            context.l10n.common_type,
             _selectedTypes.isEmpty ? '-' : _selectedTypes.map(context.l10n.clientTypeLabel).join(', '),
             valueBold: true,
           ),
-          _summaryRow('Address', _address.trim().isEmpty ? '-' : _address.trim()),
+          _summaryRow(context.l10n.common_address, _address.trim().isEmpty ? '-' : _address.trim()),
         ],
       ),
     );
@@ -682,7 +679,7 @@ class _AddClientScreenState extends State<AddClientScreen> {
           const SizedBox(width: AppSpacing.s10),
           Expanded(
             child: Text(
-              "You can update this client's animal species or crops anytime by editing their profile.",
+              context.l10n.clients_tip,
               style: TextStyle(fontSize: AppFontSize.f12, color: context.colors.primary.withValues(alpha: AppAlpha.a85)),
             ),
           ),
@@ -699,7 +696,7 @@ class _AddClientScreenState extends State<AddClientScreen> {
   Widget _buildAnimalCropCard() {
     final isCropProducer = _farmerSubType == 'Crop Producer';
     final isAnimalKeeper = _farmerSubType == 'Animal Keeper';
-    final title = isCropProducer ? 'Crop Information (Optional)' : 'Animal Information (Optional)';
+    final title = isCropProducer ? context.l10n.clients_cropInfo : context.l10n.clients_animalInfo;
 
     return Container(
       padding: const EdgeInsets.all(AppSpacing.s16),
@@ -715,20 +712,20 @@ class _AddClientScreenState extends State<AddClientScreen> {
           const SizedBox(height: AppSpacing.s4),
           Text(
             isCropProducer
-                ? 'Add crops grown by this client if available.'
+                ? context.l10n.clients_cropHint
                 : isAnimalKeeper
-                    ? 'Add animals owned by this client if available.'
-                    : 'Select a farmer type below to add crops or animals.',
+                    ? context.l10n.clients_animalHint
+                    : context.l10n.clients_farmerTypeHint,
             style: TextStyle(color: context.colors.textMuted, fontSize: AppFontSize.f12_5),
           ),
           const SizedBox(height: AppSpacing.s12),
-          _fieldLabel('Farmer Type'),
+          _fieldLabel(context.l10n.clients_farmerType),
           const SizedBox(height: AppSpacing.s6),
           DropdownButtonFormField<String?>(
             initialValue: _farmerSubType,
             decoration: _fieldDecoration(),
             items: [
-              const DropdownMenuItem(value: null, child: Text('None')),
+              DropdownMenuItem(value: null, child: Text(context.l10n.common_none)),
               ...farmerSubTypes.map((sub) => DropdownMenuItem(value: sub, child: Text(context.l10n.farmerSubTypeLabel(sub)))),
             ],
             onChanged: (val) => setState(() => _farmerSubType = val),
@@ -755,7 +752,7 @@ class _AddClientScreenState extends State<AddClientScreen> {
               width: double.infinity,
               child: OutlinedButton.icon(
                 icon: const Icon(Icons.add, size: AppIconSize.i16),
-                label: Text(isCropProducer ? 'Add Crops' : 'Add Animals'),
+                label: Text(isCropProducer ? context.l10n.clients_addCrops : context.l10n.clients_addAnimals),
                 style: OutlinedButton.styleFrom(
                   foregroundColor: context.colors.primary,
                   side: BorderSide(color: context.colors.primary.withValues(alpha: AppAlpha.a40)),
@@ -763,7 +760,7 @@ class _AddClientScreenState extends State<AddClientScreen> {
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadius.r10)),
                 ),
                 onPressed: () => _showGroupedMultiSelectDialog(
-                  title: isCropProducer ? 'Select Crops' : 'Select Animal Species',
+                  title: isCropProducer ? context.l10n.clients_selectCrops : context.l10n.clients_selectAnimals,
                   groups: isCropProducer ? cropGroups : animalGroups,
                   selected: isCropProducer ? _selectedCrops : _selectedAnimals,
                   groupLabel: isCropProducer ? context.l10n.cropGroupLabel : context.l10n.animalGroupLabel,
@@ -815,7 +812,7 @@ class _AddClientScreenState extends State<AddClientScreen> {
                   children: [
                     TextField(
                       decoration: InputDecoration(
-                        hintText: 'Search...',
+                        hintText: context.l10n.common_searchEllipsis,
                         prefixIcon: const Icon(Icons.search, size: AppIconSize.i20),
                         isDense: true,
                         border: OutlineInputBorder(borderRadius: BorderRadius.circular(AppRadius.r10)),
@@ -825,7 +822,7 @@ class _AddClientScreenState extends State<AddClientScreen> {
                     const SizedBox(height: AppSpacing.s12),
                     Expanded(
                       child: filteredGroups.isEmpty
-                          ? const Center(child: Text('No matches found'))
+                          ? Center(child: Text(context.l10n.clients_noMatches))
                           : ListView(
                               children: filteredGroups.entries.expand((entry) {
                                 return [
@@ -864,7 +861,7 @@ class _AddClientScreenState extends State<AddClientScreen> {
                 ),
               ),
               actions: [
-                TextButton(onPressed: () => Navigator.pop(dialogContext), child: const Text('Done')),
+                TextButton(onPressed: () => Navigator.pop(dialogContext), child: Text(context.l10n.common_done)),
               ],
             );
           },
@@ -890,16 +887,16 @@ class _AddClientScreenState extends State<AddClientScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _sectionHeader(Icons.info_outline, 'Additional Details'),
+          _sectionHeader(Icons.info_outline, context.l10n.clients_additionalDetails),
           const SizedBox(height: AppSpacing.s12),
           if (showVet) ...[
-            _fieldLabel('Practice Type'),
+            _fieldLabel(context.l10n.clients_practiceType),
             const SizedBox(height: AppSpacing.s6),
             DropdownButtonFormField<String?>(
               initialValue: _vetPracticeType,
               decoration: _fieldDecoration(),
               items: [
-                const DropdownMenuItem(value: null, child: Text('None')),
+                DropdownMenuItem(value: null, child: Text(context.l10n.common_none)),
                 ...vetPracticeTypes.map((v) => DropdownMenuItem(value: v, child: Text(context.l10n.vetPracticeTypeLabel(v)))),
               ],
               onChanged: (val) => setState(() => _vetPracticeType = val),
@@ -907,11 +904,11 @@ class _AddClientScreenState extends State<AddClientScreen> {
             if (showBusiness) const SizedBox(height: AppSpacing.s12),
           ],
           if (showBusiness) ...[
-            _fieldLabel('Business Name'),
+            _fieldLabel(context.l10n.clients_businessName),
             const SizedBox(height: AppSpacing.s6),
             TextFormField(
               initialValue: _businessName,
-              decoration: _fieldDecoration(hintText: 'Enter business name'),
+              decoration: _fieldDecoration(hintText: context.l10n.clients_businessNameHint),
               cursorColor: context.colors.primary,
               textCapitalization: TextCapitalization.sentences,
               inputFormatters: [SentenceCapitalizationFormatter()],
@@ -937,7 +934,7 @@ class _AddClientScreenState extends State<AddClientScreen> {
         children: [
           OutlinedButton.icon(
             icon: const Icon(Icons.close, size: AppIconSize.i16),
-            label: const Text('Cancel'),
+            label: Text(context.l10n.common_cancel),
             style: OutlinedButton.styleFrom(
               foregroundColor: context.colors.textPrimary,
               side: BorderSide(color: context.colors.textHint.withValues(alpha: AppAlpha.a40)),
@@ -966,7 +963,7 @@ class _AddClientScreenState extends State<AddClientScreen> {
                     children: [
                       const Icon(Icons.save_outlined, size: AppIconSize.i16),
                       const SizedBox(width: AppSpacing.s8),
-                      Text(isEditing ? 'Update Client' : 'Save Client'),
+                      Text(isEditing ? context.l10n.clients_update : context.l10n.clients_save),
                     ],
                   ),
           ),
@@ -995,7 +992,7 @@ Future<bool?> showAddClientScreen(BuildContext context, {Client? client}) async 
   return showGeneralDialog<bool>(
     context: context,
     barrierDismissible: true,
-    barrierLabel: client == null ? 'Add Client' : 'Edit Client',
+    barrierLabel: client == null ? context.l10n.clients_add : context.l10n.clients_edit,
     barrierColor: context.colors.scrim.withValues(alpha: AppAlpha.a50),
     transitionDuration: AppMotion.normal,
     pageBuilder: (context, animation, secondaryAnimation) {

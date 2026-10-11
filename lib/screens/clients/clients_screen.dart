@@ -145,15 +145,16 @@ class _ClientsScreenState extends State<ClientsScreen> {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Expanded(child: _metricCard('Total Clients', '${allClients.length}', 'All time', Icons.people_outline, context.colors.primary)),
+          Expanded(child: _metricCard(context.l10n.clients_total, '${allClients.length}', context.l10n.clients_allTime, Icons.people_outline, context.colors.primary)),
           const SizedBox(width: AppSpacing.s12),
-          Expanded(child: _metricCard('New This Month', '$newThisMonth', null, Icons.person_add_alt_outlined, context.colors.primary)),
+          Expanded(child: _metricCard(context.l10n.clients_newThisMonth, '$newThisMonth', null, Icons.person_add_alt_outlined, context.colors.primary)),
           const SizedBox(width: AppSpacing.s12),
           Expanded(
             child: _metricCard(
-              'Most Active Type',
-              mostActiveType,
-              allClients.isEmpty ? null : '${mostActivePercent.toStringAsFixed(0)}% of clients',
+              context.l10n.clients_mostActiveType,
+              // A stored client type, shown by its label ('-' when there are no clients).
+              mostActiveType == '-' ? mostActiveType : context.l10n.clientTypeLabel(mostActiveType),
+              allClients.isEmpty ? null : context.l10n.clients_percentOfClients(mostActivePercent.toStringAsFixed(0)),
               Icons.shopping_cart_outlined,
               context.colors.accent,
             ),
@@ -161,7 +162,7 @@ class _ClientsScreenState extends State<ClientsScreen> {
           const SizedBox(width: AppSpacing.s12),
           Expanded(
             child: _metricCard(
-              'Last Added',
+              context.l10n.clients_lastAdded,
               lastAdded?.name ?? '-',
               lastAdded?.createdAt != null ? AppDateFormat.date.format(lastAdded!.createdAt!) : null,
               Icons.calendar_today_outlined,
@@ -231,7 +232,7 @@ class _ClientsScreenState extends State<ClientsScreen> {
           child: TextField(
             controller: _searchController,
             decoration: InputDecoration(
-              hintText: 'Search by name, phone, address...',
+              hintText: context.l10n.clients_searchHint,
               hintStyle: const TextStyle(fontSize: AppFontSize.f13),
               prefixIcon: const Icon(Icons.search, size: AppIconSize.i20),
               filled: true,
@@ -268,7 +269,7 @@ class _ClientsScreenState extends State<ClientsScreen> {
               icon: Icon(Icons.arrow_drop_down, size: AppIconSize.i18, color: context.colors.primary),
               style: TextStyle(color: context.colors.textPrimary, fontSize: AppFontSize.f13),
               items: _clientTypes
-                  .map((t) => DropdownMenuItem(value: t, child: Text(t == 'All' ? 'Type: All' : context.l10n.clientTypeLabel(t))))
+                  .map((t) => DropdownMenuItem(value: t, child: Text(t == 'All' ? context.l10n.common_filterValue(context.l10n.common_type, context.l10n.common_all) : context.l10n.clientTypeLabel(t))))
                   .toList(),
               onChanged: (val) {
                 if (val != null) _onTypeSelected(val);
@@ -292,7 +293,7 @@ class _ClientsScreenState extends State<ClientsScreen> {
               style: TextStyle(color: context.colors.textPrimary, fontSize: AppFontSize.f13),
               // Shows the label; the filter queries the stored status.
               items: [
-                const DropdownMenuItem(value: 'All', child: Text('Status: All')),
+                DropdownMenuItem(value: 'All', child: Text(context.l10n.common_filterValue(context.l10n.common_status, context.l10n.common_all))),
                 for (final s in kClientStatuses) DropdownMenuItem(value: s, child: Text(context.l10n.clientStatusLabel(s))),
               ],
               onChanged: (val) {
@@ -346,8 +347,8 @@ class _ClientsScreenState extends State<ClientsScreen> {
       context: context,
       builder: (_) => AlertDialog(
         backgroundColor: context.colors.background,
-        title: Text('Delete Client', style: TextStyle(color: context.colors.primary)),
-        content: Text('Delete "${client.name}" permanently?'),
+        title: Text(context.l10n.clients_deleteTitle, style: TextStyle(color: context.colors.primary)),
+        content: Text(context.l10n.clients_deleteBody(client.name)),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
@@ -357,7 +358,7 @@ class _ClientsScreenState extends State<ClientsScreen> {
                 return context.colors.primary;
               }),
             ),
-            child: const Text('Cancel'),
+            child: Text(context.l10n.common_cancel),
           ),
           TextButton.icon(
             onPressed: () => Navigator.pop(context, true),
@@ -368,7 +369,7 @@ class _ClientsScreenState extends State<ClientsScreen> {
               }),
             ),
             icon: const Icon(Icons.delete),
-            label: const Text('Delete'),
+            label: Text(context.l10n.common_delete),
           ),
         ],
       ),
@@ -383,9 +384,9 @@ class _ClientsScreenState extends State<ClientsScreen> {
         if (_selectedClient?.id == client.id) setState(() => _selectedClient = null);
         // A hard delete (nothing goes to trash_clients), so no Undo: see
         // design-open-questions.md, "make client deletion soft?".
-        AppFeedback.success('Client deleted');
+        AppFeedback.success(L10n.current.clients_deleted);
       } catch (e, st) {
-        AppFeedback.error("Couldn't delete the client", error: e, stackTrace: st);
+        AppFeedback.error(L10n.current.clients_deleteFailed, error: e, stackTrace: st);
       }
     }
   }
@@ -447,7 +448,7 @@ class _ClientsScreenState extends State<ClientsScreen> {
         downloadFileWeb(bytes, 'client_${client.id}.png');
         return;
       }
-      AppFeedback.error("Couldn't share the client card", error: e, stackTrace: st);
+      AppFeedback.error(L10n.current.clients_shareFailed, error: e, stackTrace: st);
     } finally {
       if (mounted) setState(() => _isSharing = false);
     }
@@ -472,7 +473,7 @@ class _ClientsScreenState extends State<ClientsScreen> {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                const Text('Client Details', style: TextStyle(fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f16)),
+                Text(context.l10n.clients_detailsTitle, style: const TextStyle(fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f16)),
                 IconButton(
                   icon: const Icon(Icons.close, size: AppIconSize.i20),
                   onPressed: () => setState(() => _selectedClient = null),
@@ -515,22 +516,22 @@ class _ClientsScreenState extends State<ClientsScreen> {
                 ),
                 IconButton(
                   icon: Icon(Icons.phone_outlined, size: AppIconSize.i18, color: accent),
-                  tooltip: 'Call',
+                  tooltip: context.l10n.common_call,
                   onPressed: () async {
                     final uri = AppLinks.tel(client.phone);
                     final launched = await launchUrl(uri, mode: LaunchMode.externalApplication);
                     if (!launched) {
-                      AppFeedback.info("Couldn't open the dialer");
+                      AppFeedback.info(L10n.current.common_dialerFailed);
                     }
                   },
                 ),
               ],
             ),
             const Divider(height: 32),
-            _detailLabel('Address'),
+            _detailLabel(context.l10n.common_address),
             Text(client.address, style: const TextStyle(fontSize: AppFontSize.f14)),
             const SizedBox(height: AppSpacing.s16),
-            _detailLabel('Client Type'),
+            _detailLabel(context.l10n.clients_clientType),
             Wrap(
               spacing: AppSpacing.s6,
               runSpacing: AppSpacing.s6,
@@ -551,13 +552,13 @@ class _ClientsScreenState extends State<ClientsScreen> {
               }).toList(),
             ),
             const SizedBox(height: AppSpacing.s16),
-            _detailLabel('Joined On'),
+            _detailLabel(context.l10n.clients_joinedOn),
             Text(
               client.createdAt != null ? AppDateFormat.date.format(client.createdAt!) : '-',
               style: const TextStyle(fontSize: AppFontSize.f14),
             ),
             const SizedBox(height: AppSpacing.s16),
-            _detailLabel('Status'),
+            _detailLabel(context.l10n.common_status),
             Container(
               padding: const EdgeInsets.symmetric(horizontal: AppSpacing.s8, vertical: AppSpacing.s3),
               decoration: BoxDecoration(
@@ -582,18 +583,18 @@ class _ClientsScreenState extends State<ClientsScreen> {
                 return Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    _detailLabel('Total Transactions'),
+                    _detailLabel(context.l10n.clients_totalTransactions),
                     Text('$count', style: const TextStyle(fontSize: AppFontSize.f14)),
                     const SizedBox(height: AppSpacing.s16),
-                    _detailLabel('Total Spent'),
+                    _detailLabel(context.l10n.clients_totalSpent),
                     Text(Money.symbolPlain(total), style: const TextStyle(fontSize: AppFontSize.f14)),
                   ],
                 );
               },
             ),
             const SizedBox(height: AppSpacing.s16),
-            _detailLabel('Notes'),
-            Text(latestNote ?? 'No notes added', style: TextStyle(fontSize: AppFontSize.f13_5, color: latestNote == null ? context.colors.textHint : context.colors.textPrimary)),
+            _detailLabel(context.l10n.common_notes),
+            Text(latestNote ?? context.l10n.common_noNotes, style: TextStyle(fontSize: AppFontSize.f13_5, color: latestNote == null ? context.colors.textHint : context.colors.textPrimary)),
                   ],
                 ),
               ),
@@ -606,7 +607,7 @@ class _ClientsScreenState extends State<ClientsScreen> {
                 icon: _isSharing
                     ? SizedBox(height: AppSpacing.s16, width: 16, child: CircularProgressIndicator(strokeWidth: 2, color: context.colors.onPrimary))
                     : const Icon(Icons.share_outlined, size: AppIconSize.i18),
-                label: const Text('Save / Share'),
+                label: Text(context.l10n.clients_saveShare),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: context.colors.primary,
                   foregroundColor: context.colors.onPrimary,
@@ -656,7 +657,7 @@ class _ClientsScreenState extends State<ClientsScreen> {
                   child: Align(
                     alignment: Alignment.centerLeft,
                     child: Text(
-                      'Searching by name (across all types)',
+                      context.l10n.clients_searchingNote,
                       style: TextStyle(fontSize: AppFontSize.f11, color: context.colors.textHint, fontStyle: FontStyle.italic),
                     ),
                   ),
@@ -680,14 +681,13 @@ class _ClientsScreenState extends State<ClientsScreen> {
                                 const SizedBox(width: AppSpacing.s8),
                                 Expanded(
                                   child: Text(
-                                    '${controller.newRecordsAvailable} new client'
-                                    '${controller.newRecordsAvailable == 1 ? '' : 's'} available',
+                                    context.l10n.clients_newRecords(controller.newRecordsAvailable),
                                     style: TextStyle(fontSize: AppFontSize.f13, color: context.colors.primary),
                                   ),
                                 ),
                                 TextButton(
                                   onPressed: () => controller.refreshSession(),
-                                  child: const Text('Refresh'),
+                                  child: Text(context.l10n.common_refresh),
                                 ),
                               ],
                             ),
@@ -705,7 +705,7 @@ class _ClientsScreenState extends State<ClientsScreen> {
                                   : clients.isEmpty
                                       ? Center(
                                           child: Text(
-                                            isSearching ? 'No clients match "$_searchQuery"' : 'No clients found',
+                                            isSearching ? context.l10n.clients_emptySearch(_searchQuery) : context.l10n.clients_empty,
                                           ),
                                         )
                                       : _buildClientsTable(clients),
@@ -743,8 +743,8 @@ class _ClientsScreenState extends State<ClientsScreen> {
       title: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Text('Clients', style: TextStyle(fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f19, color: context.colors.textPrimary)),
-          Text('Manage all your clients in one place', style: TextStyle(fontSize: AppFontSize.f12, color: context.colors.textSecondary)),
+          Text(context.l10n.clients_title, style: TextStyle(fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f19, color: context.colors.textPrimary)),
+          Text(context.l10n.clients_subtitle, style: TextStyle(fontSize: AppFontSize.f12, color: context.colors.textSecondary)),
         ],
       ),
       actions: [
@@ -755,7 +755,7 @@ class _ClientsScreenState extends State<ClientsScreen> {
               await showAddClientScreen(context);
             },
             icon: const Icon(Icons.add, size: AppIconSize.i18),
-            label: const Text('Add Client'),
+            label: Text(context.l10n.clients_add),
             style: ElevatedButton.styleFrom(
               backgroundColor: context.colors.primary,
               foregroundColor: context.colors.background,
@@ -777,11 +777,11 @@ class _ClientsScreenState extends State<ClientsScreen> {
           decoration: BoxDecoration(border: Border(bottom: BorderSide(color: context.colors.textHint.withValues(alpha: AppAlpha.a20)))),
           child: Row(
             children: [
-              _headerCell('Client', flex: 3),
-              _headerCell('Type', flex: 2),
-              _headerCell('Phone', flex: 2),
-              _headerCell('Status', flex: 2),
-              _headerCell('Joined On', flex: 2),
+              _headerCell(context.l10n.clients_client, flex: 3),
+              _headerCell(context.l10n.common_type, flex: 2),
+              _headerCell(context.l10n.common_phone, flex: 2),
+              _headerCell(context.l10n.common_status, flex: 2),
+              _headerCell(context.l10n.clients_joinedOn, flex: 2),
               _headerCell('', flex: 1),
             ],
           ),
@@ -911,9 +911,9 @@ class _ClientsScreenState extends State<ClientsScreen> {
                 }
               },
               itemBuilder: (context) => [
-                const PopupMenuItem(value: 'edit', child: Text('Edit')),
+                PopupMenuItem(value: 'edit', child: Text(context.l10n.common_edit)),
                 if (isAdmin)
-                  PopupMenuItem(value: 'delete', child: Text('Delete', style: TextStyle(color: context.colors.dangerSoft))),
+                  PopupMenuItem(value: 'delete', child: Text(context.l10n.common_delete, style: TextStyle(color: context.colors.dangerSoft))),
               ],
             ),
           ),
@@ -944,8 +944,8 @@ class _ClientsScreenState extends State<ClientsScreen> {
         const SizedBox(height: AppSpacing.s8),
         Text(
           url != null
-              ? 'This filter needs a one-time database index to be created first.'
-              : 'Could not load clients: ${FriendlyError.messageFor(error)}',
+              ? context.l10n.clients_indexNeeded
+              : context.l10n.clients_loadError(FriendlyError.messageFor(error)),
           textAlign: TextAlign.center,
           style: const TextStyle(fontSize: AppFontSize.f13),
         ),
@@ -956,11 +956,11 @@ class _ClientsScreenState extends State<ClientsScreen> {
               final uri = Uri.parse(url);
               final launched = await launchUrl(uri, mode: LaunchMode.externalApplication);
               if (!launched) {
-                AppFeedback.warning("Couldn't open the link", detail: 'Copy it from the error log instead');
+                AppFeedback.warning(L10n.current.common_linkFailed, detail: L10n.current.common_linkFailedDetail);
               }
             },
             icon: const Icon(Icons.open_in_new, size: AppIconSize.i18),
-            label: const Text('Create Index'),
+            label: Text(context.l10n.clients_createIndex),
             style: ButtonStyle(
               backgroundColor: WidgetStateProperty.resolveWith<Color>((states) {
                 if (states.contains(WidgetState.hovered)) return context.colors.accent;
@@ -971,7 +971,7 @@ class _ClientsScreenState extends State<ClientsScreen> {
           ),
           const SizedBox(height: AppSpacing.s8),
           Text(
-            'This takes a minute or two to finish building after you create it - then try this filter again.',
+            context.l10n.clients_indexBuildingHint,
             textAlign: TextAlign.center,
             style: TextStyle(fontSize: AppFontSize.f11, color: context.colors.textMuted, fontStyle: FontStyle.italic),
           ),
@@ -993,7 +993,7 @@ class _ClientsScreenState extends State<ClientsScreen> {
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           Text(
-            itemCount == 0 ? 'No clients' : 'Showing $pageStart to $pageEnd',
+            itemCount == 0 ? context.l10n.clients_none : context.l10n.common_showingRange(pageStart, pageEnd),
             style: TextStyle(fontSize: AppFontSize.f12_5, color: context.colors.textMuted),
           ),
           Row(
@@ -1002,7 +1002,7 @@ class _ClientsScreenState extends State<ClientsScreen> {
                 child: DropdownButton<int>(
                   value: pageSize,
                   items: const [10, 25, 50]
-                      .map((n) => DropdownMenuItem(value: n, child: Text('$n per page')))
+                      .map((n) => DropdownMenuItem(value: n, child: Text(context.l10n.common_perPage(n))))
                       .toList(),
                   onChanged: (val) {
                     if (val != null) controller.setPageSize(val);
@@ -1014,7 +1014,7 @@ class _ClientsScreenState extends State<ClientsScreen> {
                 icon: const Icon(Icons.chevron_left),
                 onPressed: controller.hasPreviousPage ? () => controller.goToPreviousPage() : null,
               ),
-              Text('Page ${controller.currentPage}', style: const TextStyle(fontSize: AppFontSize.f13)),
+              Text(context.l10n.common_page(controller.currentPage), style: const TextStyle(fontSize: AppFontSize.f13)),
               IconButton(
                 icon: controller.isLoading
                     ? const SizedBox(width: AppSpacing.s16, height: 16, child: CircularProgressIndicator(strokeWidth: 2))
