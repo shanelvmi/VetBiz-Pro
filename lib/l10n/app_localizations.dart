@@ -4393,6 +4393,144 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Version'**
   String get settings_version;
+
+  /// App info dialog label.
+  ///
+  /// In en, this message translates to:
+  /// **'Built For'**
+  String get settings_builtFor;
+
+  /// App info dialog value.
+  ///
+  /// In en, this message translates to:
+  /// **'Veterinary & agrovet business management'**
+  String get settings_builtForValue;
+
+  /// UI Settings section heading.
+  ///
+  /// In en, this message translates to:
+  /// **'COLOUR THEME'**
+  String get uiSettings_colourTheme;
+
+  /// UI Settings section heading.
+  ///
+  /// In en, this message translates to:
+  /// **'APPEARANCE'**
+  String get uiSettings_appearance;
+
+  /// UI Settings option (not available yet).
+  ///
+  /// In en, this message translates to:
+  /// **'Dark Mode'**
+  String get uiSettings_darkMode;
+
+  /// Under an option that is not available yet.
+  ///
+  /// In en, this message translates to:
+  /// **'Coming soon'**
+  String get uiSettings_comingSoon;
+
+  /// UI Settings section heading.
+  ///
+  /// In en, this message translates to:
+  /// **'LAYOUT'**
+  String get uiSettings_layout;
+
+  /// UI Settings option.
+  ///
+  /// In en, this message translates to:
+  /// **'Layout Fixed Mode'**
+  String get uiSettings_layoutFixed;
+
+  /// Under Layout Fixed Mode.
+  ///
+  /// In en, this message translates to:
+  /// **'Keeps the sidebar open and hides its collapse button on large screens.'**
+  String get uiSettings_layoutFixedHint;
+
+  /// UI Settings section heading.
+  ///
+  /// In en, this message translates to:
+  /// **'SYSTEM'**
+  String get uiSettings_system;
+
+  /// UI Settings option.
+  ///
+  /// In en, this message translates to:
+  /// **'System Refresh'**
+  String get uiSettings_systemRefresh;
+
+  /// Under System Refresh.
+  ///
+  /// In en, this message translates to:
+  /// **'Reloads your data and takes you back to the start. You stay signed in.'**
+  String get uiSettings_systemRefreshHint;
+
+  /// Under the UI Settings title.
+  ///
+  /// In en, this message translates to:
+  /// **'Saved on this device'**
+  String get uiSettings_savedOnDevice;
+
+  /// System Refresh confirmation title.
+  ///
+  /// In en, this message translates to:
+  /// **'Refresh the app?'**
+  String get uiSettings_refreshTitle;
+
+  /// System Refresh confirmation text.
+  ///
+  /// In en, this message translates to:
+  /// **'This reloads your data and takes you back to the start. You stay signed in, but anything you haven\'t saved will be lost.'**
+  String get uiSettings_refreshBody;
+
+  /// Colour theme name (id "kilimanjaro").
+  ///
+  /// In en, this message translates to:
+  /// **'Kilimanjaro Green'**
+  String get uiSettings_themeKilimanjaro;
+
+  /// Colour theme name (id "serengeti").
+  ///
+  /// In en, this message translates to:
+  /// **'Serengeti Yellow'**
+  String get uiSettings_themeSerengeti;
+
+  /// Colour theme name (id "victoria").
+  ///
+  /// In en, this message translates to:
+  /// **'Victoria Blue'**
+  String get uiSettings_themeVictoria;
+
+  /// Message after saving.
+  ///
+  /// In en, this message translates to:
+  /// **'Business hours saved'**
+  String get hours_saved;
+
+  /// Message when saving failed.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t save the business hours'**
+  String get hours_saveFailed;
+
+  /// Business Hours screen intro; the quoted names are other screens' English texts until those are translated.
+  ///
+  /// In en, this message translates to:
+  /// **'Sets when the \"Generate Today\'s Report\" button becomes active in View Reports.'**
+  String get hours_intro;
+
+  /// Business Hours row title.
+  ///
+  /// In en, this message translates to:
+  /// **'Weekdays (Mon–Fri)'**
+  String get hours_weekdays;
+
+  /// Business Hours row title.
+  ///
+  /// In en, this message translates to:
+  /// **'Saturday'**
+  String get hours_saturday;
 }
 
 class _AppLocalizationsDelegate

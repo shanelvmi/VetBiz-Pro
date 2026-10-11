@@ -2447,4 +2447,78 @@ class AppLocalizationsSw extends AppLocalizations {
 
   @override
   String get settings_version => 'Toleo';
+
+  @override
+  String get settings_builtFor => 'Imetengenezwa Kwa';
+
+  @override
+  String get settings_builtForValue =>
+      'Usimamizi wa biashara za mifugo na pembejeo za kilimo';
+
+  @override
+  String get uiSettings_colourTheme => 'RANGI';
+
+  @override
+  String get uiSettings_appearance => 'MWONEKANO';
+
+  @override
+  String get uiSettings_darkMode => 'Hali ya Giza';
+
+  @override
+  String get uiSettings_comingSoon => 'Inakuja hivi karibuni';
+
+  @override
+  String get uiSettings_layout => 'MPANGILIO';
+
+  @override
+  String get uiSettings_layoutFixed => 'Mpangilio Usiobadilika';
+
+  @override
+  String get uiSettings_layoutFixedHint =>
+      'Huacha menyu ya pembeni wazi na huficha kitufe cha kuifunga kwenye skrini kubwa.';
+
+  @override
+  String get uiSettings_system => 'MFUMO';
+
+  @override
+  String get uiSettings_systemRefresh => 'Onyesha Upya Mfumo';
+
+  @override
+  String get uiSettings_systemRefreshHint =>
+      'Hupakia data yako upya na kukurudisha mwanzo. Unabaki umeingia.';
+
+  @override
+  String get uiSettings_savedOnDevice => 'Imehifadhiwa kwenye kifaa hiki';
+
+  @override
+  String get uiSettings_refreshTitle => 'Onyesha upya programu?';
+
+  @override
+  String get uiSettings_refreshBody =>
+      'Hii hupakia data yako upya na kukurudisha mwanzo. Unabaki umeingia, lakini chochote ambacho hujahifadhi kitapotea.';
+
+  @override
+  String get uiSettings_themeKilimanjaro => 'Kijani cha Kilimanjaro';
+
+  @override
+  String get uiSettings_themeSerengeti => 'Njano ya Serengeti';
+
+  @override
+  String get uiSettings_themeVictoria => 'Bluu ya Victoria';
+
+  @override
+  String get hours_saved => 'Saa za biashara zimehifadhiwa';
+
+  @override
+  String get hours_saveFailed => 'Imeshindwa kuhifadhi saa za biashara';
+
+  @override
+  String get hours_intro =>
+      'Huweka wakati kitufe cha \"Generate Today\'s Report\" kinapoanza kufanya kazi kwenye View Reports.';
+
+  @override
+  String get hours_weekdays => 'Siku za kazi (Jtatu–Ijumaa)';
+
+  @override
+  String get hours_saturday => 'Jumamosi';
 }

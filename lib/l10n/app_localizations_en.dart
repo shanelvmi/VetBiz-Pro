@@ -2433,4 +2433,78 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get settings_version => 'Version';
+
+  @override
+  String get settings_builtFor => 'Built For';
+
+  @override
+  String get settings_builtForValue =>
+      'Veterinary & agrovet business management';
+
+  @override
+  String get uiSettings_colourTheme => 'COLOUR THEME';
+
+  @override
+  String get uiSettings_appearance => 'APPEARANCE';
+
+  @override
+  String get uiSettings_darkMode => 'Dark Mode';
+
+  @override
+  String get uiSettings_comingSoon => 'Coming soon';
+
+  @override
+  String get uiSettings_layout => 'LAYOUT';
+
+  @override
+  String get uiSettings_layoutFixed => 'Layout Fixed Mode';
+
+  @override
+  String get uiSettings_layoutFixedHint =>
+      'Keeps the sidebar open and hides its collapse button on large screens.';
+
+  @override
+  String get uiSettings_system => 'SYSTEM';
+
+  @override
+  String get uiSettings_systemRefresh => 'System Refresh';
+
+  @override
+  String get uiSettings_systemRefreshHint =>
+      'Reloads your data and takes you back to the start. You stay signed in.';
+
+  @override
+  String get uiSettings_savedOnDevice => 'Saved on this device';
+
+  @override
+  String get uiSettings_refreshTitle => 'Refresh the app?';
+
+  @override
+  String get uiSettings_refreshBody =>
+      'This reloads your data and takes you back to the start. You stay signed in, but anything you haven\'t saved will be lost.';
+
+  @override
+  String get uiSettings_themeKilimanjaro => 'Kilimanjaro Green';
+
+  @override
+  String get uiSettings_themeSerengeti => 'Serengeti Yellow';
+
+  @override
+  String get uiSettings_themeVictoria => 'Victoria Blue';
+
+  @override
+  String get hours_saved => 'Business hours saved';
+
+  @override
+  String get hours_saveFailed => 'Couldn\'t save the business hours';
+
+  @override
+  String get hours_intro =>
+      'Sets when the \"Generate Today\'s Report\" button becomes active in View Reports.';
+
+  @override
+  String get hours_weekdays => 'Weekdays (Mon–Fri)';
+
+  @override
+  String get hours_saturday => 'Saturday';
 }
