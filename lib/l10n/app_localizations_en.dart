@@ -2661,4 +2661,84 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get printer_sendTest => 'Send Test Print';
+
+  @override
+  String get printer_connectFirst => 'Connect a printer above before testing.';
+
+  @override
+  String get common_serviceRecords => 'Service Records';
+
+  @override
+  String get trash_restoreSaleTitle => 'Restore this sale?';
+
+  @override
+  String get trash_restoreSaleBody =>
+      'The sale will be back in your sales list, but restoring will NOT change:\n• stock: the items stay back on the shelf, as they were put back when the sale was deleted\n• debt: the client\'s debt for this sale is not re-created\n• client balance: it stays as it is now\n\nAdjust these by hand if the sale really happened.';
+
+  @override
+  String get trash_restoreServiceTitle => 'Restore this service?';
+
+  @override
+  String get trash_restoreServiceBody =>
+      'The service will be back in your services list, but restoring will NOT change:\n• stock: the items it used stay back in stock\n• debt: the client\'s debt for this service is not re-created\n• client balance: it stays as it is now\n• expenses: its expense transaction was deleted for good and does not come back\n\nAdjust these by hand if the service really happened.';
+
+  @override
+  String get trash_restored => 'Item restored';
+
+  @override
+  String get trash_restoreFailed => 'Couldn\'t restore the item';
+
+  @override
+  String get trash_deleteForeverTitle => 'Delete Forever?';
+
+  @override
+  String trash_deleteForeverBody(String label) {
+    return '\"$label\" will be permanently deleted. This cannot be undone.';
+  }
+
+  @override
+  String get trash_deleteForever => 'Delete Forever';
+
+  @override
+  String get trash_deleted => 'Permanently deleted';
+
+  @override
+  String get trash_deleteFailed => 'Couldn\'t delete the item permanently';
+
+  @override
+  String get trash_empty => 'Trash is empty';
+
+  @override
+  String trash_expiringBanner(int count, int days) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other:
+          '$count items will be permanently deleted within $days days. Restore now if you still need them.',
+      one:
+          '1 item will be permanently deleted within $days days. Restore now if you still need it.',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get trash_deletingSoon => 'Deleting soon';
+
+  @override
+  String get trash_expiresTomorrow => 'Expires tomorrow';
+
+  @override
+  String trash_expiresIn(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Expires in $count days',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String trash_deletedBy(String name) {
+    return 'Deleted by $name';
+  }
 }

@@ -2678,4 +2678,85 @@ class AppLocalizationsSw extends AppLocalizations {
 
   @override
   String get printer_sendTest => 'Tuma Jaribio la Kuchapisha';
+
+  @override
+  String get printer_connectFirst =>
+      'Unganisha printa hapo juu kabla ya kujaribu.';
+
+  @override
+  String get common_serviceRecords => 'Rekodi za Huduma';
+
+  @override
+  String get trash_restoreSaleTitle => 'Rejesha mauzo haya?';
+
+  @override
+  String get trash_restoreSaleBody =>
+      'Mauzo yatarudi kwenye orodha yako ya mauzo, lakini kurejesha HAKUTABADILISHA:\n• akiba: bidhaa zinabaki rafuni, kama zilivyorudishwa mauzo yalipofutwa\n• deni: deni la mteja kwa mauzo haya halirudishwi\n• salio la mteja: linabaki kama lilivyo sasa\n\nRekebisha haya kwa mkono ikiwa mauzo yalitokea kweli.';
+
+  @override
+  String get trash_restoreServiceTitle => 'Rejesha huduma hii?';
+
+  @override
+  String get trash_restoreServiceBody =>
+      'Huduma itarudi kwenye orodha yako ya huduma, lakini kurejesha HAKUTABADILISHA:\n• akiba: bidhaa ilizotumia zinabaki stoo\n• deni: deni la mteja kwa huduma hii halirudishwi\n• salio la mteja: linabaki kama lilivyo sasa\n• matumizi: muamala wake wa matumizi ulifutwa kabisa na haurudi\n\nRekebisha haya kwa mkono ikiwa huduma ilitolewa kweli.';
+
+  @override
+  String get trash_restored => 'Kipengee kimerejeshwa';
+
+  @override
+  String get trash_restoreFailed => 'Imeshindwa kurejesha kipengee';
+
+  @override
+  String get trash_deleteForeverTitle => 'Futa Kabisa?';
+
+  @override
+  String trash_deleteForeverBody(String label) {
+    return '\"$label\" itafutwa kabisa. Hili haliwezi kutenduliwa.';
+  }
+
+  @override
+  String get trash_deleteForever => 'Futa Kabisa';
+
+  @override
+  String get trash_deleted => 'Imefutwa kabisa';
+
+  @override
+  String get trash_deleteFailed => 'Imeshindwa kufuta kipengee kabisa';
+
+  @override
+  String get trash_empty => 'Takataka ni tupu';
+
+  @override
+  String trash_expiringBanner(int count, int days) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other:
+          'Vipengee $count vitafutwa kabisa ndani ya siku $days. Virejeshe sasa ikiwa bado unavihitaji.',
+      one:
+          'Kipengee 1 kitafutwa kabisa ndani ya siku $days. Kirejeshe sasa ikiwa bado unakihitaji.',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get trash_deletingSoon => 'Kinafutwa hivi karibuni';
+
+  @override
+  String get trash_expiresTomorrow => 'Kinaisha kesho';
+
+  @override
+  String trash_expiresIn(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Kinaisha baada ya siku $count',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String trash_deletedBy(String name) {
+    return 'Kimefutwa na $name';
+  }
 }

@@ -4789,6 +4789,120 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Send Test Print'**
   String get printer_sendTest;
+
+  /// Under the test button when nothing is connected.
+  ///
+  /// In en, this message translates to:
+  /// **'Connect a printer above before testing.'**
+  String get printer_connectFirst;
+
+  /// Trash tab and export dataset: performed services.
+  ///
+  /// In en, this message translates to:
+  /// **'Service Records'**
+  String get common_serviceRecords;
+
+  /// Restore confirmation title for a sale.
+  ///
+  /// In en, this message translates to:
+  /// **'Restore this sale?'**
+  String get trash_restoreSaleTitle;
+
+  /// Restore confirmation text for a sale.
+  ///
+  /// In en, this message translates to:
+  /// **'The sale will be back in your sales list, but restoring will NOT change:\n• stock: the items stay back on the shelf, as they were put back when the sale was deleted\n• debt: the client\'s debt for this sale is not re-created\n• client balance: it stays as it is now\n\nAdjust these by hand if the sale really happened.'**
+  String get trash_restoreSaleBody;
+
+  /// Restore confirmation title for a service.
+  ///
+  /// In en, this message translates to:
+  /// **'Restore this service?'**
+  String get trash_restoreServiceTitle;
+
+  /// Restore confirmation text for a service.
+  ///
+  /// In en, this message translates to:
+  /// **'The service will be back in your services list, but restoring will NOT change:\n• stock: the items it used stay back in stock\n• debt: the client\'s debt for this service is not re-created\n• client balance: it stays as it is now\n• expenses: its expense transaction was deleted for good and does not come back\n\nAdjust these by hand if the service really happened.'**
+  String get trash_restoreServiceBody;
+
+  /// Message after restoring.
+  ///
+  /// In en, this message translates to:
+  /// **'Item restored'**
+  String get trash_restored;
+
+  /// Message when restoring failed.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t restore the item'**
+  String get trash_restoreFailed;
+
+  /// Permanent delete confirmation title.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete Forever?'**
+  String get trash_deleteForeverTitle;
+
+  /// Permanent delete confirmation text.
+  ///
+  /// In en, this message translates to:
+  /// **'\"{label}\" will be permanently deleted. This cannot be undone.'**
+  String trash_deleteForeverBody(String label);
+
+  /// Button and tooltip that delete an item for good.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete Forever'**
+  String get trash_deleteForever;
+
+  /// Message after a permanent delete.
+  ///
+  /// In en, this message translates to:
+  /// **'Permanently deleted'**
+  String get trash_deleted;
+
+  /// Message when a permanent delete failed.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t delete the item permanently'**
+  String get trash_deleteFailed;
+
+  /// Trash tab with nothing in it.
+  ///
+  /// In en, this message translates to:
+  /// **'Trash is empty'**
+  String get trash_empty;
+
+  /// Warning above a Trash tab.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 item will be permanently deleted within {days} days. Restore now if you still need it.} other{{count} items will be permanently deleted within {days} days. Restore now if you still need them.}}'**
+  String trash_expiringBanner(int count, int days);
+
+  /// Item whose time in Trash is up.
+  ///
+  /// In en, this message translates to:
+  /// **'Deleting soon'**
+  String get trash_deletingSoon;
+
+  /// Item deleted for good tomorrow.
+  ///
+  /// In en, this message translates to:
+  /// **'Expires tomorrow'**
+  String get trash_expiresTomorrow;
+
+  /// Days until the item is deleted for good.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, other{Expires in {count} days}}'**
+  String trash_expiresIn(int count);
+
+  /// Who deleted the item (date unknown).
+  ///
+  /// In en, this message translates to:
+  /// **'Deleted by {name}'**
+  String trash_deletedBy(String name);
 }
 
 class _AppLocalizationsDelegate
