@@ -1,6 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:vetbiz_pro/data/activity_type.dart';
+import 'package:vetbiz_pro/data/facility_status.dart';
 import 'package:vetbiz_pro/data/payment_submission_status.dart';
 import 'package:vetbiz_pro/data/user_role.dart';
 import 'package:vetbiz_pro/data/user_status.dart';
@@ -56,5 +57,15 @@ void main() {
     }
     expect(UserStatus.fromKey('approved'), UserStatus.pending);
     expect(UserStatus.fromKey(null), UserStatus.pending);
+  });
+
+  test('FacilityStatus keys are the stored strings; reading ignores case', () {
+    expect(FacilityStatus.values.map((s) => s.key), ['Active', 'Inactive', 'pending']);
+    expect(FacilityStatus.fromKey('Active'), FacilityStatus.active);
+    expect(FacilityStatus.fromKey('active'), FacilityStatus.active);
+    expect(FacilityStatus.fromKey('INACTIVE'), FacilityStatus.inactive);
+    expect(FacilityStatus.fromKey('Pending'), FacilityStatus.pending);
+    expect(FacilityStatus.fromKey(null), FacilityStatus.active);
+    expect(FacilityStatus.fromKey('closed'), isNull);
   });
 }

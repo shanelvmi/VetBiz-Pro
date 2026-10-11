@@ -9,6 +9,7 @@ import '../../constants/facility_types.dart';
 import '../../widgets/initials_avatar.dart';
 import '../../widgets/vetbiz_loading_indicator.dart';
 import '../../data/collections.dart';
+import '../../data/facility_status.dart';
 import '../../data/fields.dart';
 import '../../data/user_role.dart';
 import '../../config/app_info.dart';
@@ -387,7 +388,7 @@ class _FacilityPickerScreenState extends State<FacilityPickerScreen> {
     final details = _detailsByFacility[facilityId];
     final logoUrl = details?['logoUrl'] as String?;
     final address = details?['address'] as String?;
-    final status = details?[Fields.status] as String? ?? 'Active';
+    final status = details?[Fields.status] as String? ?? FacilityStatus.active.key;
     final staffCount = _staffCountByFacility[facilityId] ?? 0;
     final isDefault = facilityId == _defaultFacilityId;
     final typeColor = _typeColor(type);
@@ -466,7 +467,7 @@ class _FacilityPickerScreenState extends State<FacilityPickerScreen> {
                     const SizedBox(width: AppSpacing.s4),
                     Text('$staffCount Staff', style: TextStyle(fontSize: AppFontSize.f12, color: context.colors.textMuted)),
                     const SizedBox(width: AppSpacing.s12),
-                    Container(width: 6, height: 6, decoration: BoxDecoration(color: status == 'Active' ? context.colors.success : context.colors.textHint, shape: BoxShape.circle)),
+                    Container(width: 6, height: 6, decoration: BoxDecoration(color: FacilityStatus.fromKey(status) == FacilityStatus.active ? context.colors.success : context.colors.textHint, shape: BoxShape.circle)),
                     const SizedBox(width: AppSpacing.s4),
                     Text(status, style: TextStyle(fontSize: AppFontSize.f12, color: context.colors.textMuted)),
                   ],

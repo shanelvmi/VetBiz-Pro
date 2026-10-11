@@ -20,6 +20,7 @@ import '../../utils/force_logout.dart';
 import '../../utils/facility_limit_helper.dart';
 import '../admin/manage_assistants_screen.dart';
 import '../../data/collections.dart';
+import '../../data/facility_status.dart';
 import '../../data/fields.dart';
 import '../../data/user_role.dart';
 import '../../config/app_defaults.dart';
@@ -180,7 +181,7 @@ class _FacilityScreenState extends State<FacilityScreen> {
       final licenseNo = facilityDoc.data()?['licenseNo'] as String?;
       final tin = facilityDoc.data()?['tin'] as String?;
       final ownership = facilityDoc.data()?['ownership'] as String?;
-      final status = facilityDoc.data()?[Fields.status] as String? ?? 'Active';
+      final status = facilityDoc.data()?[Fields.status] as String? ?? FacilityStatus.active.key;
       final createdAtTs = facilityDoc.data()?[Fields.createdAt] as Timestamp?;
       final updatedAtTs = facilityDoc.data()?[Fields.updatedAt] as Timestamp?;
       final retentionDays = (facilityDoc.data()?['activityLogRetentionDays'] as num?)?.toInt() ?? AppRules.activityLogRetentionDefaultDays;
@@ -594,7 +595,7 @@ class _FacilityScreenState extends State<FacilityScreen> {
     final taglineController =
         TextEditingController(text: existingDetails?['tagline'] as String? ?? '');
     String? selectedOwnership = existingDetails?['ownership'] as String?;
-    String selectedStatus = existingDetails?[Fields.status] as String? ?? 'Active';
+    String selectedStatus = existingDetails?[Fields.status] as String? ?? FacilityStatus.active.key;
     String selectedRestockFrequency = existingDetails?['restockFrequency'] as String? ??
         UsageCalculatorService.defaultRestockFrequency;
     String? selectedType = facility['type'] as String?;
@@ -795,9 +796,9 @@ class _FacilityScreenState extends State<FacilityScreen> {
                 DropdownButtonFormField<String>(
                   initialValue: selectedStatus,
                   decoration: const InputDecoration(labelText: 'Status'),
-                  items: const [
-                    DropdownMenuItem(value: 'Active', child: Text('Active')),
-                    DropdownMenuItem(value: 'Inactive', child: Text('Inactive')),
+                  items: [
+                    DropdownMenuItem(value: FacilityStatus.active.key, child: const Text('Active')),
+                    DropdownMenuItem(value: FacilityStatus.inactive.key, child: const Text('Inactive')),
                   ],
                   onChanged: (val) {
                     if (val != null) setDialogState(() => selectedStatus = val);
@@ -1230,20 +1231,12 @@ class _FacilityScreenState extends State<FacilityScreen> {
   }
 
   Widget buildStatusChip(String status) {
-    Color chipColor;
-    switch (status.toLowerCase()) {
-      case 'active':
-        chipColor = context.colors.success;
-        break;
-      case 'inactive':
-        chipColor = context.colors.danger;
-        break;
-      case 'pending':
-        chipColor = context.colors.warning;
-        break;
-      default:
-        chipColor = context.colors.textHint;
-    }
+    final chipColor = switch (FacilityStatus.fromKey(status)) {
+      FacilityStatus.active => context.colors.success,
+      FacilityStatus.inactive => context.colors.danger,
+      FacilityStatus.pending => context.colors.warning,
+      null => context.colors.textHint,
+    };
     return Container(
       margin: const EdgeInsets.only(left: AppSpacing.s8),
       padding: const EdgeInsets.symmetric(horizontal: AppSpacing.s8, vertical: AppSpacing.s4),
@@ -1311,7 +1304,7 @@ class _FacilityScreenState extends State<FacilityScreen> {
             final code = (f['code'] ?? '').toString().toLowerCase();
             final matchesSearch =
                 _searchQuery.isEmpty || name.contains(_searchQuery) || code.contains(_searchQuery);
-            final status = _detailsByFacility[f[Fields.facilityId]]?[Fields.status] as String? ?? 'Active';
+            final status = _detailsByFacility[f[Fields.facilityId]]?[Fields.status] as String? ?? FacilityStatus.active.key;
             final matchesStatus = _listStatusFilter == 'All' || status == _listStatusFilter;
             return matchesSearch && matchesStatus;
           }).toList();
@@ -1416,9 +1409,9 @@ class _FacilityScreenState extends State<FacilityScreen> {
                   children: [
                     _statusFilterChip('All'),
                     const SizedBox(width: AppSpacing.s8),
-                    _statusFilterChip('Active'),
+                    _statusFilterChip(FacilityStatus.active.key),
                     const SizedBox(width: AppSpacing.s8),
-                    _statusFilterChip('Inactive'),
+                    _statusFilterChip(FacilityStatus.inactive.key),
                   ],
                 ),
               ],
@@ -1485,7 +1478,7 @@ class _FacilityScreenState extends State<FacilityScreen> {
     final isSelected = facilityId == _selectedFacilityIdForDetail;
     final logoUrl = _logoByFacility[facilityId];
     final address = _detailsByFacility[facilityId]?['address'] as String?;
-    final status = _detailsByFacility[facilityId]?[Fields.status] as String? ?? 'Active';
+    final status = _detailsByFacility[facilityId]?[Fields.status] as String? ?? FacilityStatus.active.key;
 
     return InkWell(
       onTap: () => setState(() {
@@ -1637,7 +1630,7 @@ class _FacilityScreenState extends State<FacilityScreen> {
     final logoUrl = _logoByFacility[facilityId];
     final contact = _contactByFacility[facilityId];
     final details = _detailsByFacility[facilityId];
-    final status = details?[Fields.status] as String? ?? 'Active';
+    final status = details?[Fields.status] as String? ?? FacilityStatus.active.key;
     final createdAt = details?[Fields.createdAt] as DateTime?;
 
     return Container(
@@ -2396,10 +2389,10 @@ class _FacilityScreenState extends State<FacilityScreen> {
   Widget _buildSettingsTab(Map<String, dynamic> facility) {
     final facilityId = facility[Fields.facilityId] as String?;
     final details = _detailsByFacility[facilityId];
-    final status = (details?[Fields.status] as String?) ?? 'Active';
+    final status = (details?[Fields.status] as String?) ?? FacilityStatus.active.key;
     final retentionDays = (details?['activityLogRetentionDays'] as int?) ?? AppRules.activityLogRetentionDefaultDays;
     final debtOverdueDays = (details?['debtOverdueDays'] as int?) ?? 30;
-    final isActive = status.toLowerCase() == 'active';
+    final isActive = FacilityStatus.fromKey(status) == FacilityStatus.active;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -2561,8 +2554,8 @@ class _FacilityScreenState extends State<FacilityScreen> {
   Future<void> _confirmToggleFacilityStatus(Map<String, dynamic> facility, {required String currentStatus}) async {
     final facilityId = facility[Fields.facilityId] as String?;
     if (facilityId == null) return;
-    final isActive = currentStatus.toLowerCase() == 'active';
-    final newStatus = isActive ? 'Inactive' : 'Active';
+    final isActive = FacilityStatus.fromKey(currentStatus) == FacilityStatus.active;
+    final newStatus = isActive ? FacilityStatus.inactive.key : FacilityStatus.active.key;
 
     final confirmed = await showDialog<bool>(
       context: context,
@@ -2802,7 +2795,7 @@ class _FacilityScreenState extends State<FacilityScreen> {
           ],
           _aboutField('Facility Type', facility['type'] as String? ?? '-'),
           _aboutField('Ownership', (details?['ownership'] as String?) ?? 'Not set'),
-          _aboutFieldWithChip('Status', (details?[Fields.status] as String?) ?? 'Active'),
+          _aboutFieldWithChip('Status', (details?[Fields.status] as String?) ?? FacilityStatus.active.key),
           _aboutField('Created By', _adminFullName ?? 'You'),
           if (createdAt != null) _aboutField('Created On', _formatDateTime(createdAt)),
           if (updatedAt != null) _aboutField('Last Updated', _formatDateTime(updatedAt)),
