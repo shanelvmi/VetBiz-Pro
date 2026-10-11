@@ -96,7 +96,7 @@ class AppLocalizationsSw extends AppLocalizations {
   String get common_moreActions => 'Vitendo zaidi';
 
   @override
-  String get common_loading => 'Inapakia...';
+  String get common_loading => 'Inapakia…';
 
   @override
   String get common_optional => 'Si lazima';

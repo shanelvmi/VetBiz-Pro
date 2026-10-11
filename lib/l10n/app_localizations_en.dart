@@ -96,7 +96,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get common_moreActions => 'More actions';
 
   @override
-  String get common_loading => 'Loading...';
+  String get common_loading => 'Loading…';
 
   @override
   String get common_optional => 'Optional';

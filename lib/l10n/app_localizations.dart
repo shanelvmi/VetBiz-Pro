@@ -275,7 +275,7 @@ abstract class AppLocalizations {
   /// Shown while something loads.
   ///
   /// In en, this message translates to:
-  /// **'Loading...'**
+  /// **'Loading…'**
   String get common_loading;
 
   /// Marks a form field that may be left empty.
