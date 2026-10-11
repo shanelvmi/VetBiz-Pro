@@ -796,6 +796,8 @@ class _SalesScreenState extends State<SalesScreen> {
   // ==================== SALE DETAILS PANEL ====================
 
   Future<void> _confirmDeleteSale(Sale sale) async {
+    // Read before the dialog: a confirmed delete must still go through.
+    final saleProvider = Provider.of<SaleProvider>(context, listen: false);
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
@@ -815,7 +817,7 @@ class _SalesScreenState extends State<SalesScreen> {
     try {
       final facilityId = _facilityId;
       if (facilityId == null) return;
-      await Provider.of<SaleProvider>(context, listen: false).deleteSale(sale.id, facilityId);
+      await saleProvider.deleteSale(sale.id, facilityId);
       if (!mounted) return;
       if (_selectedSale?.id == sale.id) setState(() => _selectedSale = null);
       _openSalesListSession(forceRefresh: true);

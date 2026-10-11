@@ -679,6 +679,13 @@ class _AddSaleScreenState extends State<AddSaleScreen> {
       return;
     }
 
+    // Read before the awaits below: once the person has pressed save and
+    // confirmed, the sale must still be recorded.
+    final facilityProvider = Provider.of<FacilityProvider>(context, listen: false);
+    final authService = Provider.of<AuthService>(context, listen: false);
+    final saleProvider = Provider.of<SaleProvider>(context, listen: false);
+    final debtProvider = Provider.of<DebtProvider>(context, listen: false);
+
     final expiredPortion = await _simulateExpiredSalePortion();
     if (expiredPortion.isNotEmpty) {
       if (!mounted) return;
@@ -695,11 +702,6 @@ class _AddSaleScreenState extends State<AddSaleScreen> {
       // Tsh 45,000 sale): the excess is change handed back, not extra
       // sale revenue, so only the total itself should be recorded.
       if (!saleOnCredit) totalPaid = totalAmount;
-
-      final facilityProvider = Provider.of<FacilityProvider>(context, listen: false);
-      final authService = Provider.of<AuthService>(context, listen: false);
-      final saleProvider = Provider.of<SaleProvider>(context, listen: false);
-      final debtProvider = Provider.of<DebtProvider>(context, listen: false);
 
       final facility = facilityProvider.selectedFacility;
       if (facility == null) {

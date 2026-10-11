@@ -334,6 +334,12 @@ class _ClientsScreenState extends State<ClientsScreen> {
   }
 
   Future<void> _confirmDelete(Client client) async {
+    // Read before the dialog: a confirmed delete must still go through,
+    // in the facility the client was shown in.
+    final facilityId =
+        Provider.of<FacilityProvider>(context, listen: false).selectedFacilityId;
+    final clientProvider = Provider.of<ClientProvider>(context, listen: false);
+
     final confirm = await showDialog<bool>(
       context: context,
       builder: (_) => AlertDialog(
@@ -368,13 +374,9 @@ class _ClientsScreenState extends State<ClientsScreen> {
 
     if (confirm != true) return;
 
-    final facilityId =
-        Provider.of<FacilityProvider>(context, listen: false).selectedFacilityId;
-
     if (facilityId != null) {
       try {
-        await Provider.of<ClientProvider>(context, listen: false)
-            .deleteClient(facilityId, client.id);
+        await clientProvider.deleteClient(facilityId, client.id);
         if (!mounted) return;
         if (_selectedClient?.id == client.id) setState(() => _selectedClient = null);
         // A hard delete (nothing goes to trash_clients), so no Undo: see
