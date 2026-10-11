@@ -2881,6 +2881,138 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Load more transactions'**
   String get transactions_loadMore;
+
+  /// Message when the transaction form is incomplete.
+  ///
+  /// In en, this message translates to:
+  /// **'Fill in all required fields correctly'**
+  String get transactions_fillRequired;
+
+  /// Message when no payment method is chosen.
+  ///
+  /// In en, this message translates to:
+  /// **'Select how this transaction was paid'**
+  String get transactions_selectPaymentMethod;
+
+  /// Message after editing a transaction.
+  ///
+  /// In en, this message translates to:
+  /// **'Transaction updated'**
+  String get transactions_updated;
+
+  /// Message when editing failed.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t update the transaction'**
+  String get transactions_updateFailed;
+
+  /// Message after recording a transaction.
+  ///
+  /// In en, this message translates to:
+  /// **'Transaction saved'**
+  String get transactions_saved;
+
+  /// Message when recording failed.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t save the transaction'**
+  String get transactions_saveFailed;
+
+  /// Category field before one is chosen.
+  ///
+  /// In en, this message translates to:
+  /// **'Select category...'**
+  String get transactions_selectCategory;
+
+  /// Description field hint.
+  ///
+  /// In en, this message translates to:
+  /// **'What was this for?'**
+  String get transactions_descriptionHint;
+
+  /// Note field label.
+  ///
+  /// In en, this message translates to:
+  /// **'Reference/Note (optional)'**
+  String get transactions_noteLabel;
+
+  /// Note field hint.
+  ///
+  /// In en, this message translates to:
+  /// **'Add any additional information'**
+  String get transactions_noteHint;
+
+  /// Form section heading.
+  ///
+  /// In en, this message translates to:
+  /// **'Amount & Payment'**
+  String get transactions_amountPayment;
+
+  /// Amount field label; currency is the currency symbol.
+  ///
+  /// In en, this message translates to:
+  /// **'Amount ({currency}) *'**
+  String transactions_amountRequired(String currency);
+
+  /// Payment method field before one is chosen.
+  ///
+  /// In en, this message translates to:
+  /// **'Select method'**
+  String get transactions_selectMethod;
+
+  /// Category picker when the search matches nothing.
+  ///
+  /// In en, this message translates to:
+  /// **'No categories found'**
+  String get transactions_noCategories;
+
+  /// Category picker title.
+  ///
+  /// In en, this message translates to:
+  /// **'Select Category'**
+  String get transactions_selectCategoryTitle;
+
+  /// Category picker search hint.
+  ///
+  /// In en, this message translates to:
+  /// **'Search categories...'**
+  String get transactions_searchCategories;
+
+  /// What a debt came from (stored as "Service").
+  ///
+  /// In en, this message translates to:
+  /// **'Service'**
+  String get debtSource_service;
+
+  /// Debtors screen title.
+  ///
+  /// In en, this message translates to:
+  /// **'Active Debts'**
+  String get debtors_title;
+
+  /// Debtors screen subtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Track and manage all outstanding debts'**
+  String get debtors_subtitle;
+
+  /// Banner when new debtors arrived while the list was open.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 new debtor available} other{{count} new debtors available}}'**
+  String debtors_newRecords(int count);
+
+  /// Debtors list when nobody owes anything.
+  ///
+  /// In en, this message translates to:
+  /// **'No outstanding debts'**
+  String get debtors_emptyNone;
+
+  /// Debtors list when the search finds nobody.
+  ///
+  /// In en, this message translates to:
+  /// **'No debtors match your search'**
+  String get debtors_emptySearch;
 }
 
 class _AppLocalizationsDelegate

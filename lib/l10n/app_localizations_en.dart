@@ -1532,4 +1532,82 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get transactions_loadMore => 'Load more transactions';
+
+  @override
+  String get transactions_fillRequired =>
+      'Fill in all required fields correctly';
+
+  @override
+  String get transactions_selectPaymentMethod =>
+      'Select how this transaction was paid';
+
+  @override
+  String get transactions_updated => 'Transaction updated';
+
+  @override
+  String get transactions_updateFailed => 'Couldn\'t update the transaction';
+
+  @override
+  String get transactions_saved => 'Transaction saved';
+
+  @override
+  String get transactions_saveFailed => 'Couldn\'t save the transaction';
+
+  @override
+  String get transactions_selectCategory => 'Select category...';
+
+  @override
+  String get transactions_descriptionHint => 'What was this for?';
+
+  @override
+  String get transactions_noteLabel => 'Reference/Note (optional)';
+
+  @override
+  String get transactions_noteHint => 'Add any additional information';
+
+  @override
+  String get transactions_amountPayment => 'Amount & Payment';
+
+  @override
+  String transactions_amountRequired(String currency) {
+    return 'Amount ($currency) *';
+  }
+
+  @override
+  String get transactions_selectMethod => 'Select method';
+
+  @override
+  String get transactions_noCategories => 'No categories found';
+
+  @override
+  String get transactions_selectCategoryTitle => 'Select Category';
+
+  @override
+  String get transactions_searchCategories => 'Search categories...';
+
+  @override
+  String get debtSource_service => 'Service';
+
+  @override
+  String get debtors_title => 'Active Debts';
+
+  @override
+  String get debtors_subtitle => 'Track and manage all outstanding debts';
+
+  @override
+  String debtors_newRecords(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count new debtors available',
+      one: '1 new debtor available',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get debtors_emptyNone => 'No outstanding debts';
+
+  @override
+  String get debtors_emptySearch => 'No debtors match your search';
 }

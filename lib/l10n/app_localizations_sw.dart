@@ -1542,4 +1542,83 @@ class AppLocalizationsSw extends AppLocalizations {
 
   @override
   String get transactions_loadMore => 'Pakia miamala zaidi';
+
+  @override
+  String get transactions_fillRequired =>
+      'Jaza sehemu zote zinazohitajika kwa usahihi';
+
+  @override
+  String get transactions_selectPaymentMethod =>
+      'Chagua jinsi muamala huu ulivyolipwa';
+
+  @override
+  String get transactions_updated => 'Muamala umesasishwa';
+
+  @override
+  String get transactions_updateFailed => 'Imeshindwa kusasisha muamala';
+
+  @override
+  String get transactions_saved => 'Muamala umehifadhiwa';
+
+  @override
+  String get transactions_saveFailed => 'Imeshindwa kuhifadhi muamala';
+
+  @override
+  String get transactions_selectCategory => 'Chagua kundi...';
+
+  @override
+  String get transactions_descriptionHint => 'Hii ilikuwa ya nini?';
+
+  @override
+  String get transactions_noteLabel => 'Kumbukumbu/Maelezo (si lazima)';
+
+  @override
+  String get transactions_noteHint => 'Ongeza taarifa yoyote ya ziada';
+
+  @override
+  String get transactions_amountPayment => 'Kiasi na Malipo';
+
+  @override
+  String transactions_amountRequired(String currency) {
+    return 'Kiasi ($currency) *';
+  }
+
+  @override
+  String get transactions_selectMethod => 'Chagua njia';
+
+  @override
+  String get transactions_noCategories => 'Hakuna makundi yaliyopatikana';
+
+  @override
+  String get transactions_selectCategoryTitle => 'Chagua Kundi';
+
+  @override
+  String get transactions_searchCategories => 'Tafuta makundi...';
+
+  @override
+  String get debtSource_service => 'Huduma';
+
+  @override
+  String get debtors_title => 'Madeni Yanayoendelea';
+
+  @override
+  String get debtors_subtitle => 'Fuatilia na simamia madeni yote yanayodaiwa';
+
+  @override
+  String debtors_newRecords(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Wadaiwa $count wapya wapo',
+      one: 'Mdaiwa 1 mpya yupo',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get debtors_emptyNone => 'Hakuna madeni yanayodaiwa';
+
+  @override
+  String get debtors_emptySearch =>
+      'Hakuna wadaiwa wanaolingana na utafutaji wako';
 }
