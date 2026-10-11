@@ -1,0 +1,52 @@
+﻿key,english,kiswahili,notes,status
+common_language,Language,Lugha,"The word for the app's display language (Settings, Language picker).",draft
+common_save,Save,Hifadhi,"Save button, everywhere.",draft
+common_cancel,Cancel,Ghairi,Cancel button in dialogs and forms.,draft
+common_delete,Delete,Futa,Delete button or menu item.,draft
+common_edit,Edit,Hariri,Edit button or menu item.,draft
+common_remove,Remove,Ondoa,Remove button (takes an item off a list).,draft
+common_close,Close,Funga,"Close button or tooltip (dialogs, messages).",draft
+common_ok,OK,Sawa,OK button that acknowledges a dialog.,draft
+common_yes,Yes,Ndiyo,Yes answer in a confirmation.,draft
+common_no,No,Hapana,No answer in a confirmation.,draft
+common_confirm,Confirm,Thibitisha,Confirm button in a confirmation dialog.,draft
+common_done,Done,Tayari,Done button that closes a finished step.,draft
+common_apply,Apply,Tumia,Apply button for filters and settings.,draft
+common_reset,Reset,Weka upya,Reset button for filters and forms.,draft
+common_refresh,Refresh,Onyesha upya,Refresh button or tooltip that reloads data.,draft
+common_retry,Retry,Jaribu tena,Retry action on an error message.,draft
+common_tryAgain,Try Again,Jaribu Tena,Try Again button on a failed screen or load.,draft
+common_undo,Undo,Tendua,Undo action after something was moved to Trash.,draft
+common_details,Details,Maelezo,Details action on an error message (shows the technical text) and Details dialog title.,draft
+common_viewDetails,View Details,Angalia Maelezo,View Details button or menu item.,draft
+common_copy,Copy,Nakili,Copy button (copies text).,draft
+common_share,Share,Shiriki,Share button.,draft
+common_print,Print,Chapisha,Print button.,draft
+common_search,Search,Tafuta,Search field hint or button.,draft
+common_add,Add,Ongeza,Add button.,draft
+common_clear,Clear,Safisha,Clear button (empties a field or filter).,draft
+common_change,Change,Badilisha,Change button (picks a different value).,draft
+common_call,Call,Piga simu,Call button (phones a client).,draft
+common_moreActions,More actions,Vitendo zaidi,Tooltip of the three-dot menu.,draft
+common_loading,Loading...,Inapakia...,Shown while something loads.,draft
+common_optional,Optional,Si lazima,Marks a form field that may be left empty.,draft
+common_all,All,Zote,The no-filter choice in a filter list.,draft
+common_date,Date,Tarehe,Date label or column heading.,draft
+common_amount,Amount,Kiasi,Amount label or column heading.,draft
+common_total,Total,Jumla,Total label or column heading.,draft
+common_status,Status,Hali,Status label or column heading.,draft
+common_type,Type,Aina,Type label or column heading.,draft
+common_email,Email,Barua pepe,Email field label.,draft
+common_password,Password,Nenosiri,Password field label.,draft
+common_notes,Notes,Maelezo ya ziada,Notes field label or heading.,draft
+error_generic,Something went wrong. Try again.,Kuna tatizo limetokea. Jaribu tena.,Second line of an error message when nothing more specific is known (FriendlyError).,draft
+error_noPermission,You don't have permission to do that.,Huna ruhusa ya kufanya hivyo.,Second line of an error message: permission denied (FriendlyError).,draft
+error_noConnection,No connection. Check your internet and try again.,Hakuna mtandao. Angalia intaneti yako kisha ujaribu tena.,"Second line of an error message: no network (FriendlyError, sign-in).",draft
+error_tooSlow,That took too long. Try again.,Imechukua muda mrefu mno. Jaribu tena.,Second line of an error message: timed out (FriendlyError).,draft
+error_notFound,That item no longer exists.,Kitu hicho hakipo tena.,Second line of an error message: the record was deleted (FriendlyError).,draft
+error_alreadyExists,That already exists.,Hicho tayari kipo.,Second line of an error message: a duplicate (FriendlyError).,draft
+error_rateLimited,Too many requests. Wait a moment and try again.,Maombi ni mengi mno. Subiri kidogo kisha ujaribu tena.,Second line of an error message: rate limited (FriendlyError).,draft
+login_wrongCredentials,Incorrect email or password.,Barua pepe au nenosiri si sahihi.,"Sign-in error for a wrong password OR an unknown email (one message on purpose, so it does not reveal which emails are registered).",draft
+login_accountDisabled,This account has been disabled. Contact your admin.,Akaunti hii imezimwa. Wasiliana na msimamizi wako.,Sign-in error: the account was disabled.,draft
+login_tooManyAttempts,Too many attempts. Wait a moment and try again.,Umejaribu mara nyingi mno. Subiri kidogo kisha ujaribu tena.,Sign-in error: too many failed attempts.,draft
+login_signInFailed,Couldn't sign in. Try again.,Imeshindikana kuingia. Jaribu tena.,Sign-in error when Firebase gives no message of its own.,draft
