@@ -8,11 +8,15 @@ import '../../utils/force_logout.dart';
 import '../../constants/facility_types.dart';
 import '../../widgets/initials_avatar.dart';
 import '../../widgets/vetbiz_loading_indicator.dart';
-import '../../theme/app_palette.dart';
 import '../../data/collections.dart';
 import '../../data/fields.dart';
 import '../../data/user_role.dart';
 import '../../config/app_info.dart';
+import '../../theme/app_text.dart';
+import '../../theme/app_dimens.dart';
+import '../../theme/theme_context.dart';
+import '../../theme/app_motion.dart';
+import '../../theme/app_breakpoints.dart';
 
 /// Only ever shown for an Admin managing more than one facility - the
 /// single-facility case (every Assistant, and most Admins) never
@@ -31,9 +35,6 @@ class FacilityPickerScreen extends StatefulWidget {
   final String? role;
 
   const FacilityPickerScreen({super.key, required this.facilities, this.role});
-
-  static const Color primaryColor = AppPalette.primary;
-  static const Color warmAmber = AppPalette.accent;
 
   @override
   State<FacilityPickerScreen> createState() => _FacilityPickerScreenState();
@@ -118,11 +119,11 @@ class _FacilityPickerScreenState extends State<FacilityPickerScreen> {
   Color _typeColor(String type) {
     switch (type.toLowerCase()) {
       case 'agrovet':
-        return Colors.green;
+        return context.colors.success;
       case 'vet clinic':
       case 'vet hospital':
       case 'ambulatory vet':
-        return Colors.blue;
+        return context.colors.info;
       default:
         return Colors.purple;
     }
@@ -149,9 +150,9 @@ class _FacilityPickerScreenState extends State<FacilityPickerScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF7F9F8),
+      backgroundColor: context.colors.surfaceMuted,
       body: AnimatedSwitcher(
-        duration: const Duration(milliseconds: 220),
+        duration: AppMotion.normal,
         switchInCurve: Curves.easeOut,
         switchOutCurve: Curves.easeIn,
         transitionBuilder: (child, animation) => FadeTransition(opacity: animation, child: child),
@@ -164,18 +165,18 @@ class _FacilityPickerScreenState extends State<FacilityPickerScreen> {
                 Expanded(
                   child: SingleChildScrollView(
                     child: Padding(
-                      padding: const EdgeInsets.all(24),
+                      padding: const EdgeInsets.all(AppSpacing.s24),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           _buildHero(),
-                          const SizedBox(height: 24),
+                          const SizedBox(height: AppSpacing.s24),
                           _buildSearchAndFilter(),
-                          const SizedBox(height: 20),
+                          const SizedBox(height: AppSpacing.s20),
                           _buildFacilityGrid(),
-                          const SizedBox(height: 24),
+                          const SizedBox(height: AppSpacing.s24),
                           _buildFooter(),
-                          const SizedBox(height: 24),
+                          const SizedBox(height: AppSpacing.s24),
                         ],
                       ),
                     ),
@@ -189,24 +190,24 @@ class _FacilityPickerScreenState extends State<FacilityPickerScreen> {
 
   Widget _buildHeader() {
     return Container(
-      color: FacilityPickerScreen.primaryColor,
-      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
+      color: context.colors.primary,
+      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.s24, vertical: AppSpacing.s14),
       child: Row(
         children: [
           Container(
             width: 34,
             height: 34,
             alignment: Alignment.center,
-            decoration: const BoxDecoration(color: Colors.white, shape: BoxShape.circle),
+            decoration: BoxDecoration(color: context.colors.surface, shape: BoxShape.circle),
             child: Text('VB',
-                style: TextStyle(color: FacilityPickerScreen.primaryColor, fontWeight: FontWeight.bold, fontSize: 13)),
+                style: TextStyle(color: context.colors.primary, fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f13)),
           ),
-          const SizedBox(width: 10),
-          const Column(
+          const SizedBox(width: AppSpacing.s10),
+          Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(AppInfo.name, style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16)),
-              Text('Manage. Care. Grow.', style: TextStyle(color: Colors.white70, fontSize: 10.5)),
+              Text(AppInfo.name, style: TextStyle(color: context.colors.onPrimary, fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f16)),
+              Text('Manage. Care. Grow.', style: TextStyle(color: context.colors.onPrimaryMuted, fontSize: AppFontSize.f10_5)),
             ],
           ),
           const Spacer(),
@@ -224,13 +225,13 @@ class _FacilityPickerScreenState extends State<FacilityPickerScreen> {
                   avatarUrl: _currentUserAvatarUrl,
                   name: _currentUserName,
                   size: 32,
-                  backgroundColor: Colors.white,
-                  foregroundColor: FacilityPickerScreen.primaryColor,
+                  backgroundColor: context.colors.surface,
+                  foregroundColor: context.colors.primary,
                 ),
-                const SizedBox(width: 8),
+                const SizedBox(width: AppSpacing.s8),
                 Text(_currentUserName.isEmpty ? 'Account' : _currentUserName,
-                    style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w600, fontSize: 13)),
-                const Icon(Icons.expand_more, color: Colors.white, size: 18),
+                    style: TextStyle(color: context.colors.onPrimary, fontWeight: AppFontWeight.semibold, fontSize: AppFontSize.f13)),
+                Icon(Icons.expand_more, color: context.colors.onPrimary, size: AppIconSize.i18),
               ],
             ),
           ),
@@ -242,30 +243,30 @@ class _FacilityPickerScreenState extends State<FacilityPickerScreen> {
   Widget _buildHero() {
     return LayoutBuilder(
       builder: (context, constraints) {
-        final isNarrow = constraints.maxWidth < 700;
+        final isNarrow = constraints.maxWidth < AppBreakpoints.stackSections;
         final textColumn = Expanded(
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Container(
-                padding: const EdgeInsets.all(14),
+                padding: const EdgeInsets.all(AppSpacing.s14),
                 decoration: BoxDecoration(
-                  color: FacilityPickerScreen.primaryColor.withValues(alpha: 0.08),
+                  color: context.colors.primary.withValues(alpha: AppAlpha.a10),
                   shape: BoxShape.circle,
                 ),
-                child: Icon(Icons.storefront_outlined, color: FacilityPickerScreen.primaryColor, size: 26),
+                child: Icon(Icons.storefront_outlined, color: context.colors.primary, size: AppIconSize.i24),
               ),
-              const SizedBox(width: 16),
+              const SizedBox(width: AppSpacing.s16),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text('Select Your Facility',
-                        style: TextStyle(fontWeight: FontWeight.bold, fontSize: 24, color: FacilityPickerScreen.primaryColor)),
-                    const SizedBox(height: 6),
+                        style: TextStyle(fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f24, color: context.colors.primary)),
+                    const SizedBox(height: AppSpacing.s6),
                     Text(
                       'Choose the facility you want to manage. You can switch between your facilities at any time from the top menu.',
-                      style: TextStyle(color: Colors.grey[600], fontSize: 13.5),
+                      style: TextStyle(color: context.colors.textMuted, fontSize: AppFontSize.f13_5),
                     ),
                   ],
                 ),
@@ -279,7 +280,7 @@ class _FacilityPickerScreenState extends State<FacilityPickerScreen> {
         return Row(
           children: [
             textColumn,
-            const SizedBox(width: 16),
+            const SizedBox(width: AppSpacing.s16),
             SizedBox(
               width: 110,
               height: 70,
@@ -289,17 +290,17 @@ class _FacilityPickerScreenState extends State<FacilityPickerScreen> {
                   Positioned(
                     left: 0,
                     bottom: 0,
-                    child: Icon(Icons.agriculture_outlined, color: FacilityPickerScreen.primaryColor.withValues(alpha: 0.25), size: 56),
+                    child: Icon(Icons.agriculture_outlined, color: context.colors.primary.withValues(alpha: AppAlpha.a30), size: AppIconSize.i56),
                   ),
                   Positioned(
                     right: 10,
                     top: 4,
-                    child: Icon(Icons.cruelty_free, color: FacilityPickerScreen.warmAmber.withValues(alpha: 0.5), size: 30),
+                    child: Icon(Icons.cruelty_free, color: context.colors.accent.withValues(alpha: AppAlpha.a50), size: AppIconSize.i32),
                   ),
                   Positioned(
                     right: 0,
                     bottom: 6,
-                    child: Icon(Icons.pets, color: FacilityPickerScreen.primaryColor.withValues(alpha: 0.35), size: 22),
+                    child: Icon(Icons.pets, color: context.colors.primary.withValues(alpha: AppAlpha.a40), size: AppIconSize.i22),
                   ),
                 ],
               ),
@@ -317,17 +318,17 @@ class _FacilityPickerScreenState extends State<FacilityPickerScreen> {
           child: TextField(
             decoration: InputDecoration(
               hintText: 'Search facility by name, location or type...',
-              prefixIcon: const Icon(Icons.search, size: 20),
+              prefixIcon: const Icon(Icons.search, size: AppIconSize.i20),
               isDense: true,
-              contentPadding: const EdgeInsets.symmetric(vertical: 12, horizontal: 12),
+              contentPadding: const EdgeInsets.symmetric(vertical: AppSpacing.s12, horizontal: AppSpacing.s12),
               filled: true,
-              fillColor: Colors.white,
-              border: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: BorderSide.none),
+              fillColor: context.colors.surface,
+              border: OutlineInputBorder(borderRadius: BorderRadius.circular(AppRadius.r10), borderSide: BorderSide.none),
             ),
             onChanged: (value) => setState(() => _searchQuery = value),
           ),
         ),
-        const SizedBox(width: 8),
+        const SizedBox(width: AppSpacing.s8),
         PopupMenuButton<String?>(
           initialValue: _typeFilter,
           onSelected: (value) => setState(() => _typeFilter = value),
@@ -336,15 +337,15 @@ class _FacilityPickerScreenState extends State<FacilityPickerScreen> {
             ...kFacilityTypes.map((t) => PopupMenuItem(value: t, child: Text(t))),
           ],
           child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-            decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(10)),
+            padding: const EdgeInsets.symmetric(horizontal: AppSpacing.s14, vertical: AppSpacing.s12),
+            decoration: BoxDecoration(color: context.colors.surface, borderRadius: BorderRadius.circular(AppRadius.r10)),
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                const Icon(Icons.filter_list, size: 18),
-                const SizedBox(width: 6),
-                Text(_typeFilter ?? 'Filter', style: const TextStyle(fontSize: 13)),
-                const Icon(Icons.expand_more, size: 18),
+                const Icon(Icons.filter_list, size: AppIconSize.i18),
+                const SizedBox(width: AppSpacing.s6),
+                Text(_typeFilter ?? 'Filter', style: const TextStyle(fontSize: AppFontSize.f13)),
+                const Icon(Icons.expand_more, size: AppIconSize.i18),
               ],
             ),
           ),
@@ -393,14 +394,14 @@ class _FacilityPickerScreenState extends State<FacilityPickerScreen> {
 
     return Container(
       decoration: BoxDecoration(
-        color: isDefault ? FacilityPickerScreen.primaryColor.withValues(alpha: 0.05) : Colors.white,
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: isDefault ? FacilityPickerScreen.primaryColor : Colors.grey.withValues(alpha: 0.2), width: isDefault ? 2 : 1),
+        color: isDefault ? context.colors.primary.withValues(alpha: AppAlpha.a05) : context.colors.surface,
+        borderRadius: BorderRadius.circular(AppRadius.r14),
+        border: Border.all(color: isDefault ? context.colors.primary : context.colors.textHint.withValues(alpha: AppAlpha.a20), width: isDefault ? 2 : 1),
       ),
       child: Stack(
         children: [
           Padding(
-            padding: const EdgeInsets.all(14),
+            padding: const EdgeInsets.all(AppSpacing.s14),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -408,69 +409,69 @@ class _FacilityPickerScreenState extends State<FacilityPickerScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     ClipRRect(
-                      borderRadius: BorderRadius.circular(10),
+                      borderRadius: BorderRadius.circular(AppRadius.r10),
                       child: SizedBox(
                         width: 56,
                         height: 56,
                         child: logoUrl != null && logoUrl.isNotEmpty
                             ? Image.network(logoUrl, fit: BoxFit.cover,
                                 errorBuilder: (context, error, stackTrace) => Container(
-                                    color: FacilityPickerScreen.primaryColor.withValues(alpha: 0.1),
-                                    child: Icon(Icons.storefront_outlined, color: FacilityPickerScreen.primaryColor)))
+                                    color: context.colors.primary.withValues(alpha: AppAlpha.a10),
+                                    child: Icon(Icons.storefront_outlined, color: context.colors.primary)))
                             : Container(
-                                color: FacilityPickerScreen.primaryColor.withValues(alpha: 0.1),
-                                child: Icon(Icons.storefront_outlined, color: FacilityPickerScreen.primaryColor)),
+                                color: context.colors.primary.withValues(alpha: AppAlpha.a10),
+                                child: Icon(Icons.storefront_outlined, color: context.colors.primary)),
                       ),
                     ),
-                    const SizedBox(width: 12),
+                    const SizedBox(width: AppSpacing.s12),
                     Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(name, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15), maxLines: 1, overflow: TextOverflow.ellipsis),
-                          const SizedBox(height: 4),
+                          Text(name, style: const TextStyle(fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f15), maxLines: 1, overflow: TextOverflow.ellipsis),
+                          const SizedBox(height: AppSpacing.s4),
                           Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                            padding: const EdgeInsets.symmetric(horizontal: AppSpacing.s8, vertical: AppSpacing.s2),
                             decoration: BoxDecoration(
-                              color: type.isNotEmpty ? typeColor.withValues(alpha: 0.12) : Colors.grey.withValues(alpha: 0.12),
-                              borderRadius: BorderRadius.circular(8),
+                              color: type.isNotEmpty ? typeColor.withValues(alpha: AppAlpha.a10) : context.colors.textHint.withValues(alpha: AppAlpha.a10),
+                              borderRadius: BorderRadius.circular(AppRadius.r8),
                             ),
                             child: Text(type.isNotEmpty ? type : 'Type not set',
-                                style: TextStyle(color: type.isNotEmpty ? typeColor : Colors.grey[600], fontSize: 11, fontWeight: FontWeight.w600)),
+                                style: TextStyle(color: type.isNotEmpty ? typeColor : context.colors.textMuted, fontSize: AppFontSize.f11, fontWeight: AppFontWeight.semibold)),
                           ),
                         ],
                       ),
                     ),
                   ],
                 ),
-                const SizedBox(height: 10),
+                const SizedBox(height: AppSpacing.s10),
                 Row(
                   children: [
-                    Icon(Icons.location_on_outlined, size: 14, color: Colors.grey[500]),
-                    const SizedBox(width: 4),
+                    Icon(Icons.location_on_outlined, size: AppIconSize.i14, color: context.colors.textHint),
+                    const SizedBox(width: AppSpacing.s4),
                     Expanded(
                       child: Text(
                         (address != null && address.isNotEmpty) ? address : 'Location not set',
-                        style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+                        style: TextStyle(fontSize: AppFontSize.f12, color: context.colors.textMuted),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                       ),
                     ),
                   ],
                 ),
-                const SizedBox(height: 6),
+                const SizedBox(height: AppSpacing.s6),
                 Row(
                   children: [
-                    Icon(Icons.people_outline, size: 14, color: Colors.grey[500]),
-                    const SizedBox(width: 4),
-                    Text('$staffCount Staff', style: TextStyle(fontSize: 12, color: Colors.grey[600])),
-                    const SizedBox(width: 12),
-                    Container(width: 6, height: 6, decoration: BoxDecoration(color: status == 'Active' ? Colors.green : Colors.grey, shape: BoxShape.circle)),
-                    const SizedBox(width: 4),
-                    Text(status, style: TextStyle(fontSize: 12, color: Colors.grey[600])),
+                    Icon(Icons.people_outline, size: AppIconSize.i14, color: context.colors.textHint),
+                    const SizedBox(width: AppSpacing.s4),
+                    Text('$staffCount Staff', style: TextStyle(fontSize: AppFontSize.f12, color: context.colors.textMuted)),
+                    const SizedBox(width: AppSpacing.s12),
+                    Container(width: 6, height: 6, decoration: BoxDecoration(color: status == 'Active' ? context.colors.success : context.colors.textHint, shape: BoxShape.circle)),
+                    const SizedBox(width: AppSpacing.s4),
+                    Text(status, style: TextStyle(fontSize: AppFontSize.f12, color: context.colors.textMuted)),
                   ],
                 ),
-                const SizedBox(height: 12),
+                const SizedBox(height: AppSpacing.s12),
                 Row(
                   children: [
                     SizedBox(
@@ -478,15 +479,15 @@ class _FacilityPickerScreenState extends State<FacilityPickerScreen> {
                       child: isDefault
                           ? ElevatedButton.icon(
                               onPressed: () => activateFacilityAndGoToDashboard(context: context, facility: facility, role: widget.role),
-                              icon: const Icon(Icons.arrow_forward, size: 16),
+                              icon: const Icon(Icons.arrow_forward, size: AppIconSize.i16),
                               label: const Text('Open Facility'),
-                              style: ElevatedButton.styleFrom(backgroundColor: FacilityPickerScreen.primaryColor, foregroundColor: Colors.white),
+                              style: ElevatedButton.styleFrom(backgroundColor: context.colors.primary, foregroundColor: context.colors.onPrimary),
                             )
                           : OutlinedButton.icon(
                               onPressed: () => activateFacilityAndGoToDashboard(context: context, facility: facility, role: widget.role),
-                              icon: const Icon(Icons.arrow_forward, size: 16),
+                              icon: const Icon(Icons.arrow_forward, size: AppIconSize.i16),
                               label: const Text('Open Facility'),
-                              style: OutlinedButton.styleFrom(foregroundColor: FacilityPickerScreen.primaryColor),
+                              style: OutlinedButton.styleFrom(foregroundColor: context.colors.primary),
                             ),
                     ),
                     const Spacer(),
@@ -498,9 +499,9 @@ class _FacilityPickerScreenState extends State<FacilityPickerScreen> {
                         if (!isDefault) const PopupMenuItem(value: 'default', child: Text('Set as Default')),
                       ],
                       child: Container(
-                        padding: const EdgeInsets.all(10),
-                        decoration: BoxDecoration(border: Border.all(color: Colors.grey.withValues(alpha: 0.3)), borderRadius: BorderRadius.circular(8)),
-                        child: const Icon(Icons.more_vert, size: 16),
+                        padding: const EdgeInsets.all(AppSpacing.s10),
+                        decoration: BoxDecoration(border: Border.all(color: context.colors.textHint.withValues(alpha: AppAlpha.a30)), borderRadius: BorderRadius.circular(AppRadius.r8)),
+                        child: const Icon(Icons.more_vert, size: AppIconSize.i16),
                       ),
                     ),
                   ],
@@ -513,14 +514,14 @@ class _FacilityPickerScreenState extends State<FacilityPickerScreen> {
               top: 10,
               right: 10,
               child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                decoration: BoxDecoration(color: FacilityPickerScreen.primaryColor, borderRadius: BorderRadius.circular(10)),
-                child: const Row(
+                padding: const EdgeInsets.symmetric(horizontal: AppSpacing.s8, vertical: AppSpacing.s3),
+                decoration: BoxDecoration(color: context.colors.primary, borderRadius: BorderRadius.circular(AppRadius.r10)),
+                child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Icon(Icons.star, size: 10, color: Colors.white),
-                    SizedBox(width: 3),
-                    Text('Default', style: TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold)),
+                    Icon(Icons.star, size: AppIconSize.i12, color: context.colors.onPrimary),
+                    SizedBox(width: AppSpacing.s3),
+                    Text('Default', style: TextStyle(color: context.colors.onPrimary, fontSize: AppFontSize.f10, fontWeight: AppFontWeight.bold)),
                   ],
                 ),
               ),
@@ -533,8 +534,8 @@ class _FacilityPickerScreenState extends State<FacilityPickerScreen> {
   Widget _buildFooter() {
     return Center(
       child: Text(
-        'Secure  •  Reliable  •  Built for Veterinary Businesses',
-        style: TextStyle(color: Colors.grey[500], fontSize: 11.5),
+        'Secure  â€¢  Reliable  â€¢  Built for Veterinary Businesses',
+        style: TextStyle(color: context.colors.textHint, fontSize: AppFontSize.f11_5),
       ),
     );
   }

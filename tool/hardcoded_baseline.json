@@ -17,7 +17,7 @@
       "lib/screens/dashboard/dashboard_screen.dart": 14,
       "lib/screens/dashboard/insights_screen.dart": 5,
       "lib/screens/dashboard/notifications_screen.dart": 1,
-      "lib/screens/facilities/facility_picker_screen.dart": 29,
+      "lib/screens/facilities/facility_picker_screen.dart": 1,
       "lib/screens/facilities/facility_screen.dart": 3,
       "lib/screens/facilities/select_facility_screen.dart": 7,
       "lib/screens/legal/legal_document_screen.dart": 15,
@@ -31,7 +31,6 @@
     "R2": {
       "lib/main.dart": 11,
       "lib/screens/activity/activity_log_screen.dart": 10,
-      "lib/screens/facilities/facility_picker_screen.dart": 14,
       "lib/screens/facilities/select_facility_screen.dart": 3,
       "lib/screens/legal/legal_document_screen.dart": 13,
       "lib/services/daily_report_pdf_service.dart": 25,
@@ -40,7 +39,6 @@
     "R3": {
       "lib/main.dart": 6,
       "lib/screens/activity/activity_log_screen.dart": 6,
-      "lib/screens/facilities/facility_picker_screen.dart": 7,
       "lib/screens/facilities/select_facility_screen.dart": 1,
       "lib/screens/legal/legal_document_screen.dart": 3,
       "lib/services/daily_report_pdf_service.dart": 1
@@ -50,7 +48,6 @@
       "lib/screens/activity/activity_log_screen.dart": 22,
       "lib/screens/admin/manage_assistants_screen.dart": 1,
       "lib/screens/dashboard/dashboard_screen.dart": 1,
-      "lib/screens/facilities/facility_picker_screen.dart": 30,
       "lib/screens/facilities/facility_screen.dart": 2,
       "lib/screens/facilities/select_facility_screen.dart": 9,
       "lib/screens/legal/legal_document_screen.dart": 22,
@@ -65,7 +62,6 @@
       "lib/screens/activity/activity_log_screen.dart": 3,
       "lib/screens/dashboard/dashboard_screen.dart": 14,
       "lib/screens/dashboard/insights_screen.dart": 4,
-      "lib/screens/facilities/facility_picker_screen.dart": 1,
       "lib/screens/facilities/select_facility_screen.dart": 2,
       "lib/screens/login_screen.dart": 10,
       "lib/screens/platform_admin/facility_detail_screen.dart": 1,
@@ -78,7 +74,6 @@
     "R7": {
       "lib/screens/activity/activity_log_screen.dart": 1,
       "lib/screens/dashboard/dashboard_screen.dart": 2,
-      "lib/screens/facilities/facility_picker_screen.dart": 1,
       "lib/screens/legal/legal_document_screen.dart": 1
     },
     "R8": {

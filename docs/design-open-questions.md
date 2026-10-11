@@ -97,6 +97,7 @@ Colours are outside the standing snap rule, so this is kept as it is:
 
 - **Facility teal `#3E8E82`**, `lib/screens/facilities/facility_screen.dart` (`_tealAccent`, the Total Products metric): the login teal again (see D8). Kept as a named constant.
 - **Activity colours `Colors.purple` / `Colors.teal`**, `facility_screen.dart` `_activityColor`: kept for the 2E helper, as in D5 and D9.
+- **Facility type `Colors.purple`** (any type other than agrovet or vet), `lib/screens/facilities/facility_picker_screen.dart` `_typeColor`: same value as `chart4`, different purpose. Kept.
 - **Loading gaps 40**, `facility_screen.dart` (`EdgeInsets.symmetric(vertical: 40)`, inventory and sales tabs): 8 above `s32`. Kept. List panel sizes `_listPanelHeight` 360 and `_listPanelWidth` 340 kept exact as named constants.
 
 ### Trash and restore: books consistency (audit after D6, read-only)
