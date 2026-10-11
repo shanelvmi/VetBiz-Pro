@@ -323,7 +323,7 @@ class _HoverFabState extends State<HoverFab> {
         duration: AppMotion.fast,
         curve: Curves.easeOut,
         transform: _hovered
-            ? (Matrix4.identity()..scale(0.97)) // Slight shrink on hover
+            ? (Matrix4.identity()..scaleByDouble(0.97, 0.97, 0.97, 1.0)) // Slight shrink on hover
             : Matrix4.identity(),
         child: FloatingActionButton.extended(
           heroTag: widget.heroTag,

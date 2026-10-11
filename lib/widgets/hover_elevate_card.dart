@@ -46,7 +46,7 @@ class _HoverElevateCardState extends State<HoverElevateCard> {
         curve: Curves.easeOut,
         margin: widget.margin,
         transform: _isHovering
-            ? (Matrix4.identity()..translate(0.0, -3.0))
+            ? (Matrix4.identity()..translateByDouble(0.0, -3.0, 0.0, 1.0))
             : Matrix4.identity(),
         child: Card(
           color: widget.color ?? context.colors.surface,
