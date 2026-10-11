@@ -5,13 +5,16 @@ import '../../utils/subscription_status_utils.dart';
 import '../../widgets/firestore_error_view.dart';
 import '../../widgets/hover_elevate_card.dart';
 import 'overview_details_screen.dart';
-import '../../theme/app_palette.dart';
 import '../../data/collections.dart';
 import '../../data/fields.dart';
 import '../../data/subscription_keys.dart';
 import '../../data/payment_submission_status.dart';
 import '../../config/money.dart';
 import '../../config/app_date_format.dart';
+import '../../theme/app_text.dart';
+import '../../theme/app_dimens.dart';
+import '../../theme/theme_context.dart';
+import '../../theme/app_breakpoints.dart';
 
 /// A snapshot of the whole business - how many facilities, in what state, and
 /// how much has actually been collected this month. Reads every facility
@@ -32,7 +35,6 @@ class OverviewTab extends StatefulWidget {
 }
 
 class _OverviewTabState extends State<OverviewTab> {
-  static const Color primaryColor = AppPalette.primary;
 
   Map<String, dynamic>? _stats;
   bool _isLoading = true;
@@ -151,7 +153,7 @@ class _OverviewTabState extends State<OverviewTab> {
       child: ConstrainedBox(
         constraints: const BoxConstraints(maxWidth: 900),
         child: ListView(
-          padding: const EdgeInsets.all(16),
+          padding: const EdgeInsets.all(AppSpacing.s16),
           children: [
             Row(
               children: [
@@ -159,18 +161,18 @@ class _OverviewTabState extends State<OverviewTab> {
                 if (_lastRefreshed != null)
                   Text(
                     'Updated ${AppDateFormat.time24.format(_lastRefreshed!)}',
-                    style: TextStyle(fontSize: 11.5, color: Colors.grey[500]),
+                    style: TextStyle(fontSize: AppFontSize.f11_5, color: context.colors.textHint),
                   ),
                 IconButton(
                   icon: _isLoading
-                      ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2))
-                      : const Icon(Icons.refresh, size: 20),
+                      ? const SizedBox(width: AppSpacing.s18, height: 18, child: CircularProgressIndicator(strokeWidth: 2))
+                      : const Icon(Icons.refresh, size: AppIconSize.i20),
                   tooltip: 'Refresh',
                   onPressed: _isLoading ? null : _refresh,
                 ),
               ],
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: AppSpacing.s16),
 
             // Responsive grid - 4 across on a wide desktop monitor, 2
             // across on a tablet-width window, a single stacked column
@@ -179,7 +181,7 @@ class _OverviewTabState extends State<OverviewTab> {
             LayoutBuilder(
               builder: (context, constraints) {
                 final width = constraints.maxWidth;
-                final crossAxisCount = width >= 700 ? 4 : (width >= 420 ? 2 : 1);
+                final crossAxisCount = width >= AppBreakpoints.stackSections ? 4 : (width >= AppBreakpoints.smallPhone ? 2 : 1);
                 final spacing = 12.0;
                 final cardWidth = (width - spacing * (crossAxisCount - 1)) / crossAxisCount;
 
@@ -187,25 +189,25 @@ class _OverviewTabState extends State<OverviewTab> {
                   _StatCard(
                     label: 'Total Facilities',
                     value: '${stats['total']}',
-                    color: primaryColor,
+                    color: context.colors.primary,
                     icon: Icons.store,
                   ),
                   _StatCard(
                     label: 'Revenue This Month',
                     value: Money.symbolPlain(stats['monthRevenue']),
-                    color: Colors.green,
+                    color: context.colors.success,
                     icon: Icons.payments,
                   ),
                   _StatCard(
                     label: 'Pending Requests',
                     value: '${stats['pendingCount']}',
-                    color: Colors.blue,
+                    color: context.colors.info,
                     icon: Icons.pending_actions,
                   ),
                   _StatCard(
                     label: 'Payments This Month',
                     value: '${stats['monthPayments']}',
-                    color: primaryColor,
+                    color: context.colors.primary,
                     icon: Icons.receipt_long,
                   ),
                 ];
@@ -218,24 +220,23 @@ class _OverviewTabState extends State<OverviewTab> {
               },
             ),
 
-            const SizedBox(height: 28),
-            const Text('Facilities by Status', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
-            const SizedBox(height: 12),
+            const SizedBox(height: AppSpacing.s28),
+            const Text('Facilities by Status', style: TextStyle(fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f15)),
+            const SizedBox(height: AppSpacing.s12),
             _StatusBar(
-              primaryColor: primaryColor,
               active: stats[SubscriptionKeys.active] as int,
               trial: stats[SubscriptionKeys.trial] as int,
               grace: stats[SubscriptionKeys.grace] as int,
               locked: stats[SubscriptionKeys.locked] as int,
             ),
 
-            const SizedBox(height: 24),
+            const SizedBox(height: AppSpacing.s24),
             Center(
               child: OutlinedButton.icon(
                 onPressed: () => showOverviewDetailsScreen(context),
-                icon: const Icon(Icons.bar_chart_outlined, size: 18),
+                icon: const Icon(Icons.bar_chart_outlined, size: AppIconSize.i18),
                 label: const Text('View More'),
-                style: OutlinedButton.styleFrom(foregroundColor: primaryColor),
+                style: OutlinedButton.styleFrom(foregroundColor: context.colors.primary),
               ),
             ),
           ],
@@ -268,28 +269,28 @@ class _StatCard extends StatelessWidget {
           // Card doesn't clip its child by default, so a mismatched
           // radius here would show as a faint square corner peeking out
           // from under the card's rounded one.
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(AppRadius.r12),
         ),
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        padding: const EdgeInsets.symmetric(horizontal: AppSpacing.s16, vertical: AppSpacing.s14),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Container(
-              padding: const EdgeInsets.all(8),
+              padding: const EdgeInsets.all(AppSpacing.s8),
               decoration: BoxDecoration(
-                color: color.withValues(alpha: 0.10),
-                borderRadius: BorderRadius.circular(8),
+                color: color.withValues(alpha: AppAlpha.a10),
+                borderRadius: BorderRadius.circular(AppRadius.r8),
               ),
-              child: Icon(icon, color: color, size: 20),
+              child: Icon(icon, color: color, size: AppIconSize.i20),
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: AppSpacing.s12),
             FittedBox(
               fit: BoxFit.scaleDown,
               alignment: Alignment.centerLeft,
-              child: Text(value, style: TextStyle(fontWeight: FontWeight.bold, fontSize: 22, color: color)),
+              child: Text(value, style: TextStyle(fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f22, color: color)),
             ),
-            const SizedBox(height: 3),
-            Text(label, style: TextStyle(fontSize: 12.5, color: Colors.grey[600])),
+            const SizedBox(height: AppSpacing.s3),
+            Text(label, style: TextStyle(fontSize: AppFontSize.f12_5, color: context.colors.textMuted)),
           ],
         ),
       ),
@@ -303,14 +304,12 @@ class _StatCard extends StatelessWidget {
 /// (mostly active? a worrying amount locked?) that four separate
 /// numbers in a plain list never gave as immediately.
 class _StatusBar extends StatelessWidget {
-  final Color primaryColor;
   final int active;
   final int trial;
   final int grace;
   final int locked;
 
   const _StatusBar({
-    required this.primaryColor,
     required this.active,
     required this.trial,
     required this.grace,
@@ -322,21 +321,21 @@ class _StatusBar extends StatelessWidget {
     final total = active + trial + grace + locked;
 
     final segments = [
-      (label: 'Active', count: active, color: Colors.green),
-      (label: 'Trial', count: trial, color: primaryColor),
-      (label: 'Grace Period', count: grace, color: Colors.orange),
-      (label: 'Locked', count: locked, color: Colors.redAccent),
+      (label: 'Active', count: active, color: context.colors.success),
+      (label: 'Trial', count: trial, color: context.colors.primary),
+      (label: 'Grace Period', count: grace, color: context.colors.warning),
+      (label: 'Locked', count: locked, color: context.colors.dangerAccent),
     ];
 
     if (total == 0) {
-      return Text('No facilities yet.', style: TextStyle(color: Colors.grey[600]));
+      return Text('No facilities yet.', style: TextStyle(color: context.colors.textMuted));
     }
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         ClipRRect(
-          borderRadius: BorderRadius.circular(8),
+          borderRadius: BorderRadius.circular(AppRadius.r8),
           child: SizedBox(
             height: 16,
             child: Row(
@@ -347,7 +346,7 @@ class _StatusBar extends StatelessWidget {
             ),
           ),
         ),
-        const SizedBox(height: 16),
+        const SizedBox(height: AppSpacing.s16),
         Wrap(
           spacing: 24,
           runSpacing: 10,
@@ -357,10 +356,10 @@ class _StatusBar extends StatelessWidget {
               mainAxisSize: MainAxisSize.min,
               children: [
                 Container(width: 10, height: 10, decoration: BoxDecoration(color: s.color, shape: BoxShape.circle)),
-                const SizedBox(width: 8),
+                const SizedBox(width: AppSpacing.s8),
                 Text(
                   '${s.label}: ${s.count} ($pct%)',
-                  style: const TextStyle(fontSize: 13.5, fontWeight: FontWeight.w500),
+                  style: const TextStyle(fontSize: AppFontSize.f13_5, fontWeight: AppFontWeight.medium),
                 ),
               ],
             );

@@ -8,10 +8,13 @@ import '../../widgets/hover_elevate_card.dart';
 import '../../utils/facility_limit_helper.dart';
 import '../../utils/thousands_input_formatter.dart';
 import 'promotions_screen.dart';
-import '../../theme/app_palette.dart';
 import '../../data/collections.dart';
 import '../../config/money.dart';
 import '../../config/app_defaults.dart';
+import '../../theme/app_text.dart';
+import '../../theme/app_dimens.dart';
+import '../../theme/theme_context.dart';
+import '../../ui/feedback/app_feedback.dart';
 
 /// Platform-wide configuration - currently new-facility trial length and
 /// subscription pricing. Deliberately separate from Overview: Overview
@@ -25,52 +28,50 @@ import '../../config/app_defaults.dart';
 class PlatformSettingsScreen extends StatelessWidget {
   const PlatformSettingsScreen({super.key});
 
-  static const Color primaryColor = AppPalette.primary;
-
   @override
   Widget build(BuildContext context) {
     return Center(
       child: ConstrainedBox(
         constraints: const BoxConstraints(maxWidth: 700),
         child: ListView(
-          padding: const EdgeInsets.all(16),
+          padding: const EdgeInsets.all(AppSpacing.s16),
           children: [
               HoverElevateCard(
                 child: InkWell(
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(AppRadius.r12),
                   onTap: () => showPromotionsScreen(context),
-                  child: const Padding(
-                    padding: EdgeInsets.all(14),
+                  child: Padding(
+                    padding: EdgeInsets.all(AppSpacing.s14),
                     child: Row(
                       children: [
-                        Icon(Icons.local_offer_outlined, color: primaryColor, size: 22),
-                        SizedBox(width: 12),
+                        Icon(Icons.local_offer_outlined, color: context.colors.primary, size: AppIconSize.i22),
+                        SizedBox(width: AppSpacing.s12),
                         Expanded(
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Text('Promotions', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
-                              SizedBox(height: 2),
+                              Text('Promotions', style: TextStyle(fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f15)),
+                              SizedBox(height: AppSpacing.s2),
                               Text(
                                 'Create seasonal sales or renewal offers for expiring facilities.',
-                                style: TextStyle(fontSize: 12, color: Colors.grey),
+                                style: TextStyle(fontSize: AppFontSize.f12, color: context.colors.textHint),
                               ),
                             ],
                           ),
                         ),
-                        Icon(Icons.chevron_right, color: Colors.grey),
+                        Icon(Icons.chevron_right, color: context.colors.textHint),
                       ],
                     ),
                   ),
                 ),
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: AppSpacing.s16),
               const _PricingSettingsCard(),
-              const SizedBox(height: 16),
+              const SizedBox(height: AppSpacing.s16),
               const _TrialSettingsCard(),
-              const SizedBox(height: 16),
+              const SizedBox(height: AppSpacing.s16),
               const _FacilityLimitSettingsCard(),
-              const SizedBox(height: 16),
+              const SizedBox(height: AppSpacing.s16),
               const _MaintenanceModeCard(),
             ],
           ),
@@ -95,8 +96,6 @@ class _MaintenanceModeCard extends StatefulWidget {
 }
 
 class _MaintenanceModeCardState extends State<_MaintenanceModeCard> {
-  static const Color primaryColor = AppPalette.primary;
-  static const Color warmAmber = AppPalette.accent;
 
   final TextEditingController _messageController = TextEditingController();
   bool _isLoading = true;
@@ -149,7 +148,7 @@ class _MaintenanceModeCardState extends State<_MaintenanceModeCard> {
             ),
             TextButton(
               onPressed: () => Navigator.pop(context, true),
-              child: const Text('Turn On', style: TextStyle(color: Colors.redAccent)),
+              child: Text('Turn On', style: TextStyle(color: context.colors.dangerAccent)),
             ),
           ],
         ),
@@ -168,18 +167,15 @@ class _MaintenanceModeCardState extends State<_MaintenanceModeCard> {
         _isMaintenanceMode = value;
         _isTogglingMode = false;
       });
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(value ? 'Maintenance mode is now ON.' : 'Maintenance mode is now OFF.'),
-          backgroundColor: value ? Colors.orange : Colors.green,
-        ),
-      );
-    } catch (e) {
+      if (value) {
+        AppFeedback.warning('Maintenance mode is now ON');
+      } else {
+        AppFeedback.success('Maintenance mode is now OFF');
+      }
+    } catch (e, st) {
       if (!mounted) return;
       setState(() => _isTogglingMode = false);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Could not save: $e'), backgroundColor: Colors.redAccent),
-      );
+      AppFeedback.error("Couldn't save maintenance mode", error: e, stackTrace: st);
     }
   }
 
@@ -192,15 +188,11 @@ class _MaintenanceModeCardState extends State<_MaintenanceModeCard> {
           .set({'maintenanceMessage': _messageController.text.trim()}, SetOptions(merge: true));
       if (!mounted) return;
       setState(() => _isSavingMessage = false);
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Message saved.'), backgroundColor: Colors.green),
-      );
-    } catch (e) {
+      AppFeedback.success('Message saved');
+    } catch (e, st) {
       if (!mounted) return;
       setState(() => _isSavingMessage = false);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Could not save: $e'), backgroundColor: Colors.redAccent),
-      );
+      AppFeedback.error("Couldn't save the maintenance message", error: e, stackTrace: st);
     }
   }
 
@@ -208,49 +200,49 @@ class _MaintenanceModeCardState extends State<_MaintenanceModeCard> {
   Widget build(BuildContext context) {
     return HoverElevateCard(
       child: Padding(
-        padding: const EdgeInsets.all(14),
+        padding: const EdgeInsets.all(AppSpacing.s14),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Row(
               children: [
-                Icon(Icons.build_circle_outlined, color: _isMaintenanceMode ? Colors.orange : primaryColor, size: 20),
-                const SizedBox(width: 8),
-                const Text('Maintenance Mode', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
+                Icon(Icons.build_circle_outlined, color: _isMaintenanceMode ? context.colors.warning : context.colors.primary, size: AppIconSize.i20),
+                const SizedBox(width: AppSpacing.s8),
+                const Text('Maintenance Mode', style: TextStyle(fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f15)),
               ],
             ),
-            const SizedBox(height: 4),
+            const SizedBox(height: AppSpacing.s4),
             Text(
               'Blocks every user except Platform Admins from using the app until turned off.',
-              style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+              style: TextStyle(fontSize: AppFontSize.f12, color: context.colors.textMuted),
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: AppSpacing.s12),
             if (_isLoading)
-              const Center(child: Padding(padding: EdgeInsets.all(8), child: CircularProgressIndicator()))
+              const Center(child: Padding(padding: EdgeInsets.all(AppSpacing.s8), child: CircularProgressIndicator()))
             else ...[
               Row(
                 children: [
                   Switch(
                     value: _isMaintenanceMode,
                     onChanged: _isTogglingMode ? null : _setMaintenanceMode,
-                    activeColor: Colors.orange,
+                    activeColor: context.colors.warning,
                   ),
-                  const SizedBox(width: 8),
+                  const SizedBox(width: AppSpacing.s8),
                   Text(
                     _isMaintenanceMode ? 'Currently ON - users are blocked' : 'Currently OFF - app is live',
                     style: TextStyle(
-                      fontSize: 13,
-                      fontWeight: FontWeight.w600,
-                      color: _isMaintenanceMode ? Colors.orange[800] : Colors.grey[600],
+                      fontSize: AppFontSize.f13,
+                      fontWeight: AppFontWeight.semibold,
+                      color: _isMaintenanceMode ? context.colors.warningStrong : context.colors.textMuted,
                     ),
                   ),
                   if (_isTogglingMode) ...[
-                    const SizedBox(width: 8),
-                    const SizedBox(width: 14, height: 14, child: CircularProgressIndicator(strokeWidth: 2)),
+                    const SizedBox(width: AppSpacing.s8),
+                    const SizedBox(width: AppSpacing.s14, height: 14, child: CircularProgressIndicator(strokeWidth: 2)),
                   ],
                 ],
               ),
-              const SizedBox(height: 12),
+              const SizedBox(height: AppSpacing.s12),
               TextField(
                 controller: _messageController,
                 maxLines: 2,
@@ -263,22 +255,22 @@ class _MaintenanceModeCardState extends State<_MaintenanceModeCard> {
                   isDense: true,
                 ),
               ),
-              const SizedBox(height: 8),
+              const SizedBox(height: AppSpacing.s8),
               Align(
                 alignment: Alignment.centerRight,
                 child: ElevatedButton(
                   onPressed: _isSavingMessage ? null : _saveMessage,
                   style: ButtonStyle(
                     backgroundColor: WidgetStateProperty.resolveWith<Color>((states) {
-                      if (states.contains(WidgetState.hovered)) return warmAmber;
-                      return primaryColor;
+                      if (states.contains(WidgetState.hovered)) return context.colors.accent;
+                      return context.colors.primary;
                     }),
-                    foregroundColor: WidgetStateProperty.all(Colors.white),
+                    foregroundColor: WidgetStateProperty.all(context.colors.onPrimary),
                   ),
                   child: _isSavingMessage
-                      ? const SizedBox(
+                      ? SizedBox(
                           width: 16, height: 16,
-                          child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                          child: CircularProgressIndicator(strokeWidth: 2, color: context.colors.onPrimary),
                         )
                       : const Text('Save Message'),
                 ),
@@ -304,8 +296,6 @@ class _TrialSettingsCard extends StatefulWidget {
 }
 
 class _TrialSettingsCardState extends State<_TrialSettingsCard> {
-  static const Color primaryColor = AppPalette.primary;
-  static const Color warmAmber = AppPalette.accent;
 
   final TextEditingController _controller = TextEditingController();
   bool _isLoading = true;
@@ -349,9 +339,7 @@ class _TrialSettingsCardState extends State<_TrialSettingsCard> {
   Future<void> _save() async {
     final parsed = int.tryParse(_controller.text.trim());
     if (parsed == null || parsed <= 0) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Enter a whole number of days, greater than 0')),
-      );
+      AppFeedback.warning('Enter a whole number of days, greater than 0');
       return;
     }
 
@@ -366,18 +354,14 @@ class _TrialSettingsCardState extends State<_TrialSettingsCard> {
         _currentDays = parsed;
         _isSaving = false;
       });
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Trial length set to $parsed day${parsed == 1 ? '' : 's'} - applies to facilities created from now on.'),
-          backgroundColor: Colors.green,
-        ),
+      AppFeedback.success(
+        'Trial length set to $parsed day${parsed == 1 ? '' : 's'}',
+        detail: 'Applies to facilities created from now on',
       );
-    } catch (e) {
+    } catch (e, st) {
       if (!mounted) return;
       setState(() => _isSaving = false);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Could not save: $e'), backgroundColor: Colors.redAccent),
-      );
+      AppFeedback.error("Couldn't save the trial length", error: e, stackTrace: st);
     }
   }
 
@@ -385,26 +369,26 @@ class _TrialSettingsCardState extends State<_TrialSettingsCard> {
   Widget build(BuildContext context) {
     return HoverElevateCard(
       child: Padding(
-        padding: const EdgeInsets.all(14),
+        padding: const EdgeInsets.all(AppSpacing.s14),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Row(
               children: [
-                Icon(Icons.hourglass_empty, color: primaryColor, size: 20),
-                const SizedBox(width: 8),
+                Icon(Icons.hourglass_empty, color: context.colors.primary, size: AppIconSize.i20),
+                const SizedBox(width: AppSpacing.s8),
                 const Text('New Facility Trial Length',
-                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
+                    style: TextStyle(fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f15)),
               ],
             ),
-            const SizedBox(height: 4),
+            const SizedBox(height: AppSpacing.s4),
             Text(
               'Only applies to facilities created from now on - never changes one already mid-trial.',
-              style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+              style: TextStyle(fontSize: AppFontSize.f12, color: context.colors.textMuted),
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: AppSpacing.s12),
             if (_isLoading)
-              const Center(child: Padding(padding: EdgeInsets.all(8), child: CircularProgressIndicator()))
+              const Center(child: Padding(padding: EdgeInsets.all(AppSpacing.s8), child: CircularProgressIndicator()))
             else
               Row(
                 children: [
@@ -420,25 +404,25 @@ class _TrialSettingsCardState extends State<_TrialSettingsCard> {
                       ),
                     ),
                   ),
-                  const SizedBox(width: 12),
+                  const SizedBox(width: AppSpacing.s12),
                   ElevatedButton(
                     onPressed: _isSaving ? null : _save,
                     style: ButtonStyle(
                       backgroundColor: WidgetStateProperty.resolveWith<Color>((states) {
-                        if (states.contains(WidgetState.hovered)) return warmAmber;
-                        return primaryColor;
+                        if (states.contains(WidgetState.hovered)) return context.colors.accent;
+                        return context.colors.primary;
                       }),
-                      foregroundColor: WidgetStateProperty.all(Colors.white),
+                      foregroundColor: WidgetStateProperty.all(context.colors.onPrimary),
                     ),
                     child: _isSaving
-                        ? const SizedBox(
+                        ? SizedBox(
                             width: 16, height: 16,
-                            child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                            child: CircularProgressIndicator(strokeWidth: 2, color: context.colors.onPrimary),
                           )
                         : const Text('Save'),
                   ),
-                  const SizedBox(width: 12),
-                  Text('Currently: $_currentDays days', style: TextStyle(fontSize: 12, color: Colors.grey[600])),
+                  const SizedBox(width: AppSpacing.s12),
+                  Text('Currently: $_currentDays days', style: TextStyle(fontSize: AppFontSize.f12, color: context.colors.textMuted)),
                 ],
               ),
           ],
@@ -461,8 +445,6 @@ class _PricingSettingsCard extends StatefulWidget {
 }
 
 class _PricingSettingsCardState extends State<_PricingSettingsCard> {
-  static const Color primaryColor = AppPalette.primary;
-  static const Color warmAmber = AppPalette.accent;
 
   final Map<String, TextEditingController> _controllers = {
     for (final plan in kSubscriptionPlans) plan.id: TextEditingController(),
@@ -503,9 +485,7 @@ class _PricingSettingsCardState extends State<_PricingSettingsCard> {
     for (final plan in kSubscriptionPlans) {
       final raw = _controllers[plan.id]?.text.trim() ?? '';
       if (raw.isEmpty) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Enter a valid price for ${plan.label}')),
-        );
+        AppFeedback.warning('Enter a valid price for ${plan.label}');
         return;
       }
       updates['${plan.id}PriceTsh'] = parseThousands(raw);
@@ -519,18 +499,11 @@ class _PricingSettingsCardState extends State<_PricingSettingsCard> {
           .set(updates, SetOptions(merge: true));
       if (!mounted) return;
       setState(() => _isSaving = false);
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Prices updated - applies to new payment submissions from now on.'),
-          backgroundColor: Colors.green,
-        ),
-      );
-    } catch (e) {
+      AppFeedback.success('Prices updated', detail: 'Applies to new payment submissions from now on');
+    } catch (e, st) {
       if (!mounted) return;
       setState(() => _isSaving = false);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Could not save: $e'), backgroundColor: Colors.redAccent),
-      );
+      AppFeedback.error("Couldn't save the prices", error: e, stackTrace: st);
     }
   }
 
@@ -538,26 +511,26 @@ class _PricingSettingsCardState extends State<_PricingSettingsCard> {
   Widget build(BuildContext context) {
     return HoverElevateCard(
       child: Padding(
-        padding: const EdgeInsets.all(14),
+        padding: const EdgeInsets.all(AppSpacing.s14),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Row(
               children: [
-                Icon(Icons.sell_outlined, color: primaryColor, size: 20),
-                const SizedBox(width: 8),
+                Icon(Icons.sell_outlined, color: context.colors.primary, size: AppIconSize.i20),
+                const SizedBox(width: AppSpacing.s8),
                 const Text('Subscription Pricing',
-                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
+                    style: TextStyle(fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f15)),
               ],
             ),
-            const SizedBox(height: 4),
+            const SizedBox(height: AppSpacing.s4),
             Text(
               'Applies to new payment submissions from now on - never changes what a facility already paid.',
-              style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+              style: TextStyle(fontSize: AppFontSize.f12, color: context.colors.textMuted),
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: AppSpacing.s12),
             if (_isLoading)
-              const Center(child: Padding(padding: EdgeInsets.all(8), child: CircularProgressIndicator()))
+              const Center(child: Padding(padding: EdgeInsets.all(AppSpacing.s8), child: CircularProgressIndicator()))
             else
               Wrap(
                 spacing: 12,
@@ -579,22 +552,22 @@ class _PricingSettingsCardState extends State<_PricingSettingsCard> {
                   );
                 }).toList(),
               ),
-            const SizedBox(height: 12),
+            const SizedBox(height: AppSpacing.s12),
             if (!_isLoading)
               ElevatedButton(
                 onPressed: _isSaving ? null : _save,
                 style: ButtonStyle(
                   backgroundColor: WidgetStateProperty.resolveWith<Color>((states) {
-                    if (states.contains(WidgetState.hovered)) return warmAmber;
-                    return primaryColor;
+                    if (states.contains(WidgetState.hovered)) return context.colors.accent;
+                    return context.colors.primary;
                   }),
-                  foregroundColor: WidgetStateProperty.all(Colors.white),
+                  foregroundColor: WidgetStateProperty.all(context.colors.onPrimary),
                 ),
                 child: _isSaving
-                    ? const SizedBox(
+                    ? SizedBox(
                         width: 16,
                         height: 16,
-                        child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                        child: CircularProgressIndicator(strokeWidth: 2, color: context.colors.onPrimary),
                       )
                     : const Text('Save All Prices'),
               ),
@@ -620,8 +593,6 @@ class _FacilityLimitSettingsCard extends StatefulWidget {
 }
 
 class _FacilityLimitSettingsCardState extends State<_FacilityLimitSettingsCard> {
-  static const Color primaryColor = AppPalette.primary;
-  static const Color warmAmber = AppPalette.accent;
 
   final TextEditingController _controller = TextEditingController();
   bool _isLoading = true;
@@ -654,9 +625,7 @@ class _FacilityLimitSettingsCardState extends State<_FacilityLimitSettingsCard> 
   Future<void> _save() async {
     final parsed = int.tryParse(_controller.text.trim());
     if (parsed == null || parsed <= 0) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Enter a whole number, greater than 0')),
-      );
+      AppFeedback.warning('Enter a whole number, greater than 0');
       return;
     }
 
@@ -671,18 +640,11 @@ class _FacilityLimitSettingsCardState extends State<_FacilityLimitSettingsCard> 
         _currentLimit = parsed;
         _isSaving = false;
       });
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Facility limit set to $parsed per Admin account.'),
-          backgroundColor: Colors.green,
-        ),
-      );
-    } catch (e) {
+      AppFeedback.success('Facility limit set to $parsed per Admin account');
+    } catch (e, st) {
       if (!mounted) return;
       setState(() => _isSaving = false);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Could not save: $e'), backgroundColor: Colors.redAccent),
-      );
+      AppFeedback.error("Couldn't save the facility limit", error: e, stackTrace: st);
     }
   }
 
@@ -690,26 +652,26 @@ class _FacilityLimitSettingsCardState extends State<_FacilityLimitSettingsCard> 
   Widget build(BuildContext context) {
     return HoverElevateCard(
       child: Padding(
-        padding: const EdgeInsets.all(14),
+        padding: const EdgeInsets.all(AppSpacing.s14),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Row(
               children: [
-                Icon(Icons.storefront_outlined, color: primaryColor, size: 20),
-                const SizedBox(width: 8),
+                Icon(Icons.storefront_outlined, color: context.colors.primary, size: AppIconSize.i20),
+                const SizedBox(width: AppSpacing.s8),
                 const Text('Facility Limit Per Admin',
-                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
+                    style: TextStyle(fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f15)),
               ],
             ),
-            const SizedBox(height: 4),
+            const SizedBox(height: AppSpacing.s4),
             Text(
               'Caps how many facilities a single Admin account can create - mainly to prevent trial abuse via endless new facilities.',
-              style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+              style: TextStyle(fontSize: AppFontSize.f12, color: context.colors.textMuted),
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: AppSpacing.s12),
             if (_isLoading)
-              const Center(child: Padding(padding: EdgeInsets.all(8), child: CircularProgressIndicator()))
+              const Center(child: Padding(padding: EdgeInsets.all(AppSpacing.s8), child: CircularProgressIndicator()))
             else
               Row(
                 children: [
@@ -725,25 +687,25 @@ class _FacilityLimitSettingsCardState extends State<_FacilityLimitSettingsCard> 
                       ),
                     ),
                   ),
-                  const SizedBox(width: 12),
+                  const SizedBox(width: AppSpacing.s12),
                   ElevatedButton(
                     onPressed: _isSaving ? null : _save,
                     style: ButtonStyle(
                       backgroundColor: WidgetStateProperty.resolveWith<Color>((states) {
-                        if (states.contains(WidgetState.hovered)) return warmAmber;
-                        return primaryColor;
+                        if (states.contains(WidgetState.hovered)) return context.colors.accent;
+                        return context.colors.primary;
                       }),
-                      foregroundColor: WidgetStateProperty.all(Colors.white),
+                      foregroundColor: WidgetStateProperty.all(context.colors.onPrimary),
                     ),
                     child: _isSaving
-                        ? const SizedBox(
+                        ? SizedBox(
                             width: 16, height: 16,
-                            child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                            child: CircularProgressIndicator(strokeWidth: 2, color: context.colors.onPrimary),
                           )
                         : const Text('Save'),
                   ),
-                  const SizedBox(width: 12),
-                  Text('Currently: $_currentLimit', style: TextStyle(fontSize: 12, color: Colors.grey[600])),
+                  const SizedBox(width: AppSpacing.s12),
+                  Text('Currently: $_currentLimit', style: TextStyle(fontSize: AppFontSize.f12, color: context.colors.textMuted)),
                 ],
               ),
           ],
