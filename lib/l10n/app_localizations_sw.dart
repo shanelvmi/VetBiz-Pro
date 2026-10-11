@@ -428,4 +428,76 @@ class AppLocalizationsSw extends AppLocalizations {
 
   @override
   String get unit_cartons => 'katoni';
+
+  @override
+  String get unit_packs => 'pakiti';
+
+  @override
+  String get unit_strips => 'kadi';
+
+  @override
+  String get unit_tablets => 'vidonge';
+
+  @override
+  String get unit_tubes => 'tyubu';
+
+  @override
+  String get unit_rolls => 'roli';
+
+  @override
+  String get unit_pairs => 'jozi';
+
+  @override
+  String get unit_others => 'nyinginezo';
+
+  @override
+  String get serviceCategory_surgical => 'Upasuaji';
+
+  @override
+  String get serviceCategory_treatment => 'Matibabu';
+
+  @override
+  String get serviceCategory_management => 'Usimamizi';
+
+  @override
+  String get serviceCategory_consultation => 'Ushauri';
+
+  @override
+  String get serviceCategory_diagnostics => 'Uchunguzi';
+
+  @override
+  String get serviceCategory_preventive => 'Kinga';
+
+  @override
+  String get serviceCategory_other => 'Nyingine';
+
+  @override
+  String get facilityType_agrovet => 'Agrovet';
+
+  @override
+  String get facilityType_vetClinic => 'Kliniki ya Mifugo';
+
+  @override
+  String get facilityType_vetHospital => 'Hospitali ya Mifugo';
+
+  @override
+  String get facilityType_ambulatoryVet => 'Daktari wa Mifugo wa Kutembelea';
+
+  @override
+  String get facilityType_other => 'Nyingine';
+
+  @override
+  String get paymentMethod_cash => 'Taslimu';
+
+  @override
+  String get paymentMethod_mPesa => 'M-Pesa';
+
+  @override
+  String get paymentMethod_mixxByYas => 'Mixx by Yas';
+
+  @override
+  String get paymentMethod_haloPesa => 'HaloPesa';
+
+  @override
+  String get paymentMethod_airtelMoney => 'Airtel Money';
 }

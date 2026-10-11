@@ -901,6 +901,150 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'cartons'**
   String get unit_cartons;
+
+  /// Product unit: product form unit picker (stored value 'packs').
+  ///
+  /// In en, this message translates to:
+  /// **'packs'**
+  String get unit_packs;
+
+  /// Product unit: product form unit picker (stored value 'strips').
+  ///
+  /// In en, this message translates to:
+  /// **'strips'**
+  String get unit_strips;
+
+  /// Product unit: product form unit picker (stored value 'tablets').
+  ///
+  /// In en, this message translates to:
+  /// **'tablets'**
+  String get unit_tablets;
+
+  /// Product unit: product form unit picker (stored value 'tubes').
+  ///
+  /// In en, this message translates to:
+  /// **'tubes'**
+  String get unit_tubes;
+
+  /// Product unit: product form unit picker (stored value 'rolls').
+  ///
+  /// In en, this message translates to:
+  /// **'rolls'**
+  String get unit_rolls;
+
+  /// Product unit: product form unit picker (stored value 'pairs').
+  ///
+  /// In en, this message translates to:
+  /// **'pairs'**
+  String get unit_pairs;
+
+  /// Product unit: product form unit picker (stored value 'others').
+  ///
+  /// In en, this message translates to:
+  /// **'others'**
+  String get unit_others;
+
+  /// Service category: service form, Services filters and lists (stored value 'Surgical').
+  ///
+  /// In en, this message translates to:
+  /// **'Surgical'**
+  String get serviceCategory_surgical;
+
+  /// Service category: service form, Services filters and lists (stored value 'Treatment').
+  ///
+  /// In en, this message translates to:
+  /// **'Treatment'**
+  String get serviceCategory_treatment;
+
+  /// Service category: service form, Services filters and lists (stored value 'Management').
+  ///
+  /// In en, this message translates to:
+  /// **'Management'**
+  String get serviceCategory_management;
+
+  /// Service category: service form, Services filters and lists (stored value 'Consultation').
+  ///
+  /// In en, this message translates to:
+  /// **'Consultation'**
+  String get serviceCategory_consultation;
+
+  /// Service category: service form, Services filters and lists (stored value 'Diagnostics').
+  ///
+  /// In en, this message translates to:
+  /// **'Diagnostics'**
+  String get serviceCategory_diagnostics;
+
+  /// Service category: service form, Services filters and lists (stored value 'Preventive').
+  ///
+  /// In en, this message translates to:
+  /// **'Preventive'**
+  String get serviceCategory_preventive;
+
+  /// Service category: service form, Services filters and lists (stored value 'Other').
+  ///
+  /// In en, this message translates to:
+  /// **'Other'**
+  String get serviceCategory_other;
+
+  /// Facility type: registration, Facilities screen, facility picker filter (stored value 'Agrovet').
+  ///
+  /// In en, this message translates to:
+  /// **'Agrovet'**
+  String get facilityType_agrovet;
+
+  /// Facility type: registration, Facilities screen, facility picker filter (stored value 'Vet Clinic').
+  ///
+  /// In en, this message translates to:
+  /// **'Vet Clinic'**
+  String get facilityType_vetClinic;
+
+  /// Facility type: registration, Facilities screen, facility picker filter (stored value 'Vet Hospital').
+  ///
+  /// In en, this message translates to:
+  /// **'Vet Hospital'**
+  String get facilityType_vetHospital;
+
+  /// Facility type: registration, Facilities screen, facility picker filter (stored value 'Ambulatory Vet').
+  ///
+  /// In en, this message translates to:
+  /// **'Ambulatory Vet'**
+  String get facilityType_ambulatoryVet;
+
+  /// Facility type: registration, Facilities screen, facility picker filter (stored value 'Other').
+  ///
+  /// In en, this message translates to:
+  /// **'Other'**
+  String get facilityType_other;
+
+  /// Payment method: payment chips and menus, payment filters (stored value 'Cash').
+  ///
+  /// In en, this message translates to:
+  /// **'Cash'**
+  String get paymentMethod_cash;
+
+  /// Payment method: payment chips and menus, payment filters (stored value 'M-Pesa').
+  ///
+  /// In en, this message translates to:
+  /// **'M-Pesa'**
+  String get paymentMethod_mPesa;
+
+  /// Payment method: payment chips and menus, payment filters (stored value 'Mixx by Yas').
+  ///
+  /// In en, this message translates to:
+  /// **'Mixx by Yas'**
+  String get paymentMethod_mixxByYas;
+
+  /// Payment method: payment chips and menus, payment filters (stored value 'HaloPesa').
+  ///
+  /// In en, this message translates to:
+  /// **'HaloPesa'**
+  String get paymentMethod_haloPesa;
+
+  /// Payment method: payment chips and menus, payment filters (stored value 'Airtel Money').
+  ///
+  /// In en, this message translates to:
+  /// **'Airtel Money'**
+  String get paymentMethod_airtelMoney;
 }
 
 class _AppLocalizationsDelegate

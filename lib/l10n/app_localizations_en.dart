@@ -427,4 +427,76 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get unit_cartons => 'cartons';
+
+  @override
+  String get unit_packs => 'packs';
+
+  @override
+  String get unit_strips => 'strips';
+
+  @override
+  String get unit_tablets => 'tablets';
+
+  @override
+  String get unit_tubes => 'tubes';
+
+  @override
+  String get unit_rolls => 'rolls';
+
+  @override
+  String get unit_pairs => 'pairs';
+
+  @override
+  String get unit_others => 'others';
+
+  @override
+  String get serviceCategory_surgical => 'Surgical';
+
+  @override
+  String get serviceCategory_treatment => 'Treatment';
+
+  @override
+  String get serviceCategory_management => 'Management';
+
+  @override
+  String get serviceCategory_consultation => 'Consultation';
+
+  @override
+  String get serviceCategory_diagnostics => 'Diagnostics';
+
+  @override
+  String get serviceCategory_preventive => 'Preventive';
+
+  @override
+  String get serviceCategory_other => 'Other';
+
+  @override
+  String get facilityType_agrovet => 'Agrovet';
+
+  @override
+  String get facilityType_vetClinic => 'Vet Clinic';
+
+  @override
+  String get facilityType_vetHospital => 'Vet Hospital';
+
+  @override
+  String get facilityType_ambulatoryVet => 'Ambulatory Vet';
+
+  @override
+  String get facilityType_other => 'Other';
+
+  @override
+  String get paymentMethod_cash => 'Cash';
+
+  @override
+  String get paymentMethod_mPesa => 'M-Pesa';
+
+  @override
+  String get paymentMethod_mixxByYas => 'Mixx by Yas';
+
+  @override
+  String get paymentMethod_haloPesa => 'HaloPesa';
+
+  @override
+  String get paymentMethod_airtelMoney => 'Airtel Money';
 }
