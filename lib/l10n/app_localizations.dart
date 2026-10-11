@@ -1831,6 +1831,30 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Interest Income'**
   String get incomeCategory_interest;
+
+  /// Income category: Add Transaction picker, Transactions list and details (stored value 'Refunds Received').
+  ///
+  /// In en, this message translates to:
+  /// **'Refunds Received'**
+  String get incomeCategory_refundsReceived;
+
+  /// Income category: Add Transaction picker, Transactions list and details (stored value 'Discounts Received').
+  ///
+  /// In en, this message translates to:
+  /// **'Discounts Received'**
+  String get incomeCategory_discountsReceived;
+
+  /// Income category: Add Transaction picker, Transactions list and details (stored value 'Asset Disposal Income').
+  ///
+  /// In en, this message translates to:
+  /// **'Asset Disposal Income'**
+  String get incomeCategory_assetDisposal;
+
+  /// Income category: Add Transaction picker, Transactions list and details (stored value 'Other Income').
+  ///
+  /// In en, this message translates to:
+  /// **'Other Income'**
+  String get incomeCategory_other;
 }
 
 class _AppLocalizationsDelegate

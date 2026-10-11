@@ -893,4 +893,16 @@ class AppLocalizationsSw extends AppLocalizations {
 
   @override
   String get incomeCategory_interest => 'Mapato ya Riba';
+
+  @override
+  String get incomeCategory_refundsReceived => 'Marejesho Yaliyopokelewa';
+
+  @override
+  String get incomeCategory_discountsReceived => 'Punguzo Lililopokelewa';
+
+  @override
+  String get incomeCategory_assetDisposal => 'Mapato ya Kuuza Mali';
+
+  @override
+  String get incomeCategory_other => 'Mapato Mengine';
 }

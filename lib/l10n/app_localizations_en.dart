@@ -892,4 +892,16 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get incomeCategory_interest => 'Interest Income';
+
+  @override
+  String get incomeCategory_refundsReceived => 'Refunds Received';
+
+  @override
+  String get incomeCategory_discountsReceived => 'Discounts Received';
+
+  @override
+  String get incomeCategory_assetDisposal => 'Asset Disposal Income';
+
+  @override
+  String get incomeCategory_other => 'Other Income';
 }
