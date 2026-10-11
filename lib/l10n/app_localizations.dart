@@ -5305,6 +5305,78 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Couldn\'t delete the account'**
   String get account_deleteFailed;
+
+  /// Delete Account item while checking whether it is allowed.
+  ///
+  /// In en, this message translates to:
+  /// **'Checking...'**
+  String get account_checking;
+
+  /// Delete Account item for a Platform Admin.
+  ///
+  /// In en, this message translates to:
+  /// **'Platform Admin accounts can\'t be deleted from here.'**
+  String get account_platformAdminNoDelete;
+
+  /// Delete Account item for an owner; "View Facilities" is the screen's English name until it is translated.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete all facilities you own in View Facilities first.'**
+  String get account_deleteOwnedFirst;
+
+  /// Delete Account item.
+  ///
+  /// In en, this message translates to:
+  /// **'Permanently delete your account. This action cannot be undone.'**
+  String get account_deleteHint;
+
+  /// Section heading.
+  ///
+  /// In en, this message translates to:
+  /// **'Danger Zone'**
+  String get account_dangerZone;
+
+  /// Under Danger Zone.
+  ///
+  /// In en, this message translates to:
+  /// **'These actions affect your account and business data. Review carefully before proceeding.'**
+  String get account_dangerHint;
+
+  /// Manage Account item.
+  ///
+  /// In en, this message translates to:
+  /// **'Log Out of All Devices'**
+  String get account_logoutAll;
+
+  /// Under Log Out of All Devices.
+  ///
+  /// In en, this message translates to:
+  /// **'Disconnect your active profile session from all other active platforms.'**
+  String get account_logoutAllHint;
+
+  /// Manage Account item.
+  ///
+  /// In en, this message translates to:
+  /// **'Wipe All Business Data'**
+  String get account_wipeAll;
+
+  /// Under Wipe All Business Data while it runs.
+  ///
+  /// In en, this message translates to:
+  /// **'Erase in progress - please wait, this may take a moment...'**
+  String get account_wipeInProgress;
+
+  /// Under Wipe All Business Data.
+  ///
+  /// In en, this message translates to:
+  /// **'Permanently delete records of transactions, sales, and products while keeping your log in profile.'**
+  String get account_wipeHint;
+
+  /// Under Deactivate Account.
+  ///
+  /// In en, this message translates to:
+  /// **'Temporarily disable your account. Can be reactivated later.'**
+  String get account_deactivateHint;
 }
 
 class _AppLocalizationsDelegate

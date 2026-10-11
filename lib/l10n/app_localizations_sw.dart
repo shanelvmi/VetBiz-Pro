@@ -2987,4 +2987,48 @@ class AppLocalizationsSw extends AppLocalizations {
 
   @override
   String get account_deleteFailed => 'Imeshindwa kufuta akaunti';
+
+  @override
+  String get account_checking => 'Inakagua...';
+
+  @override
+  String get account_platformAdminNoDelete =>
+      'Akaunti za Msimamizi wa Jukwaa haziwezi kufutwa hapa.';
+
+  @override
+  String get account_deleteOwnedFirst =>
+      'Futa kwanza vituo vyote unavyomiliki kwenye View Facilities.';
+
+  @override
+  String get account_deleteHint =>
+      'Futa akaunti yako kabisa. Kitendo hiki hakiwezi kutenduliwa.';
+
+  @override
+  String get account_dangerZone => 'Eneo la Hatari';
+
+  @override
+  String get account_dangerHint =>
+      'Vitendo hivi vinaathiri akaunti yako na data ya biashara. Kagua kwa makini kabla ya kuendelea.';
+
+  @override
+  String get account_logoutAll => 'Toka Kwenye Vifaa Vyote';
+
+  @override
+  String get account_logoutAllHint =>
+      'Tenganisha kipindi chako kutoka kwenye vifaa vingine vyote.';
+
+  @override
+  String get account_wipeAll => 'Futa Data Yote ya Biashara';
+
+  @override
+  String get account_wipeInProgress =>
+      'Inafuta - tafadhali subiri, hii inaweza kuchukua muda...';
+
+  @override
+  String get account_wipeHint =>
+      'Futa kabisa rekodi za miamala, mauzo na bidhaa huku ukibaki na wasifu wako wa kuingia.';
+
+  @override
+  String get account_deactivateHint =>
+      'Zima akaunti yako kwa muda. Inaweza kurejeshwa baadaye.';
 }

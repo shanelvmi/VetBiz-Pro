@@ -2970,4 +2970,48 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get account_deleteFailed => 'Couldn\'t delete the account';
+
+  @override
+  String get account_checking => 'Checking...';
+
+  @override
+  String get account_platformAdminNoDelete =>
+      'Platform Admin accounts can\'t be deleted from here.';
+
+  @override
+  String get account_deleteOwnedFirst =>
+      'Delete all facilities you own in View Facilities first.';
+
+  @override
+  String get account_deleteHint =>
+      'Permanently delete your account. This action cannot be undone.';
+
+  @override
+  String get account_dangerZone => 'Danger Zone';
+
+  @override
+  String get account_dangerHint =>
+      'These actions affect your account and business data. Review carefully before proceeding.';
+
+  @override
+  String get account_logoutAll => 'Log Out of All Devices';
+
+  @override
+  String get account_logoutAllHint =>
+      'Disconnect your active profile session from all other active platforms.';
+
+  @override
+  String get account_wipeAll => 'Wipe All Business Data';
+
+  @override
+  String get account_wipeInProgress =>
+      'Erase in progress - please wait, this may take a moment...';
+
+  @override
+  String get account_wipeHint =>
+      'Permanently delete records of transactions, sales, and products while keeping your log in profile.';
+
+  @override
+  String get account_deactivateHint =>
+      'Temporarily disable your account. Can be reactivated later.';
 }
