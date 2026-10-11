@@ -24,6 +24,12 @@ import '../data/fields.dart';
 import '../data/user_role.dart';
 import '../config/app_timeouts.dart';
 import '../config/app_info.dart';
+import '../theme/app_text.dart';
+import '../theme/app_dimens.dart';
+import '../theme/theme_context.dart';
+import '../theme/app_breakpoints.dart';
+import '../ui/feedback/app_feedback.dart';
+import '../ui/feedback/friendly_error.dart';
 
 class RegisterScreen extends StatefulWidget {
   final bool isUpdating;
@@ -127,11 +133,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
   Uint8List? _imageBytes;
   String? avatarUrl;
   String? error;
-
-  // Colors & style
-  final Color deepTealGreen = AppPalette.primary;
-  final Color warmAmber = AppPalette.accent;
-  final Color offWhite = AppPalette.background;
 
   // Facilities
   List<Map<String, dynamic>> facilities = [];
@@ -254,16 +255,12 @@ class _RegisterScreenState extends State<RegisterScreen> {
     // Say what's missing rather than doing nothing - pressing Add with the
     // name or type left empty used to be a silent no-op.
     if (name.isEmpty || type == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(name.isEmpty ? 'Enter the facility name first.' : 'Choose the facility type first.')),
-      );
+      AppFeedback.warning(name.isEmpty ? 'Enter the facility name first' : 'Choose the facility type first');
       return;
     }
 
     if (facilities.length >= _maxFacilities) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("You've reached the limit of $_maxFacilities facilities per account.")),
-      );
+      AppFeedback.warning("You've reached the limit of $_maxFacilities facilities per account");
       return;
     }
 
@@ -276,14 +273,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
         facilityNameController.clear();
         _selectedFacilityType = null;
       });
-    } catch (e) {
+    } catch (e, st) {
       // Was uncaught, so any failure here looked like Add just did nothing.
-      debugPrint('Could not add facility: $e');
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text("Couldn't add this facility. Please try again.")),
-        );
-      }
+      AppFeedback.error("Couldn't add this facility", error: e, stackTrace: st);
     } finally {
       if (mounted) setState(() => _isAddingFacility = false);
     }
@@ -366,9 +358,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
       };
       await FirebaseFirestore.instance.collection(Collections.users).doc(uid).update(updateData);
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text("Profile updated successfully!")),
-        );
+        AppFeedback.success('Profile updated');
         if (widget.isModal) {
           // Opened as a modal over the Dashboard, which follows the user's
           // profile live - closing is all it takes to show the changes.
@@ -406,12 +396,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
       }
 
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text(
-                "Account registered successfully! We've sent a verification link to your email - check your Spam folder if it doesn't appear within a few minutes."),
-            duration: Duration(seconds: 6),
-          ),
+        AppFeedback.success(
+          'Account registered',
+          detail: "We've sent a verification link to your email. Check your Spam folder if it doesn't appear within a few minutes.",
         );
 
         if (facilitiesWithId.length == 1) {
@@ -464,11 +451,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
       );
 
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-              duration: Duration(seconds: 6),
-              content: Text(
-                  "Assistant registered successfully! Waiting for admin approval. We've also sent a verification link to your email - check your Spam folder if it doesn't appear.")),
+        AppFeedback.success(
+          'Assistant registered, waiting for admin approval',
+          detail: "We've also sent a verification link to your email. Check your Spam folder if it doesn't appear.",
         );
         Navigator.pushReplacementNamed(context, '/login');
       }
@@ -486,16 +471,17 @@ class _RegisterScreenState extends State<RegisterScreen> {
       setState(() {
         _submitAttempted = true;
         _fieldErrors = {..._fieldErrors, 'email': 'Enter a valid email address, like name@example.com'};
-        error = e.message ?? 'Registration failed. Please try again.';
+        error = 'Enter a valid email address.';
       });
     } else if (e.code == 'weak-password') {
       setState(() {
         _submitAttempted = true;
         _fieldErrors = {..._fieldErrors, 'password': 'Choose a stronger password'};
-        error = e.message ?? 'Registration failed. Please try again.';
+        error = 'Choose a stronger password.';
       });
     } else {
-      setState(() => error = e.message ?? 'Registration failed. Please try again.');
+      // Through FriendlyError: Firebase's own text can be technical.
+      setState(() => error = "Couldn't create the account. ${FriendlyError.messageFor(e)}");
     }
   } on FirebaseFunctionsException catch (e) {
     // The server refused or couldn't finish: a bad or used-up invite, the
@@ -511,7 +497,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
     });
   } catch (e, stackTrace) {
     debugPrint('🔥 Error: $e\n📌 Stack: $stackTrace');
-    setState(() => error = e.toString());
+    // AccountCreatedException's message is written to be shown; anything
+    // else is raw exception text.
+    setState(() => error = e is AccountCreatedException ? e.message : FriendlyError.messageFor(e));
   }
  }
 
@@ -523,8 +511,13 @@ class _RegisterScreenState extends State<RegisterScreen> {
   // logic both share, and is unchanged.
   // ======================================================================
 
-  final Color tealAccent = const Color(0xFF3E8E82);
-  final Color tealGlow = const Color(0xFF7EE8CB);
+  // The login page's two teals (no role; listed in design-open-questions.md, D8).
+  static const Color tealAccent = Color(0xFF3E8E82);
+  static const Color tealGlow = Color(0xFF7EE8CB);
+  // Alert timings with no token, the same as the login page's (D8): the fade-in,
+  // and the countdown restart after the pointer leaves the alert.
+  static const Duration _alertSwitch = Duration(milliseconds: 260);
+  static const Duration _alertHoverGrace = Duration(seconds: 3);
 
   bool _isSubmitting = false;
   bool _obscurePassword = true;
@@ -619,7 +612,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
         child: ConstrainedBox(
           constraints: const BoxConstraints(maxWidth: 560),
           child: AnimatedSwitcher(
-            duration: const Duration(milliseconds: 260),
+            duration: _alertSwitch,
             switchInCurve: Curves.easeOutCubic,
             transitionBuilder: (child, animation) => FadeTransition(
               opacity: animation,
@@ -643,43 +636,43 @@ class _RegisterScreenState extends State<RegisterScreen> {
       // AnimatedSwitcher looks at), so a changed message animates in.
       key: ValueKey(error),
       onEnter: (_) => _errorTimer?.cancel(),
-      onExit: (_) => _startErrorCountdown(const Duration(seconds: 3)),
+      onExit: (_) => _startErrorCountdown(_alertHoverGrace),
       child: Semantics(
         liveRegion: true,
         child: Material(
           color: Colors.transparent,
           child: Container(
-            padding: const EdgeInsets.fromLTRB(14, 12, 8, 12),
+            padding: const EdgeInsets.fromLTRB(AppSpacing.s14, AppSpacing.s12, AppSpacing.s8, AppSpacing.s12),
             decoration: BoxDecoration(
-              color: const Color(0xFFFFF1F0),
-              borderRadius: BorderRadius.circular(14),
-              border: Border.all(color: Colors.redAccent.withValues(alpha: 0.35)),
+              color: context.colors.surfaceMuted,
+              borderRadius: BorderRadius.circular(AppRadius.r14),
+              border: Border.all(color: context.colors.dangerAccent.withValues(alpha: AppAlpha.a40)),
               boxShadow: [
-                BoxShadow(color: Colors.redAccent.withValues(alpha: 0.2), blurRadius: 20, offset: const Offset(0, 8)),
+                BoxShadow(color: context.colors.dangerAccent.withValues(alpha: AppAlpha.a20), blurRadius: 20, offset: const Offset(0, 8)),
               ],
             ),
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Padding(
-                  padding: EdgeInsets.only(top: 1),
-                  child: Icon(Icons.error_outline, color: Colors.redAccent, size: 19),
+                Padding(
+                  padding: EdgeInsets.only(top: AppSpacing.s2),
+                  child: Icon(Icons.error_outline, color: context.colors.dangerAccent, size: AppIconSize.i20),
                 ),
-                const SizedBox(width: 10),
+                const SizedBox(width: AppSpacing.s10),
                 Expanded(
                   child: ConstrainedBox(
                     constraints: const BoxConstraints(maxHeight: 110),
                     child: SingleChildScrollView(
                       child: Text(
                         error!,
-                        style: const TextStyle(color: Color(0xFFB3261E), fontSize: 13, height: 1.35),
+                        style: TextStyle(color: context.colors.dangerDeep, fontSize: AppFontSize.f13, height: 1.35),
                       ),
                     ),
                   ),
                 ),
                 IconButton(
-                  icon: const Icon(Icons.close, size: 17),
-                  color: Colors.redAccent,
+                  icon: const Icon(Icons.close, size: AppIconSize.i18),
+                  color: context.colors.dangerAccent,
                   tooltip: 'Dismiss',
                   padding: EdgeInsets.zero,
                   constraints: const BoxConstraints(minWidth: 30, minHeight: 30),
@@ -713,12 +706,12 @@ class _RegisterScreenState extends State<RegisterScreen> {
           const Positioned.fill(child: AuthBackground()),
           Center(
             child: SingleChildScrollView(
-              padding: const EdgeInsets.all(24),
+              padding: const EdgeInsets.all(AppSpacing.s24),
               child: LayoutBuilder(
                 builder: (context, constraints) {
                   // The space actually available to the card, after the 24px
                   // padding either side - same approach as the login page.
-                  final isWide = constraints.maxWidth > 900;
+                  final isWide = constraints.maxWidth > AppBreakpoints.medium;
                   final targetWidth = isWide ? 1100.0 : 560.0;
                   final cardWidth = constraints.maxWidth < targetWidth ? constraints.maxWidth : targetWidth;
 
@@ -779,7 +772,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
       decoration: BoxDecoration(
         gradient: LinearGradient(
-          colors: [deepTealGreen, tealAccent],
+          colors: [context.colors.primary, tealAccent],
           begin: Alignment.centerLeft,
           end: Alignment.centerRight,
         ),
@@ -791,7 +784,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
             height: 44,
             decoration: const BoxDecoration(color: Colors.white, shape: BoxShape.circle),
             alignment: Alignment.center,
-            child: Text('VB.', style: TextStyle(color: deepTealGreen, fontWeight: FontWeight.bold, fontSize: 16)),
+            child: Text('VB.', style: TextStyle(color: context.colors.primary, fontWeight: FontWeight.bold, fontSize: 16)),
           ),
           const SizedBox(width: 12),
           const Expanded(
@@ -835,7 +828,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
         gradient: LinearGradient(
-          colors: [deepTealGreen, tealAccent],
+          colors: [context.colors.primary, tealAccent],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
@@ -895,7 +888,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         gradient: LinearGradient(
-          colors: [deepTealGreen, tealAccent],
+          colors: [context.colors.primary, tealAccent],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
@@ -1008,11 +1001,11 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
   Widget _buildEditView() {
     return Scaffold(
-      backgroundColor: offWhite,
+      backgroundColor: context.colors.background,
       appBar: PreferredSize(
         preferredSize: const Size.fromHeight(64),
         child: Container(
-          color: deepTealGreen,
+          color: context.colors.primary,
           padding: const EdgeInsets.symmetric(horizontal: 20),
           child: SafeArea(
             bottom: false,
@@ -1334,7 +1327,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
       contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
       border: border(rest),
       enabledBorder: border(rest),
-      focusedBorder: border(deepTealGreen, 1.6),
+      focusedBorder: border(context.colors.primary, 1.6),
       errorBorder: border(Colors.redAccent),
       focusedErrorBorder: border(Colors.redAccent, 1.6),
     );
@@ -1366,7 +1359,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 width: 32,
                 height: 32,
                 decoration: BoxDecoration(color: tealGlow.withValues(alpha: 0.25), shape: BoxShape.circle),
-                child: Icon(icon, color: deepTealGreen, size: 17),
+                child: Icon(icon, color: context.colors.primary, size: 17),
               ),
               const SizedBox(width: 10),
               Expanded(
@@ -1386,16 +1379,16 @@ class _RegisterScreenState extends State<RegisterScreen> {
     final button = ElevatedButton(
       onPressed: _isSubmitting ? null : _submitGuarded,
       style: ElevatedButton.styleFrom(
-        foregroundColor: offWhite,
-        disabledForegroundColor: offWhite,
+        foregroundColor: context.colors.background,
+        disabledForegroundColor: context.colors.background,
         padding: const EdgeInsets.symmetric(vertical: 15, horizontal: 28),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         elevation: 3,
       ).copyWith(
         backgroundColor: WidgetStateProperty.resolveWith<Color>((states) {
-          if (states.contains(WidgetState.disabled)) return deepTealGreen.withValues(alpha: 0.65);
-          if (states.contains(WidgetState.hovered)) return warmAmber;
-          return deepTealGreen;
+          if (states.contains(WidgetState.disabled)) return context.colors.primary.withValues(alpha: 0.65);
+          if (states.contains(WidgetState.hovered)) return context.colors.accent;
+          return context.colors.primary;
         }),
       ),
       child: _isSubmitting
@@ -1409,7 +1402,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 SizedBox(
                   width: 20,
                   height: 20,
-                  child: CircularProgressIndicator(strokeWidth: 2.2, color: offWhite),
+                  child: CircularProgressIndicator(strokeWidth: 2.2, color: context.colors.background),
                 ),
                 const SizedBox(width: 12),
                 Text(
@@ -1533,7 +1526,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   backgroundImage: _imageBytes != null
                       ? MemoryImage(_imageBytes!)
                       : (hasUploaded ? NetworkImage(avatarUrl!) as ImageProvider : null),
-                  child: hasImage ? null : Icon(Icons.person_outline, size: 32, color: deepTealGreen),
+                  child: hasImage ? null : Icon(Icons.person_outline, size: 32, color: context.colors.primary),
                 ),
                 Positioned(
                   right: -2,
@@ -1542,7 +1535,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     padding: const EdgeInsets.all(6),
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
-                      color: deepTealGreen,
+                      color: context.colors.primary,
                       border: Border.all(color: Colors.white, width: 2),
                     ),
                     child: const Icon(Icons.camera_alt, size: 13, color: Colors.white),
@@ -1659,11 +1652,11 @@ class _RegisterScreenState extends State<RegisterScreen> {
     final locked = widget.isUpdating;
     // A locked card keeps its selected state but in grey - clearly "this is
     // yours", clearly "not changeable here".
-    final accent = locked ? Colors.grey.shade600 : deepTealGreen;
+    final accent = locked ? Colors.grey.shade600 : context.colors.primary;
     final shape = RoundedRectangleBorder(
       borderRadius: BorderRadius.circular(14),
       side: BorderSide(
-        color: selected ? (locked ? Colors.grey.shade400 : deepTealGreen) : const Color(0xFFE2E8E6),
+        color: selected ? (locked ? Colors.grey.shade400 : context.colors.primary) : const Color(0xFFE2E8E6),
         width: selected ? 1.6 : 1,
       ),
     );
@@ -1763,7 +1756,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
     return [
       Text(
         'Ask your facility Admin for an invite code to join their team.',
-        style: TextStyle(fontSize: 12.5, color: deepTealGreen, fontStyle: FontStyle.italic),
+        style: TextStyle(fontSize: 12.5, color: context.colors.primary, fontStyle: FontStyle.italic),
       ),
       const SizedBox(height: 12),
       _labeled(
@@ -1836,7 +1829,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
             width: 36,
             height: 36,
             decoration: BoxDecoration(color: tealGlow.withValues(alpha: 0.22), shape: BoxShape.circle),
-            child: Icon(Icons.storefront_outlined, color: deepTealGreen, size: 18),
+            child: Icon(Icons.storefront_outlined, color: context.colors.primary, size: 18),
           ),
           const SizedBox(width: 12),
           Expanded(
@@ -1980,7 +1973,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       : const Icon(Icons.add, size: 18),
                   label: const Text('Add'),
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: warmAmber,
+                    backgroundColor: context.colors.accent,
                     foregroundColor: Colors.black87,
                     disabledBackgroundColor: Colors.grey.shade200,
                     elevation: 0,
