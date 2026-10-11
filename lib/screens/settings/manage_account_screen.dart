@@ -116,6 +116,10 @@ class _ManageAccountScreenState extends State<ManageAccountScreen> {
 
   // 🔹 Log out of all active devices
   void _logoutOfAllDevices() async {
+    // Read before the awaits: this device must still be logged out after
+    // the other sessions are revoked.
+    final authService = Provider.of<AuthService>(context, listen: false);
+
     final confirm = await showDialog<bool>(
       context: context,
       builder: (_) => AlertDialog(
@@ -151,7 +155,6 @@ class _ManageAccountScreenState extends State<ManageAccountScreen> {
       // "Log out everywhere" should include this device too - otherwise
       // this session would keep working until its cached token naturally
       // expires, which doesn't match what the button says it does.
-      final authService = Provider.of<AuthService>(context, listen: false);
       await authService.logout();
 
       if (!mounted) return;
@@ -206,7 +209,7 @@ class _ManageAccountScreenState extends State<ManageAccountScreen> {
       ),
     );
 
-    if (confirm != true) return;
+    if (confirm != true || !mounted) return;
 
     final doubleCheck = await showDialog<String>(
       context: context,
@@ -249,7 +252,7 @@ class _ManageAccountScreenState extends State<ManageAccountScreen> {
       },
     );
 
-    if (doubleCheck != 'ERASE') return;
+    if (doubleCheck != 'ERASE' || !mounted) return;
 
     setState(() => _isWipingData = true);
 
@@ -328,6 +331,7 @@ class _ManageAccountScreenState extends State<ManageAccountScreen> {
       }
     }
 
+    if (!mounted) return;
     final confirm = await showDialog<bool>(
       context: context,
       builder: (_) => AlertDialog(
@@ -354,7 +358,7 @@ class _ManageAccountScreenState extends State<ManageAccountScreen> {
       ),
     );
 
-    if (confirm != true) return;
+    if (confirm != true || !mounted) return;
 
     // Second layer, matching the weight given to Wipe Data - deactivation
     // is reversible, but it still ends your current session immediately,
@@ -401,7 +405,7 @@ class _ManageAccountScreenState extends State<ManageAccountScreen> {
       },
     );
 
-    if (doubleCheck != 'DEACTIVATE') return;
+    if (doubleCheck != 'DEACTIVATE' || !mounted) return;
 
     try {
       final facilityId = Provider.of<FacilityProvider>(context, listen: false).selectedFacilityId;
