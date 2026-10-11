@@ -700,7 +700,7 @@ class _InsightsScreenState extends State<InsightsScreen> {
       return Center(child: Text('No services in the last 30 days.', style: TextStyle(color: context.colors.textMuted)));
     }
 
-    final total = _serviceBreakdown.fold<double>(0.0, (total, e) => total + e.value);
+    final total = _serviceBreakdown.fold<double>(0.0, (runningTotal, e) => runningTotal + e.value);
     final touched = _touchedServiceIndex;
     final centerLabel = (touched != null && touched >= 0 && touched < _serviceBreakdown.length)
         ? _serviceBreakdown[touched]
