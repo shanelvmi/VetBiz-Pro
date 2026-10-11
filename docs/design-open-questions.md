@@ -93,6 +93,12 @@ Colours are outside the standing snap rule, so this is kept as it is:
 - **Debt category `#E59A00`**, `lib/screens/dashboard/notifications_screen.dart` `_categoryColor`: no role within 12 (`warning` is 26 off). Kept.
 - **Left as written on purpose (owner's D9 rule):** the bell's `_BlinkingDot` class (its 700/1400/400 ms timings, 9 px dot, red default), and the 900 ms delay before the subscription pill shows.
 
+### Raised in step 2D, batch D10
+
+- **Facility teal `#3E8E82`**, `lib/screens/facilities/facility_screen.dart` (`_tealAccent`, the Total Products metric): the login teal again (see D8). Kept as a named constant.
+- **Activity colours `Colors.purple` / `Colors.teal`**, `facility_screen.dart` `_activityColor`: kept for the 2E helper, as in D5 and D9.
+- **Loading gaps 40**, `facility_screen.dart` (`EdgeInsets.symmetric(vertical: 40)`, inventory and sales tabs): 8 above `s32`. Kept. List panel sizes `_listPanelHeight` 360 and `_listPanelWidth` 340 kept exact as named constants.
+
 ### Trash and restore: books consistency (audit after D6, read-only)
 
 `TrashService.restore` (used by the Trash screen and every Undo) only copies the document back from `trash_*` to its live collection, drops `deletedAt`/`deletedBy`, and logs "Restored ...". Anything else the delete changed is reversed only if a server trigger reacts to the document reappearing (the `onDocumentWritten` daily summaries do).

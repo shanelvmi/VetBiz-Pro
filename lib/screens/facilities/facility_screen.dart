@@ -2335,11 +2335,11 @@ class _FacilityScreenState extends State<FacilityScreen> {
           children: [
             Container(
               width: double.infinity,
-              padding: const EdgeInsets.all(20),
+              padding: const EdgeInsets.all(AppSpacing.s20),
               decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(14),
-                border: Border.all(color: Colors.grey.withValues(alpha: 0.15)),
+                color: context.colors.surface,
+                borderRadius: BorderRadius.circular(AppRadius.r14),
+                border: Border.all(color: context.colors.textHint.withValues(alpha: AppAlpha.a15)),
               ),
               child: Row(
                 children: [
@@ -2347,7 +2347,7 @@ class _FacilityScreenState extends State<FacilityScreen> {
                     child: _monthComparisonColumn('This Month', thisMonth['totalAmount'] ?? 0,
                         (thisMonth['saleCount'] ?? 0).toInt()),
                   ),
-                  Container(width: 1, height: 50, color: Colors.grey.withValues(alpha: 0.2)),
+                  Container(width: 1, height: 50, color: context.colors.textHint.withValues(alpha: AppAlpha.a20)),
                   Expanded(
                     child: _monthComparisonColumn('Last Month', lastMonth['totalAmount'] ?? 0,
                         (lastMonth['saleCount'] ?? 0).toInt()),
@@ -2355,22 +2355,22 @@ class _FacilityScreenState extends State<FacilityScreen> {
                 ],
               ),
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: AppSpacing.s16),
             Container(
               width: double.infinity,
-              padding: const EdgeInsets.all(20),
+              padding: const EdgeInsets.all(AppSpacing.s20),
               decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(14),
-                border: Border.all(color: Colors.grey.withValues(alpha: 0.15)),
+                color: context.colors.surface,
+                borderRadius: BorderRadius.circular(AppRadius.r14),
+                border: Border.all(color: context.colors.textHint.withValues(alpha: AppAlpha.a15)),
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text('Recent Sales', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
-                  const SizedBox(height: 12),
+                  const Text('Recent Sales', style: TextStyle(fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f15)),
+                  const SizedBox(height: AppSpacing.s12),
                   if (recentSales.isEmpty)
-                    Text('No sales recorded yet.', style: TextStyle(color: Colors.grey[600], fontSize: 13))
+                    Text('No sales recorded yet.', style: TextStyle(color: context.colors.textMuted, fontSize: AppFontSize.f13))
                   else
                     ...recentSales.map((doc) {
                       final data = doc.data() as Map<String, dynamic>;
@@ -2378,21 +2378,21 @@ class _FacilityScreenState extends State<FacilityScreen> {
                       final totalAmount = (data['totalAmount'] as num?)?.toDouble() ?? 0.0;
                       final ts = data['timestamp'] as Timestamp?;
                       return Padding(
-                        padding: const EdgeInsets.only(bottom: 10),
+                        padding: const EdgeInsets.only(bottom: AppSpacing.s10),
                         child: Row(
                           children: [
                             Expanded(
                               child: Text(
                                 clientName?.isNotEmpty == true ? clientName! : 'Walk-in sale',
-                                style: const TextStyle(fontSize: 13.5),
+                                style: const TextStyle(fontSize: AppFontSize.f13_5),
                               ),
                             ),
                             if (ts != null)
                               Text(_formatDate(ts.toDate()),
-                                  style: TextStyle(fontSize: 12, color: Colors.grey[500])),
-                            const SizedBox(width: 10),
+                                  style: TextStyle(fontSize: AppFontSize.f12, color: context.colors.textHint)),
+                            const SizedBox(width: AppSpacing.s10),
                             Text('${AppDefaults.currencySymbol} ${_formatCompact(totalAmount)}',
-                                style: const TextStyle(fontSize: 13.5, fontWeight: FontWeight.bold)),
+                                style: const TextStyle(fontSize: AppFontSize.f13_5, fontWeight: AppFontWeight.bold)),
                           ],
                         ),
                       );
@@ -2410,10 +2410,10 @@ class _FacilityScreenState extends State<FacilityScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(label, style: TextStyle(fontSize: 12, color: Colors.grey[600])),
-        const SizedBox(height: 4),
-        Text('${AppDefaults.currencySymbol} ${_formatCompact(amount)}', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
-        Text('$count sale${count == 1 ? '' : 's'}', style: TextStyle(fontSize: 12, color: Colors.grey[600])),
+        Text(label, style: TextStyle(fontSize: AppFontSize.f12, color: context.colors.textMuted)),
+        const SizedBox(height: AppSpacing.s4),
+        Text('${AppDefaults.currencySymbol} ${_formatCompact(amount)}', style: const TextStyle(fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f18)),
+        Text('$count sale${count == 1 ? '' : 's'}', style: TextStyle(fontSize: AppFontSize.f12, color: context.colors.textMuted)),
       ],
     );
   }
@@ -2421,17 +2421,17 @@ class _FacilityScreenState extends State<FacilityScreen> {
   Widget _buildActivityLogTab(Map<String, dynamic> facility) {
     final facilityId = facility[Fields.facilityId] as String?;
     return Container(
-      padding: const EdgeInsets.all(20),
+      padding: const EdgeInsets.all(AppSpacing.s20),
       decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: Colors.grey.withValues(alpha: 0.15)),
+        color: context.colors.surface,
+        borderRadius: BorderRadius.circular(AppRadius.r14),
+        border: Border.all(color: context.colors.textHint.withValues(alpha: AppAlpha.a15)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text('Activity Log', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
-          const SizedBox(height: 12),
+          const Text('Activity Log', style: TextStyle(fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f15)),
+          const SizedBox(height: AppSpacing.s12),
           if (facilityId != null) _buildActivityList(facilityId, limit: AppLimits.facilityActivityLog),
         ],
       ),
@@ -2451,23 +2451,23 @@ class _FacilityScreenState extends State<FacilityScreen> {
       children: [
         Container(
           width: double.infinity,
-          padding: const EdgeInsets.all(20),
+          padding: const EdgeInsets.all(AppSpacing.s20),
           decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(14),
-            border: Border.all(color: Colors.grey.withValues(alpha: 0.15)),
+            color: context.colors.surface,
+            borderRadius: BorderRadius.circular(AppRadius.r14),
+            border: Border.all(color: context.colors.textHint.withValues(alpha: AppAlpha.a15)),
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text('Facility Actions', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
-              const SizedBox(height: 4),
+              const Text('Facility Actions', style: TextStyle(fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f15)),
+              const SizedBox(height: AppSpacing.s4),
               Text(
                 'Settings specific to this facility. For your account, notifications, '
                 'printer, currency, and app-wide preferences, use the main Settings screen.',
-                style: TextStyle(fontSize: 12.5, color: Colors.grey[600]),
+                style: TextStyle(fontSize: AppFontSize.f12_5, color: context.colors.textMuted),
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: AppSpacing.s16),
               _settingsActionRow(
                 icon: Icons.edit_outlined,
                 label: 'Edit Facility Details',
@@ -2488,20 +2488,20 @@ class _FacilityScreenState extends State<FacilityScreen> {
                 icon: Icons.delete_outline,
                 label: 'Delete This Facility',
                 subtitle: 'Permanently removes this facility and its data. This cannot be undone.',
-                iconColor: Colors.red,
+                iconColor: context.colors.danger,
                 onTap: () => _showDeleteFacilityDialog(facility),
               ),
             ],
           ),
         ),
-        const SizedBox(height: 16),
+        const SizedBox(height: AppSpacing.s16),
         Container(
           width: double.infinity,
-          padding: const EdgeInsets.all(20),
+          padding: const EdgeInsets.all(AppSpacing.s20),
           decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(14),
-            border: Border.all(color: Colors.grey.withValues(alpha: 0.15)),
+            color: context.colors.surface,
+            borderRadius: BorderRadius.circular(AppRadius.r14),
+            border: Border.all(color: context.colors.textHint.withValues(alpha: AppAlpha.a15)),
           ),
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -2511,11 +2511,11 @@ class _FacilityScreenState extends State<FacilityScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     const Text('Activity Log Retention',
-                        style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
-                    const SizedBox(height: 4),
+                        style: TextStyle(fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f15)),
+                    const SizedBox(height: AppSpacing.s4),
                     Text(
                       'Logs older than this are automatically deleted for this facility. Currently: $retentionDays days.',
-                      style: TextStyle(fontSize: 12.5, color: Colors.grey[600]),
+                      style: TextStyle(fontSize: AppFontSize.f12_5, color: context.colors.textMuted),
                     ),
                   ],
                 ),
@@ -2530,14 +2530,14 @@ class _FacilityScreenState extends State<FacilityScreen> {
             ],
           ),
         ),
-        const SizedBox(height: 16),
+        const SizedBox(height: AppSpacing.s16),
         Container(
           width: double.infinity,
-          padding: const EdgeInsets.all(20),
+          padding: const EdgeInsets.all(AppSpacing.s20),
           decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(14),
-            border: Border.all(color: Colors.grey.withValues(alpha: 0.15)),
+            color: context.colors.surface,
+            borderRadius: BorderRadius.circular(AppRadius.r14),
+            border: Border.all(color: context.colors.textHint.withValues(alpha: AppAlpha.a15)),
           ),
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -2547,12 +2547,12 @@ class _FacilityScreenState extends State<FacilityScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     const Text('Debt Overdue Threshold',
-                        style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
-                    const SizedBox(height: 4),
+                        style: TextStyle(fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f15)),
+                    const SizedBox(height: AppSpacing.s4),
                     Text(
                       'An unpaid debt is considered overdue once it is older than this many days. '
                       'Currently: $debtOverdueDays days.',
-                      style: TextStyle(fontSize: 12.5, color: Colors.grey[600]),
+                      style: TextStyle(fontSize: AppFontSize.f12_5, color: context.colors.textMuted),
                     ),
                   ],
                 ),
@@ -2580,23 +2580,23 @@ class _FacilityScreenState extends State<FacilityScreen> {
   }) {
     return InkWell(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(8),
+      borderRadius: BorderRadius.circular(AppRadius.r8),
       child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 6),
+        padding: const EdgeInsets.symmetric(vertical: AppSpacing.s6),
         child: Row(
           children: [
-            Icon(icon, color: iconColor ?? context.colors.primary, size: 20),
-            const SizedBox(width: 12),
+            Icon(icon, color: iconColor ?? context.colors.primary, size: AppIconSize.i20),
+            const SizedBox(width: AppSpacing.s12),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(label, style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13.5)),
-                  Text(subtitle, style: TextStyle(fontSize: 12, color: Colors.grey[600])),
+                  Text(label, style: const TextStyle(fontWeight: AppFontWeight.semibold, fontSize: AppFontSize.f13_5)),
+                  Text(subtitle, style: TextStyle(fontSize: AppFontSize.f12, color: context.colors.textMuted)),
                 ],
               ),
             ),
-            Icon(Icons.chevron_right, size: 18, color: Colors.grey[400]),
+            Icon(Icons.chevron_right, size: AppIconSize.i18, color: context.colors.textDisabled),
           ],
         ),
       ),
@@ -2642,12 +2642,10 @@ class _FacilityScreenState extends State<FacilityScreen> {
           Fields.updatedAt: DateTime.now(),
         };
       });
-      ScaffoldMessenger.of(context)
-          .showSnackBar(SnackBar(content: Text('Facility marked $newStatus'), backgroundColor: Colors.green));
+      AppFeedback.success('Facility marked $newStatus');
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context)
-          .showSnackBar(SnackBar(content: Text('Could not update status: $e'), backgroundColor: Colors.redAccent));
+      AppFeedback.error("Couldn't update the status", error: e);
     }
   }
 
@@ -2701,7 +2699,7 @@ class _FacilityScreenState extends State<FacilityScreen> {
             TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancel')),
             TextButton(
               onPressed: () => Navigator.pop(ctx, true),
-              child: Text('Delete and switch to $selected days', style: const TextStyle(color: Colors.red)),
+              child: Text('Delete and switch to $selected days', style: TextStyle(color: context.colors.danger)),
             ),
           ],
         ),
@@ -2735,21 +2733,18 @@ class _FacilityScreenState extends State<FacilityScreen> {
           'activityLogRetentionDays': selected,
         };
       });
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(problem != null
-              ? 'Saved - logs older than $selected days will be hidden, but could not be deleted yet: $problem'
-              : deleted > 0
-                  ? 'Logs will now be kept for $selected days - $deleted older log${deleted == 1 ? '' : 's'} deleted'
-                  : 'Logs will now be kept for $selected days'),
-          backgroundColor: problem != null ? Colors.orange.shade800 : Colors.green,
-          duration: Duration(seconds: problem != null ? 7 : 4),
-        ),
-      );
+      if (problem != null) {
+        // explainFailure's text is written to be shown; it is the second line.
+        AppFeedback.warning("Saved. Logs older than $selected days will be hidden, but couldn't be deleted yet",
+            detail: problem);
+      } else {
+        AppFeedback.success(deleted > 0
+            ? 'Logs will now be kept for $selected days, $deleted older log${deleted == 1 ? '' : 's'} deleted'
+            : 'Logs will now be kept for $selected days');
+      }
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context)
-          .showSnackBar(SnackBar(content: Text('Could not save: $e'), backgroundColor: Colors.redAccent));
+      AppFeedback.error("Couldn't save the setting", error: e);
     }
   }
 
@@ -2793,32 +2788,29 @@ class _FacilityScreenState extends State<FacilityScreen> {
           'debtOverdueDays': selected,
         };
       });
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Debts are now overdue after $selected days'), backgroundColor: Colors.green),
-      );
+      AppFeedback.success('Debts are now overdue after $selected days');
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context)
-          .showSnackBar(SnackBar(content: Text('Could not save: $e'), backgroundColor: Colors.redAccent));
+      AppFeedback.error("Couldn't save the setting", error: e);
     }
   }
 
   Widget _buildComingSoonTab(String title, String message, {String? actionLabel, VoidCallback? onAction}) {
     return Container(
-      padding: const EdgeInsets.all(24),
+      padding: const EdgeInsets.all(AppSpacing.s24),
       decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: Colors.grey.withValues(alpha: 0.15)),
+        color: context.colors.surface,
+        borderRadius: BorderRadius.circular(AppRadius.r14),
+        border: Border.all(color: context.colors.textHint.withValues(alpha: AppAlpha.a15)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(title, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
-          const SizedBox(height: 6),
-          Text(message, style: TextStyle(color: Colors.grey[600], fontSize: 13.5)),
+          Text(title, style: const TextStyle(fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f16)),
+          const SizedBox(height: AppSpacing.s6),
+          Text(message, style: TextStyle(color: context.colors.textMuted, fontSize: AppFontSize.f13_5)),
           if (actionLabel != null && onAction != null) ...[
-            const SizedBox(height: 12),
+            const SizedBox(height: AppSpacing.s12),
             OutlinedButton(
               onPressed: onAction,
               style: OutlinedButton.styleFrom(foregroundColor: context.colors.primary),
@@ -2838,20 +2830,20 @@ class _FacilityScreenState extends State<FacilityScreen> {
     final updatedAt = details?[Fields.updatedAt] as DateTime?;
 
     final aboutCard = Container(
-      padding: const EdgeInsets.all(20),
+      padding: const EdgeInsets.all(AppSpacing.s20),
       decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: Colors.grey.withValues(alpha: 0.15)),
+        color: context.colors.surface,
+        borderRadius: BorderRadius.circular(AppRadius.r14),
+        border: Border.all(color: context.colors.textHint.withValues(alpha: AppAlpha.a15)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text('About this facility', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
-          const SizedBox(height: 10),
+          const Text('About this facility', style: TextStyle(fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f15)),
+          const SizedBox(height: AppSpacing.s10),
           if (description != null && description.isNotEmpty) ...[
-            Text(description, style: const TextStyle(fontSize: 13.5, height: 1.5)),
-            const SizedBox(height: 14),
+            Text(description, style: const TextStyle(fontSize: AppFontSize.f13_5, height: 1.5)),
+            const SizedBox(height: AppSpacing.s14),
           ],
           _aboutField('Facility Type', facility['type'] as String? ?? '-'),
           _aboutField('Ownership', (details?['ownership'] as String?) ?? 'Not set'),
@@ -2864,11 +2856,11 @@ class _FacilityScreenState extends State<FacilityScreen> {
     );
 
     final activityCard = Container(
-      padding: const EdgeInsets.all(20),
+      padding: const EdgeInsets.all(AppSpacing.s20),
       decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: Colors.grey.withValues(alpha: 0.15)),
+        color: context.colors.surface,
+        borderRadius: BorderRadius.circular(AppRadius.r14),
+        border: Border.all(color: context.colors.textHint.withValues(alpha: AppAlpha.a15)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -2876,21 +2868,21 @@ class _FacilityScreenState extends State<FacilityScreen> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              const Text('Recent Activity', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
+              const Text('Recent Activity', style: TextStyle(fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f15)),
               InkWell(
                 onTap: () => setState(() => _selectedTabIndex = 4),
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     Text('View all activity',
-                        style: TextStyle(fontSize: 12.5, color: context.colors.primary, fontWeight: FontWeight.w600)),
-                    Icon(Icons.arrow_forward, size: 12, color: context.colors.primary),
+                        style: TextStyle(fontSize: AppFontSize.f12_5, color: context.colors.primary, fontWeight: AppFontWeight.semibold)),
+                    Icon(Icons.arrow_forward, size: AppIconSize.i12, color: context.colors.primary),
                   ],
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: AppSpacing.s12),
           if (facilityId != null) _buildActivityList(facilityId, limit: AppLimits.facilityActivityPreview),
         ],
       ),
@@ -2898,12 +2890,12 @@ class _FacilityScreenState extends State<FacilityScreen> {
 
     return LayoutBuilder(
       builder: (context, constraints) {
-        final isWide = constraints.maxWidth >= 700;
+        final isWide = constraints.maxWidth >= AppBreakpoints.stackSections;
         if (!isWide) {
           return Column(
             children: [
               aboutCard,
-              const SizedBox(height: 16),
+              const SizedBox(height: AppSpacing.s16),
               activityCard,
             ],
           );
@@ -2912,7 +2904,7 @@ class _FacilityScreenState extends State<FacilityScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Expanded(child: aboutCard),
-            const SizedBox(width: 16),
+            const SizedBox(width: AppSpacing.s16),
             Expanded(child: activityCard),
           ],
         );
@@ -2922,17 +2914,17 @@ class _FacilityScreenState extends State<FacilityScreen> {
 
   Widget _aboutField(String label, String value) {
     return Padding(
-      padding: const EdgeInsets.only(bottom: 10),
+      padding: const EdgeInsets.only(bottom: AppSpacing.s10),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(label, style: TextStyle(fontSize: 13, color: Colors.grey[600])),
+          Text(label, style: TextStyle(fontSize: AppFontSize.f13, color: context.colors.textMuted)),
           Flexible(
             child: Text(
               value,
               textAlign: TextAlign.right,
-              style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
+              style: const TextStyle(fontSize: AppFontSize.f13, fontWeight: AppFontWeight.semibold),
             ),
           ),
         ],
@@ -2942,11 +2934,11 @@ class _FacilityScreenState extends State<FacilityScreen> {
 
   Widget _aboutFieldWithChip(String label, String value) {
     return Padding(
-      padding: const EdgeInsets.only(bottom: 10),
+      padding: const EdgeInsets.only(bottom: AppSpacing.s10),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(label, style: TextStyle(fontSize: 13, color: Colors.grey[600])),
+          Text(label, style: TextStyle(fontSize: AppFontSize.f13, color: context.colors.textMuted)),
           buildStatusChip(value),
         ],
       ),
