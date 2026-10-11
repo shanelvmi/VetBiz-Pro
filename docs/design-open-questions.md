@@ -214,7 +214,7 @@ The questions as raised:
 ### To do in the batch named
 
 - **Services batch:** switch `DateFormat.yMMMMd` in `add_edit_service_screen.dart` to `AppDateFormat.date`, and list it as an output difference. As raised: `lib/screens/services/add_edit_service_screen.dart:541`, `DateFormat.yMMMMd()` ("March 5, 2026"), now `AppDateFormat.monthDayYearLong`: the only date format that follows the locale; every other screen uses a fixed pattern such as `dd MMM yyyy` ("05 Mar 2026"). When step 2F turns on Kiswahili this one will change shape and the others won't. Switch it to `AppDateFormat.date` so it matches the rest?
-- **Login batch:** reword the sign-in texts to the copy rules, and merge "No account found with that email address." into "Incorrect email or password." so the screen does not reveal which emails are registered. Show the owner the before/after list. As raised:
+- **Login batch (done in D8):** reword the sign-in texts to the copy rules, and merge "No account found with that email address." into "Incorrect email or password." so the screen does not reveal which emails are registered. Show the owner the before/after list. "Incorrect password" merged too, as it would still confirm the email exists. The texts stay sentences, like FriendlyError's, because FriendlyError shows them as a second line. As raised:
   Sign-in error texts, now shared by the login screen and `FriendlyError` (`lib/ui/feedback/auth_error_messages.dart`), kept word for word. Against the copy rules (PHASE2_FEEDBACK_SPEC section 6) they end with a full stop and some say "Please":
   - "No account found with that email address."
   - "Incorrect password. Please try again." ("Please")

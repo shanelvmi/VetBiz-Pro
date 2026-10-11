@@ -77,8 +77,11 @@ void main() {
       final e = FirebaseAuthException(code: code, message: 'raw $code');
       expect(FriendlyError.messageFor(e), authErrorMessage(e), reason: code);
     }
-    expect(FriendlyError.messageFor(FirebaseAuthException(code: 'wrong-password')),
-        'Incorrect password. Please try again.');
+    // Wrong password and unknown email read the same, so the login screen
+    // does not reveal which emails are registered.
+    for (final code in ['user-not-found', 'invalid-email', 'wrong-password', 'invalid-credential']) {
+      expect(FriendlyError.messageFor(FirebaseAuthException(code: code)), 'Incorrect email or password.', reason: code);
+    }
   });
 
   test('anything else gets the fallback', () {

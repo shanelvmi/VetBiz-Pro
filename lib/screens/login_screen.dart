@@ -118,7 +118,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
     if (emailController.text.isEmpty || passwordController.text.length < AppRules.minPasswordLength) {
       setState(() {
-        error = "Enter valid email and password (min 6 chars).";
+        error = 'Enter your email and a password of at least ${AppRules.minPasswordLength} characters.';
         errorIsAboutCredentials = true;
         _shakeCount++;
         isLoggingIn = false;
@@ -220,7 +220,7 @@ class _LoginScreenState extends State<LoginScreen> {
     final email = emailController.text.trim();
     if (email.isEmpty) {
       setState(() {
-        error = "Enter your email first to reset password.";
+        error = 'Enter your email to reset your password.';
         errorIsAboutCredentials = true; // it's the email field that's empty
         _shakeCount++;
       });
