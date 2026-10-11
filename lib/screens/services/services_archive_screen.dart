@@ -593,10 +593,12 @@ class _ServicesArchiveScreenState extends State<ServicesArchiveScreen> {
                       .map((n) => DropdownMenuItem(value: n, child: Text('$n per page')))
                       .toList(),
                   onChanged: (val) {
-                    if (val != null) setState(() {
-                      _displayPageSize = val;
-                      _currentPageIndex = 0;
-                    });
+                    if (val != null) {
+                      setState(() {
+                        _displayPageSize = val;
+                        _currentPageIndex = 0;
+                      });
+                    }
                   },
                 ),
               ),

@@ -2802,7 +2802,7 @@ Widget _buildDrawerContent() {
   // reflects whatever's actually saved (via FacilityProvider's live
   // listener) rather than a locally-picked image that was never wired
   // to that update path.
-  final double _logoSize = effectivelyCollapsed ? 36 : 60;
+  final double logoSize = effectivelyCollapsed ? 36 : 60;
   Widget logoSection = Container(
     width: double.infinity,
     padding: const EdgeInsets.only(top: AppSpacing.s18, bottom: AppSpacing.s12),
@@ -2814,8 +2814,8 @@ Widget _buildDrawerContent() {
       // mid-slide.
       duration: AppMotion.slower,
       curve: Curves.easeInOutCubic,
-      width: _logoSize,
-      height: _logoSize,
+      width: logoSize,
+      height: logoSize,
       padding: const EdgeInsets.all(AppSpacing.s4),
       decoration: BoxDecoration(
         color: context.colors.background,

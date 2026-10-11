@@ -199,7 +199,7 @@ extension NotificationTypeDisplay on NotificationType {
 ///
 /// Two lifecycles, distinguished by [expiresAt]:
 ///   - Ephemeral (expiresAt is null): meant to disappear once read -
-///     e.g. "your subscription payment was rejected: <reason>". Once
+///     e.g. "your subscription payment was rejected: `<reason>`". Once
 ///     acknowledged, there's nothing further to track.
 ///   - Persistent (expiresAt is set): stays visible - just no longer
 ///     marked as new - until the underlying condition itself ends,
