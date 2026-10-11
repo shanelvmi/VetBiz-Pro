@@ -28,6 +28,7 @@ import '../../theme/app_dimens.dart';
 import '../../theme/theme_context.dart';
 import '../../theme/app_breakpoints.dart';
 import '../../ui/feedback/app_feedback.dart';
+import '../../l10n/l10n.dart';
 
 class DebtorsScreen extends StatefulWidget {
   const DebtorsScreen({super.key});
@@ -229,14 +230,13 @@ class _DebtorsScreenState extends State<DebtorsScreen> {
                                   const SizedBox(width: AppSpacing.s8),
                                   Expanded(
                                     child: Text(
-                                      '${controller.newRecordsAvailable} new debtor'
-                                      '${controller.newRecordsAvailable == 1 ? '' : 's'} available',
+                                      context.l10n.debtors_newRecords(controller.newRecordsAvailable),
                                       style: TextStyle(fontSize: AppFontSize.f13, color: context.colors.primary),
                                     ),
                                   ),
                                   TextButton(
                                     onPressed: () => controller.refreshSession(),
-                                    child: const Text('Refresh'),
+                                    child: Text(context.l10n.common_refresh),
                                   ),
                                 ],
                               ),
@@ -255,8 +255,8 @@ class _DebtorsScreenState extends State<DebtorsScreen> {
                                             const SizedBox(height: AppSpacing.s16),
                                             Text(
                                               _searchQuery.isEmpty
-                                                  ? 'No outstanding debts'
-                                                  : 'No debtors match your search',
+                                                  ? context.l10n.debtors_emptyNone
+                                                  : context.l10n.debtors_emptySearch,
                                               style: TextStyle(fontSize: AppFontSize.f18, color: context.colors.textMuted),
                                             ),
                                           ],
@@ -292,35 +292,35 @@ class _DebtorsScreenState extends State<DebtorsScreen> {
 
     final metrics = [
       (
-        'Total Debtors',
+        context.l10n.debtors_totalDebtors,
         isMetricsLoading ? '' : '${facilityMetrics?.totalDebtors ?? 0}',
         Icons.people_outline,
         context.colors.primary,
-        'With outstanding balance',
+        context.l10n.debtors_withBalance,
         isMetricsLoading,
       ),
       (
-        'Total Owed',
+        context.l10n.debtors_totalOwed,
         isMetricsLoading ? '' : Money.format(facilityMetrics?.totalOwed ?? 0),
         Icons.account_balance_wallet_outlined,
         context.colors.warning,
-        'Outstanding balance',
+        context.l10n.debtors_outstandingBalance,
         isMetricsLoading,
       ),
       (
-        'Overdue Debtors',
+        context.l10n.debtors_overdueDebtors,
         isMetricsLoading ? '' : '${facilityMetrics?.overdueDebtors ?? 0}',
         Icons.error_outline,
         context.colors.danger,
-        'Over $overdueDays days',
+        context.l10n.debtors_overDays(overdueDays),
         isMetricsLoading,
       ),
       (
-        'Paid This Month',
+        context.l10n.debtors_paidThisMonth,
         Money.format(_paidThisMonth ?? 0),
         Icons.account_balance_outlined,
         context.colors.success,
-        'From debt payments',
+        context.l10n.debtors_fromDebtPayments,
         isPaidLoading,
       ),
     ];
@@ -420,8 +420,8 @@ class _DebtorsScreenState extends State<DebtorsScreen> {
       title: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Text('Active Debts', style: TextStyle(fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f19, color: context.colors.textPrimary)),
-          Text('Track and manage all outstanding debts', style: TextStyle(fontSize: AppFontSize.f12, color: context.colors.textSecondary)),
+          Text(context.l10n.debtors_title, style: TextStyle(fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f19, color: context.colors.textPrimary)),
+          Text(context.l10n.debtors_subtitle, style: TextStyle(fontSize: AppFontSize.f12, color: context.colors.textSecondary)),
         ],
       ),
       actions: [
@@ -446,7 +446,7 @@ class _DebtorsScreenState extends State<DebtorsScreen> {
               }
             },
             icon: const Icon(Icons.add, size: AppIconSize.i18),
-            label: const Text('Record Payment'),
+            label: Text(context.l10n.debtors_recordPayment),
             style: ElevatedButton.styleFrom(
               backgroundColor: context.colors.primary,
               foregroundColor: context.colors.background,
@@ -473,15 +473,23 @@ class _DebtorsScreenState extends State<DebtorsScreen> {
   String _overdueRangeLabel(String key, int overdueDays) {
     switch (key) {
       case 'bucket1':
-        return '1-$overdueDays days overdue';
+        return context.l10n.debtors_rangeDays(1, overdueDays);
       case 'bucket2':
-        return '${overdueDays + 1}-${overdueDays * 2} days overdue';
+        return context.l10n.debtors_rangeDays(overdueDays + 1, overdueDays * 2);
       case 'bucket3':
-        return '${overdueDays * 2 + 1}+ days overdue';
+        return context.l10n.debtors_rangeDaysPlus(overdueDays * 2 + 1);
       default:
-        return 'All';
+        return context.l10n.common_all;
     }
   }
+
+  // The status filter's values stay English (ClientProvider compares
+  // them); this is what each one shows.
+  String _statusFilterLabel(String value) => switch (value) {
+        'Overdue' => context.l10n.debtors_overdue,
+        'Current' => context.l10n.debtors_current,
+        _ => context.l10n.common_all,
+      };
 
   Widget _buildFiltersToolbar() {
     final border = OutlineInputBorder(
@@ -498,7 +506,7 @@ class _DebtorsScreenState extends State<DebtorsScreen> {
           child: TextField(
             controller: _searchController,
             decoration: InputDecoration(
-              hintText: 'Search debtor by name...',
+              hintText: context.l10n.debtors_searchHint,
               hintStyle: const TextStyle(fontSize: AppFontSize.f13),
               prefixIcon: const Icon(Icons.search, size: AppIconSize.i20),
               filled: true,
@@ -530,7 +538,8 @@ class _DebtorsScreenState extends State<DebtorsScreen> {
         _toolbarDropdown<String>(
           value: _statusFilter,
           items: _statusFilterOptions,
-          label: 'Status',
+          label: context.l10n.common_status,
+          display: _statusFilterLabel,
           onChanged: (val) {
             setState(() => _statusFilter = val);
             _openDebtorsListSession();
@@ -553,7 +562,7 @@ class _DebtorsScreenState extends State<DebtorsScreen> {
               items: _overdueRangeOptions
                   .map((key) => DropdownMenuItem(
                         value: key,
-                        child: Text('Overdue: ${_overdueRangeLabel(key, overdueDays)}'),
+                        child: Text(context.l10n.common_filterValue(context.l10n.debtors_colOverdue, _overdueRangeLabel(key, overdueDays))),
                       ))
                   .toList(),
               onChanged: (val) {
@@ -577,14 +586,14 @@ class _DebtorsScreenState extends State<DebtorsScreen> {
               });
               _openDebtorsListSession();
             },
-            child: const Text('Reset'),
+            child: Text(context.l10n.common_reset),
           ),
         ],
         const SizedBox(width: AppSpacing.s10),
         OutlinedButton.icon(
           onPressed: () => _exportDebtors(),
           icon: const Icon(Icons.download_outlined, size: AppIconSize.i16),
-          label: const Text('Export'),
+          label: Text(context.l10n.common_export),
           style: OutlinedButton.styleFrom(
             padding: const EdgeInsets.symmetric(horizontal: AppSpacing.s14, vertical: AppSpacing.s12),
             side: BorderSide(color: context.colors.textHint.withValues(alpha: AppAlpha.a30)),
@@ -598,6 +607,8 @@ class _DebtorsScreenState extends State<DebtorsScreen> {
     required T value,
     required List<T> items,
     required String label,
+    // What an item shows; the dropdown keeps the item itself as its value.
+    required String Function(T value) display,
     required ValueChanged<T> onChanged,
   }) {
     return Container(
@@ -613,7 +624,7 @@ class _DebtorsScreenState extends State<DebtorsScreen> {
           value: value,
           icon: Icon(Icons.arrow_drop_down, size: AppIconSize.i18, color: context.colors.primary),
           style: TextStyle(color: context.colors.textPrimary, fontSize: AppFontSize.f13),
-          items: items.map((v) => DropdownMenuItem(value: v, child: Text('$label: $v'))).toList(),
+          items: items.map((v) => DropdownMenuItem(value: v, child: Text(context.l10n.common_filterValue(label, display(v))))).toList(),
           onChanged: (val) {
             if (val != null) onChanged(val);
           },
@@ -633,12 +644,12 @@ class _DebtorsScreenState extends State<DebtorsScreen> {
           decoration: BoxDecoration(border: Border(bottom: BorderSide(color: context.colors.textHint.withValues(alpha: AppAlpha.a20)))),
           child: Row(
             children: [
-              _headerCell('Debtor', flex: 3),
-              _headerCell('Total Owed', flex: 2),
-              _headerCell('Overdue', flex: 2),
-              _headerCell('Oldest Debt Since', flex: 2),
-              _headerCell('Status', flex: 2),
-              _headerCell('Actions', flex: 2),
+              _headerCell(context.l10n.debtors_debtor, flex: 3),
+              _headerCell(context.l10n.debtors_totalOwed, flex: 2),
+              _headerCell(context.l10n.debtors_colOverdue, flex: 2),
+              _headerCell(context.l10n.debtors_oldestDebtSince, flex: 2),
+              _headerCell(context.l10n.common_status, flex: 2),
+              _headerCell(context.l10n.common_actions, flex: 2),
             ],
           ),
         ),
@@ -708,7 +719,7 @@ class _DebtorsScreenState extends State<DebtorsScreen> {
             Expanded(
               flex: 2,
               child: Text(
-                isOverdue ? '${debtor.daysSinceOldestDebt} days' : '\u2014',
+                isOverdue ? context.l10n.debtors_daysCount(debtor.daysSinceOldestDebt) : '\u2014',
                 style: TextStyle(fontSize: AppFontSize.f13, fontWeight: AppFontWeight.semibold, color: isOverdue ? context.colors.danger : context.colors.textMuted),
               ),
             ),
@@ -729,7 +740,7 @@ class _DebtorsScreenState extends State<DebtorsScreen> {
                   color: (isOverdue ? context.colors.danger : context.colors.success).withValues(alpha: AppAlpha.a10),
                   borderRadius: BorderRadius.circular(AppRadius.r10),
                 ),
-                child: Text(isOverdue ? 'Overdue' : 'Current',
+                child: Text(isOverdue ? context.l10n.debtors_overdue : context.l10n.debtors_current,
                     style: TextStyle(color: isOverdue ? context.colors.danger : context.colors.success, fontSize: AppFontSize.f11_5, fontWeight: AppFontWeight.semibold)),
               ),
             ),
@@ -740,14 +751,14 @@ class _DebtorsScreenState extends State<DebtorsScreen> {
                 children: [
                   IconButton(
                     icon: Icon(Icons.notifications_active_outlined, size: AppIconSize.i18, color: context.colors.warningStrong),
-                    tooltip: 'Send Reminder',
+                    tooltip: context.l10n.debtors_sendReminder,
                     onPressed: debtor.clientPhone.isEmpty
                         ? null
                         : () => _showReminderOptions(context, debtor.clientName, debtor.clientPhone, debtor.totalOwed),
                   ),
                   IconButton(
                     icon: Icon(Icons.history, size: AppIconSize.i18, color: context.colors.primary),
-                    tooltip: 'Payment History',
+                    tooltip: context.l10n.debtors_paymentHistory,
                     onPressed: () => _openPaymentHistory(debtor),
                   ),
                   PopupMenuButton<String>(
@@ -756,7 +767,7 @@ class _DebtorsScreenState extends State<DebtorsScreen> {
                       if (value == 'view') setState(() => _selectedClientId = debtor.clientId);
                     },
                     itemBuilder: (context) => [
-                      const PopupMenuItem(value: 'view', child: Text('View Details')),
+                      PopupMenuItem(value: 'view', child: Text(context.l10n.common_viewDetails)),
                     ],
                   ),
                 ],
@@ -792,7 +803,7 @@ class _DebtorsScreenState extends State<DebtorsScreen> {
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           Text(
-            itemCount == 0 ? 'No debtors' : 'Showing $pageStart to $pageEnd',
+            itemCount == 0 ? context.l10n.debtors_none : context.l10n.common_showingRange(pageStart, pageEnd),
             style: TextStyle(fontSize: AppFontSize.f12_5, color: context.colors.textMuted),
           ),
           Row(
@@ -801,7 +812,7 @@ class _DebtorsScreenState extends State<DebtorsScreen> {
                 child: DropdownButton<int>(
                   value: pageSize,
                   items: const [10, 25, 50]
-                      .map((n) => DropdownMenuItem(value: n, child: Text('$n per page')))
+                      .map((n) => DropdownMenuItem(value: n, child: Text(context.l10n.common_perPage(n))))
                       .toList(),
                   onChanged: (val) {
                     if (val != null) controller.setPageSize(val);
@@ -813,7 +824,7 @@ class _DebtorsScreenState extends State<DebtorsScreen> {
                 icon: const Icon(Icons.chevron_left),
                 onPressed: controller.hasPreviousPage ? () => controller.goToPreviousPage() : null,
               ),
-              Text('Page ${controller.currentPage}', style: const TextStyle(fontSize: AppFontSize.f13)),
+              Text(context.l10n.common_page(controller.currentPage), style: const TextStyle(fontSize: AppFontSize.f13)),
               IconButton(
                 icon: controller.isLoading
                     ? const SizedBox(width: AppSpacing.s16, height: 16, child: CircularProgressIndicator(strokeWidth: 2))
@@ -873,7 +884,7 @@ class _DebtorsScreenState extends State<DebtorsScreen> {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                const Text('Debtor Details', style: TextStyle(fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f16)),
+                Text(context.l10n.debtors_detailsTitle, style: const TextStyle(fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f16)),
                 IconButton(
                   icon: const Icon(Icons.close, size: AppIconSize.i20),
                   onPressed: () => setState(() => _selectedClientId = null),
@@ -908,7 +919,7 @@ class _DebtorsScreenState extends State<DebtorsScreen> {
                     color: (isOverdue ? context.colors.danger : context.colors.success).withValues(alpha: AppAlpha.a10),
                     borderRadius: BorderRadius.circular(AppRadius.r12),
                   ),
-                  child: Text(isOverdue ? 'Overdue' : 'Current',
+                  child: Text(isOverdue ? context.l10n.debtors_overdue : context.l10n.debtors_current,
                       style: TextStyle(color: isOverdue ? context.colors.danger : context.colors.success, fontSize: AppFontSize.f12, fontWeight: AppFontWeight.semibold)),
                 ),
               ],
@@ -922,7 +933,7 @@ class _DebtorsScreenState extends State<DebtorsScreen> {
                         ? null
                         : () => _showReminderOptions(context, debtor.clientName, debtor.clientPhone, debtor.totalOwed),
                     icon: const Icon(Icons.send_outlined, size: AppIconSize.i16),
-                    label: const Text('Send Reminder', style: TextStyle(fontSize: AppFontSize.f12_5)),
+                    label: Text(context.l10n.debtors_sendReminder, style: const TextStyle(fontSize: AppFontSize.f12_5)),
                   ),
                 ),
                 const SizedBox(width: AppSpacing.s8),
@@ -930,15 +941,15 @@ class _DebtorsScreenState extends State<DebtorsScreen> {
                   child: OutlinedButton.icon(
                     onPressed: () => _openPaymentHistory(debtor),
                     icon: const Icon(Icons.history, size: AppIconSize.i16),
-                    label: const Text('Payment History', style: TextStyle(fontSize: AppFontSize.f12_5)),
+                    label: Text(context.l10n.debtors_paymentHistory, style: const TextStyle(fontSize: AppFontSize.f12_5)),
                   ),
                 ),
               ],
             ),
             const SizedBox(height: AppSpacing.s20),
-            const Text('Summary', style: TextStyle(fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f13_5)),
+            Text(context.l10n.common_summary, style: const TextStyle(fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f13_5)),
             const SizedBox(height: AppSpacing.s10),
-            _totalsRow('Total Owed', Money.format(debtor.totalOwed), color: context.colors.danger),
+            _totalsRow(context.l10n.debtors_totalOwed, Money.format(debtor.totalOwed), color: context.colors.danger),
             FutureBuilder<List<Debt>>(
               future: _getDetailsDebtsFuture(debtor.clientId),
               builder: (context, snapshot) {
@@ -963,11 +974,11 @@ class _DebtorsScreenState extends State<DebtorsScreen> {
                 return Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    _totalsRow('Overdue Amount', Money.format(overdueAmount), color: context.colors.danger),
+                    _totalsRow(context.l10n.debtors_overdueAmount, Money.format(overdueAmount), color: context.colors.danger),
                     if (clientDebts.isNotEmpty)
-                      _totalsRow('Last Transaction', AppDateFormat.date.format(clientDebts.first.timestamp)),
+                      _totalsRow(context.l10n.debtors_lastTransaction, AppDateFormat.date.format(clientDebts.first.timestamp)),
                     const SizedBox(height: AppSpacing.s20),
-                    Text('Outstanding Debts (${clientDebts.length})',
+                    Text(context.l10n.debtors_outstandingDebts(clientDebts.length),
                         style: const TextStyle(fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f13_5)),
                     const SizedBox(height: AppSpacing.s10),
                     ...clientDebts.map((debt) => _buildDebtTile(debtor, debt)),
@@ -979,11 +990,11 @@ class _DebtorsScreenState extends State<DebtorsScreen> {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                const Text('Notes', style: TextStyle(fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f13_5)),
+                Text(context.l10n.common_notes, style: const TextStyle(fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f13_5)),
                 TextButton.icon(
                   onPressed: () => _addNote(debtor),
                   icon: const Icon(Icons.add, size: AppIconSize.i16),
-                  label: const Text('Add Note'),
+                  label: Text(context.l10n.debtors_addNote),
                 ),
               ],
             ),
@@ -1000,7 +1011,7 @@ class _DebtorsScreenState extends State<DebtorsScreen> {
                 if (notes.isEmpty) {
                   return Padding(
                     padding: const EdgeInsets.symmetric(vertical: AppSpacing.s8),
-                    child: Text('No notes added', style: TextStyle(fontSize: AppFontSize.f12_5, color: context.colors.textMuted)),
+                    child: Text(context.l10n.common_noNotes, style: TextStyle(fontSize: AppFontSize.f12_5, color: context.colors.textMuted)),
                   );
                 }
                 final sorted = [...notes]
@@ -1055,7 +1066,7 @@ class _DebtorsScreenState extends State<DebtorsScreen> {
                 }
               },
               icon: const Icon(Icons.account_balance_wallet_outlined, size: AppIconSize.i16),
-              label: const Text('Record Payment'),
+              label: Text(context.l10n.debtors_recordPayment),
               style: ElevatedButton.styleFrom(
                 backgroundColor: context.colors.primary,
                 foregroundColor: context.colors.background,
@@ -1093,7 +1104,7 @@ class _DebtorsScreenState extends State<DebtorsScreen> {
                         ? '${_debtInvoicePrefix(debt)}-${receiptNumber.toString().padLeft(6, '0')}'
                         : '${_debtInvoicePrefix(debt)}-......';
                     return Text(
-                      'Invoice: $invoiceText \u2022 ${AppDateFormat.date.format(debt.timestamp)}',
+                      context.l10n.debtors_invoiceLine(invoiceText, AppDateFormat.date.format(debt.timestamp)),
                       style: const TextStyle(fontSize: AppFontSize.f12, fontWeight: AppFontWeight.semibold),
                     );
                   },
@@ -1103,7 +1114,7 @@ class _DebtorsScreenState extends State<DebtorsScreen> {
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: AppSpacing.s8, vertical: AppSpacing.s2),
                   decoration: BoxDecoration(color: context.colors.danger.withValues(alpha: AppAlpha.a10), borderRadius: BorderRadius.circular(AppRadius.r8)),
-                  child: Text('Overdue', style: TextStyle(color: context.colors.danger, fontSize: AppFontSize.f10_5, fontWeight: AppFontWeight.semibold)),
+                  child: Text(context.l10n.debtors_overdue, style: TextStyle(color: context.colors.danger, fontSize: AppFontSize.f10_5, fontWeight: AppFontWeight.semibold)),
                 ),
             ],
           ),
@@ -1117,7 +1128,7 @@ class _DebtorsScreenState extends State<DebtorsScreen> {
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text('Amount', style: TextStyle(fontSize: AppFontSize.f11, color: context.colors.textMuted)),
+                  Text(context.l10n.common_amount, style: TextStyle(fontSize: AppFontSize.f11, color: context.colors.textMuted)),
                   Text(Money.format(debt.amountOwed),
                       style: TextStyle(fontSize: AppFontSize.f14, fontWeight: AppFontWeight.bold, color: context.colors.danger)),
                 ],
@@ -1129,7 +1140,7 @@ class _DebtorsScreenState extends State<DebtorsScreen> {
                   foregroundColor: context.colors.background,
                   padding: const EdgeInsets.symmetric(horizontal: AppSpacing.s20, vertical: AppSpacing.s10),
                 ),
-                child: const Text('Pay'),
+                child: Text(context.l10n.debtors_pay),
               ),
             ],
           ),
@@ -1200,14 +1211,14 @@ class _DebtorsScreenState extends State<DebtorsScreen> {
   /// "Service" - a sale debt lists each product and quantity; a
   /// service debt names the specific service performed.
   String _debtDescription(Debt debt) {
-    if (debt.items.isEmpty) return debt.source;
+    if (debt.items.isEmpty) return context.l10n.debtSourceLabel(debt.source);
     if (debt.source == 'Service') {
       final item = debt.items.first;
       if (item is Map) {
         final name = item['serviceName'] as String?;
         if (name != null && name.isNotEmpty) return name;
       }
-      return debt.source;
+      return context.l10n.debtSourceLabel(debt.source);
     }
     // Sale: list each product × quantity, e.g. "Amoxicillin x2, Syringe x1"
     final parts = <String>[];
@@ -1220,7 +1231,7 @@ class _DebtorsScreenState extends State<DebtorsScreen> {
         }
       }
     }
-    return parts.isEmpty ? debt.source : parts.join(', ');
+    return parts.isEmpty ? context.l10n.debtSourceLabel(debt.source) : parts.join(', ');
   }
 
   Future<List<Map<String, dynamic>>> _getNotesFuture(String clientId) {
@@ -1279,7 +1290,7 @@ class _DebtorsScreenState extends State<DebtorsScreen> {
       );
       await Share.shareXFiles([xfile], text: 'Active Debts Export');
     } catch (e, st) {
-      AppFeedback.error("Couldn't export the active debts", error: e, stackTrace: st);
+      AppFeedback.error(L10n.current.debtors_exportFailed, error: e, stackTrace: st);
     }
   }
 
@@ -1288,20 +1299,20 @@ class _DebtorsScreenState extends State<DebtorsScreen> {
     final text = await showDialog<String>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Add Note'),
+        title: Text(context.l10n.debtors_addNote),
         content: TextField(
           controller: controller,
           autofocus: true,
           maxLines: 3,
           textCapitalization: TextCapitalization.sentences,
           inputFormatters: [SentenceCapitalizationFormatter()],
-          decoration: const InputDecoration(hintText: 'e.g. Promised to pay by Friday'),
+          decoration: InputDecoration(hintText: context.l10n.debtors_noteHint),
         ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
+          TextButton(onPressed: () => Navigator.pop(ctx), child: Text(context.l10n.common_cancel)),
           TextButton(
             onPressed: () => Navigator.pop(ctx, controller.text.trim()),
-            child: const Text('Save'),
+            child: Text(context.l10n.common_save),
           ),
         ],
       ),
@@ -1325,7 +1336,7 @@ class _DebtorsScreenState extends State<DebtorsScreen> {
       if (!mounted) return;
       setState(() => _notesFutureByClient.remove(debtor.clientId));
     } catch (e, st) {
-      AppFeedback.error("Couldn't save the note", error: e, stackTrace: st);
+      AppFeedback.error(L10n.current.debtors_noteSaveFailed, error: e, stackTrace: st);
     }
   }
 
@@ -1353,6 +1364,8 @@ class _DebtorsScreenState extends State<DebtorsScreen> {
       BuildContext context, String clientName, String phone, double amountOwed) async {
     final facilityName =
         Provider.of<FacilityProvider>(context, listen: false).selectedFacilityName ?? 'us';
+    // Sent to the debtor, not shown in the app: left in English, not in
+    // the language files, until the owner decides its language (2F-5).
     final message =
         'Hi $clientName, this is a reminder from $facilityName that you have an outstanding '
         'balance of ${Money.symbolPlain(amountOwed)}. Kindly settle at your earliest '
@@ -1361,18 +1374,18 @@ class _DebtorsScreenState extends State<DebtorsScreen> {
     final choice = await showDialog<String>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Send Reminder'),
-        content: Text('Remind $clientName about their ${Money.symbolPlain(amountOwed)} balance via:'),
+        title: Text(context.l10n.debtors_sendReminder),
+        content: Text(context.l10n.debtors_reminderBody(clientName, Money.symbolPlain(amountOwed))),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(context, null), child: const Text('Cancel')),
+          TextButton(onPressed: () => Navigator.pop(context, null), child: Text(context.l10n.common_cancel)),
           TextButton(
             onPressed: () => Navigator.pop(context, 'sms'),
-            child: const Text('SMS'),
+            child: Text(context.l10n.debtors_viaSms),
           ),
           ElevatedButton(
             onPressed: () => Navigator.pop(context, 'whatsapp'),
             style: ElevatedButton.styleFrom(backgroundColor: context.colors.success, foregroundColor: context.colors.onPrimary),
-            child: const Text('WhatsApp'),
+            child: Text(context.l10n.debtors_viaWhatsApp),
           ),
         ],
       ),
@@ -1387,10 +1400,10 @@ class _DebtorsScreenState extends State<DebtorsScreen> {
     try {
       final launched = await launchUrl(uri, mode: LaunchMode.externalApplication);
       if (!launched) {
-        AppFeedback.info("Couldn't open ${choice == 'whatsapp' ? 'WhatsApp' : 'Messages'}");
+        AppFeedback.info(choice == 'whatsapp' ? L10n.current.debtors_whatsAppFailed : L10n.current.debtors_messagesFailed);
       }
     } catch (e, st) {
-      AppFeedback.error("Couldn't send the reminder", error: e, stackTrace: st);
+      AppFeedback.error(L10n.current.debtors_reminderFailed, error: e, stackTrace: st);
     }
   }
 }

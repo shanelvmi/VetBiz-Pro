@@ -23,6 +23,7 @@ import '../../theme/theme_context.dart';
 import '../../theme/app_breakpoints.dart';
 import '../../theme/app_motion.dart';
 import '../../ui/feedback/app_feedback.dart';
+import '../../l10n/l10n.dart';
 
 class AddPaymentScreen extends StatefulWidget {
   final Client? preselectedClient;
@@ -98,11 +99,11 @@ class _AddPaymentScreenState extends State<AddPaymentScreen> {
   String? _debtorError(String rawText, {required bool afterSave}) {
     if (selectedClient != null) return null;
     final typed = rawText.trim();
-    if (typed.isEmpty) return afterSave ? 'Choose the debtor this payment is for' : null;
-    if (typed.length >= 2 && !_hasDebtorMatching(typed)) return 'No debtor found with the name "$typed"';
+    if (typed.isEmpty) return afterSave ? context.l10n.debtors_errChooseDebtor : null;
+    if (typed.length >= 2 && !_hasDebtorMatching(typed)) return context.l10n.debtors_errNoMatch(typed);
     if (!afterSave) return null;
-    if (typed.length < 2) return "Type at least 2 letters of the debtor's name";
-    return 'Choose a debtor from the suggestions';
+    if (typed.length < 2) return context.l10n.debtors_errTooShort;
+    return context.l10n.debtors_errPickSuggestion;
   }
 
   // "Client: Juma Hassan  ·  Total owed: Tsh 150,000" - the amount in red so
@@ -123,9 +124,9 @@ class _AddPaymentScreenState extends State<AddPaymentScreen> {
             TextSpan(
               style: TextStyle(fontSize: AppFontSize.f16, color: context.colors.textPrimary),
               children: [
-                TextSpan(text: 'Client: ${client.name}', style: const TextStyle(fontWeight: AppFontWeight.bold)),
+                TextSpan(text: context.l10n.debtors_clientLabel(client.name), style: const TextStyle(fontWeight: AppFontWeight.bold)),
                 if (owed != null) ...[
-                  TextSpan(text: '  \u00b7  Total owed: ', style: TextStyle(fontSize: AppFontSize.f14, color: context.colors.textSoft)),
+                  TextSpan(text: '  \u00b7  ${context.l10n.debtors_totalOwedLabel} ', style: TextStyle(fontSize: AppFontSize.f14, color: context.colors.textSoft)),
                   TextSpan(
                     text: Money.symbolPlain(owed),
                     style: TextStyle(fontWeight: AppFontWeight.bold, color: context.colors.dangerAccent),
@@ -141,7 +142,7 @@ class _AddPaymentScreenState extends State<AddPaymentScreen> {
               selectedClient = null;
               _attemptedSave = false;
             }),
-            child: const Text('Change'),
+            child: Text(context.l10n.common_change),
           ),
       ],
     );
@@ -154,7 +155,7 @@ class _AddPaymentScreenState extends State<AddPaymentScreen> {
     _formKey.currentState!.save();
 
     if (paymentMethod == null) {
-      AppFeedback.warning('Select how this payment was made');
+      AppFeedback.warning(L10n.current.debtors_selectPaymentMethod);
       return;
     }
 
@@ -169,18 +170,18 @@ class _AddPaymentScreenState extends State<AddPaymentScreen> {
 
       final facilityId = widget.facilityId ?? facilityProvider.selectedFacility?['id'];
       if (facilityId == null) {
-        AppFeedback.warning('No facility selected');
+        AppFeedback.warning(L10n.current.common_noFacility);
         return;
       }
 
       final user = authService.getCurrentUser();
       if (user == null) {
-        AppFeedback.warning('Sign in again to record this payment');
+        AppFeedback.warning(L10n.current.debtors_signInAgain);
         return;
       }
 
       if (selectedClient == null) {
-        AppFeedback.warning('Select a client');
+        AppFeedback.warning(L10n.current.debtors_selectClient);
         return;
       }
 
@@ -381,10 +382,10 @@ class _AddPaymentScreenState extends State<AddPaymentScreen> {
       );
 
       if (!mounted) return;
-      AppFeedback.success('Payment of ${Money.symbolPlain(amount)} recorded for ${selectedClient!.name}');
+      AppFeedback.success(L10n.current.debtors_paymentRecorded(Money.symbolPlain(amount), selectedClient!.name));
       if (mounted) Navigator.pop(context, true);
     } catch (e, st) {
-      AppFeedback.error("Couldn't save the payment", error: e, stackTrace: st);
+      AppFeedback.error(L10n.current.debtors_paymentSaveFailed, error: e, stackTrace: st);
     } finally {
       if (mounted) setState(() => _isSaving = false);
     }
@@ -406,13 +407,13 @@ class _AddPaymentScreenState extends State<AddPaymentScreen> {
                 Icon(Icons.payments_outlined, color: context.colors.onPrimary, size: AppIconSize.i22),
                 const SizedBox(width: AppSpacing.s12),
                 Expanded(
-                  child: Text('Record Payment',
+                  child: Text(context.l10n.debtors_recordPayment,
                       style: TextStyle(color: context.colors.onPrimary, fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f18)),
                 ),
                 if (widget.isModal)
                   IconButton(
                     icon: Icon(Icons.close, color: context.colors.onPrimary),
-                    tooltip: 'Close',
+                    tooltip: context.l10n.common_close,
                     onPressed: () => Navigator.of(context).pop(),
                   )
                 else
@@ -464,11 +465,11 @@ class _AddPaymentScreenState extends State<AddPaymentScreen> {
                                   controller: controller,
                                   focusNode: focusNode,
                                   decoration: InputDecoration(
-                                    labelText: 'Debtor',
-                                    hintText: 'Search by name or phone',
+                                    labelText: context.l10n.debtors_debtor,
+                                    hintText: context.l10n.debtors_debtorSearchHint,
                                     // Why a name might be missing: only people
                                     // who owe something are in this list.
-                                    helperText: 'Only clients who currently owe money are listed',
+                                    helperText: context.l10n.debtors_debtorHelper,
                                     border: const OutlineInputBorder(),
                                     errorText: _debtorError(value.text, afterSave: _attemptedSave),
                                     errorMaxLines: 2,
@@ -485,29 +486,29 @@ class _AddPaymentScreenState extends State<AddPaymentScreen> {
               const SizedBox(height: AppSpacing.s16),
               if (widget.amountOwed != null)
                 Text(
-                  'Amount owed: ${Money.symbolPlain(widget.amountOwed!)}',
+                  context.l10n.debtors_amountOwed(Money.symbolPlain(widget.amountOwed!)),
                   style: TextStyle(fontSize: AppFontSize.f14, color: context.colors.dangerAccent),
                 ),
               const SizedBox(height: AppSpacing.s12),
               TextFormField(
-                decoration: const InputDecoration(
-                  labelText: 'Payment Amount',
-                  border: OutlineInputBorder(),
+                decoration: InputDecoration(
+                  labelText: context.l10n.debtors_paymentAmount,
+                  border: const OutlineInputBorder(),
                 ),
                 keyboardType: TextInputType.number,
                 inputFormatters: [FilteringTextInputFormatter.digitsOnly, ThousandsSeparatorInputFormatter()],
                 validator: (val) {
-                  if (val == null || val.trim().isEmpty) return 'Enter an amount';
+                  if (val == null || val.trim().isEmpty) return context.l10n.debtors_errEnterAmount;
                   final parsed = parseThousands(val);
-                  if (parsed <= 0) return 'Enter a valid amount';
+                  if (parsed <= 0) return context.l10n.debtors_errValidAmount;
                   if (widget.amountOwed != null && parsed > widget.amountOwed!) {
-                    return 'Cannot pay more than owed';
+                    return context.l10n.debtors_errMoreThanOwed;
                   }
                   final selectedBalance = (selectedClient != null && widget.debtorBalances != null)
                       ? widget.debtorBalances![selectedClient!.id]
                       : null;
                   if (widget.amountOwed == null && selectedBalance != null && parsed > selectedBalance) {
-                    return 'Cannot pay more than total owed';
+                    return context.l10n.debtors_errMoreThanTotal;
                   }
                   return null;
                 },
@@ -540,7 +541,7 @@ class _AddPaymentScreenState extends State<AddPaymentScreen> {
         children: [
           OutlinedButton.icon(
             icon: const Icon(Icons.close, size: AppIconSize.i16),
-            label: const Text('Cancel'),
+            label: Text(context.l10n.common_cancel),
             style: OutlinedButton.styleFrom(
               foregroundColor: context.colors.textPrimary,
               side: BorderSide(color: context.colors.textHint.withValues(alpha: AppAlpha.a40)),
@@ -564,12 +565,12 @@ class _AddPaymentScreenState extends State<AddPaymentScreen> {
                     height: 18,
                     child: CircularProgressIndicator(strokeWidth: 2, color: context.colors.onPrimary),
                   )
-                : const Row(
+                : Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Icon(Icons.payments_outlined, size: AppIconSize.i16),
-                      SizedBox(width: AppSpacing.s8),
-                      Text('Save Payment'),
+                      const Icon(Icons.payments_outlined, size: AppIconSize.i16),
+                      const SizedBox(width: AppSpacing.s8),
+                      Text(context.l10n.debtors_savePayment),
                     ],
                   ),
           ),
@@ -615,7 +616,7 @@ Future<bool?> showAddPaymentScreen(
   return showGeneralDialog<bool>(
     context: context,
     barrierDismissible: true,
-    barrierLabel: 'Record Payment',
+    barrierLabel: context.l10n.debtors_recordPayment,
     barrierColor: context.colors.scrim.withValues(alpha: AppAlpha.a50),
     transitionDuration: AppMotion.normal,
     pageBuilder: (context, animation, secondaryAnimation) {
