@@ -12,7 +12,6 @@ import '../widgets/announcement_message.dart';
 import '../utils/navigator_key.dart';
 import 'legal/privacy_policy_screen.dart';
 import 'legal/terms_of_service_screen.dart';
-import '../theme/app_palette.dart';
 import '../data/collections.dart';
 import '../config/app_timeouts.dart';
 import '../config/app_rules.dart';
@@ -21,6 +20,7 @@ import '../ui/feedback/auth_error_messages.dart';
 import '../ui/feedback/app_feedback.dart';
 import '../ui/feedback/friendly_error.dart';
 import '../theme/app_breakpoints.dart';
+import '../theme/app_motion.dart';
 import '../theme/app_text.dart';
 import '../theme/theme_context.dart';
 
@@ -61,6 +61,12 @@ class _LoginScreenState extends State<LoginScreen> {
   // The announcement carousel's page slide: 600 ms has no AppMotion step
   // (100 from slowest). Kept exact and listed (D8).
   static const Duration _announcementSlide = Duration(milliseconds: 600);
+  // Alert timings with no AppMotion or AppTimeouts entry; kept exact and
+  // listed (D8): the countdown restart after the pointer leaves the alert,
+  // the form card's shake, and the alert's fade-and-slide in.
+  static const Duration _alertHoverGrace = Duration(seconds: 3);
+  static const Duration _shakeDuration = Duration(milliseconds: 420);
+  static const Duration _alertSwitch = Duration(milliseconds: 260);
 
   OutlineInputBorder _fieldBorder(Color color) =>
       OutlineInputBorder(borderRadius: BorderRadius.circular(AppRadius.r16), borderSide: BorderSide(color: color));
@@ -795,21 +801,21 @@ class _LoginScreenState extends State<LoginScreen> {
     required bool hasError,
     Widget? suffix,
   }) {
-    final restColor = hasError ? Colors.redAccent.withValues(alpha: 0.7) : const Color(0xFFE2E8E6);
-    final focusColor = hasError ? Colors.redAccent : context.colors.primary;
+    final restColor = hasError ? context.colors.dangerAccent.withValues(alpha: AppAlpha.a70) : context.colors.border;
+    final focusColor = hasError ? context.colors.dangerAccent : context.colors.primary;
     return InputDecoration(
       hintText: hint,
-      hintStyle: TextStyle(color: Colors.grey.shade400),
-      prefixIcon: Icon(icon, size: 19, color: hasError ? Colors.redAccent : Colors.grey.shade500),
+      hintStyle: TextStyle(color: context.colors.textDisabled),
+      prefixIcon: Icon(icon, size: AppIconSize.i20, color: hasError ? context.colors.dangerAccent : context.colors.textHint),
       suffixIcon: suffix,
       filled: true,
-      fillColor: const Color(0xFFF6F9F8),
+      fillColor: context.colors.surfaceMuted,
       isDense: true,
-      contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 15),
+      contentPadding: const EdgeInsets.symmetric(horizontal: AppSpacing.s14, vertical: AppSpacing.s16),
       border: _fieldBorder(restColor),
       enabledBorder: _fieldBorder(restColor),
       focusedBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(AppRadius.r16),
         borderSide: BorderSide(color: focusColor, width: 1.6),
       ),
     );
@@ -829,29 +835,29 @@ class _LoginScreenState extends State<LoginScreen> {
       // AnimatedSwitcher looks at), so a changed message animates in.
       key: ValueKey(error),
       onEnter: (_) => _errorTimer?.cancel(),
-      onExit: (_) => _startErrorTimer(after: const Duration(seconds: 3)),
+      onExit: (_) => _startErrorTimer(after: _alertHoverGrace),
       child: Semantics(
         liveRegion: true,
         child: Material(
           color: Colors.transparent,
           child: Container(
-            padding: const EdgeInsets.fromLTRB(12, 10, 6, 10),
+            padding: const EdgeInsets.fromLTRB(AppSpacing.s12, AppSpacing.s10, AppSpacing.s6, AppSpacing.s10),
             decoration: BoxDecoration(
-              color: const Color(0xFFFFF1F0),
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: Colors.redAccent.withValues(alpha: 0.35)),
+              color: context.colors.surfaceMuted,
+              borderRadius: BorderRadius.circular(AppRadius.r12),
+              border: Border.all(color: context.colors.dangerAccent.withValues(alpha: AppAlpha.a40)),
               boxShadow: [
-                BoxShadow(color: Colors.redAccent.withValues(alpha: 0.18), blurRadius: 16, offset: const Offset(0, 6)),
+                BoxShadow(color: context.colors.dangerAccent.withValues(alpha: AppAlpha.a20), blurRadius: 16, offset: const Offset(0, 6)),
               ],
             ),
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Padding(
-                  padding: EdgeInsets.only(top: 1),
-                  child: Icon(Icons.error_outline, color: Colors.redAccent, size: 18),
+                Padding(
+                  padding: EdgeInsets.only(top: AppSpacing.s2),
+                  child: Icon(Icons.error_outline, color: context.colors.dangerAccent, size: AppIconSize.i18),
                 ),
-                const SizedBox(width: 8),
+                const SizedBox(width: AppSpacing.s8),
                 Expanded(
                   // A very long message scrolls inside the alert rather than
                   // growing it over the whole form.
@@ -860,14 +866,14 @@ class _LoginScreenState extends State<LoginScreen> {
                     child: SingleChildScrollView(
                       child: Text(
                         error!,
-                        style: const TextStyle(color: Color(0xFFB3261E), fontSize: 12.5, height: 1.35),
+                        style: TextStyle(color: context.colors.dangerDeep, fontSize: AppFontSize.f12_5, height: 1.35),
                       ),
                     ),
                   ),
                 ),
                 IconButton(
-                  icon: const Icon(Icons.close, size: 16),
-                  color: Colors.redAccent,
+                  icon: const Icon(Icons.close, size: AppIconSize.i16),
+                  color: context.colors.dangerAccent,
                   tooltip: 'Dismiss',
                   padding: EdgeInsets.zero,
                   constraints: const BoxConstraints(minWidth: 28, minHeight: 28),
@@ -893,7 +899,7 @@ class _LoginScreenState extends State<LoginScreen> {
     // (and exactly 0 - no offset - when it isn't shaking).
     return TweenAnimationBuilder<double>(
       tween: Tween<double>(begin: 0, end: _shakeCount.toDouble()),
-      duration: const Duration(milliseconds: 420),
+      duration: _shakeDuration,
       builder: (context, value, child) {
         final progress = value - value.floorToDouble();
         final dx = math.sin(progress * math.pi * 6) * 8 * (1 - progress);
@@ -901,18 +907,18 @@ class _LoginScreenState extends State<LoginScreen> {
       },
       child: Container(
         decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: const Color(0xFFDDEAE7)),
+          color: context.colors.surface,
+          borderRadius: BorderRadius.circular(AppRadius.r20),
+          border: Border.all(color: context.colors.border),
           // Two layers: a wide, teal-tinted one that lifts the card off the
           // panel behind it, and a tight one for a crisp edge.
           boxShadow: [
-            BoxShadow(color: context.colors.primary.withValues(alpha: 0.15), blurRadius: 32, offset: const Offset(0, 14)),
-            BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 8, offset: const Offset(0, 2)),
+            BoxShadow(color: context.colors.primary.withValues(alpha: AppAlpha.a15), blurRadius: 32, offset: const Offset(0, 14)),
+            BoxShadow(color: context.colors.shadow.withValues(alpha: AppAlpha.a05), blurRadius: 8, offset: const Offset(0, 2)),
           ],
         ),
         child: ClipRRect(
-          borderRadius: BorderRadius.circular(19),
+          borderRadius: BorderRadius.circular(AppRadius.r20),
           child: Stack(
             children: [
               Column(
@@ -927,7 +933,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     ),
                   ),
                   Padding(
-                    padding: const EdgeInsets.fromLTRB(28, 26, 28, 24),
+                    padding: const EdgeInsets.fromLTRB(AppSpacing.s28, AppSpacing.s28, AppSpacing.s28, AppSpacing.s24),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       mainAxisSize: MainAxisSize.min,
@@ -938,35 +944,35 @@ class _LoginScreenState extends State<LoginScreen> {
                               width: 42,
                               height: 42,
                               decoration: BoxDecoration(
-                                color: tealGlow.withValues(alpha: 0.24),
+                                color: tealGlow.withValues(alpha: AppAlpha.a20),
                                 shape: BoxShape.circle,
-                                border: Border.all(color: tealGlow.withValues(alpha: 0.75), width: 1.4),
+                                border: Border.all(color: tealGlow.withValues(alpha: AppAlpha.a70), width: 1.4),
                                 boxShadow: [
-                                  BoxShadow(color: tealGlow.withValues(alpha: 0.5), blurRadius: 14),
+                                  BoxShadow(color: tealGlow.withValues(alpha: AppAlpha.a50), blurRadius: 14),
                                 ],
                               ),
-                              child: Icon(Icons.lock_outline, color: context.colors.primary, size: 20),
+                              child: Icon(Icons.lock_outline, color: context.colors.primary, size: AppIconSize.i20),
                             ),
-                            const SizedBox(width: 14),
+                            const SizedBox(width: AppSpacing.s14),
                             Expanded(
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   Text('Welcome back',
                                       overflow: TextOverflow.ellipsis,
-                                      style: TextStyle(fontSize: 20, fontWeight: FontWeight.w800, color: context.colors.textPrimary)),
-                                  const SizedBox(height: 2),
+                                      style: TextStyle(fontSize: AppFontSize.f20, fontWeight: AppFontWeight.extraBold, color: context.colors.textPrimary)),
+                                  const SizedBox(height: AppSpacing.s2),
                                   Text('Log into your facility',
                                       overflow: TextOverflow.ellipsis,
-                                      style: TextStyle(fontSize: 13, color: Colors.grey.shade600)),
+                                      style: TextStyle(fontSize: AppFontSize.f13, color: context.colors.textMuted)),
                                 ],
                               ),
                             ),
                           ],
                         ),
-                        const SizedBox(height: 26),
-                        Text('Email', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: context.colors.textPrimary)),
-                        const SizedBox(height: 6),
+                        const SizedBox(height: AppSpacing.s28),
+                        Text('Email', style: TextStyle(fontSize: AppFontSize.f13, fontWeight: AppFontWeight.semibold, color: context.colors.textPrimary)),
+                        const SizedBox(height: AppSpacing.s6),
                         TextField(
                           controller: emailController,
                           style: TextStyle(color: context.colors.textPrimary),
@@ -980,9 +986,9 @@ class _LoginScreenState extends State<LoginScreen> {
                             hasError: fieldsInError,
                           ),
                         ),
-                        const SizedBox(height: 18),
-                        Text('Password', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: context.colors.textPrimary)),
-                        const SizedBox(height: 6),
+                        const SizedBox(height: AppSpacing.s18),
+                        Text('Password', style: TextStyle(fontSize: AppFontSize.f13, fontWeight: AppFontWeight.semibold, color: context.colors.textPrimary)),
+                        const SizedBox(height: AppSpacing.s6),
                         TextField(
                           controller: passwordController,
                           focusNode: passwordFocusNode,
@@ -999,18 +1005,18 @@ class _LoginScreenState extends State<LoginScreen> {
                               onTap: () => setState(() => obscurePassword = !obscurePassword),
                               child: Icon(
                                 obscurePassword ? Icons.visibility_outlined : Icons.visibility_off_outlined,
-                                color: Colors.grey.shade500,
-                                size: 20,
+                                color: context.colors.textHint,
+                                size: AppIconSize.i20,
                               ),
                             ),
                           ),
                         ),
-                        const SizedBox(height: 4),
+                        const SizedBox(height: AppSpacing.s4),
                         Padding(
-                          padding: const EdgeInsets.only(left: 2),
-                          child: Text('Minimum 6 characters', style: TextStyle(color: Colors.grey.shade500, fontSize: 11.5)),
+                          padding: const EdgeInsets.only(left: AppSpacing.s2),
+                          child: Text('Minimum 6 characters', style: TextStyle(color: context.colors.textHint, fontSize: AppFontSize.f11_5)),
                         ),
-                        const SizedBox(height: 12),
+                        const SizedBox(height: AppSpacing.s12),
                         Row(
                           children: [
                             SizedBox(
@@ -1020,12 +1026,12 @@ class _LoginScreenState extends State<LoginScreen> {
                                 value: rememberMe,
                                 onChanged: (value) => setState(() => rememberMe = value ?? false),
                                 activeColor: context.colors.primary,
-                                checkColor: Colors.white,
+                                checkColor: context.colors.onPrimary,
                                 materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
                               ),
                             ),
-                            const SizedBox(width: 8),
-                            Text('Remember Me', style: TextStyle(color: context.colors.textPrimary, fontSize: 13)),
+                            const SizedBox(width: AppSpacing.s8),
+                            Text('Remember Me', style: TextStyle(color: context.colors.textPrimary, fontSize: AppFontSize.f13)),
                             const Spacer(),
                             MouseRegion(
                               onEnter: (_) => setState(() => isForgotHovered = true),
@@ -1037,22 +1043,22 @@ class _LoginScreenState extends State<LoginScreen> {
                                   'Forgot Password?',
                                   style: TextStyle(
                                     color: isForgotHovered ? context.colors.accent : tealAccent,
-                                    fontSize: 13,
-                                    fontWeight: FontWeight.w600,
+                                    fontSize: AppFontSize.f13,
+                                    fontWeight: AppFontWeight.semibold,
                                   ),
                                 ),
                               ),
                             ),
                           ],
                         ),
-                        const SizedBox(height: 20),
+                        const SizedBox(height: AppSpacing.s20),
                         _AnimatedLoginButton(
                           isLoading: isLoggingIn,
                           onPressed: isLoggingIn ? null : _login,
                           primaryColor: context.colors.primary,
                           accentColor: tealAccent,
                         ),
-                        const SizedBox(height: 20),
+                        const SizedBox(height: AppSpacing.s20),
                         Center(
                           child: MouseRegion(
                             onEnter: (_) => setState(() => isRegisterHovered = true),
@@ -1064,14 +1070,14 @@ class _LoginScreenState extends State<LoginScreen> {
                               },
                               child: RichText(
                                 text: TextSpan(
-                                  style: TextStyle(fontSize: 13, color: context.colors.textPrimary),
+                                  style: TextStyle(fontSize: AppFontSize.f13, color: context.colors.textPrimary),
                                   children: [
                                     const TextSpan(text: "Don't have an account? "),
                                     TextSpan(
                                       text: 'Register',
                                       style: TextStyle(
                                         color: isRegisterHovered ? context.colors.accent : tealAccent,
-                                        fontWeight: FontWeight.w700,
+                                        fontWeight: AppFontWeight.bold,
                                       ),
                                     ),
                                   ],
@@ -1093,7 +1099,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 left: 14,
                 right: 14,
                 child: AnimatedSwitcher(
-                  duration: const Duration(milliseconds: 260),
+                  duration: _alertSwitch,
                   switchInCurve: Curves.easeOutCubic,
                   transitionBuilder: (child, animation) => FadeTransition(
                     opacity: animation,
@@ -1145,7 +1151,7 @@ class _LoginScreenState extends State<LoginScreen> {
           // A subtle dark scrim - keeps the floating card and its
           // shadow clearly readable against the background photo
           // regardless of how bright or busy that photo is.
-          Positioned.fill(child: Container(color: Colors.black.withValues(alpha: 0.18))),
+          Positioned.fill(child: Container(color: context.colors.scrim.withValues(alpha: AppAlpha.a20))),
 
           // The single floating card holding every piece of content -
           // header, welcome/announcements, login form, and footer all
@@ -1154,7 +1160,7 @@ class _LoginScreenState extends State<LoginScreen> {
           // rather than switching to a stripped-down alternate layout.
           Center(
             child: SingleChildScrollView(
-              padding: const EdgeInsets.all(24),
+              padding: const EdgeInsets.all(AppSpacing.s24),
               child: LayoutBuilder(
                 builder: (context, constraints) {
                   // The actual space available to the card, after the
@@ -1162,7 +1168,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   // screen width, which doesn't account for that and
                   // was the real cause of the two-column layout
                   // overflowing at widths just above the old cutoff.
-                  final isWide = constraints.maxWidth > 820;
+                  final isWide = constraints.maxWidth > AppBreakpoints.twoPane;
                   final targetWidth = isWide ? 1100.0 : 480.0;
                   // The card is forced to be exactly this wide (not
                   // just "up to" it) - otherwise its own width follows
@@ -1180,10 +1186,10 @@ class _LoginScreenState extends State<LoginScreen> {
                     child: Container(
                       clipBehavior: Clip.antiAlias,
                       decoration: BoxDecoration(
-                        color: Colors.white.withValues(alpha: 0.97),
-                        borderRadius: BorderRadius.circular(24),
+                        color: context.colors.surface.withValues(alpha: 0.97),
+                        borderRadius: BorderRadius.circular(AppRadius.r24),
                         boxShadow: [
-                          BoxShadow(color: Colors.black.withValues(alpha: 0.35), blurRadius: 40, offset: const Offset(0, 20)),
+                          BoxShadow(color: context.colors.shadow.withValues(alpha: AppAlpha.a40), blurRadius: 40, offset: const Offset(0, 20)),
                         ],
                       ),
                       child: Column(
@@ -1192,7 +1198,7 @@ class _LoginScreenState extends State<LoginScreen> {
                         children: [
                           _buildHeader(),
                           Padding(
-                            padding: const EdgeInsets.all(28),
+                            padding: const EdgeInsets.all(AppSpacing.s28),
                             child: isWide
                                 ? IntrinsicHeight(
                                     child: Row(
@@ -1205,14 +1211,14 @@ class _LoginScreenState extends State<LoginScreen> {
                                             crossAxisAlignment: CrossAxisAlignment.stretch,
                                             children: [
                                               _buildWelcomeCard(),
-                                              const SizedBox(height: 16),
+                                              const SizedBox(height: AppSpacing.s16),
                                               Expanded(child: _buildAnnouncementsCard()),
-                                              const SizedBox(height: 16),
+                                              const SizedBox(height: AppSpacing.s16),
                                               _buildTrustFooter(),
                                             ],
                                           ),
                                         ),
-                                        const SizedBox(width: 28),
+                                        const SizedBox(width: AppSpacing.s28),
                                         // Right: Login
                                         Expanded(
                                           flex: 1,
@@ -1222,14 +1228,14 @@ class _LoginScreenState extends State<LoginScreen> {
                                           // of blending into the white surface
                                           // around it.
                                           child: Container(
-                                            padding: const EdgeInsets.all(24),
+                                            padding: const EdgeInsets.all(AppSpacing.s24),
                                             decoration: BoxDecoration(
-                                              gradient: const LinearGradient(
+                                              gradient: LinearGradient(
                                                 begin: Alignment.topLeft,
                                                 end: Alignment.bottomRight,
-                                                colors: [Color(0xFFE8F4F1), Color(0xFFF6FAF9)],
+                                                colors: [context.colors.divider, context.colors.surfaceMuted],
                                               ),
-                                              borderRadius: BorderRadius.circular(24),
+                                              borderRadius: BorderRadius.circular(AppRadius.r24),
                                             ),
                                             child: Center(child: _buildLoginForm()),
                                           ),
@@ -1248,11 +1254,11 @@ class _LoginScreenState extends State<LoginScreen> {
                                     crossAxisAlignment: CrossAxisAlignment.stretch,
                                     children: [
                                       _buildLoginForm(),
-                                      const SizedBox(height: 20),
+                                      const SizedBox(height: AppSpacing.s20),
                                       _buildWelcomeCard(),
-                                      const SizedBox(height: 16),
+                                      const SizedBox(height: AppSpacing.s16),
                                       _buildAnnouncementsCard(),
-                                      const SizedBox(height: 16),
+                                      const SizedBox(height: AppSpacing.s16),
                                       _buildTrustFooter(),
                                     ],
                                   ),
@@ -1293,17 +1299,13 @@ class _AnimatedLoginButton extends StatefulWidget {
 
 class _AnimatedLoginButtonState extends State<_AnimatedLoginButton> with SingleTickerProviderStateMixin {
   late final AnimationController _controller;
-  // Same teal used for the glow treatment on the other icon badges
-  // throughout this screen - defined locally since this is a separate
-  // widget class from _LoginScreenState and can't reach that class's
-  // own instance field.
-  static const Color _tealGlow = Color(0xFF7EE8CB);
-  static const Color _warmAmber = AppPalette.accent;
+  // The hover sweep; no AppMotion step (50 from slower). Kept exact (D8).
+  static const Duration _hoverSweep = Duration(milliseconds: 450);
 
   @override
   void initState() {
     super.initState();
-    _controller = AnimationController(vsync: this, duration: const Duration(milliseconds: 450));
+    _controller = AnimationController(vsync: this, duration: _hoverSweep);
   }
 
   @override
@@ -1343,7 +1345,7 @@ class _AnimatedLoginButtonState extends State<_AnimatedLoginButton> with SingleT
                 return Opacity(
                   opacity: enabled ? 1 : 0.6,
                   child: ClipRRect(
-                    borderRadius: BorderRadius.circular(28),
+                    borderRadius: BorderRadius.circular(AppRadius.r24),
                     child: Stack(
                       children: [
                         // Base gradient - reverses direction as hover
@@ -1373,9 +1375,9 @@ class _AnimatedLoginButtonState extends State<_AnimatedLoginButton> with SingleT
                                   decoration: BoxDecoration(
                                     gradient: LinearGradient(
                                       colors: [
-                                        Colors.white.withValues(alpha: 0),
-                                        Colors.white.withValues(alpha: 0.35 * t),
-                                        Colors.white.withValues(alpha: 0),
+                                        context.colors.onPrimary.withValues(alpha: 0),
+                                        context.colors.onPrimary.withValues(alpha: AppAlpha.a40 * t),
+                                        context.colors.onPrimary.withValues(alpha: 0),
                                       ],
                                     ),
                                   ),
@@ -1384,13 +1386,13 @@ class _AnimatedLoginButtonState extends State<_AnimatedLoginButton> with SingleT
                             ),
                           ),
                         Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 6),
+                          padding: const EdgeInsets.symmetric(horizontal: AppSpacing.s6),
                           child: widget.isLoading
-                              ? const Center(
+                              ? Center(
                                   child: SizedBox(
                                     width: 20,
                                     height: 20,
-                                    child: CircularProgressIndicator(strokeWidth: 2.5, color: Colors.white),
+                                    child: CircularProgressIndicator(strokeWidth: 2.5, color: context.colors.onPrimary),
                                   ),
                                 )
                               : Stack(
@@ -1399,9 +1401,9 @@ class _AnimatedLoginButtonState extends State<_AnimatedLoginButton> with SingleT
                                     Center(
                                       child: Text('Login',
                                           style: TextStyle(
-                                              color: Color.lerp(Colors.white, _warmAmber, t),
-                                              fontWeight: FontWeight.w600,
-                                              fontSize: 15)),
+                                              color: Color.lerp(context.colors.onPrimary, context.colors.accent, t),
+                                              fontWeight: AppFontWeight.semibold,
+                                              fontSize: AppFontSize.f15)),
                                     ),
                                     // Slides from the left edge toward
                                     // center as t goes 0->1 - the uncircled
@@ -1412,21 +1414,21 @@ class _AnimatedLoginButtonState extends State<_AnimatedLoginButton> with SingleT
                                         width: 32,
                                         height: 32,
                                         decoration: BoxDecoration(
-                                          color: Colors.white.withValues(alpha: 0.22),
+                                          color: context.colors.surface.withValues(alpha: AppAlpha.a20),
                                           shape: BoxShape.circle,
-                                          border: Border.all(color: _tealGlow.withValues(alpha: 0.55), width: 1.2),
+                                          border: Border.all(color: _LoginScreenState.tealGlow.withValues(alpha: AppAlpha.a50), width: 1.2),
                                           boxShadow: [
-                                            BoxShadow(color: _tealGlow.withValues(alpha: 0.3), blurRadius: 8),
+                                            BoxShadow(color: _LoginScreenState.tealGlow.withValues(alpha: AppAlpha.a30), blurRadius: 8),
                                           ],
                                         ),
-                                        child: Icon(Icons.arrow_forward, color: Color.lerp(Colors.white, _warmAmber, t), size: 16),
+                                        child: Icon(Icons.arrow_forward, color: Color.lerp(context.colors.onPrimary, context.colors.accent, t), size: AppIconSize.i16),
                                       ),
                                     ),
-                                    const Align(
+                                    Align(
                                       alignment: Alignment.centerRight,
                                       child: Padding(
-                                        padding: EdgeInsets.only(right: 4),
-                                        child: Icon(Icons.arrow_forward, color: Colors.white, size: 18),
+                                        padding: EdgeInsets.only(right: AppSpacing.s4),
+                                        child: Icon(Icons.arrow_forward, color: context.colors.onPrimary, size: AppIconSize.i18),
                                       ),
                                     ),
                                   ],
@@ -1457,19 +1459,22 @@ class _NewBadgeState extends State<_NewBadge> {
   bool visible = true;
   int blinkCount = 0;
   Timer? _blinkTimer;
+  // Blink step and how long the badge stays before fading; kept exact (D8).
+  static const Duration _blinkStep = Duration(milliseconds: 600);
+  static const Duration _blinkHold = Duration(seconds: 3);
 
   @override
   void initState() {
     super.initState();
     // Blink twice like car indicator, then fade out
     _blinkTimer =
-        Timer.periodic(const Duration(milliseconds: 600), (timer) {
+        Timer.periodic(_blinkStep, (timer) {
       setState(() => visible = !visible);
       blinkCount++;
       if (blinkCount >= 4) {
         timer.cancel();
         setState(() => visible = true);
-        Future.delayed(const Duration(seconds: 3), () {
+        Future.delayed(_blinkHold, () {
           if (mounted) setState(() => visible = false);
         });
       }
@@ -1486,19 +1491,19 @@ class _NewBadgeState extends State<_NewBadge> {
   Widget build(BuildContext context) {
     return AnimatedOpacity(
       opacity: visible ? 1 : 0,
-      duration: const Duration(milliseconds: 400),
+      duration: AppMotion.slower,
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+        padding: const EdgeInsets.symmetric(horizontal: AppSpacing.s6, vertical: AppSpacing.s2),
         decoration: BoxDecoration(
-          color: Colors.red,
-          borderRadius: BorderRadius.circular(4),
+          color: context.colors.danger,
+          borderRadius: BorderRadius.circular(AppRadius.r4),
         ),
-        child: const Text(
+        child: Text(
           'NEW',
           style: TextStyle(
-              color: Colors.white,
-              fontSize: 10,
-              fontWeight: FontWeight.bold),
+              color: context.colors.onPrimary,
+              fontSize: AppFontSize.f10,
+              fontWeight: AppFontWeight.bold),
         ),
       ),
     );
@@ -1520,7 +1525,6 @@ class _FooterLink extends StatefulWidget {
 }
 
 class _FooterLinkState extends State<_FooterLink> {
-  static const Color _warmAmber = AppPalette.accent;
   bool _hovered = false;
 
   @override
@@ -1533,10 +1537,10 @@ class _FooterLinkState extends State<_FooterLink> {
         onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => widget.destination)),
         child: Text(widget.label,
             style: TextStyle(
-              color: _hovered ? _warmAmber : Colors.white.withValues(alpha: 0.7),
-              fontSize: 12,
+              color: _hovered ? context.colors.accent : context.colors.onPrimary.withValues(alpha: AppAlpha.a70),
+              fontSize: AppFontSize.f12,
               decoration: TextDecoration.underline,
-              decorationColor: _hovered ? _warmAmber : Colors.white.withValues(alpha: 0.4),
+              decorationColor: _hovered ? context.colors.accent : context.colors.onPrimary.withValues(alpha: AppAlpha.a40),
             )),
       ),
     );

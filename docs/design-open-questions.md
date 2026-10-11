@@ -70,7 +70,9 @@ Colours are outside the standing snap rule, so this is kept as it is:
 
 - **Login teals `#3E8E82` (`tealAccent`) and `#7EE8CB` (`tealGlow`)**, `lib/screens/login_screen.dart` (header and welcome-panel gradients, the welcome badge, the form card's top accent and lock badge, the Forgot / Register links): more than 12 from every role. Kept as named `static const` fields. `#3E8E82` is also the platform admin's `tealGlow` (D7). One `brandTeal` role (and a second for the light glow)?
 - **Online dot `Colors.greenAccent`**, `login_screen.dart` (the "System Online" pill in the header): no role within 12 (`success` is green, `trendUp` is `#10B981`). Kept.
-- **Announcement slide 600 ms**, `login_screen.dart` (`_announcementSlide`, the carousel's page animation): no AppMotion step (100 from `slowest`). Kept exact as a named constant.
+- **Login timings with no token**, `login_screen.dart`, kept exact as named constants: `_announcementSlide` 600 ms (carousel page), `_shakeDuration` 420 ms (form card shake), `_alertSwitch` 260 ms (alert fade-in), `_hoverSweep` 450 ms (Login button hover), `_alertHoverGrace` 3 s (alert countdown restart after hover), `_blinkStep` 600 ms and `_blinkHold` 3 s (the NEW badge). The nearest AppMotion steps are 20 to 100 ms away; the 3 s delays have no AppTimeouts entry.
+- **Card fill alpha 0.97**, `login_screen.dart` (the floating card over the photo, `surface` at 0.97): no AppAlpha step within 0.05. Kept.
+- **Login card widths 1100 / 480**, `login_screen.dart` (`targetWidth`, wide and narrow): content widths, not in 4.10 (480 is `dialogMd`'s snap source, but this is a page card, not a dialog). Kept.
 - **Computed alert time**, `login_screen.dart` `_errorDisplayDuration`: 4 s plus 1 s per 20 characters, clamped to 5 to 12 s. A computed UI timeout; still counted by guard R5. Same allowlist question as the computed `Duration(days: ...)` in D7.
 
 ### Trash and restore: books consistency (audit after D6, read-only)
