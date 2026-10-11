@@ -418,3 +418,196 @@ store_notesHint,"e.g., Quality checked, ready for sale","mf., Ubora umekaguliwa,
 store_quantityRange,Enter a quantity from 1 to {max},Weka kiasi kuanzia 1 hadi {max},Message when the release quantity is out of range.,draft
 store_released,Released {quantity} {unit} of {product} to the shelf,Umetoa {quantity} {unit} za {product} kwenda rafuni,Message after releasing stock (unit already in the current language).,draft
 store_releaseFailed,Couldn't release the product,Imeshindwa kutoa bidhaa,Message when releasing stock failed.,draft
+common_unknown,Unknown,Haijulikani,Shown when a name is missing (who recorded an entry).,draft
+common_showingRange,Showing {start} to {end},Inaonyesha {start} hadi {end},Pagination bar: which rows of the list are shown.,draft
+common_phone,Phone,Simu,Phone number label or column header.,draft
+common_address,Address,Anwani,Address label or column header.,draft
+common_name,Name,Jina,Name label.,draft
+common_description,Description,Maelezo,Description column header or label.,draft
+common_category,Category,Kundi,Category column header or label.,draft
+common_required,Required,Inahitajika,Error under a form field left empty.,draft
+common_requiredLabel,{label} *,{label} *,A form field's label with the required-field star.,draft
+common_export,Export,Hamisha,Export button (downloads the list as a file).,draft
+common_actions,Actions,Vitendo,Table column header for the row's action buttons.,draft
+common_summary,Summary,Muhtasari,Heading of a summary section.,draft
+common_noNotes,No notes added,Hakuna maelezo yaliyoongezwa,Notes section when there are none.,draft
+common_none,None,Hakuna,Dropdown choice meaning nothing is chosen.,draft
+common_searchEllipsis,Search...,Tafuta...,Search box hint in a picker.,draft
+common_noFacility,No facility selected,Hakuna kituo kilichochaguliwa,Message (or its second line) when no facility is chosen.,draft
+common_linkFailed,Couldn't open the link,Imeshindwa kufungua kiungo,Message when a web link could not be opened.,draft
+common_linkFailedDetail,Copy it from the error log instead,Nakili kutoka kwenye kumbukumbu ya hitilafu badala yake,Second line of the could-not-open-link message.,draft
+common_noPrinterTitle,No Printer Connected,Hakuna Printa Iliyounganishwa,Dialog title when printing with no receipt printer connected.,draft
+common_noPrinterBody,Connect a Bluetooth receipt printer in Printer Settings first.,Unganisha printa ya risiti ya Bluetooth kwenye Mipangilio ya Printa kwanza.,Dialog text when no receipt printer is connected.,draft
+common_goToPrinterSettings,Go to Printer Settings,Nenda kwenye Mipangilio ya Printa,Button that opens Printer Settings.,draft
+common_receiptSentToPrinter,Receipt sent to printer,Risiti imetumwa kwa printa,Message after a receipt was printed.,draft
+common_printFailed,Couldn't print the receipt,Imeshindwa kuchapisha risiti,Message when printing a receipt failed.,draft
+common_printFailedDetail,The printer did not accept it,Printa haikuikubali,Second line when the printer refused the receipt.,draft
+transactionType_expense,Expense,Matumizi,"Transaction type (stored as ""expense""); ""Other Income"" uses payments_typeOtherIncome.",draft
+transactions_title,Transactions,Miamala,Transactions screen title.,draft
+transactions_subtitle,All income and expense transactions,Miamala yote ya mapato na matumizi,Transactions screen subtitle.,draft
+transactions_record,Record Transaction,Rekodi Muamala,Button and form title for a new transaction.,draft
+transactions_edit,Edit Transaction,Hariri Muamala,Form title when editing a transaction.,draft
+transactions_update,Update Transaction,Sasisha Muamala,Save button when editing a transaction.,draft
+transactions_expenses,Expenses,Matumizi,Transactions metric card: total expenses in the period.,draft
+transactions_incomeVsExpenses,Other Income vs Expenses,Mapato Mengine dhidi ya Matumizi,Transactions metric card: other income minus expenses.,draft
+transactions_searchHint,"Search by description, category...","Tafuta kwa maelezo, kundi...",Transactions search box hint.,draft
+transactions_count,"{count, plural, =1{1 transaction} other{{count} transactions}}","{count, plural, =1{Muamala 1} other{Miamala {count}}}","Number of transactions shown, beside the filters.",draft
+transactions_empty,No transactions.,Hakuna miamala.,Transactions list when it is empty.,draft
+transactions_emptyForType,No transactions for {type}.,Hakuna miamala ya {type}.,"Transactions list when the type filter has none; type is the type's label.",draft
+transactions_deleteTitle,Delete this transaction?,Futa muamala huu?,Delete confirmation title.,draft
+transactions_deleteBody,"""{description}"" - {amount}
+
+You can restore it from Trash.","""{description}"" - {amount}
+
+Unaweza kuurejesha kutoka Takataka.","Delete confirmation text; amount is pre-formatted money.",draft
+transactions_movedToTrash,Transaction moved to Trash,Muamala umehamishiwa Takataka,"Message after deleting, with Undo.",draft
+transactions_deleteFailed,Couldn't delete the transaction,Imeshindwa kufuta muamala,Message when deleting failed.,draft
+transactions_restored,Transaction restored,Muamala umerejeshwa,Message after Undo restored the transaction.,draft
+transactions_restoreFailed,Couldn't restore the transaction,Imeshindwa kurejesha muamala,Message when Undo failed.,draft
+transactions_detailsTitle,Transaction Details,Maelezo ya Muamala,Details panel title and the form's first section heading.,draft
+transactions_allShown,Showing all recent transactions,Inaonyesha miamala yote ya hivi karibuni,End of the transactions list.,draft
+transactions_loadMore,Load more transactions,Pakia miamala zaidi,Button at the end of the transactions list.,draft
+transactions_fillRequired,Fill in all required fields correctly,Jaza sehemu zote zinazohitajika kwa usahihi,Message when the transaction form is incomplete.,draft
+transactions_selectPaymentMethod,Select how this transaction was paid,Chagua jinsi muamala huu ulivyolipwa,Message when no payment method is chosen.,draft
+transactions_updated,Transaction updated,Muamala umesasishwa,Message after editing a transaction.,draft
+transactions_updateFailed,Couldn't update the transaction,Imeshindwa kusasisha muamala,Message when editing failed.,draft
+transactions_saved,Transaction saved,Muamala umehifadhiwa,Message after recording a transaction.,draft
+transactions_saveFailed,Couldn't save the transaction,Imeshindwa kuhifadhi muamala,Message when recording failed.,draft
+transactions_selectCategory,Select category...,Chagua kundi...,Category field before one is chosen.,draft
+transactions_descriptionHint,What was this for?,Hii ilikuwa ya nini?,Description field hint.,draft
+transactions_noteLabel,Reference/Note (optional),Kumbukumbu/Maelezo (si lazima),Note field label.,draft
+transactions_noteHint,Add any additional information,Ongeza taarifa yoyote ya ziada,Note field hint.,draft
+transactions_amountPayment,Amount & Payment,Kiasi na Malipo,Form section heading.,draft
+transactions_amountRequired,Amount ({currency}) *,Kiasi ({currency}) *,"Amount field label; currency is the currency symbol.",draft
+transactions_selectMethod,Select method,Chagua njia,Payment method field before one is chosen.,draft
+transactions_noCategories,No categories found,Hakuna makundi yaliyopatikana,Category picker when the search matches nothing.,draft
+transactions_selectCategoryTitle,Select Category,Chagua Kundi,Category picker title.,draft
+transactions_searchCategories,Search categories...,Tafuta makundi...,Category picker search hint.,draft
+debtSource_service,Service,Huduma,"What a debt came from (stored as ""Service"").",draft
+debtors_title,Active Debts,Madeni Yanayoendelea,Debtors screen title.,draft
+debtors_subtitle,Track and manage all outstanding debts,Fuatilia na simamia madeni yote yanayodaiwa,Debtors screen subtitle.,draft
+debtors_newRecords,"{count, plural, =1{1 new debtor available} other{{count} new debtors available}}","{count, plural, =1{Mdaiwa 1 mpya yupo} other{Wadaiwa {count} wapya wapo}}",Banner when new debtors arrived while the list was open.,draft
+debtors_emptyNone,No outstanding debts,Hakuna madeni yanayodaiwa,Debtors list when nobody owes anything.,draft
+debtors_emptySearch,No debtors match your search,Hakuna wadaiwa wanaolingana na utafutaji wako,Debtors list when the search finds nobody.,draft
+debtors_totalDebtors,Total Debtors,Jumla ya Wadaiwa,Debtors metric card title.,draft
+debtors_withBalance,With outstanding balance,Wenye salio linalodaiwa,Under the Total Debtors metric.,draft
+debtors_totalOwed,Total Owed,Jumla Inayodaiwa,"Debtors metric, table header and details row: everything a debtor owes.",draft
+debtors_outstandingBalance,Outstanding balance,Salio linalodaiwa,Under the Total Owed metric.,draft
+debtors_overdueDebtors,Overdue Debtors,Wadaiwa Waliochelewa,Debtors metric card title.,draft
+debtors_overDays,Over {days} days,Zaidi ya siku {days},"Under the Overdue Debtors metric; days is the facility's overdue limit.",draft
+debtors_paidThisMonth,Paid This Month,Kilicholipwa Mwezi Huu,Debtors metric card title.,draft
+debtors_fromDebtPayments,From debt payments,Kutoka malipo ya madeni,Under the Paid This Month metric.,draft
+debtors_recordPayment,Record Payment,Rekodi Malipo,Button and form title for recording a debt payment.,draft
+debtors_overdue,Overdue,Imechelewa,Debt status badge and status filter choice: past the overdue limit.,draft
+debtors_current,Current,Ndani ya muda,Debt status badge and status filter choice: not overdue yet.,draft
+debtors_colOverdue,Overdue,Muda wa Kuchelewa,Debtors table header (how long overdue) and the overdue-range filter's label.,draft
+debtors_rangeDays,{from}-{to} days overdue,Siku {from}-{to} za kuchelewa,Overdue-range filter choice.,draft
+debtors_rangeDaysPlus,{from}+ days overdue,Siku {from}+ za kuchelewa,Last overdue-range filter choice.,draft
+debtors_searchHint,Search debtor by name...,Tafuta mdaiwa kwa jina...,Debtors search box hint.,draft
+debtors_debtor,Debtor,Mdaiwa,Debtors table header and the payment form's debtor field.,draft
+debtors_oldestDebtSince,Oldest Debt Since,Deni la Zamani Zaidi Tangu,Debtors table header.,draft
+debtors_daysCount,"{count, plural, other{{count} days}}","{count, plural, other{Siku {count}}}","How many days a debtor is overdue, in the table.",draft
+debtors_sendReminder,Send Reminder,Tuma Ukumbusho,"Button, tooltip and dialog title for reminding a debtor.",draft
+debtors_paymentHistory,Payment History,Historia ya Malipo,Button and tooltip that open a debtor's payments.,draft
+debtors_none,No debtors,Hakuna wadaiwa,Pagination bar when the list is empty.,draft
+debtors_detailsTitle,Debtor Details,Maelezo ya Mdaiwa,Details panel title.,draft
+debtors_overdueAmount,Overdue Amount,Kiasi Kilichochelewa,Details panel row.,draft
+debtors_lastTransaction,Last Transaction,Muamala wa Mwisho,Details panel row: date of the latest debt.,draft
+debtors_outstandingDebts,Outstanding Debts ({count}),Madeni Yanayodaiwa ({count}),Details panel heading with the number of debts.,draft
+debtors_addNote,Add Note,Ongeza Maelezo,Button and dialog title for a note on a debtor.,draft
+debtors_invoiceLine,Invoice: {invoice} • {date},Ankara: {invoice} • {date},One debt in the details panel: invoice number and date.,draft
+debtors_pay,Pay,Lipa,Button that pays one debt.,draft
+debtors_exportFailed,Couldn't export the active debts,Imeshindwa kuhamisha madeni yanayoendelea,Message when the export failed.,draft
+debtors_noteHint,e.g. Promised to pay by Friday,mf. Ameahidi kulipa kufikia Ijumaa,Add Note field hint.,draft
+debtors_noteSaveFailed,Couldn't save the note,Imeshindwa kuhifadhi maelezo,Message when saving a note failed.,draft
+debtors_reminderBody,Remind {name} about their {amount} balance via:,Mkumbushe {name} kuhusu salio lake la {amount} kupitia:,"Send Reminder dialog text; amount is pre-formatted money.",draft
+debtors_viaSms,SMS,SMS,Send Reminder dialog: send by text message.,draft
+debtors_viaWhatsApp,WhatsApp,WhatsApp,Send Reminder dialog: send by WhatsApp.,draft
+debtors_whatsAppFailed,Couldn't open WhatsApp,Imeshindwa kufungua WhatsApp,Message when WhatsApp could not be opened.,draft
+debtors_messagesFailed,Couldn't open Messages,Imeshindwa kufungua Ujumbe,Message when the text-message app could not be opened.,draft
+debtors_reminderFailed,Couldn't send the reminder,Imeshindwa kutuma ukumbusho,Message when opening the reminder failed.,draft
+debtors_errChooseDebtor,Choose the debtor this payment is for,Chagua mdaiwa wa malipo haya,Payment form: debtor field left empty.,draft
+debtors_errNoMatch,"No debtor found with the name ""{name}""","Hakuna mdaiwa aliyepatikana kwa jina ""{name}""",Payment form: the typed name matches no debtor.,draft
+debtors_errTooShort,Type at least 2 letters of the debtor's name,Andika angalau herufi 2 za jina la mdaiwa,Payment form: too little typed to search.,draft
+debtors_errPickSuggestion,Choose a debtor from the suggestions,Chagua mdaiwa kutoka kwenye mapendekezo,Payment form: a name was typed but not picked from the list.,draft
+debtors_clientLabel,Client: {name},Mteja: {name},Payment form header: the debtor's name.,draft
+debtors_totalOwedLabel,Total owed:,Jumla inayodaiwa:,"Payment form header, before the amount (shown in red after it).",draft
+debtors_selectPaymentMethod,Select how this payment was made,Chagua jinsi malipo haya yalivyofanywa,Message when no payment method is chosen.,draft
+debtors_signInAgain,Sign in again to record this payment,Ingia tena ili urekodi malipo haya,Message when the session has ended.,draft
+debtors_selectClient,Select a client,Chagua mteja,Message when no debtor is chosen.,draft
+debtors_paymentRecorded,Payment of {amount} recorded for {name},Malipo ya {amount} yamerekodiwa kwa {name},"Message after recording a payment; amount is pre-formatted money.",draft
+debtors_paymentSaveFailed,Couldn't save the payment,Imeshindwa kuhifadhi malipo,Message when recording a payment failed.,draft
+debtors_debtorSearchHint,Search by name or phone,Tafuta kwa jina au simu,Payment form: debtor field hint.,draft
+debtors_debtorHelper,Only clients who currently owe money are listed,Wateja wanaodaiwa pesa kwa sasa ndio pekee walioorodheshwa,Payment form: under the debtor field.,draft
+debtors_amountOwed,Amount owed: {amount},Kiasi kinachodaiwa: {amount},"Payment form: what this one debt still owes; amount is pre-formatted money.",draft
+debtors_paymentAmount,Payment Amount,Kiasi cha Malipo,Payment form: amount field label.,draft
+debtors_errEnterAmount,Enter an amount,Weka kiasi,Payment form: amount left empty.,draft
+debtors_errValidAmount,Enter a valid amount,Weka kiasi sahihi,Payment form: amount is zero.,draft
+debtors_errMoreThanOwed,Cannot pay more than owed,Huwezi kulipa zaidi ya kinachodaiwa,Payment form: amount above what this debt owes.,draft
+debtors_errMoreThanTotal,Cannot pay more than total owed,Huwezi kulipa zaidi ya jumla inayodaiwa,Payment form: amount above everything the debtor owes.,draft
+debtors_savePayment,Save Payment,Hifadhi Malipo,Payment form save button.,draft
+clients_title,Clients,Wateja,Clients screen title.,draft
+clients_subtitle,Manage all your clients in one place,Simamia wateja wako wote mahali pamoja,Clients screen subtitle.,draft
+clients_add,Add Client,Ongeza Mteja,Button and form title for a new client.,draft
+clients_edit,Edit Client,Hariri Mteja,Form title when editing a client.,draft
+clients_total,Total Clients,Jumla ya Wateja,Clients metric card title.,draft
+clients_allTime,All time,Muda wote,Beside the Total Clients metric.,draft
+clients_newThisMonth,New This Month,Wapya Mwezi Huu,Clients metric card title.,draft
+clients_mostActiveType,Most Active Type,Aina Inayoongoza,Clients metric card: the client type with most clients.,draft
+clients_percentOfClients,{percent}% of clients,{percent}% ya wateja,"Beside the Most Active Type metric; percent is a whole number.",draft
+clients_lastAdded,Last Added,Aliyeongezwa Mwisho,Clients metric card: the newest client.,draft
+clients_searchHint,"Search by name, phone, address...","Tafuta kwa jina, simu, anwani...",Clients search box hint.,draft
+clients_deleteTitle,Delete Client,Futa Mteja,Delete confirmation title.,draft
+clients_deleteBody,"Delete ""{name}"" permanently?","Futa ""{name}"" kabisa?",Delete confirmation text.,draft
+clients_deleted,Client deleted,Mteja amefutwa,Message after deleting a client.,draft
+clients_deleteFailed,Couldn't delete the client,Imeshindwa kufuta mteja,Message when deleting failed.,draft
+clients_shareFailed,Couldn't share the client card,Imeshindwa kushiriki kadi ya mteja,Message when sharing the client card failed.,draft
+clients_detailsTitle,Client Details,Maelezo ya Mteja,Details panel title.,draft
+clients_clientType,Client Type,Aina ya Mteja,Details label and form section heading.,draft
+clients_joinedOn,Joined On,Alijiunga Tarehe,Table header and details label: when the client was added.,draft
+clients_totalTransactions,Total Transactions,Jumla ya Miamala,Details label: the client's number of payments.,draft
+clients_totalSpent,Total Spent,Jumla Aliyotumia,Details label: what the client has paid in total.,draft
+clients_saveShare,Save / Share,Hifadhi / Shiriki,Button that saves or shares the client card image.,draft
+clients_searchingNote,Searching by name (across all types),Inatafuta kwa jina (katika aina zote),Note under the search box while searching.,draft
+clients_newRecords,"{count, plural, =1{1 new client available} other{{count} new clients available}}","{count, plural, =1{Mteja 1 mpya yupo} other{Wateja {count} wapya wapo}}",Banner when new clients arrived while the list was open.,draft
+clients_emptySearch,"No clients match ""{query}""","Hakuna wateja wanaolingana na ""{query}""",Clients list when the search finds nobody.,draft
+clients_empty,No clients found,Hakuna wateja waliopatikana,Clients list when it is empty.,draft
+clients_client,Client,Mteja,Clients table header.,draft
+clients_indexNeeded,This filter needs a one-time database index to be created first.,Kichujio hiki kinahitaji faharasa ya hifadhidata itengenezwe mara moja kwanza.,Clients list error when a database index is missing.,draft
+clients_loadError,Could not load clients: {error},Imeshindwa kupakia wateja: {error},"Clients list error; error is FriendlyError's sentence.",draft
+clients_createIndex,Create Index,Tengeneza Faharasa,Button that opens the console to create the missing index.,draft
+clients_indexBuildingHint,This takes a minute or two to finish building after you create it - then try this filter again.,Hii huchukua dakika moja au mbili kukamilika baada ya kuitengeneza - kisha jaribu kichujio hiki tena.,Under the Create Index button.,draft
+clients_none,No clients,Hakuna wateja,Pagination bar when the list is empty.,draft
+clients_errSelectType,Select at least one client type,Chagua angalau aina moja ya mteja,Client form: no type chosen.,draft
+clients_saveFailed,Couldn't save the client,Imeshindwa kuhifadhi mteja,Message when saving a client failed.,draft
+clients_added,Client added,Mteja ameongezwa,Message after adding a client.,draft
+clients_updated,Client updated,Mteja amesasishwa,Message after editing a client.,draft
+clients_duplicateTitle,Client already exists,Mteja tayari yupo,Duplicate-client dialog title.,draft
+clients_duplicateByPhone,A client with this phone number already exists:,Mteja mwenye namba hii ya simu tayari yupo:,"Duplicate-client dialog, matched by phone.",draft
+clients_duplicateByName,A client with a similar name already exists:,Mteja mwenye jina linalofanana tayari yupo:,"Duplicate-client dialog, matched by name.",draft
+clients_noPhone,No phone number,Hakuna namba ya simu,Duplicate-client dialog: the existing client has no phone.,draft
+clients_duplicateBody,"To avoid duplicate clients, {action, select, add{this client was not saved} other{your changes were not saved}}. If it is the same person, use the existing client from the Clients list. If it is a different person, {match, select, phone{enter a different phone number} other{change the name slightly}} and try again.","Ili kuepuka wateja waliorudiwa, {action, select, add{mteja huyu hajahifadhiwa} other{mabadiliko yako hayajahifadhiwa}}. Ikiwa ni mtu yule yule, tumia mteja aliyepo kutoka kwenye orodha ya Wateja. Ikiwa ni mtu tofauti, {match, select, phone{weka namba nyingine ya simu} other{badilisha jina kidogo}} kisha ujaribu tena.","Duplicate-client dialog advice. action: ""add"" when adding, ""edit"" when editing; match: ""phone"" or ""name"".",draft
+clients_infoSection,Client Information,Taarifa za Mteja,Client form section heading.,draft
+clients_nameHint,Enter client name,Weka jina la mteja,Client form: name hint.,draft
+clients_phoneHint,e.g. 07XX XXX XXX,mf. 07XX XXX XXX,Client form: phone hint.,draft
+clients_addressHint,Enter address,Weka anwani,Client form: address hint.,draft
+clients_notesHint,Any additional information about the client...,Taarifa yoyote ya ziada kuhusu mteja...,Client form: notes hint.,draft
+clients_quickSummary,Quick Summary,Muhtasari wa Haraka,Client form side card heading.,draft
+clients_tip,You can update this client's animal species or crops anytime by editing their profile.,Unaweza kusasisha aina za wanyama au mazao ya mteja huyu wakati wowote kwa kuhariri wasifu wake.,Client form tip card.,draft
+clients_cropInfo,Crop Information (Optional),Taarifa za Mazao (Si lazima),Client form section heading for a crop producer.,draft
+clients_animalInfo,Animal Information (Optional),Taarifa za Wanyama (Si lazima),Client form section heading for a farmer.,draft
+clients_cropHint,Add crops grown by this client if available.,Ongeza mazao yanayolimwa na mteja huyu ikiwa yapo.,Under the crop section heading.,draft
+clients_animalHint,Add animals owned by this client if available.,Ongeza wanyama anaowamiliki mteja huyu ikiwa wapo.,Under the animal section heading.,draft
+clients_farmerTypeHint,Select a farmer type below to add crops or animals.,Chagua aina ya mkulima hapa chini ili kuongeza mazao au wanyama.,Under the section heading before a farmer type is chosen.,draft
+clients_farmerType,Farmer Type,Aina ya Mkulima,Client form: farmer type field label.,draft
+clients_addCrops,Add Crops,Ongeza Mazao,Button that opens the crop picker.,draft
+clients_addAnimals,Add Animals,Ongeza Wanyama,Button that opens the animal picker.,draft
+clients_selectCrops,Select Crops,Chagua Mazao,Crop picker title.,draft
+clients_selectAnimals,Select Animal Species,Chagua Aina za Wanyama,Animal picker title.,draft
+clients_noMatches,No matches found,Hakuna kinacholingana,Crop or animal picker when the search matches nothing.,draft
+clients_additionalDetails,Additional Details,Maelezo ya Ziada,Client form section heading (vet or business details).,draft
+clients_practiceType,Practice Type,Aina ya Kazi,Client form: a vet client's practice type.,draft
+clients_businessName,Business Name,Jina la Biashara,Client form: business name field label.,draft
+clients_businessNameHint,Enter business name,Weka jina la biashara,Client form: business name hint.,draft
+clients_update,Update Client,Sasisha Mteja,Save button when editing a client.,draft
+clients_save,Save Client,Hifadhi Mteja,Save button when adding a client.,draft
