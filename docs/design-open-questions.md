@@ -43,12 +43,6 @@ User-facing "VetBiz Pro" now reads `AppInfo.name` (titles, Settings, support lin
 - **Two names in use**: "VetBiz Pro" and "VetBiz Pro System" (login header, register header, © line). One name?
 - **The version** "v1.0.0" is typed in Settings (`settings_screen.dart:239`); it could come from the build (pubspec) instead.
 
-### Raised in step 2D, batch D5
-
-Colours are outside the standing snap rule, so this is kept as it is:
-
-- **Activity-type colours**, `lib/screens/reports/report_tabbed_content.dart` `_activityColor`: services `Colors.purple`, transactions `Colors.indigo`, clients `Colors.teal`. This is one of the four copies the shared activity-type helper replaces in step 2E. Kept for that step.
-
 ### Raised in step 2D, batch D6
 
 - **Alpha 0.95**, `lib/screens/products/add_edit_product_screen.dart` (the brand-green category and type picker dialogs' background, x2): 0.1 above `a85`, no step. Kept as is (owner, after D6); listed for 2R.
@@ -86,7 +80,6 @@ Colours are outside the standing snap rule, so this is kept as it is:
 - **Drawer item timings**, `dashboard_screen.dart`, kept as named constants: `_hoverFade` 200 ms (between `fast` and `normal`), `_tooltipWait` 300 ms (`tooltipDelay` is 400).
 - **Subscription banner**, `dashboard_screen.dart` `_buildSubscriptionBanner`: `deepAmber` `#C77800` and `cream` `#FFF6E7` (local consts; no role within 12), the cream at alpha 0.92 (no step within 0.05), and `_bannerSwitch` 550 ms (50 above `slowest`). All kept.
 - **Quick action tints `#E3F0EC` (Record Visit) and `#FCEFD9` (Add Product)**, `dashboard_screen.dart` `_buildQuickActionCards`: `#E3F0EC` is within 12 of `divider`, but snapping a tinted fill to a grey is what the owner reversed for the alerts after D8, so both are kept exact. Tint roles (like `dangerSurface`)?
-- **Activity colours `Colors.purple` (services) and `Colors.teal` (clients)**, `dashboard_screen.dart` `_activityColor`: one of the four copies the 2E helper replaces; kept for that step, as in D5.
 - **Chart loading gap 40**, `dashboard_screen.dart` (`EdgeInsets.symmetric(vertical: 40)` around the chart spinner): 8 above `s32`. Kept.
 - **Service breakdown palette**, `lib/screens/dashboard/insights_screen.dart` `_servicePalette`: steel blue `#5C7C99`, sage `#8FA998`, terracotta `#B98B6F`, lavender `#9B8AA6` (the brand teal and amber now read `AppPalette`). A fixed chart palette with no roles. `chart` roles with the exact values?
 - **Inline raw error**, `insights_screen.dart`: "Could not load insights: $_error". Fixed before D10 (owner): "Couldn't load insights." plus `FriendlyError.messageFor(error)`.
@@ -96,9 +89,16 @@ Colours are outside the standing snap rule, so this is kept as it is:
 ### Raised in step 2D, batch D10
 
 - **Facility teal `#3E8E82`**, `lib/screens/facilities/facility_screen.dart` (`_tealAccent`, the Total Products metric): the login teal again (see D8). Kept as a named constant.
-- **Activity colours `Colors.purple` / `Colors.teal`**, `facility_screen.dart` `_activityColor`: kept for the 2E helper, as in D5 and D9.
 - **Facility type `Colors.purple`** (any type other than agrovet or vet), `lib/screens/facilities/facility_picker_screen.dart` `_typeColor`: same value as `chart4`, different purpose. Kept.
 - **Loading gaps 40**, `facility_screen.dart` (`EdgeInsets.symmetric(vertical: 40)`, inventory and sales tabs): 8 above `s32`. Kept. List panel sizes `_listPanelHeight` 360 and `_listPanelWidth` 340 kept exact as named constants.
+
+### Raised in step 2E
+
+- **`Colors.orange.shade900`**, `lib/main.dart` (the text of the "removed from facility" note on the no-facility screen): no role (`warningStrong` is orange 800). On the guard allowlist with that reason. Snap to `warningStrong`, or a role?
+- **New category roles `chart8` (amber 700) and `chart9` (deep orange)**, `lib/theme/app_colors.dart`, for the Reorder Soon and Debt Reminder notification colours (spec 4.1: category colour -> chartN), next to `chart7` (indigo, Transactions activity). Exact legacy values; for review in 2R with the other chart roles.
+- **PDF snaps (output difference)**, `daily_report_pdf_service.dart` and `receipt_pdf_service.dart`: font 8 and 8.5 -> 9, 9.5 -> 10, spacing 1.5 -> 2, 3.5 and 5 -> 4 (spec tables and the standing rule). Printed text in those spots grows by up to 1pt. Check one printed daily report and receipt.
+- **Never in a 2D batch**: `lib/screens/activity/activity_log_screen.dart` (62 guard hits left) and `lib/screens/legal/legal_document_screen.dart` (54). Neither folder is in the D1 to D10 list. One more batch for both?
+- **Screen allowlist candidates**: the computed `Duration(days: ...)` in `subscription_requests_tab.dart`, `overview_details_screen.dart`, `facility_detail_screen.dart` and login's `_errorDisplayDuration` (raised in D7/D8) are the same kind as the ones allowlisted in 2E for `client_provider.dart` and `activity_log_retention.dart`. Allowlist them too?
 
 ### Trash and restore: books consistency (audit after D6, read-only)
 
@@ -265,13 +265,13 @@ The questions as raised:
   - fallback "Login failed. Please try again." ("Please"), and an unknown code shows Firebase's own message.
   Reword to the copy rules? (The login screen would change too.)
 
-### For step 2E
+### For step 2E (done in step 2E, commits 6bb62cd to be0b55b)
 
-- **New activity entries write `'Sales'`.** Both spellings stay readable, which also gives old `'Sale'` rows the right icon. As raised: Activity type `'Sale'` vs `'Sales'`, `lib/screens/sales/add_sale_screen.dart:793` vs `lib/providers/sale_provider.dart:441, 570`: two spellings for sale entries, both already stored. The icon/colour readers lower-case and match `'sales'`, so entries written as `'Sale'` get the default icon. Both are kept in `ActivityType` (stored strings never change). Should new entries all write `'Sales'`? Old `'Sale'` entries would still need to display.
-- **One shared activity-type icon/colour helper** replacing the four copies. As raised: Activity-type readers, `activity_log_screen.dart:348, 373`, `dashboard_screen.dart:1784, 1807`, `facility_screen.dart:1802, 1825`, `report_tabbed_content.dart:815, 840`: four copies of the same lower-case `switch` for icon and colour, including types nothing writes any more (`clients`, `settings`, `admin`). Keep as is, or one shared helper (a behaviour-neutral change, but outside 2B)?
-- **A `FacilityStatus` enum.** As raised: Facility status, `lib/screens/facilities/facility_screen.dart:1229-1240, 2444, 2606`: `'Active'` / `'active'` / `'pending'` / `'inactive'`, compared case-insensitively. A third kind of "status" (not a user or payment-submission status). Its own enum in `lib/data`?
-- **`Fields.active`.** As raised: Promotion `active` field, `lib/models/promotion.dart:78-152`, `lib/screens/platform_admin/promotions_screen.dart:228, 561`: `'active'` is a boolean field NAME on `promotions/{id}`, not a status value. Add it to `Fields`, or leave it with the model?
-- **A membership-history action enum, with a link test against `functions/membership.js`.** As raised: Membership-history action keys, `lib/screens/admin/manage_assistants_screen.dart:242, 1650-1656`: `'approved'`, `'rejected'`, `'deactivated'`, `'reactivated'` are the `statusHistory[].action` values written by `functions/membership.js:92-95` (`history:`). Shared with the server, so an enum here would want a link test like UserStatus has.
+- **New activity entries write `'Sales'`.** Both spellings stay readable, which also gives old `'Sale'` rows the right icon. As raised: Activity type `'Sale'` vs `'Sales'`, `lib/screens/sales/add_sale_screen.dart:793` vs `lib/providers/sale_provider.dart:441, 570`: two spellings for sale entries, both already stored. The icon/colour readers lower-case and match `'sales'`, so entries written as `'Sale'` get the default icon. Both are kept in `ActivityType` (stored strings never change). Should new entries all write `'Sales'`? Old `'Sale'` entries would still need to display. **Done (6bb62cd):** the add-sale screen writes `ActivityType.sales`; `ActivityType.canonicalKey` reads `'Sale'` as `'Sales'` for the log's summary chips, filter, icon and colour.
+- **One shared activity-type icon/colour helper** replacing the four copies. As raised: Activity-type readers, `activity_log_screen.dart:348, 373`, `dashboard_screen.dart:1784, 1807`, `facility_screen.dart:1802, 1825`, `report_tabbed_content.dart:815, 840`: four copies of the same lower-case `switch` for icon and colour, including types nothing writes any more (`clients`, `settings`, `admin`). Keep as is, or one shared helper (a behaviour-neutral change, but outside 2B)? **Done (ff9e3c3):** `lib/theme/activity_type_style.dart`; services `chart4`, clients `chart6`, transactions a new `chart7` (indigo). The dashboard and facility copies had no Transactions case; those entries now get the receipt icon in indigo there too.
+- **A `FacilityStatus` enum.** As raised: Facility status, `lib/screens/facilities/facility_screen.dart:1229-1240, 2444, 2606`: `'Active'` / `'active'` / `'pending'` / `'inactive'`, compared case-insensitively. A third kind of "status" (not a user or payment-submission status). Its own enum in `lib/data`? **Done (a0e8e2d):** `lib/data/facility_status.dart`, read ignoring case, missing = Active.
+- **`Fields.active`.** As raised: Promotion `active` field, `lib/models/promotion.dart:78-152`, `lib/screens/platform_admin/promotions_screen.dart:228, 561`: `'active'` is a boolean field NAME on `promotions/{id}`, not a status value. Add it to `Fields`, or leave it with the model? **Done (b3825d5).**
+- **A membership-history action enum, with a link test against `functions/membership.js`.** As raised: Membership-history action keys, `lib/screens/admin/manage_assistants_screen.dart:242, 1650-1656`: `'approved'`, `'rejected'`, `'deactivated'`, `'reactivated'` are the `statusHistory[].action` values written by `functions/membership.js:92-95` (`history:`). Shared with the server, so an enum here would want a link test like UserStatus has. **Done (be0b55b):** `lib/data/membership_history_action.dart` holds request and stored key; `functions/test/endpoints.test.js` compares it with `STATUS_ACTIONS` and fails if either side cannot be parsed.
 
 ### Separate task, after 2D and before 2F
 
