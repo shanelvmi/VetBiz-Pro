@@ -2214,4 +2214,80 @@ class AppLocalizationsSw extends AppLocalizations {
 
   @override
   String get team_subtitle => 'Simamia ruhusa na hali ya wafanyakazi wako';
+
+  @override
+  String get team_inviteAssistant => 'Mwalike Msaidizi';
+
+  @override
+  String get team_noAdmin => 'Hakuna msimamizi aliyeingia';
+
+  @override
+  String get team_noFacilities =>
+      'Hakuna vituo vilivyopatikana kwa akaunti yako.';
+
+  @override
+  String get team_acrossFacilities => 'Katika vituo vyako';
+
+  @override
+  String get team_haveAccess => 'Wana ruhusa';
+
+  @override
+  String get team_accessPaused => 'Ruhusa imesimamishwa';
+
+  @override
+  String get team_waitingApproval => 'Wanasubiri Idhini';
+
+  @override
+  String get team_needDecision => 'Wanahitaji uamuzi wako';
+
+  @override
+  String get team_searchHint => 'Tafuta kwa jina, simu au kituo...';
+
+  @override
+  String get team_emptyTitle => 'Bado hakuna wafanyakazi';
+
+  @override
+  String get team_emptyHint =>
+      'Tumia Mwalike Msaidizi kuongeza mfanyakazi wako wa kwanza.';
+
+  @override
+  String get team_noAssistants => 'Bado hakuna wasaidizi';
+
+  @override
+  String get team_noMatches =>
+      'Hakuna wafanyakazi wanaolingana na vichujio vyako';
+
+  @override
+  String get team_colUserName => 'Jina la mtumiaji';
+
+  @override
+  String get team_colRole => 'Nafasi';
+
+  @override
+  String get team_notRecorded => 'Haijarekodiwa';
+
+  @override
+  String get team_registered => 'Amejisajili';
+
+  @override
+  String get team_detailsTitle => 'Maelezo ya Mfanyakazi';
+
+  @override
+  String team_nameYou(String name) {
+    return '$name  (wewe)';
+  }
+
+  @override
+  String get team_joined => 'Alijiunga';
+
+  @override
+  String team_askedAgain(String date) {
+    return 'Aliomba kujiunga tena: $date';
+  }
+
+  @override
+  String get team_approvedLabel => 'Aliidhinishwa';
+
+  @override
+  String get team_waitingForApproval => 'Anasubiri idhini';
 }

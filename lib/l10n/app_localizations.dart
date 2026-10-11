@@ -3997,6 +3997,144 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Manage your team\'s access and status'**
   String get team_subtitle;
+
+  /// Button, tooltip and dialog title for inviting an assistant.
+  ///
+  /// In en, this message translates to:
+  /// **'Invite Assistant'**
+  String get team_inviteAssistant;
+
+  /// Team screen when no admin is signed in.
+  ///
+  /// In en, this message translates to:
+  /// **'No logged in admin user found'**
+  String get team_noAdmin;
+
+  /// Team screen when the admin has no facilities.
+  ///
+  /// In en, this message translates to:
+  /// **'No facilities found for your account.'**
+  String get team_noFacilities;
+
+  /// Under the Total card.
+  ///
+  /// In en, this message translates to:
+  /// **'Across your facilities'**
+  String get team_acrossFacilities;
+
+  /// Under the Active card.
+  ///
+  /// In en, this message translates to:
+  /// **'Have access'**
+  String get team_haveAccess;
+
+  /// Under the Deactivated card.
+  ///
+  /// In en, this message translates to:
+  /// **'Access paused'**
+  String get team_accessPaused;
+
+  /// Card title: assistants waiting for approval.
+  ///
+  /// In en, this message translates to:
+  /// **'Waiting Approval'**
+  String get team_waitingApproval;
+
+  /// Under the Waiting Approval card.
+  ///
+  /// In en, this message translates to:
+  /// **'Need your decision'**
+  String get team_needDecision;
+
+  /// Team search box hint.
+  ///
+  /// In en, this message translates to:
+  /// **'Search by name, phone or facility...'**
+  String get team_searchHint;
+
+  /// Team list when it is empty.
+  ///
+  /// In en, this message translates to:
+  /// **'No team members yet'**
+  String get team_emptyTitle;
+
+  /// Under the empty team list.
+  ///
+  /// In en, this message translates to:
+  /// **'Use Invite Assistant to add your first team member.'**
+  String get team_emptyHint;
+
+  /// Team list (cards) when it is empty.
+  ///
+  /// In en, this message translates to:
+  /// **'No assistants yet'**
+  String get team_noAssistants;
+
+  /// Team list when the filters match nobody.
+  ///
+  /// In en, this message translates to:
+  /// **'No team members match your filters'**
+  String get team_noMatches;
+
+  /// Team table header.
+  ///
+  /// In en, this message translates to:
+  /// **'User name'**
+  String get team_colUserName;
+
+  /// Team table header.
+  ///
+  /// In en, this message translates to:
+  /// **'Role'**
+  String get team_colRole;
+
+  /// Details panel: a date or value that was never saved.
+  ///
+  /// In en, this message translates to:
+  /// **'Not recorded'**
+  String get team_notRecorded;
+
+  /// History: when the account was created.
+  ///
+  /// In en, this message translates to:
+  /// **'Registered'**
+  String get team_registered;
+
+  /// Details panel title.
+  ///
+  /// In en, this message translates to:
+  /// **'Team Member Details'**
+  String get team_detailsTitle;
+
+  /// Details panel: your own name.
+  ///
+  /// In en, this message translates to:
+  /// **'{name}  (you)'**
+  String team_nameYou(String name);
+
+  /// Details panel label.
+  ///
+  /// In en, this message translates to:
+  /// **'Joined'**
+  String get team_joined;
+
+  /// Details panel, under Joined.
+  ///
+  /// In en, this message translates to:
+  /// **'Asked to join again: {date}'**
+  String team_askedAgain(String date);
+
+  /// Details panel label: when the assistant was approved.
+  ///
+  /// In en, this message translates to:
+  /// **'Approved'**
+  String get team_approvedLabel;
+
+  /// Details panel: not approved yet.
+  ///
+  /// In en, this message translates to:
+  /// **'Waiting for approval'**
+  String get team_waitingForApproval;
 }
 
 class _AppLocalizationsDelegate

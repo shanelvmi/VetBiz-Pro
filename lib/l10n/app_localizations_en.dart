@@ -2202,4 +2202,78 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get team_subtitle => 'Manage your team\'s access and status';
+
+  @override
+  String get team_inviteAssistant => 'Invite Assistant';
+
+  @override
+  String get team_noAdmin => 'No logged in admin user found';
+
+  @override
+  String get team_noFacilities => 'No facilities found for your account.';
+
+  @override
+  String get team_acrossFacilities => 'Across your facilities';
+
+  @override
+  String get team_haveAccess => 'Have access';
+
+  @override
+  String get team_accessPaused => 'Access paused';
+
+  @override
+  String get team_waitingApproval => 'Waiting Approval';
+
+  @override
+  String get team_needDecision => 'Need your decision';
+
+  @override
+  String get team_searchHint => 'Search by name, phone or facility...';
+
+  @override
+  String get team_emptyTitle => 'No team members yet';
+
+  @override
+  String get team_emptyHint =>
+      'Use Invite Assistant to add your first team member.';
+
+  @override
+  String get team_noAssistants => 'No assistants yet';
+
+  @override
+  String get team_noMatches => 'No team members match your filters';
+
+  @override
+  String get team_colUserName => 'User name';
+
+  @override
+  String get team_colRole => 'Role';
+
+  @override
+  String get team_notRecorded => 'Not recorded';
+
+  @override
+  String get team_registered => 'Registered';
+
+  @override
+  String get team_detailsTitle => 'Team Member Details';
+
+  @override
+  String team_nameYou(String name) {
+    return '$name  (you)';
+  }
+
+  @override
+  String get team_joined => 'Joined';
+
+  @override
+  String team_askedAgain(String date) {
+    return 'Asked to join again: $date';
+  }
+
+  @override
+  String get team_approvedLabel => 'Approved';
+
+  @override
+  String get team_waitingForApproval => 'Waiting for approval';
 }
