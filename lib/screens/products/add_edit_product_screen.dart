@@ -1484,7 +1484,7 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
   /// Sale's: Cancel at the far left, the primary action at the far right.
   Widget _buildFooter({required bool isEditing, required String buttonText}) {
     return Container(
-      padding: EdgeInsets.fromLTRB(20, 14, 20, 14 + MediaQuery.of(context).padding.bottom),
+      padding: EdgeInsets.fromLTRB(AppSpacing.s20, AppSpacing.s14, AppSpacing.s20, AppSpacing.s14 + MediaQuery.of(context).padding.bottom),
       decoration: BoxDecoration(
         color: context.colors.surface,
         border: Border(top: BorderSide(color: context.colors.textHint.withValues(alpha: AppAlpha.a15))),

@@ -59,7 +59,7 @@
   "counts": {
     "R1": {
       "lib/screens/admin/manage_assistants_screen.dart": 2,
-      "lib/screens/dashboard/dashboard_screen.dart": 12,
+      "lib/screens/dashboard/dashboard_screen.dart": 10,
       "lib/screens/dashboard/insights_screen.dart": 5,
       "lib/screens/dashboard/notifications_screen.dart": 1,
       "lib/screens/facilities/facility_picker_screen.dart": 1,
@@ -75,9 +75,7 @@
     "R4": {
       "lib/screens/admin/manage_assistants_screen.dart": 1,
       "lib/screens/dashboard/dashboard_screen.dart": 1,
-      "lib/screens/facilities/facility_screen.dart": 2,
-      "lib/screens/products/add_edit_product_screen.dart": 1,
-      "lib/screens/sales/add_sale_screen.dart": 1
+      "lib/screens/facilities/facility_screen.dart": 2
     },
     "R5": {
       "lib/screens/dashboard/dashboard_screen.dart": 14,
@@ -90,7 +88,7 @@
     },
     "R6": {},
     "R7": {
-      "lib/screens/dashboard/dashboard_screen.dart": 2
+      "lib/screens/dashboard/dashboard_screen.dart": 1
     },
     "R8": {
       "lib/screens/sales/receipt_preview_screen.dart": 1,

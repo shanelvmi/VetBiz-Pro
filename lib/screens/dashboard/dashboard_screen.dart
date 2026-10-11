@@ -2752,8 +2752,8 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
             // promotion sees both rather than only whichever was
             // checked first.
             final activeCategories = <Color>[
-              if (hasNew || hasUnreadFacilityNotification) Colors.redAccent,
-              if (isInTrialInfo) Colors.blue,
+              if (hasNew || hasUnreadFacilityNotification) context.colors.dangerAccent,
+              if (isInTrialInfo) context.colors.info,
               if (hasActivePromotion) context.colors.accent,
             ];
 
@@ -2765,7 +2765,7 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
                   icon: const Icon(Icons.notifications_outlined),
                   tooltip: 'Notifications',
                   onPressed: () async {
-                    final isWideScreen = MediaQuery.of(context).size.width >= 900;
+                    final isWideScreen = MediaQuery.of(context).size.width >= AppBreakpoints.medium;
                     if (isWideScreen) {
                       await _showNotificationsDropdown(context);
                     } else {
