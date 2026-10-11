@@ -5035,6 +5035,144 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Select End Date'**
   String get export_selectEnd;
+
+  /// Date range dialog title.
+  ///
+  /// In en, this message translates to:
+  /// **'Date Range'**
+  String get export_dateRange;
+
+  /// Date range choice.
+  ///
+  /// In en, this message translates to:
+  /// **'Last 7 Days'**
+  String get export_last7;
+
+  /// Date range choice.
+  ///
+  /// In en, this message translates to:
+  /// **'Last 30 Days'**
+  String get export_last30;
+
+  /// Date range choice.
+  ///
+  /// In en, this message translates to:
+  /// **'Last Month'**
+  String get export_lastMonth;
+
+  /// Date range choice.
+  ///
+  /// In en, this message translates to:
+  /// **'This Year'**
+  String get export_thisYear;
+
+  /// Date range choice: no dates.
+  ///
+  /// In en, this message translates to:
+  /// **'All Time'**
+  String get export_allTime;
+
+  /// Date range choice that opens the date pickers.
+  ///
+  /// In en, this message translates to:
+  /// **'Custom Range...'**
+  String get export_customRange;
+
+  /// Date scope for datasets without dates.
+  ///
+  /// In en, this message translates to:
+  /// **'Not applicable - this is a current snapshot'**
+  String get export_notApplicable;
+
+  /// Date scope before one is chosen.
+  ///
+  /// In en, this message translates to:
+  /// **'Please select a date range below'**
+  String get export_pickRange;
+
+  /// Date scope when All Time is chosen.
+  ///
+  /// In en, this message translates to:
+  /// **'All Records (No Filters Applied)'**
+  String get export_allRecords;
+
+  /// Date scope: the chosen dates.
+  ///
+  /// In en, this message translates to:
+  /// **'{start}  to  {end}'**
+  String export_rangeLine(String start, String end);
+
+  /// Date scope label.
+  ///
+  /// In en, this message translates to:
+  /// **'Date Selection Scope'**
+  String get export_scope;
+
+  /// Button that opens the date range dialog.
+  ///
+  /// In en, this message translates to:
+  /// **'Modify'**
+  String get export_modify;
+
+  /// File format choice.
+  ///
+  /// In en, this message translates to:
+  /// **'Excel Workbook (.xlsx)'**
+  String get export_xlsx;
+
+  /// File format description.
+  ///
+  /// In en, this message translates to:
+  /// **'Bolded headers, multiple sheets, real dates - opens clean, ready to keep'**
+  String get export_xlsxHint;
+
+  /// File format choice.
+  ///
+  /// In en, this message translates to:
+  /// **'CSV (Plain Text)'**
+  String get export_csv;
+
+  /// File format description.
+  ///
+  /// In en, this message translates to:
+  /// **'Universal, simple text - opens in Excel, Sheets, or any editor'**
+  String get export_csvHint;
+
+  /// Under the export button with no dates chosen.
+  ///
+  /// In en, this message translates to:
+  /// **'Select a date range above before exporting.'**
+  String get export_pickRangeFirst;
+
+  /// Message when exporting with no dates chosen.
+  ///
+  /// In en, this message translates to:
+  /// **'Select a date range before exporting'**
+  String get export_pickRangeWarning;
+
+  /// Export button.
+  ///
+  /// In en, this message translates to:
+  /// **'Generate & Export Data'**
+  String get export_generate;
+
+  /// Confirmation title.
+  ///
+  /// In en, this message translates to:
+  /// **'Log Out of All Devices?'**
+  String get account_logoutAllTitle;
+
+  /// Confirmation text.
+  ///
+  /// In en, this message translates to:
+  /// **'This will clear active sessions and log you out on all other phones, tablets, or computers currently signed into your account.'**
+  String get account_logoutAllBody;
+
+  /// Confirm button.
+  ///
+  /// In en, this message translates to:
+  /// **'Log Out Everywhere'**
+  String get account_logoutEverywhere;
 }
 
 class _AppLocalizationsDelegate

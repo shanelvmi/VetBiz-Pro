@@ -2818,4 +2818,80 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get export_selectEnd => 'Select End Date';
+
+  @override
+  String get export_dateRange => 'Date Range';
+
+  @override
+  String get export_last7 => 'Last 7 Days';
+
+  @override
+  String get export_last30 => 'Last 30 Days';
+
+  @override
+  String get export_lastMonth => 'Last Month';
+
+  @override
+  String get export_thisYear => 'This Year';
+
+  @override
+  String get export_allTime => 'All Time';
+
+  @override
+  String get export_customRange => 'Custom Range...';
+
+  @override
+  String get export_notApplicable =>
+      'Not applicable - this is a current snapshot';
+
+  @override
+  String get export_pickRange => 'Please select a date range below';
+
+  @override
+  String get export_allRecords => 'All Records (No Filters Applied)';
+
+  @override
+  String export_rangeLine(String start, String end) {
+    return '$start  to  $end';
+  }
+
+  @override
+  String get export_scope => 'Date Selection Scope';
+
+  @override
+  String get export_modify => 'Modify';
+
+  @override
+  String get export_xlsx => 'Excel Workbook (.xlsx)';
+
+  @override
+  String get export_xlsxHint =>
+      'Bolded headers, multiple sheets, real dates - opens clean, ready to keep';
+
+  @override
+  String get export_csv => 'CSV (Plain Text)';
+
+  @override
+  String get export_csvHint =>
+      'Universal, simple text - opens in Excel, Sheets, or any editor';
+
+  @override
+  String get export_pickRangeFirst =>
+      'Select a date range above before exporting.';
+
+  @override
+  String get export_pickRangeWarning => 'Select a date range before exporting';
+
+  @override
+  String get export_generate => 'Generate & Export Data';
+
+  @override
+  String get account_logoutAllTitle => 'Log Out of All Devices?';
+
+  @override
+  String get account_logoutAllBody =>
+      'This will clear active sessions and log you out on all other phones, tablets, or computers currently signed into your account.';
+
+  @override
+  String get account_logoutEverywhere => 'Log Out Everywhere';
 }

@@ -2836,4 +2836,79 @@ class AppLocalizationsSw extends AppLocalizations {
 
   @override
   String get export_selectEnd => 'Chagua Tarehe ya Mwisho';
+
+  @override
+  String get export_dateRange => 'Kipindi';
+
+  @override
+  String get export_last7 => 'Siku 7 Zilizopita';
+
+  @override
+  String get export_last30 => 'Siku 30 Zilizopita';
+
+  @override
+  String get export_lastMonth => 'Mwezi Uliopita';
+
+  @override
+  String get export_thisYear => 'Mwaka Huu';
+
+  @override
+  String get export_allTime => 'Muda Wote';
+
+  @override
+  String get export_customRange => 'Chagua Tarehe...';
+
+  @override
+  String get export_notApplicable => 'Haihusiki - hii ni hali ya sasa';
+
+  @override
+  String get export_pickRange => 'Tafadhali chagua kipindi hapa chini';
+
+  @override
+  String get export_allRecords => 'Rekodi Zote (Bila Vichujio)';
+
+  @override
+  String export_rangeLine(String start, String end) {
+    return '$start  hadi  $end';
+  }
+
+  @override
+  String get export_scope => 'Kipindi Kilichochaguliwa';
+
+  @override
+  String get export_modify => 'Badilisha';
+
+  @override
+  String get export_xlsx => 'Faili la Excel (.xlsx)';
+
+  @override
+  String get export_xlsxHint =>
+      'Vichwa vilivyokolezwa, kurasa kadhaa, tarehe halisi - linafunguka vizuri, tayari kuhifadhiwa';
+
+  @override
+  String get export_csv => 'CSV (Maandishi Matupu)';
+
+  @override
+  String get export_csvHint =>
+      'Maandishi rahisi ya kawaida - yanafunguka kwenye Excel, Sheets, au kihariri chochote';
+
+  @override
+  String get export_pickRangeFirst =>
+      'Chagua kipindi hapo juu kabla ya kuhamisha.';
+
+  @override
+  String get export_pickRangeWarning => 'Chagua kipindi kabla ya kuhamisha';
+
+  @override
+  String get export_generate => 'Tengeneza na Hamisha Data';
+
+  @override
+  String get account_logoutAllTitle => 'Toka Kwenye Vifaa Vyote?';
+
+  @override
+  String get account_logoutAllBody =>
+      'Hii itafuta vipindi vilivyo hai na kukutoa kwenye simu, tableti au kompyuta nyingine zote zilizoingia kwenye akaunti yako.';
+
+  @override
+  String get account_logoutEverywhere => 'Toka Kila Mahali';
 }
