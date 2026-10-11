@@ -2,6 +2,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:vetbiz_pro/constants/batch_move_reasons.dart';
 import 'package:vetbiz_pro/constants/client_options.dart';
 import 'package:vetbiz_pro/constants/crops.dart';
+import 'package:vetbiz_pro/constants/transaction_categories.dart';
 import 'package:vetbiz_pro/data/payment_status.dart';
 
 /// Lists that were local to a screen and moved to lib/constants or lib/data
@@ -54,6 +55,29 @@ void main() {
     expect(PaymentStatus.of(0, 0), 'Paid');
     expect(PaymentStatus.of(40, 100), 'Partial');
     expect(PaymentStatus.of(0, 100), 'Unpaid');
+  });
+
+  test('transaction categories (add_transaction_screen kExpenseCategoryGroups, kIncomeCategories)', () {
+    expect(kExpenseCategoryGroups.keys.toList(),
+        ['Administration', 'Premises & Utilities', 'Operations', 'Transport', 'Business', 'Other']);
+    expect(kExpenseCategoryGroups['Administration'], ['Meals & Refreshments', 'Salaries & Wages', 'Office Supplies']);
+    expect(kExpenseCategoryGroups['Premises & Utilities'], ['Electricity', 'Water', 'Rent']);
+    expect(kExpenseCategoryGroups['Operations'], ['Drugs & Medicines', 'Vaccines', 'Veterinary Supplies']);
+    expect(kExpenseCategoryGroups['Transport'], ['Fuel', 'Vehicle Maintenance']);
+    expect(kExpenseCategoryGroups['Business'], ['Marketing', 'Licences & Registration']);
+    expect(kExpenseCategoryGroups['Other'], ['Miscellaneous']);
+    expect(kIncomeCategories, [
+      'Commission Income',
+      'Delivery Income',
+      'Training Income',
+      'Consultancy Income',
+      'Rental Income',
+      'Interest Income',
+      'Refunds Received',
+      'Discounts Received',
+      'Asset Disposal Income',
+      'Other Income',
+    ]);
   });
 
   test('batch move reasons (move_expired_to_stock_dialog _moveReasons)', () {

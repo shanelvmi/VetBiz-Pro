@@ -21,32 +21,7 @@ import '../../theme/app_breakpoints.dart';
 import '../../theme/app_motion.dart';
 import '../../ui/feedback/app_feedback.dart';
 import '../../l10n/l10n.dart';
-
-// Expense categories, grouped for the picker - matches the proposed
-// structure exactly. Kept local to this file rather than centralized,
-// since these are specific to transaction categorization only.
-const Map<String, List<String>> kExpenseCategoryGroups = {
-  'Administration': ['Meals & Refreshments', 'Salaries & Wages', 'Office Supplies'],
-  'Premises & Utilities': ['Electricity', 'Water', 'Rent'],
-  'Operations': ['Drugs & Medicines', 'Vaccines', 'Veterinary Supplies'],
-  'Transport': ['Fuel', 'Vehicle Maintenance'],
-  'Business': ['Marketing', 'Licences & Registration'],
-  'Other': ['Miscellaneous'],
-};
-
-// Income categories - flat, no grouping needed for this shorter list.
-const List<String> kIncomeCategories = [
-  'Commission Income',
-  'Delivery Income',
-  'Training Income',
-  'Consultancy Income',
-  'Rental Income',
-  'Interest Income',
-  'Refunds Received',
-  'Discounts Received',
-  'Asset Disposal Income',
-  'Other Income',
-];
+import '../../constants/transaction_categories.dart';
 
 class AddTransactionScreen extends StatefulWidget {
   final TransactionModel? transaction;
