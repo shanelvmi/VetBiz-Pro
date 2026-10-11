@@ -13,6 +13,7 @@ import '../../theme/app_motion.dart';
 import '../../ui/feedback/app_feedback.dart';
 import '../../constants/client_options.dart';
 import '../../l10n/l10n.dart';
+import '../../constants/crops.dart';
 
 class AddClientScreen extends StatefulWidget {
   final Client? client; // null = add, not null = edit
@@ -54,18 +55,7 @@ class _AddClientScreenState extends State<AddClientScreen> {
   final List<String> clientTypes = kClientTypes;
   final List<String> farmerSubTypes = kFarmerSubTypes;
 
-  final Map<String, List<String>> cropGroups = {
-    'Food Crops': [
-      'Maize', 'Rice', 'Wheat', 'Cassava', 'Sorghum', 'Millet', 'Beans',
-      'Bananas', 'Sweet Potatoes', 'Irish Potatoes', 'Groundnuts',
-    ],
-    'Cash Crops': [
-      'Coffee', 'Cotton', 'Tobacco', 'Cashew Nuts', 'Sisal', 'Tea',
-      'Pyrethrum', 'Sugarcane', 'Cloves', 'Sesame', 'Sunflower',
-    ],
-    'Vegetables': ['Tomatoes', 'Onions', 'Cabbage', 'Okra'],
-    'Fruits': ['Mangoes', 'Oranges', 'Avocado', 'Watermelon'],
-  };
+  final Map<String, List<String>> cropGroups = kCropGroups;
 
   final Map<String, List<String>> animalGroups = kAnimalGroups;
 

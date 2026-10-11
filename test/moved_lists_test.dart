@@ -1,6 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:vetbiz_pro/constants/batch_move_reasons.dart';
 import 'package:vetbiz_pro/constants/client_options.dart';
+import 'package:vetbiz_pro/constants/crops.dart';
 import 'package:vetbiz_pro/data/payment_status.dart';
 
 /// Lists that were local to a screen and moved to lib/constants or lib/data
@@ -21,6 +22,20 @@ void main() {
     expect(kAnimalGroups['Livestock'], ['Cattle', 'Goat', 'Sheep', 'Pig', 'Donkey']);
     expect(kAnimalGroups['Poultry'], ['Chicken', 'Duck', 'Turkey', 'Guinea Fowl']);
     expect(kAnimalGroups['Other'], ['Bees', 'Dog', 'Cat', 'Rabbit']);
+  });
+
+  test('crops and their groups (add_client_screen cropGroups)', () {
+    expect(kCropGroups.keys.toList(), ['Food Crops', 'Cash Crops', 'Vegetables', 'Fruits']);
+    expect(kCropGroups['Food Crops'], [
+      'Maize', 'Rice', 'Wheat', 'Cassava', 'Sorghum', 'Millet', 'Beans',
+      'Bananas', 'Sweet Potatoes', 'Irish Potatoes', 'Groundnuts',
+    ]);
+    expect(kCropGroups['Cash Crops'], [
+      'Coffee', 'Cotton', 'Tobacco', 'Cashew Nuts', 'Sisal', 'Tea',
+      'Pyrethrum', 'Sugarcane', 'Cloves', 'Sesame', 'Sunflower',
+    ]);
+    expect(kCropGroups['Vegetables'], ['Tomatoes', 'Onions', 'Cabbage', 'Okra']);
+    expect(kCropGroups['Fruits'], ['Mangoes', 'Oranges', 'Avocado', 'Watermelon']);
   });
 
   test('vet practice types (add_client_screen vetPracticeTypes)', () {
