@@ -35,7 +35,7 @@ class NotificationRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final color = notification.type.color;
+    final color = notification.type.colorIn(context.colors);
     final hasTarget = notification.relatedEntityType != null && notification.relatedEntityId != null;
 
     return Container(

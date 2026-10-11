@@ -59,6 +59,8 @@ class AppColors extends ThemeExtension<AppColors> {
     required this.chart5,
     required this.chart6,
     required this.chart7,
+    required this.chart8,
+    required this.chart9,
     required this.roleOwner,
     required this.roleOwnerStrong,
     required this.roleCoAdmin,
@@ -146,7 +148,9 @@ class AppColors extends ThemeExtension<AppColors> {
   // chart5 and chart6 hold the same values as roleAssistant and roleCoAdmin,
   // but for a different purpose, so they are separate roles. Activity types
   // (activity_type_style.dart) reuse chart4 (Services), chart6 (Clients)
-  // and chart7 (Transactions, indigo).
+  // and chart7 (Transactions, indigo). Notification types
+  // (notification_model.dart) add chart8 (Reorder Soon, amber 700) and
+  // chart9 (Debt Reminder, deep orange).
   final Color chart1;
   final Color chart2;
   final Color chart3;
@@ -154,6 +158,8 @@ class AppColors extends ThemeExtension<AppColors> {
   final Color chart5;
   final Color chart6;
   final Color chart7;
+  final Color chart8;
+  final Color chart9;
 
   // Team roles (manage_assistants_screen.dart role chips): a light fill of
   // the base colour with the Strong shade as the label. Exact legacy values.
@@ -210,6 +216,8 @@ class AppColors extends ThemeExtension<AppColors> {
         chart5: Colors.blueGrey,
         chart6: Colors.teal,
         chart7: Colors.indigo,
+        chart8: Colors.amber.shade700,
+        chart9: Colors.deepOrange,
         roleOwner: Colors.indigo,
         roleOwnerStrong: Colors.indigo.shade700,
         roleCoAdmin: Colors.teal,
@@ -264,6 +272,8 @@ class AppColors extends ThemeExtension<AppColors> {
     Color? chart5,
     Color? chart6,
     Color? chart7,
+    Color? chart8,
+    Color? chart9,
     Color? roleOwner,
     Color? roleOwnerStrong,
     Color? roleCoAdmin,
@@ -316,6 +326,8 @@ class AppColors extends ThemeExtension<AppColors> {
         chart5: chart5 ?? this.chart5,
         chart6: chart6 ?? this.chart6,
         chart7: chart7 ?? this.chart7,
+        chart8: chart8 ?? this.chart8,
+        chart9: chart9 ?? this.chart9,
         roleOwner: roleOwner ?? this.roleOwner,
         roleOwnerStrong: roleOwnerStrong ?? this.roleOwnerStrong,
         roleCoAdmin: roleCoAdmin ?? this.roleCoAdmin,
@@ -373,6 +385,8 @@ class AppColors extends ThemeExtension<AppColors> {
       chart5: l(chart5, other.chart5),
       chart6: l(chart6, other.chart6),
       chart7: l(chart7, other.chart7),
+      chart8: l(chart8, other.chart8),
+      chart9: l(chart9, other.chart9),
       roleOwner: l(roleOwner, other.roleOwner),
       roleOwnerStrong: l(roleOwnerStrong, other.roleOwnerStrong),
       roleCoAdmin: l(roleCoAdmin, other.roleCoAdmin),

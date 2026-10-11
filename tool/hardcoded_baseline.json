@@ -11,7 +11,6 @@
   "counts": {
     "R1": {
       "lib/main.dart": 27,
-      "lib/models/notification_model.dart": 13,
       "lib/screens/activity/activity_log_screen.dart": 21,
       "lib/screens/admin/manage_assistants_screen.dart": 2,
       "lib/screens/dashboard/dashboard_screen.dart": 12,

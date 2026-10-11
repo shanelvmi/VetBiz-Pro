@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+
+import '../theme/app_colors.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../data/fields.dart';
 
@@ -128,38 +130,40 @@ extension NotificationTypeDisplay on NotificationType {
     }
   }
 
-  Color get color {
+  /// The type's colour from the theme's roles (pass `context.colors`); a
+  /// model has no BuildContext of its own (Phase 2 spec, section 5).
+  Color colorIn(AppColors c) {
     switch (this) {
       case NotificationType.criticalStock:
       case NotificationType.subscriptionRejected:
-        return Colors.red;
+        return c.danger;
       case NotificationType.lowStock:
       case NotificationType.subscriptionExpiring:
-        return Colors.orange;
+        return c.warning;
       case NotificationType.reorderSoon:
-        return Colors.amber[700]!;
+        return c.chart8;
       case NotificationType.restockShelf:
-        return Colors.blue;
+        return c.info;
       case NotificationType.paymentReceived:
-        return Colors.green;
+        return c.success;
       case NotificationType.serviceRecorded:
       case NotificationType.newClient:
-        return Colors.blue;
+        return c.info;
       case NotificationType.debtReminder:
-        return Colors.deepOrange;
+        return c.chart9;
       case NotificationType.productExpiry:
-        return Colors.red;
+        return c.danger;
       case NotificationType.promotion:
-        return Colors.purple;
+        return c.chart4;
       case NotificationType.roleChanged:
-        return Colors.teal;
+        return c.chart6;
       case NotificationType.trialStarted:
       case NotificationType.trialStatus:
-        return Colors.blue;
+        return c.info;
       case NotificationType.assistantPending:
-        return Colors.orange;
+        return c.warning;
       case NotificationType.general:
-        return Colors.grey;
+        return c.textHint;
     }
   }
 

@@ -838,7 +838,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
   }
 
   Widget _typeIcon(FacilityNotification n, double size) {
-    final color = n.type.color;
+    final color = n.type.colorIn(context.colors);
     return Container(
       width: size,
       height: size,

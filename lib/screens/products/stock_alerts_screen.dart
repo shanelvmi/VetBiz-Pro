@@ -146,15 +146,15 @@ class StockAlertsScreen extends StatelessWidget {
   static Color _color(StockAlertKind k, AppColors colors) {
     switch (k) {
       case StockAlertKind.depleted:
-        return NotificationType.criticalStock.color;
+        return NotificationType.criticalStock.colorIn(colors);
       case StockAlertKind.expired:
-        return NotificationType.productExpiry.color;
+        return NotificationType.productExpiry.colorIn(colors);
       case StockAlertKind.lowStock:
-        return NotificationType.lowStock.color;
+        return NotificationType.lowStock.colorIn(colors);
       case StockAlertKind.expiringSoon:
         return colors.warning;
       case StockAlertKind.restockShelf:
-        return NotificationType.restockShelf.color;
+        return NotificationType.restockShelf.colorIn(colors);
     }
   }
 
