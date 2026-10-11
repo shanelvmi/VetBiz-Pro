@@ -87,6 +87,15 @@ class _PaymentsScreenState extends State<PaymentsScreen> {
     ('Other Income', 'other_income'),
   ];
   String _selectedTypeFilter = 'All';
+
+  // The type tabs' English names are the filter's values; this is what a tab shows.
+  String _typeTabLabel(String tab) => switch (tab) {
+        'Sales' => context.l10n.payments_typeSales,
+        'Services' => context.l10n.payments_typeServices,
+        'Debt Repayments' => context.l10n.payments_typeDebtRepayments,
+        'Other Income' => context.l10n.payments_typeOtherIncome,
+        _ => context.l10n.common_all,
+      };
   String? _selectedMethodFilter;
   final Map<String, Future<(String?, String?)>> _referenceFutureByKey = {};
   LedgerEntry? _selectedEntry;
@@ -267,7 +276,7 @@ class _PaymentsScreenState extends State<PaymentsScreen> {
     if (facilityId == null) return;
     final target = await _resolvePrintTarget(e);
     if (target == null) {
-      AppFeedback.info('No receipt available for this payment');
+      AppFeedback.info(L10n.current.payments_noReceipt);
       return;
     }
     final (collection, docId) = target;
@@ -445,14 +454,13 @@ class _PaymentsScreenState extends State<PaymentsScreen> {
                                     const SizedBox(width: AppSpacing.s8),
                                     Expanded(
                                       child: Text(
-                                        '${controller.newEntriesAvailable} new entr'
-                                        '${controller.newEntriesAvailable == 1 ? 'y' : 'ies'} available',
+                                        context.l10n.payments_newEntries(controller.newEntriesAvailable),
                                         style: TextStyle(fontSize: AppFontSize.f13, color: context.colors.primary),
                                       ),
                                     ),
                                     TextButton(
                                       onPressed: () => controller.refreshSession(),
-                                      child: const Text('Refresh'),
+                                      child: Text(context.l10n.common_refresh),
                                     ),
                                   ],
                                 ),
@@ -462,7 +470,7 @@ class _PaymentsScreenState extends State<PaymentsScreen> {
                             Expanded(
                               child: filtered.isEmpty
                                   ? Center(
-                                      child: Text('No payments in this period.', style: TextStyle(color: context.colors.textMuted)),
+                                      child: Text(context.l10n.payments_emptyPeriod, style: TextStyle(color: context.colors.textMuted)),
                                     )
                                   : Column(
                                       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -472,13 +480,13 @@ class _PaymentsScreenState extends State<PaymentsScreen> {
                                           decoration: BoxDecoration(border: Border(bottom: BorderSide(color: context.colors.textHint.withValues(alpha: AppAlpha.a20)))),
                                           child: Row(
                                             children: [
-                                              _headerCell('Date & Time', flex: 3),
-                                              _headerCell('Payer', flex: 2),
-                                              _headerCell('Source', flex: 2),
-                                              _headerCell('Reference', flex: 2),
-                                              _headerCell('Method', flex: 2),
-                                              _headerCell('Amount', flex: 2),
-                                              _headerCell('Recorded By', flex: 2),
+                                              _headerCell(context.l10n.payments_colDateTime, flex: 3),
+                                              _headerCell(context.l10n.payments_payer, flex: 2),
+                                              _headerCell(context.l10n.payments_source, flex: 2),
+                                              _headerCell(context.l10n.payments_reference, flex: 2),
+                                              _headerCell(context.l10n.common_method, flex: 2),
+                                              _headerCell(context.l10n.common_amount, flex: 2),
+                                              _headerCell(context.l10n.payments_recordedBy, flex: 2),
                                             ],
                                           ),
                                         ),
@@ -518,11 +526,11 @@ class _PaymentsScreenState extends State<PaymentsScreen> {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Expanded(child: _metricCard('Today', _todayMetric)),
+          Expanded(child: _metricCard(context.l10n.common_today, _todayMetric)),
           const SizedBox(width: AppSpacing.s12),
-          Expanded(child: _metricCard('This Week', _weekMetric)),
+          Expanded(child: _metricCard(context.l10n.payments_thisWeek, _weekMetric)),
           const SizedBox(width: AppSpacing.s12),
-          Expanded(child: _metricCard('This Month', _monthMetric)),
+          Expanded(child: _metricCard(context.l10n.payments_thisMonth, _monthMetric)),
           const SizedBox(width: AppSpacing.s12),
           Expanded(child: _outstandingCard()),
         ],
@@ -565,7 +573,7 @@ class _PaymentsScreenState extends State<PaymentsScreen> {
                           ],
                         ],
                       ),
-                      Text('${metric?.count ?? 0} payments', style: TextStyle(fontSize: AppFontSize.f11, color: context.colors.textMuted)),
+                      Text(context.l10n.payments_paymentCount(metric?.count ?? 0), style: TextStyle(fontSize: AppFontSize.f11, color: context.colors.textMuted)),
                     ],
                   ),
           ),
@@ -589,7 +597,7 @@ class _PaymentsScreenState extends State<PaymentsScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('Outstanding', style: TextStyle(fontSize: AppFontSize.f12, color: context.colors.textMuted)),
+          Text(context.l10n.payments_outstanding, style: TextStyle(fontSize: AppFontSize.f12, color: context.colors.textMuted)),
           const SizedBox(height: AppSpacing.s4),
           AnimatedSwitcher(
             duration: AppMotion.slow,
@@ -612,7 +620,7 @@ class _PaymentsScreenState extends State<PaymentsScreen> {
                           ],
                         ],
                       ),
-                      Text('${_outstandingCount ?? 0} debts', style: TextStyle(fontSize: AppFontSize.f11, color: context.colors.textMuted)),
+                      Text(context.l10n.payments_debtCount(_outstandingCount ?? 0), style: TextStyle(fontSize: AppFontSize.f11, color: context.colors.textMuted)),
                     ],
                   ),
           ),
@@ -667,7 +675,7 @@ class _PaymentsScreenState extends State<PaymentsScreen> {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                const Text('Payment Details', style: TextStyle(fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f16)),
+                Text(context.l10n.payments_detailsTitle, style: const TextStyle(fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f16)),
                 IconButton(
                   icon: const Icon(Icons.close, size: AppIconSize.i20),
                   onPressed: () => setState(() => _selectedEntry = null),
@@ -684,7 +692,7 @@ class _PaymentsScreenState extends State<PaymentsScreen> {
                 children: [
                   Icon(Icons.check_circle, size: AppIconSize.i14, color: context.colors.successStrong),
                   const SizedBox(width: AppSpacing.s4),
-                  Text('Payment Received', style: TextStyle(
+                  Text(context.l10n.payments_received, style: TextStyle(
                       fontSize: AppFontSize.f11_5, color: context.colors.successStrong, fontWeight: AppFontWeight.semibold)),
                 ],
               ),
@@ -711,7 +719,7 @@ class _PaymentsScreenState extends State<PaymentsScreen> {
               ],
             ),
             const Divider(height: 32),
-            _detailLabel('Payer'),
+            _detailLabel(context.l10n.payments_payer),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
@@ -727,12 +735,12 @@ class _PaymentsScreenState extends State<PaymentsScreen> {
                 if (e.clientPhone != null)
                   IconButton(
                     icon: Icon(Icons.phone_outlined, size: AppIconSize.i18, color: context.colors.primary),
-                    tooltip: 'Call',
+                    tooltip: context.l10n.common_call,
                     onPressed: () async {
                       final uri = AppLinks.tel(e.clientPhone!);
                       final launched = await launchUrl(uri, mode: LaunchMode.externalApplication);
                       if (!launched) {
-                        AppFeedback.info("Couldn't open the dialer");
+                        AppFeedback.info(L10n.current.common_dialerFailed);
                       }
                     },
                   ),
@@ -747,13 +755,13 @@ class _PaymentsScreenState extends State<PaymentsScreen> {
                 return Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    _detailLabel('Source'),
+                    _detailLabel(context.l10n.payments_source),
                     Text('${e.description}${reference != null ? ' $reference' : ''}', style: const TextStyle(fontSize: AppFontSize.f14)),
                     const SizedBox(height: AppSpacing.s16),
-                    _detailLabel('Payment Method'),
+                    _detailLabel(context.l10n.payments_method),
                     Text(context.l10n.paymentMethodLabel(e.paymentMethod ?? '-'), style: const TextStyle(fontSize: AppFontSize.f14)),
                     const SizedBox(height: AppSpacing.s16),
-                    _detailLabel('Recorded By'),
+                    _detailLabel(context.l10n.payments_recordedBy),
                     Row(
                       children: [
                         Icon(Icons.person_outline, size: AppIconSize.i16, color: context.colors.textMuted),
@@ -763,7 +771,7 @@ class _PaymentsScreenState extends State<PaymentsScreen> {
                     ),
                     if (notes != null && notes.isNotEmpty) ...[
                       const SizedBox(height: AppSpacing.s16),
-                      _detailLabel('Notes'),
+                      _detailLabel(context.l10n.common_notes),
                       Text(notes, style: const TextStyle(fontSize: AppFontSize.f13_5)),
                     ],
                   ],
@@ -776,7 +784,7 @@ class _PaymentsScreenState extends State<PaymentsScreen> {
               child: ElevatedButton.icon(
                 onPressed: () => _printReceiptFor(e),
                 icon: const Icon(Icons.print_outlined, size: AppIconSize.i18),
-                label: const Text('Print Receipt'),
+                label: Text(context.l10n.common_printReceipt),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: context.colors.primary,
                   foregroundColor: context.colors.onPrimary,
@@ -811,7 +819,7 @@ class _PaymentsScreenState extends State<PaymentsScreen> {
           child: TextField(
             controller: _searchController,
             decoration: InputDecoration(
-              hintText: 'Search payer, reference, invoice...',
+              hintText: context.l10n.payments_searchHint,
               hintStyle: const TextStyle(fontSize: AppFontSize.f13),
               prefixIcon: const Icon(Icons.search, size: AppIconSize.i20),
               filled: true,
@@ -844,7 +852,8 @@ class _PaymentsScreenState extends State<PaymentsScreen> {
           _toolbarDropdown<String>(
             value: _selectedTypeFilter,
             items: _typeTabs.map((t) => t.$1).toList(),
-            label: 'Type',
+            label: context.l10n.common_type,
+            display: _typeTabLabel,
             onChanged: (val) {
               setState(() => _selectedTypeFilter = val);
               _openLedgerSession();
@@ -862,13 +871,13 @@ class _PaymentsScreenState extends State<PaymentsScreen> {
             child: DropdownButtonHideUnderline(
               child: DropdownButton<String?>(
                 value: _selectedMethodFilter,
-                hint: const Text('All Methods', style: TextStyle(fontSize: AppFontSize.f13)),
+                hint: Text(context.l10n.payments_allMethods, style: const TextStyle(fontSize: AppFontSize.f13)),
                 icon: Icon(Icons.arrow_drop_down, size: AppIconSize.i18, color: context.colors.primary),
                 style: TextStyle(color: context.colors.textPrimary, fontSize: AppFontSize.f13),
                 items: [
-                  const DropdownMenuItem<String?>(value: null, child: Text('Method: All')),
+                  DropdownMenuItem<String?>(value: null, child: Text(context.l10n.common_filterValue(context.l10n.common_method, context.l10n.common_all))),
                   // Shows the label; filters on the stored method.
-                  ...kPaymentMethods.map((m) => DropdownMenuItem<String?>(value: m, child: Text('Method: ${context.l10n.paymentMethodLabel(m)}'))),
+                  ...kPaymentMethods.map((m) => DropdownMenuItem<String?>(value: m, child: Text(context.l10n.common_filterValue(context.l10n.common_method, context.l10n.paymentMethodLabel(m))))),
                 ],
                 onChanged: (val) {
                   setState(() => _selectedMethodFilter = val);
@@ -887,13 +896,13 @@ class _PaymentsScreenState extends State<PaymentsScreen> {
                 });
                 _openLedgerSession();
               },
-              child: const Text('Clear', style: TextStyle(fontSize: AppFontSize.f13)),
+              child: Text(context.l10n.common_clear, style: const TextStyle(fontSize: AppFontSize.f13)),
             ),
           ],
         ],
         const SizedBox(width: AppSpacing.s16),
         Text(
-          'Total: ${Money.symbolPlain(total)}',
+          context.l10n.common_totalValue(Money.symbolPlain(total)),
           style: TextStyle(fontSize: AppFontSize.f13, fontWeight: AppFontWeight.bold, color: context.colors.primary),
         ),
       ],
@@ -905,6 +914,8 @@ class _PaymentsScreenState extends State<PaymentsScreen> {
     required List<T> items,
     required String label,
     required ValueChanged<T> onChanged,
+    // What an item shows; the dropdown still holds and returns the item.
+    String Function(T value)? display,
   }) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: AppSpacing.s10),
@@ -919,7 +930,7 @@ class _PaymentsScreenState extends State<PaymentsScreen> {
           value: value,
           icon: Icon(Icons.arrow_drop_down, size: AppIconSize.i18, color: context.colors.primary),
           style: TextStyle(color: context.colors.textPrimary, fontSize: AppFontSize.f13),
-          items: items.map((v) => DropdownMenuItem(value: v, child: Text('$label: $v'))).toList(),
+          items: items.map((v) => DropdownMenuItem(value: v, child: Text(context.l10n.common_filterValue(label, display?.call(v) ?? '$v')))).toList(),
           onChanged: (val) {
             if (val != null) onChanged(val);
           },
@@ -939,11 +950,11 @@ class _PaymentsScreenState extends State<PaymentsScreen> {
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Text(
-            widget.initialClientName != null ? 'Payments - ${widget.initialClientName}' : 'Payments',
+            widget.initialClientName != null ? context.l10n.payments_titleForClient(widget.initialClientName!) : context.l10n.payments_title,
             style: TextStyle(
                 fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f19, color: context.colors.textPrimary),
           ),
-          Text('All payments received across your business',
+          Text(context.l10n.payments_subtitle,
               style: TextStyle(fontSize: AppFontSize.f12, color: context.colors.textSecondary)),
         ],
       ),
@@ -971,9 +982,9 @@ class _PaymentsScreenState extends State<PaymentsScreen> {
 
     String label;
     if (date == today) {
-      label = 'Today';
+      label = context.l10n.common_today;
     } else if (date == yesterday) {
-      label = 'Yesterday';
+      label = context.l10n.common_yesterday;
     } else {
       label = AppDateFormat.dateLongPadded.format(date);
     }
