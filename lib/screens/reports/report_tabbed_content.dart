@@ -856,7 +856,7 @@ class _ReportTabbedContentState extends State<ReportTabbedContent> with SingleTi
               children: [
                 Icon(ActivityTypeStyle.icon(entry.actionType), size: AppIconSize.i14, color: color),
                 const SizedBox(width: AppSpacing.s6),
-                Flexible(child: Text(entry.actionType, style: TextStyle(fontSize: AppFontSize.f12, color: color), overflow: TextOverflow.ellipsis)),
+                Flexible(child: Text(context.l10n.activityTypeLabel(entry.actionType), style: TextStyle(fontSize: AppFontSize.f12, color: color), overflow: TextOverflow.ellipsis)),
               ],
             ),
           ),

@@ -73,6 +73,7 @@ import '../../theme/app_breakpoints.dart';
 import '../../ui/feedback/app_feedback.dart';
 import '../../theme/app_text.dart';
 import '../../theme/app_motion.dart';
+import '../../l10n/l10n.dart';
 
 class DrawerHoverItem extends StatefulWidget {
   final IconData icon;
@@ -3237,8 +3238,9 @@ Widget _buildDrawerContent() {
                       // A promoted Assistant is a Co-admin, not just "Admin".
                       TextSpan(
                           text: (role == UserRole.admin.key && data['previousRole'] == UserRole.assistant.key)
-                              ? 'Co-admin'
-                              : _capitalize(role)),
+                              ? context.l10n.role_coAdmin
+                              // Capitalised first, so an unknown role still shows as before.
+                              : context.l10n.roleLabel(_capitalize(role))),
                     ],
                   ),
                 ),

@@ -24,6 +24,7 @@ import '../../theme/theme_context.dart';
 import '../../theme/app_breakpoints.dart';
 import '../../theme/app_motion.dart';
 import '../../ui/feedback/app_feedback.dart';
+import '../../l10n/l10n.dart';
 
 /// Who someone is on a facility's team, as this screen shows them. Worked out
 /// from the user record (role, previousRole, who created the facility); not
@@ -472,10 +473,18 @@ class _ManageAssistantsScreenState extends State<ManageAssistantsScreen> {
   }
 
   String _kindLabel(TeamMemberKind kind) {
-    if (kind == TeamMemberKind.assistant) return 'Assistant';
-    if (kind == TeamMemberKind.coAdmin) return 'Co-admin';
-    return 'Admin';
+    if (kind == TeamMemberKind.assistant) return context.l10n.roleLabel(UserRole.assistant.key);
+    if (kind == TeamMemberKind.coAdmin) return context.l10n.role_coAdmin;
+    return context.l10n.roleLabel(UserRole.admin.key);
   }
+
+  // The English role words search has always matched, so typing "assistant"
+  // still finds people while the screen shows another language.
+  String _kindSearchWords(TeamMemberKind kind) => switch (kind) {
+        TeamMemberKind.assistant => UserRole.assistant.key,
+        TeamMemberKind.coAdmin => 'co-admin',
+        TeamMemberKind.owner => UserRole.admin.key,
+      };
 
   // The order of authority: Admin first, then Co-admins, then Assistants.
   int _tier(TeamMemberKind kind) =>
@@ -525,7 +534,7 @@ class _ManageAssistantsScreenState extends State<ManageAssistantsScreen> {
     final kind = _kindOf(doc.id, data);
     if (kind == TeamMemberKind.owner) return [_note('Facility admin')];
     if (kind == TeamMemberKind.coAdmin) {
-      if (!_viewerOwns(facilityId)) return [_note('Co-admin')];
+      if (!_viewerOwns(facilityId)) return [_note(context.l10n.role_coAdmin)];
       final bucket = _bucket(data);
       return [
         if (bucket == UserStatus.active.key)
@@ -542,7 +551,7 @@ class _ManageAssistantsScreenState extends State<ManageAssistantsScreen> {
             color: context.colors.success,
             onPressed: () => _setCoAdminStatus(doc, data, UserStatus.active.key),
           ),
-        if (bucket == UserStatus.pending.key) _note('Co-admin'),
+        if (bucket == UserStatus.pending.key) _note(context.l10n.role_coAdmin),
       ];
     }
     return _buildActionButtons(doc, status, facilityId);
@@ -640,9 +649,10 @@ class _ManageAssistantsScreenState extends State<ManageAssistantsScreen> {
       };
 
   String _statusLabel(String bucket) => switch (UserStatus.fromKey(bucket)) {
-        UserStatus.active => 'Active',
-        UserStatus.deactivated => 'Deactivated',
-        UserStatus.pending || UserStatus.rejected => 'Pending',
+        UserStatus.active => context.l10n.userStatusLabel(UserStatus.active.key),
+        UserStatus.deactivated => context.l10n.userStatusLabel(UserStatus.deactivated.key),
+        // A rejected person is shown with the waiting ones, as before.
+        UserStatus.pending || UserStatus.rejected => context.l10n.userStatusLabel(UserStatus.pending.key),
       };
 
   // First facility id on the record, or '' - an empty list used to throw.
@@ -944,7 +954,8 @@ class _ManageAssistantsScreenState extends State<ManageAssistantsScreen> {
         final name = (data['fullName'] ?? '').toString().toLowerCase();
         final phone = (data['phone'] ?? '').toString().toLowerCase();
         final facilityName = ids.map((id) => (facilityNames[id] ?? '').toLowerCase()).join(' ');
-        final roleName = _kindLabel(_kindOf(doc.id, data)).toLowerCase();
+        final kind = _kindOf(doc.id, data);
+        final roleName = '${_kindLabel(kind)} ${_kindSearchWords(kind)}'.toLowerCase();
         if (!name.contains(q) && !phone.contains(q) && !facilityName.contains(q) && !roleName.contains(q)) {
           return false;
         }
@@ -1045,7 +1056,7 @@ class _ManageAssistantsScreenState extends State<ManageAssistantsScreen> {
         filter: null,
       ),
       _card(
-        label: 'Active',
+        label: context.l10n.userStatusLabel(UserStatus.active.key),
         value: '${counts[UserStatus.active.key] ?? 0}',
         hint: 'Have access',
         icon: Icons.check_circle_outline,
@@ -1053,7 +1064,7 @@ class _ManageAssistantsScreenState extends State<ManageAssistantsScreen> {
         filter: UserStatus.active.key,
       ),
       _card(
-        label: 'Deactivated',
+        label: context.l10n.userStatusLabel(UserStatus.deactivated.key),
         value: '${counts[UserStatus.deactivated.key] ?? 0}',
         hint: 'Access paused',
         icon: Icons.pause_circle_outline,
@@ -1656,13 +1667,8 @@ class _ManageAssistantsScreenState extends State<ManageAssistantsScreen> {
             MembershipHistoryAction.deactivated => context.colors.warning,
             null => context.colors.textHint,
           },
-          title: switch (known) {
-            MembershipHistoryAction.approved => 'Approved',
-            MembershipHistoryAction.rejected => 'Rejected',
-            MembershipHistoryAction.deactivated => 'Deactivated',
-            MembershipHistoryAction.reactivated => 'Reactivated',
-            null => action,
-          },
+          // An unknown action is shown as stored.
+          title: context.l10n.membershipActionLabel(action),
           by: (h['by'] ?? '').toString(),
         ));
       }

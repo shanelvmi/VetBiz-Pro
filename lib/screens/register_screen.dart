@@ -1606,7 +1606,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 child: _roleCard(
                   role: 'Admin',
                   icon: Icons.storefront_outlined,
-                  title: isCoAdmin ? 'Co-admin' : 'Admin',
+                  title: isCoAdmin ? context.l10n.role_coAdmin : context.l10n.roleLabel(UserRole.admin.key),
                   subtitle: isCoAdmin ? 'I help manage a facility' : 'I own or manage a facility',
                 ),
               ),
@@ -1615,7 +1615,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 child: _roleCard(
                   role: 'Assistant',
                   icon: Icons.groups_outlined,
-                  title: 'Assistant',
+                  title: context.l10n.roleLabel(UserRole.assistant.key),
                   subtitle: 'I have an invite code',
                 ),
               ),

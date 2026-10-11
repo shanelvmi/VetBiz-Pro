@@ -6,6 +6,7 @@ import 'subscription_screen.dart' show submissionStatusColor;
 import '../../data/collections.dart';
 import '../../data/fields.dart';
 import '../../data/payment_submission_status.dart';
+import '../../constants/subscription_plans.dart';
 import '../../config/money.dart';
 import '../../config/app_limits.dart';
 import '../../config/app_date_format.dart';
@@ -14,10 +15,12 @@ import '../../theme/app_breakpoints.dart';
 import '../../theme/app_dimens.dart';
 import '../../theme/app_text.dart';
 import '../../theme/theme_context.dart';
+import '../../l10n/l10n.dart';
 
 /// One payment submission, read from a payment_submissions document.
 class _Submission {
-  final String planLabel;
+  final String planId;
+  final String planLabel; // English, as saved; shown only for an unknown planId
   final num amount;
   final String method;
   final String reference;
@@ -28,6 +31,7 @@ class _Submission {
   final String? promotionLabel;
 
   const _Submission({
+    required this.planId,
     required this.planLabel,
     required this.amount,
     required this.method,
@@ -43,6 +47,7 @@ class _Submission {
     DateTime? asDate(dynamic v) => v is Timestamp ? v.toDate() : null;
     final rawStatus = (d[Fields.status] as String?) ?? PaymentSubmissionStatus.pending.key;
     return _Submission(
+      planId: (d['planId'] as String?) ?? '',
       planLabel: (d['planLabel'] as String?) ?? '',
       amount: (d['amount'] as num?) ?? 0,
       method: (d['method'] as String?) ?? '',
@@ -118,7 +123,22 @@ class _SubscriptionHistoryScreenState extends State<SubscriptionHistoryScreen> {
     super.dispose();
   }
 
-  String _statusName(String status) => status[0].toUpperCase() + status.substring(1);
+  String _statusName(String status) => context.l10n.submissionStatusLabel(status);
+
+  // A plan's name in the current language, from its id. The English
+  // planLabel saved with the payment is shown only for a plan the app
+  // doesn't know.
+  String _planName(_Submission s) =>
+      planById(s.planId) != null ? context.l10n.subscriptionPlanLabel(s.planId) : s.planLabel;
+
+  // The plan filter holds saved planLabels; this shows one in the current
+  // language when it is a known plan's English name.
+  String _planNameForLabel(String saved) {
+    for (final p in kSubscriptionPlans) {
+      if (p.label == saved) return context.l10n.subscriptionPlanLabel(p.id);
+    }
+    return saved;
+  }
 
   void _resetFilters() {
     _searchController.clear();
@@ -255,7 +275,7 @@ class _SubscriptionHistoryScreenState extends State<SubscriptionHistoryScreen> {
         filter: null,
       ),
       _card(
-        label: 'Approved',
+        label: _statusName(PaymentSubmissionStatus.approved.key),
         value: '${counts[PaymentSubmissionStatus.approved.key] ?? 0}',
         hint: Money.format(approvedTotal),
         icon: Icons.check_circle_outline,
@@ -263,7 +283,7 @@ class _SubscriptionHistoryScreenState extends State<SubscriptionHistoryScreen> {
         filter: PaymentSubmissionStatus.approved.key,
       ),
       _card(
-        label: 'Pending',
+        label: _statusName(PaymentSubmissionStatus.pending.key),
         value: '${counts[PaymentSubmissionStatus.pending.key] ?? 0}',
         hint: 'Awaiting review',
         icon: Icons.hourglass_empty,
@@ -271,7 +291,7 @@ class _SubscriptionHistoryScreenState extends State<SubscriptionHistoryScreen> {
         filter: PaymentSubmissionStatus.pending.key,
       ),
       _card(
-        label: 'Rejected',
+        label: _statusName(PaymentSubmissionStatus.rejected.key),
         value: '${counts[PaymentSubmissionStatus.rejected.key] ?? 0}',
         hint: 'Not accepted',
         icon: Icons.cancel_outlined,
@@ -411,9 +431,9 @@ class _SubscriptionHistoryScreenState extends State<SubscriptionHistoryScreen> {
               const SizedBox(height: AppSpacing.s10),
               Row(
                 children: [
-                  Expanded(child: _dropdown('Plan', plan, plans, (v) => _planFilter = v, expand: true)),
+                  Expanded(child: _dropdown('Plan', plan, plans, (v) => _planFilter = v, expand: true, display: _planNameForLabel)),
                   const SizedBox(width: AppSpacing.s10),
-                  Expanded(child: _dropdown('Method', method, methods, (v) => _methodFilter = v, expand: true)),
+                  Expanded(child: _dropdown('Method', method, methods, (v) => _methodFilter = v, expand: true, display: context.l10n.paymentMethodLabel)),
                   if (reset != null) ...[const SizedBox(width: AppSpacing.s6), reset],
                 ],
               ),
@@ -424,9 +444,9 @@ class _SubscriptionHistoryScreenState extends State<SubscriptionHistoryScreen> {
           children: [
             Expanded(flex: 3, child: search),
             const SizedBox(width: AppSpacing.s10),
-            _dropdown('Plan', plan, plans, (v) => _planFilter = v),
+            _dropdown('Plan', plan, plans, (v) => _planFilter = v, display: _planNameForLabel),
             const SizedBox(width: AppSpacing.s10),
-            _dropdown('Method', method, methods, (v) => _methodFilter = v),
+            _dropdown('Method', method, methods, (v) => _methodFilter = v, display: context.l10n.paymentMethodLabel),
             if (reset != null) ...[const SizedBox(width: AppSpacing.s10), reset],
           ],
         );
@@ -434,8 +454,9 @@ class _SubscriptionHistoryScreenState extends State<SubscriptionHistoryScreen> {
     );
   }
 
+  // [display]: what an option shows; the dropdown still holds the saved value.
   Widget _dropdown(String label, String value, List<String> options, void Function(String) assign,
-      {bool expand = false}) {
+      {bool expand = false, String Function(String saved)? display}) {
     final items = ['All', ...options];
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: AppSpacing.s10),
@@ -452,7 +473,10 @@ class _SubscriptionHistoryScreenState extends State<SubscriptionHistoryScreen> {
           icon: Icon(Icons.arrow_drop_down, size: AppIconSize.i18, color: _primary),
           style: TextStyle(color: context.colors.textPrimary, fontSize: AppFontSize.f13),
           items: items
-              .map((v) => DropdownMenuItem(value: v, child: Text('$label: $v', overflow: TextOverflow.ellipsis)))
+              .map((v) => DropdownMenuItem(
+                  value: v,
+                  child: Text('$label: ${v == 'All' ? context.l10n.common_all : (display?.call(v) ?? v)}',
+                      overflow: TextOverflow.ellipsis)))
               .toList(),
           onChanged: (v) {
             if (v != null) {
@@ -573,7 +597,7 @@ class _SubscriptionHistoryScreenState extends State<SubscriptionHistoryScreen> {
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('Approved', style: TextStyle(
+            Text(_statusName(PaymentSubmissionStatus.approved.key), style: TextStyle(
                     fontSize: AppFontSize.f12_5, color: context.colors.successStrong, fontWeight: AppFontWeight.medium)),
             if (s.reviewedAt != null) ...[
               const SizedBox(height: AppSpacing.s2),
@@ -614,7 +638,7 @@ class _SubscriptionHistoryScreenState extends State<SubscriptionHistoryScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(s.planLabel.isEmpty ? '-' : s.planLabel,
+                Text(_planName(s).isEmpty ? '-' : _planName(s),
                     maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: AppFontSize.f13)),
                 if (s.promotionLabel != null && s.promotionLabel!.isNotEmpty)
                   Text(s.promotionLabel!,
@@ -633,7 +657,7 @@ class _SubscriptionHistoryScreenState extends State<SubscriptionHistoryScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(s.method.isEmpty ? '-' : s.method,
+                Text(s.method.isEmpty ? '-' : context.l10n.paymentMethodLabel(s.method),
                     maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: AppFontSize.f13)),
                 if (s.reference.isNotEmpty)
                   Text(s.reference,
@@ -654,7 +678,7 @@ class _SubscriptionHistoryScreenState extends State<SubscriptionHistoryScreen> {
   Widget _buildNarrowCard(_Submission s) {
     final submitted = s.submittedAt;
     final color = submissionStatusColor(s.status, context.colors);
-    final methodLine = [if (s.method.isNotEmpty) s.method, if (s.reference.isNotEmpty) s.reference].join(' · ');
+    final methodLine = [if (s.method.isNotEmpty) context.l10n.paymentMethodLabel(s.method), if (s.reference.isNotEmpty) s.reference].join(' · ');
 
     return Container(
       decoration: BoxDecoration(
@@ -677,7 +701,7 @@ class _SubscriptionHistoryScreenState extends State<SubscriptionHistoryScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Expanded(
-                    child: Text(s.planLabel.isEmpty ? '-' : s.planLabel,
+                    child: Text(_planName(s).isEmpty ? '-' : _planName(s),
                         style: const TextStyle(fontSize: AppFontSize.f14, fontWeight: AppFontWeight.bold)),
                   ),
                   const SizedBox(width: AppSpacing.s8),

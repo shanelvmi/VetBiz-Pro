@@ -361,7 +361,8 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
                     value: plan,
                     groupValue: _selectedPlan,
                     activeColor: colors.primary,
-                    title: Text(plan.label),
+                    // Shown from the plan id; the English plan.label is what is saved.
+                    title: Text(context.l10n.subscriptionPlanLabel(plan.id)),
                     subtitle: hasDiscount
                         ? Row(
                             children: [

@@ -22,6 +22,7 @@ import '../../data/fields.dart';
 import '../../config/app_limits.dart';
 import '../../config/app_rules.dart';
 import '../../config/app_date_format.dart';
+import '../../l10n/l10n.dart';
 
 class ActivityLogScreen extends StatefulWidget {
   final bool isModal;
@@ -597,7 +598,7 @@ class _ActivityLogScreenState extends State<ActivityLogScreen> {
                                     ),
                                   ),
                                   child: Text(
-                                    type,
+                                    context.l10n.activityTypeLabel(type),
                                     style: TextStyle(
                                       fontSize: AppFontSize.f11,
                                       fontWeight: AppFontWeight.semibold,
@@ -767,7 +768,8 @@ class _ActivityLogScreenState extends State<ActivityLogScreen> {
                         padding: const EdgeInsets.only(right: AppSpacing.s8),
                         child: ChoiceChip(
                           key: _keyFor(type),
-                          label: Text('$type · ${typeCounts[type]}'),
+                          // Shows the label; the chip filters on the stored type.
+                          label: Text('${context.l10n.activityTypeLabel(type)} · ${typeCounts[type]}'),
                           selected: selectedFilter == type,
                           onSelected: (_) => _selectFilterAndScrollIntoView(type),
                           selectedColor: context.colors.accent,

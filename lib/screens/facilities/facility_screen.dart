@@ -1829,7 +1829,7 @@ class _FacilityScreenState extends State<FacilityScreen> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          actionType.isEmpty ? 'Activity' : actionType,
+                          actionType.isEmpty ? 'Activity' : context.l10n.activityTypeLabel(actionType),
                           style: const TextStyle(fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f13),
                         ),
                         Text(description, style: TextStyle(fontSize: AppFontSize.f12_5, color: context.colors.textSoft)),
