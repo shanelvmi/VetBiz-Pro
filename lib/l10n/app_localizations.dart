@@ -5173,6 +5173,138 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Log Out Everywhere'**
   String get account_logoutEverywhere;
+
+  /// Message when signing out elsewhere failed.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t clear other sessions'**
+  String get account_logoutAllFailed;
+
+  /// Stands in for a missing facility name.
+  ///
+  /// In en, this message translates to:
+  /// **'this facility'**
+  String get account_thisFacility;
+
+  /// Wipe confirmation title.
+  ///
+  /// In en, this message translates to:
+  /// **'Wipe All Data?'**
+  String get account_wipeTitle;
+
+  /// Wipe confirmation, first line.
+  ///
+  /// In en, this message translates to:
+  /// **'Business data for \"{facility}\" will be permanently wiped.'**
+  String account_wipeFacility(String facility);
+
+  /// Wipe confirmation text.
+  ///
+  /// In en, this message translates to:
+  /// **'All records of sales, products, clients, and transactions for this facility are erased. Other facilities you have are not affected. Your login credentials remain unaffected.'**
+  String get account_wipeBody;
+
+  /// Wipe confirm button.
+  ///
+  /// In en, this message translates to:
+  /// **'Wipe Data'**
+  String get account_wipe;
+
+  /// Typed confirmation title before a wipe.
+  ///
+  /// In en, this message translates to:
+  /// **'Confirm Action'**
+  String get account_confirmTitle;
+
+  /// Typed confirmation; word is the English word that must be typed.
+  ///
+  /// In en, this message translates to:
+  /// **'Please type \"{word}\" to finalize clearing all records:'**
+  String account_typeErase(String word);
+
+  /// Message after a wipe.
+  ///
+  /// In en, this message translates to:
+  /// **'All business data permanently wiped'**
+  String get account_wiped;
+
+  /// Message when a wipe failed.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t clear the records'**
+  String get account_wipeFailed;
+
+  /// Dialog title for a Platform Admin account.
+  ///
+  /// In en, this message translates to:
+  /// **'Cannot Deactivate'**
+  String get account_cannotDeactivateTitle;
+
+  /// Dialog text for a Platform Admin account.
+  ///
+  /// In en, this message translates to:
+  /// **'This account has Platform Admin access, so it can\'t be deactivated - not by you, and not by anyone else. This keeps the platform from ever being locked out of its own oversight tools.'**
+  String get account_cannotDeactivateBody;
+
+  /// Dialog title and Manage Account item.
+  ///
+  /// In en, this message translates to:
+  /// **'Deactivate Account'**
+  String get account_deactivateTitle;
+
+  /// Deactivate confirmation text.
+  ///
+  /// In en, this message translates to:
+  /// **'Are you sure you want to deactivate your account? You\'ll be signed out immediately, and will need your facility admin (or Platform Admin) to reactivate it before you can sign back in.'**
+  String get account_deactivateBody;
+
+  /// Typed confirmation title before deactivating.
+  ///
+  /// In en, this message translates to:
+  /// **'Confirm Deactivation'**
+  String get account_confirmDeactivation;
+
+  /// Typed confirmation; word is the English word that must be typed.
+  ///
+  /// In en, this message translates to:
+  /// **'Type \"{word}\" to confirm:'**
+  String account_typeToConfirm(String word);
+
+  /// Shown on the sign-in screen after deactivating.
+  ///
+  /// In en, this message translates to:
+  /// **'Your account has been deactivated.'**
+  String get account_deactivated;
+
+  /// Message when deactivating failed.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t deactivate the account'**
+  String get account_deactivateFailed;
+
+  /// Dialog title, button and Manage Account item.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete Account'**
+  String get account_deleteTitle;
+
+  /// Delete account dialog text.
+  ///
+  /// In en, this message translates to:
+  /// **'Deleting your account is permanent and cannot be undone. All your data will be erased.'**
+  String get account_deleteWarning;
+
+  /// Message after deleting the account.
+  ///
+  /// In en, this message translates to:
+  /// **'Your account has been deleted'**
+  String get account_deleted;
+
+  /// Message when deleting failed.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t delete the account'**
+  String get account_deleteFailed;
 }
 
 class _AppLocalizationsDelegate

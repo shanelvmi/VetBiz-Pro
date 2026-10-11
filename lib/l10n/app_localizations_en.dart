@@ -2894,4 +2894,80 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get account_logoutEverywhere => 'Log Out Everywhere';
+
+  @override
+  String get account_logoutAllFailed => 'Couldn\'t clear other sessions';
+
+  @override
+  String get account_thisFacility => 'this facility';
+
+  @override
+  String get account_wipeTitle => 'Wipe All Data?';
+
+  @override
+  String account_wipeFacility(String facility) {
+    return 'Business data for \"$facility\" will be permanently wiped.';
+  }
+
+  @override
+  String get account_wipeBody =>
+      'All records of sales, products, clients, and transactions for this facility are erased. Other facilities you have are not affected. Your login credentials remain unaffected.';
+
+  @override
+  String get account_wipe => 'Wipe Data';
+
+  @override
+  String get account_confirmTitle => 'Confirm Action';
+
+  @override
+  String account_typeErase(String word) {
+    return 'Please type \"$word\" to finalize clearing all records:';
+  }
+
+  @override
+  String get account_wiped => 'All business data permanently wiped';
+
+  @override
+  String get account_wipeFailed => 'Couldn\'t clear the records';
+
+  @override
+  String get account_cannotDeactivateTitle => 'Cannot Deactivate';
+
+  @override
+  String get account_cannotDeactivateBody =>
+      'This account has Platform Admin access, so it can\'t be deactivated - not by you, and not by anyone else. This keeps the platform from ever being locked out of its own oversight tools.';
+
+  @override
+  String get account_deactivateTitle => 'Deactivate Account';
+
+  @override
+  String get account_deactivateBody =>
+      'Are you sure you want to deactivate your account? You\'ll be signed out immediately, and will need your facility admin (or Platform Admin) to reactivate it before you can sign back in.';
+
+  @override
+  String get account_confirmDeactivation => 'Confirm Deactivation';
+
+  @override
+  String account_typeToConfirm(String word) {
+    return 'Type \"$word\" to confirm:';
+  }
+
+  @override
+  String get account_deactivated => 'Your account has been deactivated.';
+
+  @override
+  String get account_deactivateFailed => 'Couldn\'t deactivate the account';
+
+  @override
+  String get account_deleteTitle => 'Delete Account';
+
+  @override
+  String get account_deleteWarning =>
+      'Deleting your account is permanent and cannot be undone. All your data will be erased.';
+
+  @override
+  String get account_deleted => 'Your account has been deleted';
+
+  @override
+  String get account_deleteFailed => 'Couldn\'t delete the account';
 }

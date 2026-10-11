@@ -2911,4 +2911,80 @@ class AppLocalizationsSw extends AppLocalizations {
 
   @override
   String get account_logoutEverywhere => 'Toka Kila Mahali';
+
+  @override
+  String get account_logoutAllFailed => 'Imeshindwa kufuta vipindi vingine';
+
+  @override
+  String get account_thisFacility => 'kituo hiki';
+
+  @override
+  String get account_wipeTitle => 'Futa Data Yote?';
+
+  @override
+  String account_wipeFacility(String facility) {
+    return 'Data ya biashara ya \"$facility\" itafutwa kabisa.';
+  }
+
+  @override
+  String get account_wipeBody =>
+      'Rekodi zote za mauzo, bidhaa, wateja na miamala za kituo hiki zinafutwa. Vituo vyako vingine haviguswi. Taarifa zako za kuingia hazibadiliki.';
+
+  @override
+  String get account_wipe => 'Futa Data';
+
+  @override
+  String get account_confirmTitle => 'Thibitisha Kitendo';
+
+  @override
+  String account_typeErase(String word) {
+    return 'Tafadhali andika \"$word\" ili kukamilisha kufuta rekodi zote:';
+  }
+
+  @override
+  String get account_wiped => 'Data yote ya biashara imefutwa kabisa';
+
+  @override
+  String get account_wipeFailed => 'Imeshindwa kufuta rekodi';
+
+  @override
+  String get account_cannotDeactivateTitle => 'Haiwezi Kusimamishwa';
+
+  @override
+  String get account_cannotDeactivateBody =>
+      'Akaunti hii ina ruhusa ya Msimamizi wa Jukwaa, kwa hiyo haiwezi kusimamishwa - si na wewe, wala na mtu mwingine. Hii inazuia jukwaa kufungiwa nje ya zana zake za usimamizi.';
+
+  @override
+  String get account_deactivateTitle => 'Simamisha Akaunti';
+
+  @override
+  String get account_deactivateBody =>
+      'Una uhakika unataka kusimamisha akaunti yako? Utatolewa mara moja, na utahitaji msimamizi wa kituo chako (au Msimamizi wa Jukwaa) kuirejesha kabla hujaingia tena.';
+
+  @override
+  String get account_confirmDeactivation => 'Thibitisha Kusimamisha';
+
+  @override
+  String account_typeToConfirm(String word) {
+    return 'Andika \"$word\" kuthibitisha:';
+  }
+
+  @override
+  String get account_deactivated => 'Akaunti yako imesimamishwa.';
+
+  @override
+  String get account_deactivateFailed => 'Imeshindwa kusimamisha akaunti';
+
+  @override
+  String get account_deleteTitle => 'Futa Akaunti';
+
+  @override
+  String get account_deleteWarning =>
+      'Kufuta akaunti yako ni kwa kudumu na hakuwezi kutenduliwa. Data yako yote itafutwa.';
+
+  @override
+  String get account_deleted => 'Akaunti yako imefutwa';
+
+  @override
+  String get account_deleteFailed => 'Imeshindwa kufuta akaunti';
 }
