@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../data/fields.dart';
+import '../data/payment_status.dart';
 
 class SaleItem {
   final String productId;
@@ -221,7 +222,7 @@ class Sale {
       // Mirrors sales_screen.dart's _getPaymentStatus exactly - kept as
       // an equality-filterable field precisely so the status filter
       // can be part of a real query rather than a client-side check.
-      'paymentStatus': totalPaid >= totalAmount ? 'Paid' : (totalPaid > 0 ? 'Partial' : 'Unpaid'),
+      'paymentStatus': PaymentStatus.of(totalPaid, totalAmount),
     };
   }
 

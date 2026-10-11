@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../data/fields.dart';
+import '../data/payment_status.dart';
 
 class Service {
   final String id;
@@ -110,7 +111,7 @@ class Service {
   Map<String, dynamic> searchFields() {
     return {
       'clientNameLower': (clientName ?? '').toLowerCase(),
-      'paymentStatus': totalPaid >= totalAmount ? 'Paid' : (totalPaid > 0 ? 'Partial' : 'Unpaid'),
+      'paymentStatus': PaymentStatus.of(totalPaid, totalAmount),
     };
   }
 

@@ -28,6 +28,7 @@ import '../../theme/theme_context.dart';
 import '../../theme/app_breakpoints.dart';
 import '../../ui/feedback/app_feedback.dart';
 import '../../l10n/l10n.dart';
+import '../../data/payment_status.dart';
 
 class ServicesScreen extends StatefulWidget {
   const ServicesScreen({super.key});
@@ -170,9 +171,7 @@ class _ServicesScreenState extends State<ServicesScreen> {
   }
 
   String _getPaymentStatus(double paid, double total) {
-    if (paid >= total) return 'Paid';
-    if (paid > 0) return 'Partial';
-    return 'Unpaid';
+    return PaymentStatus.of(paid, total);
   }
 
   Color _statusColor(double paid, double total) {
@@ -430,7 +429,7 @@ class _ServicesScreenState extends State<ServicesScreen> {
   // ==================== FILTERS TOOLBAR ====================
 
   static const List<String> _dateFilterOptions = ['All time', 'Today', 'Last 7 days', 'Last 30 days', 'This month'];
-  static const List<String> _statusFilterOptions = ['All', 'Paid', 'Partial', 'Unpaid'];
+  static const List<String> _statusFilterOptions = ['All', ...PaymentStatus.values];
 
   Widget _buildFiltersToolbar() {
     final border = OutlineInputBorder(

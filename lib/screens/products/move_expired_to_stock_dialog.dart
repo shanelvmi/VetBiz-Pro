@@ -9,8 +9,8 @@ import '../../theme/app_text.dart';
 import '../../theme/app_dimens.dart';
 import '../../theme/theme_context.dart';
 import '../../ui/feedback/app_feedback.dart';
+import '../../constants/batch_move_reasons.dart';
 
-const List<String> _moveReasons = ['Expired', 'Deteriorated', 'Other (specify)'];
 
 /// Prompts for a quantity and a reason, then moves a sellable batch
 /// back to Stock Store - called from View Batches' per-batch action,
@@ -31,7 +31,7 @@ Future<void> promptQuantityAndMoveToStock(
   // whose own date has already passed) but never stops someone from
   // picking Deteriorated or Other instead, or from moving a batch
   // that isn't expired at all.
-  String? reason = isAlreadyExpired ? 'Expired' : null;
+  String? reason = isAlreadyExpired ? kBatchMoveReasonExpired : null;
   String? qtyErrorText;
   String? reasonErrorText;
 
@@ -72,7 +72,7 @@ Future<void> promptQuantityAndMoveToStock(
                   isDense: true,
                   errorText: reasonErrorText,
                 ),
-                items: _moveReasons
+                items: kBatchMoveReasons
                     .map((r) => DropdownMenuItem(value: r, child: Text(r, style: const TextStyle(fontSize: AppFontSize.f13))))
                     .toList(),
                 onChanged: (v) => setDialogState(() {
@@ -84,7 +84,7 @@ Future<void> promptQuantityAndMoveToStock(
               TextField(
                 controller: notesController,
                 decoration: InputDecoration(
-                  labelText: reason == 'Other (specify)' ? 'Note (required for Other)' : 'Note (optional)',
+                  labelText: reason == kBatchMoveReasonOther ? 'Note (required for Other)' : 'Note (optional)',
                   border: const OutlineInputBorder(),
                   isDense: true,
                 ),
@@ -107,7 +107,7 @@ Future<void> promptQuantityAndMoveToStock(
               if (reason == null) {
                 reasonErrorText = 'Select a reason';
                 hasError = true;
-              } else if (reason == 'Other (specify)' && notesController.text.trim().isEmpty) {
+              } else if (reason == kBatchMoveReasonOther && notesController.text.trim().isEmpty) {
                 reasonErrorText = 'Describe the reason in the note below';
                 hasError = true;
               }

@@ -11,6 +11,7 @@ import '../../theme/theme_context.dart';
 import '../../theme/app_breakpoints.dart';
 import '../../theme/app_motion.dart';
 import '../../ui/feedback/app_feedback.dart';
+import '../../constants/client_options.dart';
 
 class AddClientScreen extends StatefulWidget {
   final Client? client; // null = add, not null = edit
@@ -49,8 +50,8 @@ class _AddClientScreenState extends State<AddClientScreen> {
   String _status = 'Active';
 
 
-  final List<String> clientTypes = ['Farmer', 'Vet', 'Wholesaler', 'Retailer'];
-  final List<String> farmerSubTypes = ['Crop Producer', 'Animal Keeper'];
+  final List<String> clientTypes = kClientTypes;
+  final List<String> farmerSubTypes = kFarmerSubTypes;
 
   final Map<String, List<String>> cropGroups = {
     'Food Crops': [
@@ -65,13 +66,9 @@ class _AddClientScreenState extends State<AddClientScreen> {
     'Fruits': ['Mangoes', 'Oranges', 'Avocado', 'Watermelon'],
   };
 
-  final Map<String, List<String>> animalGroups = {
-    'Livestock': ['Cattle', 'Goat', 'Sheep', 'Pig', 'Donkey'],
-    'Poultry': ['Chicken', 'Duck', 'Turkey', 'Guinea Fowl'],
-    'Other': ['Bees', 'Dog', 'Cat', 'Rabbit'],
-  };
+  final Map<String, List<String>> animalGroups = kAnimalGroups;
 
-  final List<String> vetPracticeTypes = ['Clinic', 'Consultant', 'Hospital', 'Ambulatory'];
+  final List<String> vetPracticeTypes = kVetPracticeTypes;
 
   @override
   void initState() {

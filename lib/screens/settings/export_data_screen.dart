@@ -21,6 +21,7 @@ import '../../theme/app_dimens.dart';
 import '../../theme/theme_context.dart';
 import '../../theme/app_breakpoints.dart';
 import '../../ui/feedback/app_feedback.dart';
+import '../../data/payment_status.dart';
 
 /// One logical table of data - a title (shown as its own line in CSV,
 /// its own sheet/tab name in xlsx), a header row, and the data rows
@@ -397,7 +398,7 @@ class _ExportDataScreenState extends State<ExportDataScreen> {
     final saleRows = allSales.map((data) {
       final totalAmount = (data['totalAmount'] as num?)?.toDouble() ?? 0.0;
       final totalPaid = (data['totalPaid'] as num?)?.toDouble() ?? 0.0;
-      final status = totalPaid >= totalAmount ? 'Paid' : (totalPaid > 0 ? 'Partial' : 'Unpaid');
+      final status = PaymentStatus.of(totalPaid, totalAmount);
       return [
         _asDate(data['timestamp']),
         data['clientName'] ?? 'Walk-in',
@@ -460,7 +461,7 @@ class _ExportDataScreenState extends State<ExportDataScreen> {
     final rows = allServices.map((data) {
       final totalAmount = (data['totalAmount'] as num?)?.toDouble() ?? 0.0;
       final totalPaid = (data['totalPaid'] as num?)?.toDouble() ?? 0.0;
-      final status = totalPaid >= totalAmount ? 'Paid' : (totalPaid > 0 ? 'Partial' : 'Unpaid');
+      final status = PaymentStatus.of(totalPaid, totalAmount);
       return [
         _asDate(data['serviceDate']),
         data['clientName'] ?? 'N/A',

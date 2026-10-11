@@ -26,6 +26,7 @@ import '../../theme/app_text.dart';
 import '../../theme/app_dimens.dart';
 import '../../theme/theme_context.dart';
 import '../../ui/feedback/friendly_error.dart';
+import '../../constants/client_options.dart';
 
 class ClientsScreen extends StatefulWidget {
   const ClientsScreen({super.key});
@@ -36,7 +37,7 @@ class ClientsScreen extends StatefulWidget {
 
 class _ClientsScreenState extends State<ClientsScreen> {
 
-  static const List<String> _clientTypes = ['All', 'Farmer', 'Vet', 'Wholesaler', 'Retailer'];
+  static const List<String> _clientTypes = ['All', ...kClientTypes];
 
   String _searchQuery = '';
   final TextEditingController _searchController = TextEditingController();
@@ -119,7 +120,7 @@ class _ClientsScreenState extends State<ClientsScreen> {
 
     final typeCounts = <String, int>{};
     for (final c in allClients) {
-      final types = c.types.isNotEmpty ? c.types : ['Other'];
+      final types = c.types.isNotEmpty ? c.types : [kClientTypeOther];
       for (final t in types) {
         typeCounts[t] = (typeCounts[t] ?? 0) + 1;
       }
@@ -452,7 +453,7 @@ class _ClientsScreenState extends State<ClientsScreen> {
   }
 
   Widget _buildDetailsPanel(Client client) {
-    final types = client.types.isNotEmpty ? client.types : ['Other'];
+    final types = client.types.isNotEmpty ? client.types : [kClientTypeOther];
     final accent = _colorForType(types.first);
     final latestNote = client.debtorNotes.isNotEmpty ? client.debtorNotes.last['text'] as String? : null;
 
@@ -802,7 +803,7 @@ class _ClientsScreenState extends State<ClientsScreen> {
   }
 
   Widget _buildClientRow(Client client) {
-    final types = client.types.isNotEmpty ? client.types : ['Other'];
+    final types = client.types.isNotEmpty ? client.types : [kClientTypeOther];
     final primaryType = types.first;
     final accent = _colorForType(primaryType);
     final isAdmin = Provider.of<UserRoleProvider>(context, listen: false).isAdmin;

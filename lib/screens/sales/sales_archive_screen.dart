@@ -14,6 +14,7 @@ import '../../theme/app_text.dart';
 import '../../theme/app_dimens.dart';
 import '../../theme/theme_context.dart';
 import '../../l10n/l10n.dart';
+import '../../data/payment_status.dart';
 
 class SalesArchiveScreen extends StatefulWidget {
   const SalesArchiveScreen({super.key});
@@ -188,9 +189,7 @@ class _SalesArchiveScreenState extends State<SalesArchiveScreen> {
   }
 
   String _getPaymentStatus(double paid, double total) {
-    if (paid >= total) return 'Paid';
-    if (paid > 0) return 'Partial';
-    return 'Unpaid';
+    return PaymentStatus.of(paid, total);
   }
 
   Color _statusColor(double paid, double total) {
