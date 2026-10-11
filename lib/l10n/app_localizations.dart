@@ -1855,6 +1855,126 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Other Income'**
   String get incomeCategory_other;
+
+  /// Payment method, short: filter names and table headers (Payments, Subscription history).
+  ///
+  /// In en, this message translates to:
+  /// **'Method'**
+  String get common_method;
+
+  /// A filter showing its name and chosen value, e.g. 'Type: Sales', 'Method: All'.
+  ///
+  /// In en, this message translates to:
+  /// **'{label}: {value}'**
+  String common_filterValue(String label, String value);
+
+  /// A total next to a list (amount already formatted, e.g. TSh 12,000).
+  ///
+  /// In en, this message translates to:
+  /// **'Total: {amount}'**
+  String common_totalValue(String amount);
+
+  /// Today: metric card and day heading.
+  ///
+  /// In en, this message translates to:
+  /// **'Today'**
+  String get common_today;
+
+  /// Yesterday: day heading in a list grouped by day.
+  ///
+  /// In en, this message translates to:
+  /// **'Yesterday'**
+  String get common_yesterday;
+
+  /// Page-size choice under a paged list.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} per page'**
+  String common_perPage(int count);
+
+  /// The current page under a paged list.
+  ///
+  /// In en, this message translates to:
+  /// **'Page {page}'**
+  String common_page(int page);
+
+  /// Message when tapping a phone number could not open the phone app.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t open the dialer'**
+  String get common_dialerFailed;
+
+  /// Button that prints a receipt.
+  ///
+  /// In en, this message translates to:
+  /// **'Print Receipt'**
+  String get common_printReceipt;
+
+  /// Button under an empty filtered list.
+  ///
+  /// In en, this message translates to:
+  /// **'Reset filters'**
+  String get common_resetFilters;
+
+  /// Label of an optional notes field.
+  ///
+  /// In en, this message translates to:
+  /// **'Notes (optional)'**
+  String get common_notesOptional;
+
+  /// Name of a notifications panel (read by screen readers).
+  ///
+  /// In en, this message translates to:
+  /// **'Notifications'**
+  String get common_notifications;
+
+  /// Payments screen title.
+  ///
+  /// In en, this message translates to:
+  /// **'Payments'**
+  String get payments_title;
+
+  /// Payments screen title when opened for one client.
+  ///
+  /// In en, this message translates to:
+  /// **'Payments - {clientName}'**
+  String payments_titleForClient(String clientName);
+
+  /// Payments screen subtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'All payments received across your business'**
+  String get payments_subtitle;
+
+  /// Payments type filter: payments for sales.
+  ///
+  /// In en, this message translates to:
+  /// **'Sales'**
+  String get payments_typeSales;
+
+  /// Payments type filter: payments for services.
+  ///
+  /// In en, this message translates to:
+  /// **'Services'**
+  String get payments_typeServices;
+
+  /// Payments type filter: debt repayments.
+  ///
+  /// In en, this message translates to:
+  /// **'Debt Repayments'**
+  String get payments_typeDebtRepayments;
+
+  /// Payments type filter: other income.
+  ///
+  /// In en, this message translates to:
+  /// **'Other Income'**
+  String get payments_typeOtherIncome;
+
+  /// Payments method filter before one is chosen.
+  ///
+  /// In en, this message translates to:
+  /// **'All Methods'**
+  String get payments_allMethods;
 }
 
 class _AppLocalizationsDelegate

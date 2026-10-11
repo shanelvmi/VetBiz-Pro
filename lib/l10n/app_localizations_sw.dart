@@ -905,4 +905,75 @@ class AppLocalizationsSw extends AppLocalizations {
 
   @override
   String get incomeCategory_other => 'Mapato Mengine';
+
+  @override
+  String get common_method => 'Njia';
+
+  @override
+  String common_filterValue(String label, String value) {
+    return '$label: $value';
+  }
+
+  @override
+  String common_totalValue(String amount) {
+    return 'Jumla: $amount';
+  }
+
+  @override
+  String get common_today => 'Leo';
+
+  @override
+  String get common_yesterday => 'Jana';
+
+  @override
+  String common_perPage(int count) {
+    return '$count kwa ukurasa';
+  }
+
+  @override
+  String common_page(int page) {
+    return 'Ukurasa $page';
+  }
+
+  @override
+  String get common_dialerFailed => 'Imeshindwa kufungua simu';
+
+  @override
+  String get common_printReceipt => 'Chapisha Risiti';
+
+  @override
+  String get common_resetFilters => 'Futa vichujio';
+
+  @override
+  String get common_notesOptional => 'Maelezo (si lazima)';
+
+  @override
+  String get common_notifications => 'Arifa';
+
+  @override
+  String get payments_title => 'Malipo';
+
+  @override
+  String payments_titleForClient(String clientName) {
+    return 'Malipo - $clientName';
+  }
+
+  @override
+  String get payments_subtitle =>
+      'Malipo yote yaliyopokelewa katika biashara yako';
+
+  @override
+  String get payments_typeSales => 'Mauzo';
+
+  @override
+  String get payments_typeServices => 'Huduma';
+
+  @override
+  String get payments_typeDebtRepayments => 'Marejesho ya Madeni';
+
+  @override
+  String get payments_typeOtherIncome => 'Mapato Mengine';
+
+  @override
+  String get payments_allMethods => 'Njia Zote';
 }

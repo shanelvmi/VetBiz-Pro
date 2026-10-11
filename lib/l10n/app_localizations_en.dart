@@ -904,4 +904,74 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get incomeCategory_other => 'Other Income';
+
+  @override
+  String get common_method => 'Method';
+
+  @override
+  String common_filterValue(String label, String value) {
+    return '$label: $value';
+  }
+
+  @override
+  String common_totalValue(String amount) {
+    return 'Total: $amount';
+  }
+
+  @override
+  String get common_today => 'Today';
+
+  @override
+  String get common_yesterday => 'Yesterday';
+
+  @override
+  String common_perPage(int count) {
+    return '$count per page';
+  }
+
+  @override
+  String common_page(int page) {
+    return 'Page $page';
+  }
+
+  @override
+  String get common_dialerFailed => 'Couldn\'t open the dialer';
+
+  @override
+  String get common_printReceipt => 'Print Receipt';
+
+  @override
+  String get common_resetFilters => 'Reset filters';
+
+  @override
+  String get common_notesOptional => 'Notes (optional)';
+
+  @override
+  String get common_notifications => 'Notifications';
+
+  @override
+  String get payments_title => 'Payments';
+
+  @override
+  String payments_titleForClient(String clientName) {
+    return 'Payments - $clientName';
+  }
+
+  @override
+  String get payments_subtitle => 'All payments received across your business';
+
+  @override
+  String get payments_typeSales => 'Sales';
+
+  @override
+  String get payments_typeServices => 'Services';
+
+  @override
+  String get payments_typeDebtRepayments => 'Debt Repayments';
+
+  @override
+  String get payments_typeOtherIncome => 'Other Income';
+
+  @override
+  String get payments_allMethods => 'All Methods';
 }
