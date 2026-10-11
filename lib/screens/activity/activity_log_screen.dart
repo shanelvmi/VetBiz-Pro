@@ -267,6 +267,7 @@ class _ActivityLogScreenState extends State<ActivityLogScreen> {
     // Growing the window (e.g. 14 to 60) deletes nothing and doesn't
     // need this extra step.
     if (selected < current) {
+      if (!mounted) return;
       final confirmed = await showDialog<bool>(
         context: context,
         builder: (ctx) => AlertDialog(

@@ -279,6 +279,7 @@ class _FacilityScreenState extends State<FacilityScreen> {
     try {
       final userDoc = await FirebaseFirestore.instance.collection(Collections.users).doc(currentUser!.uid).get();
       final userData = userDoc.data();
+      if (!mounted) return;
 
       if (userData != null && userData[Fields.role] == UserRole.admin.key) {
         final facilityList = List<Map<String, dynamic>>.from(userData['facilities'] ?? []);
@@ -399,6 +400,7 @@ class _FacilityScreenState extends State<FacilityScreen> {
     String? dialogError;
     Uint8List? pendingLogoBytes;
 
+    if (!mounted) return;
     await showDialog(
       context: context,
       builder: (dialogContext) => StatefulBuilder(
@@ -2614,6 +2616,7 @@ class _FacilityScreenState extends State<FacilityScreen> {
     // outside it immediately, not just going forward. Growing the
     // window deletes nothing and doesn't need this extra step.
     if (selected < currentRetention) {
+      if (!mounted) return;
       final confirmed = await showDialog<bool>(
         context: context,
         builder: (ctx) => AlertDialog(
