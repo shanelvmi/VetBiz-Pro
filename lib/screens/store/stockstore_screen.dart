@@ -91,7 +91,7 @@ class _StockStoreScreenState extends State<StockStoreScreen> {
     await showGeneralDialog(
       context: context,
       barrierDismissible: true,
-      barrierLabel: 'Notifications',
+      barrierLabel: context.l10n.common_notifications,
       barrierColor: Colors.transparent,
       transitionDuration: AppMotion.fast,
       pageBuilder: (context, animation, secondaryAnimation) {
@@ -132,15 +132,29 @@ class _StockStoreScreenState extends State<StockStoreScreen> {
 
   String _categoryOf(Product p) => p.category.isNotEmpty ? p.category : 'Uncategorized';
 
+  // _getProductStatus's 'text' is also what the counts and the status filter
+  // use, so it stays English; this is what a status chip shows.
+  String _statusLabel(String status) => switch (status) {
+        'Not Stocked' => context.l10n.products_statusNotStocked,
+        'Depleted' => context.l10n.products_statusDepleted,
+        'Expired' => context.l10n.products_statusExpired,
+        'Low Stock' => context.l10n.products_statusLowStock,
+        'Reorder Soon' => context.l10n.products_statusReorderSoon,
+        'Unknown' => context.l10n.products_statusUnknown,
+        'Expiring Soon' => context.l10n.products_statusExpiringSoon,
+        'Active' => context.l10n.products_statusActive,
+        _ => status,
+      };
+
   Widget _buildSummaryMetrics({
     required int totalCount,
     required Map<String, int> statusCounts,
     required double totalStockValue,
   }) {
     final metrics = [
-      ('Total Products', '$totalCount', Icons.shopping_bag_outlined, context.colors.primary),
+      (context.l10n.products_totalProducts, '$totalCount', Icons.shopping_bag_outlined, context.colors.primary),
       (
-        'In Stock',
+        context.l10n.products_statusInStock,
         // 'Unknown' (no expiry set at all) is still genuinely in stock
         // and sellable - just missing expiry information - so it counts
         // here alongside 'Active' instead of vanishing from the summary.
@@ -148,9 +162,9 @@ class _StockStoreScreenState extends State<StockStoreScreen> {
         Icons.check_circle_outline,
         context.colors.success,
       ),
-      ('Low Stock', '${statusCounts['Low Stock'] ?? 0}', Icons.trending_down, context.colors.warning),
-      ('Depleted', '${statusCounts['Depleted'] ?? 0}', Icons.remove_shopping_cart_outlined, context.colors.danger),
-      ('Store Stock Value', Money.format(totalStockValue), Icons.account_balance_wallet_outlined, context.colors.accent),
+      (context.l10n.products_statusLowStock, '${statusCounts['Low Stock'] ?? 0}', Icons.trending_down, context.colors.warning),
+      (context.l10n.products_statusDepleted, '${statusCounts['Depleted'] ?? 0}', Icons.remove_shopping_cart_outlined, context.colors.danger),
+      (context.l10n.store_stockValue, Money.format(totalStockValue), Icons.account_balance_wallet_outlined, context.colors.accent),
     ];
 
     return LayoutBuilder(
@@ -300,16 +314,16 @@ class _StockStoreScreenState extends State<StockStoreScreen> {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (_) => AlertDialog(
-        title: Text('Confirm Delete',
+        title: Text(context.l10n.products_confirmDeleteTitle,
             style: TextStyle(color: context.colors.primary)),
-        content: const Text('Are you sure you want to delete this product?'),
+        content: Text(context.l10n.products_confirmDeleteBody),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
             style: TextButton.styleFrom(
               foregroundColor: context.colors.primary,
             ),
-            child: const Text('Cancel'),
+            child: Text(context.l10n.common_cancel),
           ),
           ElevatedButton(
             onPressed: () => Navigator.pop(context, true),
@@ -317,7 +331,7 @@ class _StockStoreScreenState extends State<StockStoreScreen> {
               backgroundColor: context.colors.danger,
               foregroundColor: context.colors.background,
             ),
-            child: const Text('Delete'),
+            child: Text(context.l10n.common_delete),
           ),
         ],
       ),
@@ -333,11 +347,11 @@ class _StockStoreScreenState extends State<StockStoreScreen> {
       // deleteProduct moves the product to Trash (a soft delete), so Undo
       // puts it back with the Trash screen's own restore, as on Products.
       AppFeedback.undo(
-        'Product moved to Trash',
+        L10n.current.products_movedToTrash,
         onUndo: () => _undoDeleteProduct(facilityId, productId),
       );
     } catch (e, st) {
-      AppFeedback.error("Couldn't delete the product", error: e, stackTrace: st);
+      AppFeedback.error(L10n.current.products_deleteFailed, error: e, stackTrace: st);
     }
   }
 
@@ -350,9 +364,9 @@ class _StockStoreScreenState extends State<StockStoreScreen> {
         liveCollection: Collections.products,
         id: productId,
       );
-      AppFeedback.success('Product restored');
+      AppFeedback.success(L10n.current.products_restored);
     } catch (e, st) {
-      AppFeedback.error("Couldn't restore the product", error: e, stackTrace: st);
+      AppFeedback.error(L10n.current.products_restoreFailed, error: e, stackTrace: st);
     }
   }
 
@@ -447,7 +461,7 @@ class _StockStoreScreenState extends State<StockStoreScreen> {
           child: Align(
             alignment: Alignment.centerRight,
             child: Text(
-              '${result.totalCount} product${result.totalCount == 1 ? '' : 's'} in stock',
+              context.l10n.store_productsInStock(result.totalCount),
               style: TextStyle(fontSize: AppFontSize.f12, color: context.colors.textMuted),
             ),
           ),
@@ -461,7 +475,7 @@ class _StockStoreScreenState extends State<StockStoreScreen> {
                       Icon(Icons.inventory_2, size: AppIconSize.i64, color: context.colors.textDisabled),
                       const SizedBox(height: AppSpacing.s16),
                       Text(
-                        noFiltersActive ? 'No products in stock store' : 'No products match your filters',
+                        noFiltersActive ? context.l10n.store_empty : context.l10n.products_noMatches,
                         style: TextStyle(fontSize: AppFontSize.f18, color: context.colors.textMuted),
                       ),
                     ],
@@ -585,7 +599,7 @@ class _StockStoreScreenState extends State<StockStoreScreen> {
               children: [
                 Text(p.name, style: const TextStyle(fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f14_5),
                     maxLines: 1, overflow: TextOverflow.ellipsis),
-                Text('${context.l10n.productCategoryLabel(p.category)} \u2022 ${context.l10n.productTypeLabel(p.type)}',
+                Text('${context.l10n.productCategoryLabel(p.category)} • ${context.l10n.productTypeLabel(p.type)}',
                     style: TextStyle(fontSize: AppFontSize.f12, color: context.colors.textMuted), maxLines: 1, overflow: TextOverflow.ellipsis),
                 const SizedBox(height: AppSpacing.s4),
                 Wrap(
@@ -599,7 +613,7 @@ class _StockStoreScreenState extends State<StockStoreScreen> {
                         borderRadius: BorderRadius.circular(AppRadius.r10),
                         border: Border.all(color: statusColor.withValues(alpha: AppAlpha.a40)),
                       ),
-                      child: Text(status['text'] as String,
+                      child: Text(_statusLabel(status['text'] as String),
                           style: TextStyle(
                               color: statusColor, fontSize: AppFontSize.f11, fontWeight: AppFontWeight.semibold)),
                     ),
@@ -616,7 +630,7 @@ class _StockStoreScreenState extends State<StockStoreScreen> {
                           children: [
                             Icon(Icons.move_up, size: AppIconSize.i12, color: context.colors.infoStrong),
                             const SizedBox(width: AppSpacing.s3),
-                            Text('Restock Shelf',
+                            Text(context.l10n.products_restockShelf,
                                 style: TextStyle(
                                     color: context.colors.infoStrong, fontSize: AppFontSize.f11, fontWeight: AppFontWeight.semibold)),
                           ],
@@ -629,11 +643,11 @@ class _StockStoreScreenState extends State<StockStoreScreen> {
           ),
           Expanded(
             flex: 2,
-            child: _labelValue('Stock', '${p.stockQty} ${p.unit}', valueColor: statusColor),
+            child: _labelValue(context.l10n.products_stock, '${p.stockQty} ${context.l10n.productUnitLabel(p.unit)}', valueColor: statusColor),
           ),
           Expanded(
             flex: 2,
-            child: _labelValue('Price', Money.format(p.sellPrice)),
+            child: _labelValue(context.l10n.products_price, Money.format(p.sellPrice)),
           ),
           Row(
             mainAxisSize: MainAxisSize.min,
@@ -644,17 +658,17 @@ class _StockStoreScreenState extends State<StockStoreScreen> {
                     showAddEditProductScreen(context, product: p);
                   },
                   icon: Icon(Icons.edit_outlined, color: context.colors.primary, size: AppIconSize.i20),
-                  tooltip: 'Edit',
+                  tooltip: context.l10n.common_edit,
                 ),
               if (isAdmin && p.stockQty > 0)
                 IconButton(
                   onPressed: () => _releaseToShop(p),
                   icon: Icon(Icons.upload, color: context.colors.primary, size: AppIconSize.i20),
-                  tooltip: 'Release',
+                  tooltip: context.l10n.products_release,
                 ),
               PopupMenuButton<String>(
                 icon: Icon(Icons.more_vert, color: context.colors.primary),
-                tooltip: 'More actions',
+                tooltip: context.l10n.common_moreActions,
                 onSelected: (value) {
                   if (value == 'add_batch') {
                     showAddBatchScreen(context, product: p);
@@ -665,12 +679,12 @@ class _StockStoreScreenState extends State<StockStoreScreen> {
                   }
                 },
                 itemBuilder: (context) => [
-                  const PopupMenuItem(value: 'add_batch', child: Text('Add New Batch')),
-                  const PopupMenuItem(value: 'view_batches', child: Text('View Batches')),
+                  PopupMenuItem(value: 'add_batch', child: Text(context.l10n.products_addNewBatch)),
+                  PopupMenuItem(value: 'view_batches', child: Text(context.l10n.products_viewBatches)),
                   if (isAdmin)
                     PopupMenuItem(
                       value: 'delete',
-                      child: Text('Delete', style: TextStyle(color: context.colors.dangerSoft)),
+                      child: Text(context.l10n.common_delete, style: TextStyle(color: context.colors.dangerSoft)),
                     ),
                 ],
               ),
@@ -694,16 +708,16 @@ class _StockStoreScreenState extends State<StockStoreScreen> {
         crossAxisAlignment: CrossAxisAlignment.center,
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Text('Stock Store',
+          Text(context.l10n.store_title,
               style: TextStyle(
                   fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f19, color: context.colors.textPrimary)),
-          Text('Manage your inventory', style: TextStyle(fontSize: AppFontSize.f12, color: context.colors.textMuted)),
+          Text(context.l10n.store_subtitle, style: TextStyle(fontSize: AppFontSize.f12, color: context.colors.textMuted)),
         ],
       ),
       actions: [
         IconButton(
           icon: const Icon(Icons.refresh),
-          tooltip: 'Refresh',
+          tooltip: context.l10n.common_refresh,
           onPressed: _manualRefresh,
         ),
         Stack(
@@ -712,7 +726,7 @@ class _StockStoreScreenState extends State<StockStoreScreen> {
             IconButton(
               key: _bellKey,
               icon: const Icon(Icons.notifications_none),
-              tooltip: 'Stock Alerts',
+              tooltip: context.l10n.products_stockAlerts,
               onPressed: () async {
                 final isWideScreen = context.screenWidth >= AppBreakpoints.medium;
                 if (isWideScreen) {
@@ -741,7 +755,7 @@ class _StockStoreScreenState extends State<StockStoreScreen> {
           child: ElevatedButton.icon(
             onPressed: () => showAddEditProductScreen(context),
             icon: const Icon(Icons.add, size: AppIconSize.i18),
-            label: const Text('Add Product'),
+            label: Text(context.l10n.products_addProduct),
             style: ElevatedButton.styleFrom(
               backgroundColor: context.colors.primary,
               foregroundColor: context.colors.background,
@@ -765,7 +779,7 @@ class _StockStoreScreenState extends State<StockStoreScreen> {
           child: TextField(
             controller: _searchController,
             decoration: InputDecoration(
-              hintText: 'Search stock, brand or batch...',
+              hintText: context.l10n.store_searchHint,
               hintStyle: const TextStyle(fontSize: AppFontSize.f13),
               prefixIcon: const Icon(Icons.search, size: AppIconSize.i20),
               filled: true,
@@ -869,7 +883,7 @@ class _StockStoreScreenState extends State<StockStoreScreen> {
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
         Text(
-          'Showing $start to $end of ${result.totalCount} products',
+          context.l10n.products_showingRange(result.totalCount, start, end),
           style: TextStyle(fontSize: AppFontSize.f12_5, color: context.colors.textMuted),
         ),
         Row(
@@ -1000,7 +1014,7 @@ class _StockStoreScreenState extends State<StockStoreScreen> {
                       overflow: TextOverflow.ellipsis,
                     ),
                     Text(
-                      '${context.l10n.productCategoryLabel(p.category)} \u2022 ${context.l10n.productTypeLabel(p.type)}',
+                      '${context.l10n.productCategoryLabel(p.category)} • ${context.l10n.productTypeLabel(p.type)}',
                       style: TextStyle(fontSize: AppFontSize.f12, color: context.colors.textMuted),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
@@ -1023,7 +1037,7 @@ class _StockStoreScreenState extends State<StockStoreScreen> {
                               Icon(status['icon'] as IconData, size: AppIconSize.i12, color: statusColor),
                               const SizedBox(width: AppSpacing.s4),
                               Text(
-                                status['text'] as String,
+                                _statusLabel(status['text'] as String),
                                 style: TextStyle(
                                     color: statusColor, fontSize: AppFontSize.f11, fontWeight: AppFontWeight.semibold),
                               ),
@@ -1044,7 +1058,7 @@ class _StockStoreScreenState extends State<StockStoreScreen> {
                                 Icon(Icons.move_up, size: AppIconSize.i12, color: context.colors.infoStrong),
                                 const SizedBox(width: AppSpacing.s4),
                                 Text(
-                                  'Restock Shelf',
+                                  context.l10n.products_restockShelf,
                                   style: TextStyle(
                                       color: context.colors.infoStrong, fontSize: AppFontSize.f11, fontWeight: AppFontWeight.semibold),
                                 ),
@@ -1060,14 +1074,14 @@ class _StockStoreScreenState extends State<StockStoreScreen> {
                     Row(
                       children: [
                         Expanded(
-                          child: _labelValue('Stock', '${p.stockQty} ${p.unit}', valueColor: statusColor),
+                          child: _labelValue(context.l10n.products_stock, '${p.stockQty} ${context.l10n.productUnitLabel(p.unit)}', valueColor: statusColor),
                         ),
-                        Expanded(child: _labelValue('Price', Money.format(p.sellPrice))),
+                        Expanded(child: _labelValue(context.l10n.products_price, Money.format(p.sellPrice))),
                       ],
                     ),
                     const SizedBox(height: AppSpacing.s8),
                     Text(
-                      'Sellable: ${p.sellableQty} ${p.unit} \u2022 Batch: ${p.batchNo ?? "-"}',
+                      context.l10n.products_sellableBatch('${p.sellableQty}', context.l10n.productUnitLabel(p.unit), p.batchNo ?? '-'),
                       style: TextStyle(fontSize: AppFontSize.f12_5, color: context.colors.textSoft),
                     ),
                     Row(
@@ -1078,12 +1092,12 @@ class _StockStoreScreenState extends State<StockStoreScreen> {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
-                                'Buy: ${Money.format(p.buyPrice)}',
+                                context.l10n.products_buyPrice(Money.format(p.buyPrice)),
                                 style: TextStyle(fontSize: AppFontSize.f12_5, color: context.colors.textSoft),
                               ),
                               if (p.expiry != null)
                                 Text(
-                                  'Expiry: ${AppDateFormat.date.format(p.expiry!)}',
+                                  context.l10n.products_expiryDate(AppDateFormat.date.format(p.expiry!)),
                                   style: TextStyle(fontSize: AppFontSize.f12_5, color: context.colors.textSoft),
                                 ),
                             ],
@@ -1100,7 +1114,7 @@ class _StockStoreScreenState extends State<StockStoreScreen> {
                         // control crowding it.
                         PopupMenuButton<String>(
                           icon: Icon(Icons.more_vert, color: context.colors.primary),
-                          tooltip: 'More actions',
+                          tooltip: context.l10n.common_moreActions,
                           onSelected: (value) {
                             if (value == 'add_batch') {
                               showAddBatchScreen(context, product: p);
@@ -1111,12 +1125,12 @@ class _StockStoreScreenState extends State<StockStoreScreen> {
                             }
                           },
                           itemBuilder: (context) => [
-                            const PopupMenuItem(value: 'add_batch', child: Text('Add New Batch')),
-                            const PopupMenuItem(value: 'view_batches', child: Text('View Batches')),
+                            PopupMenuItem(value: 'add_batch', child: Text(context.l10n.products_addNewBatch)),
+                            PopupMenuItem(value: 'view_batches', child: Text(context.l10n.products_viewBatches)),
                             if (isAdmin)
                               PopupMenuItem(
                                 value: 'delete',
-                                child: Text('Delete', style: TextStyle(color: context.colors.dangerSoft)),
+                                child: Text(context.l10n.common_delete, style: TextStyle(color: context.colors.dangerSoft)),
                               ),
                           ],
                         ),
@@ -1137,7 +1151,7 @@ class _StockStoreScreenState extends State<StockStoreScreen> {
                       showAddEditProductScreen(context, product: p);
                     },
                     icon: Icon(Icons.edit_outlined, size: AppIconSize.i16, color: context.colors.primary),
-                    label: Text('Edit', style: TextStyle(color: context.colors.primary)),
+                    label: Text(context.l10n.common_edit, style: TextStyle(color: context.colors.primary)),
                     style: OutlinedButton.styleFrom(
                       side: BorderSide(color: context.colors.primary.withValues(alpha: AppAlpha.a40)),
                       padding: const EdgeInsets.symmetric(vertical: AppSpacing.s10),
@@ -1149,7 +1163,7 @@ class _StockStoreScreenState extends State<StockStoreScreen> {
                 Expanded(
                   child: ElevatedButton.icon(
                     icon: const Icon(Icons.upload, size: AppIconSize.i16),
-                    label: const Text('Release'),
+                    label: Text(context.l10n.products_release),
                     style: ButtonStyle(
                       padding: WidgetStateProperty.all(const EdgeInsets.symmetric(vertical: AppSpacing.s10)),
                       backgroundColor: WidgetStateProperty.resolveWith<Color>((states) {

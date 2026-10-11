@@ -12,6 +12,7 @@ import '../../ui/feedback/app_feedback.dart';
 import '../../data/collections.dart';
 import '../../data/fields.dart';
 import '../../data/activity_type.dart';
+import '../../l10n/l10n.dart';
 
 // The "release to shelf" flow, shared so it behaves identically wherever it's
 // started from - the Stock Store's own Release button and the Product Alerts
@@ -23,8 +24,9 @@ import '../../data/activity_type.dart';
 // soonest-expiry-first sort, same "take" math) but read-only - just
 // to find out, before committing to anything, whether releasing this
 // quantity would actually draw from an already-expired batch, and if
-// so, precisely how many units from which one.
-Future<List<(String, int)>> _simulateExpiredPortion(Product product, int qty) async {
+// so, precisely how many units from which one. Each entry is the batch's
+// number (null when it has none) and the units it would give.
+Future<List<(String?, int)>> _simulateExpiredPortion(Product product, int qty) async {
   final batchesRef = FirebaseFirestore.instance
       .collection(Collections.facilities)
       .doc(product.facilityId)
@@ -46,7 +48,7 @@ Future<List<(String, int)>> _simulateExpiredPortion(Product product, int qty) as
       return aExp.compareTo(bExp);
     });
 
-  final expiredPortion = <(String, int)>[];
+  final expiredPortion = <(String?, int)>[];
   int remaining = qty;
   for (final doc in candidates) {
     if (remaining <= 0) break;
@@ -58,15 +60,18 @@ Future<List<(String, int)>> _simulateExpiredPortion(Product product, int qty) as
     final expiry = data['expiry'] as Timestamp?;
     if (expiry != null && expiry.toDate().isBefore(now)) {
       final batchNo = data['batchNo'] as String?;
-      final label = batchNo?.isNotEmpty == true ? 'Batch $batchNo' : 'an unlabeled batch';
-      expiredPortion.add((label, take));
+      expiredPortion.add((batchNo?.isNotEmpty == true ? batchNo : null, take));
     }
     remaining -= take;
   }
   return expiredPortion;
 }
 
-Future<bool?> _showExpiredReleaseWarning(BuildContext context, Product product, List<(String, int)> expiredPortion) {
+// How a batch is named in the activity entry: in English, exactly as it has
+// always been saved. The warning dialog shows it in the current language.
+String _batchNameForLog(String? batchNo) => batchNo != null ? 'Batch $batchNo' : 'an unlabeled batch';
+
+Future<bool?> _showExpiredReleaseWarning(BuildContext context, Product product, List<(String?, int)> expiredPortion) {
   return showDialog<bool>(
     context: context,
     builder: (ctx) => AlertDialog(
@@ -75,7 +80,7 @@ Future<bool?> _showExpiredReleaseWarning(BuildContext context, Product product, 
         children: [
           Icon(Icons.warning_amber_rounded, color: ctx.colors.danger),
           const SizedBox(width: AppSpacing.s8),
-          const Text('Expired Stock'),
+          Text(ctx.l10n.store_expiredStockTitle),
         ],
       ),
       content: SizedBox(
@@ -84,23 +89,25 @@ Future<bool?> _showExpiredReleaseWarning(BuildContext context, Product product, 
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('This product is expired. Do you still want to release it to the shelf?',
+            Text(ctx.l10n.store_expiredStockBody,
                 style: const TextStyle(fontSize: AppFontSize.f13_5)),
             const SizedBox(height: AppSpacing.s10),
             ...expiredPortion.map((e) => Padding(
                   padding: const EdgeInsets.only(bottom: AppSpacing.s4),
-                  child: Text('• ${e.$2} ${product.unit} from ${e.$1}',
+                  child: Text(
+                      ctx.l10n.store_expiredPortionLine('${e.$2}', ctx.l10n.productUnitLabel(product.unit),
+                          e.$1 != null ? ctx.l10n.store_batchName(e.$1!) : ctx.l10n.store_unlabeledBatch),
                       style: TextStyle(fontSize: AppFontSize.f12_5, color: ctx.colors.dangerStrong)),
                 )),
           ],
         ),
       ),
       actions: [
-        TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancel')),
+        TextButton(onPressed: () => Navigator.pop(ctx, false), child: Text(ctx.l10n.common_cancel)),
         ElevatedButton(
           style: ElevatedButton.styleFrom(backgroundColor: ctx.colors.danger, foregroundColor: ctx.colors.onPrimary),
           onPressed: () => Navigator.pop(ctx, true),
-          child: const Text('Release Anyway'),
+          child: Text(ctx.l10n.store_releaseAnyway),
         ),
       ],
     ),
@@ -119,19 +126,19 @@ Future<void> releaseProductToShop(BuildContext context, Product product, {int in
   final confirmed = await showDialog<bool>(
     context: context,
     builder: (_) => AlertDialog(
-      title: Text('Release to Shelf',
+      title: Text(context.l10n.store_releaseTitle,
           style: TextStyle(color: context.colors.primary)),
       content: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Text('Available stock: ${product.stockQty} ${product.unit}'),
+          Text(context.l10n.store_availableStock('${product.stockQty}', context.l10n.productUnitLabel(product.unit))),
           const SizedBox(height: AppSpacing.s12),
           TextField(
             controller: qtyController,
             keyboardType: TextInputType.number,
             cursorColor: context.colors.primary,
             decoration: InputDecoration(
-              labelText: 'Quantity to release',
+              labelText: context.l10n.store_quantityToRelease,
               labelStyle: TextStyle(color: context.colors.textSoft),
               floatingLabelStyle: TextStyle(color: context.colors.primary),
               border: OutlineInputBorder(
@@ -154,8 +161,8 @@ Future<void> releaseProductToShop(BuildContext context, Product product, {int in
             textCapitalization: TextCapitalization.sentences,
             inputFormatters: [SentenceCapitalizationFormatter()],
             decoration: InputDecoration(
-              labelText: 'Notes (optional)',
-              hintText: 'e.g., Quality checked, ready for sale',
+              labelText: context.l10n.common_notesOptional,
+              hintText: context.l10n.store_notesHint,
               labelStyle: TextStyle(color: context.colors.textSoft),
               floatingLabelStyle: TextStyle(color: context.colors.primary),
               border: OutlineInputBorder(
@@ -180,7 +187,7 @@ Future<void> releaseProductToShop(BuildContext context, Product product, {int in
           style: TextButton.styleFrom(
             foregroundColor: context.colors.primary,
           ),
-          child: const Text('Cancel'),
+          child: Text(context.l10n.common_cancel),
         ),
         ElevatedButton(
           onPressed: () => Navigator.pop(context, true),
@@ -195,7 +202,7 @@ Future<void> releaseProductToShop(BuildContext context, Product product, {int in
             ),
             foregroundColor: WidgetStateProperty.all(context.colors.background),
           ),
-          child: const Text('Release'),
+          child: Text(context.l10n.products_release),
         ),
       ],
     ),
@@ -205,7 +212,7 @@ Future<void> releaseProductToShop(BuildContext context, Product product, {int in
 
   final qty = int.tryParse(qtyController.text.trim()) ?? 0;
   if (qty <= 0 || qty > product.stockQty) {
-    AppFeedback.warning('Enter a quantity from 1 to ${product.stockQty}');
+    AppFeedback.warning(L10n.current.store_quantityRange('${product.stockQty}'));
     return;
   }
 
@@ -232,7 +239,7 @@ Future<void> releaseProductToShop(BuildContext context, Product product, {int in
 
     if (expiredPortion.isNotEmpty) {
       final userInfo = await ActivityLogger.getCurrentUserInfo();
-      final unitsSummary = expiredPortion.map((e) => '${e.$2} from ${e.$1}').join(', ');
+      final unitsSummary = expiredPortion.map((e) => '${e.$2} from ${_batchNameForLog(e.$1)}').join(', ');
       await ActivityLogger.logActivity(
         facilityId: product.facilityId,
         userId: userInfo[Fields.userId]!,
@@ -242,8 +249,9 @@ Future<void> releaseProductToShop(BuildContext context, Product product, {int in
       );
     }
 
-    AppFeedback.success('Released $qty ${product.unit} of ${product.name} to the shelf');
+    AppFeedback.success(
+        L10n.current.store_released('$qty', L10n.current.productUnitLabel(product.unit), product.name));
   } catch (e, st) {
-    AppFeedback.error("Couldn't release the product", error: e, stackTrace: st);
+    AppFeedback.error(L10n.current.store_releaseFailed, error: e, stackTrace: st);
   }
 }

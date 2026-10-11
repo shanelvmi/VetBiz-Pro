@@ -523,8 +523,6 @@
       "lib/screens/settings/settings_screen.dart": 36,
       "lib/screens/settings/trash_screen.dart": 23,
       "lib/screens/settings/ui_settings_dialog.dart": 15,
-      "lib/screens/store/release_to_shop_flow.dart": 15,
-      "lib/screens/store/stockstore_screen.dart": 35,
       "lib/screens/transactions/add_transaction_screen.dart": 21,
       "lib/screens/transactions/transactions_screen.dart": 33,
       "lib/services/role_change_service.dart": 1,
