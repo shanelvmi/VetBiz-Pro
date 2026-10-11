@@ -1750,7 +1750,7 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
       barrierDismissible: true,
       barrierLabel: 'Notifications',
       barrierColor: Colors.transparent,
-      transitionDuration: const Duration(milliseconds: 180),
+      transitionDuration: AppMotion.fast,
       pageBuilder: (context, animation, secondaryAnimation) {
         return Stack(
           children: [
@@ -1758,8 +1758,8 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
               top: bellPosition.dy + bellSize.height + 8,
               left: left,
               child: Material(
-                elevation: 8,
-                borderRadius: BorderRadius.circular(12),
+                elevation: AppElevation.e8,
+                borderRadius: BorderRadius.circular(AppRadius.r12),
                 clipBehavior: Clip.antiAlias,
                 child: SizedBox(
                   width: panelWidth,
@@ -1813,9 +1813,9 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
   Color _activityColor(String actionType) {
     switch (actionType.toLowerCase()) {
       case 'inventory move':
-        return Colors.blue;
+        return context.colors.info;
       case 'products':
-        return Colors.green;
+        return context.colors.success;
       case 'sales':
         return context.colors.accent;
       case 'services':
@@ -1823,11 +1823,11 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
       case 'clients':
         return Colors.teal;
       case 'debtors':
-        return Colors.orange;
+        return context.colors.warning;
       case 'settings':
-        return Colors.grey;
+        return context.colors.textHint;
       case 'admin':
-        return Colors.red;
+        return context.colors.danger;
       default:
         return context.colors.primary;
     }
@@ -1837,11 +1837,11 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
     final facilityId = _lastLoadedFacilityId;
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(18),
+      padding: const EdgeInsets.all(AppSpacing.s18),
       decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.grey.withValues(alpha: 0.15)),
+        color: context.colors.surface,
+        borderRadius: BorderRadius.circular(AppRadius.r12),
+        border: Border.all(color: context.colors.textHint.withValues(alpha: AppAlpha.a15)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -1851,9 +1851,9 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
             children: [
               Row(
                 children: [
-                  Icon(Icons.history, size: 18, color: context.colors.primary),
-                  const SizedBox(width: 8),
-                  const Text('Recent Activity', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14.5)),
+                  Icon(Icons.history, size: AppIconSize.i18, color: context.colors.primary),
+                  const SizedBox(width: AppSpacing.s8),
+                  const Text('Recent Activity', style: TextStyle(fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f14_5)),
                 ],
               ),
               TextButton(
@@ -1863,11 +1863,11 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
               ),
             ],
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: AppSpacing.s8),
           if (facilityId == null)
             Padding(
-              padding: const EdgeInsets.symmetric(vertical: 20),
-              child: Center(child: Text('No activity yet.', style: TextStyle(color: Colors.grey[600]))),
+              padding: const EdgeInsets.symmetric(vertical: AppSpacing.s20),
+              child: Center(child: Text('No activity yet.', style: TextStyle(color: context.colors.textMuted))),
             )
           else
             StreamBuilder<List<LogDoc>>(
@@ -1875,29 +1875,29 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
               builder: (context, snapshot) {
                 if (snapshot.hasError) {
                   return Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 20),
+                    padding: const EdgeInsets.symmetric(vertical: AppSpacing.s20),
                     child: Center(
-                      child: Text("Couldn't load recent activity.", style: TextStyle(color: Colors.grey[600])),
+                      child: Text("Couldn't load recent activity.", style: TextStyle(color: context.colors.textMuted)),
                     ),
                   );
                 }
                 if (!snapshot.hasData) {
                   return const Padding(
-                    padding: EdgeInsets.symmetric(vertical: 20),
+                    padding: EdgeInsets.symmetric(vertical: AppSpacing.s20),
                     child: Center(child: CircularProgressIndicator(strokeWidth: 2)),
                   );
                 }
                 final docs = snapshot.data!;
                 if (docs.isEmpty) {
                   return Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 20),
-                    child: Center(child: Text('No activity yet.', style: TextStyle(color: Colors.grey[600]))),
+                    padding: const EdgeInsets.symmetric(vertical: AppSpacing.s20),
+                    child: Center(child: Text('No activity yet.', style: TextStyle(color: context.colors.textMuted))),
                   );
                 }
                 return Column(
                   children: [
                     for (int i = 0; i < docs.length; i++) ...[
-                      if (i > 0) Divider(height: 1, color: Colors.grey.withValues(alpha: 0.15)),
+                      if (i > 0) Divider(height: 1, color: context.colors.textHint.withValues(alpha: AppAlpha.a15)),
                       _activityTile(docs[i].data()),
                     ],
                   ],
@@ -1920,22 +1920,22 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
     final color = _activityColor(actionType);
 
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 10),
+      padding: const EdgeInsets.symmetric(vertical: AppSpacing.s10),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Container(
             width: 32,
             height: 32,
-            decoration: BoxDecoration(color: color.withValues(alpha: 0.12), borderRadius: BorderRadius.circular(8)),
-            child: Icon(_activityIcon(actionType), size: 16, color: color),
+            decoration: BoxDecoration(color: color.withValues(alpha: AppAlpha.a10), borderRadius: BorderRadius.circular(AppRadius.r8)),
+            child: Icon(_activityIcon(actionType), size: AppIconSize.i16, color: color),
           ),
-          const SizedBox(width: 10),
+          const SizedBox(width: AppSpacing.s10),
           Expanded(
-            child: Text(description, style: const TextStyle(fontSize: 12.5), maxLines: 2, overflow: TextOverflow.ellipsis),
+            child: Text(description, style: const TextStyle(fontSize: AppFontSize.f12_5), maxLines: 2, overflow: TextOverflow.ellipsis),
           ),
-          const SizedBox(width: 8),
-          Text(timeStr, style: TextStyle(fontSize: 11, color: Colors.grey[500])),
+          const SizedBox(width: AppSpacing.s8),
+          Text(timeStr, style: TextStyle(fontSize: AppFontSize.f11, color: context.colors.textHint)),
         ],
       ),
     );
@@ -1965,11 +1965,11 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
 
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(18),
+      padding: const EdgeInsets.all(AppSpacing.s18),
       decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.grey.withValues(alpha: 0.15)),
+        color: context.colors.surface,
+        borderRadius: BorderRadius.circular(AppRadius.r12),
+        border: Border.all(color: context.colors.textHint.withValues(alpha: AppAlpha.a15)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -1979,23 +1979,23 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
             children: [
               Row(
                 children: [
-                  Icon(Icons.show_chart, size: 18, color: context.colors.primary),
-                  const SizedBox(width: 8),
-                  const Text('Sales & Revenue Overview', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14.5)),
+                  Icon(Icons.show_chart, size: AppIconSize.i18, color: context.colors.primary),
+                  const SizedBox(width: AppSpacing.s8),
+                  const Text('Sales & Revenue Overview', style: TextStyle(fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f14_5)),
                 ],
               ),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10),
+                padding: const EdgeInsets.symmetric(horizontal: AppSpacing.s10),
                 height: 36,
                 decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: Colors.grey.withValues(alpha: 0.3)),
+                  borderRadius: BorderRadius.circular(AppRadius.r8),
+                  border: Border.all(color: context.colors.textHint.withValues(alpha: AppAlpha.a30)),
                 ),
                 child: DropdownButtonHideUnderline(
                   child: DropdownButton<String>(
                     value: _chartPeriod,
                     items: const ['Last 7 days', 'Last 30 days']
-                        .map((p) => DropdownMenuItem(value: p, child: Text(p, style: const TextStyle(fontSize: 13))))
+                        .map((p) => DropdownMenuItem(value: p, child: Text(p, style: const TextStyle(fontSize: AppFontSize.f13))))
                         .toList(),
                     onChanged: (val) {
                       if (val == null) return;
@@ -2008,7 +2008,7 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
               ),
             ],
           ),
-          const SizedBox(height: 14),
+          const SizedBox(height: AppSpacing.s14),
           if (!hasData && _isChartLoading)
             const Padding(
               padding: EdgeInsets.symmetric(vertical: 40),
@@ -2022,34 +2022,34 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(Money.format(currentTotal),
-                        style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 22, color: Colors.black87)),
-                    Text('Total Revenue', style: TextStyle(fontSize: 12, color: Colors.grey[600])),
+                        style: TextStyle(fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f22, color: context.colors.textPrimary)),
+                    Text('Total Revenue', style: TextStyle(fontSize: AppFontSize.f12, color: context.colors.textMuted)),
                   ],
                 ),
                 if (trendPercent != null) ...[
-                  const SizedBox(width: 12),
+                  const SizedBox(width: AppSpacing.s12),
                   Padding(
-                    padding: const EdgeInsets.only(bottom: 4),
+                    padding: const EdgeInsets.only(bottom: AppSpacing.s4),
                     child: Row(
                       children: [
                         Icon(trendPercent >= 0 ? Icons.arrow_upward : Icons.arrow_downward,
-                            size: 14, color: trendPercent >= 0 ? Colors.green : Colors.red),
+                            size: AppIconSize.i14, color: trendPercent >= 0 ? context.colors.success : context.colors.danger),
                         Text('${trendPercent.abs().toStringAsFixed(1)}% vs last period',
                             style: TextStyle(
-                                fontSize: 12,
-                                fontWeight: FontWeight.w600,
-                                color: trendPercent >= 0 ? Colors.green : Colors.red)),
+                                fontSize: AppFontSize.f12,
+                                fontWeight: AppFontWeight.semibold,
+                                color: trendPercent >= 0 ? context.colors.success : context.colors.danger)),
                       ],
                     ),
                   ),
                 ],
               ],
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: AppSpacing.s16),
             SizedBox(
               height: 220,
               child: !hasData || (salesByDay.every((v) => v == 0) && collectionsByDay.every((v) => v == 0))
-                  ? Center(child: Text('No activity in this period.', style: TextStyle(color: Colors.grey[600])))
+                  ? Center(child: Text('No activity in this period.', style: TextStyle(color: context.colors.textMuted)))
                   : LineChart(
                       LineChartData(
                         // None of these three (sales, collections,
@@ -2066,7 +2066,7 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
                         // one).
                         minY: 0,
                         gridData: const FlGridData(show: true, drawVerticalLine: false),
-                        borderData: FlBorderData(show: true, border: Border.all(color: Colors.grey.shade300)),
+                        borderData: FlBorderData(show: true, border: Border.all(color: context.colors.border)),
                         lineTouchData: LineTouchData(
                           touchTooltipData: LineTouchTooltipData(
                             getTooltipItems: (touchedSpots) {
@@ -2079,7 +2079,7 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
                                 };
                                 return LineTooltipItem(
                                   '${AppDateFormat.dateShort.format(day)}\n$label: ${Money.format(spot.y)}',
-                                  const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 12),
+                                  TextStyle(color: context.colors.onPrimary, fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f12),
                                 );
                               }).toList();
                             },
@@ -2093,7 +2093,7 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
                               showTitles: true,
                               reservedSize: 48,
                               getTitlesWidget: (value, meta) =>
-                                  Text(Money.format(value), style: const TextStyle(fontSize: 9)),
+                                  Text(Money.format(value), style: const TextStyle(fontSize: AppFontSize.f9)),
                             ),
                           ),
                           bottomTitles: AxisTitles(
@@ -2103,8 +2103,8 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
                               getTitlesWidget: (value, meta) {
                                 final day = start.add(Duration(days: value.toInt()));
                                 return Padding(
-                                  padding: const EdgeInsets.only(top: 6),
-                                  child: Text(AppDateFormat.dateShort.format(day), style: const TextStyle(fontSize: 9)),
+                                  padding: const EdgeInsets.only(top: AppSpacing.s6),
+                                  child: Text(AppDateFormat.dateShort.format(day), style: const TextStyle(fontSize: AppFontSize.f9)),
                                 );
                               },
                             ),
@@ -2118,7 +2118,7 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
                             color: context.colors.primary,
                             barWidth: 3,
                             dotData: const FlDotData(show: false),
-                            belowBarData: BarAreaData(show: true, color: context.colors.primary.withValues(alpha: 0.1)),
+                            belowBarData: BarAreaData(show: true, color: context.colors.primary.withValues(alpha: AppAlpha.a10)),
                           ),
                           LineChartBarData(
                             spots: [for (int i = 0; i < collectionsByDay.length; i++) FlSpot(i.toDouble(), collectionsByDay[i])],
@@ -2127,7 +2127,7 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
                             color: context.colors.accent,
                             barWidth: 3,
                             dotData: const FlDotData(show: false),
-                            belowBarData: BarAreaData(show: true, color: context.colors.accent.withValues(alpha: 0.1)),
+                            belowBarData: BarAreaData(show: true, color: context.colors.accent.withValues(alpha: AppAlpha.a10)),
                           ),
                           LineChartBarData(
                             spots: [for (int i = 0; i < servicesByDay.length; i++) FlSpot(i.toDouble(), servicesByDay[i])],
@@ -2136,19 +2136,19 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
                             color: servicesSteelBlue,
                             barWidth: 3,
                             dotData: const FlDotData(show: false),
-                            belowBarData: BarAreaData(show: true, color: servicesSteelBlue.withValues(alpha: 0.1)),
+                            belowBarData: BarAreaData(show: true, color: servicesSteelBlue.withValues(alpha: AppAlpha.a10)),
                           ),
                         ],
                       ),
                     ),
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: AppSpacing.s12),
             Row(
               children: [
                 _chartLegendItem(context.colors.primary, 'Sales (${AppDefaults.currencySymbol})'),
-                const SizedBox(width: 20),
+                const SizedBox(width: AppSpacing.s20),
                 _chartLegendItem(context.colors.accent, 'Collections (${AppDefaults.currencySymbol})'),
-                const SizedBox(width: 20),
+                const SizedBox(width: AppSpacing.s20),
                 _chartLegendItem(servicesSteelBlue, 'Services (${AppDefaults.currencySymbol})'),
               ],
             ),
@@ -2163,8 +2163,8 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
       mainAxisSize: MainAxisSize.min,
       children: [
         Container(width: 10, height: 10, decoration: BoxDecoration(color: color, shape: BoxShape.circle)),
-        const SizedBox(width: 6),
-        Text(label, style: TextStyle(fontSize: 12, color: Colors.grey[700])),
+        const SizedBox(width: AppSpacing.s6),
+        Text(label, style: TextStyle(fontSize: AppFontSize.f12, color: context.colors.textSoft)),
       ],
     );
   }
@@ -2172,10 +2172,10 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
   Widget _buildTopBar(BuildContext context) {
     return Container(
       height: 72,
-      padding: const EdgeInsets.only(left: 16, right: 16),
+      padding: const EdgeInsets.only(left: AppSpacing.s16, right: AppSpacing.s16),
       decoration: BoxDecoration(
-        color: Colors.white,
-        border: Border(bottom: BorderSide(color: Colors.grey.withValues(alpha: 0.2))),
+        color: context.colors.surface,
+        border: Border(bottom: BorderSide(color: context.colors.textHint.withValues(alpha: AppAlpha.a20))),
       ),
       child: Row(
         children: [
@@ -2185,14 +2185,14 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
             IconButton(
               padding: EdgeInsets.zero,
               constraints: const BoxConstraints(),
-              icon: Icon(_isDrawerCollapsed ? Icons.menu_open : Icons.menu, color: Colors.black87, size: 22),
+              icon: Icon(_isDrawerCollapsed ? Icons.menu_open : Icons.menu, color: context.colors.textPrimary, size: AppIconSize.i22),
               tooltip: _isDrawerCollapsed ? 'Expand menu' : 'Collapse menu',
               onPressed: _toggleDrawerCollapsed,
             ),
           const Spacer(),
           Container(
             width: 260,
-            margin: const EdgeInsets.only(right: 12),
+            margin: const EdgeInsets.only(right: AppSpacing.s12),
             child: Autocomplete<_DashboardSearchResult>(
               displayStringForOption: (r) => r.title,
               optionsBuilder: (textEditingValue) {
@@ -2233,24 +2233,24 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
               fieldViewBuilder: (context, controller, focusNode, onFieldSubmitted) {
                 return Container(
                   height: 38,
-                  padding: const EdgeInsets.symmetric(horizontal: 12),
+                  padding: const EdgeInsets.symmetric(horizontal: AppSpacing.s12),
                   decoration: BoxDecoration(
                     color: context.colors.background,
-                    borderRadius: BorderRadius.circular(8),
-                    border: Border.all(color: Colors.grey.withValues(alpha: 0.25)),
+                    borderRadius: BorderRadius.circular(AppRadius.r8),
+                    border: Border.all(color: context.colors.textHint.withValues(alpha: AppAlpha.a30)),
                   ),
                   child: Row(
                     children: [
-                      Icon(Icons.search, size: 18, color: Colors.grey[500]),
-                      const SizedBox(width: 8),
+                      Icon(Icons.search, size: AppIconSize.i18, color: context.colors.textHint),
+                      const SizedBox(width: AppSpacing.s8),
                       Expanded(
                         child: TextField(
                           controller: controller,
                           focusNode: focusNode,
-                          style: const TextStyle(fontSize: 13),
+                          style: const TextStyle(fontSize: AppFontSize.f13),
                           decoration: InputDecoration.collapsed(
                             hintText: 'Search products or clients...',
-                            hintStyle: TextStyle(fontSize: 13, color: Colors.grey[500]),
+                            hintStyle: TextStyle(fontSize: AppFontSize.f13, color: context.colors.textHint),
                           ),
                         ),
                       ),
@@ -2263,8 +2263,8 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
                 return Align(
                   alignment: Alignment.topLeft,
                   child: Material(
-                    elevation: 4,
-                    borderRadius: BorderRadius.circular(8),
+                    elevation: AppElevation.e2,
+                    borderRadius: BorderRadius.circular(AppRadius.r8),
                     child: SizedBox(
                       width: 300,
                       child: ListView.builder(
@@ -2275,9 +2275,9 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
                           final r = list[index];
                           return ListTile(
                             dense: true,
-                            leading: Icon(r.icon, size: 18, color: context.colors.primary),
-                            title: Text(r.title, style: const TextStyle(fontSize: 13)),
-                            subtitle: Text(r.subtitle, style: const TextStyle(fontSize: 11)),
+                            leading: Icon(r.icon, size: AppIconSize.i18, color: context.colors.primary),
+                            title: Text(r.title, style: const TextStyle(fontSize: AppFontSize.f13)),
+                            subtitle: Text(r.subtitle, style: const TextStyle(fontSize: AppFontSize.f11)),
                             onTap: () => onSelected(r),
                           );
                         },
@@ -2293,13 +2293,13 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
           // Contact Details, falling back to a generic message if
           // nothing's configured yet.
           IconButton(
-            icon: const Icon(Icons.help_outline, color: Colors.black87, size: 22),
+            icon: Icon(Icons.help_outline, color: context.colors.textPrimary, size: AppIconSize.i22),
             tooltip: 'Help',
             onPressed: () => _showHelpDialog(context),
           ),
-          const SizedBox(width: 4),
+          const SizedBox(width: AppSpacing.s4),
           Padding(
-            padding: const EdgeInsets.only(right: 12),
+            padding: const EdgeInsets.only(right: AppSpacing.s12),
             child: Builder(
               builder: (context) => _HoverableProfileIcon(
                 onTap: () => Scaffold.of(context).openEndDrawer(),
@@ -2320,7 +2320,7 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
                             avatarUrl: avatarUrl,
                             name: fullNameForAvatar,
                             size: 32,
-                            backgroundColor: context.colors.primary.withValues(alpha: 0.12),
+                            backgroundColor: context.colors.primary.withValues(alpha: AppAlpha.a10),
                             foregroundColor: context.colors.primary,
                           );
 
@@ -2328,17 +2328,17 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         avatar,
-                        const SizedBox(width: 8),
+                        const SizedBox(width: AppSpacing.s8),
                         ConstrainedBox(
                           constraints: const BoxConstraints(maxWidth: 110),
                           child: Text(
                             fullNameForAvatar.isNotEmpty ? fullNameForAvatar : 'Account',
-                            style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: Colors.black87),
+                            style: TextStyle(fontSize: AppFontSize.f13, fontWeight: AppFontWeight.semibold, color: context.colors.textPrimary),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                           ),
                         ),
-                        const Icon(Icons.keyboard_arrow_down, size: 18, color: Colors.black54),
+                        Icon(Icons.keyboard_arrow_down, size: AppIconSize.i18, color: context.colors.textSecondary),
                       ],
                     );
                   },
@@ -2353,29 +2353,29 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
 
   Widget _buildTodayGlanceStrip(int debtorCount) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
+      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.s18, vertical: AppSpacing.s14),
       decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.grey.withValues(alpha: 0.15)),
+        color: context.colors.surface,
+        borderRadius: BorderRadius.circular(AppRadius.r12),
+        border: Border.all(color: context.colors.textHint.withValues(alpha: AppAlpha.a15)),
       ),
       child: Wrap(
         crossAxisAlignment: WrapCrossAlignment.center,
         spacing: 24,
         runSpacing: 10,
         children: [
-          Text('Today at a Glance', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13.5, color: Colors.black87)),
+          Text('Today at a Glance', style: TextStyle(fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f13_5, color: context.colors.textPrimary)),
           if (_glanceSaleCount == null && _isGlanceLoading)
-            const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2))
+            const SizedBox(width: AppSpacing.s16, height: 16, child: CircularProgressIndicator(strokeWidth: 2))
           else ...[
             _glanceStat(Icons.shopping_cart_outlined, '${_glanceSaleCount ?? 0}', 'Sales', context.colors.primary),
-            _glanceStat(Icons.build_outlined, '${_glanceServiceCount ?? 0}', 'Services', const Color(0xFF3D5A80)),
+            _glanceStat(Icons.build_outlined, '${_glanceServiceCount ?? 0}', 'Services', context.colors.chart1),
             _glanceStat(Icons.payments_outlined, Money.symbolDecimal(_glanceCollected ?? 0), 'Collected', context.colors.primary),
           ],
           _glanceStat(Icons.folder_outlined, '$debtorCount', debtorCount == 1 ? 'Outstanding Debt' : 'Outstanding Debts', context.colors.accent),
           OutlinedButton.icon(
             onPressed: () => showInsightsScreen(context),
-            icon: Icon(Icons.insights, size: 16, color: context.colors.primary),
+            icon: Icon(Icons.insights, size: AppIconSize.i16, color: context.colors.primary),
             label: Text('Insights', style: TextStyle(color: context.colors.primary)),
             style: OutlinedButton.styleFrom(side: BorderSide(color: context.colors.primary)),
           ),
@@ -2388,11 +2388,11 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        Icon(icon, size: 16, color: color),
-        const SizedBox(width: 6),
-        Text(value, style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: color)),
-        const SizedBox(width: 4),
-        Text(label, style: TextStyle(fontSize: 12.5, color: Colors.grey[600])),
+        Icon(icon, size: AppIconSize.i16, color: color),
+        const SizedBox(width: AppSpacing.s6),
+        Text(value, style: TextStyle(fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f14, color: color)),
+        const SizedBox(width: AppSpacing.s4),
+        Text(label, style: TextStyle(fontSize: AppFontSize.f12_5, color: context.colors.textMuted)),
       ],
     );
   }
@@ -2412,13 +2412,13 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
               children: [
                 Expanded(
                   child: Padding(
-                    padding: const EdgeInsets.only(left: 22),
-                    child: _profitBreakdownDot('Earned', realized, Colors.green),
+                    padding: const EdgeInsets.only(left: AppSpacing.s22),
+                    child: _profitBreakdownDot('Earned', realized, context.colors.success),
                   ),
                 ),
                 Expanded(
                   child: Padding(
-                    padding: const EdgeInsets.only(left: 16),
+                    padding: const EdgeInsets.only(left: AppSpacing.s16),
                     child: _profitBreakdownDot('Pending', pending, context.colors.accent),
                   ),
                 ),
@@ -2426,10 +2426,10 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
             ),
           ),
           Padding(
-            padding: const EdgeInsets.only(top: 2, left: 4),
+            padding: const EdgeInsets.only(top: AppSpacing.s2, left: AppSpacing.s4),
             child: Tooltip(
               message: 'Earned: already collected in cash.\nPending: sold on credit, not yet paid.',
-              child: Icon(Icons.info_outline, size: 15, color: Colors.grey[400]),
+              child: Icon(Icons.info_outline, size: AppIconSize.i16, color: context.colors.textDisabled),
             ),
           ),
         ],
@@ -2455,17 +2455,17 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Padding(
-          padding: const EdgeInsets.only(top: 4),
+          padding: const EdgeInsets.only(top: AppSpacing.s4),
           child: Container(width: 6, height: 6, decoration: BoxDecoration(color: color, shape: BoxShape.circle)),
         ),
-        const SizedBox(width: 5),
+        const SizedBox(width: AppSpacing.s4),
         Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           mainAxisSize: MainAxisSize.min,
           children: [
-            Text(label, style: TextStyle(fontSize: 10.5, color: Colors.grey[600]), maxLines: 1, overflow: TextOverflow.ellipsis),
+            Text(label, style: TextStyle(fontSize: AppFontSize.f10_5, color: context.colors.textMuted), maxLines: 1, overflow: TextOverflow.ellipsis),
             Text(_formatCompactAmount(value),
-                style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Colors.black87),
+                style: TextStyle(fontSize: AppFontSize.f12, fontWeight: AppFontWeight.semibold, color: context.colors.textPrimary),
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis),
           ],
@@ -2475,7 +2475,7 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
   }
 
   Widget _buildQuickActionCards(BuildContext context) {
-    final isLargeScreen = MediaQuery.of(context).size.width >= 1024;
+    final isLargeScreen = MediaQuery.of(context).size.width >= AppBreakpoints.expanded;
 
     final cards = [
       _quickActionCard(
@@ -2525,7 +2525,7 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
       return Row(
         children: [
           for (int i = 0; i < cards.length; i++) ...[
-            if (i > 0) const SizedBox(width: 12),
+            if (i > 0) const SizedBox(width: AppSpacing.s12),
             Expanded(child: cards[i]),
           ],
         ],
@@ -2534,7 +2534,7 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
     return Column(
       children: [
         for (int i = 0; i < cards.length; i++) ...[
-          if (i > 0) const SizedBox(height: 12),
+          if (i > 0) const SizedBox(height: AppSpacing.s12),
           cards[i],
         ],
       ],
@@ -2550,20 +2550,20 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
     required bool isDark,
     required VoidCallback onTap,
   }) {
-    final textColor = isDark ? Colors.white : Colors.black87;
-    final subtitleColor = isDark ? Colors.white.withValues(alpha: 0.85) : Colors.grey[700];
-    final iconCircleColor = isDark ? Colors.white.withValues(alpha: 0.18) : accentColor.withValues(alpha: 0.15);
-    final iconColor = isDark ? Colors.white : accentColor;
-    final chevronColor = isDark ? Colors.white : accentColor;
+    final textColor = isDark ? context.colors.onPrimary : context.colors.textPrimary;
+    final subtitleColor = isDark ? context.colors.onPrimary.withValues(alpha: AppAlpha.a85) : context.colors.textSoft;
+    final iconCircleColor = isDark ? context.colors.onPrimary.withValues(alpha: AppAlpha.a20) : accentColor.withValues(alpha: AppAlpha.a15);
+    final iconColor = isDark ? context.colors.onPrimary : accentColor;
+    final chevronColor = isDark ? context.colors.onPrimary : accentColor;
 
     return InkWell(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(12),
+      borderRadius: BorderRadius.circular(AppRadius.r12),
       child: Container(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(AppSpacing.s16),
         decoration: BoxDecoration(
           color: backgroundColor,
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(AppRadius.r12),
         ),
         child: Row(
           children: [
@@ -2572,21 +2572,21 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
               height: 40,
               decoration: BoxDecoration(
                 color: iconCircleColor,
-                borderRadius: BorderRadius.circular(10),
+                borderRadius: BorderRadius.circular(AppRadius.r10),
               ),
-              child: Icon(icon, color: iconColor, size: 20),
+              child: Icon(icon, color: iconColor, size: AppIconSize.i20),
             ),
-            const SizedBox(width: 12),
+            const SizedBox(width: AppSpacing.s12),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(title, style: TextStyle(color: textColor, fontWeight: FontWeight.bold, fontSize: 14)),
-                  Text(subtitle, style: TextStyle(color: subtitleColor, fontSize: 11.5)),
+                  Text(title, style: TextStyle(color: textColor, fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f14)),
+                  Text(subtitle, style: TextStyle(color: subtitleColor, fontSize: AppFontSize.f11_5)),
                 ],
               ),
             ),
-            Icon(Icons.chevron_right, color: chevronColor, size: 20),
+            Icon(Icons.chevron_right, color: chevronColor, size: AppIconSize.i20),
           ],
         ),
       ),

@@ -83,6 +83,9 @@ Colours are outside the standing snap rule, so this is kept as it is:
 - **Drawer hover fill `Colors.teal.shade700`**, `dashboard_screen.dart` (`DrawerHoverItem`): same value as `roleCoAdminStrong`, different purpose. Kept.
 - **Drawer item timings**, `dashboard_screen.dart`, kept as named constants: `_hoverFade` 200 ms (between `fast` and `normal`), `_tooltipWait` 300 ms (`tooltipDelay` is 400).
 - **Subscription banner**, `dashboard_screen.dart` `_buildSubscriptionBanner`: `deepAmber` `#C77800` and `cream` `#FFF6E7` (local consts; no role within 12), the cream at alpha 0.92 (no step within 0.05), and `_bannerSwitch` 550 ms (50 above `slowest`). All kept.
+- **Quick action tints `#E3F0EC` (Record Visit) and `#FCEFD9` (Add Product)**, `dashboard_screen.dart` `_buildQuickActionCards`: `#E3F0EC` is within 12 of `divider`, but snapping a tinted fill to a grey is what the owner reversed for the alerts after D8, so both are kept exact. Tint roles (like `dangerSurface`)?
+- **Activity colours `Colors.purple` (services) and `Colors.teal` (clients)**, `dashboard_screen.dart` `_activityColor`: one of the four copies the 2E helper replaces; kept for that step, as in D5.
+- **Chart loading gap 40**, `dashboard_screen.dart` (`EdgeInsets.symmetric(vertical: 40)` around the chart spinner): 8 above `s32`. Kept.
 - **Left as written on purpose (owner's D9 rule):** the bell's `_BlinkingDot` class (its 700/1400/400 ms timings, 9 px dot, red default), and the 900 ms delay before the subscription pill shows.
 
 ### Trash and restore: books consistency (audit after D6, read-only)
