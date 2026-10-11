@@ -125,7 +125,7 @@ class DebtProvider with ChangeNotifier {
 
   /// Total outstanding debt across all clients
   double totalOutstanding() {
-    return _debts.fold(0.0, (sum, debt) => sum + debt.amountOwed);
+    return _debts.fold(0.0, (total, debt) => total + debt.amountOwed);
   }
 
   /// Filter debts for a specific client
@@ -188,7 +188,7 @@ class DebtProvider with ChangeNotifier {
       } catch (_) {}
 
       final totalOwed =
-          clientDebts.fold(0.0, (sum, d) => sum + d.amountOwed);
+          clientDebts.fold(0.0, (total, d) => total + d.amountOwed);
       final lastDebtDate = clientDebts
           .map((d) => d.timestamp)
           .reduce((a, b) => a.isAfter(b) ? a : b);

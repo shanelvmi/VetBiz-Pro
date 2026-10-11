@@ -486,7 +486,7 @@ class _ProductsScreenState extends State<ProductsScreen> {
         _query.selectedCategory == 'All' &&
         _query.selectedStatus == 'All';
 
-    final totalStockValue = baseProducts.fold<double>(0, (sum, p) => sum + (p.sellableQty * p.buyPrice));
+    final totalStockValue = baseProducts.fold<double>(0, (total, p) => total + (p.sellableQty * p.buyPrice));
 
     final listOrGrid = result.items.isEmpty
         ? Center(

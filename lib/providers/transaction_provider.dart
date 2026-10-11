@@ -423,15 +423,15 @@ class TransactionProvider with ChangeNotifier {
   /// ---------------------------------------------------
   double get subProfit => transactions
       .where((t) => t.type.toLowerCase() == 'profit')
-      .fold(0.0, (sum, t) => sum + t.amount);
+      .fold(0.0, (total, t) => total + t.amount);
 
   double get totalExpenses => transactions
       .where((t) => t.type.toLowerCase() == 'expense')
-      .fold(0.0, (sum, t) => sum + t.amount);
+      .fold(0.0, (total, t) => total + t.amount);
 
   double get totalOtherIncome => transactions
       .where((t) => t.type.toLowerCase() == 'other income')
-      .fold(0.0, (sum, t) => sum + t.amount);
+      .fold(0.0, (total, t) => total + t.amount);
 
   double get outstandingPayment => 0.0;
 

@@ -153,7 +153,7 @@ class _InsightsScreenState extends State<InsightsScreen> {
         ..sort((a, b) => b.value.compareTo(a.value));
       final topServices = sortedServicesFull.take(5).toList();
       final remainingServicesTotal =
-          sortedServicesFull.skip(5).fold<double>(0.0, (sum, e) => sum + e.value);
+          sortedServicesFull.skip(5).fold<double>(0.0, (total, e) => total + e.value);
       final serviceBreakdown = [
         ...topServices,
         if (remainingServicesTotal > 0) MapEntry('Other', remainingServicesTotal),
@@ -700,7 +700,7 @@ class _InsightsScreenState extends State<InsightsScreen> {
       return Center(child: Text('No services in the last 30 days.', style: TextStyle(color: context.colors.textMuted)));
     }
 
-    final total = _serviceBreakdown.fold<double>(0.0, (sum, e) => sum + e.value);
+    final total = _serviceBreakdown.fold<double>(0.0, (total, e) => total + e.value);
     final touched = _touchedServiceIndex;
     final centerLabel = (touched != null && touched >= 0 && touched < _serviceBreakdown.length)
         ? _serviceBreakdown[touched]

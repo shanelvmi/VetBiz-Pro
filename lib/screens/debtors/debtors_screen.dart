@@ -959,7 +959,7 @@ class _DebtorsScreenState extends State<DebtorsScreen> {
                 final overdueDays = Provider.of<FacilityProvider>(context, listen: false).debtOverdueDays;
                 final overdueAmount = clientDebts
                     .where((d) => now.difference(d.timestamp).inDays > overdueDays)
-                    .fold<double>(0, (sum, d) => sum + d.amountOwed);
+                    .fold<double>(0, (total, d) => total + d.amountOwed);
                 return Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [

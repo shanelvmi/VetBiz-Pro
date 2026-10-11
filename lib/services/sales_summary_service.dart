@@ -132,12 +132,12 @@ class SalesSummaryService {
         await getDailySummaries(facilityId: facilityId, start: start, end: end);
 
     return {
-      'totalAmount': summaries.fold(0.0, (sum, s) => sum + s.totalAmount),
-      'totalPaid': summaries.fold(0.0, (sum, s) => sum + s.totalPaid),
-      'totalProfit': summaries.fold(0.0, (sum, s) => sum + s.totalProfit),
-      'totalRealizedProfit': summaries.fold(0.0, (sum, s) => sum + s.totalRealizedProfit),
-      'totalUnrealizedProfit': summaries.fold(0.0, (sum, s) => sum + s.totalUnrealizedProfit),
-      'saleCount': summaries.fold(0.0, (sum, s) => sum + s.saleCount),
+      'totalAmount': summaries.fold(0.0, (total, s) => total + s.totalAmount),
+      'totalPaid': summaries.fold(0.0, (total, s) => total + s.totalPaid),
+      'totalProfit': summaries.fold(0.0, (total, s) => total + s.totalProfit),
+      'totalRealizedProfit': summaries.fold(0.0, (total, s) => total + s.totalRealizedProfit),
+      'totalUnrealizedProfit': summaries.fold(0.0, (total, s) => total + s.totalUnrealizedProfit),
+      'saleCount': summaries.fold(0.0, (total, s) => total + s.saleCount),
     };
   }
 
@@ -173,7 +173,7 @@ class SalesSummaryService {
   }) async {
     final collections =
         await getDailyCollections(facilityId: facilityId, start: start, end: end);
-    return collections.fold<double>(0.0, (sum, c) => sum + c.totalCollected);
+    return collections.fold<double>(0.0, (total, c) => total + c.totalCollected);
   }
 
   /// Fetch daily service-revenue aggregates for [facilityId] between
@@ -219,7 +219,7 @@ class SalesSummaryService {
 
     return snapshot.docs.fold<double>(
       0.0,
-      (sum, doc) => sum + ((doc.data()['totalOtherIncome'] as num?)?.toDouble() ?? 0.0),
+      (total, doc) => total + ((doc.data()['totalOtherIncome'] as num?)?.toDouble() ?? 0.0),
     );
   }
 }

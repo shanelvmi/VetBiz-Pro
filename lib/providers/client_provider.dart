@@ -145,7 +145,7 @@ class ClientProvider with ChangeNotifier, PaginatedStreamLoader<Client> {
   double get totalOutstandingPayment {
     return _clients
         .where((c) => c.balance > 0)
-        .fold(0.0, (sum, client) => sum + client.balance);
+        .fold(0.0, (total, client) => total + client.balance);
   }
 
   // ==================== PAGINATED (Clients browse screen) ====================

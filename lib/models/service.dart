@@ -141,9 +141,9 @@ class Service {
 
   /// ---------- EXPENSES ----------
   double get totalExpenses {
-    return itemsUsed.fold(0.0, (sum, item) {
+    return itemsUsed.fold(0.0, (total, item) {
       final p = item['price'] ?? 0.0;
-      return sum + (p is int ? p.toDouble() : p);
+      return total + (p is int ? p.toDouble() : p);
     });
   }
 
@@ -154,10 +154,10 @@ class Service {
   /// Only externally-bought items / plain costs (fare, etc. - no
   /// productId) count as a new expense.
   double get externalExpenseTotal {
-    return itemsUsed.fold(0.0, (sum, item) {
-      if (item['productId'] != null) return sum;
+    return itemsUsed.fold(0.0, (total, item) {
+      if (item['productId'] != null) return total;
       final p = item['price'] ?? 0.0;
-      return sum + (p is int ? p.toDouble() : p);
+      return total + (p is int ? p.toDouble() : p);
     });
   }
 
@@ -186,9 +186,9 @@ class Service {
     final newTotalAmount = totalAmount ?? this.totalAmount;
     final newItems = itemsUsed ?? this.itemsUsed;
 
-    final newExpenses = newItems.fold(0.0, (sum, item) {
+    final newExpenses = newItems.fold(0.0, (total, item) {
       final p = item['price'] ?? 0.0;
-      return sum + (p is int ? p.toDouble() : p);
+      return total + (p is int ? p.toDouble() : p);
     });
 
     return Service(

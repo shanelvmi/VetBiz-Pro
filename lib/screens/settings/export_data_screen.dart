@@ -280,7 +280,7 @@ class _ExportDataScreenState extends State<ExportDataScreen> {
           sections = await _buildSalesAndTransactionsData(facilityId);
       }
 
-      final totalRows = sections.fold<int>(0, (sum, s) => sum + s.rows.length);
+      final totalRows = sections.fold<int>(0, (total, s) => total + s.rows.length);
       if (totalRows == 0) {
         throw Exception('No records found for this selection. Try a different date range or category.');
       }

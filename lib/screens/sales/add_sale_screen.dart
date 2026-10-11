@@ -92,7 +92,7 @@ class _AddSaleScreenState extends State<AddSaleScreen> {
   final GlobalKey _stackKey = GlobalKey();
 
   double get subtotal {
-    return items.fold(0.0, (sum, item) => sum + (item.unitPrice * item.quantity));
+    return items.fold(0.0, (total, item) => total + (item.unitPrice * item.quantity));
   }
 
   double get totalAmount => subtotal - saleDiscount;
@@ -749,11 +749,11 @@ class _AddSaleScreenState extends State<AddSaleScreen> {
       }).toList();
 
       final totalProfit =
-          updatedItems.fold(0.0, (sum, item) => sum + item.profit);
+          updatedItems.fold(0.0, (total, item) => total + item.profit);
       final realizedProfit =
-          updatedItems.fold(0.0, (sum, item) => sum + item.realizedProfit);
+          updatedItems.fold(0.0, (total, item) => total + item.realizedProfit);
       final unrealizedProfit =
-          updatedItems.fold(0.0, (sum, item) => sum + item.unrealizedProfit);
+          updatedItems.fold(0.0, (total, item) => total + item.unrealizedProfit);
 
       final sale = Sale(
         id: '',
@@ -977,7 +977,7 @@ class _AddSaleScreenState extends State<AddSaleScreen> {
   }
 
   Widget _buildSaleSummarySidebar() {
-    final totalItemCount = items.fold<int>(0, (sum, i) => sum + i.quantity);
+    final totalItemCount = items.fold<int>(0, (total, i) => total + i.quantity);
     final change = (totalPaid - totalAmount) > 0 ? (totalPaid - totalAmount) : 0.0;
 
     return Column(

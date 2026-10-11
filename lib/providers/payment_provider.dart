@@ -333,11 +333,11 @@ class PaymentProvider with ChangeNotifier {
           }).toList();
 
           final totalProfit =
-              updatedItems.fold(0.0, (sum, item) => sum + item.profit);
+              updatedItems.fold(0.0, (total, item) => total + item.profit);
           final realizedProfit =
-              updatedItems.fold(0.0, (sum, item) => sum + item.realizedProfit);
+              updatedItems.fold(0.0, (total, item) => total + item.realizedProfit);
           final unrealizedProfit =
-              updatedItems.fold(0.0, (sum, item) => sum + item.unrealizedProfit);
+              updatedItems.fold(0.0, (total, item) => total + item.unrealizedProfit);
 
           final updatedSale = sale.copyWith(
             totalPaid: updatedTotalPaid,
@@ -393,7 +393,7 @@ class PaymentProvider with ChangeNotifier {
   double totalPaidByClient(String clientId) {
     return _payments
         .where((p) => p.clientId == clientId)
-        .fold(0.0, (sum, p) => sum + p.amount);
+        .fold(0.0, (total, p) => total + p.amount);
   }
 
   /// Delete a payment and update related sale or service
@@ -445,11 +445,11 @@ class PaymentProvider with ChangeNotifier {
           }).toList();
 
           final totalProfit =
-              updatedItems.fold(0.0, (sum, item) => sum + item.profit);
+              updatedItems.fold(0.0, (total, item) => total + item.profit);
           final realizedProfit =
-              updatedItems.fold(0.0, (sum, item) => sum + item.realizedProfit);
+              updatedItems.fold(0.0, (total, item) => total + item.realizedProfit);
           final unrealizedProfit =
-              updatedItems.fold(0.0, (sum, item) => sum + item.unrealizedProfit);
+              updatedItems.fold(0.0, (total, item) => total + item.unrealizedProfit);
 
           final updatedSale = sale.copyWith(
             totalPaid: updatedTotalPaid,

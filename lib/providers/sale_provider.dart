@@ -367,7 +367,7 @@ class SaleProvider extends ChangeNotifier {
           deductedSoFar[item.productId] = allocations;
 
           final totalCost = allocations.fold<double>(
-              0, (sum, a) => sum + (a['quantity'] as int) * (a['buyPrice'] as double));
+              0, (total, a) => total + (a['quantity'] as int) * (a['buyPrice'] as double));
           final weightedCostPrice = item.quantity > 0 ? totalCost / item.quantity : item.costPrice;
 
           updatedItems.add(item.copyWith(
@@ -594,11 +594,11 @@ class SaleProvider extends ChangeNotifier {
       return item.copyWith(realizedProfit: realized, unrealizedProfit: unrealized);
     }).toList();
 
-    final totalProfit = updatedItems.fold(0.0, (sum, item) => sum + item.profit);
+    final totalProfit = updatedItems.fold(0.0, (total, item) => total + item.profit);
     final realizedProfit =
-        updatedItems.fold(0.0, (sum, item) => sum + item.realizedProfit);
+        updatedItems.fold(0.0, (total, item) => total + item.realizedProfit);
     final unrealizedProfit =
-        updatedItems.fold(0.0, (sum, item) => sum + item.unrealizedProfit);
+        updatedItems.fold(0.0, (total, item) => total + item.unrealizedProfit);
 
     return sale.copyWith(
       items: updatedItems,
@@ -693,16 +693,16 @@ class SaleProvider extends ChangeNotifier {
   /// the facility's entire history. For full-history totals, use
   /// SalesSummaryService, which reads precomputed daily summaries instead
   /// of scanning raw sales.
-  double get totalSales => sales.fold(0.0, (sum, sale) => sum + sale.totalAmount);
+  double get totalSales => sales.fold(0.0, (total, sale) => total + sale.totalAmount);
 
-  double get totalEarnings => sales.fold(0.0, (sum, sale) => sum + sale.totalPaid);
+  double get totalEarnings => sales.fold(0.0, (total, sale) => total + sale.totalPaid);
 
-  double get totalProfit => sales.fold(0.0, (sum, sale) => sum + sale.totalProfit);
+  double get totalProfit => sales.fold(0.0, (total, sale) => total + sale.totalProfit);
 
-  double get realizedProfit => sales.fold(0.0, (sum, sale) => sum + sale.realizedProfit);
+  double get realizedProfit => sales.fold(0.0, (total, sale) => total + sale.realizedProfit);
 
   double get unrealizedProfit =>
-      sales.fold(0.0, (sum, sale) => sum + sale.unrealizedProfit);
+      sales.fold(0.0, (total, sale) => total + sale.unrealizedProfit);
 
   List<Sale> get debtSales =>
       sales.where((sale) => sale.totalPaid < sale.totalAmount).toList();

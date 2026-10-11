@@ -898,7 +898,7 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
         servicesByDay.add(servicesByDate[day] ?? 0.0);
       }
 
-      final previousServicesTotal = previousDailyServices.fold<double>(0.0, (sum, s) => sum + s.totalAmount);
+      final previousServicesTotal = previousDailyServices.fold<double>(0.0, (total, s) => total + s.totalAmount);
       final previousFullTotal =
           (previousTotals['totalAmount'] ?? 0.0) + previousServicesTotal + previousOtherIncomeTotal;
 

@@ -240,7 +240,7 @@ class DashboardSummaryService {
         .snapshots()
         .listen((snap) {
       collected = snap.docs.fold(
-          0.0, (sum, doc) => sum + ((doc.data()['totalCollected'] as num?)?.toDouble() ?? 0.0));
+          0.0, (total, doc) => total + ((doc.data()['totalCollected'] as num?)?.toDouble() ?? 0.0));
       hasCollected = true;
       emit();
     }, onError: controller.addError));

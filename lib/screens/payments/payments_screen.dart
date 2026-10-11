@@ -408,7 +408,7 @@ class _PaymentsScreenState extends State<PaymentsScreen> {
               builder: (context, _) {
                 final controller = paymentProvider.ledgerController;
                 final filtered = controller.entries;
-                final total = filtered.fold<double>(0.0, (sum, e) => sum + e.amount);
+                final total = filtered.fold<double>(0.0, (total, e) => total + e.amount);
 
                 // Group by calendar day, preserving descending order.
                 final Map<String, List<LedgerEntry>> grouped = {};
@@ -485,7 +485,7 @@ class _PaymentsScreenState extends State<PaymentsScreen> {
                                           child: ListView(
                                             children: grouped.entries.map((dayEntry) {
                                               final dayTotal =
-                                                  dayEntry.value.fold<double>(0.0, (sum, e) => sum + e.amount);
+                                                  dayEntry.value.fold<double>(0.0, (total, e) => total + e.amount);
                                               return _buildDayGroup(dayEntry.key, dayEntry.value, dayTotal);
                                             }).toList(),
                                           ),

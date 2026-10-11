@@ -228,7 +228,7 @@ class DailyReportService {
     // ---- Sales ----
     final sales = salesSnap.docs.map((d) => Sale.fromFirestore(d.data(), d.id)).toList();
     final salesCount = sales.length;
-    final salesTotalValue = sales.fold(0.0, (sum, s) => sum + s.totalAmount);
+    final salesTotalValue = sales.fold(0.0, (total, s) => total + s.totalAmount);
     final salesLineItems = sales
         .map((s) => SaleLineItem(
               saleId: s.id,
@@ -245,7 +245,7 @@ class DailyReportService {
     // ---- Services ----
     final services = servicesSnap.docs.map((d) => Service.fromFirestore(d.data(), d.id)).toList();
     final servicesCount = services.length;
-    final servicesTotalValue = services.fold(0.0, (sum, s) => sum + s.totalAmount);
+    final servicesTotalValue = services.fold(0.0, (total, s) => total + s.totalAmount);
     final serviceBreakdownMap = <String, ServiceTypeBreakdown>{};
     for (final s in services) {
       final key = s.name.isEmpty ? 'Other' : s.name;

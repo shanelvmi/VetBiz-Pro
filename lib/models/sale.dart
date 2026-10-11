@@ -195,9 +195,9 @@ class Sale {
     }).toList();
 
     final totalRealized =
-        updatedItems.fold(0.0, (sum, i) => sum + (i.realizedProfit));
+        updatedItems.fold(0.0, (total, i) => total + (i.realizedProfit));
     final totalUnrealized =
-        updatedItems.fold(0.0, (sum, i) => sum + (i.unrealizedProfit));
+        updatedItems.fold(0.0, (total, i) => total + (i.unrealizedProfit));
 
     return copyWith(
       totalPaid: newTotalPaid,
@@ -255,11 +255,11 @@ class Sale {
             .toList() ??
         [];
 
-    double totalProfit = itemsList.fold(0.0, (sum, item) => sum + item.profit);
+    double totalProfit = itemsList.fold(0.0, (total, item) => total + item.profit);
     double realized =
-        itemsList.fold(0.0, (sum, item) => sum + item.realizedProfit);
+        itemsList.fold(0.0, (total, item) => total + item.realizedProfit);
     double unrealized =
-        itemsList.fold(0.0, (sum, item) => sum + item.unrealizedProfit);
+        itemsList.fold(0.0, (total, item) => total + item.unrealizedProfit);
 
     DateTime timestamp = DateTime.now();
     final rawTs = map['timestamp'];

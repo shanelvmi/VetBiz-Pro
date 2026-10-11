@@ -220,7 +220,7 @@ class _ServicesArchiveScreenState extends State<ServicesArchiveScreen> {
     final sortedCategories = ['All', ...categories.toList()..sort()];
 
     final totalAmount = filteredServices.fold<double>(
-        0, (sum, s) => sum + ((s['totalAmount'] ?? 0.0) as num).toDouble());
+        0, (total, s) => total + ((s['totalAmount'] ?? 0.0) as num).toDouble());
 
     // Same honest display-pagination window as the main Services
     // screen - a page here is a view over whatever's already loaded

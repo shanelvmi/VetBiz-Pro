@@ -222,7 +222,7 @@ class _SalesArchiveScreenState extends State<SalesArchiveScreen> {
     }).toList();
 
     final totalAmount = filteredSales.fold<double>(
-        0, (sum, sale) => sum + ((sale['totalAmount'] ?? 0.0) as num).toDouble());
+        0, (total, sale) => total + ((sale['totalAmount'] ?? 0.0) as num).toDouble());
 
     // Same honest display-pagination window as the main Sales screen -
     // a page here is a view over whatever's already loaded (or gets
@@ -581,9 +581,9 @@ class _SalesArchiveScreenState extends State<SalesArchiveScreen> {
     final timestamp = (sale['timestamp'] as Timestamp?)?.toDate() ?? DateTime.now();
     final items = (sale['items'] as List?)?.cast<Map<String, dynamic>>() ?? [];
     final subtotal = items.fold<double>(
-        0, (sum, i) => sum + ((i['unitPrice'] ?? 0.0) as num).toDouble() * ((i['quantity'] ?? 0) as num).toDouble());
+        0, (total, i) => total + ((i['unitPrice'] ?? 0.0) as num).toDouble() * ((i['quantity'] ?? 0) as num).toDouble());
     final totalDiscount =
-        items.fold<double>(0, (sum, i) => sum + ((i['discount'] ?? 0.0) as num).toDouble());
+        items.fold<double>(0, (total, i) => total + ((i['discount'] ?? 0.0) as num).toDouble());
     final balance = total - paid;
 
     return Container(
