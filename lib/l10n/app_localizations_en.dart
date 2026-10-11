@@ -1610,4 +1610,83 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get debtors_emptySearch => 'No debtors match your search';
+
+  @override
+  String get debtors_totalDebtors => 'Total Debtors';
+
+  @override
+  String get debtors_withBalance => 'With outstanding balance';
+
+  @override
+  String get debtors_totalOwed => 'Total Owed';
+
+  @override
+  String get debtors_outstandingBalance => 'Outstanding balance';
+
+  @override
+  String get debtors_overdueDebtors => 'Overdue Debtors';
+
+  @override
+  String debtors_overDays(int days) {
+    return 'Over $days days';
+  }
+
+  @override
+  String get debtors_paidThisMonth => 'Paid This Month';
+
+  @override
+  String get debtors_fromDebtPayments => 'From debt payments';
+
+  @override
+  String get debtors_recordPayment => 'Record Payment';
+
+  @override
+  String get debtors_overdue => 'Overdue';
+
+  @override
+  String get debtors_current => 'Current';
+
+  @override
+  String get debtors_colOverdue => 'Overdue';
+
+  @override
+  String debtors_rangeDays(int from, int to) {
+    return '$from-$to days overdue';
+  }
+
+  @override
+  String debtors_rangeDaysPlus(int from) {
+    return '$from+ days overdue';
+  }
+
+  @override
+  String get debtors_searchHint => 'Search debtor by name...';
+
+  @override
+  String get debtors_debtor => 'Debtor';
+
+  @override
+  String get debtors_oldestDebtSince => 'Oldest Debt Since';
+
+  @override
+  String debtors_daysCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count days',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get debtors_sendReminder => 'Send Reminder';
+
+  @override
+  String get debtors_paymentHistory => 'Payment History';
+
+  @override
+  String get debtors_none => 'No debtors';
+
+  @override
+  String get debtors_detailsTitle => 'Debtor Details';
 }

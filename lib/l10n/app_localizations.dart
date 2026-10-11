@@ -3013,6 +3013,138 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'No debtors match your search'**
   String get debtors_emptySearch;
+
+  /// Debtors metric card title.
+  ///
+  /// In en, this message translates to:
+  /// **'Total Debtors'**
+  String get debtors_totalDebtors;
+
+  /// Under the Total Debtors metric.
+  ///
+  /// In en, this message translates to:
+  /// **'With outstanding balance'**
+  String get debtors_withBalance;
+
+  /// Debtors metric, table header and details row: everything a debtor owes.
+  ///
+  /// In en, this message translates to:
+  /// **'Total Owed'**
+  String get debtors_totalOwed;
+
+  /// Under the Total Owed metric.
+  ///
+  /// In en, this message translates to:
+  /// **'Outstanding balance'**
+  String get debtors_outstandingBalance;
+
+  /// Debtors metric card title.
+  ///
+  /// In en, this message translates to:
+  /// **'Overdue Debtors'**
+  String get debtors_overdueDebtors;
+
+  /// Under the Overdue Debtors metric; days is the facility's overdue limit.
+  ///
+  /// In en, this message translates to:
+  /// **'Over {days} days'**
+  String debtors_overDays(int days);
+
+  /// Debtors metric card title.
+  ///
+  /// In en, this message translates to:
+  /// **'Paid This Month'**
+  String get debtors_paidThisMonth;
+
+  /// Under the Paid This Month metric.
+  ///
+  /// In en, this message translates to:
+  /// **'From debt payments'**
+  String get debtors_fromDebtPayments;
+
+  /// Button and form title for recording a debt payment.
+  ///
+  /// In en, this message translates to:
+  /// **'Record Payment'**
+  String get debtors_recordPayment;
+
+  /// Debt status badge and status filter choice: past the overdue limit.
+  ///
+  /// In en, this message translates to:
+  /// **'Overdue'**
+  String get debtors_overdue;
+
+  /// Debt status badge and status filter choice: not overdue yet.
+  ///
+  /// In en, this message translates to:
+  /// **'Current'**
+  String get debtors_current;
+
+  /// Debtors table header (how long overdue) and the overdue-range filter's label.
+  ///
+  /// In en, this message translates to:
+  /// **'Overdue'**
+  String get debtors_colOverdue;
+
+  /// Overdue-range filter choice.
+  ///
+  /// In en, this message translates to:
+  /// **'{from}-{to} days overdue'**
+  String debtors_rangeDays(int from, int to);
+
+  /// Last overdue-range filter choice.
+  ///
+  /// In en, this message translates to:
+  /// **'{from}+ days overdue'**
+  String debtors_rangeDaysPlus(int from);
+
+  /// Debtors search box hint.
+  ///
+  /// In en, this message translates to:
+  /// **'Search debtor by name...'**
+  String get debtors_searchHint;
+
+  /// Debtors table header and the payment form's debtor field.
+  ///
+  /// In en, this message translates to:
+  /// **'Debtor'**
+  String get debtors_debtor;
+
+  /// Debtors table header.
+  ///
+  /// In en, this message translates to:
+  /// **'Oldest Debt Since'**
+  String get debtors_oldestDebtSince;
+
+  /// How many days a debtor is overdue, in the table.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, other{{count} days}}'**
+  String debtors_daysCount(int count);
+
+  /// Button, tooltip and dialog title for reminding a debtor.
+  ///
+  /// In en, this message translates to:
+  /// **'Send Reminder'**
+  String get debtors_sendReminder;
+
+  /// Button and tooltip that open a debtor's payments.
+  ///
+  /// In en, this message translates to:
+  /// **'Payment History'**
+  String get debtors_paymentHistory;
+
+  /// Pagination bar when the list is empty.
+  ///
+  /// In en, this message translates to:
+  /// **'No debtors'**
+  String get debtors_none;
+
+  /// Details panel title.
+  ///
+  /// In en, this message translates to:
+  /// **'Debtor Details'**
+  String get debtors_detailsTitle;
 }
 
 class _AppLocalizationsDelegate

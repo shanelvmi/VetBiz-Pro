@@ -1621,4 +1621,83 @@ class AppLocalizationsSw extends AppLocalizations {
   @override
   String get debtors_emptySearch =>
       'Hakuna wadaiwa wanaolingana na utafutaji wako';
+
+  @override
+  String get debtors_totalDebtors => 'Jumla ya Wadaiwa';
+
+  @override
+  String get debtors_withBalance => 'Wenye salio linalodaiwa';
+
+  @override
+  String get debtors_totalOwed => 'Jumla Inayodaiwa';
+
+  @override
+  String get debtors_outstandingBalance => 'Salio linalodaiwa';
+
+  @override
+  String get debtors_overdueDebtors => 'Wadaiwa Waliochelewa';
+
+  @override
+  String debtors_overDays(int days) {
+    return 'Zaidi ya siku $days';
+  }
+
+  @override
+  String get debtors_paidThisMonth => 'Kilicholipwa Mwezi Huu';
+
+  @override
+  String get debtors_fromDebtPayments => 'Kutoka malipo ya madeni';
+
+  @override
+  String get debtors_recordPayment => 'Rekodi Malipo';
+
+  @override
+  String get debtors_overdue => 'Imechelewa';
+
+  @override
+  String get debtors_current => 'Ndani ya muda';
+
+  @override
+  String get debtors_colOverdue => 'Muda wa Kuchelewa';
+
+  @override
+  String debtors_rangeDays(int from, int to) {
+    return 'Siku $from-$to za kuchelewa';
+  }
+
+  @override
+  String debtors_rangeDaysPlus(int from) {
+    return 'Siku $from+ za kuchelewa';
+  }
+
+  @override
+  String get debtors_searchHint => 'Tafuta mdaiwa kwa jina...';
+
+  @override
+  String get debtors_debtor => 'Mdaiwa';
+
+  @override
+  String get debtors_oldestDebtSince => 'Deni la Zamani Zaidi Tangu';
+
+  @override
+  String debtors_daysCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Siku $count',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get debtors_sendReminder => 'Tuma Ukumbusho';
+
+  @override
+  String get debtors_paymentHistory => 'Historia ya Malipo';
+
+  @override
+  String get debtors_none => 'Hakuna wadaiwa';
+
+  @override
+  String get debtors_detailsTitle => 'Maelezo ya Mdaiwa';
 }
