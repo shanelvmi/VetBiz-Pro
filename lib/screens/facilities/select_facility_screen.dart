@@ -17,13 +17,12 @@ import '../../utils/provider_reset.dart';
 import '../../data/collections.dart';
 import '../../data/fields.dart';
 import '../../config/app_timeouts.dart';
+import '../../theme/app_text.dart';
+import '../../theme/app_dimens.dart';
+import '../../theme/theme_context.dart';
+import '../../theme/app_motion.dart';
+import '../../ui/feedback/friendly_error.dart';
 
-
-class AppColors {
-  static const deepGreen = Color(0xFF2F5D62);
-  static const warmAmber = Color(0xFFFFB200);
-  static const offWhite = Color(0xFFFDFDF9);
-}
 
 class SelectFacilityScreen extends StatefulWidget {
   const SelectFacilityScreen({super.key});
@@ -91,7 +90,7 @@ class _SelectFacilityScreenState extends State<SelectFacilityScreen> {
       debugPrint("Error loading facilities: $e");
       loadError = e is TimeoutException
           ? 'This is taking longer than expected. Check your connection and try again.'
-          : 'Could not load your facilities: $e';
+          : "Couldn't load your facilities. ${FriendlyError.messageFor(e)}";
     } finally {
       if (mounted) setState(() => isLoading = false);
     }
@@ -154,27 +153,27 @@ class _SelectFacilityScreenState extends State<SelectFacilityScreen> {
     }
 
     return Scaffold(
-      backgroundColor: AppColors.offWhite,
+      backgroundColor: context.colors.background,
       appBar: AppBar(
         title: const Text('Select Facility'),
         centerTitle: true,
-        backgroundColor: AppColors.deepGreen,
-        foregroundColor: AppColors.offWhite,
+        backgroundColor: context.colors.primary,
+        foregroundColor: context.colors.background,
       ),
       body: loadError != null
           ? Center(
               child: Padding(
-                padding: const EdgeInsets.all(24),
+                padding: const EdgeInsets.all(AppSpacing.s24),
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Icon(Icons.error_outline, color: Colors.redAccent, size: 40),
-                    const SizedBox(height: 12),
+                    Icon(Icons.error_outline, color: context.colors.dangerAccent, size: AppIconSize.i40),
+                    const SizedBox(height: AppSpacing.s12),
                     Text(loadError!, textAlign: TextAlign.center),
-                    const SizedBox(height: 16),
+                    const SizedBox(height: AppSpacing.s16),
                     ElevatedButton(
                       onPressed: _loadFacilities,
-                      style: ElevatedButton.styleFrom(backgroundColor: AppColors.deepGreen, foregroundColor: Colors.white),
+                      style: ElevatedButton.styleFrom(backgroundColor: context.colors.primary, foregroundColor: context.colors.onPrimary),
                       child: const Text('Try Again'),
                     ),
                   ],
@@ -184,7 +183,7 @@ class _SelectFacilityScreenState extends State<SelectFacilityScreen> {
           : facilities.isEmpty
           ? const Center(child: Text('No facilities found.'))
           : ListView.builder(
-              padding: const EdgeInsets.all(24),
+              padding: const EdgeInsets.all(AppSpacing.s24),
               itemCount: facilities.length,
               itemBuilder: (context, index) {
                 final facility = facilities[index];
@@ -203,8 +202,8 @@ class _SelectFacilityScreenState extends State<SelectFacilityScreen> {
       floatingActionButton: selectedFacilityId == null
           ? null
           : FloatingActionButton.extended(
-              backgroundColor: AppColors.deepGreen,
-              foregroundColor: AppColors.offWhite,
+              backgroundColor: context.colors.primary,
+              foregroundColor: context.colors.background,
               icon: const Icon(Icons.arrow_forward),
               label: const Text('Proceed'),
               onPressed: () {
@@ -264,51 +263,51 @@ class _HoverCardState extends State<_HoverCard> {
       child: GestureDetector(
         onTap: widget.onTap,
         child: AnimatedContainer(
-          duration: const Duration(milliseconds: 250),
+          duration: AppMotion.normal,
           curve: Curves.easeInOut,
-          margin: const EdgeInsets.symmetric(vertical: 8),
-          padding: const EdgeInsets.all(16),
+          margin: const EdgeInsets.symmetric(vertical: AppSpacing.s8),
+          padding: const EdgeInsets.all(AppSpacing.s16),
           decoration: BoxDecoration(
             color: widget.isSelected
-                ? AppColors.warmAmber.withValues(alpha: 0.3)
-                : Colors.white,
-            borderRadius: BorderRadius.circular(8),
+                ? context.colors.accent.withValues(alpha: AppAlpha.a30)
+                : context.colors.surface,
+            borderRadius: BorderRadius.circular(AppRadius.r8),
             border: Border.all(
               color: widget.isSelected
-                  ? AppColors.deepGreen
+                  ? context.colors.primary
                   : Colors.transparent,
               width: 2,
             ),
-            boxShadow: const [
+            boxShadow: [
               BoxShadow(
-                color: Colors.black12,
+                color: context.colors.shadow.withValues(alpha: AppAlpha.a10),
                 blurRadius: 4,
-                offset: Offset(0, 2),
+                offset: const Offset(0, 2),
               ),
             ],
           ),
           child: Row(
             children: [
-              Icon(icon, color: AppColors.deepGreen),
-              const SizedBox(width: 16),
+              Icon(icon, color: context.colors.primary),
+              const SizedBox(width: AppSpacing.s16),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
                       name,
-                      style: const TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                        color: AppColors.deepGreen,
+                      style: TextStyle(
+                        fontSize: AppFontSize.f16,
+                        fontWeight: AppFontWeight.bold,
+                        color: context.colors.primary,
                       ),
                     ),
-                    const SizedBox(height: 4),
+                    const SizedBox(height: AppSpacing.s4),
                     Text(
                       type,
                       style: TextStyle(
-                        fontSize: 14,
-                        color: AppColors.deepGreen.withValues(alpha: 0.8),
+                        fontSize: AppFontSize.f14,
+                        color: context.colors.primary.withValues(alpha: AppAlpha.a85),
                       ),
                     ),
                   ],
@@ -316,15 +315,15 @@ class _HoverCardState extends State<_HoverCard> {
               ),
               AnimatedOpacity(
                 opacity: isHovered ? 1.0 : 0.0,
-                duration: const Duration(milliseconds: 250),
+                duration: AppMotion.normal,
                 curve: Curves.easeInOut,
                 child: Padding(
-                  padding: const EdgeInsets.only(left: 12.0),
+                  padding: const EdgeInsets.only(left: AppSpacing.s12),
                   child: Text(
                     widget.isSelected ? 'Selected' : 'Click to select',
                     style: TextStyle(
-                      fontSize: 12,
-                      color: AppColors.deepGreen.withValues(alpha: 0.8),
+                      fontSize: AppFontSize.f12,
+                      color: context.colors.primary.withValues(alpha: AppAlpha.a85),
                       fontStyle: FontStyle.italic,
                     ),
                   ),
