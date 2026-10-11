@@ -2095,6 +2095,126 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Active'**
   String get subscription_statusActive;
+
+  /// Subscription status: expired, still usable for a few days.
+  ///
+  /// In en, this message translates to:
+  /// **'Payment overdue - grace period'**
+  String get subscription_statusGrace;
+
+  /// Subscription status: expired and read-only.
+  ///
+  /// In en, this message translates to:
+  /// **'Locked - subscription expired'**
+  String get subscription_statusLocked;
+
+  /// Under the subscription status (date already formatted).
+  ///
+  /// In en, this message translates to:
+  /// **'Expired on {date}'**
+  String subscription_expiredOn(String date);
+
+  /// Under the subscription status (date already formatted).
+  ///
+  /// In en, this message translates to:
+  /// **'Trial expires on {date}'**
+  String subscription_trialExpiresOn(String date);
+
+  /// Under the subscription status (date already formatted).
+  ///
+  /// In en, this message translates to:
+  /// **'Renews / expires on {date}'**
+  String subscription_renewsOn(String date);
+
+  /// Shown when the subscription is locked.
+  ///
+  /// In en, this message translates to:
+  /// **'Your account is in read-only mode. Submit a payment below to restore full access - your data is safe and untouched.'**
+  String get subscription_readOnly;
+
+  /// Promotion banner, discount on all plans (percent already formatted).
+  ///
+  /// In en, this message translates to:
+  /// **'{percent}% off every plan - applied automatically below.'**
+  String subscription_promoAllPlans(String percent);
+
+  /// Promotion banner, discount on some plans (percent already formatted).
+  ///
+  /// In en, this message translates to:
+  /// **'{percent}% off select plans - applied automatically below.'**
+  String subscription_promoSomePlans(String percent);
+
+  /// Subscription form heading.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose a Plan'**
+  String get subscription_choosePlan;
+
+  /// Subscription form: the payment reference field.
+  ///
+  /// In en, this message translates to:
+  /// **'Transaction / Confirmation Code'**
+  String get subscription_referenceLabel;
+
+  /// Subscription form: hint for the payment reference.
+  ///
+  /// In en, this message translates to:
+  /// **'e.g. the M-Pesa confirmation code'**
+  String get subscription_referenceHint;
+
+  /// Subscription form: button to attach a payment screenshot.
+  ///
+  /// In en, this message translates to:
+  /// **'Attach Proof (optional)'**
+  String get subscription_attachProof;
+
+  /// Subscription form: after a screenshot is attached.
+  ///
+  /// In en, this message translates to:
+  /// **'Proof attached'**
+  String get subscription_proofAttached;
+
+  /// Subscription form: a payment is already waiting.
+  ///
+  /// In en, this message translates to:
+  /// **'Your last payment is still under review. Please wait for it to be approved or rejected before submitting another.'**
+  String get subscription_pendingWarning;
+
+  /// Subscription form: the plan has no price yet.
+  ///
+  /// In en, this message translates to:
+  /// **'Pricing for this plan isn\'t available right now. Please try again shortly or contact support.'**
+  String get subscription_priceUnavailableWarning;
+
+  /// Subscription submit button while a payment waits.
+  ///
+  /// In en, this message translates to:
+  /// **'Awaiting Review'**
+  String get subscription_awaitingReview;
+
+  /// Subscription submit button when the plan has no price.
+  ///
+  /// In en, this message translates to:
+  /// **'Pricing Unavailable'**
+  String get subscription_pricingUnavailable;
+
+  /// Subscription submit button.
+  ///
+  /// In en, this message translates to:
+  /// **'Submit Payment for Review'**
+  String get subscription_submitForReview;
+
+  /// Subscription screen heading over the latest payments.
+  ///
+  /// In en, this message translates to:
+  /// **'Recent Submissions'**
+  String get subscription_recentSubmissions;
+
+  /// Subscription screen: no payments submitted yet.
+  ///
+  /// In en, this message translates to:
+  /// **'No submissions yet.'**
+  String get subscription_noSubmissionsYetDot;
 }
 
 class _AppLocalizationsDelegate

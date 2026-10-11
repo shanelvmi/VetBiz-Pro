@@ -1061,4 +1061,78 @@ class AppLocalizationsSw extends AppLocalizations {
 
   @override
   String get subscription_statusActive => 'Hai';
+
+  @override
+  String get subscription_statusGrace => 'Malipo yamechelewa - muda wa neema';
+
+  @override
+  String get subscription_statusLocked => 'Imefungwa - usajili umekwisha';
+
+  @override
+  String subscription_expiredOn(String date) {
+    return 'Uliisha $date';
+  }
+
+  @override
+  String subscription_trialExpiresOn(String date) {
+    return 'Majaribio yanaisha $date';
+  }
+
+  @override
+  String subscription_renewsOn(String date) {
+    return 'Unasasishwa / unaisha $date';
+  }
+
+  @override
+  String get subscription_readOnly =>
+      'Akaunti yako iko katika hali ya kusoma tu. Tuma malipo hapa chini ili kurejesha huduma kamili - taarifa zako ziko salama na hazijaguswa.';
+
+  @override
+  String subscription_promoAllPlans(String percent) {
+    return 'Punguzo la $percent% kwa kila mpango - linatumika lenyewe hapa chini.';
+  }
+
+  @override
+  String subscription_promoSomePlans(String percent) {
+    return 'Punguzo la $percent% kwa mipango iliyochaguliwa - linatumika lenyewe hapa chini.';
+  }
+
+  @override
+  String get subscription_choosePlan => 'Chagua Mpango';
+
+  @override
+  String get subscription_referenceLabel => 'Namba ya Muamala / Uthibitisho';
+
+  @override
+  String get subscription_referenceHint => 'mf. namba ya uthibitisho ya M-Pesa';
+
+  @override
+  String get subscription_attachProof => 'Ambatisha Uthibitisho (si lazima)';
+
+  @override
+  String get subscription_proofAttached => 'Uthibitisho umeambatishwa';
+
+  @override
+  String get subscription_pendingWarning =>
+      'Malipo yako ya mwisho bado yanakaguliwa. Tafadhali subiri yaidhinishwe au yakataliwe kabla ya kutuma mengine.';
+
+  @override
+  String get subscription_priceUnavailableWarning =>
+      'Bei ya mpango huu haipatikani kwa sasa. Tafadhali jaribu tena baadaye au wasiliana na msaada.';
+
+  @override
+  String get subscription_awaitingReview => 'Inasubiri Ukaguzi';
+
+  @override
+  String get subscription_pricingUnavailable => 'Bei Haipatikani';
+
+  @override
+  String get subscription_submitForReview => 'Tuma Malipo kwa Ukaguzi';
+
+  @override
+  String get subscription_recentSubmissions => 'Malipo ya Karibuni';
+
+  @override
+  String get subscription_noSubmissionsYetDot =>
+      'Bado hakuna malipo yaliyotumwa.';
 }

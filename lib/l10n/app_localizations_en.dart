@@ -1057,4 +1057,77 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get subscription_statusActive => 'Active';
+
+  @override
+  String get subscription_statusGrace => 'Payment overdue - grace period';
+
+  @override
+  String get subscription_statusLocked => 'Locked - subscription expired';
+
+  @override
+  String subscription_expiredOn(String date) {
+    return 'Expired on $date';
+  }
+
+  @override
+  String subscription_trialExpiresOn(String date) {
+    return 'Trial expires on $date';
+  }
+
+  @override
+  String subscription_renewsOn(String date) {
+    return 'Renews / expires on $date';
+  }
+
+  @override
+  String get subscription_readOnly =>
+      'Your account is in read-only mode. Submit a payment below to restore full access - your data is safe and untouched.';
+
+  @override
+  String subscription_promoAllPlans(String percent) {
+    return '$percent% off every plan - applied automatically below.';
+  }
+
+  @override
+  String subscription_promoSomePlans(String percent) {
+    return '$percent% off select plans - applied automatically below.';
+  }
+
+  @override
+  String get subscription_choosePlan => 'Choose a Plan';
+
+  @override
+  String get subscription_referenceLabel => 'Transaction / Confirmation Code';
+
+  @override
+  String get subscription_referenceHint => 'e.g. the M-Pesa confirmation code';
+
+  @override
+  String get subscription_attachProof => 'Attach Proof (optional)';
+
+  @override
+  String get subscription_proofAttached => 'Proof attached';
+
+  @override
+  String get subscription_pendingWarning =>
+      'Your last payment is still under review. Please wait for it to be approved or rejected before submitting another.';
+
+  @override
+  String get subscription_priceUnavailableWarning =>
+      'Pricing for this plan isn\'t available right now. Please try again shortly or contact support.';
+
+  @override
+  String get subscription_awaitingReview => 'Awaiting Review';
+
+  @override
+  String get subscription_pricingUnavailable => 'Pricing Unavailable';
+
+  @override
+  String get subscription_submitForReview => 'Submit Payment for Review';
+
+  @override
+  String get subscription_recentSubmissions => 'Recent Submissions';
+
+  @override
+  String get subscription_noSubmissionsYetDot => 'No submissions yet.';
 }
