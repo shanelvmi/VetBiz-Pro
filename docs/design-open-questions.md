@@ -66,6 +66,13 @@ Colours are outside the standing snap rule, so this is kept as it is:
 - **Chart height 220**, `lib/screens/platform_admin/overview_details_screen.dart` (`_chartHeight`, the daily earnings chart): a size. Kept exact as a named local constant.
 - **More computed `Duration(days: ...)`**: `overview_details_screen.dart` (the last N days for the chart) and `facility_detail_screen.dart` (a manual subscription override's length). Same allowlist question as subscription_requests_tab above.
 
+### Raised in step 2D, batch D8
+
+- **Login teals `#3E8E82` (`tealAccent`) and `#7EE8CB` (`tealGlow`)**, `lib/screens/login_screen.dart` (header and welcome-panel gradients, the welcome badge, the form card's top accent and lock badge, the Forgot / Register links): more than 12 from every role. Kept as named `static const` fields. `#3E8E82` is also the platform admin's `tealGlow` (D7). One `brandTeal` role (and a second for the light glow)?
+- **Online dot `Colors.greenAccent`**, `login_screen.dart` (the "System Online" pill in the header): no role within 12 (`success` is green, `trendUp` is `#10B981`). Kept.
+- **Announcement slide 600 ms**, `login_screen.dart` (`_announcementSlide`, the carousel's page animation): no AppMotion step (100 from `slowest`). Kept exact as a named constant.
+- **Computed alert time**, `login_screen.dart` `_errorDisplayDuration`: 4 s plus 1 s per 20 characters, clamped to 5 to 12 s. A computed UI timeout; still counted by guard R5. Same allowlist question as the computed `Duration(days: ...)` in D7.
+
 ### Trash and restore: books consistency (audit after D6, read-only)
 
 `TrashService.restore` (used by the Trash screen and every Undo) only copies the document back from `trash_*` to its live collection, drops `deletedAt`/`deletedBy`, and logs "Restored ...". Anything else the delete changed is reversed only if a server trigger reacts to the document reappearing (the `onDocumentWritten` daily summaries do).

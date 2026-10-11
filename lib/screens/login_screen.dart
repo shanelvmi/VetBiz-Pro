@@ -18,6 +18,11 @@ import '../config/app_timeouts.dart';
 import '../config/app_rules.dart';
 import '../config/app_info.dart';
 import '../ui/feedback/auth_error_messages.dart';
+import '../ui/feedback/app_feedback.dart';
+import '../ui/feedback/friendly_error.dart';
+import '../theme/app_breakpoints.dart';
+import '../theme/app_text.dart';
+import '../theme/theme_context.dart';
 
 class LoginScreen extends StatefulWidget {
   final String? errorMessage;
@@ -49,15 +54,16 @@ class _LoginScreenState extends State<LoginScreen> {
 
   Timer? _announcementTimer;
 
-  final Color primaryDeepGreen = AppPalette.primary;
-  final Color tealAccent = const Color(0xFF3E8E82);
-  final Color warmAmber = AppPalette.accent;
-  final Color tealGlow = const Color(0xFF7EE8CB);
-  final Color offWhite = AppPalette.background;
-  final Color neutralBlack = Colors.black87;
+  // Two teals of the login design with no role (more than 12 from every
+  // role); kept exact and listed in design-open-questions.md (D8).
+  static const Color tealAccent = Color(0xFF3E8E82);
+  static const Color tealGlow = Color(0xFF7EE8CB);
+  // The announcement carousel's page slide: 600 ms has no AppMotion step
+  // (100 from slowest). Kept exact and listed (D8).
+  static const Duration _announcementSlide = Duration(milliseconds: 600);
 
   OutlineInputBorder _fieldBorder(Color color) =>
-      OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: BorderSide(color: color));
+      OutlineInputBorder(borderRadius: BorderRadius.circular(AppRadius.r16), borderSide: BorderSide(color: color));
 
   @override
   void initState() {
@@ -200,7 +206,7 @@ class _LoginScreenState extends State<LoginScreen> {
       debugPrint('[LOGIN] Unexpected error: $e');
       if (!mounted) return;
       setState(() {
-        error = e.toString().replaceAll('Exception:', '').trim();
+        error = FriendlyError.messageFor(e);
         errorIsAboutCredentials = false;
         _shakeCount++;
         isLoggingIn = false;
@@ -238,20 +244,10 @@ class _LoginScreenState extends State<LoginScreen> {
         "has been sent. Check your inbox (and spam folder).";
     try {
       await _authService.sendPasswordReset(email);
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-          content: const Text(vagueMessage, style: TextStyle(color: Colors.white)),
-          backgroundColor: primaryDeepGreen,
-        ));
-      }
+      AppFeedback.info(vagueMessage);
     } on FirebaseAuthException catch (e) {
       if (e.code == 'user-not-found' || e.code == 'invalid-email') {
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-            content: const Text(vagueMessage, style: TextStyle(color: Colors.white)),
-            backgroundColor: primaryDeepGreen,
-          ));
-        }
+        AppFeedback.info(vagueMessage);
       } else {
         setState(() {
           error = _friendlyAuthError(e);
@@ -262,7 +258,7 @@ class _LoginScreenState extends State<LoginScreen> {
       }
     } catch (e) {
       setState(() {
-        error = "Could not send reset email: $e";
+        error = "Couldn't send the reset email. ${FriendlyError.messageFor(e)}";
         errorIsAboutCredentials = false;
         _shakeCount++;
       });
@@ -274,10 +270,10 @@ class _LoginScreenState extends State<LoginScreen> {
   Widget _buildHeader() {
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.symmetric(vertical: 16),
+      padding: const EdgeInsets.symmetric(vertical: AppSpacing.s16),
       decoration: BoxDecoration(
         gradient: LinearGradient(
-          colors: [primaryDeepGreen, tealAccent],
+          colors: [context.colors.primary, tealAccent],
           begin: Alignment.centerLeft,
           end: Alignment.centerRight,
         ),
@@ -289,7 +285,7 @@ class _LoginScreenState extends State<LoginScreen> {
           // this, the subtitle (the least critical piece here) is
           // dropped instead, keeping the title, status pill, and
           // settings icon exactly where they belong.
-          final isNarrow = constraints.maxWidth < 560;
+          final isNarrow = constraints.maxWidth < AppBreakpoints.loginHeaderNarrow;
 
           return SizedBox(
             height: 44,
@@ -311,22 +307,22 @@ class _LoginScreenState extends State<LoginScreen> {
                       Container(
                         width: 44,
                         height: 44,
-                        decoration: const BoxDecoration(color: Colors.white, shape: BoxShape.circle),
+                        decoration: BoxDecoration(color: context.colors.surface, shape: BoxShape.circle),
                         alignment: Alignment.center,
-                        child: Text('VB.', style: TextStyle(color: primaryDeepGreen, fontWeight: FontWeight.bold, fontSize: 16)),
+                        child: Text('VB.', style: TextStyle(color: context.colors.primary, fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f16)),
                       ),
-                      const SizedBox(width: 12),
+                      const SizedBox(width: AppSpacing.s12),
                       Flexible(
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            const Text('${AppInfo.name} System',
-                                style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16)),
+                            Text('${AppInfo.name} System',
+                                style: TextStyle(color: context.colors.onPrimary, fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f16)),
                             if (!isNarrow)
                               Text('Smart Business & Vet Services Monitor',
                                   overflow: TextOverflow.ellipsis,
-                                  style: TextStyle(color: Colors.white.withValues(alpha: 0.75), fontSize: 11.5)),
+                                  style: TextStyle(color: context.colors.onPrimary.withValues(alpha: AppAlpha.a70), fontSize: AppFontSize.f11_5)),
                           ],
                         ),
                       ),
@@ -348,10 +344,10 @@ class _LoginScreenState extends State<LoginScreen> {
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                        padding: const EdgeInsets.symmetric(horizontal: AppSpacing.s12, vertical: AppSpacing.s6),
                         decoration: BoxDecoration(
-                          color: Colors.white.withValues(alpha: 0.15),
-                          borderRadius: BorderRadius.circular(20),
+                          color: context.colors.surface.withValues(alpha: AppAlpha.a15),
+                          borderRadius: BorderRadius.circular(AppRadius.r20),
                         ),
                         child: Row(
                           mainAxisSize: MainAxisSize.min,
@@ -361,18 +357,18 @@ class _LoginScreenState extends State<LoginScreen> {
                               height: AppSizes.statusDot,
                               decoration: const BoxDecoration(color: Colors.greenAccent, shape: BoxShape.circle),
                             ),
-                            const SizedBox(width: 6),
-                            const Text('System Online',
-                                style: TextStyle(color: Colors.white, fontSize: 12.5, fontWeight: FontWeight.w600)),
+                            const SizedBox(width: AppSpacing.s6),
+                            Text('System Online',
+                                style: TextStyle(color: context.colors.onPrimary, fontSize: AppFontSize.f12_5, fontWeight: AppFontWeight.semibold)),
                           ],
                         ),
                       ),
-                      const SizedBox(width: 10),
+                      const SizedBox(width: AppSpacing.s10),
                       Container(
                         width: 36,
                         height: 36,
-                        decoration: BoxDecoration(color: Colors.white.withValues(alpha: 0.15), shape: BoxShape.circle),
-                        child: const Icon(Icons.wb_sunny_outlined, color: Colors.white, size: 18),
+                        decoration: BoxDecoration(color: context.colors.surface.withValues(alpha: AppAlpha.a15), shape: BoxShape.circle),
+                        child: Icon(Icons.wb_sunny_outlined, color: context.colors.onPrimary, size: AppIconSize.i18),
                       ),
                     ],
                   ),
@@ -390,26 +386,26 @@ class _LoginScreenState extends State<LoginScreen> {
   Widget _buildFooter() {
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-      color: primaryDeepGreen,
+      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.s24, vertical: AppSpacing.s12),
+      color: context.colors.primary,
       child: LayoutBuilder(
         builder: (context, constraints) {
           // Enough room for everything on a single line, spanning the
           // full width edge to edge - only falls back to a reflowing
           // layout when there genuinely isn't room for that, on small
           // screens specifically.
-          if (constraints.maxWidth >= 600) {
+          if (constraints.maxWidth >= AppBreakpoints.compact) {
             return Row(
               children: [
-                Icon(Icons.shield_outlined, color: Colors.white.withValues(alpha: 0.7), size: 16),
-                const SizedBox(width: 8),
+                Icon(Icons.shield_outlined, color: context.colors.onPrimary.withValues(alpha: AppAlpha.a70), size: AppIconSize.i16),
+                const SizedBox(width: AppSpacing.s8),
                 Text('© 2026 VetBiz Pro System. All rights reserved.',
-                    style: TextStyle(color: Colors.white.withValues(alpha: 0.7), fontSize: 12)),
+                    style: TextStyle(color: context.colors.onPrimary.withValues(alpha: AppAlpha.a70), fontSize: AppFontSize.f12)),
                 const Spacer(),
-                Text('v2.0.0', style: TextStyle(color: Colors.white.withValues(alpha: 0.7), fontSize: 12)),
-                const SizedBox(width: 20),
+                Text('v2.0.0', style: TextStyle(color: context.colors.onPrimary.withValues(alpha: AppAlpha.a70), fontSize: AppFontSize.f12)),
+                const SizedBox(width: AppSpacing.s20),
                 const _FooterLink(label: 'Privacy Policy', destination: PrivacyPolicyScreen()),
-                const SizedBox(width: 20),
+                const SizedBox(width: AppSpacing.s20),
                 const _FooterLink(label: 'Terms of Service', destination: TermsOfServiceScreen()),
               ],
             );
@@ -423,10 +419,10 @@ class _LoginScreenState extends State<LoginScreen> {
               Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Icon(Icons.shield_outlined, color: Colors.white.withValues(alpha: 0.7), size: 16),
-                  const SizedBox(width: 8),
+                  Icon(Icons.shield_outlined, color: context.colors.onPrimary.withValues(alpha: AppAlpha.a70), size: AppIconSize.i16),
+                  const SizedBox(width: AppSpacing.s8),
                   Text('© 2026 VetBiz Pro System. All rights reserved.',
-                      style: TextStyle(color: Colors.white.withValues(alpha: 0.7), fontSize: 12)),
+                      style: TextStyle(color: context.colors.onPrimary.withValues(alpha: AppAlpha.a70), fontSize: AppFontSize.f12)),
                 ],
               ),
               Wrap(
@@ -434,7 +430,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 spacing: 20,
                 runSpacing: 4,
                 children: [
-                  Text('v2.0.0', style: TextStyle(color: Colors.white.withValues(alpha: 0.7), fontSize: 12)),
+                  Text('v2.0.0', style: TextStyle(color: context.colors.onPrimary.withValues(alpha: AppAlpha.a70), fontSize: AppFontSize.f12)),
                   const _FooterLink(label: 'Privacy Policy', destination: PrivacyPolicyScreen()),
                   const _FooterLink(label: 'Terms of Service', destination: TermsOfServiceScreen()),
                 ],
@@ -449,14 +445,14 @@ class _LoginScreenState extends State<LoginScreen> {
   // ==================== LEFT: WELCOME CARD ====================
   Widget _buildWelcomeCard() {
     return Container(
-      padding: const EdgeInsets.all(20),
+      padding: const EdgeInsets.all(AppSpacing.s20),
       decoration: BoxDecoration(
         gradient: LinearGradient(
-          colors: [primaryDeepGreen, tealAccent],
+          colors: [context.colors.primary, tealAccent],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(AppRadius.r16),
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -465,26 +461,26 @@ class _LoginScreenState extends State<LoginScreen> {
             width: 44,
             height: 44,
             decoration: BoxDecoration(
-              color: tealGlow.withValues(alpha: 0.16),
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: tealGlow.withValues(alpha: 0.5), width: 1.2),
+              color: tealGlow.withValues(alpha: AppAlpha.a15),
+              borderRadius: BorderRadius.circular(AppRadius.r12),
+              border: Border.all(color: tealGlow.withValues(alpha: AppAlpha.a50), width: 1.2),
               boxShadow: [
-                BoxShadow(color: tealGlow.withValues(alpha: 0.3), blurRadius: 8),
+                BoxShadow(color: tealGlow.withValues(alpha: AppAlpha.a30), blurRadius: 8),
               ],
             ),
-            child: Icon(Icons.chat_bubble_outline, color: Colors.white, size: 20),
+            child: Icon(Icons.chat_bubble_outline, color: context.colors.onPrimary, size: AppIconSize.i20),
           ),
-          const SizedBox(width: 14),
+          const SizedBox(width: AppSpacing.s14),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('Welcome to', style: TextStyle(color: Colors.white.withValues(alpha: 0.85), fontSize: 13)),
+                Text('Welcome to', style: TextStyle(color: context.colors.onPrimary.withValues(alpha: AppAlpha.a85), fontSize: AppFontSize.f13)),
                 Text(AppInfo.name,
-                    style: TextStyle(color: Color(0xFF7EE8CB), fontWeight: FontWeight.bold, fontSize: 19)),
-                const SizedBox(height: 8),
+                    style: TextStyle(color: tealGlow, fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f19)),
+                const SizedBox(height: AppSpacing.s8),
                 Text('Stay updated with the latest news and announcements.',
-                    style: TextStyle(color: Colors.white.withValues(alpha: 0.8), fontSize: 12.5)),
+                    style: TextStyle(color: context.colors.onPrimary.withValues(alpha: AppAlpha.a85), fontSize: AppFontSize.f12_5)),
               ],
             ),
           ),
@@ -496,11 +492,11 @@ class _LoginScreenState extends State<LoginScreen> {
   // ==================== LEFT: ANNOUNCEMENTS ====================
   Widget _buildAnnouncementsCard() {
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(AppSpacing.s16),
       decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: const [BoxShadow(color: Colors.black12, blurRadius: 8, offset: Offset(0, 4))],
+        color: context.colors.surface,
+        borderRadius: BorderRadius.circular(AppRadius.r16),
+        boxShadow: [BoxShadow(color: context.colors.shadow.withValues(alpha: AppAlpha.a10), blurRadius: 8, offset: const Offset(0, 4))],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -519,12 +515,12 @@ class _LoginScreenState extends State<LoginScreen> {
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        Icon(Icons.campaign_outlined, color: neutralBlack, size: 18),
-                        const SizedBox(width: 8),
+                        Icon(Icons.campaign_outlined, color: context.colors.textPrimary, size: AppIconSize.i18),
+                        const SizedBox(width: AppSpacing.s8),
                         Flexible(
                           child: Text('Announcements',
                               overflow: TextOverflow.ellipsis,
-                              style: TextStyle(fontWeight: FontWeight.bold, color: neutralBlack, fontSize: 15)),
+                              style: TextStyle(fontWeight: AppFontWeight.bold, color: context.colors.textPrimary, fontSize: AppFontSize.f15)),
                         ),
                       ],
                     ),
@@ -536,7 +532,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   bottom: 0,
                   child: Align(
                     alignment: Alignment.centerRight,
-                    child: Icon(Icons.chevron_right, color: Colors.grey.shade400, size: 18),
+                    child: Icon(Icons.chevron_right, color: context.colors.textDisabled, size: AppIconSize.i18),
                   ),
                 ),
               ],
@@ -587,7 +583,7 @@ class _LoginScreenState extends State<LoginScreen> {
           if (!controller.hasClients || docs.isEmpty) return;
           currentIndex = (currentIndex + 1) % docs.length;
           controller.animateToPage(currentIndex,
-              duration: const Duration(milliseconds: 600),
+              duration: _announcementSlide,
               curve: Curves.easeInOut);
         });
 
@@ -610,22 +606,22 @@ class _LoginScreenState extends State<LoginScreen> {
 
                     return Container(
                       margin: const EdgeInsets.symmetric(
-                          horizontal: 8, vertical: 4),
-                      padding: const EdgeInsets.all(16),
+                          horizontal: AppSpacing.s8, vertical: AppSpacing.s4),
+                      padding: const EdgeInsets.all(AppSpacing.s16),
                       decoration: BoxDecoration(
-                        color: offWhite,
-                        borderRadius: BorderRadius.circular(16),
-                        border: Border.all(color: isUrgent ? Colors.red.withValues(alpha: 0.4) : Colors.grey.shade300),
+                        color: context.colors.background,
+                        borderRadius: BorderRadius.circular(AppRadius.r16),
+                        border: Border.all(color: isUrgent ? context.colors.danger.withValues(alpha: AppAlpha.a40) : context.colors.border),
                       ),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           if (isUrgent)
                             Padding(
-                              padding: const EdgeInsets.only(bottom: 6),
+                              padding: const EdgeInsets.only(bottom: AppSpacing.s6),
                               child: Chip(
-                                label: const Text('URGENT', style: TextStyle(fontSize: 10, color: Colors.white)),
-                                backgroundColor: Colors.red,
+                                label: Text('URGENT', style: TextStyle(fontSize: AppFontSize.f10, color: context.colors.onPrimary)),
+                                backgroundColor: context.colors.danger,
                                 visualDensity: VisualDensity.compact,
                                 padding: EdgeInsets.zero,
                               ),
@@ -636,14 +632,14 @@ class _LoginScreenState extends State<LoginScreen> {
                               Expanded(
                                 child: Text(title,
                                     style: TextStyle(
-                                        fontSize: 18,
-                                        fontWeight: FontWeight.bold,
-                                        color: primaryDeepGreen)),
+                                        fontSize: AppFontSize.f18,
+                                        fontWeight: AppFontWeight.bold,
+                                        color: context.colors.primary)),
                               ),
                               if (isNew) const _NewBadge(),
                             ],
                           ),
-                          const SizedBox(height: 8),
+                          const SizedBox(height: AppSpacing.s8),
                           // Scrollable message
                           Expanded(
                             child: SingleChildScrollView(
@@ -656,7 +652,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   },
                 ),
               ),
-              const SizedBox(height: 8),
+              const SizedBox(height: AppSpacing.s8),
               // Dot indicators
               SmoothPageIndicator(
                 controller: controller,
@@ -664,8 +660,8 @@ class _LoginScreenState extends State<LoginScreen> {
                 effect: ExpandingDotsEffect(
                   dotHeight: 6,
                   dotWidth: 6,
-                  activeDotColor: primaryDeepGreen,
-                  dotColor: Colors.grey.shade400,
+                  activeDotColor: context.colors.primary,
+                  dotColor: context.colors.textDisabled,
                 ),
               ),
             ],
@@ -682,11 +678,11 @@ class _LoginScreenState extends State<LoginScreen> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(Icons.inbox_outlined, size: 44, color: Colors.grey.shade300),
-            const SizedBox(height: 10),
-            Text('No announcements', style: TextStyle(fontWeight: FontWeight.bold, color: neutralBlack, fontSize: 14)),
-            const SizedBox(height: 4),
-            Text("You're all caught up!", style: TextStyle(color: Colors.grey.shade500, fontSize: 12.5)),
+            Icon(Icons.inbox_outlined, size: AppIconSize.i48, color: context.colors.border),
+            const SizedBox(height: AppSpacing.s10),
+            Text('No announcements', style: TextStyle(fontWeight: AppFontWeight.bold, color: context.colors.textPrimary, fontSize: AppFontSize.f14)),
+            const SizedBox(height: AppSpacing.s4),
+            Text("You're all caught up!", style: TextStyle(color: context.colors.textHint, fontSize: AppFontSize.f12_5)),
           ],
         ),
       ),
@@ -702,25 +698,25 @@ class _LoginScreenState extends State<LoginScreen> {
           width: 36,
           height: 36,
           decoration: BoxDecoration(
-            color: tealGlow.withValues(alpha: 0.1),
+            color: tealGlow.withValues(alpha: AppAlpha.a10),
             shape: BoxShape.circle,
-            border: Border.all(color: tealGlow.withValues(alpha: 0.3), width: 1),
+            border: Border.all(color: tealGlow.withValues(alpha: AppAlpha.a30), width: 1),
             boxShadow: [
-              BoxShadow(color: tealGlow.withValues(alpha: 0.15), blurRadius: 5),
+              BoxShadow(color: tealGlow.withValues(alpha: AppAlpha.a15), blurRadius: 5),
             ],
           ),
-          child: Icon(Icons.verified_user_outlined, color: primaryDeepGreen, size: 18),
+          child: Icon(Icons.verified_user_outlined, color: context.colors.primary, size: AppIconSize.i18),
         ),
-        const SizedBox(width: 12),
+        const SizedBox(width: AppSpacing.s12),
         Expanded(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text('Secure. Reliable. Always Connected.',
-                  style: TextStyle(fontWeight: FontWeight.bold, color: neutralBlack, fontSize: 13)),
-              const SizedBox(height: 2),
+                  style: TextStyle(fontWeight: AppFontWeight.bold, color: context.colors.textPrimary, fontSize: AppFontSize.f13)),
+              const SizedBox(height: AppSpacing.s2),
               Text('Your trusted partner in animal health and business growth.',
-                  style: TextStyle(color: Colors.grey.shade600, fontSize: 12)),
+                  style: TextStyle(color: context.colors.textMuted, fontSize: AppFontSize.f12)),
             ],
           ),
         ),
@@ -800,7 +796,7 @@ class _LoginScreenState extends State<LoginScreen> {
     Widget? suffix,
   }) {
     final restColor = hasError ? Colors.redAccent.withValues(alpha: 0.7) : const Color(0xFFE2E8E6);
-    final focusColor = hasError ? Colors.redAccent : primaryDeepGreen;
+    final focusColor = hasError ? Colors.redAccent : context.colors.primary;
     return InputDecoration(
       hintText: hint,
       hintStyle: TextStyle(color: Colors.grey.shade400),
@@ -911,7 +907,7 @@ class _LoginScreenState extends State<LoginScreen> {
           // Two layers: a wide, teal-tinted one that lifts the card off the
           // panel behind it, and a tight one for a crisp edge.
           boxShadow: [
-            BoxShadow(color: primaryDeepGreen.withValues(alpha: 0.15), blurRadius: 32, offset: const Offset(0, 14)),
+            BoxShadow(color: context.colors.primary.withValues(alpha: 0.15), blurRadius: 32, offset: const Offset(0, 14)),
             BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 8, offset: const Offset(0, 2)),
           ],
         ),
@@ -927,7 +923,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   Container(
                     height: 4,
                     decoration: BoxDecoration(
-                      gradient: LinearGradient(colors: [primaryDeepGreen, tealAccent, tealGlow]),
+                      gradient: LinearGradient(colors: [context.colors.primary, tealAccent, tealGlow]),
                     ),
                   ),
                   Padding(
@@ -949,7 +945,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                   BoxShadow(color: tealGlow.withValues(alpha: 0.5), blurRadius: 14),
                                 ],
                               ),
-                              child: Icon(Icons.lock_outline, color: primaryDeepGreen, size: 20),
+                              child: Icon(Icons.lock_outline, color: context.colors.primary, size: 20),
                             ),
                             const SizedBox(width: 14),
                             Expanded(
@@ -958,7 +954,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                 children: [
                                   Text('Welcome back',
                                       overflow: TextOverflow.ellipsis,
-                                      style: TextStyle(fontSize: 20, fontWeight: FontWeight.w800, color: neutralBlack)),
+                                      style: TextStyle(fontSize: 20, fontWeight: FontWeight.w800, color: context.colors.textPrimary)),
                                   const SizedBox(height: 2),
                                   Text('Log into your facility',
                                       overflow: TextOverflow.ellipsis,
@@ -969,11 +965,11 @@ class _LoginScreenState extends State<LoginScreen> {
                           ],
                         ),
                         const SizedBox(height: 26),
-                        Text('Email', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: neutralBlack)),
+                        Text('Email', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: context.colors.textPrimary)),
                         const SizedBox(height: 6),
                         TextField(
                           controller: emailController,
-                          style: TextStyle(color: neutralBlack),
+                          style: TextStyle(color: context.colors.textPrimary),
                           autofocus: true,
                           textInputAction: TextInputAction.next,
                           onChanged: (_) => _onCredentialsEdited(),
@@ -985,13 +981,13 @@ class _LoginScreenState extends State<LoginScreen> {
                           ),
                         ),
                         const SizedBox(height: 18),
-                        Text('Password', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: neutralBlack)),
+                        Text('Password', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: context.colors.textPrimary)),
                         const SizedBox(height: 6),
                         TextField(
                           controller: passwordController,
                           focusNode: passwordFocusNode,
                           obscureText: obscurePassword,
-                          style: TextStyle(color: neutralBlack),
+                          style: TextStyle(color: context.colors.textPrimary),
                           textInputAction: TextInputAction.done,
                           onChanged: (_) => _onCredentialsEdited(),
                           onSubmitted: (_) => _login(),
@@ -1023,13 +1019,13 @@ class _LoginScreenState extends State<LoginScreen> {
                               child: Checkbox(
                                 value: rememberMe,
                                 onChanged: (value) => setState(() => rememberMe = value ?? false),
-                                activeColor: primaryDeepGreen,
+                                activeColor: context.colors.primary,
                                 checkColor: Colors.white,
                                 materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
                               ),
                             ),
                             const SizedBox(width: 8),
-                            Text('Remember Me', style: TextStyle(color: neutralBlack, fontSize: 13)),
+                            Text('Remember Me', style: TextStyle(color: context.colors.textPrimary, fontSize: 13)),
                             const Spacer(),
                             MouseRegion(
                               onEnter: (_) => setState(() => isForgotHovered = true),
@@ -1040,7 +1036,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                 child: Text(
                                   'Forgot Password?',
                                   style: TextStyle(
-                                    color: isForgotHovered ? warmAmber : tealAccent,
+                                    color: isForgotHovered ? context.colors.accent : tealAccent,
                                     fontSize: 13,
                                     fontWeight: FontWeight.w600,
                                   ),
@@ -1053,7 +1049,7 @@ class _LoginScreenState extends State<LoginScreen> {
                         _AnimatedLoginButton(
                           isLoading: isLoggingIn,
                           onPressed: isLoggingIn ? null : _login,
-                          primaryColor: primaryDeepGreen,
+                          primaryColor: context.colors.primary,
                           accentColor: tealAccent,
                         ),
                         const SizedBox(height: 20),
@@ -1068,13 +1064,13 @@ class _LoginScreenState extends State<LoginScreen> {
                               },
                               child: RichText(
                                 text: TextSpan(
-                                  style: TextStyle(fontSize: 13, color: neutralBlack),
+                                  style: TextStyle(fontSize: 13, color: context.colors.textPrimary),
                                   children: [
                                     const TextSpan(text: "Don't have an account? "),
                                     TextSpan(
                                       text: 'Register',
                                       style: TextStyle(
-                                        color: isRegisterHovered ? warmAmber : tealAccent,
+                                        color: isRegisterHovered ? context.colors.accent : tealAccent,
                                         fontWeight: FontWeight.w700,
                                       ),
                                     ),
