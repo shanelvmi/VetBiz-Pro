@@ -17,6 +17,7 @@ import '../../theme/app_dimens.dart';
 import '../../theme/theme_context.dart';
 import '../../theme/app_motion.dart';
 import '../../theme/app_breakpoints.dart';
+import '../../ui/feedback/friendly_error.dart';
 
 /// A simple insights view - a 14-day sales trend and your top 5
 /// products by revenue over the last 30 days. Deliberately kept to two
@@ -45,7 +46,7 @@ class _InsightsScreenState extends State<InsightsScreen> {
   static const Color _tealAccent = Color(0xFF3E8E82);
 
   bool _isLoading = true;
-  String? _error;
+  Object? _error;
   List<double> _dailyTotals = List.filled(14, 0.0);
   late DateTime _trendStart;
   List<MapEntry<String, double>> _topProducts = [];
@@ -170,7 +171,7 @@ class _InsightsScreenState extends State<InsightsScreen> {
         });
       }
     } catch (e) {
-      if (mounted) setState(() { _error = '$e'; _isLoading = false; });
+      if (mounted) setState(() { _error = e; _isLoading = false; });
     }
   }
 
@@ -438,7 +439,7 @@ class _InsightsScreenState extends State<InsightsScreen> {
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
           : _error != null
-              ? Center(child: Padding(padding: const EdgeInsets.all(AppSpacing.s24), child: Text('Could not load insights: $_error')))
+              ? Center(child: Padding(padding: const EdgeInsets.all(AppSpacing.s24), child: Text("Couldn't load insights. ${FriendlyError.messageFor(_error!)}")))
               : Center(
                   child: ConstrainedBox(
                     constraints: const BoxConstraints(maxWidth: 800),
