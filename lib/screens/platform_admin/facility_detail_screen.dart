@@ -5,12 +5,15 @@ import 'package:cloud_functions/cloud_functions.dart';
 
 import '../../utils/subscription_status_utils.dart';
 import '../../constants/subscription_plans.dart';
-import '../../theme/app_palette.dart';
 import '../../data/collections.dart';
 import '../../data/fields.dart';
 import '../../config/money.dart';
 import '../../config/app_limits.dart';
 import '../../config/app_date_format.dart';
+import '../../theme/app_text.dart';
+import '../../theme/app_dimens.dart';
+import '../../theme/theme_context.dart';
+import '../../ui/feedback/app_feedback.dart';
 
 class FacilityDetailScreen extends StatefulWidget {
   final String facilityId;
@@ -21,15 +24,13 @@ class FacilityDetailScreen extends StatefulWidget {
 }
 
 class _FacilityDetailScreenState extends State<FacilityDetailScreen> {
-  static const Color primaryColor = AppPalette.primary;
-  static const Color warmAmber = AppPalette.accent;
 
   ButtonStyle get _accentButtonStyle => ButtonStyle(
         backgroundColor: WidgetStateProperty.resolveWith<Color>((states) {
-          if (states.contains(WidgetState.hovered)) return warmAmber;
-          return primaryColor;
+          if (states.contains(WidgetState.hovered)) return context.colors.accent;
+          return context.colors.primary;
         }),
-        foregroundColor: WidgetStateProperty.all(Colors.white),
+        foregroundColor: WidgetStateProperty.all(context.colors.onPrimary),
       );
 
   /// Manual override - for payments collected outside the normal
@@ -57,14 +58,14 @@ class _FacilityDetailScreenState extends State<FacilityDetailScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 const Text('Use this for payments collected outside the app, or to grant free access.'),
-                const SizedBox(height: 12),
+                const SizedBox(height: AppSpacing.s12),
                 ...plans.map((plan) {
                   return RadioListTile<String>(
                     contentPadding: EdgeInsets.zero,
                     title: Text('${plan.label} - ${Money.symbolWhole(plan.priceTsh)}'),
                     value: plan.id,
                     groupValue: isFree ? 'free' : selectedPlan.id,
-                    activeColor: primaryColor,
+                    activeColor: context.colors.primary,
                     onChanged: (value) {
                       setDialogState(() {
                         isFree = false;
@@ -78,16 +79,16 @@ class _FacilityDetailScreenState extends State<FacilityDetailScreen> {
                   title: const Text('Free (custom number of days)'),
                   value: 'free',
                   groupValue: isFree ? 'free' : selectedPlan.id,
-                  activeColor: primaryColor,
+                  activeColor: context.colors.primary,
                   onChanged: (value) => setDialogState(() => isFree = true),
                 ),
                 if (isFree)
                   Padding(
-                    padding: const EdgeInsets.only(left: 32, top: 4, bottom: 4),
+                    padding: const EdgeInsets.only(left: AppSpacing.s32, top: AppSpacing.s4, bottom: AppSpacing.s4),
                     child: TextField(
                       controller: freeDaysController,
                       keyboardType: TextInputType.number,
-                      cursorColor: primaryColor,
+                      cursorColor: context.colors.primary,
                       decoration: const InputDecoration(
                         labelText: 'Number of free days',
                         isDense: true,
@@ -97,10 +98,10 @@ class _FacilityDetailScreenState extends State<FacilityDetailScreen> {
                   ),
                 if (!isFree && selectedPlan.priceTsh <= 0)
                   Padding(
-                    padding: const EdgeInsets.only(top: 8),
+                    padding: const EdgeInsets.only(top: AppSpacing.s8),
                     child: Text(
                       'Pricing for this plan is not available right now.',
-                      style: TextStyle(fontSize: 12.5, color: Colors.grey[700]),
+                      style: TextStyle(fontSize: AppFontSize.f12_5, color: context.colors.textSoft),
                     ),
                   ),
               ],
@@ -109,7 +110,7 @@ class _FacilityDetailScreenState extends State<FacilityDetailScreen> {
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context, false),
-              style: TextButton.styleFrom(foregroundColor: primaryColor),
+              style: TextButton.styleFrom(foregroundColor: context.colors.primary),
               child: const Text('Cancel'),
             ),
             ElevatedButton(
@@ -132,11 +133,7 @@ class _FacilityDetailScreenState extends State<FacilityDetailScreen> {
     if (isFree) {
       durationDays = int.tryParse(freeDaysController.text.trim()) ?? 0;
       if (durationDays <= 0) {
-        if (context.mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Enter a valid number of days'), backgroundColor: Colors.redAccent),
-          );
-        }
+        AppFeedback.warning('Enter a valid number of days');
         return;
       }
       priceForRecord = 0;
@@ -173,14 +170,7 @@ class _FacilityDetailScreenState extends State<FacilityDetailScreen> {
       'lastManualOverrideBy': admin?.email ?? admin?.uid ?? 'Unknown',
     }, SetOptions(merge: true));
 
-    if (context.mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Updated ($planLabelForRecord) - now runs until ${AppDateFormat.date.format(newExpiry)}'),
-          backgroundColor: Colors.green,
-        ),
-      );
-    }
+    AppFeedback.success('Updated ($planLabelForRecord) - now runs until ${AppDateFormat.date.format(newExpiry)}');
   }
 
   bool _isDeleting = false;
@@ -212,16 +202,16 @@ class _FacilityDetailScreenState extends State<FacilityDetailScreen> {
                     'every admin or assistant currently assigned to it. This cannot '
                     'be undone.',
                   ),
-                  const SizedBox(height: 16),
-                  Text('Type "$facilityName" to confirm:', style: const TextStyle(fontWeight: FontWeight.bold)),
-                  const SizedBox(height: 8),
+                  const SizedBox(height: AppSpacing.s16),
+                  Text('Type "$facilityName" to confirm:', style: const TextStyle(fontWeight: AppFontWeight.bold)),
+                  const SizedBox(height: AppSpacing.s8),
                   TextField(
                     controller: controller,
                     autofocus: true,
                     onChanged: (_) => setDialogState(() {}),
                     decoration: InputDecoration(
                       hintText: facilityName,
-                      focusedBorder: const UnderlineInputBorder(borderSide: BorderSide(color: Colors.redAccent)),
+                      focusedBorder: UnderlineInputBorder(borderSide: BorderSide(color: context.colors.dangerAccent)),
                     ),
                   ),
                 ],
@@ -230,12 +220,12 @@ class _FacilityDetailScreenState extends State<FacilityDetailScreen> {
             actions: [
               TextButton(
                 onPressed: () => Navigator.pop(dialogContext, false),
-                style: TextButton.styleFrom(foregroundColor: primaryColor),
+                style: TextButton.styleFrom(foregroundColor: context.colors.primary),
                 child: const Text('Cancel'),
               ),
               ElevatedButton(
                 onPressed: matches ? () => Navigator.pop(dialogContext, true) : null,
-                style: ElevatedButton.styleFrom(backgroundColor: Colors.redAccent, foregroundColor: Colors.white),
+                style: ElevatedButton.styleFrom(backgroundColor: context.colors.dangerAccent, foregroundColor: context.colors.onPrimary),
                 child: const Text('Delete Permanently'),
               ),
             ],
@@ -253,25 +243,19 @@ class _FacilityDetailScreenState extends State<FacilityDetailScreen> {
       final callable = FirebaseFunctions.instance.httpsCallable('deleteFacility');
       await callable.call({'facilityId': widget.facilityId});
 
-      if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('$facilityName has been deleted.'), backgroundColor: Colors.green),
-        );
-        Navigator.pop(context);
-      }
-    } on FirebaseFunctionsException catch (e) {
+      AppFeedback.success('$facilityName has been deleted');
+      if (context.mounted) Navigator.pop(context);
+    } on FirebaseFunctionsException catch (e, st) {
       if (context.mounted) {
         setState(() => _isDeleting = false);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(e.message ?? 'Could not delete this facility.'), backgroundColor: Colors.redAccent),
-        );
+        // FriendlyError shows the server's own message (written for people)
+        // as the second line, as this used to show it on its own.
+        AppFeedback.error("Couldn't delete the facility", error: e, stackTrace: st);
       }
-    } catch (e) {
+    } catch (e, st) {
       if (context.mounted) {
         setState(() => _isDeleting = false);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Could not delete this facility: $e'), backgroundColor: Colors.redAccent),
-        );
+        AppFeedback.error("Couldn't delete the facility", error: e, stackTrace: st);
       }
     }
   }
@@ -282,8 +266,8 @@ class _FacilityDetailScreenState extends State<FacilityDetailScreen> {
       appBar: AppBar(
         title: const Text('Facility Details'),
         centerTitle: true,
-        backgroundColor: primaryColor,
-        foregroundColor: Colors.white,
+        backgroundColor: context.colors.primary,
+        foregroundColor: context.colors.onPrimary,
       ),
       body: StreamBuilder<DocumentSnapshot>(
         stream: FirebaseFirestore.instance.collection(Collections.facilities).doc(widget.facilityId).snapshots(),
@@ -308,10 +292,10 @@ class _FacilityDetailScreenState extends State<FacilityDetailScreen> {
             child: ConstrainedBox(
               constraints: const BoxConstraints(maxWidth: 700),
               child: ListView(
-                padding: const EdgeInsets.all(16),
+                padding: const EdgeInsets.all(AppSpacing.s16),
                 children: [
-                  Text(data['name'] ?? 'Unnamed facility', style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
-                  Text(data['type'] ?? '', style: TextStyle(color: Colors.grey[600])),
+                  Text(data['name'] ?? 'Unnamed facility', style: const TextStyle(fontSize: AppFontSize.f20, fontWeight: AppFontWeight.bold)),
+                  Text(data['type'] ?? '', style: TextStyle(color: context.colors.textMuted)),
                   if (data['createdBy'] != null)
                     FutureBuilder<DocumentSnapshot>(
                       future: FirebaseFirestore.instance.collection(Collections.users).doc(data['createdBy'] as String).get(),
@@ -319,39 +303,39 @@ class _FacilityDetailScreenState extends State<FacilityDetailScreen> {
                         final ownerData = ownerSnap.data?.data() as Map<String, dynamic>?;
                         final ownerName = ownerData?['fullName'] as String?;
                         if (ownerName == null || ownerName.isEmpty) return const SizedBox.shrink();
-                        return Text('Owner: $ownerName', style: TextStyle(color: Colors.grey[600]));
+                        return Text('Owner: $ownerName', style: TextStyle(color: context.colors.textMuted));
                       },
                     ),
-                  const SizedBox(height: 16),
+                  const SizedBox(height: AppSpacing.s16),
                   Card(
                     child: Padding(
-                      padding: const EdgeInsets.all(14),
+                      padding: const EdgeInsets.all(AppSpacing.s14),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text('Status: ${subscriptionStatusLabel(status)}',
-                              style: const TextStyle(fontWeight: FontWeight.bold)),
+                              style: const TextStyle(fontWeight: AppFontWeight.bold)),
                           if (expiresAt != null)
                             Text('Expires: ${AppDateFormat.date.format(expiresAt)}'),
                           if (createdAt != null)
                             Text('Signed up: ${AppDateFormat.date.format(createdAt)}',
-                                style: const TextStyle(fontSize: 12)),
+                                style: const TextStyle(fontSize: AppFontSize.f12)),
                           if (data['lastPaymentAmount'] != null)
                             Text('Last payment: ${Money.symbolPlain(data['lastPaymentAmount'])}'),
                         ],
                       ),
                     ),
                   ),
-                  const SizedBox(height: 12),
+                  const SizedBox(height: AppSpacing.s12),
                   ElevatedButton.icon(
                     onPressed: () => _manualOverride(context, data),
                     icon: const Icon(Icons.edit_calendar),
                     label: const Text('Manual Subscription Update'),
                     style: _accentButtonStyle,
                   ),
-                  const SizedBox(height: 24),
-                  const Text('Payment History', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
-                  const SizedBox(height: 8),
+                  const SizedBox(height: AppSpacing.s24),
+                  const Text('Payment History', style: TextStyle(fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f15)),
+                  const SizedBox(height: AppSpacing.s8),
                   StreamBuilder<QuerySnapshot>(
                     stream: FirebaseFirestore.instance
                         .collection(Collections.facilities)
@@ -363,7 +347,7 @@ class _FacilityDetailScreenState extends State<FacilityDetailScreen> {
                     builder: (context, subSnapshot) {
                       final subDocs = subSnapshot.data?.docs ?? [];
                       if (subDocs.isEmpty) {
-                        return Text('No submissions yet.', style: TextStyle(color: Colors.grey[600]));
+                        return Text('No submissions yet.', style: TextStyle(color: context.colors.textMuted));
                       }
                       return Column(
                         children: subDocs.map((doc) {
@@ -372,18 +356,18 @@ class _FacilityDetailScreenState extends State<FacilityDetailScreen> {
                               ? (subData['submittedAt'] as Timestamp).toDate()
                               : null;
                           return Card(
-                            margin: const EdgeInsets.only(bottom: 6),
+                            margin: const EdgeInsets.only(bottom: AppSpacing.s6),
                             child: ListTile(
                               dense: true,
                               title: Text('${subData['planLabel'] ?? ''} - ${Money.symbolAsStored(subData['amount'] ?? 0)}'),
                               subtitle: Text(
                                 '${subData['method'] ?? ''}'
                                 '${submittedAt != null ? ' - ${AppDateFormat.date.format(submittedAt)}' : ''}',
-                                style: const TextStyle(fontSize: 12),
+                                style: const TextStyle(fontSize: AppFontSize.f12),
                               ),
                               trailing: Text(
                                 (subData[Fields.status] as String? ?? '').toUpperCase(),
-                                style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold),
+                                style: const TextStyle(fontSize: AppFontSize.f11, fontWeight: AppFontWeight.bold),
                               ),
                             ),
                           );
@@ -391,29 +375,29 @@ class _FacilityDetailScreenState extends State<FacilityDetailScreen> {
                       );
                     },
                   ),
-                  const SizedBox(height: 32),
-                  const Divider(color: Colors.redAccent),
-                  const SizedBox(height: 8),
-                  const Text('Danger Zone', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15, color: Colors.redAccent)),
-                  const SizedBox(height: 8),
+                  const SizedBox(height: AppSpacing.s32),
+                  Divider(color: context.colors.dangerAccent),
+                  const SizedBox(height: AppSpacing.s8),
+                  Text('Danger Zone', style: TextStyle(fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f15, color: context.colors.dangerAccent)),
+                  const SizedBox(height: AppSpacing.s8),
                   Text(
                     'Permanently deletes this facility and every record in it - sales, products, clients, and more. This cannot be undone.',
-                    style: TextStyle(color: Colors.grey[600], fontSize: 12.5),
+                    style: TextStyle(color: context.colors.textMuted, fontSize: AppFontSize.f12_5),
                   ),
-                  const SizedBox(height: 12),
+                  const SizedBox(height: AppSpacing.s12),
                   OutlinedButton.icon(
                     onPressed: _isDeleting ? null : () => _deleteFacility(context, data['name'] ?? 'this facility'),
                     icon: _isDeleting
-                        ? const SizedBox(
+                        ? SizedBox(
                             width: 16,
                             height: 16,
-                            child: CircularProgressIndicator(strokeWidth: 2, color: Colors.redAccent),
+                            child: CircularProgressIndicator(strokeWidth: 2, color: context.colors.dangerAccent),
                           )
-                        : const Icon(Icons.delete_forever, color: Colors.redAccent),
+                        : Icon(Icons.delete_forever, color: context.colors.dangerAccent),
                     label: Text(_isDeleting ? 'Deleting...' : 'Delete Facility'),
                     style: OutlinedButton.styleFrom(
-                      foregroundColor: Colors.redAccent,
-                      side: const BorderSide(color: Colors.redAccent),
+                      foregroundColor: context.colors.dangerAccent,
+                      side: BorderSide(color: context.colors.dangerAccent),
                     ),
                   ),
                 ],

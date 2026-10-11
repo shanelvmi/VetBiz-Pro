@@ -6,11 +6,15 @@ import '../../constants/subscription_plans.dart';
 import '../../models/promotion.dart';
 import '../../widgets/hover_elevate_card.dart';
 import '../../widgets/firestore_error_view.dart';
-import '../../theme/app_palette.dart';
 import '../../data/collections.dart';
 import '../../data/fields.dart';
 import '../../config/app_ranges.dart';
 import '../../config/app_date_format.dart';
+import '../../theme/app_text.dart';
+import '../../theme/app_dimens.dart';
+import '../../theme/theme_context.dart';
+import '../../theme/app_motion.dart';
+import '../../theme/app_breakpoints.dart';
 
 /// Manage subscription discounts/offers - "Nanenane Sale", a
 /// month-end push, a renew-now discount for facilities about to
@@ -23,18 +27,15 @@ class PromotionsScreen extends StatelessWidget {
   final bool isModal;
   const PromotionsScreen({super.key, this.isModal = false});
 
-  static const Color primaryColor = AppPalette.primary;
-  static const Color warmAmber = AppPalette.accent;
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFFDFDF9),
+      backgroundColor: context.colors.background,
       appBar: AppBar(
         title: const Text('Promotions'),
         centerTitle: true,
-        backgroundColor: primaryColor,
-        foregroundColor: Colors.white,
+        backgroundColor: context.colors.primary,
+        foregroundColor: context.colors.onPrimary,
         automaticallyImplyLeading: !isModal,
         leading: isModal
             ? IconButton(
@@ -64,13 +65,13 @@ class PromotionsScreen extends StatelessWidget {
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Icon(Icons.local_offer_outlined, size: 56, color: Colors.grey[300]),
-                      const SizedBox(height: 12),
-                      Text('No promotions yet', style: TextStyle(color: Colors.grey[600], fontSize: 15)),
-                      const SizedBox(height: 4),
+                      Icon(Icons.local_offer_outlined, size: AppIconSize.i56, color: context.colors.border),
+                      const SizedBox(height: AppSpacing.s12),
+                      Text('No promotions yet', style: TextStyle(color: context.colors.textMuted, fontSize: AppFontSize.f15)),
+                      const SizedBox(height: AppSpacing.s4),
                       Text(
                         'Create one for a seasonal sale or a renewal push.',
-                        style: TextStyle(color: Colors.grey[500], fontSize: 12.5),
+                        style: TextStyle(color: context.colors.textHint, fontSize: AppFontSize.f12_5),
                       ),
                     ],
                   ),
@@ -78,7 +79,7 @@ class PromotionsScreen extends StatelessWidget {
               }
 
               return ListView.builder(
-                padding: const EdgeInsets.all(16),
+                padding: const EdgeInsets.all(AppSpacing.s16),
                 itemCount: promotions.length,
                 itemBuilder: (context, index) => _PromotionCard(promotion: promotions[index]),
               );
@@ -87,9 +88,9 @@ class PromotionsScreen extends StatelessWidget {
         ),
       ),
       floatingActionButton: FloatingActionButton.extended(
-        backgroundColor: primaryColor,
-        foregroundColor: Colors.white,
-        hoverColor: warmAmber,
+        backgroundColor: context.colors.primary,
+        foregroundColor: context.colors.onPrimary,
+        hoverColor: context.colors.accent,
         icon: const Icon(Icons.add),
         label: const Text('New Promotion'),
         onPressed: () => _showPromotionEditor(context),
@@ -102,18 +103,16 @@ class _PromotionCard extends StatelessWidget {
   final Promotion promotion;
   const _PromotionCard({required this.promotion});
 
-  static const Color primaryColor = PromotionsScreen.primaryColor;
-
   @override
   Widget build(BuildContext context) {
     final isLive = promotion.active && !promotion.hasEnded;
-    final statusColor = isLive ? Colors.green : (promotion.active ? Colors.orange : Colors.grey);
+    final statusColor = isLive ? context.colors.success : (promotion.active ? context.colors.warning : context.colors.textHint);
     final statusLabel = isLive ? 'LIVE' : (promotion.active ? 'ENDED' : 'OFF');
 
     return HoverElevateCard(
-      margin: const EdgeInsets.only(bottom: 12),
+      margin: const EdgeInsets.only(bottom: AppSpacing.s12),
       child: Padding(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(AppSpacing.s16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -123,22 +122,22 @@ class _PromotionCard extends StatelessWidget {
                 // The headline number - deliberately large, this is
                 // the one thing that should catch the eye first.
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                  padding: const EdgeInsets.symmetric(horizontal: AppSpacing.s12, vertical: AppSpacing.s8),
                   decoration: BoxDecoration(
                     gradient: LinearGradient(
-                      colors: [primaryColor, primaryColor.withValues(alpha: 0.75)],
+                      colors: [context.colors.primary, context.colors.primary.withValues(alpha: AppAlpha.a70)],
                       begin: Alignment.topLeft,
                       end: Alignment.bottomRight,
                     ),
-                    borderRadius: BorderRadius.circular(10),
+                    borderRadius: BorderRadius.circular(AppRadius.r10),
                   ),
                   child: Text(
                     '${promotion.discountPercent.toStringAsFixed(promotion.discountPercent % 1 == 0 ? 0 : 1)}%\nOFF',
                     textAlign: TextAlign.center,
-                    style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 15, height: 1.1),
+                    style: TextStyle(color: context.colors.onPrimary, fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f15, height: 1.1),
                   ),
                 ),
-                const SizedBox(width: 12),
+                const SizedBox(width: AppSpacing.s12),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -148,15 +147,15 @@ class _PromotionCard extends StatelessWidget {
                           Expanded(
                             child: Text(
                               promotion.label,
-                              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                              style: const TextStyle(fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f16),
                               overflow: TextOverflow.ellipsis,
                             ),
                           ),
                           Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                            padding: const EdgeInsets.symmetric(horizontal: AppSpacing.s8, vertical: AppSpacing.s3),
                             decoration: BoxDecoration(
-                              color: statusColor.withValues(alpha: 0.12),
-                              borderRadius: BorderRadius.circular(10),
+                              color: statusColor.withValues(alpha: AppAlpha.a10),
+                              borderRadius: BorderRadius.circular(AppRadius.r10),
                             ),
                             child: Row(
                               mainAxisSize: MainAxisSize.min,
@@ -165,19 +164,19 @@ class _PromotionCard extends StatelessWidget {
                                   Container(
                                     width: 6,
                                     height: 6,
-                                    margin: const EdgeInsets.only(right: 5),
+                                    margin: const EdgeInsets.only(right: AppSpacing.s4),
                                     decoration: BoxDecoration(color: statusColor, shape: BoxShape.circle),
                                   ),
                                 Text(
                                   statusLabel,
-                                  style: TextStyle(fontSize: 10.5, color: statusColor, fontWeight: FontWeight.bold),
+                                  style: TextStyle(fontSize: AppFontSize.f10_5, color: statusColor, fontWeight: AppFontWeight.bold),
                                 ),
                               ],
                             ),
                           ),
                         ],
                       ),
-                      const SizedBox(height: 6),
+                      const SizedBox(height: AppSpacing.s6),
                       Wrap(
                         spacing: 6,
                         runSpacing: 6,
@@ -217,9 +216,9 @@ class _PromotionCard extends StatelessWidget {
                 if (!promotion.active || promotion.hasEnded)
                   TextButton.icon(
                     onPressed: () => setActivePromotion(promotion.id),
-                    icon: const Icon(Icons.play_circle_outline, size: 18),
+                    icon: const Icon(Icons.play_circle_outline, size: AppIconSize.i18),
                     label: const Text('Activate'),
-                    style: TextButton.styleFrom(foregroundColor: Colors.green),
+                    style: TextButton.styleFrom(foregroundColor: context.colors.success),
                   )
                 else
                   TextButton.icon(
@@ -227,17 +226,17 @@ class _PromotionCard extends StatelessWidget {
                         .collection(Collections.promotions)
                         .doc(promotion.id)
                         .update({'active': false}),
-                    icon: const Icon(Icons.pause_circle_outline, size: 18),
+                    icon: const Icon(Icons.pause_circle_outline, size: AppIconSize.i18),
                     label: const Text('Deactivate'),
-                    style: TextButton.styleFrom(foregroundColor: Colors.orange),
+                    style: TextButton.styleFrom(foregroundColor: context.colors.warning),
                   ),
                 IconButton(
-                  icon: Icon(Icons.edit_outlined, color: primaryColor, size: 20),
+                  icon: Icon(Icons.edit_outlined, color: context.colors.primary, size: AppIconSize.i20),
                   tooltip: 'Edit',
                   onPressed: () => _showPromotionEditor(context, existing: promotion),
                 ),
                 IconButton(
-                  icon: const Icon(Icons.delete_outline, color: Colors.redAccent, size: 20),
+                  icon: Icon(Icons.delete_outline, color: context.colors.dangerAccent, size: AppIconSize.i20),
                   tooltip: 'Delete',
                   onPressed: () async {
                     final confirmed = await showDialog<bool>(
@@ -249,7 +248,7 @@ class _PromotionCard extends StatelessWidget {
                           TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Cancel')),
                           TextButton(
                             onPressed: () => Navigator.pop(context, true),
-                            child: const Text('Delete', style: TextStyle(color: Colors.redAccent)),
+                            child: Text('Delete', style: TextStyle(color: context.colors.dangerAccent)),
                           ),
                         ],
                       ),
@@ -276,17 +275,17 @@ class _InfoChip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.s8, vertical: AppSpacing.s4),
       decoration: BoxDecoration(
-        color: Colors.grey.shade100,
-        borderRadius: BorderRadius.circular(8),
+        color: context.colors.surfaceMuted,
+        borderRadius: BorderRadius.circular(AppRadius.r8),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(icon, size: 12, color: Colors.grey[700]),
-          const SizedBox(width: 4),
-          Text(label, style: TextStyle(fontSize: 11, color: Colors.grey[700])),
+          Icon(icon, size: AppIconSize.i12, color: context.colors.textSoft),
+          const SizedBox(width: AppSpacing.s4),
+          Text(label, style: TextStyle(fontSize: AppFontSize.f11, color: context.colors.textSoft)),
         ],
       ),
     );
@@ -333,7 +332,7 @@ Future<void> _showPromotionEditor(BuildContext context, {Promotion? existing}) a
     context: context,
     builder: (context) => StatefulBuilder(builder: (context, setDialogState) {
       final screenWidth = MediaQuery.of(context).size.width;
-      final dialogWidth = screenWidth > 700 ? 500.0 : screenWidth * 0.9;
+      final dialogWidth = screenWidth > AppBreakpoints.dialogFixedWidth ? AppSizes.dialogMd : screenWidth * 0.9;
 
       return AlertDialog(
         title: Text(isEditing ? 'Edit Promotion' : 'New Promotion'),
@@ -347,23 +346,23 @@ Future<void> _showPromotionEditor(BuildContext context, {Promotion? existing}) a
                 if (validationError != null) ...[
                   Container(
                     width: double.infinity,
-                    padding: const EdgeInsets.all(10),
+                    padding: const EdgeInsets.all(AppSpacing.s10),
                     decoration: BoxDecoration(
-                      color: Colors.red.withValues(alpha: 0.08),
-                      borderRadius: BorderRadius.circular(8),
-                      border: Border.all(color: Colors.red.withValues(alpha: 0.4)),
+                      color: context.colors.danger.withValues(alpha: AppAlpha.a10),
+                      borderRadius: BorderRadius.circular(AppRadius.r8),
+                      border: Border.all(color: context.colors.danger.withValues(alpha: AppAlpha.a40)),
                     ),
                     child: Row(
                       children: [
-                        const Icon(Icons.error_outline, color: Colors.red, size: 18),
-                        const SizedBox(width: 8),
+                        Icon(Icons.error_outline, color: context.colors.danger, size: AppIconSize.i18),
+                        const SizedBox(width: AppSpacing.s8),
                         Expanded(
-                          child: Text(validationError!, style: const TextStyle(color: Colors.red, fontSize: 13)),
+                          child: Text(validationError!, style: TextStyle(color: context.colors.danger, fontSize: AppFontSize.f13)),
                         ),
                       ],
                     ),
                   ),
-                  const SizedBox(height: 12),
+                  const SizedBox(height: AppSpacing.s12),
                 ],
                 TextField(
                   controller: labelController,
@@ -371,14 +370,14 @@ Future<void> _showPromotionEditor(BuildContext context, {Promotion? existing}) a
                   inputFormatters: [SentenceCapitalizationFormatter()],
                   decoration: const InputDecoration(labelText: 'Offer name', hintText: 'e.g. Nanenane Sale'),
                 ),
-                const SizedBox(height: 12),
+                const SizedBox(height: AppSpacing.s12),
                 TextField(
                   controller: discountController,
                   keyboardType: TextInputType.number,
                   decoration: const InputDecoration(labelText: 'Discount', suffixText: '%'),
                 ),
-                const SizedBox(height: 16),
-                const Text('Applies to', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
+                const SizedBox(height: AppSpacing.s16),
+                const Text('Applies to', style: TextStyle(fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f13)),
                 SwitchListTile(
                   contentPadding: EdgeInsets.zero,
                   dense: true,
@@ -404,8 +403,8 @@ Future<void> _showPromotionEditor(BuildContext context, {Promotion? existing}) a
                       );
                     }).toList(),
                   ),
-                const SizedBox(height: 12),
-                const Text('Who sees it', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
+                const SizedBox(height: AppSpacing.s12),
+                const Text('Who sees it', style: TextStyle(fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f13)),
                 RadioListTile<String>(
                   contentPadding: EdgeInsets.zero,
                   dense: true,
@@ -418,7 +417,7 @@ Future<void> _showPromotionEditor(BuildContext context, {Promotion? existing}) a
                   contentPadding: EdgeInsets.zero,
                   dense: true,
                   title: const Text('Only facilities expiring soon'),
-                  subtitle: const Text('Within 7 days of their subscription ending', style: TextStyle(fontSize: 11.5)),
+                  subtitle: const Text('Within 7 days of their subscription ending', style: TextStyle(fontSize: AppFontSize.f11_5)),
                   value: 'expiringSoon',
                   groupValue: targetMode,
                   onChanged: (v) => setDialogState(() => targetMode = v!),
@@ -435,27 +434,27 @@ Future<void> _showPromotionEditor(BuildContext context, {Promotion? existing}) a
                     selectedFacilities.isEmpty
                         ? 'Pick which facilities see this, regardless of billing status'
                         : '${selectedFacilities.length} selected',
-                    style: const TextStyle(fontSize: 11.5),
+                    style: const TextStyle(fontSize: AppFontSize.f11_5),
                   ),
                   value: 'specificFacilities',
                   groupValue: targetMode,
                   onChanged: (v) => setDialogState(() => targetMode = v!),
                 ),
                 if (targetMode == 'specificFacilities') ...[
-                  const SizedBox(height: 4),
+                  const SizedBox(height: AppSpacing.s4),
                   OutlinedButton.icon(
-                    icon: const Icon(Icons.storefront_outlined, size: 18),
+                    icon: const Icon(Icons.storefront_outlined, size: AppIconSize.i18),
                     label: Text(selectedFacilities.isEmpty ? 'Choose Facilities' : 'Edit Selection'),
                     onPressed: () => _pickFacilities(context, selectedFacilities, setDialogState),
                   ),
                   if (selectedFacilities.isNotEmpty) ...[
-                    const SizedBox(height: 8),
+                    const SizedBox(height: AppSpacing.s8),
                     Wrap(
                       spacing: 6,
                       runSpacing: 6,
                       children: selectedFacilities.entries.map((entry) {
                         return Chip(
-                          label: Text(entry.value, style: const TextStyle(fontSize: 12)),
+                          label: Text(entry.value, style: const TextStyle(fontSize: AppFontSize.f12)),
                           onDeleted: () => setDialogState(() => selectedFacilities.remove(entry.key)),
                           visualDensity: VisualDensity.compact,
                         );
@@ -463,13 +462,13 @@ Future<void> _showPromotionEditor(BuildContext context, {Promotion? existing}) a
                     ),
                   ],
                 ],
-                const SizedBox(height: 12),
+                const SizedBox(height: AppSpacing.s12),
                 Row(
                   children: [
                     Expanded(
                       child: Text(
                         endsAt != null ? 'Ends ${AppDateFormat.dateNoPad.format(endsAt!)}' : 'No end date set',
-                        style: const TextStyle(fontSize: 13),
+                        style: const TextStyle(fontSize: AppFontSize.f13),
                       ),
                     ),
                     TextButton(
@@ -486,7 +485,7 @@ Future<void> _showPromotionEditor(BuildContext context, {Promotion? existing}) a
                     ),
                     if (endsAt != null)
                       IconButton(
-                        icon: const Icon(Icons.clear, size: 18),
+                        icon: const Icon(Icons.clear, size: AppIconSize.i18),
                         tooltip: 'Remove end date',
                         onPressed: () => setDialogState(() => endsAt = null),
                       ),
@@ -497,7 +496,7 @@ Future<void> _showPromotionEditor(BuildContext context, {Promotion? existing}) a
                   contentPadding: EdgeInsets.zero,
                   dense: true,
                   title: const Text('Activate immediately'),
-                  subtitle: const Text('Deactivates any other currently active offer', style: TextStyle(fontSize: 11.5)),
+                  subtitle: const Text('Deactivates any other currently active offer', style: TextStyle(fontSize: AppFontSize.f11_5)),
                   value: activateImmediately,
                   onChanged: (v) => setDialogState(() => activateImmediately = v),
                 ),
@@ -530,10 +529,10 @@ Future<void> _showPromotionEditor(BuildContext context, {Promotion? existing}) a
             },
             style: ButtonStyle(
               backgroundColor: WidgetStateProperty.resolveWith<Color>((states) {
-                if (states.contains(WidgetState.hovered)) return PromotionsScreen.warmAmber;
-                return PromotionsScreen.primaryColor;
+                if (states.contains(WidgetState.hovered)) return context.colors.accent;
+                return context.colors.primary;
               }),
-              foregroundColor: WidgetStateProperty.all(Colors.white),
+              foregroundColor: WidgetStateProperty.all(context.colors.onPrimary),
             ),
             child: Text(isEditing ? 'Save' : 'Create'),
           ),
@@ -571,7 +570,7 @@ Future<void> _showPromotionEditor(BuildContext context, {Promotion? existing}) a
 /// full-screen push on mobile, a large, centered, dismissable modal
 /// on desktop/tablet-width screens.
 Future<void> showPromotionsScreen(BuildContext context) async {
-  final isWideScreen = MediaQuery.of(context).size.width >= 900;
+  final isWideScreen = MediaQuery.of(context).size.width >= AppBreakpoints.medium;
 
   if (!isWideScreen) {
     await Navigator.of(context).push(
@@ -584,8 +583,8 @@ Future<void> showPromotionsScreen(BuildContext context) async {
     context: context,
     barrierDismissible: true,
     barrierLabel: 'Promotions',
-    barrierColor: Colors.black54,
-    transitionDuration: const Duration(milliseconds: 220),
+    barrierColor: context.colors.scrim.withValues(alpha: AppAlpha.a50),
+    transitionDuration: AppMotion.normal,
     pageBuilder: (context, animation, secondaryAnimation) {
       final screenSize = MediaQuery.of(context).size;
       final modalWidth = (screenSize.width * 0.60).clamp(0, 940).toDouble();
@@ -598,7 +597,7 @@ Future<void> showPromotionsScreen(BuildContext context) async {
           width: modalWidth,
           height: modalHeight,
           child: ClipRRect(
-            borderRadius: BorderRadius.circular(16),
+            borderRadius: BorderRadius.circular(AppRadius.r16),
             child: const Material(
               child: PromotionsScreen(isModal: true),
             ),
@@ -647,7 +646,7 @@ Future<void> _pickFacilities(
         // actual screen on a phone - same reasoning as every other
         // dialog width in this app.
         final screenWidth = MediaQuery.of(context).size.width;
-        final dialogWidth = screenWidth > 700 ? 460.0 : screenWidth * 0.9;
+        final dialogWidth = screenWidth > AppBreakpoints.dialogFixedWidth ? AppSizes.dialogSm : screenWidth * 0.9;
 
         final filtered = facilitiesSnap.docs.where((doc) {
           if (query.isEmpty) return true;
@@ -669,7 +668,7 @@ Future<void> _pickFacilities(
                   ),
                   onChanged: (v) => setPickerState(() => query = v),
                 ),
-                const SizedBox(height: 8),
+                const SizedBox(height: AppSpacing.s8),
                 Expanded(
                   child: filtered.isEmpty
                       ? const Center(child: Text('No matching facility.'))
@@ -711,10 +710,10 @@ Future<void> _pickFacilities(
               },
               style: ButtonStyle(
                 backgroundColor: WidgetStateProperty.resolveWith<Color>((states) {
-                  if (states.contains(WidgetState.hovered)) return PromotionsScreen.warmAmber;
-                  return PromotionsScreen.primaryColor;
+                  if (states.contains(WidgetState.hovered)) return context.colors.accent;
+                  return context.colors.primary;
                 }),
-                foregroundColor: WidgetStateProperty.all(Colors.white),
+                foregroundColor: WidgetStateProperty.all(context.colors.onPrimary),
               ),
               child: const Text('Done'),
             ),

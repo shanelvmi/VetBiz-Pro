@@ -4,13 +4,17 @@ import 'package:fl_chart/fl_chart.dart';
 
 import '../../widgets/hover_elevate_card.dart';
 import '../../widgets/firestore_error_view.dart';
-import '../../theme/app_palette.dart';
 import '../../data/collections.dart';
 import '../../data/fields.dart';
 import '../../data/payment_submission_status.dart';
 import '../../config/money.dart';
 import '../../config/app_ranges.dart';
 import '../../config/app_date_format.dart';
+import '../../theme/app_text.dart';
+import '../../theme/app_dimens.dart';
+import '../../theme/theme_context.dart';
+import '../../theme/app_motion.dart';
+import '../../theme/app_breakpoints.dart';
 
 /// The detail behind Overview's own summary cards - day-to-day earnings,
 /// individual recent payments, revenue by plan, and the
@@ -28,9 +32,9 @@ class OverviewDetailsScreen extends StatefulWidget {
 }
 
 class _OverviewDetailsScreenState extends State<OverviewDetailsScreen> {
-  static const Color primaryColor = AppPalette.primary;
-  static const Color warmAmber = AppPalette.accent;
-
+  // Height of the daily earnings chart. A size (above the spacing
+  // ladder), kept exact.
+  static const double _chartHeight = 220;
 
   bool _isLoading = true;
   Object? _error;
@@ -144,12 +148,12 @@ class _OverviewDetailsScreenState extends State<OverviewDetailsScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFFDFDF9),
+      backgroundColor: context.colors.background,
       appBar: AppBar(
         title: const Text('Overview Details'),
         centerTitle: true,
-        backgroundColor: primaryColor,
-        foregroundColor: Colors.white,
+        backgroundColor: context.colors.primary,
+        foregroundColor: context.colors.onPrimary,
         automaticallyImplyLeading: !widget.isModal,
         leading: widget.isModal
             ? IconButton(
@@ -161,7 +165,7 @@ class _OverviewDetailsScreenState extends State<OverviewDetailsScreen> {
         actions: [
           IconButton(
             icon: _isLoading
-                ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
+                ? SizedBox(width: AppSpacing.s18, height: 18, child: CircularProgressIndicator(strokeWidth: 2, color: context.colors.onPrimary))
                 : const Icon(Icons.refresh),
             tooltip: 'Refresh',
             onPressed: _isLoading ? null : _load,
@@ -176,29 +180,29 @@ class _OverviewDetailsScreenState extends State<OverviewDetailsScreen> {
                   child: ConstrainedBox(
                     constraints: const BoxConstraints(maxWidth: 900),
                     child: ListView(
-                      padding: const EdgeInsets.all(16),
+                      padding: const EdgeInsets.all(AppSpacing.s16),
                       children: [
-                        Text('Last 90 Days', style: TextStyle(fontSize: 12, color: Colors.grey[600])),
-                        const SizedBox(height: 16),
+                        Text('Last 90 Days', style: TextStyle(fontSize: AppFontSize.f12, color: context.colors.textMuted)),
+                        const SizedBox(height: AppSpacing.s16),
 
                         const Text('Day-to-Day Earnings (Last 30 Days)',
-                            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
-                        const SizedBox(height: 12),
-                        SizedBox(height: 220, child: _buildDailyEarningsChart()),
+                            style: TextStyle(fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f15)),
+                        const SizedBox(height: AppSpacing.s12),
+                        SizedBox(height: _chartHeight, child: _buildDailyEarningsChart()),
 
-                        const SizedBox(height: 28),
-                        const Text('Revenue by Plan', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
-                        const SizedBox(height: 12),
+                        const SizedBox(height: AppSpacing.s28),
+                        const Text('Revenue by Plan', style: TextStyle(fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f15)),
+                        const SizedBox(height: AppSpacing.s12),
                         _buildRevenueByPlan(),
 
-                        const SizedBox(height: 28),
-                        const Text('Payment Outcomes', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
-                        const SizedBox(height: 12),
+                        const SizedBox(height: AppSpacing.s28),
+                        const Text('Payment Outcomes', style: TextStyle(fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f15)),
+                        const SizedBox(height: AppSpacing.s12),
                         _buildOutcomesRow(),
 
-                        const SizedBox(height: 28),
-                        const Text('Recent Payments', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
-                        const SizedBox(height: 12),
+                        const SizedBox(height: AppSpacing.s28),
+                        const Text('Recent Payments', style: TextStyle(fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f15)),
+                        const SizedBox(height: AppSpacing.s12),
                         _buildRecentPayments(),
                       ],
                     ),
@@ -209,7 +213,7 @@ class _OverviewDetailsScreenState extends State<OverviewDetailsScreen> {
 
   Widget _buildDailyEarningsChart() {
     if (_dailyEarnings.every((e) => e.value == 0)) {
-      return Center(child: Text('No revenue in the last 30 days.', style: TextStyle(color: Colors.grey[600])));
+      return Center(child: Text('No revenue in the last 30 days.', style: TextStyle(color: context.colors.textMuted)));
     }
 
     final maxValue = _dailyEarnings.map((e) => e.value).reduce((a, b) => a > b ? a : b);
@@ -226,7 +230,7 @@ class _OverviewDetailsScreenState extends State<OverviewDetailsScreen> {
               final day = _dailyEarnings[group.x.toInt()].key;
               return BarTooltipItem(
                 '${AppDateFormat.dateShort.format(day)}\n${Money.symbolPlain(rod.toY)}',
-                const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 12),
+                TextStyle(color: context.colors.onPrimary, fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f12),
               );
             },
           ),
@@ -239,7 +243,7 @@ class _OverviewDetailsScreenState extends State<OverviewDetailsScreen> {
               showTitles: true,
               reservedSize: 48,
               getTitlesWidget: (value, meta) =>
-                  Text(Money.plain(value), style: const TextStyle(fontSize: 9)),
+                  Text(Money.plain(value), style: const TextStyle(fontSize: AppFontSize.f9)),
             ),
           ),
           bottomTitles: AxisTitles(
@@ -251,10 +255,10 @@ class _OverviewDetailsScreenState extends State<OverviewDetailsScreen> {
                 final idx = value.toInt();
                 if (idx < 0 || idx >= _dailyEarnings.length) return const SizedBox.shrink();
                 return Padding(
-                  padding: const EdgeInsets.only(top: 6),
+                  padding: const EdgeInsets.only(top: AppSpacing.s6),
                   child: Text(
                     AppDateFormat.dateShort.format(_dailyEarnings[idx].key),
-                    style: const TextStyle(fontSize: 9),
+                    style: const TextStyle(fontSize: AppFontSize.f9),
                   ),
                 );
               },
@@ -266,9 +270,9 @@ class _OverviewDetailsScreenState extends State<OverviewDetailsScreen> {
             BarChartGroupData(x: i, barRods: [
               BarChartRodData(
                 toY: _dailyEarnings[i].value,
-                color: primaryColor,
+                color: context.colors.primary,
                 width: 8,
-                borderRadius: BorderRadius.circular(3),
+                borderRadius: BorderRadius.circular(AppRadius.r4),
               ),
             ]),
         ],
@@ -278,7 +282,7 @@ class _OverviewDetailsScreenState extends State<OverviewDetailsScreen> {
 
   Widget _buildRevenueByPlan() {
     if (_revenueByPlan.isEmpty) {
-      return Text('No approved payments in this period.', style: TextStyle(color: Colors.grey[600]));
+      return Text('No approved payments in this period.', style: TextStyle(color: context.colors.textMuted));
     }
 
     final entries = _revenueByPlan.entries.toList()..sort((a, b) => b.value.compareTo(a.value));
@@ -286,32 +290,32 @@ class _OverviewDetailsScreenState extends State<OverviewDetailsScreen> {
 
     return HoverElevateCard(
       child: Padding(
-        padding: const EdgeInsets.all(14),
+        padding: const EdgeInsets.all(AppSpacing.s14),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: entries.map((entry) {
             final fraction = maxValue == 0 ? 0.0 : entry.value / maxValue;
             return Padding(
-              padding: const EdgeInsets.only(bottom: 10),
+              padding: const EdgeInsets.only(bottom: AppSpacing.s10),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Text(entry.key, style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13)),
+                      Text(entry.key, style: const TextStyle(fontWeight: AppFontWeight.semibold, fontSize: AppFontSize.f13)),
                       Text(Money.symbolPlain(entry.value),
-                          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: primaryColor)),
+                          style: TextStyle(fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f13, color: context.colors.primary)),
                     ],
                   ),
-                  const SizedBox(height: 4),
+                  const SizedBox(height: AppSpacing.s4),
                   ClipRRect(
-                    borderRadius: BorderRadius.circular(4),
+                    borderRadius: BorderRadius.circular(AppRadius.r4),
                     child: LinearProgressIndicator(
                       value: fraction,
                       minHeight: 6,
-                      backgroundColor: Colors.grey.shade200,
-                      valueColor: AlwaysStoppedAnimation(warmAmber),
+                      backgroundColor: context.colors.divider,
+                      valueColor: AlwaysStoppedAnimation(context.colors.accent),
                     ),
                   ),
                 ],
@@ -333,25 +337,25 @@ class _OverviewDetailsScreenState extends State<OverviewDetailsScreen> {
           child: _OutcomeCard(
             label: 'Approved',
             value: '$_approvedCount',
-            color: Colors.green,
+            color: context.colors.success,
             icon: Icons.check_circle_outline,
           ),
         ),
-        const SizedBox(width: 12),
+        const SizedBox(width: AppSpacing.s12),
         Expanded(
           child: _OutcomeCard(
             label: 'Rejected',
             value: '$_rejectedCount',
-            color: Colors.redAccent,
+            color: context.colors.dangerAccent,
             icon: Icons.cancel_outlined,
           ),
         ),
-        const SizedBox(width: 12),
+        const SizedBox(width: AppSpacing.s12),
         Expanded(
           child: _OutcomeCard(
             label: 'Approval Rate',
             value: '$approvalRate%',
-            color: primaryColor,
+            color: context.colors.primary,
             icon: Icons.percent,
           ),
         ),
@@ -361,46 +365,46 @@ class _OverviewDetailsScreenState extends State<OverviewDetailsScreen> {
 
   Widget _buildRecentPayments() {
     if (_recentPayments.isEmpty) {
-      return Text('No approved payments in this period.', style: TextStyle(color: Colors.grey[600]));
+      return Text('No approved payments in this period.', style: TextStyle(color: context.colors.textMuted));
     }
 
     return Column(
       children: _recentPayments.map((payment) {
         final reviewedAt = payment['reviewedAt'] as DateTime;
         return HoverElevateCard(
-          margin: const EdgeInsets.only(bottom: 8),
+          margin: const EdgeInsets.only(bottom: AppSpacing.s8),
           child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+            padding: const EdgeInsets.symmetric(horizontal: AppSpacing.s14, vertical: AppSpacing.s10),
             child: Row(
               children: [
                 Container(
-                  padding: const EdgeInsets.all(8),
+                  padding: const EdgeInsets.all(AppSpacing.s8),
                   decoration: BoxDecoration(
-                    color: Colors.green.withValues(alpha: 0.1),
+                    color: context.colors.success.withValues(alpha: AppAlpha.a10),
                     shape: BoxShape.circle,
                   ),
-                  child: const Icon(Icons.payments_outlined, size: 16, color: Colors.green),
+                  child: Icon(Icons.payments_outlined, size: AppIconSize.i16, color: context.colors.success),
                 ),
-                const SizedBox(width: 12),
+                const SizedBox(width: AppSpacing.s12),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
                         (payment['facilityName'] as String?) ?? 'Unknown facility',
-                        style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
+                        style: const TextStyle(fontWeight: AppFontWeight.semibold, fontSize: AppFontSize.f14),
                         overflow: TextOverflow.ellipsis,
                       ),
                       Text(
                         '${payment['planLabel']} · ${AppDateFormat.dateTime24.format(reviewedAt)}',
-                        style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+                        style: TextStyle(fontSize: AppFontSize.f12, color: context.colors.textMuted),
                       ),
                     ],
                   ),
                 ),
                 Text(
                   Money.symbolPlain(payment['amount']),
-                  style: TextStyle(fontWeight: FontWeight.bold, color: primaryColor),
+                  style: TextStyle(fontWeight: AppFontWeight.bold, color: context.colors.primary),
                 ),
               ],
             ),
@@ -424,15 +428,15 @@ class _OutcomeCard extends StatelessWidget {
     return HoverElevateCard(
       baseElevation: 1,
       child: Padding(
-        padding: const EdgeInsets.all(14),
+        padding: const EdgeInsets.all(AppSpacing.s14),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Icon(icon, color: color, size: 20),
-            const SizedBox(height: 8),
-            Text(value, style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20, color: color)),
-            const SizedBox(height: 2),
-            Text(label, style: TextStyle(fontSize: 11.5, color: Colors.grey[600])),
+            Icon(icon, color: color, size: AppIconSize.i20),
+            const SizedBox(height: AppSpacing.s8),
+            Text(value, style: TextStyle(fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f20, color: color)),
+            const SizedBox(height: AppSpacing.s2),
+            Text(label, style: TextStyle(fontSize: AppFontSize.f11_5, color: context.colors.textMuted)),
           ],
         ),
       ),
@@ -445,7 +449,7 @@ class _OutcomeCard extends StatelessWidget {
 /// mobile, a large, centered, dismissable modal on desktop/tablet-
 /// width screens.
 Future<void> showOverviewDetailsScreen(BuildContext context) async {
-  final isWideScreen = MediaQuery.of(context).size.width >= 900;
+  final isWideScreen = MediaQuery.of(context).size.width >= AppBreakpoints.medium;
 
   if (!isWideScreen) {
     await Navigator.of(context).push(
@@ -458,8 +462,8 @@ Future<void> showOverviewDetailsScreen(BuildContext context) async {
     context: context,
     barrierDismissible: true,
     barrierLabel: 'Overview Details',
-    barrierColor: Colors.black54,
-    transitionDuration: const Duration(milliseconds: 220),
+    barrierColor: context.colors.scrim.withValues(alpha: AppAlpha.a50),
+    transitionDuration: AppMotion.normal,
     pageBuilder: (context, animation, secondaryAnimation) {
       final screenSize = MediaQuery.of(context).size;
       final modalWidth = (screenSize.width * 0.60).clamp(0, 940).toDouble();
@@ -472,7 +476,7 @@ Future<void> showOverviewDetailsScreen(BuildContext context) async {
           width: modalWidth,
           height: modalHeight,
           child: ClipRRect(
-            borderRadius: BorderRadius.circular(16),
+            borderRadius: BorderRadius.circular(AppRadius.r16),
             child: const Material(
               child: OverviewDetailsScreen(isModal: true),
             ),

@@ -14,10 +14,15 @@ import 'announcements_tab.dart';
 import 'platform_admins_tab.dart';
 import 'users_tab.dart';
 import 'platform_settings_screen.dart';
-import '../../theme/app_palette.dart';
 import '../../data/collections.dart';
 import '../../config/app_timeouts.dart';
 import '../../config/app_info.dart';
+import '../../theme/app_text.dart';
+import '../../theme/app_dimens.dart';
+import '../../theme/theme_context.dart';
+import '../../ui/feedback/app_feedback.dart';
+import '../../theme/app_motion.dart';
+import '../../theme/app_breakpoints.dart';
 
 /// One navigation entry - a simple data record rather than each item
 /// being hand-built inline. Adding a new section (or, later, a nested
@@ -59,10 +64,7 @@ class PlatformAdminHomeScreen extends StatefulWidget {
 }
 
 class _PlatformAdminHomeScreenState extends State<PlatformAdminHomeScreen> {
-  static const Color primaryColor = AppPalette.primary;
-  static const Color warmAmber = AppPalette.accent;
   static const Color tealGlow = Color(0xFF3E8E82);
-  static const Color offWhite = AppPalette.background;
 
   // Same breakpoint the main Dashboard already uses for this exact
   // sidebar-vs-drawer decision - kept consistent with the rest of the
@@ -177,7 +179,7 @@ class _PlatformAdminHomeScreenState extends State<PlatformAdminHomeScreen> {
       builder: (dialogContext) => AlertDialog(
         title: const Text('Still there?'),
         content: SizedBox(
-          width: MediaQuery.of(context).size.width > 700 ? 360 : MediaQuery.of(context).size.width * 0.85,
+          width: MediaQuery.of(context).size.width > AppBreakpoints.dialogFixedWidth ? AppSizes.dialogXs : MediaQuery.of(context).size.width * 0.85,
           child: const Text(
             'For security, Platform Admin signs out automatically after a period of '
             'inactivity. You\'ll be signed out in about a minute unless you stay active.',
@@ -191,10 +193,10 @@ class _PlatformAdminHomeScreenState extends State<PlatformAdminHomeScreen> {
             },
             style: ButtonStyle(
               backgroundColor: WidgetStateProperty.resolveWith<Color>((states) {
-                if (states.contains(WidgetState.hovered)) return warmAmber;
-                return primaryColor;
+                if (states.contains(WidgetState.hovered)) return context.colors.accent;
+                return context.colors.primary;
               }),
-              foregroundColor: WidgetStateProperty.all(Colors.white),
+              foregroundColor: WidgetStateProperty.all(context.colors.onPrimary),
             ),
             child: const Text('Stay Signed In'),
           ),
@@ -223,17 +225,17 @@ class _PlatformAdminHomeScreenState extends State<PlatformAdminHomeScreen> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(dialogContext, false),
-            style: TextButton.styleFrom(foregroundColor: primaryColor),
+            style: TextButton.styleFrom(foregroundColor: context.colors.primary),
             child: const Text('Cancel'),
           ),
           ElevatedButton(
             onPressed: () => Navigator.pop(dialogContext, true),
             style: ButtonStyle(
               backgroundColor: WidgetStateProperty.resolveWith<Color>((states) {
-                if (states.contains(WidgetState.hovered)) return warmAmber;
-                return primaryColor;
+                if (states.contains(WidgetState.hovered)) return context.colors.accent;
+                return context.colors.primary;
               }),
-              foregroundColor: WidgetStateProperty.all(Colors.white),
+              foregroundColor: WidgetStateProperty.all(context.colors.onPrimary),
             ),
             child: const Text('Logout'),
           ),
@@ -277,36 +279,34 @@ class _PlatformAdminHomeScreenState extends State<PlatformAdminHomeScreen> {
     final currentUser = FirebaseAuth.instance.currentUser;
 
     return Container(
-      color: Colors.white,
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+      color: context.colors.surface,
+      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.s16, vertical: AppSpacing.s10),
       child: Row(
         children: [
           if (!isWide)
             IconButton(
               icon: const Icon(Icons.menu),
-              color: primaryColor,
+              color: context.colors.primary,
               tooltip: 'Menu',
               onPressed: () => _scaffoldKey.currentState?.openDrawer(),
             ),
-          const Expanded(
+          Expanded(
             child: Center(
               child: Text(
                 'Platform Admin',
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: primaryColor),
+                style: TextStyle(fontSize: AppFontSize.f18, fontWeight: AppFontWeight.bold, color: context.colors.primary),
               ),
             ),
           ),
           IconButton(
             icon: const Icon(Icons.notifications_outlined),
             tooltip: 'Notifications (coming soon)',
-            color: Colors.grey[700],
+            color: context.colors.textSoft,
             onPressed: () {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Notifications are coming soon.')),
-              );
+              AppFeedback.info('Notifications are coming soon');
             },
           ),
-          const SizedBox(width: 8),
+          const SizedBox(width: AppSpacing.s8),
           if (currentUser != null)
             StreamBuilder<DocumentSnapshot<Map<String, dynamic>>>(
               stream: FirebaseFirestore.instance.collection(Collections.users).doc(currentUser.uid).snapshots(),
@@ -322,17 +322,17 @@ class _PlatformAdminHomeScreenState extends State<PlatformAdminHomeScreen> {
                       avatarUrl: avatarUrl,
                       name: name,
                       size: 32,
-                      backgroundColor: primaryColor.withValues(alpha: 0.1),
-                      foregroundColor: primaryColor,
+                      backgroundColor: context.colors.primary.withValues(alpha: AppAlpha.a10),
+                      foregroundColor: context.colors.primary,
                     ),
                     if (isWide) ...[
-                      const SizedBox(width: 8),
+                      const SizedBox(width: AppSpacing.s8),
                       ConstrainedBox(
                         constraints: const BoxConstraints(maxWidth: 140),
                         child: Text(
                           name,
                           overflow: TextOverflow.ellipsis,
-                          style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: primaryColor),
+                          style: TextStyle(fontSize: AppFontSize.f13, fontWeight: AppFontWeight.semibold, color: context.colors.primary),
                         ),
                       ),
                     ],
@@ -347,12 +347,12 @@ class _PlatformAdminHomeScreenState extends State<PlatformAdminHomeScreen> {
 
   Widget _buildBrandMark() {
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 16),
+      padding: const EdgeInsets.symmetric(vertical: AppSpacing.s16),
       child: _isSidebarCollapsed
-          ? const Icon(Icons.storefront, color: Colors.white, size: 26)
-          : const Text(
+          ? Icon(Icons.storefront, color: context.colors.onPrimary, size: AppIconSize.i24)
+          : Text(
               AppInfo.name,
-              style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16, letterSpacing: 0.3),
+              style: TextStyle(color: context.colors.onPrimary, fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f16, letterSpacing: 0.3),
             ),
     );
   }
@@ -363,15 +363,15 @@ class _PlatformAdminHomeScreenState extends State<PlatformAdminHomeScreen> {
   // the icons alone are already grouped visually by the gap between
   // them.
   Widget _buildGroupLabel(String label, {required bool collapsed}) {
-    if (collapsed) return const SizedBox(height: 12);
+    if (collapsed) return const SizedBox(height: AppSpacing.s12);
     return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 14, 12, 8),
+      padding: const EdgeInsets.fromLTRB(AppSpacing.s16, AppSpacing.s14, AppSpacing.s12, AppSpacing.s8),
       child: Text(
         label.toUpperCase(),
         style: TextStyle(
-          color: Colors.white.withValues(alpha: 0.5),
-          fontSize: 11,
-          fontWeight: FontWeight.bold,
+          color: context.colors.onPrimary.withValues(alpha: AppAlpha.a50),
+          fontSize: AppFontSize.f11,
+          fontWeight: AppFontWeight.bold,
           letterSpacing: 0.8,
         ),
       ),
@@ -395,30 +395,30 @@ class _PlatformAdminHomeScreenState extends State<PlatformAdminHomeScreen> {
     required VoidCallback onTap,
   }) {
     final tile = InkWell(
-      borderRadius: BorderRadius.circular(10),
+      borderRadius: BorderRadius.circular(AppRadius.r10),
       onTap: onTap,
       child: Container(
-        margin: EdgeInsets.fromLTRB(collapsed ? 8 : 20, 3, 6, 3),
-        padding: EdgeInsets.only(left: collapsed ? 0 : 6, right: collapsed ? 0 : 4, top: 12, bottom: 12),
+        margin: EdgeInsets.fromLTRB(collapsed ? AppSpacing.s8 : AppSpacing.s20, AppSpacing.s3, AppSpacing.s6, AppSpacing.s3),
+        padding: EdgeInsets.only(left: collapsed ? 0 : AppSpacing.s6, right: collapsed ? 0 : AppSpacing.s4, top: AppSpacing.s12, bottom: AppSpacing.s12),
         decoration: BoxDecoration(
-          color: selected ? warmAmber.withValues(alpha: 0.18) : Colors.transparent,
-          borderRadius: BorderRadius.circular(10),
-          border: Border(left: BorderSide(color: selected ? warmAmber : Colors.transparent, width: 3)),
+          color: selected ? context.colors.accent.withValues(alpha: AppAlpha.a20) : Colors.transparent,
+          borderRadius: BorderRadius.circular(AppRadius.r10),
+          border: Border(left: BorderSide(color: selected ? context.colors.accent : Colors.transparent, width: 3)),
         ),
         child: Row(
           mainAxisAlignment: collapsed ? MainAxisAlignment.center : MainAxisAlignment.start,
           children: [
-            Icon(icon, color: selected ? warmAmber : Colors.white70, size: 20),
+            Icon(icon, color: selected ? context.colors.accent : context.colors.onPrimaryMuted, size: AppIconSize.i20),
             if (!collapsed) ...[
-              const SizedBox(width: 6),
+              const SizedBox(width: AppSpacing.s6),
               Expanded(
                 child: Text(
                   label,
                   overflow: TextOverflow.ellipsis,
                   style: TextStyle(
-                    color: selected ? Colors.white : Colors.white70,
-                    fontWeight: selected ? FontWeight.w600 : FontWeight.normal,
-                    fontSize: 14,
+                    color: selected ? context.colors.onPrimary : context.colors.onPrimaryMuted,
+                    fontWeight: selected ? AppFontWeight.semibold : AppFontWeight.regular,
+                    fontSize: AppFontSize.f14,
                   ),
                 ),
               ),
@@ -432,7 +432,7 @@ class _PlatformAdminHomeScreenState extends State<PlatformAdminHomeScreen> {
     // what keeps every item identifiable without it, exactly as
     // specified.
     if (collapsed) {
-      return Tooltip(message: label, waitDuration: const Duration(milliseconds: 400), child: tile);
+      return Tooltip(message: label, waitDuration: AppTimeouts.tooltipDelay, child: tile);
     }
     return tile;
   }
@@ -461,7 +461,7 @@ class _PlatformAdminHomeScreenState extends State<PlatformAdminHomeScreen> {
             },
           );
         }),
-        const Divider(color: Colors.white24, height: 1),
+        Divider(color: context.colors.onPrimarySubtle, height: 1),
         _buildGroupLabel('Others', collapsed: collapsed),
         _buildTile(
           icon: Icons.settings_outlined,
@@ -488,30 +488,30 @@ class _PlatformAdminHomeScreenState extends State<PlatformAdminHomeScreen> {
   // with nothing needing to be re-activated or re-fetched.
   Widget _buildGoToFacilityTile({required bool collapsed, VoidCallback? onNavigate}) {
     return InkWell(
-      borderRadius: BorderRadius.circular(10),
+      borderRadius: BorderRadius.circular(AppRadius.r10),
       onTap: () {
         onNavigate?.call();
         Navigator.pop(context);
       },
       child: Container(
-        margin: EdgeInsets.fromLTRB(collapsed ? 8 : 20, 3, 6, 3),
-        padding: EdgeInsets.only(left: collapsed ? 0 : 6, right: collapsed ? 0 : 4, top: 12, bottom: 12),
+        margin: EdgeInsets.fromLTRB(collapsed ? AppSpacing.s8 : AppSpacing.s20, AppSpacing.s3, AppSpacing.s6, AppSpacing.s3),
+        padding: EdgeInsets.only(left: collapsed ? 0 : AppSpacing.s6, right: collapsed ? 0 : AppSpacing.s4, top: AppSpacing.s12, bottom: AppSpacing.s12),
         decoration: BoxDecoration(
-          color: tealGlow.withValues(alpha: 0.16),
-          borderRadius: BorderRadius.circular(10),
-          border: Border.all(color: tealGlow.withValues(alpha: 0.45), width: 1),
+          color: tealGlow.withValues(alpha: AppAlpha.a15),
+          borderRadius: BorderRadius.circular(AppRadius.r10),
+          border: Border.all(color: tealGlow.withValues(alpha: AppAlpha.a50), width: 1),
         ),
         child: Row(
           mainAxisAlignment: collapsed ? MainAxisAlignment.center : MainAxisAlignment.start,
           children: [
-            const Icon(Icons.storefront_outlined, color: tealGlow, size: 20),
+            const Icon(Icons.storefront_outlined, color: tealGlow, size: AppIconSize.i20),
             if (!collapsed) ...[
-              const SizedBox(width: 6),
-              const Expanded(
+              const SizedBox(width: AppSpacing.s6),
+              Expanded(
                 child: Text(
                   'Go to Facility',
                   overflow: TextOverflow.ellipsis,
-                  style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600, fontSize: 14),
+                  style: TextStyle(color: context.colors.onPrimary, fontWeight: AppFontWeight.semibold, fontSize: AppFontSize.f14),
                 ),
               ),
             ],
@@ -543,28 +543,28 @@ class _PlatformAdminHomeScreenState extends State<PlatformAdminHomeScreen> {
   // than an abrupt jump.
   Widget _buildSidebar() {
     return AnimatedContainer(
-      duration: const Duration(milliseconds: 220),
+      duration: AppMotion.normal,
       curve: Curves.easeInOut,
-      width: _isSidebarCollapsed ? 72 : 240,
-      color: primaryColor,
+      width: _isSidebarCollapsed ? AppSizes.sidebarCollapsed : AppSizes.platformAdminSidebarExpanded,
+      color: context.colors.primary,
       child: Column(
         children: [
           _buildBrandMark(),
-          const Divider(color: Colors.white24, height: 1),
+          Divider(color: context.colors.onPrimarySubtle, height: 1),
           Expanded(
             child: SingleChildScrollView(
               child: _buildNavColumn(collapsed: _isSidebarCollapsed),
             ),
           ),
-          const Divider(color: Colors.white24, height: 1),
+          Divider(color: context.colors.onPrimarySubtle, height: 1),
           _buildLogoutTile(collapsed: _isSidebarCollapsed),
-          const SizedBox(height: 4),
+          const SizedBox(height: AppSpacing.s4),
           Padding(
-            padding: const EdgeInsets.all(8),
+            padding: const EdgeInsets.all(AppSpacing.s8),
             child: IconButton(
               icon: Icon(
                 _isSidebarCollapsed ? Icons.chevron_right : Icons.chevron_left,
-                color: Colors.white70,
+                color: context.colors.onPrimaryMuted,
               ),
               tooltip: _isSidebarCollapsed ? 'Expand menu' : 'Collapse menu',
               onPressed: _toggleSidebarCollapsed,
@@ -580,12 +580,12 @@ class _PlatformAdminHomeScreenState extends State<PlatformAdminHomeScreen> {
   // here at all.
   Widget _buildMobileDrawer() {
     return Drawer(
-      backgroundColor: primaryColor,
+      backgroundColor: context.colors.primary,
       child: SafeArea(
         child: Column(
           children: [
             _buildBrandMark(),
-            const Divider(color: Colors.white24, height: 1),
+            Divider(color: context.colors.onPrimarySubtle, height: 1),
             Expanded(
               child: SingleChildScrollView(
                 child: _buildNavColumn(
@@ -594,9 +594,9 @@ class _PlatformAdminHomeScreenState extends State<PlatformAdminHomeScreen> {
                 ),
               ),
             ),
-            const Divider(color: Colors.white24, height: 1),
+            Divider(color: context.colors.onPrimarySubtle, height: 1),
             _buildLogoutTile(collapsed: false, onNavigate: () => Navigator.pop(context)),
-            const SizedBox(height: 8),
+            const SizedBox(height: AppSpacing.s8),
           ],
         ),
       ),
@@ -628,18 +628,18 @@ class _PlatformAdminHomeScreenState extends State<PlatformAdminHomeScreen> {
             _buildHeader(isWide: isWide),
             const Divider(height: 1),
             Padding(
-              padding: const EdgeInsets.fromLTRB(20, 16, 20, 8),
+              padding: const EdgeInsets.fromLTRB(AppSpacing.s20, AppSpacing.s16, AppSpacing.s20, AppSpacing.s8),
               child: Align(
                 alignment: Alignment.centerLeft,
                 child: Text(
                   _currentPageTitle,
-                  style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: primaryColor),
+                  style: TextStyle(fontSize: AppFontSize.f20, fontWeight: AppFontWeight.bold, color: context.colors.primary),
                 ),
               ),
             ),
             Expanded(
               child: Container(
-                color: offWhite,
+                color: context.colors.background,
                 child: IndexedStack(
                   index: _selectedIndex,
                   children: [

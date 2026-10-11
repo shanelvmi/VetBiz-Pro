@@ -62,6 +62,9 @@ Colours are outside the standing snap rule, so this is kept as it is:
 - **Computed `Duration(days: ...)`**, same file: the approved plan's length (`plan.durationDays`, from the plan) and the "attended" window (`_attendedDays`). Business date maths, not literals; still counted by guard R5. Add guard allowlist entries, as for `trial_period_helper.dart`?
 - **Platform-admin badge `Colors.deepPurple`** (x6), `lib/screens/platform_admin/users_tab.dart` (the "Platform Admin" chip, its icon and the avatar fill): no role; a category colour. A `rolePlatformAdmin` role with the exact value?
 - **Status chip fills `Colors.blue.shade100` / `Colors.orange.shade100`**, same file (pending / other status chips): not in the 4.1 table, no role within 12. Kept. Roles, or `info`/`warning` at an alpha?
+- **`tealGlow` `#3E8E82`**, `lib/screens/platform_admin/platform_admin_home_screen.dart` (the sidebar's facility badge: fill at a15, border at a50, icon): more than 12 from every role. Kept as the named constant. A role named for it, or snap to `roleCoAdmin`/teal?
+- **Chart height 220**, `lib/screens/platform_admin/overview_details_screen.dart` (`_chartHeight`, the daily earnings chart): a size. Kept exact as a named local constant.
+- **More computed `Duration(days: ...)`**: `overview_details_screen.dart` (the last N days for the chart) and `facility_detail_screen.dart` (a manual subscription override's length). Same allowlist question as subscription_requests_tab above.
 
 ### Trash and restore: books consistency (audit after D6, read-only)
 
