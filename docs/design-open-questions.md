@@ -100,6 +100,11 @@ User-facing "VetBiz Pro" now reads `AppInfo.name` (titles, Settings, support lin
 - **New category roles `chart8` (amber 700) and `chart9` (deep orange)**, `lib/theme/app_colors.dart`, for the Reorder Soon and Debt Reminder notification colours (spec 4.1: category colour -> chartN), next to `chart7` (indigo, Transactions activity). Exact legacy values; for review in 2R with the other chart roles.
 - **PDF snaps (output difference)**, `daily_report_pdf_service.dart` and `receipt_pdf_service.dart`: font 8 and 8.5 -> 9, 9.5 -> 10, spacing 1.5 -> 2, 3.5 and 5 -> 4 (spec tables and the standing rule). Printed text in those spots grows by up to 1pt. Check one printed daily report and receipt.
 
+### Raised in step 2F, batch 2F-2 (wording; English kept as it was)
+
+- **"All Status"**, `lib/widgets/product_catalog_side_panel.dart` (key `products_statusAll`): the no-filter row of the STOCK STATUS list. Reads oddly ("All statuses"? "Any status"? "All"?). The Kiswahili draft says "Hali Zote".
+- **Short relative times are much longer in Kiswahili**, `lib/widgets/notification_row.dart` `relativeTime()` (keys `time_minutesAgo`, `time_hoursAgo`, `time_daysAgo`): "5m ago", "2h ago", "3d ago" become "dakika 5 zilizopita", "saa 2 zilizopita", "siku 3 zilizopita" in the draft. Check the notification row at a narrow width; a short Kiswahili form (for example "dak. 5"), or a longer English one to match, is the owner's call.
+
 ### Trash and restore: books consistency (audit after D6, read-only)
 
 `TrashService.restore` (used by the Trash screen and every Undo) only copies the document back from `trash_*` to its live collection, drops `deletedAt`/`deletedBy`, and logs "Restored ...". Anything else the delete changed is reversed only if a server trigger reacts to the document reappearing (the `onDocumentWritten` daily summaries do).
