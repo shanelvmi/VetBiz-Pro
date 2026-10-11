@@ -1918,4 +1918,82 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get clients_createIndex => 'Create Index';
+
+  @override
+  String get clients_indexBuildingHint =>
+      'This takes a minute or two to finish building after you create it - then try this filter again.';
+
+  @override
+  String get clients_none => 'No clients';
+
+  @override
+  String get clients_errSelectType => 'Select at least one client type';
+
+  @override
+  String get clients_saveFailed => 'Couldn\'t save the client';
+
+  @override
+  String get clients_added => 'Client added';
+
+  @override
+  String get clients_updated => 'Client updated';
+
+  @override
+  String get clients_duplicateTitle => 'Client already exists';
+
+  @override
+  String get clients_duplicateByPhone =>
+      'A client with this phone number already exists:';
+
+  @override
+  String get clients_duplicateByName =>
+      'A client with a similar name already exists:';
+
+  @override
+  String get clients_noPhone => 'No phone number';
+
+  @override
+  String clients_duplicateBody(String action, String match) {
+    String _temp0 = intl.Intl.selectLogic(action, {
+      'add': 'this client was not saved',
+      'other': 'your changes were not saved',
+    });
+    String _temp1 = intl.Intl.selectLogic(match, {
+      'phone': 'enter a different phone number',
+      'other': 'change the name slightly',
+    });
+    return 'To avoid duplicate clients, $_temp0. If it is the same person, use the existing client from the Clients list. If it is a different person, $_temp1 and try again.';
+  }
+
+  @override
+  String get clients_infoSection => 'Client Information';
+
+  @override
+  String get clients_nameHint => 'Enter client name';
+
+  @override
+  String get clients_phoneHint => 'e.g. 07XX XXX XXX';
+
+  @override
+  String get clients_addressHint => 'Enter address';
+
+  @override
+  String get clients_notesHint =>
+      'Any additional information about the client...';
+
+  @override
+  String get clients_quickSummary => 'Quick Summary';
+
+  @override
+  String get clients_tip =>
+      'You can update this client\'s animal species or crops anytime by editing their profile.';
+
+  @override
+  String get clients_cropInfo => 'Crop Information (Optional)';
+
+  @override
+  String get clients_animalInfo => 'Animal Information (Optional)';
+
+  @override
+  String get clients_cropHint => 'Add crops grown by this client if available.';
 }

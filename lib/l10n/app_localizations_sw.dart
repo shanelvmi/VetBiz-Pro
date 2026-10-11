@@ -1931,4 +1931,82 @@ class AppLocalizationsSw extends AppLocalizations {
 
   @override
   String get clients_createIndex => 'Tengeneza Faharasa';
+
+  @override
+  String get clients_indexBuildingHint =>
+      'Hii huchukua dakika moja au mbili kukamilika baada ya kuitengeneza - kisha jaribu kichujio hiki tena.';
+
+  @override
+  String get clients_none => 'Hakuna wateja';
+
+  @override
+  String get clients_errSelectType => 'Chagua angalau aina moja ya mteja';
+
+  @override
+  String get clients_saveFailed => 'Imeshindwa kuhifadhi mteja';
+
+  @override
+  String get clients_added => 'Mteja ameongezwa';
+
+  @override
+  String get clients_updated => 'Mteja amesasishwa';
+
+  @override
+  String get clients_duplicateTitle => 'Mteja tayari yupo';
+
+  @override
+  String get clients_duplicateByPhone =>
+      'Mteja mwenye namba hii ya simu tayari yupo:';
+
+  @override
+  String get clients_duplicateByName =>
+      'Mteja mwenye jina linalofanana tayari yupo:';
+
+  @override
+  String get clients_noPhone => 'Hakuna namba ya simu';
+
+  @override
+  String clients_duplicateBody(String action, String match) {
+    String _temp0 = intl.Intl.selectLogic(action, {
+      'add': 'mteja huyu hajahifadhiwa',
+      'other': 'mabadiliko yako hayajahifadhiwa',
+    });
+    String _temp1 = intl.Intl.selectLogic(match, {
+      'phone': 'weka namba nyingine ya simu',
+      'other': 'badilisha jina kidogo',
+    });
+    return 'Ili kuepuka wateja waliorudiwa, $_temp0. Ikiwa ni mtu yule yule, tumia mteja aliyepo kutoka kwenye orodha ya Wateja. Ikiwa ni mtu tofauti, $_temp1 kisha ujaribu tena.';
+  }
+
+  @override
+  String get clients_infoSection => 'Taarifa za Mteja';
+
+  @override
+  String get clients_nameHint => 'Weka jina la mteja';
+
+  @override
+  String get clients_phoneHint => 'mf. 07XX XXX XXX';
+
+  @override
+  String get clients_addressHint => 'Weka anwani';
+
+  @override
+  String get clients_notesHint => 'Taarifa yoyote ya ziada kuhusu mteja...';
+
+  @override
+  String get clients_quickSummary => 'Muhtasari wa Haraka';
+
+  @override
+  String get clients_tip =>
+      'Unaweza kusasisha aina za wanyama au mazao ya mteja huyu wakati wowote kwa kuhariri wasifu wake.';
+
+  @override
+  String get clients_cropInfo => 'Taarifa za Mazao (Si lazima)';
+
+  @override
+  String get clients_animalInfo => 'Taarifa za Wanyama (Si lazima)';
+
+  @override
+  String get clients_cropHint =>
+      'Ongeza mazao yanayolimwa na mteja huyu ikiwa yapo.';
 }

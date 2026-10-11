@@ -3535,6 +3535,132 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Create Index'**
   String get clients_createIndex;
+
+  /// Under the Create Index button.
+  ///
+  /// In en, this message translates to:
+  /// **'This takes a minute or two to finish building after you create it - then try this filter again.'**
+  String get clients_indexBuildingHint;
+
+  /// Pagination bar when the list is empty.
+  ///
+  /// In en, this message translates to:
+  /// **'No clients'**
+  String get clients_none;
+
+  /// Client form: no type chosen.
+  ///
+  /// In en, this message translates to:
+  /// **'Select at least one client type'**
+  String get clients_errSelectType;
+
+  /// Message when saving a client failed.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t save the client'**
+  String get clients_saveFailed;
+
+  /// Message after adding a client.
+  ///
+  /// In en, this message translates to:
+  /// **'Client added'**
+  String get clients_added;
+
+  /// Message after editing a client.
+  ///
+  /// In en, this message translates to:
+  /// **'Client updated'**
+  String get clients_updated;
+
+  /// Duplicate-client dialog title.
+  ///
+  /// In en, this message translates to:
+  /// **'Client already exists'**
+  String get clients_duplicateTitle;
+
+  /// Duplicate-client dialog, matched by phone.
+  ///
+  /// In en, this message translates to:
+  /// **'A client with this phone number already exists:'**
+  String get clients_duplicateByPhone;
+
+  /// Duplicate-client dialog, matched by name.
+  ///
+  /// In en, this message translates to:
+  /// **'A client with a similar name already exists:'**
+  String get clients_duplicateByName;
+
+  /// Duplicate-client dialog: the existing client has no phone.
+  ///
+  /// In en, this message translates to:
+  /// **'No phone number'**
+  String get clients_noPhone;
+
+  /// Duplicate-client dialog advice. action: "add" when adding, "edit" when editing; match: "phone" or "name".
+  ///
+  /// In en, this message translates to:
+  /// **'To avoid duplicate clients, {action, select, add{this client was not saved} other{your changes were not saved}}. If it is the same person, use the existing client from the Clients list. If it is a different person, {match, select, phone{enter a different phone number} other{change the name slightly}} and try again.'**
+  String clients_duplicateBody(String action, String match);
+
+  /// Client form section heading.
+  ///
+  /// In en, this message translates to:
+  /// **'Client Information'**
+  String get clients_infoSection;
+
+  /// Client form: name hint.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter client name'**
+  String get clients_nameHint;
+
+  /// Client form: phone hint.
+  ///
+  /// In en, this message translates to:
+  /// **'e.g. 07XX XXX XXX'**
+  String get clients_phoneHint;
+
+  /// Client form: address hint.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter address'**
+  String get clients_addressHint;
+
+  /// Client form: notes hint.
+  ///
+  /// In en, this message translates to:
+  /// **'Any additional information about the client...'**
+  String get clients_notesHint;
+
+  /// Client form side card heading.
+  ///
+  /// In en, this message translates to:
+  /// **'Quick Summary'**
+  String get clients_quickSummary;
+
+  /// Client form tip card.
+  ///
+  /// In en, this message translates to:
+  /// **'You can update this client\'s animal species or crops anytime by editing their profile.'**
+  String get clients_tip;
+
+  /// Client form section heading for a crop producer.
+  ///
+  /// In en, this message translates to:
+  /// **'Crop Information (Optional)'**
+  String get clients_cropInfo;
+
+  /// Client form section heading for a farmer.
+  ///
+  /// In en, this message translates to:
+  /// **'Animal Information (Optional)'**
+  String get clients_animalInfo;
+
+  /// Under the crop section heading.
+  ///
+  /// In en, this message translates to:
+  /// **'Add crops grown by this client if available.'**
+  String get clients_cropHint;
 }
 
 class _AppLocalizationsDelegate
