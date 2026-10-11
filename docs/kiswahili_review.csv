@@ -28,7 +28,7 @@ common_clear,Clear,Safisha,Clear button (empties a field or filter).,draft
 common_change,Change,Badilisha,Change button (picks a different value).,draft
 common_call,Call,Piga simu,Call button (phones a client).,draft
 common_moreActions,More actions,Vitendo zaidi,Tooltip of the three-dot menu.,draft
-common_loading,Loading...,Inapakia...,Shown while something loads.,draft
+common_loading,Loading…,Inapakia…,Shown while something loads.,draft
 common_optional,Optional,Si lazima,Marks a form field that may be left empty.,draft
 common_all,All,Zote,The no-filter choice in a filter list.,draft
 common_date,Date,Tarehe,Date label or column heading.,draft
@@ -50,3 +50,38 @@ login_wrongCredentials,Incorrect email or password.,Barua pepe au nenosiri si sa
 login_accountDisabled,This account has been disabled. Contact your admin.,Akaunti hii imezimwa. Wasiliana na msimamizi wako.,Sign-in error: the account was disabled.,draft
 login_tooManyAttempts,Too many attempts. Wait a moment and try again.,Umejaribu mara nyingi mno. Subiri kidogo kisha ujaribu tena.,Sign-in error: too many failed attempts.,draft
 login_signInFailed,Couldn't sign in. Try again.,Imeshindikana kuingia. Jaribu tena.,Sign-in error when Firebase gives no message of its own.,draft
+common_facility,Facility,Kituo,"The word Facility, as a fallback name when a facility has none.",draft
+common_signOut,Sign out,Toka,Sign out button.,draft
+common_hideDetails,Hide details,Ficha maelezo,Hides the technical text shown by Details.,draft
+dateRange_title,Select Date Range,Chagua Kipindi cha Tarehe,"Title of the custom date range dialog (Payments, Transactions).",draft
+dateRange_start,Start Date:,Tarehe ya Kuanza:,Label above the start date in the date range dialog.,draft
+dateRange_end,End Date:,Tarehe ya Mwisho:,Label above the end date in the date range dialog.,draft
+error_couldNotLoad,Could not load data,Imeshindikana kupakia taarifa,Heading of the error shown when a list fails to load (FirestoreErrorView).,draft
+error_indexNeeded,This view needs a one-time database index to be created first.,Ukurasa huu unahitaji faharasa ya hifadhidata itengenezwe mara moja kwanza.,Error shown when a Firestore query needs an index (FirestoreErrorView).,draft
+error_createIndex,Create Missing Index,Tengeneza Faharasa Inayokosekana,Button that opens Firebase Console to create a missing index (FirestoreErrorView).,draft
+error_createIndexHint,This opens Firebase Console with the exact index needed already filled in.,Hii inafungua Firebase Console ikiwa na faharasa inayohitajika tayari imejazwa.,Small text under Create Missing Index (FirestoreErrorView).,draft
+maintenance_title,We'll be right back,Tutarudi hivi punde,Heading of the maintenance screen.,draft
+maintenance_defaultMessage,We're currently performing scheduled maintenance. Please try again shortly.,Tunafanya matengenezo yaliyopangwa kwa sasa. Tafadhali jaribu tena baada ya muda mfupi.,Maintenance screen text when the platform admin set no message of their own.,draft
+time_justNow,Just now,Sasa hivi,Age of a notification under one minute.,draft
+time_minutesAgo,{count}m ago,dakika {count} zilizopita,Age of a notification in minutes (short form).,draft
+time_hoursAgo,{count}h ago,saa {count} zilizopita,Age of a notification in hours (short form).,draft
+time_daysAgo,{count}d ago,siku {count} zilizopita,Age of a notification in days (short form).,draft
+payments_method,Payment Method,Njia ya Malipo,Label above the payment method chips.,draft
+products_categoriesHeading,CATEGORIES,MAKUNDI,Upper-case heading of the categories list in the product catalog side panel.,draft
+products_stockStatusHeading,STOCK STATUS,HALI YA STOO,Upper-case heading of the stock status list in the product catalog side panel.,draft
+products_allProducts,All Products,Bidhaa Zote,Row that shows every product (product catalog side panel).,draft
+products_statusAll,All Status,Hali Zote,Stock status filter: no filter (product catalog side panel).,draft
+products_statusInStock,In Stock,Ipo Stoo,Stock status filter: in stock.,draft
+products_statusLowStock,Low Stock,Stoo Chache,Stock status filter: low stock.,draft
+products_statusReorderSoon,Reorder Soon,Agiza Karibuni,Stock status filter: should be reordered soon.,draft
+products_statusDepleted,Depleted,Imeisha,Stock status filter: none left.,draft
+products_statusExpired,Expired,Muda Umepita,Stock status filter: past its expiry date.,draft
+summary_trendNew,New,Mpya,Badge on a summary card when there was nothing in the previous period to compare with.,draft
+loading_accountTitle,Loading your account...,Inapakia akaunti yako...,Title of the full loading screen after sign-in.,draft
+loading_accountSubtitle,Preparing your facility data and services,Inaandaa taarifa na huduma za kituo chako,Second line of the full loading screen after sign-in.,draft
+facilities_settingUp,Setting up {facilityName}...,Inaandaa {facilityName}...,Shown while the dashboard opens for a chosen facility.,draft
+facilities_yourFacility,your facility,kituo chako,"Stands for the facility name in ""Setting up ..."" when it has none.",draft
+subscription_expiredTitle,Subscription Expired,Usajili Umekwisha,Title of the dialog shown when a locked facility tries to record a sale or service.,draft
+subscription_expiredAssistant,"This facility's subscription has expired, so new sales and services can't be recorded right now. You can still view all existing data. Please ask your admin to renew the subscription.","Usajili wa kituo hiki umekwisha, kwa hiyo mauzo na huduma mpya haziwezi kurekodiwa kwa sasa. Bado unaweza kuona taarifa zote zilizopo. Tafadhali muombe msimamizi wako ahuishe usajili.",Subscription Expired dialog text for an assistant.,draft
+subscription_expiredAdmin,"Your subscription has expired, so new sales and services can't be recorded right now. You can still view all your existing data. Submit a payment to restore full access.","Usajili wako umekwisha, kwa hiyo mauzo na huduma mpya haziwezi kurekodiwa kwa sasa. Bado unaweza kuona taarifa zako zote zilizopo. Tuma malipo ili kurejesha huduma kamili.",Subscription Expired dialog text for an admin.,draft
+subscription_goTo,Go to Subscription,Nenda kwenye Usajili,Button in the Subscription Expired dialog (admins).,draft
