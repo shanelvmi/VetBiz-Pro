@@ -686,4 +686,37 @@ class AppLocalizationsSw extends AppLocalizations {
 
   @override
   String get vetPractice_clinic => 'Kliniki';
+
+  @override
+  String get vetPractice_consultant => 'Mshauri';
+
+  @override
+  String get vetPractice_hospital => 'Hospitali';
+
+  @override
+  String get vetPractice_ambulatory => 'Huduma ya Kutembelea';
+
+  @override
+  String get clientStatus_active => 'Hai';
+
+  @override
+  String get clientStatus_inactive => 'Hayuko Hai';
+
+  @override
+  String get paymentStatus_paid => 'Imelipwa';
+
+  @override
+  String get paymentStatus_partial => 'Imelipwa Sehemu';
+
+  @override
+  String get paymentStatus_unpaid => 'Haijalipwa';
+
+  @override
+  String get moveReason_expired => 'Imeisha Muda';
+
+  @override
+  String get moveReason_deteriorated => 'Imeharibika';
+
+  @override
+  String get moveReason_other => 'Nyingine (eleza)';
 }

@@ -685,4 +685,37 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get vetPractice_clinic => 'Clinic';
+
+  @override
+  String get vetPractice_consultant => 'Consultant';
+
+  @override
+  String get vetPractice_hospital => 'Hospital';
+
+  @override
+  String get vetPractice_ambulatory => 'Ambulatory';
+
+  @override
+  String get clientStatus_active => 'Active';
+
+  @override
+  String get clientStatus_inactive => 'Inactive';
+
+  @override
+  String get paymentStatus_paid => 'Paid';
+
+  @override
+  String get paymentStatus_partial => 'Partial';
+
+  @override
+  String get paymentStatus_unpaid => 'Unpaid';
+
+  @override
+  String get moveReason_expired => 'Expired';
+
+  @override
+  String get moveReason_deteriorated => 'Deteriorated';
+
+  @override
+  String get moveReason_other => 'Other (specify)';
 }

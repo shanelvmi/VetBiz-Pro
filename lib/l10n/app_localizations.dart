@@ -1417,6 +1417,72 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Clinic'**
   String get vetPractice_clinic;
+
+  /// Vet practice type: client form dropdown (stored value 'Consultant').
+  ///
+  /// In en, this message translates to:
+  /// **'Consultant'**
+  String get vetPractice_consultant;
+
+  /// Vet practice type: client form dropdown (stored value 'Hospital').
+  ///
+  /// In en, this message translates to:
+  /// **'Hospital'**
+  String get vetPractice_hospital;
+
+  /// Vet practice type: client form dropdown (stored value 'Ambulatory').
+  ///
+  /// In en, this message translates to:
+  /// **'Ambulatory'**
+  String get vetPractice_ambulatory;
+
+  /// A client's status: client form chips, Clients status filter and badges (stored value 'Active').
+  ///
+  /// In en, this message translates to:
+  /// **'Active'**
+  String get clientStatus_active;
+
+  /// A client's status: client form chips, Clients status filter and badges (stored value 'Inactive').
+  ///
+  /// In en, this message translates to:
+  /// **'Inactive'**
+  String get clientStatus_inactive;
+
+  /// A sale's or service's payment status: Sales and Services status filters and badges (stored value 'Paid').
+  ///
+  /// In en, this message translates to:
+  /// **'Paid'**
+  String get paymentStatus_paid;
+
+  /// A sale's or service's payment status: Sales and Services status filters and badges (stored value 'Partial').
+  ///
+  /// In en, this message translates to:
+  /// **'Partial'**
+  String get paymentStatus_partial;
+
+  /// A sale's or service's payment status: Sales and Services status filters and badges (stored value 'Unpaid').
+  ///
+  /// In en, this message translates to:
+  /// **'Unpaid'**
+  String get paymentStatus_unpaid;
+
+  /// Why a batch is moved back to the Stock Store or off Sellable: move dialog dropdown (stored value 'Expired').
+  ///
+  /// In en, this message translates to:
+  /// **'Expired'**
+  String get moveReason_expired;
+
+  /// Why a batch is moved back to the Stock Store or off Sellable: move dialog dropdown (stored value 'Deteriorated').
+  ///
+  /// In en, this message translates to:
+  /// **'Deteriorated'**
+  String get moveReason_deteriorated;
+
+  /// Why a batch is moved back to the Stock Store or off Sellable: move dialog dropdown (stored value 'Other (specify)').
+  ///
+  /// In en, this message translates to:
+  /// **'Other (specify)'**
+  String get moveReason_other;
 }
 
 class _AppLocalizationsDelegate
