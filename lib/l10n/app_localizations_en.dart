@@ -1278,4 +1278,82 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get products_restoreFailed => 'Couldn\'t restore the product';
+
+  @override
+  String get products_noMatches => 'No products match your filters';
+
+  @override
+  String get products_restockShelf => 'Restock Shelf';
+
+  @override
+  String get products_stock => 'Stock';
+
+  @override
+  String get products_price => 'Price';
+
+  @override
+  String get products_release => 'Release';
+
+  @override
+  String get products_addNewBatch => 'Add New Batch';
+
+  @override
+  String get products_viewBatches => 'View Batches';
+
+  @override
+  String get products_stockAlerts => 'Stock Alerts';
+
+  @override
+  String get products_addProduct => 'Add Product';
+
+  @override
+  String products_showingRange(int total, int start, int end) {
+    String _temp0 = intl.Intl.pluralLogic(
+      total,
+      locale: localeName,
+      other: 'Showing $start to $end of $total products',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String products_sellableBatch(String quantity, String unit, String batch) {
+    return 'Sellable: $quantity $unit • Batch: $batch';
+  }
+
+  @override
+  String products_buyPrice(String price) {
+    return 'Buy: $price';
+  }
+
+  @override
+  String products_expiryDate(String date) {
+    return 'Expiry: $date';
+  }
+
+  @override
+  String store_batchName(String batchNo) {
+    return 'Batch $batchNo';
+  }
+
+  @override
+  String get store_unlabeledBatch => 'an unlabeled batch';
+
+  @override
+  String get store_expiredStockTitle => 'Expired Stock';
+
+  @override
+  String get store_expiredStockBody =>
+      'This product is expired. Do you still want to release it to the shelf?';
+
+  @override
+  String store_expiredPortionLine(String quantity, String unit, String batch) {
+    return '• $quantity $unit from $batch';
+  }
+
+  @override
+  String get store_releaseAnyway => 'Release Anyway';
+
+  @override
+  String get store_releaseTitle => 'Release to Shelf';
 }

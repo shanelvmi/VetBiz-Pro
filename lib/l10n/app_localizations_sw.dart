@@ -1284,4 +1284,83 @@ class AppLocalizationsSw extends AppLocalizations {
 
   @override
   String get products_restoreFailed => 'Imeshindwa kurejesha bidhaa';
+
+  @override
+  String get products_noMatches =>
+      'Hakuna bidhaa zinazolingana na vichujio vyako';
+
+  @override
+  String get products_restockShelf => 'Jaza Rafu';
+
+  @override
+  String get products_stock => 'Stoo';
+
+  @override
+  String get products_price => 'Bei';
+
+  @override
+  String get products_release => 'Toa';
+
+  @override
+  String get products_addNewBatch => 'Ongeza Bechi Mpya';
+
+  @override
+  String get products_viewBatches => 'Tazama Bechi';
+
+  @override
+  String get products_stockAlerts => 'Tahadhari za Stoo';
+
+  @override
+  String get products_addProduct => 'Ongeza Bidhaa';
+
+  @override
+  String products_showingRange(int total, int start, int end) {
+    String _temp0 = intl.Intl.pluralLogic(
+      total,
+      locale: localeName,
+      other: 'Inaonyesha $start hadi $end kati ya bidhaa $total',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String products_sellableBatch(String quantity, String unit, String batch) {
+    return 'Inayouzwa: $quantity $unit • Bechi: $batch';
+  }
+
+  @override
+  String products_buyPrice(String price) {
+    return 'Kununua: $price';
+  }
+
+  @override
+  String products_expiryDate(String date) {
+    return 'Mwisho wa matumizi: $date';
+  }
+
+  @override
+  String store_batchName(String batchNo) {
+    return 'Bechi $batchNo';
+  }
+
+  @override
+  String get store_unlabeledBatch => 'bechi isiyo na namba';
+
+  @override
+  String get store_expiredStockTitle => 'Bidhaa Iliyoisha Muda';
+
+  @override
+  String get store_expiredStockBody =>
+      'Bidhaa hii imeisha muda. Bado unataka kuitoa kwenda rafuni?';
+
+  @override
+  String store_expiredPortionLine(String quantity, String unit, String batch) {
+    return '• $quantity $unit kutoka $batch';
+  }
+
+  @override
+  String get store_releaseAnyway => 'Toa Hata Hivyo';
+
+  @override
+  String get store_releaseTitle => 'Toa Kwenda Rafuni';
 }

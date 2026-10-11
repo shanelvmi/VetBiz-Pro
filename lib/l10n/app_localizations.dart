@@ -2455,6 +2455,126 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Couldn\'t restore the product'**
   String get products_restoreFailed;
+
+  /// Product list: filters hide everything.
+  ///
+  /// In en, this message translates to:
+  /// **'No products match your filters'**
+  String get products_noMatches;
+
+  /// Badge: the shelf needs restocking from the store.
+  ///
+  /// In en, this message translates to:
+  /// **'Restock Shelf'**
+  String get products_restockShelf;
+
+  /// Product card label: quantity in the store.
+  ///
+  /// In en, this message translates to:
+  /// **'Stock'**
+  String get products_stock;
+
+  /// Product card label: selling price.
+  ///
+  /// In en, this message translates to:
+  /// **'Price'**
+  String get products_price;
+
+  /// Button and tooltip: move stock from the store to the shelf.
+  ///
+  /// In en, this message translates to:
+  /// **'Release'**
+  String get products_release;
+
+  /// Product menu item.
+  ///
+  /// In en, this message translates to:
+  /// **'Add New Batch'**
+  String get products_addNewBatch;
+
+  /// Product menu item.
+  ///
+  /// In en, this message translates to:
+  /// **'View Batches'**
+  String get products_viewBatches;
+
+  /// Tooltip of the stock alerts bell.
+  ///
+  /// In en, this message translates to:
+  /// **'Stock Alerts'**
+  String get products_stockAlerts;
+
+  /// Button that opens the add-product form.
+  ///
+  /// In en, this message translates to:
+  /// **'Add Product'**
+  String get products_addProduct;
+
+  /// Product list pagination. English always says 'products', as before.
+  ///
+  /// In en, this message translates to:
+  /// **'{total, plural, other{Showing {start} to {end} of {total} products}}'**
+  String products_showingRange(int total, int start, int end);
+
+  /// Stock Store card line (unit already in the current language).
+  ///
+  /// In en, this message translates to:
+  /// **'Sellable: {quantity} {unit} • Batch: {batch}'**
+  String products_sellableBatch(String quantity, String unit, String batch);
+
+  /// Product card: buying price (already formatted).
+  ///
+  /// In en, this message translates to:
+  /// **'Buy: {price}'**
+  String products_buyPrice(String price);
+
+  /// Product card: expiry date (already formatted).
+  ///
+  /// In en, this message translates to:
+  /// **'Expiry: {date}'**
+  String products_expiryDate(String date);
+
+  /// A batch named by its number, in the expired-stock warning.
+  ///
+  /// In en, this message translates to:
+  /// **'Batch {batchNo}'**
+  String store_batchName(String batchNo);
+
+  /// A batch with no number, in the expired-stock warning.
+  ///
+  /// In en, this message translates to:
+  /// **'an unlabeled batch'**
+  String get store_unlabeledBatch;
+
+  /// Title of the expired-stock warning when releasing to the shelf.
+  ///
+  /// In en, this message translates to:
+  /// **'Expired Stock'**
+  String get store_expiredStockTitle;
+
+  /// Expired-stock warning text.
+  ///
+  /// In en, this message translates to:
+  /// **'This product is expired. Do you still want to release it to the shelf?'**
+  String get store_expiredStockBody;
+
+  /// One line of the expired-stock warning (unit already in the current language).
+  ///
+  /// In en, this message translates to:
+  /// **'• {quantity} {unit} from {batch}'**
+  String store_expiredPortionLine(String quantity, String unit, String batch);
+
+  /// Expired-stock warning: release regardless.
+  ///
+  /// In en, this message translates to:
+  /// **'Release Anyway'**
+  String get store_releaseAnyway;
+
+  /// Title of the release dialog.
+  ///
+  /// In en, this message translates to:
+  /// **'Release to Shelf'**
+  String get store_releaseTitle;
 }
 
 class _AppLocalizationsDelegate
