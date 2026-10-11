@@ -18,6 +18,7 @@ import '../../theme/app_dimens.dart';
 import '../../theme/theme_context.dart';
 import '../../theme/app_motion.dart';
 import '../../theme/app_breakpoints.dart';
+import '../../l10n/l10n.dart';
 
 /// Only ever shown for an Admin managing more than one facility - the
 /// single-facility case (every Assistant, and most Admins) never
@@ -335,7 +336,8 @@ class _FacilityPickerScreenState extends State<FacilityPickerScreen> {
           onSelected: (value) => setState(() => _typeFilter = value),
           itemBuilder: (context) => [
             const PopupMenuItem(value: null, child: Text('All Types')),
-            ...kFacilityTypes.map((t) => PopupMenuItem(value: t, child: Text(t))),
+            // Shows the label; filters on the stored type.
+            ...kFacilityTypes.map((t) => PopupMenuItem(value: t, child: Text(context.l10n.facilityTypeLabel(t)))),
           ],
           child: Container(
             padding: const EdgeInsets.symmetric(horizontal: AppSpacing.s14, vertical: AppSpacing.s12),
@@ -345,7 +347,7 @@ class _FacilityPickerScreenState extends State<FacilityPickerScreen> {
               children: [
                 const Icon(Icons.filter_list, size: AppIconSize.i18),
                 const SizedBox(width: AppSpacing.s6),
-                Text(_typeFilter ?? 'Filter', style: const TextStyle(fontSize: AppFontSize.f13)),
+                Text(_typeFilter == null ? 'Filter' : context.l10n.facilityTypeLabel(_typeFilter!), style: const TextStyle(fontSize: AppFontSize.f13)),
                 const Icon(Icons.expand_more, size: AppIconSize.i18),
               ],
             ),
@@ -437,7 +439,7 @@ class _FacilityPickerScreenState extends State<FacilityPickerScreen> {
                               color: type.isNotEmpty ? typeColor.withValues(alpha: AppAlpha.a10) : context.colors.textHint.withValues(alpha: AppAlpha.a10),
                               borderRadius: BorderRadius.circular(AppRadius.r8),
                             ),
-                            child: Text(type.isNotEmpty ? type : 'Type not set',
+                            child: Text(type.isNotEmpty ? context.l10n.facilityTypeLabel(type) : 'Type not set',
                                 style: TextStyle(color: type.isNotEmpty ? typeColor : context.colors.textMuted, fontSize: AppFontSize.f11, fontWeight: AppFontWeight.semibold)),
                           ),
                         ],
@@ -469,7 +471,7 @@ class _FacilityPickerScreenState extends State<FacilityPickerScreen> {
                     const SizedBox(width: AppSpacing.s12),
                     Container(width: 6, height: 6, decoration: BoxDecoration(color: FacilityStatus.fromKey(status) == FacilityStatus.active ? context.colors.success : context.colors.textHint, shape: BoxShape.circle)),
                     const SizedBox(width: AppSpacing.s4),
-                    Text(status, style: TextStyle(fontSize: AppFontSize.f12, color: context.colors.textMuted)),
+                    Text(context.l10n.facilityStatusLabel(status), style: TextStyle(fontSize: AppFontSize.f12, color: context.colors.textMuted)),
                   ],
                 ),
                 const SizedBox(height: AppSpacing.s12),

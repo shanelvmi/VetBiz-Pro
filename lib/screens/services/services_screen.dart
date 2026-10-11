@@ -27,6 +27,7 @@ import '../../theme/app_dimens.dart';
 import '../../theme/theme_context.dart';
 import '../../theme/app_breakpoints.dart';
 import '../../ui/feedback/app_feedback.dart';
+import '../../l10n/l10n.dart';
 
 class ServicesScreen extends StatefulWidget {
   const ServicesScreen({super.key});
@@ -489,6 +490,7 @@ class _ServicesScreenState extends State<ServicesScreen> {
           value: _selectedCategory,
           items: ['All', ...kServiceCategories],
           label: 'Category',
+          display: (v) => v == 'All' ? context.l10n.common_all : context.l10n.serviceCategoryLabel(v),
           onChanged: (val) {
             setState(() => _selectedCategory = val);
             _openServicesListSession();
@@ -530,6 +532,8 @@ class _ServicesScreenState extends State<ServicesScreen> {
     required List<T> items,
     required String label,
     required ValueChanged<T> onChanged,
+    // What an item shows; the dropdown still holds and returns the item.
+    String Function(T value)? display,
   }) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: AppSpacing.s10),
@@ -544,7 +548,7 @@ class _ServicesScreenState extends State<ServicesScreen> {
           value: value,
           icon: Icon(Icons.arrow_drop_down, size: AppIconSize.i18, color: context.colors.primary),
           style: TextStyle(color: context.colors.textPrimary, fontSize: AppFontSize.f13),
-          items: items.map((v) => DropdownMenuItem(value: v, child: Text('$label: $v'))).toList(),
+          items: items.map((v) => DropdownMenuItem(value: v, child: Text('$label: ${display?.call(v) ?? v}'))).toList(),
           onChanged: (val) {
             if (val != null) onChanged(val);
           },
@@ -634,7 +638,7 @@ class _ServicesScreenState extends State<ServicesScreen> {
                       color: context.colors.primary.withValues(alpha: AppAlpha.a10),
                       borderRadius: BorderRadius.circular(AppRadius.r8),
                     ),
-                    child: Text(service.category, style: TextStyle(fontSize: AppFontSize.f10_5, color: context.colors.primary, fontWeight: AppFontWeight.semibold)),
+                    child: Text(context.l10n.serviceCategoryLabel(service.category), style: TextStyle(fontSize: AppFontSize.f10_5, color: context.colors.primary, fontWeight: AppFontWeight.semibold)),
                   ),
                 ],
               ),
@@ -852,7 +856,7 @@ class _ServicesScreenState extends State<ServicesScreen> {
               ),
             ),
             const SizedBox(height: AppSpacing.s20),
-            _detailField(Icons.category_outlined, 'Category', service.category),
+            _detailField(Icons.category_outlined, 'Category', context.l10n.serviceCategoryLabel(service.category)),
             _detailField(Icons.person_outline, 'Client', service.clientName ?? 'Walk-in', subtitle: client?.phone),
             _detailField(Icons.badge_outlined, 'Provided By', service.providedByName ?? 'Unknown'),
             _detailField(Icons.calendar_today_outlined, 'Service Date', dateOnlyFormatter.format(serviceDate)),

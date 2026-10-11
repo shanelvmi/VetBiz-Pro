@@ -30,6 +30,7 @@ import '../theme/app_breakpoints.dart';
 import '../theme/app_motion.dart';
 import '../ui/feedback/app_feedback.dart';
 import '../ui/feedback/friendly_error.dart';
+import '../../l10n/l10n.dart';
 
 class RegisterScreen extends StatefulWidget {
   final bool isUpdating;
@@ -1956,7 +1957,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   initialValue: _selectedFacilityType,
                   isExpanded: true,
                   decoration: _decoration(hint: 'Select type'),
-                  items: kFacilityTypes.map((t) => DropdownMenuItem(value: t, child: Text(t))).toList(),
+                  items: kFacilityTypes.map((t) => DropdownMenuItem(value: t, child: Text(context.l10n.facilityTypeLabel(t)))).toList(),
                   onChanged: (value) {
                     setState(() => _selectedFacilityType = value);
                     _onFieldChanged();

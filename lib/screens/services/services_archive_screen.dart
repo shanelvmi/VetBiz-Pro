@@ -15,6 +15,7 @@ import '../../config/app_date_format.dart';
 import '../../theme/app_text.dart';
 import '../../theme/app_dimens.dart';
 import '../../theme/theme_context.dart';
+import '../../l10n/l10n.dart';
 
 class ServicesArchiveScreen extends StatefulWidget {
   const ServicesArchiveScreen({super.key});
@@ -384,7 +385,8 @@ class _ServicesArchiveScreenState extends State<ServicesArchiveScreen> {
           border: Border.all(color: isSelected ? context.colors.primary : context.colors.textHint.withValues(alpha: AppAlpha.a30)),
         ),
         child: Text(
-          category,
+          // Shows the label; the chip selects the stored category.
+          category == 'All' ? context.l10n.common_all : context.l10n.serviceCategoryLabel(category),
           style: TextStyle(
             fontSize: AppFontSize.f12_5,
             color: isSelected ? context.colors.surface : context.colors.textPrimary,
@@ -515,7 +517,8 @@ class _ServicesArchiveScreenState extends State<ServicesArchiveScreen> {
                       borderRadius: BorderRadius.circular(AppRadius.r8),
                     ),
                     child: Text(
-                      ((service['category'] as String?)?.isNotEmpty ?? false) ? service['category'] as String : 'Other',
+                      context.l10n.serviceCategoryLabel(
+                          ((service['category'] as String?)?.isNotEmpty ?? false) ? service['category'] as String : 'Other'),
                       style: TextStyle(fontSize: AppFontSize.f10_5, color: context.colors.primary, fontWeight: AppFontWeight.semibold),
                     ),
                   ),
@@ -703,8 +706,11 @@ class _ServicesArchiveScreenState extends State<ServicesArchiveScreen> {
               ),
             ),
             const SizedBox(height: AppSpacing.s20),
-            _detailField(Icons.category_outlined, 'Category',
-                ((service['category'] as String?)?.isNotEmpty ?? false) ? service['category'] as String : 'Other'),
+            _detailField(
+                Icons.category_outlined,
+                'Category',
+                context.l10n.serviceCategoryLabel(
+                    ((service['category'] as String?)?.isNotEmpty ?? false) ? service['category'] as String : 'Other')),
             _detailField(Icons.person_outline, 'Client', service['clientName'] ?? 'Walk-in'),
             _detailField(Icons.badge_outlined, 'Provided By', service['providedByName'] ?? 'Unknown'),
             _detailField(Icons.calendar_today_outlined, 'Service Date', dateOnlyFormatter.format(serviceDate)),

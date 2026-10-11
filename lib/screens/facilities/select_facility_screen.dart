@@ -22,6 +22,7 @@ import '../../theme/app_dimens.dart';
 import '../../theme/theme_context.dart';
 import '../../theme/app_motion.dart';
 import '../../ui/feedback/friendly_error.dart';
+import '../../l10n/l10n.dart';
 
 
 class SelectFacilityScreen extends StatefulWidget {
@@ -304,7 +305,7 @@ class _HoverCardState extends State<_HoverCard> {
                     ),
                     const SizedBox(height: AppSpacing.s4),
                     Text(
-                      type,
+                      context.l10n.facilityTypeLabel(type),
                       style: TextStyle(
                         fontSize: AppFontSize.f14,
                         color: context.colors.primary.withValues(alpha: AppAlpha.a85),

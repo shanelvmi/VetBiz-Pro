@@ -27,6 +27,7 @@ import '../../theme/theme_context.dart';
 import '../../theme/app_breakpoints.dart';
 import '../../theme/app_motion.dart';
 import '../../ui/feedback/app_feedback.dart';
+import '../../l10n/l10n.dart';
 
 class AddEditServiceScreen extends StatefulWidget {
   final Service? service;
@@ -510,7 +511,7 @@ class _AddEditServiceScreenState extends State<AddEditServiceScreen> {
                 decoration: _inputDecoration('Category'),
                 items: _categories
                     .map((cat) =>
-                        DropdownMenuItem(value: cat, child: Text(cat)))
+                        DropdownMenuItem(value: cat, child: Text(context.l10n.serviceCategoryLabel(cat))))
                     .toList(),
                 onChanged: (value) => setState(() => _selectedCategory = value),
               ),

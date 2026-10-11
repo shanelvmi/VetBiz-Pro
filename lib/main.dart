@@ -976,7 +976,7 @@ class _NoFacilityScreenState extends State<_NoFacilityScreen> {
             labelText: 'Type',
             border: OutlineInputBorder(borderRadius: BorderRadius.circular(AppRadius.r14)),
           ),
-          items: kFacilityTypes.map((t) => DropdownMenuItem(value: t, child: Text(t))).toList(),
+          items: kFacilityTypes.map((t) => DropdownMenuItem(value: t, child: Text(context.l10n.facilityTypeLabel(t)))).toList(),
           onChanged: _adding
               ? null
               : (value) => setState(() {
@@ -1167,7 +1167,7 @@ class _NoFacilityScreenState extends State<_NoFacilityScreen> {
                   if (found != null)
                     Text(
                       "You'll be asking to join: ${found.facilityName}"
-                      '${found.facilityType.isEmpty ? '' : ' (${found.facilityType})'}',
+                      '${found.facilityType.isEmpty ? '' : ' (${context.l10n.facilityTypeLabel(found.facilityType)})'}',
                       textAlign: TextAlign.center,
                       style: TextStyle(color: context.colors.success, fontWeight: AppFontWeight.semibold, fontSize: AppFontSize.f13),
                     )

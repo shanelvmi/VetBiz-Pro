@@ -34,6 +34,7 @@ import '../../theme/theme_context.dart';
 import '../../theme/app_breakpoints.dart';
 import '../../ui/feedback/app_feedback.dart';
 import '../../ui/feedback/friendly_error.dart';
+import '../../l10n/l10n.dart';
 
 class FacilityScreen extends StatefulWidget {
   const FacilityScreen({super.key});
@@ -464,7 +465,7 @@ class _FacilityScreenState extends State<FacilityScreen> {
                 DropdownButtonFormField<String>(
                   initialValue: selectedType,
                   decoration: const InputDecoration(labelText: 'Type'),
-                  items: kFacilityTypes.map((t) => DropdownMenuItem(value: t, child: Text(t))).toList(),
+                  items: kFacilityTypes.map((t) => DropdownMenuItem(value: t, child: Text(context.l10n.facilityTypeLabel(t)))).toList(),
                   onChanged: (val) => setDialogState(() => selectedType = val),
                 ),
                 if (dialogError != null) ...[
@@ -719,7 +720,7 @@ class _FacilityScreenState extends State<FacilityScreen> {
                 DropdownButtonFormField<String>(
                   initialValue: selectedType,
                   decoration: const InputDecoration(labelText: 'Type'),
-                  items: kFacilityTypes.map((t) => DropdownMenuItem(value: t, child: Text(t))).toList(),
+                  items: kFacilityTypes.map((t) => DropdownMenuItem(value: t, child: Text(context.l10n.facilityTypeLabel(t)))).toList(),
                   onChanged: (val) => setDialogState(() => selectedType = val),
                 ),
                 const SizedBox(height: AppSpacing.s12),
@@ -797,8 +798,8 @@ class _FacilityScreenState extends State<FacilityScreen> {
                   initialValue: selectedStatus,
                   decoration: const InputDecoration(labelText: 'Status'),
                   items: [
-                    DropdownMenuItem(value: FacilityStatus.active.key, child: const Text('Active')),
-                    DropdownMenuItem(value: FacilityStatus.inactive.key, child: const Text('Inactive')),
+                    DropdownMenuItem(value: FacilityStatus.active.key, child: Text(context.l10n.facilityStatusLabel(FacilityStatus.active.key))),
+                    DropdownMenuItem(value: FacilityStatus.inactive.key, child: Text(context.l10n.facilityStatusLabel(FacilityStatus.inactive.key))),
                   ],
                   onChanged: (val) {
                     if (val != null) setDialogState(() => selectedStatus = val);
@@ -813,7 +814,8 @@ class _FacilityScreenState extends State<FacilityScreen> {
                     helperMaxLines: 2,
                   ),
                   items: UsageCalculatorService.restockFrequencyOptions
-                      .map((f) => DropdownMenuItem(value: f, child: Text(f)))
+                      // Shows the label; the facility stores the frequency name.
+                      .map((f) => DropdownMenuItem(value: f, child: Text(context.l10n.restockFrequencyLabel(f))))
                       .toList(),
                   onChanged: (val) {
                     if (val != null) setDialogState(() => selectedRestockFrequency = val);
@@ -1234,7 +1236,7 @@ class _FacilityScreenState extends State<FacilityScreen> {
         color: chipColor.withValues(alpha: AppAlpha.a20),
         borderRadius: BorderRadius.circular(AppRadius.r8),
       ),
-      child: Text(status, style: TextStyle(color: chipColor, fontWeight: AppFontWeight.semibold, fontSize: AppFontSize.f12)),
+      child: Text(context.l10n.facilityStatusLabel(status), style: TextStyle(color: chipColor, fontWeight: AppFontWeight.semibold, fontSize: AppFontSize.f12)),
     );
   }
 
@@ -1441,8 +1443,9 @@ class _FacilityScreenState extends State<FacilityScreen> {
           borderRadius: BorderRadius.circular(AppRadius.r20),
           border: Border.all(color: isSelected ? context.colors.primary : context.colors.textHint.withValues(alpha: AppAlpha.a30)),
         ),
+        // Shows the label; the filter keeps the stored status.
         child: Text(
-          value,
+          value == 'All' ? context.l10n.common_all : context.l10n.facilityStatusLabel(value),
           style: TextStyle(
             fontSize: AppFontSize.f12_5,
             color: isSelected ? context.colors.onPrimary : context.colors.textPrimary,
@@ -2776,7 +2779,7 @@ class _FacilityScreenState extends State<FacilityScreen> {
             Text(description, style: const TextStyle(fontSize: AppFontSize.f13_5, height: 1.5)),
             const SizedBox(height: AppSpacing.s14),
           ],
-          _aboutField('Facility Type', facility['type'] as String? ?? '-'),
+          _aboutField('Facility Type', context.l10n.facilityTypeLabel(facility['type'] as String? ?? '-')),
           _aboutField('Ownership', (details?['ownership'] as String?) ?? 'Not set'),
           _aboutFieldWithChip('Status', (details?[Fields.status] as String?) ?? FacilityStatus.active.key),
           _aboutField('Created By', _adminFullName ?? 'You'),
