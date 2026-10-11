@@ -10,6 +10,7 @@ import '../../utils/merged_query_stream.dart';
 import '../../utils/text_sanitizer.dart';
 import '../../widgets/firestore_error_view.dart';
 import '../../theme/app_palette.dart';
+import '../../ui/feedback/app_feedback.dart';
 import '../../data/collections.dart';
 import '../../data/fields.dart';
 import '../../config/app_limits.dart';
@@ -319,22 +320,20 @@ class _ActivityLogScreenState extends State<ActivityLogScreen> {
         problem = ActivityLogRetention.explainFailure(e);
       }
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(problem != null
-              ? 'Saved - logs older than $selected days are now hidden, but could not be deleted yet: $problem'
-              : deleted > 0
-                  ? 'Logs will now be kept for $selected days - $deleted older log${deleted == 1 ? '' : 's'} deleted'
-                  : 'Logs will now be kept for $selected days'),
-          backgroundColor: problem != null ? Colors.orange.shade800 : Colors.green,
-          duration: Duration(seconds: problem != null ? 7 : 4),
-        ),
-      );
-    } catch (e) {
+      if (problem != null) {
+        AppFeedback.warning(
+          'Saved - logs older than $selected days are now hidden',
+          detail: 'They could not be deleted yet: $problem',
+        );
+      } else if (deleted > 0) {
+        AppFeedback.success('Logs will now be kept for $selected days',
+            detail: '$deleted older log${deleted == 1 ? '' : 's'} deleted');
+      } else {
+        AppFeedback.success('Logs will now be kept for $selected days');
+      }
+    } catch (e, st) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Could not save: $e'), backgroundColor: Colors.redAccent),
-      );
+      AppFeedback.error("Couldn't save the log retention setting", error: e, stackTrace: st);
     }
   }
 

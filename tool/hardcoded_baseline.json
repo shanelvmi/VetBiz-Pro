@@ -12,7 +12,7 @@
     "R1": {
       "lib/main.dart": 27,
       "lib/models/notification_model.dart": 13,
-      "lib/screens/activity/activity_log_screen.dart": 32,
+      "lib/screens/activity/activity_log_screen.dart": 29,
       "lib/screens/admin/manage_assistants_screen.dart": 2,
       "lib/screens/dashboard/dashboard_screen.dart": 14,
       "lib/screens/dashboard/insights_screen.dart": 5,
@@ -55,7 +55,7 @@
     "R5": {
       "lib/main.dart": 2,
       "lib/providers/client_provider.dart": 7,
-      "lib/screens/activity/activity_log_screen.dart": 3,
+      "lib/screens/activity/activity_log_screen.dart": 2,
       "lib/screens/dashboard/dashboard_screen.dart": 14,
       "lib/screens/dashboard/insights_screen.dart": 4,
       "lib/screens/login_screen.dart": 10,
@@ -151,8 +151,6 @@
       "lib/widgets/maintenance_gate.dart": 1,
       "lib/widgets/product_catalog_side_panel.dart": 2
     },
-    "R11": {
-      "lib/screens/activity/activity_log_screen.dart": 6
-    }
+    "R11": {}
   }
 }
