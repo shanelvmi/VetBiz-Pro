@@ -35,6 +35,7 @@ import '../../theme/app_dimens.dart';
 import '../../theme/theme_context.dart';
 import '../../theme/app_breakpoints.dart';
 import '../../theme/app_motion.dart';
+import '../../l10n/l10n.dart';
 
 // --- Custom Formatter ---
 // --- Add Sale Screen ---
@@ -356,7 +357,8 @@ class _AddSaleScreenState extends State<AddSaleScreen> {
                                       onSelected: (category) => setDialogState(() => selectedCategory = category),
                                       itemBuilder: (context) => [
                                         const PopupMenuItem(value: null, child: Text('All Categories')),
-                                        ...categories.map((c) => PopupMenuItem(value: c, child: Text(c))),
+                                        // Shows the label; filters on the stored category.
+                                        ...categories.map((c) => PopupMenuItem(value: c, child: Text(context.l10n.productCategoryLabel(c)))),
                                       ],
                                       child: Container(
                                         padding: const EdgeInsets.all(AppSpacing.s12),

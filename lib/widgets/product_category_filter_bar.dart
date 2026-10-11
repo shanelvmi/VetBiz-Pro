@@ -55,9 +55,9 @@ class ProductCategoryFilterBar extends StatelessWidget {
           runSpacing: AppSpacing.s8,
           children: groupNames.map((group) {
             return ChoiceChip(
-              // 'All' is the no-filter value, shown in the current language; the
-              // group names are stored values (their labels come with step 2F-3).
-              label: Text(group == 'All' ? context.l10n.common_all : group),
+              // 'All' is the no-filter value. The chip shows a group's label;
+              // the filter keeps the group's name.
+              label: Text(group == 'All' ? context.l10n.common_all : context.l10n.productGroupLabel(group)),
               selected: selectedGroup == group,
               selectedColor: accentColor,
               onSelected: (_) => onGroupChanged(group),
@@ -76,7 +76,8 @@ class ProductCategoryFilterBar extends StatelessWidget {
             runSpacing: AppSpacing.s8,
             children: ['All', ...categoryOptions].map((category) {
               return ChoiceChip(
-                label: Text(category == 'All' ? context.l10n.common_all : category,
+                // Shows the label; selects and compares the stored category.
+                label: Text(category == 'All' ? context.l10n.common_all : context.l10n.productCategoryLabel(category),
                     style: const TextStyle(fontSize: AppFontSize.f12_5)),
                 selected: selectedCategory == category,
                 selectedColor: accentColor,

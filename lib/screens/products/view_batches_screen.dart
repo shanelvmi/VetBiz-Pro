@@ -17,6 +17,7 @@ import '../../theme/app_text.dart';
 import '../../theme/theme_context.dart';
 import '../../theme/app_motion.dart';
 import '../../theme/app_breakpoints.dart';
+import '../../l10n/l10n.dart';
 
 /// Full management view for one product's stock - every batch on file,
 /// with a way to correct or top up any of them directly, plus a clear
@@ -391,7 +392,7 @@ class _ViewBatchesScreenState extends State<ViewBatchesScreen> {
                     Card(
                       child: ListTile(
                         title: Text(widget.product.name, style: const TextStyle(fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f16)),
-                        subtitle: Text('${widget.product.category} · ${Money.symbolWhole(widget.product.sellPrice)}'),
+                        subtitle: Text('${context.l10n.productCategoryLabel(widget.product.category)} · ${Money.symbolWhole(widget.product.sellPrice)}'),
                         trailing: TextButton(
                           onPressed: () {
                             showAddEditProductScreen(context, product: widget.product);

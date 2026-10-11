@@ -34,6 +34,7 @@ import '../../theme/app_breakpoints.dart';
 import '../../theme/app_motion.dart';
 import '../../config/app_timeouts.dart';
 import '../../ui/feedback/app_feedback.dart';
+import '../../l10n/l10n.dart';
 
 enum ProductDestination {
   sellable,
@@ -443,7 +444,7 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
       child: InputDecorator(
         decoration: _inputDecoration('Type', required: true),
         child: Text(
-          _type.isEmpty ? 'Select Type' : _type,
+          _type.isEmpty ? 'Select Type' : context.l10n.productTypeLabel(_type),
           style: TextStyle(color: _type.isEmpty ? context.colors.textHint : (enabled ? context.colors.textPrimary : context.colors.textMuted)),
         ),
       ),
@@ -468,7 +469,7 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
               errorText: formFieldState.errorText,
             ),
             child: Text(
-              _category.isEmpty ? 'Select Category' : _category,
+              _category.isEmpty ? 'Select Category' : context.l10n.productCategoryLabel(_category),
               style: TextStyle(
                   color: _category.isEmpty ? context.colors.textHint : (enabled ? context.colors.textPrimary : context.colors.textMuted)),
             ),
@@ -561,7 +562,8 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
   Widget _unitDropdown(bool fieldsLocked) {
     return DropdownButtonFormField(
       initialValue: _unit,
-      items: _units.map((unit) => DropdownMenuItem(value: unit, child: Text(unit))).toList(),
+      // Shows the unit's label, saves the stored unit.
+      items: _units.map((unit) => DropdownMenuItem(value: unit, child: Text(context.l10n.productUnitLabel(unit)))).toList(),
       decoration: _inputDecoration('Unit'),
       onChanged: fieldsLocked ? null : (String? value) => setState(() => _unit = value!),
     );
@@ -636,7 +638,7 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
                       visualDensity: const VisualDensity(vertical: -3),
                       contentPadding: const EdgeInsets.symmetric(horizontal: AppSpacing.s8),
                       title: Text(
-                        cat,
+                        context.l10n.productCategoryLabel(cat),
                         style: TextStyle(color: context.colors.background, fontSize: AppFontSize.f13),
                       ),
                       onTap: () {
@@ -693,7 +695,7 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
                       visualDensity: const VisualDensity(vertical: -3),
                       contentPadding: const EdgeInsets.symmetric(horizontal: AppSpacing.s8),
                       title: Text(
-                        t,
+                        context.l10n.productTypeLabel(t),
                         style: TextStyle(color: context.colors.background, fontSize: AppFontSize.f13),
                       ),
                       onTap: () {

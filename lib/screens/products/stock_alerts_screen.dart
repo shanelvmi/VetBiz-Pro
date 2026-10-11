@@ -19,6 +19,7 @@ import '../../theme/app_dimens.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/theme_context.dart';
 import '../../theme/app_breakpoints.dart';
+import '../../l10n/l10n.dart';
 
 /// What kind of thing needs attention. Declared in the order they're
 /// shown - most urgent first.
@@ -795,7 +796,11 @@ class _AlertsBodyState extends State<_AlertsBody> {
           icon: Icon(Icons.arrow_drop_down, size: AppIconSize.i18, color: context.colors.primary),
           style: TextStyle(color: context.colors.textPrimary, fontSize: AppFontSize.f13),
           items: items
-              .map((v) => DropdownMenuItem(value: v, child: Text('Category: $v', overflow: TextOverflow.ellipsis)))
+              // Shows the label; filters on the stored category.
+              .map((v) => DropdownMenuItem(
+                  value: v,
+                  child: Text('Category: ${v == 'All' ? context.l10n.common_all : context.l10n.productCategoryLabel(v)}',
+                      overflow: TextOverflow.ellipsis)))
               .toList(),
           onChanged: (val) {
             if (val != null) {
@@ -908,7 +913,7 @@ class _AlertsBodyState extends State<_AlertsBody> {
       padding: const EdgeInsets.symmetric(horizontal: AppSpacing.s8, vertical: AppSpacing.s4),
       decoration: BoxDecoration(color: context.colors.primary.withValues(alpha: AppAlpha.a10), borderRadius: BorderRadius.circular(AppRadius.r10)),
       child: Text(
-        category,
+        context.l10n.productCategoryLabel(category),
         maxLines: 1,
         overflow: TextOverflow.ellipsis,
         style: TextStyle(color: context.colors.primary, fontSize: AppFontSize.f11_5, fontWeight: AppFontWeight.semibold),

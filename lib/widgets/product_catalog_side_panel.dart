@@ -207,8 +207,9 @@ class _ProductCatalogSidePanelState extends State<ProductCatalogSidePanel> {
       'Agro' => Icons.eco_outlined,
       _ => Icons.category_outlined,
     };
-    // Group names are stored values; their labels come with step 2F-3.
-    final label = group == 'Vet' ? 'Veterinary' : group;
+    // The panel has the room for the Vet group's long name. The group's
+    // name itself (what the filter compares) is unchanged.
+    final label = group == 'Vet' ? context.l10n.productGroup_veterinary : context.l10n.productGroupLabel(group);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -249,7 +250,7 @@ class _ProductCatalogSidePanelState extends State<ProductCatalogSidePanel> {
                     children: allSubcategories.map((category) {
                       final isSelected = widget.selectedCategory == category;
                       return _selectableRow(
-                        label: category,
+                        label: context.l10n.productCategoryLabel(category),
                         count: widget.categoryCounts[category] ?? 0,
                         isSelected: isSelected,
                         dense: true,

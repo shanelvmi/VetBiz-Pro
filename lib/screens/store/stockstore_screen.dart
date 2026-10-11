@@ -23,6 +23,7 @@ import '../../services/trash_service.dart';
 import '../../data/collections.dart';
 import '../../config/money.dart';
 import '../../config/app_date_format.dart';
+import '../../l10n/l10n.dart';
 
 class StockStoreScreen extends StatefulWidget {
   const StockStoreScreen({super.key});
@@ -584,7 +585,7 @@ class _StockStoreScreenState extends State<StockStoreScreen> {
               children: [
                 Text(p.name, style: const TextStyle(fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f14_5),
                     maxLines: 1, overflow: TextOverflow.ellipsis),
-                Text('${p.category} \u2022 ${p.type}',
+                Text('${context.l10n.productCategoryLabel(p.category)} \u2022 ${context.l10n.productTypeLabel(p.type)}',
                     style: TextStyle(fontSize: AppFontSize.f12, color: context.colors.textMuted), maxLines: 1, overflow: TextOverflow.ellipsis),
                 const SizedBox(height: AppSpacing.s4),
                 Wrap(
@@ -999,7 +1000,7 @@ class _StockStoreScreenState extends State<StockStoreScreen> {
                       overflow: TextOverflow.ellipsis,
                     ),
                     Text(
-                      '${p.category} \u2022 ${p.type}',
+                      '${context.l10n.productCategoryLabel(p.category)} \u2022 ${context.l10n.productTypeLabel(p.type)}',
                       style: TextStyle(fontSize: AppFontSize.f12, color: context.colors.textMuted),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,

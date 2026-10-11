@@ -26,6 +26,7 @@ import '../../theme/app_dimens.dart';
 import '../../theme/theme_context.dart';
 import '../../theme/app_breakpoints.dart';
 import '../../theme/app_motion.dart';
+import '../../l10n/l10n.dart';
 
 class ProductsScreen extends StatefulWidget {
   final String? initialSearchQuery;
@@ -644,7 +645,7 @@ class _ProductsScreenState extends State<ProductsScreen> {
               children: [
                 Text(p.name, style: const TextStyle(fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f14_5),
                     maxLines: 1, overflow: TextOverflow.ellipsis),
-                Text('${p.category} \u2022 ${p.type}',
+                Text('${context.l10n.productCategoryLabel(p.category)} \u2022 ${context.l10n.productTypeLabel(p.type)}',
                     style: TextStyle(fontSize: AppFontSize.f12, color: context.colors.textMuted), maxLines: 1, overflow: TextOverflow.ellipsis),
                 const SizedBox(height: AppSpacing.s4),
                 Wrap(
@@ -1077,7 +1078,7 @@ class _ProductsScreenState extends State<ProductsScreen> {
                       overflow: TextOverflow.ellipsis,
                     ),
                     Text(
-                      '${p.category} \u2022 ${p.type}',
+                      '${context.l10n.productCategoryLabel(p.category)} \u2022 ${context.l10n.productTypeLabel(p.type)}',
                       style: TextStyle(fontSize: AppFontSize.f12, color: context.colors.textMuted),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
