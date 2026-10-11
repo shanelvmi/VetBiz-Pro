@@ -164,6 +164,14 @@ class _FeedbackCardState extends State<_FeedbackCard> {
 
   bool get _hasAction => widget.onAction != null || widget.technical != null;
 
+  // A second line needs time to be read: at least toastDetailed, and never
+  // shorter than the type's own time (an error keeps its 7 s).
+  Duration get _duration {
+    final own = widget.kind.duration;
+    if (widget.detail == null || own >= AppMotion.toastDetailed) return own;
+    return AppMotion.toastDetailed;
+  }
+
   @override
   void initState() {
     super.initState();
@@ -179,7 +187,7 @@ class _FeedbackCardState extends State<_FeedbackCard> {
 
   void _startTimer() {
     _timer?.cancel();
-    _timer = Timer(widget.kind.duration, widget.onClose);
+    _timer = Timer(_duration, widget.onClose);
   }
 
   void _act() {

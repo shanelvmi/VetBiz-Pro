@@ -649,7 +649,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
           child: Container(
             padding: const EdgeInsets.fromLTRB(AppSpacing.s14, AppSpacing.s12, AppSpacing.s8, AppSpacing.s12),
             decoration: BoxDecoration(
-              color: context.colors.surfaceMuted,
+              color: context.colors.dangerSurface,
               borderRadius: BorderRadius.circular(AppRadius.r14),
               border: Border.all(color: context.colors.dangerAccent.withValues(alpha: AppAlpha.a40)),
               boxShadow: [

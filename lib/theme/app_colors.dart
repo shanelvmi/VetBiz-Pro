@@ -49,6 +49,7 @@ class AppColors extends ThemeExtension<AppColors> {
     required this.infoNoteTextSoft,
     required this.trendUp,
     required this.trendDown,
+    required this.dangerSurface,
     required this.scrim,
     required this.shadow,
     required this.chart1,
@@ -125,6 +126,10 @@ class AppColors extends ThemeExtension<AppColors> {
   final Color trendUp;
   final Color trendDown;
 
+  // The fill of the login and register error alerts: a pale pink, exact
+  // legacy value (owner decision after D8; surfaceMuted lost the tint).
+  final Color dangerSurface;
+
   // Darkening layers, not text: a scrim over a photo, and card shadows.
   // Kept apart from textStrong because Dark Mode turns text light, and
   // these must stay dark.
@@ -191,6 +196,7 @@ class AppColors extends ThemeExtension<AppColors> {
         infoNoteTextSoft: Colors.blueGrey.shade500,
         trendUp: const Color(0xFF10B981),
         trendDown: const Color(0xFFEF4444),
+        dangerSurface: const Color(0xFFFFF1F0),
         scrim: Colors.black,
         shadow: Colors.black,
         chart1: const Color(0xFF3D5A80),
@@ -243,6 +249,7 @@ class AppColors extends ThemeExtension<AppColors> {
     Color? infoNoteTextSoft,
     Color? trendUp,
     Color? trendDown,
+    Color? dangerSurface,
     Color? scrim,
     Color? shadow,
     Color? chart1,
@@ -293,6 +300,7 @@ class AppColors extends ThemeExtension<AppColors> {
         infoNoteTextSoft: infoNoteTextSoft ?? this.infoNoteTextSoft,
         trendUp: trendUp ?? this.trendUp,
         trendDown: trendDown ?? this.trendDown,
+        dangerSurface: dangerSurface ?? this.dangerSurface,
         scrim: scrim ?? this.scrim,
         shadow: shadow ?? this.shadow,
         chart1: chart1 ?? this.chart1,
@@ -348,6 +356,7 @@ class AppColors extends ThemeExtension<AppColors> {
       infoNoteTextSoft: l(infoNoteTextSoft, other.infoNoteTextSoft),
       trendUp: l(trendUp, other.trendUp),
       trendDown: l(trendDown, other.trendDown),
+      dangerSurface: l(dangerSurface, other.dangerSurface),
       scrim: l(scrim, other.scrim),
       shadow: l(shadow, other.shadow),
       chart1: l(chart1, other.chart1),

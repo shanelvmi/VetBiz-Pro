@@ -55,6 +55,8 @@ void main() {
       // summary_card.dart's trend pill, as it was.
       'trendUp': (c.trendUp, const Color(0xFF10B981)),
       'trendDown': (c.trendDown, const Color(0xFFEF4444)),
+      // The login and register alert fill, as it was.
+      'dangerSurface': (c.dangerSurface, const Color(0xFFFFF1F0)),
       'scrim': (c.scrim, Colors.black),
       'shadow': (c.shadow, Colors.black),
       // Client-type category colours (clients_screen.dart), as they were.
@@ -219,6 +221,7 @@ void main() {
         AppMotion.toastSuccess, AppMotion.toastInfo, AppMotion.toastWarning,
         AppMotion.toastUndo, AppMotion.toastError,
       ].map((d) => d.inSeconds), [3, 4, 5, 6, 7]);
+      expect(AppMotion.toastDetailed.inSeconds, 6);
     });
 
     test('feedback sizes', () {

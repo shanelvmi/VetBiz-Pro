@@ -755,7 +755,9 @@ class _ServicesScreenState extends State<ServicesScreen> {
       context: context,
       builder: (ctx) => AlertDialog(
         title: const Text('Delete Service?'),
-        content: Text('This permanently deletes ${_invoiceNo(service)} (${service.name}). This cannot be undone.'),
+        content: const Text(
+            "This moves the service to Trash and puts its stock back, removes its debt and updates the client's balance. "
+            'Restoring from Trash brings back the record only.'),
         actions: [
           TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancel')),
           TextButton(

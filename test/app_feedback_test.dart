@@ -66,6 +66,26 @@ void main() {
     }
   });
 
+  testWidgets('a message with a second line stays at least toastDetailed', (tester) async {
+    await pumpApp(tester);
+    final cases = <(void Function(), String, Duration)>[
+      (() => AppFeedback.success('S2', detail: 'more'), 'S2', AppMotion.toastDetailed),
+      (() => AppFeedback.info('I2', detail: 'more'), 'I2', AppMotion.toastDetailed),
+      (() => AppFeedback.warning('W2', detail: 'more'), 'W2', AppMotion.toastDetailed),
+      // Already longer: keeps its own time.
+      (() => AppFeedback.error('E2', detail: 'more'), 'E2', AppMotion.toastError),
+    ];
+    for (final (show, text, duration) in cases) {
+      show();
+      await tester.pump();
+      await tester.pump(duration - const Duration(milliseconds: 100));
+      expect(find.text(text), findsOneWidget, reason: '$text still up just before $duration');
+      await tester.pump(const Duration(milliseconds: 200));
+      await tester.pumpAndSettle();
+      expect(find.text(text), findsNothing, reason: '$text gone after $duration');
+    }
+  });
+
   testWidgets('Undo runs the callback and dismisses the message', (tester) async {
     await pumpApp(tester);
     var undone = 0;

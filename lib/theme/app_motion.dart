@@ -36,4 +36,9 @@ class AppMotion {
   static const Duration toastWarning = Duration(seconds: 5);
   static const Duration toastUndo = Duration(seconds: 6);
   static const Duration toastError = Duration(seconds: 7);
+
+  /// The least time a message with a second line stays up, so the extra
+  /// text can be read (owner decision after D8). Types already longer keep
+  /// their own time.
+  static const Duration toastDetailed = Duration(seconds: 6);
 }

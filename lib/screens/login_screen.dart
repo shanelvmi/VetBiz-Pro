@@ -843,7 +843,7 @@ class _LoginScreenState extends State<LoginScreen> {
           child: Container(
             padding: const EdgeInsets.fromLTRB(AppSpacing.s12, AppSpacing.s10, AppSpacing.s6, AppSpacing.s10),
             decoration: BoxDecoration(
-              color: context.colors.surfaceMuted,
+              color: context.colors.dangerSurface,
               borderRadius: BorderRadius.circular(AppRadius.r12),
               border: Border.all(color: context.colors.dangerAccent.withValues(alpha: AppAlpha.a40)),
               boxShadow: [

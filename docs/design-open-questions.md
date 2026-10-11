@@ -100,6 +100,12 @@ Incomplete: **sales** and **services**. After restoring either one, stock is too
 
 ## Decided
 
+### D8 follow-up (decided after batch D8; done before D9)
+
+- **`AppColors.dangerSurface`** (exact `#FFF1F0`): the login and register error alert boxes use it, so they keep their pink tint (the D8 snap to `surfaceMuted` made them grey).
+- **`AppMotion.toastDetailed`** (6 s): an AppFeedback message with a second line stays at least this long; a type whose own time is already longer (error, 7 s) keeps it.
+- **Service delete dialog** (`services_screen.dart` `_confirmDeleteService`): "This moves the service to Trash and puts its stock back, removes its debt and updates the client's balance. Restoring from Trash brings back the record only."
+
 ### Undo after the Trash audit (decided after D7; done before D8)
 
 - **Services: Undo withdrawn.** Deleting a service shows "Service moved to Trash" with no Undo (`services_screen.dart` `_confirmDeleteService`), because a service restore is incomplete (see "Trash and restore: books consistency"). The Trash screen's confirmed Restore stays.
