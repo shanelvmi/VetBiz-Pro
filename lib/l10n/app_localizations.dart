@@ -3745,6 +3745,138 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Save Client'**
   String get clients_save;
+
+  /// Try again button (lower-case "again"), for example after a load error.
+  ///
+  /// In en, this message translates to:
+  /// **'Try again'**
+  String get common_tryAgainLower;
+
+  /// Restore button or tooltip (brings an item back from Trash).
+  ///
+  /// In en, this message translates to:
+  /// **'Restore'**
+  String get common_restore;
+
+  /// Screen text when no facility is chosen (with a full stop).
+  ///
+  /// In en, this message translates to:
+  /// **'No facility selected.'**
+  String get common_noFacilityDot;
+
+  /// Shown in a team member's row while a change is being saved.
+  ///
+  /// In en, this message translates to:
+  /// **'Working...'**
+  String get team_working;
+
+  /// Message after a status change; action is the stored action key.
+  ///
+  /// In en, this message translates to:
+  /// **'{action, select, approved{{name} approved} rejected{{name} rejected} deactivated{{name} deactivated} reactivated{{name} reactivated} other{{name} {action}}}'**
+  String team_actionDone(String name, String action);
+
+  /// Message when a status change failed.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t update the assistant'**
+  String get team_updateFailed;
+
+  /// Message after removing an assistant.
+  ///
+  /// In en, this message translates to:
+  /// **'Assistant removed from this facility'**
+  String get team_removed;
+
+  /// Message when removing failed.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t remove the assistant'**
+  String get team_removeFailed;
+
+  /// Message after moving an assistant to another facility.
+  ///
+  /// In en, this message translates to:
+  /// **'Assistant reassigned'**
+  String get team_reassigned;
+
+  /// Message when moving failed.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t reassign the assistant'**
+  String get team_reassignFailed;
+
+  /// Stands in for a missing name in the middle of a sentence.
+  ///
+  /// In en, this message translates to:
+  /// **'this assistant'**
+  String get team_thisAssistant;
+
+  /// Stands in for a missing name at the start of a sentence.
+  ///
+  /// In en, this message translates to:
+  /// **'This assistant'**
+  String get team_thisAssistantCap;
+
+  /// Stands in for a missing name in the Reject dialog.
+  ///
+  /// In en, this message translates to:
+  /// **'this person'**
+  String get team_thisPerson;
+
+  /// Stands in for a missing name in the Deactivate co-admin dialog.
+  ///
+  /// In en, this message translates to:
+  /// **'this co-admin'**
+  String get team_thisCoAdmin;
+
+  /// Reassign dialog title.
+  ///
+  /// In en, this message translates to:
+  /// **'Move {name}'**
+  String team_moveTitle(String name);
+
+  /// Reassign dialog text.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose the facility they should work in. They keep their account and their approval.'**
+  String get team_moveBody;
+
+  /// Reassign dialog when there is nowhere to move them.
+  ///
+  /// In en, this message translates to:
+  /// **'You don\'t run any other facility to move them to.'**
+  String get team_noOtherFacility;
+
+  /// Picker title when the admin runs several facilities.
+  ///
+  /// In en, this message translates to:
+  /// **'Invite Assistant To...'**
+  String get team_inviteTo;
+
+  /// A facility whose name is missing.
+  ///
+  /// In en, this message translates to:
+  /// **'Unknown facility'**
+  String get team_unknownFacility;
+
+  /// Actions cell on your own row.
+  ///
+  /// In en, this message translates to:
+  /// **'You'**
+  String get team_you;
+
+  /// Actions cell on the facility owner's row (seen by a co-admin).
+  ///
+  /// In en, this message translates to:
+  /// **'Facility admin'**
+  String get team_facilityAdmin;
+
+  /// Button that approves a waiting assistant.
+  ///
+  /// In en, this message translates to:
+  /// **'Approve'**
+  String get team_approve;
 }
 
 class _AppLocalizationsDelegate

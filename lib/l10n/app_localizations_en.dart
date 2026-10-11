@@ -2040,4 +2040,83 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get clients_save => 'Save Client';
+
+  @override
+  String get common_tryAgainLower => 'Try again';
+
+  @override
+  String get common_restore => 'Restore';
+
+  @override
+  String get common_noFacilityDot => 'No facility selected.';
+
+  @override
+  String get team_working => 'Working...';
+
+  @override
+  String team_actionDone(String name, String action) {
+    String _temp0 = intl.Intl.selectLogic(action, {
+      'approved': '$name approved',
+      'rejected': '$name rejected',
+      'deactivated': '$name deactivated',
+      'reactivated': '$name reactivated',
+      'other': '$name $action',
+    });
+    return '$_temp0';
+  }
+
+  @override
+  String get team_updateFailed => 'Couldn\'t update the assistant';
+
+  @override
+  String get team_removed => 'Assistant removed from this facility';
+
+  @override
+  String get team_removeFailed => 'Couldn\'t remove the assistant';
+
+  @override
+  String get team_reassigned => 'Assistant reassigned';
+
+  @override
+  String get team_reassignFailed => 'Couldn\'t reassign the assistant';
+
+  @override
+  String get team_thisAssistant => 'this assistant';
+
+  @override
+  String get team_thisAssistantCap => 'This assistant';
+
+  @override
+  String get team_thisPerson => 'this person';
+
+  @override
+  String get team_thisCoAdmin => 'this co-admin';
+
+  @override
+  String team_moveTitle(String name) {
+    return 'Move $name';
+  }
+
+  @override
+  String get team_moveBody =>
+      'Choose the facility they should work in. They keep their account and their approval.';
+
+  @override
+  String get team_noOtherFacility =>
+      'You don\'t run any other facility to move them to.';
+
+  @override
+  String get team_inviteTo => 'Invite Assistant To...';
+
+  @override
+  String get team_unknownFacility => 'Unknown facility';
+
+  @override
+  String get team_you => 'You';
+
+  @override
+  String get team_facilityAdmin => 'Facility admin';
+
+  @override
+  String get team_approve => 'Approve';
 }

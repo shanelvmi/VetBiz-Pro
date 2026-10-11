@@ -2053,4 +2053,82 @@ class AppLocalizationsSw extends AppLocalizations {
 
   @override
   String get clients_save => 'Hifadhi Mteja';
+
+  @override
+  String get common_tryAgainLower => 'Jaribu tena';
+
+  @override
+  String get common_restore => 'Rejesha';
+
+  @override
+  String get common_noFacilityDot => 'Hakuna kituo kilichochaguliwa.';
+
+  @override
+  String get team_working => 'Inashughulikia...';
+
+  @override
+  String team_actionDone(String name, String action) {
+    String _temp0 = intl.Intl.selectLogic(action, {
+      'approved': '$name ameidhinishwa',
+      'rejected': '$name amekataliwa',
+      'deactivated': '$name amesimamishwa',
+      'reactivated': '$name amerejeshwa',
+      'other': '$name $action',
+    });
+    return '$_temp0';
+  }
+
+  @override
+  String get team_updateFailed => 'Imeshindwa kusasisha msaidizi';
+
+  @override
+  String get team_removed => 'Msaidizi ameondolewa kwenye kituo hiki';
+
+  @override
+  String get team_removeFailed => 'Imeshindwa kumwondoa msaidizi';
+
+  @override
+  String get team_reassigned => 'Msaidizi amehamishwa';
+
+  @override
+  String get team_reassignFailed => 'Imeshindwa kumhamisha msaidizi';
+
+  @override
+  String get team_thisAssistant => 'msaidizi huyu';
+
+  @override
+  String get team_thisAssistantCap => 'Msaidizi huyu';
+
+  @override
+  String get team_thisPerson => 'mtu huyu';
+
+  @override
+  String get team_thisCoAdmin => 'msimamizi mwenza huyu';
+
+  @override
+  String team_moveTitle(String name) {
+    return 'Mhamishe $name';
+  }
+
+  @override
+  String get team_moveBody =>
+      'Chagua kituo atakachofanyia kazi. Akaunti yake na idhini yake vinabaki.';
+
+  @override
+  String get team_noOtherFacility => 'Huna kituo kingine cha kumhamishia.';
+
+  @override
+  String get team_inviteTo => 'Mwalike Msaidizi Kwenye...';
+
+  @override
+  String get team_unknownFacility => 'Kituo kisichojulikana';
+
+  @override
+  String get team_you => 'Wewe';
+
+  @override
+  String get team_facilityAdmin => 'Msimamizi wa kituo';
+
+  @override
+  String get team_approve => 'Idhinisha';
 }
