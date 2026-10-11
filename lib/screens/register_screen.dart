@@ -518,6 +518,11 @@ class _RegisterScreenState extends State<RegisterScreen> {
   // and the countdown restart after the pointer leaves the alert.
   static const Duration _alertSwitch = Duration(milliseconds: 260);
   static const Duration _alertHoverGrace = Duration(seconds: 3);
+  // Scrolling to the first field in error: 350 ms, between AppMotion.slow and
+  // slower. Kept exact (D8).
+  static const Duration _scrollToField = Duration(milliseconds: 350);
+  // The welcome panel beside the form on wide screens: a size. Kept exact.
+  static const double _welcomePanelWidth = 290;
 
   bool _isSubmitting = false;
   bool _obscurePassword = true;
@@ -720,10 +725,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     child: Container(
                       clipBehavior: Clip.antiAlias,
                       decoration: BoxDecoration(
-                        color: Colors.white.withValues(alpha: 0.97),
-                        borderRadius: BorderRadius.circular(24),
+                        color: context.colors.surface.withValues(alpha: 0.97),
+                        borderRadius: BorderRadius.circular(AppRadius.r24),
                         boxShadow: [
-                          BoxShadow(color: Colors.black.withValues(alpha: 0.35), blurRadius: 40, offset: const Offset(0, 20)),
+                          BoxShadow(color: context.colors.shadow.withValues(alpha: AppAlpha.a40), blurRadius: 40, offset: const Offset(0, 20)),
                         ],
                       ),
                       child: Column(
@@ -732,13 +737,13 @@ class _RegisterScreenState extends State<RegisterScreen> {
                         children: [
                           _buildRegisterHeader(),
                           Padding(
-                            padding: EdgeInsets.all(isWide ? 28 : 18),
+                            padding: EdgeInsets.all(isWide ? AppSpacing.s28 : AppSpacing.s18),
                             child: isWide
                                 ? Row(
                                     crossAxisAlignment: CrossAxisAlignment.start,
                                     children: [
-                                      SizedBox(width: 290, child: _buildWelcomePanel()),
-                                      const SizedBox(width: 24),
+                                      SizedBox(width: _welcomePanelWidth, child: _buildWelcomePanel()),
+                                      const SizedBox(width: AppSpacing.s24),
                                       Expanded(child: _buildRegisterForm(twoColumns: true)),
                                     ],
                                   )
@@ -747,7 +752,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                                     crossAxisAlignment: CrossAxisAlignment.stretch,
                                     children: [
                                       _buildWelcomeStrip(),
-                                      const SizedBox(height: 16),
+                                      const SizedBox(height: AppSpacing.s16),
                                       _buildRegisterForm(twoColumns: false),
                                     ],
                                   ),
@@ -769,7 +774,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
   Widget _buildRegisterHeader() {
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.s16, vertical: AppSpacing.s14),
       decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: [context.colors.primary, tealAccent],
@@ -782,26 +787,26 @@ class _RegisterScreenState extends State<RegisterScreen> {
           Container(
             width: 44,
             height: 44,
-            decoration: const BoxDecoration(color: Colors.white, shape: BoxShape.circle),
+            decoration: BoxDecoration(color: context.colors.surface, shape: BoxShape.circle),
             alignment: Alignment.center,
-            child: Text('VB.', style: TextStyle(color: context.colors.primary, fontWeight: FontWeight.bold, fontSize: 16)),
+            child: Text('VB.', style: TextStyle(color: context.colors.primary, fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f16)),
           ),
-          const SizedBox(width: 12),
-          const Expanded(
+          const SizedBox(width: AppSpacing.s12),
+          Expanded(
             child: Text(
               '${AppInfo.name} System',
               overflow: TextOverflow.ellipsis,
-              style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16),
+              style: TextStyle(color: context.colors.onPrimary, fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f16),
             ),
           ),
           TextButton.icon(
             onPressed: _goToLogin,
-            icon: const Icon(Icons.login, size: 17, color: Colors.white),
-            label: const Text('Log in', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600)),
+            icon: Icon(Icons.login, size: AppIconSize.i18, color: context.colors.onPrimary),
+            label: Text('Log in', style: TextStyle(color: context.colors.onPrimary, fontWeight: AppFontWeight.semibold)),
             style: TextButton.styleFrom(
-              backgroundColor: Colors.white.withValues(alpha: 0.15),
-              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+              backgroundColor: context.colors.surface.withValues(alpha: AppAlpha.a15),
+              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.s14, vertical: AppSpacing.s10),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadius.r20)),
             ),
           ),
         ],
@@ -811,28 +816,28 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
   Widget _buildWelcomePanel() {
     Widget benefit(IconData icon, String text) => Padding(
-          padding: const EdgeInsets.only(bottom: 14),
+          padding: const EdgeInsets.only(bottom: AppSpacing.s14),
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Icon(icon, color: tealGlow, size: 20),
-              const SizedBox(width: 10),
+              Icon(icon, color: tealGlow, size: AppIconSize.i20),
+              const SizedBox(width: AppSpacing.s10),
               Expanded(
-                child: Text(text, style: const TextStyle(color: Colors.white, fontSize: 13.5, height: 1.4)),
+                child: Text(text, style: TextStyle(color: context.colors.onPrimary, fontSize: AppFontSize.f13_5, height: 1.4)),
               ),
             ],
           ),
         );
 
     return Container(
-      padding: const EdgeInsets.all(24),
+      padding: const EdgeInsets.all(AppSpacing.s24),
       decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: [context.colors.primary, tealAccent],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(AppRadius.r20),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -842,40 +847,40 @@ class _RegisterScreenState extends State<RegisterScreen> {
             width: 46,
             height: 46,
             decoration: BoxDecoration(
-              color: tealGlow.withValues(alpha: 0.22),
+              color: tealGlow.withValues(alpha: AppAlpha.a20),
               shape: BoxShape.circle,
-              border: Border.all(color: tealGlow.withValues(alpha: 0.7), width: 1.4),
+              border: Border.all(color: tealGlow.withValues(alpha: AppAlpha.a70), width: 1.4),
             ),
-            child: const Icon(Icons.rocket_launch_outlined, color: Colors.white, size: 22),
+            child: Icon(Icons.rocket_launch_outlined, color: context.colors.onPrimary, size: AppIconSize.i22),
           ),
-          const SizedBox(height: 18),
-          const Text(
+          const SizedBox(height: AppSpacing.s18),
+          Text(
             'Create your account',
-            style: TextStyle(color: Colors.white, fontSize: 24, fontWeight: FontWeight.w800, height: 1.15),
+            style: TextStyle(color: context.colors.onPrimary, fontSize: AppFontSize.f24, fontWeight: AppFontWeight.extraBold, height: 1.15),
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: AppSpacing.s8),
           Text(
             'Set up ${AppInfo.name} for your agrovet or veterinary centre in a few minutes.',
-            style: TextStyle(color: Colors.white.withValues(alpha: 0.85), fontSize: 13.5, height: 1.45),
+            style: TextStyle(color: context.colors.onPrimary.withValues(alpha: AppAlpha.a85), fontSize: AppFontSize.f13_5, height: 1.45),
           ),
-          const SizedBox(height: 24),
+          const SizedBox(height: AppSpacing.s24),
           benefit(Icons.check_circle_outline, 'Sales, stock, clients and debts in one place'),
           benefit(Icons.check_circle_outline, 'Invite your team with secure, one-time codes'),
           benefit(Icons.check_circle_outline, 'Every new facility starts with a trial period'),
-          const SizedBox(height: 6),
-          Divider(color: Colors.white.withValues(alpha: 0.25)),
-          const SizedBox(height: 10),
-          Text('Already have an account?', style: TextStyle(color: Colors.white.withValues(alpha: 0.85), fontSize: 13)),
-          const SizedBox(height: 8),
+          const SizedBox(height: AppSpacing.s6),
+          Divider(color: context.colors.onPrimary.withValues(alpha: AppAlpha.a30)),
+          const SizedBox(height: AppSpacing.s10),
+          Text('Already have an account?', style: TextStyle(color: context.colors.onPrimary.withValues(alpha: AppAlpha.a85), fontSize: AppFontSize.f13)),
+          const SizedBox(height: AppSpacing.s8),
           OutlinedButton(
             onPressed: _goToLogin,
             style: OutlinedButton.styleFrom(
-              foregroundColor: Colors.white,
-              side: BorderSide(color: Colors.white.withValues(alpha: 0.6)),
-              padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 12),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              foregroundColor: context.colors.onPrimary,
+              side: BorderSide(color: context.colors.onPrimary.withValues(alpha: 0.6)),
+              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.s22, vertical: AppSpacing.s12),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadius.r12)),
             ),
-            child: const Text('Log in', style: TextStyle(fontWeight: FontWeight.w600)),
+            child: const Text('Log in', style: TextStyle(fontWeight: AppFontWeight.semibold)),
           ),
         ],
       ),
@@ -885,14 +890,14 @@ class _RegisterScreenState extends State<RegisterScreen> {
   // A compact version of the welcome panel for narrow screens.
   Widget _buildWelcomeStrip() {
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(AppSpacing.s16),
       decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: [context.colors.primary, tealAccent],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(AppRadius.r16),
       ),
       child: Row(
         children: [
@@ -900,25 +905,25 @@ class _RegisterScreenState extends State<RegisterScreen> {
             width: 40,
             height: 40,
             decoration: BoxDecoration(
-              color: tealGlow.withValues(alpha: 0.22),
+              color: tealGlow.withValues(alpha: AppAlpha.a20),
               shape: BoxShape.circle,
-              border: Border.all(color: tealGlow.withValues(alpha: 0.7), width: 1.2),
+              border: Border.all(color: tealGlow.withValues(alpha: AppAlpha.a70), width: 1.2),
             ),
-            child: const Icon(Icons.rocket_launch_outlined, color: Colors.white, size: 19),
+            child: Icon(Icons.rocket_launch_outlined, color: context.colors.onPrimary, size: AppIconSize.i20),
           ),
-          const SizedBox(width: 12),
+          const SizedBox(width: AppSpacing.s12),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text(
+                Text(
                   'Create your account',
-                  style: TextStyle(color: Colors.white, fontSize: 17, fontWeight: FontWeight.w800),
+                  style: TextStyle(color: context.colors.onPrimary, fontSize: AppFontSize.f17, fontWeight: AppFontWeight.extraBold),
                 ),
-                const SizedBox(height: 2),
+                const SizedBox(height: AppSpacing.s2),
                 Text(
                   'Set up your agrovet or veterinary centre in a few minutes.',
-                  style: TextStyle(color: Colors.white.withValues(alpha: 0.85), fontSize: 12.5),
+                  style: TextStyle(color: context.colors.onPrimary.withValues(alpha: AppAlpha.a85), fontSize: AppFontSize.f12_5),
                 ),
               ],
             ),
@@ -943,19 +948,19 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
                     _buildPersonalSection(),
-                    const SizedBox(height: 16),
+                    const SizedBox(height: AppSpacing.s16),
                     _buildSecuritySection(),
                   ],
                 ),
               ),
-              const SizedBox(width: 16),
+              const SizedBox(width: AppSpacing.s16),
               Expanded(
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
                     _buildRoleSection(),
-                    const SizedBox(height: 16),
+                    const SizedBox(height: AppSpacing.s16),
                     _buildFacilitySection(),
                   ],
                 ),
@@ -964,16 +969,16 @@ class _RegisterScreenState extends State<RegisterScreen> {
           )
         else ...[
           _buildPersonalSection(),
-          const SizedBox(height: 16),
+          const SizedBox(height: AppSpacing.s16),
           _buildRoleSection(),
-          const SizedBox(height: 16),
+          const SizedBox(height: AppSpacing.s16),
           _buildFacilitySection(),
-          const SizedBox(height: 16),
+          const SizedBox(height: AppSpacing.s16),
           _buildSecuritySection(),
         ],
-        const SizedBox(height: 20),
+        const SizedBox(height: AppSpacing.s20),
         _buildTermsLine(),
-        const SizedBox(height: 14),
+        const SizedBox(height: AppSpacing.s14),
         _buildSubmitButton('Create account'),
       ],
     );
@@ -983,7 +988,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
   // Policy." - the two names are real links to the same screens the login
   // page's footer opens.
   Widget _buildTermsLine() {
-    final base = TextStyle(fontSize: 12.5, color: Colors.grey.shade700);
+    final base = TextStyle(fontSize: AppFontSize.f12_5, color: context.colors.textSoft);
     return Wrap(
       alignment: WrapAlignment.center,
       crossAxisAlignment: WrapCrossAlignment.center,
@@ -1006,25 +1011,25 @@ class _RegisterScreenState extends State<RegisterScreen> {
         preferredSize: const Size.fromHeight(64),
         child: Container(
           color: context.colors.primary,
-          padding: const EdgeInsets.symmetric(horizontal: 20),
+          padding: const EdgeInsets.symmetric(horizontal: AppSpacing.s20),
           child: SafeArea(
             bottom: false,
             child: Row(
               children: [
-                const Icon(Icons.manage_accounts_outlined, color: Colors.white, size: 22),
-                const SizedBox(width: 12),
-                const Expanded(
+                Icon(Icons.manage_accounts_outlined, color: context.colors.onPrimary, size: AppIconSize.i22),
+                const SizedBox(width: AppSpacing.s12),
+                Expanded(
                   child: Text('Edit Profile',
-                      style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 18)),
+                      style: TextStyle(color: context.colors.onPrimary, fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f18)),
                 ),
                 if (widget.isModal)
                   IconButton(
-                    icon: const Icon(Icons.close, color: Colors.white),
+                    icon: Icon(Icons.close, color: context.colors.onPrimary),
                     tooltip: 'Close',
                     onPressed: _goBack,
                   )
                 else
-                  BackButton(color: Colors.white, onPressed: _goBack),
+                  BackButton(color: context.colors.onPrimary, onPressed: _goBack),
               ],
             ),
           ),
@@ -1034,25 +1039,25 @@ class _RegisterScreenState extends State<RegisterScreen> {
         children: [
           LayoutBuilder(
             builder: (context, constraints) {
-              final twoColumns = constraints.maxWidth >= 720;
+              final twoColumns = constraints.maxWidth >= AppBreakpoints.registerTwoColumn;
               return Center(
                 child: ConstrainedBox(
                   constraints: const BoxConstraints(maxWidth: 1000),
                   child: SingleChildScrollView(
-                    padding: const EdgeInsets.all(16),
+                    padding: const EdgeInsets.all(AppSpacing.s16),
                     child: twoColumns
                         ? Row(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Expanded(child: _buildPersonalSection()),
-                              const SizedBox(width: 16),
+                              const SizedBox(width: AppSpacing.s16),
                               Expanded(
                                 child: Column(
                                   mainAxisSize: MainAxisSize.min,
                                   crossAxisAlignment: CrossAxisAlignment.stretch,
                                   children: [
                                     _buildRoleSection(),
-                                    const SizedBox(height: 16),
+                                    const SizedBox(height: AppSpacing.s16),
                                     _buildFacilitySection(),
                                   ],
                                 ),
@@ -1064,9 +1069,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
                             crossAxisAlignment: CrossAxisAlignment.stretch,
                             children: [
                               _buildPersonalSection(),
-                              const SizedBox(height: 16),
+                              const SizedBox(height: AppSpacing.s16),
                               _buildRoleSection(),
-                              const SizedBox(height: 16),
+                              const SizedBox(height: AppSpacing.s16),
                               _buildFacilitySection(),
                             ],
                           ),
@@ -1081,22 +1086,22 @@ class _RegisterScreenState extends State<RegisterScreen> {
       // Full-width footer pinned to the bottom, same as Add Sale and Add
       // Product: Cancel at the far left, the primary action at the far right.
       bottomNavigationBar: Container(
-        padding: EdgeInsets.fromLTRB(20, 14, 20, 14 + MediaQuery.of(context).padding.bottom),
+        padding: EdgeInsets.fromLTRB(AppSpacing.s20, AppSpacing.s14, AppSpacing.s20, AppSpacing.s14 + MediaQuery.of(context).padding.bottom),
         decoration: BoxDecoration(
-          color: Colors.white,
-          border: Border(top: BorderSide(color: Colors.grey.withValues(alpha: 0.15))),
+          color: context.colors.surface,
+          border: Border(top: BorderSide(color: context.colors.textHint.withValues(alpha: AppAlpha.a15))),
         ),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             OutlinedButton.icon(
-              icon: const Icon(Icons.close, size: 16),
+              icon: const Icon(Icons.close, size: AppIconSize.i16),
               label: const Text('Cancel'),
               style: OutlinedButton.styleFrom(
-                foregroundColor: Colors.black87,
-                side: BorderSide(color: Colors.grey.withValues(alpha: 0.4)),
-                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                foregroundColor: context.colors.textPrimary,
+                side: BorderSide(color: context.colors.textHint.withValues(alpha: AppAlpha.a40)),
+                padding: const EdgeInsets.symmetric(horizontal: AppSpacing.s20, vertical: AppSpacing.s14),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadius.r12)),
               ),
               onPressed: _isSubmitting ? null : _goBack,
             ),
@@ -1256,7 +1261,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
       if (ctx != null) {
         Scrollable.ensureVisible(
           ctx,
-          duration: const Duration(milliseconds: 350),
+          duration: _scrollToField,
           curve: Curves.easeOutCubic,
           alignment: 0.2,
         );
@@ -1272,12 +1277,12 @@ class _RegisterScreenState extends State<RegisterScreen> {
   Widget _fieldLabel(String text, {bool required = false}) => Text.rich(
         TextSpan(
           text: text,
-          style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: Colors.black87),
+          style: TextStyle(fontSize: AppFontSize.f13, fontWeight: AppFontWeight.semibold, color: context.colors.textPrimary),
           children: [
             // Required fields wear a red asterisk; the legend ("* Required")
             // sits at the top of the form.
             if (required)
-              const TextSpan(text: ' *', style: TextStyle(color: Colors.redAccent, fontWeight: FontWeight.w700)),
+              TextSpan(text: ' *', style: TextStyle(color: context.colors.dangerAccent, fontWeight: AppFontWeight.bold)),
           ],
         ),
       );
@@ -1289,7 +1294,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
         mainAxisSize: MainAxisSize.min,
         children: [
           _fieldLabel(label, required: required),
-          const SizedBox(height: 6),
+          const SizedBox(height: AppSpacing.s6),
           field,
         ],
       );
@@ -1304,32 +1309,32 @@ class _RegisterScreenState extends State<RegisterScreen> {
     bool locked = false,
   }) {
     OutlineInputBorder border(Color color, [double width = 1]) => OutlineInputBorder(
-          borderRadius: BorderRadius.circular(14),
+          borderRadius: BorderRadius.circular(AppRadius.r14),
           borderSide: BorderSide(color: color, width: width),
         );
-    const rest = Color(0xFFE2E8E6);
+    final rest = context.colors.border;
     return InputDecoration(
       hintText: hint,
-      hintStyle: TextStyle(color: Colors.grey.shade400, fontSize: 14),
-      prefixIcon: icon == null ? null : Icon(icon, size: 19, color: Colors.grey.shade500),
-      suffixIcon: locked ? Icon(Icons.lock_outline, size: 16, color: Colors.grey.shade400) : suffix,
+      hintStyle: TextStyle(color: context.colors.textDisabled, fontSize: AppFontSize.f14),
+      prefixIcon: icon == null ? null : Icon(icon, size: AppIconSize.i20, color: context.colors.textHint),
+      suffixIcon: locked ? Icon(Icons.lock_outline, size: AppIconSize.i16, color: context.colors.textDisabled) : suffix,
       helperText: helper,
-      helperStyle: TextStyle(color: helperColor ?? Colors.grey.shade600, fontSize: 12),
+      helperStyle: TextStyle(color: helperColor ?? context.colors.textMuted, fontSize: AppFontSize.f12),
       helperMaxLines: 2,
       // Replaces the helper line while there's a problem, and turns the
       // outline red.
       errorText: errorText,
       errorMaxLines: 2,
-      errorStyle: const TextStyle(color: Color(0xFFB3261E), fontSize: 12),
+      errorStyle: TextStyle(color: context.colors.dangerDeep, fontSize: AppFontSize.f12),
       filled: true,
-      fillColor: locked ? const Color(0xFFF0F2F1) : const Color(0xFFF6F9F8),
+      fillColor: locked ? context.colors.divider : context.colors.surfaceMuted,
       isDense: true,
-      contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+      contentPadding: const EdgeInsets.symmetric(horizontal: AppSpacing.s14, vertical: AppSpacing.s14),
       border: border(rest),
       enabledBorder: border(rest),
       focusedBorder: border(context.colors.primary, 1.6),
-      errorBorder: border(Colors.redAccent),
-      focusedErrorBorder: border(Colors.redAccent, 1.6),
+      errorBorder: border(context.colors.dangerAccent),
+      focusedErrorBorder: border(context.colors.dangerAccent, 1.6),
     );
   }
 
@@ -1340,13 +1345,13 @@ class _RegisterScreenState extends State<RegisterScreen> {
     Widget? trailing,
   }) {
     return Container(
-      padding: const EdgeInsets.all(18),
+      padding: const EdgeInsets.all(AppSpacing.s18),
       decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: const Color(0xFFE6EEEC)),
+        color: context.colors.surface,
+        borderRadius: BorderRadius.circular(AppRadius.r16),
+        border: Border.all(color: context.colors.divider),
         boxShadow: [
-          BoxShadow(color: Colors.black.withValues(alpha: 0.04), blurRadius: 10, offset: const Offset(0, 3)),
+          BoxShadow(color: context.colors.shadow.withValues(alpha: AppAlpha.a05), blurRadius: 10, offset: const Offset(0, 3)),
         ],
       ),
       child: Column(
@@ -1358,17 +1363,17 @@ class _RegisterScreenState extends State<RegisterScreen> {
               Container(
                 width: 32,
                 height: 32,
-                decoration: BoxDecoration(color: tealGlow.withValues(alpha: 0.25), shape: BoxShape.circle),
-                child: Icon(icon, color: context.colors.primary, size: 17),
+                decoration: BoxDecoration(color: tealGlow.withValues(alpha: AppAlpha.a30), shape: BoxShape.circle),
+                child: Icon(icon, color: context.colors.primary, size: AppIconSize.i18),
               ),
-              const SizedBox(width: 10),
+              const SizedBox(width: AppSpacing.s10),
               Expanded(
-                child: Text(title, style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700)),
+                child: Text(title, style: const TextStyle(fontSize: AppFontSize.f15, fontWeight: AppFontWeight.bold)),
               ),
               if (trailing != null) trailing,
             ],
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: AppSpacing.s16),
           ...children,
         ],
       ),
@@ -1381,12 +1386,12 @@ class _RegisterScreenState extends State<RegisterScreen> {
       style: ElevatedButton.styleFrom(
         foregroundColor: context.colors.background,
         disabledForegroundColor: context.colors.background,
-        padding: const EdgeInsets.symmetric(vertical: 15, horizontal: 28),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-        elevation: 3,
+        padding: const EdgeInsets.symmetric(vertical: AppSpacing.s16, horizontal: AppSpacing.s28),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadius.r12)),
+        elevation: AppElevation.e2,
       ).copyWith(
         backgroundColor: WidgetStateProperty.resolveWith<Color>((states) {
-          if (states.contains(WidgetState.disabled)) return context.colors.primary.withValues(alpha: 0.65);
+          if (states.contains(WidgetState.disabled)) return context.colors.primary.withValues(alpha: AppAlpha.a70);
           if (states.contains(WidgetState.hovered)) return context.colors.accent;
           return context.colors.primary;
         }),
