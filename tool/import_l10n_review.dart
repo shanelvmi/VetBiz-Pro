@@ -6,6 +6,8 @@
 // A row whose status is "reviewed" (or ok / approved / done / sawa), or
 // whose Kiswahili text was changed, is saved and marked reviewed. Then run
 // flutter gen-l10n (or flutter run) to rebuild the generated code.
+// It also refreshes docs/.kiswahili_snapshot.json, so the next export sees
+// these rows as read back (a skipped row still counts as an edit).
 import 'dart:io';
 
 import 'l10n_arb.dart';
@@ -22,11 +24,15 @@ void main(List<String> args) {
   final swFile = Arb.fileFor(root, 'sw');
   final sw = Arb.read(swFile);
 
-  final result = applyReview(en, sw, parseCsv(csvFile.readAsStringSync()));
+  final csv = parseCsv(csvFile.readAsStringSync());
+  final result = applyReview(en, sw, csv);
   for (final w in result.warnings) {
     stderr.writeln('  $w');
   }
   swFile.writeAsStringSync(sw.encode(order: en.values.keys));
+  final snapshot = File('${root.path}/$reviewSnapshotPath');
+  final old = snapshot.existsSync() ? decodeSnapshot(snapshot.readAsStringSync()) : <String, List<String>>{};
+  snapshot.writeAsStringSync(encodeSnapshot(snapshotAfterImport(old, csv, result)));
   final drafts = en.values.keys.where((k) => sw.reviewOf(k) != 'reviewed').length;
   stdout.writeln('${result.reviewed.length} rows marked reviewed; '
       '${result.warnings.length} skipped; $drafts keys still draft.');

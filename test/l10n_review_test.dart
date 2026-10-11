@@ -83,6 +83,53 @@ void main() {
     expect(pendingEdits(en(), s, [['a', 'b']]), isNotEmpty);
   });
 
+  group('export compares the CSV with the snapshot of what it last wrote', () {
+    // What export_l10n_review.dart leaves on disk: the CSV and its snapshot.
+    ({String csv, String snapshot}) exported(Arb e, Arb s) {
+      final rows = reviewRows(e, s);
+      return (csv: toCsv(rows), snapshot: encodeSnapshot(snapshotOf(rows)));
+    }
+
+    test('an unedited CSV plus a draft changed in the ARB: export goes ahead', () {
+      final out = exported(en(), sw());
+      final s = sw()..values['a_save'] = 'Hifadhi sasa';
+      expect(exportBlockers(en(), s, out.csv, out.snapshot), isEmpty);
+      // Comparing with the ARB (no snapshot yet) mistook this for an owner edit.
+      expect(exportBlockers(en(), s, out.csv, null), ['a_save']);
+    });
+
+    test('an edited CSV: export refuses, whichever column the owner changed', () {
+      final out = exported(en(), sw());
+      final rows = parseCsv(out.csv);
+      expect(exportBlockers(en(), sw(), toCsv(rows..[1][2] = 'Weka'), out.snapshot), ['a_save']);
+      final notes = parseCsv(out.csv)..[2][3] = 'Too long?';
+      expect(exportBlockers(en(), sw(), toCsv(notes), out.snapshot), ['a_sold']);
+      final status = parseCsv(out.csv)..[2][4] = 'reviewed';
+      expect(exportBlockers(en(), sw(), toCsv(status), out.snapshot), ['a_sold']);
+      expect(exportBlockers(en(), sw(), 'not,the,header\r\n', out.snapshot), isNotEmpty);
+    });
+
+    test('import, then export: the imported rows no longer block it', () {
+      final out = exported(en(), sw());
+      final csv = parseCsv(out.csv)..[1][2] = 'Weka';
+      final s = sw();
+      final result = applyReview(en(), s, csv);
+      final snapshot = encodeSnapshot(snapshotAfterImport(decodeSnapshot(out.snapshot), csv, result));
+      expect(exportBlockers(en(), s, toCsv(csv), snapshot), isEmpty);
+      expect(reviewRows(en(), s)[1], ['a_save', 'Save', 'Weka', 'Save button.', 'reviewed']);
+    });
+
+    test('a row import skipped still blocks export, so the edit is not lost', () {
+      final out = exported(en(), sw());
+      final csv = parseCsv(out.csv)..[2][2] = 'Umeuza {idadi} kwa {name}';
+      final s = sw();
+      final result = applyReview(en(), s, csv);
+      expect(result.skipped, ['a_sold']);
+      final snapshot = encodeSnapshot(snapshotAfterImport(decodeSnapshot(out.snapshot), csv, result));
+      expect(exportBlockers(en(), s, toCsv(csv), snapshot), ['a_sold']);
+    });
+  });
+
   test('placeholders and plural arguments are compared by name', () {
     final e = Arb('en', {'k': '{count, plural, =1{1 item} other{{count} items}}'}, {
       'k': {'description': 'd', 'placeholders': {'count': {'type': 'int'}}},
