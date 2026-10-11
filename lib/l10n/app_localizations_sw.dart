@@ -719,4 +719,76 @@ class AppLocalizationsSw extends AppLocalizations {
 
   @override
   String get moveReason_other => 'Nyingine (eleza)';
+
+  @override
+  String get cropGroup_foodCrops => 'Mazao ya Chakula';
+
+  @override
+  String get cropGroup_cashCrops => 'Mazao ya Biashara';
+
+  @override
+  String get cropGroup_vegetables => 'Mboga';
+
+  @override
+  String get cropGroup_fruits => 'Matunda';
+
+  @override
+  String get crop_maize => 'Mahindi';
+
+  @override
+  String get crop_rice => 'Mpunga';
+
+  @override
+  String get crop_wheat => 'Ngano';
+
+  @override
+  String get crop_cassava => 'Muhogo';
+
+  @override
+  String get crop_sorghum => 'Mtama';
+
+  @override
+  String get crop_millet => 'Uwele';
+
+  @override
+  String get crop_beans => 'Maharage';
+
+  @override
+  String get crop_bananas => 'Ndizi';
+
+  @override
+  String get crop_sweetPotatoes => 'Viazi Vitamu';
+
+  @override
+  String get crop_irishPotatoes => 'Viazi Mviringo';
+
+  @override
+  String get crop_groundnuts => 'Karanga';
+
+  @override
+  String get crop_coffee => 'Kahawa';
+
+  @override
+  String get crop_cotton => 'Pamba';
+
+  @override
+  String get crop_tobacco => 'Tumbaku';
+
+  @override
+  String get crop_cashewNuts => 'Korosho';
+
+  @override
+  String get crop_sisal => 'Mkonge';
+
+  @override
+  String get crop_tea => 'Chai';
+
+  @override
+  String get crop_pyrethrum => 'Pareto';
+
+  @override
+  String get crop_sugarcane => 'Miwa';
+
+  @override
+  String get crop_cloves => 'Karafuu';
 }

@@ -718,4 +718,76 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get moveReason_other => 'Other (specify)';
+
+  @override
+  String get cropGroup_foodCrops => 'Food Crops';
+
+  @override
+  String get cropGroup_cashCrops => 'Cash Crops';
+
+  @override
+  String get cropGroup_vegetables => 'Vegetables';
+
+  @override
+  String get cropGroup_fruits => 'Fruits';
+
+  @override
+  String get crop_maize => 'Maize';
+
+  @override
+  String get crop_rice => 'Rice';
+
+  @override
+  String get crop_wheat => 'Wheat';
+
+  @override
+  String get crop_cassava => 'Cassava';
+
+  @override
+  String get crop_sorghum => 'Sorghum';
+
+  @override
+  String get crop_millet => 'Millet';
+
+  @override
+  String get crop_beans => 'Beans';
+
+  @override
+  String get crop_bananas => 'Bananas';
+
+  @override
+  String get crop_sweetPotatoes => 'Sweet Potatoes';
+
+  @override
+  String get crop_irishPotatoes => 'Irish Potatoes';
+
+  @override
+  String get crop_groundnuts => 'Groundnuts';
+
+  @override
+  String get crop_coffee => 'Coffee';
+
+  @override
+  String get crop_cotton => 'Cotton';
+
+  @override
+  String get crop_tobacco => 'Tobacco';
+
+  @override
+  String get crop_cashewNuts => 'Cashew Nuts';
+
+  @override
+  String get crop_sisal => 'Sisal';
+
+  @override
+  String get crop_tea => 'Tea';
+
+  @override
+  String get crop_pyrethrum => 'Pyrethrum';
+
+  @override
+  String get crop_sugarcane => 'Sugarcane';
+
+  @override
+  String get crop_cloves => 'Cloves';
 }

@@ -1483,6 +1483,150 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Other (specify)'**
   String get moveReason_other;
+
+  /// Heading in the client form's crop picker: the 'Food Crops' group (not stored).
+  ///
+  /// In en, this message translates to:
+  /// **'Food Crops'**
+  String get cropGroup_foodCrops;
+
+  /// Heading in the client form's crop picker: the 'Cash Crops' group (not stored).
+  ///
+  /// In en, this message translates to:
+  /// **'Cash Crops'**
+  String get cropGroup_cashCrops;
+
+  /// Heading in the client form's crop picker: the 'Vegetables' group (not stored).
+  ///
+  /// In en, this message translates to:
+  /// **'Vegetables'**
+  String get cropGroup_vegetables;
+
+  /// Heading in the client form's crop picker: the 'Fruits' group (not stored).
+  ///
+  /// In en, this message translates to:
+  /// **'Fruits'**
+  String get cropGroup_fruits;
+
+  /// Crop: client form crop picker and chips (stored value 'Maize').
+  ///
+  /// In en, this message translates to:
+  /// **'Maize'**
+  String get crop_maize;
+
+  /// Crop: client form crop picker and chips (stored value 'Rice').
+  ///
+  /// In en, this message translates to:
+  /// **'Rice'**
+  String get crop_rice;
+
+  /// Crop: client form crop picker and chips (stored value 'Wheat').
+  ///
+  /// In en, this message translates to:
+  /// **'Wheat'**
+  String get crop_wheat;
+
+  /// Crop: client form crop picker and chips (stored value 'Cassava').
+  ///
+  /// In en, this message translates to:
+  /// **'Cassava'**
+  String get crop_cassava;
+
+  /// Crop: client form crop picker and chips (stored value 'Sorghum').
+  ///
+  /// In en, this message translates to:
+  /// **'Sorghum'**
+  String get crop_sorghum;
+
+  /// Crop: client form crop picker and chips (stored value 'Millet').
+  ///
+  /// In en, this message translates to:
+  /// **'Millet'**
+  String get crop_millet;
+
+  /// Crop: client form crop picker and chips (stored value 'Beans').
+  ///
+  /// In en, this message translates to:
+  /// **'Beans'**
+  String get crop_beans;
+
+  /// Crop: client form crop picker and chips (stored value 'Bananas').
+  ///
+  /// In en, this message translates to:
+  /// **'Bananas'**
+  String get crop_bananas;
+
+  /// Crop: client form crop picker and chips (stored value 'Sweet Potatoes').
+  ///
+  /// In en, this message translates to:
+  /// **'Sweet Potatoes'**
+  String get crop_sweetPotatoes;
+
+  /// Crop: client form crop picker and chips (stored value 'Irish Potatoes').
+  ///
+  /// In en, this message translates to:
+  /// **'Irish Potatoes'**
+  String get crop_irishPotatoes;
+
+  /// Crop: client form crop picker and chips (stored value 'Groundnuts').
+  ///
+  /// In en, this message translates to:
+  /// **'Groundnuts'**
+  String get crop_groundnuts;
+
+  /// Crop: client form crop picker and chips (stored value 'Coffee').
+  ///
+  /// In en, this message translates to:
+  /// **'Coffee'**
+  String get crop_coffee;
+
+  /// Crop: client form crop picker and chips (stored value 'Cotton').
+  ///
+  /// In en, this message translates to:
+  /// **'Cotton'**
+  String get crop_cotton;
+
+  /// Crop: client form crop picker and chips (stored value 'Tobacco').
+  ///
+  /// In en, this message translates to:
+  /// **'Tobacco'**
+  String get crop_tobacco;
+
+  /// Crop: client form crop picker and chips (stored value 'Cashew Nuts').
+  ///
+  /// In en, this message translates to:
+  /// **'Cashew Nuts'**
+  String get crop_cashewNuts;
+
+  /// Crop: client form crop picker and chips (stored value 'Sisal').
+  ///
+  /// In en, this message translates to:
+  /// **'Sisal'**
+  String get crop_sisal;
+
+  /// Crop: client form crop picker and chips (stored value 'Tea').
+  ///
+  /// In en, this message translates to:
+  /// **'Tea'**
+  String get crop_tea;
+
+  /// Crop: client form crop picker and chips (stored value 'Pyrethrum').
+  ///
+  /// In en, this message translates to:
+  /// **'Pyrethrum'**
+  String get crop_pyrethrum;
+
+  /// Crop: client form crop picker and chips (stored value 'Sugarcane').
+  ///
+  /// In en, this message translates to:
+  /// **'Sugarcane'**
+  String get crop_sugarcane;
+
+  /// Crop: client form crop picker and chips (stored value 'Cloves').
+  ///
+  /// In en, this message translates to:
+  /// **'Cloves'**
+  String get crop_cloves;
 }
 
 class _AppLocalizationsDelegate
