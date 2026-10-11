@@ -741,7 +741,7 @@ class _AddClientScreenState extends State<AddClientScreen> {
               children: [
                 for (final item in (isCropProducer ? _selectedCrops : _selectedAnimals))
                   Chip(
-                    label: Text(isCropProducer ? item : context.l10n.animalLabel(item), style: const TextStyle(fontSize: AppFontSize.f12_5)),
+                    label: Text(isCropProducer ? context.l10n.cropLabel(item) : context.l10n.animalLabel(item), style: const TextStyle(fontSize: AppFontSize.f12_5)),
                     backgroundColor: context.colors.primary.withValues(alpha: AppAlpha.a10),
                     deleteIcon: const Icon(Icons.close, size: AppIconSize.i14),
                     onDeleted: () => setState(() {
@@ -766,8 +766,8 @@ class _AddClientScreenState extends State<AddClientScreen> {
                   title: isCropProducer ? 'Select Crops' : 'Select Animal Species',
                   groups: isCropProducer ? cropGroups : animalGroups,
                   selected: isCropProducer ? _selectedCrops : _selectedAnimals,
-                  groupLabel: isCropProducer ? (g) => g : context.l10n.animalGroupLabel,
-                  itemLabel: isCropProducer ? (c) => c : context.l10n.animalLabel,
+                  groupLabel: isCropProducer ? context.l10n.cropGroupLabel : context.l10n.animalGroupLabel,
+                  itemLabel: isCropProducer ? context.l10n.cropLabel : context.l10n.animalLabel,
                 ),
               ),
             ),

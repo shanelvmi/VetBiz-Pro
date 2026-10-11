@@ -4,6 +4,7 @@ import '../config/app_defaults.dart';
 import 'app_localizations.dart';
 
 export 'app_localizations.dart';
+export 'crop_labels.dart';
 export 'stored_labels.dart';
 
 /// `context.l10n.someKey` in widgets.
