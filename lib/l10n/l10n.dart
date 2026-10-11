@@ -6,6 +6,7 @@ import 'app_localizations.dart';
 export 'app_localizations.dart';
 export 'crop_labels.dart';
 export 'stored_labels.dart';
+export 'transaction_category_labels.dart';
 
 /// `context.l10n.someKey` in widgets.
 extension L10nContext on BuildContext {

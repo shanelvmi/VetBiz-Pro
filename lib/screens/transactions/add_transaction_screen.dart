@@ -320,7 +320,7 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
                 children: [
                   Expanded(
                     child: Text(
-                      selectedCategory ?? 'Select category...',
+                      selectedCategory == null ? 'Select category...' : context.l10n.transactionCategoryLabel(selectedCategory!),
                       style: TextStyle(
                         fontSize: AppFontSize.f14,
                         color: selectedCategory != null ? context.colors.textPrimary : context.colors.textHint,
@@ -456,12 +456,16 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
         return StatefulBuilder(
           builder: (dialogContext, setDialogState) {
             final lowerQuery = query.trim().toLowerCase();
+            bool matchesQuery(String c) =>
+                c.toLowerCase().contains(lowerQuery) ||
+                context.l10n.transactionCategoryLabel(c).toLowerCase().contains(lowerQuery);
 
             Widget content;
             if (isExpense) {
               final filteredGroups = <String, List<String>>{};
               for (final entry in kExpenseCategoryGroups.entries) {
-                final matches = entry.value.where((c) => c.toLowerCase().contains(lowerQuery)).toList();
+                // Typed text matches the stored category, as before, or the label shown.
+                final matches = entry.value.where(matchesQuery).toList();
                 if (matches.isNotEmpty) filteredGroups[entry.key] = matches;
               }
               content = filteredGroups.isEmpty
@@ -471,12 +475,12 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
                         return [
                           Padding(
                             padding: const EdgeInsets.fromLTRB(AppSpacing.s4, AppSpacing.s12, AppSpacing.s4, AppSpacing.s4),
-                            child: Text(entry.key,
+                            child: Text(context.l10n.expenseGroupLabel(entry.key),
                                 style: TextStyle(fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f12_5, color: context.colors.primary)),
                           ),
                           ...entry.value.map((category) => ListTile(
                                 dense: true,
-                                title: Text(category),
+                                title: Text(context.l10n.transactionCategoryLabel(category)),
                                 trailing: selectedCategory == category
                                     ? Icon(Icons.check, size: AppIconSize.i18, color: context.colors.primary)
                                     : null,
@@ -489,14 +493,14 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
                       }).toList(),
                     );
             } else {
-              final filtered = kIncomeCategories.where((c) => c.toLowerCase().contains(lowerQuery)).toList();
+              final filtered = kIncomeCategories.where(matchesQuery).toList();
               content = filtered.isEmpty
                   ? const Center(child: Text('No categories found'))
                   : ListView(
                       children: filtered
                           .map((category) => ListTile(
                                 dense: true,
-                                title: Text(category),
+                                title: Text(context.l10n.transactionCategoryLabel(category)),
                                 trailing: selectedCategory == category
                                     ? Icon(Icons.check, size: AppIconSize.i18, color: context.colors.primary)
                                     : null,

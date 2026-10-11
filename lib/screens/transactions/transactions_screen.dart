@@ -508,7 +508,7 @@ class _TransactionScreenState extends State<TransactionScreen> {
                 : Container(
                     padding: const EdgeInsets.symmetric(horizontal: AppSpacing.s6, vertical: AppSpacing.s2),
                     decoration: BoxDecoration(color: accentColor.withValues(alpha: AppAlpha.a10), borderRadius: BorderRadius.circular(AppRadius.r8)),
-                    child: Text(tx.category, style: TextStyle(fontSize: AppFontSize.f10_5, color: accentColor, fontWeight: AppFontWeight.semibold), maxLines: 1, overflow: TextOverflow.ellipsis),
+                    child: Text(context.l10n.transactionCategoryLabel(tx.category), style: TextStyle(fontSize: AppFontSize.f10_5, color: accentColor, fontWeight: AppFontWeight.semibold), maxLines: 1, overflow: TextOverflow.ellipsis),
                   ),
           ),
           Expanded(
@@ -714,7 +714,7 @@ class _TransactionScreenState extends State<TransactionScreen> {
             const Divider(height: 32),
             if (tx.category.isNotEmpty) ...[
               _detailLabel('Category'),
-              Text(tx.category, style: const TextStyle(fontSize: AppFontSize.f14)),
+              Text(context.l10n.transactionCategoryLabel(tx.category), style: const TextStyle(fontSize: AppFontSize.f14)),
               const SizedBox(height: AppSpacing.s16),
             ],
             if (tx.paymentMethod != null) ...[
