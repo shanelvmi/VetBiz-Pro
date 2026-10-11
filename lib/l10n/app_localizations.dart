@@ -103,6 +103,306 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Language'**
   String get common_language;
+
+  /// Save button, everywhere.
+  ///
+  /// In en, this message translates to:
+  /// **'Save'**
+  String get common_save;
+
+  /// Cancel button in dialogs and forms.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancel'**
+  String get common_cancel;
+
+  /// Delete button or menu item.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete'**
+  String get common_delete;
+
+  /// Edit button or menu item.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit'**
+  String get common_edit;
+
+  /// Remove button (takes an item off a list).
+  ///
+  /// In en, this message translates to:
+  /// **'Remove'**
+  String get common_remove;
+
+  /// Close button or tooltip (dialogs, messages).
+  ///
+  /// In en, this message translates to:
+  /// **'Close'**
+  String get common_close;
+
+  /// OK button that acknowledges a dialog.
+  ///
+  /// In en, this message translates to:
+  /// **'OK'**
+  String get common_ok;
+
+  /// Yes answer in a confirmation.
+  ///
+  /// In en, this message translates to:
+  /// **'Yes'**
+  String get common_yes;
+
+  /// No answer in a confirmation.
+  ///
+  /// In en, this message translates to:
+  /// **'No'**
+  String get common_no;
+
+  /// Confirm button in a confirmation dialog.
+  ///
+  /// In en, this message translates to:
+  /// **'Confirm'**
+  String get common_confirm;
+
+  /// Done button that closes a finished step.
+  ///
+  /// In en, this message translates to:
+  /// **'Done'**
+  String get common_done;
+
+  /// Apply button for filters and settings.
+  ///
+  /// In en, this message translates to:
+  /// **'Apply'**
+  String get common_apply;
+
+  /// Reset button for filters and forms.
+  ///
+  /// In en, this message translates to:
+  /// **'Reset'**
+  String get common_reset;
+
+  /// Refresh button or tooltip that reloads data.
+  ///
+  /// In en, this message translates to:
+  /// **'Refresh'**
+  String get common_refresh;
+
+  /// Retry action on an error message.
+  ///
+  /// In en, this message translates to:
+  /// **'Retry'**
+  String get common_retry;
+
+  /// Try Again button on a failed screen or load.
+  ///
+  /// In en, this message translates to:
+  /// **'Try Again'**
+  String get common_tryAgain;
+
+  /// Undo action after something was moved to Trash.
+  ///
+  /// In en, this message translates to:
+  /// **'Undo'**
+  String get common_undo;
+
+  /// Details action on an error message (shows the technical text) and Details dialog title.
+  ///
+  /// In en, this message translates to:
+  /// **'Details'**
+  String get common_details;
+
+  /// View Details button or menu item.
+  ///
+  /// In en, this message translates to:
+  /// **'View Details'**
+  String get common_viewDetails;
+
+  /// Copy button (copies text).
+  ///
+  /// In en, this message translates to:
+  /// **'Copy'**
+  String get common_copy;
+
+  /// Share button.
+  ///
+  /// In en, this message translates to:
+  /// **'Share'**
+  String get common_share;
+
+  /// Print button.
+  ///
+  /// In en, this message translates to:
+  /// **'Print'**
+  String get common_print;
+
+  /// Search field hint or button.
+  ///
+  /// In en, this message translates to:
+  /// **'Search'**
+  String get common_search;
+
+  /// Add button.
+  ///
+  /// In en, this message translates to:
+  /// **'Add'**
+  String get common_add;
+
+  /// Clear button (empties a field or filter).
+  ///
+  /// In en, this message translates to:
+  /// **'Clear'**
+  String get common_clear;
+
+  /// Change button (picks a different value).
+  ///
+  /// In en, this message translates to:
+  /// **'Change'**
+  String get common_change;
+
+  /// Call button (phones a client).
+  ///
+  /// In en, this message translates to:
+  /// **'Call'**
+  String get common_call;
+
+  /// Tooltip of the three-dot menu.
+  ///
+  /// In en, this message translates to:
+  /// **'More actions'**
+  String get common_moreActions;
+
+  /// Shown while something loads.
+  ///
+  /// In en, this message translates to:
+  /// **'Loading...'**
+  String get common_loading;
+
+  /// Marks a form field that may be left empty.
+  ///
+  /// In en, this message translates to:
+  /// **'Optional'**
+  String get common_optional;
+
+  /// The no-filter choice in a filter list.
+  ///
+  /// In en, this message translates to:
+  /// **'All'**
+  String get common_all;
+
+  /// Date label or column heading.
+  ///
+  /// In en, this message translates to:
+  /// **'Date'**
+  String get common_date;
+
+  /// Amount label or column heading.
+  ///
+  /// In en, this message translates to:
+  /// **'Amount'**
+  String get common_amount;
+
+  /// Total label or column heading.
+  ///
+  /// In en, this message translates to:
+  /// **'Total'**
+  String get common_total;
+
+  /// Status label or column heading.
+  ///
+  /// In en, this message translates to:
+  /// **'Status'**
+  String get common_status;
+
+  /// Type label or column heading.
+  ///
+  /// In en, this message translates to:
+  /// **'Type'**
+  String get common_type;
+
+  /// Email field label.
+  ///
+  /// In en, this message translates to:
+  /// **'Email'**
+  String get common_email;
+
+  /// Password field label.
+  ///
+  /// In en, this message translates to:
+  /// **'Password'**
+  String get common_password;
+
+  /// Notes field label or heading.
+  ///
+  /// In en, this message translates to:
+  /// **'Notes'**
+  String get common_notes;
+
+  /// Second line of an error message when nothing more specific is known (FriendlyError).
+  ///
+  /// In en, this message translates to:
+  /// **'Something went wrong. Try again.'**
+  String get error_generic;
+
+  /// Second line of an error message: permission denied (FriendlyError).
+  ///
+  /// In en, this message translates to:
+  /// **'You don\'t have permission to do that.'**
+  String get error_noPermission;
+
+  /// Second line of an error message: no network (FriendlyError, sign-in).
+  ///
+  /// In en, this message translates to:
+  /// **'No connection. Check your internet and try again.'**
+  String get error_noConnection;
+
+  /// Second line of an error message: timed out (FriendlyError).
+  ///
+  /// In en, this message translates to:
+  /// **'That took too long. Try again.'**
+  String get error_tooSlow;
+
+  /// Second line of an error message: the record was deleted (FriendlyError).
+  ///
+  /// In en, this message translates to:
+  /// **'That item no longer exists.'**
+  String get error_notFound;
+
+  /// Second line of an error message: a duplicate (FriendlyError).
+  ///
+  /// In en, this message translates to:
+  /// **'That already exists.'**
+  String get error_alreadyExists;
+
+  /// Second line of an error message: rate limited (FriendlyError).
+  ///
+  /// In en, this message translates to:
+  /// **'Too many requests. Wait a moment and try again.'**
+  String get error_rateLimited;
+
+  /// Sign-in error for a wrong password OR an unknown email (one message on purpose, so it does not reveal which emails are registered).
+  ///
+  /// In en, this message translates to:
+  /// **'Incorrect email or password.'**
+  String get login_wrongCredentials;
+
+  /// Sign-in error: the account was disabled.
+  ///
+  /// In en, this message translates to:
+  /// **'This account has been disabled. Contact your admin.'**
+  String get login_accountDisabled;
+
+  /// Sign-in error: too many failed attempts.
+  ///
+  /// In en, this message translates to:
+  /// **'Too many attempts. Wait a moment and try again.'**
+  String get login_tooManyAttempts;
+
+  /// Sign-in error when Firebase gives no message of its own.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t sign in. Try again.'**
+  String get login_signInFailed;
 }
 
 class _AppLocalizationsDelegate
