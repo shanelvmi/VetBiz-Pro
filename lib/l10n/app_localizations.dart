@@ -4135,6 +4135,126 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Waiting for approval'**
   String get team_waitingForApproval;
+
+  /// Details panel: who made a change.
+  ///
+  /// In en, this message translates to:
+  /// **'by {name}'**
+  String team_byName(String name);
+
+  /// Details panel: an approval with no date.
+  ///
+  /// In en, this message translates to:
+  /// **'Approved before approvals were recorded'**
+  String get team_approvedBeforeRecords;
+
+  /// Details panel label.
+  ///
+  /// In en, this message translates to:
+  /// **'Last status change'**
+  String get team_lastStatusChange;
+
+  /// Details panel: who changed the status, with their stored role.
+  ///
+  /// In en, this message translates to:
+  /// **'by {name} ({role})'**
+  String team_byNameRole(String name, String role);
+
+  /// Details panel label.
+  ///
+  /// In en, this message translates to:
+  /// **'Last active'**
+  String get team_lastActive;
+
+  /// Details panel heading.
+  ///
+  /// In en, this message translates to:
+  /// **'History'**
+  String get team_history;
+
+  /// One history line: date and who did it.
+  ///
+  /// In en, this message translates to:
+  /// **'{when}  ·  by {name}'**
+  String team_historyLine(String when, String name);
+
+  /// Details panel note.
+  ///
+  /// In en, this message translates to:
+  /// **'Use the buttons on this person\'s card to approve, reject or remove them.'**
+  String get team_useCardButtons;
+
+  /// Pagination bar when the list is empty.
+  ///
+  /// In en, this message translates to:
+  /// **'No assistants'**
+  String get team_noAssistantsPage;
+
+  /// Pagination bar.
+  ///
+  /// In en, this message translates to:
+  /// **'{total, plural, =1{Showing {start} to {end} of 1 assistant} other{Showing {start} to {end} of {total} assistants}}'**
+  String team_showingRange(int start, int end, int total);
+
+  /// Invite dialog while loading.
+  ///
+  /// In en, this message translates to:
+  /// **'Checking for an existing invite...'**
+  String get invite_checking;
+
+  /// Invite dialog error; error is a friendly sentence.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not check for an existing invite: {error}'**
+  String invite_checkFailed(String error);
+
+  /// Invite dialog while creating a code.
+  ///
+  /// In en, this message translates to:
+  /// **'Generating your invite code...'**
+  String get invite_generating;
+
+  /// Invite dialog error.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not generate an invite: {error}'**
+  String invite_generateFailed(String error);
+
+  /// Invite dialog while revoking.
+  ///
+  /// In en, this message translates to:
+  /// **'Revoking the code...'**
+  String get invite_revoking;
+
+  /// Invite dialog error.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not revoke: {error}'**
+  String invite_revokeFailed(String error);
+
+  /// Invite dialog, above an active code.
+  ///
+  /// In en, this message translates to:
+  /// **'Share this code with the person you\'re hiring - they\'ll enter it when registering as an Assistant.'**
+  String get invite_shareHint;
+
+  /// Invite dialog: when the code stops working.
+  ///
+  /// In en, this message translates to:
+  /// **'Expires {date}'**
+  String invite_expires(String date);
+
+  /// Message after copying the code.
+  ///
+  /// In en, this message translates to:
+  /// **'Copied to clipboard'**
+  String get invite_copied;
+
+  /// Button that cancels the active code.
+  ///
+  /// In en, this message translates to:
+  /// **'Revoke'**
+  String get invite_revoke;
 }
 
 class _AppLocalizationsDelegate

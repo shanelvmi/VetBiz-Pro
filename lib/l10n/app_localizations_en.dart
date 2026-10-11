@@ -2276,4 +2276,89 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get team_waitingForApproval => 'Waiting for approval';
+
+  @override
+  String team_byName(String name) {
+    return 'by $name';
+  }
+
+  @override
+  String get team_approvedBeforeRecords =>
+      'Approved before approvals were recorded';
+
+  @override
+  String get team_lastStatusChange => 'Last status change';
+
+  @override
+  String team_byNameRole(String name, String role) {
+    return 'by $name ($role)';
+  }
+
+  @override
+  String get team_lastActive => 'Last active';
+
+  @override
+  String get team_history => 'History';
+
+  @override
+  String team_historyLine(String when, String name) {
+    return '$when  ·  by $name';
+  }
+
+  @override
+  String get team_useCardButtons =>
+      'Use the buttons on this person\'s card to approve, reject or remove them.';
+
+  @override
+  String get team_noAssistantsPage => 'No assistants';
+
+  @override
+  String team_showingRange(int start, int end, int total) {
+    String _temp0 = intl.Intl.pluralLogic(
+      total,
+      locale: localeName,
+      other: 'Showing $start to $end of $total assistants',
+      one: 'Showing $start to $end of 1 assistant',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get invite_checking => 'Checking for an existing invite...';
+
+  @override
+  String invite_checkFailed(String error) {
+    return 'Could not check for an existing invite: $error';
+  }
+
+  @override
+  String get invite_generating => 'Generating your invite code...';
+
+  @override
+  String invite_generateFailed(String error) {
+    return 'Could not generate an invite: $error';
+  }
+
+  @override
+  String get invite_revoking => 'Revoking the code...';
+
+  @override
+  String invite_revokeFailed(String error) {
+    return 'Could not revoke: $error';
+  }
+
+  @override
+  String get invite_shareHint =>
+      'Share this code with the person you\'re hiring - they\'ll enter it when registering as an Assistant.';
+
+  @override
+  String invite_expires(String date) {
+    return 'Expires $date';
+  }
+
+  @override
+  String get invite_copied => 'Copied to clipboard';
+
+  @override
+  String get invite_revoke => 'Revoke';
 }

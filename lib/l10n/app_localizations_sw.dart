@@ -2290,4 +2290,89 @@ class AppLocalizationsSw extends AppLocalizations {
 
   @override
   String get team_waitingForApproval => 'Anasubiri idhini';
+
+  @override
+  String team_byName(String name) {
+    return 'na $name';
+  }
+
+  @override
+  String get team_approvedBeforeRecords =>
+      'Aliidhinishwa kabla idhini hazijaanza kurekodiwa';
+
+  @override
+  String get team_lastStatusChange => 'Mabadiliko ya mwisho ya hali';
+
+  @override
+  String team_byNameRole(String name, String role) {
+    return 'na $name ($role)';
+  }
+
+  @override
+  String get team_lastActive => 'Mara ya mwisho kuonekana';
+
+  @override
+  String get team_history => 'Historia';
+
+  @override
+  String team_historyLine(String when, String name) {
+    return '$when  ·  na $name';
+  }
+
+  @override
+  String get team_useCardButtons =>
+      'Tumia vitufe kwenye kadi ya mtu huyu kumwidhinisha, kumkataa au kumwondoa.';
+
+  @override
+  String get team_noAssistantsPage => 'Hakuna wasaidizi';
+
+  @override
+  String team_showingRange(int start, int end, int total) {
+    String _temp0 = intl.Intl.pluralLogic(
+      total,
+      locale: localeName,
+      other: 'Inaonyesha $start hadi $end kati ya wasaidizi $total',
+      one: 'Inaonyesha $start hadi $end kati ya msaidizi 1',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get invite_checking => 'Inakagua kama kuna mwaliko uliopo...';
+
+  @override
+  String invite_checkFailed(String error) {
+    return 'Imeshindwa kukagua mwaliko uliopo: $error';
+  }
+
+  @override
+  String get invite_generating => 'Inatengeneza msimbo wako wa mwaliko...';
+
+  @override
+  String invite_generateFailed(String error) {
+    return 'Imeshindwa kutengeneza mwaliko: $error';
+  }
+
+  @override
+  String get invite_revoking => 'Inafuta msimbo...';
+
+  @override
+  String invite_revokeFailed(String error) {
+    return 'Imeshindwa kufuta: $error';
+  }
+
+  @override
+  String get invite_shareHint =>
+      'Mpe mtu unayemwajiri msimbo huu - ataiweka anapojisajili kama Msaidizi.';
+
+  @override
+  String invite_expires(String date) {
+    return 'Unaisha $date';
+  }
+
+  @override
+  String get invite_copied => 'Imenakiliwa';
+
+  @override
+  String get invite_revoke => 'Futa';
 }
