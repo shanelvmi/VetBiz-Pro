@@ -5,6 +5,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import '../data/collections.dart';
 import '../config/app_rules.dart';
 import '../config/app_date_format.dart';
+import '../l10n/l10n.dart';
 
 enum SubscriptionStatus { trial, active, grace, locked }
 
@@ -123,16 +124,18 @@ class SubscriptionProvider with ChangeNotifier {
     }
   }
 
+  /// Shown on the Subscription screen, in the current language.
   String get statusLabel {
+    final l = L10n.current;
     switch (_status) {
       case SubscriptionStatus.trial:
-        return _trialExpiresAt != null ? 'Trial' : 'Trial - no subscription set up yet';
+        return _trialExpiresAt != null ? l.subscription_statusTrial : l.subscription_statusTrialNoSetup;
       case SubscriptionStatus.active:
-        return 'Active';
+        return l.subscription_statusActive;
       case SubscriptionStatus.grace:
-        return 'Payment overdue - grace period';
+        return l.subscription_statusGrace;
       case SubscriptionStatus.locked:
-        return 'Locked - subscription expired';
+        return l.subscription_statusLocked;
     }
   }
 

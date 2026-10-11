@@ -155,7 +155,7 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
     if (facilityId == null) return;
 
     if (_referenceController.text.trim().isEmpty) {
-      AppFeedback.warning('Enter the payment reference / confirmation code');
+      AppFeedback.warning(L10n.current.subscription_enterReference);
       return;
     }
 
@@ -207,11 +207,11 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
       _referenceController.clear();
       setState(() => _proofBytes = null);
 
-      AppFeedback.success('Payment submitted', detail: 'It will be reviewed and confirmed shortly');
+      AppFeedback.success(L10n.current.subscription_submitted, detail: L10n.current.subscription_submittedDetail);
     } catch (e, st) {
       // The reference and proof are still in the form (they're cleared only
       // on success), so Retry simply submits again.
-      AppFeedback.error("Couldn't submit the payment", error: e, stackTrace: st, onRetry: _submitPayment);
+      AppFeedback.error(L10n.current.subscription_submitFailed, error: e, stackTrace: st, onRetry: _submitPayment);
     } finally {
       if (mounted) setState(() => _isSubmitting = false);
     }
@@ -241,7 +241,7 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
     return Scaffold(
       backgroundColor: colors.background,
       appBar: AppBar(
-        title: const Text('Subscription'),
+        title: Text(context.l10n.subscription_title),
         centerTitle: true,
         backgroundColor: colors.primary,
         foregroundColor: colors.onPrimary,
@@ -249,7 +249,7 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
         leading: widget.isModal
             ? IconButton(
                 icon: const Icon(Icons.close),
-                tooltip: 'Close',
+                tooltip: context.l10n.common_close,
                 onPressed: () => Navigator.of(context).pop(),
               )
             : null,
@@ -288,20 +288,19 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
                       const SizedBox(height: AppSpacing.s6),
                       Text(
                         sub.status == SubscriptionStatus.locked
-                            ? 'Expired on ${AppDateFormat.dateTime24.format(sub.expiresAt!)}'
+                            ? context.l10n.subscription_expiredOn(AppDateFormat.dateTime24.format(sub.expiresAt!))
                             : sub.status == SubscriptionStatus.trial
-                                ? 'Trial expires on ${AppDateFormat.dateTime24.format(sub.expiresAt!)}'
-                                : 'Renews / expires on ${AppDateFormat.dateTime24.format(sub.expiresAt!)}',
+                                ? context.l10n.subscription_trialExpiresOn(AppDateFormat.dateTime24.format(sub.expiresAt!))
+                                : context.l10n.subscription_renewsOn(AppDateFormat.dateTime24.format(sub.expiresAt!)),
                         style: const TextStyle(fontSize: AppFontSize.f13),
                       ),
                     ],
                     if (sub.status == SubscriptionStatus.locked)
-                      const Padding(
-                        padding: EdgeInsets.only(top: AppSpacing.s8),
+                      Padding(
+                        padding: const EdgeInsets.only(top: AppSpacing.s8),
                         child: Text(
-                          'Your account is in read-only mode. Submit a payment below to '
-                          'restore full access - your data is safe and untouched.',
-                          style: TextStyle(fontSize: AppFontSize.f12_5),
+                          context.l10n.subscription_readOnly,
+                          style: const TextStyle(fontSize: AppFontSize.f12_5),
                         ),
                       ),
                   ],
@@ -337,8 +336,12 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
                               style: TextStyle(color: colors.onPrimary, fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f16),
                             ),
                             Text(
-                              '${_activePromotion!.discountPercent.toStringAsFixed(_activePromotion!.discountPercent % 1 == 0 ? 0 : 1)}% off'
-                              '${_activePromotion!.appliesToAllPlans ? ' every plan' : ' select plans'} - applied automatically below.',
+                              // The percent is formatted here, as before; the sentence comes from the language file.
+                              _activePromotion!.appliesToAllPlans
+                                  ? context.l10n.subscription_promoAllPlans(_activePromotion!.discountPercent
+                                      .toStringAsFixed(_activePromotion!.discountPercent % 1 == 0 ? 0 : 1))
+                                  : context.l10n.subscription_promoSomePlans(_activePromotion!.discountPercent
+                                      .toStringAsFixed(_activePromotion!.discountPercent % 1 == 0 ? 0 : 1)),
                               style: TextStyle(color: colors.onPrimary, fontSize: AppFontSize.f12_5),
                             ),
                           ],
@@ -350,7 +353,7 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
                 const SizedBox(height: AppSpacing.s20),
               ],
 
-              Text('Choose a Plan', style: TextStyle(fontWeight: AppFontWeight.bold, color: colors.primary)),
+              Text(context.l10n.subscription_choosePlan, style: TextStyle(fontWeight: AppFontWeight.bold, color: colors.primary)),
               const SizedBox(height: AppSpacing.s8),
               ..._plans.map((plan) {
                 final effectivePrice = _effectivePrice(plan);
@@ -394,12 +397,12 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
               }),
 
               const SizedBox(height: AppSpacing.s16),
-              Text('Payment Details', style: TextStyle(fontWeight: AppFontWeight.bold, color: colors.primary)),
+              Text(context.l10n.payments_detailsTitle, style: TextStyle(fontWeight: AppFontWeight.bold, color: colors.primary)),
               const SizedBox(height: AppSpacing.s8),
 
               DropdownButtonFormField<String>(
                 initialValue: _method,
-                decoration: const InputDecoration(labelText: 'Payment Method', border: OutlineInputBorder()),
+                decoration: InputDecoration(labelText: context.l10n.payments_method, border: const OutlineInputBorder()),
                 // New requests store the method's key ('Mixx by Yas', not the
                 // old 'Tigo Pesa'); old requests keep what they stored.
                 items: [
@@ -413,10 +416,10 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
               const SizedBox(height: AppSpacing.s12),
               TextField(
                 controller: _referenceController,
-                decoration: const InputDecoration(
-                  labelText: 'Transaction / Confirmation Code',
-                  hintText: 'e.g. the M-Pesa confirmation code',
-                  border: OutlineInputBorder(),
+                decoration: InputDecoration(
+                  labelText: context.l10n.subscription_referenceLabel,
+                  hintText: context.l10n.subscription_referenceHint,
+                  border: const OutlineInputBorder(),
                 ),
               ),
               const SizedBox(height: AppSpacing.s12),
@@ -424,7 +427,7 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
               OutlinedButton.icon(
                 onPressed: _pickProofImage,
                 icon: const Icon(Icons.upload_file),
-                label: Text(_proofBytes == null ? 'Attach Proof (optional)' : 'Proof attached'),
+                label: Text(_proofBytes == null ? context.l10n.subscription_attachProof : context.l10n.subscription_proofAttached),
                 style: OutlinedButton.styleFrom(foregroundColor: colors.primary),
               ),
 
@@ -452,8 +455,7 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
                             const SizedBox(width: AppSpacing.s10),
                             Expanded(
                               child: Text(
-                                'Your last payment is still under review. Please wait for it to be '
-                                'approved or rejected before submitting another.',
+                                context.l10n.subscription_pendingWarning,
                                 style: TextStyle(fontSize: AppFontSize.f12_5, color: colors.warningStrong, fontWeight: AppFontWeight.semibold),
                               ),
                             ),
@@ -475,8 +477,7 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
                             const SizedBox(width: AppSpacing.s10),
                             Expanded(
                               child: Text(
-                                'Pricing for this plan isn\'t available right now. Please try again '
-                                'shortly or contact support.',
+                                context.l10n.subscription_priceUnavailableWarning,
                                 style: TextStyle(fontSize: AppFontSize.f12_5, color: colors.textPrimary, fontWeight: AppFontWeight.semibold),
                               ),
                             ),
@@ -501,10 +502,10 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
                                 )
                               : Text(
                                   _hasPendingSubmission
-                                      ? 'Awaiting Review'
+                                      ? context.l10n.subscription_awaitingReview
                                       : priceUnavailable
-                                          ? 'Pricing Unavailable'
-                                          : 'Submit Payment for Review',
+                                          ? context.l10n.subscription_pricingUnavailable
+                                          : context.l10n.subscription_submitForReview,
                                   style: const TextStyle(fontWeight: AppFontWeight.bold),
                                 ),
                         ),
@@ -515,7 +516,7 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
               }),
 
               const SizedBox(height: AppSpacing.s24),
-              Text('Recent Submissions', style: TextStyle(fontWeight: AppFontWeight.bold, color: colors.primary)),
+              Text(context.l10n.subscription_recentSubmissions, style: TextStyle(fontWeight: AppFontWeight.bold, color: colors.primary)),
               const SizedBox(height: AppSpacing.s8),
               if (facilityId != null) _SubmissionHistory(facilityId: facilityId, primaryColor: colors.primary),
             ],
@@ -537,7 +538,11 @@ Color submissionStatusColor(String status, AppColors colors) {
   }
 }
 
-Widget buildSubmissionCard(Map<String, dynamic> data, AppColors colors) {
+Widget buildSubmissionCard(BuildContext context, Map<String, dynamic> data, AppColors colors) {
+  // The plan's name from its id; the saved English planLabel only for an unknown plan.
+  final planId = (data['planId'] as String?) ?? '';
+  final planName = planById(planId) != null ? context.l10n.subscriptionPlanLabel(planId) : (data['planLabel'] ?? '');
+  final method = data['method'] as String?;
   final status = (data[Fields.status] as String?) ?? PaymentSubmissionStatus.pending.key;
   final submittedAt =
       data['submittedAt'] is Timestamp ? (data['submittedAt'] as Timestamp).toDate() : null;
@@ -557,11 +562,11 @@ Widget buildSubmissionCard(Map<String, dynamic> data, AppColors colors) {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text('${data['planLabel'] ?? ''} - ${Money.symbolAsStored(data['amount'] ?? 0)}',
+                    Text('$planName - ${Money.symbolAsStored(data['amount'] ?? 0)}',
                         style: const TextStyle(fontSize: AppFontSize.f14)),
                     const SizedBox(height: AppSpacing.s2),
                     Text(
-                      '${data['method'] ?? ''}'
+                      '${method == null ? '' : context.l10n.paymentMethodLabel(method)}'
                       '${submittedAt != null ? ' - ${AppDateFormat.dateTime24.format(submittedAt)}' : ''}',
                       style: TextStyle(fontSize: AppFontSize.f12, color: colors.textMuted),
                     ),
@@ -570,7 +575,7 @@ Widget buildSubmissionCard(Map<String, dynamic> data, AppColors colors) {
               ),
               const SizedBox(width: AppSpacing.s8),
               Chip(
-                label: Text(status[0].toUpperCase() + status.substring(1),
+                label: Text(context.l10n.submissionStatusLabel(status),
                     style: TextStyle(fontSize: AppFontSize.f11, color: colors.onPrimary)),
                 backgroundColor: submissionStatusColor(status, colors),
                 padding: EdgeInsets.zero,
@@ -583,7 +588,7 @@ Widget buildSubmissionCard(Map<String, dynamic> data, AppColors colors) {
           if (status == PaymentSubmissionStatus.rejected.key) ...[
             const SizedBox(height: AppSpacing.s6),
             Text(
-              reviewNote.isNotEmpty ? 'Reason: $reviewNote' : 'No reason was given',
+              reviewNote.isNotEmpty ? context.l10n.subscription_rejectReason(reviewNote) : context.l10n.subscription_noReason,
               style: TextStyle(
                 fontSize: AppFontSize.f12,
                 color: reviewNote.isNotEmpty ? colors.dangerStrong : colors.textMuted,
@@ -622,12 +627,12 @@ class _SubmissionHistory extends StatelessWidget {
       builder: (context, snapshot) {
         final docs = snapshot.data?.docs ?? [];
         if (docs.isEmpty) {
-          return Text('No submissions yet.', style: TextStyle(color: context.colors.textMuted));
+          return Text(context.l10n.subscription_noSubmissionsYetDot, style: TextStyle(color: context.colors.textMuted));
         }
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            ...docs.map((doc) => buildSubmissionCard(doc.data() as Map<String, dynamic>, context.colors)),
+            ...docs.map((doc) => buildSubmissionCard(context, doc.data() as Map<String, dynamic>, context.colors)),
             TextButton(
               onPressed: () => Navigator.push(
                 context,
@@ -636,7 +641,7 @@ class _SubmissionHistory extends StatelessWidget {
                 ),
               ),
               style: TextButton.styleFrom(padding: EdgeInsets.zero, minimumSize: Size.zero, foregroundColor: primaryColor),
-              child: const Text('View all'),
+              child: Text(context.l10n.subscription_viewAll),
             ),
           ],
         );
@@ -664,7 +669,7 @@ Future<void> showSubscriptionScreen(BuildContext context) async {
   await showGeneralDialog(
     context: context,
     barrierDismissible: true,
-    barrierLabel: 'Subscription',
+    barrierLabel: context.l10n.subscription_title,
     barrierColor: context.colors.scrim.withValues(alpha: AppAlpha.a50),
     transitionDuration: AppMotion.normal,
     pageBuilder: (context, animation, secondaryAnimation) {

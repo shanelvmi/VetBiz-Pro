@@ -164,10 +164,10 @@ class _SubscriptionHistoryScreenState extends State<SubscriptionHistoryScreen> {
         title: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Text('Subscription History',
+            Text(context.l10n.subscription_historyTitle,
                 style: TextStyle(
                     fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f19, color: context.colors.textPrimary)),
-            Text('Your payments and their review status', style: TextStyle(fontSize: AppFontSize.f12, color: context.colors.textSecondary)),
+            Text(context.l10n.subscription_historySubtitle, style: TextStyle(fontSize: AppFontSize.f12, color: context.colors.textSecondary)),
           ],
         ),
       ),
@@ -178,7 +178,7 @@ class _SubscriptionHistoryScreenState extends State<SubscriptionHistoryScreen> {
             return Center(
               child: Padding(
                 padding: const EdgeInsets.all(AppSpacing.s24),
-                child: Text('Could not load history: ${FriendlyError.messageFor(snapshot.error!)}'),
+                child: Text(context.l10n.subscription_historyLoadError(FriendlyError.messageFor(snapshot.error!))),
               ),
             );
           }
@@ -203,9 +203,9 @@ class _SubscriptionHistoryScreenState extends State<SubscriptionHistoryScreen> {
           children: [
             Icon(Icons.receipt_long_outlined, size: AppIconSize.i64, color: context.colors.textDisabled),
             const SizedBox(height: AppSpacing.s16),
-            Text('No submissions yet', style: TextStyle(fontSize: AppFontSize.f18, color: context.colors.textMuted)),
+            Text(context.l10n.subscription_noSubmissionsYet, style: TextStyle(fontSize: AppFontSize.f18, color: context.colors.textMuted)),
             const SizedBox(height: AppSpacing.s4),
-            Text('Payments you submit will be listed here.', style: TextStyle(fontSize: AppFontSize.f13, color: context.colors.textHint)),
+            Text(context.l10n.subscription_noSubmissionsHint, style: TextStyle(fontSize: AppFontSize.f13, color: context.colors.textHint)),
           ],
         ),
       );
@@ -267,9 +267,9 @@ class _SubscriptionHistoryScreenState extends State<SubscriptionHistoryScreen> {
   Widget _buildCards(int totalCount, Map<String, int> counts, num approvedTotal) {
     final cards = <Widget>[
       _card(
-        label: 'Total Submissions',
+        label: context.l10n.subscription_totalSubmissions,
         value: '$totalCount',
-        hint: 'All payments',
+        hint: context.l10n.subscription_allPayments,
         icon: Icons.receipt_long_outlined,
         color: _primary,
         filter: null,
@@ -285,7 +285,7 @@ class _SubscriptionHistoryScreenState extends State<SubscriptionHistoryScreen> {
       _card(
         label: _statusName(PaymentSubmissionStatus.pending.key),
         value: '${counts[PaymentSubmissionStatus.pending.key] ?? 0}',
-        hint: 'Awaiting review',
+        hint: context.l10n.subscription_awaitingReviewLower,
         icon: Icons.hourglass_empty,
         color: submissionStatusColor(PaymentSubmissionStatus.pending.key, context.colors),
         filter: PaymentSubmissionStatus.pending.key,
@@ -293,7 +293,7 @@ class _SubscriptionHistoryScreenState extends State<SubscriptionHistoryScreen> {
       _card(
         label: _statusName(PaymentSubmissionStatus.rejected.key),
         value: '${counts[PaymentSubmissionStatus.rejected.key] ?? 0}',
-        hint: 'Not accepted',
+        hint: context.l10n.subscription_notAccepted,
         icon: Icons.cancel_outlined,
         color: submissionStatusColor(PaymentSubmissionStatus.rejected.key, context.colors),
         filter: PaymentSubmissionStatus.rejected.key,
@@ -391,7 +391,7 @@ class _SubscriptionHistoryScreenState extends State<SubscriptionHistoryScreen> {
     final search = TextField(
       controller: _searchController,
       decoration: InputDecoration(
-        hintText: 'Search by plan, method, reference or reason...',
+        hintText: context.l10n.subscription_searchHint,
         hintStyle: const TextStyle(fontSize: AppFontSize.f13),
         prefixIcon: const Icon(Icons.search, size: AppIconSize.i20),
         filled: true,
@@ -419,7 +419,7 @@ class _SubscriptionHistoryScreenState extends State<SubscriptionHistoryScreen> {
       }),
     );
 
-    final reset = hasActiveFilters ? TextButton(onPressed: _resetFilters, child: const Text('Reset')) : null;
+    final reset = hasActiveFilters ? TextButton(onPressed: _resetFilters, child: Text(context.l10n.common_reset)) : null;
 
     return LayoutBuilder(
       builder: (context, constraints) {
@@ -431,9 +431,9 @@ class _SubscriptionHistoryScreenState extends State<SubscriptionHistoryScreen> {
               const SizedBox(height: AppSpacing.s10),
               Row(
                 children: [
-                  Expanded(child: _dropdown('Plan', plan, plans, (v) => _planFilter = v, expand: true, display: _planNameForLabel)),
+                  Expanded(child: _dropdown(context.l10n.subscription_plan, plan, plans, (v) => _planFilter = v, expand: true, display: _planNameForLabel)),
                   const SizedBox(width: AppSpacing.s10),
-                  Expanded(child: _dropdown('Method', method, methods, (v) => _methodFilter = v, expand: true, display: context.l10n.paymentMethodLabel)),
+                  Expanded(child: _dropdown(context.l10n.common_method, method, methods, (v) => _methodFilter = v, expand: true, display: context.l10n.paymentMethodLabel)),
                   if (reset != null) ...[const SizedBox(width: AppSpacing.s6), reset],
                 ],
               ),
@@ -444,9 +444,9 @@ class _SubscriptionHistoryScreenState extends State<SubscriptionHistoryScreen> {
           children: [
             Expanded(flex: 3, child: search),
             const SizedBox(width: AppSpacing.s10),
-            _dropdown('Plan', plan, plans, (v) => _planFilter = v, display: _planNameForLabel),
+            _dropdown(context.l10n.subscription_plan, plan, plans, (v) => _planFilter = v, display: _planNameForLabel),
             const SizedBox(width: AppSpacing.s10),
-            _dropdown('Method', method, methods, (v) => _methodFilter = v, display: context.l10n.paymentMethodLabel),
+            _dropdown(context.l10n.common_method, method, methods, (v) => _methodFilter = v, display: context.l10n.paymentMethodLabel),
             if (reset != null) ...[const SizedBox(width: AppSpacing.s10), reset],
           ],
         );
@@ -475,7 +475,7 @@ class _SubscriptionHistoryScreenState extends State<SubscriptionHistoryScreen> {
           items: items
               .map((v) => DropdownMenuItem(
                   value: v,
-                  child: Text('$label: ${v == 'All' ? context.l10n.common_all : (display?.call(v) ?? v)}',
+                  child: Text(context.l10n.common_filterValue(label, v == 'All' ? context.l10n.common_all : (display?.call(v) ?? v)),
                       overflow: TextOverflow.ellipsis)))
               .toList(),
           onChanged: (v) {
@@ -500,9 +500,9 @@ class _SubscriptionHistoryScreenState extends State<SubscriptionHistoryScreen> {
         children: [
           Icon(Icons.search_off, size: AppIconSize.i56, color: context.colors.textDisabled),
           const SizedBox(height: AppSpacing.s12),
-          Text('No submissions match your filters', style: TextStyle(fontSize: AppFontSize.f17, color: context.colors.textMuted)),
+          Text(context.l10n.subscription_noMatches, style: TextStyle(fontSize: AppFontSize.f17, color: context.colors.textMuted)),
           const SizedBox(height: AppSpacing.s8),
-          TextButton(onPressed: _resetFilters, child: const Text('Reset filters')),
+          TextButton(onPressed: _resetFilters, child: Text(context.l10n.common_resetFilters)),
         ],
       ),
     );
@@ -527,12 +527,12 @@ class _SubscriptionHistoryScreenState extends State<SubscriptionHistoryScreen> {
               decoration: BoxDecoration(border: Border(bottom: BorderSide(color: context.colors.textHint.withValues(alpha: AppAlpha.a20)))),
               child: Row(
                 children: [
-                  _headerCell('Submitted', flex: 3),
-                  _headerCell('Plan', flex: 3),
-                  _headerCell('Amount', flex: 2),
-                  _headerCell('Method', flex: 3),
-                  _headerCell('Status', flex: 2),
-                  _headerCell('Details', flex: 5),
+                  _headerCell(context.l10n.subscription_colSubmitted, flex: 3),
+                  _headerCell(context.l10n.subscription_plan, flex: 3),
+                  _headerCell(context.l10n.common_amount, flex: 2),
+                  _headerCell(context.l10n.common_method, flex: 3),
+                  _headerCell(context.l10n.common_status, flex: 2),
+                  _headerCell(context.l10n.common_details, flex: 5),
                 ],
               ),
             ),
@@ -577,7 +577,7 @@ class _SubscriptionHistoryScreenState extends State<SubscriptionHistoryScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              s.hasReason ? 'Reason: ${s.reviewNote}' : 'No reason was given',
+              s.hasReason ? context.l10n.subscription_rejectReason(s.reviewNote) : context.l10n.subscription_noReason,
               maxLines: 3,
               overflow: TextOverflow.ellipsis,
               style: TextStyle(
@@ -588,7 +588,7 @@ class _SubscriptionHistoryScreenState extends State<SubscriptionHistoryScreen> {
             ),
             if (s.reviewedAt != null) ...[
               const SizedBox(height: AppSpacing.s2),
-              Text('Rejected ${_dateTimeFormat.format(s.reviewedAt!)}',
+              Text(context.l10n.subscription_rejectedOn(_dateTimeFormat.format(s.reviewedAt!)),
                   style: TextStyle(fontSize: AppFontSize.f11_5, color: context.colors.textHint)),
             ],
           ],
@@ -606,7 +606,7 @@ class _SubscriptionHistoryScreenState extends State<SubscriptionHistoryScreen> {
           ],
         );
       default:
-        return Text('Awaiting review', style: TextStyle(fontSize: AppFontSize.f12_5, color: context.colors.textMuted));
+        return Text(context.l10n.subscription_awaitingReviewLower, style: TextStyle(fontSize: AppFontSize.f12_5, color: context.colors.textMuted));
     }
   }
 
@@ -754,7 +754,9 @@ class _SubscriptionHistoryScreenState extends State<SubscriptionHistoryScreen> {
         runSpacing: AppSpacing.s4,
         children: [
           Text(
-            total == 0 ? 'No submissions' : 'Showing $start to $end of $total submission${total == 1 ? '' : 's'}',
+            total == 0
+                ? context.l10n.subscription_noSubmissions
+                : context.l10n.subscription_showingRange(total, start, end),
             style: TextStyle(fontSize: AppFontSize.f12_5, color: context.colors.textMuted),
           ),
           Row(
@@ -764,7 +766,7 @@ class _SubscriptionHistoryScreenState extends State<SubscriptionHistoryScreen> {
                 child: DropdownButton<int>(
                   value: _pageSize,
                   items: const [10, 25, 50]
-                      .map((n) => DropdownMenuItem(value: n, child: Text('$n per page')))
+                      .map((n) => DropdownMenuItem(value: n, child: Text(context.l10n.common_perPage(n))))
                       .toList(),
                   onChanged: (v) {
                     if (v != null) {
@@ -781,7 +783,7 @@ class _SubscriptionHistoryScreenState extends State<SubscriptionHistoryScreen> {
                 icon: const Icon(Icons.chevron_left),
                 onPressed: page > 1 ? () => setState(() => _page = page - 1) : null,
               ),
-              Text('Page $page', style: const TextStyle(fontSize: AppFontSize.f13)),
+              Text(context.l10n.common_page(page), style: const TextStyle(fontSize: AppFontSize.f13)),
               IconButton(
                 icon: const Icon(Icons.chevron_right),
                 onPressed: page < totalPages ? () => setState(() => _page = page + 1) : null,
