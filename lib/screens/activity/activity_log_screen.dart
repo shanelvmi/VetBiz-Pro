@@ -9,6 +9,8 @@ import '../../providers/user_role_provider.dart';
 import '../../utils/merged_query_stream.dart';
 import '../../utils/text_sanitizer.dart';
 import '../../widgets/firestore_error_view.dart';
+import '../../theme/activity_type_style.dart';
+import '../../theme/theme_context.dart';
 import '../../theme/app_palette.dart';
 import '../../ui/feedback/app_feedback.dart';
 import '../../data/activity_type.dart';
@@ -346,56 +348,6 @@ class _ActivityLogScreenState extends State<ActivityLogScreen> {
   Future<int> _cleanupOldLogs(String facilityId, int retentionDays) =>
       ActivityLogRetention.deleteExpired(facilityId, retentionDays);
 
-  IconData _getActionIcon(String actionType) {
-    switch (actionType.toLowerCase()) {
-      case 'products':
-        return Icons.inventory_2;
-      case 'inventory move':
-        return Icons.swap_horiz;
-      case 'sales':
-        return Icons.shopping_cart;
-      case 'services':
-        return Icons.build;
-      case 'transactions':
-        return Icons.receipt_long;
-      case 'clients':
-        return Icons.people;
-      case 'debtors':
-        return Icons.account_balance_wallet;
-      case 'settings':
-        return Icons.settings;
-      case 'admin':
-        return Icons.admin_panel_settings;
-      default:
-        return Icons.info;
-    }
-  }
-
-  Color _getActionColor(String actionType) {
-    switch (actionType.toLowerCase()) {
-      case 'inventory move':
-        return Colors.blue;
-      case 'products':
-        return Colors.green;
-      case 'sales':
-        return warmAmber;
-      case 'services':
-        return Colors.purple;
-      case 'transactions':
-        return Colors.indigo;
-      case 'clients':
-        return Colors.teal;
-      case 'debtors':
-        return Colors.orange;
-      case 'settings':
-        return Colors.grey;
-      case 'admin':
-        return Colors.red;
-      default:
-        return primaryDeepGreen;
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     final facilityProvider =
@@ -566,8 +518,8 @@ class _ActivityLogScreenState extends State<ActivityLogScreen> {
                               .format(timestamp.toDate().toLocal());
                         }
 
-                        final actionColor = _getActionColor(type);
-                        final actionIcon = _getActionIcon(type);
+                        final actionColor = ActivityTypeStyle.color(type, context.colors);
+                        final actionIcon = ActivityTypeStyle.icon(type);
 
                         return Card(
                           elevation: 2,

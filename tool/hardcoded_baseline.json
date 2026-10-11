@@ -12,20 +12,19 @@
     "R1": {
       "lib/main.dart": 27,
       "lib/models/notification_model.dart": 13,
-      "lib/screens/activity/activity_log_screen.dart": 29,
+      "lib/screens/activity/activity_log_screen.dart": 21,
       "lib/screens/admin/manage_assistants_screen.dart": 2,
-      "lib/screens/dashboard/dashboard_screen.dart": 14,
+      "lib/screens/dashboard/dashboard_screen.dart": 12,
       "lib/screens/dashboard/insights_screen.dart": 5,
       "lib/screens/dashboard/notifications_screen.dart": 1,
       "lib/screens/facilities/facility_picker_screen.dart": 1,
-      "lib/screens/facilities/facility_screen.dart": 3,
+      "lib/screens/facilities/facility_screen.dart": 1,
       "lib/screens/legal/legal_document_screen.dart": 15,
       "lib/screens/login_screen.dart": 3,
       "lib/screens/platform_admin/platform_admin_home_screen.dart": 1,
       "lib/screens/platform_admin/subscription_requests_tab.dart": 1,
       "lib/screens/platform_admin/users_tab.dart": 8,
-      "lib/screens/register_screen.dart": 2,
-      "lib/screens/reports/report_tabbed_content.dart": 3
+      "lib/screens/register_screen.dart": 2
     },
     "R2": {
       "lib/main.dart": 11,

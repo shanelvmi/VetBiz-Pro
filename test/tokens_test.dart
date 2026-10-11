@@ -67,6 +67,7 @@ void main() {
       'chart4': (c.chart4, Colors.purple),
       'chart5': (c.chart5, Colors.blueGrey),
       'chart6': (c.chart6, Colors.teal),
+      'chart7': (c.chart7, Colors.indigo),
       // Team role chips (manage_assistants_screen.dart), as they were.
       'roleOwner': (c.roleOwner, Colors.indigo),
       'roleOwnerStrong': (c.roleOwnerStrong, Colors.indigo[700]!),

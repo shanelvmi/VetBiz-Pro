@@ -26,6 +26,7 @@ import '../../config/app_defaults.dart';
 import '../../config/app_limits.dart';
 import '../../config/app_ranges.dart';
 import '../../config/app_rules.dart';
+import '../../theme/activity_type_style.dart';
 import '../../theme/app_text.dart';
 import '../../theme/app_dimens.dart';
 import '../../theme/theme_context.dart';
@@ -1800,52 +1801,6 @@ class _FacilityScreenState extends State<FacilityScreen> {
   // so it would show the wrong facility's activity whenever this
   // detail panel is browsing one that isn't the active facility.
 
-  IconData _activityIcon(String actionType) {
-    switch (actionType.toLowerCase()) {
-      case 'products':
-        return Icons.inventory_2;
-      case 'inventory move':
-        return Icons.swap_horiz;
-      case 'sales':
-        return Icons.shopping_cart;
-      case 'services':
-        return Icons.build;
-      case 'clients':
-        return Icons.people;
-      case 'debtors':
-        return Icons.account_balance_wallet;
-      case 'settings':
-        return Icons.settings;
-      case 'admin':
-        return Icons.admin_panel_settings;
-      default:
-        return Icons.info;
-    }
-  }
-
-  Color _activityColor(String actionType) {
-    switch (actionType.toLowerCase()) {
-      case 'inventory move':
-        return context.colors.info;
-      case 'products':
-        return context.colors.success;
-      case 'sales':
-        return context.colors.accent;
-      case 'services':
-        return Colors.purple;
-      case 'clients':
-        return Colors.teal;
-      case 'debtors':
-        return context.colors.warning;
-      case 'settings':
-        return context.colors.textHint;
-      case 'admin':
-        return context.colors.danger;
-      default:
-        return context.colors.primary;
-    }
-  }
-
   Widget _buildActivityList(String facilityId, {required int limit}) {
     return StreamBuilder<QuerySnapshot>(
       stream: FirebaseFirestore.instance
@@ -1877,7 +1832,7 @@ class _FacilityScreenState extends State<FacilityScreen> {
             final actionType = (data['actionType'] as String?) ?? '';
             final description = (data['description'] as String?) ?? '';
             final timestampTs = data['timestamp'] as Timestamp?;
-            final color = _activityColor(actionType);
+            final color = ActivityTypeStyle.color(actionType, context.colors);
 
             return Padding(
               padding: const EdgeInsets.only(bottom: AppSpacing.s14),
@@ -1888,7 +1843,7 @@ class _FacilityScreenState extends State<FacilityScreen> {
                     width: 34,
                     height: 34,
                     decoration: BoxDecoration(color: color.withValues(alpha: AppAlpha.a15), shape: BoxShape.circle),
-                    child: Icon(_activityIcon(actionType), color: color, size: AppIconSize.i18),
+                    child: Icon(ActivityTypeStyle.icon(actionType), color: color, size: AppIconSize.i18),
                   ),
                   const SizedBox(width: AppSpacing.s10),
                   Expanded(

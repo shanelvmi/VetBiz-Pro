@@ -5,6 +5,7 @@ import '../../models/daily_report.dart';
 import '../../providers/user_role_provider.dart';
 import '../../config/money.dart';
 import '../../config/app_date_format.dart';
+import '../../theme/activity_type_style.dart';
 import '../../theme/app_text.dart';
 import '../../theme/app_dimens.dart';
 import '../../theme/theme_context.dart';
@@ -811,56 +812,6 @@ class _ReportTabbedContentState extends State<ReportTabbedContent> with SingleTi
   // Matches the icon/color mapping used by the app's own standalone
   // Activity Log screen, so this tab feels like the same feature
   // rather than a separately-styled one.
-  IconData _activityIcon(String actionType) {
-    switch (actionType.toLowerCase()) {
-      case 'products':
-        return Icons.inventory_2;
-      case 'inventory move':
-        return Icons.swap_horiz;
-      case 'sales':
-        return Icons.shopping_cart;
-      case 'services':
-        return Icons.build;
-      case 'transactions':
-        return Icons.receipt_long;
-      case 'clients':
-        return Icons.people;
-      case 'debtors':
-        return Icons.account_balance_wallet;
-      case 'settings':
-        return Icons.settings;
-      case 'admin':
-        return Icons.admin_panel_settings;
-      default:
-        return Icons.info;
-    }
-  }
-
-  Color _activityColor(String actionType) {
-    switch (actionType.toLowerCase()) {
-      case 'inventory move':
-        return context.colors.info;
-      case 'products':
-        return context.colors.success;
-      case 'sales':
-        return context.colors.accent;
-      case 'services':
-        return Colors.purple;
-      case 'transactions':
-        return Colors.indigo;
-      case 'clients':
-        return Colors.teal;
-      case 'debtors':
-        return context.colors.warning;
-      case 'settings':
-        return context.colors.textHint;
-      case 'admin':
-        return context.colors.danger;
-      default:
-        return context.colors.primary;
-    }
-  }
-
   Widget _buildActivityLogTab() {
     return _tabScroll([
       _card(
@@ -888,7 +839,7 @@ class _ReportTabbedContentState extends State<ReportTabbedContent> with SingleTi
   }
 
   Widget _buildActivityRow(ActivityLogEntry entry) {
-    final color = _activityColor(entry.actionType);
+    final color = ActivityTypeStyle.color(entry.actionType, context.colors);
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: AppSpacing.s8),
       child: Row(
@@ -902,7 +853,7 @@ class _ReportTabbedContentState extends State<ReportTabbedContent> with SingleTi
             flex: 2,
             child: Row(
               children: [
-                Icon(_activityIcon(entry.actionType), size: AppIconSize.i14, color: color),
+                Icon(ActivityTypeStyle.icon(entry.actionType), size: AppIconSize.i14, color: color),
                 const SizedBox(width: AppSpacing.s6),
                 Flexible(child: Text(entry.actionType, style: TextStyle(fontSize: AppFontSize.f12, color: color), overflow: TextOverflow.ellipsis)),
               ],
