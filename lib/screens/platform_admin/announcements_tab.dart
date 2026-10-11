@@ -358,7 +358,7 @@ class _AnnouncementsTabState extends State<AnnouncementsTab> {
                       ),
                       Switch(
                         value: urgent,
-                        activeColor: context.colors.danger,
+                        activeThumbColor: context.colors.danger,
                         onChanged: (v) => setDialogState(() => urgent = v),
                       ),
                     ],

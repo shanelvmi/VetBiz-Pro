@@ -292,7 +292,7 @@ class _PrinterSettingsScreenState extends State<PrinterSettingsScreen> {
                     SwitchListTile(
                       title: const Text('Auto-print receipt after each sale'),
                       value: _autoPrint,
-                      activeColor: context.colors.primary,
+                      activeThumbColor: context.colors.primary,
                       onChanged: (value) async {
                         await _printerService.setAutoPrint(value);
                         if (mounted) setState(() => _autoPrint = value);

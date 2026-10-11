@@ -225,7 +225,7 @@ class _MaintenanceModeCardState extends State<_MaintenanceModeCard> {
                   Switch(
                     value: _isMaintenanceMode,
                     onChanged: _isTogglingMode ? null : _setMaintenanceMode,
-                    activeColor: context.colors.warning,
+                    activeThumbColor: context.colors.warning,
                   ),
                   const SizedBox(width: AppSpacing.s8),
                   Text(

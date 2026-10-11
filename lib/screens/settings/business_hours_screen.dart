@@ -167,7 +167,7 @@ class _BusinessHoursScreenState extends State<BusinessHoursScreen> {
                   ),
                   Switch(
                     value: _allowAnytime,
-                    activeColor: context.colors.warningStrong,
+                    activeThumbColor: context.colors.warningStrong,
                     onChanged: (v) => setState(() => _allowAnytime = v),
                   ),
                 ],
@@ -222,7 +222,7 @@ class _BusinessHoursScreenState extends State<BusinessHoursScreen> {
               Row(
                 children: [
                   Text('Closed all day', style: TextStyle(fontSize: AppFontSize.f12_5, color: context.colors.textSoft)),
-                  Switch(value: closed, activeColor: context.colors.primary, onChanged: onClosedChanged),
+                  Switch(value: closed, activeThumbColor: context.colors.primary, onChanged: onClosedChanged),
                 ],
               ),
             ],

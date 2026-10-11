@@ -1405,7 +1405,7 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
                     ),
                     secondary: Icon(Icons.star_outline, color: context.colors.primary),
                     value: _isWatchlisted,
-                    activeColor: context.colors.primary,
+                    activeThumbColor: context.colors.primary,
                     onChanged: fieldsLocked ? null : (value) => setState(() => _isWatchlisted = value),
                   ),
                   ],
