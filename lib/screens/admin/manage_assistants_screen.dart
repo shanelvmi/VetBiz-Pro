@@ -11,6 +11,7 @@ import '../../services/membership_service.dart';
 import '../../utils/activity_logger.dart';
 import '../../data/collections.dart';
 import '../../data/fields.dart';
+import '../../data/membership_history_action.dart';
 import '../../data/user_role.dart';
 import '../../data/user_status.dart';
 import '../../data/activity_type.dart';
@@ -241,21 +242,20 @@ class _ManageAssistantsScreenState extends State<ManageAssistantsScreen> {
   // stamps each change with its own clock and keeps a history (that's where
   // "approved on ..." in the details panel comes from), and refuses one that
   // no longer makes sense - say a second tap on Approve from a stale screen.
-  Future<void> _assistantAction(String userId, Map<String, dynamic> data, String action) =>
+  Future<void> _assistantAction(String userId, Map<String, dynamic> data, MembershipHistoryAction action) =>
       _runBusy(userId, () => _doAssistantAction(userId, data, action));
 
-  Future<void> _doAssistantAction(String userId, Map<String, dynamic> data, String action) async {
+  Future<void> _doAssistantAction(String userId, Map<String, dynamic> data, MembershipHistoryAction action) async {
     final name = (data['fullName'] ?? 'The assistant').toString();
     final facilityId = _facilityIdOf(data);
-    const past = {'approve': 'approved', 'reject': 'rejected', 'deactivate': 'deactivated', 'reactivate': 'reactivated'};
     try {
-      await MembershipService().setAssistantStatus(assistantUid: userId, action: action);
+      await MembershipService().setAssistantStatus(assistantUid: userId, action: action.request);
 
       // Worth a line in the Activity Log - and a rejection especially, since
       // the person disappears from this list.
       if (facilityId.isNotEmpty) {
         final info = await ActivityLogger.getCurrentUserInfo();
-        final verb = past[action] ?? action;
+        final verb = action.key;
         await ActivityLogger.logActivity(
           facilityId: facilityId,
           userId: info[Fields.userId] ?? '',
@@ -266,10 +266,10 @@ class _ManageAssistantsScreenState extends State<ManageAssistantsScreen> {
         );
       }
       if (!mounted) return;
-      if (action == 'reject' && _selectedUserId == userId) setState(() => _selectedUserId = null);
-      AppFeedback.success('$name ${past[action]}');
+      if (action == MembershipHistoryAction.rejected && _selectedUserId == userId) setState(() => _selectedUserId = null);
+      AppFeedback.success('$name ${action.key}');
     } catch (e, st) {
-      debugPrint('Error ($action) for assistant: $e');
+      debugPrint('Error (${action.request}) for assistant: $e');
       // FriendlyError shows the server's own message for a Functions error,
       // as MembershipService.errorMessage did, and never the raw text.
       AppFeedback.error("Couldn't update the assistant", error: e, stackTrace: st);
@@ -662,7 +662,7 @@ class _ManageAssistantsScreenState extends State<ManageAssistantsScreen> {
           label: 'Approve',
           icon: Icons.check_circle_outline,
           color: context.colors.success,
-          onPressed: () => _assistantAction(doc.id, data, 'approve'),
+          onPressed: () => _assistantAction(doc.id, data, MembershipHistoryAction.approved),
         ),
         // For someone you don't recognise. They're taken out of the facility
         // and, next time they sign in, asked for an invite code - not left
@@ -679,7 +679,7 @@ class _ManageAssistantsScreenState extends State<ManageAssistantsScreen> {
           label: 'Deactivate',
           icon: Icons.pause_circle_outline,
           color: context.colors.warning,
-          onPressed: () => _assistantAction(doc.id, data, 'deactivate'),
+          onPressed: () => _assistantAction(doc.id, data, MembershipHistoryAction.deactivated),
         ),
         _actionButton(
           label: 'Reassign',
@@ -697,7 +697,7 @@ class _ManageAssistantsScreenState extends State<ManageAssistantsScreen> {
           label: 'Reactivate',
           icon: Icons.play_circle_outline,
           color: context.colors.success,
-          onPressed: () => _assistantAction(doc.id, data, 'reactivate'),
+          onPressed: () => _assistantAction(doc.id, data, MembershipHistoryAction.reactivated),
         ),
         _actionButton(
           label: 'Remove from Facility',
@@ -812,7 +812,7 @@ class _ManageAssistantsScreenState extends State<ManageAssistantsScreen> {
       ],
       confirmLabel: 'Reject',
     );
-    if (ok) await _assistantAction(userId, data, 'reject');
+    if (ok) await _assistantAction(userId, data, MembershipHistoryAction.rejected);
   }
 
   void _resetFilters() {
@@ -1644,20 +1644,25 @@ class _ManageAssistantsScreenState extends State<ManageAssistantsScreen> {
     ];
     final rawHistory = data['statusHistory'];
     if (rawHistory is List) {
-      const labels = {'approved': 'Approved', 'rejected': 'Rejected', 'deactivated': 'Deactivated', 'reactivated': 'Reactivated'};
-      final colors = {
-        'approved': context.colors.success,
-        'rejected': context.colors.danger,
-        'deactivated': context.colors.warning,
-        'reactivated': context.colors.success,
-      };
       for (final h in rawHistory) {
         if (h is! Map) continue;
         final action = (h['action'] ?? '').toString();
+        final known = MembershipHistoryAction.fromKey(action);
         history.add((
           at: _ts(h['at']),
-          color: colors[action] ?? context.colors.textHint,
-          title: labels[action] ?? action,
+          color: switch (known) {
+            MembershipHistoryAction.approved || MembershipHistoryAction.reactivated => context.colors.success,
+            MembershipHistoryAction.rejected => context.colors.danger,
+            MembershipHistoryAction.deactivated => context.colors.warning,
+            null => context.colors.textHint,
+          },
+          title: switch (known) {
+            MembershipHistoryAction.approved => 'Approved',
+            MembershipHistoryAction.rejected => 'Rejected',
+            MembershipHistoryAction.deactivated => 'Deactivated',
+            MembershipHistoryAction.reactivated => 'Reactivated',
+            null => action,
+          },
           by: (h['by'] ?? '').toString(),
         ));
       }

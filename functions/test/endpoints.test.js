@@ -111,6 +111,21 @@ test("UserStatus keys are the statuses the server writes or moves between", () =
   assert.deepStrictEqual(appStatuses, serverStatuses);
 });
 
+test("MembershipHistoryAction matches STATUS_ACTIONS: requests and stored history keys", () => {
+  // Both sides read as text; each must parse, or the comparison would pass
+  // on two empty lists and hide the drift it is here to catch.
+  const block = mustFind(membershipJs, /const STATUS_ACTIONS = \{([\s\S]*?)\n\};/, "membership.js");
+  const server = [...block.matchAll(/(\w+):\s*\{[^}]*\bhistory:\s*"([a-z_]+)"/g)].map((m) => `${m[1]} -> ${m[2]}`).sort();
+  assert.ok(server.length > 0, "could not read any action from STATUS_ACTIONS in membership.js");
+
+  const dart = readDart("data", "membership_history_action.dart");
+  const body = mustFind(dart, /enum MembershipHistoryAction\s*\{([\s\S]*?);/, "membership_history_action.dart");
+  const app = [...body.matchAll(/\w+\('([^']+)',\s*'([^']+)'\)/g)].map((m) => `${m[1]} -> ${m[2]}`).sort();
+  assert.ok(app.length > 0, "could not read any value of MembershipHistoryAction");
+
+  assert.deepStrictEqual(app, server);
+});
+
 // ---------------------------------------------------------------------------
 // Business numbers the app shares with the server and the rules (Phase 2,
 // step 2C). Both sides are read as text. Each value MUST be found: a test

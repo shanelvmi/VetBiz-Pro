@@ -135,7 +135,7 @@ class MembershipService {
   /// stale screen), and for "reject" takes the person out of the facility so
   /// they land on the invite-code screen when they next sign in.
   ///
-  /// [action] is 'approve', 'reject', 'deactivate' or 'reactivate'.
+  /// [action] is a `MembershipHistoryAction.request`: 'approve', 'reject', 'deactivate' or 'reactivate'.
   Future<void> setAssistantStatus({required String assistantUid, required String action}) async {
     await _call('setAssistantStatus', {'assistantUid': assistantUid, 'action': action});
   }
