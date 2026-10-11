@@ -802,13 +802,15 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
         return;
       }
 
-      // Get destination
-      final destination = await _chooseDestination();
-      if (destination == null) return; // user cancelled
-
+      // Read before the destination dialog: the save must still go through
+      // once a destination is chosen.
       final facilityId =
           Provider.of<FacilityProvider>(context, listen: false)
               .selectedFacilityId;
+
+      // Get destination
+      final destination = await _chooseDestination();
+      if (destination == null) return; // user cancelled
 
       if (facilityId == null || facilityId.isEmpty) {
         AppFeedback.warning('Select a facility first');
@@ -1145,7 +1147,7 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
                                 Navigator.pop(context);
                                 await Future.delayed(AppTimeouts.productFormReopenDelay);
                                 final rootContext = navigatorKey.currentContext;
-                                if (rootContext != null) {
+                                if (rootContext != null && rootContext.mounted) {
                                   showAddEditProductScreen(rootContext, product: match);
                                 }
                               },
@@ -1183,7 +1185,7 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
                                         Navigator.pop(context);
                                         await Future.delayed(AppTimeouts.productFormReopenDelay);
                                         final rootContext = navigatorKey.currentContext;
-                                        if (rootContext != null) {
+                                        if (rootContext != null && rootContext.mounted) {
                                           showAddEditProductScreen(rootContext, product: p);
                                         }
                                       },
