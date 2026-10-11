@@ -29,6 +29,7 @@ import '../../config/app_rules.dart';
 import '../../theme/app_text.dart';
 import '../../theme/app_dimens.dart';
 import '../../theme/theme_context.dart';
+import '../../theme/app_breakpoints.dart';
 import '../../ui/feedback/app_feedback.dart';
 import '../../ui/feedback/friendly_error.dart';
 
@@ -40,6 +41,11 @@ class FacilityScreen extends StatefulWidget {
 }
 
 class _FacilityScreenState extends State<FacilityScreen> {
+  // The facility list panel: below the details on a narrow window, beside
+  // them on a wide one. Sizes, kept exact (D10).
+  static const double _listPanelHeight = 360;
+  static const double _listPanelWidth = 340;
+
   final FirebaseAuth _auth = FirebaseAuth.instance;
   late final User? currentUser;
   List<Map<String, dynamic>> facilities = [];
@@ -995,9 +1001,7 @@ class _FacilityScreenState extends State<FacilityScreen> {
     }
 
     if (!mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Facility updated'), backgroundColor: Colors.green),
-    );
+    AppFeedback.success('Facility updated');
     await fetchFacilities();
   }
 
@@ -1019,9 +1023,7 @@ class _FacilityScreenState extends State<FacilityScreen> {
     // Facility kept refusing until the owner signed out and back in. The
     // server re-checks too, so this is only about telling the truth promptly.
     setState(() => _checkingBeforeDelete = true);
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Checking that no assistants remain...'), duration: Duration(seconds: 2)),
-    );
+    AppFeedback.info('Checking that no assistants remain…');
     List<Map<String, dynamic>> assistants;
     try {
       assistants = await _fetchAssistantsForFacility(facilityId);
@@ -1033,7 +1035,7 @@ class _FacilityScreenState extends State<FacilityScreen> {
       if (mounted) setState(() => _checkingBeforeDelete = false);
     }
     if (!mounted) return;
-    ScaffoldMessenger.of(context).hideCurrentSnackBar();
+    AppFeedback.messengerKey.currentState?.hideCurrentSnackBar();
 
     if (assistants.isNotEmpty) {
       await showDialog(
@@ -1088,34 +1090,34 @@ class _FacilityScreenState extends State<FacilityScreen> {
                 Text(
                   'This permanently deletes "$facilityName" and everything in it - '
                   'products, sales, clients, debts, payments, and history. This cannot be undone.',
-                  style: const TextStyle(fontSize: 13),
+                  style: const TextStyle(fontSize: AppFontSize.f13),
                 ),
                 if (isOnlyFacility) ...[
-                  const SizedBox(height: 12),
+                  const SizedBox(height: AppSpacing.s12),
                   Container(
-                    padding: const EdgeInsets.all(10),
+                    padding: const EdgeInsets.all(AppSpacing.s10),
                     decoration: BoxDecoration(
-                      color: Colors.redAccent.withValues(alpha: 0.08),
-                      borderRadius: BorderRadius.circular(8),
-                      border: Border.all(color: Colors.redAccent.withValues(alpha: 0.3)),
+                      color: context.colors.dangerAccent.withValues(alpha: AppAlpha.a10),
+                      borderRadius: BorderRadius.circular(AppRadius.r8),
+                      border: Border.all(color: context.colors.dangerAccent.withValues(alpha: AppAlpha.a30)),
                     ),
-                    child: const Text(
+                    child: Text(
                       'This is your only facility. Deleting it leaves your account with no facility - you will stay signed in, and can then add a new one or delete your account.',
-                      style: TextStyle(fontSize: 12.5, color: Colors.redAccent, fontWeight: FontWeight.w600),
+                      style: TextStyle(fontSize: AppFontSize.f12_5, color: context.colors.dangerAccent, fontWeight: AppFontWeight.semibold),
                     ),
                   ),
                 ],
-                const SizedBox(height: 16),
-                Text('Type "$facilityName" to confirm:', style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600)),
-                const SizedBox(height: 8),
+                const SizedBox(height: AppSpacing.s16),
+                Text('Type "$facilityName" to confirm:', style: const TextStyle(fontSize: AppFontSize.f13, fontWeight: AppFontWeight.semibold)),
+                const SizedBox(height: AppSpacing.s8),
                 TextField(
                   controller: confirmController,
                   decoration: const InputDecoration(border: OutlineInputBorder(), isDense: true),
                   onChanged: (val) => setDialogState(() => canConfirm = val.trim() == facilityName),
                 ),
                 if (errorMessage != null) ...[
-                  const SizedBox(height: 10),
-                  Text(errorMessage!, style: const TextStyle(color: Colors.redAccent, fontSize: 12.5)),
+                  const SizedBox(height: AppSpacing.s10),
+                  Text(errorMessage!, style: TextStyle(color: context.colors.dangerAccent, fontSize: AppFontSize.f12_5)),
                 ],
               ],
             ),
@@ -1145,18 +1147,18 @@ class _FacilityScreenState extends State<FacilityScreen> {
                       } catch (e) {
                         setDialogState(() {
                           isDeleting = false;
-                          errorMessage = 'Could not delete: $e';
+                          errorMessage = "Couldn't delete the facility. ${FriendlyError.messageFor(e)}";
                         });
                       }
                     },
               style: ButtonStyle(
-                backgroundColor: WidgetStateProperty.all(Colors.redAccent),
+                backgroundColor: WidgetStateProperty.all(context.colors.dangerAccent),
                 foregroundColor: WidgetStateProperty.all(context.colors.onPrimary),
               ),
               child: isDeleting
-                  ? const SizedBox(
+                  ? SizedBox(
                       width: 18, height: 18,
-                      child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                      child: CircularProgressIndicator(strokeWidth: 2, color: context.colors.onPrimary),
                     )
                   : const Text('Delete'),
             ),
@@ -1181,9 +1183,7 @@ class _FacilityScreenState extends State<FacilityScreen> {
     await callable.call({'facilityId': facilityId});
 
     if (!mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Facility deleted'), backgroundColor: Colors.green),
-    );
+    AppFeedback.success('Facility deleted');
 
     await fetchFacilities();
     if (!mounted) return;
@@ -1210,9 +1210,9 @@ class _FacilityScreenState extends State<FacilityScreen> {
   Widget _statColumn(String value, String label) {
     return Column(
       children: [
-        Text(value, style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: context.colors.primary)),
-        const SizedBox(height: 2),
-        Text(label, style: TextStyle(fontSize: 11, color: Colors.grey[600]), textAlign: TextAlign.center),
+        Text(value, style: TextStyle(fontSize: AppFontSize.f15, fontWeight: AppFontWeight.bold, color: context.colors.primary)),
+        const SizedBox(height: AppSpacing.s2),
+        Text(label, style: TextStyle(fontSize: AppFontSize.f11, color: context.colors.textMuted), textAlign: TextAlign.center),
       ],
     );
   }
@@ -1230,25 +1230,25 @@ class _FacilityScreenState extends State<FacilityScreen> {
     Color chipColor;
     switch (status.toLowerCase()) {
       case 'active':
-        chipColor = Colors.green;
+        chipColor = context.colors.success;
         break;
       case 'inactive':
-        chipColor = Colors.red;
+        chipColor = context.colors.danger;
         break;
       case 'pending':
-        chipColor = Colors.orange;
+        chipColor = context.colors.warning;
         break;
       default:
-        chipColor = Colors.grey;
+        chipColor = context.colors.textHint;
     }
     return Container(
-      margin: const EdgeInsets.only(left: 8),
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      margin: const EdgeInsets.only(left: AppSpacing.s8),
+      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.s8, vertical: AppSpacing.s4),
       decoration: BoxDecoration(
-        color: chipColor.withValues(alpha: 0.2),
-        borderRadius: BorderRadius.circular(8),
+        color: chipColor.withValues(alpha: AppAlpha.a20),
+        borderRadius: BorderRadius.circular(AppRadius.r8),
       ),
-      child: Text(status, style: TextStyle(color: chipColor, fontWeight: FontWeight.w600, fontSize: 12)),
+      child: Text(status, style: TextStyle(color: chipColor, fontWeight: AppFontWeight.semibold, fontSize: AppFontSize.f12)),
     );
   }
 
@@ -1256,17 +1256,17 @@ class _FacilityScreenState extends State<FacilityScreen> {
   @override
   PreferredSizeWidget _buildAppBar() {
     return AppBar(
-      backgroundColor: Colors.white,
-      foregroundColor: Colors.black87,
-      elevation: 1,
+      backgroundColor: context.colors.surface,
+      foregroundColor: context.colors.textPrimary,
+      elevation: AppElevation.e1,
       centerTitle: true,
       toolbarHeight: 72,
-      title: const Column(
+      title: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Text('Facilities', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 19, color: Colors.black87)),
+          Text('Facilities', style: TextStyle(fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f19, color: context.colors.textPrimary)),
           Text('Manage all your veterinary facilities and branches',
-              style: TextStyle(fontSize: 12, color: Colors.black54)),
+              style: TextStyle(fontSize: AppFontSize.f12, color: context.colors.textSecondary)),
         ],
       ),
       actions: [
@@ -1276,16 +1276,16 @@ class _FacilityScreenState extends State<FacilityScreen> {
           onPressed: fetchFacilities,
         ),
         Padding(
-          padding: const EdgeInsets.only(right: 12),
+          padding: const EdgeInsets.only(right: AppSpacing.s12),
           child: ElevatedButton.icon(
             onPressed: _showAddFacilityDialog,
-            icon: const Icon(Icons.add, size: 18),
+            icon: const Icon(Icons.add, size: AppIconSize.i18),
             label: const Text('Add Facility'),
             style: ElevatedButton.styleFrom(
               backgroundColor: context.colors.primary,
               foregroundColor: context.colors.background,
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.s16, vertical: AppSpacing.s10),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadius.r8)),
             ),
           ),
         ),
@@ -1327,28 +1327,28 @@ class _FacilityScreenState extends State<FacilityScreen> {
           final detailArea = selectedFacility != null
               ? _buildDetailPanelContent(selectedFacility)
               : Padding(
-                  padding: const EdgeInsets.all(24),
+                  padding: const EdgeInsets.all(AppSpacing.s24),
                   child: Center(
                     child: Text(
                       'No facilities match your filters. Try a different search or status.',
                       textAlign: TextAlign.center,
-                      style: TextStyle(color: Colors.grey[600]),
+                      style: TextStyle(color: context.colors.textMuted),
                     ),
                   ),
                 );
 
           return LayoutBuilder(
             builder: (context, constraints) {
-              final isWide = constraints.maxWidth >= 900;
+              final isWide = constraints.maxWidth >= AppBreakpoints.medium;
 
               if (!isWide) {
                 return SingleChildScrollView(
                   child: Column(
                     children: [
-                      SizedBox(height: 360, child: _buildListPanel(filtered)),
+                      SizedBox(height: _listPanelHeight, child: _buildListPanel(filtered)),
                       const Divider(height: 1),
                       Padding(
-                        padding: const EdgeInsets.all(16),
+                        padding: const EdgeInsets.all(AppSpacing.s16),
                         child: detailArea,
                       ),
                     ],
@@ -1359,11 +1359,11 @@ class _FacilityScreenState extends State<FacilityScreen> {
               return Row(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  SizedBox(width: 340, child: _buildListPanel(filtered)),
+                  SizedBox(width: _listPanelWidth, child: _buildListPanel(filtered)),
                   const VerticalDivider(width: 1),
                   Expanded(
                     child: selectedFacility != null
-                        ? SingleChildScrollView(padding: const EdgeInsets.all(20), child: detailArea)
+                        ? SingleChildScrollView(padding: const EdgeInsets.all(AppSpacing.s20), child: detailArea)
                         : detailArea,
                   ),
                 ],
@@ -1384,7 +1384,7 @@ class _FacilityScreenState extends State<FacilityScreen> {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           Padding(
-            padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+            padding: const EdgeInsets.fromLTRB(AppSpacing.s16, AppSpacing.s16, AppSpacing.s16, AppSpacing.s8),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
@@ -1392,29 +1392,29 @@ class _FacilityScreenState extends State<FacilityScreen> {
                   controller: _searchController,
                   decoration: InputDecoration(
                     hintText: 'Search facilities...',
-                    prefixIcon: const Icon(Icons.search, size: 20),
+                    prefixIcon: const Icon(Icons.search, size: AppIconSize.i20),
                     isDense: true,
-                    contentPadding: const EdgeInsets.symmetric(vertical: 12, horizontal: 12),
+                    contentPadding: const EdgeInsets.symmetric(vertical: AppSpacing.s12, horizontal: AppSpacing.s12),
                     filled: true,
-                    fillColor: Colors.white,
+                    fillColor: context.colors.surface,
                     border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(10),
-                      borderSide: BorderSide(color: Colors.grey.withValues(alpha: 0.3)),
+                      borderRadius: BorderRadius.circular(AppRadius.r10),
+                      borderSide: BorderSide(color: context.colors.textHint.withValues(alpha: AppAlpha.a30)),
                     ),
                     enabledBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(10),
-                      borderSide: BorderSide(color: Colors.grey.withValues(alpha: 0.3)),
+                      borderRadius: BorderRadius.circular(AppRadius.r10),
+                      borderSide: BorderSide(color: context.colors.textHint.withValues(alpha: AppAlpha.a30)),
                     ),
                   ),
                   onChanged: (val) => setState(() => _searchQuery = val.trim().toLowerCase()),
                 ),
-                const SizedBox(height: 10),
+                const SizedBox(height: AppSpacing.s10),
                 Row(
                   children: [
                     _statusFilterChip('All'),
-                    const SizedBox(width: 8),
+                    const SizedBox(width: AppSpacing.s8),
                     _statusFilterChip('Active'),
-                    const SizedBox(width: 8),
+                    const SizedBox(width: AppSpacing.s8),
                     _statusFilterChip('Inactive'),
                   ],
                 ),
@@ -1424,17 +1424,17 @@ class _FacilityScreenState extends State<FacilityScreen> {
           Expanded(
             child: filtered.isEmpty
                 ? Padding(
-                    padding: const EdgeInsets.all(20),
+                    padding: const EdgeInsets.all(AppSpacing.s20),
                     child: Center(
                       child: Text(
                         'No facilities match this filter.',
                         textAlign: TextAlign.center,
-                        style: TextStyle(color: Colors.grey[600], fontSize: 13),
+                        style: TextStyle(color: context.colors.textMuted, fontSize: AppFontSize.f13),
                       ),
                     ),
                   )
                 : ListView.builder(
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                    padding: const EdgeInsets.symmetric(horizontal: AppSpacing.s12, vertical: AppSpacing.s4),
                     itemCount: filtered.length,
                     itemBuilder: (context, index) => _buildFacilityListRow(filtered[index]),
                   ),
@@ -1448,20 +1448,20 @@ class _FacilityScreenState extends State<FacilityScreen> {
     final isSelected = _listStatusFilter == value;
     return InkWell(
       onTap: () => setState(() => _listStatusFilter = value),
-      borderRadius: BorderRadius.circular(20),
+      borderRadius: BorderRadius.circular(AppRadius.r20),
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+        padding: const EdgeInsets.symmetric(horizontal: AppSpacing.s14, vertical: AppSpacing.s8),
         decoration: BoxDecoration(
-          color: isSelected ? context.colors.primary : Colors.white,
-          borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: isSelected ? context.colors.primary : Colors.grey.withValues(alpha: 0.3)),
+          color: isSelected ? context.colors.primary : context.colors.surface,
+          borderRadius: BorderRadius.circular(AppRadius.r20),
+          border: Border.all(color: isSelected ? context.colors.primary : context.colors.textHint.withValues(alpha: AppAlpha.a30)),
         ),
         child: Text(
           value,
           style: TextStyle(
-            fontSize: 12.5,
-            color: isSelected ? Colors.white : Colors.black87,
-            fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+            fontSize: AppFontSize.f12_5,
+            color: isSelected ? context.colors.onPrimary : context.colors.textPrimary,
+            fontWeight: isSelected ? AppFontWeight.semibold : AppFontWeight.regular,
           ),
         ),
       ),
@@ -1489,14 +1489,14 @@ class _FacilityScreenState extends State<FacilityScreen> {
         _selectedFacilityIdForDetail = facilityId;
         _selectedTabIndex = 0;
       }),
-      borderRadius: BorderRadius.circular(10),
+      borderRadius: BorderRadius.circular(AppRadius.r10),
       child: Container(
-        margin: const EdgeInsets.only(bottom: 6),
-        padding: const EdgeInsets.all(10),
+        margin: const EdgeInsets.only(bottom: AppSpacing.s6),
+        padding: const EdgeInsets.all(AppSpacing.s10),
         decoration: BoxDecoration(
-          color: isSelected ? context.colors.primary.withValues(alpha: 0.08) : Colors.transparent,
-          borderRadius: BorderRadius.circular(10),
-          border: isSelected ? Border.all(color: context.colors.primary.withValues(alpha: 0.3)) : null,
+          color: isSelected ? context.colors.primary.withValues(alpha: AppAlpha.a10) : Colors.transparent,
+          borderRadius: BorderRadius.circular(AppRadius.r10),
+          border: isSelected ? Border.all(color: context.colors.primary.withValues(alpha: AppAlpha.a30)) : null,
         ),
         child: Row(
           children: [
@@ -1504,38 +1504,38 @@ class _FacilityScreenState extends State<FacilityScreen> {
               width: 40,
               height: 40,
               decoration: BoxDecoration(
-                color: Colors.grey.shade100,
-                borderRadius: BorderRadius.circular(9),
-                border: Border.all(color: Colors.grey.shade300),
+                color: context.colors.surfaceMuted,
+                borderRadius: BorderRadius.circular(AppRadius.r8),
+                border: Border.all(color: context.colors.border),
               ),
-              padding: const EdgeInsets.all(4),
+              padding: const EdgeInsets.all(AppSpacing.s4),
               child: logoUrl != null
                   ? Image.network(
                       logoUrl,
                       fit: BoxFit.contain,
-                      errorBuilder: (context, error, stackTrace) => Icon(Icons.business, color: context.colors.primary, size: 18),
+                      errorBuilder: (context, error, stackTrace) => Icon(Icons.business, color: context.colors.primary, size: AppIconSize.i18),
                     )
-                  : Icon(Icons.business, color: context.colors.primary, size: 18),
+                  : Icon(Icons.business, color: context.colors.primary, size: AppIconSize.i18),
             ),
-            const SizedBox(width: 10),
+            const SizedBox(width: AppSpacing.s10),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
                     _nameWithType(facility),
-                    style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+                    style: const TextStyle(fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f14),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                   ),
                   if (address != null && address.isNotEmpty)
                     Text(
                       address,
-                      style: TextStyle(fontSize: 11.5, color: Colors.grey[600]),
+                      style: TextStyle(fontSize: AppFontSize.f11_5, color: context.colors.textMuted),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                     ),
-                  const SizedBox(height: 3),
+                  const SizedBox(height: AppSpacing.s3),
                   buildStatusChip(status),
                 ],
               ),
