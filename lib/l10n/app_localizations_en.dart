@@ -2741,4 +2741,81 @@ class AppLocalizationsEn extends AppLocalizations {
   String trash_deletedBy(String name) {
     return 'Deleted by $name';
   }
+
+  @override
+  String trash_deletedByOn(String name, String date) {
+    return 'Deleted by $name on $date';
+  }
+
+  @override
+  String get export_title => 'Export Center';
+
+  @override
+  String get export_step1 => '1. Select Dataset Category';
+
+  @override
+  String get export_step2 => '2. Scope & Date Range Filtering';
+
+  @override
+  String get export_step3 => '3. Output Document Layout';
+
+  @override
+  String get export_salesTransactions => 'Sales & Transactions';
+
+  @override
+  String get export_salesTransactionsHint =>
+      'Sales (incl. archived) and transaction history';
+
+  @override
+  String get export_serviceRecordsHint =>
+      'Services performed (incl. archived), by client and category';
+
+  @override
+  String get export_productCatalog => 'Product Inventory Catalog';
+
+  @override
+  String get export_productCatalogHint =>
+      'Current stock levels, costs, and SKU list';
+
+  @override
+  String get export_clientDirectory => 'Client Directory & Balances';
+
+  @override
+  String get export_clientDirectoryHint =>
+      'Client contacts and current outstanding balances';
+
+  @override
+  String get export_debtors => 'Debtors / Outstanding Balances';
+
+  @override
+  String get export_debtorsHint => 'Itemized list of everything currently owed';
+
+  @override
+  String get export_paymentsLedger => 'Payments Ledger';
+
+  @override
+  String get export_paymentsLedgerHint =>
+      'Every payment collected - sales, services, debts, other income';
+
+  @override
+  String get export_activityLog => 'Activity Log';
+
+  @override
+  String get export_activityLogHint => 'Who did what, and when';
+
+  @override
+  String export_done(String dataset) {
+    return 'Exported $dataset';
+  }
+
+  @override
+  String export_failed(String dataset) {
+    return 'Couldn\'t export $dataset';
+  }
+
+  @override
+  String get export_selectStart => 'Select Start Date';
+
+  @override
+  String get export_selectEnd => 'Select End Date';
 }

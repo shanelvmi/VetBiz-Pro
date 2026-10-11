@@ -4903,6 +4903,138 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Deleted by {name}'**
   String trash_deletedBy(String name);
+
+  /// Who deleted the item and when.
+  ///
+  /// In en, this message translates to:
+  /// **'Deleted by {name} on {date}'**
+  String trash_deletedByOn(String name, String date);
+
+  /// Export screen title.
+  ///
+  /// In en, this message translates to:
+  /// **'Export Center'**
+  String get export_title;
+
+  /// Export section heading.
+  ///
+  /// In en, this message translates to:
+  /// **'1. Select Dataset Category'**
+  String get export_step1;
+
+  /// Export section heading.
+  ///
+  /// In en, this message translates to:
+  /// **'2. Scope & Date Range Filtering'**
+  String get export_step2;
+
+  /// Export section heading.
+  ///
+  /// In en, this message translates to:
+  /// **'3. Output Document Layout'**
+  String get export_step3;
+
+  /// Export dataset name.
+  ///
+  /// In en, this message translates to:
+  /// **'Sales & Transactions'**
+  String get export_salesTransactions;
+
+  /// Export dataset description.
+  ///
+  /// In en, this message translates to:
+  /// **'Sales (incl. archived) and transaction history'**
+  String get export_salesTransactionsHint;
+
+  /// Export dataset description.
+  ///
+  /// In en, this message translates to:
+  /// **'Services performed (incl. archived), by client and category'**
+  String get export_serviceRecordsHint;
+
+  /// Export dataset name.
+  ///
+  /// In en, this message translates to:
+  /// **'Product Inventory Catalog'**
+  String get export_productCatalog;
+
+  /// Export dataset description.
+  ///
+  /// In en, this message translates to:
+  /// **'Current stock levels, costs, and SKU list'**
+  String get export_productCatalogHint;
+
+  /// Export dataset name.
+  ///
+  /// In en, this message translates to:
+  /// **'Client Directory & Balances'**
+  String get export_clientDirectory;
+
+  /// Export dataset description.
+  ///
+  /// In en, this message translates to:
+  /// **'Client contacts and current outstanding balances'**
+  String get export_clientDirectoryHint;
+
+  /// Export dataset name.
+  ///
+  /// In en, this message translates to:
+  /// **'Debtors / Outstanding Balances'**
+  String get export_debtors;
+
+  /// Export dataset description.
+  ///
+  /// In en, this message translates to:
+  /// **'Itemized list of everything currently owed'**
+  String get export_debtorsHint;
+
+  /// Export dataset name.
+  ///
+  /// In en, this message translates to:
+  /// **'Payments Ledger'**
+  String get export_paymentsLedger;
+
+  /// Export dataset description.
+  ///
+  /// In en, this message translates to:
+  /// **'Every payment collected - sales, services, debts, other income'**
+  String get export_paymentsLedgerHint;
+
+  /// Export dataset name.
+  ///
+  /// In en, this message translates to:
+  /// **'Activity Log'**
+  String get export_activityLog;
+
+  /// Export dataset description.
+  ///
+  /// In en, this message translates to:
+  /// **'Who did what, and when'**
+  String get export_activityLogHint;
+
+  /// Message after an export; dataset is its label.
+  ///
+  /// In en, this message translates to:
+  /// **'Exported {dataset}'**
+  String export_done(String dataset);
+
+  /// Message when an export failed.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t export {dataset}'**
+  String export_failed(String dataset);
+
+  /// Date picker heading.
+  ///
+  /// In en, this message translates to:
+  /// **'Select Start Date'**
+  String get export_selectStart;
+
+  /// Date picker heading.
+  ///
+  /// In en, this message translates to:
+  /// **'Select End Date'**
+  String get export_selectEnd;
 }
 
 class _AppLocalizationsDelegate

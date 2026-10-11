@@ -2759,4 +2759,81 @@ class AppLocalizationsSw extends AppLocalizations {
   String trash_deletedBy(String name) {
     return 'Kimefutwa na $name';
   }
+
+  @override
+  String trash_deletedByOn(String name, String date) {
+    return 'Kimefutwa na $name tarehe $date';
+  }
+
+  @override
+  String get export_title => 'Kituo cha Kuhamisha Data';
+
+  @override
+  String get export_step1 => '1. Chagua Aina ya Data';
+
+  @override
+  String get export_step2 => '2. Kipindi na Tarehe';
+
+  @override
+  String get export_step3 => '3. Muundo wa Faili';
+
+  @override
+  String get export_salesTransactions => 'Mauzo na Miamala';
+
+  @override
+  String get export_salesTransactionsHint =>
+      'Mauzo (pamoja na yaliyohifadhiwa) na historia ya miamala';
+
+  @override
+  String get export_serviceRecordsHint =>
+      'Huduma zilizotolewa (pamoja na zilizohifadhiwa), kwa mteja na kundi';
+
+  @override
+  String get export_productCatalog => 'Orodha ya Bidhaa na Akiba';
+
+  @override
+  String get export_productCatalogHint =>
+      'Viwango vya akiba vya sasa, gharama, na orodha ya bidhaa';
+
+  @override
+  String get export_clientDirectory => 'Orodha ya Wateja na Salio';
+
+  @override
+  String get export_clientDirectoryHint =>
+      'Mawasiliano ya wateja na salio wanalodaiwa sasa';
+
+  @override
+  String get export_debtors => 'Wadaiwa / Salio Linalodaiwa';
+
+  @override
+  String get export_debtorsHint => 'Orodha ya kila kinachodaiwa sasa';
+
+  @override
+  String get export_paymentsLedger => 'Daftari la Malipo';
+
+  @override
+  String get export_paymentsLedgerHint =>
+      'Kila malipo yaliyopokelewa - mauzo, huduma, madeni, mapato mengine';
+
+  @override
+  String get export_activityLog => 'Kumbukumbu za Shughuli';
+
+  @override
+  String get export_activityLogHint => 'Nani alifanya nini, na lini';
+
+  @override
+  String export_done(String dataset) {
+    return '$dataset imehamishwa';
+  }
+
+  @override
+  String export_failed(String dataset) {
+    return 'Imeshindwa kuhamisha $dataset';
+  }
+
+  @override
+  String get export_selectStart => 'Chagua Tarehe ya Kuanza';
+
+  @override
+  String get export_selectEnd => 'Chagua Tarehe ya Mwisho';
 }
