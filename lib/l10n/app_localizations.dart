@@ -4255,6 +4255,144 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Revoke'**
   String get invite_revoke;
+
+  /// Button that replaces the active code.
+  ///
+  /// In en, this message translates to:
+  /// **'Generate a new one instead'**
+  String get invite_generateNew;
+
+  /// Invite dialog when there is no active code.
+  ///
+  /// In en, this message translates to:
+  /// **'Generate a one-time code for the person you\'re hiring - it works for 48 hours or until used once, whichever comes first.'**
+  String get invite_generateHint;
+
+  /// Button that creates a code.
+  ///
+  /// In en, this message translates to:
+  /// **'Generate Invite Code'**
+  String get invite_generate;
+
+  /// Settings screen title.
+  ///
+  /// In en, this message translates to:
+  /// **'Settings'**
+  String get settings_title;
+
+  /// Settings item that opens Subscription.
+  ///
+  /// In en, this message translates to:
+  /// **'Subscription & Billing'**
+  String get settings_subscriptionBilling;
+
+  /// Settings section heading.
+  ///
+  /// In en, this message translates to:
+  /// **'Account & Data'**
+  String get settings_accountData;
+
+  /// Settings item that opens the export screen.
+  ///
+  /// In en, this message translates to:
+  /// **'Export Data'**
+  String get settings_exportData;
+
+  /// Settings item and Business Hours screen title.
+  ///
+  /// In en, this message translates to:
+  /// **'Business Hours'**
+  String get hours_title;
+
+  /// Settings item and Manage Account screen title.
+  ///
+  /// In en, this message translates to:
+  /// **'Manage Account'**
+  String get account_title;
+
+  /// Settings section heading.
+  ///
+  /// In en, this message translates to:
+  /// **'General'**
+  String get settings_general;
+
+  /// Settings item and printer screen title.
+  ///
+  /// In en, this message translates to:
+  /// **'Printer & Receipt Settings'**
+  String get printer_title;
+
+  /// Settings item and the help dialog title.
+  ///
+  /// In en, this message translates to:
+  /// **'Help & Support'**
+  String get settings_helpSupport;
+
+  /// Settings item and the app info dialog title.
+  ///
+  /// In en, this message translates to:
+  /// **'App Info'**
+  String get settings_appInfo;
+
+  /// Settings section heading.
+  ///
+  /// In en, this message translates to:
+  /// **'Preferences'**
+  String get settings_preferences;
+
+  /// Settings item and the UI Settings dialog title.
+  ///
+  /// In en, this message translates to:
+  /// **'UI Settings'**
+  String get uiSettings_title;
+
+  /// Beside the UI Settings item.
+  ///
+  /// In en, this message translates to:
+  /// **'Theme & layout'**
+  String get settings_themeLayout;
+
+  /// Settings item showing the currency.
+  ///
+  /// In en, this message translates to:
+  /// **'Currency'**
+  String get settings_currency;
+
+  /// Settings item for the language; both languages on purpose, so it can be found in either.
+  ///
+  /// In en, this message translates to:
+  /// **'Language / Lugha'**
+  String get settings_languageBoth;
+
+  /// Language picker heading; both languages on purpose.
+  ///
+  /// In en, this message translates to:
+  /// **'SELECT LANGUAGE / CHAGUA LUGHA'**
+  String get settings_selectLanguageBoth;
+
+  /// Footer of the Settings list.
+  ///
+  /// In en, this message translates to:
+  /// **'{appName} - v{version}'**
+  String settings_versionLine(String appName, String version);
+
+  /// Wide Settings screen before anything is chosen.
+  ///
+  /// In en, this message translates to:
+  /// **'Select a setting from the left'**
+  String get settings_selectPane;
+
+  /// App info dialog label.
+  ///
+  /// In en, this message translates to:
+  /// **'App Name'**
+  String get settings_appName;
+
+  /// App info dialog label.
+  ///
+  /// In en, this message translates to:
+  /// **'Version'**
+  String get settings_version;
 }
 
 class _AppLocalizationsDelegate

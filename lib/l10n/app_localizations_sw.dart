@@ -2375,4 +2375,76 @@ class AppLocalizationsSw extends AppLocalizations {
 
   @override
   String get invite_revoke => 'Futa';
+
+  @override
+  String get invite_generateNew => 'Tengeneza mpya badala yake';
+
+  @override
+  String get invite_generateHint =>
+      'Tengeneza msimbo wa mara moja kwa mtu unayemwajiri - unafanya kazi kwa saa 48 au hadi utumike mara moja, kinachotangulia.';
+
+  @override
+  String get invite_generate => 'Tengeneza Msimbo wa Mwaliko';
+
+  @override
+  String get settings_title => 'Mipangilio';
+
+  @override
+  String get settings_subscriptionBilling => 'Usajili na Malipo';
+
+  @override
+  String get settings_accountData => 'Akaunti na Data';
+
+  @override
+  String get settings_exportData => 'Hamisha Data';
+
+  @override
+  String get hours_title => 'Saa za Biashara';
+
+  @override
+  String get account_title => 'Simamia Akaunti';
+
+  @override
+  String get settings_general => 'Jumla';
+
+  @override
+  String get printer_title => 'Mipangilio ya Printa na Risiti';
+
+  @override
+  String get settings_helpSupport => 'Msaada';
+
+  @override
+  String get settings_appInfo => 'Kuhusu Programu';
+
+  @override
+  String get settings_preferences => 'Mapendeleo';
+
+  @override
+  String get uiSettings_title => 'Mipangilio ya Mwonekano';
+
+  @override
+  String get settings_themeLayout => 'Rangi na mpangilio';
+
+  @override
+  String get settings_currency => 'Sarafu';
+
+  @override
+  String get settings_languageBoth => 'Language / Lugha';
+
+  @override
+  String get settings_selectLanguageBoth => 'SELECT LANGUAGE / CHAGUA LUGHA';
+
+  @override
+  String settings_versionLine(String appName, String version) {
+    return '$appName - v$version';
+  }
+
+  @override
+  String get settings_selectPane => 'Chagua mpangilio upande wa kushoto';
+
+  @override
+  String get settings_appName => 'Jina la Programu';
+
+  @override
+  String get settings_version => 'Toleo';
 }

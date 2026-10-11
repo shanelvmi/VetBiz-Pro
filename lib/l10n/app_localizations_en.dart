@@ -2361,4 +2361,76 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get invite_revoke => 'Revoke';
+
+  @override
+  String get invite_generateNew => 'Generate a new one instead';
+
+  @override
+  String get invite_generateHint =>
+      'Generate a one-time code for the person you\'re hiring - it works for 48 hours or until used once, whichever comes first.';
+
+  @override
+  String get invite_generate => 'Generate Invite Code';
+
+  @override
+  String get settings_title => 'Settings';
+
+  @override
+  String get settings_subscriptionBilling => 'Subscription & Billing';
+
+  @override
+  String get settings_accountData => 'Account & Data';
+
+  @override
+  String get settings_exportData => 'Export Data';
+
+  @override
+  String get hours_title => 'Business Hours';
+
+  @override
+  String get account_title => 'Manage Account';
+
+  @override
+  String get settings_general => 'General';
+
+  @override
+  String get printer_title => 'Printer & Receipt Settings';
+
+  @override
+  String get settings_helpSupport => 'Help & Support';
+
+  @override
+  String get settings_appInfo => 'App Info';
+
+  @override
+  String get settings_preferences => 'Preferences';
+
+  @override
+  String get uiSettings_title => 'UI Settings';
+
+  @override
+  String get settings_themeLayout => 'Theme & layout';
+
+  @override
+  String get settings_currency => 'Currency';
+
+  @override
+  String get settings_languageBoth => 'Language / Lugha';
+
+  @override
+  String get settings_selectLanguageBoth => 'SELECT LANGUAGE / CHAGUA LUGHA';
+
+  @override
+  String settings_versionLine(String appName, String version) {
+    return '$appName - v$version';
+  }
+
+  @override
+  String get settings_selectPane => 'Select a setting from the left';
+
+  @override
+  String get settings_appName => 'App Name';
+
+  @override
+  String get settings_version => 'Version';
 }
