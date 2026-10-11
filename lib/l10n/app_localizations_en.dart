@@ -1996,4 +1996,48 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get clients_cropHint => 'Add crops grown by this client if available.';
+
+  @override
+  String get clients_animalHint =>
+      'Add animals owned by this client if available.';
+
+  @override
+  String get clients_farmerTypeHint =>
+      'Select a farmer type below to add crops or animals.';
+
+  @override
+  String get clients_farmerType => 'Farmer Type';
+
+  @override
+  String get clients_addCrops => 'Add Crops';
+
+  @override
+  String get clients_addAnimals => 'Add Animals';
+
+  @override
+  String get clients_selectCrops => 'Select Crops';
+
+  @override
+  String get clients_selectAnimals => 'Select Animal Species';
+
+  @override
+  String get clients_noMatches => 'No matches found';
+
+  @override
+  String get clients_additionalDetails => 'Additional Details';
+
+  @override
+  String get clients_practiceType => 'Practice Type';
+
+  @override
+  String get clients_businessName => 'Business Name';
+
+  @override
+  String get clients_businessNameHint => 'Enter business name';
+
+  @override
+  String get clients_update => 'Update Client';
+
+  @override
+  String get clients_save => 'Save Client';
 }

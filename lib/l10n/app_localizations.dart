@@ -3661,6 +3661,90 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Add crops grown by this client if available.'**
   String get clients_cropHint;
+
+  /// Under the animal section heading.
+  ///
+  /// In en, this message translates to:
+  /// **'Add animals owned by this client if available.'**
+  String get clients_animalHint;
+
+  /// Under the section heading before a farmer type is chosen.
+  ///
+  /// In en, this message translates to:
+  /// **'Select a farmer type below to add crops or animals.'**
+  String get clients_farmerTypeHint;
+
+  /// Client form: farmer type field label.
+  ///
+  /// In en, this message translates to:
+  /// **'Farmer Type'**
+  String get clients_farmerType;
+
+  /// Button that opens the crop picker.
+  ///
+  /// In en, this message translates to:
+  /// **'Add Crops'**
+  String get clients_addCrops;
+
+  /// Button that opens the animal picker.
+  ///
+  /// In en, this message translates to:
+  /// **'Add Animals'**
+  String get clients_addAnimals;
+
+  /// Crop picker title.
+  ///
+  /// In en, this message translates to:
+  /// **'Select Crops'**
+  String get clients_selectCrops;
+
+  /// Animal picker title.
+  ///
+  /// In en, this message translates to:
+  /// **'Select Animal Species'**
+  String get clients_selectAnimals;
+
+  /// Crop or animal picker when the search matches nothing.
+  ///
+  /// In en, this message translates to:
+  /// **'No matches found'**
+  String get clients_noMatches;
+
+  /// Client form section heading (vet or business details).
+  ///
+  /// In en, this message translates to:
+  /// **'Additional Details'**
+  String get clients_additionalDetails;
+
+  /// Client form: a vet client's practice type.
+  ///
+  /// In en, this message translates to:
+  /// **'Practice Type'**
+  String get clients_practiceType;
+
+  /// Client form: business name field label.
+  ///
+  /// In en, this message translates to:
+  /// **'Business Name'**
+  String get clients_businessName;
+
+  /// Client form: business name hint.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter business name'**
+  String get clients_businessNameHint;
+
+  /// Save button when editing a client.
+  ///
+  /// In en, this message translates to:
+  /// **'Update Client'**
+  String get clients_update;
+
+  /// Save button when adding a client.
+  ///
+  /// In en, this message translates to:
+  /// **'Save Client'**
+  String get clients_save;
 }
 
 class _AppLocalizationsDelegate

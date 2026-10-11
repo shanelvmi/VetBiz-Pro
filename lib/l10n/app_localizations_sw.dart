@@ -2009,4 +2009,48 @@ class AppLocalizationsSw extends AppLocalizations {
   @override
   String get clients_cropHint =>
       'Ongeza mazao yanayolimwa na mteja huyu ikiwa yapo.';
+
+  @override
+  String get clients_animalHint =>
+      'Ongeza wanyama anaowamiliki mteja huyu ikiwa wapo.';
+
+  @override
+  String get clients_farmerTypeHint =>
+      'Chagua aina ya mkulima hapa chini ili kuongeza mazao au wanyama.';
+
+  @override
+  String get clients_farmerType => 'Aina ya Mkulima';
+
+  @override
+  String get clients_addCrops => 'Ongeza Mazao';
+
+  @override
+  String get clients_addAnimals => 'Ongeza Wanyama';
+
+  @override
+  String get clients_selectCrops => 'Chagua Mazao';
+
+  @override
+  String get clients_selectAnimals => 'Chagua Aina za Wanyama';
+
+  @override
+  String get clients_noMatches => 'Hakuna kinacholingana';
+
+  @override
+  String get clients_additionalDetails => 'Maelezo ya Ziada';
+
+  @override
+  String get clients_practiceType => 'Aina ya Kazi';
+
+  @override
+  String get clients_businessName => 'Jina la Biashara';
+
+  @override
+  String get clients_businessNameHint => 'Weka jina la biashara';
+
+  @override
+  String get clients_update => 'Sasisha Mteja';
+
+  @override
+  String get clients_save => 'Hifadhi Mteja';
 }
