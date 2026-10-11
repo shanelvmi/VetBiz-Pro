@@ -7,12 +7,14 @@ import '../../widgets/hover_elevate_card.dart';
 import '../../utils/presence_heartbeat.dart';
 import 'user_detail_screen.dart';
 import '../../services/role_change_service.dart';
-import '../../theme/app_palette.dart';
 import '../../data/collections.dart';
 import '../../data/fields.dart';
 import '../../data/user_role.dart';
 import '../../data/user_status.dart';
 import '../../config/app_limits.dart';
+import '../../theme/app_text.dart';
+import '../../theme/theme_context.dart';
+import '../../ui/feedback/friendly_error.dart';
 
 /// Every registered user across the whole platform, not scoped to one
 /// facility - the missing piece that made "an assistant switching
@@ -33,7 +35,6 @@ class UsersTab extends StatefulWidget {
 }
 
 class _UsersTabState extends State<UsersTab> {
-  static const Color primaryColor = AppPalette.primary;
   static const int _pageSize = AppLimits.platformAdminPageSize;
   // Search can't be paginated the same way as plain browsing -
   // Firestore has no native "contains" match across two fields, so
@@ -72,7 +73,9 @@ class _UsersTabState extends State<UsersTab> {
   bool _hasMore = true;
   bool _isLoadingMore = false;
   bool _isInitialLoading = true;
-  String? _loadError;
+  // The error itself, not its text: the view shows FriendlyError's message,
+  // except for a missing-index error, whose link it keeps.
+  Object? _loadError;
 
   @override
   void initState() {
@@ -131,7 +134,8 @@ class _UsersTabState extends State<UsersTab> {
         _hasMore = snap.docs.length == _pageSize;
       });
     } catch (e) {
-      if (mounted) setState(() => _loadError = '$e');
+      debugPrint('Users load failed: $e');
+      if (mounted) setState(() => _loadError = e);
     } finally {
       if (mounted) {
         setState(() {
@@ -155,7 +159,8 @@ class _UsersTabState extends State<UsersTab> {
         _hasMore = false;
       });
     } catch (e) {
-      if (mounted) setState(() => _loadError = '$e');
+      debugPrint('Users load failed: $e');
+      if (mounted) setState(() => _loadError = e);
     } finally {
       if (mounted) setState(() => _isInitialLoading = false);
     }
@@ -187,9 +192,9 @@ class _UsersTabState extends State<UsersTab> {
   // Compared to the keys rather than UserRole.fromKey, which would read an
   // unknown role as assistant: an unknown role stays grey.
   Color _roleColor(String role) {
-    if (role == UserRole.admin.key) return primaryColor;
-    if (role == UserRole.assistant.key) return Colors.blue;
-    return Colors.grey;
+    if (role == UserRole.admin.key) return context.colors.primary;
+    if (role == UserRole.assistant.key) return context.colors.info;
+    return context.colors.textHint;
   }
 
   bool _matchesSearch(Map<String, dynamic> data) {
@@ -204,16 +209,16 @@ class _UsersTabState extends State<UsersTab> {
     return Column(
       children: [
         Padding(
-          padding: const EdgeInsets.fromLTRB(12, 12, 12, 0),
+          padding: const EdgeInsets.fromLTRB(AppSpacing.s12, AppSpacing.s12, AppSpacing.s12, 0),
           child: TextField(
-            cursorColor: primaryColor,
+            cursorColor: context.colors.primary,
             decoration: InputDecoration(
               hintText: 'Search by name or email',
               prefixIcon: const Icon(Icons.search),
-              border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+              border: OutlineInputBorder(borderRadius: BorderRadius.circular(AppRadius.r10)),
               focusedBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(10),
-                borderSide: const BorderSide(color: primaryColor, width: 2),
+                borderRadius: BorderRadius.circular(AppRadius.r10),
+                borderSide: BorderSide(color: context.colors.primary, width: 2),
               ),
               isDense: true,
             ),
@@ -232,18 +237,18 @@ class _UsersTabState extends State<UsersTab> {
           builder: (context, onlineSnapshot) {
             final onlineCount = onlineSnapshot.data?.docs.length ?? 0;
             return Padding(
-              padding: const EdgeInsets.fromLTRB(12, 8, 12, 0),
+              padding: const EdgeInsets.fromLTRB(AppSpacing.s12, AppSpacing.s8, AppSpacing.s12, 0),
               child: Row(
                 children: [
                   Container(
                     width: AppSizes.statusDot,
                     height: AppSizes.statusDot,
-                    decoration: const BoxDecoration(color: Colors.green, shape: BoxShape.circle),
+                    decoration: BoxDecoration(color: context.colors.success, shape: BoxShape.circle),
                   ),
-                  const SizedBox(width: 6),
+                  const SizedBox(width: AppSpacing.s6),
                   Text(
                     '$onlineCount online',
-                    style: TextStyle(fontSize: 12.5, color: Colors.grey[700], fontWeight: FontWeight.w600),
+                    style: TextStyle(fontSize: AppFontSize.f12_5, color: context.colors.textSoft, fontWeight: AppFontWeight.semibold),
                   ),
                 ],
               ),
@@ -251,27 +256,27 @@ class _UsersTabState extends State<UsersTab> {
           },
         ),
         Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+          padding: const EdgeInsets.symmetric(horizontal: AppSpacing.s12, vertical: AppSpacing.s8),
           child: Row(
             children: [
               _RoleFilterChip(
                 label: 'All',
                 selected: _roleFilter == null,
-                color: primaryColor,
+                color: context.colors.primary,
                 onTap: () => _onRoleFilterChanged(null),
               ),
-              const SizedBox(width: 8),
+              const SizedBox(width: AppSpacing.s8),
               _RoleFilterChip(
                 label: 'Admins',
                 selected: _roleFilter == UserRole.admin.key,
-                color: primaryColor,
+                color: context.colors.primary,
                 onTap: () => _onRoleFilterChanged(UserRole.admin.key),
               ),
-              const SizedBox(width: 8),
+              const SizedBox(width: AppSpacing.s8),
               _RoleFilterChip(
                 label: 'Assistants',
                 selected: _roleFilter == UserRole.assistant.key,
-                color: Colors.blue,
+                color: context.colors.info,
                 onTap: () => _onRoleFilterChanged(UserRole.assistant.key),
               ),
             ],
@@ -279,34 +284,34 @@ class _UsersTabState extends State<UsersTab> {
         ),
         SingleChildScrollView(
           scrollDirection: Axis.horizontal,
-          padding: const EdgeInsets.fromLTRB(12, 0, 12, 8),
+          padding: const EdgeInsets.fromLTRB(AppSpacing.s12, 0, AppSpacing.s12, AppSpacing.s8),
           child: Row(
             children: [
               _RoleFilterChip(
                 label: 'All',
                 selected: _statusFilter == null,
-                color: primaryColor,
+                color: context.colors.primary,
                 onTap: () => _onStatusFilterChanged(null),
               ),
-              const SizedBox(width: 8),
+              const SizedBox(width: AppSpacing.s8),
               _RoleFilterChip(
                 label: 'Active',
                 selected: _statusFilter == UserStatus.active.key,
-                color: Colors.green,
+                color: context.colors.success,
                 onTap: () => _onStatusFilterChanged(UserStatus.active.key),
               ),
-              const SizedBox(width: 8),
+              const SizedBox(width: AppSpacing.s8),
               _RoleFilterChip(
                 label: 'Awaiting Approval',
                 selected: _statusFilter == UserStatus.pending.key,
-                color: Colors.blue,
+                color: context.colors.info,
                 onTap: () => _onStatusFilterChanged(UserStatus.pending.key),
               ),
-              const SizedBox(width: 8),
+              const SizedBox(width: AppSpacing.s8),
               _RoleFilterChip(
                 label: 'Deactivated',
                 selected: _statusFilter == UserStatus.deactivated.key,
-                color: Colors.orange,
+                color: context.colors.warning,
                 onTap: () => _onStatusFilterChanged(UserStatus.deactivated.key),
               ),
             ],
@@ -347,7 +352,8 @@ class _UsersTabState extends State<UsersTab> {
     );
   }
 
-  Widget _buildErrorView(String error) {
+  Widget _buildErrorView(Object errorObject) {
+    final error = '$errorObject';
     final urlMatch = RegExp(r'https?://[^\s]+').firstMatch(error);
     var url = urlMatch?.group(0);
     // Trim trailing punctuation that might have been swept up if the
@@ -355,23 +361,23 @@ class _UsersTabState extends State<UsersTab> {
     if (url != null) {
       url = url.replaceAll(RegExp(r'[.,;:\)\]]+$'), '');
     }
-    final message = url != null ? error.replaceFirst(url, '').trim() : error;
+    final message = url != null ? error.replaceFirst(url, '').trim() : FriendlyError.messageFor(errorObject);
 
     return Center(
       child: Padding(
-        padding: const EdgeInsets.all(24),
+        padding: const EdgeInsets.all(AppSpacing.s24),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             Text('Could not load users: $message', textAlign: TextAlign.center),
             if (url != null) ...[
-              const SizedBox(height: 12),
+              const SizedBox(height: AppSpacing.s12),
               InkWell(
                 onTap: () => launchUrl(Uri.parse(url!), mode: LaunchMode.externalApplication),
                 child: Text(
                   url,
                   textAlign: TextAlign.center,
-                  style: const TextStyle(color: Colors.blue, decoration: TextDecoration.underline),
+                  style: TextStyle(color: context.colors.info, decoration: TextDecoration.underline),
                 ),
               ),
             ],
@@ -442,12 +448,12 @@ class _UsersTabState extends State<UsersTab> {
         if (crossAxisCount == 1) {
           scrollable = ListView.builder(
             controller: _scrollController,
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+            padding: const EdgeInsets.symmetric(horizontal: AppSpacing.s8, vertical: AppSpacing.s4),
             itemCount: items.length + (_isLoadingMore ? 1 : 0),
             itemBuilder: (context, index) {
               if (index >= items.length) {
                 return const Padding(
-                  padding: EdgeInsets.symmetric(vertical: 16),
+                  padding: EdgeInsets.symmetric(vertical: AppSpacing.s16),
                   child: Center(child: CircularProgressIndicator()),
                 );
               }
@@ -457,7 +463,7 @@ class _UsersTabState extends State<UsersTab> {
         } else {
           scrollable = GridView.builder(
             controller: _scrollController,
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+            padding: const EdgeInsets.symmetric(horizontal: AppSpacing.s8, vertical: AppSpacing.s4),
             gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
               crossAxisCount: crossAxisCount,
               crossAxisSpacing: 8,
@@ -474,14 +480,14 @@ class _UsersTabState extends State<UsersTab> {
         return Column(
           children: [
             Padding(
-              padding: const EdgeInsets.fromLTRB(12, 8, 12, 4),
+              padding: const EdgeInsets.fromLTRB(AppSpacing.s12, AppSpacing.s8, AppSpacing.s12, AppSpacing.s4),
               child: Row(
                 children: [
-                  const Icon(Icons.workspace_premium, size: 14, color: Colors.deepPurple),
-                  const SizedBox(width: 6),
+                  const Icon(Icons.workspace_premium, size: AppIconSize.i14, color: Colors.deepPurple),
+                  const SizedBox(width: AppSpacing.s6),
                   Text(
                     'Platform Admins (${platformAdminDocs.length})',
-                    style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12.5, color: Colors.deepPurple),
+                    style: const TextStyle(fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f12_5, color: Colors.deepPurple),
                   ),
                 ],
               ),
@@ -507,11 +513,11 @@ class _UsersTabState extends State<UsersTab> {
         lastActiveAt != null && DateTime.now().difference(lastActiveAt) <= PresenceHeartbeat.onlineWindow;
 
     return HoverElevateCard(
-      margin: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
+      margin: const EdgeInsets.symmetric(horizontal: AppSpacing.s4, vertical: AppSpacing.s4),
       child: Stack(
         children: [
           InkWell(
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(AppRadius.r12),
         onTap: () async {
           await Navigator.push(
             context,
@@ -528,17 +534,17 @@ class _UsersTabState extends State<UsersTab> {
           }
         },
         child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+          padding: const EdgeInsets.symmetric(horizontal: AppSpacing.s12, vertical: AppSpacing.s8),
           child: Row(
             children: [
               CircleAvatar(
-                backgroundColor: isPlatformAdmin ? Colors.deepPurple : primaryColor,
+                backgroundColor: isPlatformAdmin ? Colors.deepPurple : context.colors.primary,
                 child: Text(
                   name.isNotEmpty ? name[0].toUpperCase() : '?',
-                  style: const TextStyle(color: Colors.white),
+                  style: TextStyle(color: context.colors.onPrimary),
                 ),
               ),
-              const SizedBox(width: 12),
+              const SizedBox(width: AppSpacing.s12),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -548,26 +554,26 @@ class _UsersTabState extends State<UsersTab> {
                         Flexible(
                           child: Text(
                             name,
-                            style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
+                            style: const TextStyle(fontWeight: AppFontWeight.semibold, fontSize: AppFontSize.f14),
                             overflow: TextOverflow.ellipsis,
                           ),
                         ),
                         if (isPlatformAdmin) ...[
-                          const SizedBox(width: 6),
+                          const SizedBox(width: AppSpacing.s6),
                           Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                            padding: const EdgeInsets.symmetric(horizontal: AppSpacing.s6, vertical: AppSpacing.s2),
                             decoration: BoxDecoration(
-                              color: Colors.deepPurple.withValues(alpha: 0.12),
-                              borderRadius: BorderRadius.circular(8),
+                              color: Colors.deepPurple.withValues(alpha: AppAlpha.a10),
+                              borderRadius: BorderRadius.circular(AppRadius.r8),
                             ),
                             child: const Row(
                               mainAxisSize: MainAxisSize.min,
                               children: [
-                                Icon(Icons.workspace_premium, size: 11, color: Colors.deepPurple),
-                                SizedBox(width: 3),
+                                Icon(Icons.workspace_premium, size: AppIconSize.i12, color: Colors.deepPurple),
+                                SizedBox(width: AppSpacing.s3),
                                 Text(
                                   'Platform Admin',
-                                  style: TextStyle(fontSize: 10, color: Colors.deepPurple, fontWeight: FontWeight.bold),
+                                  style: TextStyle(fontSize: AppFontSize.f10, color: Colors.deepPurple, fontWeight: AppFontWeight.bold),
                                 ),
                               ],
                             ),
@@ -575,28 +581,28 @@ class _UsersTabState extends State<UsersTab> {
                         ],
                       ],
                     ),
-                    const SizedBox(height: 2),
+                    const SizedBox(height: AppSpacing.s2),
                     Text(
                       data['email'] ?? '',
-                      style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+                      style: TextStyle(fontSize: AppFontSize.f12, color: context.colors.textMuted),
                       overflow: TextOverflow.ellipsis,
                     ),
-                    const SizedBox(height: 4),
+                    const SizedBox(height: AppSpacing.s4),
                     Row(
                       children: [
                         Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                          padding: const EdgeInsets.symmetric(horizontal: AppSpacing.s8, vertical: AppSpacing.s2),
                           decoration: BoxDecoration(
-                            color: roleColor.withValues(alpha: 0.12),
-                            borderRadius: BorderRadius.circular(10),
+                            color: roleColor.withValues(alpha: AppAlpha.a10),
+                            borderRadius: BorderRadius.circular(AppRadius.r10),
                           ),
                           child: Text(RoleChangeService.isCoAdmin(data) ? 'co-admin' : role,
-                              style: TextStyle(color: roleColor, fontSize: 10.5, fontWeight: FontWeight.w600)),
+                              style: TextStyle(color: roleColor, fontSize: AppFontSize.f10_5, fontWeight: AppFontWeight.semibold)),
                         ),
-                        const SizedBox(width: 6),
+                        const SizedBox(width: AppSpacing.s6),
                         Text(
                           '${facilities.length} ${facilities.length == 1 ? 'facility' : 'facilities'}',
-                          style: TextStyle(fontSize: 11, color: Colors.grey[500]),
+                          style: TextStyle(fontSize: AppFontSize.f11, color: context.colors.textHint),
                         ),
                       ],
                     ),
@@ -607,7 +613,7 @@ class _UsersTabState extends State<UsersTab> {
                 Chip(
                   label: Text(
                     status == UserStatus.pending.key ? 'Awaiting Approval' : status,
-                    style: const TextStyle(fontSize: 11),
+                    style: const TextStyle(fontSize: AppFontSize.f11),
                   ),
                   backgroundColor: status == UserStatus.pending.key ? Colors.blue.shade100 : Colors.orange.shade100,
                   visualDensity: VisualDensity.compact,
@@ -626,12 +632,12 @@ class _UsersTabState extends State<UsersTab> {
                   Container(
                     width: 6,
                     height: 6,
-                    decoration: const BoxDecoration(color: Colors.green, shape: BoxShape.circle),
+                    decoration: BoxDecoration(color: context.colors.success, shape: BoxShape.circle),
                   ),
-                  const SizedBox(width: 3),
+                  const SizedBox(width: AppSpacing.s3),
                   Text(
                     'Online',
-                    style: TextStyle(fontSize: 9, color: Colors.green[700], fontWeight: FontWeight.bold),
+                    style: TextStyle(fontSize: AppFontSize.f9, color: context.colors.successStrong, fontWeight: AppFontWeight.bold),
                   ),
                 ],
               ),
@@ -658,21 +664,21 @@ class _RoleFilterChip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return InkWell(
-      borderRadius: BorderRadius.circular(20),
+      borderRadius: BorderRadius.circular(AppRadius.r20),
       onTap: onTap,
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+        padding: const EdgeInsets.symmetric(horizontal: AppSpacing.s14, vertical: AppSpacing.s6),
         decoration: BoxDecoration(
-          color: selected ? color.withValues(alpha: 0.12) : Colors.transparent,
-          borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: selected ? color : Colors.grey.shade300),
+          color: selected ? color.withValues(alpha: AppAlpha.a10) : Colors.transparent,
+          borderRadius: BorderRadius.circular(AppRadius.r20),
+          border: Border.all(color: selected ? color : context.colors.border),
         ),
         child: Text(
           label,
           style: TextStyle(
-            color: selected ? color : Colors.grey[700],
-            fontSize: 12.5,
-            fontWeight: selected ? FontWeight.w600 : FontWeight.w500,
+            color: selected ? color : context.colors.textSoft,
+            fontSize: AppFontSize.f12_5,
+            fontWeight: selected ? AppFontWeight.semibold : AppFontWeight.medium,
           ),
         ),
       ),

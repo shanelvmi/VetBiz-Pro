@@ -3,12 +3,17 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:cloud_functions/cloud_functions.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../../services/role_change_service.dart';
-import '../../theme/app_palette.dart';
 import '../../data/collections.dart';
 import '../../data/fields.dart';
 import '../../data/user_role.dart';
 import '../../data/user_status.dart';
 import '../../config/app_date_format.dart';
+import '../../theme/app_text.dart';
+import '../../theme/app_dimens.dart';
+import '../../theme/theme_context.dart';
+import '../../ui/feedback/app_feedback.dart';
+import '../../ui/feedback/friendly_error.dart';
+import '../../theme/app_breakpoints.dart';
 
 /// A single user's account, editable by the Platform Admin - the direct
 /// answer to "an assistant migrated to a new facility, and their old
@@ -24,7 +29,6 @@ class UserDetailScreen extends StatefulWidget {
 }
 
 class _UserDetailScreenState extends State<UserDetailScreen> {
-  static const Color primaryColor = AppPalette.primary;
   bool _isSaving = false;
   late Map<String, dynamic> _userData;
 
@@ -76,7 +80,7 @@ class _UserDetailScreenState extends State<UserDetailScreen> {
                     ),
                     onChanged: (v) => setDialogState(() => query = v),
                   ),
-                  const SizedBox(height: 8),
+                  const SizedBox(height: AppSpacing.s8),
                   Expanded(
                     child: filtered.isEmpty
                         ? const Center(child: Text('No matching facility.'))
@@ -115,11 +119,7 @@ class _UserDetailScreenState extends State<UserDetailScreen> {
     final currentFacilities = (_userData['facilities'] as List?)?.cast<dynamic>() ?? [];
     final alreadyThere = currentFacilities.any((f) => f is Map && f[Fields.facilityId] == selected[Fields.facilityId]);
     if (alreadyThere) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Already a member of that facility')),
-        );
-      }
+      AppFeedback.info('Already a member of that facility');
       return;
     }
 
@@ -159,15 +159,9 @@ class _UserDetailScreenState extends State<UserDetailScreen> {
         _userData['facilities'] = isAssistant ? [selected] : [...currentFacilities, selected];
         if (isTargetPlatformAdmin) _userData[Fields.role] = UserRole.admin.key;
       });
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Added to ${selected['name']}'), backgroundColor: Colors.green),
-      );
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Could not add: $e'), backgroundColor: Colors.redAccent),
-        );
-      }
+      AppFeedback.success('Added to ${selected['name']}');
+    } catch (e, st) {
+      AppFeedback.error("Couldn't add the user to the facility", error: e, stackTrace: st);
     } finally {
       if (mounted) setState(() => _isSaving = false);
     }
@@ -179,14 +173,14 @@ class _UserDetailScreenState extends State<UserDetailScreen> {
       builder: (context) => AlertDialog(
         title: const Text('Remove from Facility?'),
         content: SizedBox(
-          width: MediaQuery.of(context).size.width > 700 ? 360 : MediaQuery.of(context).size.width * 0.85,
+          width: MediaQuery.of(context).size.width > AppBreakpoints.dialogFixedWidth ? AppSizes.dialogXs : MediaQuery.of(context).size.width * 0.85,
           child: Text('Remove this user from "${facility['name']}"? They\'ll no longer be able to access it.'),
         ),
         actions: [
           TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Cancel')),
           ElevatedButton(
             onPressed: () => Navigator.pop(context, true),
-            style: ElevatedButton.styleFrom(backgroundColor: Colors.red, foregroundColor: Colors.white),
+            style: ElevatedButton.styleFrom(backgroundColor: context.colors.danger, foregroundColor: context.colors.onPrimary),
             child: const Text('Remove'),
           ),
         ],
@@ -203,15 +197,9 @@ class _UserDetailScreenState extends State<UserDetailScreen> {
       setState(() {
         (_userData['facilities'] as List).removeWhere((f) => f is Map && f[Fields.facilityId] == facility[Fields.facilityId]);
       });
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Removed'), backgroundColor: Colors.green),
-      );
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Could not remove: $e'), backgroundColor: Colors.redAccent),
-        );
-      }
+      AppFeedback.success('Removed from the facility');
+    } catch (e, st) {
+      AppFeedback.error("Couldn't remove the user from the facility", error: e, stackTrace: st);
     }
   }
 
@@ -229,7 +217,7 @@ class _UserDetailScreenState extends State<UserDetailScreen> {
           builder: (context) => AlertDialog(
             title: const Text('Cannot Deactivate'),
             content: SizedBox(
-              width: MediaQuery.of(context).size.width > 700 ? 360 : MediaQuery.of(context).size.width * 0.85,
+              width: MediaQuery.of(context).size.width > AppBreakpoints.dialogFixedWidth ? AppSizes.dialogXs : MediaQuery.of(context).size.width * 0.85,
               child: const Text(
                   'This account has Platform Admin access, so it can\'t be deactivated from '
                   'here or anywhere else. Remove their Platform Admin access first (from the '
@@ -249,7 +237,7 @@ class _UserDetailScreenState extends State<UserDetailScreen> {
       builder: (context) => AlertDialog(
         title: Text(newStatus == UserStatus.active.key ? 'Reactivate Account?' : 'Deactivate Account?'),
         content: SizedBox(
-          width: MediaQuery.of(context).size.width > 700 ? 360 : MediaQuery.of(context).size.width * 0.85,
+          width: MediaQuery.of(context).size.width > AppBreakpoints.dialogFixedWidth ? AppSizes.dialogXs : MediaQuery.of(context).size.width * 0.85,
           child: Text(newStatus == UserStatus.active.key
               ? 'This user will be able to log in again.'
               : 'This user will no longer be able to log in, at any facility.'),
@@ -259,8 +247,8 @@ class _UserDetailScreenState extends State<UserDetailScreen> {
           ElevatedButton(
             onPressed: () => Navigator.pop(context, true),
             style: ElevatedButton.styleFrom(
-              backgroundColor: newStatus == UserStatus.active.key ? Colors.green : Colors.red,
-              foregroundColor: Colors.white,
+              backgroundColor: newStatus == UserStatus.active.key ? context.colors.success : context.colors.danger,
+              foregroundColor: context.colors.onPrimary,
             ),
             child: Text(newStatus == UserStatus.active.key ? 'Reactivate' : 'Deactivate'),
           ),
@@ -284,15 +272,9 @@ class _UserDetailScreenState extends State<UserDetailScreen> {
         _userData['statusChangedByRole'] = 'Platform Admin';
         _userData['statusChangedAt'] = Timestamp.now();
       });
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Status updated to $newStatus'), backgroundColor: Colors.green),
-      );
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Could not update status: $e'), backgroundColor: Colors.redAccent),
-        );
-      }
+      AppFeedback.success('Status updated to $newStatus');
+    } catch (e, st) {
+      AppFeedback.error("Couldn't update the status", error: e, stackTrace: st);
     }
   }
 
@@ -317,20 +299,20 @@ class _UserDetailScreenState extends State<UserDetailScreen> {
               children: [
                 Text(
                   'This permanently deletes "$name"\'s account and login. This cannot be undone, and the email becomes free to register again.',
-                  style: const TextStyle(fontSize: 13),
+                  style: const TextStyle(fontSize: AppFontSize.f13),
                 ),
-                const SizedBox(height: 16),
+                const SizedBox(height: AppSpacing.s16),
                 Text('Type DELETE to confirm:',
-                    style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600)),
-                const SizedBox(height: 8),
+                    style: const TextStyle(fontSize: AppFontSize.f13, fontWeight: AppFontWeight.semibold)),
+                const SizedBox(height: AppSpacing.s8),
                 TextField(
                   controller: confirmController,
                   decoration: const InputDecoration(border: OutlineInputBorder(), isDense: true),
                   onChanged: (val) => setDialogState(() => canConfirm = val.trim() == 'DELETE'),
                 ),
                 if (dialogError != null) ...[
-                  const SizedBox(height: 10),
-                  Text(dialogError!, style: const TextStyle(color: Colors.redAccent, fontSize: 12.5)),
+                  const SizedBox(height: AppSpacing.s10),
+                  Text(dialogError!, style: TextStyle(color: context.colors.dangerAccent, fontSize: AppFontSize.f12_5)),
                 ],
               ],
             ),
@@ -354,21 +336,19 @@ class _UserDetailScreenState extends State<UserDetailScreen> {
                         if (dialogContext.mounted) Navigator.pop(dialogContext);
                         if (!mounted) return;
                         Navigator.pop(context); // back to Users list - this account no longer exists
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text('Account removed'), backgroundColor: Colors.green),
-                        );
+                        AppFeedback.success('Account removed');
                       } catch (e) {
                         setDialogState(() {
                           isRemoving = false;
-                          dialogError = 'Could not remove: $e';
+                          dialogError = 'Could not remove: ${FriendlyError.messageFor(e)}';
                         });
                       }
                     },
-              style: ElevatedButton.styleFrom(backgroundColor: Colors.red, foregroundColor: Colors.white),
+              style: ElevatedButton.styleFrom(backgroundColor: context.colors.danger, foregroundColor: context.colors.onPrimary),
               child: isRemoving
-                  ? const SizedBox(
+                  ? SizedBox(
                       width: 18, height: 18,
-                      child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                      child: CircularProgressIndicator(strokeWidth: 2, color: context.colors.onPrimary),
                     )
                   : const Text('Remove'),
             ),
@@ -383,29 +363,29 @@ class _UserDetailScreenState extends State<UserDetailScreen> {
   // Takes the label itself ("Admin", "Co-admin", "Assistant") rather than
   // the stored role, so a promoted Assistant reads as Co-admin everywhere.
   Widget _roleChip(String label) {
-    final color = label == 'Assistant' ? Colors.blueGrey : primaryColor;
+    final color = label == 'Assistant' ? context.colors.roleAssistant : context.colors.primary;
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-      decoration: BoxDecoration(color: color.withValues(alpha: 0.12), borderRadius: BorderRadius.circular(10)),
+      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.s10, vertical: AppSpacing.s4),
+      decoration: BoxDecoration(color: color.withValues(alpha: AppAlpha.a10), borderRadius: BorderRadius.circular(AppRadius.r10)),
       child: Text(
         label,
-        style: TextStyle(color: color, fontSize: 12.5, fontWeight: FontWeight.w700),
+        style: TextStyle(color: color, fontSize: AppFontSize.f12_5, fontWeight: AppFontWeight.bold),
       ),
     );
   }
 
   Widget _roleDialogLine(IconData icon, Color color, String text) {
     return Padding(
-      padding: const EdgeInsets.only(bottom: 8),
+      padding: const EdgeInsets.only(bottom: AppSpacing.s8),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Padding(
-            padding: const EdgeInsets.only(top: 1),
-            child: Icon(icon, size: 16, color: color),
+            padding: const EdgeInsets.only(top: AppSpacing.s2),
+            child: Icon(icon, size: AppIconSize.i16, color: color),
           ),
-          const SizedBox(width: 8),
-          Expanded(child: Text(text, style: const TextStyle(fontSize: 13, height: 1.35))),
+          const SizedBox(width: AppSpacing.s8),
+          Expanded(child: Text(text, style: const TextStyle(fontSize: AppFontSize.f13, height: 1.35))),
         ],
       ),
     );
@@ -417,12 +397,8 @@ class _UserDetailScreenState extends State<UserDetailScreen> {
     try {
       final facts = await RoleChangeService.gatherFacts(widget.userId, _userData);
       return RoleChangeService.evaluate(userName: name, facts: facts);
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Could not check this account: $e'), backgroundColor: Colors.red),
-        );
-      }
+    } catch (e, st) {
+      AppFeedback.error("Couldn't check this account", error: e, stackTrace: st);
       return null;
     } finally {
       if (mounted) setState(() => _isSaving = false);
@@ -453,42 +429,42 @@ class _UserDetailScreenState extends State<UserDetailScreen> {
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(name, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
-                const SizedBox(height: 8),
+                Text(name, style: const TextStyle(fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f15)),
+                const SizedBox(height: AppSpacing.s8),
                 Row(
                   children: [
                     _roleChip(plan.currentLabel),
-                    const Padding(
-                      padding: EdgeInsets.symmetric(horizontal: 8),
-                      child: Icon(Icons.arrow_forward, size: 18, color: Colors.grey),
+                    Padding(
+                      padding: EdgeInsets.symmetric(horizontal: AppSpacing.s8),
+                      child: Icon(Icons.arrow_forward, size: AppIconSize.i18, color: context.colors.textHint),
                     ),
                     _roleChip(plan.newLabel),
                   ],
                 ),
-                const SizedBox(height: 16),
+                const SizedBox(height: AppSpacing.s16),
                 if (!plan.allowed) ...[
                   Container(
                     width: double.infinity,
-                    padding: const EdgeInsets.all(12),
+                    padding: const EdgeInsets.all(AppSpacing.s12),
                     decoration: BoxDecoration(
-                      color: Colors.red.withValues(alpha: 0.06),
-                      borderRadius: BorderRadius.circular(10),
-                      border: Border.all(color: Colors.red.withValues(alpha: 0.25)),
+                      color: context.colors.danger.withValues(alpha: AppAlpha.a05),
+                      borderRadius: BorderRadius.circular(AppRadius.r10),
+                      border: Border.all(color: context.colors.danger.withValues(alpha: AppAlpha.a30)),
                     ),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        for (final reason in plan.blockers) _roleDialogLine(Icons.block, Colors.red, reason),
+                        for (final reason in plan.blockers) _roleDialogLine(Icons.block, context.colors.danger, reason),
                       ],
                     ),
                   ),
                 ] else ...[
-                  const Text('What will change', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 13)),
-                  const SizedBox(height: 8),
-                  for (final effect in plan.effects) _roleDialogLine(Icons.check_circle_outline, Colors.green, effect),
+                  const Text('What will change', style: TextStyle(fontWeight: AppFontWeight.semibold, fontSize: AppFontSize.f13)),
+                  const SizedBox(height: AppSpacing.s8),
+                  for (final effect in plan.effects) _roleDialogLine(Icons.check_circle_outline, context.colors.success, effect),
                   for (final warning in plan.warnings)
-                    _roleDialogLine(Icons.info_outline, Colors.orange.shade800, warning),
-                  const SizedBox(height: 8),
+                    _roleDialogLine(Icons.info_outline, context.colors.warningStrong, warning),
+                  const SizedBox(height: AppSpacing.s8),
                   TextField(
                     controller: reasonController,
                     maxLines: 2,
@@ -510,8 +486,8 @@ class _UserDetailScreenState extends State<UserDetailScreen> {
                 ElevatedButton(
                   onPressed: () => Navigator.pop(ctx, true),
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: isPromotion ? primaryColor : Colors.red,
-                    foregroundColor: Colors.white,
+                    backgroundColor: isPromotion ? context.colors.primary : context.colors.danger,
+                    foregroundColor: context.colors.onPrimary,
                   ),
                   child: Text(isPromotion ? 'Make Co-admin' : 'Make Assistant'),
                 ),
@@ -528,26 +504,19 @@ class _UserDetailScreenState extends State<UserDetailScreen> {
       await _refreshUserData();
       if (!mounted) return;
       // The role changed either way; only the notifications can have failed.
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('$name is now ${isPromotion ? 'a Co-admin' : 'an Assistant'}'
-              '${outcome.notificationsSent ? '' : ' - but some notifications could not be sent'}'),
-          backgroundColor: outcome.notificationsSent ? Colors.green : Colors.orange.shade800,
-        ),
-      );
+      final message = '$name is now ${isPromotion ? 'a Co-admin' : 'an Assistant'}';
+      if (outcome.notificationsSent) {
+        AppFeedback.success(message);
+      } else {
+        AppFeedback.warning(message, detail: 'Some notifications could not be sent');
+      }
     } on RoleChangeBlockedException catch (e) {
       // Re-checked at the moment of change; something moved since the dialog opened.
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text("Couldn't change the role: $e"), backgroundColor: Colors.red),
-        );
-      }
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Could not change role: $e'), backgroundColor: Colors.red),
-        );
-      }
+      // The reasons are written for people (RoleChangeService), so they
+      // are the second line as they are.
+      AppFeedback.error("Couldn't change the role", detail: e.reasons.join(' '));
+    } catch (e, st) {
+      AppFeedback.error("Couldn't change the role", error: e, stackTrace: st);
     } finally {
       if (mounted) setState(() => _isSaving = false);
     }
@@ -563,26 +532,26 @@ class _UserDetailScreenState extends State<UserDetailScreen> {
       appBar: AppBar(
         title: Text(_userData['fullName'] ?? 'User'),
         centerTitle: true,
-        backgroundColor: primaryColor,
-        foregroundColor: Colors.white,
+        backgroundColor: context.colors.primary,
+        foregroundColor: context.colors.onPrimary,
       ),
       body: Center(
         child: ConstrainedBox(
           constraints: const BoxConstraints(maxWidth: 700),
           child: ListView(
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.all(AppSpacing.s16),
             children: [
               Card(
                 child: Padding(
-                  padding: const EdgeInsets.all(16),
+                  padding: const EdgeInsets.all(AppSpacing.s16),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(_userData['email'] ?? '', style: const TextStyle(fontSize: 14)),
-                      const SizedBox(height: 4),
+                      Text(_userData['email'] ?? '', style: const TextStyle(fontSize: AppFontSize.f14)),
+                      const SizedBox(height: AppSpacing.s4),
                       Row(
                         children: [
-                          const Text('Role: ', style: TextStyle(fontSize: 13, color: Colors.grey)),
+                          Text('Role: ', style: TextStyle(fontSize: AppFontSize.f13, color: context.colors.textHint)),
                           _roleChip(RoleChangeService.displayRole(role,
                               previousRole: _userData['previousRole']?.toString())),
                           const Spacer(),
@@ -591,13 +560,13 @@ class _UserDetailScreenState extends State<UserDetailScreen> {
                           if (role == UserRole.admin.key || role == UserRole.assistant.key)
                             TextButton.icon(
                               onPressed: _isSaving ? null : _changeRole,
-                              icon: const Icon(Icons.manage_accounts_outlined, size: 18),
+                              icon: const Icon(Icons.manage_accounts_outlined, size: AppIconSize.i18),
                               label: const Text('Change role'),
                             ),
                         ],
                       ),
                       if (_userData['roleChangedBy'] != null) ...[
-                        const SizedBox(height: 2),
+                        const SizedBox(height: AppSpacing.s2),
                         Builder(builder: (context) {
                           final changedAtField = _userData['roleChangedAt'];
                           final changedAt = changedAtField is Timestamp ? changedAtField.toDate() : null;
@@ -609,26 +578,26 @@ class _UserDetailScreenState extends State<UserDetailScreen> {
                             'Role changed from $previous by $by (Platform Admin)'
                             '${changedAt != null ? ' \u00b7 ${AppDateFormat.dateTime24.format(changedAt)}' : ''}'
                             '${why.isEmpty ? '' : ' - "$why"'}',
-                            style: TextStyle(fontSize: 11.5, color: Colors.grey[600]),
+                            style: TextStyle(fontSize: AppFontSize.f11_5, color: context.colors.textMuted),
                           );
                         }),
                       ],
-                      const SizedBox(height: 4),
+                      const SizedBox(height: AppSpacing.s4),
                       Row(
                         children: [
-                          const Text('Status: ', style: TextStyle(fontSize: 13, color: Colors.grey)),
+                          Text('Status: ', style: TextStyle(fontSize: AppFontSize.f13, color: context.colors.textHint)),
                           Text(
                             status,
                             style: TextStyle(
-                              fontSize: 13,
-                              fontWeight: FontWeight.bold,
-                              color: status == UserStatus.active.key ? Colors.green : Colors.orange,
+                              fontSize: AppFontSize.f13,
+                              fontWeight: AppFontWeight.bold,
+                              color: status == UserStatus.active.key ? context.colors.success : context.colors.warning,
                             ),
                           ),
                         ],
                       ),
                       if (_userData['statusChangedBy'] != null) ...[
-                        const SizedBox(height: 4),
+                        const SizedBox(height: AppSpacing.s4),
                         Builder(builder: (context) {
                           final changedByField = _userData['statusChangedAt'];
                           final changedAt = changedByField is Timestamp ? changedByField.toDate() : null;
@@ -637,7 +606,7 @@ class _UserDetailScreenState extends State<UserDetailScreen> {
                           return Text(
                             'Changed by $by ($role)'
                             '${changedAt != null ? ' · ${AppDateFormat.dateTime24.format(changedAt)}' : ''}',
-                            style: TextStyle(fontSize: 11.5, color: Colors.grey[600]),
+                            style: TextStyle(fontSize: AppFontSize.f11_5, color: context.colors.textMuted),
                           );
                         }),
                       ],
@@ -645,11 +614,11 @@ class _UserDetailScreenState extends State<UserDetailScreen> {
                   ),
                 ),
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: AppSpacing.s16),
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  const Text('Facilities', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
+                  const Text('Facilities', style: TextStyle(fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f15)),
                   TextButton.icon(
                     onPressed: _isSaving ? null : _addToFacility,
                     icon: Icon((_userData[Fields.role] ?? '') == UserRole.assistant.key ? Icons.swap_horiz : Icons.add),
@@ -659,44 +628,44 @@ class _UserDetailScreenState extends State<UserDetailScreen> {
               ),
               if (facilities.isEmpty)
                 const Padding(
-                  padding: EdgeInsets.symmetric(vertical: 12),
+                  padding: EdgeInsets.symmetric(vertical: AppSpacing.s12),
                   child: Text('Not a member of any facility.'),
                 )
               else
                 ...facilities.map((f) {
                   final facility = f as Map<String, dynamic>;
                   return Card(
-                    margin: const EdgeInsets.only(top: 8),
+                    margin: const EdgeInsets.only(top: AppSpacing.s8),
                     child: ListTile(
                       leading: const Icon(Icons.storefront_outlined),
                       title: Text(facility['name'] ?? 'Unknown'),
                       subtitle: Text(facility['type'] ?? ''),
                       trailing: IconButton(
-                        icon: const Icon(Icons.remove_circle_outline, color: Colors.red),
+                        icon: Icon(Icons.remove_circle_outline, color: context.colors.danger),
                         tooltip: 'Remove from this facility',
                         onPressed: () => _removeFromFacility(facility),
                       ),
                     ),
                   );
                 }),
-              const SizedBox(height: 24),
+              const SizedBox(height: AppSpacing.s24),
               OutlinedButton.icon(
                 onPressed: _toggleStatus,
                 icon: Icon(status == UserStatus.active.key ? Icons.block : Icons.check_circle_outline),
                 label: Text(status == UserStatus.active.key ? 'Deactivate Account' : 'Reactivate Account'),
                 style: OutlinedButton.styleFrom(
-                  foregroundColor: status == UserStatus.active.key ? Colors.red : Colors.green,
+                  foregroundColor: status == UserStatus.active.key ? context.colors.danger : context.colors.success,
                 ),
               ),
               if (status == UserStatus.deactivated.key) ...[
-                const SizedBox(height: 12),
+                const SizedBox(height: AppSpacing.s12),
                 OutlinedButton.icon(
                   onPressed: _removeAccount,
                   icon: const Icon(Icons.delete_forever_outlined),
                   label: const Text('Remove Account Permanently'),
                   style: OutlinedButton.styleFrom(
-                    foregroundColor: Colors.red.shade900,
-                    side: BorderSide(color: Colors.red.shade900),
+                    foregroundColor: context.colors.dangerDeep,
+                    side: BorderSide(color: context.colors.dangerDeep),
                   ),
                 ),
               ],
