@@ -1036,12 +1036,15 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
           ElevatedButton(
             style: ElevatedButton.styleFrom(backgroundColor: context.colors.primary),
             onPressed: () async {
+              // Captured before the await: the dialog must close whether the
+              // email was sent or not.
+              final navigator = Navigator.of(context);
               try {
                 await FirebaseAuth.instance.sendPasswordResetEmail(email: email);
-                Navigator.pop(context);
+                navigator.pop();
                 AppFeedback.success('Reset link sent to $email');
               } catch (e, st) {
-                Navigator.pop(context);
+                navigator.pop();
                 AppFeedback.error("Couldn't send the reset link", error: e, stackTrace: st);
               }
             },
@@ -1061,6 +1064,7 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
     if (selectedFacility == null) {
     // Facility is required; redirect back to login
     Future.microtask(() {
+      if (!context.mounted) return;
       Navigator.pushReplacementNamed(context, '/login');
     });
     return const SizedBox.shrink(); // Return empty widget temporarily
@@ -3248,7 +3252,7 @@ Widget _buildDrawerContent() {
                   child: const Text('Edit Profile'),
                   onPressed: () async {
                     final snapshot = await userDoc.get();
-                    if (!snapshot.exists) return;
+                    if (!snapshot.exists || !context.mounted) return;
 
                     final rawUserData = snapshot.data();
                     final userData = (rawUserData != null)

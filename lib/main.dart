@@ -453,11 +453,15 @@ class _AppEntryPointState extends State<AppEntryPoint> {
         // fetch. This is the common case for every Assistant (always
         // exactly one facility) and the majority of Admins too.
         debugPrint('[AUTH] Single facility - calling activateFacilityAndGoToDashboard for uid=$uid');
-        await activateFacilityAndGoToDashboard(
-          context: context,
-          facility: facilities.first,
-          role: role,
-        );
+        // Only while this screen is still mounted: the helper aborts in that
+        // case anyway, and this context must not be used across the reads above.
+        if (mounted) {
+          await activateFacilityAndGoToDashboard(
+            context: context,
+            facility: facilities.first,
+            role: role,
+          );
+        }
         debugPrint('[AUTH] activateFacilityAndGoToDashboard call returned for uid=$uid');
         return const Scaffold(body: Center(child: CircularProgressIndicator()));
       }
