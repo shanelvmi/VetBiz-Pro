@@ -253,7 +253,7 @@ class _ActivityLogScreenState extends State<ActivityLogScreen> {
               return RadioListTile<int>(
                 value: days,
                 groupValue: current,
-                activeColor: primaryDeepGreen,
+                activeColor: context.colors.primary,
                 title: Text('$days days'),
                 onChanged: (val) => Navigator.pop(ctx, val),
               );
@@ -291,7 +291,7 @@ class _ActivityLogScreenState extends State<ActivityLogScreen> {
             TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancel')),
             TextButton(
               onPressed: () => Navigator.pop(ctx, true),
-              child: Text('Delete and switch to $selected days', style: const TextStyle(color: Colors.red)),
+              child: Text('Delete and switch to $selected days', style: TextStyle(color: context.colors.danger)),
             ),
           ],
         ),
