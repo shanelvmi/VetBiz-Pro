@@ -144,42 +144,305 @@
       "file": "lib/screens/dashboard/insights_screen.dart",
       "lineContains": "_trendStart.add(Duration(days: value.toInt()))",
       "reason": "computed: the trend chart axis label's day"
+    },
+    {
+      "rule": "R1",
+      "file": "lib/screens/admin/manage_assistants_screen.dart",
+      "lineContains": "Colors.teal",
+      "reason": "Reassign button teal and empty-team icon teal 300, kept in D4 (colours not covered by the snap rule); D4 Other teal question, for 2R"
+    },
+    {
+      "rule": "R1",
+      "file": "lib/screens/dashboard/dashboard_screen.dart",
+      "lineContains": "Colors.teal.shade",
+      "reason": "drawer hover and press fills teal 700/800, no role for that purpose; open question D9, for 2R"
+    },
+    {
+      "rule": "R1",
+      "file": "lib/screens/dashboard/dashboard_screen.dart",
+      "lineContains": "Color deepAmber = Color(0xFFC77800)",
+      "reason": "subscription banner amber, no role within 12; open question D9, for 2R"
+    },
+    {
+      "rule": "R1",
+      "file": "lib/screens/dashboard/dashboard_screen.dart",
+      "lineContains": "Color cream = Color(0xFFFFF6E7)",
+      "reason": "subscription banner cream, no role within 12; open question D9, for 2R"
+    },
+    {
+      "rule": "R1",
+      "file": "lib/screens/dashboard/dashboard_screen.dart",
+      "lineContains": "const _BlinkingDot({this.colors = const [Colors.redAccent]})",
+      "reason": "the bell's _BlinkingDot is left as written (owner's D9 rule); its red default"
+    },
+    {
+      "rule": "R1",
+      "file": "lib/screens/dashboard/dashboard_screen.dart",
+      "lineContains": "Color(0xFFE3F0EC)",
+      "reason": "Record Visit quick action tint, kept exact (no tint role); open question D9, for 2R"
+    },
+    {
+      "rule": "R1",
+      "file": "lib/screens/dashboard/dashboard_screen.dart",
+      "lineContains": "Color(0xFFFCEFD9)",
+      "reason": "Add Product quick action tint, kept exact (no tint role); open question D9, for 2R"
+    },
+    {
+      "rule": "R1",
+      "file": "lib/screens/dashboard/dashboard_screen.dart",
+      "lineContains": "servicesSteelBlue = Color(0xFF5C7C99)",
+      "reason": "services steel blue, no role within 12; open question D9, for 2R"
+    },
+    {
+      "rule": "R1",
+      "file": "lib/screens/dashboard/insights_screen.dart",
+      "lineContains": "Color(0xFF5C7C99), //",
+      "reason": "service breakdown palette (steel blue), no chart role; open question D9, for 2R"
+    },
+    {
+      "rule": "R1",
+      "file": "lib/screens/dashboard/insights_screen.dart",
+      "lineContains": "Color(0xFF8FA998), //",
+      "reason": "service breakdown palette (sage), no chart role; open question D9, for 2R"
+    },
+    {
+      "rule": "R1",
+      "file": "lib/screens/dashboard/insights_screen.dart",
+      "lineContains": "Color(0xFFB98B6F), //",
+      "reason": "service breakdown palette (terracotta), no chart role; open question D9, for 2R"
+    },
+    {
+      "rule": "R1",
+      "file": "lib/screens/dashboard/insights_screen.dart",
+      "lineContains": "Color(0xFF9B8AA6), //",
+      "reason": "service breakdown palette (lavender), no chart role; open question D9, for 2R"
+    },
+    {
+      "rule": "R1",
+      "file": "lib/screens/dashboard/insights_screen.dart",
+      "lineContains": "_tealAccent = Color(0xFF3E8E82)",
+      "reason": "the login teal #3E8E82, no role within 12; open question D8, for 2R"
+    },
+    {
+      "rule": "R1",
+      "file": "lib/screens/dashboard/notifications_screen.dart",
+      "lineContains": "Color(0xFFE59A00)",
+      "reason": "debt category amber, no role within 12; open question D9, for 2R"
+    },
+    {
+      "rule": "R1",
+      "file": "lib/screens/facilities/facility_picker_screen.dart",
+      "lineContains": "return Colors.purple;",
+      "reason": "facility type colour (other types), chart4's value but not its purpose; open question D10, for 2R"
+    },
+    {
+      "rule": "R1",
+      "file": "lib/screens/facilities/facility_screen.dart",
+      "lineContains": "_tealAccent = Color(0xFF3E8E82)",
+      "reason": "the login teal #3E8E82 (Total Products metric); open question D10, for 2R"
+    },
+    {
+      "rule": "R1",
+      "file": "lib/screens/login_screen.dart",
+      "lineContains": "Colors.greenAccent",
+      "reason": "System Online dot, no role within 12; open question D8, for 2R"
+    },
+    {
+      "rule": "R1",
+      "file": "lib/screens/login_screen.dart",
+      "lineContains": "tealAccent = Color(0xFF3E8E82)",
+      "reason": "login teal, no role within 12; open question D8, for 2R"
+    },
+    {
+      "rule": "R1",
+      "file": "lib/screens/login_screen.dart",
+      "lineContains": "tealGlow = Color(0xFF7EE8CB)",
+      "reason": "login light teal glow, no role within 12; open question D8, for 2R"
+    },
+    {
+      "rule": "R1",
+      "file": "lib/screens/register_screen.dart",
+      "lineContains": "tealAccent = Color(0xFF3E8E82)",
+      "reason": "login teal (register copy), no role within 12; open question D8, for 2R"
+    },
+    {
+      "rule": "R1",
+      "file": "lib/screens/register_screen.dart",
+      "lineContains": "tealGlow = Color(0xFF7EE8CB)",
+      "reason": "login light teal glow (register copy), no role within 12; open question D8, for 2R"
+    },
+    {
+      "rule": "R1",
+      "file": "lib/screens/platform_admin/platform_admin_home_screen.dart",
+      "lineContains": "tealGlow = Color(0xFF3E8E82)",
+      "reason": "sidebar facility badge teal (the login teal), no role within 12; open question D7, for 2R"
+    },
+    {
+      "rule": "R1",
+      "file": "lib/screens/platform_admin/subscription_requests_tab.dart",
+      "lineContains": "Colors.redAccent[700]",
+      "reason": "no danger role within 12 of redAccent 700; open question D7, for 2R"
+    },
+    {
+      "rule": "R1",
+      "file": "lib/screens/platform_admin/users_tab.dart",
+      "lineContains": "Colors.deepPurple",
+      "reason": "Platform Admin badge colour (x6), no role; open question D7, for 2R"
+    },
+    {
+      "rule": "R1",
+      "file": "lib/screens/platform_admin/users_tab.dart",
+      "lineContains": "Colors.blue.shade100 : Colors.orange.shade100",
+      "reason": "pending / other status chip fills, no role within 12; open question D7, for 2R"
+    },
+    {
+      "rule": "R4",
+      "file": "lib/screens/admin/manage_assistants_screen.dart",
+      "lineContains": "vertical: 36)",
+      "reason": "empty-team gap 36, 4 px above s32, kept in D4 (beyond the snap rule); for 2R"
+    },
+    {
+      "rule": "R4",
+      "file": "lib/screens/dashboard/dashboard_screen.dart",
+      "lineContains": "EdgeInsets.symmetric(vertical: 40)",
+      "reason": "chart loading gap 40, 8 px above s32; open question D9, for 2R"
+    },
+    {
+      "rule": "R4",
+      "file": "lib/screens/facilities/facility_screen.dart",
+      "lineContains": "EdgeInsets.symmetric(vertical: 40)",
+      "reason": "inventory and sales loading gaps 40 (x2), 8 px above s32; open question D10, for 2R"
+    },
+    {
+      "rule": "R5",
+      "file": "lib/screens/dashboard/dashboard_screen.dart",
+      "lineContains": "_hoverFade = Duration(milliseconds: 200)",
+      "reason": "named drawer hover timing, between AppMotion.fast and normal; open question D9, for 2R"
+    },
+    {
+      "rule": "R5",
+      "file": "lib/screens/dashboard/dashboard_screen.dart",
+      "lineContains": "_tooltipWait = Duration(milliseconds: 300)",
+      "reason": "named drawer tooltip wait (AppTimeouts.tooltipDelay is 400); open question D9, for 2R"
+    },
+    {
+      "rule": "R5",
+      "file": "lib/screens/dashboard/dashboard_screen.dart",
+      "lineContains": "_bannerSwitch = Duration(milliseconds: 550)",
+      "reason": "named subscription banner switch, 50 ms above AppMotion.slowest; open question D9, for 2R"
+    },
+    {
+      "rule": "R5",
+      "file": "lib/screens/dashboard/dashboard_screen.dart",
+      "lineContains": "duration: const Duration(milliseconds: 700),",
+      "reason": "the bell's _BlinkingDot blink, left as written (owner's D9 rule)"
+    },
+    {
+      "rule": "R5",
+      "file": "lib/screens/dashboard/dashboard_screen.dart",
+      "lineContains": "Timer.periodic(const Duration(milliseconds: 1400)",
+      "reason": "the bell's _BlinkingDot colour cycle, left as written (owner's D9 rule)"
+    },
+    {
+      "rule": "R5",
+      "file": "lib/screens/dashboard/dashboard_screen.dart",
+      "lineContains": "duration: const Duration(milliseconds: 400),",
+      "reason": "the bell's _BlinkingDot colour fade, left as written (owner's D9 rule)"
+    },
+    {
+      "rule": "R5",
+      "file": "lib/screens/dashboard/dashboard_screen.dart",
+      "lineContains": "Future.delayed(const Duration(milliseconds: 900)",
+      "reason": "delay before the subscription pill shows, left as written (owner's D9 rule)"
+    },
+    {
+      "rule": "R5",
+      "file": "lib/screens/login_screen.dart",
+      "lineContains": "_announcementSlide = Duration(milliseconds: 600)",
+      "reason": "named login timing, no AppMotion step within reach; open question D8, for 2R"
+    },
+    {
+      "rule": "R5",
+      "file": "lib/screens/login_screen.dart",
+      "lineContains": "_alertHoverGrace = Duration(seconds: 3)",
+      "reason": "named login alert restart after hover, no AppTimeouts entry; open question D8, for 2R"
+    },
+    {
+      "rule": "R5",
+      "file": "lib/screens/login_screen.dart",
+      "lineContains": "_shakeDuration = Duration(milliseconds: 420)",
+      "reason": "named login card shake, no AppMotion step within reach; open question D8, for 2R"
+    },
+    {
+      "rule": "R5",
+      "file": "lib/screens/login_screen.dart",
+      "lineContains": "_alertSwitch = Duration(milliseconds: 260)",
+      "reason": "named login alert fade-in, no AppMotion step within reach; open question D8, for 2R"
+    },
+    {
+      "rule": "R5",
+      "file": "lib/screens/login_screen.dart",
+      "lineContains": "_hoverSweep = Duration(milliseconds: 450)",
+      "reason": "named Login button hover sweep, no AppMotion step within reach; open question D8, for 2R"
+    },
+    {
+      "rule": "R5",
+      "file": "lib/screens/login_screen.dart",
+      "lineContains": "_blinkStep = Duration(milliseconds: 600)",
+      "reason": "named NEW badge blink step; open question D8, for 2R"
+    },
+    {
+      "rule": "R5",
+      "file": "lib/screens/login_screen.dart",
+      "lineContains": "_blinkHold = Duration(seconds: 3)",
+      "reason": "named NEW badge blink hold; open question D8, for 2R"
+    },
+    {
+      "rule": "R5",
+      "file": "lib/screens/register_screen.dart",
+      "lineContains": "_alertSwitch = Duration(milliseconds: 260)",
+      "reason": "named register alert fade-in (as login); open question D8, for 2R"
+    },
+    {
+      "rule": "R5",
+      "file": "lib/screens/register_screen.dart",
+      "lineContains": "_alertHoverGrace = Duration(seconds: 3)",
+      "reason": "named register alert restart after hover (as login); open question D8, for 2R"
+    },
+    {
+      "rule": "R5",
+      "file": "lib/screens/register_screen.dart",
+      "lineContains": "_scrollToField = Duration(milliseconds: 350)",
+      "reason": "named scroll to the first field in error, 50 ms from slow and slower; open question D8, for 2R"
+    },
+    {
+      "rule": "R7",
+      "file": "lib/screens/dashboard/dashboard_screen.dart",
+      "lineContains": "MediaQuery.of(context).size.width < 1024;",
+      "reason": "small-screen check beside the Layout Fixed Mode collapse logic, left as written (owner's D9 rule)"
+    },
+    {
+      "rule": "R8",
+      "file": "lib/screens/sales/receipt_preview_screen.dart",
+      "lineContains": "'TSh ${Money.plain(",
+      "reason": "the TOTAL line's 'TSh' spelling, left as typed; Money open question (step 2C), for 2R"
+    },
+    {
+      "rule": "R8",
+      "file": "lib/screens/services/service_receipt_preview_screen.dart",
+      "lineContains": "'TSh ${Money.plain(",
+      "reason": "the TOTAL line's 'TSh' spelling, left as typed; Money open question (step 2C), for 2R"
     }
   ],
   "counts": {
-    "R1": {
-      "lib/screens/admin/manage_assistants_screen.dart": 2,
-      "lib/screens/dashboard/dashboard_screen.dart": 10,
-      "lib/screens/dashboard/insights_screen.dart": 5,
-      "lib/screens/dashboard/notifications_screen.dart": 1,
-      "lib/screens/facilities/facility_picker_screen.dart": 1,
-      "lib/screens/facilities/facility_screen.dart": 1,
-      "lib/screens/login_screen.dart": 3,
-      "lib/screens/platform_admin/platform_admin_home_screen.dart": 1,
-      "lib/screens/platform_admin/subscription_requests_tab.dart": 1,
-      "lib/screens/platform_admin/users_tab.dart": 8,
-      "lib/screens/register_screen.dart": 2
-    },
+    "R1": {},
     "R2": {},
     "R3": {},
-    "R4": {
-      "lib/screens/admin/manage_assistants_screen.dart": 1,
-      "lib/screens/dashboard/dashboard_screen.dart": 1,
-      "lib/screens/facilities/facility_screen.dart": 2
-    },
-    "R5": {
-      "lib/screens/dashboard/dashboard_screen.dart": 7,
-      "lib/screens/login_screen.dart": 7,
-      "lib/screens/register_screen.dart": 3
-    },
+    "R4": {},
+    "R5": {},
     "R6": {},
-    "R7": {
-      "lib/screens/dashboard/dashboard_screen.dart": 1
-    },
-    "R8": {
-      "lib/screens/sales/receipt_preview_screen.dart": 1,
-      "lib/screens/services/service_receipt_preview_screen.dart": 1
-    },
+    "R7": {},
+    "R8": {},
     "R9": {},
     "R10": {
       "lib/main.dart": 22,
