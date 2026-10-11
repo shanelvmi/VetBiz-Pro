@@ -42,8 +42,8 @@ enum ProductDestination {
 
 class _DashedRectPainter extends CustomPainter {
   final Color color;
-  final double radius;
-  const _DashedRectPainter({required this.color, this.radius = 12});
+  final double radius = 12;
+  const _DashedRectPainter({required this.color});
 
   @override
   void paint(Canvas canvas, Size size) {

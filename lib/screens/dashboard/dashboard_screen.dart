@@ -363,12 +363,6 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
 
   String selectedFilter = 'Today';
 
-  // null while checking, then true/false once known - starts null
-  // rather than defaulting to true so the reminder banner doesn't
-  // flash in incorrectly before the actual status is known, and
-  // doesn't flash in a false positive before it's checked either.
-  bool? _isEmailVerified;
-
   // Same cached check as settings_screen.dart's own _isPlatformAdmin -
   // the "Platform Admin" nav item lives here now instead, so this
   // screen needs the same check.
@@ -469,12 +463,7 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
     // Firebase caches emailVerified and doesn't update it automatically
     // once someone clicks the link in their email - has to be
     // explicitly refreshed to find out if it changed since last login.
-    _isEmailVerified = user?.emailVerified;
-    Provider.of<AuthService>(context, listen: false)
-        .refreshEmailVerifiedStatus()
-        .then((verified) {
-      if (mounted) setState(() => _isEmailVerified = verified);
-    });
+    Provider.of<AuthService>(context, listen: false).refreshEmailVerifiedStatus();
     _watchForNewNotifications();
   }
 
@@ -1108,12 +1097,6 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
     final productProvider = Provider.of<ProductProvider>(context);
     final clientProvider = Provider.of<ClientProvider>(context);
     final debtProvider = Provider.of<DebtProvider>(context);
-
-    // Total product value
-    double totalProductValue = productProvider.products.fold(
-      0.0,
-      (sum, p) => sum + (p.sellPrice * p.stockQty),
-    );
 
     // Distinct debtors with an outstanding balance - same grouping
     // logic as the Debtors screen's own "Total Debtors" count.
@@ -3391,15 +3374,6 @@ Widget _buildDrawerContent() {
           ],
         );
       },
-    );
-  }
-
-  // --------------------- DRAWER ITEM ---------------------
-  Widget _drawerItem(IconData icon, String title, Widget page) {
-    return ListTile(
-      leading: Icon(icon, color: context.colors.background),
-      title: Text(title, style: TextStyle(color: context.colors.background)),
-      onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => page)),
     );
   }
 

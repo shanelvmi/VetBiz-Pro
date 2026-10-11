@@ -81,7 +81,6 @@ class _ActivityLogScreenState extends State<ActivityLogScreen> {
   // on every rebuild - the reported flicker while scrolling. Cached
   // here instead, created once per facilityId.
   Stream<List<LogDoc>>? _logStream;
-  String? _logStreamFacilityId;
 
   // Same fix as _logStream above, for the second place this file had
   // the identical bug: _buildActionSummary built its own `.snapshots()`
@@ -91,7 +90,6 @@ class _ActivityLogScreenState extends State<ActivityLogScreen> {
   // state (a blank SizedBox.shrink()) and back on each one. Cached here
   // instead, created once per facilityId, exactly like _logStream.
   Stream<List<LogDoc>>? _actionSummaryStream;
-  String? _actionSummaryStreamFacilityId;
 
   // Guards _cleanupOldLogs so it actually runs once per facility per
   // session, as its own comment already claimed - previously had no
@@ -124,9 +122,7 @@ class _ActivityLogScreenState extends State<ActivityLogScreen> {
       _retentionDays = null;
       _retentionLoadedForFacilityId = null;
       _logStream = null;
-      _logStreamFacilityId = null;
       _actionSummaryStream = null;
-      _actionSummaryStreamFacilityId = null;
       _cleanupRanForFacilityId = null;
     });
   }
@@ -211,9 +207,6 @@ class _ActivityLogScreenState extends State<ActivityLogScreen> {
     // Newest first, inside the retention window.
     Query<Map<String, dynamic>> windowed(Query<Map<String, dynamic>> q) =>
         q.where('timestamp', isGreaterThanOrEqualTo: cutoff).orderBy('timestamp', descending: true);
-
-    _logStreamFacilityId = facilityId;
-    _actionSummaryStreamFacilityId = facilityId;
 
     if (isAdmin) {
       _logStream = windowed(logs).limit(AppLimits.ledgerQueryCap).snapshots().map((s) => s.docs); // performance limit

@@ -29,7 +29,6 @@ class _AddClientScreenState extends State<AddClientScreen> {
   String _name = '';
   String _phone = '';
   String _address = '';
-  double _balance = 0.0;
   String? _notes;
 
   // Client categorization - a client can genuinely be more than one
@@ -83,7 +82,6 @@ class _AddClientScreenState extends State<AddClientScreen> {
       _name = c.name;
       _phone = c.phone;
       _address = c.address;
-      _balance = c.balance;
 
       _selectedTypes.addAll(c.types);
       _farmerSubType = c.farmerSubType;

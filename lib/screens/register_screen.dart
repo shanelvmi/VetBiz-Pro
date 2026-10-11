@@ -310,7 +310,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
   final phone = phoneController.text.trim();
   final password = passwordController.text.trim();
   final confirmPassword = confirmPasswordController.text.trim();
-  final roleLower = selectedRole.toLowerCase();
 
   try {
     // ---------------- Validation ----------------

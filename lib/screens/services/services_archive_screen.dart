@@ -177,11 +177,6 @@ class _ServicesArchiveScreenState extends State<ServicesArchiveScreen> {
     if (mounted) setState(() => _isLoadingMore = false);
   }
 
-  String _invoiceNo(Map<String, dynamic> service) {
-    final receiptNumber = service['receiptNumber'];
-    return 'SV-${(receiptNumber ?? 0).toString().padLeft(6, '0')}';
-  }
-
   String _getPaymentStatus(double paid, double total) {
     if (paid >= total) return 'Paid';
     if (paid > 0) return 'Partial';

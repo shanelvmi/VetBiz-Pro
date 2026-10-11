@@ -61,7 +61,6 @@ class _FacilityScreenState extends State<FacilityScreen> {
   // session (Manage Assistants, Sales, Products, Services). Matches
   // on name and code, since those are the two things someone actually
   // remembers about a specific facility.
-  bool _isSearchExpanded = false;
   String _searchQuery = '';
 
   // Master-detail state - which facility's detail panel is showing,
@@ -180,7 +179,6 @@ class _FacilityScreenState extends State<FacilityScreen> {
       final tagline = facilityDoc.data()?['tagline'] as String?;
       final licenseNo = facilityDoc.data()?['licenseNo'] as String?;
       final tin = facilityDoc.data()?['tin'] as String?;
-      final ownership = facilityDoc.data()?['ownership'] as String?;
       final status = facilityDoc.data()?[Fields.status] as String? ?? FacilityStatus.active.key;
       final createdAtTs = facilityDoc.data()?[Fields.createdAt] as Timestamp?;
       final updatedAtTs = facilityDoc.data()?[Fields.updatedAt] as Timestamp?;
@@ -1211,16 +1209,6 @@ class _FacilityScreenState extends State<FacilityScreen> {
     }
   }
 
-  Widget _statColumn(String value, String label) {
-    return Column(
-      children: [
-        Text(value, style: TextStyle(fontSize: AppFontSize.f15, fontWeight: AppFontWeight.bold, color: context.colors.primary)),
-        const SizedBox(height: AppSpacing.s2),
-        Text(label, style: TextStyle(fontSize: AppFontSize.f11, color: context.colors.textMuted), textAlign: TextAlign.center),
-      ],
-    );
-  }
-
   /// "1,200,000" -> "1.2M", "45,000" -> "45K" - keeps the stats row
   /// readable at a glance instead of a long, precise figure that
   /// doesn't matter for a quick "how's this shop doing" check.
@@ -1249,7 +1237,6 @@ class _FacilityScreenState extends State<FacilityScreen> {
   }
 
 
-  @override
   PreferredSizeWidget _buildAppBar() {
     return AppBar(
       backgroundColor: context.colors.surface,
@@ -1543,13 +1530,6 @@ class _FacilityScreenState extends State<FacilityScreen> {
   }
 
   // ==================== DETAIL PANEL ====================
-
-  Widget _buildDetailPanel(Map<String, dynamic> facility) {
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(AppSpacing.s20),
-      child: _buildDetailPanelContent(facility),
-    );
-  }
 
   Widget _buildDetailPanelContent(Map<String, dynamic> facility) {
     return Column(

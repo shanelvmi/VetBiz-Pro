@@ -553,8 +553,8 @@ Future<void> _showPromotionEditor(BuildContext context, {Promotion? existing}) a
   };
 
   if (isEditing) {
-    await FirebaseFirestore.instance.collection(Collections.promotions).doc(existing!.id).update(promotionData);
-    if (activateImmediately) await setActivePromotion(existing!.id);
+    await FirebaseFirestore.instance.collection(Collections.promotions).doc(existing.id).update(promotionData);
+    if (activateImmediately) await setActivePromotion(existing.id);
   } else {
     final docRef = await FirebaseFirestore.instance.collection(Collections.promotions).add({
       ...promotionData,
