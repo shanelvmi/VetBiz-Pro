@@ -1689,4 +1689,82 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get debtors_detailsTitle => 'Debtor Details';
+
+  @override
+  String get debtors_overdueAmount => 'Overdue Amount';
+
+  @override
+  String get debtors_lastTransaction => 'Last Transaction';
+
+  @override
+  String debtors_outstandingDebts(int count) {
+    return 'Outstanding Debts ($count)';
+  }
+
+  @override
+  String get debtors_addNote => 'Add Note';
+
+  @override
+  String debtors_invoiceLine(String invoice, String date) {
+    return 'Invoice: $invoice • $date';
+  }
+
+  @override
+  String get debtors_pay => 'Pay';
+
+  @override
+  String get debtors_exportFailed => 'Couldn\'t export the active debts';
+
+  @override
+  String get debtors_noteHint => 'e.g. Promised to pay by Friday';
+
+  @override
+  String get debtors_noteSaveFailed => 'Couldn\'t save the note';
+
+  @override
+  String debtors_reminderBody(String name, String amount) {
+    return 'Remind $name about their $amount balance via:';
+  }
+
+  @override
+  String get debtors_viaSms => 'SMS';
+
+  @override
+  String get debtors_viaWhatsApp => 'WhatsApp';
+
+  @override
+  String get debtors_whatsAppFailed => 'Couldn\'t open WhatsApp';
+
+  @override
+  String get debtors_messagesFailed => 'Couldn\'t open Messages';
+
+  @override
+  String get debtors_reminderFailed => 'Couldn\'t send the reminder';
+
+  @override
+  String get debtors_errChooseDebtor => 'Choose the debtor this payment is for';
+
+  @override
+  String debtors_errNoMatch(String name) {
+    return 'No debtor found with the name \"$name\"';
+  }
+
+  @override
+  String get debtors_errTooShort =>
+      'Type at least 2 letters of the debtor\'s name';
+
+  @override
+  String get debtors_errPickSuggestion =>
+      'Choose a debtor from the suggestions';
+
+  @override
+  String debtors_clientLabel(String name) {
+    return 'Client: $name';
+  }
+
+  @override
+  String get debtors_totalOwedLabel => 'Total owed:';
+
+  @override
+  String get debtors_selectPaymentMethod => 'Select how this payment was made';
 }

@@ -3145,6 +3145,138 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Debtor Details'**
   String get debtors_detailsTitle;
+
+  /// Details panel row.
+  ///
+  /// In en, this message translates to:
+  /// **'Overdue Amount'**
+  String get debtors_overdueAmount;
+
+  /// Details panel row: date of the latest debt.
+  ///
+  /// In en, this message translates to:
+  /// **'Last Transaction'**
+  String get debtors_lastTransaction;
+
+  /// Details panel heading with the number of debts.
+  ///
+  /// In en, this message translates to:
+  /// **'Outstanding Debts ({count})'**
+  String debtors_outstandingDebts(int count);
+
+  /// Button and dialog title for a note on a debtor.
+  ///
+  /// In en, this message translates to:
+  /// **'Add Note'**
+  String get debtors_addNote;
+
+  /// One debt in the details panel: invoice number and date.
+  ///
+  /// In en, this message translates to:
+  /// **'Invoice: {invoice} • {date}'**
+  String debtors_invoiceLine(String invoice, String date);
+
+  /// Button that pays one debt.
+  ///
+  /// In en, this message translates to:
+  /// **'Pay'**
+  String get debtors_pay;
+
+  /// Message when the export failed.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t export the active debts'**
+  String get debtors_exportFailed;
+
+  /// Add Note field hint.
+  ///
+  /// In en, this message translates to:
+  /// **'e.g. Promised to pay by Friday'**
+  String get debtors_noteHint;
+
+  /// Message when saving a note failed.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t save the note'**
+  String get debtors_noteSaveFailed;
+
+  /// Send Reminder dialog text; amount is pre-formatted money.
+  ///
+  /// In en, this message translates to:
+  /// **'Remind {name} about their {amount} balance via:'**
+  String debtors_reminderBody(String name, String amount);
+
+  /// Send Reminder dialog: send by text message.
+  ///
+  /// In en, this message translates to:
+  /// **'SMS'**
+  String get debtors_viaSms;
+
+  /// Send Reminder dialog: send by WhatsApp.
+  ///
+  /// In en, this message translates to:
+  /// **'WhatsApp'**
+  String get debtors_viaWhatsApp;
+
+  /// Message when WhatsApp could not be opened.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t open WhatsApp'**
+  String get debtors_whatsAppFailed;
+
+  /// Message when the text-message app could not be opened.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t open Messages'**
+  String get debtors_messagesFailed;
+
+  /// Message when opening the reminder failed.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t send the reminder'**
+  String get debtors_reminderFailed;
+
+  /// Payment form: debtor field left empty.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose the debtor this payment is for'**
+  String get debtors_errChooseDebtor;
+
+  /// Payment form: the typed name matches no debtor.
+  ///
+  /// In en, this message translates to:
+  /// **'No debtor found with the name \"{name}\"'**
+  String debtors_errNoMatch(String name);
+
+  /// Payment form: too little typed to search.
+  ///
+  /// In en, this message translates to:
+  /// **'Type at least 2 letters of the debtor\'s name'**
+  String get debtors_errTooShort;
+
+  /// Payment form: a name was typed but not picked from the list.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose a debtor from the suggestions'**
+  String get debtors_errPickSuggestion;
+
+  /// Payment form header: the debtor's name.
+  ///
+  /// In en, this message translates to:
+  /// **'Client: {name}'**
+  String debtors_clientLabel(String name);
+
+  /// Payment form header, before the amount (shown in red after it).
+  ///
+  /// In en, this message translates to:
+  /// **'Total owed:'**
+  String get debtors_totalOwedLabel;
+
+  /// Message when no payment method is chosen.
+  ///
+  /// In en, this message translates to:
+  /// **'Select how this payment was made'**
+  String get debtors_selectPaymentMethod;
 }
 
 class _AppLocalizationsDelegate

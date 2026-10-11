@@ -1700,4 +1700,83 @@ class AppLocalizationsSw extends AppLocalizations {
 
   @override
   String get debtors_detailsTitle => 'Maelezo ya Mdaiwa';
+
+  @override
+  String get debtors_overdueAmount => 'Kiasi Kilichochelewa';
+
+  @override
+  String get debtors_lastTransaction => 'Muamala wa Mwisho';
+
+  @override
+  String debtors_outstandingDebts(int count) {
+    return 'Madeni Yanayodaiwa ($count)';
+  }
+
+  @override
+  String get debtors_addNote => 'Ongeza Maelezo';
+
+  @override
+  String debtors_invoiceLine(String invoice, String date) {
+    return 'Ankara: $invoice • $date';
+  }
+
+  @override
+  String get debtors_pay => 'Lipa';
+
+  @override
+  String get debtors_exportFailed =>
+      'Imeshindwa kuhamisha madeni yanayoendelea';
+
+  @override
+  String get debtors_noteHint => 'mf. Ameahidi kulipa kufikia Ijumaa';
+
+  @override
+  String get debtors_noteSaveFailed => 'Imeshindwa kuhifadhi maelezo';
+
+  @override
+  String debtors_reminderBody(String name, String amount) {
+    return 'Mkumbushe $name kuhusu salio lake la $amount kupitia:';
+  }
+
+  @override
+  String get debtors_viaSms => 'SMS';
+
+  @override
+  String get debtors_viaWhatsApp => 'WhatsApp';
+
+  @override
+  String get debtors_whatsAppFailed => 'Imeshindwa kufungua WhatsApp';
+
+  @override
+  String get debtors_messagesFailed => 'Imeshindwa kufungua Ujumbe';
+
+  @override
+  String get debtors_reminderFailed => 'Imeshindwa kutuma ukumbusho';
+
+  @override
+  String get debtors_errChooseDebtor => 'Chagua mdaiwa wa malipo haya';
+
+  @override
+  String debtors_errNoMatch(String name) {
+    return 'Hakuna mdaiwa aliyepatikana kwa jina \"$name\"';
+  }
+
+  @override
+  String get debtors_errTooShort => 'Andika angalau herufi 2 za jina la mdaiwa';
+
+  @override
+  String get debtors_errPickSuggestion =>
+      'Chagua mdaiwa kutoka kwenye mapendekezo';
+
+  @override
+  String debtors_clientLabel(String name) {
+    return 'Mteja: $name';
+  }
+
+  @override
+  String get debtors_totalOwedLabel => 'Jumla inayodaiwa:';
+
+  @override
+  String get debtors_selectPaymentMethod =>
+      'Chagua jinsi malipo haya yalivyofanywa';
 }
