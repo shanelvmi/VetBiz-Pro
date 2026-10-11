@@ -2119,4 +2119,87 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get team_approve => 'Approve';
+
+  @override
+  String get team_reject => 'Reject';
+
+  @override
+  String get team_deactivate => 'Deactivate';
+
+  @override
+  String get team_reactivate => 'Reactivate';
+
+  @override
+  String get team_reassign => 'Reassign';
+
+  @override
+  String get team_removeFromFacility => 'Remove from Facility';
+
+  @override
+  String get team_removeFromFacilityConfirm => 'Remove from facility';
+
+  @override
+  String team_deactivateTitle(String name) {
+    return 'Deactivate $name?';
+  }
+
+  @override
+  String get team_deactivateBody =>
+      'They\'ll be signed out straight away and can\'t log in until you reactivate them. This doesn\'t change their role - only the platform administrator can do that.';
+
+  @override
+  String get team_updateStatusFailed => 'Couldn\'t update the status';
+
+  @override
+  String team_facilityCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count facilities',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String team_removeTitle(String name, String facility) {
+    return 'Remove $name from $facility?';
+  }
+
+  @override
+  String team_removePoint1(String name, String facility) {
+    return '$name will no longer be part of $facility, and won\'t see its records.';
+  }
+
+  @override
+  String team_removePoint2(String name, String facility) {
+    return 'What $name recorded stays in $facility\'s history.';
+  }
+
+  @override
+  String get team_removePoint3 =>
+      'Their account is kept. When they next sign in they can enter an invite code to join a facility again.';
+
+  @override
+  String team_rejectTitle(String name) {
+    return 'Reject $name?';
+  }
+
+  @override
+  String team_rejectPoint1(String name, String facility) {
+    return '$name is removed from $facility and is no longer waiting for approval.';
+  }
+
+  @override
+  String get team_rejectPoint2 =>
+      'When they next sign in they\'ll see the request wasn\'t approved, and be asked for an invite code - they can join again with a new one.';
+
+  @override
+  String get team_rejectPoint3 =>
+      'They aren\'t sent a message. Tell them yourself if you\'d like them to know.';
+
+  @override
+  String get team_title => 'Team Members';
+
+  @override
+  String get team_subtitle => 'Manage your team\'s access and status';
 }

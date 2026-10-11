@@ -2131,4 +2131,87 @@ class AppLocalizationsSw extends AppLocalizations {
 
   @override
   String get team_approve => 'Idhinisha';
+
+  @override
+  String get team_reject => 'Kataa';
+
+  @override
+  String get team_deactivate => 'Simamisha';
+
+  @override
+  String get team_reactivate => 'Rejesha';
+
+  @override
+  String get team_reassign => 'Hamisha';
+
+  @override
+  String get team_removeFromFacility => 'Ondoa Kwenye Kituo';
+
+  @override
+  String get team_removeFromFacilityConfirm => 'Ondoa kwenye kituo';
+
+  @override
+  String team_deactivateTitle(String name) {
+    return 'Msimamishe $name?';
+  }
+
+  @override
+  String get team_deactivateBody =>
+      'Atatolewa mara moja na hataweza kuingia hadi umrejeshe. Hii haibadilishi nafasi yake - ni msimamizi wa jukwaa pekee anayeweza kufanya hivyo.';
+
+  @override
+  String get team_updateStatusFailed => 'Imeshindwa kusasisha hali';
+
+  @override
+  String team_facilityCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Vituo $count',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String team_removeTitle(String name, String facility) {
+    return 'Mwondoe $name kwenye $facility?';
+  }
+
+  @override
+  String team_removePoint1(String name, String facility) {
+    return '$name hatakuwa tena sehemu ya $facility, na hataona kumbukumbu zake.';
+  }
+
+  @override
+  String team_removePoint2(String name, String facility) {
+    return 'Alichorekodi $name kinabaki kwenye historia ya $facility.';
+  }
+
+  @override
+  String get team_removePoint3 =>
+      'Akaunti yake inabaki. Akiingia tena anaweza kuweka msimbo wa mwaliko ili ajiunge na kituo tena.';
+
+  @override
+  String team_rejectTitle(String name) {
+    return 'Mkatae $name?';
+  }
+
+  @override
+  String team_rejectPoint1(String name, String facility) {
+    return '$name ameondolewa kwenye $facility na hasubiri tena idhini.';
+  }
+
+  @override
+  String get team_rejectPoint2 =>
+      'Akiingia tena ataona ombi halikuidhinishwa, na ataombwa msimbo wa mwaliko - anaweza kujiunga tena kwa msimbo mpya.';
+
+  @override
+  String get team_rejectPoint3 =>
+      'Hatumiwi ujumbe. Mwambie mwenyewe ukipenda ajue.';
+
+  @override
+  String get team_title => 'Wafanyakazi';
+
+  @override
+  String get team_subtitle => 'Simamia ruhusa na hali ya wafanyakazi wako';
 }

@@ -3877,6 +3877,126 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Approve'**
   String get team_approve;
+
+  /// Button (and confirm button) that rejects a waiting assistant.
+  ///
+  /// In en, this message translates to:
+  /// **'Reject'**
+  String get team_reject;
+
+  /// Button that pauses a team member's access.
+  ///
+  /// In en, this message translates to:
+  /// **'Deactivate'**
+  String get team_deactivate;
+
+  /// Button that gives a paused team member access again.
+  ///
+  /// In en, this message translates to:
+  /// **'Reactivate'**
+  String get team_reactivate;
+
+  /// Button that moves an assistant to another facility.
+  ///
+  /// In en, this message translates to:
+  /// **'Reassign'**
+  String get team_reassign;
+
+  /// Button that removes a paused assistant from the facility.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove from Facility'**
+  String get team_removeFromFacility;
+
+  /// Confirm button in the remove dialog.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove from facility'**
+  String get team_removeFromFacilityConfirm;
+
+  /// Deactivate co-admin dialog title.
+  ///
+  /// In en, this message translates to:
+  /// **'Deactivate {name}?'**
+  String team_deactivateTitle(String name);
+
+  /// Deactivate co-admin dialog text.
+  ///
+  /// In en, this message translates to:
+  /// **'They\'ll be signed out straight away and can\'t log in until you reactivate them. This doesn\'t change their role - only the platform administrator can do that.'**
+  String get team_deactivateBody;
+
+  /// Message when changing a co-admin's status failed.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t update the status'**
+  String get team_updateStatusFailed;
+
+  /// Facility cell of an admin who runs several facilities.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, other{{count} facilities}}'**
+  String team_facilityCount(int count);
+
+  /// Remove dialog title.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove {name} from {facility}?'**
+  String team_removeTitle(String name, String facility);
+
+  /// Remove dialog, first point.
+  ///
+  /// In en, this message translates to:
+  /// **'{name} will no longer be part of {facility}, and won\'t see its records.'**
+  String team_removePoint1(String name, String facility);
+
+  /// Remove dialog, second point.
+  ///
+  /// In en, this message translates to:
+  /// **'What {name} recorded stays in {facility}\'s history.'**
+  String team_removePoint2(String name, String facility);
+
+  /// Remove dialog, third point.
+  ///
+  /// In en, this message translates to:
+  /// **'Their account is kept. When they next sign in they can enter an invite code to join a facility again.'**
+  String get team_removePoint3;
+
+  /// Reject dialog title.
+  ///
+  /// In en, this message translates to:
+  /// **'Reject {name}?'**
+  String team_rejectTitle(String name);
+
+  /// Reject dialog, first point.
+  ///
+  /// In en, this message translates to:
+  /// **'{name} is removed from {facility} and is no longer waiting for approval.'**
+  String team_rejectPoint1(String name, String facility);
+
+  /// Reject dialog, second point.
+  ///
+  /// In en, this message translates to:
+  /// **'When they next sign in they\'ll see the request wasn\'t approved, and be asked for an invite code - they can join again with a new one.'**
+  String get team_rejectPoint2;
+
+  /// Reject dialog, third point.
+  ///
+  /// In en, this message translates to:
+  /// **'They aren\'t sent a message. Tell them yourself if you\'d like them to know.'**
+  String get team_rejectPoint3;
+
+  /// Team screen title.
+  ///
+  /// In en, this message translates to:
+  /// **'Team Members'**
+  String get team_title;
+
+  /// Team screen subtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Manage your team\'s access and status'**
+  String get team_subtitle;
 }
 
 class _AppLocalizationsDelegate
