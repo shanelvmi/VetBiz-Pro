@@ -2215,6 +2215,126 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'No submissions yet.'**
   String get subscription_noSubmissionsYetDot;
+
+  /// Link to the full Subscription history.
+  ///
+  /// In en, this message translates to:
+  /// **'View all'**
+  String get subscription_viewAll;
+
+  /// Message when Submit is pressed without a reference.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter the payment reference / confirmation code'**
+  String get subscription_enterReference;
+
+  /// Message after a payment is submitted.
+  ///
+  /// In en, this message translates to:
+  /// **'Payment submitted'**
+  String get subscription_submitted;
+
+  /// Second line of the message after a payment is submitted.
+  ///
+  /// In en, this message translates to:
+  /// **'It will be reviewed and confirmed shortly'**
+  String get subscription_submittedDetail;
+
+  /// Message when submitting a payment failed.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t submit the payment'**
+  String get subscription_submitFailed;
+
+  /// Why a payment was rejected (text typed by the reviewer).
+  ///
+  /// In en, this message translates to:
+  /// **'Reason: {reason}'**
+  String subscription_rejectReason(String reason);
+
+  /// A rejected payment with no reason.
+  ///
+  /// In en, this message translates to:
+  /// **'No reason was given'**
+  String get subscription_noReason;
+
+  /// Subscription history screen title.
+  ///
+  /// In en, this message translates to:
+  /// **'Subscription History'**
+  String get subscription_historyTitle;
+
+  /// Subscription history subtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Your payments and their review status'**
+  String get subscription_historySubtitle;
+
+  /// Subscription history failed to load (error already in friendly words).
+  ///
+  /// In en, this message translates to:
+  /// **'Could not load history: {error}'**
+  String subscription_historyLoadError(String error);
+
+  /// Subscription history, empty.
+  ///
+  /// In en, this message translates to:
+  /// **'No submissions yet'**
+  String get subscription_noSubmissionsYet;
+
+  /// Subscription history, empty: second line.
+  ///
+  /// In en, this message translates to:
+  /// **'Payments you submit will be listed here.'**
+  String get subscription_noSubmissionsHint;
+
+  /// Subscription history summary card.
+  ///
+  /// In en, this message translates to:
+  /// **'Total Submissions'**
+  String get subscription_totalSubmissions;
+
+  /// Subscription history summary card hint.
+  ///
+  /// In en, this message translates to:
+  /// **'All payments'**
+  String get subscription_allPayments;
+
+  /// Subscription history: card hint and a waiting payment.
+  ///
+  /// In en, this message translates to:
+  /// **'Awaiting review'**
+  String get subscription_awaitingReviewLower;
+
+  /// Subscription history: Rejected card hint.
+  ///
+  /// In en, this message translates to:
+  /// **'Not accepted'**
+  String get subscription_notAccepted;
+
+  /// Subscription history search hint.
+  ///
+  /// In en, this message translates to:
+  /// **'Search by plan, method, reference or reason...'**
+  String get subscription_searchHint;
+
+  /// Subscription history: plan filter and column header.
+  ///
+  /// In en, this message translates to:
+  /// **'Plan'**
+  String get subscription_plan;
+
+  /// Subscription history: filters hide everything.
+  ///
+  /// In en, this message translates to:
+  /// **'No submissions match your filters'**
+  String get subscription_noMatches;
+
+  /// Subscription history column header: when it was sent.
+  ///
+  /// In en, this message translates to:
+  /// **'Submitted'**
+  String get subscription_colSubmitted;
 }
 
 class _AppLocalizationsDelegate

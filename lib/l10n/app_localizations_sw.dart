@@ -1135,4 +1135,74 @@ class AppLocalizationsSw extends AppLocalizations {
   @override
   String get subscription_noSubmissionsYetDot =>
       'Bado hakuna malipo yaliyotumwa.';
+
+  @override
+  String get subscription_viewAll => 'Tazama yote';
+
+  @override
+  String get subscription_enterReference =>
+      'Weka namba ya kumbukumbu / uthibitisho wa malipo';
+
+  @override
+  String get subscription_submitted => 'Malipo yametumwa';
+
+  @override
+  String get subscription_submittedDetail =>
+      'Yatakaguliwa na kuthibitishwa hivi karibuni';
+
+  @override
+  String get subscription_submitFailed => 'Imeshindwa kutuma malipo';
+
+  @override
+  String subscription_rejectReason(String reason) {
+    return 'Sababu: $reason';
+  }
+
+  @override
+  String get subscription_noReason => 'Hakuna sababu iliyotolewa';
+
+  @override
+  String get subscription_historyTitle => 'Historia ya Usajili';
+
+  @override
+  String get subscription_historySubtitle =>
+      'Malipo yako na hali ya ukaguzi wake';
+
+  @override
+  String subscription_historyLoadError(String error) {
+    return 'Imeshindwa kupakia historia: $error';
+  }
+
+  @override
+  String get subscription_noSubmissionsYet => 'Bado hakuna malipo yaliyotumwa';
+
+  @override
+  String get subscription_noSubmissionsHint =>
+      'Malipo utakayotuma yataonekana hapa.';
+
+  @override
+  String get subscription_totalSubmissions => 'Jumla ya Malipo Yaliyotumwa';
+
+  @override
+  String get subscription_allPayments => 'Malipo yote';
+
+  @override
+  String get subscription_awaitingReviewLower => 'Inasubiri ukaguzi';
+
+  @override
+  String get subscription_notAccepted => 'Hayakukubaliwa';
+
+  @override
+  String get subscription_searchHint =>
+      'Tafuta kwa mpango, njia, kumbukumbu au sababu...';
+
+  @override
+  String get subscription_plan => 'Mpango';
+
+  @override
+  String get subscription_noMatches =>
+      'Hakuna malipo yanayolingana na vichujio vyako';
+
+  @override
+  String get subscription_colSubmitted => 'Yalitumwa';
 }

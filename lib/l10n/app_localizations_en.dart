@@ -1130,4 +1130,73 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get subscription_noSubmissionsYetDot => 'No submissions yet.';
+
+  @override
+  String get subscription_viewAll => 'View all';
+
+  @override
+  String get subscription_enterReference =>
+      'Enter the payment reference / confirmation code';
+
+  @override
+  String get subscription_submitted => 'Payment submitted';
+
+  @override
+  String get subscription_submittedDetail =>
+      'It will be reviewed and confirmed shortly';
+
+  @override
+  String get subscription_submitFailed => 'Couldn\'t submit the payment';
+
+  @override
+  String subscription_rejectReason(String reason) {
+    return 'Reason: $reason';
+  }
+
+  @override
+  String get subscription_noReason => 'No reason was given';
+
+  @override
+  String get subscription_historyTitle => 'Subscription History';
+
+  @override
+  String get subscription_historySubtitle =>
+      'Your payments and their review status';
+
+  @override
+  String subscription_historyLoadError(String error) {
+    return 'Could not load history: $error';
+  }
+
+  @override
+  String get subscription_noSubmissionsYet => 'No submissions yet';
+
+  @override
+  String get subscription_noSubmissionsHint =>
+      'Payments you submit will be listed here.';
+
+  @override
+  String get subscription_totalSubmissions => 'Total Submissions';
+
+  @override
+  String get subscription_allPayments => 'All payments';
+
+  @override
+  String get subscription_awaitingReviewLower => 'Awaiting review';
+
+  @override
+  String get subscription_notAccepted => 'Not accepted';
+
+  @override
+  String get subscription_searchHint =>
+      'Search by plan, method, reference or reason...';
+
+  @override
+  String get subscription_plan => 'Plan';
+
+  @override
+  String get subscription_noMatches => 'No submissions match your filters';
+
+  @override
+  String get subscription_colSubmitted => 'Submitted';
 }
