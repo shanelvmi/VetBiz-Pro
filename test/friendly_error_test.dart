@@ -2,8 +2,10 @@ import 'dart:async';
 
 import 'package:cloud_functions/cloud_functions.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+import 'package:vetbiz_pro/l10n/l10n.dart';
 import 'package:vetbiz_pro/ui/feedback/auth_error_messages.dart';
 import 'package:vetbiz_pro/ui/feedback/friendly_error.dart';
 
@@ -115,5 +117,17 @@ void main() {
         'permission-denied: [cloud_firestore/permission-denied] The caller does not have permission (raw)');
     expect(FriendlyError.detailsFor(FirebaseException(plugin: 'p', code: 'x')), 'x');
     expect(FriendlyError.detailsFor(StateError('bad')), 'Bad state: bad');
+  });
+
+  test('messages follow the chosen language; the mapping does not change', () {
+    addTearDown(() => L10n.setLocale(const Locale('en')));
+    L10n.setLocale(const Locale('sw'));
+    final sw = lookupAppLocalizations(const Locale('sw'));
+    expect(FriendlyError.messageFor(_firestore('permission-denied')), sw.error_noPermission);
+    expect(FriendlyError.messageFor(_firestore('aborted')), sw.error_generic);
+    expect(FriendlyError.messageFor(FirebaseAuthException(code: 'wrong-password')), sw.login_wrongCredentials);
+    expect(FriendlyError.messageFor(FirebaseAuthException(code: 'network-request-failed')), sw.error_noConnection);
+    // Our server's own text is shown as it arrives (spec 2.8: server messages).
+    expect(FriendlyError.messageFor(_FunctionsError('failed-precondition', 'Limit reached.')), 'Limit reached.');
   });
 }

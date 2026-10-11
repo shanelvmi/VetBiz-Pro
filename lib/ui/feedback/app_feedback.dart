@@ -8,6 +8,7 @@ import '../../theme/app_colors.dart';
 import '../../theme/app_dimens.dart';
 import '../../theme/app_motion.dart';
 import '../../theme/app_palette.dart';
+import '../../l10n/l10n.dart';
 import '../../theme/app_text.dart';
 import 'friendly_error.dart';
 
@@ -19,6 +20,9 @@ import 'friendly_error.dart';
 /// [messengerKey], so a call works after an `await`, and after the screen
 /// that made it is gone. Every call is safe at any time and does nothing
 /// if the app isn't up yet.
+///
+/// Its own words (Retry, Undo, Details, Copy, Close) come from L10n.current,
+/// like the calls themselves, which have no context to look them up from.
 ///
 /// One message at a time, bottom-centre: a new one replaces the current
 /// one, never queues behind it.
@@ -59,7 +63,7 @@ class AppFeedback {
       title,
       detail: detail ?? (error == null ? null : FriendlyError.messageFor(error)),
       technical: error == null ? null : FriendlyError.detailsFor(error),
-      actionLabel: onRetry == null ? null : 'Retry',
+      actionLabel: onRetry == null ? null : L10n.current.common_retry,
       onAction: onRetry,
     );
   }
@@ -67,7 +71,7 @@ class AppFeedback {
   /// Something was moved to Trash and can be put back ("Client moved to
   /// Trash"). Only for soft deletes.
   static void undo(String message, {required VoidCallback onUndo}) =>
-      _show(_Kind.undo, message, actionLabel: 'Undo', onAction: onUndo);
+      _show(_Kind.undo, message, actionLabel: L10n.current.common_undo, onAction: onUndo);
 
   static void _show(
     _Kind kind,
@@ -202,7 +206,7 @@ class _FeedbackCardState extends State<_FeedbackCard> {
     await showDialog<void>(
       context: context,
       builder: (dialogContext) => AlertDialog(
-        title: const Text('Details'),
+        title: Text(L10n.current.common_details),
         // Dialogs need a width limit, or they stretch across a desktop.
         content: ConstrainedBox(
           constraints: const BoxConstraints(maxWidth: AppSizes.dialogMd),
@@ -211,11 +215,11 @@ class _FeedbackCardState extends State<_FeedbackCard> {
         actions: [
           TextButton(
             onPressed: () => Clipboard.setData(ClipboardData(text: text)),
-            child: const Text('Copy'),
+            child: Text(L10n.current.common_copy),
           ),
           TextButton(
             onPressed: () => Navigator.of(dialogContext).pop(),
-            child: const Text('Close'),
+            child: Text(L10n.current.common_close),
           ),
         ],
       ),
@@ -278,7 +282,7 @@ class _FeedbackCardState extends State<_FeedbackCard> {
               TextButton(
                 style: buttonStyle.copyWith(foregroundColor: WidgetStatePropertyAll(c.textSecondary)),
                 onPressed: _showDetails,
-                child: const Text('Details'),
+                child: Text(L10n.current.common_details),
               ),
             if (widget.onAction != null)
               TextButton(
@@ -287,7 +291,7 @@ class _FeedbackCardState extends State<_FeedbackCard> {
                 child: Text(widget.actionLabel ?? '', style: const TextStyle(fontWeight: AppFontWeight.semibold)),
               ),
             IconButton(
-              tooltip: 'Close',
+              tooltip: L10n.current.common_close,
               iconSize: AppIconSize.i16,
               constraints: const BoxConstraints(minWidth: AppSizes.minTapTarget, minHeight: AppSizes.minTapTarget),
               color: c.textSecondary,

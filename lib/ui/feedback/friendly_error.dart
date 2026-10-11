@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:cloud_functions/cloud_functions.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
+import '../../l10n/l10n.dart';
 import 'auth_error_messages.dart';
 
 /// Turns an error into one sentence a person can read, and keeps the
@@ -13,13 +14,15 @@ import 'auth_error_messages.dart';
 class FriendlyError {
   FriendlyError._();
 
-  static const String fallback = 'Something went wrong. Try again.';
-  static const String noPermission = "You don't have permission to do that.";
-  static const String noConnection = 'No connection. Check your internet and try again.';
-  static const String tooSlow = 'That took too long. Try again.';
-  static const String notFound = 'That item no longer exists.';
-  static const String alreadyExists = 'That already exists.';
-  static const String tooManyRequests = 'Too many requests. Wait a moment and try again.';
+  // In the current language (L10n.current): these are often read after an
+  // await, with no BuildContext. The English texts are in lib/l10n/app_en.arb.
+  static String get fallback => L10n.current.error_generic;
+  static String get noPermission => L10n.current.error_noPermission;
+  static String get noConnection => L10n.current.error_noConnection;
+  static String get tooSlow => L10n.current.error_tooSlow;
+  static String get notFound => L10n.current.error_notFound;
+  static String get alreadyExists => L10n.current.error_alreadyExists;
+  static String get tooManyRequests => L10n.current.error_rateLimited;
 
   /// One sentence for [error].
   static String messageFor(Object error) => _clean(_map(error));
