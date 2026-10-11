@@ -12,6 +12,8 @@ import '../../widgets/firestore_error_view.dart';
 import '../../theme/activity_type_style.dart';
 import '../../theme/theme_context.dart';
 import '../../theme/app_palette.dart';
+import '../../theme/app_dimens.dart';
+import '../../theme/app_text.dart';
 import '../../ui/feedback/app_feedback.dart';
 import '../../data/activity_type.dart';
 import '../../data/collections.dart';
@@ -357,17 +359,17 @@ class _ActivityLogScreenState extends State<ActivityLogScreen> {
 
     if (facilityId == null) {
       return Scaffold(
-        backgroundColor: offWhite,
+        backgroundColor: context.colors.background,
         appBar: AppBar(
-          title: const Text('Activity Log', style: TextStyle(color: Colors.black87)),
-          backgroundColor: Colors.white,
-          foregroundColor: Colors.black87,
-          elevation: 1,
+          title: Text('Activity Log', style: TextStyle(color: context.colors.textPrimary)),
+          backgroundColor: context.colors.surface,
+          foregroundColor: context.colors.textPrimary,
+          elevation: AppElevation.e1,
           centerTitle: true,
           automaticallyImplyLeading: !widget.isModal,
           leading: widget.isModal
               ? IconButton(
-                  icon: const Icon(Icons.close, color: Colors.black87),
+                  icon: Icon(Icons.close, color: context.colors.textPrimary),
                   tooltip: 'Close',
                   onPressed: () => Navigator.of(context).pop(),
                 )
@@ -389,7 +391,7 @@ class _ActivityLogScreenState extends State<ActivityLogScreen> {
     _ensureInitializedForFacility(facilityId, isAdmin: isAdmin);
 
     return Scaffold(
-      backgroundColor: offWhite,
+      backgroundColor: context.colors.background,
       appBar: _buildAppBar(),
       body: Column(
         children: [
@@ -399,7 +401,7 @@ class _ActivityLogScreenState extends State<ActivityLogScreen> {
           _buildActionSummary(facilityId),
 
           Padding(
-            padding: const EdgeInsets.fromLTRB(12, 0, 12, 8),
+            padding: const EdgeInsets.fromLTRB(AppSpacing.s12, 0, AppSpacing.s12, AppSpacing.s8),
             child: Row(
               children: [
                 Expanded(
@@ -407,21 +409,21 @@ class _ActivityLogScreenState extends State<ActivityLogScreen> {
                     controller: _searchController,
                     decoration: InputDecoration(
                       hintText: 'Search logs...',
-                      prefixIcon: const Icon(Icons.search, size: 20),
+                      prefixIcon: const Icon(Icons.search, size: AppIconSize.i20),
                       isDense: true,
-                      contentPadding: const EdgeInsets.symmetric(vertical: 10, horizontal: 12),
-                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+                      contentPadding: const EdgeInsets.symmetric(vertical: AppSpacing.s10, horizontal: AppSpacing.s12),
+                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(AppRadius.r8)),
                     ),
                     onChanged: (val) => setState(() => searchQuery = val.trim()),
                   ),
                 ),
                 if (isAdmin) ...[
-                  const SizedBox(width: 8),
+                  const SizedBox(width: AppSpacing.s8),
                   TextButton.icon(
                     onPressed: () => _showRetentionDialog(facilityId),
-                    icon: const Icon(Icons.schedule_outlined, size: 16),
+                    icon: const Icon(Icons.schedule_outlined, size: AppIconSize.i16),
                     label: Text('Keeping logs for ${_retentionDays ?? _defaultRetentionDays} days'),
-                    style: TextButton.styleFrom(foregroundColor: primaryDeepGreen, textStyle: const TextStyle(fontSize: 12.5)),
+                    style: TextButton.styleFrom(foregroundColor: context.colors.primary, textStyle: const TextStyle(fontSize: AppFontSize.f12_5)),
                   ),
                 ],
               ],
@@ -447,7 +449,7 @@ class _ActivityLogScreenState extends State<ActivityLogScreen> {
                     snapshot.connectionState == ConnectionState.none) {
                   return Center(
                     child: CircularProgressIndicator(
-                      color: primaryDeepGreen,
+                      color: context.colors.primary,
                     ),
                   );
                 }
@@ -458,22 +460,22 @@ class _ActivityLogScreenState extends State<ActivityLogScreen> {
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         Icon(Icons.history,
-                          size: 64,
-                          color: Colors.grey[400]),
-                        const SizedBox(height: 16),
+                          size: AppIconSize.i64,
+                          color: context.colors.textDisabled),
+                        const SizedBox(height: AppSpacing.s16),
                         Text(
                           'No activity logs found',
                           style: TextStyle(
-                            fontSize: 18,
-                            color: Colors.grey[600],
+                            fontSize: AppFontSize.f18,
+                            color: context.colors.textMuted,
                           ),
                         ),
-                        const SizedBox(height: 8),
+                        const SizedBox(height: AppSpacing.s8),
                         Text(
                           'Logs auto-delete after ${_retentionDays ?? _defaultRetentionDays} days',
                           style: TextStyle(
-                            fontSize: 14,
-                            color: Colors.grey[500],
+                            fontSize: AppFontSize.f14,
+                            color: context.colors.textHint,
                           ),
                         ),
                       ],
@@ -503,7 +505,7 @@ class _ActivityLogScreenState extends State<ActivityLogScreen> {
                 }
 
                 return ListView.separated(
-                  padding: const EdgeInsets.all(12),
+                  padding: const EdgeInsets.all(AppSpacing.s12),
                   itemCount: logs.length,
                   separatorBuilder: (_, __) => const Divider(height: 1),
                   itemBuilder: (context, index) {
@@ -522,24 +524,24 @@ class _ActivityLogScreenState extends State<ActivityLogScreen> {
                         final actionIcon = ActivityTypeStyle.icon(type);
 
                         return Card(
-                          elevation: 2,
-                          margin: const EdgeInsets.symmetric(vertical: 4),
+                          elevation: AppElevation.e2,
+                          margin: const EdgeInsets.symmetric(vertical: AppSpacing.s4),
                           shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(8)),
+                              borderRadius: BorderRadius.circular(AppRadius.r8)),
                           child: Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                            padding: const EdgeInsets.symmetric(horizontal: AppSpacing.s16, vertical: AppSpacing.s12),
                             child: Row(
                               crossAxisAlignment: CrossAxisAlignment.center,
                               children: [
                                 CircleAvatar(
-                                  backgroundColor: actionColor.withValues(alpha: 0.2),
+                                  backgroundColor: actionColor.withValues(alpha: AppAlpha.a20),
                                   child: Icon(
                                     actionIcon,
                                     color: actionColor,
-                                    size: 20,
+                                    size: AppIconSize.i20,
                                   ),
                                 ),
-                                const SizedBox(width: 16),
+                                const SizedBox(width: AppSpacing.s16),
                                 Expanded(
                                   flex: 3,
                                   child: Column(
@@ -548,22 +550,22 @@ class _ActivityLogScreenState extends State<ActivityLogScreen> {
                                       Text(
                                         action,
                                         style: const TextStyle(
-                                          fontSize: 14,
-                                          fontWeight: FontWeight.w500,
+                                          fontSize: AppFontSize.f14,
+                                          fontWeight: AppFontWeight.medium,
                                         ),
                                       ),
-                                      const SizedBox(height: 4),
+                                      const SizedBox(height: AppSpacing.s4),
                                       Row(
                                         children: [
                                           Icon(Icons.person,
-                                            size: 14,
-                                            color: Colors.grey[600]),
-                                          const SizedBox(width: 4),
+                                            size: AppIconSize.i14,
+                                            color: context.colors.textMuted),
+                                          const SizedBox(width: AppSpacing.s4),
                                           Text(
                                             user,
                                             style: TextStyle(
-                                              fontSize: 12,
-                                              color: Colors.grey[700],
+                                              fontSize: AppFontSize.f12,
+                                              color: context.colors.textSoft,
                                             ),
                                           ),
                                         ],
@@ -571,43 +573,43 @@ class _ActivityLogScreenState extends State<ActivityLogScreen> {
                                     ],
                                   ),
                                 ),
-                                const SizedBox(width: 16),
+                                const SizedBox(width: AppSpacing.s16),
                                 Expanded(
                                   flex: 2,
                                   child: Row(
                                     children: [
                                       Icon(Icons.access_time,
-                                        size: 14,
-                                        color: Colors.grey[600]),
-                                      const SizedBox(width: 4),
+                                        size: AppIconSize.i14,
+                                        color: context.colors.textMuted),
+                                      const SizedBox(width: AppSpacing.s4),
                                       Text(
                                         dateStr,
                                         style: TextStyle(
-                                          fontSize: 11,
-                                          color: Colors.grey[600],
+                                          fontSize: AppFontSize.f11,
+                                          color: context.colors.textMuted,
                                         ),
                                       ),
                                     ],
                                   ),
                                 ),
-                                const SizedBox(width: 16),
+                                const SizedBox(width: AppSpacing.s16),
                                 Container(
                                   padding: const EdgeInsets.symmetric(
-                                    horizontal: 8,
-                                    vertical: 4,
+                                    horizontal: AppSpacing.s8,
+                                    vertical: AppSpacing.s4,
                                   ),
                                   decoration: BoxDecoration(
-                                    color: actionColor.withValues(alpha: 0.1),
-                                    borderRadius: BorderRadius.circular(12),
+                                    color: actionColor.withValues(alpha: AppAlpha.a10),
+                                    borderRadius: BorderRadius.circular(AppRadius.r12),
                                     border: Border.all(
-                                      color: actionColor.withValues(alpha: 0.3),
+                                      color: actionColor.withValues(alpha: AppAlpha.a30),
                                     ),
                                   ),
                                   child: Text(
                                     type,
                                     style: TextStyle(
-                                      fontSize: 11,
-                                      fontWeight: FontWeight.w600,
+                                      fontSize: AppFontSize.f11,
+                                      fontWeight: AppFontWeight.semibold,
                                       color: actionColor,
                                     ),
                                   ),
