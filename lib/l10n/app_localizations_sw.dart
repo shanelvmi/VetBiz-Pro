@@ -1779,4 +1779,78 @@ class AppLocalizationsSw extends AppLocalizations {
   @override
   String get debtors_selectPaymentMethod =>
       'Chagua jinsi malipo haya yalivyofanywa';
+
+  @override
+  String get debtors_signInAgain => 'Ingia tena ili urekodi malipo haya';
+
+  @override
+  String get debtors_selectClient => 'Chagua mteja';
+
+  @override
+  String debtors_paymentRecorded(String amount, String name) {
+    return 'Malipo ya $amount yamerekodiwa kwa $name';
+  }
+
+  @override
+  String get debtors_paymentSaveFailed => 'Imeshindwa kuhifadhi malipo';
+
+  @override
+  String get debtors_debtorSearchHint => 'Tafuta kwa jina au simu';
+
+  @override
+  String get debtors_debtorHelper =>
+      'Wateja wanaodaiwa pesa kwa sasa ndio pekee walioorodheshwa';
+
+  @override
+  String debtors_amountOwed(String amount) {
+    return 'Kiasi kinachodaiwa: $amount';
+  }
+
+  @override
+  String get debtors_paymentAmount => 'Kiasi cha Malipo';
+
+  @override
+  String get debtors_errEnterAmount => 'Weka kiasi';
+
+  @override
+  String get debtors_errValidAmount => 'Weka kiasi sahihi';
+
+  @override
+  String get debtors_errMoreThanOwed => 'Huwezi kulipa zaidi ya kinachodaiwa';
+
+  @override
+  String get debtors_errMoreThanTotal =>
+      'Huwezi kulipa zaidi ya jumla inayodaiwa';
+
+  @override
+  String get debtors_savePayment => 'Hifadhi Malipo';
+
+  @override
+  String get clients_title => 'Wateja';
+
+  @override
+  String get clients_subtitle => 'Simamia wateja wako wote mahali pamoja';
+
+  @override
+  String get clients_add => 'Ongeza Mteja';
+
+  @override
+  String get clients_edit => 'Hariri Mteja';
+
+  @override
+  String get clients_total => 'Jumla ya Wateja';
+
+  @override
+  String get clients_allTime => 'Muda wote';
+
+  @override
+  String get clients_newThisMonth => 'Wapya Mwezi Huu';
+
+  @override
+  String get clients_mostActiveType => 'Aina Inayoongoza';
+
+  @override
+  String clients_percentOfClients(String percent) {
+    return '$percent% ya wateja';
+  }
 }

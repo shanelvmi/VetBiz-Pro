@@ -3277,6 +3277,138 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Select how this payment was made'**
   String get debtors_selectPaymentMethod;
+
+  /// Message when the session has ended.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign in again to record this payment'**
+  String get debtors_signInAgain;
+
+  /// Message when no debtor is chosen.
+  ///
+  /// In en, this message translates to:
+  /// **'Select a client'**
+  String get debtors_selectClient;
+
+  /// Message after recording a payment; amount is pre-formatted money.
+  ///
+  /// In en, this message translates to:
+  /// **'Payment of {amount} recorded for {name}'**
+  String debtors_paymentRecorded(String amount, String name);
+
+  /// Message when recording a payment failed.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t save the payment'**
+  String get debtors_paymentSaveFailed;
+
+  /// Payment form: debtor field hint.
+  ///
+  /// In en, this message translates to:
+  /// **'Search by name or phone'**
+  String get debtors_debtorSearchHint;
+
+  /// Payment form: under the debtor field.
+  ///
+  /// In en, this message translates to:
+  /// **'Only clients who currently owe money are listed'**
+  String get debtors_debtorHelper;
+
+  /// Payment form: what this one debt still owes; amount is pre-formatted money.
+  ///
+  /// In en, this message translates to:
+  /// **'Amount owed: {amount}'**
+  String debtors_amountOwed(String amount);
+
+  /// Payment form: amount field label.
+  ///
+  /// In en, this message translates to:
+  /// **'Payment Amount'**
+  String get debtors_paymentAmount;
+
+  /// Payment form: amount left empty.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter an amount'**
+  String get debtors_errEnterAmount;
+
+  /// Payment form: amount is zero.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter a valid amount'**
+  String get debtors_errValidAmount;
+
+  /// Payment form: amount above what this debt owes.
+  ///
+  /// In en, this message translates to:
+  /// **'Cannot pay more than owed'**
+  String get debtors_errMoreThanOwed;
+
+  /// Payment form: amount above everything the debtor owes.
+  ///
+  /// In en, this message translates to:
+  /// **'Cannot pay more than total owed'**
+  String get debtors_errMoreThanTotal;
+
+  /// Payment form save button.
+  ///
+  /// In en, this message translates to:
+  /// **'Save Payment'**
+  String get debtors_savePayment;
+
+  /// Clients screen title.
+  ///
+  /// In en, this message translates to:
+  /// **'Clients'**
+  String get clients_title;
+
+  /// Clients screen subtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Manage all your clients in one place'**
+  String get clients_subtitle;
+
+  /// Button and form title for a new client.
+  ///
+  /// In en, this message translates to:
+  /// **'Add Client'**
+  String get clients_add;
+
+  /// Form title when editing a client.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit Client'**
+  String get clients_edit;
+
+  /// Clients metric card title.
+  ///
+  /// In en, this message translates to:
+  /// **'Total Clients'**
+  String get clients_total;
+
+  /// Beside the Total Clients metric.
+  ///
+  /// In en, this message translates to:
+  /// **'All time'**
+  String get clients_allTime;
+
+  /// Clients metric card title.
+  ///
+  /// In en, this message translates to:
+  /// **'New This Month'**
+  String get clients_newThisMonth;
+
+  /// Clients metric card: the client type with most clients.
+  ///
+  /// In en, this message translates to:
+  /// **'Most Active Type'**
+  String get clients_mostActiveType;
+
+  /// Beside the Most Active Type metric; percent is a whole number.
+  ///
+  /// In en, this message translates to:
+  /// **'{percent}% of clients'**
+  String clients_percentOfClients(String percent);
 }
 
 class _AppLocalizationsDelegate

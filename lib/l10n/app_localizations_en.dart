@@ -1767,4 +1767,77 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get debtors_selectPaymentMethod => 'Select how this payment was made';
+
+  @override
+  String get debtors_signInAgain => 'Sign in again to record this payment';
+
+  @override
+  String get debtors_selectClient => 'Select a client';
+
+  @override
+  String debtors_paymentRecorded(String amount, String name) {
+    return 'Payment of $amount recorded for $name';
+  }
+
+  @override
+  String get debtors_paymentSaveFailed => 'Couldn\'t save the payment';
+
+  @override
+  String get debtors_debtorSearchHint => 'Search by name or phone';
+
+  @override
+  String get debtors_debtorHelper =>
+      'Only clients who currently owe money are listed';
+
+  @override
+  String debtors_amountOwed(String amount) {
+    return 'Amount owed: $amount';
+  }
+
+  @override
+  String get debtors_paymentAmount => 'Payment Amount';
+
+  @override
+  String get debtors_errEnterAmount => 'Enter an amount';
+
+  @override
+  String get debtors_errValidAmount => 'Enter a valid amount';
+
+  @override
+  String get debtors_errMoreThanOwed => 'Cannot pay more than owed';
+
+  @override
+  String get debtors_errMoreThanTotal => 'Cannot pay more than total owed';
+
+  @override
+  String get debtors_savePayment => 'Save Payment';
+
+  @override
+  String get clients_title => 'Clients';
+
+  @override
+  String get clients_subtitle => 'Manage all your clients in one place';
+
+  @override
+  String get clients_add => 'Add Client';
+
+  @override
+  String get clients_edit => 'Edit Client';
+
+  @override
+  String get clients_total => 'Total Clients';
+
+  @override
+  String get clients_allTime => 'All time';
+
+  @override
+  String get clients_newThisMonth => 'New This Month';
+
+  @override
+  String get clients_mostActiveType => 'Most Active Type';
+
+  @override
+  String clients_percentOfClients(String percent) {
+    return '$percent% of clients';
+  }
 }
