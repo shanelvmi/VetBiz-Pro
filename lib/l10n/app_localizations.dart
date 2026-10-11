@@ -757,6 +757,150 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Tablet/Bolus'**
   String get productType_tabletBolus;
+
+  /// Product type (form): product form and product lists (stored value 'Topical').
+  ///
+  /// In en, this message translates to:
+  /// **'Topical'**
+  String get productType_topical;
+
+  /// Product type (form): product form and product lists (stored value 'Intramammary').
+  ///
+  /// In en, this message translates to:
+  /// **'Intramammary'**
+  String get productType_intramammary;
+
+  /// Product type (form): product form and product lists (stored value 'Spray').
+  ///
+  /// In en, this message translates to:
+  /// **'Spray'**
+  String get productType_spray;
+
+  /// Product type (form): product form and product lists (stored value 'Granules').
+  ///
+  /// In en, this message translates to:
+  /// **'Granules'**
+  String get productType_granules;
+
+  /// Product type (form): product form and product lists (stored value 'Wettable Powder').
+  ///
+  /// In en, this message translates to:
+  /// **'Wettable Powder'**
+  String get productType_wettablePowder;
+
+  /// Product type (form): product form and product lists (stored value 'Emulsifiable Concentrate').
+  ///
+  /// In en, this message translates to:
+  /// **'Emulsifiable Concentrate'**
+  String get productType_emulsifiableConcentrate;
+
+  /// Product type (form): product form and product lists (stored value 'Seed').
+  ///
+  /// In en, this message translates to:
+  /// **'Seed'**
+  String get productType_seed;
+
+  /// Product type (form): product form and product lists (stored value 'Fertilizer').
+  ///
+  /// In en, this message translates to:
+  /// **'Fertilizer'**
+  String get productType_fertilizer;
+
+  /// Product type (form): product form and product lists (stored value 'Feed').
+  ///
+  /// In en, this message translates to:
+  /// **'Feed'**
+  String get productType_feed;
+
+  /// Product type (form): product form and product lists (stored value 'Equipment').
+  ///
+  /// In en, this message translates to:
+  /// **'Equipment'**
+  String get productType_equipment;
+
+  /// Product type (form): product form and product lists (stored value 'Other').
+  ///
+  /// In en, this message translates to:
+  /// **'Other'**
+  String get productType_other;
+
+  /// Product unit: product form unit picker (stored value 'pcs').
+  ///
+  /// In en, this message translates to:
+  /// **'pcs'**
+  String get unit_pcs;
+
+  /// Product unit: product form unit picker (stored value 'kg').
+  ///
+  /// In en, this message translates to:
+  /// **'kg'**
+  String get unit_kg;
+
+  /// Product unit: product form unit picker (stored value 'g').
+  ///
+  /// In en, this message translates to:
+  /// **'g'**
+  String get unit_g;
+
+  /// Product unit: product form unit picker (stored value 'litres').
+  ///
+  /// In en, this message translates to:
+  /// **'litres'**
+  String get unit_litres;
+
+  /// Product unit: product form unit picker (stored value 'ml').
+  ///
+  /// In en, this message translates to:
+  /// **'ml'**
+  String get unit_ml;
+
+  /// Product unit: product form unit picker (stored value 'vials').
+  ///
+  /// In en, this message translates to:
+  /// **'vials'**
+  String get unit_vials;
+
+  /// Product unit: product form unit picker (stored value 'ampoules').
+  ///
+  /// In en, this message translates to:
+  /// **'ampoules'**
+  String get unit_ampoules;
+
+  /// Product unit: product form unit picker (stored value 'bottles').
+  ///
+  /// In en, this message translates to:
+  /// **'bottles'**
+  String get unit_bottles;
+
+  /// Product unit: product form unit picker (stored value 'sachets').
+  ///
+  /// In en, this message translates to:
+  /// **'sachets'**
+  String get unit_sachets;
+
+  /// Product unit: product form unit picker (stored value 'sacks').
+  ///
+  /// In en, this message translates to:
+  /// **'sacks'**
+  String get unit_sacks;
+
+  /// Product unit: product form unit picker (stored value 'bags').
+  ///
+  /// In en, this message translates to:
+  /// **'bags'**
+  String get unit_bags;
+
+  /// Product unit: product form unit picker (stored value 'boxes').
+  ///
+  /// In en, this message translates to:
+  /// **'boxes'**
+  String get unit_boxes;
+
+  /// Product unit: product form unit picker (stored value 'cartons').
+  ///
+  /// In en, this message translates to:
+  /// **'cartons'**
+  String get unit_cartons;
 }
 
 class _AppLocalizationsDelegate

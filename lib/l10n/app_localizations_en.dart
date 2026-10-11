@@ -355,4 +355,76 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get productType_tabletBolus => 'Tablet/Bolus';
+
+  @override
+  String get productType_topical => 'Topical';
+
+  @override
+  String get productType_intramammary => 'Intramammary';
+
+  @override
+  String get productType_spray => 'Spray';
+
+  @override
+  String get productType_granules => 'Granules';
+
+  @override
+  String get productType_wettablePowder => 'Wettable Powder';
+
+  @override
+  String get productType_emulsifiableConcentrate => 'Emulsifiable Concentrate';
+
+  @override
+  String get productType_seed => 'Seed';
+
+  @override
+  String get productType_fertilizer => 'Fertilizer';
+
+  @override
+  String get productType_feed => 'Feed';
+
+  @override
+  String get productType_equipment => 'Equipment';
+
+  @override
+  String get productType_other => 'Other';
+
+  @override
+  String get unit_pcs => 'pcs';
+
+  @override
+  String get unit_kg => 'kg';
+
+  @override
+  String get unit_g => 'g';
+
+  @override
+  String get unit_litres => 'litres';
+
+  @override
+  String get unit_ml => 'ml';
+
+  @override
+  String get unit_vials => 'vials';
+
+  @override
+  String get unit_ampoules => 'ampoules';
+
+  @override
+  String get unit_bottles => 'bottles';
+
+  @override
+  String get unit_sachets => 'sachets';
+
+  @override
+  String get unit_sacks => 'sacks';
+
+  @override
+  String get unit_bags => 'bags';
+
+  @override
+  String get unit_boxes => 'boxes';
+
+  @override
+  String get unit_cartons => 'cartons';
 }

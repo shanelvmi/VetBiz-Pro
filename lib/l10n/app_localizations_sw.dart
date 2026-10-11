@@ -355,4 +355,77 @@ class AppLocalizationsSw extends AppLocalizations {
 
   @override
   String get productType_tabletBolus => 'Vidonge/Bolus';
+
+  @override
+  String get productType_topical => 'Ya Kupaka';
+
+  @override
+  String get productType_intramammary => 'Ya Kiwele';
+
+  @override
+  String get productType_spray => 'Ya Kunyunyiza';
+
+  @override
+  String get productType_granules => 'Chembechembe';
+
+  @override
+  String get productType_wettablePowder => 'Unga wa Kuchanganya na Maji';
+
+  @override
+  String get productType_emulsifiableConcentrate =>
+      'Kimiminika cha Kuchanganya (EC)';
+
+  @override
+  String get productType_seed => 'Mbegu';
+
+  @override
+  String get productType_fertilizer => 'Mbolea';
+
+  @override
+  String get productType_feed => 'Chakula cha Mifugo';
+
+  @override
+  String get productType_equipment => 'Kifaa';
+
+  @override
+  String get productType_other => 'Nyingine';
+
+  @override
+  String get unit_pcs => 'pcs';
+
+  @override
+  String get unit_kg => 'kg';
+
+  @override
+  String get unit_g => 'g';
+
+  @override
+  String get unit_litres => 'lita';
+
+  @override
+  String get unit_ml => 'ml';
+
+  @override
+  String get unit_vials => 'vichupa';
+
+  @override
+  String get unit_ampoules => 'ampuli';
+
+  @override
+  String get unit_bottles => 'chupa';
+
+  @override
+  String get unit_sachets => 'sacheti';
+
+  @override
+  String get unit_sacks => 'magunia';
+
+  @override
+  String get unit_bags => 'mifuko';
+
+  @override
+  String get unit_boxes => 'maboksi';
+
+  @override
+  String get unit_cartons => 'katoni';
 }
