@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
-import '../../theme/app_palette.dart';
+import '../../theme/app_breakpoints.dart';
+import '../../theme/app_dimens.dart';
+import '../../theme/app_text.dart';
+import '../../theme/theme_context.dart';
 
 /// One heading + body pair within a legal document.
 class LegalSection {
@@ -45,8 +48,6 @@ class LegalDocumentScreen extends StatelessWidget {
     required this.calloutBody,
   });
 
-  static const Color _primaryDeepGreen = AppPalette.primary;
-  static const Color _offWhite = AppPalette.background;
 
   // The existing section headings already carry their own "1. ", "2. "
   // prefix (needed elsewhere they're used as plain text) - stripped
@@ -59,38 +60,38 @@ class LegalDocumentScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: _offWhite,
+      backgroundColor: context.colors.background,
       appBar: AppBar(
-        backgroundColor: Colors.white,
-        foregroundColor: Colors.black87,
-        elevation: 1,
+        backgroundColor: context.colors.surface,
+        foregroundColor: context.colors.textPrimary,
+        elevation: AppElevation.e1,
         centerTitle: true,
         toolbarHeight: 72,
         title: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Text(title, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 19, color: Colors.black87)),
-            Text(subtitle, style: const TextStyle(fontSize: 12, color: Colors.black54)),
+            Text(title, style: TextStyle(fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f19, color: context.colors.textPrimary)),
+            Text(subtitle, style: TextStyle(fontSize: AppFontSize.f12, color: context.colors.textSecondary)),
           ],
         ),
       ),
       body: Center(
         child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 1440),
+          constraints: const BoxConstraints(maxWidth: AppSizes.pageMax),
           child: Padding(
-            padding: const EdgeInsets.fromLTRB(20, 24, 20, 24),
+            padding: const EdgeInsets.fromLTRB(AppSpacing.s20, AppSpacing.s24, AppSpacing.s20, AppSpacing.s24),
             child: LayoutBuilder(
               builder: (context, constraints) {
-                final isWide = constraints.maxWidth >= 820;
-                final mainCard = _buildMainCard();
-                final sidebar = _buildSidebar();
+                final isWide = constraints.maxWidth >= AppBreakpoints.twoPane;
+                final mainCard = _buildMainCard(context);
+                final sidebar = _buildSidebar(context);
 
                 if (!isWide) {
                   return SingleChildScrollView(
-                    padding: const EdgeInsets.only(bottom: 16),
+                    padding: const EdgeInsets.only(bottom: AppSpacing.s16),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [mainCard, const SizedBox(height: 20), sidebar],
+                      children: [mainCard, const SizedBox(height: AppSpacing.s20), sidebar],
                     ),
                   );
                 }
@@ -101,11 +102,11 @@ class LegalDocumentScreen extends StatelessWidget {
                     Expanded(
                       flex: 7,
                       child: SingleChildScrollView(
-                        padding: const EdgeInsets.only(bottom: 16),
+                        padding: const EdgeInsets.only(bottom: AppSpacing.s16),
                         child: mainCard,
                       ),
                     ),
-                    const SizedBox(width: 20),
+                    const SizedBox(width: AppSpacing.s20),
                     Expanded(
                       flex: 3,
                       child: SingleChildScrollView(
@@ -123,32 +124,32 @@ class LegalDocumentScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildMainCard() {
+  Widget _buildMainCard(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.fromLTRB(28, 28, 28, 32),
+      padding: const EdgeInsets.fromLTRB(AppSpacing.s28, AppSpacing.s28, AppSpacing.s28, AppSpacing.s32),
       decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(14),
+        color: context.colors.surface,
+        borderRadius: BorderRadius.circular(AppRadius.r14),
         boxShadow: [
-          BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 10, offset: const Offset(0, 3)),
+          BoxShadow(color: context.colors.shadow.withValues(alpha: AppAlpha.a05), blurRadius: 10, offset: const Offset(0, 3)),
         ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(title, style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: _primaryDeepGreen)),
-          const SizedBox(height: 6),
-          Text('Last updated: $lastUpdated', style: TextStyle(fontSize: 12.5, color: Colors.grey.shade600)),
-          const SizedBox(height: 18),
-          Divider(color: Colors.grey.shade200, height: 1),
-          const SizedBox(height: 20),
-          Text(intro, style: const TextStyle(fontSize: 14.5, height: 1.6, color: Colors.black87)),
-          const SizedBox(height: 28),
+          Text(title, style: TextStyle(fontSize: AppFontSize.f24, fontWeight: AppFontWeight.bold, color: context.colors.primary)),
+          const SizedBox(height: AppSpacing.s6),
+          Text('Last updated: $lastUpdated', style: TextStyle(fontSize: AppFontSize.f12_5, color: context.colors.textMuted)),
+          const SizedBox(height: AppSpacing.s18),
+          Divider(color: context.colors.divider, height: 1),
+          const SizedBox(height: AppSpacing.s20),
+          Text(intro, style: TextStyle(fontSize: AppFontSize.f14_5, height: 1.6, color: context.colors.textPrimary)),
+          const SizedBox(height: AppSpacing.s28),
           ...sections.asMap().entries.map((entry) {
             final index = entry.key;
             final section = entry.value;
             return Padding(
-              padding: const EdgeInsets.only(bottom: 24),
+              padding: const EdgeInsets.only(bottom: AppSpacing.s24),
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -156,23 +157,23 @@ class LegalDocumentScreen extends StatelessWidget {
                     width: 28,
                     height: 28,
                     alignment: Alignment.center,
-                    decoration: BoxDecoration(color: _primaryDeepGreen.withValues(alpha: 0.12), shape: BoxShape.circle),
+                    decoration: BoxDecoration(color: context.colors.primary.withValues(alpha: AppAlpha.a10), shape: BoxShape.circle),
                     child: Text(
                       '${index + 1}',
-                      style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13.5, color: _primaryDeepGreen),
+                      style: TextStyle(fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f13_5, color: context.colors.primary),
                     ),
                   ),
-                  const SizedBox(width: 14),
+                  const SizedBox(width: AppSpacing.s14),
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(_stripLeadingNumber(section.heading),
-                            style: const TextStyle(
-                                fontSize: 16.5, fontWeight: FontWeight.bold, color: _primaryDeepGreen)),
-                        const SizedBox(height: 8),
+                            style: TextStyle(
+                                fontSize: AppFontSize.f17, fontWeight: AppFontWeight.bold, color: context.colors.primary)),
+                        const SizedBox(height: AppSpacing.s8),
                         Text(section.body,
-                            style: const TextStyle(fontSize: 14.5, height: 1.65, color: Colors.black87)),
+                            style: TextStyle(fontSize: AppFontSize.f14_5, height: 1.65, color: context.colors.textPrimary)),
                       ],
                     ),
                   ),
@@ -185,25 +186,25 @@ class LegalDocumentScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildSidebar() {
+  Widget _buildSidebar(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.fromLTRB(20, 22, 20, 20),
+      padding: const EdgeInsets.fromLTRB(AppSpacing.s20, AppSpacing.s22, AppSpacing.s20, AppSpacing.s20),
       decoration: BoxDecoration(
-        color: _primaryDeepGreen.withValues(alpha: 0.04),
-        borderRadius: BorderRadius.circular(14),
+        color: context.colors.primary.withValues(alpha: AppAlpha.a05),
+        borderRadius: BorderRadius.circular(AppRadius.r14),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text('Key Points', style: TextStyle(fontSize: 17, fontWeight: FontWeight.bold, color: _primaryDeepGreen)),
-          const SizedBox(height: 6),
+          Text('Key Points', style: TextStyle(fontSize: AppFontSize.f17, fontWeight: AppFontWeight.bold, color: context.colors.primary)),
+          const SizedBox(height: AppSpacing.s6),
           ...keyPoints.asMap().entries.map((entry) {
             final isLast = entry.key == keyPoints.length - 1;
             final point = entry.value;
             return Column(
               children: [
                 Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 12),
+                  padding: const EdgeInsets.symmetric(vertical: AppSpacing.s12),
                   child: Row(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -212,35 +213,35 @@ class LegalDocumentScreen extends StatelessWidget {
                         height: 34,
                         alignment: Alignment.center,
                         decoration:
-                            BoxDecoration(color: _primaryDeepGreen.withValues(alpha: 0.12), shape: BoxShape.circle),
-                        child: Icon(point.icon, size: 17, color: _primaryDeepGreen),
+                            BoxDecoration(color: context.colors.primary.withValues(alpha: AppAlpha.a10), shape: BoxShape.circle),
+                        child: Icon(point.icon, size: AppIconSize.i18, color: context.colors.primary),
                       ),
-                      const SizedBox(width: 12),
+                      const SizedBox(width: AppSpacing.s12),
                       Expanded(
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(point.title,
-                                style: const TextStyle(fontSize: 13.5, fontWeight: FontWeight.bold, color: Colors.black87)),
-                            const SizedBox(height: 2),
+                                style: TextStyle(fontSize: AppFontSize.f13_5, fontWeight: AppFontWeight.bold, color: context.colors.textPrimary)),
+                            const SizedBox(height: AppSpacing.s2),
                             Text(point.description,
-                                style: TextStyle(fontSize: 12.5, height: 1.4, color: Colors.grey.shade700)),
+                                style: TextStyle(fontSize: AppFontSize.f12_5, height: 1.4, color: context.colors.textSoft)),
                           ],
                         ),
                       ),
                     ],
                   ),
                 ),
-                if (!isLast) Divider(color: Colors.grey.shade200, height: 1),
+                if (!isLast) Divider(color: context.colors.divider, height: 1),
               ],
             );
           }),
-          const SizedBox(height: 10),
+          const SizedBox(height: AppSpacing.s10),
           Container(
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.all(AppSpacing.s16),
             decoration: BoxDecoration(
-              color: _primaryDeepGreen.withValues(alpha: 0.1),
-              borderRadius: BorderRadius.circular(12),
+              color: context.colors.primary.withValues(alpha: AppAlpha.a10),
+              borderRadius: BorderRadius.circular(AppRadius.r12),
             ),
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -249,19 +250,19 @@ class LegalDocumentScreen extends StatelessWidget {
                   width: 32,
                   height: 32,
                   alignment: Alignment.center,
-                  decoration: const BoxDecoration(color: _primaryDeepGreen, shape: BoxShape.circle),
-                  child: const Icon(Icons.verified_user_outlined, size: 16, color: Colors.white),
+                  decoration: BoxDecoration(color: context.colors.primary, shape: BoxShape.circle),
+                  child: Icon(Icons.verified_user_outlined, size: AppIconSize.i16, color: context.colors.onPrimary),
                 ),
-                const SizedBox(width: 12),
+                const SizedBox(width: AppSpacing.s12),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(calloutTitle,
-                          style: const TextStyle(fontSize: 13.5, fontWeight: FontWeight.bold, color: _primaryDeepGreen)),
-                      const SizedBox(height: 4),
+                          style: TextStyle(fontSize: AppFontSize.f13_5, fontWeight: AppFontWeight.bold, color: context.colors.primary)),
+                      const SizedBox(height: AppSpacing.s4),
                       Text(calloutBody,
-                          style: TextStyle(fontSize: 12, height: 1.4, color: Colors.grey.shade700)),
+                          style: TextStyle(fontSize: AppFontSize.f12, height: 1.4, color: context.colors.textSoft)),
                     ],
                   ),
                 ),

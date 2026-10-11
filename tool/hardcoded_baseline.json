@@ -64,24 +64,18 @@
       "lib/screens/dashboard/notifications_screen.dart": 1,
       "lib/screens/facilities/facility_picker_screen.dart": 1,
       "lib/screens/facilities/facility_screen.dart": 1,
-      "lib/screens/legal/legal_document_screen.dart": 15,
       "lib/screens/login_screen.dart": 3,
       "lib/screens/platform_admin/platform_admin_home_screen.dart": 1,
       "lib/screens/platform_admin/subscription_requests_tab.dart": 1,
       "lib/screens/platform_admin/users_tab.dart": 8,
       "lib/screens/register_screen.dart": 2
     },
-    "R2": {
-      "lib/screens/legal/legal_document_screen.dart": 13
-    },
-    "R3": {
-      "lib/screens/legal/legal_document_screen.dart": 3
-    },
+    "R2": {},
+    "R3": {},
     "R4": {
       "lib/screens/admin/manage_assistants_screen.dart": 1,
       "lib/screens/dashboard/dashboard_screen.dart": 1,
       "lib/screens/facilities/facility_screen.dart": 2,
-      "lib/screens/legal/legal_document_screen.dart": 22,
       "lib/screens/products/add_edit_product_screen.dart": 1,
       "lib/screens/sales/add_sale_screen.dart": 1
     },
@@ -96,8 +90,7 @@
     },
     "R6": {},
     "R7": {
-      "lib/screens/dashboard/dashboard_screen.dart": 2,
-      "lib/screens/legal/legal_document_screen.dart": 1
+      "lib/screens/dashboard/dashboard_screen.dart": 2
     },
     "R8": {
       "lib/screens/sales/receipt_preview_screen.dart": 1,
