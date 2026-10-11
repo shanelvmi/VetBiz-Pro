@@ -2749,6 +2749,138 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Couldn\'t print the receipt'**
   String get common_printFailed;
+
+  /// Second line when the printer refused the receipt.
+  ///
+  /// In en, this message translates to:
+  /// **'The printer did not accept it'**
+  String get common_printFailedDetail;
+
+  /// Transaction type (stored as "expense"); "Other Income" uses payments_typeOtherIncome.
+  ///
+  /// In en, this message translates to:
+  /// **'Expense'**
+  String get transactionType_expense;
+
+  /// Transactions screen title.
+  ///
+  /// In en, this message translates to:
+  /// **'Transactions'**
+  String get transactions_title;
+
+  /// Transactions screen subtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'All income and expense transactions'**
+  String get transactions_subtitle;
+
+  /// Button and form title for a new transaction.
+  ///
+  /// In en, this message translates to:
+  /// **'Record Transaction'**
+  String get transactions_record;
+
+  /// Form title when editing a transaction.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit Transaction'**
+  String get transactions_edit;
+
+  /// Save button when editing a transaction.
+  ///
+  /// In en, this message translates to:
+  /// **'Update Transaction'**
+  String get transactions_update;
+
+  /// Transactions metric card: total expenses in the period.
+  ///
+  /// In en, this message translates to:
+  /// **'Expenses'**
+  String get transactions_expenses;
+
+  /// Transactions metric card: other income minus expenses.
+  ///
+  /// In en, this message translates to:
+  /// **'Other Income vs Expenses'**
+  String get transactions_incomeVsExpenses;
+
+  /// Transactions search box hint.
+  ///
+  /// In en, this message translates to:
+  /// **'Search by description, category...'**
+  String get transactions_searchHint;
+
+  /// Number of transactions shown, beside the filters.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 transaction} other{{count} transactions}}'**
+  String transactions_count(int count);
+
+  /// Transactions list when it is empty.
+  ///
+  /// In en, this message translates to:
+  /// **'No transactions.'**
+  String get transactions_empty;
+
+  /// Transactions list when the type filter has none; type is the type's label.
+  ///
+  /// In en, this message translates to:
+  /// **'No transactions for {type}.'**
+  String transactions_emptyForType(String type);
+
+  /// Delete confirmation title.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete this transaction?'**
+  String get transactions_deleteTitle;
+
+  /// Delete confirmation text; amount is pre-formatted money.
+  ///
+  /// In en, this message translates to:
+  /// **'\"{description}\" - {amount}\n\nYou can restore it from Trash.'**
+  String transactions_deleteBody(String description, String amount);
+
+  /// Message after deleting, with Undo.
+  ///
+  /// In en, this message translates to:
+  /// **'Transaction moved to Trash'**
+  String get transactions_movedToTrash;
+
+  /// Message when deleting failed.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t delete the transaction'**
+  String get transactions_deleteFailed;
+
+  /// Message after Undo restored the transaction.
+  ///
+  /// In en, this message translates to:
+  /// **'Transaction restored'**
+  String get transactions_restored;
+
+  /// Message when Undo failed.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t restore the transaction'**
+  String get transactions_restoreFailed;
+
+  /// Details panel title and the form's first section heading.
+  ///
+  /// In en, this message translates to:
+  /// **'Transaction Details'**
+  String get transactions_detailsTitle;
+
+  /// End of the transactions list.
+  ///
+  /// In en, this message translates to:
+  /// **'Showing all recent transactions'**
+  String get transactions_allShown;
+
+  /// Button at the end of the transactions list.
+  ///
+  /// In en, this message translates to:
+  /// **'Load more transactions'**
+  String get transactions_loadMore;
 }
 
 class _AppLocalizationsDelegate

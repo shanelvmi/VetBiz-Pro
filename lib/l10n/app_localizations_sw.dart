@@ -1462,4 +1462,84 @@ class AppLocalizationsSw extends AppLocalizations {
 
   @override
   String get common_printFailed => 'Imeshindwa kuchapisha risiti';
+
+  @override
+  String get common_printFailedDetail => 'Printa haikuikubali';
+
+  @override
+  String get transactionType_expense => 'Matumizi';
+
+  @override
+  String get transactions_title => 'Miamala';
+
+  @override
+  String get transactions_subtitle => 'Miamala yote ya mapato na matumizi';
+
+  @override
+  String get transactions_record => 'Rekodi Muamala';
+
+  @override
+  String get transactions_edit => 'Hariri Muamala';
+
+  @override
+  String get transactions_update => 'Sasisha Muamala';
+
+  @override
+  String get transactions_expenses => 'Matumizi';
+
+  @override
+  String get transactions_incomeVsExpenses =>
+      'Mapato Mengine dhidi ya Matumizi';
+
+  @override
+  String get transactions_searchHint => 'Tafuta kwa maelezo, kundi...';
+
+  @override
+  String transactions_count(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Miamala $count',
+      one: 'Muamala 1',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get transactions_empty => 'Hakuna miamala.';
+
+  @override
+  String transactions_emptyForType(String type) {
+    return 'Hakuna miamala ya $type.';
+  }
+
+  @override
+  String get transactions_deleteTitle => 'Futa muamala huu?';
+
+  @override
+  String transactions_deleteBody(String description, String amount) {
+    return '\"$description\" - $amount\n\nUnaweza kuurejesha kutoka Takataka.';
+  }
+
+  @override
+  String get transactions_movedToTrash => 'Muamala umehamishiwa Takataka';
+
+  @override
+  String get transactions_deleteFailed => 'Imeshindwa kufuta muamala';
+
+  @override
+  String get transactions_restored => 'Muamala umerejeshwa';
+
+  @override
+  String get transactions_restoreFailed => 'Imeshindwa kurejesha muamala';
+
+  @override
+  String get transactions_detailsTitle => 'Maelezo ya Muamala';
+
+  @override
+  String get transactions_allShown =>
+      'Inaonyesha miamala yote ya hivi karibuni';
+
+  @override
+  String get transactions_loadMore => 'Pakia miamala zaidi';
 }

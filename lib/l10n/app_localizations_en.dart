@@ -1454,4 +1454,82 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get common_printFailed => 'Couldn\'t print the receipt';
+
+  @override
+  String get common_printFailedDetail => 'The printer did not accept it';
+
+  @override
+  String get transactionType_expense => 'Expense';
+
+  @override
+  String get transactions_title => 'Transactions';
+
+  @override
+  String get transactions_subtitle => 'All income and expense transactions';
+
+  @override
+  String get transactions_record => 'Record Transaction';
+
+  @override
+  String get transactions_edit => 'Edit Transaction';
+
+  @override
+  String get transactions_update => 'Update Transaction';
+
+  @override
+  String get transactions_expenses => 'Expenses';
+
+  @override
+  String get transactions_incomeVsExpenses => 'Other Income vs Expenses';
+
+  @override
+  String get transactions_searchHint => 'Search by description, category...';
+
+  @override
+  String transactions_count(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count transactions',
+      one: '1 transaction',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get transactions_empty => 'No transactions.';
+
+  @override
+  String transactions_emptyForType(String type) {
+    return 'No transactions for $type.';
+  }
+
+  @override
+  String get transactions_deleteTitle => 'Delete this transaction?';
+
+  @override
+  String transactions_deleteBody(String description, String amount) {
+    return '\"$description\" - $amount\n\nYou can restore it from Trash.';
+  }
+
+  @override
+  String get transactions_movedToTrash => 'Transaction moved to Trash';
+
+  @override
+  String get transactions_deleteFailed => 'Couldn\'t delete the transaction';
+
+  @override
+  String get transactions_restored => 'Transaction restored';
+
+  @override
+  String get transactions_restoreFailed => 'Couldn\'t restore the transaction';
+
+  @override
+  String get transactions_detailsTitle => 'Transaction Details';
+
+  @override
+  String get transactions_allShown => 'Showing all recent transactions';
+
+  @override
+  String get transactions_loadMore => 'Load more transactions';
 }
