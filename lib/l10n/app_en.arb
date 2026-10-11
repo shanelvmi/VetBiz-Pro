@@ -1,0 +1,7 @@
+{
+  "@@locale": "en",
+  "common_language": "Language",
+  "@common_language": {
+    "description": "The word for the app's display language (Settings, Language picker)."
+  }
+}

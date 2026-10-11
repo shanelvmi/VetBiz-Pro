@@ -1,0 +1,5 @@
+# Flutter's gen-l10n settings (Phase 2 step 2F, docs/PHASE2_LOCALISATION_SPEC.md).
+# English is the template; every key in it needs the same key in app_sw.arb.
+arb-dir: lib/l10n
+template-arb-file: app_en.arb
+output-localization-file: app_localizations.dart

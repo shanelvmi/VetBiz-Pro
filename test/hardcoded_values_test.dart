@@ -73,6 +73,8 @@ void main() {
     expect(hits(r1, 'color: Colors.grey[600],'), isTrue);
     expect(hits(r1, 'final c = AppColors.fromTheme(theme);'), isFalse);
     expect(isExcluded('lib/theme/app_colors.dart'), isTrue);
+    // The language files and the code generated from them hold the texts.
+    expect(isExcluded('lib/l10n/app_localizations_sw.dart'), isTrue);
     expect(isExcluded('lib/screens/sales/sales_screen.dart'), isFalse);
   });
 }

@@ -15,6 +15,7 @@ import 'utils/facility_activation.dart';
 import 'utils/activity_signal.dart';
 import 'utils/presence_heartbeat.dart';
 import 'widgets/maintenance_gate.dart';
+import 'l10n/l10n.dart';
 
 import 'services/auth_service.dart';
 import 'services/membership_service.dart';
@@ -95,8 +96,9 @@ class VetBizProApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Watched so a colour-theme change in UI Settings rebuilds the theme.
-    final colorTheme = context.watch<UiSettingsProvider>().colorTheme;
+    // Watched so a colour-theme or language change in Settings rebuilds the app.
+    final uiSettings = context.watch<UiSettingsProvider>();
+    final colorTheme = uiSettings.colorTheme;
 
     return MaterialApp(
       navigatorKey: navigatorKey,
@@ -106,6 +108,11 @@ class VetBizProApp extends StatelessWidget {
       title: AppInfo.name,
       theme: AppTheme.build(colorTheme, Brightness.light),
       debugShowCheckedModeBanner: false,
+      // Our texts plus Flutter's own (date picker, OK/Cancel, tooltips).
+      // Dates and amounts we format ourselves stay fixed (AppDateFormat, Money).
+      localizationsDelegates: AppLocalizations.localizationsDelegates,
+      supportedLocales: AppLocalizations.supportedLocales,
+      locale: uiSettings.locale,
       routes: {
         '/login': (context) => const LoginScreen(),
         '/register': (context) => const RegisterScreen(),

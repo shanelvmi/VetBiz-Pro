@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
-import '../../providers/settings_provider.dart';
+import '../../providers/ui_settings_provider.dart';
 import '../../providers/user_role_provider.dart';
 import 'ui_settings_dialog.dart';
 
@@ -55,13 +55,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
   // item pushes a full screen. Mobile has no spare room for a
   // sidebar+pane layout, so this stays exactly as it always worked.
   Widget _buildMobileLayout(BuildContext context) {
-    final settings = Provider.of<SettingsProvider>(context);
+    final uiSettings = Provider.of<UiSettingsProvider>(context);
     final isAdmin = Provider.of<UserRoleProvider>(context).isAdmin;
 
-    final currentLanguageMap = settings.supportedLanguages.firstWhere(
-      (element) => element['code'] == settings.selectedLanguage,
-      orElse: () => {'code': 'en', 'name': 'English'},
-    );
+    final currentLanguageName = AppDefaults.languageNames[uiSettings.languageCode];
 
     return Scaffold(
       appBar: AppBar(
@@ -232,9 +229,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     _buildSettingsItem(
                       icon: Icons.language_outlined,
                       label: 'Language / Lugha',
-                      trailingText: currentLanguageMap['name'],
+                      trailingText: currentLanguageName,
                       isLast: true,
-                      onTap: () => _showLanguageSelection(context, settings),
+                      onTap: () => _showLanguageSelection(context, uiSettings),
                     ),
                   ],
                 ),
@@ -267,7 +264,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
   // mobile - they're small, modal-appropriate content, not worth
   // dedicating a whole pane to.
   Widget _buildDesktopLayout(BuildContext context) {
-    final settings = Provider.of<SettingsProvider>(context);
+    final uiSettings = Provider.of<UiSettingsProvider>(context);
     final isAdmin = Provider.of<UserRoleProvider>(context).isAdmin;
 
     // Whatever's genuinely first in the sidebar for this role -
@@ -275,10 +272,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     // an Assistant (who never sees the Subscription section at all).
     _selectedKey ??= isAdmin ? 'subscription' : 'notifications';
 
-    final currentLanguageMap = settings.supportedLanguages.firstWhere(
-      (element) => element['code'] == settings.selectedLanguage,
-      orElse: () => {'code': 'en', 'name': 'English'},
-    );
+    final currentLanguageName = AppDefaults.languageNames[uiSettings.languageCode];
 
     return Scaffold(
       backgroundColor: context.colors.background,
@@ -382,8 +376,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         _buildSidebarItem(
                           icon: Icons.language_outlined,
                           label: 'Language / Lugha',
-                          trailingText: currentLanguageMap['name'],
-                          onTapDialog: () => _showLanguageSelection(context, settings),
+                          trailingText: currentLanguageName,
+                          onTapDialog: () => _showLanguageSelection(context, uiSettings),
                         ),
                         const SizedBox(height: AppSpacing.s20),
                       ],
@@ -497,7 +491,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
   // --- Dynamic Bottom Sheets for Data Scalability ---
 
-  void _showLanguageSelection(BuildContext context, SettingsProvider settings) {
+  void _showLanguageSelection(BuildContext context, UiSettingsProvider uiSettings) {
     showModalBottomSheet(
       context: context,
       backgroundColor: context.colors.background,
@@ -519,21 +513,21 @@ class _SettingsScreenState extends State<SettingsScreen> {
               Flexible(
                 child: ListView.separated(
                   shrinkWrap: true,
-                  itemCount: settings.supportedLanguages.length,
+                  itemCount: AppDefaults.supportedLanguages.length,
                   separatorBuilder: (_, __) => Divider(height: 1, color: context.colors.divider),
                   itemBuilder: (context, index) {
-                    final lang = settings.supportedLanguages[index];
-                    final bool isSelected = lang['code'] == settings.selectedLanguage;
+                    final code = AppDefaults.supportedLanguages[index];
+                    final bool isSelected = code == uiSettings.languageCode;
 
                     return ListTile(
                       contentPadding: EdgeInsets.zero,
-                      title: Text(lang['name']!),
+                      title: Text(AppDefaults.languageNames[code] ?? code),
                       trailing: Icon(
                         isSelected ? Icons.check_circle : Icons.circle_outlined,
                         color: isSelected ? context.colors.primary : context.colors.border,
                       ),
                       onTap: () {
-                        settings.setLanguage(lang['code']!);
+                        uiSettings.setLocale(code);
                         Navigator.pop(context);
                       },
                     );

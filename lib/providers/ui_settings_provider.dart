@@ -1,6 +1,8 @@
-import 'package:flutter/foundation.dart';
+import 'package:flutter/widgets.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../config/app_defaults.dart';
+import '../l10n/l10n.dart';
 import '../theme/app_palette.dart';
 
 /// How the app looks and lays itself out - the choices in UI Settings.
@@ -11,9 +13,11 @@ import '../theme/app_palette.dart';
 class UiSettingsProvider with ChangeNotifier {
   static const String _layoutFixedKey = 'ui_layout_fixed';
   static const String _colorThemeKey = 'ui_color_theme';
+  static const String _languageKey = 'ui_language';
 
   bool _layoutFixed = false;
   String _colorThemeId = AppColorTheme.defaultId;
+  String _languageCode = AppDefaults.defaultLanguage;
   bool _loaded = false;
 
   UiSettingsProvider() {
@@ -30,6 +34,12 @@ class UiSettingsProvider with ChangeNotifier {
 
   AppColorTheme get colorTheme => AppColorTheme.byId(_colorThemeId);
 
+  /// The app's display language, a code from AppDefaults.supportedLanguages.
+  /// Dates and amounts keep their fixed formats whatever this is.
+  String get languageCode => _languageCode;
+
+  Locale get locale => Locale(_languageCode);
+
   Future<void> _load() async {
     try {
       final prefs = await SharedPreferences.getInstance();
@@ -37,6 +47,13 @@ class UiSettingsProvider with ChangeNotifier {
       // Only a theme that can actually be used is restored.
       final saved = AppColorTheme.byId(prefs.getString(_colorThemeKey));
       if (saved.available) _colorThemeId = saved.id;
+      // Likewise only a language the app has texts for; anything else
+      // (a code from an older or newer build) leaves the default.
+      final language = prefs.getString(_languageKey);
+      if (AppDefaults.supportedLanguages.contains(language)) {
+        _languageCode = language!;
+        L10n.setLocale(locale);
+      }
     } catch (e) {
       // Settings are a convenience: if they can't be read, the defaults stand.
       debugPrint('[UI SETTINGS] could not read saved settings: $e');
@@ -54,6 +71,22 @@ class UiSettingsProvider with ChangeNotifier {
       await prefs.setBool(_layoutFixedKey, value);
     } catch (e) {
       debugPrint('[UI SETTINGS] could not save layout setting: $e');
+    }
+  }
+
+  /// Chooses the display language. A code the app has no texts for is ignored.
+  Future<void> setLocale(String code) async {
+    if (!AppDefaults.supportedLanguages.contains(code) || code == _languageCode) return;
+    _languageCode = code;
+    // Before notifying: listeners that rebuild (and any L10n.current read
+    // they make) must already see the new language.
+    L10n.setLocale(locale);
+    notifyListeners();
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString(_languageKey, code);
+    } catch (e) {
+      debugPrint('[UI SETTINGS] could not save language: $e');
     }
   }
 

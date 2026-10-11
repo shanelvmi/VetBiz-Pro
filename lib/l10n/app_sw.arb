@@ -1,0 +1,7 @@
+{
+  "@@locale": "sw",
+  "common_language": "Lugha",
+  "@common_language": {
+    "x-review": "draft"
+  }
+}

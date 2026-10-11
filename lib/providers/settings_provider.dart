@@ -14,11 +14,10 @@ class SettingsProvider with ChangeNotifier {
   String get exportFormat => _exportFormat;
 
   // --- New Scalable Preference States ---
+  // The display language lives in UiSettingsProvider (a saved device setting).
   String _selectedCurrency = AppDefaults.currencyCode;
-  String _selectedLanguage = 'en';
 
   String get selectedCurrency => _selectedCurrency;
-  String get selectedLanguage => _selectedLanguage;
 
   // Centralized, scalable matrix definitions
   final List<Map<String, String>> supportedCurrencies = [
@@ -26,11 +25,6 @@ class SettingsProvider with ChangeNotifier {
     {'code': 'KES', 'name': 'Kenyan Shilling'},
     {'code': 'UGX', 'name': 'Ugandan Shilling'},
     {'code': 'USD', 'name': 'United States Dollar'},
-  ];
-
-  final List<Map<String, String>> supportedLanguages = [
-    {'code': 'en', 'name': 'English'},
-    {'code': 'sw', 'name': 'Kiswahili'},
   ];
 
   // --- Your Existing Toggle Methods ---
@@ -52,11 +46,6 @@ class SettingsProvider with ChangeNotifier {
   // --- New Selection Setters ---
   void setCurrency(String code) {
     _selectedCurrency = code;
-    notifyListeners();
-  }
-
-  void setLanguage(String code) {
-    _selectedLanguage = code;
     notifyListeners();
   }
 }

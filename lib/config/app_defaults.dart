@@ -18,5 +18,13 @@ class AppDefaults {
   static const String numberLocale = 'en_US';
 
   static const String defaultLanguage = 'en';
+  /// Each needs a lib/l10n/app_<code>.arb (test/l10n_setup_test.dart checks).
   static const List<String> supportedLanguages = ['en', 'sw'];
+
+  /// Each language's name in that language, as the Language picker lists
+  /// them. Never translated: a person looks for their own language's name.
+  static const Map<String, String> languageNames = {
+    'en': 'English',
+    'sw': 'Kiswahili',
+  };
 }
