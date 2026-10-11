@@ -11,6 +11,7 @@ import '../../theme/app_dimens.dart';
 import '../../theme/theme_context.dart';
 import '../../ui/feedback/friendly_error.dart';
 import '../../ui/feedback/app_feedback.dart';
+import '../../l10n/l10n.dart';
 
 /// Generates a short-lived, single-use code for inviting a new
 /// Assistant to join this facility - shown to the Admin to share
@@ -38,7 +39,7 @@ Future<void> showInviteAssistantDialog(BuildContext context, String facilityId) 
   bool initialCheckStarted = false;
   // One request at a time, whatever the buttons show.
   bool busy = false;
-  String loadingMessage = 'Checking for an existing invite...';
+  String loadingMessage = L10n.current.invite_checking;
   String? activeCode;
   DateTime? activeExpiresAt;
   String? errorMessage;
@@ -50,7 +51,7 @@ Future<void> showInviteAssistantDialog(BuildContext context, String facilityId) 
         Future<void> loadActiveInvite() async {
           setDialogState(() {
             isLoading = true;
-            loadingMessage = 'Checking for an existing invite...';
+            loadingMessage = L10n.current.invite_checking;
           });
           try {
             final active = await inviteService.getActiveInvite(facilityId);
@@ -63,7 +64,7 @@ Future<void> showInviteAssistantDialog(BuildContext context, String facilityId) 
           } catch (e) {
             if (!dialogContext.mounted) return;
             setDialogState(() {
-              errorMessage = 'Could not check for an existing invite: ${FriendlyError.messageFor(e)}';
+              errorMessage = L10n.current.invite_checkFailed(FriendlyError.messageFor(e));
               isLoading = false;
             });
           }
@@ -81,7 +82,7 @@ Future<void> showInviteAssistantDialog(BuildContext context, String facilityId) 
           busy = true;
           setDialogState(() {
             isLoading = true;
-            loadingMessage = 'Generating your invite code...';
+            loadingMessage = L10n.current.invite_generating;
           });
           try {
             final user = authService.getCurrentUser();
@@ -99,7 +100,7 @@ Future<void> showInviteAssistantDialog(BuildContext context, String facilityId) 
           } catch (e) {
             if (!dialogContext.mounted) return;
             setDialogState(() {
-              errorMessage = 'Could not generate an invite: ${MembershipService.errorMessage(e)}';
+              errorMessage = L10n.current.invite_generateFailed(MembershipService.errorMessage(e));
               isLoading = false;
             });
           } finally {
@@ -112,7 +113,7 @@ Future<void> showInviteAssistantDialog(BuildContext context, String facilityId) 
           busy = true;
           setDialogState(() {
             isLoading = true;
-            loadingMessage = 'Revoking the code...';
+            loadingMessage = L10n.current.invite_revoking;
           });
           try {
             await inviteService.revokeInviteCode(facilityId);
@@ -125,7 +126,7 @@ Future<void> showInviteAssistantDialog(BuildContext context, String facilityId) 
           } catch (e) {
             if (!dialogContext.mounted) return;
             setDialogState(() {
-              errorMessage = 'Could not revoke: ${FriendlyError.messageFor(e)}';
+              errorMessage = L10n.current.invite_revokeFailed(FriendlyError.messageFor(e));
               isLoading = false;
             });
           } finally {
@@ -136,7 +137,7 @@ Future<void> showInviteAssistantDialog(BuildContext context, String facilityId) 
         final formatted = activeCode != null ? inviteService.formatForDisplay(activeCode!) : null;
 
         return AlertDialog(
-          title: const Text('Invite Assistant'),
+          title: Text(dialogContext.l10n.team_inviteAssistant),
           // A fixed width keeps the dialog's horizontal size stable
           // across states; height now follows the actual content
           // (mainAxisSize.min on the Column below) instead of a single
@@ -168,10 +169,9 @@ Future<void> showInviteAssistantDialog(BuildContext context, String facilityId) 
                         const SizedBox(height: AppSpacing.s12),
                       ],
                       if (formatted != null) ...[
-                        const Text(
-                          'Share this code with the person you\'re hiring - '
-                          'they\'ll enter it when registering as an Assistant.',
-                          style: TextStyle(fontSize: AppFontSize.f13),
+                        Text(
+                          dialogContext.l10n.invite_shareHint,
+                          style: const TextStyle(fontSize: AppFontSize.f13),
                         ),
                         const SizedBox(height: AppSpacing.s16),
                         Container(
@@ -197,7 +197,7 @@ Future<void> showInviteAssistantDialog(BuildContext context, String facilityId) 
                               const SizedBox(height: AppSpacing.s4),
                               if (activeExpiresAt != null)
                                 Text(
-                                  'Expires ${AppDateFormat.dateDayTime24.format(activeExpiresAt!)}',
+                                  dialogContext.l10n.invite_expires(AppDateFormat.dateDayTime24.format(activeExpiresAt!)),
                                   style: TextStyle(fontSize: AppFontSize.f11, color: dialogContext.colors.textMuted),
                                 ),
                             ],
@@ -210,10 +210,10 @@ Future<void> showInviteAssistantDialog(BuildContext context, String facilityId) 
                               child: OutlinedButton.icon(
                                 onPressed: () {
                                   Clipboard.setData(ClipboardData(text: formatted));
-                                  AppFeedback.success('Copied to clipboard');
+                                  AppFeedback.success(L10n.current.invite_copied);
                                 },
                                 icon: const Icon(Icons.copy, size: AppIconSize.i16),
-                                label: const Text('Copy'),
+                                label: Text(dialogContext.l10n.common_copy),
                                 style: OutlinedButton.styleFrom(foregroundColor: dialogContext.colors.primary),
                               ),
                             ),
@@ -222,7 +222,7 @@ Future<void> showInviteAssistantDialog(BuildContext context, String facilityId) 
                               child: OutlinedButton.icon(
                                 onPressed: revoke,
                                 icon: const Icon(Icons.cancel_outlined, size: AppIconSize.i16),
-                                label: const Text('Revoke'),
+                                label: Text(dialogContext.l10n.invite_revoke),
                                 style: OutlinedButton.styleFrom(foregroundColor: dialogContext.colors.dangerAccent),
                               ),
                             ),
@@ -233,15 +233,13 @@ Future<void> showInviteAssistantDialog(BuildContext context, String facilityId) 
                           child: TextButton(
                             onPressed: generateNew,
                             style: TextButton.styleFrom(foregroundColor: dialogContext.colors.accent),
-                            child: const Text('Generate a new one instead'),
+                            child: Text(dialogContext.l10n.invite_generateNew),
                           ),
                         ),
                       ] else ...[
-                        const Text(
-                          'Generate a one-time code for the person you\'re '
-                          'hiring - it works for 48 hours or until used once, '
-                          'whichever comes first.',
-                          style: TextStyle(fontSize: AppFontSize.f13),
+                        Text(
+                          dialogContext.l10n.invite_generateHint,
+                          style: const TextStyle(fontSize: AppFontSize.f13),
                         ),
                         const SizedBox(height: AppSpacing.s16),
                         SizedBox(
@@ -256,7 +254,7 @@ Future<void> showInviteAssistantDialog(BuildContext context, String facilityId) 
                               foregroundColor: WidgetStateProperty.all(dialogContext.colors.onPrimary),
                               padding: WidgetStateProperty.all(const EdgeInsets.symmetric(vertical: AppSpacing.s12)),
                             ),
-                            child: const Text('Generate Invite Code'),
+                            child: Text(dialogContext.l10n.invite_generate),
                           ),
                         ),
                       ],
@@ -273,7 +271,7 @@ Future<void> showInviteAssistantDialog(BuildContext context, String facilityId) 
                   return dialogContext.colors.primary;
                 }),
               ),
-              child: const Text('Close'),
+              child: Text(dialogContext.l10n.common_close),
             ),
           ],
         );

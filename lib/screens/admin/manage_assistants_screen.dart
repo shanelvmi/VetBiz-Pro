@@ -133,7 +133,7 @@ class _ManageAssistantsScreenState extends State<ManageAssistantsScreen> {
   String _nameWithType(Map<String, dynamic> facility) {
     final name = ((facility['name'] as String?) ?? '').trim();
     final type = ((facility['type'] as String?) ?? '').trim();
-    if (name.isEmpty) return 'Unknown';
+    if (name.isEmpty) return L10n.current.common_unknown;
     if (type.isEmpty || name.toLowerCase().contains(type.toLowerCase())) return name;
     return '$name $type';
   }
@@ -227,7 +227,7 @@ class _ManageAssistantsScreenState extends State<ManageAssistantsScreen> {
       children: [
         const SizedBox(width: AppSpacing.s16, height: 16, child: CircularProgressIndicator(strokeWidth: 2)),
         const SizedBox(width: AppSpacing.s8),
-        Text('Working...', style: TextStyle(fontSize: AppFontSize.f12_5, color: context.colors.textMuted)),
+        Text(context.l10n.team_working, style: TextStyle(fontSize: AppFontSize.f12_5, color: context.colors.textMuted)),
       ],
     );
   }
@@ -268,12 +268,12 @@ class _ManageAssistantsScreenState extends State<ManageAssistantsScreen> {
       }
       if (!mounted) return;
       if (action == MembershipHistoryAction.rejected && _selectedUserId == userId) setState(() => _selectedUserId = null);
-      AppFeedback.success('$name ${action.key}');
+      AppFeedback.success(L10n.current.team_actionDone(name, action.key));
     } catch (e, st) {
       debugPrint('Error (${action.request}) for assistant: $e');
       // FriendlyError shows the server's own message for a Functions error,
       // as MembershipService.errorMessage did, and never the raw text.
-      AppFeedback.error("Couldn't update the assistant", error: e, stackTrace: st);
+      AppFeedback.error(L10n.current.team_updateFailed, error: e, stackTrace: st);
     }
   }
 
@@ -290,26 +290,27 @@ class _ManageAssistantsScreenState extends State<ManageAssistantsScreen> {
   Future<void> _removeFromFacility(String userId, String facilityId) async {
     try {
       await MembershipService().removeAssistantFromFacility(assistantUid: userId, facilityId: facilityId);
-      AppFeedback.success('Assistant removed from this facility');
+      AppFeedback.success(L10n.current.team_removed);
     } catch (e, st) {
       debugPrint('Error removing assistant from facility: $e');
-      AppFeedback.error("Couldn't remove the assistant", error: e, stackTrace: st);
+      AppFeedback.error(L10n.current.team_removeFailed, error: e, stackTrace: st);
     }
   }
 
   Future<void> _reassignAssistant(String userId, String newFacilityId) async {
     try {
       await MembershipService().reassignAssistant(assistantUid: userId, newFacilityId: newFacilityId);
-      AppFeedback.success('Assistant reassigned');
+      AppFeedback.success(L10n.current.team_reassigned);
     } catch (e, st) {
       debugPrint('Error reassigning assistant: $e');
-      AppFeedback.error("Couldn't reassign the assistant", error: e, stackTrace: st);
+      AppFeedback.error(L10n.current.team_reassignFailed, error: e, stackTrace: st);
     }
   }
 
   // Same look as the rest of the app - this used to be a dark grey dialog that
   // matched nothing else.
-  void _showFacilityPickerDialog(String userId, {String name = 'this assistant', String currentFacilityId = ''}) {
+  void _showFacilityPickerDialog(String userId, {String? name, String currentFacilityId = ''}) {
+    final who = name ?? context.l10n.team_thisAssistant;
     final options = facilityNames.entries.where((e) => e.key != currentFacilityId).toList();
     showDialog(
       context: context,
@@ -323,15 +324,15 @@ class _ManageAssistantsScreenState extends State<ManageAssistantsScreen> {
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('Move $name', style: const TextStyle(fontSize: AppFontSize.f17, fontWeight: AppFontWeight.bold)),
+                Text(context.l10n.team_moveTitle(who), style: const TextStyle(fontSize: AppFontSize.f17, fontWeight: AppFontWeight.bold)),
                 const SizedBox(height: AppSpacing.s6),
                 Text(
-                  'Choose the facility they should work in. They keep their account and their approval.',
+                  context.l10n.team_moveBody,
                   style: TextStyle(fontSize: AppFontSize.f13, color: context.colors.textMuted, height: 1.35),
                 ),
                 const SizedBox(height: AppSpacing.s16),
                 if (options.isEmpty)
-                  Text("You don't run any other facility to move them to.",
+                  Text(context.l10n.team_noOtherFacility,
                       style: TextStyle(fontSize: AppFontSize.f13, color: context.colors.textSoft))
                 else
                   ...options.map(
@@ -366,7 +367,7 @@ class _ManageAssistantsScreenState extends State<ManageAssistantsScreen> {
                   ),
                 Align(
                   alignment: Alignment.centerRight,
-                  child: TextButton(onPressed: () => Navigator.of(ctx).pop(), child: const Text('Cancel')),
+                  child: TextButton(onPressed: () => Navigator.of(ctx).pop(), child: Text(context.l10n.common_cancel)),
                 ),
               ],
             ),
@@ -403,11 +404,11 @@ class _ManageAssistantsScreenState extends State<ManageAssistantsScreen> {
     final chosen = await showDialog<String>(
       context: context,
       builder: (context) => SimpleDialog(
-        title: const Text('Invite Assistant To...'),
+        title: Text(context.l10n.team_inviteTo),
         children: adminFacilityIds.map((id) {
           return SimpleDialogOption(
             onPressed: () => Navigator.pop(context, id),
-            child: Text(facilityNames[id] ?? 'Unknown facility'),
+            child: Text(facilityNames[id] ?? context.l10n.team_unknownFacility),
           );
         }).toList(),
       ),
@@ -530,23 +531,23 @@ class _ManageAssistantsScreenState extends State<ManageAssistantsScreen> {
   // role - a role is still only the Platform Admin's to change.
   List<Widget> _actionsFor(QueryDocumentSnapshot doc, Map<String, dynamic> data, String status, String facilityId) {
     if (_busyUserIds.contains(doc.id)) return [_workingNote()];
-    if (doc.id == adminUid) return [_note('You', strong: true)];
+    if (doc.id == adminUid) return [_note(context.l10n.team_you, strong: true)];
     final kind = _kindOf(doc.id, data);
-    if (kind == TeamMemberKind.owner) return [_note('Facility admin')];
+    if (kind == TeamMemberKind.owner) return [_note(context.l10n.team_facilityAdmin)];
     if (kind == TeamMemberKind.coAdmin) {
       if (!_viewerOwns(facilityId)) return [_note(context.l10n.role_coAdmin)];
       final bucket = _bucket(data);
       return [
         if (bucket == UserStatus.active.key)
           _actionButton(
-            label: 'Deactivate',
+            label: context.l10n.team_deactivate,
             icon: Icons.pause_circle_outline,
             color: context.colors.warning,
             onPressed: () => _confirmDeactivateCoAdmin(doc, data),
           ),
         if (bucket == UserStatus.deactivated.key)
           _actionButton(
-            label: 'Reactivate',
+            label: context.l10n.team_reactivate,
             icon: Icons.play_circle_outline,
             color: context.colors.success,
             onPressed: () => _setCoAdminStatus(doc, data, UserStatus.active.key),
@@ -558,25 +559,24 @@ class _ManageAssistantsScreenState extends State<ManageAssistantsScreen> {
   }
 
   Future<void> _confirmDeactivateCoAdmin(QueryDocumentSnapshot doc, Map<String, dynamic> data) async {
-    final name = (data['fullName'] ?? 'this co-admin').toString();
+    final name = (data['fullName'] ?? context.l10n.team_thisCoAdmin).toString();
     final confirm = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: Text('Deactivate $name?'),
+        title: Text(context.l10n.team_deactivateTitle(name)),
         content: SizedBox(
           width: 340,
-          child: const Text(
-            'They\'ll be signed out straight away and can\'t log in until you reactivate them. '
-            'This doesn\'t change their role - only the platform administrator can do that.',
-            style: TextStyle(fontSize: AppFontSize.f13),
+          child: Text(
+            context.l10n.team_deactivateBody,
+            style: const TextStyle(fontSize: AppFontSize.f13),
           ),
         ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancel')),
+          TextButton(onPressed: () => Navigator.pop(ctx, false), child: Text(context.l10n.common_cancel)),
           ElevatedButton(
             style: ElevatedButton.styleFrom(backgroundColor: context.colors.warning, foregroundColor: context.colors.onPrimary),
             onPressed: () => Navigator.pop(ctx, true),
-            child: const Text('Deactivate'),
+            child: Text(context.l10n.team_deactivate),
           ),
         ],
       ),
@@ -612,10 +612,10 @@ class _ManageAssistantsScreenState extends State<ManageAssistantsScreen> {
           description: '${activating ? 'Reactivated' : 'Deactivated'} co-admin $name',
         );
       }
-      AppFeedback.success('$name ${activating ? 'reactivated' : 'deactivated'}');
+      AppFeedback.success(L10n.current.team_actionDone(name, activating ? 'reactivated' : 'deactivated'));
     } catch (e, st) {
       debugPrint('Error updating co-admin status: $e');
-      AppFeedback.error("Couldn't update the status", error: e, stackTrace: st);
+      AppFeedback.error(L10n.current.team_updateStatusFailed, error: e, stackTrace: st);
     }
   }
 
@@ -626,9 +626,9 @@ class _ManageAssistantsScreenState extends State<ManageAssistantsScreen> {
   // rather than naming just the first.
   String _facilityText(Map<String, dynamic> data) {
     final ids = _facilityIdsOf(data);
-    if (ids.isEmpty) return 'Unknown';
-    if (ids.length > 1) return '${ids.length} facilities';
-    return facilityNames[ids.first] ?? 'Unknown';
+    if (ids.isEmpty) return context.l10n.common_unknown;
+    if (ids.length > 1) return context.l10n.team_facilityCount(ids.length);
+    return facilityNames[ids.first] ?? context.l10n.common_unknown;
   }
 
   String _bucket(Map<String, dynamic> data) {
@@ -669,7 +669,7 @@ class _ManageAssistantsScreenState extends State<ManageAssistantsScreen> {
     return [
       if (status == UserStatus.pending.key) ...[
         _actionButton(
-          label: 'Approve',
+          label: context.l10n.team_approve,
           icon: Icons.check_circle_outline,
           color: context.colors.success,
           onPressed: () => _assistantAction(doc.id, data, MembershipHistoryAction.approved),
@@ -678,7 +678,7 @@ class _ManageAssistantsScreenState extends State<ManageAssistantsScreen> {
         // and, next time they sign in, asked for an invite code - not left
         // "waiting for approval" for ever.
         _actionButton(
-          label: 'Reject',
+          label: context.l10n.team_reject,
           icon: Icons.cancel_outlined,
           color: context.colors.danger,
           onPressed: () => _confirmReject(doc.id, data),
@@ -686,31 +686,31 @@ class _ManageAssistantsScreenState extends State<ManageAssistantsScreen> {
       ],
       if (status == UserStatus.active.key) ...[
         _actionButton(
-          label: 'Deactivate',
+          label: context.l10n.team_deactivate,
           icon: Icons.pause_circle_outline,
           color: context.colors.warning,
           onPressed: () => _assistantAction(doc.id, data, MembershipHistoryAction.deactivated),
         ),
         _actionButton(
-          label: 'Reassign',
+          label: context.l10n.team_reassign,
           icon: Icons.swap_horiz,
           color: Colors.teal,
           onPressed: () => _showFacilityPickerDialog(
             doc.id,
-            name: (data['fullName'] ?? 'this assistant').toString(),
+            name: (data['fullName'] ?? context.l10n.team_thisAssistant).toString(),
             currentFacilityId: facilityId,
           ),
         ),
       ],
       if (status == UserStatus.deactivated.key) ...[
         _actionButton(
-          label: 'Reactivate',
+          label: context.l10n.team_reactivate,
           icon: Icons.play_circle_outline,
           color: context.colors.success,
           onPressed: () => _assistantAction(doc.id, data, MembershipHistoryAction.reactivated),
         ),
         _actionButton(
-          label: 'Remove from Facility',
+          label: context.l10n.team_removeFromFacility,
           icon: Icons.person_remove_outlined,
           color: context.colors.textSoft,
           onPressed: () => _confirmRemoveFromFacility(doc.id, data, facilityId),
@@ -773,7 +773,7 @@ class _ManageAssistantsScreenState extends State<ManageAssistantsScreen> {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.end,
                   children: [
-                    TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancel')),
+                    TextButton(onPressed: () => Navigator.pop(ctx, false), child: Text(context.l10n.common_cancel)),
                     const SizedBox(width: AppSpacing.s8),
                     ElevatedButton(
                       style: ElevatedButton.styleFrom(backgroundColor: color, foregroundColor: context.colors.onPrimary),
@@ -792,35 +792,35 @@ class _ManageAssistantsScreenState extends State<ManageAssistantsScreen> {
   }
 
   Future<void> _confirmRemoveFromFacility(String userId, Map<String, dynamic> data, String facilityId) async {
-    final name = (data['fullName'] ?? 'This assistant').toString();
-    final facility = facilityNames[facilityId] ?? 'your facility';
+    final name = (data['fullName'] ?? context.l10n.team_thisAssistantCap).toString();
+    final facility = facilityNames[facilityId] ?? context.l10n.facilities_yourFacility;
     final ok = await _confirm(
       icon: Icons.person_remove_outlined,
       color: context.colors.danger,
-      title: 'Remove $name from $facility?',
+      title: context.l10n.team_removeTitle(name, facility),
       points: [
-        "$name will no longer be part of $facility, and won't see its records.",
-        "What $name recorded stays in $facility's history.",
-        'Their account is kept. When they next sign in they can enter an invite code to join a facility again.',
+        context.l10n.team_removePoint1(name, facility),
+        context.l10n.team_removePoint2(name, facility),
+        context.l10n.team_removePoint3,
       ],
-      confirmLabel: 'Remove from facility',
+      confirmLabel: context.l10n.team_removeFromFacilityConfirm,
     );
     if (ok) await removeFromFacility(userId, facilityId);
   }
 
   Future<void> _confirmReject(String userId, Map<String, dynamic> data) async {
-    final name = (data['fullName'] ?? 'this person').toString();
-    final facility = facilityNames[_facilityIdOf(data)] ?? 'your facility';
+    final name = (data['fullName'] ?? context.l10n.team_thisPerson).toString();
+    final facility = facilityNames[_facilityIdOf(data)] ?? context.l10n.facilities_yourFacility;
     final ok = await _confirm(
       icon: Icons.cancel_outlined,
       color: context.colors.danger,
-      title: 'Reject $name?',
+      title: context.l10n.team_rejectTitle(name),
       points: [
-        '$name is removed from $facility and is no longer waiting for approval.',
-        "When they next sign in they'll see the request wasn't approved, and be asked for an invite code - they can join again with a new one.",
-        "They aren't sent a message. Tell them yourself if you'd like them to know.",
+        context.l10n.team_rejectPoint1(name, facility),
+        context.l10n.team_rejectPoint2,
+        context.l10n.team_rejectPoint3,
       ],
-      confirmLabel: 'Reject',
+      confirmLabel: context.l10n.team_reject,
     );
     if (ok) await _assistantAction(userId, data, MembershipHistoryAction.rejected);
   }
@@ -846,14 +846,14 @@ class _ManageAssistantsScreenState extends State<ManageAssistantsScreen> {
       title: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Text('Team Members', style: TextStyle(fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f19, color: context.colors.textPrimary)),
-          Text("Manage your team's access and status", style: TextStyle(fontSize: AppFontSize.f12, color: context.colors.textSecondary)),
+          Text(context.l10n.team_title, style: TextStyle(fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f19, color: context.colors.textPrimary)),
+          Text(context.l10n.team_subtitle, style: TextStyle(fontSize: AppFontSize.f12, color: context.colors.textSecondary)),
         ],
       ),
       actions: [
         IconButton(
           icon: const Icon(Icons.refresh),
-          tooltip: 'Refresh',
+          tooltip: context.l10n.common_refresh,
           onPressed: _fetchAdminFacilities,
         ),
         // Same place Sales puts "Record Sale" - the primary action lives
@@ -861,7 +861,7 @@ class _ManageAssistantsScreenState extends State<ManageAssistantsScreen> {
         if (narrow)
           IconButton(
             icon: const Icon(Icons.person_add_alt),
-            tooltip: 'Invite Assistant',
+            tooltip: context.l10n.team_inviteAssistant,
             onPressed: _startInviteFlow,
           )
         else
@@ -870,7 +870,7 @@ class _ManageAssistantsScreenState extends State<ManageAssistantsScreen> {
             child: ElevatedButton.icon(
               onPressed: _startInviteFlow,
               icon: const Icon(Icons.person_add_alt, size: AppIconSize.i18),
-              label: const Text('Invite Assistant'),
+              label: Text(context.l10n.team_inviteAssistant),
               style: ElevatedButton.styleFrom(
                 backgroundColor: context.colors.primary,
                 foregroundColor: context.colors.background,
@@ -889,7 +889,7 @@ class _ManageAssistantsScreenState extends State<ManageAssistantsScreen> {
       return Scaffold(
         backgroundColor: context.colors.background,
         appBar: _buildAppBar(),
-        body: const Center(child: Text('No logged in admin user found')),
+        body: Center(child: Text(context.l10n.team_noAdmin)),
       );
     }
 
@@ -908,13 +908,13 @@ class _ManageAssistantsScreenState extends State<ManageAssistantsScreen> {
                       OutlinedButton.icon(
                         onPressed: _fetchAdminFacilities,
                         icon: const Icon(Icons.refresh, size: AppIconSize.i18),
-                        label: const Text('Try again'),
+                        label: Text(context.l10n.common_tryAgainLower),
                       ),
                     ],
                   ),
                 )
               : adminFacilityIds.isEmpty
-              ? const Center(child: Text('No facilities found for your account.'))
+              ? Center(child: Text(context.l10n.team_noFacilities))
               : StreamBuilder<QuerySnapshot>(
                   stream: _assistantsStream!,
                   builder: (context, snapshot) {
@@ -1048,9 +1048,9 @@ class _ManageAssistantsScreenState extends State<ManageAssistantsScreen> {
   Widget _buildCards(int totalCount, Map<String, int> counts) {
     final cards = <Widget>[
       _card(
-        label: 'Total',
+        label: context.l10n.common_total,
         value: '$totalCount',
-        hint: 'Across your facilities',
+        hint: context.l10n.team_acrossFacilities,
         icon: Icons.groups_outlined,
         color: context.colors.primary,
         filter: null,
@@ -1058,7 +1058,7 @@ class _ManageAssistantsScreenState extends State<ManageAssistantsScreen> {
       _card(
         label: context.l10n.userStatusLabel(UserStatus.active.key),
         value: '${counts[UserStatus.active.key] ?? 0}',
-        hint: 'Have access',
+        hint: context.l10n.team_haveAccess,
         icon: Icons.check_circle_outline,
         color: _statusColor(UserStatus.active.key),
         filter: UserStatus.active.key,
@@ -1066,15 +1066,15 @@ class _ManageAssistantsScreenState extends State<ManageAssistantsScreen> {
       _card(
         label: context.l10n.userStatusLabel(UserStatus.deactivated.key),
         value: '${counts[UserStatus.deactivated.key] ?? 0}',
-        hint: 'Access paused',
+        hint: context.l10n.team_accessPaused,
         icon: Icons.pause_circle_outline,
         color: _statusColor(UserStatus.deactivated.key),
         filter: UserStatus.deactivated.key,
       ),
       _card(
-        label: 'Waiting Approval',
+        label: context.l10n.team_waitingApproval,
         value: '${counts[UserStatus.pending.key] ?? 0}',
-        hint: 'Need your decision',
+        hint: context.l10n.team_needDecision,
         icon: Icons.hourglass_empty,
         color: _statusColor(UserStatus.pending.key),
         filter: UserStatus.pending.key,
@@ -1171,7 +1171,7 @@ class _ManageAssistantsScreenState extends State<ManageAssistantsScreen> {
     final search = TextField(
       controller: _searchController,
       decoration: InputDecoration(
-        hintText: 'Search by name, phone or facility...',
+        hintText: context.l10n.team_searchHint,
         hintStyle: const TextStyle(fontSize: AppFontSize.f13),
         prefixIcon: const Icon(Icons.search, size: AppIconSize.i20),
         filled: true,
@@ -1201,7 +1201,7 @@ class _ManageAssistantsScreenState extends State<ManageAssistantsScreen> {
 
     // Only worth showing when there's more than one facility to choose from.
     final showFacility = facilityNames.length > 1;
-    final reset = hasActiveFilters ? TextButton(onPressed: _resetFilters, child: const Text('Reset')) : null;
+    final reset = hasActiveFilters ? TextButton(onPressed: _resetFilters, child: Text(context.l10n.common_reset)) : null;
 
     return LayoutBuilder(
       builder: (context, constraints) {
@@ -1249,9 +1249,9 @@ class _ManageAssistantsScreenState extends State<ManageAssistantsScreen> {
           icon: Icon(Icons.arrow_drop_down, size: AppIconSize.i18, color: context.colors.primary),
           style: TextStyle(color: context.colors.textPrimary, fontSize: AppFontSize.f13),
           items: [
-            const DropdownMenuItem(value: 'All', child: Text('Facility: All')),
+            DropdownMenuItem(value: 'All', child: Text(context.l10n.common_filterValue(context.l10n.common_facility, context.l10n.common_all))),
             ...facilityNames.entries.map(
-              (e) => DropdownMenuItem(value: e.key, child: Text('Facility: ${e.value}', overflow: TextOverflow.ellipsis)),
+              (e) => DropdownMenuItem(value: e.key, child: Text(context.l10n.common_filterValue(context.l10n.common_facility, e.value), overflow: TextOverflow.ellipsis)),
             ),
           ],
           onChanged: (val) {
@@ -1276,9 +1276,9 @@ class _ManageAssistantsScreenState extends State<ManageAssistantsScreen> {
         children: [
           Icon(Icons.groups_outlined, size: AppIconSize.i64, color: context.colors.textDisabled),
           const SizedBox(height: AppSpacing.s16),
-          Text('No team members yet', style: TextStyle(fontSize: AppFontSize.f18, color: context.colors.textMuted)),
+          Text(context.l10n.team_emptyTitle, style: TextStyle(fontSize: AppFontSize.f18, color: context.colors.textMuted)),
           const SizedBox(height: AppSpacing.s4),
-          Text('Use Invite Assistant to add your first team member.',
+          Text(context.l10n.team_emptyHint,
               style: TextStyle(fontSize: AppFontSize.f13, color: context.colors.textHint)),
         ],
       ),
@@ -1298,11 +1298,11 @@ class _ManageAssistantsScreenState extends State<ManageAssistantsScreen> {
             children: [
               Icon(Icons.group_add_outlined, size: AppIconSize.i48, color: Colors.teal.shade300),
               const SizedBox(height: AppSpacing.s12),
-              const Text('No assistants yet',
+              Text(context.l10n.team_noAssistants,
                   textAlign: TextAlign.center, style: TextStyle(fontSize: AppFontSize.f17, fontWeight: AppFontWeight.semibold)),
               const SizedBox(height: AppSpacing.s6),
               Text(
-                'Use Invite Assistant to add your first team member.',
+                context.l10n.team_emptyHint,
                 textAlign: TextAlign.center,
                 style: TextStyle(fontSize: AppFontSize.f13_5, color: context.colors.textMuted),
               ),
@@ -1310,7 +1310,7 @@ class _ManageAssistantsScreenState extends State<ManageAssistantsScreen> {
               OutlinedButton.icon(
                 onPressed: _startInviteFlow,
                 icon: const Icon(Icons.person_add_alt_1_outlined, size: AppIconSize.i18),
-                label: const Text('Invite Assistant'),
+                label: Text(context.l10n.team_inviteAssistant),
               ),
             ],
           ),
@@ -1326,9 +1326,9 @@ class _ManageAssistantsScreenState extends State<ManageAssistantsScreen> {
         children: [
           Icon(Icons.search_off, size: AppIconSize.i56, color: context.colors.textDisabled),
           const SizedBox(height: AppSpacing.s12),
-          Text('No team members match your filters', style: TextStyle(fontSize: AppFontSize.f17, color: context.colors.textMuted)),
+          Text(context.l10n.team_noMatches, style: TextStyle(fontSize: AppFontSize.f17, color: context.colors.textMuted)),
           const SizedBox(height: AppSpacing.s8),
-          TextButton(onPressed: _resetFilters, child: const Text('Reset filters')),
+          TextButton(onPressed: _resetFilters, child: Text(context.l10n.common_resetFilters)),
         ],
       ),
     );
@@ -1355,12 +1355,12 @@ class _ManageAssistantsScreenState extends State<ManageAssistantsScreen> {
               decoration: BoxDecoration(border: Border(bottom: BorderSide(color: context.colors.textHint.withValues(alpha: AppAlpha.a20)))),
               child: Row(
                 children: [
-                  _headerCell('User name', flex: 4),
-                  _headerCell('Role', flex: 2),
-                  _headerCell('Phone', flex: 2),
-                  _headerCell('Facility', flex: 3),
-                  _headerCell('Status', flex: 2),
-                  _headerCell('Actions', flex: 4),
+                  _headerCell(context.l10n.team_colUserName, flex: 4),
+                  _headerCell(context.l10n.team_colRole, flex: 2),
+                  _headerCell(context.l10n.common_phone, flex: 2),
+                  _headerCell(context.l10n.common_facility, flex: 3),
+                  _headerCell(context.l10n.common_status, flex: 2),
+                  _headerCell(context.l10n.common_actions, flex: 4),
                 ],
               ),
             ),
@@ -1573,7 +1573,7 @@ class _ManageAssistantsScreenState extends State<ManageAssistantsScreen> {
 
   DateTime? _ts(dynamic value) => value is Timestamp ? value.toDate() : null;
 
-  String _when(DateTime? d) => d == null ? 'Not recorded' : AppDateFormat.dateTime24.format(d);
+  String _when(DateTime? d) => d == null ? context.l10n.team_notRecorded : AppDateFormat.dateTime24.format(d);
 
   Widget _panelField(IconData icon, String label, String value, {String? subtitle}) {
     return Padding(
@@ -1651,7 +1651,7 @@ class _ManageAssistantsScreenState extends State<ManageAssistantsScreen> {
     // Newest first. Registration comes from the account itself; everything
     // after it from the history the server keeps with each change.
     final history = <({DateTime? at, Color color, String title, String by})>[
-      (at: created, color: context.colors.textHint, title: 'Registered', by: ''),
+      (at: created, color: context.colors.textHint, title: context.l10n.team_registered, by: ''),
     ];
     final rawHistory = data['statusHistory'];
     if (rawHistory is List) {
@@ -1691,7 +1691,7 @@ class _ManageAssistantsScreenState extends State<ManageAssistantsScreen> {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                const Text('Team Member Details', style: TextStyle(fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f16)),
+                Text(context.l10n.team_detailsTitle, style: const TextStyle(fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f16)),
                 IconButton(
                   icon: const Icon(Icons.close, size: AppIconSize.i20),
                   onPressed: onClose ?? () => setState(() => _selectedUserId = null),
@@ -1714,7 +1714,7 @@ class _ManageAssistantsScreenState extends State<ManageAssistantsScreen> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        '${data['fullName'] ?? ''}${isSelf ? '  (you)' : ''}',
+                        isSelf ? context.l10n.team_nameYou('${data['fullName'] ?? ''}') : '${data['fullName'] ?? ''}',
                         style: const TextStyle(fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f17),
                       ),
                       const SizedBox(height: AppSpacing.s6),
@@ -1729,43 +1729,46 @@ class _ManageAssistantsScreenState extends State<ManageAssistantsScreen> {
               Wrap(spacing: AppSpacing.s8, runSpacing: AppSpacing.s8, children: _actionsFor(doc, data, rawStatus, facilityId)),
             ],
             const Divider(height: 28),
-            _panelField(Icons.phone_outlined, 'Phone', '${data['phone'] ?? ''}'.isEmpty ? 'Not recorded' : '${data['phone']}'),
-            _panelField(Icons.mail_outline, 'Email', email.isEmpty ? 'Not recorded' : email),
-            _panelField(Icons.storefront_outlined, 'Facility', _facilityText(data)),
+            _panelField(Icons.phone_outlined, context.l10n.common_phone, '${data['phone'] ?? ''}'.isEmpty ? context.l10n.team_notRecorded : '${data['phone']}'),
+            _panelField(Icons.mail_outline, context.l10n.common_email, email.isEmpty ? context.l10n.team_notRecorded : email),
+            _panelField(Icons.storefront_outlined, context.l10n.common_facility, _facilityText(data)),
             const Divider(height: 28),
             _panelField(
               Icons.event_available_outlined,
-              'Joined',
+              context.l10n.team_joined,
               _when(created),
-              subtitle: rejoined != null ? 'Asked to join again: ${_when(rejoined)}' : null,
+              subtitle: rejoined != null ? context.l10n.team_askedAgain(_when(rejoined)) : null,
             ),
             if (isAssistant)
               _panelField(
                 Icons.verified_outlined,
-                'Approved',
+                context.l10n.team_approvedLabel,
                 approved != null
                     ? _when(approved)
-                    : (bucket == UserStatus.pending.key ? 'Waiting for approval' : 'Not recorded'),
+                    : (bucket == UserStatus.pending.key ? context.l10n.team_waitingForApproval : context.l10n.team_notRecorded),
                 subtitle: approved != null
-                    ? (approvedBy.isEmpty ? null : 'by $approvedBy')
-                    : (bucket == UserStatus.pending.key ? null : 'Approved before approvals were recorded'),
+                    ? (approvedBy.isEmpty ? null : context.l10n.team_byName(approvedBy))
+                    : (bucket == UserStatus.pending.key ? null : context.l10n.team_approvedBeforeRecords),
               ),
             _panelField(
               Icons.update_outlined,
-              'Last status change',
+              context.l10n.team_lastStatusChange,
               _when(statusChanged),
-              subtitle: changedBy.isEmpty ? null : 'by $changedBy${changedRole.isEmpty ? '' : ' ($changedRole)'}',
+              // The role is shown as stored.
+              subtitle: changedBy.isEmpty
+                  ? null
+                  : (changedRole.isEmpty ? context.l10n.team_byName(changedBy) : context.l10n.team_byNameRole(changedBy, changedRole)),
             ),
-            _panelField(Icons.access_time, 'Last active', _when(lastActive)),
+            _panelField(Icons.access_time, context.l10n.team_lastActive, _when(lastActive)),
             const Divider(height: 28),
-            const Text('History', style: TextStyle(fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f13_5)),
+            Text(context.l10n.team_history, style: const TextStyle(fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f13_5)),
             const SizedBox(height: AppSpacing.s12),
             for (final h in history)
-              _historyTile(h.color, h.title, '${_when(h.at)}${h.by.isEmpty ? '' : '  \u00b7  by ${h.by}'}'),
+              _historyTile(h.color, h.title, h.by.isEmpty ? _when(h.at) : context.l10n.team_historyLine(_when(h.at), h.by)),
             if (!showActions && !isSelf) ...[
               const SizedBox(height: AppSpacing.s4),
               Text(
-                'Use the buttons on this person\'s card to approve, reject or remove them.',
+                context.l10n.team_useCardButtons,
                 style: TextStyle(fontSize: AppFontSize.f12, color: context.colors.textMuted),
               ),
             ],
@@ -1845,7 +1848,7 @@ class _ManageAssistantsScreenState extends State<ManageAssistantsScreen> {
         runSpacing: AppSpacing.s4,
         children: [
           Text(
-            total == 0 ? 'No assistants' : 'Showing $start to $end of $total assistant${total == 1 ? '' : 's'}',
+            total == 0 ? context.l10n.team_noAssistantsPage : context.l10n.team_showingRange(start, end, total),
             style: TextStyle(fontSize: AppFontSize.f12_5, color: context.colors.textMuted),
           ),
           Row(
@@ -1855,7 +1858,7 @@ class _ManageAssistantsScreenState extends State<ManageAssistantsScreen> {
                 child: DropdownButton<int>(
                   value: _pageSize,
                   items: const [10, 25, 50]
-                      .map((n) => DropdownMenuItem(value: n, child: Text('$n per page')))
+                      .map((n) => DropdownMenuItem(value: n, child: Text(context.l10n.common_perPage(n))))
                       .toList(),
                   onChanged: (val) {
                     if (val != null) {
@@ -1872,7 +1875,7 @@ class _ManageAssistantsScreenState extends State<ManageAssistantsScreen> {
                 icon: const Icon(Icons.chevron_left),
                 onPressed: page > 1 ? () => setState(() => _page = page - 1) : null,
               ),
-              Text('Page $page', style: const TextStyle(fontSize: AppFontSize.f13)),
+              Text(context.l10n.common_page(page), style: const TextStyle(fontSize: AppFontSize.f13)),
               IconButton(
                 icon: const Icon(Icons.chevron_right),
                 onPressed: page < totalPages ? () => setState(() => _page = page + 1) : null,
