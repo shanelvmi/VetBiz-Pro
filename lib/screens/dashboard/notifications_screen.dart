@@ -11,13 +11,16 @@ import '../../utils/notification_seen_tracker.dart';
 import '../../models/notification_model.dart';
 import '../../widgets/announcement_message.dart';
 import '../../widgets/notification_row.dart';
-import '../../theme/app_palette.dart';
 import '../../data/collections.dart';
 import '../../data/fields.dart';
 import '../../config/app_limits.dart';
 import '../../config/app_timeouts.dart';
 import '../../config/app_ranges.dart';
 import '../../config/app_date_format.dart';
+import '../../theme/app_text.dart';
+import '../../theme/app_dimens.dart';
+import '../../theme/theme_context.dart';
+import '../../theme/app_breakpoints.dart';
 
 /// Everything that needs your attention, facility-wide - subscription
 /// status, urgent announcements, payments, debts, and system messages.
@@ -29,7 +32,6 @@ class NotificationsScreen extends StatefulWidget {
   final bool isDropdown;
   const NotificationsScreen({super.key, this.isDropdown = false});
 
-  static const Color primaryColor = AppPalette.primary;
 
   @override
   State<NotificationsScreen> createState() => _NotificationsScreenState();
@@ -344,25 +346,25 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
     }
 
     return Scaffold(
-      backgroundColor: const Color(0xFFFDFDF9),
+      backgroundColor: context.colors.background,
       appBar: AppBar(
-        backgroundColor: Colors.white,
-        foregroundColor: Colors.black87,
-        elevation: 1,
+        backgroundColor: context.colors.surface,
+        foregroundColor: context.colors.textPrimary,
+        elevation: AppElevation.e1,
         centerTitle: true,
         toolbarHeight: 72,
-        title: const Column(
+        title: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Text('Notifications', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 19, color: Colors.black87)),
-            Text('All updates and alerts from your facility', style: TextStyle(fontSize: 12, color: Colors.black54)),
+            Text('Notifications', style: TextStyle(fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f19, color: context.colors.textPrimary)),
+            Text('All updates and alerts from your facility', style: TextStyle(fontSize: AppFontSize.f12, color: context.colors.textSecondary)),
           ],
         ),
       ),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
           : _error != null
-              ? Center(child: Padding(padding: const EdgeInsets.all(24), child: Text('Could not load alerts: $_error')))
+              ? Center(child: Padding(padding: const EdgeInsets.all(AppSpacing.s24), child: Text('Could not load alerts: $_error')))
               : _buildFullScreenBody(),
     );
   }
@@ -372,7 +374,6 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
   // laid out like the Sales and Product Alerts screens.
   // ======================================================================
 
-  static const Color _primary = NotificationsScreen.primaryColor;
 
   // The filter cards, in display order - the same categories the old tab
   // strip offered; "All" is simply no card selected.
@@ -421,17 +422,17 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
   Color _categoryColor(NotificationCategory c) {
     switch (c) {
       case NotificationCategory.critical:
-        return Colors.red;
+        return context.colors.danger;
       case NotificationCategory.stock:
-        return Colors.orange;
+        return context.colors.warning;
       case NotificationCategory.payment:
-        return Colors.green;
+        return context.colors.success;
       case NotificationCategory.debt:
         return const Color(0xFFE59A00);
       case NotificationCategory.system:
-        return Colors.blue;
+        return context.colors.info;
       case NotificationCategory.other:
-        return Colors.grey;
+        return context.colors.textHint;
     }
   }
 
@@ -455,11 +456,11 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
     return Column(
       children: [
         Padding(
-          padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
+          padding: const EdgeInsets.fromLTRB(AppSpacing.s16, AppSpacing.s16, AppSpacing.s16, 0),
           child: _buildCategoryCards(counts, unreadCounts),
         ),
         Padding(
-          padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+          padding: const EdgeInsets.fromLTRB(AppSpacing.s16, AppSpacing.s12, AppSpacing.s16, 0),
           child: _buildFilters(),
         ),
         Expanded(
@@ -479,7 +480,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
   Widget _buildCategoryCards(Map<NotificationCategory, int> counts, Map<NotificationCategory, int> unread) {
     return LayoutBuilder(
       builder: (context, constraints) {
-        final columns = constraints.maxWidth >= 720 ? 5 : 3;
+        final columns = constraints.maxWidth >= AppBreakpoints.fiveColumnCards ? 5 : 3;
         return GridView.builder(
           shrinkWrap: true,
           physics: const NeverScrollableScrollPhysics(),
@@ -505,17 +506,17 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
     final color = _categoryColor(category);
     final selected = _selectedCategory == category;
     final shape = RoundedRectangleBorder(
-      borderRadius: BorderRadius.circular(12),
+      borderRadius: BorderRadius.circular(AppRadius.r12),
       side: BorderSide(
-        color: selected ? color.withValues(alpha: 0.7) : Colors.grey.withValues(alpha: 0.15),
+        color: selected ? color.withValues(alpha: AppAlpha.a70) : context.colors.textHint.withValues(alpha: AppAlpha.a15),
         width: selected ? 1.5 : 1,
       ),
     );
     return Material(
-      color: selected ? color.withValues(alpha: 0.06) : Colors.white,
+      color: selected ? color.withValues(alpha: AppAlpha.a05) : context.colors.surface,
       shape: shape,
-      elevation: 1,
-      shadowColor: Colors.black.withValues(alpha: 0.05),
+      elevation: AppElevation.e1,
+      shadowColor: context.colors.shadow.withValues(alpha: AppAlpha.a05),
       child: InkWell(
         customBorder: shape,
         onTap: () => setState(() {
@@ -523,7 +524,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
           _currentPage = 1;
         }),
         child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+          padding: const EdgeInsets.symmetric(horizontal: AppSpacing.s12, vertical: AppSpacing.s10),
           child: FittedBox(
             fit: BoxFit.scaleDown,
             alignment: Alignment.topLeft,
@@ -537,21 +538,21 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                       width: 26,
                       height: 26,
                       decoration:
-                          BoxDecoration(color: color.withValues(alpha: 0.12), borderRadius: BorderRadius.circular(7)),
-                      child: Icon(_categoryIcon(category), color: color, size: 14),
+                          BoxDecoration(color: color.withValues(alpha: AppAlpha.a10), borderRadius: BorderRadius.circular(AppRadius.r7)),
+                      child: Icon(_categoryIcon(category), color: color, size: AppIconSize.i14),
                     ),
-                    const SizedBox(width: 8),
-                    Text('$count', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                    const SizedBox(width: AppSpacing.s8),
+                    Text('$count', style: const TextStyle(fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f16)),
                   ],
                 ),
-                const SizedBox(height: 4),
-                Text(_categoryName(category), style: TextStyle(fontSize: 11.5, color: Colors.grey[600])),
+                const SizedBox(height: AppSpacing.s4),
+                Text(_categoryName(category), style: TextStyle(fontSize: AppFontSize.f11_5, color: context.colors.textMuted)),
                 Text(
                   unread > 0 ? '$unread unread' : 'All read',
                   style: TextStyle(
-                    fontSize: 10.5,
-                    color: unread > 0 ? color : Colors.grey[400],
-                    fontWeight: unread > 0 ? FontWeight.w600 : FontWeight.normal,
+                    fontSize: AppFontSize.f10_5,
+                    color: unread > 0 ? color : context.colors.textDisabled,
+                    fontWeight: unread > 0 ? AppFontWeight.semibold : AppFontWeight.regular,
                   ),
                 ),
               ],
@@ -566,26 +567,26 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
 
   Widget _buildFilters() {
     final border = OutlineInputBorder(
-      borderRadius: BorderRadius.circular(10),
-      borderSide: BorderSide(color: Colors.grey.withValues(alpha: 0.3)),
+      borderRadius: BorderRadius.circular(AppRadius.r10),
+      borderSide: BorderSide(color: context.colors.textHint.withValues(alpha: AppAlpha.a30)),
     );
 
     final search = TextField(
       controller: _searchController,
       decoration: InputDecoration(
         hintText: 'Search notifications...',
-        hintStyle: const TextStyle(fontSize: 13),
-        prefixIcon: const Icon(Icons.search, size: 20),
+        hintStyle: const TextStyle(fontSize: AppFontSize.f13),
+        prefixIcon: const Icon(Icons.search, size: AppIconSize.i20),
         filled: true,
-        fillColor: Colors.white,
+        fillColor: context.colors.surface,
         isDense: true,
-        contentPadding: const EdgeInsets.symmetric(vertical: 12, horizontal: 12),
+        contentPadding: const EdgeInsets.symmetric(vertical: AppSpacing.s12, horizontal: AppSpacing.s12),
         border: border,
         enabledBorder: border,
         suffixIcon: _searchController.text.isEmpty
             ? null
             : IconButton(
-                icon: const Icon(Icons.clear, size: 18),
+                icon: const Icon(Icons.clear, size: AppIconSize.i18),
                 onPressed: () {
                   _searchController.clear();
                   setState(() {
@@ -604,32 +605,32 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
     final hasUnread = [..._needsAttention, ..._earlier].any((n) => !n.isRead);
     final markAll = OutlinedButton.icon(
       onPressed: hasUnread ? _markAllAsRead : null,
-      icon: const Icon(Icons.done_all, size: 16),
+      icon: const Icon(Icons.done_all, size: AppIconSize.i16),
       label: const Text('Mark all read'),
       style: OutlinedButton.styleFrom(
-        foregroundColor: _primary,
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-        side: BorderSide(color: Colors.grey.withValues(alpha: 0.3)),
+        foregroundColor: context.colors.primary,
+        padding: const EdgeInsets.symmetric(horizontal: AppSpacing.s14, vertical: AppSpacing.s12),
+        side: BorderSide(color: context.colors.textHint.withValues(alpha: AppAlpha.a30)),
       ),
     );
     final reset = _hasActiveFilters ? TextButton(onPressed: _resetFilters, child: const Text('Reset')) : null;
 
     return LayoutBuilder(
       builder: (context, constraints) {
-        if (constraints.maxWidth < 820) {
+        if (constraints.maxWidth < AppBreakpoints.twoPane) {
           return Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               search,
-              const SizedBox(height: 10),
+              const SizedBox(height: AppSpacing.s10),
               Row(
                 children: [
                   Expanded(child: _dateRangeButton(expand: true)),
-                  const SizedBox(width: 10),
+                  const SizedBox(width: AppSpacing.s10),
                   Expanded(child: _statusDropdown(expand: true)),
                 ],
               ),
-              const SizedBox(height: 10),
+              const SizedBox(height: AppSpacing.s10),
               Row(
                 children: [
                   if (reset != null) reset,
@@ -644,12 +645,12 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
         return Row(
           children: [
             Expanded(flex: 3, child: search),
-            const SizedBox(width: 10),
+            const SizedBox(width: AppSpacing.s10),
             _dateRangeButton(),
-            const SizedBox(width: 10),
+            const SizedBox(width: AppSpacing.s10),
             _statusDropdown(),
-            if (reset != null) ...[const SizedBox(width: 10), reset],
-            const SizedBox(width: 10),
+            if (reset != null) ...[const SizedBox(width: AppSpacing.s10), reset],
+            const SizedBox(width: AppSpacing.s10),
             markAll,
           ],
         );
@@ -659,19 +660,19 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
 
   Widget _statusDropdown({bool expand = false}) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10),
+      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.s10),
       height: 44,
       decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: Colors.grey.withValues(alpha: 0.3)),
+        color: context.colors.surface,
+        borderRadius: BorderRadius.circular(AppRadius.r10),
+        border: Border.all(color: context.colors.textHint.withValues(alpha: AppAlpha.a30)),
       ),
       child: DropdownButtonHideUnderline(
         child: DropdownButton<String>(
           value: _statusFilter,
           isExpanded: expand,
-          icon: const Icon(Icons.arrow_drop_down, size: 18, color: _primary),
-          style: const TextStyle(color: Colors.black87, fontSize: 13),
+          icon: Icon(Icons.arrow_drop_down, size: AppIconSize.i18, color: context.colors.primary),
+          style: TextStyle(color: context.colors.textPrimary, fontSize: AppFontSize.f13),
           items: const ['All', 'Unread', 'Read']
               .map((v) => DropdownMenuItem(value: v, child: Text('Status: $v')))
               .toList(),
@@ -699,18 +700,18 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
       label,
       maxLines: 1,
       overflow: TextOverflow.ellipsis,
-      style: const TextStyle(fontSize: 13, color: Colors.black87),
+      style: TextStyle(fontSize: AppFontSize.f13, color: context.colors.textPrimary),
     );
     final tappable = InkWell(
-      borderRadius: BorderRadius.circular(10),
+      borderRadius: BorderRadius.circular(AppRadius.r10),
       onTap: _pickDateRange,
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 12),
+        padding: const EdgeInsets.symmetric(horizontal: AppSpacing.s10, vertical: AppSpacing.s12),
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Icon(Icons.calendar_today_outlined, size: 15, color: _primary),
-            const SizedBox(width: 8),
+            Icon(Icons.calendar_today_outlined, size: AppIconSize.i16, color: context.colors.primary),
+            const SizedBox(width: AppSpacing.s8),
             if (expand) Flexible(child: labelText) else labelText,
           ],
         ),
@@ -719,9 +720,9 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
     return Container(
       height: 44,
       decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: Colors.grey.withValues(alpha: 0.3)),
+        color: context.colors.surface,
+        borderRadius: BorderRadius.circular(AppRadius.r10),
+        border: Border.all(color: context.colors.textHint.withValues(alpha: AppAlpha.a30)),
       ),
       child: Row(
         mainAxisSize: expand ? MainAxisSize.max : MainAxisSize.min,
@@ -729,7 +730,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
           if (expand) Expanded(child: tappable) else tappable,
           if (_dateRange != null)
             IconButton(
-              icon: const Icon(Icons.close, size: 16),
+              icon: const Icon(Icons.close, size: AppIconSize.i16),
               tooltip: 'Clear date range',
               visualDensity: VisualDensity.compact,
               onPressed: () => setState(() {
@@ -764,12 +765,12 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(Icons.notifications_none, size: 64, color: Colors.grey[400]),
-          const SizedBox(height: 16),
-          Text('No notifications', style: TextStyle(fontSize: 18, color: Colors.grey[600])),
-          const SizedBox(height: 4),
+          Icon(Icons.notifications_none, size: AppIconSize.i64, color: context.colors.textDisabled),
+          const SizedBox(height: AppSpacing.s16),
+          Text('No notifications', style: TextStyle(fontSize: AppFontSize.f18, color: context.colors.textMuted)),
+          const SizedBox(height: AppSpacing.s4),
           Text('New updates from your facility will appear here.',
-              style: TextStyle(fontSize: 13, color: Colors.grey[500])),
+              style: TextStyle(fontSize: AppFontSize.f13, color: context.colors.textHint)),
         ],
       ),
     );
@@ -780,10 +781,10 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(Icons.search_off, size: 56, color: Colors.grey[400]),
-          const SizedBox(height: 12),
-          Text('No notifications match your filters', style: TextStyle(fontSize: 17, color: Colors.grey[600])),
-          const SizedBox(height: 8),
+          Icon(Icons.search_off, size: AppIconSize.i56, color: context.colors.textDisabled),
+          const SizedBox(height: AppSpacing.s12),
+          Text('No notifications match your filters', style: TextStyle(fontSize: AppFontSize.f17, color: context.colors.textMuted)),
+          const SizedBox(height: AppSpacing.s8),
           TextButton(onPressed: _resetFilters, child: const Text('Reset filters')),
         ],
       ),
@@ -861,7 +862,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
   }
 
   Widget _statusChip(FacilityNotification n) {
-    final color = n.isRead ? Colors.grey : _primary;
+    final color = n.isRead ? Colors.grey : context.colors.primary;
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(color: color.withValues(alpha: 0.12), borderRadius: BorderRadius.circular(10)),
@@ -881,7 +882,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
       key: ValueKey(n.id),
       // Coloured bar down the left edge, tinted while unread.
       decoration: BoxDecoration(
-        color: unread ? _primary.withValues(alpha: 0.04) : null,
+        color: unread ? context.colors.primary.withValues(alpha: 0.04) : null,
         border: Border(left: BorderSide(color: _categoryColor(n.category), width: 4)),
       ),
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
@@ -953,7 +954,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
         borderRadius: BorderRadius.circular(11),
         child: Container(
           decoration: BoxDecoration(
-            color: unread ? Color.alphaBlend(_primary.withValues(alpha: 0.04), Colors.white) : Colors.white,
+            color: unread ? Color.alphaBlend(context.colors.primary.withValues(alpha: 0.04), Colors.white) : Colors.white,
             border: Border(left: BorderSide(color: _categoryColor(n.category), width: 4)),
           ),
           padding: const EdgeInsets.all(12),
@@ -1070,7 +1071,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
         Container(
           padding: const EdgeInsets.fromLTRB(16, 14, 8, 14),
           decoration: BoxDecoration(
-            color: NotificationsScreen.primaryColor,
+            color: context.colors.primary,
             borderRadius: const BorderRadius.vertical(top: Radius.circular(12)),
           ),
           child: Row(
@@ -1162,7 +1163,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                 navigator.pop();
                 navigator.push(MaterialPageRoute(builder: (_) => const NotificationsScreen()));
               },
-              style: TextButton.styleFrom(foregroundColor: NotificationsScreen.primaryColor),
+              style: TextButton.styleFrom(foregroundColor: context.colors.primary),
               child: const Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
@@ -1265,11 +1266,11 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
   Widget _sectionHeader(IconData icon, String title, int count, Color color) {
     return Row(
       children: [
-        Icon(icon, size: 16, color: NotificationsScreen.primaryColor),
+        Icon(icon, size: 16, color: context.colors.primary),
         const SizedBox(width: 6),
         Expanded(
           child: Text(title,
-              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: NotificationsScreen.primaryColor)),
+              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: context.colors.primary)),
         ),
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
