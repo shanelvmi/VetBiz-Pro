@@ -82,6 +82,7 @@ Colours are outside the standing snap rule, so this is kept as it is:
 - **Services steel blue `#5C7C99`**, `lib/screens/dashboard/dashboard_screen.dart` (`servicesSteelBlue`): no role within 12 (`roleAssistant` is 14 off on blue). Kept as a named constant. A role for it?
 - **Drawer hover fill `Colors.teal.shade700`**, `dashboard_screen.dart` (`DrawerHoverItem`): same value as `roleCoAdminStrong`, different purpose. Kept.
 - **Drawer item timings**, `dashboard_screen.dart`, kept as named constants: `_hoverFade` 200 ms (between `fast` and `normal`), `_tooltipWait` 300 ms (`tooltipDelay` is 400).
+- **Subscription banner**, `dashboard_screen.dart` `_buildSubscriptionBanner`: `deepAmber` `#C77800` and `cream` `#FFF6E7` (local consts; no role within 12), the cream at alpha 0.92 (no step within 0.05), and `_bannerSwitch` 550 ms (50 above `slowest`). All kept.
 - **Left as written on purpose (owner's D9 rule):** the bell's `_BlinkingDot` class (its 700/1400/400 ms timings, 9 px dot, red default), and the 900 ms delay before the subscription pill shows.
 
 ### Trash and restore: books consistency (audit after D6, read-only)

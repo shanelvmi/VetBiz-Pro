@@ -68,6 +68,8 @@ import '../../config/app_links.dart';
 import '../../config/app_info.dart';
 import '../../theme/app_dimens.dart';
 import '../../theme/theme_context.dart';
+import '../../theme/app_breakpoints.dart';
+import '../../ui/feedback/app_feedback.dart';
 import '../../theme/app_text.dart';
 import '../../theme/app_motion.dart';
 
@@ -345,6 +347,9 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
   // The Services colour (glance strip, chart, quick actions): no role within
   // 12; kept exact and listed in design-open-questions.md (D9).
   static const Color servicesSteelBlue = Color(0xFF5C7C99);
+  // The subscription banner's fade-and-scale switch: 550 ms, 50 above
+  // AppMotion.slowest. Kept exact and listed (D9).
+  static const Duration _bannerSwitch = Duration(milliseconds: 550);
 
   final user = FirebaseAuth.instance.currentUser;
   late final userDoc = FirebaseFirestore.instance.collection(Collections.users).doc(user?.uid);
@@ -990,13 +995,9 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
       final downloadUrl = await storageRef.getDownloadURL();
       await userDoc.update({'avatarUrl': downloadUrl});
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Profile avatar updated successfully.')),
-      );
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Failed to save profile avatar.')),
-      );
+      AppFeedback.success('Profile avatar updated');
+    } catch (e, st) {
+      AppFeedback.error("Couldn't save the profile avatar", error: e, stackTrace: st);
     }
   }
 
@@ -1045,14 +1046,10 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
               try {
                 await FirebaseAuth.instance.sendPasswordResetEmail(email: email);
                 Navigator.pop(context);
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: Text("Reset link sent to $email")),
-                );
-              } catch (e) {
+                AppFeedback.success('Reset link sent to $email');
+              } catch (e, st) {
                 Navigator.pop(context);
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: Text("Error: $e")),
-                );
+                AppFeedback.error("Couldn't send the reset link", error: e, stackTrace: st);
               }
             },
             child: Text("Send Link", style: TextStyle(color: context.colors.background)),
@@ -1125,18 +1122,18 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
 
     return LayoutBuilder(
       builder: (context, constraints) {
-        bool isLargeScreen = constraints.maxWidth >= 1024;
+        bool isLargeScreen = constraints.maxWidth >= AppBreakpoints.expanded;
 
         return Scaffold(
           backgroundColor: context.colors.background,
           appBar: isLargeScreen ? null : AppBar(
-            backgroundColor: Colors.white,
-            elevation: 1,
+            backgroundColor: context.colors.surface,
+            elevation: AppElevation.e1,
             centerTitle: false,
-            iconTheme: const IconThemeData(color: Colors.black87),
+            iconTheme: IconThemeData(color: context.colors.textPrimary),
             leading: isLargeScreen
                 ? IconButton(
-                    icon: Icon(_isDrawerCollapsed ? Icons.menu_open : Icons.menu, color: Colors.black87, size: 22),
+                    icon: Icon(_isDrawerCollapsed ? Icons.menu_open : Icons.menu, color: context.colors.textPrimary, size: AppIconSize.i22),
                     tooltip: _isDrawerCollapsed ? 'Expand menu' : 'Collapse menu',
                     onPressed: _toggleDrawerCollapsed,
                   )
@@ -1149,22 +1146,22 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
                 Container(
                   width: 260,
                   height: 38,
-                  margin: const EdgeInsets.only(right: 12),
-                  padding: const EdgeInsets.symmetric(horizontal: 12),
+                  margin: const EdgeInsets.only(right: AppSpacing.s12),
+                  padding: const EdgeInsets.symmetric(horizontal: AppSpacing.s12),
                   decoration: BoxDecoration(
                     color: context.colors.background,
-                    borderRadius: BorderRadius.circular(8),
-                    border: Border.all(color: Colors.grey.withValues(alpha: 0.25)),
+                    borderRadius: BorderRadius.circular(AppRadius.r8),
+                    border: Border.all(color: context.colors.textHint.withValues(alpha: AppAlpha.a30)),
                   ),
                   child: Row(
                     children: [
-                      Icon(Icons.search, size: 18, color: Colors.grey[500]),
-                      const SizedBox(width: 8),
+                      Icon(Icons.search, size: AppIconSize.i18, color: context.colors.textHint),
+                      const SizedBox(width: AppSpacing.s8),
                       Expanded(
                         child: Text('Search anything...',
-                            style: TextStyle(fontSize: 13, color: Colors.grey[500])),
+                            style: TextStyle(fontSize: AppFontSize.f13, color: context.colors.textHint)),
                       ),
-                      Text('Ctrl+K', style: TextStyle(fontSize: 11, color: Colors.grey[400])),
+                      Text('Ctrl+K', style: TextStyle(fontSize: AppFontSize.f11, color: context.colors.textDisabled)),
                     ],
                   ),
                 ),
@@ -1173,13 +1170,13 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
               // Contact Details, falling back to a generic message if
               // nothing's configured yet.
               IconButton(
-                icon: const Icon(Icons.help_outline, color: Colors.black87, size: 22),
+                icon: Icon(Icons.help_outline, color: context.colors.textPrimary, size: AppIconSize.i22),
                 tooltip: 'Help',
                 onPressed: () => _showHelpDialog(context),
               ),
-              const SizedBox(width: 4),
+              const SizedBox(width: AppSpacing.s4),
               Padding(
-                padding: const EdgeInsets.only(right: 12),
+                padding: const EdgeInsets.only(right: AppSpacing.s12),
                 child: Builder(
                   builder: (context) => _HoverableProfileIcon(
                     onTap: () => Scaffold.of(context).openEndDrawer(),
@@ -1200,7 +1197,7 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
                                 avatarUrl: avatarUrl,
                                 name: fullNameForAvatar,
                                 size: 32,
-                                backgroundColor: context.colors.primary.withValues(alpha: 0.12),
+                                backgroundColor: context.colors.primary.withValues(alpha: AppAlpha.a10),
                                 foregroundColor: context.colors.primary,
                               );
 
@@ -1210,17 +1207,17 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
                           mainAxisSize: MainAxisSize.min,
                           children: [
                             avatar,
-                            const SizedBox(width: 8),
+                            const SizedBox(width: AppSpacing.s8),
                             ConstrainedBox(
                               constraints: const BoxConstraints(maxWidth: 110),
                               child: Text(
                                 fullNameForAvatar.isNotEmpty ? fullNameForAvatar : 'Account',
-                                style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: Colors.black87),
+                                style: TextStyle(fontSize: AppFontSize.f13, fontWeight: AppFontWeight.semibold, color: context.colors.textPrimary),
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
                               ),
                             ),
-                            const Icon(Icons.keyboard_arrow_down, size: 18, color: Colors.black54),
+                            Icon(Icons.keyboard_arrow_down, size: AppIconSize.i18, color: context.colors.textSecondary),
                           ],
                         );
                       },
@@ -1234,7 +1231,7 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
           endDrawer: Drawer(child: _buildEndDrawerContent()),
           body: Column(
             children: [
-              Container(height: 1.2, width: double.infinity, color: Colors.grey.shade400),
+              Container(height: 1.2, width: double.infinity, color: context.colors.borderStrong),
               Expanded(
                 child: Stack(
                   children: [
@@ -1250,7 +1247,7 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
                                 child: Container(
                                   color: context.colors.background,
                                   child: Padding(
-                                  padding: const EdgeInsets.all(16),
+                                  padding: const EdgeInsets.all(AppSpacing.s16),
                                   child: SingleChildScrollView(
                                     child: Column(
                                     children: [
@@ -1268,10 +1265,10 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
                                       mainAxisSize: MainAxisSize.min,
                                       children: [
                                         Text('${greetingTime()}, $fullName',
-                                            style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.black87)),
-                                        const SizedBox(height: 2),
+                                            style: TextStyle(fontSize: AppFontSize.f20, fontWeight: AppFontWeight.bold, color: context.colors.textPrimary)),
+                                        const SizedBox(height: AppSpacing.s2),
                                         Text("Here's how $facilityName is doing today.",
-                                            style: TextStyle(fontSize: 13, color: Colors.grey[600])),
+                                            style: TextStyle(fontSize: AppFontSize.f13, color: context.colors.textMuted)),
                                       ],
                                     );
 
@@ -1291,24 +1288,24 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
                                               child: Row(
                                                 mainAxisSize: MainAxisSize.min,
                                                 children: [
-                                                  Icon(Icons.calendar_today_outlined, size: 14, color: Colors.grey[500]),
-                                                  const SizedBox(width: 6),
+                                                  Icon(Icons.calendar_today_outlined, size: AppIconSize.i14, color: context.colors.textHint),
+                                                  const SizedBox(width: AppSpacing.s6),
                                                   Text(
                                                     selectedFilter == 'Today'
                                                         ? AppDateFormat.dateWeekdayShort.format(now)
                                                         : selectedFilter,
-                                                    style: TextStyle(fontSize: 12.5, color: Colors.grey[600]),
+                                                    style: TextStyle(fontSize: AppFontSize.f12_5, color: context.colors.textMuted),
                                                   ),
-                                                  const SizedBox(width: 2),
-                                                  Icon(Icons.arrow_drop_down, size: 16, color: Colors.grey[500]),
+                                                  const SizedBox(width: AppSpacing.s2),
+                                                  Icon(Icons.arrow_drop_down, size: AppIconSize.i16, color: context.colors.textHint),
                                                 ],
                                               ),
                                             ),
-                                            const SizedBox(width: 14),
-                                            Icon(Icons.access_time, size: 14, color: Colors.grey[500]),
-                                            const SizedBox(width: 6),
+                                            const SizedBox(width: AppSpacing.s14),
+                                            Icon(Icons.access_time, size: AppIconSize.i14, color: context.colors.textHint),
+                                            const SizedBox(width: AppSpacing.s6),
                                             Text(AppDateFormat.time12.format(now),
-                                                style: TextStyle(fontSize: 12.5, color: Colors.grey[600])),
+                                                style: TextStyle(fontSize: AppFontSize.f12_5, color: context.colors.textMuted)),
                                           ],
                                         );
                                       },
@@ -1325,13 +1322,13 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
                                       crossAxisAlignment: CrossAxisAlignment.start,
                                       children: [
                                         greetingColumn,
-                                        const SizedBox(height: 8),
+                                        const SizedBox(height: AppSpacing.s8),
                                         dateTimeRow,
                                       ],
                                     );
                                   },
                                 ),
-                                const SizedBox(height: 16),
+                                const SizedBox(height: AppSpacing.s16),
                             LayoutBuilder(
                               builder: (context, gridConstraints) {
                                 final gridWidth = gridConstraints.maxWidth;
@@ -1436,7 +1433,7 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
                                         title: 'Total Expenses ($selectedFilter)',
                                         value: Money.symbolDecimal(_periodTotals.totalExpenses),
                                         icon: Icons.trending_down,
-                                        color: Colors.red,
+                                        color: context.colors.danger,
                                         shadow: true,
                                         isLoading: _isPeriodLoading,
                                         trend: KpiTrend(
@@ -1491,7 +1488,7 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
                                         title: 'Completed Services ($selectedFilter)',
                                         value: '${_periodTotals.completedServicesCount}',
                                         icon: Icons.design_services,
-                                        color: const Color(0xFF3D5A80),
+                                        color: context.colors.chart1,
                                         shadow: true,
                                         isLoading: _isPeriodLoading,
                                         trend: KpiTrend(
@@ -1519,24 +1516,24 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
                                 );
                               },
                             ),
-                            const SizedBox(height: 16),
+                            const SizedBox(height: AppSpacing.s16),
                             _buildTodayGlanceStrip(glanceDebtorCount),
-                            const SizedBox(height: 16),
+                            const SizedBox(height: AppSpacing.s16),
                             if (isLargeScreen)
                               Row(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   Expanded(flex: 2, child: _buildSalesRevenueChart()),
-                                  const SizedBox(width: 16),
+                                  const SizedBox(width: AppSpacing.s16),
                                   Expanded(child: _buildRecentActivityFeed()),
                                 ],
                               )
                             else ...[
                               _buildSalesRevenueChart(),
-                              const SizedBox(height: 16),
+                              const SizedBox(height: AppSpacing.s16),
                               _buildRecentActivityFeed(),
                             ],
-                            const SizedBox(height: 16),
+                            const SizedBox(height: AppSpacing.s16),
                             _buildQuickActionCards(context),
                           ],
                         ),
@@ -1611,10 +1608,10 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
     final isTrial = sub.status == SubscriptionStatus.trial;
     // The accent - carried by the icon, the text, and a thin border -
     // rather than a full background fill. Same deepened, burnt-amber
-    // reasoning as before: the brand's own context.colors.accent is too close to
+    // reasoning as before: the brand's own amber (accent) is too close to
     // yellow to read cleanly as an accent on a cream background.
     const Color deepAmber = Color(0xFFC77800);
-    final accent = isLocked ? Colors.redAccent : (isInTrialInfo ? Colors.blue : deepAmber);
+    final accent = isLocked ? context.colors.dangerAccent : (isInTrialInfo ? context.colors.info : deepAmber);
     const Color cream = Color(0xFFFFF6E7);
 
     // Full sentence now that this sits in its own row above the filter
@@ -1650,7 +1647,7 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
     final isAdmin = Provider.of<UserRoleProvider>(context).isAdmin;
 
     return AnimatedSwitcher(
-      duration: const Duration(milliseconds: 550),
+      duration: _bannerSwitch,
       transitionBuilder: (child, animation) => FadeTransition(
         opacity: CurvedAnimation(parent: animation, curve: const Interval(0, 0.5, curve: Curves.easeOut)),
         child: ScaleTransition(
@@ -1662,13 +1659,13 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
           ? const SizedBox.shrink(key: ValueKey('sub-banner-hidden'))
           : Container(
               key: const ValueKey('sub-banner-shown'),
-              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.s14, vertical: AppSpacing.s8),
               decoration: BoxDecoration(
                 color: cream.withValues(alpha: 0.92),
-                borderRadius: BorderRadius.circular(24),
-                border: Border.all(color: accent.withValues(alpha: 0.35)),
+                borderRadius: BorderRadius.circular(AppRadius.r24),
+                border: Border.all(color: accent.withValues(alpha: AppAlpha.a40)),
                 boxShadow: [
-                  BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 6, offset: const Offset(0, 2)),
+                  BoxShadow(color: context.colors.shadow.withValues(alpha: AppAlpha.a05), blurRadius: 6, offset: const Offset(0, 2)),
                 ],
               ),
               child: Row(
@@ -1679,41 +1676,41 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
                         ? Icons.lock_outline
                         : (isInTrialInfo ? Icons.workspace_premium_outlined : Icons.warning_amber_rounded),
                     color: accent,
-                    size: 16,
+                    size: AppIconSize.i16,
                   ),
-                  const SizedBox(width: 6),
+                  const SizedBox(width: AppSpacing.s6),
                   Text(
                     message,
-                    style: const TextStyle(color: Colors.black87, fontSize: 12.5, fontWeight: FontWeight.w600),
+                    style: TextStyle(color: context.colors.textPrimary, fontSize: AppFontSize.f12_5, fontWeight: AppFontWeight.semibold),
                   ),
                   if (isAdmin) ...[
-                    const SizedBox(width: 16),
+                    const SizedBox(width: AppSpacing.s16),
                     GestureDetector(
                       onTap: () => showSubscriptionScreen(context),
                       child: Text(
                         isInTrialInfo ? 'View Plans' : 'Renew',
                         style: TextStyle(
                           color: accent,
-                          fontSize: 12.5,
-                          fontWeight: FontWeight.bold,
+                          fontSize: AppFontSize.f12_5,
+                          fontWeight: AppFontWeight.bold,
                           decoration: TextDecoration.underline,
                         ),
                       ),
                     ),
                   ] else ...[
-                    const SizedBox(width: 8),
+                    const SizedBox(width: AppSpacing.s8),
                     Text('· Ask your admin',
-                        style: TextStyle(color: Colors.grey[600], fontSize: 11.5, fontStyle: FontStyle.italic)),
+                        style: TextStyle(color: context.colors.textMuted, fontSize: AppFontSize.f11_5, fontStyle: FontStyle.italic)),
                   ],
                   // Snoozes rather than dismisses permanently - see the
                   // note on _subscriptionSnoozeDuration above for why.
-                  const SizedBox(width: 4),
+                  const SizedBox(width: AppSpacing.s4),
                   InkWell(
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: BorderRadius.circular(AppRadius.r12),
                     onTap: _snoozeSubscriptionBanner,
                     child: Padding(
-                      padding: const EdgeInsets.all(4),
-                      child: Icon(Icons.close, size: 15, color: Colors.grey[500]),
+                      padding: const EdgeInsets.all(AppSpacing.s4),
+                      child: Icon(Icons.close, size: AppIconSize.i16, color: context.colors.textHint),
                     ),
                   ),
                 ],
