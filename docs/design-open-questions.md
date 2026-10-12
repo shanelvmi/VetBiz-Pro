@@ -118,6 +118,18 @@ User-facing "VetBiz Pro" now reads `AppInfo.name` (titles, Settings, support lin
 - **"Payment Details"** is one key (`payments_detailsTitle`) for the Payments detail panel and the Subscription form's payment section. The Kiswahili ("Maelezo ya Malipo") fits both; split it if either should read differently.
 - **"No submissions yet." and "No submissions yet"** (Subscription screen with a full stop, Subscription history without) are two keys because the English differs.
 
+### Raised in step 2F, batch 2F-9 (wording and language; English kept as it was)
+
+- **Two password minimums**: the login hint says "Minimum 6 characters" (the number typed into the text; the check itself uses `AppRules.minPasswordLength`, 6), while registration requires 8 ("At least 8 characters", also typed). A `{count}` placeholder would keep the hint in step with the rule; whether login should say 8 is the owner's call.
+- **"Logout", "Log in", "Login" and "Sign out"**: the loading, error and no-facility screens say "Logout" (`common_logout`), the register screen "Log in", the login button "Login", and elsewhere the app says "Sign out" (`common_signOut`). Kept apart because the English differs; all map to "Toka"/"Ingia" in the Kiswahili draft.
+- **"Could not delete the account: ..."** (no-facility screen, delete-account dialog) still shows the raw error text after the colon, and `e.message` from Firebase when it has one, instead of a `FriendlyError` message. Moved as it was (`noFacility_deleteFailedWith` with an `{error}` placeholder); changing what it shows is a behaviour change.
+- **Capitals**: "Could Not Load Your Account" is in title case where the app's other titles use sentence case; "Ask your facility Admin" (register) and "Ask your facility admin" (deactivated message) differ.
+- **"Please fix 2 fields: ..."** is two keys (`register_fixFields`, `register_fixFieldsMore`) because the old code added " and n more" only when there were more than three; the count is always 2 or more, so no plural is needed.
+- **Sentences around links stay in pieces**: "By creating an account you agree to our {Terms of Service} and {Privacy Policy}." and "Don't have an account? {Register}" keep their link pieces as separate keys (`register_termsPrefix`, `register_termsAnd`, `login_noAccount`), so the Kiswahili must keep the links in the same order.
+- **Shown in English on purpose**: the name prefixes Mr./Mrs./Ms./Dr. (saved inside the full name), the example email "name@example.com" and phone "07XX XXX XXX" (keys whose Kiswahili is the same text), the logo letters "VB." and the version "v2.0.0" (now `AppInfo.logoMark` and `AppInfo.versionLabel`), and the announcements themselves (stored text; only the "Notice" fallback title is localised).
+- **"© 2026 {appName} System"**: the year is typed into the text.
+- **Facility types** in "Joining: ...", the Edit Profile read-only facility and the register facility tiles are now shown through `facilityTypeLabel` (they showed the stored English before); in English nothing changes.
+
 ### Raised in step 2F, batch 2F-8 (wording and language; English kept as it was)
 
 - **"archived after 1 days", "of 1 sales"** (Sales Archive subtitle and pagination): `sales_archiveSubtitle` and `sales_archiveShowing` are ICU plurals with one `other` branch, like the services archive, so the English reads as before.
