@@ -3748,4 +3748,80 @@ class AppLocalizationsSw extends AppLocalizations {
 
   @override
   String get reports_colDifference => 'Tofauti';
+
+  @override
+  String reports_reasonValue(String reason) {
+    return 'Sababu: $reason';
+  }
+
+  @override
+  String get reports_newDebtTodayLower => 'Deni jipya leo';
+
+  @override
+  String get reports_repaymentsCollected => 'Marejesho yaliyokusanywa';
+
+  @override
+  String get reports_outstandingChange => 'Mabadiliko ya deni';
+
+  @override
+  String get reports_byCustomer => 'Kwa Mteja';
+
+  @override
+  String get reports_colNewDebt => 'Deni Jipya';
+
+  @override
+  String get reports_colRepayment => 'Marejesho';
+
+  @override
+  String get reports_colClosing => 'Kufunga';
+
+  @override
+  String get reports_totalExpenses => 'Jumla ya Gharama';
+
+  @override
+  String get reports_allTransactions => 'Miamala Yote';
+
+  @override
+  String get reports_transactionsNote =>
+      'Mapato na gharama zilizorekodiwa moja kwa moja, tofauti na mapato ya mauzo na huduma.';
+
+  @override
+  String get reports_noTransactionsToday => 'Hakuna miamala iliyorekodiwa leo.';
+
+  @override
+  String get reports_everythingToday =>
+      'Kila kitu kilichorekodiwa leo, kwa mpangilio.';
+
+  @override
+  String get reports_activityNotIncluded =>
+      'Haijajumuishwa - rasimu hii ilitengenezwa na msaidizi, anayeona shughuli zake tu. Futa rasimu na uitengeneze tena upate kumbukumbu kamili.';
+
+  @override
+  String get reports_noActivityToday => 'Hakuna shughuli iliyorekodiwa leo.';
+
+  @override
+  String get reports_colBy => 'Na';
+
+  @override
+  String get reports_combinedAll => 'Kwa Pamoja - Njia Zote za Malipo';
+
+  @override
+  String get reports_combinedNote =>
+      'Mauzo, huduma, marejesho ya madeni na mapato mengine kwa pamoja, kulingana na jinsi yalivyopokelewa.';
+
+  @override
+  String get reports_generateFailed => 'Imeshindikana kutengeneza ripoti';
+
+  @override
+  String get reports_deleteDraftTitle => 'Futa Rasimu?';
+
+  @override
+  String get reports_deleteDraftBody =>
+      'Hii inafuta rasimu ya ripoti ya leo ili iweze kutengenezwa upya. Haiathiri mauzo, huduma au miamala yoyote - ni nakala hii ya kazi pekee.';
+
+  @override
+  String get reports_deleteDraft => 'Futa Rasimu';
+
+  @override
+  String get reports_deleteDraftFailed => 'Imeshindikana kufuta rasimu';
 }
