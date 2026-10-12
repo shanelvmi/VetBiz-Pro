@@ -5525,4 +5525,84 @@ class AppLocalizationsSw extends AppLocalizations {
 
   @override
   String get subscription_askYourAdmin => '· Muulize msimamizi wako';
+
+  @override
+  String get dashboard_reassigned =>
+      'Umehamishiwa kituo kingine. Tafadhali ingia tena.';
+
+  @override
+  String get dashboard_vsYesterday => 'dhidi ya Jana';
+
+  @override
+  String get dashboard_vsLastWeek => 'dhidi ya Wiki Iliyopita';
+
+  @override
+  String get dashboard_vsLastMonth => 'dhidi ya Mwezi Uliopita';
+
+  @override
+  String get dashboard_vsLastYear => 'dhidi ya Mwaka Uliopita';
+
+  @override
+  String get dashboard_goodMorning => 'Habari za asubuhi';
+
+  @override
+  String get dashboard_goodAfternoon => 'Habari za mchana';
+
+  @override
+  String get dashboard_goodEvening => 'Habari za jioni';
+
+  @override
+  String dashboard_greeting(String greeting, String name) {
+    return '$greeting, $name';
+  }
+
+  @override
+  String dashboard_howFacilityIsDoing(String facility) {
+    return 'Hivi ndivyo $facility inavyoendelea leo.';
+  }
+
+  @override
+  String get dashboard_avatarUpdated => 'Picha ya wasifu imesasishwa';
+
+  @override
+  String get dashboard_avatarSaveFailed =>
+      'Imeshindwa kuhifadhi picha ya wasifu';
+
+  @override
+  String get dashboard_resetPasswordTitle => 'Weka Upya Nenosiri';
+
+  @override
+  String dashboard_resetPasswordPrompt(String email) {
+    return 'Tuma barua pepe ya kuweka upya nenosiri kwa $email?';
+  }
+
+  @override
+  String get dashboard_sendLink => 'Tuma Kiungo';
+
+  @override
+  String dashboard_resetLinkSent(String email) {
+    return 'Kiungo cha kuweka upya kimetumwa kwa $email';
+  }
+
+  @override
+  String get dashboard_resetLinkFailed =>
+      'Imeshindwa kutuma kiungo cha kuweka upya';
+
+  @override
+  String get dashboard_expandMenu => 'Panua menyu';
+
+  @override
+  String get dashboard_collapseMenu => 'Kunja menyu';
+
+  @override
+  String get dashboard_searchAnything => 'Tafuta chochote...';
+
+  @override
+  String get dashboard_searchShortcut => 'Ctrl+K';
+
+  @override
+  String get dashboard_help => 'Msaada';
+
+  @override
+  String get dashboard_account => 'Akaunti';
 }

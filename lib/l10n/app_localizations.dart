@@ -9443,6 +9443,144 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'· Ask your admin'**
   String get subscription_askYourAdmin;
+
+  /// Shown on the login screen after the assistant was moved to another facility.
+  ///
+  /// In en, this message translates to:
+  /// **'You\'ve been reassigned to a different facility. Please log back in.'**
+  String get dashboard_reassigned;
+
+  /// Next to a trend: compared with yesterday (Dashboard cards, Insights).
+  ///
+  /// In en, this message translates to:
+  /// **'vs Yesterday'**
+  String get dashboard_vsYesterday;
+
+  /// Next to a Dashboard card trend.
+  ///
+  /// In en, this message translates to:
+  /// **'vs Last Week'**
+  String get dashboard_vsLastWeek;
+
+  /// Next to a Dashboard card trend.
+  ///
+  /// In en, this message translates to:
+  /// **'vs Last Month'**
+  String get dashboard_vsLastMonth;
+
+  /// Next to a Dashboard card trend.
+  ///
+  /// In en, this message translates to:
+  /// **'vs Last Year'**
+  String get dashboard_vsLastYear;
+
+  /// Dashboard greeting before noon.
+  ///
+  /// In en, this message translates to:
+  /// **'Good morning'**
+  String get dashboard_goodMorning;
+
+  /// Dashboard greeting before 5 pm.
+  ///
+  /// In en, this message translates to:
+  /// **'Good afternoon'**
+  String get dashboard_goodAfternoon;
+
+  /// Dashboard greeting from 5 pm.
+  ///
+  /// In en, this message translates to:
+  /// **'Good evening'**
+  String get dashboard_goodEvening;
+
+  /// Dashboard greeting line: the greeting and the user's name.
+  ///
+  /// In en, this message translates to:
+  /// **'{greeting}, {name}'**
+  String dashboard_greeting(String greeting, String name);
+
+  /// Under the Dashboard greeting.
+  ///
+  /// In en, this message translates to:
+  /// **'Here\'s how {facility} is doing today.'**
+  String dashboard_howFacilityIsDoing(String facility);
+
+  /// Message after a new profile picture is saved.
+  ///
+  /// In en, this message translates to:
+  /// **'Profile avatar updated'**
+  String get dashboard_avatarUpdated;
+
+  /// Error after a profile picture failed to save.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t save the profile avatar'**
+  String get dashboard_avatarSaveFailed;
+
+  /// Title of the profile panel's change-password dialog.
+  ///
+  /// In en, this message translates to:
+  /// **'Reset Password'**
+  String get dashboard_resetPasswordTitle;
+
+  /// Change-password dialog question.
+  ///
+  /// In en, this message translates to:
+  /// **'Send password reset email to {email}?'**
+  String dashboard_resetPasswordPrompt(String email);
+
+  /// Change-password dialog button.
+  ///
+  /// In en, this message translates to:
+  /// **'Send Link'**
+  String get dashboard_sendLink;
+
+  /// Message after the reset email was sent.
+  ///
+  /// In en, this message translates to:
+  /// **'Reset link sent to {email}'**
+  String dashboard_resetLinkSent(String email);
+
+  /// Error when the reset email could not be sent.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t send the reset link'**
+  String get dashboard_resetLinkFailed;
+
+  /// Tooltip of the sidebar toggle when collapsed.
+  ///
+  /// In en, this message translates to:
+  /// **'Expand menu'**
+  String get dashboard_expandMenu;
+
+  /// Tooltip of the sidebar toggle when open.
+  ///
+  /// In en, this message translates to:
+  /// **'Collapse menu'**
+  String get dashboard_collapseMenu;
+
+  /// Placeholder of the top bar search box (phone layout).
+  ///
+  /// In en, this message translates to:
+  /// **'Search anything...'**
+  String get dashboard_searchAnything;
+
+  /// Keyboard shortcut shown in the top bar search box.
+  ///
+  /// In en, this message translates to:
+  /// **'Ctrl+K'**
+  String get dashboard_searchShortcut;
+
+  /// Tooltip of the top bar help button.
+  ///
+  /// In en, this message translates to:
+  /// **'Help'**
+  String get dashboard_help;
+
+  /// Top bar profile button when the user has no name.
+  ///
+  /// In en, this message translates to:
+  /// **'Account'**
+  String get dashboard_account;
 }
 
 class _AppLocalizationsDelegate

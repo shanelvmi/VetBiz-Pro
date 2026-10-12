@@ -5497,4 +5497,82 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get subscription_askYourAdmin => '· Ask your admin';
+
+  @override
+  String get dashboard_reassigned =>
+      'You\'ve been reassigned to a different facility. Please log back in.';
+
+  @override
+  String get dashboard_vsYesterday => 'vs Yesterday';
+
+  @override
+  String get dashboard_vsLastWeek => 'vs Last Week';
+
+  @override
+  String get dashboard_vsLastMonth => 'vs Last Month';
+
+  @override
+  String get dashboard_vsLastYear => 'vs Last Year';
+
+  @override
+  String get dashboard_goodMorning => 'Good morning';
+
+  @override
+  String get dashboard_goodAfternoon => 'Good afternoon';
+
+  @override
+  String get dashboard_goodEvening => 'Good evening';
+
+  @override
+  String dashboard_greeting(String greeting, String name) {
+    return '$greeting, $name';
+  }
+
+  @override
+  String dashboard_howFacilityIsDoing(String facility) {
+    return 'Here\'s how $facility is doing today.';
+  }
+
+  @override
+  String get dashboard_avatarUpdated => 'Profile avatar updated';
+
+  @override
+  String get dashboard_avatarSaveFailed => 'Couldn\'t save the profile avatar';
+
+  @override
+  String get dashboard_resetPasswordTitle => 'Reset Password';
+
+  @override
+  String dashboard_resetPasswordPrompt(String email) {
+    return 'Send password reset email to $email?';
+  }
+
+  @override
+  String get dashboard_sendLink => 'Send Link';
+
+  @override
+  String dashboard_resetLinkSent(String email) {
+    return 'Reset link sent to $email';
+  }
+
+  @override
+  String get dashboard_resetLinkFailed => 'Couldn\'t send the reset link';
+
+  @override
+  String get dashboard_expandMenu => 'Expand menu';
+
+  @override
+  String get dashboard_collapseMenu => 'Collapse menu';
+
+  @override
+  String get dashboard_searchAnything => 'Search anything...';
+
+  @override
+  String get dashboard_searchShortcut => 'Ctrl+K';
+
+  @override
+  String get dashboard_help => 'Help';
+
+  @override
+  String get dashboard_account => 'Account';
 }
