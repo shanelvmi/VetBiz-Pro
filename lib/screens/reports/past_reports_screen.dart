@@ -11,6 +11,7 @@ import '../../config/money.dart';
 import '../../config/app_limits.dart';
 import '../../config/app_ranges.dart';
 import '../../config/app_date_format.dart';
+import '../../l10n/l10n.dart';
 import '../../theme/app_text.dart';
 import '../../theme/app_dimens.dart';
 import '../../theme/theme_context.dart';
@@ -25,16 +26,16 @@ class PastReportsScreen extends StatefulWidget {
 enum _TimeFilter { allTime, last7Days, thisMonth, thisYear }
 
 extension on _TimeFilter {
-  String get label {
+  String label(AppLocalizations l10n) {
     switch (this) {
       case _TimeFilter.allTime:
-        return 'All time';
+        return l10n.clients_allTime;
       case _TimeFilter.last7Days:
-        return 'Last 7 days';
+        return l10n.services_last7;
       case _TimeFilter.thisMonth:
-        return 'This month';
+        return l10n.services_thisMonth;
       case _TimeFilter.thisYear:
-        return 'This year';
+        return l10n.reports_thisYear;
     }
   }
 
@@ -176,8 +177,8 @@ class _PastReportsScreenState extends State<PastReportsScreen> {
         title: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Text('Past Reports', style: TextStyle(fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f19, color: context.colors.textPrimary)),
-            Text('Every daily closing report for this facility',
+            Text(context.l10n.reports_pastTitle, style: TextStyle(fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f19, color: context.colors.textPrimary)),
+            Text(context.l10n.reports_pastSubtitle,
                 style: TextStyle(fontSize: AppFontSize.f12, color: context.colors.textSecondary)),
           ],
         ),
@@ -198,7 +199,7 @@ class _PastReportsScreenState extends State<PastReportsScreen> {
                   child: _filteredReports.isEmpty
                       ? Center(
                           child: Text(
-                            _reports.isEmpty ? 'No reports generated yet.' : 'No reports match your search.',
+                            _reports.isEmpty ? context.l10n.reports_noneYet : context.l10n.reports_noMatch,
                             style: TextStyle(color: context.colors.textMuted),
                           ),
                         )
@@ -227,7 +228,7 @@ class _PastReportsScreenState extends State<PastReportsScreen> {
             : OutlinedButton(
                 onPressed: _loadMore,
                 style: OutlinedButton.styleFrom(foregroundColor: context.colors.primary),
-                child: const Text('Load more'),
+                child: Text(context.l10n.reports_loadMore),
               ),
       ),
     );
@@ -240,7 +241,7 @@ class _PastReportsScreenState extends State<PastReportsScreen> {
           child: TextField(
             controller: _searchController,
             decoration: InputDecoration(
-              hintText: 'Search reports...',
+              hintText: context.l10n.reports_searchHint,
               prefixIcon: const Icon(Icons.search, size: AppIconSize.i20),
               isDense: true,
               contentPadding: const EdgeInsets.symmetric(vertical: AppSpacing.s12, horizontal: AppSpacing.s14),
@@ -270,7 +271,7 @@ class _PastReportsScreenState extends State<PastReportsScreen> {
                           children: [
                             Icon(Icons.calendar_today_outlined, size: AppIconSize.i16, color: context.colors.primary),
                             const SizedBox(width: AppSpacing.s8),
-                            Text(f.label, style: const TextStyle(fontSize: AppFontSize.f13, fontWeight: AppFontWeight.semibold)),
+                            Text(f.label(context.l10n), style: const TextStyle(fontSize: AppFontSize.f13, fontWeight: AppFontWeight.semibold)),
                           ],
                         ),
                       ))
@@ -310,15 +311,15 @@ class _PastReportsScreenState extends State<PastReportsScreen> {
       ),
       child: Row(
         children: [
-          Expanded(child: _summaryStat(Icons.assignment_outlined, '$_totalCount', 'Reports generated')),
+          Expanded(child: _summaryStat(Icons.assignment_outlined, '$_totalCount', context.l10n.reports_generatedCount)),
           _summaryDivider(),
-          Expanded(child: _summaryStat(Icons.event_note_outlined, periodLabel, 'Loaded period')),
+          Expanded(child: _summaryStat(Icons.event_note_outlined, periodLabel, context.l10n.reports_loadedPeriod)),
           _summaryDivider(),
           Expanded(
             child: _summaryStat(
               Icons.access_time,
               latestDate == null ? '-' : AppDateFormat.dateNoPad.format(latestDate),
-              'Latest',
+              context.l10n.reports_latest,
             ),
           ),
         ],
@@ -390,7 +391,7 @@ class _PastReportsScreenState extends State<PastReportsScreen> {
                     Text(AppDateFormat.dateLong.format(report.reportDate),
                         style: const TextStyle(fontWeight: AppFontWeight.semibold, fontSize: AppFontSize.f13_5)),
                     const SizedBox(height: AppSpacing.s2),
-                    Text('${Money.symbolDecimal(revenue)} total revenue - generated by ${report.generatedByName}',
+                    Text(context.l10n.reports_rowSummary(Money.symbolDecimal(revenue), report.generatedByName),
                         style: TextStyle(fontSize: AppFontSize.f12, color: context.colors.textMuted)),
                   ],
                 ),
@@ -403,7 +404,7 @@ class _PastReportsScreenState extends State<PastReportsScreen> {
                     color: context.colors.warning.withValues(alpha: AppAlpha.a10),
                     borderRadius: BorderRadius.circular(AppRadius.r20),
                   ),
-                  child: Text('Not submitted',
+                  child: Text(context.l10n.reports_notSubmitted,
                       style: TextStyle(fontSize: AppFontSize.f10_5, fontWeight: AppFontWeight.semibold, color: context.colors.warningStrong)),
                 )
               else
@@ -418,7 +419,7 @@ class _PastReportsScreenState extends State<PastReportsScreen> {
                     children: [
                       Icon(Icons.check_circle, size: AppIconSize.i14, color: context.colors.successStrong),
                       const SizedBox(width: AppSpacing.s4),
-                      Text('Completed', style: TextStyle(fontSize: AppFontSize.f10_5, fontWeight: AppFontWeight.semibold, color: context.colors.successStrong)),
+                      Text(context.l10n.reports_completed, style: TextStyle(fontSize: AppFontSize.f10_5, fontWeight: AppFontWeight.semibold, color: context.colors.successStrong)),
                     ],
                   ),
                 ),

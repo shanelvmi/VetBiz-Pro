@@ -5,6 +5,7 @@ import '../../models/daily_report.dart';
 import '../../providers/user_role_provider.dart';
 import '../../config/money.dart';
 import '../../config/app_date_format.dart';
+import '../../l10n/l10n.dart';
 import '../../theme/app_text.dart';
 import '../../theme/app_dimens.dart';
 import '../../theme/theme_context.dart';
@@ -29,7 +30,7 @@ Future<void> showReportFullViewScreen(BuildContext context, DailyReport report) 
   await showGeneralDialog(
     context: context,
     barrierDismissible: true,
-    barrierLabel: 'Full Report',
+    barrierLabel: context.l10n.reports_fullReport,
     barrierColor: context.colors.scrim.withValues(alpha: AppAlpha.a50),
     transitionDuration: AppMotion.normal,
     pageBuilder: (context, animation, secondaryAnimation) {
@@ -137,12 +138,12 @@ class ReportFullViewScreen extends StatelessWidget {
           Icon(Icons.description_outlined, color: context.colors.onPrimary),
           const SizedBox(width: AppSpacing.s12),
           Expanded(
-            child: Text('Full Report', style: TextStyle(color: context.colors.onPrimary, fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f18)),
+            child: Text(context.l10n.reports_fullReport, style: TextStyle(color: context.colors.onPrimary, fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f18)),
           ),
           if (isModal)
             IconButton(
               icon: Icon(Icons.close, color: context.colors.onPrimary),
-              tooltip: 'Close',
+              tooltip: context.l10n.common_close,
               onPressed: () => Navigator.of(context).pop(),
             )
           else
@@ -156,12 +157,14 @@ class ReportFullViewScreen extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('Daily Closing Report', style: TextStyle(fontSize: AppFontSize.f22, fontWeight: AppFontWeight.bold, color: context.colors.primary)),
+        Text(context.l10n.reports_dailyClosingReport, style: TextStyle(fontSize: AppFontSize.f22, fontWeight: AppFontWeight.bold, color: context.colors.primary)),
         const SizedBox(height: AppSpacing.s6),
         Text(AppDateFormat.dateLongFull.format(report.reportDate),
             style: const TextStyle(fontSize: AppFontSize.f14, fontWeight: AppFontWeight.semibold)),
         Text(
-          report.status == 'submitted' ? 'Submitted by ${report.generatedByName}' : 'Draft - not yet submitted',
+          report.status == 'submitted'
+              ? context.l10n.reports_submittedBy(report.generatedByName)
+              : context.l10n.reports_draftNotSubmitted,
           style: TextStyle(fontSize: AppFontSize.f12_5, color: report.status == 'submitted' ? context.colors.textMuted : context.colors.warningStrong),
         ),
       ],
@@ -211,15 +214,16 @@ class ReportFullViewScreen extends StatelessWidget {
       Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _sectionHeader(context, 'Daily Summary'),
+          _sectionHeader(context, context.l10n.reports_dailySummary),
           const SizedBox(height: AppSpacing.s8),
-          _statRow(context, 'Total Sales', Money.symbolDecimal(report.salesTotalValue)),
-          _statRow(context, 'Service Revenue', Money.symbolDecimal(report.servicesTotalValue)),
-          _statRow(context, 'Total Revenue', Money.symbolDecimal(revenue), bold: true),
-          if (report.totalOtherIncome > 0) _statRow(context, 'Other Income', Money.symbolDecimal(report.totalOtherIncome)),
-          _statRow(context, 'Debt Repayments', Money.symbolDecimal(report.repaymentsValue)),
-          _statRow(context, 'Expenses', Money.symbolDecimal(report.totalExpenses)),
-          _statRow(context, 'New Debt Today', Money.symbolDecimal(report.newDebtValue)),
+          _statRow(context, context.l10n.reports_totalSales, Money.symbolDecimal(report.salesTotalValue)),
+          _statRow(context, context.l10n.reports_serviceRevenue, Money.symbolDecimal(report.servicesTotalValue)),
+          _statRow(context, context.l10n.reports_totalRevenue, Money.symbolDecimal(revenue), bold: true),
+          if (report.totalOtherIncome > 0)
+            _statRow(context, context.l10n.payments_typeOtherIncome, Money.symbolDecimal(report.totalOtherIncome)),
+          _statRow(context, context.l10n.payments_typeDebtRepayments, Money.symbolDecimal(report.repaymentsValue)),
+          _statRow(context, context.l10n.transactions_expenses, Money.symbolDecimal(report.totalExpenses)),
+          _statRow(context, context.l10n.reports_newDebtToday, Money.symbolDecimal(report.newDebtValue)),
         ],
       ),
     );
@@ -230,10 +234,10 @@ class ReportFullViewScreen extends StatelessWidget {
       Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _sectionHeader(context, 'Sales'),
+          _sectionHeader(context, context.l10n.payments_typeSales),
           const SizedBox(height: AppSpacing.s8),
           if (report.salesLineItems.isEmpty)
-            _emptyState(context, 'No sales recorded today.')
+            _emptyState(context, context.l10n.reports_noSalesToday)
           else
             for (final s in report.salesLineItems) _statRow(context, s.customerName, Money.symbolDecimal(s.amount)),
         ],
@@ -246,10 +250,10 @@ class ReportFullViewScreen extends StatelessWidget {
       Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _sectionHeader(context, 'Veterinary Services'),
+          _sectionHeader(context, context.l10n.reports_vetServices),
           const SizedBox(height: AppSpacing.s8),
           if (report.serviceBreakdown.isEmpty)
-            _emptyState(context, 'No services provided today.')
+            _emptyState(context, context.l10n.reports_noServicesToday)
           else
             for (final s in report.serviceBreakdown) _statRow(context, s.serviceName, Money.symbolDecimal(s.revenue)),
         ],
@@ -262,17 +266,18 @@ class ReportFullViewScreen extends StatelessWidget {
       Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _sectionHeader(context, 'Product Movement'),
+          _sectionHeader(context, context.l10n.reports_productMovement),
           const SizedBox(height: AppSpacing.s8),
           if (report.productMovement.isEmpty)
-            _emptyState(context, 'No product movement today.')
+            _emptyState(context, context.l10n.reports_noMovementToday)
           else
             for (final p in report.productMovement)
               _statRow(context, 
                 p.name,
                 p.adjustment == 0
-                    ? 'Sold: ${p.sold} ${p.unit}  |  Closing: ${p.expectedClosing} ${p.unit}'
-                    : 'Sold: ${p.sold} ${p.unit}  |  Adjusted: ${p.adjustment > 0 ? '+' : ''}${p.adjustment} ${p.unit}  |  Closing: ${p.expectedClosing} ${p.unit}',
+                    ? context.l10n.reports_movementLine(p.sold, p.expectedClosing, context.l10n.productUnitLabel(p.unit))
+                    : context.l10n.reports_movementLineAdjusted(
+                        p.sold, '${p.adjustment > 0 ? '+' : ''}${p.adjustment}', p.expectedClosing, context.l10n.productUnitLabel(p.unit)),
               ),
         ],
       ),
@@ -285,15 +290,15 @@ class ReportFullViewScreen extends StatelessWidget {
       Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _sectionHeader(context, 'Expected vs Physical Stock'),
+          _sectionHeader(context, context.l10n.reports_expectedVsPhysical),
           const SizedBox(height: AppSpacing.s8),
           if (watchlisted.isEmpty)
-            _emptyState(context, 'No watch-listed products for this facility.')
+            _emptyState(context, context.l10n.reports_noWatchlisted)
           else if (report.status != 'submitted')
-            _emptyState(context, 'Physical counts have not been submitted yet.')
+            _emptyState(context, context.l10n.reports_countsNotSubmitted)
           else
             for (final p in watchlisted)
-              _statRow(context, p.name, 'Expected: ${p.expectedClosing}  |  Physical: ${p.physicalCount ?? '-'}'),
+              _statRow(context, p.name, context.l10n.reports_expectedPhysical(p.expectedClosing, '${p.physicalCount ?? '-'}')),
         ],
       ),
     );
@@ -304,10 +309,10 @@ class ReportFullViewScreen extends StatelessWidget {
       Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _sectionHeader(context, 'Debt Activity'),
+          _sectionHeader(context, context.l10n.reports_debtActivity),
           const SizedBox(height: AppSpacing.s8),
           if (report.clientDebtEntries.isEmpty)
-            _emptyState(context, 'No debt activity today.')
+            _emptyState(context, context.l10n.reports_noDebtActivity)
           else
             for (final c in report.clientDebtEntries) _statRow(context, c.clientName, Money.symbolDecimal(c.closingDebt)),
         ],
@@ -320,10 +325,10 @@ class ReportFullViewScreen extends StatelessWidget {
       Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _sectionHeader(context, 'Expenses Recorded'),
+          _sectionHeader(context, context.l10n.reports_expensesRecorded),
           const SizedBox(height: AppSpacing.s8),
           if (report.expenseLineItems.isEmpty)
-            _emptyState(context, 'No expenses recorded today.')
+            _emptyState(context, context.l10n.reports_noExpensesToday)
           else
             for (final e in report.expenseLineItems) _statRow(context, e.description, Money.symbolDecimal(e.amount)),
         ],
@@ -337,9 +342,9 @@ class ReportFullViewScreen extends StatelessWidget {
         Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            _sectionHeader(context, 'Payment Reconciliation'),
+            _sectionHeader(context, context.l10n.reports_paymentReconciliation),
             const SizedBox(height: AppSpacing.s8),
-            _emptyState(context, 'No payments recorded today.'),
+            _emptyState(context, context.l10n.reports_noPaymentsToday),
           ],
         ),
       );
@@ -348,21 +353,26 @@ class ReportFullViewScreen extends StatelessWidget {
       Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _sectionHeader(context, 'Payment Reconciliation'),
+          _sectionHeader(context, context.l10n.reports_paymentReconciliation),
           const SizedBox(height: AppSpacing.s8),
           for (final p in report.paymentReconciliation) ...[
-            Text(p.method, style: const TextStyle(fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f13)),
-            _statRow(context, 'Expected balance', Money.symbolDecimal(p.expected)),
+            Text(context.l10n.paymentMethodLabel(p.method), style: const TextStyle(fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f13)),
+            _statRow(context, context.l10n.reports_expectedBalance, Money.symbolDecimal(p.expected)),
             if (p.physicalCount != null) ...[
-              _statRow(context, 'Physical balance counted', Money.symbolDecimal(p.physicalCount!), bold: true),
-              _statRow(context, 'Variance', (p.variance != null && p.variance != 0) ? '${Money.symbolDecimal(p.variance!)} - VARIANCE' : '${Money.symbolDecimal(0)} - Match',
+              _statRow(context, context.l10n.reports_physicalBalance, Money.symbolDecimal(p.physicalCount!), bold: true),
+              _statRow(
+                  context,
+                  context.l10n.reports_variance,
+                  (p.variance != null && p.variance != 0)
+                      ? context.l10n.reports_varianceValue(Money.symbolDecimal(p.variance!))
+                      : context.l10n.reports_matchValue(Money.symbolDecimal(0)),
                   bold: p.variance != null && p.variance != 0),
               if (p.varianceReason != null && p.varianceReason!.isNotEmpty)
-                _statRow(context, 'Reason', p.varianceReason!),
+                _statRow(context, context.l10n.reports_reason, p.varianceReason!),
             ] else if (!p.requiresCount)
-              _emptyState(context, 'No income via ${p.method} today - outflow only, no count needed.')
+              _emptyState(context, context.l10n.reports_outflowOnly(context.l10n.paymentMethodLabel(p.method)))
             else
-              _emptyState(context, 'Not yet submitted.'),
+              _emptyState(context, context.l10n.reports_notYetSubmitted),
             if (p != report.paymentReconciliation.last) const SizedBox(height: AppSpacing.s10),
           ],
         ],
@@ -393,7 +403,8 @@ class ReportFullViewScreen extends StatelessWidget {
           if (byMethod.isEmpty)
             _emptyState(context, emptyText)
           else
-            for (final entry in byMethod.entries) _statRow(context, entry.key, Money.symbolDecimal(entry.value)),
+            for (final entry in byMethod.entries)
+              _statRow(context, context.l10n.paymentMethodLabel(entry.key), Money.symbolDecimal(entry.value)),
           const SizedBox(height: AppSpacing.s10),
         ],
       );
@@ -403,19 +414,20 @@ class ReportFullViewScreen extends StatelessWidget {
       Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _sectionHeader(context, 'Payment Methods'),
+          _sectionHeader(context, context.l10n.reports_paymentMethods),
           const SizedBox(height: AppSpacing.s8),
           if (combined.isEmpty)
-            _emptyState(context, 'No payments recorded today.')
+            _emptyState(context, context.l10n.reports_noPaymentsToday)
           else ...[
-            for (final entry in combined.entries) _statRow(context, entry.key, Money.symbolDecimal(entry.value), bold: true),
+            for (final entry in combined.entries)
+              _statRow(context, context.l10n.paymentMethodLabel(entry.key), Money.symbolDecimal(entry.value), bold: true),
             const SizedBox(height: AppSpacing.s12),
             const Divider(height: 1),
             const SizedBox(height: AppSpacing.s12),
-            category('Sales', report.salesByPaymentMethod, 'No sales today.'),
-            category('Services', report.servicesByPaymentMethod, 'No services today.'),
-            category('Debt Repayments', report.repaymentsByPaymentMethod, 'No repayments today.'),
-            category('Other Income', report.otherIncomeByPaymentMethod, 'No other income today.'),
+            category(context.l10n.payments_typeSales, report.salesByPaymentMethod, context.l10n.reports_noSalesShort),
+            category(context.l10n.payments_typeServices, report.servicesByPaymentMethod, context.l10n.reports_noServicesShort),
+            category(context.l10n.payments_typeDebtRepayments, report.repaymentsByPaymentMethod, context.l10n.reports_noRepaymentsShort),
+            category(context.l10n.payments_typeOtherIncome, report.otherIncomeByPaymentMethod, context.l10n.reports_noOtherIncomeShort),
           ],
         ],
       ),
@@ -427,7 +439,7 @@ class ReportFullViewScreen extends StatelessWidget {
       Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _sectionHeader(context, 'Activity Log'),
+          _sectionHeader(context, context.l10n.export_activityLog),
           const SizedBox(height: AppSpacing.s8),
           for (final entry in report.activityLogEntries)
             Padding(
@@ -445,13 +457,12 @@ class ReportFullViewScreen extends StatelessWidget {
       Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _sectionHeader(context, 'Daily Closing Declaration'),
+          _sectionHeader(context, context.l10n.reports_declaration),
           const SizedBox(height: AppSpacing.s8),
           Text(
             report.declarationConfirmed
-                ? "Confirmed - I have reviewed today's transactions and that the cash and stock figures "
-                    'entered represent the closing figures for my shift.'
-                : 'Not yet confirmed.',
+                ? context.l10n.reports_declarationConfirmed
+                : context.l10n.reports_notConfirmed,
             style: TextStyle(fontSize: AppFontSize.f12_5, color: report.declarationConfirmed ? context.colors.successStrong : context.colors.warningStrong),
           ),
         ],

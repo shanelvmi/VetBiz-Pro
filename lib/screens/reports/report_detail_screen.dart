@@ -7,6 +7,7 @@ import '../../services/daily_report_pdf_service.dart';
 import 'report_tabbed_content.dart';
 import '../../config/app_date_format.dart';
 import '../../config/app_info.dart';
+import '../../l10n/l10n.dart';
 import '../../theme/app_text.dart';
 import '../../theme/app_dimens.dart';
 import '../../theme/theme_context.dart';
@@ -24,6 +25,7 @@ class ReportDetailScreen extends StatelessWidget {
 
   Future<void> _printOrDownloadPdf(BuildContext context) async {
     final facilityProvider = Provider.of<FacilityProvider>(context, listen: false);
+    // The PDF stays English (spec 2.8), so its fallback name does too.
     final rawName = facilityProvider.selectedFacilityName ?? '${AppInfo.name} Facility';
     final facilityType = facilityProvider.selectedFacilityType;
     final facilityName = (facilityType != null && facilityType.isNotEmpty) ? '$rawName $facilityType' : rawName;
@@ -47,8 +49,8 @@ class ReportDetailScreen extends StatelessWidget {
                 style: TextStyle(fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f18, color: context.colors.textPrimary)),
             Text(
               report.status == 'submitted'
-                  ? 'Submitted by ${report.generatedByName}'
-                  : 'Draft - not yet submitted',
+                  ? context.l10n.reports_submittedBy(report.generatedByName)
+                  : context.l10n.reports_draftNotSubmitted,
               style: TextStyle(fontSize: AppFontSize.f12, color: report.status == 'submitted' ? context.colors.textSecondary : context.colors.warningStrong),
             ),
           ],
@@ -59,7 +61,7 @@ class ReportDetailScreen extends StatelessWidget {
             child: OutlinedButton.icon(
               onPressed: () => _printOrDownloadPdf(context),
               icon: const Icon(Icons.picture_as_pdf_outlined, size: AppIconSize.i16),
-              label: const Text('PDF'),
+              label: Text(context.l10n.reports_pdf),
               style: OutlinedButton.styleFrom(
                 foregroundColor: context.colors.primary,
                 side: BorderSide(color: context.colors.primary.withValues(alpha: AppAlpha.a40)),
