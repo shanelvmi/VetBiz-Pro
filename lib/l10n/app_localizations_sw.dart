@@ -4922,4 +4922,73 @@ class AppLocalizationsSw extends AppLocalizations {
 
   @override
   String get login_noAnnouncements => 'Hakuna matangazo';
+
+  @override
+  String get login_allCaughtUp => 'Umeshaona yote!';
+
+  @override
+  String get login_trustTitle => 'Salama. Imara. Daima Mtandaoni.';
+
+  @override
+  String get login_trustBody =>
+      'Mshirika wako wa kuaminika katika afya ya mifugo na ukuaji wa biashara.';
+
+  @override
+  String get login_welcomeBack => 'Karibu tena';
+
+  @override
+  String get login_logIntoFacility => 'Ingia kwenye kituo chako';
+
+  @override
+  String get login_emailHint => 'Weka barua pepe yako';
+
+  @override
+  String get login_passwordHint => 'Weka nenosiri lako';
+
+  @override
+  String get login_minPasswordHint => 'Angalau herufi 6';
+
+  @override
+  String get login_rememberMe => 'Nikumbuke';
+
+  @override
+  String get login_forgotPassword => 'Umesahau Nenosiri?';
+
+  @override
+  String get login_noAccount => 'Huna akaunti? ';
+
+  @override
+  String get login_register => 'Jisajili';
+
+  @override
+  String get login_loginButton => 'Ingia';
+
+  @override
+  String get login_newBadge => 'MPYA';
+
+  @override
+  String login_credentialsTooShort(int count) {
+    return 'Weka barua pepe yako na nenosiri lenye angalau herufi $count.';
+  }
+
+  @override
+  String get login_slowSignIn =>
+      'Kuingia kunachukua muda mrefu kuliko kawaida. Angalia intaneti yako kisha ujaribu tena.';
+
+  @override
+  String get login_resetNeedsEmail =>
+      'Weka barua pepe yako ili kubadilisha nenosiri.';
+
+  @override
+  String get login_resetSent =>
+      'Kama akaunti ipo kwa barua pepe hii, kiungo cha kubadilisha nenosiri kimetumwa. Angalia sanduku la barua (na folda ya spam).';
+
+  @override
+  String login_resetFailed(String reason) {
+    return 'Imeshindwa kutuma barua pepe ya kubadilisha nenosiri. $reason';
+  }
+
+  @override
+  String get register_inviteInvalid =>
+      'Msimbo wa mwaliko si sahihi, umeisha muda, au umeshatumika';
 }

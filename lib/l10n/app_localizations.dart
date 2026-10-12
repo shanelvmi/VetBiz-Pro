@@ -8477,6 +8477,126 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'No announcements'**
   String get login_noAnnouncements;
+
+  /// Login announcements card, empty.
+  ///
+  /// In en, this message translates to:
+  /// **'You\'re all caught up!'**
+  String get login_allCaughtUp;
+
+  /// Login trust footer.
+  ///
+  /// In en, this message translates to:
+  /// **'Secure. Reliable. Always Connected.'**
+  String get login_trustTitle;
+
+  /// Login trust footer.
+  ///
+  /// In en, this message translates to:
+  /// **'Your trusted partner in animal health and business growth.'**
+  String get login_trustBody;
+
+  /// Login form title.
+  ///
+  /// In en, this message translates to:
+  /// **'Welcome back'**
+  String get login_welcomeBack;
+
+  /// Login form subtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Log into your facility'**
+  String get login_logIntoFacility;
+
+  /// Login email field hint.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter your email'**
+  String get login_emailHint;
+
+  /// Login password field hint.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter your password'**
+  String get login_passwordHint;
+
+  /// Login, under the password field.
+  ///
+  /// In en, this message translates to:
+  /// **'Minimum 6 characters'**
+  String get login_minPasswordHint;
+
+  /// Login checkbox: keep the email for next time.
+  ///
+  /// In en, this message translates to:
+  /// **'Remember Me'**
+  String get login_rememberMe;
+
+  /// Login link that sends a password reset email.
+  ///
+  /// In en, this message translates to:
+  /// **'Forgot Password?'**
+  String get login_forgotPassword;
+
+  /// Login, before the Register link (ends with a space).
+  ///
+  /// In en, this message translates to:
+  /// **'Don\'t have an account? '**
+  String get login_noAccount;
+
+  /// Login link to the register screen.
+  ///
+  /// In en, this message translates to:
+  /// **'Register'**
+  String get login_register;
+
+  /// Login button.
+  ///
+  /// In en, this message translates to:
+  /// **'Login'**
+  String get login_loginButton;
+
+  /// Badge on an announcement less than two days old.
+  ///
+  /// In en, this message translates to:
+  /// **'NEW'**
+  String get login_newBadge;
+
+  /// Login error: email empty or password too short.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter your email and a password of at least {count} characters.'**
+  String login_credentialsTooShort(int count);
+
+  /// Login error when sign-in has not finished after a few seconds.
+  ///
+  /// In en, this message translates to:
+  /// **'Signing in is taking longer than expected. Check your internet connection and try again.'**
+  String get login_slowSignIn;
+
+  /// Login: Forgot Password pressed with no email.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter your email to reset your password.'**
+  String get login_resetNeedsEmail;
+
+  /// Login: after Forgot Password (the same whether or not the account exists).
+  ///
+  /// In en, this message translates to:
+  /// **'If an account exists for this email, a reset link has been sent. Check your inbox (and spam folder).'**
+  String get login_resetSent;
+
+  /// Login: the reset email could not be sent; reason is a FriendlyError message.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t send the reset email. {reason}'**
+  String login_resetFailed(String reason);
+
+  /// Register: the invite code typed was not accepted.
+  ///
+  /// In en, this message translates to:
+  /// **'Invalid, expired, or already-used invite code'**
+  String get register_inviteInvalid;
 }
 
 class _AppLocalizationsDelegate

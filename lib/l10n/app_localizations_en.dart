@@ -4894,4 +4894,73 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get login_noAnnouncements => 'No announcements';
+
+  @override
+  String get login_allCaughtUp => 'You\'re all caught up!';
+
+  @override
+  String get login_trustTitle => 'Secure. Reliable. Always Connected.';
+
+  @override
+  String get login_trustBody =>
+      'Your trusted partner in animal health and business growth.';
+
+  @override
+  String get login_welcomeBack => 'Welcome back';
+
+  @override
+  String get login_logIntoFacility => 'Log into your facility';
+
+  @override
+  String get login_emailHint => 'Enter your email';
+
+  @override
+  String get login_passwordHint => 'Enter your password';
+
+  @override
+  String get login_minPasswordHint => 'Minimum 6 characters';
+
+  @override
+  String get login_rememberMe => 'Remember Me';
+
+  @override
+  String get login_forgotPassword => 'Forgot Password?';
+
+  @override
+  String get login_noAccount => 'Don\'t have an account? ';
+
+  @override
+  String get login_register => 'Register';
+
+  @override
+  String get login_loginButton => 'Login';
+
+  @override
+  String get login_newBadge => 'NEW';
+
+  @override
+  String login_credentialsTooShort(int count) {
+    return 'Enter your email and a password of at least $count characters.';
+  }
+
+  @override
+  String get login_slowSignIn =>
+      'Signing in is taking longer than expected. Check your internet connection and try again.';
+
+  @override
+  String get login_resetNeedsEmail =>
+      'Enter your email to reset your password.';
+
+  @override
+  String get login_resetSent =>
+      'If an account exists for this email, a reset link has been sent. Check your inbox (and spam folder).';
+
+  @override
+  String login_resetFailed(String reason) {
+    return 'Couldn\'t send the reset email. $reason';
+  }
+
+  @override
+  String get register_inviteInvalid =>
+      'Invalid, expired, or already-used invite code';
 }
