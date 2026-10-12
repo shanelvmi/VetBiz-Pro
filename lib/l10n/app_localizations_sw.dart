@@ -4149,4 +4149,86 @@ class AppLocalizationsSw extends AppLocalizations {
   ) {
     return '$product - iliisha $date · $quantity $unit zipo';
   }
+
+  @override
+  String alerts_messageExpiring(
+    String product,
+    String when,
+    String date,
+    int quantity,
+    String unit,
+  ) {
+    return '$product - inaisha $when ($date) · $quantity $unit zipo';
+  }
+
+  @override
+  String get alerts_today => 'leo';
+
+  @override
+  String alerts_inDays(int days) {
+    String _temp0 = intl.Intl.pluralLogic(
+      days,
+      locale: localeName,
+      other: 'baada ya siku $days',
+      one: 'baada ya siku 1',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String alerts_messageRestock(String product, int sellable, int stock) {
+    return '$product - $sellable rafuni · $stock stoo';
+  }
+
+  @override
+  String get alerts_title => 'Tahadhari za Bidhaa';
+
+  @override
+  String get alerts_subtitle =>
+      'Matatizo ya akiba na muda wa kuisha yanayohitaji hatua';
+
+  @override
+  String alerts_viewAllCount(int count) {
+    return 'Tazama tahadhari zote $count';
+  }
+
+  @override
+  String get alerts_viewAll => 'Tazama tahadhari zote';
+
+  @override
+  String get alerts_allCaughtUp => 'Kila kitu kiko sawa!';
+
+  @override
+  String get alerts_noneNow => 'Hakuna tahadhari za akiba kwa sasa.';
+
+  @override
+  String get alerts_hintLowStock => 'Chini ya kiwango cha chini';
+
+  @override
+  String get alerts_hintDepleted => 'Hakuna kilichobaki';
+
+  @override
+  String get alerts_hintRestockShelf => 'Stoo ina akiba';
+
+  @override
+  String get alerts_hintExpiringSoon => 'Ndani ya siku 30';
+
+  @override
+  String get alerts_hintExpired => 'Bado zipo';
+
+  @override
+  String get alerts_restock => 'Ongeza Akiba';
+
+  @override
+  String get alerts_moveToShelf => 'Peleka rafuni';
+
+  @override
+  String get alerts_adminOnlyMove =>
+      'Ni admin tu anayeweza kupeleka bidhaa rafuni';
+
+  @override
+  String get alerts_viewBatches => 'Tazama batch';
+
+  @override
+  String get alerts_removeExpired => 'Ondoa zilizoisha';
 }

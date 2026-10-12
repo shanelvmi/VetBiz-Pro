@@ -4131,4 +4131,85 @@ class AppLocalizationsEn extends AppLocalizations {
   ) {
     return '$product - expired $date · $quantity $unit on hand';
   }
+
+  @override
+  String alerts_messageExpiring(
+    String product,
+    String when,
+    String date,
+    int quantity,
+    String unit,
+  ) {
+    return '$product - expires $when ($date) · $quantity $unit on hand';
+  }
+
+  @override
+  String get alerts_today => 'today';
+
+  @override
+  String alerts_inDays(int days) {
+    String _temp0 = intl.Intl.pluralLogic(
+      days,
+      locale: localeName,
+      other: 'in $days days',
+      one: 'in 1 day',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String alerts_messageRestock(String product, int sellable, int stock) {
+    return '$product - $sellable on shelf · $stock in store';
+  }
+
+  @override
+  String get alerts_title => 'Product Alerts';
+
+  @override
+  String get alerts_subtitle => 'Stock and expiry problems that need action';
+
+  @override
+  String alerts_viewAllCount(int count) {
+    return 'View all $count alerts';
+  }
+
+  @override
+  String get alerts_viewAll => 'View all alerts';
+
+  @override
+  String get alerts_allCaughtUp => 'You\'re all caught up!';
+
+  @override
+  String get alerts_noneNow => 'No stock alerts right now.';
+
+  @override
+  String get alerts_hintLowStock => 'Below minimum level';
+
+  @override
+  String get alerts_hintDepleted => 'Nothing left';
+
+  @override
+  String get alerts_hintRestockShelf => 'Store has stock';
+
+  @override
+  String get alerts_hintExpiringSoon => 'Within 30 days';
+
+  @override
+  String get alerts_hintExpired => 'Still on hand';
+
+  @override
+  String get alerts_restock => 'Restock';
+
+  @override
+  String get alerts_moveToShelf => 'Move to shelf';
+
+  @override
+  String get alerts_adminOnlyMove =>
+      'Only an admin can move stock to the shelf';
+
+  @override
+  String get alerts_viewBatches => 'View batches';
+
+  @override
+  String get alerts_removeExpired => 'Remove expired';
 }

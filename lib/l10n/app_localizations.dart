@@ -7259,6 +7259,132 @@ abstract class AppLocalizations {
     int quantity,
     String unit,
   );
+
+  /// Alerts bell dropdown line. when is alerts_today or alerts_inDays.
+  ///
+  /// In en, this message translates to:
+  /// **'{product} - expires {when} ({date}) · {quantity} {unit} on hand'**
+  String alerts_messageExpiring(
+    String product,
+    String when,
+    String date,
+    int quantity,
+    String unit,
+  );
+
+  /// Part of alerts_messageExpiring.
+  ///
+  /// In en, this message translates to:
+  /// **'today'**
+  String get alerts_today;
+
+  /// Part of alerts_messageExpiring.
+  ///
+  /// In en, this message translates to:
+  /// **'{days, plural, =1{in 1 day} other{in {days} days}}'**
+  String alerts_inDays(int days);
+
+  /// Alerts bell dropdown line (restock shelf).
+  ///
+  /// In en, this message translates to:
+  /// **'{product} - {sellable} on shelf · {stock} in store'**
+  String alerts_messageRestock(String product, int sellable, int stock);
+
+  /// Product Alerts title (screen and bell dropdown).
+  ///
+  /// In en, this message translates to:
+  /// **'Product Alerts'**
+  String get alerts_title;
+
+  /// Product Alerts subtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Stock and expiry problems that need action'**
+  String get alerts_subtitle;
+
+  /// Bell dropdown link when not all alerts are shown.
+  ///
+  /// In en, this message translates to:
+  /// **'View all {count} alerts'**
+  String alerts_viewAllCount(int count);
+
+  /// Bell dropdown link.
+  ///
+  /// In en, this message translates to:
+  /// **'View all alerts'**
+  String get alerts_viewAll;
+
+  /// Product Alerts, empty.
+  ///
+  /// In en, this message translates to:
+  /// **'You\'re all caught up!'**
+  String get alerts_allCaughtUp;
+
+  /// Product Alerts, empty.
+  ///
+  /// In en, this message translates to:
+  /// **'No stock alerts right now.'**
+  String get alerts_noneNow;
+
+  /// Product Alerts card hint.
+  ///
+  /// In en, this message translates to:
+  /// **'Below minimum level'**
+  String get alerts_hintLowStock;
+
+  /// Product Alerts card hint.
+  ///
+  /// In en, this message translates to:
+  /// **'Nothing left'**
+  String get alerts_hintDepleted;
+
+  /// Product Alerts card hint.
+  ///
+  /// In en, this message translates to:
+  /// **'Store has stock'**
+  String get alerts_hintRestockShelf;
+
+  /// Product Alerts card hint.
+  ///
+  /// In en, this message translates to:
+  /// **'Within 30 days'**
+  String get alerts_hintExpiringSoon;
+
+  /// Product Alerts card hint.
+  ///
+  /// In en, this message translates to:
+  /// **'Still on hand'**
+  String get alerts_hintExpired;
+
+  /// Product Alerts row action.
+  ///
+  /// In en, this message translates to:
+  /// **'Restock'**
+  String get alerts_restock;
+
+  /// Product Alerts row action.
+  ///
+  /// In en, this message translates to:
+  /// **'Move to shelf'**
+  String get alerts_moveToShelf;
+
+  /// Product Alerts action tooltip for assistants.
+  ///
+  /// In en, this message translates to:
+  /// **'Only an admin can move stock to the shelf'**
+  String get alerts_adminOnlyMove;
+
+  /// Product Alerts row action.
+  ///
+  /// In en, this message translates to:
+  /// **'View batches'**
+  String get alerts_viewBatches;
+
+  /// Product Alerts row action.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove expired'**
+  String get alerts_removeExpired;
 }
 
 class _AppLocalizationsDelegate
