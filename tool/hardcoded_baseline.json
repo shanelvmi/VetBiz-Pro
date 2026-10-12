@@ -488,7 +488,6 @@
     "R9": {},
     "R10": {
       "lib/constants/subscription_plans.dart": 4,
-      "lib/main.dart": 33,
       "lib/providers/subscription_provider.dart": 8,
       "lib/providers/user_role_provider.dart": 1,
       "lib/screens/activity/activity_log_screen.dart": 24,

@@ -341,9 +341,7 @@ class _AppEntryPointState extends State<AppEntryPoint> {
         // both, and the message says what's actually wrong.
         debugPrint('[AUTH] users/$uid does not exist - signing out with a message');
         forceLogoutAndShowLogin(
-          message: "We couldn't find a profile for this account. If you have just registered, "
-              'the registration did not finish - please register again. '
-              'If this keeps happening, contact support.',
+          message: L10n.current.entry_noProfile,
         );
         return const Scaffold(body: Center(child: CircularProgressIndicator()));
       }
@@ -386,15 +384,14 @@ class _AppEntryPointState extends State<AppEntryPoint> {
         // independent navigation (via the global key) sidesteps that
         // race entirely, instead of hoping the return value survives.
         forceLogoutAndShowLogin(
-          message: 'This account has been deactivated. Ask your facility admin '
-              '(or Platform Admin) to reactivate it before signing in again.',
+          message: L10n.current.entry_deactivated,
         );
         return const Scaffold(body: Center(child: CircularProgressIndicator()));
       }
       if (!isPlatformAdminAccount && !removedAssistant && role == UserRole.assistant.key && status != UserStatus.active.key) {
         debugPrint('[AUTH] blocked - assistant not yet active');
         forceLogoutAndShowLogin(
-          message: 'Your account is not active yet. Please wait for admin approval.',
+          message: L10n.current.entry_notActiveYet,
         );
         return const Scaffold(body: Center(child: CircularProgressIndicator()));
       }
@@ -450,7 +447,7 @@ class _AppEntryPointState extends State<AppEntryPoint> {
         final rejection = data['lastRejection'];
         if (role == UserRole.assistant.key && rejection is Map) {
           final from = (rejection['facilityName'] ?? '').toString().trim();
-          notice = from.isEmpty ? 'Your request to join was not approved.' : 'Your request to join $from was not approved.';
+          notice = from.isEmpty ? L10n.current.entry_requestNotApproved : L10n.current.entry_requestNotApprovedFrom(from);
         }
         return _NoFacilityScreen(role: role, notice: notice);
       }
@@ -640,7 +637,7 @@ class _AuthLoadingScreenState extends State<_AuthLoadingScreen> {
                     Padding(
                       padding: const EdgeInsets.symmetric(horizontal: AppSpacing.s32),
                       child: Text(
-                        'Taking longer than expected to load.',
+                        context.l10n.entry_slowLoad,
                         textAlign: TextAlign.center,
                         style: TextStyle(color: context.colors.textSoft),
                       ),
@@ -654,7 +651,7 @@ class _AuthLoadingScreenState extends State<_AuthLoadingScreen> {
                       // that's the thing currently stuck.
                       onPressed: () => forceLogoutAndShowLogin(),
                       icon: const Icon(Icons.refresh),
-                      label: const Text('Try Again'),
+                      label: Text(context.l10n.common_tryAgain),
                     ),
                   ],
                 )
@@ -677,22 +674,20 @@ class _DecisionErrorScreen extends StatelessWidget {
 
   // Plain words for what went wrong, and a short technical tag underneath so
   // it can be reported accurately.
-  String get _explanation {
+  String _explanation(AppLocalizations l10n) {
     final e = error;
     if (e is TimeoutException) {
-      return 'This is taking longer than expected. Check your internet connection and try again.';
+      return l10n.entry_timeoutExplanation;
     }
     if (e is FirebaseException) {
       if (e.code == 'unavailable') {
-        return "We couldn't reach the server. Check your internet connection and try again.";
+        return l10n.entry_unreachable;
       }
       if (e.code == 'permission-denied') {
-        return "Your account couldn't be opened because access was refused. "
-            'Try again, and if it keeps happening, contact support.';
+        return l10n.entry_accessRefused;
       }
     }
-    return 'Something went wrong while loading your account details. '
-        'Check your connection and try again.';
+    return l10n.entry_loadFailed;
   }
 
   String? get _tag {
@@ -714,11 +709,11 @@ class _DecisionErrorScreen extends StatelessWidget {
             children: [
               Icon(Icons.error_outline, size: AppIconSize.i48, color: context.colors.textHint),
               const SizedBox(height: AppSpacing.s16),
-              const Text('Could Not Load Your Account',
-                  style: TextStyle(fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f17)),
+              Text(context.l10n.entry_couldNotLoadTitle,
+                  style: const TextStyle(fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f17)),
               const SizedBox(height: AppSpacing.s8),
               Text(
-                _explanation,
+                _explanation(context.l10n),
                 textAlign: TextAlign.center,
                 style: TextStyle(color: context.colors.textSoft),
               ),
@@ -733,13 +728,13 @@ class _DecisionErrorScreen extends StatelessWidget {
                   OutlinedButton.icon(
                     onPressed: onRetry,
                     icon: const Icon(Icons.refresh),
-                    label: const Text('Try Again'),
+                    label: Text(context.l10n.common_tryAgain),
                   ),
                   const SizedBox(width: AppSpacing.s12),
                   OutlinedButton.icon(
                     onPressed: () => forceLogoutAndShowLogin(),
                     icon: const Icon(Icons.logout),
-                    label: const Text('Logout'),
+                    label: Text(context.l10n.common_logout),
                   ),
                 ],
               ),
@@ -795,7 +790,7 @@ class _NoFacilityScreenState extends State<_NoFacilityScreen> {
     final name = _facilityNameController.text.trim();
     final type = _facilityType;
     if (name.isEmpty || type == null) {
-      setState(() => _addError = name.isEmpty ? 'Enter the facility name.' : 'Choose the facility type.');
+      setState(() => _addError = name.isEmpty ? L10n.current.noFacility_enterName : L10n.current.noFacility_chooseType);
       return;
     }
     setState(() {
@@ -818,12 +813,12 @@ class _NoFacilityScreenState extends State<_NoFacilityScreen> {
 
   String _deleteAccountError(Object e) {
     if (e is FirebaseAuthException) {
-      if (e.code == 'wrong-password' || e.code == 'invalid-credential') return "That password isn't right.";
-      if (e.code == 'too-many-requests') return 'Too many attempts. Wait a few minutes and try again.';
-      if (e.code == 'network-request-failed') return "We couldn't reach the server. Check your connection and try again.";
-      return e.message ?? 'Could not delete the account.';
+      if (e.code == 'wrong-password' || e.code == 'invalid-credential') return L10n.current.noFacility_wrongPassword;
+      if (e.code == 'too-many-requests') return L10n.current.noFacility_tooManyAttempts;
+      if (e.code == 'network-request-failed') return L10n.current.noFacility_unreachable;
+      return e.message ?? L10n.current.noFacility_deleteFailed;
     }
-    return 'Could not delete the account: $e';
+    return L10n.current.noFacility_deleteFailedWith('$e');
   }
 
   // Deleting the account used to live only inside Settings - which needs a
@@ -844,19 +839,16 @@ class _NoFacilityScreenState extends State<_NoFacilityScreen> {
           .limit(AppLimits.single)
           .get();
       if (owned.docs.isNotEmpty && mounted) {
-        final name = (owned.docs.first.data()['name'] ?? 'a facility').toString();
+        final name = (owned.docs.first.data()['name'] ?? L10n.current.noFacility_aFacility).toString();
         await showDialog(
           context: context,
           builder: (ctx) => AlertDialog(
-            title: const Text("Can't delete the account yet"),
+            title: Text(ctx.l10n.noFacility_cantDeleteTitle),
             content: SizedBox(
               width: 340,
-              child: Text(
-                'This account still owns "$name", which isn\'t on your profile. '
-                'Contact support so it can be sorted out first.',
-              ),
+              child: Text(ctx.l10n.noFacility_stillOwns(name)),
             ),
-            actions: [TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('OK'))],
+            actions: [TextButton(onPressed: () => Navigator.pop(ctx), child: Text(ctx.l10n.common_ok))],
           ),
         );
         return;
@@ -878,27 +870,26 @@ class _NoFacilityScreenState extends State<_NoFacilityScreen> {
       barrierDismissible: false,
       builder: (ctx) => StatefulBuilder(
         builder: (ctx, setDialogState) => AlertDialog(
-          title: const Text('Delete your account?'),
+          title: Text(ctx.l10n.noFacility_deleteTitle),
           content: SizedBox(
             width: 340,
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                const Text(
-                  'This is permanent and cannot be undone. Your account and profile will be erased, '
-                  'and you will not be able to sign in with this email again.',
-                  style: TextStyle(fontSize: AppFontSize.f13),
+                Text(
+                  ctx.l10n.noFacility_deleteWarning,
+                  style: const TextStyle(fontSize: AppFontSize.f13),
                 ),
                 const SizedBox(height: AppSpacing.s14),
                 TextField(
                   controller: emailController,
-                  decoration: const InputDecoration(labelText: 'Email', prefixIcon: Icon(Icons.email_outlined)),
+                  decoration: InputDecoration(labelText: ctx.l10n.common_email, prefixIcon: const Icon(Icons.email_outlined)),
                 ),
                 const SizedBox(height: AppSpacing.s8),
                 TextField(
                   controller: passwordController,
                   obscureText: true,
-                  decoration: const InputDecoration(labelText: 'Password', prefixIcon: Icon(Icons.lock_outline)),
+                  decoration: InputDecoration(labelText: ctx.l10n.common_password, prefixIcon: const Icon(Icons.lock_outline)),
                 ),
                 if (dialogError != null) ...[
                   const SizedBox(height: AppSpacing.s10),
@@ -908,14 +899,14 @@ class _NoFacilityScreenState extends State<_NoFacilityScreen> {
             ),
           ),
           actions: [
-            TextButton(onPressed: deleting ? null : () => Navigator.pop(ctx), child: const Text('Cancel')),
+            TextButton(onPressed: deleting ? null : () => Navigator.pop(ctx), child: Text(ctx.l10n.common_cancel)),
             ElevatedButton(
               style: ElevatedButton.styleFrom(backgroundColor: context.colors.dangerAccent, foregroundColor: context.colors.onPrimary),
               onPressed: deleting
                   ? null
                   : () async {
                       if (passwordController.text.isEmpty) {
-                        setDialogState(() => dialogError = 'Enter your password to confirm.');
+                        setDialogState(() => dialogError = L10n.current.noFacility_enterPasswordToConfirm);
                         return;
                       }
                       setDialogState(() {
@@ -928,7 +919,7 @@ class _NoFacilityScreenState extends State<_NoFacilityScreen> {
                           password: passwordController.text,
                         );
                         if (ctx.mounted) Navigator.pop(ctx);
-                        await forceLogoutAndShowLogin(message: 'Your account has been deleted.');
+                        await forceLogoutAndShowLogin(message: L10n.current.noFacility_accountDeleted);
                       } catch (e) {
                         if (!ctx.mounted) return;
                         setDialogState(() {
@@ -943,7 +934,7 @@ class _NoFacilityScreenState extends State<_NoFacilityScreen> {
                       height: AppIconSize.i18,
                       child: CircularProgressIndicator(strokeWidth: 2, color: context.colors.onPrimary),
                     )
-                  : const Text('Delete account'),
+                  : Text(ctx.l10n.noFacility_deleteAccount),
             ),
           ],
         ),
@@ -962,8 +953,8 @@ class _NoFacilityScreenState extends State<_NoFacilityScreen> {
           textCapitalization: TextCapitalization.words,
           onChanged: (_) => setState(() => _addError = null),
           decoration: InputDecoration(
-            labelText: 'Facility name',
-            hintText: 'e.g. Ukuli',
+            labelText: context.l10n.common_facilityName,
+            hintText: context.l10n.common_facilityNameHint,
             prefixIcon: const Icon(Icons.storefront_outlined),
             border: OutlineInputBorder(borderRadius: BorderRadius.circular(AppRadius.r14)),
           ),
@@ -973,7 +964,7 @@ class _NoFacilityScreenState extends State<_NoFacilityScreen> {
           initialValue: _facilityType,
           isExpanded: true,
           decoration: InputDecoration(
-            labelText: 'Type',
+            labelText: context.l10n.common_type,
             border: OutlineInputBorder(borderRadius: BorderRadius.circular(AppRadius.r14)),
           ),
           items: kFacilityTypes.map((t) => DropdownMenuItem(value: t, child: Text(context.l10n.facilityTypeLabel(t)))).toList(),
@@ -1005,17 +996,17 @@ class _NoFacilityScreenState extends State<_NoFacilityScreen> {
                     children: [
                       SizedBox(width: AppIconSize.i18, height: AppIconSize.i18, child: CircularProgressIndicator(strokeWidth: 2, color: context.colors.onPrimary)),
                       SizedBox(width: AppSpacing.s10),
-                      Text('Adding facility...'),
+                      Text(context.l10n.noFacility_adding),
                     ],
                   )
-                : const Text('Add facility'),
+                : Text(context.l10n.noFacility_addFacility),
           ),
         ),
         const SizedBox(height: AppSpacing.s8),
         TextButton(
           onPressed: _adding ? null : _confirmDeleteAccount,
           style: TextButton.styleFrom(foregroundColor: context.colors.dangerAccent),
-          child: const Text('Delete my account instead'),
+          child: Text(context.l10n.noFacility_deleteInstead),
         ),
       ],
     );
@@ -1044,7 +1035,7 @@ class _NoFacilityScreenState extends State<_NoFacilityScreen> {
         setState(() {
           _checking = false;
           _found = check;
-          _codeProblem = check == null ? 'That code is invalid, has expired, or has already been used.' : null;
+          _codeProblem = check == null ? L10n.current.noFacility_codeInvalid : null;
         });
       } catch (e) {
         if (!mounted || _codeController.text.trim() != code) return;
@@ -1068,7 +1059,7 @@ class _NoFacilityScreenState extends State<_NoFacilityScreen> {
       // They're "pending" now, so the sign-in check would turn them away
       // anyway. Sign out with a plain message rather than leave them here.
       await forceLogoutAndShowLogin(
-        message: 'Request sent to ${found.facilityName}. You can sign in once its admin approves you.',
+        message: L10n.current.noFacility_requestSent(found.facilityName),
       );
     } catch (e) {
       if (!mounted) return;
@@ -1083,7 +1074,7 @@ class _NoFacilityScreenState extends State<_NoFacilityScreen> {
     return OutlinedButton.icon(
       onPressed: (_joining || _adding) ? null : () => forceLogoutAndShowLogin(),
       icon: const Icon(Icons.logout),
-      label: const Text('Logout'),
+      label: Text(context.l10n.common_logout),
     );
   }
 
@@ -1103,7 +1094,7 @@ class _NoFacilityScreenState extends State<_NoFacilityScreen> {
                 Icon(Icons.storefront_outlined, size: AppIconSize.i48, color: context.colors.textHint),
                 const SizedBox(height: AppSpacing.s16),
                 Text(
-                  _isAssistant ? "You're not in a facility right now" : "You don't have a facility right now",
+                  _isAssistant ? context.l10n.noFacility_titleAssistant : context.l10n.noFacility_titleAdmin,
                   textAlign: TextAlign.center,
                   style: const TextStyle(fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f17),
                 ),
@@ -1124,7 +1115,7 @@ class _NoFacilityScreenState extends State<_NoFacilityScreen> {
                         const SizedBox(width: AppSpacing.s8),
                         Expanded(
                           child: Text(
-                            '${widget.notice} If you think that was a mistake, ask for a new invite code.',
+                            context.l10n.noFacility_noticeMistake(widget.notice!),
                             style: TextStyle(fontSize: AppFontSize.f13, color: Colors.orange.shade900, height: 1.35),
                           ),
                         ),
@@ -1135,11 +1126,8 @@ class _NoFacilityScreenState extends State<_NoFacilityScreen> {
                 const SizedBox(height: AppSpacing.s8),
                 Text(
                   _isAssistant
-                      ? 'You may have been removed from your facility, or not added to one yet. '
-                          'Your account, name, phone number and photo are kept. To join a facility, '
-                          'enter an invite code from its admin.'
-                      : 'Your account is kept. Add a facility to carry on, or delete your account '
-                          'if you no longer need it.',
+                      ? context.l10n.noFacility_bodyAssistant
+                      : context.l10n.noFacility_bodyAdmin,
                   textAlign: TextAlign.center,
                   style: TextStyle(color: context.colors.textSoft, height: 1.4),
                 ),
@@ -1151,8 +1139,8 @@ class _NoFacilityScreenState extends State<_NoFacilityScreen> {
                     textCapitalization: TextCapitalization.characters,
                     onChanged: _onCodeChanged,
                     decoration: InputDecoration(
-                      labelText: 'Invite code',
-                      hintText: 'e.g. JK7-2P4',
+                      labelText: context.l10n.common_inviteCode,
+                      hintText: context.l10n.noFacility_inviteHint,
                       prefixIcon: const Icon(Icons.vpn_key_outlined),
                       suffixIcon: _checking
                           ? const Padding(
@@ -1166,8 +1154,10 @@ class _NoFacilityScreenState extends State<_NoFacilityScreen> {
                   const SizedBox(height: AppSpacing.s10),
                   if (found != null)
                     Text(
-                      "You'll be asking to join: ${found.facilityName}"
-                      '${found.facilityType.isEmpty ? '' : ' (${context.l10n.facilityTypeLabel(found.facilityType)})'}',
+                      found.facilityType.isEmpty
+                          ? context.l10n.noFacility_askingToJoin(found.facilityName)
+                          : context.l10n.noFacility_askingToJoinWithType(
+                              found.facilityName, context.l10n.facilityTypeLabel(found.facilityType)),
                       textAlign: TextAlign.center,
                       style: TextStyle(color: context.colors.success, fontWeight: AppFontWeight.semibold, fontSize: AppFontSize.f13),
                     )
@@ -1200,16 +1190,15 @@ class _NoFacilityScreenState extends State<_NoFacilityScreen> {
                                   child: CircularProgressIndicator(strokeWidth: 2, color: context.colors.onPrimary),
                                 ),
                                 SizedBox(width: AppSpacing.s10),
-                                Text('Sending your request...'),
+                                Text(context.l10n.noFacility_sending),
                               ],
                             )
-                          : const Text('Request to join'),
+                          : Text(context.l10n.noFacility_requestToJoin),
                     ),
                   ),
                   const SizedBox(height: AppSpacing.s10),
                   Text(
-                    "The facility's admin has to approve you, as with any new assistant. "
-                    'Or ask your previous admin to add you back.',
+                    context.l10n.noFacility_approvalNote,
                     textAlign: TextAlign.center,
                     style: TextStyle(color: context.colors.textMuted, fontSize: AppFontSize.f12, height: 1.4),
                   ),
