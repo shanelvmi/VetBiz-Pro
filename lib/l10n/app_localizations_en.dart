@@ -3410,4 +3410,84 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get reports_noSalesToday => 'No sales recorded today.';
+
+  @override
+  String get reports_vetServices => 'Veterinary Services';
+
+  @override
+  String get reports_noServicesToday => 'No services provided today.';
+
+  @override
+  String get reports_productMovement => 'Product Movement';
+
+  @override
+  String get reports_noMovementToday => 'No product movement today.';
+
+  @override
+  String reports_movementLine(int sold, int closing, String unit) {
+    return 'Sold: $sold $unit  |  Closing: $closing $unit';
+  }
+
+  @override
+  String reports_movementLineAdjusted(
+    int sold,
+    String adjustment,
+    int closing,
+    String unit,
+  ) {
+    return 'Sold: $sold $unit  |  Adjusted: $adjustment $unit  |  Closing: $closing $unit';
+  }
+
+  @override
+  String get reports_expectedVsPhysical => 'Expected vs Physical Stock';
+
+  @override
+  String get reports_noWatchlisted =>
+      'No watch-listed products for this facility.';
+
+  @override
+  String get reports_countsNotSubmitted =>
+      'Physical counts have not been submitted yet.';
+
+  @override
+  String reports_expectedPhysical(int expected, String physical) {
+    return 'Expected: $expected  |  Physical: $physical';
+  }
+
+  @override
+  String get reports_debtActivity => 'Debt Activity';
+
+  @override
+  String get reports_noDebtActivity => 'No debt activity today.';
+
+  @override
+  String get reports_expensesRecorded => 'Expenses Recorded';
+
+  @override
+  String get reports_noExpensesToday => 'No expenses recorded today.';
+
+  @override
+  String get reports_paymentReconciliation => 'Payment Reconciliation';
+
+  @override
+  String get reports_noPaymentsToday => 'No payments recorded today.';
+
+  @override
+  String get reports_expectedBalance => 'Expected balance';
+
+  @override
+  String get reports_physicalBalance => 'Physical balance counted';
+
+  @override
+  String get reports_variance => 'Variance';
+
+  @override
+  String reports_varianceValue(String amount) {
+    return '$amount - VARIANCE';
+  }
+
+  @override
+  String reports_matchValue(String amount) {
+    return '$amount - Match';
+  }
 }

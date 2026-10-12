@@ -3429,4 +3429,84 @@ class AppLocalizationsSw extends AppLocalizations {
 
   @override
   String get reports_noSalesToday => 'Hakuna mauzo yaliyorekodiwa leo.';
+
+  @override
+  String get reports_vetServices => 'Huduma za Mifugo';
+
+  @override
+  String get reports_noServicesToday => 'Hakuna huduma zilizotolewa leo.';
+
+  @override
+  String get reports_productMovement => 'Mwenendo wa Bidhaa';
+
+  @override
+  String get reports_noMovementToday => 'Hakuna mwenendo wa bidhaa leo.';
+
+  @override
+  String reports_movementLine(int sold, int closing, String unit) {
+    return 'Imeuzwa: $sold $unit  |  Kufunga: $closing $unit';
+  }
+
+  @override
+  String reports_movementLineAdjusted(
+    int sold,
+    String adjustment,
+    int closing,
+    String unit,
+  ) {
+    return 'Imeuzwa: $sold $unit  |  Imerekebishwa: $adjustment $unit  |  Kufunga: $closing $unit';
+  }
+
+  @override
+  String get reports_expectedVsPhysical => 'Stoo Inayotarajiwa dhidi ya Halisi';
+
+  @override
+  String get reports_noWatchlisted =>
+      'Hakuna bidhaa zinazofuatiliwa kwa kituo hiki.';
+
+  @override
+  String get reports_countsNotSubmitted =>
+      'Hesabu halisi bado hazijawasilishwa.';
+
+  @override
+  String reports_expectedPhysical(int expected, String physical) {
+    return 'Inatarajiwa: $expected  |  Halisi: $physical';
+  }
+
+  @override
+  String get reports_debtActivity => 'Mwenendo wa Madeni';
+
+  @override
+  String get reports_noDebtActivity => 'Hakuna mwenendo wa madeni leo.';
+
+  @override
+  String get reports_expensesRecorded => 'Gharama Zilizorekodiwa';
+
+  @override
+  String get reports_noExpensesToday => 'Hakuna gharama zilizorekodiwa leo.';
+
+  @override
+  String get reports_paymentReconciliation => 'Ulinganisho wa Malipo';
+
+  @override
+  String get reports_noPaymentsToday => 'Hakuna malipo yaliyorekodiwa leo.';
+
+  @override
+  String get reports_expectedBalance => 'Salio linalotarajiwa';
+
+  @override
+  String get reports_physicalBalance => 'Salio halisi lililohesabiwa';
+
+  @override
+  String get reports_variance => 'Tofauti';
+
+  @override
+  String reports_varianceValue(String amount) {
+    return '$amount - TOFAUTI';
+  }
+
+  @override
+  String reports_matchValue(String amount) {
+    return '$amount - Inalingana';
+  }
 }

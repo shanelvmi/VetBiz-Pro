@@ -6055,6 +6055,137 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'No sales recorded today.'**
   String get reports_noSalesToday;
+
+  /// Report section.
+  ///
+  /// In en, this message translates to:
+  /// **'Veterinary Services'**
+  String get reports_vetServices;
+
+  /// Report, empty section.
+  ///
+  /// In en, this message translates to:
+  /// **'No services provided today.'**
+  String get reports_noServicesToday;
+
+  /// Report section.
+  ///
+  /// In en, this message translates to:
+  /// **'Product Movement'**
+  String get reports_productMovement;
+
+  /// Report, empty section.
+  ///
+  /// In en, this message translates to:
+  /// **'No product movement today.'**
+  String get reports_noMovementToday;
+
+  /// Full report product line; unit is the product unit label.
+  ///
+  /// In en, this message translates to:
+  /// **'Sold: {sold} {unit}  |  Closing: {closing} {unit}'**
+  String reports_movementLine(int sold, int closing, String unit);
+
+  /// Full report product line with an adjustment (adjustment carries its sign).
+  ///
+  /// In en, this message translates to:
+  /// **'Sold: {sold} {unit}  |  Adjusted: {adjustment} {unit}  |  Closing: {closing} {unit}'**
+  String reports_movementLineAdjusted(
+    int sold,
+    String adjustment,
+    int closing,
+    String unit,
+  );
+
+  /// Report section.
+  ///
+  /// In en, this message translates to:
+  /// **'Expected vs Physical Stock'**
+  String get reports_expectedVsPhysical;
+
+  /// Report, empty section.
+  ///
+  /// In en, this message translates to:
+  /// **'No watch-listed products for this facility.'**
+  String get reports_noWatchlisted;
+
+  /// Report, stock section of a draft.
+  ///
+  /// In en, this message translates to:
+  /// **'Physical counts have not been submitted yet.'**
+  String get reports_countsNotSubmitted;
+
+  /// Full report stock line; physical is "-" when not counted.
+  ///
+  /// In en, this message translates to:
+  /// **'Expected: {expected}  |  Physical: {physical}'**
+  String reports_expectedPhysical(int expected, String physical);
+
+  /// Report section.
+  ///
+  /// In en, this message translates to:
+  /// **'Debt Activity'**
+  String get reports_debtActivity;
+
+  /// Report, empty section.
+  ///
+  /// In en, this message translates to:
+  /// **'No debt activity today.'**
+  String get reports_noDebtActivity;
+
+  /// Report section.
+  ///
+  /// In en, this message translates to:
+  /// **'Expenses Recorded'**
+  String get reports_expensesRecorded;
+
+  /// Report, empty section.
+  ///
+  /// In en, this message translates to:
+  /// **'No expenses recorded today.'**
+  String get reports_noExpensesToday;
+
+  /// Report section.
+  ///
+  /// In en, this message translates to:
+  /// **'Payment Reconciliation'**
+  String get reports_paymentReconciliation;
+
+  /// Report, empty section.
+  ///
+  /// In en, this message translates to:
+  /// **'No payments recorded today.'**
+  String get reports_noPaymentsToday;
+
+  /// Payment reconciliation row.
+  ///
+  /// In en, this message translates to:
+  /// **'Expected balance'**
+  String get reports_expectedBalance;
+
+  /// Payment reconciliation row.
+  ///
+  /// In en, this message translates to:
+  /// **'Physical balance counted'**
+  String get reports_physicalBalance;
+
+  /// Reconciliation row and status.
+  ///
+  /// In en, this message translates to:
+  /// **'Variance'**
+  String get reports_variance;
+
+  /// Full report reconciliation; amount is pre-formatted.
+  ///
+  /// In en, this message translates to:
+  /// **'{amount} - VARIANCE'**
+  String reports_varianceValue(String amount);
+
+  /// Full report reconciliation; amount is pre-formatted.
+  ///
+  /// In en, this message translates to:
+  /// **'{amount} - Match'**
+  String reports_matchValue(String amount);
 }
 
 class _AppLocalizationsDelegate
