@@ -10127,6 +10127,78 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'New'**
   String get notifications_statusNew;
+
+  /// Tooltip of the Notifications date filter's clear button.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear date range'**
+  String get notifications_clearDateRange;
+
+  /// Notifications when there are none.
+  ///
+  /// In en, this message translates to:
+  /// **'No notifications'**
+  String get notifications_empty;
+
+  /// Notifications when there are none.
+  ///
+  /// In en, this message translates to:
+  /// **'New updates from your facility will appear here.'**
+  String get notifications_emptyHint;
+
+  /// Notifications when the filters hide everything.
+  ///
+  /// In en, this message translates to:
+  /// **'No notifications match your filters'**
+  String get notifications_noMatches;
+
+  /// Notifications table column.
+  ///
+  /// In en, this message translates to:
+  /// **'Notification'**
+  String get notifications_colNotification;
+
+  /// Under the Notifications table.
+  ///
+  /// In en, this message translates to:
+  /// **'Showing {start} to {end} of {total, plural, =1{1 notification} other{{total} notifications}}'**
+  String notifications_showingRange(int start, int end, int total);
+
+  /// Notifications section: subscription and trial notices.
+  ///
+  /// In en, this message translates to:
+  /// **'Your Plan'**
+  String get notifications_yourPlan;
+
+  /// Notifications section.
+  ///
+  /// In en, this message translates to:
+  /// **'Needs Attention'**
+  String get notifications_needsAttention;
+
+  /// Notifications section.
+  ///
+  /// In en, this message translates to:
+  /// **'Earlier'**
+  String get notifications_earlier;
+
+  /// Notifications section.
+  ///
+  /// In en, this message translates to:
+  /// **'Urgent Announcements'**
+  String get notifications_urgentAnnouncements;
+
+  /// Notifications dropdown link to the full screen.
+  ///
+  /// In en, this message translates to:
+  /// **'View all notifications'**
+  String get notifications_viewAll;
+
+  /// Notifications dropdown with nothing to show.
+  ///
+  /// In en, this message translates to:
+  /// **'No urgent announcements, subscription issues, or stock alerts right now.'**
+  String get notifications_allCaughtUpHint;
 }
 
 class _AppLocalizationsDelegate

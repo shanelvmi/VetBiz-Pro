@@ -5894,4 +5894,50 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get notifications_statusNew => 'New';
+
+  @override
+  String get notifications_clearDateRange => 'Clear date range';
+
+  @override
+  String get notifications_empty => 'No notifications';
+
+  @override
+  String get notifications_emptyHint =>
+      'New updates from your facility will appear here.';
+
+  @override
+  String get notifications_noMatches => 'No notifications match your filters';
+
+  @override
+  String get notifications_colNotification => 'Notification';
+
+  @override
+  String notifications_showingRange(int start, int end, int total) {
+    String _temp0 = intl.Intl.pluralLogic(
+      total,
+      locale: localeName,
+      other: '$total notifications',
+      one: '1 notification',
+    );
+    return 'Showing $start to $end of $_temp0';
+  }
+
+  @override
+  String get notifications_yourPlan => 'Your Plan';
+
+  @override
+  String get notifications_needsAttention => 'Needs Attention';
+
+  @override
+  String get notifications_earlier => 'Earlier';
+
+  @override
+  String get notifications_urgentAnnouncements => 'Urgent Announcements';
+
+  @override
+  String get notifications_viewAll => 'View all notifications';
+
+  @override
+  String get notifications_allCaughtUpHint =>
+      'No urgent announcements, subscription issues, or stock alerts right now.';
 }

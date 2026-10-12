@@ -5926,4 +5926,51 @@ class AppLocalizationsSw extends AppLocalizations {
 
   @override
   String get notifications_statusNew => 'Mpya';
+
+  @override
+  String get notifications_clearDateRange => 'Futa kipindi cha tarehe';
+
+  @override
+  String get notifications_empty => 'Hakuna arifa';
+
+  @override
+  String get notifications_emptyHint =>
+      'Taarifa mpya kutoka kituo chako zitaonekana hapa.';
+
+  @override
+  String get notifications_noMatches =>
+      'Hakuna arifa zinazolingana na vichujio vyako';
+
+  @override
+  String get notifications_colNotification => 'Arifa';
+
+  @override
+  String notifications_showingRange(int start, int end, int total) {
+    String _temp0 = intl.Intl.pluralLogic(
+      total,
+      locale: localeName,
+      other: 'arifa $total',
+      one: 'arifa 1',
+    );
+    return 'Inaonyesha $start hadi $end kati ya $_temp0';
+  }
+
+  @override
+  String get notifications_yourPlan => 'Kifurushi Chako';
+
+  @override
+  String get notifications_needsAttention => 'Inahitaji Uangalizi';
+
+  @override
+  String get notifications_earlier => 'Awali';
+
+  @override
+  String get notifications_urgentAnnouncements => 'Matangazo ya Dharura';
+
+  @override
+  String get notifications_viewAll => 'Tazama arifa zote';
+
+  @override
+  String get notifications_allCaughtUpHint =>
+      'Hakuna matangazo ya dharura, matatizo ya usajili, wala tahadhari za stoo kwa sasa.';
 }
