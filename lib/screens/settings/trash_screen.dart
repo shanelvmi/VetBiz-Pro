@@ -8,6 +8,7 @@ import '../../data/collections.dart';
 import '../../data/fields.dart';
 import '../../data/activity_type.dart';
 import '../../config/money.dart';
+import '../../l10n/l10n.dart';
 import '../../config/app_rules.dart';
 import '../../config/app_date_format.dart';
 import '../../services/trash_service.dart';
@@ -47,7 +48,7 @@ class _TrashScreenState extends State<TrashScreen> with SingleTickerProviderStat
     return Scaffold(
       backgroundColor: context.colors.background,
       appBar: AppBar(
-        title: const Text('Trash'),
+        title: Text(context.l10n.activityType_trash),
         centerTitle: true,
         backgroundColor: context.colors.primary,
         foregroundColor: context.colors.onPrimary,
@@ -56,17 +57,17 @@ class _TrashScreenState extends State<TrashScreen> with SingleTickerProviderStat
           indicatorColor: context.colors.onPrimary,
           labelColor: context.colors.onPrimary,
           unselectedLabelColor: context.colors.onPrimaryMuted,
-          tabs: const [
-            Tab(text: 'Products'),
-            Tab(text: 'Clients'),
-            Tab(text: 'Service Records'),
-            Tab(text: 'Sales'),
-            Tab(text: 'Transactions'),
+          tabs: [
+            Tab(text: context.l10n.activityType_products),
+            Tab(text: context.l10n.clients_title),
+            Tab(text: context.l10n.common_serviceRecords),
+            Tab(text: context.l10n.payments_typeSales),
+            Tab(text: context.l10n.transactions_title),
           ],
         ),
       ),
       body: facilityId == null
-          ? const Center(child: Text('No facility selected.'))
+          ? Center(child: Text(context.l10n.common_noFacilityDot))
           : Center(
               child: ConstrainedBox(
                 constraints: const BoxConstraints(maxWidth: 700),
@@ -92,6 +93,10 @@ class _TrashScreenState extends State<TrashScreen> with SingleTickerProviderStat
                       facilityId: facilityId,
                       trashCollection: Collections.trashSales,
                       liveCollection: Collections.sales,
+                      // The title also goes into the saved activity description ("Permanently
+
+                      // deleted: ..."), so it stays English.
+
                       titleBuilder: (data) {
                         final client = (data['clientName'] as String?) ?? 'Walk-in';
                         final amount = (data['totalAmount'] as num?) ?? 0;
@@ -136,33 +141,24 @@ class _TrashList extends StatelessWidget {
   /// restore: books consistency"). Null where Restore is complete.
   /// Restore only moves the document back; these lines just say so before
   /// the user commits to it.
-  ({String title, String body})? get _restoreWarning {
+  ({String title, String body})? _restoreWarning(AppLocalizations l) {
     if (liveCollection == Collections.sales) {
       return (
-        title: 'Restore this sale?',
-        body: 'The sale will be back in your sales list, but restoring will NOT change:\n'
-            '• stock: the items stay back on the shelf, as they were put back when the sale was deleted\n'
-            "• debt: the client's debt for this sale is not re-created\n"
-            "• client balance: it stays as it is now\n\n"
-            'Adjust these by hand if the sale really happened.',
+        title: l.trash_restoreSaleTitle,
+        body: l.trash_restoreSaleBody,
       );
     }
     if (liveCollection == Collections.services) {
       return (
-        title: 'Restore this service?',
-        body: 'The service will be back in your services list, but restoring will NOT change:\n'
-            '• stock: the items it used stay back in stock\n'
-            "• debt: the client's debt for this service is not re-created\n"
-            "• client balance: it stays as it is now\n"
-            '• expenses: its expense transaction was deleted for good and does not come back\n\n'
-            'Adjust these by hand if the service really happened.',
+        title: l.trash_restoreServiceTitle,
+        body: l.trash_restoreServiceBody,
       );
     }
     return null;
   }
 
   Future<void> _restore(BuildContext context, String id, Map<String, dynamic> data) async {
-    final warning = _restoreWarning;
+    final warning = _restoreWarning(context.l10n);
     if (warning != null) {
       final confirm = await showDialog<bool>(
         context: context,
@@ -173,8 +169,8 @@ class _TrashList extends StatelessWidget {
             child: Text(warning.body),
           ),
           actions: [
-            TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Cancel')),
-            TextButton(onPressed: () => Navigator.pop(context, true), child: const Text('Restore')),
+            TextButton(onPressed: () => Navigator.pop(context, false), child: Text(context.l10n.common_cancel)),
+            TextButton(onPressed: () => Navigator.pop(context, true), child: Text(context.l10n.common_restore)),
           ],
         ),
       );
@@ -190,9 +186,9 @@ class _TrashList extends StatelessWidget {
         data: data,
       );
 
-      AppFeedback.success('Item restored');
+      AppFeedback.success(L10n.current.trash_restored);
     } catch (e, st) {
-      AppFeedback.error("Couldn't restore the item", error: e, stackTrace: st);
+      AppFeedback.error(L10n.current.trash_restoreFailed, error: e, stackTrace: st);
     }
   }
 
@@ -200,13 +196,13 @@ class _TrashList extends StatelessWidget {
     final confirm = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Delete Forever?'),
-        content: Text('"$label" will be permanently deleted. This cannot be undone.'),
+        title: Text(context.l10n.trash_deleteForeverTitle),
+        content: Text(context.l10n.trash_deleteForeverBody(label)),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Cancel')),
+          TextButton(onPressed: () => Navigator.pop(context, false), child: Text(context.l10n.common_cancel)),
           TextButton(
             onPressed: () => Navigator.pop(context, true),
-            child: Text('Delete Forever', style: TextStyle(color: context.colors.danger)),
+            child: Text(context.l10n.trash_deleteForever, style: TextStyle(color: context.colors.danger)),
           ),
         ],
       ),
@@ -252,9 +248,9 @@ class _TrashList extends StatelessWidget {
       );
 
       // A hard delete: plain success, no Undo (PHASE2_FEEDBACK_SPEC section 8).
-      AppFeedback.success('Permanently deleted');
+      AppFeedback.success(L10n.current.trash_deleted);
     } catch (e, st) {
-      AppFeedback.error("Couldn't delete the item permanently", error: e, stackTrace: st);
+      AppFeedback.error(L10n.current.trash_deleteFailed, error: e, stackTrace: st);
     }
   }
 
@@ -290,7 +286,7 @@ class _TrashList extends StatelessWidget {
               children: [
                 Icon(Icons.delete_outline, size: AppIconSize.i56, color: context.colors.textDisabled),
                 const SizedBox(height: AppSpacing.s12),
-                Text('Trash is empty', style: TextStyle(color: context.colors.textMuted)),
+                Text(context.l10n.trash_empty, style: TextStyle(color: context.colors.textMuted)),
               ],
             ),
           );
@@ -323,9 +319,7 @@ class _TrashList extends StatelessWidget {
                     const SizedBox(width: AppSpacing.s8),
                     Expanded(
                       child: Text(
-                        '$soonToExpireCount item${soonToExpireCount == 1 ? '' : 's'} will be '
-                        'permanently deleted within $_warningThresholdDays days. '
-                        'Restore now if you still need ${soonToExpireCount == 1 ? 'it' : 'them'}.',
+                        context.l10n.trash_expiringBanner(soonToExpireCount, _warningThresholdDays),
                         style: const TextStyle(fontSize: AppFontSize.f12_5, fontWeight: AppFontWeight.medium),
                       ),
                     ),
@@ -341,11 +335,11 @@ class _TrashList extends StatelessWidget {
                   final data = doc.data() as Map<String, dynamic>;
                   final name = titleBuilder != null
                       ? titleBuilder!(data)
-                      : (data['name'] as String?) ?? 'Untitled';
+                      : (data['name'] as String?) ?? 'Untitled'; // also in the saved activity description: English
                   final deletedAt = data['deletedAt'] is Timestamp
                       ? (data['deletedAt'] as Timestamp).toDate()
                       : null;
-                  final deletedBy = (data['deletedBy'] as String?) ?? 'Unknown';
+                  final deletedBy = (data['deletedBy'] as String?) ?? context.l10n.common_unknown;
                   final remaining = _daysRemaining(deletedAt);
 
                   String expiryText;
@@ -353,16 +347,16 @@ class _TrashList extends StatelessWidget {
                   if (remaining == null) {
                     expiryText = '';
                   } else if (remaining <= 0) {
-                    expiryText = 'Deleting soon';
+                    expiryText = context.l10n.trash_deletingSoon;
                     expiryColor = context.colors.dangerAccent;
                   } else if (remaining == 1) {
-                    expiryText = 'Expires tomorrow';
+                    expiryText = context.l10n.trash_expiresTomorrow;
                     expiryColor = context.colors.dangerAccent;
                   } else if (remaining <= _warningThresholdDays) {
-                    expiryText = 'Expires in $remaining days';
+                    expiryText = context.l10n.trash_expiresIn(remaining);
                     expiryColor = context.colors.warningStrong;
                   } else {
-                    expiryText = 'Expires in $remaining days';
+                    expiryText = context.l10n.trash_expiresIn(remaining);
                   }
 
                   return Card(
@@ -373,8 +367,9 @@ class _TrashList extends StatelessWidget {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            'Deleted by $deletedBy'
-                            '${deletedAt != null ? ' on ${AppDateFormat.dateTime24.format(deletedAt)}' : ''}',
+                            deletedAt != null
+                                ? context.l10n.trash_deletedByOn(deletedBy, AppDateFormat.dateTime24.format(deletedAt))
+                                : context.l10n.trash_deletedBy(deletedBy),
                             style: const TextStyle(fontSize: AppFontSize.f12),
                           ),
                           if (expiryText.isNotEmpty)
@@ -389,12 +384,12 @@ class _TrashList extends StatelessWidget {
                         children: [
                           IconButton(
                             icon: Icon(Icons.restore, color: context.colors.primary),
-                            tooltip: 'Restore',
+                            tooltip: context.l10n.common_restore,
                             onPressed: () => _restore(context, doc.id, data),
                           ),
                           IconButton(
                             icon: Icon(Icons.delete_forever, color: context.colors.dangerAccent),
-                            tooltip: 'Delete Forever',
+                            tooltip: context.l10n.trash_deleteForever,
                             onPressed: () => _deleteForever(context, doc.id, name),
                           ),
                         ],

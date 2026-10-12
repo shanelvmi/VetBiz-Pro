@@ -511,9 +511,6 @@
       "lib/screens/services/services_archive_screen.dart": 23,
       "lib/screens/services/services_screen.dart": 28,
       "lib/screens/settings/export_data_screen.dart": 25,
-      "lib/screens/settings/manage_account_screen.dart": 48,
-      "lib/screens/settings/printer_settings_screen.dart": 21,
-      "lib/screens/settings/trash_screen.dart": 23,
       "lib/services/role_change_service.dart": 1,
       "lib/services/session_validity_service.dart": 1
     },

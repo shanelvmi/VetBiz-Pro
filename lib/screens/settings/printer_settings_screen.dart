@@ -3,6 +3,7 @@ import 'package:print_bluetooth_thermal/print_bluetooth_thermal.dart';
 
 import '../../services/receipt_printer_service.dart';
 import '../../theme/app_text.dart';
+import '../../l10n/l10n.dart';
 import '../../theme/app_dimens.dart';
 import '../../theme/theme_context.dart';
 import '../../ui/feedback/app_feedback.dart';
@@ -63,7 +64,7 @@ class _PrinterSettingsScreenState extends State<PrinterSettingsScreen> {
     } catch (e) {
       if (mounted) {
         setState(() => _platformError =
-            'Bluetooth printing isn\'t available on this platform. This screen needs a real Android or iOS build with Bluetooth hardware - it can\'t connect to a printer from a web browser.');
+            L10n.current.printer_unavailableConnect);
       }
     }
   }
@@ -87,7 +88,7 @@ class _PrinterSettingsScreenState extends State<PrinterSettingsScreen> {
         setState(() {
           _isLoadingDevices = false;
           _platformError =
-              'Bluetooth printing isn\'t available on this platform. This screen needs a real Android or iOS build with Bluetooth hardware - it can\'t list paired devices from a web browser.';
+              L10n.current.printer_unavailableList;
         });
       }
     }
@@ -106,12 +107,12 @@ class _PrinterSettingsScreenState extends State<PrinterSettingsScreen> {
           _isConnected = true;
           _lastPrinter = {'mac': device.macAdress, 'name': device.name};
         });
-        AppFeedback.success('Connected to ${device.name}');
+        AppFeedback.success(L10n.current.printer_connected(device.name));
       } else {
-        AppFeedback.error("Couldn't connect to ${device.name}");
+        AppFeedback.error(L10n.current.printer_connectFailedNamed(device.name));
       }
     } catch (e, st) {
-      AppFeedback.error("Couldn't connect to the printer", error: e, stackTrace: st);
+      AppFeedback.error(L10n.current.printer_connectFailed, error: e, stackTrace: st);
     } finally {
       if (mounted) setState(() => _isConnecting = false);
     }
@@ -123,7 +124,7 @@ class _PrinterSettingsScreenState extends State<PrinterSettingsScreen> {
       if (!mounted) return;
       setState(() => _isConnected = false);
     } catch (e, st) {
-      AppFeedback.error("Couldn't disconnect the printer", error: e, stackTrace: st);
+      AppFeedback.error(L10n.current.printer_disconnectFailed, error: e, stackTrace: st);
     }
   }
 
@@ -137,12 +138,12 @@ class _PrinterSettingsScreenState extends State<PrinterSettingsScreen> {
     try {
       final success = await _printerService.printTestPage();
       if (success) {
-        AppFeedback.success('Test page sent to printer');
+        AppFeedback.success(L10n.current.printer_testSent);
       } else {
-        AppFeedback.error("Couldn't print the test page", detail: 'The printer did not accept it');
+        AppFeedback.error(L10n.current.printer_testFailed, detail: L10n.current.common_printFailedDetail);
       }
     } catch (e, st) {
-      AppFeedback.error("Couldn't print the test page", error: e, stackTrace: st);
+      AppFeedback.error(L10n.current.printer_testFailed, error: e, stackTrace: st);
     } finally {
       if (mounted) setState(() => _isTestPrinting = false);
     }
@@ -153,7 +154,7 @@ class _PrinterSettingsScreenState extends State<PrinterSettingsScreen> {
     return Scaffold(
       backgroundColor: context.colors.background,
       appBar: AppBar(
-        title: const Text('Printer & Receipt Settings'),
+        title: Text(context.l10n.printer_title),
         backgroundColor: context.colors.primary,
         foregroundColor: context.colors.onPrimary,
         centerTitle: true,
@@ -193,16 +194,16 @@ class _PrinterSettingsScreenState extends State<PrinterSettingsScreen> {
                       _isConnected ? Icons.bluetooth_connected : Icons.bluetooth_disabled,
                       color: _isConnected ? context.colors.success : context.colors.textHint,
                     ),
-                    title: Text(_lastPrinter!['name'] ?? 'Saved printer'),
-                    subtitle: Text(_isConnected ? 'Connected' : 'Not connected'),
+                    title: Text(_lastPrinter!['name'] ?? context.l10n.printer_savedPrinter),
+                    subtitle: Text(_isConnected ? context.l10n.printer_statusConnected : context.l10n.printer_statusNotConnected),
                     trailing: Wrap(
                       spacing: AppSpacing.s4,
                       children: [
                         if (_isConnected)
-                          TextButton(onPressed: _disconnect, child: const Text('Disconnect')),
+                          TextButton(onPressed: _disconnect, child: Text(context.l10n.printer_disconnect)),
                         IconButton(
                           icon: const Icon(Icons.close, size: AppIconSize.i18),
-                          tooltip: 'Forget this printer',
+                          tooltip: context.l10n.printer_forget,
                           onPressed: _forgetPrinter,
                         ),
                       ],
@@ -215,7 +216,7 @@ class _PrinterSettingsScreenState extends State<PrinterSettingsScreen> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Text('Paired Devices', style: TextStyle(fontWeight: AppFontWeight.bold, color: context.colors.primary)),
+                  Text(context.l10n.printer_paired, style: TextStyle(fontWeight: AppFontWeight.bold, color: context.colors.primary)),
                   TextButton.icon(
                     onPressed: _isLoadingDevices ? null : _refreshPairedDevices,
                     icon: _isLoadingDevices
@@ -225,14 +226,14 @@ class _PrinterSettingsScreenState extends State<PrinterSettingsScreen> {
                             child: CircularProgressIndicator(strokeWidth: 2, color: context.colors.primary),
                           )
                         : const Icon(Icons.refresh, size: AppIconSize.i18),
-                    label: const Text('Refresh'),
+                    label: Text(context.l10n.common_refresh),
                   ),
                 ],
               ),
               Padding(
                 padding: const EdgeInsets.only(bottom: AppSpacing.s8),
                 child: Text(
-                  'Pair your printer in your device\'s Bluetooth settings first - this list only shows devices already paired there.',
+                  context.l10n.printer_pairHint,
                   style: TextStyle(fontSize: AppFontSize.f12, color: context.colors.textMuted),
                 ),
               ),
@@ -240,7 +241,7 @@ class _PrinterSettingsScreenState extends State<PrinterSettingsScreen> {
               if (_pairedDevices.isEmpty && _platformError == null)
                 Padding(
                   padding: const EdgeInsets.symmetric(vertical: AppSpacing.s12),
-                  child: Text('No paired devices found.', style: TextStyle(color: context.colors.textMuted)),
+                  child: Text(context.l10n.printer_noPaired, style: TextStyle(color: context.colors.textMuted)),
                 )
               else
                 ..._pairedDevices.map((device) {
@@ -260,26 +261,26 @@ class _PrinterSettingsScreenState extends State<PrinterSettingsScreen> {
                               ? Icon(Icons.check_circle, color: context.colors.success)
                               : TextButton(
                                   onPressed: () => _connectTo(device),
-                                  child: const Text('Connect'),
+                                  child: Text(context.l10n.printer_connect),
                                 )),
                     ),
                   );
                 }),
 
               const SizedBox(height: AppSpacing.s20),
-              Text('Print Options', style: TextStyle(fontWeight: AppFontWeight.bold, color: context.colors.primary)),
+              Text(context.l10n.printer_printOptions, style: TextStyle(fontWeight: AppFontWeight.bold, color: context.colors.primary)),
               const SizedBox(height: AppSpacing.s8),
               Card(
                 elevation: AppElevation.e2,
                 child: Column(
                   children: [
                     ListTile(
-                      title: const Text('Paper Size'),
+                      title: Text(context.l10n.printer_paperSize),
                       trailing: DropdownButton<String>(
                         value: _paperSize,
-                        items: const [
-                          DropdownMenuItem(value: '58', child: Text('58mm')),
-                          DropdownMenuItem(value: '80', child: Text('80mm')),
+                        items: [
+                          DropdownMenuItem(value: '58', child: Text(context.l10n.printer_paperWidth('58'))),
+                          DropdownMenuItem(value: '80', child: Text(context.l10n.printer_paperWidth('80'))),
                         ],
                         onChanged: (value) async {
                           if (value == null) return;
@@ -290,7 +291,7 @@ class _PrinterSettingsScreenState extends State<PrinterSettingsScreen> {
                     ),
                     const Divider(height: 1),
                     SwitchListTile(
-                      title: const Text('Auto-print receipt after each sale'),
+                      title: Text(context.l10n.printer_autoPrint),
                       value: _autoPrint,
                       activeThumbColor: context.colors.primary,
                       onChanged: (value) async {
@@ -313,7 +314,7 @@ class _PrinterSettingsScreenState extends State<PrinterSettingsScreen> {
                           child: CircularProgressIndicator(strokeWidth: 2, color: context.colors.onPrimary),
                         )
                       : const Icon(Icons.print),
-                  label: Text(_isTestPrinting ? 'Sending...' : 'Send Test Print'),
+                  label: Text(_isTestPrinting ? context.l10n.printer_sending : context.l10n.printer_sendTest),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: context.colors.primary,
                     foregroundColor: context.colors.onPrimary,
@@ -325,7 +326,7 @@ class _PrinterSettingsScreenState extends State<PrinterSettingsScreen> {
                 Padding(
                   padding: const EdgeInsets.only(top: AppSpacing.s8),
                   child: Text(
-                    'Connect a printer above before testing.',
+                    context.l10n.printer_connectFirst,
                     style: TextStyle(fontSize: AppFontSize.f12, color: context.colors.textMuted),
                     textAlign: TextAlign.center,
                   ),
