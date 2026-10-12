@@ -3359,5 +3359,11 @@
   "notifications_viewAll": "Tazama arifa zote",
   "@notifications_viewAll": {"x-review":"draft"},
   "notifications_allCaughtUpHint": "Hakuna matangazo ya dharura, matatizo ya usajili, wala tahadhari za stoo kwa sasa.",
-  "@notifications_allCaughtUpHint": {"x-review":"draft"}
+  "@notifications_allCaughtUpHint": {"x-review":"draft"},
+  "notifications_catPayment": "Malipo",
+  "@notifications_catPayment": {"x-review":"draft"},
+  "notifications_catDebt": "Deni",
+  "@notifications_catDebt": {"x-review":"draft"},
+  "notifications_catUpdate": "Taarifa",
+  "@notifications_catUpdate": {"x-review":"draft"}
 }

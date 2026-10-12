@@ -3359,5 +3359,11 @@
   "notifications_viewAll": "View all notifications",
   "@notifications_viewAll": {"description":"Notifications dropdown link to the full screen."},
   "notifications_allCaughtUpHint": "No urgent announcements, subscription issues, or stock alerts right now.",
-  "@notifications_allCaughtUpHint": {"description":"Notifications dropdown with nothing to show."}
+  "@notifications_allCaughtUpHint": {"description":"Notifications dropdown with nothing to show."},
+  "notifications_catPayment": "Payment",
+  "@notifications_catPayment": {"description":"Notifications table: category of one notification."},
+  "notifications_catDebt": "Debt",
+  "@notifications_catDebt": {"description":"Notifications table: category of one notification."},
+  "notifications_catUpdate": "Update",
+  "@notifications_catUpdate": {"description":"Notifications table: category of one notification."}
 }
