@@ -5274,4 +5274,78 @@ class AppLocalizationsSw extends AppLocalizations {
 
   @override
   String get register_reenterPassword => 'Andika nenosiri tena';
+
+  @override
+  String get register_passwordsMatch => 'Nenosiri zinalingana';
+
+  @override
+  String get entry_noProfile =>
+      'Hatukupata wasifu wa akaunti hii. Kama umejisajili sasa hivi, usajili haukukamilika - tafadhali jisajili tena. Hili likiendelea kutokea, wasiliana na msaada.';
+
+  @override
+  String get entry_deactivated =>
+      'Akaunti hii imezimwa. Muombe msimamizi wa kituo chako (au Msimamizi wa Mfumo) aiwashe tena kabla ya kuingia tena.';
+
+  @override
+  String get entry_notActiveYet =>
+      'Akaunti yako bado haijawashwa. Tafadhali subiri idhini ya msimamizi.';
+
+  @override
+  String get entry_requestNotApproved =>
+      'Ombi lako la kujiunga halikuidhinishwa.';
+
+  @override
+  String entry_requestNotApprovedFrom(String facility) {
+    return 'Ombi lako la kujiunga na $facility halikuidhinishwa.';
+  }
+
+  @override
+  String get entry_slowLoad => 'Inachukua muda mrefu kuliko kawaida kufunguka.';
+
+  @override
+  String get entry_timeoutExplanation =>
+      'Hili linachukua muda mrefu kuliko kawaida. Angalia intaneti yako kisha ujaribu tena.';
+
+  @override
+  String get entry_unreachable =>
+      'Hatukuweza kufikia seva. Angalia intaneti yako kisha ujaribu tena.';
+
+  @override
+  String get entry_accessRefused =>
+      'Akaunti yako haikuweza kufunguliwa kwa sababu ruhusa ilikataliwa. Jaribu tena, na hili likiendelea, wasiliana na msaada.';
+
+  @override
+  String get entry_loadFailed =>
+      'Hitilafu imetokea wakati wa kupakia taarifa za akaunti yako. Angalia mtandao wako kisha ujaribu tena.';
+
+  @override
+  String get entry_couldNotLoadTitle => 'Imeshindwa Kufungua Akaunti Yako';
+
+  @override
+  String get noFacility_enterName => 'Weka jina la kituo.';
+
+  @override
+  String get noFacility_chooseType => 'Chagua aina ya kituo.';
+
+  @override
+  String get noFacility_wrongPassword => 'Nenosiri hilo si sahihi.';
+
+  @override
+  String get noFacility_tooManyAttempts =>
+      'Majaribio mengi mno. Subiri dakika chache kisha ujaribu tena.';
+
+  @override
+  String get noFacility_unreachable =>
+      'Hatukuweza kufikia seva. Angalia mtandao wako kisha ujaribu tena.';
+
+  @override
+  String get noFacility_deleteFailed => 'Imeshindwa kufuta akaunti.';
+
+  @override
+  String noFacility_deleteFailedWith(String error) {
+    return 'Imeshindwa kufuta akaunti: $error';
+  }
+
+  @override
+  String get noFacility_aFacility => 'kituo';
 }

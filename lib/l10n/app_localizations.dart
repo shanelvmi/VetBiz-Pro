@@ -9077,6 +9077,126 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Re-enter your password'**
   String get register_reenterPassword;
+
+  /// Register confirm field helper.
+  ///
+  /// In en, this message translates to:
+  /// **'Passwords match'**
+  String get register_passwordsMatch;
+
+  /// Shown on the login screen after signing out an account with no profile.
+  ///
+  /// In en, this message translates to:
+  /// **'We couldn\'t find a profile for this account. If you have just registered, the registration did not finish - please register again. If this keeps happening, contact support.'**
+  String get entry_noProfile;
+
+  /// Shown on the login screen after signing out a deactivated account.
+  ///
+  /// In en, this message translates to:
+  /// **'This account has been deactivated. Ask your facility admin (or Platform Admin) to reactivate it before signing in again.'**
+  String get entry_deactivated;
+
+  /// Shown on the login screen after signing out an assistant waiting for approval.
+  ///
+  /// In en, this message translates to:
+  /// **'Your account is not active yet. Please wait for admin approval.'**
+  String get entry_notActiveYet;
+
+  /// No-facility screen notice for a rejected assistant (facility name unknown).
+  ///
+  /// In en, this message translates to:
+  /// **'Your request to join was not approved.'**
+  String get entry_requestNotApproved;
+
+  /// No-facility screen notice for a rejected assistant.
+  ///
+  /// In en, this message translates to:
+  /// **'Your request to join {facility} was not approved.'**
+  String entry_requestNotApprovedFrom(String facility);
+
+  /// Loading screen, after a while.
+  ///
+  /// In en, this message translates to:
+  /// **'Taking longer than expected to load.'**
+  String get entry_slowLoad;
+
+  /// Account loading error screen: timed out.
+  ///
+  /// In en, this message translates to:
+  /// **'This is taking longer than expected. Check your internet connection and try again.'**
+  String get entry_timeoutExplanation;
+
+  /// Account loading error screen: server unreachable.
+  ///
+  /// In en, this message translates to:
+  /// **'We couldn\'t reach the server. Check your internet connection and try again.'**
+  String get entry_unreachable;
+
+  /// Account loading error screen: permission denied.
+  ///
+  /// In en, this message translates to:
+  /// **'Your account couldn\'t be opened because access was refused. Try again, and if it keeps happening, contact support.'**
+  String get entry_accessRefused;
+
+  /// Account loading error screen: any other error.
+  ///
+  /// In en, this message translates to:
+  /// **'Something went wrong while loading your account details. Check your connection and try again.'**
+  String get entry_loadFailed;
+
+  /// Account loading error screen title.
+  ///
+  /// In en, this message translates to:
+  /// **'Could Not Load Your Account'**
+  String get entry_couldNotLoadTitle;
+
+  /// No-facility screen: Add facility pressed with no name.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter the facility name.'**
+  String get noFacility_enterName;
+
+  /// No-facility screen: Add facility pressed with no type.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose the facility type.'**
+  String get noFacility_chooseType;
+
+  /// Delete-account dialog error.
+  ///
+  /// In en, this message translates to:
+  /// **'That password isn\'t right.'**
+  String get noFacility_wrongPassword;
+
+  /// Delete-account dialog error.
+  ///
+  /// In en, this message translates to:
+  /// **'Too many attempts. Wait a few minutes and try again.'**
+  String get noFacility_tooManyAttempts;
+
+  /// Delete-account dialog error.
+  ///
+  /// In en, this message translates to:
+  /// **'We couldn\'t reach the server. Check your connection and try again.'**
+  String get noFacility_unreachable;
+
+  /// Delete-account dialog error.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not delete the account.'**
+  String get noFacility_deleteFailed;
+
+  /// Delete-account dialog error; error is the raw error text (kept as before).
+  ///
+  /// In en, this message translates to:
+  /// **'Could not delete the account: {error}'**
+  String noFacility_deleteFailedWith(String error);
+
+  /// Stands in for a missing facility name in noFacility_stillOwns.
+  ///
+  /// In en, this message translates to:
+  /// **'a facility'**
+  String get noFacility_aFacility;
 }
 
 class _AppLocalizationsDelegate

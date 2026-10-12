@@ -5248,4 +5248,78 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get register_reenterPassword => 'Re-enter your password';
+
+  @override
+  String get register_passwordsMatch => 'Passwords match';
+
+  @override
+  String get entry_noProfile =>
+      'We couldn\'t find a profile for this account. If you have just registered, the registration did not finish - please register again. If this keeps happening, contact support.';
+
+  @override
+  String get entry_deactivated =>
+      'This account has been deactivated. Ask your facility admin (or Platform Admin) to reactivate it before signing in again.';
+
+  @override
+  String get entry_notActiveYet =>
+      'Your account is not active yet. Please wait for admin approval.';
+
+  @override
+  String get entry_requestNotApproved =>
+      'Your request to join was not approved.';
+
+  @override
+  String entry_requestNotApprovedFrom(String facility) {
+    return 'Your request to join $facility was not approved.';
+  }
+
+  @override
+  String get entry_slowLoad => 'Taking longer than expected to load.';
+
+  @override
+  String get entry_timeoutExplanation =>
+      'This is taking longer than expected. Check your internet connection and try again.';
+
+  @override
+  String get entry_unreachable =>
+      'We couldn\'t reach the server. Check your internet connection and try again.';
+
+  @override
+  String get entry_accessRefused =>
+      'Your account couldn\'t be opened because access was refused. Try again, and if it keeps happening, contact support.';
+
+  @override
+  String get entry_loadFailed =>
+      'Something went wrong while loading your account details. Check your connection and try again.';
+
+  @override
+  String get entry_couldNotLoadTitle => 'Could Not Load Your Account';
+
+  @override
+  String get noFacility_enterName => 'Enter the facility name.';
+
+  @override
+  String get noFacility_chooseType => 'Choose the facility type.';
+
+  @override
+  String get noFacility_wrongPassword => 'That password isn\'t right.';
+
+  @override
+  String get noFacility_tooManyAttempts =>
+      'Too many attempts. Wait a few minutes and try again.';
+
+  @override
+  String get noFacility_unreachable =>
+      'We couldn\'t reach the server. Check your connection and try again.';
+
+  @override
+  String get noFacility_deleteFailed => 'Could not delete the account.';
+
+  @override
+  String noFacility_deleteFailedWith(String error) {
+    return 'Could not delete the account: $error';
+  }
+
+  @override
+  String get noFacility_aFacility => 'a facility';
 }
