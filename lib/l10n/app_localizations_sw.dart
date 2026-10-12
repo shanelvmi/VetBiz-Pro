@@ -5131,4 +5131,75 @@ class AppLocalizationsSw extends AppLocalizations {
   @override
   String get register_nameTooShort =>
       'Jina lako linaonekana fupi mno - weka jina lako kamili';
+
+  @override
+  String get register_enterEmail => 'Weka barua pepe yako';
+
+  @override
+  String get register_enterPhone => 'Weka namba yako ya simu';
+
+  @override
+  String get register_validPhone =>
+      'Weka namba sahihi ya simu, kama 0712 345 678';
+
+  @override
+  String register_pressAddToInclude(String name) {
+    return 'Bonyeza Ongeza ili kujumuisha \"$name\" kabla ya kujisajili';
+  }
+
+  @override
+  String get register_chooseTypeThenAdd =>
+      'Chagua aina ya kituo, kisha bonyeza Ongeza';
+
+  @override
+  String get register_addOneFacilityHow =>
+      'Ongeza angalau kituo kimoja: weka jina lake, chagua aina yake, kisha bonyeza Ongeza';
+
+  @override
+  String get register_enterInviteCode => 'Weka msimbo wako wa mwaliko';
+
+  @override
+  String get register_stillChecking =>
+      'Bado tunakagua msimbo wako wa mwaliko - jaribu tena baada ya muda mfupi';
+
+  @override
+  String get register_createPassword => 'Tengeneza nenosiri';
+
+  @override
+  String get register_reenterToConfirm =>
+      'Andika nenosiri tena ili kulithibitisha';
+
+  @override
+  String register_fixFields(int count, String fields) {
+    return 'Tafadhali rekebisha sehemu $count: $fields.';
+  }
+
+  @override
+  String register_fixFieldsMore(int count, String fields, int more) {
+    return 'Tafadhali rekebisha sehemu $count: $fields na nyingine $more.';
+  }
+
+  @override
+  String get register_saving => 'Inahifadhi...';
+
+  @override
+  String get register_creating => 'Inafungua akaunti yako...';
+
+  @override
+  String get register_personalDetails => 'Taarifa binafsi';
+
+  @override
+  String get register_requiredNote => '* Lazima';
+
+  @override
+  String get register_title => 'Cheo';
+
+  @override
+  String get register_emailHint => 'name@example.com';
+
+  @override
+  String get register_phoneHint => '07XX XXX XXX';
+
+  @override
+  String get register_profilePhoto => 'Picha ya wasifu';
 }

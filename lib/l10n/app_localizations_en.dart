@@ -5105,4 +5105,75 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get register_nameTooShort =>
       'Your name looks too short - enter your full name';
+
+  @override
+  String get register_enterEmail => 'Enter your email address';
+
+  @override
+  String get register_enterPhone => 'Enter your phone number';
+
+  @override
+  String get register_validPhone =>
+      'Enter a valid phone number, like 0712 345 678';
+
+  @override
+  String register_pressAddToInclude(String name) {
+    return 'Press Add to include \"$name\" before you register';
+  }
+
+  @override
+  String get register_chooseTypeThenAdd =>
+      'Choose the facility type, then press Add';
+
+  @override
+  String get register_addOneFacilityHow =>
+      'Add at least one facility: enter its name, choose its type, then press Add';
+
+  @override
+  String get register_enterInviteCode => 'Enter your invite code';
+
+  @override
+  String get register_stillChecking =>
+      'Still checking your invite code - try again in a moment';
+
+  @override
+  String get register_createPassword => 'Create a password';
+
+  @override
+  String get register_reenterToConfirm =>
+      'Re-enter your password to confirm it';
+
+  @override
+  String register_fixFields(int count, String fields) {
+    return 'Please fix $count fields: $fields.';
+  }
+
+  @override
+  String register_fixFieldsMore(int count, String fields, int more) {
+    return 'Please fix $count fields: $fields and $more more.';
+  }
+
+  @override
+  String get register_saving => 'Saving...';
+
+  @override
+  String get register_creating => 'Creating your account...';
+
+  @override
+  String get register_personalDetails => 'Personal details';
+
+  @override
+  String get register_requiredNote => '* Required';
+
+  @override
+  String get register_title => 'Title';
+
+  @override
+  String get register_emailHint => 'name@example.com';
+
+  @override
+  String get register_phoneHint => '07XX XXX XXX';
+
+  @override
+  String get register_profilePhoto => 'Profile photo';
 }

@@ -8837,6 +8837,126 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Your name looks too short - enter your full name'**
   String get register_nameTooShort;
+
+  /// Register email field error.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter your email address'**
+  String get register_enterEmail;
+
+  /// Register phone field error.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter your phone number'**
+  String get register_enterPhone;
+
+  /// Register phone field error.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter a valid phone number, like 0712 345 678'**
+  String get register_validPhone;
+
+  /// Register facility error: name and type filled but Add not pressed.
+  ///
+  /// In en, this message translates to:
+  /// **'Press Add to include \"{name}\" before you register'**
+  String register_pressAddToInclude(String name);
+
+  /// Register facility error.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose the facility type, then press Add'**
+  String get register_chooseTypeThenAdd;
+
+  /// Register facility error.
+  ///
+  /// In en, this message translates to:
+  /// **'Add at least one facility: enter its name, choose its type, then press Add'**
+  String get register_addOneFacilityHow;
+
+  /// Register invite code field hint and error.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter your invite code'**
+  String get register_enterInviteCode;
+
+  /// Register invite code field error.
+  ///
+  /// In en, this message translates to:
+  /// **'Still checking your invite code - try again in a moment'**
+  String get register_stillChecking;
+
+  /// Register password field hint and error.
+  ///
+  /// In en, this message translates to:
+  /// **'Create a password'**
+  String get register_createPassword;
+
+  /// Register confirm field error.
+  ///
+  /// In en, this message translates to:
+  /// **'Re-enter your password to confirm it'**
+  String get register_reenterToConfirm;
+
+  /// Register alert naming the fields with problems (count is 2 or more; fields is a comma list of field labels).
+  ///
+  /// In en, this message translates to:
+  /// **'Please fix {count} fields: {fields}.'**
+  String register_fixFields(int count, String fields);
+
+  /// As register_fixFields, when more than three fields have problems.
+  ///
+  /// In en, this message translates to:
+  /// **'Please fix {count} fields: {fields} and {more} more.'**
+  String register_fixFieldsMore(int count, String fields, int more);
+
+  /// Edit Profile button while saving.
+  ///
+  /// In en, this message translates to:
+  /// **'Saving...'**
+  String get register_saving;
+
+  /// Register button while creating the account.
+  ///
+  /// In en, this message translates to:
+  /// **'Creating your account...'**
+  String get register_creating;
+
+  /// Register section title.
+  ///
+  /// In en, this message translates to:
+  /// **'Personal details'**
+  String get register_personalDetails;
+
+  /// Register section note: fields marked * are required.
+  ///
+  /// In en, this message translates to:
+  /// **'* Required'**
+  String get register_requiredNote;
+
+  /// Register field label for Mr./Mrs./Ms./Dr. (the choices themselves are saved in the name and stay as typed).
+  ///
+  /// In en, this message translates to:
+  /// **'Title'**
+  String get register_title;
+
+  /// Register email field example.
+  ///
+  /// In en, this message translates to:
+  /// **'name@example.com'**
+  String get register_emailHint;
+
+  /// Register phone field example.
+  ///
+  /// In en, this message translates to:
+  /// **'07XX XXX XXX'**
+  String get register_phoneHint;
+
+  /// Register avatar picker.
+  ///
+  /// In en, this message translates to:
+  /// **'Profile photo'**
+  String get register_profilePhoto;
 }
 
 class _AppLocalizationsDelegate
