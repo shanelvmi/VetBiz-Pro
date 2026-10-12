@@ -1561,3 +1561,152 @@ noFacility_askingToJoinWithType,You'll be asking to join: {facility} ({type}),Ut
 noFacility_sending,Sending your request...,Inatuma ombi lako...,No-facility screen button while sending.,draft
 noFacility_requestToJoin,Request to join,Omba kujiunga,No-facility screen button.,draft
 noFacility_approvalNote,"The facility's admin has to approve you, as with any new assistant. Or ask your previous admin to add you back.","Msimamizi wa kituo lazima akuidhinishe, kama ilivyo kwa msaidizi yeyote mpya. Au muombe msimamizi wako wa awali akurudishe.","No-facility screen, under Request to join.",draft
+subscription_freeTrialTitle,Free Trial,Majaribio Bure,Title of the live free-trial row in Notifications.,draft
+subscription_onFreeTrial,You're on a free trial.,Uko kwenye majaribio bure.,Free-trial message when no end date is known (Notifications row and Dashboard banner).,draft
+subscription_trialDaysLeftEnding,"You have {count, plural, =1{1 day} other{{count} days}} left of your free trial, ending on {date}.","Umebakiwa na {count, plural, =1{siku 1} other{siku {count}}} za majaribio bure, yanayoisha {date}.",Free-trial row in Notifications: days left and the end date.,draft
+subscription_trialEndedTitle,Trial Ended,Majaribio Yamekwisha,Notifications row title when the trial has run out.,draft
+subscription_trialEndedReadOnly,Your trial has ended. The app is in read-only mode.,Majaribio yako yamekwisha. Programu iko katika hali ya kusoma tu.,"Notifications row and Dashboard banner: trial over, facility locked.",draft
+subscription_expiredReadOnly,Your subscription has expired. The app is in read-only mode.,Usajili wako umekwisha. Programu iko katika hali ya kusoma tu.,"Notifications row and Dashboard banner: subscription over, facility locked.",draft
+subscription_trialEndedGrace,Your trial has ended. You have a few days of grace before read-only mode begins.,Majaribio yako yamekwisha. Una siku chache za neema kabla hali ya kusoma tu haijaanza.,"Notifications row and Dashboard banner: trial over, in the grace days.",draft
+subscription_expiredGrace,Your subscription has expired. You have a few days of grace before read-only mode begins.,Usajili wako umekwisha. Una siku chache za neema kabla hali ya kusoma tu haijaanza.,"Notifications row and Dashboard banner: subscription over, in the grace days.",draft
+subscription_trialExpiringSoonTitle,Trial Expiring Soon,Majaribio Yanakaribia Kwisha,Notifications row title: the trial ends within a few days.,draft
+subscription_expiringSoonTitle,Subscription Expiring Soon,Usajili Unakaribia Kwisha,Notifications row title: the subscription ends within a few days.,draft
+subscription_trialExpiresIn,"Your trial expires in {count, plural, =1{1 day} other{{count} days}}.","Majaribio yako yanakwisha baada ya {count, plural, =1{siku 1} other{siku {count}}}.",Notifications row and Dashboard banner: days until the trial ends.,draft
+subscription_expiresIn,"Your subscription expires in {count, plural, =1{1 day} other{{count} days}}.","Usajili wako unakwisha baada ya {count, plural, =1{siku 1} other{siku {count}}}.",Notifications row and Dashboard banner: days until the subscription ends.,draft
+subscription_freeTrialDaysLeft,"You're on a free trial - {count, plural, =1{1 day} other{{count} days}} left.","Uko kwenye majaribio bure - {count, plural, =1{imebaki siku 1} other{zimebaki siku {count}}}.",Dashboard banner during the free trial.,draft
+subscription_trialActive,Your trial is active.,Majaribio yako yanaendelea.,Dashboard banner: trial with no end date.,draft
+subscription_active,Your subscription is active.,Usajili wako uko hai.,Dashboard banner: subscription with no end date.,draft
+subscription_viewPlans,View Plans,Tazama Vifurushi,"Dashboard banner link (admin, free trial).",draft
+subscription_renew,Renew,Huisha,Dashboard banner link (admin).,draft
+subscription_askYourAdmin,· Ask your admin,· Muulize msimamizi wako,"Dashboard banner, for an assistant.",draft
+dashboard_reassigned,You've been reassigned to a different facility. Please log back in.,Umehamishiwa kituo kingine. Tafadhali ingia tena.,Shown on the login screen after the assistant was moved to another facility.,draft
+dashboard_vsYesterday,vs Yesterday,dhidi ya Jana,"Next to a trend: compared with yesterday (Dashboard cards, Insights).",draft
+dashboard_vsLastWeek,vs Last Week,dhidi ya Wiki Iliyopita,Next to a Dashboard card trend.,draft
+dashboard_vsLastMonth,vs Last Month,dhidi ya Mwezi Uliopita,Next to a Dashboard card trend.,draft
+dashboard_vsLastYear,vs Last Year,dhidi ya Mwaka Uliopita,Next to a Dashboard card trend.,draft
+dashboard_goodMorning,Good morning,Habari za asubuhi,Dashboard greeting before noon.,draft
+dashboard_goodAfternoon,Good afternoon,Habari za mchana,Dashboard greeting before 5 pm.,draft
+dashboard_goodEvening,Good evening,Habari za jioni,Dashboard greeting from 5 pm.,draft
+dashboard_greeting,"{greeting}, {name}","{greeting}, {name}",Dashboard greeting line: the greeting and the user's name.,draft
+dashboard_howFacilityIsDoing,Here's how {facility} is doing today.,Hivi ndivyo {facility} inavyoendelea leo.,Under the Dashboard greeting.,draft
+dashboard_avatarUpdated,Profile avatar updated,Picha ya wasifu imesasishwa,Message after a new profile picture is saved.,draft
+dashboard_avatarSaveFailed,Couldn't save the profile avatar,Imeshindwa kuhifadhi picha ya wasifu,Error after a profile picture failed to save.,draft
+dashboard_resetPasswordTitle,Reset Password,Weka Upya Nenosiri,Title of the profile panel's change-password dialog.,draft
+dashboard_resetPasswordPrompt,Send password reset email to {email}?,Tuma barua pepe ya kuweka upya nenosiri kwa {email}?,Change-password dialog question.,draft
+dashboard_sendLink,Send Link,Tuma Kiungo,Change-password dialog button.,draft
+dashboard_resetLinkSent,Reset link sent to {email},Kiungo cha kuweka upya kimetumwa kwa {email},Message after the reset email was sent.,draft
+dashboard_resetLinkFailed,Couldn't send the reset link,Imeshindwa kutuma kiungo cha kuweka upya,Error when the reset email could not be sent.,draft
+dashboard_expandMenu,Expand menu,Panua menyu,Tooltip of the sidebar toggle when collapsed.,draft
+dashboard_collapseMenu,Collapse menu,Kunja menyu,Tooltip of the sidebar toggle when open.,draft
+dashboard_searchAnything,Search anything...,Tafuta chochote...,Placeholder of the top bar search box (phone layout).,draft
+dashboard_searchShortcut,Ctrl+K,Ctrl+K,Keyboard shortcut shown in the top bar search box.,draft
+dashboard_help,Help,Msaada,Tooltip of the top bar help button.,draft
+dashboard_account,Account,Akaunti,Top bar profile button when the user has no name.,draft
+dashboard_changePeriod,Change period,Badilisha kipindi,Tooltip of the Dashboard period picker.,draft
+dashboard_totalProductValue,Total Product Value,Thamani ya Bidhaa Zote,Dashboard card title.,draft
+dashboard_asOfNow,as of now,hadi sasa,"Dashboard card subtitle: a current balance, not a period total.",draft
+dashboard_totalSales,Total Sales ({period}),Jumla ya Mauzo ({period}),Dashboard card title with the chosen period.,draft
+dashboard_totalCollected,Total Collected ({period}),Jumla Iliyokusanywa ({period}),Dashboard card title with the chosen period.,draft
+dashboard_netProfit,Net Profit ({period}),Faida Halisi ({period}),Dashboard card title with the chosen period.,draft
+dashboard_totalExpenses,Total Expenses ({period}),Jumla ya Matumizi ({period}),Dashboard card title with the chosen period.,draft
+dashboard_outstandingPayment,Outstanding Payment,Malipo Yanayodaiwa,Dashboard card title: debt still owed.,draft
+dashboard_completedServices,Completed Services ({period}),Huduma Zilizokamilika ({period}),Dashboard card title with the chosen period.,draft
+dashboard_recentActivity,Recent Activity,Shughuli za Karibuni,Dashboard section title.,draft
+dashboard_viewAll,View All,Tazama Zote,Dashboard Recent Activity button: opens the activity log.,draft
+dashboard_noActivityYet,No activity yet.,Bado hakuna shughuli.,Dashboard Recent Activity when empty.,draft
+dashboard_recentActivityLoadFailed,Couldn't load recent activity.,Imeshindwa kupakia shughuli za karibuni.,Dashboard Recent Activity when loading failed.,draft
+dashboard_salesRevenueOverview,Sales & Revenue Overview,Muhtasari wa Mauzo na Mapato,Dashboard chart title.,draft
+dashboard_vsLastPeriod,{percent}% vs last period,{percent}% dhidi ya kipindi kilichopita,Dashboard chart: change against the period before.,draft
+dashboard_noActivityInPeriod,No activity in this period.,Hakuna shughuli katika kipindi hiki.,Dashboard chart when empty.,draft
+dashboard_sales,Sales,Mauzo,"Dashboard chart series, Today at a Glance count and Insights metric.",draft
+dashboard_collections,Collections,Makusanyo,Dashboard chart series: debt repayments collected.,draft
+dashboard_services,Services,Huduma,Dashboard chart series and Today at a Glance count.,draft
+dashboard_seriesWithCurrency,{label} ({currency}),{label} ({currency}),Dashboard chart legend: a series and the currency symbol.,draft
+dashboard_searchProductsOrClients,Search products or clients...,Tafuta bidhaa au wateja...,Placeholder of the top bar search box.,draft
+dashboard_searchClient,Client • {phone},Mteja • {phone},Top bar search result under a client's name.,draft
+dashboard_todayAtAGlance,Today at a Glance,Leo kwa Ufupi,Dashboard strip title.,draft
+dashboard_outstandingDebts,"{count, plural, =1{Outstanding Debt} other{Outstanding Debts}}","{count, plural, =1{Deni Linalodaiwa} other{Madeni Yanayodaiwa}}",Today at a Glance label after the number of debts.,draft
+dashboard_profitEarned,Earned,Imepatikana,Net Profit card: profit already collected in cash.,draft
+dashboard_profitPending,Pending,Inasubiri,"Net Profit card: profit sold on credit, not yet paid.",draft
+dashboard_profitHelp,"Earned: already collected in cash.
+Pending: sold on credit, not yet paid.","Imepatikana: tayari imekusanywa kwa fedha taslimu.
+Inasubiri: imeuzwa kwa mkopo, bado haijalipwa.",Tooltip of the Net Profit card's info icon.,draft
+dashboard_createNewSale,Create a new sale,Unda mauzo mapya,Quick action card under Record Sale.,draft
+dashboard_addServiceRecord,Add a new service record,Ongeza rekodi mpya ya huduma,Quick action card under Record Visit.,draft
+dashboard_addProductToStore,Add new product to store,Ongeza bidhaa mpya stoo,Quick action card under Add Product.,draft
+dashboard_emailAppFailed,Couldn't open your email app,Imeshindwa kufungua programu yako ya barua pepe,Help dialog: the email link could not be opened.,draft
+dashboard_contactSupport,Contact Support,Wasiliana na Msaada,Help dialog title.,draft
+dashboard_supportIntro,For help or support please reach out to {appName} platform admin.,Kwa msaada tafadhali wasiliana na msimamizi wa jukwaa la {appName}.,Help dialog text.,draft
+dashboard_facilityNameType,{name} {type},{name} {type},Sidebar: the facility name followed by its type.,draft
+dashboard_fullNameLabel,"Full Name: ","Jina Kamili: ",Profile panel label before the name.,draft
+dashboard_emailLabel,"Email: ","Barua pepe: ",Profile panel label before the email.,draft
+dashboard_phoneLabel,"Phone: ","Simu: ",Profile panel label before the phone number.,draft
+dashboard_roleLabel,"Role: ","Nafasi: ",Profile panel label before the role.,draft
+dashboard_viewFacilities,View Facilities,Tazama Vituo,Profile panel button (admin).,draft
+dashboard_changePassword,Change Password,Badilisha Nenosiri,Profile panel button.,draft
+dashboard_logoutConfirm,Are you sure you want to logout?,Una uhakika unataka kutoka?,Profile panel logout dialog.,draft
+nav_stock,Stock,Stoo,Sidebar item: opens the Stock Store.,draft
+nav_products,Products,Bidhaa,Sidebar item: opens Sellable Products.,draft
+nav_sales,Sales,Mauzo,Sidebar item: opens Sales.,draft
+nav_services,Services,Huduma,Sidebar item: opens Services.,draft
+nav_debtors,Debtors,Wadaiwa,Sidebar item: opens Active Debts.,draft
+nav_reports,Reports,Ripoti,Sidebar item: opens Reports.,draft
+nav_platformAdmin,Platform Admin,Msimamizi wa Jukwaa,Sidebar item (platform admins only): opens the operator console.,draft
+insights_title,Insights,Maarifa,Insights screen title and the Dashboard button that opens it.,draft
+insights_serviceRevenue,Service revenue,Mapato ya huduma,Business Pulse metric.,draft
+insights_outstandingPayments,Outstanding payments,Malipo yanayodaiwa,Business Pulse metric.,draft
+insights_watchSales,Keep an eye on sales this week.,Fuatilia mauzo wiki hii.,Business Pulse headline: weekly sales falling.,draft
+insights_noActivity,No activity recorded yet.,Bado hakuna shughuli iliyorekodiwa.,Business Pulse headline: nothing recorded.,draft
+insights_salesTrendingUp,Sales are trending upward.,Mauzo yanapanda.,Business Pulse headline.,draft
+insights_servicesGaining,Services are gaining momentum.,Huduma zinashika kasi.,Business Pulse headline.,draft
+insights_strongActivity,Strong business activity today.,Biashara imechangamka leo.,Business Pulse headline.,draft
+insights_pickingUp,Business is picking up.,Biashara inaimarika.,Business Pulse headline.,draft
+insights_steady,Business is steady.,Biashara iko imara.,Business Pulse headline.,draft
+insights_quieter,A quieter day so far.,Siku tulivu kwa sasa.,Business Pulse headline.,draft
+insights_slowing,Customer activity is slowing.,Shughuli za wateja zinapungua.,Business Pulse headline.,draft
+insights_noOutstanding,No outstanding payments.,Hakuna malipo yanayodaiwa.,Business Pulse line about debts.,draft
+insights_outstandingRising,Outstanding payments are rising - worth following up.,Malipo yanayodaiwa yanaongezeka - inafaa kufuatilia.,Business Pulse line about debts.,draft
+insights_outstandingStable,Outstanding payments are stable.,Malipo yanayodaiwa hayabadiliki.,Business Pulse line about debts.,draft
+insights_outstandingImproving,Outstanding payments are improving.,Malipo yanayodaiwa yanapungua.,Business Pulse line about debts.,draft
+insights_businessPulse,Business Pulse,Mapigo ya Biashara,Insights card title.,draft
+insights_loadFailed,Couldn't load insights. {error},Imeshindwa kupakia maarifa. {error},"Insights screen when loading failed; error is a friendly message.",draft
+insights_salesLast14,Sales - Last 14 Days,Mauzo - Siku 14 Zilizopita,Insights chart title.,draft
+insights_topProductsLast30,Top 5 Products - Last 30 Days,Bidhaa 5 Bora - Siku 30 Zilizopita,Insights chart title.,draft
+insights_servicesByTypeLast30,Services by Type - Last 30 Days,Huduma kwa Aina - Siku 30 Zilizopita,Insights chart title.,draft
+insights_totalOver14,Total: {amount} over 14 days,Jumla: {amount} kwa siku 14,Insights sales chart summary.,draft
+insights_topSeller,Top seller: {name} · {amount},Inayouzwa zaidi: {name} · {amount},Insights products chart summary.,draft
+insights_mostRequested,Most requested: {name} - {amount},Inayoombwa zaidi: {name} - {amount},Insights services chart summary.,draft
+insights_noSales14,No sales in the last 14 days.,Hakuna mauzo katika siku 14 zilizopita.,Insights sales chart when empty.,draft
+insights_noSales30,No sales in the last 30 days.,Hakuna mauzo katika siku 30 zilizopita.,Insights products chart when empty.,draft
+insights_noServices30,No services in the last 30 days.,Hakuna huduma katika siku 30 zilizopita.,Insights services chart when empty.,draft
+notifications_subtitle,All updates and alerts from your facility,Taarifa na tahadhari zote kutoka kituo chako,Notifications screen subtitle.,draft
+notifications_loadFailed,Could not load alerts: {error},Imeshindwa kupakia arifa: {error},Notifications when loading failed.,draft
+notifications_catCritical,Critical,Muhimu Sana,Notifications category card.,draft
+notifications_catStock,Stock,Stoo,Notifications category card.,draft
+notifications_catPayments,Payments,Malipo,Notifications category card.,draft
+notifications_catDebts,Debts,Madeni,Notifications category card.,draft
+notifications_catSystem,System,Mfumo,Notifications category card.,draft
+notifications_catUpdates,Updates,Taarifa,Notifications category card (everything else).,draft
+notifications_unreadCount,{count} unread,{count} hazijasomwa,Notifications category card: how many are unread.,draft
+notifications_allRead,All read,Zote zimesomwa,Notifications category card with nothing unread.,draft
+notifications_searchHint,Search notifications...,Tafuta arifa...,Notifications search box.,draft
+notifications_markAllRead,Mark all read,Weka zote zimesomwa,Notifications screen button.,draft
+notifications_markAllAsRead,Mark all as read,Weka zote kama zimesomwa,Notifications dropdown button.,draft
+notifications_unread,Unread,Hazijasomwa,Notifications status filter choice.,draft
+notifications_read,Read,Zimesomwa,Notifications status filter choice and status chip.,draft
+notifications_statusNew,New,Mpya,Notifications status chip of an unread notification.,draft
+notifications_clearDateRange,Clear date range,Futa kipindi cha tarehe,Tooltip of the Notifications date filter's clear button.,draft
+notifications_empty,No notifications,Hakuna arifa,Notifications when there are none.,draft
+notifications_emptyHint,New updates from your facility will appear here.,Taarifa mpya kutoka kituo chako zitaonekana hapa.,Notifications when there are none.,draft
+notifications_noMatches,No notifications match your filters,Hakuna arifa zinazolingana na vichujio vyako,Notifications when the filters hide everything.,draft
+notifications_colNotification,Notification,Arifa,Notifications table column.,draft
+notifications_showingRange,"Showing {start} to {end} of {total, plural, =1{1 notification} other{{total} notifications}}","Inaonyesha {start} hadi {end} kati ya {total, plural, =1{arifa 1} other{arifa {total}}}",Under the Notifications table.,draft
+notifications_yourPlan,Your Plan,Kifurushi Chako,Notifications section: subscription and trial notices.,draft
+notifications_needsAttention,Needs Attention,Inahitaji Uangalizi,Notifications section.,draft
+notifications_earlier,Earlier,Awali,Notifications section.,draft
+notifications_urgentAnnouncements,Urgent Announcements,Matangazo ya Dharura,Notifications section.,draft
+notifications_viewAll,View all notifications,Tazama arifa zote,Notifications dropdown link to the full screen.,draft
+notifications_allCaughtUpHint,"No urgent announcements, subscription issues, or stock alerts right now.","Hakuna matangazo ya dharura, matatizo ya usajili, wala tahadhari za stoo kwa sasa.",Notifications dropdown with nothing to show.,draft
+notifications_catPayment,Payment,Malipo,Notifications table: category of one notification.,draft
+notifications_catDebt,Debt,Deni,Notifications table: category of one notification.,draft
+notifications_catUpdate,Update,Taarifa,Notifications table: category of one notification.,draft
