@@ -5365,4 +5365,46 @@ class AppLocalizationsEn extends AppLocalizations {
   String noFacility_requestSent(String facility) {
     return 'Request sent to $facility. You can sign in once its admin approves you.';
   }
+
+  @override
+  String get noFacility_titleAssistant => 'You\'re not in a facility right now';
+
+  @override
+  String get noFacility_titleAdmin => 'You don\'t have a facility right now';
+
+  @override
+  String noFacility_noticeMistake(String notice) {
+    return '$notice If you think that was a mistake, ask for a new invite code.';
+  }
+
+  @override
+  String get noFacility_bodyAssistant =>
+      'You may have been removed from your facility, or not added to one yet. Your account, name, phone number and photo are kept. To join a facility, enter an invite code from its admin.';
+
+  @override
+  String get noFacility_bodyAdmin =>
+      'Your account is kept. Add a facility to carry on, or delete your account if you no longer need it.';
+
+  @override
+  String get noFacility_inviteHint => 'e.g. JK7-2P4';
+
+  @override
+  String noFacility_askingToJoin(String facility) {
+    return 'You\'ll be asking to join: $facility';
+  }
+
+  @override
+  String noFacility_askingToJoinWithType(String facility, String type) {
+    return 'You\'ll be asking to join: $facility ($type)';
+  }
+
+  @override
+  String get noFacility_sending => 'Sending your request...';
+
+  @override
+  String get noFacility_requestToJoin => 'Request to join';
+
+  @override
+  String get noFacility_approvalNote =>
+      'The facility\'s admin has to approve you, as with any new assistant. Or ask your previous admin to add you back.';
 }

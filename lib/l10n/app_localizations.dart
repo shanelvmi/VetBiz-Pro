@@ -9269,6 +9269,72 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Request sent to {facility}. You can sign in once its admin approves you.'**
   String noFacility_requestSent(String facility);
+
+  /// No-facility screen title (assistant).
+  ///
+  /// In en, this message translates to:
+  /// **'You\'re not in a facility right now'**
+  String get noFacility_titleAssistant;
+
+  /// No-facility screen title (owner).
+  ///
+  /// In en, this message translates to:
+  /// **'You don\'t have a facility right now'**
+  String get noFacility_titleAdmin;
+
+  /// No-facility screen notice box; notice is entry_requestNotApproved or entry_requestNotApprovedFrom.
+  ///
+  /// In en, this message translates to:
+  /// **'{notice} If you think that was a mistake, ask for a new invite code.'**
+  String noFacility_noticeMistake(String notice);
+
+  /// No-facility screen body (assistant).
+  ///
+  /// In en, this message translates to:
+  /// **'You may have been removed from your facility, or not added to one yet. Your account, name, phone number and photo are kept. To join a facility, enter an invite code from its admin.'**
+  String get noFacility_bodyAssistant;
+
+  /// No-facility screen body (owner).
+  ///
+  /// In en, this message translates to:
+  /// **'Your account is kept. Add a facility to carry on, or delete your account if you no longer need it.'**
+  String get noFacility_bodyAdmin;
+
+  /// No-facility screen invite code example.
+  ///
+  /// In en, this message translates to:
+  /// **'e.g. JK7-2P4'**
+  String get noFacility_inviteHint;
+
+  /// No-facility screen: the facility the code leads to (no type known).
+  ///
+  /// In en, this message translates to:
+  /// **'You\'ll be asking to join: {facility}'**
+  String noFacility_askingToJoin(String facility);
+
+  /// No-facility screen: the facility the code leads to, with its type.
+  ///
+  /// In en, this message translates to:
+  /// **'You\'ll be asking to join: {facility} ({type})'**
+  String noFacility_askingToJoinWithType(String facility, String type);
+
+  /// No-facility screen button while sending.
+  ///
+  /// In en, this message translates to:
+  /// **'Sending your request...'**
+  String get noFacility_sending;
+
+  /// No-facility screen button.
+  ///
+  /// In en, this message translates to:
+  /// **'Request to join'**
+  String get noFacility_requestToJoin;
+
+  /// No-facility screen, under Request to join.
+  ///
+  /// In en, this message translates to:
+  /// **'The facility\'s admin has to approve you, as with any new assistant. Or ask your previous admin to add you back.'**
+  String get noFacility_approvalNote;
 }
 
 class _AppLocalizationsDelegate

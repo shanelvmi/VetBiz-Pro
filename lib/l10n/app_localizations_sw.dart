@@ -5391,4 +5391,47 @@ class AppLocalizationsSw extends AppLocalizations {
   String noFacility_requestSent(String facility) {
     return 'Ombi limetumwa kwa $facility. Utaweza kuingia msimamizi wake akishakuidhinisha.';
   }
+
+  @override
+  String get noFacility_titleAssistant =>
+      'Kwa sasa hauko kwenye kituo chochote';
+
+  @override
+  String get noFacility_titleAdmin => 'Kwa sasa huna kituo';
+
+  @override
+  String noFacility_noticeMistake(String notice) {
+    return '$notice Kama unadhani hilo ni kosa, omba msimbo mpya wa mwaliko.';
+  }
+
+  @override
+  String get noFacility_bodyAssistant =>
+      'Huenda umeondolewa kwenye kituo chako, au bado hujaongezwa kwenye kituo. Akaunti, jina, namba ya simu na picha yako vimehifadhiwa. Ili ujiunge na kituo, weka msimbo wa mwaliko kutoka kwa msimamizi wake.';
+
+  @override
+  String get noFacility_bodyAdmin =>
+      'Akaunti yako imehifadhiwa. Ongeza kituo ili uendelee, au futa akaunti yako kama huihitaji tena.';
+
+  @override
+  String get noFacility_inviteHint => 'mf. JK7-2P4';
+
+  @override
+  String noFacility_askingToJoin(String facility) {
+    return 'Utaomba kujiunga na: $facility';
+  }
+
+  @override
+  String noFacility_askingToJoinWithType(String facility, String type) {
+    return 'Utaomba kujiunga na: $facility ($type)';
+  }
+
+  @override
+  String get noFacility_sending => 'Inatuma ombi lako...';
+
+  @override
+  String get noFacility_requestToJoin => 'Omba kujiunga';
+
+  @override
+  String get noFacility_approvalNote =>
+      'Msimamizi wa kituo lazima akuidhinishe, kama ilivyo kwa msaidizi yeyote mpya. Au muombe msimamizi wako wa awali akurudishe.';
 }
