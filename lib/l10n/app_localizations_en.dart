@@ -3656,4 +3656,78 @@ class AppLocalizationsEn extends AppLocalizations {
   String reports_generatedAtBy(String time, String name) {
     return 'Generated at $time by $name';
   }
+
+  @override
+  String reports_submittedAt(String time) {
+    return 'Submitted at $time';
+  }
+
+  @override
+  String reports_soldCount(int count) {
+    return 'Sold: $count';
+  }
+
+  @override
+  String get reports_colTime => 'Time';
+
+  @override
+  String get reports_colReceipt => 'Receipt';
+
+  @override
+  String get reports_colItems => 'Items';
+
+  @override
+  String get reports_colPayment => 'Payment';
+
+  @override
+  String get reports_colService => 'Service';
+
+  @override
+  String get reports_colNumber => 'Number';
+
+  @override
+  String get reports_colRevenue => 'Revenue';
+
+  @override
+  String get reports_totalServiceRevenue => 'Total Service Revenue';
+
+  @override
+  String get reports_colProduct => 'Product';
+
+  @override
+  String get reports_colUnit => 'Unit';
+
+  @override
+  String get reports_colOpening => 'Opening';
+
+  @override
+  String get reports_colAdded => 'Added';
+
+  @override
+  String get reports_colAdjusted => 'Adjusted';
+
+  @override
+  String get reports_colSold => 'Sold';
+
+  @override
+  String get reports_colExpectedClosing => 'Expected Closing';
+
+  @override
+  String get reports_totalUnitsSold => 'Total Units Sold';
+
+  @override
+  String get reports_systemTracked =>
+      'System-tracked - only products with movement today, or watch-listed products, are shown.';
+
+  @override
+  String get reports_watchlistedOnly => 'Watch-listed products only.';
+
+  @override
+  String get reports_colExpected => 'Expected';
+
+  @override
+  String get reports_colPhysical => 'Physical';
+
+  @override
+  String get reports_colDifference => 'Difference';
 }

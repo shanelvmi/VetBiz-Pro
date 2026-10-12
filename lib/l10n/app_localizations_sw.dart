@@ -3674,4 +3674,78 @@ class AppLocalizationsSw extends AppLocalizations {
   String reports_generatedAtBy(String time, String name) {
     return 'Imetengenezwa saa $time na $name';
   }
+
+  @override
+  String reports_submittedAt(String time) {
+    return 'Imewasilishwa saa $time';
+  }
+
+  @override
+  String reports_soldCount(int count) {
+    return 'Imeuzwa: $count';
+  }
+
+  @override
+  String get reports_colTime => 'Muda';
+
+  @override
+  String get reports_colReceipt => 'Risiti';
+
+  @override
+  String get reports_colItems => 'Vitu';
+
+  @override
+  String get reports_colPayment => 'Malipo';
+
+  @override
+  String get reports_colService => 'Huduma';
+
+  @override
+  String get reports_colNumber => 'Idadi';
+
+  @override
+  String get reports_colRevenue => 'Mapato';
+
+  @override
+  String get reports_totalServiceRevenue => 'Jumla ya Mapato ya Huduma';
+
+  @override
+  String get reports_colProduct => 'Bidhaa';
+
+  @override
+  String get reports_colUnit => 'Kipimo';
+
+  @override
+  String get reports_colOpening => 'Mwanzo';
+
+  @override
+  String get reports_colAdded => 'Imeongezwa';
+
+  @override
+  String get reports_colAdjusted => 'Imerekebishwa';
+
+  @override
+  String get reports_colSold => 'Imeuzwa';
+
+  @override
+  String get reports_colExpectedClosing => 'Kufunga Kunakotarajiwa';
+
+  @override
+  String get reports_totalUnitsSold => 'Jumla ya Vipimo Vilivyouzwa';
+
+  @override
+  String get reports_systemTracked =>
+      'Inafuatiliwa na mfumo - bidhaa zenye mwenendo leo, au zinazofuatiliwa, ndizo zinaonyeshwa.';
+
+  @override
+  String get reports_watchlistedOnly => 'Bidhaa zinazofuatiliwa pekee.';
+
+  @override
+  String get reports_colExpected => 'Inatarajiwa';
+
+  @override
+  String get reports_colPhysical => 'Halisi';
+
+  @override
+  String get reports_colDifference => 'Tofauti';
 }

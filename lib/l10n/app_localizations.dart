@@ -6450,6 +6450,144 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Generated at {time} by {name}'**
   String reports_generatedAtBy(String time, String name);
+
+  /// Report summary footer.
+  ///
+  /// In en, this message translates to:
+  /// **'Submitted at {time}'**
+  String reports_submittedAt(String time);
+
+  /// Report product preview.
+  ///
+  /// In en, this message translates to:
+  /// **'Sold: {count}'**
+  String reports_soldCount(int count);
+
+  /// Report table column.
+  ///
+  /// In en, this message translates to:
+  /// **'Time'**
+  String get reports_colTime;
+
+  /// Report table column.
+  ///
+  /// In en, this message translates to:
+  /// **'Receipt'**
+  String get reports_colReceipt;
+
+  /// Report table column.
+  ///
+  /// In en, this message translates to:
+  /// **'Items'**
+  String get reports_colItems;
+
+  /// Report table column.
+  ///
+  /// In en, this message translates to:
+  /// **'Payment'**
+  String get reports_colPayment;
+
+  /// Report table column.
+  ///
+  /// In en, this message translates to:
+  /// **'Service'**
+  String get reports_colService;
+
+  /// Report table column: how many times.
+  ///
+  /// In en, this message translates to:
+  /// **'Number'**
+  String get reports_colNumber;
+
+  /// Report table column.
+  ///
+  /// In en, this message translates to:
+  /// **'Revenue'**
+  String get reports_colRevenue;
+
+  /// Report total row.
+  ///
+  /// In en, this message translates to:
+  /// **'Total Service Revenue'**
+  String get reports_totalServiceRevenue;
+
+  /// Report table column.
+  ///
+  /// In en, this message translates to:
+  /// **'Product'**
+  String get reports_colProduct;
+
+  /// Report table column.
+  ///
+  /// In en, this message translates to:
+  /// **'Unit'**
+  String get reports_colUnit;
+
+  /// Report table column: opening amount.
+  ///
+  /// In en, this message translates to:
+  /// **'Opening'**
+  String get reports_colOpening;
+
+  /// Report table column.
+  ///
+  /// In en, this message translates to:
+  /// **'Added'**
+  String get reports_colAdded;
+
+  /// Report table column.
+  ///
+  /// In en, this message translates to:
+  /// **'Adjusted'**
+  String get reports_colAdjusted;
+
+  /// Report table column.
+  ///
+  /// In en, this message translates to:
+  /// **'Sold'**
+  String get reports_colSold;
+
+  /// Report table column.
+  ///
+  /// In en, this message translates to:
+  /// **'Expected Closing'**
+  String get reports_colExpectedClosing;
+
+  /// Report total row.
+  ///
+  /// In en, this message translates to:
+  /// **'Total Units Sold'**
+  String get reports_totalUnitsSold;
+
+  /// Report products tab note.
+  ///
+  /// In en, this message translates to:
+  /// **'System-tracked - only products with movement today, or watch-listed products, are shown.'**
+  String get reports_systemTracked;
+
+  /// Report stock tab note.
+  ///
+  /// In en, this message translates to:
+  /// **'Watch-listed products only.'**
+  String get reports_watchlistedOnly;
+
+  /// Report table column.
+  ///
+  /// In en, this message translates to:
+  /// **'Expected'**
+  String get reports_colExpected;
+
+  /// Report table column.
+  ///
+  /// In en, this message translates to:
+  /// **'Physical'**
+  String get reports_colPhysical;
+
+  /// Report table column.
+  ///
+  /// In en, this message translates to:
+  /// **'Difference'**
+  String get reports_colDifference;
 }
 
 class _AppLocalizationsDelegate
