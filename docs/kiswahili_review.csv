@@ -1155,3 +1155,246 @@ reports_accountability,Accountability,Uwajibikaji,Reports screen panel.,draft
 reports_submittedByLabel,Submitted by,Imewasilishwa na,Accountability row label.,draft
 reports_declarationPending,"This declaration is confirmed as part of Submit Daily Closing, once physical stock and cash counts have been entered.","Tamko hili huthibitishwa wakati wa Kuwasilisha Kufunga Siku, baada ya hesabu za stoo na fedha kuwekwa.",Declaration panel of a draft.,draft
 reports_savedNote,The report will be saved in the system and available for you and the admin to view or download at any time.,Ripoti itahifadhiwa kwenye mfumo na itapatikana kwako na kwa msimamizi kuitazama au kuipakua wakati wowote.,Declaration panel note.,draft
+batch_mergedIntoExisting,Added to the existing batch with this number and expiry,Imeongezwa kwenye batch iliyopo yenye namba na tarehe hii ya kuisha,Message after adding a batch that matched an existing one.,draft
+batch_added,New batch added,Batch mpya imeongezwa,Message after adding a new batch.,draft
+batch_addFailed,Couldn't add the batch,Imeshindikana kuongeza batch,Error message when adding a batch fails.,draft
+batch_addIntro,"Choose where this delivery goes - this is recorded as its own batch, separate from any existing stock.","Chagua mzigo huu uende wapi - unarekodiwa kama batch yake, tofauti na akiba iliyopo.","Add New Batch, under the product name.",draft
+batch_batchNoOptional,Batch No (optional),Namba ya Batch (si lazima),Add New Batch field label.,draft
+batch_expiryDate,Expiry Date,Tarehe ya Kuisha,Add New Batch field label.,draft
+batch_addStockTo,Add This Stock To,Weka Bidhaa Hizi,"Add New Batch, heading over the destination choice.",draft
+batch_storeHint,"Needs a separate ""Release"" step before it can be sold","Inahitaji hatua ya ""Toa"" kabla ya kuuzwa","Add New Batch, under the Stock Store choice.",draft
+batch_sellableOption,Sellable (straight to the shelf),Za Kuuza (moja kwa moja rafuni),Add New Batch destination choice.,draft
+batch_sellableHint,Ready to sell immediately,Tayari kuuzwa sasa hivi,"Add New Batch, under the Sellable choice.",draft
+batch_quantityReceived,Quantity Received,Idadi Iliyopokelewa,Add New Batch field label.,draft
+batch_validQuantity,Enter a valid quantity,Weka idadi sahihi,Add New Batch quantity validation.,draft
+batch_buyPriceLabel,Buy Price ({currency}),Bei ya Kununua ({currency}),Add New Batch field label with the currency symbol.,draft
+batch_addBatch,Add Batch,Ongeza Batch,Add New Batch save button and the dialog's screen-reader label.,draft
+batch_moveToStock,Move to Stock,Rudisha Stoo,Action that moves sellable stock of a batch back to the Stock Store (Products wording).,draft
+batch_removeFromSellable,Remove from Sellable,Ondoa Kwenye za Kuuza,"The same action, as worded in the Stock Store and Product Alerts.",draft
+batch_moveIntro,{product}{batchPart}{expiryPart}. Up to {quantity} {unit} can move back to Stock Store.,{product}{batchPart}{expiryPart}. Hadi {quantity} {unit} zinaweza kurudi Stoo.,"Move to Stock dialog text. batchPart and expiryPart are the texts below, or empty.",draft
+batch_moveBatchPart," - Batch {batchNo}"," - Batch {batchNo}",Part of batch_moveIntro (starts with a space).,draft
+batch_moveExpiredPart," (expired {date})"," (iliisha {date})",Part of batch_moveIntro (starts with a space).,draft
+batch_moveExpiresPart," (expires {date})"," (inaisha {date})",Part of batch_moveIntro (starts with a space).,draft
+batch_quantityToMove,Quantity to move ({unit}),Idadi ya kuhamisha ({unit}),Move to Stock dialog field label.,draft
+batch_noteRequiredOther,Note (required for Other),Maelezo (lazima kwa Nyingine),Move to Stock dialog note label when the reason is Other.,draft
+batch_noteOptional,Note (optional),Maelezo (si lazima),Move to Stock dialog note label.,draft
+batch_quantityUpTo,Enter a quantity up to {max},Weka idadi isiyozidi {max},Move to Stock dialog validation.,draft
+batch_selectReason,Select a reason,Chagua sababu,Move to Stock dialog validation.,draft
+batch_describeReason,Describe the reason in the note below,Eleza sababu kwenye maelezo hapa chini,Move to Stock dialog validation when the reason is Other.,draft
+batch_movedBack,Moved {quantity} {unit} back to Stock Store,{quantity} {unit} zimerudishwa Stoo,Message after Move to Stock.,draft
+batch_removedFromSellable,Removed {quantity} {unit} from Sellable,{quantity} {unit} zimeondolewa kwenye za Kuuza,Message after Remove from Sellable.,draft
+batch_moveFailed,Couldn't move the stock,Imeshindikana kuhamisha bidhaa,Error message when Move to Stock fails.,draft
+batch_unlabeledTitle,Unlabeled Batch,Batch Isiyo na Namba,Adjust dialog title for a batch with no number.,draft
+batch_currently,Currently: {stock} store · {sellable} sellable,Sasa: {stock} stoo · {sellable} za kuuza,"Adjust dialog, current quantities.",draft
+batch_modeAdd,Add to it,Ongeza juu yake,Adjust dialog choice.,draft
+batch_modeSet,Correct to,Rekebisha iwe,Adjust dialog choice.,draft
+batch_modeAddHint,Adds this amount on top of what's already there (a top-up delivery).,Inaongeza kiasi hiki juu ya kilichopo (mzigo wa nyongeza).,"Adjust dialog, explains Add to it.",draft
+batch_modeSetHint,Sets the exact amount on file right now (fixing a miscount).,Inaweka kiasi kamili kilichopo sasa (kurekebisha hesabu iliyokosewa).,"Adjust dialog, explains Correct to.",draft
+batch_addStoreQty,Add to Store Qty,Ongeza Idadi ya Stoo,Adjust dialog field label.,draft
+batch_setStoreQty,Correct Store Qty to,Rekebisha Idadi ya Stoo iwe,Adjust dialog field label.,draft
+batch_addSellableQty,Add to Sellable Qty,Ongeza Idadi ya Kuuza,Adjust dialog field label.,draft
+batch_setSellableQty,Correct Sellable Qty to,Rekebisha Idadi ya Kuuza iwe,Adjust dialog field label.,draft
+batch_saveFailed,Could not save: {error},Imeshindikana kuhifadhi: {error},Adjust dialog error with the technical error text.,draft
+batch_deleteExpiredTitle,Delete Expired Batch?,Futa Batch Iliyoisha Muda?,Delete batch dialog title.,draft
+batch_deleteTitle,Delete This Batch?,Futa Batch Hii?,Delete batch dialog title.,draft
+batch_notExpiredWarning,"This batch has not expired - it still has good, sellable stock.",Batch hii bado haijaisha muda - bado ina bidhaa nzuri za kuuza.,Delete batch dialog warning.,draft
+batch_deleteBody,This permanently removes {batch} and subtracts its {stock} store and {sellable} sellable units from this product's totals. This cannot be undone.,Hii inaondoa {batch} kabisa na kutoa vipimo vyake {stock} vya stoo na {sellable} vya kuuza kwenye jumla ya bidhaa hii. Haiwezi kurudishwa.,Delete batch dialog text. batch is store_batchName or batch_thisUnlabeled.,draft
+batch_thisUnlabeled,this unlabeled batch,batch hii isiyo na namba,Part of batch_deleteBody.,draft
+batch_deleteFailed,Could not delete: {error},Imeshindikana kufuta: {error},Delete batch dialog error with the technical error text.,draft
+batch_editDetails,Edit Details,Hariri Taarifa,View Batches button.,draft
+batch_batches,Batches,Batch,View Batches section heading.,draft
+batch_loadFailed,Could not load batches: {error},Imeshindikana kupakia batch: {error},View Batches load error with the technical error text.,draft
+batch_noneYet,No batches recorded yet.,Bado hakuna batch iliyorekodiwa.,"View Batches, empty.",draft
+batch_unlabeled,Unlabeled batch,Batch isiyo na namba,View Batches row title for a batch with no number.,draft
+batch_outOfStock,Out of Stock - 0 available,Imeisha - 0 zipo,View Batches row badge.,draft
+batch_rowQuantities,Store: {stock} · Shelf: {sellable} · {price},Stoo: {stock} · Rafu: {sellable} · {price},View Batches row. price is already formatted.,draft
+batch_expiredOn,Expired {date},Iliisha {date},View Batches row and Product Alerts details.,draft
+batch_expiresOn,Expires {date},Inaisha {date},View Batches row.,draft
+batch_deleteExpiredTooltip,Delete expired batch,Futa batch iliyoisha muda,View Batches row button tooltip.,draft
+batch_deleteTooltip,Delete batch,Futa batch,View Batches row button tooltip.,draft
+batch_adjustQuantity,Adjust quantity,Rekebisha idadi,View Batches row button tooltip.,draft
+alerts_outOfStock,Out of Stock,Imeisha,Product Alerts kind name.,draft
+alerts_messageStock,{product} - Shelf: {sellable} · Store: {stock},{product} - Rafu: {sellable} · Stoo: {stock},Alerts bell dropdown line (out of stock and low stock).,draft
+alerts_messageExpired,{product} - expired {date} · {quantity} {unit} on hand,{product} - iliisha {date} · {quantity} {unit} zipo,Alerts bell dropdown line.,draft
+alerts_messageExpiring,{product} - expires {when} ({date}) · {quantity} {unit} on hand,{product} - inaisha {when} ({date}) · {quantity} {unit} zipo,Alerts bell dropdown line. when is alerts_today or alerts_inDays.,draft
+alerts_today,today,leo,Part of alerts_messageExpiring.,draft
+alerts_inDays,"{days, plural, =1{in 1 day} other{in {days} days}}","{days, plural, =1{baada ya siku 1} other{baada ya siku {days}}}",Part of alerts_messageExpiring.,draft
+alerts_messageRestock,{product} - {sellable} on shelf · {stock} in store,{product} - {sellable} rafuni · {stock} stoo,Alerts bell dropdown line (restock shelf).,draft
+alerts_title,Product Alerts,Tahadhari za Bidhaa,Product Alerts title (screen and bell dropdown).,draft
+alerts_subtitle,Stock and expiry problems that need action,Matatizo ya akiba na muda wa kuisha yanayohitaji hatua,Product Alerts subtitle.,draft
+alerts_viewAllCount,View all {count} alerts,Tazama tahadhari zote {count},Bell dropdown link when not all alerts are shown.,draft
+alerts_viewAll,View all alerts,Tazama tahadhari zote,Bell dropdown link.,draft
+alerts_allCaughtUp,You're all caught up!,Kila kitu kiko sawa!,"Product Alerts, empty.",draft
+alerts_noneNow,No stock alerts right now.,Hakuna tahadhari za akiba kwa sasa.,"Product Alerts, empty.",draft
+alerts_hintLowStock,Below minimum level,Chini ya kiwango cha chini,Product Alerts card hint.,draft
+alerts_hintDepleted,Nothing left,Hakuna kilichobaki,Product Alerts card hint.,draft
+alerts_hintRestockShelf,Store has stock,Stoo ina akiba,Product Alerts card hint.,draft
+alerts_hintExpiringSoon,Within 30 days,Ndani ya siku 30,Product Alerts card hint.,draft
+alerts_hintExpired,Still on hand,Bado zipo,Product Alerts card hint.,draft
+alerts_restock,Restock,Ongeza Akiba,Product Alerts row action.,draft
+alerts_moveToShelf,Move to shelf,Peleka rafuni,Product Alerts row action.,draft
+alerts_adminOnlyMove,Only an admin can move stock to the shelf,Ni admin tu anayeweza kupeleka bidhaa rafuni,Product Alerts action tooltip for assistants.,draft
+alerts_viewBatches,View batches,Tazama batch,Product Alerts row action.,draft
+alerts_removeExpired,Remove expired,Ondoa zilizoisha,Product Alerts row action.,draft
+alerts_inStock,{count} in stock,{count} zipo,"Product Alerts details, first line.",draft
+alerts_minRequired,Min. required: {count},Kiwango cha chini: {count},"Product Alerts details, second line.",draft
+alerts_onShelf,{count} on shelf,{count} rafuni,"Product Alerts details, first line.",draft
+alerts_shelfMinimum,Shelf minimum: {count},Kiwango cha chini rafuni: {count},"Product Alerts details, second line.",draft
+alerts_expiresToday,Expires today,Inaisha leo,Product Alerts details.,draft
+alerts_expiresInDays,"{days, plural, =1{Expires in 1 day} other{Expires in {days} days}}","{days, plural, =1{Inaisha baada ya siku 1} other{Inaisha baada ya siku {days}}}",Product Alerts details.,draft
+alerts_dateOnHand,{date} · {quantity} {unit} on hand,{date} · {quantity} {unit} zipo,"Product Alerts details, second line.",draft
+alerts_onHand,{quantity} {unit} on hand,{quantity} {unit} zipo,"Product Alerts details, second line.",draft
+alerts_searchHint,"Search by product, category or alert...","Tafuta kwa bidhaa, aina au tahadhari...",Product Alerts search box.,draft
+alerts_noMatches,No alerts match your filters,Hakuna tahadhari zinazolingana na vichujio,"Product Alerts, nothing after filtering.",draft
+alerts_colAlert,Alert,Tahadhari,Product Alerts table column.,draft
+alerts_colStoreShelf,Store / Shelf,Stoo / Rafu,Product Alerts table column.,draft
+alerts_colAction,Action,Hatua,Product Alerts table column.,draft
+alerts_storeQty,Store: {count},Stoo: {count},Product Alerts row.,draft
+alerts_shelfQty,Shelf: {count},Rafu: {count},Product Alerts row.,draft
+alerts_storeShelfQty,Store: {stock}  ·  Shelf: {sellable},Stoo: {stock}  ·  Rafu: {sellable},Product Alerts narrow card.,draft
+alerts_none,No alerts,Hakuna tahadhari,Product Alerts footer when empty.,draft
+alerts_showingRange,"{total, plural, =1{Showing {start} to {end} of 1 alert} other{Showing {start} to {end} of {total} alerts}}","{total, plural, =1{Inaonyesha {start} hadi {end} kati ya tahadhari 1} other{Inaonyesha {start} hadi {end} kati ya tahadhari {total}}}",Product Alerts footer.,draft
+products_smartDefaultsRunning,Recalculating smart defaults…,Inakokotoa upya viwango vya kujitegemea…,Message while smart defaults are recalculated.,draft
+products_smartDefaultsUpdated,"{count, plural, =1{Updated smart defaults for 1 product with enough usage history} other{Updated smart defaults for {count} products with enough usage history}}","{count, plural, =1{Viwango vya kujitegemea vimesasishwa kwa bidhaa 1 yenye historia ya kutosha ya matumizi} other{Viwango vya kujitegemea vimesasishwa kwa bidhaa {count} zenye historia ya kutosha ya matumizi}}",Message after recalculating smart defaults.,draft
+products_smartDefaultsNone,No products have enough sales/service history yet to compute smart defaults,Bado hakuna bidhaa yenye historia ya kutosha ya mauzo/huduma kukokotoa viwango vya kujitegemea,Message when no product could be recalculated.,draft
+products_smartDefaultsFailed,Couldn't recalculate smart defaults,Imeshindikana kukokotoa upya viwango vya kujitegemea,Error message when recalculating fails.,draft
+products_shelfStockValue,Shelf Stock Value,Thamani ya Bidhaa Rafuni,Sellable Products metric card.,draft
+products_watchlistFailed,Couldn't update the watchlist,Imeshindikana kusasisha orodha ya ufuatiliaji,Error message when the watchlist toggle fails.,draft
+products_confirmDeleteNamed,"Are you sure you want to delete ""{name}""?","Una uhakika unataka kufuta ""{name}""?",Delete product dialog text.,draft
+products_noSellable,No sellable products,Hakuna bidhaa za kuuza,"Sellable Products, empty.",draft
+products_releaseFromStore,Release products from Stock Store,Toa bidhaa kutoka Stoo,"Sellable Products, empty hint.",draft
+products_sellable,Sellable,Za Kuuza,Product card label over the sellable quantity.,draft
+products_nothingSellable,Out of stock - nothing sellable,Imeisha - hakuna cha kuuza,Tooltip on the Sell button when nothing is sellable.,draft
+products_sell,Sell,Uza,Product card button.,draft
+products_removeFromWatchlist,Remove from Watchlist,Ondoa kwenye Ufuatiliaji,Product card menu item.,draft
+products_addToWatchlist,Add to Watchlist,Ongeza kwenye Ufuatiliaji,Product card menu item.,draft
+products_sellableTitle,Sellable Products,Bidhaa za Kuuza,Sellable Products screen title.,draft
+products_sellableSubtitle,Products ready for sale,Bidhaa zilizo tayari kuuzwa,Sellable Products screen subtitle.,draft
+products_recalculateTooltip,Recalculate smart defaults from usage history,Kokotoa upya viwango vya kujitegemea kutoka historia ya matumizi,Sellable Products app bar button tooltip.,draft
+products_searchHint,"Search product, brand or batch...","Tafuta bidhaa, chapa au batch...",Sellable Products search box.,draft
+products_stockBatch,Stock: {quantity} {unit} • Batch: {batch},Stoo: {quantity} {unit} • Batch: {batch},Product card line.,draft
+products_watchlisted,Watch-listed for daily reports,Inafuatiliwa kwenye ripoti za kila siku,Tooltip on the watchlist badge.,draft
+products_selectFacilityFirst,Select a facility first,Chagua kituo kwanza,Add/Edit Product warning when no facility is selected.,draft
+products_imageUploadFailed,Couldn't upload the image,Imeshindikana kupakia picha,Add/Edit Product error.,draft
+products_addPhoto,Add photo,Ongeza picha,Add/Edit Product photo box.,draft
+products_batchNo,Batch No,Namba ya Batch,Add/Edit Product field label.,draft
+products_expiry,Expiry,Tarehe ya Kuisha,Add/Edit Product field label.,draft
+products_selectType,Select Type,Chagua Aina,Add/Edit Product type field placeholder and dialog title.,draft
+products_selectCategoryError,Please select a category,Tafadhali chagua kundi,Add/Edit Product validation.,draft
+products_supplier,Supplier,Msambazaji,Add/Edit Product field label.,draft
+products_buyingPriceLabel,Buying Price ({currency}),Bei ya Kununua ({currency}),Add/Edit Product field label.,draft
+products_sellingPriceLabel,Selling Price ({currency}),Bei ya Kuuza ({currency}),Add/Edit Product field label.,draft
+products_greaterThanZero,Must be greater than 0,Lazima iwe zaidi ya 0,Add/Edit Product price validation.,draft
+products_quantity,Quantity,Idadi,Add/Edit Product field label.,draft
+products_cannotBeNegative,Cannot be negative,Haiwezi kuwa hasi,Add/Edit Product quantity validation.,draft
+products_destinationTitle,Where should this product go?,Bidhaa hii iende wapi?,New product destination dialog title.,draft
+products_destinationCatalog,Sellable Product Catalog,Orodha ya Bidhaa za Kuuza,New product destination choice.,draft
+products_destinationCatalogHint,Available for sales and transactions,Inapatikana kwa mauzo na miamala,New product destination choice hint.,draft
+products_destinationStoreHint,Stored but not sellable yet,Imehifadhiwa lakini bado haiuzwi,New product destination choice hint.,draft
+products_continue,Continue,Endelea,New product destination dialog button.,draft
+products_nameExists,Product name already exists,Jina la bidhaa tayari lipo,Add/Edit Product warning.,draft
+products_addedToCatalog,Product added to Sellable Catalog,Bidhaa imeongezwa kwenye Orodha ya Kuuza,Message after adding a product to the catalog.,draft
+products_addedToStore,Product added to Stock Store,Bidhaa imeongezwa Stoo,Message after adding a product to the Stock Store.,draft
+products_updated,Product updated,Bidhaa imesasishwa,Message after editing a product.,draft
+products_saveFailed,Couldn't save the product,Imeshindikana kuhifadhi bidhaa,Error message when saving a product fails.,draft
+products_editProduct,Edit Product,Hariri Bidhaa,Add/Edit Product title when editing.,draft
+products_updateProduct,Update Product,Sasisha Bidhaa,Add/Edit Product save button when editing.,draft
+products_saveProduct,Save Product,Hifadhi Bidhaa,Add/Edit Product save button when adding.,draft
+products_basicInfo,Basic Information,Taarifa za Msingi,Add/Edit Product section heading.,draft
+products_productName,Product Name,Jina la Bidhaa,Add/Edit Product field label.,draft
+products_nameRequired,Product name is required,Jina la bidhaa linahitajika,Add/Edit Product validation.,draft
+products_alreadyExistsNamed,"""{name}"" already exists","""{name}"" tayari ipo","Add Product, a product with the same name exists.",draft
+products_openBelowHint,"Adding new stock for it, or updating its quantity? Open it below - you can edit its details and quantity right there.",Unaongeza mzigo mpya au kusasisha idadi yake? Ifungue hapa chini - unaweza kuhariri taarifa na idadi yake hapo hapo.,"Add Product, under the duplicate name warning.",draft
+products_openThisProduct,Open This Product,Fungua Bidhaa Hii,"Add Product, duplicate name button.",draft
+products_similarExist,Similar products already exist,Bidhaa zinazofanana tayari zipo,"Add Product, similar names warning.",draft
+products_open,Open,Fungua,"Add Product, open a similar product.",draft
+products_details,Product Details,Taarifa za Bidhaa,Add/Edit Product section heading.,draft
+products_currentQuantity,Current Quantity,Idadi ya Sasa,"Edit Product, heading over the quantities.",draft
+products_storeQty,Store Qty,Idadi Stoo,Edit Product field label.,draft
+products_invalid,Invalid,Si sahihi,Add/Edit Product number validation.,draft
+products_shelfQty,Shelf Qty,Idadi Rafuni,Edit Product field label.,draft
+products_quantityEditHint,Editing these corrects the actual quantity on hand right now.,Kuhariri hizi kunarekebisha idadi halisi iliyopo sasa.,"Edit Product, under the quantities.",draft
+products_manyBatchesHint,This product has {count} separate batches - manage them individually for accuracy.,Bidhaa hii ina batch {count} tofauti - zisimamie moja moja kwa usahihi.,"Edit Product, when the product has several batches.",draft
+products_manageBatches,Manage Batches,Simamia Batch,Edit Product button.,draft
+products_addNewBatchLong,"Add New Batch (new delivery, different expiry)","Ongeza Batch Mpya (mzigo mpya, tarehe tofauti ya kuisha)",Edit Product button.,draft
+products_pricingStock,Pricing & Stock,Bei na Akiba,Add/Edit Product section heading.,draft
+products_additionalInfo,Additional Information,Taarifa za Ziada,Add/Edit Product section heading.,draft
+products_minStockLevel,Minimum Stock Level,Kiwango cha Chini cha Akiba,Add/Edit Product field label.,draft
+products_minStockHint,e.g. 5 (defaults to {count} if left blank),mf. 5 (itakuwa {count} ikiachwa wazi),Add/Edit Product field hint.,draft
+products_trackInReports,Track in Daily Reports,Fuatilia kwenye Ripoti za Kila Siku,Add/Edit Product switch.,draft
+products_trackInReportsHint,Watch-listed products need a physical stock count before the daily closing report can be submitted.,Bidhaa zinazofuatiliwa zinahitaji kuhesabiwa kabla ripoti ya kufunga siku haijawasilishwa.,Add/Edit Product switch hint.,draft
+sales_newRecords,"{count, plural, =1{1 new sale available} other{{count} new sales available}}","{count, plural, =1{Mauzo 1 mapya yanapatikana} other{Mauzo {count} mapya yanapatikana}}",Banner when new sales arrived while the list was open.,draft
+sales_empty,No sales yet,Bado hakuna mauzo,"Sales list, empty.",draft
+sales_emptyFiltered,No sales match your filters,Hakuna mauzo yanayolingana na vichujio,"Sales list, empty after a search.",draft
+sales_collected,Collected,Yaliyokusanywa,Sales metric card: money collected.,draft
+sales_pending,Pending,Yanayodaiwa,"Sales metric card: money still owed (an amount, not a status).",draft
+sales_searchHint,"Search sale by product, client, invoice...","Tafuta mauzo kwa bidhaa, mteja, ankara...",Sales and Sales Archive search box.,draft
+sales_paymentStatus,Payment Status,Hali ya Malipo,Sales filter label and table column.,draft
+sales_seller,Seller,Muuzaji,"Sales filter label, table column and details field.",draft
+sales_title,Sales Records,Kumbukumbu za Mauzo,Sales screen title.,draft
+sales_subtitle,Track and manage all sales transactions,Fuatilia na simamia miamala yote ya mauzo,Sales screen subtitle.,draft
+sales_recordSale,Record Sale,Rekodi Mauzo,Sales screen button.,draft
+sales_invoiceNo,Invoice No.,Namba ya Ankara,Sales table column.,draft
+sales_firstItem,{name} × {quantity},{name} × {quantity},Sales table: the first item of a sale.,draft
+sales_itemCount,"{count, plural, =1{1 item} other{{count} items}}","{count, plural, =1{Bidhaa 1} other{Bidhaa {count}}}",Sales table and details: how many items a sale has.,draft
+sales_none,No sales,Hakuna mauzo,Sales footer when empty.,draft
+sales_deleteTitle,Delete Sale?,Futa Mauzo?,Delete sale dialog title.,draft
+sales_deleteBody,This permanently deletes {invoice} and restores its stock. This cannot be undone.,Hii inafuta {invoice} kabisa na kurudisha bidhaa zake. Haiwezi kurudishwa.,Delete sale dialog text.,draft
+sales_deleted,Sale deleted,Mauzo yamefutwa,Message after deleting a sale.,draft
+sales_deleteFailed,Couldn't delete the sale,Imeshindikana kufuta mauzo,Error message when deleting a sale fails.,draft
+sales_details,Sale Details,Taarifa za Mauzo,Sale details panel title.,draft
+sales_quantityTimes,× {quantity},× {quantity},Sale details: an item's quantity.,draft
+sales_subtotal,Subtotal,Jumla Ndogo,Sale details totals row.,draft
+sales_discount,Discount,Punguzo,Sale details totals row.,draft
+sales_totalAmount,Total Amount,Jumla Kuu,Sale details totals row.,draft
+sales_paid,Paid,Kilicholipwa,Sale details totals row: the amount paid.,draft
+sales_balance,Balance,Salio,Sale details totals row.,draft
+sales_archiveEmpty,No archived sales found,Hakuna mauzo yaliyohifadhiwa yaliyopatikana,"Sales Archive, empty.",draft
+sales_archiveEmptyHint,Try a different search or date range,Jaribu utafutaji au kipindi tofauti,"Sales Archive, empty.",draft
+sales_archiveTitle,Sales Archive,Hifadhi ya Mauzo,Sales Archive title.,draft
+sales_archiveSubtitle,"{days, plural, other{Sales archived after {days} days}}","{days, plural, other{Mauzo huhifadhiwa baada ya siku {days}}}",Sales Archive subtitle.,draft
+sales_archivedSales,Archived sales,Mauzo yaliyohifadhiwa,Sales Archive banner without dates.,draft
+sales_archiveShowing,"{total, plural, other{Showing {start} to {end} of {total}{more} sales}}","{total, plural, other{Inaonyesha {start} hadi {end} kati ya {total}{more} ya mauzo}}","Sales Archive footer. more is '+' when more pages may exist, or empty.",draft
+sales_item,Item,Bidhaa,Sale details: an item with no name.,draft
+sales_searchArchiveTitle,Search Archived Sales,Tafuta Mauzo Yaliyohifadhiwa,Sales Archive search dialog title.,draft
+sales_archiveFullyPaidNote,Archived sales are always fully paid - sales still owing money stay in your active Sales tab regardless of age.,Mauzo yaliyohifadhiwa huwa yamelipwa yote - mauzo yanayodaiwa hubaki kwenye kichupo cha Mauzo bila kujali umri.,Sales Archive search dialog note.,draft
+sales_archiveCutoffNote,Only sales before {date} have reached the archive - anything newer is still in your active Sales list.,Mauzo ya kabla ya {date} tu ndiyo yamefika kwenye hifadhi - mapya zaidi bado yako kwenye orodha ya Mauzo.,Sales Archive search dialog note.,draft
+sales_noShelfStock,{product} has no stock available on the shelf,{product} haina bidhaa rafuni,Record Sale message when a product has nothing on the shelf.,draft
+sales_saleDiscount,Sale Discount,Punguzo la Mauzo,Record Sale discount dialog title.,draft
+sales_discountAmountLabel,Discount Amount ({currency}),Kiasi cha Punguzo ({currency}),Record Sale discount dialog field label.,draft
+sales_browseProducts,Browse Products,Vinjari Bidhaa,Record Sale button and the product browser title.,draft
+sales_browseFilterHint,"Filter by name, batch no or category...","Chuja kwa jina, namba ya batch au kundi...",Product browser search box.,draft
+sales_filterByCategory,Filter by category,Chuja kwa kundi,Product browser category button tooltip.,draft
+sales_allCategories,All Categories,Makundi Yote,Product browser category choice.,draft
+sales_noProductsFound,No products found,Hakuna bidhaa zilizopatikana,"Product browser, nothing found.",draft
+sales_outOfStock,Out of stock,Imeisha,Product browser row.,draft
+sales_availablePrice,{quantity} {unit} available · {price},{quantity} {unit} zipo · {price},Product browser and search suggestion row. price is already formatted.,draft
+sales_expiredSaleBody,This product is expired. Do you still want to sell it?,Bidhaa hii imeisha muda. Bado unataka kuiuza?,Expired stock warning when selling.,draft
+sales_expiredPortionLine,• {quantity} {unit} of {product},• {quantity} {unit} za {product},"Expired stock warning, one line per product.",draft
+sales_sellAnyway,Sell Anyway,Uza Hata Hivyo,Expired stock warning button.,draft
+sales_addItemFirst,Add at least one item before saving,Ongeza angalau bidhaa moja kabla ya kuhifadhi,Record Sale warning.,draft
+sales_partialNeedsRegistered,Select a registered client to allow a partial payment,Chagua mteja aliyesajiliwa kuruhusu malipo ya sehemu,Record Sale warning (walk-in with a partial payment).,draft
+sales_walkInPayInFull,Walk-in sales must be paid in full,Mauzo ya mteja wa papo hapo lazima yalipwe yote,"Record Sale warning, second line.",draft
+sales_partialNeedsClient,Select a client to record a partial payment,Chagua mteja kurekodi malipo ya sehemu,Record Sale warning (no client with a partial payment).,draft
+sales_orChooseWalkIn,Or choose Walk-in Customer and collect payment in full,Au chagua Mteja wa Papo Hapo na pokea malipo yote,"Record Sale warning, second line.",draft
+sales_selectPaymentMethod,Select a payment method before saving,Chagua njia ya malipo kabla ya kuhifadhi,Record Sale warning.,draft
+sales_savedWithDebt,Sale saved and debt recorded,Mauzo yamehifadhiwa na deni limerekodiwa,Message after saving a sale on credit.,draft
+sales_saved,Sale saved,Mauzo yamehifadhiwa,Message after saving a sale.,draft
+sales_saveFailed,Couldn't save the sale,Imeshindikana kuhifadhi mauzo,Error message when saving a sale fails.,draft
+sales_summary,Sale Summary,Muhtasari wa Mauzo,Record Sale section heading.,draft
+sales_totalItems,Total Items,Jumla ya Bidhaa,Record Sale summary row.,draft
+sales_selectMethod,Select Method,Chagua Njia,Record Sale payment method placeholder.,draft
+sales_amountReceivedLabel,Amount Received ({currency}) *,Kiasi Kilichopokelewa ({currency}) *,Record Sale field label.,draft
+sales_changeLabel,Change ({currency}),Chenji ({currency}),Record Sale field label: money given back.,draft
+sales_walkInCustomer,Walk-in Customer,Mteja wa Papo Hapo,"Record Sale client choice for a customer with no record (not saved; a walk-in sale has no client name).",draft
+sales_noClientSelected,No client selected,Hakuna mteja aliyechaguliwa,"Record Sale, under Walk-in Customer.",draft
+sales_productSearchHint,"Search product by name, batch no or category...","Tafuta bidhaa kwa jina, namba ya batch au kundi...",Record Sale product search box.,draft
+sales_noProductsYet,No products added yet,Bado hakuna bidhaa zilizoongezwa,"Record Sale, empty item list.",draft
+sales_addProductsHint,Search and add products to this sale,Tafuta na ongeza bidhaa kwenye mauzo haya,"Record Sale, empty item list.",draft
+sales_colBatchNo,Batch No.,Namba ya Batch,Record Sale items table column.,draft
+sales_colUnitPrice,Unit Price ({currency}),Bei ya Kipimo ({currency}),Record Sale items table column.,draft
+sales_colQty,Qty,Idadi,Record Sale items table column.,draft
+sales_colTotal,Total ({currency}),Jumla ({currency}),Record Sale items table column.,draft
+sales_batchShort,Batch: {batch},Batch: {batch},Record Sale item card.,draft
+sales_expShort,Exp: {date},Inaisha: {date},Record Sale item card.,draft
+sales_notesHint,Add any additional notes (optional)...,Ongeza maelezo mengine (si lazima)...,Record Sale notes box.,draft
