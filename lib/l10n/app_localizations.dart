@@ -5629,6 +5629,144 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Specific Month'**
   String get services_specificMonth;
+
+  /// Archive search dialog.
+  ///
+  /// In en, this message translates to:
+  /// **'Only services before {date} have reached the archive.'**
+  String services_archiveCutoffNote(String date);
+
+  /// Archive search dialog.
+  ///
+  /// In en, this message translates to:
+  /// **'Select Month:'**
+  String get services_selectMonth;
+
+  /// Visit form title when editing.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit Visit'**
+  String get services_editVisit;
+
+  /// Visit form field label.
+  ///
+  /// In en, this message translates to:
+  /// **'Select Client *'**
+  String get services_selectClientRequired;
+
+  /// Visit form client field.
+  ///
+  /// In en, this message translates to:
+  /// **'Search or select client...'**
+  String get services_clientSearchHint;
+
+  /// Visit form validation.
+  ///
+  /// In en, this message translates to:
+  /// **'Please select a client'**
+  String get services_errSelectClient;
+
+  /// Tooltip on the visit form's add-client button.
+  ///
+  /// In en, this message translates to:
+  /// **'Add New Client'**
+  String get services_addNewClient;
+
+  /// Visit form section.
+  ///
+  /// In en, this message translates to:
+  /// **'Visit Details'**
+  String get services_visitDetails;
+
+  /// Visit form field.
+  ///
+  /// In en, this message translates to:
+  /// **'Service Name'**
+  String get services_serviceName;
+
+  /// Visit form validation.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter service name'**
+  String get services_errServiceName;
+
+  /// Visit form validation.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter provider'**
+  String get services_errProvider;
+
+  /// Visit form section: items used during the visit.
+  ///
+  /// In en, this message translates to:
+  /// **'Expenses (Items Used)'**
+  String get services_itemsUsed;
+
+  /// Visit form button.
+  ///
+  /// In en, this message translates to:
+  /// **'Add Item'**
+  String get services_addItem;
+
+  /// Visit form field.
+  ///
+  /// In en, this message translates to:
+  /// **'Item Name'**
+  String get services_itemName;
+
+  /// Visit form validation for an item.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter name'**
+  String get services_errItemName;
+
+  /// Visit form, under an item name with no product match.
+  ///
+  /// In en, this message translates to:
+  /// **'No matching product - will be recorded as a plain expense.'**
+  String get services_noMatchingProduct;
+
+  /// Visit form product suggestion; unit is the product unit label.
+  ///
+  /// In en, this message translates to:
+  /// **'Sellable: {quantity} {unit}'**
+  String services_sellableQty(String quantity, String unit);
+
+  /// Visit form, under an item matched to a product.
+  ///
+  /// In en, this message translates to:
+  /// **'In stock - will deduct, no expense recorded'**
+  String get services_inStockDeduct;
+
+  /// Visit form validation.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter price'**
+  String get services_errPrice;
+
+  /// Visit form; amount is pre-formatted.
+  ///
+  /// In en, this message translates to:
+  /// **'Total Items Cost: {amount}'**
+  String services_totalItemsCost(String amount);
+
+  /// Visit form section.
+  ///
+  /// In en, this message translates to:
+  /// **'Visit Summary'**
+  String get services_visitSummary;
+
+  /// Visit form field label.
+  ///
+  /// In en, this message translates to:
+  /// **'Total Amount ({currency}) *'**
+  String services_totalAmountRequired(String currency);
+
+  /// Visit form validation.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter total amount'**
+  String get services_errTotalAmount;
 }
 
 class _AppLocalizationsDelegate

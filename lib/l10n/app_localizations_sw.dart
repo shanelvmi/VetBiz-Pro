@@ -3196,4 +3196,83 @@ class AppLocalizationsSw extends AppLocalizations {
 
   @override
   String get services_specificMonth => 'Mwezi Maalum';
+
+  @override
+  String services_archiveCutoffNote(String date) {
+    return 'Huduma za kabla ya $date pekee ndizo zimefika kwenye kumbukumbu.';
+  }
+
+  @override
+  String get services_selectMonth => 'Chagua Mwezi:';
+
+  @override
+  String get services_editVisit => 'Hariri Ziara';
+
+  @override
+  String get services_selectClientRequired => 'Chagua Mteja *';
+
+  @override
+  String get services_clientSearchHint => 'Tafuta au chagua mteja...';
+
+  @override
+  String get services_errSelectClient => 'Tafadhali chagua mteja';
+
+  @override
+  String get services_addNewClient => 'Ongeza Mteja Mpya';
+
+  @override
+  String get services_visitDetails => 'Maelezo ya Ziara';
+
+  @override
+  String get services_serviceName => 'Jina la Huduma';
+
+  @override
+  String get services_errServiceName => 'Weka jina la huduma';
+
+  @override
+  String get services_errProvider => 'Weka mtoa huduma';
+
+  @override
+  String get services_itemsUsed => 'Gharama (Vitu Vilivyotumika)';
+
+  @override
+  String get services_addItem => 'Ongeza Kitu';
+
+  @override
+  String get services_itemName => 'Jina la Kitu';
+
+  @override
+  String get services_errItemName => 'Weka jina';
+
+  @override
+  String get services_noMatchingProduct =>
+      'Hakuna bidhaa inayolingana - itarekodiwa kama gharama ya kawaida.';
+
+  @override
+  String services_sellableQty(String quantity, String unit) {
+    return 'Inauzika: $quantity $unit';
+  }
+
+  @override
+  String get services_inStockDeduct =>
+      'Ipo stoo - itapunguzwa, hakuna gharama itakayorekodiwa';
+
+  @override
+  String get services_errPrice => 'Weka bei';
+
+  @override
+  String services_totalItemsCost(String amount) {
+    return 'Jumla ya Gharama za Vitu: $amount';
+  }
+
+  @override
+  String get services_visitSummary => 'Muhtasari wa Ziara';
+
+  @override
+  String services_totalAmountRequired(String currency) {
+    return 'Jumla ya Kiasi ($currency) *';
+  }
+
+  @override
+  String get services_errTotalAmount => 'Weka jumla ya kiasi';
 }

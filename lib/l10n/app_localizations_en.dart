@@ -3178,4 +3178,83 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get services_specificMonth => 'Specific Month';
+
+  @override
+  String services_archiveCutoffNote(String date) {
+    return 'Only services before $date have reached the archive.';
+  }
+
+  @override
+  String get services_selectMonth => 'Select Month:';
+
+  @override
+  String get services_editVisit => 'Edit Visit';
+
+  @override
+  String get services_selectClientRequired => 'Select Client *';
+
+  @override
+  String get services_clientSearchHint => 'Search or select client...';
+
+  @override
+  String get services_errSelectClient => 'Please select a client';
+
+  @override
+  String get services_addNewClient => 'Add New Client';
+
+  @override
+  String get services_visitDetails => 'Visit Details';
+
+  @override
+  String get services_serviceName => 'Service Name';
+
+  @override
+  String get services_errServiceName => 'Enter service name';
+
+  @override
+  String get services_errProvider => 'Enter provider';
+
+  @override
+  String get services_itemsUsed => 'Expenses (Items Used)';
+
+  @override
+  String get services_addItem => 'Add Item';
+
+  @override
+  String get services_itemName => 'Item Name';
+
+  @override
+  String get services_errItemName => 'Enter name';
+
+  @override
+  String get services_noMatchingProduct =>
+      'No matching product - will be recorded as a plain expense.';
+
+  @override
+  String services_sellableQty(String quantity, String unit) {
+    return 'Sellable: $quantity $unit';
+  }
+
+  @override
+  String get services_inStockDeduct =>
+      'In stock - will deduct, no expense recorded';
+
+  @override
+  String get services_errPrice => 'Enter price';
+
+  @override
+  String services_totalItemsCost(String amount) {
+    return 'Total Items Cost: $amount';
+  }
+
+  @override
+  String get services_visitSummary => 'Visit Summary';
+
+  @override
+  String services_totalAmountRequired(String currency) {
+    return 'Total Amount ($currency) *';
+  }
+
+  @override
+  String get services_errTotalAmount => 'Enter total amount';
 }
