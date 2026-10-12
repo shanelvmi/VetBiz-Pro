@@ -129,7 +129,7 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
   Future<void> _pickProductImage() async {
     final facilityId = Provider.of<FacilityProvider>(context, listen: false).selectedFacilityId;
     if (facilityId == null || facilityId.isEmpty) {
-      AppFeedback.warning('Select a facility first');
+      AppFeedback.warning(L10n.current.products_selectFacilityFirst);
       return;
     }
 
@@ -161,7 +161,7 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
     } catch (e, st) {
       if (!mounted) return;
       setState(() => _isUploadingImage = false);
-      AppFeedback.error("Couldn't upload the image", error: e, stackTrace: st);
+      AppFeedback.error(L10n.current.products_imageUploadFailed, error: e, stackTrace: st);
     }
   }
 
@@ -267,10 +267,10 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
         Icon(Icons.add_photo_alternate_outlined, size: AppIconSize.i40, color: context.colors.primary.withValues(alpha: 0.6)),
         const SizedBox(height: AppSpacing.s8),
         Text(
-          'Add photo',
+          context.l10n.products_addPhoto,
           style: TextStyle(fontSize: AppFontSize.f13, fontWeight: AppFontWeight.bold, color: context.colors.primary),
         ),
-        Text('Optional', style: TextStyle(fontSize: AppFontSize.f11, color: context.colors.textMuted)),
+        Text(context.l10n.common_optional, style: TextStyle(fontSize: AppFontSize.f11, color: context.colors.textMuted)),
       ],
     );
   }
@@ -387,13 +387,13 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
     final supplierField = _supplierField(enabled: true);
     final batchField = TextFormField(
       controller: _batchController,
-      decoration: _inputDecoration('Batch No'),
+      decoration: _inputDecoration(context.l10n.products_batchNo),
       cursorColor: context.colors.primary,
     );
     final expiryField = TextFormField(
       controller: _expiryController,
       readOnly: true,
-      decoration: _inputDecoration('Expiry').copyWith(
+      decoration: _inputDecoration(context.l10n.products_expiry).copyWith(
           suffixIcon: Icon(Icons.calendar_today, color: context.colors.primary)),
       onTap: _pickExpiryDate,
       cursorColor: context.colors.primary,
@@ -442,9 +442,9 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
     return InkWell(
       onTap: enabled ? _selectTypeDialog : null,
       child: InputDecorator(
-        decoration: _inputDecoration('Type', required: true),
+        decoration: _inputDecoration(context.l10n.common_type, required: true),
         child: Text(
-          _type.isEmpty ? 'Select Type' : context.l10n.productTypeLabel(_type),
+          _type.isEmpty ? context.l10n.products_selectType : context.l10n.productTypeLabel(_type),
           style: TextStyle(color: _type.isEmpty ? context.colors.textHint : (enabled ? context.colors.textPrimary : context.colors.textMuted)),
         ),
       ),
@@ -455,7 +455,7 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
     return FormField<String>(
       initialValue: _category,
       validator: (value) =>
-          (value == null || value.isEmpty) ? 'Please select a category' : null,
+          (value == null || value.isEmpty) ? context.l10n.products_selectCategoryError : null,
       builder: (formFieldState) {
         return InkWell(
           onTap: enabled
@@ -465,11 +465,11 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
                 }
               : null,
           child: InputDecorator(
-            decoration: _inputDecoration('Category', required: true).copyWith(
+            decoration: _inputDecoration(context.l10n.common_category, required: true).copyWith(
               errorText: formFieldState.errorText,
             ),
             child: Text(
-              _category.isEmpty ? 'Select Category' : context.l10n.productCategoryLabel(_category),
+              _category.isEmpty ? context.l10n.transactions_selectCategoryTitle : context.l10n.productCategoryLabel(_category),
               style: TextStyle(
                   color: _category.isEmpty ? context.colors.textHint : (enabled ? context.colors.textPrimary : context.colors.textMuted)),
             ),
@@ -501,7 +501,7 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
         return TextFormField(
           controller: fieldController,
           focusNode: focusNode,
-          decoration: _inputDecoration('Supplier'),
+          decoration: _inputDecoration(context.l10n.products_supplier),
           textCapitalization: TextCapitalization.sentences,
           inputFormatters: [SentenceCapitalizationFormatter()],
           cursorColor: context.colors.primary,
@@ -515,14 +515,14 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
   Widget _buyPriceField(bool fieldsLocked) {
     return TextFormField(
       controller: _buyPriceController,
-      decoration: _inputDecoration('Buying Price (${AppDefaults.currencySymbol})', required: true),
+      decoration: _inputDecoration(context.l10n.products_buyingPriceLabel(AppDefaults.currencySymbol), required: true),
       keyboardType: TextInputType.number,
       inputFormatters: [FilteringTextInputFormatter.digitsOnly, ThousandsSeparatorInputFormatter()],
       cursorColor: context.colors.primary,
       enabled: !fieldsLocked,
       validator: (value) {
         final parsed = parseThousands(value ?? '');
-        if (parsed <= 0) return 'Must be greater than 0';
+        if (parsed <= 0) return context.l10n.products_greaterThanZero;
         return null;
       },
     );
@@ -531,14 +531,14 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
   Widget _sellPriceField(bool fieldsLocked) {
     return TextFormField(
       controller: _sellPriceController,
-      decoration: _inputDecoration('Selling Price (${AppDefaults.currencySymbol})', required: true),
+      decoration: _inputDecoration(context.l10n.products_sellingPriceLabel(AppDefaults.currencySymbol), required: true),
       keyboardType: TextInputType.number,
       inputFormatters: [FilteringTextInputFormatter.digitsOnly, ThousandsSeparatorInputFormatter()],
       cursorColor: context.colors.primary,
       enabled: !fieldsLocked,
       validator: (value) {
         final parsed = parseThousands(value ?? '');
-        if (parsed <= 0) return 'Must be greater than 0';
+        if (parsed <= 0) return context.l10n.products_greaterThanZero;
         return null;
       },
     );
@@ -547,13 +547,13 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
   Widget _quantityField() {
     return TextFormField(
       controller: _stockController,
-      decoration: _inputDecoration('Quantity', required: true),
+      decoration: _inputDecoration(context.l10n.products_quantity, required: true),
       keyboardType: TextInputType.number,
       cursorColor: context.colors.primary,
       validator: (value) {
         final parsed = int.tryParse((value ?? '').trim());
-        if (parsed == null) return 'Enter a valid quantity';
-        if (parsed < 0) return 'Cannot be negative';
+        if (parsed == null) return context.l10n.batch_validQuantity;
+        if (parsed < 0) return context.l10n.products_cannotBeNegative;
         return null;
       },
     );
@@ -564,14 +564,14 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
       initialValue: _unit,
       // Shows the unit's label, saves the stored unit.
       items: _units.map((unit) => DropdownMenuItem(value: unit, child: Text(context.l10n.productUnitLabel(unit)))).toList(),
-      decoration: _inputDecoration('Unit'),
+      decoration: _inputDecoration(context.l10n.reports_colUnit),
       onChanged: fieldsLocked ? null : (String? value) => setState(() => _unit = value!),
     );
   }
 
   InputDecoration _inputDecoration(String label, {bool required = false}) {
     return InputDecoration(
-      labelText: required ? '$label *' : label,
+      labelText: required ? context.l10n.common_requiredLabel(label) : label,
       labelStyle: TextStyle(color: context.colors.textSoft),
       floatingLabelStyle: TextStyle(color: context.colors.primary),
       border: OutlineInputBorder(borderRadius: BorderRadius.circular(AppRadius.r8)),
@@ -620,7 +620,7 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: AppSpacing.s8),
                 child: Text(
-                  'Select Category',
+                  context.l10n.transactions_selectCategoryTitle,
                   style: TextStyle(
                     color: context.colors.background,
                     fontSize: AppFontSize.f15,
@@ -677,7 +677,7 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: AppSpacing.s8),
                 child: Text(
-                  'Select Type',
+                  context.l10n.products_selectType,
                   style: TextStyle(
                     color: context.colors.background,
                     fontSize: AppFontSize.f15,
@@ -738,22 +738,22 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
       barrierDismissible: false,
       builder: (_) => StatefulBuilder(
         builder: (context, setDialogState) => AlertDialog(
-          title: const Text('Where should this product go?'),
+          title: Text(context.l10n.products_destinationTitle),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
               RadioListTile<ProductDestination>(
                 activeColor: context.colors.primary,
-                title: const Text('Sellable Product Catalog'),
-                subtitle: const Text('Available for sales and transactions'),
+                title: Text(context.l10n.products_destinationCatalog),
+                subtitle: Text(context.l10n.products_destinationCatalogHint),
                 value: ProductDestination.sellable,
                 groupValue: selected,
                 onChanged: (val) => setDialogState(() => selected = val!),
               ),
               RadioListTile<ProductDestination>(
                 activeColor: context.colors.primary,
-                title: const Text('Stock Store'),
-                subtitle: const Text('Stored but not sellable yet'),
+                title: Text(context.l10n.store_title),
+                subtitle: Text(context.l10n.products_destinationStoreHint),
                 value: ProductDestination.stockStore,
                 groupValue: selected,
                 onChanged: (val) => setDialogState(() => selected = val!),
@@ -766,7 +766,7 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
               style: TextButton.styleFrom(
                 foregroundColor: context.colors.primary,
               ),
-              child: const Text('Cancel'),
+              child: Text(context.l10n.common_cancel),
             ),
             ElevatedButton(
               onPressed: () => Navigator.pop(context, selected),
@@ -778,7 +778,7 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
                 ),
                 foregroundColor: WidgetStateProperty.all(context.colors.background),
               ),
-              child: const Text('Continue'),
+              child: Text(context.l10n.products_continue),
             ),
           ],
         ),
@@ -800,7 +800,7 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
       // Prevent duplicate names (new product only)
       if (widget.product == null &&
           existingNames.contains(_nameController.text.trim().toLowerCase())) {
-        AppFeedback.warning('Product name already exists');
+        AppFeedback.warning(L10n.current.products_nameExists);
         return;
       }
 
@@ -815,7 +815,7 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
       if (destination == null) return; // user cancelled
 
       if (facilityId == null || facilityId.isEmpty) {
-        AppFeedback.warning('Select a facility first');
+        AppFeedback.warning(L10n.current.products_selectFacilityFirst);
         return;
       }
 
@@ -1007,15 +1007,15 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
       AppFeedback.success(
         widget.product == null
             ? (destination == ProductDestination.sellable
-                ? 'Product added to Sellable Catalog'
-                : 'Product added to Stock Store')
-            : 'Product updated',
+                ? L10n.current.products_addedToCatalog
+                : L10n.current.products_addedToStore)
+            : L10n.current.products_updated,
       );
 
       // Navigate back (don't redirect, just pop)
       Navigator.pop(context);
     } catch (e, st) {
-      AppFeedback.error("Couldn't save the product", error: e, stackTrace: st);
+      AppFeedback.error(L10n.current.products_saveFailed, error: e, stackTrace: st);
     } finally {
       if (mounted) setState(() => _isSaving = false);
     }
@@ -1032,8 +1032,8 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
     // is admin-only - the Quantity section below is never affected by
     // this, only the fields handled here.
     final fieldsLocked = isEditing && Provider.of<UserRoleProvider>(context).isAssistant;
-    final appBarTitle = isEditing ? 'Edit Product' : 'Add Product';
-    final buttonText = isEditing ? 'Update Product' : 'Save Product';
+    final appBarTitle = isEditing ? context.l10n.products_editProduct : context.l10n.products_addProduct;
+    final buttonText = isEditing ? context.l10n.products_updateProduct : context.l10n.products_saveProduct;
 
     return Scaffold(
       appBar: AppBar(
@@ -1053,7 +1053,7 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
             ? [
                 IconButton(
                   icon: Icon(Icons.close, color: context.colors.background),
-                  tooltip: 'Close',
+                  tooltip: context.l10n.common_close,
                   onPressed: () => Navigator.of(context).pop(),
                 ),
               ]
@@ -1074,7 +1074,7 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
           // Each section's contents, unchanged from before - only where
           // they're placed (one column vs two) is decided below.
           final List<Widget> basicInfoItems = [
-              _sectionHeader('Basic Information', Icons.info_outline),
+              _sectionHeader(context.l10n.products_basicInfo, Icons.info_outline),
               // Product Name - with live duplicate detection. Typing a
               // name that matches an existing product shows a clear
               // notice with a direct path to "Add New Batch" instead of
@@ -1082,11 +1082,11 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
               // disconnected product record.
               TextFormField(
                 controller: _nameController,
-                decoration: _inputDecoration('Product Name', required: true),
+                decoration: _inputDecoration(context.l10n.products_productName, required: true),
                 textCapitalization: TextCapitalization.sentences,
                 inputFormatters: [SentenceCapitalizationFormatter()],
                 validator: (value) =>
-                    value == null || value.trim().isEmpty ? 'Product name is required' : null,
+                    value == null || value.trim().isEmpty ? context.l10n.products_nameRequired : null,
                 cursorColor: context.colors.primary,
                 enabled: !fieldsLocked,
                 autofillHints: const [],
@@ -1129,7 +1129,7 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
                               const SizedBox(width: AppSpacing.s6),
                               Expanded(
                                 child: Text(
-                                  '"${match.name}" already exists',
+                                  context.l10n.products_alreadyExistsNamed(match.name),
                                   style: TextStyle(fontWeight: AppFontWeight.bold, color: context.colors.warningStrong),
                                 ),
                               ),
@@ -1137,8 +1137,7 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
                           ),
                           const SizedBox(height: AppSpacing.s4),
                           Text(
-                            'Adding new stock for it, or updating its quantity? Open it below - '
-                            'you can edit its details and quantity right there.',
+                            context.l10n.products_openBelowHint,
                             style: TextStyle(fontSize: AppFontSize.f12_5, color: context.colors.textSoft),
                           ),
                           const SizedBox(height: AppSpacing.s10),
@@ -1154,7 +1153,7 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
                                 }
                               },
                               icon: const Icon(Icons.edit_outlined, size: AppIconSize.i18),
-                              label: const Text('Open This Product'),
+                              label: Text(context.l10n.products_openThisProduct),
                               style: ButtonStyle(
                                 backgroundColor: WidgetStateProperty.resolveWith<Color>((states) {
                                   if (states.contains(WidgetState.hovered)) return context.colors.accent;
@@ -1170,7 +1169,7 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
                               Icon(Icons.search, size: AppIconSize.i18, color: context.colors.warningStrong),
                               const SizedBox(width: AppSpacing.s6),
                               Text(
-                                'Similar products already exist',
+                                context.l10n.products_similarExist,
                                 style: TextStyle(fontWeight: AppFontWeight.bold, color: context.colors.warningStrong, fontSize: AppFontSize.f13),
                               ),
                             ],
@@ -1191,7 +1190,7 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
                                           showAddEditProductScreen(rootContext, product: p);
                                         }
                                       },
-                                      child: const Text('Open', style: TextStyle(fontSize: AppFontSize.f12)),
+                                      child: Text(context.l10n.products_open, style: const TextStyle(fontSize: AppFontSize.f12)),
                                     ),
                                   ],
                                 ),
@@ -1221,13 +1220,13 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
               Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    _sectionHeader('Product Details', Icons.folder_outlined),
+                    _sectionHeader(context.l10n.products_details, Icons.folder_outlined),
                     isEditing
                         ? _supplierField(enabled: !fieldsLocked)
                         : _buildSupplierBatchExpiryFields(isNarrow, compact: isTwoColumn),
                     if (isEditing) ...[
                       const SizedBox(height: AppSpacing.s14),
-                      const Text('Current Quantity', style: TextStyle(fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f14)),
+                      Text(context.l10n.products_currentQuantity, style: const TextStyle(fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f14)),
                       const SizedBox(height: AppSpacing.s8),
                       if (_loadingBatches)
                         const Padding(
@@ -1240,13 +1239,13 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
                             Expanded(
                               child: TextFormField(
                                 controller: _storeQtyController,
-                                decoration: _inputDecoration('Store Qty', required: true),
+                                decoration: _inputDecoration(context.l10n.products_storeQty, required: true),
                                 keyboardType: TextInputType.number,
                                 cursorColor: context.colors.primary,
                                 validator: (value) {
                                   final parsed = int.tryParse((value ?? '').trim());
-                                  if (parsed == null) return 'Invalid';
-                                  if (parsed < 0) return 'Cannot be negative';
+                                  if (parsed == null) return context.l10n.products_invalid;
+                                  if (parsed < 0) return context.l10n.products_cannotBeNegative;
                                   return null;
                                 },
                               ),
@@ -1255,13 +1254,13 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
                             Expanded(
                               child: TextFormField(
                                 controller: _shelfQtyController,
-                                decoration: _inputDecoration('Shelf Qty', required: true),
+                                decoration: _inputDecoration(context.l10n.products_shelfQty, required: true),
                                 keyboardType: TextInputType.number,
                                 cursorColor: context.colors.primary,
                                 validator: (value) {
                                   final parsed = int.tryParse((value ?? '').trim());
-                                  if (parsed == null) return 'Invalid';
-                                  if (parsed < 0) return 'Cannot be negative';
+                                  if (parsed == null) return context.l10n.products_invalid;
+                                  if (parsed < 0) return context.l10n.products_cannotBeNegative;
                                   return null;
                                 },
                               ),
@@ -1270,7 +1269,7 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
                         ),
                         const SizedBox(height: AppSpacing.s6),
                         Text(
-                          'Editing these corrects the actual quantity on hand right now.',
+                          context.l10n.products_quantityEditHint,
                           style: TextStyle(fontSize: AppFontSize.f11_5, color: context.colors.textMuted),
                         ),
                       ] else ...[
@@ -1284,7 +1283,7 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
                             children: [
                               Expanded(
                                 child: Text(
-                                  'This product has ${_batches.length} separate batches - manage them individually for accuracy.',
+                                  context.l10n.products_manyBatchesHint(_batches.length),
                                   style: const TextStyle(fontSize: AppFontSize.f12_5),
                                 ),
                               ),
@@ -1292,7 +1291,7 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
                                 onPressed: () {
                                   showViewBatchesScreen(context, product: widget.product!);
                                 },
-                                child: const Text('Manage Batches'),
+                                child: Text(context.l10n.products_manageBatches),
                               ),
                             ],
                           ),
@@ -1304,14 +1303,14 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
                           showAddBatchScreen(context, product: widget.product!);
                         },
                         icon: const Icon(Icons.add, size: AppIconSize.i18),
-                        label: const Text('Add New Batch (new delivery, different expiry)'),
+                        label: Text(context.l10n.products_addNewBatchLong),
                         style: OutlinedButton.styleFrom(foregroundColor: context.colors.primary),
                       ),
                     ],
                     const SizedBox(height: AppSpacing.s12),
                     TextFormField(
                       controller: _descriptionController,
-                      decoration: _inputDecoration('Description').copyWith(alignLabelWithHint: true),
+                      decoration: _inputDecoration(context.l10n.common_description).copyWith(alignLabelWithHint: true),
                       textCapitalization: TextCapitalization.sentences,
                       inputFormatters: [SentenceCapitalizationFormatter()],
                       // Adding, in two columns: the right-hand column (photo,
@@ -1335,7 +1334,7 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
               Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    _sectionHeader('Pricing & Stock', Icons.attach_money),
+                    _sectionHeader(context.l10n.products_pricingStock, Icons.attach_money),
                     isNarrow
                         ? Column(
                             children: [_buyPriceField(fieldsLocked), const SizedBox(height: AppSpacing.s12), _sellPriceField(fieldsLocked)],
@@ -1377,15 +1376,15 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
               Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    _sectionHeader('Additional Information', Icons.label_outline),
+                    _sectionHeader(context.l10n.products_additionalInfo, Icons.label_outline),
                     // Minimum Stock Level - a per-product low-stock threshold.
                     // Always editable (unlike quantity above, which is
                     // batch-managed once editing), since this is a product-level
                     // setting, not something tied to a specific delivery/batch.
                     TextFormField(
                 controller: _minStockController,
-                decoration: _inputDecoration('Minimum Stock Level').copyWith(
-                  hintText: 'e.g. 5 (defaults to ${Product.defaultLowStockThreshold} if left blank)',
+                decoration: _inputDecoration(context.l10n.products_minStockLevel).copyWith(
+                  hintText: context.l10n.products_minStockHint(Product.defaultLowStockThreshold),
                 ),
                 keyboardType: TextInputType.number,
                 cursorColor: context.colors.primary,
@@ -1394,18 +1393,18 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
                   final trimmed = (value ?? '').trim();
                   if (trimmed.isEmpty) return null; // optional
                   final parsed = int.tryParse(trimmed);
-                  if (parsed == null) return 'Invalid';
-                  if (parsed < 0) return 'Cannot be negative';
+                  if (parsed == null) return context.l10n.products_invalid;
+                  if (parsed < 0) return context.l10n.products_cannotBeNegative;
                   return null;
                 },
               ),
                   const SizedBox(height: AppSpacing.s12),
                   SwitchListTile(
                     contentPadding: EdgeInsets.zero,
-                    title: const Text('Track in Daily Reports', style: TextStyle(fontSize: AppFontSize.f14, fontWeight: AppFontWeight.semibold)),
-                    subtitle: const Text(
-                      'Watch-listed products need a physical stock count before the daily closing report can be submitted.',
-                      style: TextStyle(fontSize: AppFontSize.f12),
+                    title: Text(context.l10n.products_trackInReports, style: const TextStyle(fontSize: AppFontSize.f14, fontWeight: AppFontWeight.semibold)),
+                    subtitle: Text(
+                      context.l10n.products_trackInReportsHint,
+                      style: const TextStyle(fontSize: AppFontSize.f12),
                     ),
                     secondary: Icon(Icons.star_outline, color: context.colors.primary),
                     value: _isWatchlisted,
@@ -1498,7 +1497,7 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
         children: [
           OutlinedButton.icon(
             icon: const Icon(Icons.close, size: AppIconSize.i16),
-            label: const Text('Cancel'),
+            label: Text(context.l10n.common_cancel),
             style: OutlinedButton.styleFrom(
               foregroundColor: context.colors.textPrimary,
               side: BorderSide(color: context.colors.textHint.withValues(alpha: AppAlpha.a40)),
@@ -1560,7 +1559,7 @@ Future<void> showAddEditProductScreen(
   await showGeneralDialog(
     context: context,
     barrierDismissible: true,
-    barrierLabel: product != null ? 'Edit Product' : 'Add Product',
+    barrierLabel: product != null ? context.l10n.products_editProduct : context.l10n.products_addProduct,
     barrierColor: context.colors.scrim.withValues(alpha: AppAlpha.a50),
     transitionDuration: AppMotion.normal,
     pageBuilder: (context, animation, secondaryAnimation) {
