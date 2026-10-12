@@ -3351,4 +3351,82 @@ class AppLocalizationsSw extends AppLocalizations {
 
   @override
   String get common_notApplicable => 'Haipo';
+
+  @override
+  String get reports_thisYear => 'Mwaka huu';
+
+  @override
+  String get reports_pastTitle => 'Ripoti Zilizopita';
+
+  @override
+  String get reports_pastSubtitle =>
+      'Kila ripoti ya kufunga siku ya kituo hiki';
+
+  @override
+  String get reports_noneYet => 'Bado hakuna ripoti iliyotengenezwa.';
+
+  @override
+  String get reports_noMatch =>
+      'Hakuna ripoti zinazolingana na utafutaji wako.';
+
+  @override
+  String get reports_loadMore => 'Pakia zaidi';
+
+  @override
+  String get reports_searchHint => 'Tafuta ripoti...';
+
+  @override
+  String get reports_generatedCount => 'Ripoti zilizotengenezwa';
+
+  @override
+  String get reports_loadedPeriod => 'Kipindi kilichopakiwa';
+
+  @override
+  String get reports_latest => 'Ya hivi karibuni';
+
+  @override
+  String reports_rowSummary(String amount, String name) {
+    return 'Mapato ya jumla $amount - imetengenezwa na $name';
+  }
+
+  @override
+  String get reports_notSubmitted => 'Haijawasilishwa';
+
+  @override
+  String get reports_completed => 'Imekamilika';
+
+  @override
+  String reports_submittedBy(String name) {
+    return 'Imewasilishwa na $name';
+  }
+
+  @override
+  String get reports_draftNotSubmitted => 'Rasimu - bado haijawasilishwa';
+
+  @override
+  String get reports_pdf => 'PDF';
+
+  @override
+  String get reports_fullReport => 'Ripoti Kamili';
+
+  @override
+  String get reports_dailyClosingReport => 'Ripoti ya Kufunga Siku';
+
+  @override
+  String get reports_dailySummary => 'Muhtasari wa Siku';
+
+  @override
+  String get reports_totalSales => 'Jumla ya Mauzo';
+
+  @override
+  String get reports_serviceRevenue => 'Mapato ya Huduma';
+
+  @override
+  String get reports_totalRevenue => 'Jumla ya Mapato';
+
+  @override
+  String get reports_newDebtToday => 'Deni Jipya Leo';
+
+  @override
+  String get reports_noSalesToday => 'Hakuna mauzo yaliyorekodiwa leo.';
 }
