@@ -6392,4 +6392,68 @@ class AppLocalizationsSw extends AppLocalizations {
 
   @override
   String get facilities_keepLogsFor => 'Hifadhi Kumbukumbu Kwa';
+
+  @override
+  String get facilities_deleteOlderLogsTitle =>
+      'Futa Kumbukumbu za Zamani Sasa?';
+
+  @override
+  String facilities_deleteOlderLogsMessage(int current, int selected) {
+    return 'Kwa sasa kumbukumbu zinahifadhiwa kwa siku $current. Ukibadilisha kuwa siku $selected, kila kumbukumbu iliyozidi siku $selected itafutwa kabisa sasa hivi - si kuanzia sasa tu. Hili haliwezi kutenduliwa.';
+  }
+
+  @override
+  String facilities_deleteAndSwitch(int count) {
+    return 'Futa na ubadilishe kuwa siku $count';
+  }
+
+  @override
+  String facilities_retentionSavedNotDeleted(int count) {
+    return 'Imehifadhiwa. Kumbukumbu zilizozidi siku $count zitafichwa, lakini bado hazijaweza kufutwa';
+  }
+
+  @override
+  String facilities_retentionSavedDeleted(int days, int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'kumbukumbu $count za zamani zimefutwa',
+      one: 'kumbukumbu 1 ya zamani imefutwa',
+    );
+    return 'Kumbukumbu sasa zitahifadhiwa kwa siku $days, $_temp0';
+  }
+
+  @override
+  String facilities_retentionSaved(int count) {
+    return 'Kumbukumbu sasa zitahifadhiwa kwa siku $count';
+  }
+
+  @override
+  String get facilities_saveSettingFailed => 'Imeshindwa kuhifadhi mpangilio';
+
+  @override
+  String get facilities_overdueAfterTitle => 'Imechelewa Baada ya';
+
+  @override
+  String facilities_overdueSaved(int count) {
+    return 'Madeni sasa yanachelewa baada ya siku $count';
+  }
+
+  @override
+  String get facilities_aboutTitle => 'Kuhusu kituo hiki';
+
+  @override
+  String get facilities_facilityType => 'Aina ya Kituo';
+
+  @override
+  String get facilities_ownership => 'Umiliki';
+
+  @override
+  String get facilities_createdBy => 'Kimeundwa na';
+
+  @override
+  String get facilities_lastUpdated => 'Kilisasishwa Mwisho';
+
+  @override
+  String get facilities_viewAllActivity => 'Angalia shughuli zote';
 }

@@ -6356,4 +6356,67 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get facilities_keepLogsFor => 'Keep Logs For';
+
+  @override
+  String get facilities_deleteOlderLogsTitle => 'Delete Older Logs Now?';
+
+  @override
+  String facilities_deleteOlderLogsMessage(int current, int selected) {
+    return 'Logs are currently kept for $current days. Switching to $selected days will permanently delete every log older than $selected days right now - not just going forward. This cannot be undone.';
+  }
+
+  @override
+  String facilities_deleteAndSwitch(int count) {
+    return 'Delete and switch to $count days';
+  }
+
+  @override
+  String facilities_retentionSavedNotDeleted(int count) {
+    return 'Saved. Logs older than $count days will be hidden, but couldn\'t be deleted yet';
+  }
+
+  @override
+  String facilities_retentionSavedDeleted(int days, int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count older logs',
+      one: '1 older log',
+    );
+    return 'Logs will now be kept for $days days, $_temp0 deleted';
+  }
+
+  @override
+  String facilities_retentionSaved(int count) {
+    return 'Logs will now be kept for $count days';
+  }
+
+  @override
+  String get facilities_saveSettingFailed => 'Couldn\'t save the setting';
+
+  @override
+  String get facilities_overdueAfterTitle => 'Overdue After';
+
+  @override
+  String facilities_overdueSaved(int count) {
+    return 'Debts are now overdue after $count days';
+  }
+
+  @override
+  String get facilities_aboutTitle => 'About this facility';
+
+  @override
+  String get facilities_facilityType => 'Facility Type';
+
+  @override
+  String get facilities_ownership => 'Ownership';
+
+  @override
+  String get facilities_createdBy => 'Created By';
+
+  @override
+  String get facilities_lastUpdated => 'Last Updated';
+
+  @override
+  String get facilities_viewAllActivity => 'View all activity';
 }

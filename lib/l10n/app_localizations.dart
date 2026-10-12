@@ -10901,6 +10901,96 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Keep Logs For'**
   String get facilities_keepLogsFor;
+
+  /// Retention dialog: confirm a shorter window.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete Older Logs Now?'**
+  String get facilities_deleteOlderLogsTitle;
+
+  /// Retention dialog: confirm a shorter window.
+  ///
+  /// In en, this message translates to:
+  /// **'Logs are currently kept for {current} days. Switching to {selected} days will permanently delete every log older than {selected} days right now - not just going forward. This cannot be undone.'**
+  String facilities_deleteOlderLogsMessage(int current, int selected);
+
+  /// Retention dialog button.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete and switch to {count} days'**
+  String facilities_deleteAndSwitch(int count);
+
+  /// Retention saved, old logs not deleted yet (the reason follows).
+  ///
+  /// In en, this message translates to:
+  /// **'Saved. Logs older than {count} days will be hidden, but couldn\'t be deleted yet'**
+  String facilities_retentionSavedNotDeleted(int count);
+
+  /// Retention saved and old logs deleted.
+  ///
+  /// In en, this message translates to:
+  /// **'Logs will now be kept for {days} days, {count, plural, =1{1 older log} other{{count} older logs}} deleted'**
+  String facilities_retentionSavedDeleted(int days, int count);
+
+  /// Retention saved.
+  ///
+  /// In en, this message translates to:
+  /// **'Logs will now be kept for {count} days'**
+  String facilities_retentionSaved(int count);
+
+  /// Retention or overdue setting not saved.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t save the setting'**
+  String get facilities_saveSettingFailed;
+
+  /// Overdue threshold dialog title.
+  ///
+  /// In en, this message translates to:
+  /// **'Overdue After'**
+  String get facilities_overdueAfterTitle;
+
+  /// Overdue threshold saved.
+  ///
+  /// In en, this message translates to:
+  /// **'Debts are now overdue after {count} days'**
+  String facilities_overdueSaved(int count);
+
+  /// Facility detail, Overview card title.
+  ///
+  /// In en, this message translates to:
+  /// **'About this facility'**
+  String get facilities_aboutTitle;
+
+  /// Facility detail, About card row.
+  ///
+  /// In en, this message translates to:
+  /// **'Facility Type'**
+  String get facilities_facilityType;
+
+  /// Facility detail, About card row.
+  ///
+  /// In en, this message translates to:
+  /// **'Ownership'**
+  String get facilities_ownership;
+
+  /// Facility detail, About card row.
+  ///
+  /// In en, this message translates to:
+  /// **'Created By'**
+  String get facilities_createdBy;
+
+  /// Facility detail, About card row.
+  ///
+  /// In en, this message translates to:
+  /// **'Last Updated'**
+  String get facilities_lastUpdated;
+
+  /// Facility detail, Recent Activity link.
+  ///
+  /// In en, this message translates to:
+  /// **'View all activity'**
+  String get facilities_viewAllActivity;
 }
 
 class _AppLocalizationsDelegate
