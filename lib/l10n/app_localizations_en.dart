@@ -4049,4 +4049,86 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get batch_deleteExpiredTitle => 'Delete Expired Batch?';
+
+  @override
+  String get batch_deleteTitle => 'Delete This Batch?';
+
+  @override
+  String get batch_notExpiredWarning =>
+      'This batch has not expired - it still has good, sellable stock.';
+
+  @override
+  String batch_deleteBody(String batch, int stock, int sellable) {
+    return 'This permanently removes $batch and subtracts its $stock store and $sellable sellable units from this product\'s totals. This cannot be undone.';
+  }
+
+  @override
+  String get batch_thisUnlabeled => 'this unlabeled batch';
+
+  @override
+  String batch_deleteFailed(String error) {
+    return 'Could not delete: $error';
+  }
+
+  @override
+  String get batch_editDetails => 'Edit Details';
+
+  @override
+  String get batch_batches => 'Batches';
+
+  @override
+  String batch_loadFailed(String error) {
+    return 'Could not load batches: $error';
+  }
+
+  @override
+  String get batch_noneYet => 'No batches recorded yet.';
+
+  @override
+  String get batch_unlabeled => 'Unlabeled batch';
+
+  @override
+  String get batch_outOfStock => 'Out of Stock - 0 available';
+
+  @override
+  String batch_rowQuantities(int stock, int sellable, String price) {
+    return 'Store: $stock · Shelf: $sellable · $price';
+  }
+
+  @override
+  String batch_expiredOn(String date) {
+    return 'Expired $date';
+  }
+
+  @override
+  String batch_expiresOn(String date) {
+    return 'Expires $date';
+  }
+
+  @override
+  String get batch_deleteExpiredTooltip => 'Delete expired batch';
+
+  @override
+  String get batch_deleteTooltip => 'Delete batch';
+
+  @override
+  String get batch_adjustQuantity => 'Adjust quantity';
+
+  @override
+  String get alerts_outOfStock => 'Out of Stock';
+
+  @override
+  String alerts_messageStock(String product, int sellable, int stock) {
+    return '$product - Shelf: $sellable · Store: $stock';
+  }
+
+  @override
+  String alerts_messageExpired(
+    String product,
+    String date,
+    int quantity,
+    String unit,
+  ) {
+    return '$product - expired $date · $quantity $unit on hand';
+  }
 }

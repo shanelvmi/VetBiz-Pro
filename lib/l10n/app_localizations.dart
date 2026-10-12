@@ -7134,6 +7134,131 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Delete Expired Batch?'**
   String get batch_deleteExpiredTitle;
+
+  /// Delete batch dialog title.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete This Batch?'**
+  String get batch_deleteTitle;
+
+  /// Delete batch dialog warning.
+  ///
+  /// In en, this message translates to:
+  /// **'This batch has not expired - it still has good, sellable stock.'**
+  String get batch_notExpiredWarning;
+
+  /// Delete batch dialog text. batch is store_batchName or batch_thisUnlabeled.
+  ///
+  /// In en, this message translates to:
+  /// **'This permanently removes {batch} and subtracts its {stock} store and {sellable} sellable units from this product\'s totals. This cannot be undone.'**
+  String batch_deleteBody(String batch, int stock, int sellable);
+
+  /// Part of batch_deleteBody.
+  ///
+  /// In en, this message translates to:
+  /// **'this unlabeled batch'**
+  String get batch_thisUnlabeled;
+
+  /// Delete batch dialog error with the technical error text.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not delete: {error}'**
+  String batch_deleteFailed(String error);
+
+  /// View Batches button.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit Details'**
+  String get batch_editDetails;
+
+  /// View Batches section heading.
+  ///
+  /// In en, this message translates to:
+  /// **'Batches'**
+  String get batch_batches;
+
+  /// View Batches load error with the technical error text.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not load batches: {error}'**
+  String batch_loadFailed(String error);
+
+  /// View Batches, empty.
+  ///
+  /// In en, this message translates to:
+  /// **'No batches recorded yet.'**
+  String get batch_noneYet;
+
+  /// View Batches row title for a batch with no number.
+  ///
+  /// In en, this message translates to:
+  /// **'Unlabeled batch'**
+  String get batch_unlabeled;
+
+  /// View Batches row badge.
+  ///
+  /// In en, this message translates to:
+  /// **'Out of Stock - 0 available'**
+  String get batch_outOfStock;
+
+  /// View Batches row. price is already formatted.
+  ///
+  /// In en, this message translates to:
+  /// **'Store: {stock} · Shelf: {sellable} · {price}'**
+  String batch_rowQuantities(int stock, int sellable, String price);
+
+  /// View Batches row and Product Alerts details.
+  ///
+  /// In en, this message translates to:
+  /// **'Expired {date}'**
+  String batch_expiredOn(String date);
+
+  /// View Batches row.
+  ///
+  /// In en, this message translates to:
+  /// **'Expires {date}'**
+  String batch_expiresOn(String date);
+
+  /// View Batches row button tooltip.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete expired batch'**
+  String get batch_deleteExpiredTooltip;
+
+  /// View Batches row button tooltip.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete batch'**
+  String get batch_deleteTooltip;
+
+  /// View Batches row button tooltip.
+  ///
+  /// In en, this message translates to:
+  /// **'Adjust quantity'**
+  String get batch_adjustQuantity;
+
+  /// Product Alerts kind name.
+  ///
+  /// In en, this message translates to:
+  /// **'Out of Stock'**
+  String get alerts_outOfStock;
+
+  /// Alerts bell dropdown line (out of stock and low stock).
+  ///
+  /// In en, this message translates to:
+  /// **'{product} - Shelf: {sellable} · Store: {stock}'**
+  String alerts_messageStock(String product, int sellable, int stock);
+
+  /// Alerts bell dropdown line.
+  ///
+  /// In en, this message translates to:
+  /// **'{product} - expired {date} · {quantity} {unit} on hand'**
+  String alerts_messageExpired(
+    String product,
+    String date,
+    int quantity,
+    String unit,
+  );
 }
 
 class _AppLocalizationsDelegate

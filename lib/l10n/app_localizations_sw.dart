@@ -4067,4 +4067,86 @@ class AppLocalizationsSw extends AppLocalizations {
 
   @override
   String get batch_deleteExpiredTitle => 'Futa Batch Iliyoisha Muda?';
+
+  @override
+  String get batch_deleteTitle => 'Futa Batch Hii?';
+
+  @override
+  String get batch_notExpiredWarning =>
+      'Batch hii bado haijaisha muda - bado ina bidhaa nzuri za kuuza.';
+
+  @override
+  String batch_deleteBody(String batch, int stock, int sellable) {
+    return 'Hii inaondoa $batch kabisa na kutoa vipimo vyake $stock vya stoo na $sellable vya kuuza kwenye jumla ya bidhaa hii. Haiwezi kurudishwa.';
+  }
+
+  @override
+  String get batch_thisUnlabeled => 'batch hii isiyo na namba';
+
+  @override
+  String batch_deleteFailed(String error) {
+    return 'Imeshindikana kufuta: $error';
+  }
+
+  @override
+  String get batch_editDetails => 'Hariri Taarifa';
+
+  @override
+  String get batch_batches => 'Batch';
+
+  @override
+  String batch_loadFailed(String error) {
+    return 'Imeshindikana kupakia batch: $error';
+  }
+
+  @override
+  String get batch_noneYet => 'Bado hakuna batch iliyorekodiwa.';
+
+  @override
+  String get batch_unlabeled => 'Batch isiyo na namba';
+
+  @override
+  String get batch_outOfStock => 'Imeisha - 0 zipo';
+
+  @override
+  String batch_rowQuantities(int stock, int sellable, String price) {
+    return 'Stoo: $stock · Rafu: $sellable · $price';
+  }
+
+  @override
+  String batch_expiredOn(String date) {
+    return 'Iliisha $date';
+  }
+
+  @override
+  String batch_expiresOn(String date) {
+    return 'Inaisha $date';
+  }
+
+  @override
+  String get batch_deleteExpiredTooltip => 'Futa batch iliyoisha muda';
+
+  @override
+  String get batch_deleteTooltip => 'Futa batch';
+
+  @override
+  String get batch_adjustQuantity => 'Rekebisha idadi';
+
+  @override
+  String get alerts_outOfStock => 'Imeisha';
+
+  @override
+  String alerts_messageStock(String product, int sellable, int stock) {
+    return '$product - Rafu: $sellable · Stoo: $stock';
+  }
+
+  @override
+  String alerts_messageExpired(
+    String product,
+    String date,
+    int quantity,
+    String unit,
+  ) {
+    return '$product - iliisha $date · $quantity $unit zipo';
+  }
 }
