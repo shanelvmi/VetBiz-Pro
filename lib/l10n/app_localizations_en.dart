@@ -5940,4 +5940,13 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get notifications_allCaughtUpHint =>
       'No urgent announcements, subscription issues, or stock alerts right now.';
+
+  @override
+  String get notifications_catPayment => 'Payment';
+
+  @override
+  String get notifications_catDebt => 'Debt';
+
+  @override
+  String get notifications_catUpdate => 'Update';
 }

@@ -5973,4 +5973,13 @@ class AppLocalizationsSw extends AppLocalizations {
   @override
   String get notifications_allCaughtUpHint =>
       'Hakuna matangazo ya dharura, matatizo ya usajili, wala tahadhari za stoo kwa sasa.';
+
+  @override
+  String get notifications_catPayment => 'Malipo';
+
+  @override
+  String get notifications_catDebt => 'Deni';
+
+  @override
+  String get notifications_catUpdate => 'Taarifa';
 }

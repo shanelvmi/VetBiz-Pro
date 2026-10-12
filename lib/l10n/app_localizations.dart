@@ -10199,6 +10199,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'No urgent announcements, subscription issues, or stock alerts right now.'**
   String get notifications_allCaughtUpHint;
+
+  /// Notifications table: category of one notification.
+  ///
+  /// In en, this message translates to:
+  /// **'Payment'**
+  String get notifications_catPayment;
+
+  /// Notifications table: category of one notification.
+  ///
+  /// In en, this message translates to:
+  /// **'Debt'**
+  String get notifications_catDebt;
+
+  /// Notifications table: category of one notification.
+  ///
+  /// In en, this message translates to:
+  /// **'Update'**
+  String get notifications_catUpdate;
 }
 
 class _AppLocalizationsDelegate
