@@ -5322,4 +5322,47 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get noFacility_aFacility => 'a facility';
+
+  @override
+  String get noFacility_cantDeleteTitle => 'Can\'t delete the account yet';
+
+  @override
+  String noFacility_stillOwns(String name) {
+    return 'This account still owns \"$name\", which isn\'t on your profile. Contact support so it can be sorted out first.';
+  }
+
+  @override
+  String get noFacility_deleteTitle => 'Delete your account?';
+
+  @override
+  String get noFacility_deleteWarning =>
+      'This is permanent and cannot be undone. Your account and profile will be erased, and you will not be able to sign in with this email again.';
+
+  @override
+  String get noFacility_enterPasswordToConfirm =>
+      'Enter your password to confirm.';
+
+  @override
+  String get noFacility_accountDeleted => 'Your account has been deleted.';
+
+  @override
+  String get noFacility_deleteAccount => 'Delete account';
+
+  @override
+  String get noFacility_adding => 'Adding facility...';
+
+  @override
+  String get noFacility_addFacility => 'Add facility';
+
+  @override
+  String get noFacility_deleteInstead => 'Delete my account instead';
+
+  @override
+  String get noFacility_codeInvalid =>
+      'That code is invalid, has expired, or has already been used.';
+
+  @override
+  String noFacility_requestSent(String facility) {
+    return 'Request sent to $facility. You can sign in once its admin approves you.';
+  }
 }

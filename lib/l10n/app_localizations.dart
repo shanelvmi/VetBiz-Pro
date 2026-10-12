@@ -9197,6 +9197,78 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'a facility'**
   String get noFacility_aFacility;
+
+  /// Dialog title: the account still owns a facility.
+  ///
+  /// In en, this message translates to:
+  /// **'Can\'t delete the account yet'**
+  String get noFacility_cantDeleteTitle;
+
+  /// Dialog body: the account still owns a facility.
+  ///
+  /// In en, this message translates to:
+  /// **'This account still owns \"{name}\", which isn\'t on your profile. Contact support so it can be sorted out first.'**
+  String noFacility_stillOwns(String name);
+
+  /// Delete-account dialog title.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete your account?'**
+  String get noFacility_deleteTitle;
+
+  /// Delete-account dialog body.
+  ///
+  /// In en, this message translates to:
+  /// **'This is permanent and cannot be undone. Your account and profile will be erased, and you will not be able to sign in with this email again.'**
+  String get noFacility_deleteWarning;
+
+  /// Delete-account dialog error.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter your password to confirm.'**
+  String get noFacility_enterPasswordToConfirm;
+
+  /// Shown on the login screen after deleting the account.
+  ///
+  /// In en, this message translates to:
+  /// **'Your account has been deleted.'**
+  String get noFacility_accountDeleted;
+
+  /// Delete-account dialog button.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete account'**
+  String get noFacility_deleteAccount;
+
+  /// No-facility screen button while adding.
+  ///
+  /// In en, this message translates to:
+  /// **'Adding facility...'**
+  String get noFacility_adding;
+
+  /// No-facility screen button.
+  ///
+  /// In en, this message translates to:
+  /// **'Add facility'**
+  String get noFacility_addFacility;
+
+  /// No-facility screen link.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete my account instead'**
+  String get noFacility_deleteInstead;
+
+  /// No-facility screen: invite code not accepted.
+  ///
+  /// In en, this message translates to:
+  /// **'That code is invalid, has expired, or has already been used.'**
+  String get noFacility_codeInvalid;
+
+  /// Shown on the login screen after asking to join a facility.
+  ///
+  /// In en, this message translates to:
+  /// **'Request sent to {facility}. You can sign in once its admin approves you.'**
+  String noFacility_requestSent(String facility);
 }
 
 class _AppLocalizationsDelegate

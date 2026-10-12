@@ -5348,4 +5348,47 @@ class AppLocalizationsSw extends AppLocalizations {
 
   @override
   String get noFacility_aFacility => 'kituo';
+
+  @override
+  String get noFacility_cantDeleteTitle => 'Akaunti haiwezi kufutwa bado';
+
+  @override
+  String noFacility_stillOwns(String name) {
+    return 'Akaunti hii bado inamiliki \"$name\", ambacho hakiko kwenye wasifu wako. Wasiliana na msaada ili lishughulikiwe kwanza.';
+  }
+
+  @override
+  String get noFacility_deleteTitle => 'Ufute akaunti yako?';
+
+  @override
+  String get noFacility_deleteWarning =>
+      'Hili ni la kudumu na haliwezi kutenduliwa. Akaunti na wasifu wako vitafutwa, na hutaweza kuingia tena kwa barua pepe hii.';
+
+  @override
+  String get noFacility_enterPasswordToConfirm =>
+      'Weka nenosiri lako ili kuthibitisha.';
+
+  @override
+  String get noFacility_accountDeleted => 'Akaunti yako imefutwa.';
+
+  @override
+  String get noFacility_deleteAccount => 'Futa akaunti';
+
+  @override
+  String get noFacility_adding => 'Inaongeza kituo...';
+
+  @override
+  String get noFacility_addFacility => 'Ongeza kituo';
+
+  @override
+  String get noFacility_deleteInstead => 'Futa akaunti yangu badala yake';
+
+  @override
+  String get noFacility_codeInvalid =>
+      'Msimbo huo si sahihi, umeisha muda, au umeshatumika.';
+
+  @override
+  String noFacility_requestSent(String facility) {
+    return 'Ombi limetumwa kwa $facility. Utaweza kuingia msimamizi wake akishakuidhinisha.';
+  }
 }
