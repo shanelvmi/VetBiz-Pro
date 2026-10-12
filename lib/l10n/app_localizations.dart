@@ -6186,6 +6186,144 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{amount} - Match'**
   String reports_matchValue(String amount);
+
+  /// Reconciliation row: the reason for a variance.
+  ///
+  /// In en, this message translates to:
+  /// **'Reason'**
+  String get reports_reason;
+
+  /// Full report reconciliation; method is the payment method label.
+  ///
+  /// In en, this message translates to:
+  /// **'No income via {method} today - outflow only, no count needed.'**
+  String reports_outflowOnly(String method);
+
+  /// Full report reconciliation of a draft.
+  ///
+  /// In en, this message translates to:
+  /// **'Not yet submitted.'**
+  String get reports_notYetSubmitted;
+
+  /// Report section and tab.
+  ///
+  /// In en, this message translates to:
+  /// **'Payment Methods'**
+  String get reports_paymentMethods;
+
+  /// Payment methods, empty category.
+  ///
+  /// In en, this message translates to:
+  /// **'No sales today.'**
+  String get reports_noSalesShort;
+
+  /// Payment methods, empty category.
+  ///
+  /// In en, this message translates to:
+  /// **'No services today.'**
+  String get reports_noServicesShort;
+
+  /// Payment methods, empty category.
+  ///
+  /// In en, this message translates to:
+  /// **'No repayments today.'**
+  String get reports_noRepaymentsShort;
+
+  /// Payment methods, empty category.
+  ///
+  /// In en, this message translates to:
+  /// **'No other income today.'**
+  String get reports_noOtherIncomeShort;
+
+  /// Report section.
+  ///
+  /// In en, this message translates to:
+  /// **'Daily Closing Declaration'**
+  String get reports_declaration;
+
+  /// Declaration of a submitted report.
+  ///
+  /// In en, this message translates to:
+  /// **'Confirmed - I have reviewed today\'s transactions and that the cash and stock figures entered represent the closing figures for my shift.'**
+  String get reports_declarationConfirmed;
+
+  /// Declaration of a draft.
+  ///
+  /// In en, this message translates to:
+  /// **'Not yet confirmed.'**
+  String get reports_notConfirmed;
+
+  /// Error message.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t submit the report'**
+  String get reports_submitFailed;
+
+  /// Review dialog title.
+  ///
+  /// In en, this message translates to:
+  /// **'Review & Submit'**
+  String get reports_reviewSubmit;
+
+  /// Review dialog intro.
+  ///
+  /// In en, this message translates to:
+  /// **'Sales, services, transactions, and debt activity have already been calculated automatically. Count the items below and enter what you actually find before submitting.'**
+  String get reports_reviewIntro;
+
+  /// Review dialog section.
+  ///
+  /// In en, this message translates to:
+  /// **'Physical Stock Count'**
+  String get reports_physicalStockCount;
+
+  /// Review dialog stock section.
+  ///
+  /// In en, this message translates to:
+  /// **'Watch-listed products only - count these before submitting.'**
+  String get reports_watchlistedHint;
+
+  /// Review dialog: the expected closing count.
+  ///
+  /// In en, this message translates to:
+  /// **'Expected: {count}'**
+  String reports_expectedValue(int count);
+
+  /// Review dialog count field hint.
+  ///
+  /// In en, this message translates to:
+  /// **'Physical count'**
+  String get reports_physicalCount;
+
+  /// Review dialog; variance carries its sign.
+  ///
+  /// In en, this message translates to:
+  /// **'{variance} variance'**
+  String reports_varianceCount(String variance);
+
+  /// Count matches the expected value.
+  ///
+  /// In en, this message translates to:
+  /// **'Match'**
+  String get reports_match;
+
+  /// Review dialog field hint.
+  ///
+  /// In en, this message translates to:
+  /// **'Reason for variance (e.g. damaged, unable to locate)'**
+  String get reports_varianceReasonHint;
+
+  /// Review dialog validation.
+  ///
+  /// In en, this message translates to:
+  /// **'Please provide a reason for the variance.'**
+  String get reports_errVarianceReason;
+
+  /// Review dialog payment section.
+  ///
+  /// In en, this message translates to:
+  /// **'Count what you actually have for each method used today - mobile money balance, bank balance, and cash in the drawer.'**
+  String get reports_countEachMethod;
 }
 
 class _AppLocalizationsDelegate

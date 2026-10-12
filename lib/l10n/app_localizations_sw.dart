@@ -3509,4 +3509,84 @@ class AppLocalizationsSw extends AppLocalizations {
   String reports_matchValue(String amount) {
     return '$amount - Inalingana';
   }
+
+  @override
+  String get reports_reason => 'Sababu';
+
+  @override
+  String reports_outflowOnly(String method) {
+    return 'Hakuna mapato kupitia $method leo - matumizi tu, hakuna haja ya kuhesabu.';
+  }
+
+  @override
+  String get reports_notYetSubmitted => 'Bado haijawasilishwa.';
+
+  @override
+  String get reports_paymentMethods => 'Njia za Malipo';
+
+  @override
+  String get reports_noSalesShort => 'Hakuna mauzo leo.';
+
+  @override
+  String get reports_noServicesShort => 'Hakuna huduma leo.';
+
+  @override
+  String get reports_noRepaymentsShort => 'Hakuna marejesho leo.';
+
+  @override
+  String get reports_noOtherIncomeShort => 'Hakuna mapato mengine leo.';
+
+  @override
+  String get reports_declaration => 'Tamko la Kufunga Siku';
+
+  @override
+  String get reports_declarationConfirmed =>
+      'Imethibitishwa - Nimepitia miamala ya leo na kwamba takwimu za fedha na stoo zilizowekwa ni takwimu za kufunga zamu yangu.';
+
+  @override
+  String get reports_notConfirmed => 'Bado haijathibitishwa.';
+
+  @override
+  String get reports_submitFailed => 'Imeshindikana kuwasilisha ripoti';
+
+  @override
+  String get reports_reviewSubmit => 'Pitia na Uwasilishe';
+
+  @override
+  String get reports_reviewIntro =>
+      'Mauzo, huduma, miamala na mwenendo wa madeni tayari vimekokotolewa. Hesabu vitu vilivyo hapa chini na uweke ulichokipata kabla ya kuwasilisha.';
+
+  @override
+  String get reports_physicalStockCount => 'Hesabu ya Stoo Halisi';
+
+  @override
+  String get reports_watchlistedHint =>
+      'Bidhaa zinazofuatiliwa pekee - zihesabu kabla ya kuwasilisha.';
+
+  @override
+  String reports_expectedValue(int count) {
+    return 'Inatarajiwa: $count';
+  }
+
+  @override
+  String get reports_physicalCount => 'Hesabu halisi';
+
+  @override
+  String reports_varianceCount(String variance) {
+    return 'Tofauti $variance';
+  }
+
+  @override
+  String get reports_match => 'Inalingana';
+
+  @override
+  String get reports_varianceReasonHint =>
+      'Sababu ya tofauti (mf. imeharibika, haipatikani)';
+
+  @override
+  String get reports_errVarianceReason => 'Tafadhali eleza sababu ya tofauti.';
+
+  @override
+  String get reports_countEachMethod =>
+      'Hesabu ulicho nacho kwa kila njia iliyotumika leo - salio la pesa za simu, salio la benki na fedha taslimu kwenye droo.';
 }

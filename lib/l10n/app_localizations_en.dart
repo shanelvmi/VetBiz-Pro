@@ -3490,4 +3490,85 @@ class AppLocalizationsEn extends AppLocalizations {
   String reports_matchValue(String amount) {
     return '$amount - Match';
   }
+
+  @override
+  String get reports_reason => 'Reason';
+
+  @override
+  String reports_outflowOnly(String method) {
+    return 'No income via $method today - outflow only, no count needed.';
+  }
+
+  @override
+  String get reports_notYetSubmitted => 'Not yet submitted.';
+
+  @override
+  String get reports_paymentMethods => 'Payment Methods';
+
+  @override
+  String get reports_noSalesShort => 'No sales today.';
+
+  @override
+  String get reports_noServicesShort => 'No services today.';
+
+  @override
+  String get reports_noRepaymentsShort => 'No repayments today.';
+
+  @override
+  String get reports_noOtherIncomeShort => 'No other income today.';
+
+  @override
+  String get reports_declaration => 'Daily Closing Declaration';
+
+  @override
+  String get reports_declarationConfirmed =>
+      'Confirmed - I have reviewed today\'s transactions and that the cash and stock figures entered represent the closing figures for my shift.';
+
+  @override
+  String get reports_notConfirmed => 'Not yet confirmed.';
+
+  @override
+  String get reports_submitFailed => 'Couldn\'t submit the report';
+
+  @override
+  String get reports_reviewSubmit => 'Review & Submit';
+
+  @override
+  String get reports_reviewIntro =>
+      'Sales, services, transactions, and debt activity have already been calculated automatically. Count the items below and enter what you actually find before submitting.';
+
+  @override
+  String get reports_physicalStockCount => 'Physical Stock Count';
+
+  @override
+  String get reports_watchlistedHint =>
+      'Watch-listed products only - count these before submitting.';
+
+  @override
+  String reports_expectedValue(int count) {
+    return 'Expected: $count';
+  }
+
+  @override
+  String get reports_physicalCount => 'Physical count';
+
+  @override
+  String reports_varianceCount(String variance) {
+    return '$variance variance';
+  }
+
+  @override
+  String get reports_match => 'Match';
+
+  @override
+  String get reports_varianceReasonHint =>
+      'Reason for variance (e.g. damaged, unable to locate)';
+
+  @override
+  String get reports_errVarianceReason =>
+      'Please provide a reason for the variance.';
+
+  @override
+  String get reports_countEachMethod =>
+      'Count what you actually have for each method used today - mobile money balance, bank balance, and cash in the drawer.';
 }
