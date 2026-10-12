@@ -5377,6 +5377,144 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Temporarily disable your account. Can be reactivated later.'**
   String get account_deactivateHint;
+
+  /// Shown in place of a client name when a record has none.
+  ///
+  /// In en, this message translates to:
+  /// **'Walk-in'**
+  String get common_walkIn;
+
+  /// Banner when new services arrived while the list was open.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 new service available} other{{count} new services available}}'**
+  String services_newRecords(int count);
+
+  /// Services list, empty.
+  ///
+  /// In en, this message translates to:
+  /// **'No services yet'**
+  String get services_empty;
+
+  /// Services list, empty after a search or filter.
+  ///
+  /// In en, this message translates to:
+  /// **'No services match your filters'**
+  String get services_emptyFiltered;
+
+  /// Services metric card.
+  ///
+  /// In en, this message translates to:
+  /// **'Total Services'**
+  String get services_totalServices;
+
+  /// Services metric card and the details panel.
+  ///
+  /// In en, this message translates to:
+  /// **'Paid Amount'**
+  String get services_paidAmount;
+
+  /// Services metric card: everything not paid in cash.
+  ///
+  /// In en, this message translates to:
+  /// **'Digital Payments'**
+  String get services_digitalPayments;
+
+  /// Under each services metric card, and a date filter choice.
+  ///
+  /// In en, this message translates to:
+  /// **'Last 30 days'**
+  String get services_last30;
+
+  /// Services date filter choice.
+  ///
+  /// In en, this message translates to:
+  /// **'Last 7 days'**
+  String get services_last7;
+
+  /// Services date filter choice.
+  ///
+  /// In en, this message translates to:
+  /// **'This month'**
+  String get services_thisMonth;
+
+  /// Under the Service Records title.
+  ///
+  /// In en, this message translates to:
+  /// **'Track all services provided to your clients'**
+  String get services_subtitle;
+
+  /// Button that opens the visit form, and the form's title for a new visit.
+  ///
+  /// In en, this message translates to:
+  /// **'Record Visit'**
+  String get services_recordVisit;
+
+  /// Button that opens the services archive.
+  ///
+  /// In en, this message translates to:
+  /// **'Archive'**
+  String get services_archive;
+
+  /// Search box on the services list and archive.
+  ///
+  /// In en, this message translates to:
+  /// **'Search service by client, category, note...'**
+  String get services_searchHint;
+
+  /// Services table column.
+  ///
+  /// In en, this message translates to:
+  /// **'Service / Category'**
+  String get services_colServiceCategory;
+
+  /// Services table column: who provided the service.
+  ///
+  /// In en, this message translates to:
+  /// **'Provider'**
+  String get services_colProvider;
+
+  /// Pagination bar when the list is empty.
+  ///
+  /// In en, this message translates to:
+  /// **'No services'**
+  String get services_none;
+
+  /// Delete dialog title.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete Service?'**
+  String get services_deleteTitle;
+
+  /// Delete dialog body.
+  ///
+  /// In en, this message translates to:
+  /// **'This moves the service to Trash and puts its stock back, removes its debt and updates the client\'s balance. Restoring from Trash brings back the record only.'**
+  String get services_deleteBody;
+
+  /// Message after deleting a service.
+  ///
+  /// In en, this message translates to:
+  /// **'Service moved to Trash'**
+  String get services_movedToTrash;
+
+  /// Error message.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t delete the service'**
+  String get services_deleteFailed;
+
+  /// Details panel title.
+  ///
+  /// In en, this message translates to:
+  /// **'Service Details'**
+  String get services_detailsTitle;
+
+  /// Details panel section.
+  ///
+  /// In en, this message translates to:
+  /// **'Payment Information'**
+  String get services_paymentInfo;
 }
 
 class _AppLocalizationsDelegate

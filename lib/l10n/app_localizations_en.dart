@@ -3014,4 +3014,83 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get account_deactivateHint =>
       'Temporarily disable your account. Can be reactivated later.';
+
+  @override
+  String get common_walkIn => 'Walk-in';
+
+  @override
+  String services_newRecords(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count new services available',
+      one: '1 new service available',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get services_empty => 'No services yet';
+
+  @override
+  String get services_emptyFiltered => 'No services match your filters';
+
+  @override
+  String get services_totalServices => 'Total Services';
+
+  @override
+  String get services_paidAmount => 'Paid Amount';
+
+  @override
+  String get services_digitalPayments => 'Digital Payments';
+
+  @override
+  String get services_last30 => 'Last 30 days';
+
+  @override
+  String get services_last7 => 'Last 7 days';
+
+  @override
+  String get services_thisMonth => 'This month';
+
+  @override
+  String get services_subtitle => 'Track all services provided to your clients';
+
+  @override
+  String get services_recordVisit => 'Record Visit';
+
+  @override
+  String get services_archive => 'Archive';
+
+  @override
+  String get services_searchHint =>
+      'Search service by client, category, note...';
+
+  @override
+  String get services_colServiceCategory => 'Service / Category';
+
+  @override
+  String get services_colProvider => 'Provider';
+
+  @override
+  String get services_none => 'No services';
+
+  @override
+  String get services_deleteTitle => 'Delete Service?';
+
+  @override
+  String get services_deleteBody =>
+      'This moves the service to Trash and puts its stock back, removes its debt and updates the client\'s balance. Restoring from Trash brings back the record only.';
+
+  @override
+  String get services_movedToTrash => 'Service moved to Trash';
+
+  @override
+  String get services_deleteFailed => 'Couldn\'t delete the service';
+
+  @override
+  String get services_detailsTitle => 'Service Details';
+
+  @override
+  String get services_paymentInfo => 'Payment Information';
 }

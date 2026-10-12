@@ -3031,4 +3031,83 @@ class AppLocalizationsSw extends AppLocalizations {
   @override
   String get account_deactivateHint =>
       'Zima akaunti yako kwa muda. Inaweza kurejeshwa baadaye.';
+
+  @override
+  String get common_walkIn => 'Mteja wa papo hapo';
+
+  @override
+  String services_newRecords(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Huduma $count mpya zipo',
+      one: 'Huduma 1 mpya ipo',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get services_empty => 'Bado hakuna huduma';
+
+  @override
+  String get services_emptyFiltered =>
+      'Hakuna huduma zinazolingana na vichujio vyako';
+
+  @override
+  String get services_totalServices => 'Jumla ya Huduma';
+
+  @override
+  String get services_paidAmount => 'Kiasi Kilicholipwa';
+
+  @override
+  String get services_digitalPayments => 'Malipo ya Kidijitali';
+
+  @override
+  String get services_last30 => 'Siku 30 zilizopita';
+
+  @override
+  String get services_last7 => 'Siku 7 zilizopita';
+
+  @override
+  String get services_thisMonth => 'Mwezi huu';
+
+  @override
+  String get services_subtitle => 'Fuatilia huduma zote ulizowapa wateja wako';
+
+  @override
+  String get services_recordVisit => 'Rekodi Ziara';
+
+  @override
+  String get services_archive => 'Kumbukumbu';
+
+  @override
+  String get services_searchHint => 'Tafuta huduma kwa mteja, aina, maelezo...';
+
+  @override
+  String get services_colServiceCategory => 'Huduma / Aina';
+
+  @override
+  String get services_colProvider => 'Mtoa Huduma';
+
+  @override
+  String get services_none => 'Hakuna huduma';
+
+  @override
+  String get services_deleteTitle => 'Futa Huduma?';
+
+  @override
+  String get services_deleteBody =>
+      'Hii inahamisha huduma kwenye Tupio na kurudisha bidhaa zake stoo, inaondoa deni lake na kusasisha salio la mteja. Kurejesha kutoka Tupio kunarudisha rekodi pekee.';
+
+  @override
+  String get services_movedToTrash => 'Huduma imehamishiwa Tupio';
+
+  @override
+  String get services_deleteFailed => 'Imeshindikana kufuta huduma';
+
+  @override
+  String get services_detailsTitle => 'Maelezo ya Huduma';
+
+  @override
+  String get services_paymentInfo => 'Taarifa za Malipo';
 }
