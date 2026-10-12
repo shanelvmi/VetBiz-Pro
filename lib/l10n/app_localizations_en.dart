@@ -5659,4 +5659,83 @@ class AppLocalizationsEn extends AppLocalizations {
   String dashboard_searchClient(String phone) {
     return 'Client • $phone';
   }
+
+  @override
+  String get dashboard_todayAtAGlance => 'Today at a Glance';
+
+  @override
+  String dashboard_outstandingDebts(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Outstanding Debts',
+      one: 'Outstanding Debt',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get dashboard_profitEarned => 'Earned';
+
+  @override
+  String get dashboard_profitPending => 'Pending';
+
+  @override
+  String get dashboard_profitHelp =>
+      'Earned: already collected in cash.\nPending: sold on credit, not yet paid.';
+
+  @override
+  String get dashboard_createNewSale => 'Create a new sale';
+
+  @override
+  String get dashboard_addServiceRecord => 'Add a new service record';
+
+  @override
+  String get dashboard_addProductToStore => 'Add new product to store';
+
+  @override
+  String get dashboard_emailAppFailed => 'Couldn\'t open your email app';
+
+  @override
+  String get dashboard_contactSupport => 'Contact Support';
+
+  @override
+  String dashboard_supportIntro(String appName) {
+    return 'For help or support please reach out to $appName platform admin.';
+  }
+
+  @override
+  String dashboard_facilityNameType(String name, String type) {
+    return '$name $type';
+  }
+
+  @override
+  String get dashboard_fullNameLabel => 'Full Name: ';
+
+  @override
+  String get dashboard_emailLabel => 'Email: ';
+
+  @override
+  String get dashboard_phoneLabel => 'Phone: ';
+
+  @override
+  String get dashboard_roleLabel => 'Role: ';
+
+  @override
+  String get dashboard_viewFacilities => 'View Facilities';
+
+  @override
+  String get dashboard_changePassword => 'Change Password';
+
+  @override
+  String get dashboard_logoutConfirm => 'Are you sure you want to logout?';
+
+  @override
+  String get nav_stock => 'Stock';
+
+  @override
+  String get nav_products => 'Products';
+
+  @override
+  String get nav_sales => 'Sales';
 }

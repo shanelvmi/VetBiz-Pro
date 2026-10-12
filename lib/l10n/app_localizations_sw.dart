@@ -5689,4 +5689,84 @@ class AppLocalizationsSw extends AppLocalizations {
   String dashboard_searchClient(String phone) {
     return 'Mteja • $phone';
   }
+
+  @override
+  String get dashboard_todayAtAGlance => 'Leo kwa Ufupi';
+
+  @override
+  String dashboard_outstandingDebts(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Madeni Yanayodaiwa',
+      one: 'Deni Linalodaiwa',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get dashboard_profitEarned => 'Imepatikana';
+
+  @override
+  String get dashboard_profitPending => 'Inasubiri';
+
+  @override
+  String get dashboard_profitHelp =>
+      'Imepatikana: tayari imekusanywa kwa fedha taslimu.\nInasubiri: imeuzwa kwa mkopo, bado haijalipwa.';
+
+  @override
+  String get dashboard_createNewSale => 'Unda mauzo mapya';
+
+  @override
+  String get dashboard_addServiceRecord => 'Ongeza rekodi mpya ya huduma';
+
+  @override
+  String get dashboard_addProductToStore => 'Ongeza bidhaa mpya stoo';
+
+  @override
+  String get dashboard_emailAppFailed =>
+      'Imeshindwa kufungua programu yako ya barua pepe';
+
+  @override
+  String get dashboard_contactSupport => 'Wasiliana na Msaada';
+
+  @override
+  String dashboard_supportIntro(String appName) {
+    return 'Kwa msaada tafadhali wasiliana na msimamizi wa jukwaa la $appName.';
+  }
+
+  @override
+  String dashboard_facilityNameType(String name, String type) {
+    return '$name $type';
+  }
+
+  @override
+  String get dashboard_fullNameLabel => 'Jina Kamili: ';
+
+  @override
+  String get dashboard_emailLabel => 'Barua pepe: ';
+
+  @override
+  String get dashboard_phoneLabel => 'Simu: ';
+
+  @override
+  String get dashboard_roleLabel => 'Nafasi: ';
+
+  @override
+  String get dashboard_viewFacilities => 'Tazama Vituo';
+
+  @override
+  String get dashboard_changePassword => 'Badilisha Nenosiri';
+
+  @override
+  String get dashboard_logoutConfirm => 'Una uhakika unataka kutoka?';
+
+  @override
+  String get nav_stock => 'Stoo';
+
+  @override
+  String get nav_products => 'Bidhaa';
+
+  @override
+  String get nav_sales => 'Mauzo';
 }

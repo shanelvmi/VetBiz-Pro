@@ -9713,6 +9713,138 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Client • {phone}'**
   String dashboard_searchClient(String phone);
+
+  /// Dashboard strip title.
+  ///
+  /// In en, this message translates to:
+  /// **'Today at a Glance'**
+  String get dashboard_todayAtAGlance;
+
+  /// Today at a Glance label after the number of debts.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{Outstanding Debt} other{Outstanding Debts}}'**
+  String dashboard_outstandingDebts(int count);
+
+  /// Net Profit card: profit already collected in cash.
+  ///
+  /// In en, this message translates to:
+  /// **'Earned'**
+  String get dashboard_profitEarned;
+
+  /// Net Profit card: profit sold on credit, not yet paid.
+  ///
+  /// In en, this message translates to:
+  /// **'Pending'**
+  String get dashboard_profitPending;
+
+  /// Tooltip of the Net Profit card's info icon.
+  ///
+  /// In en, this message translates to:
+  /// **'Earned: already collected in cash.\nPending: sold on credit, not yet paid.'**
+  String get dashboard_profitHelp;
+
+  /// Quick action card under Record Sale.
+  ///
+  /// In en, this message translates to:
+  /// **'Create a new sale'**
+  String get dashboard_createNewSale;
+
+  /// Quick action card under Record Visit.
+  ///
+  /// In en, this message translates to:
+  /// **'Add a new service record'**
+  String get dashboard_addServiceRecord;
+
+  /// Quick action card under Add Product.
+  ///
+  /// In en, this message translates to:
+  /// **'Add new product to store'**
+  String get dashboard_addProductToStore;
+
+  /// Help dialog: the email link could not be opened.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t open your email app'**
+  String get dashboard_emailAppFailed;
+
+  /// Help dialog title.
+  ///
+  /// In en, this message translates to:
+  /// **'Contact Support'**
+  String get dashboard_contactSupport;
+
+  /// Help dialog text.
+  ///
+  /// In en, this message translates to:
+  /// **'For help or support please reach out to {appName} platform admin.'**
+  String dashboard_supportIntro(String appName);
+
+  /// Sidebar: the facility name followed by its type.
+  ///
+  /// In en, this message translates to:
+  /// **'{name} {type}'**
+  String dashboard_facilityNameType(String name, String type);
+
+  /// Profile panel label before the name.
+  ///
+  /// In en, this message translates to:
+  /// **'Full Name: '**
+  String get dashboard_fullNameLabel;
+
+  /// Profile panel label before the email.
+  ///
+  /// In en, this message translates to:
+  /// **'Email: '**
+  String get dashboard_emailLabel;
+
+  /// Profile panel label before the phone number.
+  ///
+  /// In en, this message translates to:
+  /// **'Phone: '**
+  String get dashboard_phoneLabel;
+
+  /// Profile panel label before the role.
+  ///
+  /// In en, this message translates to:
+  /// **'Role: '**
+  String get dashboard_roleLabel;
+
+  /// Profile panel button (admin).
+  ///
+  /// In en, this message translates to:
+  /// **'View Facilities'**
+  String get dashboard_viewFacilities;
+
+  /// Profile panel button.
+  ///
+  /// In en, this message translates to:
+  /// **'Change Password'**
+  String get dashboard_changePassword;
+
+  /// Profile panel logout dialog.
+  ///
+  /// In en, this message translates to:
+  /// **'Are you sure you want to logout?'**
+  String get dashboard_logoutConfirm;
+
+  /// Sidebar item: opens the Stock Store.
+  ///
+  /// In en, this message translates to:
+  /// **'Stock'**
+  String get nav_stock;
+
+  /// Sidebar item: opens Sellable Products.
+  ///
+  /// In en, this message translates to:
+  /// **'Products'**
+  String get nav_products;
+
+  /// Sidebar item: opens Sales.
+  ///
+  /// In en, this message translates to:
+  /// **'Sales'**
+  String get nav_sales;
 }
 
 class _AppLocalizationsDelegate
