@@ -7889,6 +7889,126 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Minimum Stock Level'**
   String get products_minStockLevel;
+
+  /// Add/Edit Product field hint.
+  ///
+  /// In en, this message translates to:
+  /// **'e.g. 5 (defaults to {count} if left blank)'**
+  String products_minStockHint(int count);
+
+  /// Add/Edit Product switch.
+  ///
+  /// In en, this message translates to:
+  /// **'Track in Daily Reports'**
+  String get products_trackInReports;
+
+  /// Add/Edit Product switch hint.
+  ///
+  /// In en, this message translates to:
+  /// **'Watch-listed products need a physical stock count before the daily closing report can be submitted.'**
+  String get products_trackInReportsHint;
+
+  /// Banner when new sales arrived while the list was open.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 new sale available} other{{count} new sales available}}'**
+  String sales_newRecords(int count);
+
+  /// Sales list, empty.
+  ///
+  /// In en, this message translates to:
+  /// **'No sales yet'**
+  String get sales_empty;
+
+  /// Sales list, empty after a search.
+  ///
+  /// In en, this message translates to:
+  /// **'No sales match your filters'**
+  String get sales_emptyFiltered;
+
+  /// Sales metric card: money collected.
+  ///
+  /// In en, this message translates to:
+  /// **'Collected'**
+  String get sales_collected;
+
+  /// Sales metric card: money still owed (an amount, not a status).
+  ///
+  /// In en, this message translates to:
+  /// **'Pending'**
+  String get sales_pending;
+
+  /// Sales and Sales Archive search box.
+  ///
+  /// In en, this message translates to:
+  /// **'Search sale by product, client, invoice...'**
+  String get sales_searchHint;
+
+  /// Sales filter label and table column.
+  ///
+  /// In en, this message translates to:
+  /// **'Payment Status'**
+  String get sales_paymentStatus;
+
+  /// Sales filter label, table column and details field.
+  ///
+  /// In en, this message translates to:
+  /// **'Seller'**
+  String get sales_seller;
+
+  /// Sales screen title.
+  ///
+  /// In en, this message translates to:
+  /// **'Sales Records'**
+  String get sales_title;
+
+  /// Sales screen subtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Track and manage all sales transactions'**
+  String get sales_subtitle;
+
+  /// Sales screen button.
+  ///
+  /// In en, this message translates to:
+  /// **'Record Sale'**
+  String get sales_recordSale;
+
+  /// Sales table column.
+  ///
+  /// In en, this message translates to:
+  /// **'Invoice No.'**
+  String get sales_invoiceNo;
+
+  /// Sales table: the first item of a sale.
+  ///
+  /// In en, this message translates to:
+  /// **'{name} × {quantity}'**
+  String sales_firstItem(String name, String quantity);
+
+  /// Sales table and details: how many items a sale has.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 item} other{{count} items}}'**
+  String sales_itemCount(int count);
+
+  /// Sales footer when empty.
+  ///
+  /// In en, this message translates to:
+  /// **'No sales'**
+  String get sales_none;
+
+  /// Delete sale dialog title.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete Sale?'**
+  String get sales_deleteTitle;
+
+  /// Delete sale dialog text.
+  ///
+  /// In en, this message translates to:
+  /// **'This permanently deletes {invoice} and restores its stock. This cannot be undone.'**
+  String sales_deleteBody(String invoice);
 }
 
 class _AppLocalizationsDelegate

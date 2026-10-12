@@ -4526,4 +4526,87 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get products_minStockLevel => 'Minimum Stock Level';
+
+  @override
+  String products_minStockHint(int count) {
+    return 'e.g. 5 (defaults to $count if left blank)';
+  }
+
+  @override
+  String get products_trackInReports => 'Track in Daily Reports';
+
+  @override
+  String get products_trackInReportsHint =>
+      'Watch-listed products need a physical stock count before the daily closing report can be submitted.';
+
+  @override
+  String sales_newRecords(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count new sales available',
+      one: '1 new sale available',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get sales_empty => 'No sales yet';
+
+  @override
+  String get sales_emptyFiltered => 'No sales match your filters';
+
+  @override
+  String get sales_collected => 'Collected';
+
+  @override
+  String get sales_pending => 'Pending';
+
+  @override
+  String get sales_searchHint => 'Search sale by product, client, invoice...';
+
+  @override
+  String get sales_paymentStatus => 'Payment Status';
+
+  @override
+  String get sales_seller => 'Seller';
+
+  @override
+  String get sales_title => 'Sales Records';
+
+  @override
+  String get sales_subtitle => 'Track and manage all sales transactions';
+
+  @override
+  String get sales_recordSale => 'Record Sale';
+
+  @override
+  String get sales_invoiceNo => 'Invoice No.';
+
+  @override
+  String sales_firstItem(String name, String quantity) {
+    return '$name × $quantity';
+  }
+
+  @override
+  String sales_itemCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count items',
+      one: '1 item',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get sales_none => 'No sales';
+
+  @override
+  String get sales_deleteTitle => 'Delete Sale?';
+
+  @override
+  String sales_deleteBody(String invoice) {
+    return 'This permanently deletes $invoice and restores its stock. This cannot be undone.';
+  }
 }

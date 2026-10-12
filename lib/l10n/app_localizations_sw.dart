@@ -4550,4 +4550,87 @@ class AppLocalizationsSw extends AppLocalizations {
 
   @override
   String get products_minStockLevel => 'Kiwango cha Chini cha Akiba';
+
+  @override
+  String products_minStockHint(int count) {
+    return 'mf. 5 (itakuwa $count ikiachwa wazi)';
+  }
+
+  @override
+  String get products_trackInReports => 'Fuatilia kwenye Ripoti za Kila Siku';
+
+  @override
+  String get products_trackInReportsHint =>
+      'Bidhaa zinazofuatiliwa zinahitaji kuhesabiwa kabla ripoti ya kufunga siku haijawasilishwa.';
+
+  @override
+  String sales_newRecords(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Mauzo $count mapya yanapatikana',
+      one: 'Mauzo 1 mapya yanapatikana',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get sales_empty => 'Bado hakuna mauzo';
+
+  @override
+  String get sales_emptyFiltered => 'Hakuna mauzo yanayolingana na vichujio';
+
+  @override
+  String get sales_collected => 'Yaliyokusanywa';
+
+  @override
+  String get sales_pending => 'Yanayodaiwa';
+
+  @override
+  String get sales_searchHint => 'Tafuta mauzo kwa bidhaa, mteja, ankara...';
+
+  @override
+  String get sales_paymentStatus => 'Hali ya Malipo';
+
+  @override
+  String get sales_seller => 'Muuzaji';
+
+  @override
+  String get sales_title => 'Kumbukumbu za Mauzo';
+
+  @override
+  String get sales_subtitle => 'Fuatilia na simamia miamala yote ya mauzo';
+
+  @override
+  String get sales_recordSale => 'Rekodi Mauzo';
+
+  @override
+  String get sales_invoiceNo => 'Namba ya Ankara';
+
+  @override
+  String sales_firstItem(String name, String quantity) {
+    return '$name × $quantity';
+  }
+
+  @override
+  String sales_itemCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Bidhaa $count',
+      one: 'Bidhaa 1',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get sales_none => 'Hakuna mauzo';
+
+  @override
+  String get sales_deleteTitle => 'Futa Mauzo?';
+
+  @override
+  String sales_deleteBody(String invoice) {
+    return 'Hii inafuta $invoice kabisa na kurudisha bidhaa zake. Haiwezi kurudishwa.';
+  }
 }
