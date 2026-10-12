@@ -5202,4 +5202,76 @@ class AppLocalizationsSw extends AppLocalizations {
 
   @override
   String get register_profilePhoto => 'Picha ya wasifu';
+
+  @override
+  String get register_tapToChangePhoto => 'Gusa ili kubadilisha picha yako';
+
+  @override
+  String get register_tapToAddPhoto => 'Si lazima - gusa ili kuongeza picha';
+
+  @override
+  String get register_yourRole => 'Nafasi yako';
+
+  @override
+  String get register_roleCoAdminSubtitle => 'Ninasaidia kusimamia kituo';
+
+  @override
+  String get register_roleAdminSubtitle => 'Ninamiliki au ninasimamia kituo';
+
+  @override
+  String get register_roleAssistantSubtitle => 'Nina msimbo wa mwaliko';
+
+  @override
+  String get register_roleLocked => 'Nafasi yako haiwezi kubadilishwa hapa.';
+
+  @override
+  String get register_yourFacilities => 'Vituo vyako';
+
+  @override
+  String get register_askAdminForInvite =>
+      'Muombe Msimamizi wa kituo chako msimbo wa mwaliko ili ujiunge na timu yake.';
+
+  @override
+  String register_joining(String facility) {
+    return 'Unajiunga na: $facility';
+  }
+
+  @override
+  String register_facilityTypeAndCode(String type, String code) {
+    return '$type  ·  Msimbo: $code';
+  }
+
+  @override
+  String get register_addOneToContinue =>
+      'Ongeza angalau kituo kimoja ili kuendelea.';
+
+  @override
+  String get register_useViewFacilities =>
+      'Kuongeza au kubadilisha vituo, tumia View Facilities.';
+
+  @override
+  String register_facilitiesAdded(int count, int max) {
+    return 'Vituo $count kati ya $max vimeongezwa';
+  }
+
+  @override
+  String get register_selectType => 'Chagua aina';
+
+  @override
+  String register_maxFacilitiesReached(int max) {
+    return 'Umefikia kikomo cha vituo $max';
+  }
+
+  @override
+  String get register_accountSecurity => 'Usalama wa akaunti';
+
+  @override
+  String get register_passwordRule =>
+      'Angalau herufi 8, zikiwemo herufi na namba';
+
+  @override
+  String get register_looksGood => 'Liko sawa';
+
+  @override
+  String get register_reenterPassword => 'Andika nenosiri tena';
 }

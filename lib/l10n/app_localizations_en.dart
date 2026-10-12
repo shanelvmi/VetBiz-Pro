@@ -5176,4 +5176,76 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get register_profilePhoto => 'Profile photo';
+
+  @override
+  String get register_tapToChangePhoto => 'Tap to change your photo';
+
+  @override
+  String get register_tapToAddPhoto => 'Optional - tap to add a photo';
+
+  @override
+  String get register_yourRole => 'Your role';
+
+  @override
+  String get register_roleCoAdminSubtitle => 'I help manage a facility';
+
+  @override
+  String get register_roleAdminSubtitle => 'I own or manage a facility';
+
+  @override
+  String get register_roleAssistantSubtitle => 'I have an invite code';
+
+  @override
+  String get register_roleLocked => 'Your role can\'t be changed here.';
+
+  @override
+  String get register_yourFacilities => 'Your facilities';
+
+  @override
+  String get register_askAdminForInvite =>
+      'Ask your facility Admin for an invite code to join their team.';
+
+  @override
+  String register_joining(String facility) {
+    return 'Joining: $facility';
+  }
+
+  @override
+  String register_facilityTypeAndCode(String type, String code) {
+    return '$type  ·  Code: $code';
+  }
+
+  @override
+  String get register_addOneToContinue =>
+      'Add at least one facility to continue.';
+
+  @override
+  String get register_useViewFacilities =>
+      'To add or change facilities, use View Facilities.';
+
+  @override
+  String register_facilitiesAdded(int count, int max) {
+    return '$count of $max facilities added';
+  }
+
+  @override
+  String get register_selectType => 'Select type';
+
+  @override
+  String register_maxFacilitiesReached(int max) {
+    return 'Maximum of $max facilities reached';
+  }
+
+  @override
+  String get register_accountSecurity => 'Account security';
+
+  @override
+  String get register_passwordRule =>
+      'At least 8 characters, with a letter and a number';
+
+  @override
+  String get register_looksGood => 'Looks good';
+
+  @override
+  String get register_reenterPassword => 'Re-enter your password';
 }

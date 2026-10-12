@@ -8957,6 +8957,126 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Profile photo'**
   String get register_profilePhoto;
+
+  /// Register avatar picker.
+  ///
+  /// In en, this message translates to:
+  /// **'Tap to change your photo'**
+  String get register_tapToChangePhoto;
+
+  /// Register avatar picker.
+  ///
+  /// In en, this message translates to:
+  /// **'Optional - tap to add a photo'**
+  String get register_tapToAddPhoto;
+
+  /// Register section title.
+  ///
+  /// In en, this message translates to:
+  /// **'Your role'**
+  String get register_yourRole;
+
+  /// Register role card, Co-admin.
+  ///
+  /// In en, this message translates to:
+  /// **'I help manage a facility'**
+  String get register_roleCoAdminSubtitle;
+
+  /// Register role card, Admin.
+  ///
+  /// In en, this message translates to:
+  /// **'I own or manage a facility'**
+  String get register_roleAdminSubtitle;
+
+  /// Register role card, Assistant.
+  ///
+  /// In en, this message translates to:
+  /// **'I have an invite code'**
+  String get register_roleAssistantSubtitle;
+
+  /// Edit Profile, under the role cards.
+  ///
+  /// In en, this message translates to:
+  /// **'Your role can\'t be changed here.'**
+  String get register_roleLocked;
+
+  /// Register section title (owner).
+  ///
+  /// In en, this message translates to:
+  /// **'Your facilities'**
+  String get register_yourFacilities;
+
+  /// Register, assistant facility section.
+  ///
+  /// In en, this message translates to:
+  /// **'Ask your facility Admin for an invite code to join their team.'**
+  String get register_askAdminForInvite;
+
+  /// Register, the facility an invite code leads to (facility is "name (type)").
+  ///
+  /// In en, this message translates to:
+  /// **'Joining: {facility}'**
+  String register_joining(String facility);
+
+  /// Register facility tile: its type and its code.
+  ///
+  /// In en, this message translates to:
+  /// **'{type}  ·  Code: {code}'**
+  String register_facilityTypeAndCode(String type, String code);
+
+  /// Register, owner facility section, empty.
+  ///
+  /// In en, this message translates to:
+  /// **'Add at least one facility to continue.'**
+  String get register_addOneToContinue;
+
+  /// Edit Profile, owner facility section (View Facilities is the menu item's name).
+  ///
+  /// In en, this message translates to:
+  /// **'To add or change facilities, use View Facilities.'**
+  String get register_useViewFacilities;
+
+  /// Register, owner facility section.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} of {max} facilities added'**
+  String register_facilitiesAdded(int count, int max);
+
+  /// Register facility type dropdown hint.
+  ///
+  /// In en, this message translates to:
+  /// **'Select type'**
+  String get register_selectType;
+
+  /// Register Add button tooltip at the limit.
+  ///
+  /// In en, this message translates to:
+  /// **'Maximum of {max} facilities reached'**
+  String register_maxFacilitiesReached(int max);
+
+  /// Register section title.
+  ///
+  /// In en, this message translates to:
+  /// **'Account security'**
+  String get register_accountSecurity;
+
+  /// Register password helper before typing.
+  ///
+  /// In en, this message translates to:
+  /// **'At least 8 characters, with a letter and a number'**
+  String get register_passwordRule;
+
+  /// Register password helper when the password is acceptable.
+  ///
+  /// In en, this message translates to:
+  /// **'Looks good'**
+  String get register_looksGood;
+
+  /// Register confirm field hint.
+  ///
+  /// In en, this message translates to:
+  /// **'Re-enter your password'**
+  String get register_reenterPassword;
 }
 
 class _AppLocalizationsDelegate
