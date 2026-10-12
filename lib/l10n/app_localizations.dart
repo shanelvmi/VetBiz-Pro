@@ -10331,6 +10331,120 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{count} Staff'**
   String facilityPicker_staffCount(int count);
+
+  /// Facility picker card button.
+  ///
+  /// In en, this message translates to:
+  /// **'Open Facility'**
+  String get facilityPicker_openFacility;
+
+  /// Facility picker card menu item.
+  ///
+  /// In en, this message translates to:
+  /// **'Set as Default'**
+  String get facilityPicker_setAsDefault;
+
+  /// Facility picker card badge on the default facility.
+  ///
+  /// In en, this message translates to:
+  /// **'Default'**
+  String get facilityPicker_default;
+
+  /// Facility picker footer.
+  ///
+  /// In en, this message translates to:
+  /// **'Secure  •  Reliable  •  Built for Veterinary Businesses'**
+  String get facilityPicker_footer;
+
+  /// Facility ownership (stored value 'Owned'): Edit Facility dropdown and About card.
+  ///
+  /// In en, this message translates to:
+  /// **'Owned'**
+  String get facilityOwnership_owned;
+
+  /// Facility ownership (stored value 'Rented'): Edit Facility dropdown and About card.
+  ///
+  /// In en, this message translates to:
+  /// **'Rented'**
+  String get facilityOwnership_rented;
+
+  /// Facilities screen: loading failed.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t load facilities'**
+  String get facilities_loadFailed;
+
+  /// Facilities screen: dialog when the account has the most facilities allowed.
+  ///
+  /// In en, this message translates to:
+  /// **'Facility Limit Reached'**
+  String get facilities_limitTitle;
+
+  /// Facilities screen: facility limit dialog.
+  ///
+  /// In en, this message translates to:
+  /// **'You\'ve reached the limit of {max} facilities per account. Contact support if you need more.'**
+  String facilities_limitMessage(int max);
+
+  /// Facilities screen: top bar button and Add dialog title.
+  ///
+  /// In en, this message translates to:
+  /// **'Add Facility'**
+  String get facilities_addTitle;
+
+  /// Add Facility dialog, under the logo picker.
+  ///
+  /// In en, this message translates to:
+  /// **'Logo (optional)'**
+  String get facilities_logoOptional;
+
+  /// Add and Edit Facility dialogs: name field.
+  ///
+  /// In en, this message translates to:
+  /// **'Facility Name'**
+  String get facilities_nameLabel;
+
+  /// Add and Edit Facility dialogs: name or type missing.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter a name and select a type'**
+  String get facilities_nameAndTypeRequired;
+
+  /// Add Facility dialog button while saving.
+  ///
+  /// In en, this message translates to:
+  /// **'Adding...'**
+  String get facilities_adding;
+
+  /// Message after adding a facility.
+  ///
+  /// In en, this message translates to:
+  /// **'Facility added'**
+  String get facilities_added;
+
+  /// Edit Facility dialog title and More Actions menu item.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit Facility'**
+  String get facilities_editTitle;
+
+  /// Edit Facility dialog, under the logo.
+  ///
+  /// In en, this message translates to:
+  /// **'Tap to change logo'**
+  String get facilities_tapToChangeLogo;
+
+  /// Edit Facility dialog button.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove logo'**
+  String get facilities_removeLogo;
+
+  /// Edit Facility dialog field.
+  ///
+  /// In en, this message translates to:
+  /// **'Business Email (optional)'**
+  String get facilities_businessEmailOptional;
 }
 
 class _AppLocalizationsDelegate

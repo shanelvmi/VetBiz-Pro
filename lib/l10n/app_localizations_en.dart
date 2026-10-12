@@ -6013,4 +6013,64 @@ class AppLocalizationsEn extends AppLocalizations {
   String facilityPicker_staffCount(int count) {
     return '$count Staff';
   }
+
+  @override
+  String get facilityPicker_openFacility => 'Open Facility';
+
+  @override
+  String get facilityPicker_setAsDefault => 'Set as Default';
+
+  @override
+  String get facilityPicker_default => 'Default';
+
+  @override
+  String get facilityPicker_footer =>
+      'Secure  •  Reliable  •  Built for Veterinary Businesses';
+
+  @override
+  String get facilityOwnership_owned => 'Owned';
+
+  @override
+  String get facilityOwnership_rented => 'Rented';
+
+  @override
+  String get facilities_loadFailed => 'Couldn\'t load facilities';
+
+  @override
+  String get facilities_limitTitle => 'Facility Limit Reached';
+
+  @override
+  String facilities_limitMessage(int max) {
+    return 'You\'ve reached the limit of $max facilities per account. Contact support if you need more.';
+  }
+
+  @override
+  String get facilities_addTitle => 'Add Facility';
+
+  @override
+  String get facilities_logoOptional => 'Logo (optional)';
+
+  @override
+  String get facilities_nameLabel => 'Facility Name';
+
+  @override
+  String get facilities_nameAndTypeRequired => 'Enter a name and select a type';
+
+  @override
+  String get facilities_adding => 'Adding...';
+
+  @override
+  String get facilities_added => 'Facility added';
+
+  @override
+  String get facilities_editTitle => 'Edit Facility';
+
+  @override
+  String get facilities_tapToChangeLogo => 'Tap to change logo';
+
+  @override
+  String get facilities_removeLogo => 'Remove logo';
+
+  @override
+  String get facilities_businessEmailOptional => 'Business Email (optional)';
 }

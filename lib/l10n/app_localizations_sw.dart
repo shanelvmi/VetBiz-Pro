@@ -6046,4 +6046,65 @@ class AppLocalizationsSw extends AppLocalizations {
   String facilityPicker_staffCount(int count) {
     return 'Wafanyakazi $count';
   }
+
+  @override
+  String get facilityPicker_openFacility => 'Fungua Kituo';
+
+  @override
+  String get facilityPicker_setAsDefault => 'Weka kama Chaguo-msingi';
+
+  @override
+  String get facilityPicker_default => 'Chaguo-msingi';
+
+  @override
+  String get facilityPicker_footer =>
+      'Salama  •  Inaaminika  •  Imejengwa kwa Biashara za Mifugo';
+
+  @override
+  String get facilityOwnership_owned => 'Inamilikiwa';
+
+  @override
+  String get facilityOwnership_rented => 'Imekodiwa';
+
+  @override
+  String get facilities_loadFailed => 'Imeshindwa kupakia vituo';
+
+  @override
+  String get facilities_limitTitle => 'Kikomo cha Vituo Kimefikiwa';
+
+  @override
+  String facilities_limitMessage(int max) {
+    return 'Umefikia kikomo cha vituo $max kwa kila akaunti. Wasiliana na huduma kwa wateja ukihitaji zaidi.';
+  }
+
+  @override
+  String get facilities_addTitle => 'Ongeza Kituo';
+
+  @override
+  String get facilities_logoOptional => 'Nembo (si lazima)';
+
+  @override
+  String get facilities_nameLabel => 'Jina la Kituo';
+
+  @override
+  String get facilities_nameAndTypeRequired => 'Weka jina na uchague aina';
+
+  @override
+  String get facilities_adding => 'Inaongeza...';
+
+  @override
+  String get facilities_added => 'Kituo kimeongezwa';
+
+  @override
+  String get facilities_editTitle => 'Hariri Kituo';
+
+  @override
+  String get facilities_tapToChangeLogo => 'Gusa kubadilisha nembo';
+
+  @override
+  String get facilities_removeLogo => 'Ondoa nembo';
+
+  @override
+  String get facilities_businessEmailOptional =>
+      'Barua pepe ya Biashara (si lazima)';
 }
