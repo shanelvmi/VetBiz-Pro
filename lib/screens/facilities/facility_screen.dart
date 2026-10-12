@@ -2100,7 +2100,7 @@ class _FacilityScreenState extends State<FacilityScreen> {
               borderRadius: BorderRadius.circular(AppRadius.r14),
               border: Border.all(color: context.colors.textHint.withValues(alpha: AppAlpha.a15)),
             ),
-            child: Text('No products in this facility yet.', style: TextStyle(color: context.colors.textMuted)),
+            child: Text(context.l10n.facilities_noProducts, style: TextStyle(color: context.colors.textMuted)),
           );
         }
 
@@ -2129,7 +2129,7 @@ class _FacilityScreenState extends State<FacilityScreen> {
 
           if (isExpired || isLow) {
             needsAttention.add({
-              'name': data['name'] as String? ?? 'Product',
+              'name': data['name'] as String? ?? context.l10n.reports_colProduct,
               'isExpired': isExpired,
               'isLow': isLow,
               'stockQty': stockQty.toInt(),
@@ -2155,14 +2155,15 @@ class _FacilityScreenState extends State<FacilityScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text('By Category', style: TextStyle(fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f15)),
+                  Text(context.l10n.facilities_byCategory, style: const TextStyle(fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f15)),
                   const SizedBox(height: AppSpacing.s12),
                   ...sortedCategories.map((e) => Padding(
                         padding: const EdgeInsets.only(bottom: AppSpacing.s8),
                         child: Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
-                            Text(e.key, style: const TextStyle(fontSize: AppFontSize.f13_5)),
+                            // Grouped by the stored category; shown through its label.
+                            Text(context.l10n.productCategoryLabel(e.key), style: const TextStyle(fontSize: AppFontSize.f13_5)),
                             Text('${e.value}',
                                 style: const TextStyle(fontSize: AppFontSize.f13_5, fontWeight: AppFontWeight.bold)),
                           ],
@@ -2183,10 +2184,10 @@ class _FacilityScreenState extends State<FacilityScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text('Needs Attention', style: TextStyle(fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f15)),
+                  Text(context.l10n.notifications_needsAttention, style: const TextStyle(fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f15)),
                   const SizedBox(height: AppSpacing.s12),
                   if (needsAttention.isEmpty)
-                    Text('Nothing low on stock or expired right now.',
+                    Text(context.l10n.facilities_nothingNeedsAttention,
                         style: TextStyle(color: context.colors.textMuted, fontSize: AppFontSize.f13))
                   else
                     ...needsAttention.take(10).map((p) => Padding(
@@ -2197,9 +2198,9 @@ class _FacilityScreenState extends State<FacilityScreen> {
                                 child: Text(p['name'] as String, style: const TextStyle(fontSize: AppFontSize.f13_5)),
                               ),
                               if (p['isExpired'] as bool)
-                                _miniBadge('Expired', context.colors.danger)
+                                _miniBadge(context.l10n.products_statusExpired, context.colors.danger)
                               else if (p['isLow'] as bool)
-                                _miniBadge('Low Stock', context.colors.warning),
+                                _miniBadge(context.l10n.products_statusLowStock, context.colors.warning),
                             ],
                           ),
                         )),
@@ -2280,12 +2281,12 @@ class _FacilityScreenState extends State<FacilityScreen> {
               child: Row(
                 children: [
                   Expanded(
-                    child: _monthComparisonColumn('This Month', thisMonth['totalAmount'] ?? 0,
+                    child: _monthComparisonColumn(context.l10n.payments_thisMonth, thisMonth['totalAmount'] ?? 0,
                         (thisMonth['saleCount'] ?? 0).toInt()),
                   ),
                   Container(width: 1, height: 50, color: context.colors.textHint.withValues(alpha: AppAlpha.a20)),
                   Expanded(
-                    child: _monthComparisonColumn('Last Month', lastMonth['totalAmount'] ?? 0,
+                    child: _monthComparisonColumn(context.l10n.export_lastMonth, lastMonth['totalAmount'] ?? 0,
                         (lastMonth['saleCount'] ?? 0).toInt()),
                   ),
                 ],
@@ -2303,10 +2304,10 @@ class _FacilityScreenState extends State<FacilityScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text('Recent Sales', style: TextStyle(fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f15)),
+                  Text(context.l10n.facilities_recentSales, style: const TextStyle(fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f15)),
                   const SizedBox(height: AppSpacing.s12),
                   if (recentSales.isEmpty)
-                    Text('No sales recorded yet.', style: TextStyle(color: context.colors.textMuted, fontSize: AppFontSize.f13))
+                    Text(context.l10n.facilities_noSalesYet, style: TextStyle(color: context.colors.textMuted, fontSize: AppFontSize.f13))
                   else
                     ...recentSales.map((doc) {
                       final data = doc.data() as Map<String, dynamic>;
@@ -2319,7 +2320,7 @@ class _FacilityScreenState extends State<FacilityScreen> {
                           children: [
                             Expanded(
                               child: Text(
-                                clientName?.isNotEmpty == true ? clientName! : 'Walk-in sale',
+                                clientName?.isNotEmpty == true ? clientName! : context.l10n.facilities_walkInSale,
                                 style: const TextStyle(fontSize: AppFontSize.f13_5),
                               ),
                             ),
@@ -2349,7 +2350,7 @@ class _FacilityScreenState extends State<FacilityScreen> {
         Text(label, style: TextStyle(fontSize: AppFontSize.f12, color: context.colors.textMuted)),
         const SizedBox(height: AppSpacing.s4),
         Text('${AppDefaults.currencySymbol} ${_formatCompact(amount)}', style: const TextStyle(fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f18)),
-        Text('$count sale${count == 1 ? '' : 's'}', style: TextStyle(fontSize: AppFontSize.f12, color: context.colors.textMuted)),
+        Text(context.l10n.facilities_saleCount(count), style: TextStyle(fontSize: AppFontSize.f12, color: context.colors.textMuted)),
       ],
     );
   }
@@ -2366,7 +2367,7 @@ class _FacilityScreenState extends State<FacilityScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text('Activity Log', style: TextStyle(fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f15)),
+          Text(context.l10n.export_activityLog, style: const TextStyle(fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f15)),
           const SizedBox(height: AppSpacing.s12),
           if (facilityId != null) _buildActivityList(facilityId, limit: AppLimits.facilityActivityLog),
         ],
@@ -2396,34 +2397,33 @@ class _FacilityScreenState extends State<FacilityScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text('Facility Actions', style: TextStyle(fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f15)),
+              Text(context.l10n.facilities_actionsTitle, style: const TextStyle(fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f15)),
               const SizedBox(height: AppSpacing.s4),
               Text(
-                'Settings specific to this facility. For your account, notifications, '
-                'printer, currency, and app-wide preferences, use the main Settings screen.',
+                context.l10n.facilities_actionsIntro,
                 style: TextStyle(fontSize: AppFontSize.f12_5, color: context.colors.textMuted),
               ),
               const SizedBox(height: AppSpacing.s16),
               _settingsActionRow(
                 icon: Icons.edit_outlined,
-                label: 'Edit Facility Details',
-                subtitle: 'Name, type, logo, contact info, license, and more.',
+                label: context.l10n.facilities_editDetails,
+                subtitle: context.l10n.facilities_editDetailsHint,
                 onTap: () => _showEditFacilityDialog(facility),
               ),
               const Divider(height: 24),
               _settingsActionRow(
                 icon: isActive ? Icons.pause_circle_outline : Icons.play_circle_outline,
-                label: isActive ? 'Deactivate This Facility' : 'Reactivate This Facility',
+                label: isActive ? context.l10n.facilities_deactivateThis : context.l10n.facilities_reactivateThis,
                 subtitle: isActive
-                    ? 'Marks this facility as inactive. It stays in your list but is flagged as not operating.'
-                    : 'Marks this facility as active again.',
+                    ? context.l10n.facilities_deactivateHint
+                    : context.l10n.facilities_reactivateHint,
                 onTap: () => _confirmToggleFacilityStatus(facility, currentStatus: status),
               ),
               const Divider(height: 24),
               _settingsActionRow(
                 icon: Icons.delete_outline,
-                label: 'Delete This Facility',
-                subtitle: 'Permanently removes this facility and its data. This cannot be undone.',
+                label: context.l10n.facilities_deleteThis,
+                subtitle: context.l10n.facilities_deleteThisHint,
                 iconColor: context.colors.danger,
                 onTap: () => _showDeleteFacilityDialog(facility),
               ),
@@ -2446,11 +2446,11 @@ class _FacilityScreenState extends State<FacilityScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text('Activity Log Retention',
-                        style: TextStyle(fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f15)),
+                    Text(context.l10n.facilities_retentionTitle,
+                        style: const TextStyle(fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f15)),
                     const SizedBox(height: AppSpacing.s4),
                     Text(
-                      'Logs older than this are automatically deleted for this facility. Currently: $retentionDays days.',
+                      context.l10n.facilities_retentionText(retentionDays),
                       style: TextStyle(fontSize: AppFontSize.f12_5, color: context.colors.textMuted),
                     ),
                   ],
@@ -2461,7 +2461,7 @@ class _FacilityScreenState extends State<FacilityScreen> {
                     ? null
                     : () => _showFacilityRetentionDialog(facilityId, currentRetention: retentionDays),
                 style: OutlinedButton.styleFrom(foregroundColor: context.colors.primary),
-                child: const Text('Change'),
+                child: Text(context.l10n.common_change),
               ),
             ],
           ),
@@ -2482,12 +2482,11 @@ class _FacilityScreenState extends State<FacilityScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text('Debt Overdue Threshold',
-                        style: TextStyle(fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f15)),
+                    Text(context.l10n.facilities_overdueTitle,
+                        style: const TextStyle(fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f15)),
                     const SizedBox(height: AppSpacing.s4),
                     Text(
-                      'An unpaid debt is considered overdue once it is older than this many days. '
-                      'Currently: $debtOverdueDays days.',
+                      context.l10n.facilities_overdueText(debtOverdueDays),
                       style: TextStyle(fontSize: AppFontSize.f12_5, color: context.colors.textMuted),
                     ),
                   ],
@@ -2498,7 +2497,7 @@ class _FacilityScreenState extends State<FacilityScreen> {
                     ? null
                     : () => _showDebtOverdueDialog(facilityId, currentThreshold: debtOverdueDays),
                 style: OutlinedButton.styleFrom(foregroundColor: context.colors.primary),
-                child: const Text('Change'),
+                child: Text(context.l10n.common_change),
               ),
             ],
           ),
@@ -2548,17 +2547,17 @@ class _FacilityScreenState extends State<FacilityScreen> {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: Text(isActive ? 'Deactivate Facility?' : 'Reactivate Facility?'),
+        title: Text(isActive ? context.l10n.facilities_deactivateConfirmTitle : context.l10n.facilities_reactivateConfirmTitle),
         content: Text(
           isActive
-              ? '${facility['name']} will be marked Inactive. It stays in your facilities list but is flagged as not operating.'
-              : '${facility['name']} will be marked Active again.',
+              ? context.l10n.facilities_deactivateConfirm('${facility['name']}')
+              : context.l10n.facilities_reactivateConfirm('${facility['name']}'),
         ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancel')),
+          TextButton(onPressed: () => Navigator.pop(ctx, false), child: Text(context.l10n.common_cancel)),
           TextButton(
             onPressed: () => Navigator.pop(ctx, true),
-            child: Text(isActive ? 'Deactivate' : 'Reactivate'),
+            child: Text(isActive ? context.l10n.team_deactivate : context.l10n.team_reactivate),
           ),
         ],
       ),
@@ -2578,10 +2577,11 @@ class _FacilityScreenState extends State<FacilityScreen> {
           Fields.updatedAt: DateTime.now(),
         };
       });
-      AppFeedback.success('Facility marked $newStatus');
+      // Saved the stored status; the message shows its label.
+      AppFeedback.success(L10n.current.facilities_markedStatus(L10n.current.facilityStatusLabel(newStatus)));
     } catch (e) {
       if (!mounted) return;
-      AppFeedback.error("Couldn't update the status", error: e);
+      AppFeedback.error(L10n.current.team_updateStatusFailed, error: e);
     }
   }
 
@@ -2596,7 +2596,7 @@ class _FacilityScreenState extends State<FacilityScreen> {
     final selected = await showDialog<int>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Keep Logs For'),
+        title: Text(context.l10n.facilities_keepLogsFor),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: _retentionOptions.map((days) {
@@ -2604,13 +2604,13 @@ class _FacilityScreenState extends State<FacilityScreen> {
               value: days,
               groupValue: currentRetention,
               activeColor: context.colors.primary,
-              title: Text('$days days'),
+              title: Text(context.l10n.debtors_daysCount(days)),
               onChanged: (val) => Navigator.pop(ctx, val),
             );
           }).toList(),
         ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
+          TextButton(onPressed: () => Navigator.pop(ctx), child: Text(context.l10n.common_cancel)),
         ],
       ),
     );
@@ -2626,17 +2626,13 @@ class _FacilityScreenState extends State<FacilityScreen> {
       final confirmed = await showDialog<bool>(
         context: context,
         builder: (ctx) => AlertDialog(
-          title: const Text('Delete Older Logs Now?'),
-          content: Text(
-            'Logs are currently kept for $currentRetention days. Switching to $selected days '
-            'will permanently delete every log older than $selected days right now - '
-            'not just going forward. This cannot be undone.',
-          ),
+          title: Text(context.l10n.facilities_deleteOlderLogsTitle),
+          content: Text(context.l10n.facilities_deleteOlderLogsMessage(currentRetention, selected)),
           actions: [
-            TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancel')),
+            TextButton(onPressed: () => Navigator.pop(ctx, false), child: Text(context.l10n.common_cancel)),
             TextButton(
               onPressed: () => Navigator.pop(ctx, true),
-              child: Text('Delete and switch to $selected days', style: TextStyle(color: context.colors.danger)),
+              child: Text(context.l10n.facilities_deleteAndSwitch(selected), style: TextStyle(color: context.colors.danger)),
             ),
           ],
         ),
@@ -2672,16 +2668,16 @@ class _FacilityScreenState extends State<FacilityScreen> {
       });
       if (problem != null) {
         // explainFailure's text is written to be shown; it is the second line.
-        AppFeedback.warning("Saved. Logs older than $selected days will be hidden, but couldn't be deleted yet",
+        AppFeedback.warning(L10n.current.facilities_retentionSavedNotDeleted(selected),
             detail: problem);
       } else {
         AppFeedback.success(deleted > 0
-            ? 'Logs will now be kept for $selected days, $deleted older log${deleted == 1 ? '' : 's'} deleted'
-            : 'Logs will now be kept for $selected days');
+            ? L10n.current.facilities_retentionSavedDeleted(selected, deleted)
+            : L10n.current.facilities_retentionSaved(selected));
       }
     } catch (e) {
       if (!mounted) return;
-      AppFeedback.error("Couldn't save the setting", error: e);
+      AppFeedback.error(L10n.current.facilities_saveSettingFailed, error: e);
     }
   }
 
@@ -2691,7 +2687,7 @@ class _FacilityScreenState extends State<FacilityScreen> {
     final selected = await showDialog<int>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Overdue After'),
+        title: Text(context.l10n.facilities_overdueAfterTitle),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: _debtOverdueOptions.map((days) {
@@ -2699,13 +2695,13 @@ class _FacilityScreenState extends State<FacilityScreen> {
               value: days,
               groupValue: currentThreshold,
               activeColor: context.colors.primary,
-              title: Text('$days days'),
+              title: Text(context.l10n.debtors_daysCount(days)),
               onChanged: (val) => Navigator.pop(ctx, val),
             );
           }).toList(),
         ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
+          TextButton(onPressed: () => Navigator.pop(ctx), child: Text(context.l10n.common_cancel)),
         ],
       ),
     );
@@ -2725,10 +2721,10 @@ class _FacilityScreenState extends State<FacilityScreen> {
           'debtOverdueDays': selected,
         };
       });
-      AppFeedback.success('Debts are now overdue after $selected days');
+      AppFeedback.success(L10n.current.facilities_overdueSaved(selected));
     } catch (e) {
       if (!mounted) return;
-      AppFeedback.error("Couldn't save the setting", error: e);
+      AppFeedback.error(L10n.current.facilities_saveSettingFailed, error: e);
     }
   }
 
@@ -2776,18 +2772,23 @@ class _FacilityScreenState extends State<FacilityScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text('About this facility', style: TextStyle(fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f15)),
+          Text(context.l10n.facilities_aboutTitle, style: const TextStyle(fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f15)),
           const SizedBox(height: AppSpacing.s10),
           if (description != null && description.isNotEmpty) ...[
             Text(description, style: const TextStyle(fontSize: AppFontSize.f13_5, height: 1.5)),
             const SizedBox(height: AppSpacing.s14),
           ],
-          _aboutField('Facility Type', context.l10n.facilityTypeLabel(facility['type'] as String? ?? '-')),
-          _aboutField('Ownership', (details?['ownership'] as String?) ?? 'Not set'),
-          _aboutFieldWithChip('Status', (details?[Fields.status] as String?) ?? FacilityStatus.active.key),
-          _aboutField('Created By', _adminFullName ?? 'You'),
-          if (createdAt != null) _aboutField('Created On', _formatDateTime(createdAt)),
-          if (updatedAt != null) _aboutField('Last Updated', _formatDateTime(updatedAt)),
+          _aboutField(context.l10n.facilities_facilityType, context.l10n.facilityTypeLabel(facility['type'] as String? ?? '-')),
+          _aboutField(
+            context.l10n.facilities_ownership,
+            (details?['ownership'] as String?) != null
+                ? context.l10n.facilityOwnershipLabel(details!['ownership'] as String)
+                : context.l10n.facilities_notSet,
+          ),
+          _aboutFieldWithChip(context.l10n.common_status, (details?[Fields.status] as String?) ?? FacilityStatus.active.key),
+          _aboutField(context.l10n.facilities_createdBy, _adminFullName ?? context.l10n.team_you),
+          if (createdAt != null) _aboutField(context.l10n.services_createdOn, _formatDateTime(createdAt)),
+          if (updatedAt != null) _aboutField(context.l10n.facilities_lastUpdated, _formatDateTime(updatedAt)),
         ],
       ),
     );
@@ -2805,13 +2806,13 @@ class _FacilityScreenState extends State<FacilityScreen> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              const Text('Recent Activity', style: TextStyle(fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f15)),
+              Text(context.l10n.dashboard_recentActivity, style: const TextStyle(fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f15)),
               InkWell(
                 onTap: () => setState(() => _selectedTabIndex = 4),
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Text('View all activity',
+                    Text(context.l10n.facilities_viewAllActivity,
                         style: TextStyle(fontSize: AppFontSize.f12_5, color: context.colors.primary, fontWeight: AppFontWeight.semibold)),
                     Icon(Icons.arrow_forward, size: AppIconSize.i12, color: context.colors.primary),
                   ],
