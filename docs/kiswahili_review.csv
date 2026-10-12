@@ -1398,3 +1398,166 @@ sales_colTotal,Total ({currency}),Jumla ({currency}),Record Sale items table col
 sales_batchShort,Batch: {batch},Batch: {batch},Record Sale item card.,draft
 sales_expShort,Exp: {date},Inaisha: {date},Record Sale item card.,draft
 sales_notesHint,Add any additional notes (optional)...,Ongeza maelezo mengine (si lazima)...,Record Sale notes box.,draft
+common_dismiss,Dismiss,Funga,Tooltip on the close button of an error alert.,draft
+common_privacyPolicy,Privacy Policy,Sera ya Faragha,"Link to the privacy policy (login footer, register terms line).",draft
+common_termsOfService,Terms of Service,Masharti ya Huduma,"Link to the terms of service (login footer, register terms line).",draft
+common_logout,Logout,Toka,"Button that signs the person out (loading, error and no-facility screens).",draft
+common_logIn,Log in,Ingia,Button on the register screen that goes to the login screen.,draft
+common_inviteCode,Invite code,Msimbo wa mwaliko,"Field label for an invite code (register, no-facility screen).",draft
+common_facilityName,Facility name,Jina la kituo,Field label for a new facility's name.,draft
+common_facilityNameHint,e.g. Ukuli,mf. Ukuli,Example in the facility name field.,draft
+common_passwordsDoNotMatch,Passwords do not match,Nenosiri hazilingani,Register: the two passwords differ.,draft
+common_appSystem,{appName} System,Mfumo wa {appName},App title in the login and register top bar.,draft
+common_editProfile,Edit Profile,Hariri Wasifu,Edit Profile screen title.,draft
+login_tagline,Smart Business & Vet Services Monitor,Ufuatiliaji Mahiri wa Biashara na Huduma za Mifugo,"Login top bar, under the app title.",draft
+login_systemOnline,System Online,Mfumo Uko Hewani,Login top bar status pill.,draft
+login_copyright,© 2026 {appName} System. All rights reserved.,© 2026 Mfumo wa {appName}. Haki zote zimehifadhiwa.,Login footer.,draft
+login_welcomeTo,Welcome to,Karibu,"Login welcome card, above the app name.",draft
+login_stayUpdated,Stay updated with the latest news and announcements.,Pata habari na matangazo mapya kila wakati.,Login welcome card.,draft
+login_announcements,Announcements,Matangazo,Login announcements card title.,draft
+login_urgent,URGENT,DHARURA,Login announcement chip for an urgent announcement.,draft
+login_announcementFallbackTitle,Notice,Taarifa,Login announcement title when the announcement has none.,draft
+login_noAnnouncements,No announcements,Hakuna matangazo,"Login announcements card, empty.",draft
+login_allCaughtUp,You're all caught up!,Umeshaona yote!,"Login announcements card, empty.",draft
+login_trustTitle,Secure. Reliable. Always Connected.,Salama. Imara. Daima Mtandaoni.,Login trust footer.,draft
+login_trustBody,Your trusted partner in animal health and business growth.,Mshirika wako wa kuaminika katika afya ya mifugo na ukuaji wa biashara.,Login trust footer.,draft
+login_welcomeBack,Welcome back,Karibu tena,Login form title.,draft
+login_logIntoFacility,Log into your facility,Ingia kwenye kituo chako,Login form subtitle.,draft
+login_emailHint,Enter your email,Weka barua pepe yako,Login email field hint.,draft
+login_passwordHint,Enter your password,Weka nenosiri lako,Login password field hint.,draft
+login_minPasswordHint,Minimum 6 characters,Angalau herufi 6,"Login, under the password field.",draft
+login_rememberMe,Remember Me,Nikumbuke,Login checkbox: keep the email for next time.,draft
+login_forgotPassword,Forgot Password?,Umesahau Nenosiri?,Login link that sends a password reset email.,draft
+login_noAccount,"Don't have an account? ","Huna akaunti? ","Login, before the Register link (ends with a space).",draft
+login_register,Register,Jisajili,Login link to the register screen.,draft
+login_loginButton,Login,Ingia,Login button.,draft
+login_newBadge,NEW,MPYA,Badge on an announcement less than two days old.,draft
+login_credentialsTooShort,Enter your email and a password of at least {count} characters.,Weka barua pepe yako na nenosiri lenye angalau herufi {count}.,Login error: email empty or password too short.,draft
+login_slowSignIn,Signing in is taking longer than expected. Check your internet connection and try again.,Kuingia kunachukua muda mrefu kuliko kawaida. Angalia intaneti yako kisha ujaribu tena.,Login error when sign-in has not finished after a few seconds.,draft
+login_resetNeedsEmail,Enter your email to reset your password.,Weka barua pepe yako ili kubadilisha nenosiri.,Login: Forgot Password pressed with no email.,draft
+login_resetSent,"If an account exists for this email, a reset link has been sent. Check your inbox (and spam folder).","Kama akaunti ipo kwa barua pepe hii, kiungo cha kubadilisha nenosiri kimetumwa. Angalia sanduku la barua (na folda ya spam).",Login: after Forgot Password (the same whether or not the account exists).,draft
+login_resetFailed,Couldn't send the reset email. {reason},Imeshindwa kutuma barua pepe ya kubadilisha nenosiri. {reason},"Login: the reset email could not be sent; reason is a FriendlyError message.",draft
+register_inviteInvalid,"Invalid, expired, or already-used invite code","Msimbo wa mwaliko si sahihi, umeisha muda, au umeshatumika",Register: the invite code typed was not accepted.,draft
+register_inviteCheckFailed,Could not check this code - try again,Imeshindwa kukagua msimbo huu - jaribu tena,Register: the invite code lookup failed.,draft
+register_enterFacilityNameFirst,Enter the facility name first,Weka jina la kituo kwanza,Register: Add pressed with no facility name.,draft
+register_chooseFacilityTypeFirst,Choose the facility type first,Chagua aina ya kituo kwanza,Register: Add pressed with no facility type.,draft
+register_facilityLimit,You've reached the limit of {max} facilities per account,Umefikia kikomo cha vituo {max} kwa kila akaunti,Register: Add pressed at the facility limit.,draft
+register_addFacilityFailed,Couldn't add this facility,Imeshindwa kuongeza kituo hiki,Register: adding a facility to the list failed.,draft
+register_pwMin8,At least 8 characters,Angalau herufi 8,Register password check.,draft
+register_pwNeedsLetter,Add at least one letter,Ongeza angalau herufi moja,Register password check.,draft
+register_pwNeedsNumber,Add at least one number,Ongeza angalau namba moja,Register password check.,draft
+register_pwTooCommon,This password is too common - choose another,Nenosiri hili ni la kawaida mno - chagua jingine,Register password check.,draft
+register_addAtLeastOneFacility,Please add at least one facility,Tafadhali ongeza angalau kituo kimoja,Register error: an owner with no facility.,draft
+register_enterValidInvite,Enter a valid invite code,Weka msimbo sahihi wa mwaliko,Register error: no valid invite code.,draft
+register_profileUpdated,Profile updated,Wasifu umesasishwa,Edit Profile: saved.,draft
+register_accountRegistered,Account registered,Akaunti imesajiliwa,Register: owner account created.,draft
+register_verifyEmailSent,We've sent a verification link to your email. Check your Spam folder if it doesn't appear within a few minutes.,Tumetuma kiungo cha uthibitisho kwenye barua pepe yako. Angalia folda ya Spam kama hakitaonekana ndani ya dakika chache.,Register: second line after an owner account is created.,draft
+register_enterValidInviteFirst,Enter a valid invite code first,Weka msimbo sahihi wa mwaliko kwanza,Register error: assistant with no valid invite code.,draft
+register_assistantRegistered,"Assistant registered, waiting for admin approval","Msaidizi amesajiliwa, anasubiri idhini ya msimamizi",Register: assistant account created.,draft
+register_verifyEmailAlsoSent,We've also sent a verification link to your email. Check your Spam folder if it doesn't appear.,Pia tumetuma kiungo cha uthibitisho kwenye barua pepe yako. Angalia folda ya Spam kama hakitaonekana.,Register: second line after an assistant account is created.,draft
+register_emailAlreadyRegistered,This email is already registered,Barua pepe hii imeshasajiliwa,Register: email field error.,draft
+register_emailExists,"An account with this email already exists. If you're switching facilities, this email can't register a second time - ask your Platform Admin to add you to the new facility instead.","Tayari kuna akaunti yenye barua pepe hii. Kama unahamia kituo kingine, barua pepe hii haiwezi kusajiliwa mara ya pili - muombe Msimamizi wa Mfumo akuongeze kwenye kituo kipya badala yake.",Register error: the email is already used.,draft
+register_validEmailExample,"Enter a valid email address, like name@example.com","Weka barua pepe sahihi, kama name@example.com",Register: email field error.,draft
+register_validEmail,Enter a valid email address.,Weka barua pepe sahihi.,Register error: the email was refused.,draft
+register_strongerPasswordField,Choose a stronger password,Chagua nenosiri imara zaidi,Register: password field error.,draft
+register_strongerPassword,Choose a stronger password.,Chagua nenosiri imara zaidi.,Register error: the password was refused as weak.,draft
+register_createFailed,Couldn't create the account. {reason},Imeshindwa kufungua akaunti. {reason},"Register error; reason is a FriendlyError message.",draft
+register_createYourAccount,Create your account,Fungua akaunti yako,Register welcome panel title.,draft
+register_setUpApp,Set up {appName} for your agrovet or veterinary centre in a few minutes.,Andaa {appName} kwa agrovet au kituo chako cha mifugo kwa dakika chache.,Register welcome panel.,draft
+register_setUpCentre,Set up your agrovet or veterinary centre in a few minutes.,Andaa agrovet au kituo chako cha mifugo kwa dakika chache.,Register welcome strip (narrow screens).,draft
+register_benefitAllInOne,"Sales, stock, clients and debts in one place","Mauzo, stoo, wateja na madeni sehemu moja",Register welcome panel benefit.,draft
+register_benefitInvite,"Invite your team with secure, one-time codes",Alika timu yako kwa misimbo salama ya kutumika mara moja,Register welcome panel benefit.,draft
+register_benefitTrial,Every new facility starts with a trial period,Kila kituo kipya kinaanza na kipindi cha majaribio,Register welcome panel benefit.,draft
+register_alreadyHaveAccount,Already have an account?,Una akaunti tayari?,"Register welcome panel, above Log in.",draft
+register_createAccount,Create account,Fungua akaunti,Register submit button.,draft
+register_termsPrefix,"By creating an account you agree to our ","Kwa kufungua akaunti unakubali ","Register terms line, before the Terms of Service link (ends with a space).",draft
+register_termsAnd," and "," na ","Register terms line, between the two links (spaces on both sides).",draft
+register_saveChanges,Save changes,Hifadhi mabadiliko,Edit Profile submit button.,draft
+register_fieldFullName,Full name,Jina kamili,Register field label (also named in the fix-these-fields message).,draft
+register_fieldPhone,Phone number,Namba ya simu,Register field label (also named in the fix-these-fields message).,draft
+register_fieldConfirmPassword,Confirm password,Thibitisha nenosiri,Register field label (also named in the fix-these-fields message).,draft
+register_enterFullName,Enter your full name,Weka jina lako kamili,Register name field hint and error.,draft
+register_nameTooShort,Your name looks too short - enter your full name,Jina lako linaonekana fupi mno - weka jina lako kamili,Register name field error.,draft
+register_enterEmail,Enter your email address,Weka barua pepe yako,Register email field error.,draft
+register_enterPhone,Enter your phone number,Weka namba yako ya simu,Register phone field error.,draft
+register_validPhone,"Enter a valid phone number, like 0712 345 678","Weka namba sahihi ya simu, kama 0712 345 678",Register phone field error.,draft
+register_pressAddToInclude,"Press Add to include ""{name}"" before you register","Bonyeza Ongeza ili kujumuisha ""{name}"" kabla ya kujisajili",Register facility error: name and type filled but Add not pressed.,draft
+register_chooseTypeThenAdd,"Choose the facility type, then press Add","Chagua aina ya kituo, kisha bonyeza Ongeza",Register facility error.,draft
+register_addOneFacilityHow,"Add at least one facility: enter its name, choose its type, then press Add","Ongeza angalau kituo kimoja: weka jina lake, chagua aina yake, kisha bonyeza Ongeza",Register facility error.,draft
+register_enterInviteCode,Enter your invite code,Weka msimbo wako wa mwaliko,Register invite code field hint and error.,draft
+register_stillChecking,Still checking your invite code - try again in a moment,Bado tunakagua msimbo wako wa mwaliko - jaribu tena baada ya muda mfupi,Register invite code field error.,draft
+register_createPassword,Create a password,Tengeneza nenosiri,Register password field hint and error.,draft
+register_reenterToConfirm,Re-enter your password to confirm it,Andika nenosiri tena ili kulithibitisha,Register confirm field error.,draft
+register_fixFields,Please fix {count} fields: {fields}.,Tafadhali rekebisha sehemu {count}: {fields}.,"Register alert naming the fields with problems (count is 2 or more; fields is a comma list of field labels).",draft
+register_fixFieldsMore,Please fix {count} fields: {fields} and {more} more.,Tafadhali rekebisha sehemu {count}: {fields} na nyingine {more}.,"As register_fixFields, when more than three fields have problems.",draft
+register_saving,Saving...,Inahifadhi...,Edit Profile button while saving.,draft
+register_creating,Creating your account...,Inafungua akaunti yako...,Register button while creating the account.,draft
+register_personalDetails,Personal details,Taarifa binafsi,Register section title.,draft
+register_requiredNote,* Required,* Lazima,Register section note: fields marked * are required.,draft
+register_title,Title,Cheo,Register field label for Mr./Mrs./Ms./Dr. (the choices themselves are saved in the name and stay as typed).,draft
+register_emailHint,name@example.com,name@example.com,Register email field example.,draft
+register_phoneHint,07XX XXX XXX,07XX XXX XXX,Register phone field example.,draft
+register_profilePhoto,Profile photo,Picha ya wasifu,Register avatar picker.,draft
+register_tapToChangePhoto,Tap to change your photo,Gusa ili kubadilisha picha yako,Register avatar picker.,draft
+register_tapToAddPhoto,Optional - tap to add a photo,Si lazima - gusa ili kuongeza picha,Register avatar picker.,draft
+register_yourRole,Your role,Nafasi yako,Register section title.,draft
+register_roleCoAdminSubtitle,I help manage a facility,Ninasaidia kusimamia kituo,"Register role card, Co-admin.",draft
+register_roleAdminSubtitle,I own or manage a facility,Ninamiliki au ninasimamia kituo,"Register role card, Admin.",draft
+register_roleAssistantSubtitle,I have an invite code,Nina msimbo wa mwaliko,"Register role card, Assistant.",draft
+register_roleLocked,Your role can't be changed here.,Nafasi yako haiwezi kubadilishwa hapa.,"Edit Profile, under the role cards.",draft
+register_yourFacilities,Your facilities,Vituo vyako,Register section title (owner).,draft
+register_askAdminForInvite,Ask your facility Admin for an invite code to join their team.,Muombe Msimamizi wa kituo chako msimbo wa mwaliko ili ujiunge na timu yake.,"Register, assistant facility section.",draft
+register_joining,Joining: {facility},Unajiunga na: {facility},"Register, the facility an invite code leads to (facility is ""name (type)"").",draft
+register_facilityTypeAndCode,{type}  ·  Code: {code},{type}  ·  Msimbo: {code},Register facility tile: its type and its code.,draft
+register_addOneToContinue,Add at least one facility to continue.,Ongeza angalau kituo kimoja ili kuendelea.,"Register, owner facility section, empty.",draft
+register_useViewFacilities,"To add or change facilities, use View Facilities.","Kuongeza au kubadilisha vituo, tumia View Facilities.","Edit Profile, owner facility section (View Facilities is the menu item's name).",draft
+register_facilitiesAdded,{count} of {max} facilities added,Vituo {count} kati ya {max} vimeongezwa,"Register, owner facility section.",draft
+register_selectType,Select type,Chagua aina,Register facility type dropdown hint.,draft
+register_maxFacilitiesReached,Maximum of {max} facilities reached,Umefikia kikomo cha vituo {max},Register Add button tooltip at the limit.,draft
+register_accountSecurity,Account security,Usalama wa akaunti,Register section title.,draft
+register_passwordRule,"At least 8 characters, with a letter and a number","Angalau herufi 8, zikiwemo herufi na namba",Register password helper before typing.,draft
+register_looksGood,Looks good,Liko sawa,Register password helper when the password is acceptable.,draft
+register_reenterPassword,Re-enter your password,Andika nenosiri tena,Register confirm field hint.,draft
+register_passwordsMatch,Passwords match,Nenosiri zinalingana,Register confirm field helper.,draft
+entry_noProfile,"We couldn't find a profile for this account. If you have just registered, the registration did not finish - please register again. If this keeps happening, contact support.","Hatukupata wasifu wa akaunti hii. Kama umejisajili sasa hivi, usajili haukukamilika - tafadhali jisajili tena. Hili likiendelea kutokea, wasiliana na msaada.",Shown on the login screen after signing out an account with no profile.,draft
+entry_deactivated,This account has been deactivated. Ask your facility admin (or Platform Admin) to reactivate it before signing in again.,Akaunti hii imezimwa. Muombe msimamizi wa kituo chako (au Msimamizi wa Mfumo) aiwashe tena kabla ya kuingia tena.,Shown on the login screen after signing out a deactivated account.,draft
+entry_notActiveYet,Your account is not active yet. Please wait for admin approval.,Akaunti yako bado haijawashwa. Tafadhali subiri idhini ya msimamizi.,Shown on the login screen after signing out an assistant waiting for approval.,draft
+entry_requestNotApproved,Your request to join was not approved.,Ombi lako la kujiunga halikuidhinishwa.,No-facility screen notice for a rejected assistant (facility name unknown).,draft
+entry_requestNotApprovedFrom,Your request to join {facility} was not approved.,Ombi lako la kujiunga na {facility} halikuidhinishwa.,No-facility screen notice for a rejected assistant.,draft
+entry_slowLoad,Taking longer than expected to load.,Inachukua muda mrefu kuliko kawaida kufunguka.,"Loading screen, after a while.",draft
+entry_timeoutExplanation,This is taking longer than expected. Check your internet connection and try again.,Hili linachukua muda mrefu kuliko kawaida. Angalia intaneti yako kisha ujaribu tena.,Account loading error screen: timed out.,draft
+entry_unreachable,We couldn't reach the server. Check your internet connection and try again.,Hatukuweza kufikia seva. Angalia intaneti yako kisha ujaribu tena.,Account loading error screen: server unreachable.,draft
+entry_accessRefused,"Your account couldn't be opened because access was refused. Try again, and if it keeps happening, contact support.","Akaunti yako haikuweza kufunguliwa kwa sababu ruhusa ilikataliwa. Jaribu tena, na hili likiendelea, wasiliana na msaada.",Account loading error screen: permission denied.,draft
+entry_loadFailed,Something went wrong while loading your account details. Check your connection and try again.,Hitilafu imetokea wakati wa kupakia taarifa za akaunti yako. Angalia mtandao wako kisha ujaribu tena.,Account loading error screen: any other error.,draft
+entry_couldNotLoadTitle,Could Not Load Your Account,Imeshindwa Kufungua Akaunti Yako,Account loading error screen title.,draft
+noFacility_enterName,Enter the facility name.,Weka jina la kituo.,No-facility screen: Add facility pressed with no name.,draft
+noFacility_chooseType,Choose the facility type.,Chagua aina ya kituo.,No-facility screen: Add facility pressed with no type.,draft
+noFacility_wrongPassword,That password isn't right.,Nenosiri hilo si sahihi.,Delete-account dialog error.,draft
+noFacility_tooManyAttempts,Too many attempts. Wait a few minutes and try again.,Majaribio mengi mno. Subiri dakika chache kisha ujaribu tena.,Delete-account dialog error.,draft
+noFacility_unreachable,We couldn't reach the server. Check your connection and try again.,Hatukuweza kufikia seva. Angalia mtandao wako kisha ujaribu tena.,Delete-account dialog error.,draft
+noFacility_deleteFailed,Could not delete the account.,Imeshindwa kufuta akaunti.,Delete-account dialog error.,draft
+noFacility_deleteFailedWith,Could not delete the account: {error},Imeshindwa kufuta akaunti: {error},"Delete-account dialog error; error is the raw error text (kept as before).",draft
+noFacility_aFacility,a facility,kituo,Stands in for a missing facility name in noFacility_stillOwns.,draft
+noFacility_cantDeleteTitle,Can't delete the account yet,Akaunti haiwezi kufutwa bado,Dialog title: the account still owns a facility.,draft
+noFacility_stillOwns,"This account still owns ""{name}"", which isn't on your profile. Contact support so it can be sorted out first.","Akaunti hii bado inamiliki ""{name}"", ambacho hakiko kwenye wasifu wako. Wasiliana na msaada ili lishughulikiwe kwanza.",Dialog body: the account still owns a facility.,draft
+noFacility_deleteTitle,Delete your account?,Ufute akaunti yako?,Delete-account dialog title.,draft
+noFacility_deleteWarning,"This is permanent and cannot be undone. Your account and profile will be erased, and you will not be able to sign in with this email again.","Hili ni la kudumu na haliwezi kutenduliwa. Akaunti na wasifu wako vitafutwa, na hutaweza kuingia tena kwa barua pepe hii.",Delete-account dialog body.,draft
+noFacility_enterPasswordToConfirm,Enter your password to confirm.,Weka nenosiri lako ili kuthibitisha.,Delete-account dialog error.,draft
+noFacility_accountDeleted,Your account has been deleted.,Akaunti yako imefutwa.,Shown on the login screen after deleting the account.,draft
+noFacility_deleteAccount,Delete account,Futa akaunti,Delete-account dialog button.,draft
+noFacility_adding,Adding facility...,Inaongeza kituo...,No-facility screen button while adding.,draft
+noFacility_addFacility,Add facility,Ongeza kituo,No-facility screen button.,draft
+noFacility_deleteInstead,Delete my account instead,Futa akaunti yangu badala yake,No-facility screen link.,draft
+noFacility_codeInvalid,"That code is invalid, has expired, or has already been used.","Msimbo huo si sahihi, umeisha muda, au umeshatumika.",No-facility screen: invite code not accepted.,draft
+noFacility_requestSent,Request sent to {facility}. You can sign in once its admin approves you.,Ombi limetumwa kwa {facility}. Utaweza kuingia msimamizi wake akishakuidhinisha.,Shown on the login screen after asking to join a facility.,draft
+noFacility_titleAssistant,You're not in a facility right now,Kwa sasa hauko kwenye kituo chochote,No-facility screen title (assistant).,draft
+noFacility_titleAdmin,You don't have a facility right now,Kwa sasa huna kituo,No-facility screen title (owner).,draft
+noFacility_noticeMistake,"{notice} If you think that was a mistake, ask for a new invite code.","{notice} Kama unadhani hilo ni kosa, omba msimbo mpya wa mwaliko.","No-facility screen notice box; notice is entry_requestNotApproved or entry_requestNotApprovedFrom.",draft
+noFacility_bodyAssistant,"You may have been removed from your facility, or not added to one yet. Your account, name, phone number and photo are kept. To join a facility, enter an invite code from its admin.","Huenda umeondolewa kwenye kituo chako, au bado hujaongezwa kwenye kituo. Akaunti, jina, namba ya simu na picha yako vimehifadhiwa. Ili ujiunge na kituo, weka msimbo wa mwaliko kutoka kwa msimamizi wake.",No-facility screen body (assistant).,draft
+noFacility_bodyAdmin,"Your account is kept. Add a facility to carry on, or delete your account if you no longer need it.","Akaunti yako imehifadhiwa. Ongeza kituo ili uendelee, au futa akaunti yako kama huihitaji tena.",No-facility screen body (owner).,draft
+noFacility_inviteHint,e.g. JK7-2P4,mf. JK7-2P4,No-facility screen invite code example.,draft
+noFacility_askingToJoin,You'll be asking to join: {facility},Utaomba kujiunga na: {facility},No-facility screen: the facility the code leads to (no type known).,draft
+noFacility_askingToJoinWithType,You'll be asking to join: {facility} ({type}),Utaomba kujiunga na: {facility} ({type}),"No-facility screen: the facility the code leads to, with its type.",draft
+noFacility_sending,Sending your request...,Inatuma ombi lako...,No-facility screen button while sending.,draft
+noFacility_requestToJoin,Request to join,Omba kujiunga,No-facility screen button.,draft
+noFacility_approvalNote,"The facility's admin has to approve you, as with any new assistant. Or ask your previous admin to add you back.","Msimamizi wa kituo lazima akuidhinishe, kama ilivyo kwa msaidizi yeyote mpya. Au muombe msimamizi wako wa awali akurudishe.","No-facility screen, under Request to join.",draft
