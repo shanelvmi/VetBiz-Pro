@@ -230,14 +230,13 @@ class _ServicesScreenState extends State<ServicesScreen> {
                                   const SizedBox(width: AppSpacing.s8),
                                   Expanded(
                                     child: Text(
-                                      '${controller.newRecordsAvailable} new service'
-                                      '${controller.newRecordsAvailable == 1 ? '' : 's'} available',
+                                      context.l10n.services_newRecords(controller.newRecordsAvailable),
                                       style: TextStyle(fontSize: AppFontSize.f13, color: context.colors.primary),
                                     ),
                                   ),
                                   TextButton(
                                     onPressed: () => serviceProvider.servicesListController.refreshSession(),
-                                    child: const Text('Refresh'),
+                                    child: Text(context.l10n.common_refresh),
                                   ),
                                 ],
                               ),
@@ -255,7 +254,7 @@ class _ServicesScreenState extends State<ServicesScreen> {
                                             Icon(Icons.medical_services_outlined, size: AppIconSize.i64, color: context.colors.textDisabled),
                                             const SizedBox(height: AppSpacing.s16),
                                             Text(
-                                              _searchQuery.isEmpty ? 'No services yet' : 'No services match your filters',
+                                              _searchQuery.isEmpty ? context.l10n.services_empty : context.l10n.services_emptyFiltered,
                                               style: TextStyle(fontSize: AppFontSize.f18, color: context.colors.textMuted),
                                             ),
                                           ],
@@ -296,10 +295,10 @@ class _ServicesScreenState extends State<ServicesScreen> {
     final nonCashAmount = summary?['nonCashAmount'] ?? 0.0;
 
     final metrics = [
-      ('Total Services', '$count', Icons.medical_services_outlined, context.colors.primary),
-      ('Paid Amount', Money.format(paidAmount), Icons.account_balance_wallet_outlined, context.colors.info),
-      ('Outstanding', Money.format(outstanding), Icons.pending_actions_outlined, context.colors.accent),
-      ('Digital Payments', Money.format(nonCashAmount), Icons.phone_iphone_outlined, context.colors.success),
+      (context.l10n.services_totalServices, '$count', Icons.medical_services_outlined, context.colors.primary),
+      (context.l10n.services_paidAmount, Money.format(paidAmount), Icons.account_balance_wallet_outlined, context.colors.info),
+      (context.l10n.payments_outstanding, Money.format(outstanding), Icons.pending_actions_outlined, context.colors.accent),
+      (context.l10n.services_digitalPayments, Money.format(nonCashAmount), Icons.phone_iphone_outlined, context.colors.success),
     ];
 
     return LayoutBuilder(
@@ -363,7 +362,7 @@ class _ServicesScreenState extends State<ServicesScreen> {
             ),
             const SizedBox(height: AppSpacing.s4),
             Text(label, style: TextStyle(fontSize: AppFontSize.f11_5, color: context.colors.textMuted)),
-            Text('Last 30 days', style: TextStyle(fontSize: AppFontSize.f10_5, color: context.colors.textDisabled)),
+            Text(context.l10n.services_last30, style: TextStyle(fontSize: AppFontSize.f10_5, color: context.colors.textDisabled)),
           ],
         ),
       ),
@@ -380,8 +379,8 @@ class _ServicesScreenState extends State<ServicesScreen> {
       title: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Text('Service Records', style: TextStyle(fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f19, color: context.colors.textPrimary)),
-          Text('Track all services provided to your clients', style: TextStyle(fontSize: AppFontSize.f12, color: context.colors.textSecondary)),
+          Text(context.l10n.common_serviceRecords, style: TextStyle(fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f19, color: context.colors.textPrimary)),
+          Text(context.l10n.services_subtitle, style: TextStyle(fontSize: AppFontSize.f12, color: context.colors.textSecondary)),
         ],
       ),
       actions: [
@@ -397,7 +396,7 @@ class _ServicesScreenState extends State<ServicesScreen> {
               },
             ),
             icon: const Icon(Icons.add, size: AppIconSize.i18),
-            label: const Text('Record Visit'),
+            label: Text(context.l10n.services_recordVisit),
             style: ElevatedButton.styleFrom(
               backgroundColor: context.colors.primary,
               foregroundColor: context.colors.background,
@@ -418,7 +417,7 @@ class _ServicesScreenState extends State<ServicesScreen> {
         Navigator.push(context, MaterialPageRoute(builder: (_) => const ServicesArchiveScreen()));
       },
       icon: const Icon(Icons.archive_outlined, size: AppIconSize.i16),
-      label: const Text('Archive'),
+      label: Text(context.l10n.services_archive),
       style: OutlinedButton.styleFrom(
         padding: const EdgeInsets.symmetric(horizontal: AppSpacing.s14, vertical: AppSpacing.s12),
         side: BorderSide(color: context.colors.textHint.withValues(alpha: AppAlpha.a30)),
@@ -430,6 +429,17 @@ class _ServicesScreenState extends State<ServicesScreen> {
 
   static const List<String> _dateFilterOptions = ['All time', 'Today', 'Last 7 days', 'Last 30 days', 'This month'];
   static const List<String> _statusFilterOptions = ['All', ...PaymentStatus.values];
+
+  // The options are the values: ServiceProvider compares them. This is
+  // only what the dropdown shows.
+  String _dateFilterLabel(String value) => switch (value) {
+        'All time' => context.l10n.clients_allTime,
+        'Today' => context.l10n.common_today,
+        'Last 7 days' => context.l10n.services_last7,
+        'Last 30 days' => context.l10n.services_last30,
+        'This month' => context.l10n.services_thisMonth,
+        _ => value,
+      };
 
   Widget _buildFiltersToolbar() {
     final border = OutlineInputBorder(
@@ -446,7 +456,7 @@ class _ServicesScreenState extends State<ServicesScreen> {
           child: TextField(
             controller: _searchController,
             decoration: InputDecoration(
-              hintText: 'Search service by client, category, note...',
+              hintText: context.l10n.services_searchHint,
               hintStyle: const TextStyle(fontSize: AppFontSize.f13),
               prefixIcon: const Icon(Icons.search, size: AppIconSize.i20),
               filled: true,
@@ -478,7 +488,8 @@ class _ServicesScreenState extends State<ServicesScreen> {
         _toolbarDropdown<String>(
           value: _dateFilter,
           items: _dateFilterOptions,
-          label: 'Date',
+          label: context.l10n.common_date,
+          display: _dateFilterLabel,
           onChanged: (val) {
             setState(() => _dateFilter = val);
             _openServicesListSession();
@@ -488,7 +499,7 @@ class _ServicesScreenState extends State<ServicesScreen> {
         _toolbarDropdown<String>(
           value: _selectedCategory,
           items: ['All', ...kServiceCategories],
-          label: 'Category',
+          label: context.l10n.common_category,
           display: (v) => v == 'All' ? context.l10n.common_all : context.l10n.serviceCategoryLabel(v),
           onChanged: (val) {
             setState(() => _selectedCategory = val);
@@ -499,7 +510,7 @@ class _ServicesScreenState extends State<ServicesScreen> {
         _toolbarDropdown<String>(
           value: _statusFilter,
           items: _statusFilterOptions,
-          label: 'Status',
+          label: context.l10n.common_status,
           display: (v) => v == 'All' ? context.l10n.common_all : context.l10n.paymentStatusLabel(v),
           onChanged: (val) {
             setState(() => _statusFilter = val);
@@ -520,7 +531,7 @@ class _ServicesScreenState extends State<ServicesScreen> {
               });
               _openServicesListSession();
             },
-            child: const Text('Reset'),
+            child: Text(context.l10n.common_reset),
           ),
         ],
       ],
@@ -548,7 +559,9 @@ class _ServicesScreenState extends State<ServicesScreen> {
           value: value,
           icon: Icon(Icons.arrow_drop_down, size: AppIconSize.i18, color: context.colors.primary),
           style: TextStyle(color: context.colors.textPrimary, fontSize: AppFontSize.f13),
-          items: items.map((v) => DropdownMenuItem(value: v, child: Text('$label: ${display?.call(v) ?? v}'))).toList(),
+          items: items
+              .map((v) => DropdownMenuItem(value: v, child: Text(context.l10n.common_filterValue(label, display?.call(v) ?? '$v'))))
+              .toList(),
           onChanged: (val) {
             if (val != null) onChanged(val);
           },
@@ -570,13 +583,13 @@ class _ServicesScreenState extends State<ServicesScreen> {
           decoration: BoxDecoration(border: Border(bottom: BorderSide(color: context.colors.textHint.withValues(alpha: AppAlpha.a20)))),
           child: Row(
             children: [
-              _headerCell('Date', flex: 3),
-              _headerCell('Service / Category', flex: 3),
-              _headerCell('Client', flex: 2),
-              _headerCell('Provider', flex: 2),
-              _headerCell('Amount', flex: 2),
-              _headerCell('Status', flex: 2),
-              _headerCell('Payment Method', flex: 2),
+              _headerCell(context.l10n.common_date, flex: 3),
+              _headerCell(context.l10n.services_colServiceCategory, flex: 3),
+              _headerCell(context.l10n.clients_client, flex: 2),
+              _headerCell(context.l10n.services_colProvider, flex: 2),
+              _headerCell(context.l10n.common_amount, flex: 2),
+              _headerCell(context.l10n.common_status, flex: 2),
+              _headerCell(context.l10n.payments_method, flex: 2),
               _headerCell('', flex: 1),
             ],
           ),
@@ -645,11 +658,11 @@ class _ServicesScreenState extends State<ServicesScreen> {
             ),
             Expanded(
               flex: 2,
-              child: Text(service.clientName ?? 'Walk-in', style: const TextStyle(fontSize: AppFontSize.f13), maxLines: 1, overflow: TextOverflow.ellipsis),
+              child: Text(service.clientName ?? context.l10n.common_walkIn, style: const TextStyle(fontSize: AppFontSize.f13), maxLines: 1, overflow: TextOverflow.ellipsis),
             ),
             Expanded(
               flex: 2,
-              child: Text(service.providedByName ?? 'Unknown', style: const TextStyle(fontSize: AppFontSize.f13), maxLines: 1, overflow: TextOverflow.ellipsis),
+              child: Text(service.providedByName ?? context.l10n.common_unknown, style: const TextStyle(fontSize: AppFontSize.f13), maxLines: 1, overflow: TextOverflow.ellipsis),
             ),
             Expanded(
               flex: 2,
@@ -684,10 +697,10 @@ class _ServicesScreenState extends State<ServicesScreen> {
                   }
                 },
                 itemBuilder: (context) => [
-                  const PopupMenuItem(value: 'view', child: Text('View Details')),
-                  const PopupMenuItem(value: 'edit', child: Text('Edit')),
+                  PopupMenuItem(value: 'view', child: Text(context.l10n.common_viewDetails)),
+                  PopupMenuItem(value: 'edit', child: Text(context.l10n.common_edit)),
                   if (Provider.of<UserRoleProvider>(context, listen: false).isAdmin)
-                    PopupMenuItem(value: 'delete', child: Text('Delete', style: TextStyle(color: context.colors.dangerSoft))),
+                    PopupMenuItem(value: 'delete', child: Text(context.l10n.common_delete, style: TextStyle(color: context.colors.dangerSoft))),
                 ],
               ),
             ),
@@ -715,7 +728,7 @@ class _ServicesScreenState extends State<ServicesScreen> {
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           Text(
-            itemCount == 0 ? 'No services' : 'Showing $pageStart to $pageEnd',
+            itemCount == 0 ? context.l10n.services_none : context.l10n.common_showingRange(pageStart, pageEnd),
             style: TextStyle(fontSize: AppFontSize.f12_5, color: context.colors.textMuted),
           ),
           Row(
@@ -724,7 +737,7 @@ class _ServicesScreenState extends State<ServicesScreen> {
                 child: DropdownButton<int>(
                   value: pageSize,
                   items: const [10, 25, 50]
-                      .map((n) => DropdownMenuItem(value: n, child: Text('$n per page')))
+                      .map((n) => DropdownMenuItem(value: n, child: Text(context.l10n.common_perPage(n))))
                       .toList(),
                   onChanged: (val) {
                     if (val != null) serviceProvider.servicesListController.setPageSize(val);
@@ -736,7 +749,7 @@ class _ServicesScreenState extends State<ServicesScreen> {
                 icon: const Icon(Icons.chevron_left),
                 onPressed: controller.hasPreviousPage ? () => controller.goToPreviousPage() : null,
               ),
-              Text('Page ${controller.currentPage}', style: const TextStyle(fontSize: AppFontSize.f13)),
+              Text(context.l10n.common_page(controller.currentPage), style: const TextStyle(fontSize: AppFontSize.f13)),
               IconButton(
                 icon: controller.isLoading
                     ? const SizedBox(width: AppSpacing.s16, height: 16, child: CircularProgressIndicator(strokeWidth: 2))
@@ -758,15 +771,13 @@ class _ServicesScreenState extends State<ServicesScreen> {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Delete Service?'),
-        content: const Text(
-            "This moves the service to Trash and puts its stock back, removes its debt and updates the client's balance. "
-            'Restoring from Trash brings back the record only.'),
+        title: Text(context.l10n.services_deleteTitle),
+        content: Text(context.l10n.services_deleteBody),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancel')),
+          TextButton(onPressed: () => Navigator.pop(ctx, false), child: Text(context.l10n.common_cancel)),
           TextButton(
             onPressed: () => Navigator.pop(ctx, true),
-            child: Text('Delete', style: TextStyle(color: context.colors.dangerSoft)),
+            child: Text(context.l10n.common_delete, style: TextStyle(color: context.colors.dangerSoft)),
           ),
         ],
       ),
@@ -781,9 +792,9 @@ class _ServicesScreenState extends State<ServicesScreen> {
       // No Undo: deleteService also puts stock back, removes the debt and
       // hard-deletes the service's expenses, and a restore reverses none of
       // that (design-open-questions.md, "Trash and restore"). Same as sales.
-      AppFeedback.success('Service moved to Trash');
+      AppFeedback.success(L10n.current.services_movedToTrash);
     } catch (e, st) {
-      AppFeedback.error("Couldn't delete the service", error: e, stackTrace: st);
+      AppFeedback.error(L10n.current.services_deleteFailed, error: e, stackTrace: st);
     }
   }
 
@@ -804,7 +815,7 @@ class _ServicesScreenState extends State<ServicesScreen> {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                const Text('Service Details', style: TextStyle(fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f16)),
+                Text(context.l10n.services_detailsTitle, style: TextStyle(fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f16)),
                 IconButton(
                   icon: const Icon(Icons.close, size: AppIconSize.i20),
                   onPressed: () => setState(() => _selectedService = null),
@@ -842,27 +853,29 @@ class _ServicesScreenState extends State<ServicesScreen> {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      const Text('Payment Information', style: TextStyle(fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f13_5)),
+                      Text(context.l10n.services_paymentInfo, style: TextStyle(fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f13_5)),
                       Text(context.l10n.paymentStatusLabel(status), style: TextStyle(color: statusColor, fontSize: AppFontSize.f12_5, fontWeight: AppFontWeight.semibold)),
                     ],
                   ),
                   const SizedBox(height: AppSpacing.s10),
-                  _totalsRow('Paid Amount', Money.format(service.totalPaid)),
-                  _totalsRow('Payment Method', context.l10n.paymentMethodLabel(service.paymentMethod ?? 'Not recorded')),
+                  _totalsRow(context.l10n.services_paidAmount, Money.format(service.totalPaid)),
+                  _totalsRow(context.l10n.payments_method,
+                      context.l10n.paymentMethodLabel(service.paymentMethod ?? context.l10n.team_notRecorded)),
                   if (service.transactionId != null && service.transactionId!.isNotEmpty)
-                    _totalsRow('Transaction ID', service.transactionId!),
-                  _totalsRow('Paid On', service.updatedAt != null ? dateOnlyFormatter.format(service.updatedAt!) : '-'),
+                    _totalsRow(context.l10n.services_transactionId, service.transactionId!),
+                  _totalsRow(context.l10n.services_paidOn, service.updatedAt != null ? dateOnlyFormatter.format(service.updatedAt!) : '-'),
                 ],
               ),
             ),
             const SizedBox(height: AppSpacing.s20),
-            _detailField(Icons.category_outlined, 'Category', context.l10n.serviceCategoryLabel(service.category)),
-            _detailField(Icons.person_outline, 'Client', service.clientName ?? 'Walk-in', subtitle: client?.phone),
-            _detailField(Icons.badge_outlined, 'Provided By', service.providedByName ?? 'Unknown'),
-            _detailField(Icons.calendar_today_outlined, 'Service Date', dateOnlyFormatter.format(serviceDate)),
-            _detailField(Icons.edit_note_outlined, 'Notes', service.description.isNotEmpty ? service.description : '-'),
+            _detailField(Icons.category_outlined, context.l10n.common_category, context.l10n.serviceCategoryLabel(service.category)),
+            _detailField(Icons.person_outline, context.l10n.clients_client, service.clientName ?? context.l10n.common_walkIn,
+                subtitle: client?.phone),
+            _detailField(Icons.badge_outlined, context.l10n.services_providedBy, service.providedByName ?? context.l10n.common_unknown),
+            _detailField(Icons.calendar_today_outlined, context.l10n.services_serviceDate, dateOnlyFormatter.format(serviceDate)),
+            _detailField(Icons.edit_note_outlined, context.l10n.common_notes, service.description.isNotEmpty ? service.description : '-'),
             if (service.updatedAt != null)
-              _detailField(Icons.history_outlined, 'Created On',
+              _detailField(Icons.history_outlined, context.l10n.services_createdOn,
                   '${dateOnlyFormatter.format(service.updatedAt!)}, ${timeOnlyFormatter.format(service.updatedAt!)}'),
             const SizedBox(height: AppSpacing.s20),
             Row(
@@ -873,7 +886,7 @@ class _ServicesScreenState extends State<ServicesScreen> {
                       Navigator.push(context, MaterialPageRoute(builder: (_) => ServiceReceiptPreviewScreen(service: service)));
                     },
                     icon: const Icon(Icons.print_outlined, size: AppIconSize.i16),
-                    label: const Text('Print'),
+                    label: Text(context.l10n.common_print),
                   ),
                 ),
                 const SizedBox(width: AppSpacing.s8),
@@ -883,7 +896,7 @@ class _ServicesScreenState extends State<ServicesScreen> {
                       showAddEditServiceScreen(context, service: service);
                     },
                     icon: const Icon(Icons.edit_outlined, size: AppIconSize.i16),
-                    label: const Text('Edit'),
+                    label: Text(context.l10n.common_edit),
                   ),
                 ),
                 if (Provider.of<UserRoleProvider>(context).isAdmin) ...[
@@ -892,7 +905,7 @@ class _ServicesScreenState extends State<ServicesScreen> {
                     child: OutlinedButton.icon(
                       onPressed: () => _confirmDeleteService(service),
                       icon: Icon(Icons.delete_outline, size: AppIconSize.i16, color: context.colors.dangerSoft),
-                      label: Text('Delete', style: TextStyle(color: context.colors.dangerSoft)),
+                      label: Text(context.l10n.common_delete, style: TextStyle(color: context.colors.dangerSoft)),
                       style: OutlinedButton.styleFrom(side: BorderSide(color: context.colors.danger.withValues(alpha: AppAlpha.a50))),
                     ),
                   ),

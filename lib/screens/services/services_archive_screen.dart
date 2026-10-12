@@ -266,12 +266,12 @@ class _ServicesArchiveScreenState extends State<ServicesArchiveScreen> {
                                     Icon(Icons.archive_outlined, size: AppIconSize.i64, color: context.colors.textDisabled),
                                     const SizedBox(height: AppSpacing.s16),
                                     Text(
-                                      'No archived services found',
+                                      context.l10n.services_archiveEmpty,
                                       style: TextStyle(fontSize: AppFontSize.f18, color: context.colors.textMuted),
                                     ),
                                     const SizedBox(height: AppSpacing.s8),
                                     Text(
-                                      'Try a different search, category, or date range',
+                                      context.l10n.services_archiveEmptyHint,
                                       style: TextStyle(fontSize: AppFontSize.f14, color: context.colors.textHint),
                                     ),
                                   ],
@@ -310,8 +310,8 @@ class _ServicesArchiveScreenState extends State<ServicesArchiveScreen> {
       title: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Text('Services Archive', style: TextStyle(fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f19, color: context.colors.textPrimary)),
-          Text('Services archived after $_archiveCutoffDays days', style: TextStyle(fontSize: AppFontSize.f12, color: context.colors.textSecondary)),
+          Text(context.l10n.services_archiveTitle, style: TextStyle(fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f19, color: context.colors.textPrimary)),
+          Text(context.l10n.services_archiveSubtitle(_archiveCutoffDays), style: TextStyle(fontSize: AppFontSize.f12, color: context.colors.textSecondary)),
         ],
       ),
       actions: [
@@ -320,7 +320,7 @@ class _ServicesArchiveScreenState extends State<ServicesArchiveScreen> {
           child: OutlinedButton.icon(
             onPressed: _showSearchDialog,
             icon: const Icon(Icons.date_range_outlined, size: AppIconSize.i16),
-            label: const Text('Date Range'),
+            label: Text(context.l10n.export_dateRange),
           ),
         ),
       ],
@@ -343,12 +343,12 @@ class _ServicesArchiveScreenState extends State<ServicesArchiveScreen> {
           Expanded(
             child: Text(
               _searchStart != null && _searchEnd != null
-                  ? 'Period: ${AppDateFormat.date.format(_searchStart!)} \u2013 ${AppDateFormat.date.format(_searchEnd!)}'
-                  : 'Archived services',
+                  ? context.l10n.services_archivePeriod(AppDateFormat.date.format(_searchStart!), AppDateFormat.date.format(_searchEnd!))
+                  : context.l10n.services_archivedServices,
               style: TextStyle(fontSize: AppFontSize.f12_5, color: context.colors.textSoft),
             ),
           ),
-          Text('$foundCount found', style: TextStyle(fontSize: AppFontSize.f12_5, fontWeight: AppFontWeight.semibold, color: context.colors.primary)),
+          Text(context.l10n.services_foundCount(foundCount), style: TextStyle(fontSize: AppFontSize.f12_5, fontWeight: AppFontWeight.semibold, color: context.colors.primary)),
           const SizedBox(width: AppSpacing.s12),
           Text(Money.format(totalAmount), style: TextStyle(fontSize: AppFontSize.f12_5, fontWeight: AppFontWeight.bold, color: context.colors.primary)),
         ],
@@ -404,7 +404,7 @@ class _ServicesArchiveScreenState extends State<ServicesArchiveScreen> {
     return TextField(
       controller: _searchController,
       decoration: InputDecoration(
-        hintText: 'Search service by client, category, note...',
+        hintText: context.l10n.services_searchHint,
         hintStyle: const TextStyle(fontSize: AppFontSize.f13),
         prefixIcon: const Icon(Icons.search, size: AppIconSize.i20),
         filled: true,
@@ -442,13 +442,13 @@ class _ServicesArchiveScreenState extends State<ServicesArchiveScreen> {
           decoration: BoxDecoration(border: Border(bottom: BorderSide(color: context.colors.textHint.withValues(alpha: AppAlpha.a20)))),
           child: Row(
             children: [
-              _headerCell('Date', flex: 3),
-              _headerCell('Service / Category', flex: 3),
-              _headerCell('Client', flex: 2),
-              _headerCell('Provider', flex: 2),
-              _headerCell('Amount', flex: 2),
-              _headerCell('Status', flex: 2),
-              _headerCell('Payment Method', flex: 2),
+              _headerCell(context.l10n.common_date, flex: 3),
+              _headerCell(context.l10n.services_colServiceCategory, flex: 3),
+              _headerCell(context.l10n.clients_client, flex: 2),
+              _headerCell(context.l10n.services_colProvider, flex: 2),
+              _headerCell(context.l10n.common_amount, flex: 2),
+              _headerCell(context.l10n.common_status, flex: 2),
+              _headerCell(context.l10n.payments_method, flex: 2),
             ],
           ),
         ),
@@ -505,7 +505,7 @@ class _ServicesArchiveScreenState extends State<ServicesArchiveScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text((service['name'] as String?) ?? 'Service',
+                  Text((service['name'] as String?) ?? context.l10n.services_fallbackName,
                       style: const TextStyle(fontSize: AppFontSize.f13, fontWeight: AppFontWeight.semibold),
                       maxLines: 1, overflow: TextOverflow.ellipsis),
                   const SizedBox(height: AppSpacing.s3),
@@ -524,7 +524,7 @@ class _ServicesArchiveScreenState extends State<ServicesArchiveScreen> {
                   if (description.isNotEmpty)
                     Padding(
                       padding: const EdgeInsets.only(top: AppSpacing.s3),
-                      child: Text('Notes: $description',
+                      child: Text(context.l10n.services_notesValue(description),
                           style: TextStyle(fontSize: AppFontSize.f11_5, color: context.colors.textMuted),
                           maxLines: 1, overflow: TextOverflow.ellipsis),
                     ),
@@ -533,11 +533,11 @@ class _ServicesArchiveScreenState extends State<ServicesArchiveScreen> {
             ),
             Expanded(
               flex: 2,
-              child: Text(service['clientName'] ?? 'Walk-in', style: const TextStyle(fontSize: AppFontSize.f13), maxLines: 1, overflow: TextOverflow.ellipsis),
+              child: Text(service['clientName'] ?? context.l10n.common_walkIn, style: const TextStyle(fontSize: AppFontSize.f13), maxLines: 1, overflow: TextOverflow.ellipsis),
             ),
             Expanded(
               flex: 2,
-              child: Text(service['providedByName'] ?? 'Unknown', style: const TextStyle(fontSize: AppFontSize.f13), maxLines: 1, overflow: TextOverflow.ellipsis),
+              child: Text(service['providedByName'] ?? context.l10n.common_unknown, style: const TextStyle(fontSize: AppFontSize.f13), maxLines: 1, overflow: TextOverflow.ellipsis),
             ),
             Expanded(
               flex: 2,
@@ -582,8 +582,8 @@ class _ServicesArchiveScreenState extends State<ServicesArchiveScreen> {
         children: [
           Text(
             totalFiltered == 0
-                ? 'No services'
-                : 'Showing ${pageStart + 1} to $pageEnd of $totalFiltered${_hasMore ? '+' : ''} services',
+                ? context.l10n.services_none
+                : context.l10n.services_archiveShowing(pageStart + 1, pageEnd, totalFiltered, _hasMore ? '+' : ''),
             style: TextStyle(fontSize: AppFontSize.f12_5, color: context.colors.textMuted),
           ),
           Row(
@@ -592,7 +592,7 @@ class _ServicesArchiveScreenState extends State<ServicesArchiveScreen> {
                 child: DropdownButton<int>(
                   value: _displayPageSize,
                   items: const [10, 25, 50]
-                      .map((n) => DropdownMenuItem(value: n, child: Text('$n per page')))
+                      .map((n) => DropdownMenuItem(value: n, child: Text(context.l10n.common_perPage(n))))
                       .toList(),
                   onChanged: (val) {
                     if (val != null) {
@@ -609,7 +609,7 @@ class _ServicesArchiveScreenState extends State<ServicesArchiveScreen> {
                 icon: const Icon(Icons.chevron_left),
                 onPressed: _currentPageIndex > 0 ? () => setState(() => _currentPageIndex--) : null,
               ),
-              Text('Page ${_currentPageIndex + 1} of $totalPages', style: const TextStyle(fontSize: AppFontSize.f13)),
+              Text(context.l10n.services_pageOf(_currentPageIndex + 1, totalPages), style: const TextStyle(fontSize: AppFontSize.f13)),
               IconButton(
                 icon: _isLoadingMore
                     ? const SizedBox(width: AppSpacing.s16, height: 16, child: CircularProgressIndicator(strokeWidth: 2))
@@ -654,7 +654,7 @@ class _ServicesArchiveScreenState extends State<ServicesArchiveScreen> {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                const Text('Service Details', style: TextStyle(fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f16)),
+                Text(context.l10n.services_detailsTitle, style: TextStyle(fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f16)),
                 IconButton(
                   icon: const Icon(Icons.close, size: AppIconSize.i20),
                   onPressed: () => setState(() => _selectedService = null),
@@ -692,33 +692,34 @@ class _ServicesArchiveScreenState extends State<ServicesArchiveScreen> {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      const Text('Payment Information', style: TextStyle(fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f13_5)),
+                      Text(context.l10n.services_paymentInfo, style: TextStyle(fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f13_5)),
                       Text(context.l10n.paymentStatusLabel(status), style: TextStyle(color: statusColor, fontSize: AppFontSize.f12_5, fontWeight: AppFontWeight.semibold)),
                     ],
                   ),
                   const SizedBox(height: AppSpacing.s10),
-                  _totalsRow('Paid Amount', Money.format(totalPaid)),
-                  _totalsRow('Payment Method', context.l10n.paymentMethodLabel((service['paymentMethod'] as String?) ?? 'Not recorded')),
+                  _totalsRow(context.l10n.services_paidAmount, Money.format(totalPaid)),
+                  _totalsRow(context.l10n.payments_method,
+                      context.l10n.paymentMethodLabel((service['paymentMethod'] as String?) ?? context.l10n.team_notRecorded)),
                   if (transactionId != null && transactionId.isNotEmpty)
-                    _totalsRow('Transaction ID', transactionId),
+                    _totalsRow(context.l10n.services_transactionId, transactionId),
                 ],
               ),
             ),
             const SizedBox(height: AppSpacing.s20),
             _detailField(
                 Icons.category_outlined,
-                'Category',
+                context.l10n.common_category,
                 context.l10n.serviceCategoryLabel(
                     ((service['category'] as String?)?.isNotEmpty ?? false) ? service['category'] as String : 'Other')),
-            _detailField(Icons.person_outline, 'Client', service['clientName'] ?? 'Walk-in'),
-            _detailField(Icons.badge_outlined, 'Provided By', service['providedByName'] ?? 'Unknown'),
-            _detailField(Icons.calendar_today_outlined, 'Service Date', dateOnlyFormatter.format(serviceDate)),
-            _detailField(Icons.edit_note_outlined, 'Notes', description.isNotEmpty ? description : '-'),
+            _detailField(Icons.person_outline, context.l10n.clients_client, service['clientName'] ?? context.l10n.common_walkIn),
+            _detailField(Icons.badge_outlined, context.l10n.services_providedBy, service['providedByName'] ?? context.l10n.common_unknown),
+            _detailField(Icons.calendar_today_outlined, context.l10n.services_serviceDate, dateOnlyFormatter.format(serviceDate)),
+            _detailField(Icons.edit_note_outlined, context.l10n.common_notes, description.isNotEmpty ? description : '-'),
             const SizedBox(height: AppSpacing.s20),
             OutlinedButton.icon(
               onPressed: () => _openReceipt(service),
               icon: const Icon(Icons.print_outlined, size: AppIconSize.i16),
-              label: const Text('Print'),
+              label: Text(context.l10n.common_print),
               style: OutlinedButton.styleFrom(minimumSize: const Size(double.infinity, 44)),
             ),
           ],
@@ -812,19 +813,19 @@ class _SearchServicesArchiveDialogState extends State<_SearchServicesArchiveDial
     final cutoffLabel = AppDateFormat.date.format(_archiveCutoff);
 
     return AlertDialog(
-      title: Text('Search Archived Services', style: TextStyle(color: widget.primaryDeepGreen)),
+      title: Text(context.l10n.services_searchArchiveTitle, style: TextStyle(color: widget.primaryDeepGreen)),
       content: SingleChildScrollView(
         child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text('Search By:', style: TextStyle(fontWeight: AppFontWeight.bold)),
+            Text(context.l10n.services_searchBy, style: TextStyle(fontWeight: AppFontWeight.bold)),
             const SizedBox(height: AppSpacing.s8),
             Row(
               children: [
                 Expanded(
                   child: ChoiceChip(
-                    label: const Text('Specific Month'),
+                    label: Text(context.l10n.services_specificMonth),
                     selected: _dateMode == 'month',
                     onSelected: (selected) {
                       if (selected) setState(() => _dateMode = 'month');
@@ -835,7 +836,7 @@ class _SearchServicesArchiveDialogState extends State<_SearchServicesArchiveDial
                 const SizedBox(width: AppSpacing.s8),
                 Expanded(
                   child: ChoiceChip(
-                    label: const Text('Date Range'),
+                    label: Text(context.l10n.export_dateRange),
                     selected: _dateMode == 'range',
                     onSelected: (selected) {
                       if (selected) setState(() => _dateMode = 'range');
@@ -847,12 +848,12 @@ class _SearchServicesArchiveDialogState extends State<_SearchServicesArchiveDial
             ),
             const SizedBox(height: AppSpacing.s8),
             Text(
-              'Only services before $cutoffLabel have reached the archive.',
+              context.l10n.services_archiveCutoffNote(cutoffLabel),
               style: TextStyle(fontSize: AppFontSize.f11, color: context.colors.textMuted),
             ),
             const SizedBox(height: AppSpacing.s16),
             if (_dateMode == 'month') ...[
-              const Text('Select Month:', style: TextStyle(fontWeight: AppFontWeight.bold)),
+              Text(context.l10n.services_selectMonth, style: TextStyle(fontWeight: AppFontWeight.bold)),
               const SizedBox(height: AppSpacing.s8),
               InkWell(
                 onTap: () async {
@@ -880,7 +881,7 @@ class _SearchServicesArchiveDialogState extends State<_SearchServicesArchiveDial
                 ),
               ),
             ] else ...[
-              const Text('Start Date:', style: TextStyle(fontWeight: AppFontWeight.bold)),
+              Text(context.l10n.dateRange_start, style: TextStyle(fontWeight: AppFontWeight.bold)),
               const SizedBox(height: AppSpacing.s8),
               InkWell(
                 onTap: () async {
@@ -908,7 +909,7 @@ class _SearchServicesArchiveDialogState extends State<_SearchServicesArchiveDial
                 ),
               ),
               const SizedBox(height: AppSpacing.s12),
-              const Text('End Date:', style: TextStyle(fontWeight: AppFontWeight.bold)),
+              Text(context.l10n.dateRange_end, style: TextStyle(fontWeight: AppFontWeight.bold)),
               const SizedBox(height: AppSpacing.s8),
               InkWell(
                 onTap: () async {
@@ -943,7 +944,7 @@ class _SearchServicesArchiveDialogState extends State<_SearchServicesArchiveDial
         TextButton(
           onPressed: () => Navigator.pop(context, null),
           style: TextButton.styleFrom(foregroundColor: widget.primaryDeepGreen),
-          child: const Text('Cancel'),
+          child: Text(context.l10n.common_cancel),
         ),
         ElevatedButton(
           onPressed: () {
@@ -962,7 +963,7 @@ class _SearchServicesArchiveDialogState extends State<_SearchServicesArchiveDial
             backgroundColor: WidgetStateProperty.all(widget.primaryDeepGreen),
             foregroundColor: WidgetStateProperty.all(widget.offWhite),
           ),
-          child: const Text('Search'),
+          child: Text(context.l10n.common_search),
         ),
       ],
     );
