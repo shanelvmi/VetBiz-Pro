@@ -11,6 +11,7 @@ import 'package:vetbiz_pro/constants/product_units.dart';
 import 'package:vetbiz_pro/constants/service_categories.dart';
 import 'package:vetbiz_pro/constants/subscription_plans.dart';
 import 'package:vetbiz_pro/data/activity_type.dart';
+import 'package:vetbiz_pro/data/facility_ownership.dart';
 import 'package:vetbiz_pro/data/facility_status.dart';
 import 'package:vetbiz_pro/data/membership_history_action.dart';
 import 'package:vetbiz_pro/data/payment_status.dart';
@@ -92,6 +93,11 @@ void main() {
     expect(en.facilityStatusLabel('active'), 'Active');
     expect(en.facilityStatusLabel('INACTIVE'), 'Inactive');
     expect(en.facilityStatusLabel('Pending'), 'Pending');
+  });
+
+  test('facility ownership', () {
+    checkStoredList(StoredValueLabels.facilityOwnership, FacilityOwnership.values, (l, v) => l.facilityOwnershipLabel(v),
+        english: const {'Owned': 'Owned', 'Rented': 'Rented'});
   });
 
   test('payment submission statuses', () {

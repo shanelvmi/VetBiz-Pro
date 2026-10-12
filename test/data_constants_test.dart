@@ -7,6 +7,7 @@ import 'package:vetbiz_pro/data/membership_history_action.dart';
 import 'package:vetbiz_pro/data/payment_submission_status.dart';
 import 'package:vetbiz_pro/data/user_role.dart';
 import 'package:vetbiz_pro/data/user_status.dart';
+import 'package:vetbiz_pro/data/facility_ownership.dart';
 
 /// Stored keys must stay exactly the strings already saved in Firestore, and
 /// an unknown value must fall back safely instead of crashing.
@@ -69,6 +70,10 @@ void main() {
     expect(FacilityStatus.fromKey('Pending'), FacilityStatus.pending);
     expect(FacilityStatus.fromKey(null), FacilityStatus.active);
     expect(FacilityStatus.fromKey('closed'), isNull);
+  });
+
+  test('FacilityOwnership values are the stored strings, in dropdown order', () {
+    expect(FacilityOwnership.values, ['Owned', 'Rented']);
   });
   test('Fields.active is the stored promotions field name', () {
     // Stored on every promotions/{id} and queried by name: never rename.

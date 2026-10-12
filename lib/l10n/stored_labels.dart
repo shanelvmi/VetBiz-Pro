@@ -3,6 +3,7 @@ import '../config/restock_rules.dart';
 import '../constants/batch_move_reasons.dart';
 import '../constants/client_options.dart';
 import '../data/activity_type.dart';
+import '../data/facility_ownership.dart';
 import '../data/facility_status.dart';
 import '../data/membership_history_action.dart';
 import '../data/payment_status.dart';
@@ -190,6 +191,11 @@ class StoredValueLabels {
     FacilityStatus.pending.key: (l) => l.facilityStatus_pending,
   }, ignoreCase: true);
 
+  static final facilityOwnership = StoredLabelTable({
+    FacilityOwnership.owned: (l) => l.facilityOwnership_owned,
+    FacilityOwnership.rented: (l) => l.facilityOwnership_rented,
+  });
+
   static final submissionStatus = StoredLabelTable({
     PaymentSubmissionStatus.pending.key: (l) => l.submissionStatus_pending,
     PaymentSubmissionStatus.approved.key: (l) => l.submissionStatus_approved,
@@ -289,6 +295,7 @@ extension StoredLabels on AppLocalizations {
   String userStatusLabel(String stored) => StoredValueLabels.userStatus.labelOf(this, stored);
   String membershipActionLabel(String stored) => StoredValueLabels.membershipAction.labelOf(this, stored);
   String facilityStatusLabel(String stored) => StoredValueLabels.facilityStatus.labelOf(this, stored);
+  String facilityOwnershipLabel(String stored) => StoredValueLabels.facilityOwnership.labelOf(this, stored);
   String submissionStatusLabel(String stored) => StoredValueLabels.submissionStatus.labelOf(this, stored);
   String subscriptionPlanLabel(String planId) => StoredValueLabels.subscriptionPlan.labelOf(this, planId);
   String clientTypeLabel(String stored) => StoredValueLabels.clientType.labelOf(this, stored);
