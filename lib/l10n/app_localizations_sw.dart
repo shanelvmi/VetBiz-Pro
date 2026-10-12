@@ -5605,4 +5605,88 @@ class AppLocalizationsSw extends AppLocalizations {
 
   @override
   String get dashboard_account => 'Akaunti';
+
+  @override
+  String get dashboard_changePeriod => 'Badilisha kipindi';
+
+  @override
+  String get dashboard_totalProductValue => 'Thamani ya Bidhaa Zote';
+
+  @override
+  String get dashboard_asOfNow => 'hadi sasa';
+
+  @override
+  String dashboard_totalSales(String period) {
+    return 'Jumla ya Mauzo ($period)';
+  }
+
+  @override
+  String dashboard_totalCollected(String period) {
+    return 'Jumla Iliyokusanywa ($period)';
+  }
+
+  @override
+  String dashboard_netProfit(String period) {
+    return 'Faida Halisi ($period)';
+  }
+
+  @override
+  String dashboard_totalExpenses(String period) {
+    return 'Jumla ya Matumizi ($period)';
+  }
+
+  @override
+  String get dashboard_outstandingPayment => 'Malipo Yanayodaiwa';
+
+  @override
+  String dashboard_completedServices(String period) {
+    return 'Huduma Zilizokamilika ($period)';
+  }
+
+  @override
+  String get dashboard_recentActivity => 'Shughuli za Karibuni';
+
+  @override
+  String get dashboard_viewAll => 'Tazama Zote';
+
+  @override
+  String get dashboard_noActivityYet => 'Bado hakuna shughuli.';
+
+  @override
+  String get dashboard_recentActivityLoadFailed =>
+      'Imeshindwa kupakia shughuli za karibuni.';
+
+  @override
+  String get dashboard_salesRevenueOverview => 'Muhtasari wa Mauzo na Mapato';
+
+  @override
+  String dashboard_vsLastPeriod(String percent) {
+    return '$percent% dhidi ya kipindi kilichopita';
+  }
+
+  @override
+  String get dashboard_noActivityInPeriod =>
+      'Hakuna shughuli katika kipindi hiki.';
+
+  @override
+  String get dashboard_sales => 'Mauzo';
+
+  @override
+  String get dashboard_collections => 'Makusanyo';
+
+  @override
+  String get dashboard_services => 'Huduma';
+
+  @override
+  String dashboard_seriesWithCurrency(String label, String currency) {
+    return '$label ($currency)';
+  }
+
+  @override
+  String get dashboard_searchProductsOrClients => 'Tafuta bidhaa au wateja...';
+
+  @override
+  String dashboard_searchClient(String phone) {
+    return 'Mteja • $phone';
+  }
 }

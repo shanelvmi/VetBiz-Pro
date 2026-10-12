@@ -9581,6 +9581,138 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Account'**
   String get dashboard_account;
+
+  /// Tooltip of the Dashboard period picker.
+  ///
+  /// In en, this message translates to:
+  /// **'Change period'**
+  String get dashboard_changePeriod;
+
+  /// Dashboard card title.
+  ///
+  /// In en, this message translates to:
+  /// **'Total Product Value'**
+  String get dashboard_totalProductValue;
+
+  /// Dashboard card subtitle: a current balance, not a period total.
+  ///
+  /// In en, this message translates to:
+  /// **'as of now'**
+  String get dashboard_asOfNow;
+
+  /// Dashboard card title with the chosen period.
+  ///
+  /// In en, this message translates to:
+  /// **'Total Sales ({period})'**
+  String dashboard_totalSales(String period);
+
+  /// Dashboard card title with the chosen period.
+  ///
+  /// In en, this message translates to:
+  /// **'Total Collected ({period})'**
+  String dashboard_totalCollected(String period);
+
+  /// Dashboard card title with the chosen period.
+  ///
+  /// In en, this message translates to:
+  /// **'Net Profit ({period})'**
+  String dashboard_netProfit(String period);
+
+  /// Dashboard card title with the chosen period.
+  ///
+  /// In en, this message translates to:
+  /// **'Total Expenses ({period})'**
+  String dashboard_totalExpenses(String period);
+
+  /// Dashboard card title: debt still owed.
+  ///
+  /// In en, this message translates to:
+  /// **'Outstanding Payment'**
+  String get dashboard_outstandingPayment;
+
+  /// Dashboard card title with the chosen period.
+  ///
+  /// In en, this message translates to:
+  /// **'Completed Services ({period})'**
+  String dashboard_completedServices(String period);
+
+  /// Dashboard section title.
+  ///
+  /// In en, this message translates to:
+  /// **'Recent Activity'**
+  String get dashboard_recentActivity;
+
+  /// Dashboard Recent Activity button: opens the activity log.
+  ///
+  /// In en, this message translates to:
+  /// **'View All'**
+  String get dashboard_viewAll;
+
+  /// Dashboard Recent Activity when empty.
+  ///
+  /// In en, this message translates to:
+  /// **'No activity yet.'**
+  String get dashboard_noActivityYet;
+
+  /// Dashboard Recent Activity when loading failed.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t load recent activity.'**
+  String get dashboard_recentActivityLoadFailed;
+
+  /// Dashboard chart title.
+  ///
+  /// In en, this message translates to:
+  /// **'Sales & Revenue Overview'**
+  String get dashboard_salesRevenueOverview;
+
+  /// Dashboard chart: change against the period before.
+  ///
+  /// In en, this message translates to:
+  /// **'{percent}% vs last period'**
+  String dashboard_vsLastPeriod(String percent);
+
+  /// Dashboard chart when empty.
+  ///
+  /// In en, this message translates to:
+  /// **'No activity in this period.'**
+  String get dashboard_noActivityInPeriod;
+
+  /// Dashboard chart series, Today at a Glance count and Insights metric.
+  ///
+  /// In en, this message translates to:
+  /// **'Sales'**
+  String get dashboard_sales;
+
+  /// Dashboard chart series: debt repayments collected.
+  ///
+  /// In en, this message translates to:
+  /// **'Collections'**
+  String get dashboard_collections;
+
+  /// Dashboard chart series and Today at a Glance count.
+  ///
+  /// In en, this message translates to:
+  /// **'Services'**
+  String get dashboard_services;
+
+  /// Dashboard chart legend: a series and the currency symbol.
+  ///
+  /// In en, this message translates to:
+  /// **'{label} ({currency})'**
+  String dashboard_seriesWithCurrency(String label, String currency);
+
+  /// Placeholder of the top bar search box.
+  ///
+  /// In en, this message translates to:
+  /// **'Search products or clients...'**
+  String get dashboard_searchProductsOrClients;
+
+  /// Top bar search result under a client's name.
+  ///
+  /// In en, this message translates to:
+  /// **'Client • {phone}'**
+  String dashboard_searchClient(String phone);
 }
 
 class _AppLocalizationsDelegate

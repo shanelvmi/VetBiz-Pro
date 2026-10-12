@@ -5575,4 +5575,88 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get dashboard_account => 'Account';
+
+  @override
+  String get dashboard_changePeriod => 'Change period';
+
+  @override
+  String get dashboard_totalProductValue => 'Total Product Value';
+
+  @override
+  String get dashboard_asOfNow => 'as of now';
+
+  @override
+  String dashboard_totalSales(String period) {
+    return 'Total Sales ($period)';
+  }
+
+  @override
+  String dashboard_totalCollected(String period) {
+    return 'Total Collected ($period)';
+  }
+
+  @override
+  String dashboard_netProfit(String period) {
+    return 'Net Profit ($period)';
+  }
+
+  @override
+  String dashboard_totalExpenses(String period) {
+    return 'Total Expenses ($period)';
+  }
+
+  @override
+  String get dashboard_outstandingPayment => 'Outstanding Payment';
+
+  @override
+  String dashboard_completedServices(String period) {
+    return 'Completed Services ($period)';
+  }
+
+  @override
+  String get dashboard_recentActivity => 'Recent Activity';
+
+  @override
+  String get dashboard_viewAll => 'View All';
+
+  @override
+  String get dashboard_noActivityYet => 'No activity yet.';
+
+  @override
+  String get dashboard_recentActivityLoadFailed =>
+      'Couldn\'t load recent activity.';
+
+  @override
+  String get dashboard_salesRevenueOverview => 'Sales & Revenue Overview';
+
+  @override
+  String dashboard_vsLastPeriod(String percent) {
+    return '$percent% vs last period';
+  }
+
+  @override
+  String get dashboard_noActivityInPeriod => 'No activity in this period.';
+
+  @override
+  String get dashboard_sales => 'Sales';
+
+  @override
+  String get dashboard_collections => 'Collections';
+
+  @override
+  String get dashboard_services => 'Services';
+
+  @override
+  String dashboard_seriesWithCurrency(String label, String currency) {
+    return '$label ($currency)';
+  }
+
+  @override
+  String get dashboard_searchProductsOrClients =>
+      'Search products or clients...';
+
+  @override
+  String dashboard_searchClient(String phone) {
+    return 'Client • $phone';
+  }
 }
