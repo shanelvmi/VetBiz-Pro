@@ -7385,6 +7385,114 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Remove expired'**
   String get alerts_removeExpired;
+
+  /// Product Alerts details, first line.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} in stock'**
+  String alerts_inStock(int count);
+
+  /// Product Alerts details, second line.
+  ///
+  /// In en, this message translates to:
+  /// **'Min. required: {count}'**
+  String alerts_minRequired(int count);
+
+  /// Product Alerts details, first line.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} on shelf'**
+  String alerts_onShelf(int count);
+
+  /// Product Alerts details, second line.
+  ///
+  /// In en, this message translates to:
+  /// **'Shelf minimum: {count}'**
+  String alerts_shelfMinimum(int count);
+
+  /// Product Alerts details.
+  ///
+  /// In en, this message translates to:
+  /// **'Expires today'**
+  String get alerts_expiresToday;
+
+  /// Product Alerts details.
+  ///
+  /// In en, this message translates to:
+  /// **'{days, plural, =1{Expires in 1 day} other{Expires in {days} days}}'**
+  String alerts_expiresInDays(int days);
+
+  /// Product Alerts details, second line.
+  ///
+  /// In en, this message translates to:
+  /// **'{date} · {quantity} {unit} on hand'**
+  String alerts_dateOnHand(String date, int quantity, String unit);
+
+  /// Product Alerts details, second line.
+  ///
+  /// In en, this message translates to:
+  /// **'{quantity} {unit} on hand'**
+  String alerts_onHand(int quantity, String unit);
+
+  /// Product Alerts search box.
+  ///
+  /// In en, this message translates to:
+  /// **'Search by product, category or alert...'**
+  String get alerts_searchHint;
+
+  /// Product Alerts, nothing after filtering.
+  ///
+  /// In en, this message translates to:
+  /// **'No alerts match your filters'**
+  String get alerts_noMatches;
+
+  /// Product Alerts table column.
+  ///
+  /// In en, this message translates to:
+  /// **'Alert'**
+  String get alerts_colAlert;
+
+  /// Product Alerts table column.
+  ///
+  /// In en, this message translates to:
+  /// **'Store / Shelf'**
+  String get alerts_colStoreShelf;
+
+  /// Product Alerts table column.
+  ///
+  /// In en, this message translates to:
+  /// **'Action'**
+  String get alerts_colAction;
+
+  /// Product Alerts row.
+  ///
+  /// In en, this message translates to:
+  /// **'Store: {count}'**
+  String alerts_storeQty(int count);
+
+  /// Product Alerts row.
+  ///
+  /// In en, this message translates to:
+  /// **'Shelf: {count}'**
+  String alerts_shelfQty(int count);
+
+  /// Product Alerts narrow card.
+  ///
+  /// In en, this message translates to:
+  /// **'Store: {stock}  ·  Shelf: {sellable}'**
+  String alerts_storeShelfQty(int stock, int sellable);
+
+  /// Product Alerts footer when empty.
+  ///
+  /// In en, this message translates to:
+  /// **'No alerts'**
+  String get alerts_none;
+
+  /// Product Alerts footer.
+  ///
+  /// In en, this message translates to:
+  /// **'{total, plural, =1{Showing {start} to {end} of 1 alert} other{Showing {start} to {end} of {total} alerts}}'**
+  String alerts_showingRange(int start, int end, int total);
 }
 
 class _AppLocalizationsDelegate

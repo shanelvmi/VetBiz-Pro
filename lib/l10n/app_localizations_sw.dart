@@ -4231,4 +4231,92 @@ class AppLocalizationsSw extends AppLocalizations {
 
   @override
   String get alerts_removeExpired => 'Ondoa zilizoisha';
+
+  @override
+  String alerts_inStock(int count) {
+    return '$count zipo';
+  }
+
+  @override
+  String alerts_minRequired(int count) {
+    return 'Kiwango cha chini: $count';
+  }
+
+  @override
+  String alerts_onShelf(int count) {
+    return '$count rafuni';
+  }
+
+  @override
+  String alerts_shelfMinimum(int count) {
+    return 'Kiwango cha chini rafuni: $count';
+  }
+
+  @override
+  String get alerts_expiresToday => 'Inaisha leo';
+
+  @override
+  String alerts_expiresInDays(int days) {
+    String _temp0 = intl.Intl.pluralLogic(
+      days,
+      locale: localeName,
+      other: 'Inaisha baada ya siku $days',
+      one: 'Inaisha baada ya siku 1',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String alerts_dateOnHand(String date, int quantity, String unit) {
+    return '$date · $quantity $unit zipo';
+  }
+
+  @override
+  String alerts_onHand(int quantity, String unit) {
+    return '$quantity $unit zipo';
+  }
+
+  @override
+  String get alerts_searchHint => 'Tafuta kwa bidhaa, aina au tahadhari...';
+
+  @override
+  String get alerts_noMatches => 'Hakuna tahadhari zinazolingana na vichujio';
+
+  @override
+  String get alerts_colAlert => 'Tahadhari';
+
+  @override
+  String get alerts_colStoreShelf => 'Stoo / Rafu';
+
+  @override
+  String get alerts_colAction => 'Hatua';
+
+  @override
+  String alerts_storeQty(int count) {
+    return 'Stoo: $count';
+  }
+
+  @override
+  String alerts_shelfQty(int count) {
+    return 'Rafu: $count';
+  }
+
+  @override
+  String alerts_storeShelfQty(int stock, int sellable) {
+    return 'Stoo: $stock  ·  Rafu: $sellable';
+  }
+
+  @override
+  String get alerts_none => 'Hakuna tahadhari';
+
+  @override
+  String alerts_showingRange(int start, int end, int total) {
+    String _temp0 = intl.Intl.pluralLogic(
+      total,
+      locale: localeName,
+      other: 'Inaonyesha $start hadi $end kati ya tahadhari $total',
+      one: 'Inaonyesha $start hadi $end kati ya tahadhari 1',
+    );
+    return '$_temp0';
+  }
 }

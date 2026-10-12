@@ -4212,4 +4212,92 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get alerts_removeExpired => 'Remove expired';
+
+  @override
+  String alerts_inStock(int count) {
+    return '$count in stock';
+  }
+
+  @override
+  String alerts_minRequired(int count) {
+    return 'Min. required: $count';
+  }
+
+  @override
+  String alerts_onShelf(int count) {
+    return '$count on shelf';
+  }
+
+  @override
+  String alerts_shelfMinimum(int count) {
+    return 'Shelf minimum: $count';
+  }
+
+  @override
+  String get alerts_expiresToday => 'Expires today';
+
+  @override
+  String alerts_expiresInDays(int days) {
+    String _temp0 = intl.Intl.pluralLogic(
+      days,
+      locale: localeName,
+      other: 'Expires in $days days',
+      one: 'Expires in 1 day',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String alerts_dateOnHand(String date, int quantity, String unit) {
+    return '$date · $quantity $unit on hand';
+  }
+
+  @override
+  String alerts_onHand(int quantity, String unit) {
+    return '$quantity $unit on hand';
+  }
+
+  @override
+  String get alerts_searchHint => 'Search by product, category or alert...';
+
+  @override
+  String get alerts_noMatches => 'No alerts match your filters';
+
+  @override
+  String get alerts_colAlert => 'Alert';
+
+  @override
+  String get alerts_colStoreShelf => 'Store / Shelf';
+
+  @override
+  String get alerts_colAction => 'Action';
+
+  @override
+  String alerts_storeQty(int count) {
+    return 'Store: $count';
+  }
+
+  @override
+  String alerts_shelfQty(int count) {
+    return 'Shelf: $count';
+  }
+
+  @override
+  String alerts_storeShelfQty(int stock, int sellable) {
+    return 'Store: $stock  ·  Shelf: $sellable';
+  }
+
+  @override
+  String get alerts_none => 'No alerts';
+
+  @override
+  String alerts_showingRange(int start, int end, int total) {
+    String _temp0 = intl.Intl.pluralLogic(
+      total,
+      locale: localeName,
+      other: 'Showing $start to $end of $total alerts',
+      one: 'Showing $start to $end of 1 alert',
+    );
+    return '$_temp0';
+  }
 }
