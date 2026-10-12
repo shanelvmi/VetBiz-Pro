@@ -503,7 +503,6 @@
       "lib/screens/login_screen.dart": 33,
       "lib/screens/register_screen.dart": 38,
       "lib/screens/sales/add_sale_screen.dart": 49,
-      "lib/screens/sales/receipt_preview_screen.dart": 31,
       "lib/services/role_change_service.dart": 1,
       "lib/services/session_validity_service.dart": 1
     },

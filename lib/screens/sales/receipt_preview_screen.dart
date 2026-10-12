@@ -27,6 +27,8 @@ import '../../theme/app_dimens.dart';
 import '../../theme/theme_context.dart';
 import '../../theme/app_breakpoints.dart';
 import '../../ui/feedback/app_feedback.dart';
+import '../../utils/receipt_texts.dart';
+import '../../l10n/l10n.dart';
 
 /// Shows the receipt as it will actually look before doing anything with
 /// it - a real preview, not a blind print. From here it can be shared or
@@ -97,7 +99,7 @@ class _ReceiptPreviewScreenState extends State<ReceiptPreviewScreen> {
       );
 
       debugPrint('Receipt captured: ${bytes.length} bytes. Opening share sheet...');
-      await Share.shareXFiles([xfile], text: 'Receipt');
+      await Share.shareXFiles([xfile], text: ReceiptTexts.shareText);
       debugPrint('Share sheet closed normally.');
     } catch (e, stack) {
       if (!mounted) return;
@@ -115,7 +117,7 @@ class _ReceiptPreviewScreenState extends State<ReceiptPreviewScreen> {
       debugPrint('Share receipt failed: ${e.runtimeType} - $e\n$stack');
       // The raw error used to be shown as selectable text for 10 s; it is
       // now behind Details (owner's rule: no inline raw error text).
-      AppFeedback.error("Couldn't share the receipt", error: e, stackTrace: stack);
+      AppFeedback.error(L10n.current.receipt_shareFailed, error: e, stackTrace: stack);
     } finally {
       if (mounted) setState(() => _isSharing = false);
     }
@@ -137,14 +139,13 @@ class _ReceiptPreviewScreenState extends State<ReceiptPreviewScreen> {
         final goToSettings = await showDialog<bool>(
           context: context,
           builder: (context) => AlertDialog(
-            title: const Text('No Printer Connected'),
-            content: const Text(
-                'Connect a Bluetooth receipt printer in Printer Settings first.'),
+            title: Text(context.l10n.common_noPrinterTitle),
+            content: Text(context.l10n.common_noPrinterBody),
             actions: [
-              TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Cancel')),
+              TextButton(onPressed: () => Navigator.pop(context, false), child: Text(context.l10n.common_cancel)),
               ElevatedButton(
                 onPressed: () => Navigator.pop(context, true),
-                child: const Text('Go to Printer Settings'),
+                child: Text(context.l10n.common_goToPrinterSettings),
               ),
             ],
           ),
@@ -160,12 +161,12 @@ class _ReceiptPreviewScreenState extends State<ReceiptPreviewScreen> {
 
       final success = await printerService.printSaleReceipt(widget.sale);
       if (success) {
-        AppFeedback.success('Receipt sent to printer');
+        AppFeedback.success(L10n.current.common_receiptSentToPrinter);
       } else {
-        AppFeedback.error("Couldn't print the receipt", detail: 'The printer did not accept it');
+        AppFeedback.error(L10n.current.common_printFailed, detail: L10n.current.common_printFailedDetail);
       }
     } catch (e, st) {
-      AppFeedback.error("Couldn't print the receipt", error: e, stackTrace: st);
+      AppFeedback.error(L10n.current.common_printFailed, error: e, stackTrace: st);
     } finally {
       if (mounted) setState(() => _isPrinting = false);
     }
@@ -194,7 +195,7 @@ class _ReceiptPreviewScreenState extends State<ReceiptPreviewScreen> {
         facilityTin: facility?['tin'],
       );
     } catch (e, st) {
-      AppFeedback.error("Couldn't generate the PDF", error: e, stackTrace: st);
+      AppFeedback.error(L10n.current.receipt_pdfFailed, error: e, stackTrace: st);
     } finally {
       if (mounted) {
         setState(() {
@@ -204,6 +205,15 @@ class _ReceiptPreviewScreenState extends State<ReceiptPreviewScreen> {
       }
     }
   }
+
+  // statusText is the receipt's own English wording (ReceiptTexts); the
+  // side panel is on-screen text, so it shows the translated label.
+  String _statusLabel(String statusText) => switch (statusText) {
+        ReceiptTexts.partiallyPaid => context.l10n.receipt_statusPartiallyPaid,
+        ReceiptTexts.balanceDue => context.l10n.receipt_statusBalanceDue,
+        ReceiptTexts.paidInFull => context.l10n.receipt_statusPaidInFull,
+        _ => statusText,
+      };
 
   @override
   Widget build(BuildContext context) {
@@ -220,14 +230,14 @@ class _ReceiptPreviewScreenState extends State<ReceiptPreviewScreen> {
     final facilityTagline = facility?['tagline'];
     final facilityTin = facility?['tin'];
     final statusText = balance > 0
-        ? (sale.totalPaid > 0 ? 'Partially Paid' : 'Balance Due')
-        : 'Paid in Full';
+        ? (sale.totalPaid > 0 ? ReceiptTexts.partiallyPaid : ReceiptTexts.balanceDue)
+        : ReceiptTexts.paidInFull;
     final statusColor = balance > 0 ? context.colors.danger : context.colors.success;
 
     return Scaffold(
       backgroundColor: context.colors.surfaceMuted,
       appBar: AppBar(
-        title: const Text('Receipt Preview'),
+        title: Text(context.l10n.receipt_previewTitle),
         centerTitle: true,
         backgroundColor: context.colors.primary,
         foregroundColor: context.colors.onPrimary,
@@ -408,8 +418,8 @@ class _ReceiptPreviewScreenState extends State<ReceiptPreviewScreen> {
       padding: const EdgeInsets.symmetric(vertical: AppSpacing.s20, horizontal: AppSpacing.s20),
       child: Column(
         children: [
-          thumbnail(formatKey: 'thermal', isThermal: true, label: 'Receipt (Thermal)'),
-          thumbnail(formatKey: 'a4', isThermal: false, label: 'A4 Format'),
+          thumbnail(formatKey: 'thermal', isThermal: true, label: context.l10n.receipt_formatThermal),
+          thumbnail(formatKey: 'a4', isThermal: false, label: context.l10n.receipt_formatA4),
         ],
       ),
     );
@@ -483,10 +493,10 @@ class _ReceiptPreviewScreenState extends State<ReceiptPreviewScreen> {
         decoration: BoxDecoration(color: context.colors.primary, borderRadius: BorderRadius.circular(AppRadius.r4)),
         child: Row(
           children: [
-            Expanded(flex: 4, child: Text('Item / Service', style: TextStyle(color: context.colors.onPrimary, fontSize: AppFontSize.f11_5, fontWeight: AppFontWeight.semibold))),
-            Expanded(flex: 1, child: Text('Qty', style: TextStyle(color: context.colors.onPrimary, fontSize: AppFontSize.f11_5, fontWeight: AppFontWeight.semibold))),
-            Expanded(flex: 2, child: Text('Unit Price', textAlign: TextAlign.right, style: TextStyle(color: context.colors.onPrimary, fontSize: AppFontSize.f11_5, fontWeight: AppFontWeight.semibold))),
-            Expanded(flex: 2, child: Text('Amount', textAlign: TextAlign.right, style: TextStyle(color: context.colors.onPrimary, fontSize: AppFontSize.f11_5, fontWeight: AppFontWeight.semibold))),
+            Expanded(flex: 4, child: Text(ReceiptTexts.colItemService, style: TextStyle(color: context.colors.onPrimary, fontSize: AppFontSize.f11_5, fontWeight: AppFontWeight.semibold))),
+            Expanded(flex: 1, child: Text(ReceiptTexts.colQty, style: TextStyle(color: context.colors.onPrimary, fontSize: AppFontSize.f11_5, fontWeight: AppFontWeight.semibold))),
+            Expanded(flex: 2, child: Text(ReceiptTexts.colUnitPrice, textAlign: TextAlign.right, style: TextStyle(color: context.colors.onPrimary, fontSize: AppFontSize.f11_5, fontWeight: AppFontWeight.semibold))),
+            Expanded(flex: 2, child: Text(ReceiptTexts.colAmount, textAlign: TextAlign.right, style: TextStyle(color: context.colors.onPrimary, fontSize: AppFontSize.f11_5, fontWeight: AppFontWeight.semibold))),
           ],
         ),
       );
@@ -561,8 +571,8 @@ class _ReceiptPreviewScreenState extends State<ReceiptPreviewScreen> {
                     text: const TextSpan(
                       style: TextStyle(fontSize: AppFontSize.f16, fontWeight: AppFontWeight.bold),
                       children: [
-                        TextSpan(text: 'VetBiz ', style: TextStyle(color: AppPalette.primary)),
-                        TextSpan(text: 'Pro', style: TextStyle(color: ReceiptPalette.amber)),
+                        TextSpan(text: ReceiptTexts.brandFirst, style: TextStyle(color: AppPalette.primary)),
+                        TextSpan(text: ReceiptTexts.brandSecond, style: TextStyle(color: ReceiptPalette.amber)),
                       ],
                     ),
                   ),
@@ -582,33 +592,33 @@ class _ReceiptPreviewScreenState extends State<ReceiptPreviewScreen> {
                   if (facilityPhone != null && facilityPhone.isNotEmpty) contactRow(Icons.phone, facilityPhone),
                   if (facilityEmail != null && facilityEmail.isNotEmpty) contactRow(Icons.email_outlined, facilityEmail),
                   if (facilityAddress != null && facilityAddress.isNotEmpty) contactRow(Icons.location_on_outlined, facilityAddress),
-                  if (facilityTin != null && facilityTin.isNotEmpty) contactRow(Icons.badge_outlined, 'TIN: $facilityTin'),
+                  if (facilityTin != null && facilityTin.isNotEmpty) contactRow(Icons.badge_outlined, ReceiptTexts.tin(facilityTin)),
                 ],
               ),
             ),
             divider(),
             // ---- Receipt meta ----
-            infoLine('Receipt #', sale.receiptNumber?.toString() ?? sale.id.substring(0, sale.id.length < AppRules.fallbackReceiptIdLength ? sale.id.length : AppRules.fallbackReceiptIdLength),
-                label2: 'Date', value2: AppDateFormat.dateTime24.format(sale.timestamp)),
-            infoLine('Customer', sale.clientName ?? 'Walk-in'),
-            infoLine('Payment Method', sale.paymentMethod ?? PaymentMethod.onCredit),
+            infoLine(ReceiptTexts.receiptNo, sale.receiptNumber?.toString() ?? sale.id.substring(0, sale.id.length < AppRules.fallbackReceiptIdLength ? sale.id.length : AppRules.fallbackReceiptIdLength),
+                label2: ReceiptTexts.date, value2: AppDateFormat.dateTime24.format(sale.timestamp)),
+            infoLine(ReceiptTexts.customer, sale.clientName ?? ReceiptTexts.walkIn),
+            infoLine(ReceiptTexts.paymentMethod, sale.paymentMethod ?? PaymentMethod.onCredit),
             const SizedBox(height: AppSpacing.s10),
             // ---- Items table ----
             itemsTableHeader(),
             for (final item in sale.items) itemRow(item),
             divider(),
             // ---- Totals ----
-            totalsRow('Subtotal', Money.plain(sale.totalAmount + sale.items.fold(0.0, (sum, i) => sum + i.discount))),
-            totalsRow('Discount', Money.plain(sale.items.fold(0.0, (sum, i) => sum + i.discount))),
+            totalsRow(ReceiptTexts.subtotal, Money.plain(sale.totalAmount + sale.items.fold(0.0, (sum, i) => sum + i.discount))),
+            totalsRow(ReceiptTexts.discount, Money.plain(sale.items.fold(0.0, (sum, i) => sum + i.discount))),
             const SizedBox(height: AppSpacing.s8),
             Container(
               padding: const EdgeInsets.symmetric(horizontal: AppSpacing.s10, vertical: AppSpacing.s8),
               color: context.colors.primary.withValues(alpha: AppAlpha.a10),
-              child: totalsRow('TOTAL', 'TSh ${Money.plain(sale.totalAmount)}', bold: true),
+              child: totalsRow(ReceiptTexts.total, 'TSh ${Money.plain(sale.totalAmount)}', bold: true),
             ),
             const SizedBox(height: AppSpacing.s8),
-            totalsRow('Paid', Money.plain(sale.totalPaid)),
-            totalsRow('Balance', Money.plain(balance), bold: balance > 0, color: balance > 0 ? context.colors.danger : null),
+            totalsRow(ReceiptTexts.paid, Money.plain(sale.totalPaid)),
+            totalsRow(ReceiptTexts.balance, Money.plain(balance), bold: balance > 0, color: balance > 0 ? context.colors.danger : null),
             const SizedBox(height: AppSpacing.s10),
             Row(
               children: [
@@ -618,7 +628,7 @@ class _ReceiptPreviewScreenState extends State<ReceiptPreviewScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text('Payment Method', style: TextStyle(fontSize: AppFontSize.f10_5, color: context.colors.textMuted)),
+                      Text(ReceiptTexts.paymentMethod, style: TextStyle(fontSize: AppFontSize.f10_5, color: context.colors.textMuted)),
                       Text(sale.paymentMethod ?? PaymentMethod.onCredit, style: const TextStyle(fontSize: AppFontSize.f12_5, fontWeight: AppFontWeight.semibold)),
                     ],
                   ),
@@ -631,7 +641,7 @@ class _ReceiptPreviewScreenState extends State<ReceiptPreviewScreen> {
                     children: [
                       Icon(Icons.check_circle, size: AppIconSize.i12, color: statusColor),
                       const SizedBox(width: AppSpacing.s4),
-                      Text(statusText, style: TextStyle(fontSize: AppFontSize.f10_5, fontWeight: AppFontWeight.semibold, color: statusColor)),
+                      Text(_statusLabel(statusText), style: TextStyle(fontSize: AppFontSize.f10_5, fontWeight: AppFontWeight.semibold, color: statusColor)),
                     ],
                   ),
                 ),
@@ -639,7 +649,7 @@ class _ReceiptPreviewScreenState extends State<ReceiptPreviewScreen> {
             ),
             const SizedBox(height: AppSpacing.s22),
             Center(
-              child: Text('Thank you for choosing us.',
+              child: Text(ReceiptTexts.thankYou,
                   style: TextStyle(fontSize: AppFontSize.f13, fontStyle: FontStyle.italic, color: context.colors.textSoft)),
             ),
             const SizedBox(height: AppSpacing.s10),
@@ -648,15 +658,15 @@ class _ReceiptPreviewScreenState extends State<ReceiptPreviewScreen> {
                 text: const TextSpan(
                   style: TextStyle(fontSize: AppFontSize.f13, fontWeight: AppFontWeight.bold),
                   children: [
-                    TextSpan(text: 'VetBiz ', style: TextStyle(color: AppPalette.primary)),
-                    TextSpan(text: 'Pro', style: TextStyle(color: ReceiptPalette.amber)),
+                    TextSpan(text: ReceiptTexts.brandFirst, style: TextStyle(color: AppPalette.primary)),
+                    TextSpan(text: ReceiptTexts.brandSecond, style: TextStyle(color: ReceiptPalette.amber)),
                   ],
                 ),
               ),
             ),
             const SizedBox(height: AppSpacing.s2),
             Center(
-              child: Text('Powered by ${AppInfo.name}', style: TextStyle(fontSize: AppFontSize.f9, color: context.colors.textHint)),
+              child: Text(ReceiptTexts.poweredBy(AppInfo.name), style: TextStyle(fontSize: AppFontSize.f9, color: context.colors.textHint)),
             ),
           ],
         ),
@@ -679,7 +689,7 @@ class _ReceiptPreviewScreenState extends State<ReceiptPreviewScreen> {
                   icon: _isSharing
                       ? const SizedBox(width: AppSpacing.s16, height: 16, child: CircularProgressIndicator(strokeWidth: 2))
                       : const Icon(Icons.share),
-                  label: const Text('Share / Save'),
+                  label: Text(context.l10n.receipt_shareSave),
                   style: OutlinedButton.styleFrom(foregroundColor: context.colors.primary),
                 ),
               ),
@@ -690,7 +700,7 @@ class _ReceiptPreviewScreenState extends State<ReceiptPreviewScreen> {
                   icon: _isPrinting
                       ? SizedBox(width: AppSpacing.s16, height: 16, child: CircularProgressIndicator(strokeWidth: 2, color: context.colors.onPrimary))
                       : const Icon(Icons.print),
-                  label: const Text('Print'),
+                  label: Text(context.l10n.common_print),
                   style: ElevatedButton.styleFrom(backgroundColor: context.colors.primary, foregroundColor: context.colors.onPrimary),
                 ),
               ),
@@ -757,7 +767,7 @@ class _ReceiptPreviewScreenState extends State<ReceiptPreviewScreen> {
                   child: Icon(Icons.receipt_long_outlined, size: AppIconSize.i18, color: context.colors.primary),
                 ),
                 const SizedBox(width: AppSpacing.s8),
-                const Expanded(child: Text('Receipt Details', style: TextStyle(fontSize: AppFontSize.f16, fontWeight: AppFontWeight.bold))),
+                Expanded(child: Text(context.l10n.receipt_details, style: const TextStyle(fontSize: AppFontSize.f16, fontWeight: AppFontWeight.bold))),
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: AppSpacing.s10, vertical: AppSpacing.s4),
                   decoration: BoxDecoration(color: statusColor.withValues(alpha: AppAlpha.a10), borderRadius: BorderRadius.circular(AppRadius.r20)),
@@ -766,7 +776,7 @@ class _ReceiptPreviewScreenState extends State<ReceiptPreviewScreen> {
                     children: [
                       Icon(Icons.check_circle, size: AppIconSize.i12, color: statusColor),
                       const SizedBox(width: AppSpacing.s3),
-                      Text(statusText, style: TextStyle(fontSize: AppFontSize.f10_5, fontWeight: AppFontWeight.semibold, color: statusColor)),
+                      Text(_statusLabel(statusText), style: TextStyle(fontSize: AppFontSize.f10_5, fontWeight: AppFontWeight.semibold, color: statusColor)),
                     ],
                   ),
                 ),
@@ -774,23 +784,24 @@ class _ReceiptPreviewScreenState extends State<ReceiptPreviewScreen> {
             ),
             const SizedBox(height: AppSpacing.s8),
             const Divider(height: 20),
-            if (sale.receiptNumber != null) field(Icons.tag, 'Receipt Number', '${sale.receiptNumber}'),
+            if (sale.receiptNumber != null) field(Icons.tag, context.l10n.receipt_number, '${sale.receiptNumber}'),
             field(
               Icons.storefront_outlined,
-              'Facility',
+              context.l10n.common_facility,
               facilityType != null && facilityType.isNotEmpty && facilityType != 'Other'
                   ? '$facilityName $facilityType'
                   : facilityName,
             ),
-            field(Icons.person_outline, 'Customer', sale.clientName ?? 'Walk-in'),
-            field(Icons.calendar_today_outlined, 'Date & Time', AppDateFormat.dateTime24.format(sale.timestamp)),
-            field(Icons.payment_outlined, 'Payment Method', sale.paymentMethod ?? PaymentMethod.onCredit),
+            field(Icons.person_outline, context.l10n.receipt_customer, sale.clientName ?? context.l10n.common_walkIn),
+            field(Icons.calendar_today_outlined, context.l10n.payments_colDateTime, AppDateFormat.dateTime24.format(sale.timestamp)),
+            field(Icons.payment_outlined, context.l10n.payments_method,
+                context.l10n.paymentMethodLabel(sale.paymentMethod ?? PaymentMethod.onCredit)),
             const Divider(height: 28),
             Row(
               children: [
                 Icon(Icons.bolt, size: AppIconSize.i16, color: context.colors.primary),
                 const SizedBox(width: AppSpacing.s6),
-                const Text('Quick Actions', style: TextStyle(fontSize: AppFontSize.f13_5, fontWeight: AppFontWeight.bold)),
+                Text(context.l10n.receipt_quickActions, style: const TextStyle(fontSize: AppFontSize.f13_5, fontWeight: AppFontWeight.bold)),
               ],
             ),
             const SizedBox(height: AppSpacing.s12),
@@ -802,7 +813,7 @@ class _ReceiptPreviewScreenState extends State<ReceiptPreviewScreen> {
                     icon: _isSharing
                         ? const SizedBox(width: AppSpacing.s14, height: 14, child: CircularProgressIndicator(strokeWidth: 2))
                         : const Icon(Icons.share_outlined, size: AppIconSize.i16),
-                    label: const Text('Share', style: TextStyle(fontSize: AppFontSize.f12_5)),
+                    label: Text(context.l10n.common_share, style: const TextStyle(fontSize: AppFontSize.f12_5)),
                     style: OutlinedButton.styleFrom(
                       foregroundColor: context.colors.primary,
                       backgroundColor: context.colors.primary.withValues(alpha: AppAlpha.a10),
@@ -818,7 +829,7 @@ class _ReceiptPreviewScreenState extends State<ReceiptPreviewScreen> {
                     icon: _isPrinting
                         ? SizedBox(width: AppSpacing.s14, height: 14, child: CircularProgressIndicator(strokeWidth: 2, color: context.colors.onPrimary))
                         : const Icon(Icons.print_outlined, size: AppIconSize.i16),
-                    label: const Text('Print Receipt', style: TextStyle(fontSize: AppFontSize.f12_5)),
+                    label: Text(context.l10n.common_printReceipt, style: const TextStyle(fontSize: AppFontSize.f12_5)),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: context.colors.primary,
                       foregroundColor: context.colors.onPrimary,
@@ -839,7 +850,7 @@ class _ReceiptPreviewScreenState extends State<ReceiptPreviewScreen> {
                   const SizedBox(width: AppSpacing.s8),
                   Expanded(
                     child: Text(
-                      'This receipt shows the final amount paid for the selected transaction. You can print or share it for your records.',
+                      context.l10n.receipt_infoNote,
                       style: TextStyle(fontSize: AppFontSize.f11, color: context.colors.infoNoteText, height: 1.4),
                     ),
                   ),

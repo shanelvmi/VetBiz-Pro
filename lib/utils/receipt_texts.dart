@@ -29,7 +29,9 @@ class ReceiptTexts {
   static const String colUnitPrice = 'Unit Price';
   static const String colAmount = 'Amount';
 
-  // Totals
+  // Totals (Subtotal and Discount appear on sale receipts only)
+  static const String subtotal = 'Subtotal';
+  static const String discount = 'Discount';
   static const String total = 'TOTAL';
   static const String paid = 'Paid';
   static const String balance = 'Balance';

@@ -4,6 +4,7 @@ import 'package:vetbiz_pro/utils/receipt_texts.dart';
 // The expected text below was copied from service_receipt_preview_screen.dart
 // before its receipt texts moved to ReceiptTexts: receipts stay English
 // (docs/PHASE2_LOCALISATION_SPEC.md 2.8) and must read exactly as before.
+// Subtotal and Discount were copied from the sale receipt_preview_screen.dart.
 void main() {
   test('receipt texts are unchanged', () {
     final lines = <String>[
@@ -20,6 +21,8 @@ void main() {
       ReceiptTexts.colQty,
       ReceiptTexts.colUnitPrice,
       ReceiptTexts.colAmount,
+      ReceiptTexts.subtotal,
+      ReceiptTexts.discount,
       ReceiptTexts.total,
       ReceiptTexts.paid,
       ReceiptTexts.balance,
@@ -44,6 +47,8 @@ void main() {
         'Qty\n'
         'Unit Price\n'
         'Amount\n'
+        'Subtotal\n'
+        'Discount\n'
         'TOTAL\n'
         'Paid\n'
         'Balance\n'
