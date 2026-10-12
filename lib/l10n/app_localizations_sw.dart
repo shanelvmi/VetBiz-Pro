@@ -5982,4 +5982,68 @@ class AppLocalizationsSw extends AppLocalizations {
 
   @override
   String get notifications_catUpdate => 'Taarifa';
+
+  @override
+  String get selectFacility_slowLoad =>
+      'Hii inachukua muda mrefu kuliko kawaida. Angalia muunganisho wako kisha ujaribu tena.';
+
+  @override
+  String selectFacility_loadFailed(String error) {
+    return 'Imeshindwa kupakia vituo vyako. $error';
+  }
+
+  @override
+  String get selectFacility_title => 'Chagua Kituo';
+
+  @override
+  String get selectFacility_proceed => 'Endelea';
+
+  @override
+  String get selectFacility_unnamed => 'Bila jina';
+
+  @override
+  String get selectFacility_selected => 'Imechaguliwa';
+
+  @override
+  String get selectFacility_clickToSelect => 'Bofya kuchagua';
+
+  @override
+  String get facilities_noneFound => 'Hakuna vituo vilivyopatikana.';
+
+  @override
+  String get facilityPicker_tagline => 'Simamia. Hudumia. Kua.';
+
+  @override
+  String get facilityPicker_logOut => 'Toka';
+
+  @override
+  String get facilityPicker_title => 'Chagua Kituo Chako';
+
+  @override
+  String get facilityPicker_intro =>
+      'Chagua kituo unachotaka kusimamia. Unaweza kuhamia kituo kingine wakati wowote kupitia menyu ya juu.';
+
+  @override
+  String get facilityPicker_searchHint =>
+      'Tafuta kituo kwa jina, mahali au aina...';
+
+  @override
+  String get facilityPicker_allTypes => 'Aina Zote';
+
+  @override
+  String get facilityPicker_filter => 'Chuja';
+
+  @override
+  String get facilityPicker_unnamedFacility => 'Kituo Bila Jina';
+
+  @override
+  String get facilityPicker_typeNotSet => 'Aina haijawekwa';
+
+  @override
+  String get facilityPicker_locationNotSet => 'Mahali hapajawekwa';
+
+  @override
+  String facilityPicker_staffCount(int count) {
+    return 'Wafanyakazi $count';
+  }
 }

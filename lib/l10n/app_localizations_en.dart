@@ -5949,4 +5949,68 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get notifications_catUpdate => 'Update';
+
+  @override
+  String get selectFacility_slowLoad =>
+      'This is taking longer than expected. Check your connection and try again.';
+
+  @override
+  String selectFacility_loadFailed(String error) {
+    return 'Couldn\'t load your facilities. $error';
+  }
+
+  @override
+  String get selectFacility_title => 'Select Facility';
+
+  @override
+  String get selectFacility_proceed => 'Proceed';
+
+  @override
+  String get selectFacility_unnamed => 'Unnamed';
+
+  @override
+  String get selectFacility_selected => 'Selected';
+
+  @override
+  String get selectFacility_clickToSelect => 'Click to select';
+
+  @override
+  String get facilities_noneFound => 'No facilities found.';
+
+  @override
+  String get facilityPicker_tagline => 'Manage. Care. Grow.';
+
+  @override
+  String get facilityPicker_logOut => 'Log Out';
+
+  @override
+  String get facilityPicker_title => 'Select Your Facility';
+
+  @override
+  String get facilityPicker_intro =>
+      'Choose the facility you want to manage. You can switch between your facilities at any time from the top menu.';
+
+  @override
+  String get facilityPicker_searchHint =>
+      'Search facility by name, location or type...';
+
+  @override
+  String get facilityPicker_allTypes => 'All Types';
+
+  @override
+  String get facilityPicker_filter => 'Filter';
+
+  @override
+  String get facilityPicker_unnamedFacility => 'Unnamed Facility';
+
+  @override
+  String get facilityPicker_typeNotSet => 'Type not set';
+
+  @override
+  String get facilityPicker_locationNotSet => 'Location not set';
+
+  @override
+  String facilityPicker_staffCount(int count) {
+    return '$count Staff';
+  }
 }

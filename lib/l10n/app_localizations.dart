@@ -10217,6 +10217,120 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Update'**
   String get notifications_catUpdate;
+
+  /// Select Facility screen: loading the facilities timed out.
+  ///
+  /// In en, this message translates to:
+  /// **'This is taking longer than expected. Check your connection and try again.'**
+  String get selectFacility_slowLoad;
+
+  /// Select Facility screen: loading failed; error is the friendly reason.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t load your facilities. {error}'**
+  String selectFacility_loadFailed(String error);
+
+  /// Select Facility screen title.
+  ///
+  /// In en, this message translates to:
+  /// **'Select Facility'**
+  String get selectFacility_title;
+
+  /// Select Facility screen button after choosing one.
+  ///
+  /// In en, this message translates to:
+  /// **'Proceed'**
+  String get selectFacility_proceed;
+
+  /// Select Facility card: a facility with no name.
+  ///
+  /// In en, this message translates to:
+  /// **'Unnamed'**
+  String get selectFacility_unnamed;
+
+  /// Select Facility card hint: this one is chosen.
+  ///
+  /// In en, this message translates to:
+  /// **'Selected'**
+  String get selectFacility_selected;
+
+  /// Select Facility card hint on hover.
+  ///
+  /// In en, this message translates to:
+  /// **'Click to select'**
+  String get selectFacility_clickToSelect;
+
+  /// Facilities and Select Facility screens: the account has no facility.
+  ///
+  /// In en, this message translates to:
+  /// **'No facilities found.'**
+  String get facilities_noneFound;
+
+  /// Facility picker top bar, under the app name.
+  ///
+  /// In en, this message translates to:
+  /// **'Manage. Care. Grow.'**
+  String get facilityPicker_tagline;
+
+  /// Facility picker profile menu item.
+  ///
+  /// In en, this message translates to:
+  /// **'Log Out'**
+  String get facilityPicker_logOut;
+
+  /// Facility picker heading.
+  ///
+  /// In en, this message translates to:
+  /// **'Select Your Facility'**
+  String get facilityPicker_title;
+
+  /// Facility picker, under the heading.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose the facility you want to manage. You can switch between your facilities at any time from the top menu.'**
+  String get facilityPicker_intro;
+
+  /// Facility picker search field.
+  ///
+  /// In en, this message translates to:
+  /// **'Search facility by name, location or type...'**
+  String get facilityPicker_searchHint;
+
+  /// Facility picker type filter: no filter.
+  ///
+  /// In en, this message translates to:
+  /// **'All Types'**
+  String get facilityPicker_allTypes;
+
+  /// Facility picker type filter button when nothing is chosen.
+  ///
+  /// In en, this message translates to:
+  /// **'Filter'**
+  String get facilityPicker_filter;
+
+  /// Facility picker card: a facility with no name.
+  ///
+  /// In en, this message translates to:
+  /// **'Unnamed Facility'**
+  String get facilityPicker_unnamedFacility;
+
+  /// Facility picker card: no facility type.
+  ///
+  /// In en, this message translates to:
+  /// **'Type not set'**
+  String get facilityPicker_typeNotSet;
+
+  /// Facility picker card: no address.
+  ///
+  /// In en, this message translates to:
+  /// **'Location not set'**
+  String get facilityPicker_locationNotSet;
+
+  /// Facility picker card: how many people work there.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} Staff'**
+  String facilityPicker_staffCount(int count);
 }
 
 class _AppLocalizationsDelegate
