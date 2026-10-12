@@ -462,6 +462,12 @@
       "file": "lib/services/receipt_printer_service.dart",
       "lineContains": "",
       "reason": "out of scope for step 2F (docs/PHASE2_LOCALISATION_SPEC.md 2.8): receipt, PDF and printer language will be a facility setting (a later feature)"
+    },
+    {
+      "rule": "R10",
+      "file": "lib/screens/settings/export_data_screen.dart",
+      "lineContains": "",
+      "reason": "out of scope for step 2F (docs/PHASE2_LOCALISATION_SPEC.md 2.8): the exported file's sheet subtitles and share text stay English, like receipts and PDFs; every on-screen text in this file is already in the language files (2F-6)"
     }
   ],
   "counts": {
@@ -510,7 +516,6 @@
       "lib/screens/services/service_receipt_preview_screen.dart": 31,
       "lib/screens/services/services_archive_screen.dart": 23,
       "lib/screens/services/services_screen.dart": 28,
-      "lib/screens/settings/export_data_screen.dart": 25,
       "lib/services/role_change_service.dart": 1,
       "lib/services/session_validity_service.dart": 1
     },

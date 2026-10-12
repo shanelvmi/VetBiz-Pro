@@ -13,6 +13,7 @@ import '../../utils/web_download.dart';
 import '../../data/collections.dart';
 import '../../data/fields.dart';
 import '../../config/money.dart';
+import '../../l10n/l10n.dart';
 import '../../config/app_ranges.dart';
 import '../../data/data_keys.dart';
 import '../../config/app_info.dart';
@@ -58,15 +59,39 @@ class ExportDataScreen extends StatefulWidget {
 
 class _ExportDataScreenState extends State<ExportDataScreen> {
 
-  static const List<Map<String, String>> _dataTypes = [
-    {'title': 'Sales & Transactions', 'subtitle': 'Sales (incl. archived) and transaction history'},
-    {'title': 'Service Records', 'subtitle': 'Services performed (incl. archived), by client and category'},
-    {'title': 'Product Inventory Catalog', 'subtitle': 'Current stock levels, costs, and SKU list'},
-    {'title': 'Client Directory & Balances', 'subtitle': 'Client contacts and current outstanding balances'},
-    {'title': 'Debtors / Outstanding Balances', 'subtitle': 'Itemized list of everything currently owed'},
-    {'title': 'Payments Ledger', 'subtitle': 'Every payment collected - sales, services, debts, other income'},
-    {'title': 'Activity Log', 'subtitle': 'Who did what, and when'},
+  // The English names are the values: compared, used in the file name and
+  // the share text. _dataTypeLabel and _dataTypeHint are what is shown.
+  static const List<String> _dataTypes = [
+    'Sales & Transactions',
+    'Service Records',
+    'Product Inventory Catalog',
+    'Client Directory & Balances',
+    'Debtors / Outstanding Balances',
+    'Payments Ledger',
+    'Activity Log',
   ];
+
+  String _dataTypeLabel(String type) => switch (type) {
+        'Sales & Transactions' => context.l10n.export_salesTransactions,
+        'Service Records' => context.l10n.common_serviceRecords,
+        'Product Inventory Catalog' => context.l10n.export_productCatalog,
+        'Client Directory & Balances' => context.l10n.export_clientDirectory,
+        'Debtors / Outstanding Balances' => context.l10n.export_debtors,
+        'Payments Ledger' => context.l10n.export_paymentsLedger,
+        'Activity Log' => context.l10n.export_activityLog,
+        _ => type,
+      };
+
+  String _dataTypeHint(String type) => switch (type) {
+        'Sales & Transactions' => context.l10n.export_salesTransactionsHint,
+        'Service Records' => context.l10n.export_serviceRecordsHint,
+        'Product Inventory Catalog' => context.l10n.export_productCatalogHint,
+        'Client Directory & Balances' => context.l10n.export_clientDirectoryHint,
+        'Debtors / Outstanding Balances' => context.l10n.export_debtorsHint,
+        'Payments Ledger' => context.l10n.export_paymentsLedgerHint,
+        'Activity Log' => context.l10n.export_activityLogHint,
+        _ => '',
+      };
 
   // These two are point-in-time snapshots, not something with a
   // meaningful "date it happened" - the date range filter doesn't apply.
@@ -321,7 +346,7 @@ class _ExportDataScreenState extends State<ExportDataScreen> {
 
       if (isDesktopWeb) {
         downloadFileWeb(bytes, fileName, mimeType: mimeType);
-        AppFeedback.success('Exported $_selectedDataType');
+        AppFeedback.success(L10n.current.export_done(_dataTypeLabel(_selectedDataType)));
         return;
       }
 
@@ -329,7 +354,7 @@ class _ExportDataScreenState extends State<ExportDataScreen> {
 
       await Share.shareXFiles([xfile], text: '${AppInfo.name} export: $_selectedDataType');
 
-      AppFeedback.success('Exported $_selectedDataType');
+      AppFeedback.success(L10n.current.export_done(_dataTypeLabel(_selectedDataType)));
     } catch (e, st) {
       if (!mounted) return;
       // Confirmed on the receipt screens: desktop browsers' well-known
@@ -343,7 +368,7 @@ class _ExportDataScreenState extends State<ExportDataScreen> {
         downloadFileWeb(bytes, fileName, mimeType: mimeType);
         return;
       }
-      AppFeedback.error("Couldn't export $_selectedDataType", error: e, stackTrace: st);
+      AppFeedback.error(L10n.current.export_failed(_dataTypeLabel(_selectedDataType)), error: e, stackTrace: st);
     } finally {
       if (mounted) setState(() => _isExporting = false);
     }
@@ -715,7 +740,7 @@ class _ExportDataScreenState extends State<ExportDataScreen> {
         firstDate: DateTime(2020),
         lastDate: now,
         initialDate: now,
-        helpText: 'Select Start Date',
+        helpText: context.l10n.export_selectStart,
       );
       if (start == null || !mounted) return;
 
@@ -724,7 +749,7 @@ class _ExportDataScreenState extends State<ExportDataScreen> {
         firstDate: start,
         lastDate: now,
         initialDate: now.isBefore(start) ? start : now,
-        helpText: 'Select End Date',
+        helpText: context.l10n.export_selectEnd,
       );
       if (end == null || !mounted) return;
 
@@ -747,31 +772,31 @@ class _ExportDataScreenState extends State<ExportDataScreen> {
         }
 
         return AlertDialog(
-          title: const Text('Date Range'),
+          title: Text(context.l10n.export_dateRange),
           contentPadding: const EdgeInsets.symmetric(vertical: AppSpacing.s12),
           content: SizedBox(
             width: 320,
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                presetTile('Last 7 Days', () => DateTimeRange(
+                presetTile(context.l10n.export_last7, () => DateTimeRange(
                     start: today.subtract(AppRanges.exportLast7DaysBack), end: today)),
-                presetTile('Last 30 Days', () => DateTimeRange(
+                presetTile(context.l10n.export_last30, () => DateTimeRange(
                     start: today.subtract(AppRanges.exportLast30DaysBack), end: today)),
-                presetTile('This Month', () => DateTimeRange(
+                presetTile(context.l10n.payments_thisMonth, () => DateTimeRange(
                     start: DateTime(today.year, today.month, 1), end: today)),
-                presetTile('Last Month', () {
+                presetTile(context.l10n.export_lastMonth, () {
                   final lastMonth = DateTime(today.year, today.month - 1, 1);
                   final lastDayOfLastMonth = DateTime(today.year, today.month, 0);
                   return DateTimeRange(start: lastMonth, end: lastDayOfLastMonth);
                 }),
-                presetTile('This Year', () => DateTimeRange(
+                presetTile(context.l10n.export_thisYear, () => DateTimeRange(
                     start: DateTime(today.year, 1, 1), end: today)),
-                presetTile('All Time', () => null),
+                presetTile(context.l10n.export_allTime, () => null),
                 const Divider(height: 16),
                 ListTile(
                   leading: Icon(Icons.edit_calendar_outlined, color: context.colors.primary, size: AppIconSize.i20),
-                  title: const Text('Custom Range...'),
+                  title: Text(context.l10n.export_customRange),
                   hoverColor: context.colors.accent.withValues(alpha: AppAlpha.a10),
                   onTap: pickCustomRange,
                 ),
@@ -781,7 +806,7 @@ class _ExportDataScreenState extends State<ExportDataScreen> {
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context),
-              child: Text('Cancel', style: TextStyle(color: context.colors.primary)),
+              child: Text(context.l10n.common_cancel, style: TextStyle(color: context.colors.primary)),
             ),
           ],
         );
@@ -795,18 +820,18 @@ class _ExportDataScreenState extends State<ExportDataScreen> {
     final isSnapshot = _snapshotTypes.contains(_selectedDataType);
 
     String dateRangeText = isSnapshot
-        ? 'Not applicable - this is a current snapshot'
+        ? context.l10n.export_notApplicable
         : !_hasChosenDateRange
-            ? 'Please select a date range below'
+            ? context.l10n.export_pickRange
             : _selectedDateRange == null
-                ? 'All Records (No Filters Applied)'
-                : '${DateFormat(DataKeys.isoDay).format(_selectedDateRange!.start)}  to  ${DateFormat(DataKeys.isoDay).format(_selectedDateRange!.end)}';
+                ? context.l10n.export_allRecords
+                : context.l10n.export_rangeLine(DateFormat(DataKeys.isoDay).format(_selectedDateRange!.start), DateFormat(DataKeys.isoDay).format(_selectedDateRange!.end));
 
     return Scaffold(
       backgroundColor: context.colors.background,
       appBar: AppBar(
         centerTitle: true,
-        title: const Text('Export Center', style: TextStyle(fontWeight: AppFontWeight.semibold, fontSize: AppFontSize.f20)),
+        title: Text(context.l10n.export_title, style: const TextStyle(fontWeight: AppFontWeight.semibold, fontSize: AppFontSize.f20)),
         backgroundColor: context.colors.primary,
         foregroundColor: context.colors.onPrimary,
         elevation: AppElevation.e0,
@@ -817,7 +842,7 @@ class _ExportDataScreenState extends State<ExportDataScreen> {
           child: ListView(
         padding: const EdgeInsets.all(AppSpacing.s16),
         children: [
-          _buildSectionTitle('1. Select Dataset Category'),
+          _buildSectionTitle(context.l10n.export_step1),
           const SizedBox(height: AppSpacing.s6),
           Card(
             elevation: cardElevation,
@@ -826,21 +851,21 @@ class _ExportDataScreenState extends State<ExportDataScreen> {
               children: [
                 for (int i = 0; i < _dataTypes.length; i++) ...[
                   if (i > 0) Divider(height: 1, color: context.colors.divider, indent: 56),
-                  _buildRadioTile(_dataTypes[i]['title']!, _dataTypes[i]['subtitle']!),
+                  _buildRadioTile(_dataTypes[i]),
                 ],
               ],
             ),
           ),
           const SizedBox(height: AppSpacing.s20),
 
-          _buildSectionTitle('2. Scope & Date Range Filtering'),
+          _buildSectionTitle(context.l10n.export_step2),
           const SizedBox(height: AppSpacing.s6),
           Card(
             elevation: cardElevation,
             margin: EdgeInsets.zero,
             child: ListTile(
               leading: Icon(Icons.calendar_today_outlined, color: context.colors.primary),
-              title: const Text('Date Selection Scope', style: TextStyle(fontWeight: AppFontWeight.medium, fontSize: AppFontSize.f15)),
+              title: Text(context.l10n.export_scope, style: const TextStyle(fontWeight: AppFontWeight.medium, fontSize: AppFontSize.f15)),
               subtitle: Text(dateRangeText),
               trailing: isSnapshot
                   ? null
@@ -852,13 +877,13 @@ class _ExportDataScreenState extends State<ExportDataScreen> {
                           return context.colors.primary;
                         }),
                       ),
-                      child: const Text('Modify', style: TextStyle(fontWeight: AppFontWeight.bold)),
+                      child: Text(context.l10n.export_modify, style: const TextStyle(fontWeight: AppFontWeight.bold)),
                     ),
             ),
           ),
           const SizedBox(height: AppSpacing.s20),
 
-          _buildSectionTitle('3. Output Document Layout'),
+          _buildSectionTitle(context.l10n.export_step3),
           const SizedBox(height: AppSpacing.s6),
           Card(
             elevation: cardElevation,
@@ -867,14 +892,14 @@ class _ExportDataScreenState extends State<ExportDataScreen> {
               children: [
                 _buildFormatTile(
                   value: 'xlsx',
-                  title: 'Excel Workbook (.xlsx)',
-                  subtitle: 'Bolded headers, multiple sheets, real dates - opens clean, ready to keep',
+                  title: context.l10n.export_xlsx,
+                  subtitle: context.l10n.export_xlsxHint,
                 ),
                 Divider(height: 1, color: context.colors.divider, indent: 56),
                 _buildFormatTile(
                   value: 'csv',
-                  title: 'CSV (Plain Text)',
-                  subtitle: 'Universal, simple text - opens in Excel, Sheets, or any editor',
+                  title: context.l10n.export_csv,
+                  subtitle: context.l10n.export_csvHint,
                 ),
               ],
             ),
@@ -885,7 +910,7 @@ class _ExportDataScreenState extends State<ExportDataScreen> {
             Padding(
               padding: const EdgeInsets.only(bottom: AppSpacing.s8, left: AppSpacing.s4),
               child: Text(
-                'Select a date range above before exporting.',
+                context.l10n.export_pickRangeFirst,
                 style: TextStyle(fontSize: AppFontSize.f12_5, color: context.colors.textSoft),
               ),
             ),
@@ -897,7 +922,7 @@ class _ExportDataScreenState extends State<ExportDataScreen> {
                   ? null
                   : () {
                       if (!isSnapshot && !_hasChosenDateRange) {
-                        AppFeedback.warning('Select a date range before exporting');
+                        AppFeedback.warning(L10n.current.export_pickRangeWarning);
                         return;
                       }
                       _triggerExportPipeline();
@@ -916,8 +941,8 @@ class _ExportDataScreenState extends State<ExportDataScreen> {
                       width: 24, height: 24,
                       child: CircularProgressIndicator(strokeWidth: 2.5, color: context.colors.onPrimary),
                     )
-                  : const Text('Generate & Export Data',
-                      style: TextStyle(fontSize: AppFontSize.f15, fontWeight: AppFontWeight.bold, letterSpacing: 0.5)),
+                  : Text(context.l10n.export_generate,
+                      style: const TextStyle(fontSize: AppFontSize.f15, fontWeight: AppFontWeight.bold, letterSpacing: 0.5)),
             ),
           ),
         ],
@@ -927,10 +952,10 @@ class _ExportDataScreenState extends State<ExportDataScreen> {
     );
   }
 
-  Widget _buildRadioTile(String title, String subtitle) {
+  Widget _buildRadioTile(String title) {
     return RadioListTile<String>(
-      title: Text(title, style: const TextStyle(fontWeight: AppFontWeight.medium, fontSize: AppFontSize.f15)),
-      subtitle: Text(subtitle, style: const TextStyle(fontSize: AppFontSize.f13)),
+      title: Text(_dataTypeLabel(title), style: const TextStyle(fontWeight: AppFontWeight.medium, fontSize: AppFontSize.f15)),
+      subtitle: Text(_dataTypeHint(title), style: const TextStyle(fontSize: AppFontSize.f13)),
       value: title,
       groupValue: _selectedDataType,
       activeColor: context.colors.primary,
