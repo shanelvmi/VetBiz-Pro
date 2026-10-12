@@ -5036,4 +5036,73 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get register_validEmailExample =>
       'Enter a valid email address, like name@example.com';
+
+  @override
+  String get register_validEmail => 'Enter a valid email address.';
+
+  @override
+  String get register_strongerPasswordField => 'Choose a stronger password';
+
+  @override
+  String get register_strongerPassword => 'Choose a stronger password.';
+
+  @override
+  String register_createFailed(String reason) {
+    return 'Couldn\'t create the account. $reason';
+  }
+
+  @override
+  String get register_createYourAccount => 'Create your account';
+
+  @override
+  String register_setUpApp(String appName) {
+    return 'Set up $appName for your agrovet or veterinary centre in a few minutes.';
+  }
+
+  @override
+  String get register_setUpCentre =>
+      'Set up your agrovet or veterinary centre in a few minutes.';
+
+  @override
+  String get register_benefitAllInOne =>
+      'Sales, stock, clients and debts in one place';
+
+  @override
+  String get register_benefitInvite =>
+      'Invite your team with secure, one-time codes';
+
+  @override
+  String get register_benefitTrial =>
+      'Every new facility starts with a trial period';
+
+  @override
+  String get register_alreadyHaveAccount => 'Already have an account?';
+
+  @override
+  String get register_createAccount => 'Create account';
+
+  @override
+  String get register_termsPrefix => 'By creating an account you agree to our ';
+
+  @override
+  String get register_termsAnd => ' and ';
+
+  @override
+  String get register_saveChanges => 'Save changes';
+
+  @override
+  String get register_fieldFullName => 'Full name';
+
+  @override
+  String get register_fieldPhone => 'Phone number';
+
+  @override
+  String get register_fieldConfirmPassword => 'Confirm password';
+
+  @override
+  String get register_enterFullName => 'Enter your full name';
+
+  @override
+  String get register_nameTooShort =>
+      'Your name looks too short - enter your full name';
 }

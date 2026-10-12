@@ -5062,4 +5062,73 @@ class AppLocalizationsSw extends AppLocalizations {
   @override
   String get register_validEmailExample =>
       'Weka barua pepe sahihi, kama name@example.com';
+
+  @override
+  String get register_validEmail => 'Weka barua pepe sahihi.';
+
+  @override
+  String get register_strongerPasswordField => 'Chagua nenosiri imara zaidi';
+
+  @override
+  String get register_strongerPassword => 'Chagua nenosiri imara zaidi.';
+
+  @override
+  String register_createFailed(String reason) {
+    return 'Imeshindwa kufungua akaunti. $reason';
+  }
+
+  @override
+  String get register_createYourAccount => 'Fungua akaunti yako';
+
+  @override
+  String register_setUpApp(String appName) {
+    return 'Andaa $appName kwa agrovet au kituo chako cha mifugo kwa dakika chache.';
+  }
+
+  @override
+  String get register_setUpCentre =>
+      'Andaa agrovet au kituo chako cha mifugo kwa dakika chache.';
+
+  @override
+  String get register_benefitAllInOne =>
+      'Mauzo, stoo, wateja na madeni sehemu moja';
+
+  @override
+  String get register_benefitInvite =>
+      'Alika timu yako kwa misimbo salama ya kutumika mara moja';
+
+  @override
+  String get register_benefitTrial =>
+      'Kila kituo kipya kinaanza na kipindi cha majaribio';
+
+  @override
+  String get register_alreadyHaveAccount => 'Una akaunti tayari?';
+
+  @override
+  String get register_createAccount => 'Fungua akaunti';
+
+  @override
+  String get register_termsPrefix => 'Kwa kufungua akaunti unakubali ';
+
+  @override
+  String get register_termsAnd => ' na ';
+
+  @override
+  String get register_saveChanges => 'Hifadhi mabadiliko';
+
+  @override
+  String get register_fieldFullName => 'Jina kamili';
+
+  @override
+  String get register_fieldPhone => 'Namba ya simu';
+
+  @override
+  String get register_fieldConfirmPassword => 'Thibitisha nenosiri';
+
+  @override
+  String get register_enterFullName => 'Weka jina lako kamili';
+
+  @override
+  String get register_nameTooShort =>
+      'Jina lako linaonekana fupi mno - weka jina lako kamili';
 }

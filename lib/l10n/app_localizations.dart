@@ -8717,6 +8717,126 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Enter a valid email address, like name@example.com'**
   String get register_validEmailExample;
+
+  /// Register error: the email was refused.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter a valid email address.'**
+  String get register_validEmail;
+
+  /// Register: password field error.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose a stronger password'**
+  String get register_strongerPasswordField;
+
+  /// Register error: the password was refused as weak.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose a stronger password.'**
+  String get register_strongerPassword;
+
+  /// Register error; reason is a FriendlyError message.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t create the account. {reason}'**
+  String register_createFailed(String reason);
+
+  /// Register welcome panel title.
+  ///
+  /// In en, this message translates to:
+  /// **'Create your account'**
+  String get register_createYourAccount;
+
+  /// Register welcome panel.
+  ///
+  /// In en, this message translates to:
+  /// **'Set up {appName} for your agrovet or veterinary centre in a few minutes.'**
+  String register_setUpApp(String appName);
+
+  /// Register welcome strip (narrow screens).
+  ///
+  /// In en, this message translates to:
+  /// **'Set up your agrovet or veterinary centre in a few minutes.'**
+  String get register_setUpCentre;
+
+  /// Register welcome panel benefit.
+  ///
+  /// In en, this message translates to:
+  /// **'Sales, stock, clients and debts in one place'**
+  String get register_benefitAllInOne;
+
+  /// Register welcome panel benefit.
+  ///
+  /// In en, this message translates to:
+  /// **'Invite your team with secure, one-time codes'**
+  String get register_benefitInvite;
+
+  /// Register welcome panel benefit.
+  ///
+  /// In en, this message translates to:
+  /// **'Every new facility starts with a trial period'**
+  String get register_benefitTrial;
+
+  /// Register welcome panel, above Log in.
+  ///
+  /// In en, this message translates to:
+  /// **'Already have an account?'**
+  String get register_alreadyHaveAccount;
+
+  /// Register submit button.
+  ///
+  /// In en, this message translates to:
+  /// **'Create account'**
+  String get register_createAccount;
+
+  /// Register terms line, before the Terms of Service link (ends with a space).
+  ///
+  /// In en, this message translates to:
+  /// **'By creating an account you agree to our '**
+  String get register_termsPrefix;
+
+  /// Register terms line, between the two links (spaces on both sides).
+  ///
+  /// In en, this message translates to:
+  /// **' and '**
+  String get register_termsAnd;
+
+  /// Edit Profile submit button.
+  ///
+  /// In en, this message translates to:
+  /// **'Save changes'**
+  String get register_saveChanges;
+
+  /// Register field label (also named in the fix-these-fields message).
+  ///
+  /// In en, this message translates to:
+  /// **'Full name'**
+  String get register_fieldFullName;
+
+  /// Register field label (also named in the fix-these-fields message).
+  ///
+  /// In en, this message translates to:
+  /// **'Phone number'**
+  String get register_fieldPhone;
+
+  /// Register field label (also named in the fix-these-fields message).
+  ///
+  /// In en, this message translates to:
+  /// **'Confirm password'**
+  String get register_fieldConfirmPassword;
+
+  /// Register name field hint and error.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter your full name'**
+  String get register_enterFullName;
+
+  /// Register name field error.
+  ///
+  /// In en, this message translates to:
+  /// **'Your name looks too short - enter your full name'**
+  String get register_nameTooShort;
 }
 
 class _AppLocalizationsDelegate
