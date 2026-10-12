@@ -201,7 +201,7 @@ class _FacilityPickerScreenState extends State<FacilityPickerScreen> {
             height: 34,
             alignment: Alignment.center,
             decoration: BoxDecoration(color: context.colors.surface, shape: BoxShape.circle),
-            child: Text('VB',
+            child: Text(AppInfo.logoInitials,
                 style: TextStyle(color: context.colors.primary, fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f13)),
           ),
           const SizedBox(width: AppSpacing.s10),
@@ -209,7 +209,7 @@ class _FacilityPickerScreenState extends State<FacilityPickerScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(AppInfo.name, style: TextStyle(color: context.colors.onPrimary, fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f16)),
-              Text('Manage. Care. Grow.', style: TextStyle(color: context.colors.onPrimaryMuted, fontSize: AppFontSize.f10_5)),
+              Text(context.l10n.facilityPicker_tagline, style: TextStyle(color: context.colors.onPrimaryMuted, fontSize: AppFontSize.f10_5)),
             ],
           ),
           const Spacer(),
@@ -218,7 +218,7 @@ class _FacilityPickerScreenState extends State<FacilityPickerScreen> {
               if (value == 'logout') forceLogoutAndShowLogin();
             },
             itemBuilder: (context) => [
-              const PopupMenuItem(value: 'logout', child: Text('Log Out')),
+              PopupMenuItem(value: 'logout', child: Text(context.l10n.facilityPicker_logOut)),
             ],
             child: Row(
               mainAxisSize: MainAxisSize.min,
@@ -231,7 +231,7 @@ class _FacilityPickerScreenState extends State<FacilityPickerScreen> {
                   foregroundColor: context.colors.primary,
                 ),
                 const SizedBox(width: AppSpacing.s8),
-                Text(_currentUserName.isEmpty ? 'Account' : _currentUserName,
+                Text(_currentUserName.isEmpty ? context.l10n.dashboard_account : _currentUserName,
                     style: TextStyle(color: context.colors.onPrimary, fontWeight: AppFontWeight.semibold, fontSize: AppFontSize.f13)),
                 Icon(Icons.expand_more, color: context.colors.onPrimary, size: AppIconSize.i18),
               ],
@@ -263,11 +263,11 @@ class _FacilityPickerScreenState extends State<FacilityPickerScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text('Select Your Facility',
+                    Text(context.l10n.facilityPicker_title,
                         style: TextStyle(fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f24, color: context.colors.primary)),
                     const SizedBox(height: AppSpacing.s6),
                     Text(
-                      'Choose the facility you want to manage. You can switch between your facilities at any time from the top menu.',
+                      context.l10n.facilityPicker_intro,
                       style: TextStyle(color: context.colors.textMuted, fontSize: AppFontSize.f13_5),
                     ),
                   ],
@@ -319,7 +319,7 @@ class _FacilityPickerScreenState extends State<FacilityPickerScreen> {
         Expanded(
           child: TextField(
             decoration: InputDecoration(
-              hintText: 'Search facility by name, location or type...',
+              hintText: context.l10n.facilityPicker_searchHint,
               prefixIcon: const Icon(Icons.search, size: AppIconSize.i20),
               isDense: true,
               contentPadding: const EdgeInsets.symmetric(vertical: AppSpacing.s12, horizontal: AppSpacing.s12),
@@ -335,7 +335,7 @@ class _FacilityPickerScreenState extends State<FacilityPickerScreen> {
           initialValue: _typeFilter,
           onSelected: (value) => setState(() => _typeFilter = value),
           itemBuilder: (context) => [
-            const PopupMenuItem(value: null, child: Text('All Types')),
+            PopupMenuItem(value: null, child: Text(context.l10n.facilityPicker_allTypes)),
             // Shows the label; filters on the stored type.
             ...kFacilityTypes.map((t) => PopupMenuItem(value: t, child: Text(context.l10n.facilityTypeLabel(t)))),
           ],
@@ -347,7 +347,7 @@ class _FacilityPickerScreenState extends State<FacilityPickerScreen> {
               children: [
                 const Icon(Icons.filter_list, size: AppIconSize.i18),
                 const SizedBox(width: AppSpacing.s6),
-                Text(_typeFilter == null ? 'Filter' : context.l10n.facilityTypeLabel(_typeFilter!), style: const TextStyle(fontSize: AppFontSize.f13)),
+                Text(_typeFilter == null ? context.l10n.facilityPicker_filter : context.l10n.facilityTypeLabel(_typeFilter!), style: const TextStyle(fontSize: AppFontSize.f13)),
                 const Icon(Icons.expand_more, size: AppIconSize.i18),
               ],
             ),
@@ -385,7 +385,7 @@ class _FacilityPickerScreenState extends State<FacilityPickerScreen> {
 
   Widget _buildFacilityCard(Map<String, dynamic> facility) {
     final facilityId = facility[Fields.facilityId] as String;
-    final name = facility['facilityName'] as String? ?? 'Unnamed Facility';
+    final name = facility['facilityName'] as String? ?? context.l10n.facilityPicker_unnamedFacility;
     final type = facility['facilityType'] as String? ?? '';
     final details = _detailsByFacility[facilityId];
     final logoUrl = details?['logoUrl'] as String?;
@@ -439,7 +439,7 @@ class _FacilityPickerScreenState extends State<FacilityPickerScreen> {
                               color: type.isNotEmpty ? typeColor.withValues(alpha: AppAlpha.a10) : context.colors.textHint.withValues(alpha: AppAlpha.a10),
                               borderRadius: BorderRadius.circular(AppRadius.r8),
                             ),
-                            child: Text(type.isNotEmpty ? context.l10n.facilityTypeLabel(type) : 'Type not set',
+                            child: Text(type.isNotEmpty ? context.l10n.facilityTypeLabel(type) : context.l10n.facilityPicker_typeNotSet,
                                 style: TextStyle(color: type.isNotEmpty ? typeColor : context.colors.textMuted, fontSize: AppFontSize.f11, fontWeight: AppFontWeight.semibold)),
                           ),
                         ],
@@ -454,7 +454,7 @@ class _FacilityPickerScreenState extends State<FacilityPickerScreen> {
                     const SizedBox(width: AppSpacing.s4),
                     Expanded(
                       child: Text(
-                        (address != null && address.isNotEmpty) ? address : 'Location not set',
+                        (address != null && address.isNotEmpty) ? address : context.l10n.facilityPicker_locationNotSet,
                         style: TextStyle(fontSize: AppFontSize.f12, color: context.colors.textMuted),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
@@ -467,7 +467,7 @@ class _FacilityPickerScreenState extends State<FacilityPickerScreen> {
                   children: [
                     Icon(Icons.people_outline, size: AppIconSize.i14, color: context.colors.textHint),
                     const SizedBox(width: AppSpacing.s4),
-                    Text('$staffCount Staff', style: TextStyle(fontSize: AppFontSize.f12, color: context.colors.textMuted)),
+                    Text(context.l10n.facilityPicker_staffCount(staffCount), style: TextStyle(fontSize: AppFontSize.f12, color: context.colors.textMuted)),
                     const SizedBox(width: AppSpacing.s12),
                     Container(width: 6, height: 6, decoration: BoxDecoration(color: FacilityStatus.fromKey(status) == FacilityStatus.active ? context.colors.success : context.colors.textHint, shape: BoxShape.circle)),
                     const SizedBox(width: AppSpacing.s4),
@@ -483,13 +483,13 @@ class _FacilityPickerScreenState extends State<FacilityPickerScreen> {
                           ? ElevatedButton.icon(
                               onPressed: () => activateFacilityAndGoToDashboard(context: context, facility: facility, role: widget.role),
                               icon: const Icon(Icons.arrow_forward, size: AppIconSize.i16),
-                              label: const Text('Open Facility'),
+                              label: Text(context.l10n.facilityPicker_openFacility),
                               style: ElevatedButton.styleFrom(backgroundColor: context.colors.primary, foregroundColor: context.colors.onPrimary),
                             )
                           : OutlinedButton.icon(
                               onPressed: () => activateFacilityAndGoToDashboard(context: context, facility: facility, role: widget.role),
                               icon: const Icon(Icons.arrow_forward, size: AppIconSize.i16),
-                              label: const Text('Open Facility'),
+                              label: Text(context.l10n.facilityPicker_openFacility),
                               style: OutlinedButton.styleFrom(foregroundColor: context.colors.primary),
                             ),
                     ),
@@ -499,7 +499,7 @@ class _FacilityPickerScreenState extends State<FacilityPickerScreen> {
                         if (value == 'default') _setAsDefault(facilityId);
                       },
                       itemBuilder: (context) => [
-                        if (!isDefault) const PopupMenuItem(value: 'default', child: Text('Set as Default')),
+                        if (!isDefault) PopupMenuItem(value: 'default', child: Text(context.l10n.facilityPicker_setAsDefault)),
                       ],
                       child: Container(
                         padding: const EdgeInsets.all(AppSpacing.s10),
@@ -524,7 +524,7 @@ class _FacilityPickerScreenState extends State<FacilityPickerScreen> {
                   children: [
                     Icon(Icons.star, size: AppIconSize.i12, color: context.colors.onPrimary),
                     SizedBox(width: AppSpacing.s3),
-                    Text('Default', style: TextStyle(color: context.colors.onPrimary, fontSize: AppFontSize.f10, fontWeight: AppFontWeight.bold)),
+                    Text(context.l10n.facilityPicker_default, style: TextStyle(color: context.colors.onPrimary, fontSize: AppFontSize.f10, fontWeight: AppFontWeight.bold)),
                   ],
                 ),
               ),
@@ -537,7 +537,7 @@ class _FacilityPickerScreenState extends State<FacilityPickerScreen> {
   Widget _buildFooter() {
     return Center(
       child: Text(
-        'Secure  â€¢  Reliable  â€¢  Built for Veterinary Businesses',
+        context.l10n.facilityPicker_footer,
         style: TextStyle(color: context.colors.textHint, fontSize: AppFontSize.f11_5),
       ),
     );

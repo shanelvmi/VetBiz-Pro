@@ -90,8 +90,8 @@ class _SelectFacilityScreenState extends State<SelectFacilityScreen> {
     } catch (e) {
       debugPrint("Error loading facilities: $e");
       loadError = e is TimeoutException
-          ? 'This is taking longer than expected. Check your connection and try again.'
-          : "Couldn't load your facilities. ${FriendlyError.messageFor(e)}";
+          ? L10n.current.selectFacility_slowLoad
+          : L10n.current.selectFacility_loadFailed(FriendlyError.messageFor(e));
     } finally {
       if (mounted) setState(() => isLoading = false);
     }
@@ -156,7 +156,7 @@ class _SelectFacilityScreenState extends State<SelectFacilityScreen> {
     return Scaffold(
       backgroundColor: context.colors.background,
       appBar: AppBar(
-        title: const Text('Select Facility'),
+        title: Text(context.l10n.selectFacility_title),
         centerTitle: true,
         backgroundColor: context.colors.primary,
         foregroundColor: context.colors.background,
@@ -175,14 +175,14 @@ class _SelectFacilityScreenState extends State<SelectFacilityScreen> {
                     ElevatedButton(
                       onPressed: _loadFacilities,
                       style: ElevatedButton.styleFrom(backgroundColor: context.colors.primary, foregroundColor: context.colors.onPrimary),
-                      child: const Text('Try Again'),
+                      child: Text(context.l10n.common_tryAgain),
                     ),
                   ],
                 ),
               ),
             )
           : facilities.isEmpty
-          ? const Center(child: Text('No facilities found.'))
+          ? Center(child: Text(context.l10n.facilities_noneFound))
           : ListView.builder(
               padding: const EdgeInsets.all(AppSpacing.s24),
               itemCount: facilities.length,
@@ -206,7 +206,7 @@ class _SelectFacilityScreenState extends State<SelectFacilityScreen> {
               backgroundColor: context.colors.primary,
               foregroundColor: context.colors.background,
               icon: const Icon(Icons.arrow_forward),
-              label: const Text('Proceed'),
+              label: Text(context.l10n.selectFacility_proceed),
               onPressed: () {
                 final facility = facilities.firstWhere(
                   (f) => f[Fields.facilityId] == selectedFacilityId,
@@ -253,7 +253,7 @@ class _HoverCardState extends State<_HoverCard> {
 
   @override
   Widget build(BuildContext context) {
-    final name = widget.facility['facilityName'] ?? 'Unnamed';
+    final name = widget.facility['facilityName'] ?? context.l10n.selectFacility_unnamed;
     final type = widget.facility['facilityType'] ?? '';
     final icon = _getFacilityIcon(type);
 
@@ -321,7 +321,7 @@ class _HoverCardState extends State<_HoverCard> {
                 child: Padding(
                   padding: const EdgeInsets.only(left: AppSpacing.s12),
                   child: Text(
-                    widget.isSelected ? 'Selected' : 'Click to select',
+                    widget.isSelected ? context.l10n.selectFacility_selected : context.l10n.selectFacility_clickToSelect,
                     style: TextStyle(
                       fontSize: AppFontSize.f12,
                       color: context.colors.primary.withValues(alpha: AppAlpha.a85),
