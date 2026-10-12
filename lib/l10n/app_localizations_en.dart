@@ -5738,4 +5738,80 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get nav_sales => 'Sales';
+
+  @override
+  String get nav_services => 'Services';
+
+  @override
+  String get nav_debtors => 'Debtors';
+
+  @override
+  String get nav_reports => 'Reports';
+
+  @override
+  String get nav_platformAdmin => 'Platform Admin';
+
+  @override
+  String get insights_title => 'Insights';
+
+  @override
+  String get insights_serviceRevenue => 'Service revenue';
+
+  @override
+  String get insights_outstandingPayments => 'Outstanding payments';
+
+  @override
+  String get insights_watchSales => 'Keep an eye on sales this week.';
+
+  @override
+  String get insights_noActivity => 'No activity recorded yet.';
+
+  @override
+  String get insights_salesTrendingUp => 'Sales are trending upward.';
+
+  @override
+  String get insights_servicesGaining => 'Services are gaining momentum.';
+
+  @override
+  String get insights_strongActivity => 'Strong business activity today.';
+
+  @override
+  String get insights_pickingUp => 'Business is picking up.';
+
+  @override
+  String get insights_steady => 'Business is steady.';
+
+  @override
+  String get insights_quieter => 'A quieter day so far.';
+
+  @override
+  String get insights_slowing => 'Customer activity is slowing.';
+
+  @override
+  String get insights_noOutstanding => 'No outstanding payments.';
+
+  @override
+  String get insights_outstandingRising =>
+      'Outstanding payments are rising - worth following up.';
+
+  @override
+  String get insights_outstandingStable => 'Outstanding payments are stable.';
+
+  @override
+  String get insights_outstandingImproving =>
+      'Outstanding payments are improving.';
+
+  @override
+  String get insights_businessPulse => 'Business Pulse';
+
+  @override
+  String insights_loadFailed(String error) {
+    return 'Couldn\'t load insights. $error';
+  }
+
+  @override
+  String get insights_salesLast14 => 'Sales - Last 14 Days';
+
+  @override
+  String get insights_topProductsLast30 => 'Top 5 Products - Last 30 Days';
 }

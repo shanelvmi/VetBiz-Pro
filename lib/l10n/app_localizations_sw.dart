@@ -5769,4 +5769,79 @@ class AppLocalizationsSw extends AppLocalizations {
 
   @override
   String get nav_sales => 'Mauzo';
+
+  @override
+  String get nav_services => 'Huduma';
+
+  @override
+  String get nav_debtors => 'Wadaiwa';
+
+  @override
+  String get nav_reports => 'Ripoti';
+
+  @override
+  String get nav_platformAdmin => 'Msimamizi wa Jukwaa';
+
+  @override
+  String get insights_title => 'Maarifa';
+
+  @override
+  String get insights_serviceRevenue => 'Mapato ya huduma';
+
+  @override
+  String get insights_outstandingPayments => 'Malipo yanayodaiwa';
+
+  @override
+  String get insights_watchSales => 'Fuatilia mauzo wiki hii.';
+
+  @override
+  String get insights_noActivity => 'Bado hakuna shughuli iliyorekodiwa.';
+
+  @override
+  String get insights_salesTrendingUp => 'Mauzo yanapanda.';
+
+  @override
+  String get insights_servicesGaining => 'Huduma zinashika kasi.';
+
+  @override
+  String get insights_strongActivity => 'Biashara imechangamka leo.';
+
+  @override
+  String get insights_pickingUp => 'Biashara inaimarika.';
+
+  @override
+  String get insights_steady => 'Biashara iko imara.';
+
+  @override
+  String get insights_quieter => 'Siku tulivu kwa sasa.';
+
+  @override
+  String get insights_slowing => 'Shughuli za wateja zinapungua.';
+
+  @override
+  String get insights_noOutstanding => 'Hakuna malipo yanayodaiwa.';
+
+  @override
+  String get insights_outstandingRising =>
+      'Malipo yanayodaiwa yanaongezeka - inafaa kufuatilia.';
+
+  @override
+  String get insights_outstandingStable => 'Malipo yanayodaiwa hayabadiliki.';
+
+  @override
+  String get insights_outstandingImproving => 'Malipo yanayodaiwa yanapungua.';
+
+  @override
+  String get insights_businessPulse => 'Mapigo ya Biashara';
+
+  @override
+  String insights_loadFailed(String error) {
+    return 'Imeshindwa kupakia maarifa. $error';
+  }
+
+  @override
+  String get insights_salesLast14 => 'Mauzo - Siku 14 Zilizopita';
+
+  @override
+  String get insights_topProductsLast30 => 'Bidhaa 5 Bora - Siku 30 Zilizopita';
 }

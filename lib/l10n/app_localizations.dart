@@ -9845,6 +9845,150 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Sales'**
   String get nav_sales;
+
+  /// Sidebar item: opens Services.
+  ///
+  /// In en, this message translates to:
+  /// **'Services'**
+  String get nav_services;
+
+  /// Sidebar item: opens Active Debts.
+  ///
+  /// In en, this message translates to:
+  /// **'Debtors'**
+  String get nav_debtors;
+
+  /// Sidebar item: opens Reports.
+  ///
+  /// In en, this message translates to:
+  /// **'Reports'**
+  String get nav_reports;
+
+  /// Sidebar item (platform admins only): opens the operator console.
+  ///
+  /// In en, this message translates to:
+  /// **'Platform Admin'**
+  String get nav_platformAdmin;
+
+  /// Insights screen title and the Dashboard button that opens it.
+  ///
+  /// In en, this message translates to:
+  /// **'Insights'**
+  String get insights_title;
+
+  /// Business Pulse metric.
+  ///
+  /// In en, this message translates to:
+  /// **'Service revenue'**
+  String get insights_serviceRevenue;
+
+  /// Business Pulse metric.
+  ///
+  /// In en, this message translates to:
+  /// **'Outstanding payments'**
+  String get insights_outstandingPayments;
+
+  /// Business Pulse headline: weekly sales falling.
+  ///
+  /// In en, this message translates to:
+  /// **'Keep an eye on sales this week.'**
+  String get insights_watchSales;
+
+  /// Business Pulse headline: nothing recorded.
+  ///
+  /// In en, this message translates to:
+  /// **'No activity recorded yet.'**
+  String get insights_noActivity;
+
+  /// Business Pulse headline.
+  ///
+  /// In en, this message translates to:
+  /// **'Sales are trending upward.'**
+  String get insights_salesTrendingUp;
+
+  /// Business Pulse headline.
+  ///
+  /// In en, this message translates to:
+  /// **'Services are gaining momentum.'**
+  String get insights_servicesGaining;
+
+  /// Business Pulse headline.
+  ///
+  /// In en, this message translates to:
+  /// **'Strong business activity today.'**
+  String get insights_strongActivity;
+
+  /// Business Pulse headline.
+  ///
+  /// In en, this message translates to:
+  /// **'Business is picking up.'**
+  String get insights_pickingUp;
+
+  /// Business Pulse headline.
+  ///
+  /// In en, this message translates to:
+  /// **'Business is steady.'**
+  String get insights_steady;
+
+  /// Business Pulse headline.
+  ///
+  /// In en, this message translates to:
+  /// **'A quieter day so far.'**
+  String get insights_quieter;
+
+  /// Business Pulse headline.
+  ///
+  /// In en, this message translates to:
+  /// **'Customer activity is slowing.'**
+  String get insights_slowing;
+
+  /// Business Pulse line about debts.
+  ///
+  /// In en, this message translates to:
+  /// **'No outstanding payments.'**
+  String get insights_noOutstanding;
+
+  /// Business Pulse line about debts.
+  ///
+  /// In en, this message translates to:
+  /// **'Outstanding payments are rising - worth following up.'**
+  String get insights_outstandingRising;
+
+  /// Business Pulse line about debts.
+  ///
+  /// In en, this message translates to:
+  /// **'Outstanding payments are stable.'**
+  String get insights_outstandingStable;
+
+  /// Business Pulse line about debts.
+  ///
+  /// In en, this message translates to:
+  /// **'Outstanding payments are improving.'**
+  String get insights_outstandingImproving;
+
+  /// Insights card title.
+  ///
+  /// In en, this message translates to:
+  /// **'Business Pulse'**
+  String get insights_businessPulse;
+
+  /// Insights screen when loading failed; error is a friendly message.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t load insights. {error}'**
+  String insights_loadFailed(String error);
+
+  /// Insights chart title.
+  ///
+  /// In en, this message translates to:
+  /// **'Sales - Last 14 Days'**
+  String get insights_salesLast14;
+
+  /// Insights chart title.
+  ///
+  /// In en, this message translates to:
+  /// **'Top 5 Products - Last 30 Days'**
+  String get insights_topProductsLast30;
 }
 
 class _AppLocalizationsDelegate
