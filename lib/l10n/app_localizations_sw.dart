@@ -5434,4 +5434,95 @@ class AppLocalizationsSw extends AppLocalizations {
   @override
   String get noFacility_approvalNote =>
       'Msimamizi wa kituo lazima akuidhinishe, kama ilivyo kwa msaidizi yeyote mpya. Au muombe msimamizi wako wa awali akurudishe.';
+
+  @override
+  String get subscription_freeTrialTitle => 'Majaribio Bure';
+
+  @override
+  String get subscription_onFreeTrial => 'Uko kwenye majaribio bure.';
+
+  @override
+  String subscription_trialDaysLeftEnding(int count, String date) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'siku $count',
+      one: 'siku 1',
+    );
+    return 'Umebakiwa na $_temp0 za majaribio bure, yanayoisha $date.';
+  }
+
+  @override
+  String get subscription_trialEndedTitle => 'Majaribio Yamekwisha';
+
+  @override
+  String get subscription_trialEndedReadOnly =>
+      'Majaribio yako yamekwisha. Programu iko katika hali ya kusoma tu.';
+
+  @override
+  String get subscription_expiredReadOnly =>
+      'Usajili wako umekwisha. Programu iko katika hali ya kusoma tu.';
+
+  @override
+  String get subscription_trialEndedGrace =>
+      'Majaribio yako yamekwisha. Una siku chache za neema kabla hali ya kusoma tu haijaanza.';
+
+  @override
+  String get subscription_expiredGrace =>
+      'Usajili wako umekwisha. Una siku chache za neema kabla hali ya kusoma tu haijaanza.';
+
+  @override
+  String get subscription_trialExpiringSoonTitle =>
+      'Majaribio Yanakaribia Kwisha';
+
+  @override
+  String get subscription_expiringSoonTitle => 'Usajili Unakaribia Kwisha';
+
+  @override
+  String subscription_trialExpiresIn(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'siku $count',
+      one: 'siku 1',
+    );
+    return 'Majaribio yako yanakwisha baada ya $_temp0.';
+  }
+
+  @override
+  String subscription_expiresIn(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'siku $count',
+      one: 'siku 1',
+    );
+    return 'Usajili wako unakwisha baada ya $_temp0.';
+  }
+
+  @override
+  String subscription_freeTrialDaysLeft(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'zimebaki siku $count',
+      one: 'imebaki siku 1',
+    );
+    return 'Uko kwenye majaribio bure - $_temp0.';
+  }
+
+  @override
+  String get subscription_trialActive => 'Majaribio yako yanaendelea.';
+
+  @override
+  String get subscription_active => 'Usajili wako uko hai.';
+
+  @override
+  String get subscription_viewPlans => 'Tazama Vifurushi';
+
+  @override
+  String get subscription_renew => 'Huisha';
+
+  @override
+  String get subscription_askYourAdmin => '· Muulize msimamizi wako';
 }

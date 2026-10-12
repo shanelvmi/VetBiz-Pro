@@ -9335,6 +9335,114 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'The facility\'s admin has to approve you, as with any new assistant. Or ask your previous admin to add you back.'**
   String get noFacility_approvalNote;
+
+  /// Title of the live free-trial row in Notifications.
+  ///
+  /// In en, this message translates to:
+  /// **'Free Trial'**
+  String get subscription_freeTrialTitle;
+
+  /// Free-trial message when no end date is known (Notifications row and Dashboard banner).
+  ///
+  /// In en, this message translates to:
+  /// **'You\'re on a free trial.'**
+  String get subscription_onFreeTrial;
+
+  /// Free-trial row in Notifications: days left and the end date.
+  ///
+  /// In en, this message translates to:
+  /// **'You have {count, plural, =1{1 day} other{{count} days}} left of your free trial, ending on {date}.'**
+  String subscription_trialDaysLeftEnding(int count, String date);
+
+  /// Notifications row title when the trial has run out.
+  ///
+  /// In en, this message translates to:
+  /// **'Trial Ended'**
+  String get subscription_trialEndedTitle;
+
+  /// Notifications row and Dashboard banner: trial over, facility locked.
+  ///
+  /// In en, this message translates to:
+  /// **'Your trial has ended. The app is in read-only mode.'**
+  String get subscription_trialEndedReadOnly;
+
+  /// Notifications row and Dashboard banner: subscription over, facility locked.
+  ///
+  /// In en, this message translates to:
+  /// **'Your subscription has expired. The app is in read-only mode.'**
+  String get subscription_expiredReadOnly;
+
+  /// Notifications row and Dashboard banner: trial over, in the grace days.
+  ///
+  /// In en, this message translates to:
+  /// **'Your trial has ended. You have a few days of grace before read-only mode begins.'**
+  String get subscription_trialEndedGrace;
+
+  /// Notifications row and Dashboard banner: subscription over, in the grace days.
+  ///
+  /// In en, this message translates to:
+  /// **'Your subscription has expired. You have a few days of grace before read-only mode begins.'**
+  String get subscription_expiredGrace;
+
+  /// Notifications row title: the trial ends within a few days.
+  ///
+  /// In en, this message translates to:
+  /// **'Trial Expiring Soon'**
+  String get subscription_trialExpiringSoonTitle;
+
+  /// Notifications row title: the subscription ends within a few days.
+  ///
+  /// In en, this message translates to:
+  /// **'Subscription Expiring Soon'**
+  String get subscription_expiringSoonTitle;
+
+  /// Notifications row and Dashboard banner: days until the trial ends.
+  ///
+  /// In en, this message translates to:
+  /// **'Your trial expires in {count, plural, =1{1 day} other{{count} days}}.'**
+  String subscription_trialExpiresIn(int count);
+
+  /// Notifications row and Dashboard banner: days until the subscription ends.
+  ///
+  /// In en, this message translates to:
+  /// **'Your subscription expires in {count, plural, =1{1 day} other{{count} days}}.'**
+  String subscription_expiresIn(int count);
+
+  /// Dashboard banner during the free trial.
+  ///
+  /// In en, this message translates to:
+  /// **'You\'re on a free trial - {count, plural, =1{1 day} other{{count} days}} left.'**
+  String subscription_freeTrialDaysLeft(int count);
+
+  /// Dashboard banner: trial with no end date.
+  ///
+  /// In en, this message translates to:
+  /// **'Your trial is active.'**
+  String get subscription_trialActive;
+
+  /// Dashboard banner: subscription with no end date.
+  ///
+  /// In en, this message translates to:
+  /// **'Your subscription is active.'**
+  String get subscription_active;
+
+  /// Dashboard banner link (admin, free trial).
+  ///
+  /// In en, this message translates to:
+  /// **'View Plans'**
+  String get subscription_viewPlans;
+
+  /// Dashboard banner link (admin).
+  ///
+  /// In en, this message translates to:
+  /// **'Renew'**
+  String get subscription_renew;
+
+  /// Dashboard banner, for an assistant.
+  ///
+  /// In en, this message translates to:
+  /// **'· Ask your admin'**
+  String get subscription_askYourAdmin;
 }
 
 class _AppLocalizationsDelegate

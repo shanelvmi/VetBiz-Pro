@@ -5407,4 +5407,94 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get noFacility_approvalNote =>
       'The facility\'s admin has to approve you, as with any new assistant. Or ask your previous admin to add you back.';
+
+  @override
+  String get subscription_freeTrialTitle => 'Free Trial';
+
+  @override
+  String get subscription_onFreeTrial => 'You\'re on a free trial.';
+
+  @override
+  String subscription_trialDaysLeftEnding(int count, String date) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count days',
+      one: '1 day',
+    );
+    return 'You have $_temp0 left of your free trial, ending on $date.';
+  }
+
+  @override
+  String get subscription_trialEndedTitle => 'Trial Ended';
+
+  @override
+  String get subscription_trialEndedReadOnly =>
+      'Your trial has ended. The app is in read-only mode.';
+
+  @override
+  String get subscription_expiredReadOnly =>
+      'Your subscription has expired. The app is in read-only mode.';
+
+  @override
+  String get subscription_trialEndedGrace =>
+      'Your trial has ended. You have a few days of grace before read-only mode begins.';
+
+  @override
+  String get subscription_expiredGrace =>
+      'Your subscription has expired. You have a few days of grace before read-only mode begins.';
+
+  @override
+  String get subscription_trialExpiringSoonTitle => 'Trial Expiring Soon';
+
+  @override
+  String get subscription_expiringSoonTitle => 'Subscription Expiring Soon';
+
+  @override
+  String subscription_trialExpiresIn(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count days',
+      one: '1 day',
+    );
+    return 'Your trial expires in $_temp0.';
+  }
+
+  @override
+  String subscription_expiresIn(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count days',
+      one: '1 day',
+    );
+    return 'Your subscription expires in $_temp0.';
+  }
+
+  @override
+  String subscription_freeTrialDaysLeft(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count days',
+      one: '1 day',
+    );
+    return 'You\'re on a free trial - $_temp0 left.';
+  }
+
+  @override
+  String get subscription_trialActive => 'Your trial is active.';
+
+  @override
+  String get subscription_active => 'Your subscription is active.';
+
+  @override
+  String get subscription_viewPlans => 'View Plans';
+
+  @override
+  String get subscription_renew => 'Renew';
+
+  @override
+  String get subscription_askYourAdmin => '· Ask your admin';
 }
