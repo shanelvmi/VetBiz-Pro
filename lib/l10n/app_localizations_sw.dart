@@ -4991,4 +4991,75 @@ class AppLocalizationsSw extends AppLocalizations {
   @override
   String get register_inviteInvalid =>
       'Msimbo wa mwaliko si sahihi, umeisha muda, au umeshatumika';
+
+  @override
+  String get register_inviteCheckFailed =>
+      'Imeshindwa kukagua msimbo huu - jaribu tena';
+
+  @override
+  String get register_enterFacilityNameFirst => 'Weka jina la kituo kwanza';
+
+  @override
+  String get register_chooseFacilityTypeFirst => 'Chagua aina ya kituo kwanza';
+
+  @override
+  String register_facilityLimit(int max) {
+    return 'Umefikia kikomo cha vituo $max kwa kila akaunti';
+  }
+
+  @override
+  String get register_addFacilityFailed => 'Imeshindwa kuongeza kituo hiki';
+
+  @override
+  String get register_pwMin8 => 'Angalau herufi 8';
+
+  @override
+  String get register_pwNeedsLetter => 'Ongeza angalau herufi moja';
+
+  @override
+  String get register_pwNeedsNumber => 'Ongeza angalau namba moja';
+
+  @override
+  String get register_pwTooCommon =>
+      'Nenosiri hili ni la kawaida mno - chagua jingine';
+
+  @override
+  String get register_addAtLeastOneFacility =>
+      'Tafadhali ongeza angalau kituo kimoja';
+
+  @override
+  String get register_enterValidInvite => 'Weka msimbo sahihi wa mwaliko';
+
+  @override
+  String get register_profileUpdated => 'Wasifu umesasishwa';
+
+  @override
+  String get register_accountRegistered => 'Akaunti imesajiliwa';
+
+  @override
+  String get register_verifyEmailSent =>
+      'Tumetuma kiungo cha uthibitisho kwenye barua pepe yako. Angalia folda ya Spam kama hakitaonekana ndani ya dakika chache.';
+
+  @override
+  String get register_enterValidInviteFirst =>
+      'Weka msimbo sahihi wa mwaliko kwanza';
+
+  @override
+  String get register_assistantRegistered =>
+      'Msaidizi amesajiliwa, anasubiri idhini ya msimamizi';
+
+  @override
+  String get register_verifyEmailAlsoSent =>
+      'Pia tumetuma kiungo cha uthibitisho kwenye barua pepe yako. Angalia folda ya Spam kama hakitaonekana.';
+
+  @override
+  String get register_emailAlreadyRegistered => 'Barua pepe hii imeshasajiliwa';
+
+  @override
+  String get register_emailExists =>
+      'Tayari kuna akaunti yenye barua pepe hii. Kama unahamia kituo kingine, barua pepe hii haiwezi kusajiliwa mara ya pili - muombe Msimamizi wa Mfumo akuongeze kwenye kituo kipya badala yake.';
+
+  @override
+  String get register_validEmailExample =>
+      'Weka barua pepe sahihi, kama name@example.com';
 }

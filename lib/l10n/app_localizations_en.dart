@@ -4963,4 +4963,77 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get register_inviteInvalid =>
       'Invalid, expired, or already-used invite code';
+
+  @override
+  String get register_inviteCheckFailed =>
+      'Could not check this code - try again';
+
+  @override
+  String get register_enterFacilityNameFirst => 'Enter the facility name first';
+
+  @override
+  String get register_chooseFacilityTypeFirst =>
+      'Choose the facility type first';
+
+  @override
+  String register_facilityLimit(int max) {
+    return 'You\'ve reached the limit of $max facilities per account';
+  }
+
+  @override
+  String get register_addFacilityFailed => 'Couldn\'t add this facility';
+
+  @override
+  String get register_pwMin8 => 'At least 8 characters';
+
+  @override
+  String get register_pwNeedsLetter => 'Add at least one letter';
+
+  @override
+  String get register_pwNeedsNumber => 'Add at least one number';
+
+  @override
+  String get register_pwTooCommon =>
+      'This password is too common - choose another';
+
+  @override
+  String get register_addAtLeastOneFacility =>
+      'Please add at least one facility';
+
+  @override
+  String get register_enterValidInvite => 'Enter a valid invite code';
+
+  @override
+  String get register_profileUpdated => 'Profile updated';
+
+  @override
+  String get register_accountRegistered => 'Account registered';
+
+  @override
+  String get register_verifyEmailSent =>
+      'We\'ve sent a verification link to your email. Check your Spam folder if it doesn\'t appear within a few minutes.';
+
+  @override
+  String get register_enterValidInviteFirst =>
+      'Enter a valid invite code first';
+
+  @override
+  String get register_assistantRegistered =>
+      'Assistant registered, waiting for admin approval';
+
+  @override
+  String get register_verifyEmailAlsoSent =>
+      'We\'ve also sent a verification link to your email. Check your Spam folder if it doesn\'t appear.';
+
+  @override
+  String get register_emailAlreadyRegistered =>
+      'This email is already registered';
+
+  @override
+  String get register_emailExists =>
+      'An account with this email already exists. If you\'re switching facilities, this email can\'t register a second time - ask your Platform Admin to add you to the new facility instead.';
+
+  @override
+  String get register_validEmailExample =>
+      'Enter a valid email address, like name@example.com';
 }

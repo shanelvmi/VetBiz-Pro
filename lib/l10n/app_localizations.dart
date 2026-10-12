@@ -8597,6 +8597,126 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Invalid, expired, or already-used invite code'**
   String get register_inviteInvalid;
+
+  /// Register: the invite code lookup failed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not check this code - try again'**
+  String get register_inviteCheckFailed;
+
+  /// Register: Add pressed with no facility name.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter the facility name first'**
+  String get register_enterFacilityNameFirst;
+
+  /// Register: Add pressed with no facility type.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose the facility type first'**
+  String get register_chooseFacilityTypeFirst;
+
+  /// Register: Add pressed at the facility limit.
+  ///
+  /// In en, this message translates to:
+  /// **'You\'ve reached the limit of {max} facilities per account'**
+  String register_facilityLimit(int max);
+
+  /// Register: adding a facility to the list failed.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t add this facility'**
+  String get register_addFacilityFailed;
+
+  /// Register password check.
+  ///
+  /// In en, this message translates to:
+  /// **'At least 8 characters'**
+  String get register_pwMin8;
+
+  /// Register password check.
+  ///
+  /// In en, this message translates to:
+  /// **'Add at least one letter'**
+  String get register_pwNeedsLetter;
+
+  /// Register password check.
+  ///
+  /// In en, this message translates to:
+  /// **'Add at least one number'**
+  String get register_pwNeedsNumber;
+
+  /// Register password check.
+  ///
+  /// In en, this message translates to:
+  /// **'This password is too common - choose another'**
+  String get register_pwTooCommon;
+
+  /// Register error: an owner with no facility.
+  ///
+  /// In en, this message translates to:
+  /// **'Please add at least one facility'**
+  String get register_addAtLeastOneFacility;
+
+  /// Register error: no valid invite code.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter a valid invite code'**
+  String get register_enterValidInvite;
+
+  /// Edit Profile: saved.
+  ///
+  /// In en, this message translates to:
+  /// **'Profile updated'**
+  String get register_profileUpdated;
+
+  /// Register: owner account created.
+  ///
+  /// In en, this message translates to:
+  /// **'Account registered'**
+  String get register_accountRegistered;
+
+  /// Register: second line after an owner account is created.
+  ///
+  /// In en, this message translates to:
+  /// **'We\'ve sent a verification link to your email. Check your Spam folder if it doesn\'t appear within a few minutes.'**
+  String get register_verifyEmailSent;
+
+  /// Register error: assistant with no valid invite code.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter a valid invite code first'**
+  String get register_enterValidInviteFirst;
+
+  /// Register: assistant account created.
+  ///
+  /// In en, this message translates to:
+  /// **'Assistant registered, waiting for admin approval'**
+  String get register_assistantRegistered;
+
+  /// Register: second line after an assistant account is created.
+  ///
+  /// In en, this message translates to:
+  /// **'We\'ve also sent a verification link to your email. Check your Spam folder if it doesn\'t appear.'**
+  String get register_verifyEmailAlsoSent;
+
+  /// Register: email field error.
+  ///
+  /// In en, this message translates to:
+  /// **'This email is already registered'**
+  String get register_emailAlreadyRegistered;
+
+  /// Register error: the email is already used.
+  ///
+  /// In en, this message translates to:
+  /// **'An account with this email already exists. If you\'re switching facilities, this email can\'t register a second time - ask your Platform Admin to add you to the new facility instead.'**
+  String get register_emailExists;
+
+  /// Register: email field error.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter a valid email address, like name@example.com'**
+  String get register_validEmailExample;
 }
 
 class _AppLocalizationsDelegate
