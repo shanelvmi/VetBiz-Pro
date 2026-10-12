@@ -546,7 +546,7 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
       final facilityIds = (userDoc.data()?['facilityIds'] as List?)?.cast<String>() ?? [];
       if (!facilityIds.contains(activeFacilityId)) {
         await forceLogoutAndShowLogin(
-          message: 'You\'ve been reassigned to a different facility. Please log back in.',
+          message: L10n.current.dashboard_reassigned,
         );
       }
     } catch (e) {
@@ -688,17 +688,41 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
   /// actually being compared against, since a bare percentage on its
   /// own doesn't say what period it's relative to.
   String _comparisonLabelForFilter(String filter) {
+    final l = context.l10n;
     switch (filter) {
       case 'Today':
-        return 'vs Yesterday';
+        return l.dashboard_vsYesterday;
       case 'This Week':
-        return 'vs Last Week';
+        return l.dashboard_vsLastWeek;
       case 'This Month':
-        return 'vs Last Month';
+        return l.dashboard_vsLastMonth;
       case 'This Year':
-        return 'vs Last Year';
+        return l.dashboard_vsLastYear;
       default:
-        return 'vs Yesterday';
+        return l.dashboard_vsYesterday;
+    }
+  }
+
+  /// What a period choice is shown as. selectedFilter and _chartPeriod keep
+  /// their English values ('Today', 'Last 7 days', ...), which the code above
+  /// compares; only the label is localised.
+  String _periodLabel(String filter) {
+    final l = context.l10n;
+    switch (filter) {
+      case 'Today':
+        return l.common_today;
+      case 'This Week':
+        return l.payments_thisWeek;
+      case 'This Month':
+        return l.payments_thisMonth;
+      case 'This Year':
+        return l.export_thisYear;
+      case 'Last 7 days':
+        return l.services_last7;
+      case 'Last 30 days':
+        return l.services_last30;
+      default:
+        return filter;
     }
   }
 
@@ -963,9 +987,9 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
 
   String greetingTime() {
     final hour = DateTime.now().hour;
-    if (hour < 12) return 'Good morning';
-    if (hour < 17) return 'Good afternoon';
-    return 'Good evening';
+    if (hour < 12) return context.l10n.dashboard_goodMorning;
+    if (hour < 17) return context.l10n.dashboard_goodAfternoon;
+    return context.l10n.dashboard_goodEvening;
   }
 
   String _capitalize(String s) {
@@ -989,9 +1013,9 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
       final downloadUrl = await storageRef.getDownloadURL();
       await userDoc.update({'avatarUrl': downloadUrl});
 
-      AppFeedback.success('Profile avatar updated');
+      AppFeedback.success(L10n.current.dashboard_avatarUpdated);
     } catch (e, st) {
-      AppFeedback.error("Couldn't save the profile avatar", error: e, stackTrace: st);
+      AppFeedback.error(L10n.current.dashboard_avatarSaveFailed, error: e, stackTrace: st);
     }
   }
 
@@ -1007,12 +1031,12 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
         content: Text(content),
         actions: [
           TextButton(
-            child: Text('Cancel', style: TextStyle(color: context.colors.primary)),
+            child: Text(context.l10n.common_cancel, style: TextStyle(color: context.colors.primary)),
             onPressed: () => Navigator.pop(context),
           ),
           ElevatedButton(
             style: ElevatedButton.styleFrom(backgroundColor: context.colors.accent),
-            child: Text('Confirm'),
+            child: Text(context.l10n.common_confirm),
             onPressed: () {
               Navigator.pop(context);
               onConfirm();
@@ -1027,12 +1051,12 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
     showDialog(
       context: context,
       builder: (_) => AlertDialog(
-        title: const Text("Reset Password"),
-        content: Text("Send password reset email to $email?"),
+        title: Text(context.l10n.dashboard_resetPasswordTitle),
+        content: Text(context.l10n.dashboard_resetPasswordPrompt(email)),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text("Cancel"),
+            child: Text(context.l10n.common_cancel),
           ),
           ElevatedButton(
             style: ElevatedButton.styleFrom(backgroundColor: context.colors.primary),
@@ -1043,13 +1067,13 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
               try {
                 await FirebaseAuth.instance.sendPasswordResetEmail(email: email);
                 navigator.pop();
-                AppFeedback.success('Reset link sent to $email');
+                AppFeedback.success(L10n.current.dashboard_resetLinkSent(email));
               } catch (e, st) {
                 navigator.pop();
-                AppFeedback.error("Couldn't send the reset link", error: e, stackTrace: st);
+                AppFeedback.error(L10n.current.dashboard_resetLinkFailed, error: e, stackTrace: st);
               }
             },
-            child: Text("Send Link", style: TextStyle(color: context.colors.background)),
+            child: Text(context.l10n.dashboard_sendLink, style: TextStyle(color: context.colors.background)),
           ),
         ],
       ),
@@ -1073,7 +1097,7 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
 
 
     // Facility is loaded, we can safely access its fields
-    final facilityName = selectedFacility['name'] ?? 'Facility';
+    final facilityName = selectedFacility['name'] ?? context.l10n.common_facility;
     final currentFacilityId = selectedFacility['id'];
 
     // Kick off a period-totals fetch whenever the facility or the
@@ -1126,7 +1150,7 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
             leading: isLargeScreen
                 ? IconButton(
                     icon: Icon(_isDrawerCollapsed ? Icons.menu_open : Icons.menu, color: context.colors.textPrimary, size: AppIconSize.i22),
-                    tooltip: _isDrawerCollapsed ? 'Expand menu' : 'Collapse menu',
+                    tooltip: _isDrawerCollapsed ? context.l10n.dashboard_expandMenu : context.l10n.dashboard_collapseMenu,
                     onPressed: _toggleDrawerCollapsed,
                   )
                 : null,
@@ -1150,10 +1174,10 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
                       Icon(Icons.search, size: AppIconSize.i18, color: context.colors.textHint),
                       const SizedBox(width: AppSpacing.s8),
                       Expanded(
-                        child: Text('Search anything...',
+                        child: Text(context.l10n.dashboard_searchAnything,
                             style: TextStyle(fontSize: AppFontSize.f13, color: context.colors.textHint)),
                       ),
-                      Text('Ctrl+K', style: TextStyle(fontSize: AppFontSize.f11, color: context.colors.textDisabled)),
+                      Text(context.l10n.dashboard_searchShortcut, style: TextStyle(fontSize: AppFontSize.f11, color: context.colors.textDisabled)),
                     ],
                   ),
                 ),
@@ -1163,7 +1187,7 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
               // nothing's configured yet.
               IconButton(
                 icon: Icon(Icons.help_outline, color: context.colors.textPrimary, size: AppIconSize.i22),
-                tooltip: 'Help',
+                tooltip: context.l10n.dashboard_help,
                 onPressed: () => _showHelpDialog(context),
               ),
               const SizedBox(width: AppSpacing.s4),
@@ -1203,7 +1227,7 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
                             ConstrainedBox(
                               constraints: const BoxConstraints(maxWidth: 110),
                               child: Text(
-                                fullNameForAvatar.isNotEmpty ? fullNameForAvatar : 'Account',
+                                fullNameForAvatar.isNotEmpty ? fullNameForAvatar : context.l10n.dashboard_account,
                                 style: TextStyle(fontSize: AppFontSize.f13, fontWeight: AppFontWeight.semibold, color: context.colors.textPrimary),
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
@@ -1256,10 +1280,10 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
                                       crossAxisAlignment: CrossAxisAlignment.start,
                                       mainAxisSize: MainAxisSize.min,
                                       children: [
-                                        Text('${greetingTime()}, $fullName',
+                                        Text(context.l10n.dashboard_greeting(greetingTime(), fullName),
                                             style: TextStyle(fontSize: AppFontSize.f20, fontWeight: AppFontWeight.bold, color: context.colors.textPrimary)),
                                         const SizedBox(height: AppSpacing.s2),
-                                        Text("Here's how $facilityName is doing today.",
+                                        Text(context.l10n.dashboard_howFacilityIsDoing(facilityName),
                                             style: TextStyle(fontSize: AppFontSize.f13, color: context.colors.textMuted)),
                                       ],
                                     );
@@ -1272,10 +1296,10 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
                                           mainAxisSize: MainAxisSize.min,
                                           children: [
                                             PopupMenuButton<String>(
-                                              tooltip: 'Change period',
+                                              tooltip: context.l10n.dashboard_changePeriod,
                                               onSelected: (val) => setState(() => selectedFilter = val),
                                               itemBuilder: (context) => ['Today', 'This Week', 'This Month', 'This Year']
-                                                  .map((f) => PopupMenuItem(value: f, child: Text(f)))
+                                                  .map((f) => PopupMenuItem(value: f, child: Text(_periodLabel(f))))
                                                   .toList(),
                                               child: Row(
                                                 mainAxisSize: MainAxisSize.min,
@@ -1285,7 +1309,7 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
                                                   Text(
                                                     selectedFilter == 'Today'
                                                         ? AppDateFormat.dateWeekdayShort.format(now)
-                                                        : selectedFilter,
+                                                        : _periodLabel(selectedFilter),
                                                     style: TextStyle(fontSize: AppFontSize.f12_5, color: context.colors.textMuted),
                                                   ),
                                                   const SizedBox(width: AppSpacing.s2),
@@ -1337,12 +1361,12 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
                                         : 2;
                                 final cards = [
                                       SummaryCard(
-                                        title: 'Total Product Value',
+                                        title: context.l10n.dashboard_totalProductValue,
                                         value: Money.symbolDecimal(productProvider.totalProductValue),
                                         icon: Icons.inventory,
                                         color: context.colors.primary,
                                         shadow: true,
-                                        subtitle: 'as of now',
+                                        subtitle: context.l10n.dashboard_asOfNow,
                                         trend: KpiTrend(
                                           currentValue: productProvider.totalProductValue,
                                           previousValue:
@@ -1354,7 +1378,7 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
                                         ),
                                       ),
                                       SummaryCard(
-                                        title: 'Total Sales ($selectedFilter)',
+                                        title: context.l10n.dashboard_totalSales(_periodLabel(selectedFilter)),
                                         value: Money.symbolDecimal(_periodTotals.totalSales),
                                         icon: Icons.shopping_cart,
                                         color: context.colors.accent,
@@ -1370,7 +1394,7 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
                                         ),
                                       ),
                                       SummaryCard(
-                                        title: 'Total Collected ($selectedFilter)',
+                                        title: context.l10n.dashboard_totalCollected(_periodLabel(selectedFilter)),
                                         value: Money.symbolDecimal(_periodTotals.totalCollected),
                                         icon: Icons.attach_money,
                                         color: context.colors.primary,
@@ -1386,7 +1410,7 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
                                         ),
                                       ),
                                       SummaryCard(
-                                        title: 'Net Profit ($selectedFilter)',
+                                        title: context.l10n.dashboard_netProfit(_periodLabel(selectedFilter)),
                                         value: Provider.of<UserRoleProvider>(context).isAdmin
                                             ? Money.symbolDecimal(_periodTotals.netProfit)
                                             : '*****',
@@ -1422,7 +1446,7 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
                                             : null,
                                       ),
                                       SummaryCard(
-                                        title: 'Total Expenses ($selectedFilter)',
+                                        title: context.l10n.dashboard_totalExpenses(_periodLabel(selectedFilter)),
                                         value: Money.symbolDecimal(_periodTotals.totalExpenses),
                                         icon: Icons.trending_down,
                                         color: context.colors.danger,
@@ -1441,12 +1465,12 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
                                         ),
                                       ),
                                       SummaryCard(
-                                        title: 'Outstanding Payment',
+                                        title: context.l10n.dashboard_outstandingPayment,
                                         value: Money.symbolDecimal(debtProvider.totalOutstanding()),
                                         icon: Icons.account_balance_wallet,
                                         color: context.colors.accent,
                                         shadow: true,
-                                        subtitle: 'as of now',
+                                        subtitle: context.l10n.dashboard_asOfNow,
                                         trend: KpiTrend(
                                           currentValue: debtProvider.totalOutstanding(),
                                           previousValue:
@@ -1460,12 +1484,12 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
                                         ),
                                       ),
                                       SummaryCard(
-                                        title: 'Total Clients',
+                                        title: context.l10n.clients_total,
                                         value: '${clientProvider.clients.length}',
                                         icon: Icons.people,
                                         color: context.colors.accent,
                                         shadow: true,
-                                        subtitle: 'as of now',
+                                        subtitle: context.l10n.dashboard_asOfNow,
                                         trend: KpiTrend(
                                           currentValue: clientProvider.clients.length.toDouble(),
                                           previousValue:
@@ -1477,7 +1501,7 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
                                         ),
                                       ),
                                       SummaryCard(
-                                        title: 'Completed Services ($selectedFilter)',
+                                        title: context.l10n.dashboard_completedServices(_periodLabel(selectedFilter)),
                                         value: '${_periodTotals.completedServicesCount}',
                                         icon: Icons.design_services,
                                         color: context.colors.chart1,
@@ -1609,31 +1633,28 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
     // Full sentence now that this sits in its own row above the filter
     // chips, rather than the shortened version needed when it was
     // squeezed inline next to Insights.
+    final l = context.l10n;
     String message;
     if (isLocked) {
-      message = isTrial
-          ? 'Your trial has ended. The app is in read-only mode.'
-          : 'Your subscription has expired. The app is in read-only mode.';
+      message = isTrial ? l.subscription_trialEndedReadOnly : l.subscription_expiredReadOnly;
     } else if (isGrace) {
-      message = isTrial
-          ? 'Your trial has ended. You have a few days of grace before read-only mode begins.'
-          : 'Your subscription has expired. You have a few days of grace before read-only mode begins.';
+      message = isTrial ? l.subscription_trialEndedGrace : l.subscription_expiredGrace;
     } else if (isInTrialInfo) {
       // A legacy facility with no trial/subscription date recorded at
       // all reaches this branch with daysRemaining null - shown as an
       // open-ended trial rather than ever interpolating "null" into
       // the sentence.
       message = sub.daysRemaining != null
-          ? "You're on a free trial - ${sub.daysRemaining} day${sub.daysRemaining == 1 ? '' : 's'} left."
-          : "You're on a free trial.";
+          ? l.subscription_freeTrialDaysLeft(sub.daysRemaining!)
+          : l.subscription_onFreeTrial;
     } else if (isTrial) {
       message = sub.daysRemaining != null
-          ? 'Your trial expires in ${sub.daysRemaining} day${sub.daysRemaining == 1 ? '' : 's'}.'
-          : 'Your trial is active.';
+          ? l.subscription_trialExpiresIn(sub.daysRemaining!)
+          : l.subscription_trialActive;
     } else {
       message = sub.daysRemaining != null
-          ? 'Your subscription expires in ${sub.daysRemaining} day${sub.daysRemaining == 1 ? '' : 's'}.'
-          : 'Your subscription is active.';
+          ? l.subscription_expiresIn(sub.daysRemaining!)
+          : l.subscription_active;
     }
 
     final isAdmin = Provider.of<UserRoleProvider>(context).isAdmin;
@@ -1680,7 +1701,7 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
                     GestureDetector(
                       onTap: () => showSubscriptionScreen(context),
                       child: Text(
-                        isInTrialInfo ? 'View Plans' : 'Renew',
+                        isInTrialInfo ? l.subscription_viewPlans : l.subscription_renew,
                         style: TextStyle(
                           color: accent,
                           fontSize: AppFontSize.f12_5,
@@ -1691,7 +1712,7 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
                     ),
                   ] else ...[
                     const SizedBox(width: AppSpacing.s8),
-                    Text('· Ask your admin',
+                    Text(l.subscription_askYourAdmin,
                         style: TextStyle(color: context.colors.textMuted, fontSize: AppFontSize.f11_5, fontStyle: FontStyle.italic)),
                   ],
                   // Snoozes rather than dismisses permanently - see the
@@ -1740,7 +1761,7 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
     await showGeneralDialog(
       context: context,
       barrierDismissible: true,
-      barrierLabel: 'Notifications',
+      barrierLabel: context.l10n.common_notifications,
       barrierColor: Colors.transparent,
       transitionDuration: AppMotion.fast,
       pageBuilder: (context, animation, secondaryAnimation) {
@@ -1799,13 +1820,13 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
                 children: [
                   Icon(Icons.history, size: AppIconSize.i18, color: context.colors.primary),
                   const SizedBox(width: AppSpacing.s8),
-                  const Text('Recent Activity', style: TextStyle(fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f14_5)),
+                  Text(context.l10n.dashboard_recentActivity, style: const TextStyle(fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f14_5)),
                 ],
               ),
               TextButton(
                 // Opens as a modal over the Dashboard (full screen on a phone).
                 onPressed: () => showActivityLog(context),
-                child: const Text('View All'),
+                child: Text(context.l10n.dashboard_viewAll),
               ),
             ],
           ),
@@ -1813,7 +1834,7 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
           if (facilityId == null)
             Padding(
               padding: const EdgeInsets.symmetric(vertical: AppSpacing.s20),
-              child: Center(child: Text('No activity yet.', style: TextStyle(color: context.colors.textMuted))),
+              child: Center(child: Text(context.l10n.dashboard_noActivityYet, style: TextStyle(color: context.colors.textMuted))),
             )
           else
             StreamBuilder<List<LogDoc>>(
@@ -1823,7 +1844,7 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
                   return Padding(
                     padding: const EdgeInsets.symmetric(vertical: AppSpacing.s20),
                     child: Center(
-                      child: Text("Couldn't load recent activity.", style: TextStyle(color: context.colors.textMuted)),
+                      child: Text(context.l10n.dashboard_recentActivityLoadFailed, style: TextStyle(color: context.colors.textMuted)),
                     ),
                   );
                 }
@@ -1837,7 +1858,7 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
                 if (docs.isEmpty) {
                   return Padding(
                     padding: const EdgeInsets.symmetric(vertical: AppSpacing.s20),
-                    child: Center(child: Text('No activity yet.', style: TextStyle(color: context.colors.textMuted))),
+                    child: Center(child: Text(context.l10n.dashboard_noActivityYet, style: TextStyle(color: context.colors.textMuted))),
                   );
                 }
                 return Column(
@@ -1927,7 +1948,7 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
                 children: [
                   Icon(Icons.show_chart, size: AppIconSize.i18, color: context.colors.primary),
                   const SizedBox(width: AppSpacing.s8),
-                  const Text('Sales & Revenue Overview', style: TextStyle(fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f14_5)),
+                  Text(context.l10n.dashboard_salesRevenueOverview, style: const TextStyle(fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f14_5)),
                 ],
               ),
               Container(
@@ -1941,7 +1962,7 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
                   child: DropdownButton<String>(
                     value: _chartPeriod,
                     items: const ['Last 7 days', 'Last 30 days']
-                        .map((p) => DropdownMenuItem(value: p, child: Text(p, style: const TextStyle(fontSize: AppFontSize.f13))))
+                        .map((p) => DropdownMenuItem(value: p, child: Text(_periodLabel(p), style: const TextStyle(fontSize: AppFontSize.f13))))
                         .toList(),
                     onChanged: (val) {
                       if (val == null) return;
@@ -1969,7 +1990,7 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
                   children: [
                     Text(Money.format(currentTotal),
                         style: TextStyle(fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f22, color: context.colors.textPrimary)),
-                    Text('Total Revenue', style: TextStyle(fontSize: AppFontSize.f12, color: context.colors.textMuted)),
+                    Text(context.l10n.reports_totalRevenue, style: TextStyle(fontSize: AppFontSize.f12, color: context.colors.textMuted)),
                   ],
                 ),
                 if (trendPercent != null) ...[
@@ -1980,7 +2001,7 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
                       children: [
                         Icon(trendPercent >= 0 ? Icons.arrow_upward : Icons.arrow_downward,
                             size: AppIconSize.i14, color: trendPercent >= 0 ? context.colors.success : context.colors.danger),
-                        Text('${trendPercent.abs().toStringAsFixed(1)}% vs last period',
+                        Text(context.l10n.dashboard_vsLastPeriod(trendPercent.abs().toStringAsFixed(1)),
                             style: TextStyle(
                                 fontSize: AppFontSize.f12,
                                 fontWeight: AppFontWeight.semibold,
@@ -1995,7 +2016,7 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
             SizedBox(
               height: 220,
               child: !hasData || (salesByDay.every((v) => v == 0) && collectionsByDay.every((v) => v == 0))
-                  ? Center(child: Text('No activity in this period.', style: TextStyle(color: context.colors.textMuted)))
+                  ? Center(child: Text(context.l10n.dashboard_noActivityInPeriod, style: TextStyle(color: context.colors.textMuted)))
                   : LineChart(
                       LineChartData(
                         // None of these three (sales, collections,
@@ -2019,12 +2040,12 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
                               return touchedSpots.map((spot) {
                                 final day = start.add(Duration(days: spot.x.toInt()));
                                 final label = switch (spot.barIndex) {
-                                  0 => 'Sales',
-                                  1 => 'Collections',
-                                  _ => 'Services',
+                                  0 => context.l10n.dashboard_sales,
+                                  1 => context.l10n.dashboard_collections,
+                                  _ => context.l10n.dashboard_services,
                                 };
                                 return LineTooltipItem(
-                                  '${AppDateFormat.dateShort.format(day)}\n$label: ${Money.format(spot.y)}',
+                                  '${AppDateFormat.dateShort.format(day)}\n${context.l10n.common_filterValue(label, Money.format(spot.y))}',
                                   TextStyle(color: context.colors.onPrimary, fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f12),
                                 );
                               }).toList();
@@ -2091,11 +2112,14 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
             const SizedBox(height: AppSpacing.s12),
             Row(
               children: [
-                _chartLegendItem(context.colors.primary, 'Sales (${AppDefaults.currencySymbol})'),
+                _chartLegendItem(context.colors.primary,
+                    context.l10n.dashboard_seriesWithCurrency(context.l10n.dashboard_sales, AppDefaults.currencySymbol)),
                 const SizedBox(width: AppSpacing.s20),
-                _chartLegendItem(context.colors.accent, 'Collections (${AppDefaults.currencySymbol})'),
+                _chartLegendItem(context.colors.accent,
+                    context.l10n.dashboard_seriesWithCurrency(context.l10n.dashboard_collections, AppDefaults.currencySymbol)),
                 const SizedBox(width: AppSpacing.s20),
-                _chartLegendItem(servicesSteelBlue, 'Services (${AppDefaults.currencySymbol})'),
+                _chartLegendItem(servicesSteelBlue,
+                    context.l10n.dashboard_seriesWithCurrency(context.l10n.dashboard_services, AppDefaults.currencySymbol)),
               ],
             ),
           ],
@@ -2132,7 +2156,7 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
               padding: EdgeInsets.zero,
               constraints: const BoxConstraints(),
               icon: Icon(_isDrawerCollapsed ? Icons.menu_open : Icons.menu, color: context.colors.textPrimary, size: AppIconSize.i22),
-              tooltip: _isDrawerCollapsed ? 'Expand menu' : 'Collapse menu',
+              tooltip: _isDrawerCollapsed ? context.l10n.dashboard_expandMenu : context.l10n.dashboard_collapseMenu,
               onPressed: _toggleDrawerCollapsed,
             ),
           const Spacer(),
@@ -2153,7 +2177,7 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
                   if (p.name.toLowerCase().contains(query)) {
                     results.add(_DashboardSearchResult(
                       title: p.name,
-                      subtitle: 'Product',
+                      subtitle: context.l10n.reports_colProduct,
                       icon: Icons.inventory_2_outlined,
                       onTap: () => Navigator.push(
                         context,
@@ -2166,7 +2190,7 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
                   if (c.name.toLowerCase().contains(query) || c.phone.contains(query)) {
                     results.add(_DashboardSearchResult(
                       title: c.name,
-                      subtitle: 'Client \u2022 ${c.phone}',
+                      subtitle: context.l10n.dashboard_searchClient(c.phone),
                       icon: Icons.person_outline,
                       onTap: () =>
                           Navigator.push(context, MaterialPageRoute(builder: (_) => const ClientsScreen())),
@@ -2195,7 +2219,7 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
                           focusNode: focusNode,
                           style: const TextStyle(fontSize: AppFontSize.f13),
                           decoration: InputDecoration.collapsed(
-                            hintText: 'Search products or clients...',
+                            hintText: context.l10n.dashboard_searchProductsOrClients,
                             hintStyle: TextStyle(fontSize: AppFontSize.f13, color: context.colors.textHint),
                           ),
                         ),
@@ -2240,7 +2264,7 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
           // nothing's configured yet.
           IconButton(
             icon: Icon(Icons.help_outline, color: context.colors.textPrimary, size: AppIconSize.i22),
-            tooltip: 'Help',
+            tooltip: context.l10n.dashboard_help,
             onPressed: () => _showHelpDialog(context),
           ),
           const SizedBox(width: AppSpacing.s4),
@@ -2278,7 +2302,7 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
                         ConstrainedBox(
                           constraints: const BoxConstraints(maxWidth: 110),
                           child: Text(
-                            fullNameForAvatar.isNotEmpty ? fullNameForAvatar : 'Account',
+                            fullNameForAvatar.isNotEmpty ? fullNameForAvatar : context.l10n.dashboard_account,
                             style: TextStyle(fontSize: AppFontSize.f13, fontWeight: AppFontWeight.semibold, color: context.colors.textPrimary),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
@@ -2310,19 +2334,19 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
         spacing: 24,
         runSpacing: 10,
         children: [
-          Text('Today at a Glance', style: TextStyle(fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f13_5, color: context.colors.textPrimary)),
+          Text(context.l10n.dashboard_todayAtAGlance, style: TextStyle(fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f13_5, color: context.colors.textPrimary)),
           if (_glanceSaleCount == null && _isGlanceLoading)
             const SizedBox(width: AppSpacing.s16, height: 16, child: CircularProgressIndicator(strokeWidth: 2))
           else ...[
-            _glanceStat(Icons.shopping_cart_outlined, '${_glanceSaleCount ?? 0}', 'Sales', context.colors.primary),
-            _glanceStat(Icons.build_outlined, '${_glanceServiceCount ?? 0}', 'Services', context.colors.chart1),
-            _glanceStat(Icons.payments_outlined, Money.symbolDecimal(_glanceCollected ?? 0), 'Collected', context.colors.primary),
+            _glanceStat(Icons.shopping_cart_outlined, '${_glanceSaleCount ?? 0}', context.l10n.dashboard_sales, context.colors.primary),
+            _glanceStat(Icons.build_outlined, '${_glanceServiceCount ?? 0}', context.l10n.dashboard_services, context.colors.chart1),
+            _glanceStat(Icons.payments_outlined, Money.symbolDecimal(_glanceCollected ?? 0), context.l10n.sales_collected, context.colors.primary),
           ],
-          _glanceStat(Icons.folder_outlined, '$debtorCount', debtorCount == 1 ? 'Outstanding Debt' : 'Outstanding Debts', context.colors.accent),
+          _glanceStat(Icons.folder_outlined, '$debtorCount', context.l10n.dashboard_outstandingDebts(debtorCount), context.colors.accent),
           OutlinedButton.icon(
             onPressed: () => showInsightsScreen(context),
             icon: Icon(Icons.insights, size: AppIconSize.i16, color: context.colors.primary),
-            label: Text('Insights', style: TextStyle(color: context.colors.primary)),
+            label: Text(context.l10n.insights_title, style: TextStyle(color: context.colors.primary)),
             style: OutlinedButton.styleFrom(side: BorderSide(color: context.colors.primary)),
           ),
         ],
@@ -2359,13 +2383,13 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
                 Expanded(
                   child: Padding(
                     padding: const EdgeInsets.only(left: AppSpacing.s22),
-                    child: _profitBreakdownDot('Earned', realized, context.colors.success),
+                    child: _profitBreakdownDot(context.l10n.dashboard_profitEarned, realized, context.colors.success),
                   ),
                 ),
                 Expanded(
                   child: Padding(
                     padding: const EdgeInsets.only(left: AppSpacing.s16),
-                    child: _profitBreakdownDot('Pending', pending, context.colors.accent),
+                    child: _profitBreakdownDot(context.l10n.dashboard_profitPending, pending, context.colors.accent),
                   ),
                 ),
               ],
@@ -2374,7 +2398,7 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
           Padding(
             padding: const EdgeInsets.only(top: AppSpacing.s2, left: AppSpacing.s4),
             child: Tooltip(
-              message: 'Earned: already collected in cash.\nPending: sold on credit, not yet paid.',
+              message: context.l10n.dashboard_profitHelp,
               child: Icon(Icons.info_outline, size: AppIconSize.i16, color: context.colors.textDisabled),
             ),
           ),
@@ -2426,8 +2450,8 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
     final cards = [
       _quickActionCard(
         icon: Icons.add_shopping_cart,
-        title: 'Record Sale',
-        subtitle: 'Create a new sale',
+        title: context.l10n.sales_recordSale,
+        subtitle: context.l10n.dashboard_createNewSale,
         backgroundColor: context.colors.primary,
         accentColor: context.colors.primary,
         isDark: true,
@@ -2442,8 +2466,8 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
       ),
       _quickActionCard(
         icon: Icons.design_services,
-        title: 'Record Visit',
-        subtitle: 'Add a new service record',
+        title: context.l10n.services_recordVisit,
+        subtitle: context.l10n.dashboard_addServiceRecord,
         backgroundColor: const Color(0xFFE3F0EC),
         accentColor: context.colors.primary,
         isDark: false,
@@ -2458,8 +2482,8 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
       ),
       _quickActionCard(
         icon: Icons.add_box,
-        title: 'Add Product',
-        subtitle: 'Add new product to store',
+        title: context.l10n.products_addProduct,
+        subtitle: context.l10n.dashboard_addProductToStore,
         backgroundColor: const Color(0xFFFCEFD9),
         accentColor: context.colors.accent,
         isDark: false,
@@ -2560,10 +2584,10 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
 
     if (!context.mounted) return;
 
-    Future<void> launch(Uri uri, String failureLabel) async {
+    Future<void> launch(Uri uri, String failureMessage) async {
       final launched = await launchUrl(uri, mode: LaunchMode.externalApplication);
       if (!launched && context.mounted) {
-        AppFeedback.info("Couldn't open $failureLabel");
+        AppFeedback.info(failureMessage);
       }
     }
 
@@ -2624,7 +2648,7 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
       context: context,
       builder: (ctx) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadius.r16)),
-        title: const Text('Contact Support'),
+        title: Text(context.l10n.dashboard_contactSupport),
         content: SizedBox(
           width: 320,
           child: Column(
@@ -2634,8 +2658,8 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
               // Always shown, regardless of whether any contact
               // details are configured - the statement itself already
               // names Platform Admin explicitly.
-              const Text('For help or support please reach out to ${AppInfo.name} platform admin.',
-                  style: TextStyle(fontSize: AppFontSize.f13_5)),
+              Text(context.l10n.dashboard_supportIntro(AppInfo.name),
+                  style: const TextStyle(fontSize: AppFontSize.f13_5)),
               if (email.isNotEmpty || phone.isNotEmpty || whatsapp.isNotEmpty || address.isNotEmpty) ...[
                 const SizedBox(height: AppSpacing.s10),
                 if (email.isNotEmpty)
@@ -2644,7 +2668,7 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
                     label: email,
                     onTap: () {
                       Navigator.pop(ctx);
-                      launch(AppLinks.mailto(email), 'your email app');
+                      launch(AppLinks.mailto(email), context.l10n.dashboard_emailAppFailed);
                     },
                   ),
                 if (phone.isNotEmpty)
@@ -2653,17 +2677,17 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
                     label: phone,
                     onTap: () {
                       Navigator.pop(ctx);
-                      launch(AppLinks.tel(phone), 'the dialer');
+                      launch(AppLinks.tel(phone), context.l10n.common_dialerFailed);
                     },
                   ),
                 if (whatsapp.isNotEmpty)
                   contactRow(
                     icon: Icons.chat_outlined,
                     label: whatsapp,
-                    sublabel: 'WhatsApp',
+                    sublabel: context.l10n.debtors_viaWhatsApp,
                     onTap: () {
                       Navigator.pop(ctx);
-                      launch(AppLinks.whatsApp(whatsapp), 'WhatsApp');
+                      launch(AppLinks.whatsApp(whatsapp), context.l10n.debtors_whatsAppFailed);
                     },
                   ),
                 if (address.isNotEmpty)
@@ -2673,7 +2697,7 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
           ),
         ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Close')),
+          TextButton(onPressed: () => Navigator.pop(ctx), child: Text(context.l10n.common_close)),
         ],
       ),
     );
@@ -2751,7 +2775,7 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
                 IconButton(
                   key: _bellKey,
                   icon: const Icon(Icons.notifications_outlined),
-                  tooltip: 'Notifications',
+                  tooltip: context.l10n.common_notifications,
                   onPressed: () async {
                     final isWideScreen = MediaQuery.of(context).size.width >= AppBreakpoints.medium;
                     if (isWideScreen) {
@@ -2872,7 +2896,7 @@ Widget _buildDrawerContent() {
     children: [
       DrawerHoverItem(
         icon: Icons.store,
-        title: 'Stock',
+        title: context.l10n.nav_stock,
         isCollapsed: effectivelyCollapsed,
         onTap: () async {
           await Navigator.push(
@@ -2884,7 +2908,7 @@ Widget _buildDrawerContent() {
       ),
       DrawerHoverItem(
         icon: Icons.inventory,
-        title: 'Products',
+        title: context.l10n.nav_products,
         isCollapsed: effectivelyCollapsed,
         onTap: () async {
           await Navigator.push(
@@ -2896,7 +2920,7 @@ Widget _buildDrawerContent() {
       ),
       DrawerHoverItem(
         icon: Icons.attach_money,
-        title: 'Sales',
+        title: context.l10n.nav_sales,
         isCollapsed: effectivelyCollapsed,
         onTap: () async {
           await Navigator.push(
@@ -2908,7 +2932,7 @@ Widget _buildDrawerContent() {
       ),
       DrawerHoverItem(
         icon: Icons.design_services,
-        title: 'Services',
+        title: context.l10n.nav_services,
         isCollapsed: effectivelyCollapsed,
         onTap: () async {
           await Navigator.push(
@@ -2920,7 +2944,7 @@ Widget _buildDrawerContent() {
       ),
       DrawerHoverItem(
         icon: Icons.people,
-        title: 'Clients',
+        title: context.l10n.clients_title,
         isCollapsed: effectivelyCollapsed,
         onTap: () => Navigator.push(
           context,
@@ -2929,7 +2953,7 @@ Widget _buildDrawerContent() {
       ),
       DrawerHoverItem(
         icon: Icons.payments,
-        title: 'Payments',
+        title: context.l10n.payments_title,
         isCollapsed: effectivelyCollapsed,
         onTap: () async {
           await Navigator.push(
@@ -2941,7 +2965,7 @@ Widget _buildDrawerContent() {
       ),
       DrawerHoverItem(
         icon: Icons.money_off,
-        title: 'Debtors',
+        title: context.l10n.nav_debtors,
         isCollapsed: effectivelyCollapsed,
         onTap: () async {
           await Navigator.push(
@@ -2953,7 +2977,7 @@ Widget _buildDrawerContent() {
       ),
       DrawerHoverItem(
         icon: Icons.receipt_long,
-        title: 'Transactions',
+        title: context.l10n.transactions_title,
         isCollapsed: effectivelyCollapsed,
         onTap: () async {
           await Navigator.push(
@@ -2965,7 +2989,7 @@ Widget _buildDrawerContent() {
       ),
       DrawerHoverItem(
         icon: Icons.summarize_outlined,
-        title: 'Reports',
+        title: context.l10n.nav_reports,
         isCollapsed: effectivelyCollapsed,
         onTap: () => Navigator.push(
           context,
@@ -2978,7 +3002,7 @@ Widget _buildDrawerContent() {
   // ---------- SETTINGS ----------
   Widget settings = DrawerHoverItem(
     icon: Icons.settings,
-    title: 'Settings',
+    title: context.l10n.settings_title,
     isCollapsed: effectivelyCollapsed,
     onTap: () => Navigator.push(
       context,
@@ -3019,7 +3043,7 @@ Widget _buildDrawerContent() {
                   const SizedBox(width: AppSpacing.s16),
                   Expanded(
                     child: Text(
-                      'Platform Admin',
+                      context.l10n.nav_platformAdmin,
                       style: TextStyle(color: context.colors.onPrimary, fontWeight: AppFontWeight.semibold),
                       overflow: TextOverflow.ellipsis,
                     ),
@@ -3031,7 +3055,7 @@ Widget _buildDrawerContent() {
         ),
       );
       if (!effectivelyCollapsed) return content;
-      return Tooltip(message: 'Platform Admin', waitDuration: _DrawerHoverItemState._tooltipWait, child: content);
+      return Tooltip(message: context.l10n.nav_platformAdmin, waitDuration: _DrawerHoverItemState._tooltipWait, child: content);
     },
   );
 
@@ -3054,9 +3078,11 @@ Widget _buildDrawerContent() {
   final String facilityDisplayName = selectedFacility?['name'] ?? '';
   final String facilityDisplayType = selectedFacility?['type'] ?? '';
   final String? facilityIdForTagline = selectedFacility?['id'];
+  // 'Other' is the stored type, compared as stored; the type is shown through
+  // its lookup.
   final String combinedNameAndType =
       (facilityDisplayType.isNotEmpty && facilityDisplayType != 'Other')
-          ? '$facilityDisplayName $facilityDisplayType'
+          ? context.l10n.dashboard_facilityNameType(facilityDisplayName, context.l10n.facilityTypeLabel(facilityDisplayType))
           : facilityDisplayName;
   Widget facilityNameSection = effectivelyCollapsed || facilityDisplayName.isEmpty
       ? const SizedBox.shrink()
@@ -3207,7 +3233,7 @@ Widget _buildDrawerContent() {
                   text: TextSpan(
                     style: TextStyle(color: context.colors.textStrong),
                     children: [
-                      const TextSpan(text: "Full Name: ", style: TextStyle(fontWeight: AppFontWeight.bold)),
+                      TextSpan(text: context.l10n.dashboard_fullNameLabel, style: const TextStyle(fontWeight: AppFontWeight.bold)),
                       TextSpan(text: data['fullName'] ?? ''),
                     ],
                   ),
@@ -3216,7 +3242,7 @@ Widget _buildDrawerContent() {
                   text: TextSpan(
                     style: TextStyle(color: context.colors.textStrong),
                     children: [
-                      const TextSpan(text: "Email: ", style: TextStyle(fontWeight: AppFontWeight.bold)),
+                      TextSpan(text: context.l10n.dashboard_emailLabel, style: const TextStyle(fontWeight: AppFontWeight.bold)),
                       TextSpan(text: data['email'] ?? ''),
                     ],
                   ),
@@ -3225,7 +3251,7 @@ Widget _buildDrawerContent() {
                   text: TextSpan(
                     style: TextStyle(color: context.colors.textStrong),
                     children: [
-                      const TextSpan(text: "Phone: ", style: TextStyle(fontWeight: AppFontWeight.bold)),
+                      TextSpan(text: context.l10n.dashboard_phoneLabel, style: const TextStyle(fontWeight: AppFontWeight.bold)),
                       TextSpan(text: data['phone'] ?? ''),
                     ],
                   ),
@@ -3234,7 +3260,7 @@ Widget _buildDrawerContent() {
                   text: TextSpan(
                     style: TextStyle(color: context.colors.textStrong),
                     children: [
-                      const TextSpan(text: "Role: ", style: TextStyle(fontWeight: AppFontWeight.bold)),
+                      TextSpan(text: context.l10n.dashboard_roleLabel, style: const TextStyle(fontWeight: AppFontWeight.bold)),
                       // A promoted Assistant is a Co-admin, not just "Admin".
                       TextSpan(
                           text: (role == UserRole.admin.key && data['previousRole'] == UserRole.assistant.key)
@@ -3251,7 +3277,7 @@ Widget _buildDrawerContent() {
                 // Buttons
                 ElevatedButton(
                   style: buttonStyle,
-                  child: const Text('Edit Profile'),
+                  child: Text(context.l10n.common_editProfile),
                   onPressed: () async {
                     final snapshot = await userDoc.get();
                     if (!snapshot.exists || !context.mounted) return;
@@ -3271,7 +3297,7 @@ Widget _buildDrawerContent() {
                 if (Provider.of<UserRoleProvider>(context).isAdmin) ...[
                   ElevatedButton(
                     style: buttonStyle,
-                    child: const Text('Team Members'),
+                    child: Text(context.l10n.team_title),
                     onPressed: () {
                       Navigator.of(context).push(
                         MaterialPageRoute(builder: (_) => ManageAssistantsScreen()),
@@ -3281,7 +3307,7 @@ Widget _buildDrawerContent() {
                   const SizedBox(height: AppSpacing.s12),
                   ElevatedButton(
                     style: buttonStyle,
-                    child: const Text('View Facilities'),
+                    child: Text(context.l10n.dashboard_viewFacilities),
                     onPressed: () {
                       Navigator.of(context).push(
                         MaterialPageRoute(builder: (_) => FacilityScreen()),
@@ -3293,7 +3319,7 @@ Widget _buildDrawerContent() {
 
                 ElevatedButton(
                   style: buttonStyle,
-                  child: const Text('Change Password'),
+                  child: Text(context.l10n.dashboard_changePassword),
                   onPressed: () {
                     final email = FirebaseAuth.instance.currentUser?.email;
                     if (email != null) _showChangePasswordDialog(email);
@@ -3303,7 +3329,7 @@ Widget _buildDrawerContent() {
                   const SizedBox(height: AppSpacing.s12),
                   ElevatedButton(
                     style: buttonStyle,
-                    child: const Text('Activity Log'),
+                    child: Text(context.l10n.export_activityLog),
                     // Full screen, like the other drawer items (Manage Assistants,
                     // View Facilities).
                     onPressed: () {
@@ -3324,7 +3350,7 @@ Widget _buildDrawerContent() {
               top: 16,
               right: 16,
               child: Tooltip(
-                message: 'Close',
+                message: context.l10n.common_close,
                 child: IconButton(
                   icon: Icon(Icons.close, size: 28, color: context.colors.textSecondary),
                   onPressed: () => Navigator.of(context).pop(),
@@ -3337,7 +3363,7 @@ Widget _buildDrawerContent() {
               bottom: 16,
               right: 16,
               child: Tooltip(
-                message: 'Logout',
+                message: context.l10n.common_logout,
                 child: InkWell(
                   borderRadius: BorderRadius.circular(AppRadius.pill),
                   hoverColor: Colors.teal.shade700,
@@ -3346,19 +3372,19 @@ Widget _buildDrawerContent() {
                       context: context,
                       builder: (ctx) => AlertDialog(
                         backgroundColor: context.colors.surface,
-                        title: Text('Logout', style: TextStyle(color: context.colors.primary)),
-                        content: const Text('Are you sure you want to logout?'),
+                        title: Text(context.l10n.common_logout, style: TextStyle(color: context.colors.primary)),
+                        content: Text(context.l10n.dashboard_logoutConfirm),
                         actions: [
                           TextButton(
                             onPressed: () => Navigator.of(ctx).pop(),
-                            child: Text('Cancel', style: TextStyle(color: context.colors.primary)),
+                            child: Text(context.l10n.common_cancel, style: TextStyle(color: context.colors.primary)),
                           ),
                           TextButton(
                             onPressed: () async {
                               Navigator.of(ctx).pop();
                               await forceLogoutAndShowLogin();
                             },
-                            child: Text('Logout', style: TextStyle(color: context.colors.danger)),
+                            child: Text(context.l10n.common_logout, style: TextStyle(color: context.colors.danger)),
                           ),
                         ],
                       ),
