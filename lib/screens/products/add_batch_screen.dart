@@ -17,6 +17,7 @@ import '../../theme/theme_context.dart';
 import '../../theme/app_breakpoints.dart';
 import '../../theme/app_motion.dart';
 import '../../ui/feedback/app_feedback.dart';
+import '../../l10n/l10n.dart';
 
 /// Records a new delivery of an existing product as its own batch - a
 /// separate batch number, expiry, and quantity, never overwriting an
@@ -106,11 +107,11 @@ class _AddBatchScreenState extends State<AddBatchScreen> {
       Navigator.pop(context);
       AppFeedback.success(
         wasMerged
-            ? 'Added to the existing batch with this number and expiry'
-            : 'New batch added',
+            ? L10n.current.batch_mergedIntoExisting
+            : L10n.current.batch_added,
       );
     } catch (e, st) {
-      AppFeedback.error("Couldn't add the batch", error: e, stackTrace: st);
+      AppFeedback.error(L10n.current.batch_addFailed, error: e, stackTrace: st);
     } finally {
       if (mounted) setState(() => _isSaving = false);
     }
@@ -120,7 +121,7 @@ class _AddBatchScreenState extends State<AddBatchScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Add New Batch'),
+        title: Text(context.l10n.products_addNewBatch),
         centerTitle: true,
         backgroundColor: context.colors.primary,
         foregroundColor: context.colors.onPrimary,
@@ -128,7 +129,7 @@ class _AddBatchScreenState extends State<AddBatchScreen> {
         leading: widget.isModal
             ? IconButton(
                 icon: const Icon(Icons.close),
-                tooltip: 'Close',
+                tooltip: context.l10n.common_close,
                 onPressed: () => Navigator.of(context).pop(),
               )
             : null,
@@ -143,33 +144,32 @@ class _AddBatchScreenState extends State<AddBatchScreen> {
               children: [
                 Text(widget.product.name, style: const TextStyle(fontSize: AppFontSize.f18, fontWeight: AppFontWeight.bold)),
                 Text(
-                  'Choose where this delivery goes - this is recorded as its own batch, '
-                  'separate from any existing stock.',
+                  context.l10n.batch_addIntro,
                   style: TextStyle(fontSize: AppFontSize.f12_5, color: context.colors.textMuted),
                 ),
                 const SizedBox(height: AppSpacing.s20),
                 TextFormField(
                   controller: _batchController,
-                  decoration: const InputDecoration(labelText: 'Batch No (optional)', border: OutlineInputBorder()),
+                  decoration: InputDecoration(labelText: context.l10n.batch_batchNoOptional, border: const OutlineInputBorder()),
                 ),
                 const SizedBox(height: AppSpacing.s12),
                 TextFormField(
                   controller: _expiryController,
                   readOnly: true,
                   onTap: _pickExpiry,
-                  decoration: const InputDecoration(
-                    labelText: 'Expiry Date',
-                    border: OutlineInputBorder(),
-                    suffixIcon: Icon(Icons.calendar_today),
+                  decoration: InputDecoration(
+                    labelText: context.l10n.batch_expiryDate,
+                    border: const OutlineInputBorder(),
+                    suffixIcon: const Icon(Icons.calendar_today),
                   ),
                 ),
                 const SizedBox(height: AppSpacing.s12),
-                const Text('Add This Stock To', style: TextStyle(fontWeight: AppFontWeight.semibold, fontSize: AppFontSize.f13)),
+                Text(context.l10n.batch_addStockTo, style: const TextStyle(fontWeight: AppFontWeight.semibold, fontSize: AppFontSize.f13)),
                 RadioListTile<String>(
                   contentPadding: EdgeInsets.zero,
                   dense: true,
-                  title: const Text('Stock Store'),
-                  subtitle: const Text('Needs a separate "Release" step before it can be sold', style: TextStyle(fontSize: AppFontSize.f11_5)),
+                  title: Text(context.l10n.store_title),
+                  subtitle: Text(context.l10n.batch_storeHint, style: const TextStyle(fontSize: AppFontSize.f11_5)),
                   value: 'stock',
                   groupValue: _destination,
                   activeColor: context.colors.primary,
@@ -178,8 +178,8 @@ class _AddBatchScreenState extends State<AddBatchScreen> {
                 RadioListTile<String>(
                   contentPadding: EdgeInsets.zero,
                   dense: true,
-                  title: const Text('Sellable (straight to the shelf)'),
-                  subtitle: const Text('Ready to sell immediately', style: TextStyle(fontSize: AppFontSize.f11_5)),
+                  title: Text(context.l10n.batch_sellableOption),
+                  subtitle: Text(context.l10n.batch_sellableHint, style: const TextStyle(fontSize: AppFontSize.f11_5)),
                   value: 'sellable',
                   groupValue: _destination,
                   activeColor: context.colors.primary,
@@ -190,10 +190,10 @@ class _AddBatchScreenState extends State<AddBatchScreen> {
                   controller: _quantityController,
                   keyboardType: TextInputType.number,
                   inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-                  decoration: const InputDecoration(labelText: 'Quantity Received', border: OutlineInputBorder()),
+                  decoration: InputDecoration(labelText: context.l10n.batch_quantityReceived, border: const OutlineInputBorder()),
                   validator: (v) {
                     final n = int.tryParse(v ?? '');
-                    if (n == null || n <= 0) return 'Enter a valid quantity';
+                    if (n == null || n <= 0) return context.l10n.batch_validQuantity;
                     return null;
                   },
                 ),
@@ -202,7 +202,7 @@ class _AddBatchScreenState extends State<AddBatchScreen> {
                   controller: _buyPriceController,
                   keyboardType: TextInputType.number,
                   inputFormatters: [FilteringTextInputFormatter.digitsOnly, ThousandsSeparatorInputFormatter()],
-                  decoration: const InputDecoration(labelText: 'Buy Price (${AppDefaults.currencySymbol})', border: OutlineInputBorder()),
+                  decoration: InputDecoration(labelText: context.l10n.batch_buyPriceLabel(AppDefaults.currencySymbol), border: const OutlineInputBorder()),
                 ),
                 const SizedBox(height: AppSpacing.s24),
                 SizedBox(
@@ -212,7 +212,7 @@ class _AddBatchScreenState extends State<AddBatchScreen> {
                     style: ElevatedButton.styleFrom(backgroundColor: context.colors.primary, foregroundColor: context.colors.onPrimary),
                     child: _isSaving
                         ? SizedBox(width: AppSpacing.s22, height: 22, child: CircularProgressIndicator(strokeWidth: 2.5, color: context.colors.onPrimary))
-                        : const Text('Add Batch'),
+                        : Text(context.l10n.batch_addBatch),
                   ),
                 ),
               ],
@@ -241,7 +241,7 @@ Future<void> showAddBatchScreen(BuildContext context, {required Product product}
   await showGeneralDialog(
     context: context,
     barrierDismissible: true,
-    barrierLabel: 'Add Batch',
+    barrierLabel: context.l10n.batch_addBatch,
     barrierColor: context.colors.scrim.withValues(alpha: AppAlpha.a50),
     transitionDuration: AppMotion.normal,
     pageBuilder: (context, animation, secondaryAnimation) {
