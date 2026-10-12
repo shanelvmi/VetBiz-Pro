@@ -9,6 +9,7 @@ import '../../services/daily_report_service.dart';
 import '../../utils/thousands_input_formatter.dart';
 import '../../config/money.dart';
 import '../../config/app_date_format.dart';
+import '../../l10n/l10n.dart';
 import '../../theme/app_text.dart';
 import '../../theme/app_dimens.dart';
 import '../../theme/theme_context.dart';
@@ -163,7 +164,7 @@ class _ReportReviewScreenState extends State<ReportReviewScreen> {
       if (!mounted) return;
       Navigator.of(context).pop(submitted);
     } catch (e, st) {
-      AppFeedback.error("Couldn't submit the report", error: e, stackTrace: st);
+      AppFeedback.error(L10n.current.reports_submitFailed, error: e, stackTrace: st);
     } finally {
       if (mounted) setState(() => _isSubmitting = false);
     }
@@ -182,14 +183,14 @@ class _ReportReviewScreenState extends State<ReportReviewScreen> {
         leading: widget.isModal
             ? IconButton(
                 icon: const Icon(Icons.close),
-                tooltip: 'Close',
+                tooltip: context.l10n.common_close,
                 onPressed: () => Navigator.of(context).pop(),
               )
             : null,
         title: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Text('Review & Submit', style: TextStyle(fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f18, color: context.colors.textPrimary)),
+            Text(context.l10n.reports_reviewSubmit, style: TextStyle(fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f18, color: context.colors.textPrimary)),
             Text(AppDateFormat.dateLong.format(widget.report.reportDate),
                 style: TextStyle(fontSize: AppFontSize.f12, color: context.colors.textSecondary)),
           ],
@@ -255,8 +256,7 @@ class _ReportReviewScreenState extends State<ReportReviewScreen> {
           const SizedBox(width: AppSpacing.s10),
           Expanded(
             child: Text(
-              'Sales, services, transactions, and debt activity have already been calculated automatically. '
-              'Count the items below and enter what you actually find before submitting.',
+              context.l10n.reports_reviewIntro,
               style: TextStyle(fontSize: AppFontSize.f12_5, color: context.colors.primary.withValues(alpha: AppAlpha.a85)),
             ),
           ),
@@ -270,9 +270,9 @@ class _ReportReviewScreenState extends State<ReportReviewScreen> {
       Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _sectionHeader(Icons.inventory_2_outlined, 'Physical Stock Count'),
+          _sectionHeader(Icons.inventory_2_outlined, context.l10n.reports_physicalStockCount),
           const SizedBox(height: AppSpacing.s4),
-          Text('Watch-listed products only - count these before submitting.',
+          Text(context.l10n.reports_watchlistedHint,
               style: TextStyle(fontSize: AppFontSize.f12, color: context.colors.textMuted)),
           const SizedBox(height: AppSpacing.s12),
           for (final p in _watchlisted) _buildProductCountRow(p),
@@ -302,7 +302,7 @@ class _ReportReviewScreenState extends State<ReportReviewScreen> {
               Expanded(
                 child: Text(p.name, style: const TextStyle(fontWeight: AppFontWeight.semibold, fontSize: AppFontSize.f13_5)),
               ),
-              Text('Expected: ${p.expectedClosing}', style: TextStyle(fontSize: AppFontSize.f12, color: context.colors.textMuted)),
+              Text(context.l10n.reports_expectedValue(p.expectedClosing), style: TextStyle(fontSize: AppFontSize.f12, color: context.colors.textMuted)),
             ],
           ),
           const SizedBox(height: AppSpacing.s8),
@@ -315,7 +315,7 @@ class _ReportReviewScreenState extends State<ReportReviewScreen> {
                   keyboardType: TextInputType.number,
                   inputFormatters: [FilteringTextInputFormatter.digitsOnly],
                   decoration: InputDecoration(
-                    hintText: 'Physical count',
+                    hintText: context.l10n.reports_physicalCount,
                     isDense: true,
                     filled: true,
                     fillColor: context.colors.surface,
@@ -332,13 +332,13 @@ class _ReportReviewScreenState extends State<ReportReviewScreen> {
                 const SizedBox(width: AppSpacing.s12),
                 Icon(Icons.warning_amber_rounded, size: AppIconSize.i16, color: context.colors.dangerStrong),
                 const SizedBox(width: AppSpacing.s4),
-                Text('${variance > 0 ? '+' : ''}$variance variance',
+                Text(context.l10n.reports_varianceCount('${variance > 0 ? '+' : ''}$variance'),
                     style: TextStyle(fontSize: AppFontSize.f12, fontWeight: AppFontWeight.semibold, color: context.colors.dangerStrong)),
               ] else if (count != null) ...[
                 const SizedBox(width: AppSpacing.s12),
                 Icon(Icons.check_circle_outline, size: AppIconSize.i16, color: context.colors.success),
                 const SizedBox(width: AppSpacing.s4),
-                Text('Match', style: TextStyle(fontSize: AppFontSize.f12, color: context.colors.successStrong)),
+                Text(context.l10n.reports_match, style: TextStyle(fontSize: AppFontSize.f12, color: context.colors.successStrong)),
               ],
             ],
           ),
@@ -349,8 +349,8 @@ class _ReportReviewScreenState extends State<ReportReviewScreen> {
               textCapitalization: TextCapitalization.sentences,
               inputFormatters: [SentenceCapitalizationFormatter()],
               decoration: InputDecoration(
-                hintText: 'Reason for variance (e.g. damaged, unable to locate)',
-                errorText: _isMissingStockReason(p) ? 'Please provide a reason for the variance.' : null,
+                hintText: context.l10n.reports_varianceReasonHint,
+                errorText: _isMissingStockReason(p) ? context.l10n.reports_errVarianceReason : null,
                 isDense: true,
                 filled: true,
                 fillColor: context.colors.surface,
@@ -374,9 +374,9 @@ class _ReportReviewScreenState extends State<ReportReviewScreen> {
         Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            _sectionHeader(Icons.payments_outlined, 'Payment Reconciliation'),
+            _sectionHeader(Icons.payments_outlined, context.l10n.reports_paymentReconciliation),
             const SizedBox(height: AppSpacing.s10),
-            Text('No payments recorded today.', style: TextStyle(fontSize: AppFontSize.f13, color: context.colors.textMuted)),
+            Text(context.l10n.reports_noPaymentsToday, style: TextStyle(fontSize: AppFontSize.f13, color: context.colors.textMuted)),
           ],
         ),
       );
@@ -386,10 +386,10 @@ class _ReportReviewScreenState extends State<ReportReviewScreen> {
       Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _sectionHeader(Icons.payments_outlined, 'Payment Reconciliation'),
+          _sectionHeader(Icons.payments_outlined, context.l10n.reports_paymentReconciliation),
           const SizedBox(height: AppSpacing.s4),
           Text(
-            'Count what you actually have for each method used today - mobile money balance, bank balance, and cash in the drawer.',
+            context.l10n.reports_countEachMethod,
             style: TextStyle(fontSize: AppFontSize.f12, color: context.colors.textMuted),
           ),
           for (final p in widget.report.paymentReconciliation) ...[
@@ -408,12 +408,12 @@ class _ReportReviewScreenState extends State<ReportReviewScreen> {
       return Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(p.method, style: const TextStyle(fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f14)),
+          Text(context.l10n.paymentMethodLabel(p.method), style: const TextStyle(fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f14)),
           const SizedBox(height: AppSpacing.s8),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text('Amount paid out', style: TextStyle(fontSize: AppFontSize.f13, color: context.colors.textSoft)),
+              Text(context.l10n.reports_amountPaidOut, style: TextStyle(fontSize: AppFontSize.f13, color: context.colors.textSoft)),
               Text(Money.symbolDecimal(p.expected.abs()),
                   style: const TextStyle(fontSize: AppFontSize.f13, fontWeight: AppFontWeight.bold)),
             ],
@@ -425,7 +425,7 @@ class _ReportReviewScreenState extends State<ReportReviewScreen> {
               const SizedBox(width: AppSpacing.s4),
               Expanded(
                 child: Text(
-                  'No income came in via ${p.method} today - just an outflow. No physical count needed here.',
+                  context.l10n.reports_noIncomeVia(context.l10n.paymentMethodLabel(p.method)),
                   style: TextStyle(fontSize: AppFontSize.f12, color: context.colors.infoNoteTextSoft),
                 ),
               ),
@@ -442,18 +442,18 @@ class _ReportReviewScreenState extends State<ReportReviewScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(p.method, style: const TextStyle(fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f14)),
+        Text(context.l10n.paymentMethodLabel(p.method), style: const TextStyle(fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f14)),
         const SizedBox(height: AppSpacing.s8),
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Text('Expected balance', style: TextStyle(fontSize: AppFontSize.f13, color: context.colors.textSoft)),
+            Text(context.l10n.reports_expectedBalance, style: TextStyle(fontSize: AppFontSize.f13, color: context.colors.textSoft)),
             Text(Money.symbolDecimal(p.expected),
                 style: const TextStyle(fontSize: AppFontSize.f13, fontWeight: AppFontWeight.bold)),
           ],
         ),
         const SizedBox(height: AppSpacing.s12),
-        const Text('Physical balance counted *', style: TextStyle(fontWeight: AppFontWeight.semibold, fontSize: AppFontSize.f13)),
+        Text(context.l10n.reports_physicalBalanceRequired, style: TextStyle(fontWeight: AppFontWeight.semibold, fontSize: AppFontSize.f13)),
         const SizedBox(height: AppSpacing.s6),
         TextField(
           controller: _paymentCountControllers[p.method],
@@ -478,7 +478,9 @@ class _ReportReviewScreenState extends State<ReportReviewScreen> {
             children: [
               Icon(Icons.warning_amber_rounded, size: AppIconSize.i16, color: context.colors.dangerStrong),
               const SizedBox(width: AppSpacing.s4),
-              Text('${p.method} variance: ${variance > 0 ? '+' : ''}${Money.symbolDecimal(variance)}',
+              Text(
+                  context.l10n.reports_methodVariance(
+                      context.l10n.paymentMethodLabel(p.method), '${variance > 0 ? '+' : ''}${Money.symbolDecimal(variance)}'),
                   style: TextStyle(fontSize: AppFontSize.f13, fontWeight: AppFontWeight.semibold, color: context.colors.dangerStrong)),
             ],
           ),
@@ -488,8 +490,8 @@ class _ReportReviewScreenState extends State<ReportReviewScreen> {
             textCapitalization: TextCapitalization.sentences,
             inputFormatters: [SentenceCapitalizationFormatter()],
             decoration: InputDecoration(
-              hintText: 'Reason for ${p.method} variance',
-              errorText: _isMissingPaymentReason(p.method) ? 'Please provide a reason for the variance.' : null,
+              hintText: context.l10n.reports_methodVarianceReason(context.l10n.paymentMethodLabel(p.method)),
+              errorText: _isMissingPaymentReason(p.method) ? context.l10n.reports_errVarianceReason : null,
               isDense: true,
               filled: true,
               fillColor: context.colors.surface,
@@ -508,7 +510,7 @@ class _ReportReviewScreenState extends State<ReportReviewScreen> {
               children: [
                 Icon(Icons.check_circle_outline, size: AppIconSize.i16, color: context.colors.success),
                 const SizedBox(width: AppSpacing.s4),
-                Text('${p.method} matches', style: TextStyle(fontSize: AppFontSize.f12_5, color: context.colors.successStrong)),
+                Text(context.l10n.reports_methodMatches(context.l10n.paymentMethodLabel(p.method)), style: TextStyle(fontSize: AppFontSize.f12_5, color: context.colors.successStrong)),
               ],
             ),
           ),
@@ -521,7 +523,7 @@ class _ReportReviewScreenState extends State<ReportReviewScreen> {
       Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _sectionHeader(Icons.verified_outlined, 'Daily Closing Declaration'),
+          _sectionHeader(Icons.verified_outlined, context.l10n.reports_declaration),
           const SizedBox(height: AppSpacing.s10),
           InkWell(
             onTap: () => setState(() => _declarationConfirmed = !_declarationConfirmed),
@@ -538,8 +540,7 @@ class _ReportReviewScreenState extends State<ReportReviewScreen> {
                   child: Padding(
                     padding: const EdgeInsets.only(top: AppSpacing.s12),
                     child: Text(
-                      "I confirm that I have reviewed today's transactions and that the cash and stock figures "
-                      'entered above represent the closing figures for my shift.',
+                      context.l10n.reports_confirmDeclaration,
                       style: TextStyle(fontSize: AppFontSize.f12_5, color: context.colors.textPrimary),
                     ),
                   ),
@@ -555,13 +556,13 @@ class _ReportReviewScreenState extends State<ReportReviewScreen> {
   Widget _buildFooter() {
     String? blockedReason;
     if (!_allWatchlistedCounted) {
-      blockedReason = 'Enter a physical count for every watch-listed product';
+      blockedReason = context.l10n.reports_blockedCounts;
     } else if (!_allPaymentMethodsCounted) {
-      blockedReason = 'Enter the physical balance for every payment method';
+      blockedReason = context.l10n.reports_blockedBalances;
     } else if (_anyMissingStockReasons || _anyMissingPaymentReasons) {
-      blockedReason = 'Please provide a reason for the variance found';
+      blockedReason = context.l10n.reports_blockedReason;
     } else if (!_declarationConfirmed) {
-      blockedReason = 'Confirm the closing declaration to submit';
+      blockedReason = context.l10n.reports_blockedDeclaration;
     }
 
     return Container(
@@ -576,7 +577,7 @@ class _ReportReviewScreenState extends State<ReportReviewScreen> {
         children: [
           OutlinedButton.icon(
             icon: const Icon(Icons.close, size: AppIconSize.i16),
-            label: const Text('Cancel'),
+            label: Text(context.l10n.common_cancel),
             style: OutlinedButton.styleFrom(
               foregroundColor: context.colors.textPrimary,
               side: BorderSide(color: context.colors.textHint.withValues(alpha: AppAlpha.a40)),
@@ -606,12 +607,12 @@ class _ReportReviewScreenState extends State<ReportReviewScreen> {
             child: _isSubmitting
                 ? SizedBox(
                     width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2, color: context.colors.onPrimary))
-                : const Row(
+                : Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Icon(Icons.check, size: AppIconSize.i16),
-                      SizedBox(width: AppSpacing.s8),
-                      Text('Submit Daily Closing'),
+                      const Icon(Icons.check, size: AppIconSize.i16),
+                      const SizedBox(width: AppSpacing.s8),
+                      Text(context.l10n.reports_submitDailyClosing),
                     ],
                   ),
           ),
@@ -636,7 +637,7 @@ Future<DailyReport?> showReportReviewScreen(BuildContext context, DailyReport re
   return showGeneralDialog<DailyReport>(
     context: context,
     barrierDismissible: true,
-    barrierLabel: 'Review & Submit',
+    barrierLabel: context.l10n.reports_reviewSubmit,
     barrierColor: context.colors.scrim.withValues(alpha: AppAlpha.a50),
     transitionDuration: AppMotion.normal,
     pageBuilder: (context, animation, secondaryAnimation) {

@@ -15,6 +15,10 @@ class DailyReportPdfService {
   static final _dateTime = AppDateFormat.dateNoPadTime12Short;
   static final _time = AppDateFormat.time24;
 
+  /// The text sent with the shared PDF. English, like the PDF itself
+  /// (docs/PHASE2_LOCALISATION_SPEC.md 2.8).
+  static const shareText = 'Daily Closing Report';
+
   /// Builds the PDF and opens the OS's native print/share preview -
   /// the one shared entry point both the report detail screen and the
   /// main View Reports screen use, so the Printing.layoutPdf() call
