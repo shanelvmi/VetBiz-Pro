@@ -10445,6 +10445,120 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Business Email (optional)'**
   String get facilities_businessEmailOptional;
+
+  /// Edit Facility dialog field.
+  ///
+  /// In en, this message translates to:
+  /// **'Business Phone (optional)'**
+  String get facilities_businessPhoneOptional;
+
+  /// Edit Facility dialog field.
+  ///
+  /// In en, this message translates to:
+  /// **'Address (optional)'**
+  String get facilities_addressOptional;
+
+  /// Edit Facility dialog field.
+  ///
+  /// In en, this message translates to:
+  /// **'Description (optional)'**
+  String get facilities_descriptionOptional;
+
+  /// Edit Facility dialog field.
+  ///
+  /// In en, this message translates to:
+  /// **'Tagline (optional)'**
+  String get facilities_taglineOptional;
+
+  /// Edit Facility dialog: example tagline.
+  ///
+  /// In en, this message translates to:
+  /// **'e.g. Agrovet & Animal Care'**
+  String get facilities_taglineHint;
+
+  /// Edit Facility dialog field.
+  ///
+  /// In en, this message translates to:
+  /// **'License Number (optional)'**
+  String get facilities_licenseOptional;
+
+  /// Edit Facility dialog field (Tax Identification Number).
+  ///
+  /// In en, this message translates to:
+  /// **'TIN (optional)'**
+  String get facilities_tinOptional;
+
+  /// Edit Facility dialog: TIN field hint.
+  ///
+  /// In en, this message translates to:
+  /// **'Tax Identification Number'**
+  String get facilities_tinHint;
+
+  /// Edit Facility dialog field.
+  ///
+  /// In en, this message translates to:
+  /// **'Ownership (optional)'**
+  String get facilities_ownershipOptional;
+
+  /// Edit Facility dialog: restock frequency field.
+  ///
+  /// In en, this message translates to:
+  /// **'How often do you typically restock?'**
+  String get facilities_restockQuestion;
+
+  /// Edit Facility dialog: under the restock frequency field.
+  ///
+  /// In en, this message translates to:
+  /// **'Used to suggest smart stock-level defaults from your sales history'**
+  String get facilities_restockHelper;
+
+  /// Edit Facility dialog: saving failed; error is the friendly reason.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t save the changes. {error}'**
+  String facilities_saveFailed(String error);
+
+  /// Message after editing a facility.
+  ///
+  /// In en, this message translates to:
+  /// **'Facility updated'**
+  String get facilities_updated;
+
+  /// Shown while Delete Facility checks for assistants.
+  ///
+  /// In en, this message translates to:
+  /// **'Checking that no assistants remain…'**
+  String get facilities_checkingAssistants;
+
+  /// Dialog title: the facility still has assistants.
+  ///
+  /// In en, this message translates to:
+  /// **'Cannot Delete Facility'**
+  String get facilities_cannotDeleteTitle;
+
+  /// Cannot Delete Facility dialog: how many assistants remain.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{This facility still has 1 assistant assigned. Remove or reassign them first, then try again.} other{This facility still has {count} assistants assigned. Remove or reassign all of them first, then try again.}}'**
+  String facilities_cannotDeleteMessage(int count);
+
+  /// Delete dialog title and More Actions menu item.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete Facility'**
+  String get facilities_deleteTitle;
+
+  /// Delete Facility dialog: what is deleted.
+  ///
+  /// In en, this message translates to:
+  /// **'This permanently deletes \"{name}\" and everything in it - products, sales, clients, debts, payments, and history. This cannot be undone.'**
+  String facilities_deleteWarning(String name);
+
+  /// Delete Facility dialog: warning when it is the account's only facility.
+  ///
+  /// In en, this message translates to:
+  /// **'This is your only facility. Deleting it leaves your account with no facility - you will stay signed in, and can then add a new one or delete your account.'**
+  String get facilities_onlyFacilityWarning;
 }
 
 class _AppLocalizationsDelegate

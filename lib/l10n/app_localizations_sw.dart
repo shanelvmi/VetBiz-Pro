@@ -6107,4 +6107,79 @@ class AppLocalizationsSw extends AppLocalizations {
   @override
   String get facilities_businessEmailOptional =>
       'Barua pepe ya Biashara (si lazima)';
+
+  @override
+  String get facilities_businessPhoneOptional => 'Simu ya Biashara (si lazima)';
+
+  @override
+  String get facilities_addressOptional => 'Anwani (si lazima)';
+
+  @override
+  String get facilities_descriptionOptional => 'Maelezo (si lazima)';
+
+  @override
+  String get facilities_taglineOptional => 'Kauli mbiu (si lazima)';
+
+  @override
+  String get facilities_taglineHint => 'mf. Agrovet na Huduma kwa Wanyama';
+
+  @override
+  String get facilities_licenseOptional => 'Namba ya Leseni (si lazima)';
+
+  @override
+  String get facilities_tinOptional => 'TIN (si lazima)';
+
+  @override
+  String get facilities_tinHint => 'Namba ya Utambulisho wa Mlipakodi';
+
+  @override
+  String get facilities_ownershipOptional => 'Umiliki (si lazima)';
+
+  @override
+  String get facilities_restockQuestion =>
+      'Kwa kawaida unaongeza mzigo mara ngapi?';
+
+  @override
+  String get facilities_restockHelper =>
+      'Hutumika kupendekeza viwango vya akiba kutokana na historia ya mauzo yako';
+
+  @override
+  String facilities_saveFailed(String error) {
+    return 'Imeshindwa kuhifadhi mabadiliko. $error';
+  }
+
+  @override
+  String get facilities_updated => 'Kituo kimesasishwa';
+
+  @override
+  String get facilities_checkingAssistants =>
+      'Inahakikisha hakuna msaidizi aliyebaki…';
+
+  @override
+  String get facilities_cannotDeleteTitle => 'Haiwezekani Kufuta Kituo';
+
+  @override
+  String facilities_cannotDeleteMessage(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other:
+          'Kituo hiki bado kina wasaidizi $count. Waondoe au wahamishe wote kwanza, kisha ujaribu tena.',
+      one:
+          'Kituo hiki bado kina msaidizi 1. Mwondoe au mhamishe kwanza, kisha ujaribu tena.',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get facilities_deleteTitle => 'Futa Kituo';
+
+  @override
+  String facilities_deleteWarning(String name) {
+    return 'Hii inafuta kabisa \"$name\" na kila kitu ndani yake - bidhaa, mauzo, wateja, madeni, malipo na historia. Hili haliwezi kutenduliwa.';
+  }
+
+  @override
+  String get facilities_onlyFacilityWarning =>
+      'Hiki ndicho kituo chako pekee. Ukikifuta, akaunti yako itabaki bila kituo - utaendelea kuwa umeingia, na kisha unaweza kuongeza kipya au kufuta akaunti yako.';
 }

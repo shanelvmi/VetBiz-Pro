@@ -6073,4 +6073,79 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get facilities_businessEmailOptional => 'Business Email (optional)';
+
+  @override
+  String get facilities_businessPhoneOptional => 'Business Phone (optional)';
+
+  @override
+  String get facilities_addressOptional => 'Address (optional)';
+
+  @override
+  String get facilities_descriptionOptional => 'Description (optional)';
+
+  @override
+  String get facilities_taglineOptional => 'Tagline (optional)';
+
+  @override
+  String get facilities_taglineHint => 'e.g. Agrovet & Animal Care';
+
+  @override
+  String get facilities_licenseOptional => 'License Number (optional)';
+
+  @override
+  String get facilities_tinOptional => 'TIN (optional)';
+
+  @override
+  String get facilities_tinHint => 'Tax Identification Number';
+
+  @override
+  String get facilities_ownershipOptional => 'Ownership (optional)';
+
+  @override
+  String get facilities_restockQuestion =>
+      'How often do you typically restock?';
+
+  @override
+  String get facilities_restockHelper =>
+      'Used to suggest smart stock-level defaults from your sales history';
+
+  @override
+  String facilities_saveFailed(String error) {
+    return 'Couldn\'t save the changes. $error';
+  }
+
+  @override
+  String get facilities_updated => 'Facility updated';
+
+  @override
+  String get facilities_checkingAssistants =>
+      'Checking that no assistants remain…';
+
+  @override
+  String get facilities_cannotDeleteTitle => 'Cannot Delete Facility';
+
+  @override
+  String facilities_cannotDeleteMessage(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other:
+          'This facility still has $count assistants assigned. Remove or reassign all of them first, then try again.',
+      one:
+          'This facility still has 1 assistant assigned. Remove or reassign them first, then try again.',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get facilities_deleteTitle => 'Delete Facility';
+
+  @override
+  String facilities_deleteWarning(String name) {
+    return 'This permanently deletes \"$name\" and everything in it - products, sales, clients, debts, payments, and history. This cannot be undone.';
+  }
+
+  @override
+  String get facilities_onlyFacilityWarning =>
+      'This is your only facility. Deleting it leaves your account with no facility - you will stay signed in, and can then add a new one or delete your account.';
 }
