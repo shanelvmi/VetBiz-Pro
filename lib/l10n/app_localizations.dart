@@ -6324,6 +6324,132 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Count what you actually have for each method used today - mobile money balance, bank balance, and cash in the drawer.'**
   String get reports_countEachMethod;
+
+  /// Review dialog, a method with only outflow.
+  ///
+  /// In en, this message translates to:
+  /// **'Amount paid out'**
+  String get reports_amountPaidOut;
+
+  /// Review dialog; method is the payment method label.
+  ///
+  /// In en, this message translates to:
+  /// **'No income came in via {method} today - just an outflow. No physical count needed here.'**
+  String reports_noIncomeVia(String method);
+
+  /// Review dialog field label.
+  ///
+  /// In en, this message translates to:
+  /// **'Physical balance counted *'**
+  String get reports_physicalBalanceRequired;
+
+  /// Review dialog; amount is pre-formatted with its sign.
+  ///
+  /// In en, this message translates to:
+  /// **'{method} variance: {amount}'**
+  String reports_methodVariance(String method, String amount);
+
+  /// Review dialog field hint.
+  ///
+  /// In en, this message translates to:
+  /// **'Reason for {method} variance'**
+  String reports_methodVarianceReason(String method);
+
+  /// Review dialog.
+  ///
+  /// In en, this message translates to:
+  /// **'{method} matches'**
+  String reports_methodMatches(String method);
+
+  /// Review dialog declaration checkbox.
+  ///
+  /// In en, this message translates to:
+  /// **'I confirm that I have reviewed today\'s transactions and that the cash and stock figures entered above represent the closing figures for my shift.'**
+  String get reports_confirmDeclaration;
+
+  /// Review dialog: why Submit is disabled.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter a physical count for every watch-listed product'**
+  String get reports_blockedCounts;
+
+  /// Review dialog: why Submit is disabled.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter the physical balance for every payment method'**
+  String get reports_blockedBalances;
+
+  /// Review dialog: why Submit is disabled.
+  ///
+  /// In en, this message translates to:
+  /// **'Please provide a reason for the variance found'**
+  String get reports_blockedReason;
+
+  /// Review dialog: why Submit is disabled.
+  ///
+  /// In en, this message translates to:
+  /// **'Confirm the closing declaration to submit'**
+  String get reports_blockedDeclaration;
+
+  /// Review dialog submit button.
+  ///
+  /// In en, this message translates to:
+  /// **'Submit Daily Closing'**
+  String get reports_submitDailyClosing;
+
+  /// Report tab.
+  ///
+  /// In en, this message translates to:
+  /// **'Stock Reconciliation'**
+  String get reports_tabStock;
+
+  /// Report tab.
+  ///
+  /// In en, this message translates to:
+  /// **'Debt'**
+  String get reports_tabDebt;
+
+  /// Report tab.
+  ///
+  /// In en, this message translates to:
+  /// **'Products'**
+  String get reports_tabProducts;
+
+  /// Report summary tile.
+  ///
+  /// In en, this message translates to:
+  /// **'Outstanding New Debt'**
+  String get reports_outstandingNewDebt;
+
+  /// Report summary tile.
+  ///
+  /// In en, this message translates to:
+  /// **'Services Performed'**
+  String get reports_servicesPerformed;
+
+  /// Report summary tile.
+  ///
+  /// In en, this message translates to:
+  /// **'Products Sold'**
+  String get reports_productsSold;
+
+  /// Report summary tile: units sold.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, other{{count} units}}'**
+  String reports_unitsCount(int count);
+
+  /// Report summary tile.
+  ///
+  /// In en, this message translates to:
+  /// **'Total Revenue Today'**
+  String get reports_totalRevenueToday;
+
+  /// Report summary footer.
+  ///
+  /// In en, this message translates to:
+  /// **'Generated at {time} by {name}'**
+  String reports_generatedAtBy(String time, String name);
 }
 
 class _AppLocalizationsDelegate

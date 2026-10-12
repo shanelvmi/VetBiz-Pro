@@ -3571,4 +3571,89 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get reports_countEachMethod =>
       'Count what you actually have for each method used today - mobile money balance, bank balance, and cash in the drawer.';
+
+  @override
+  String get reports_amountPaidOut => 'Amount paid out';
+
+  @override
+  String reports_noIncomeVia(String method) {
+    return 'No income came in via $method today - just an outflow. No physical count needed here.';
+  }
+
+  @override
+  String get reports_physicalBalanceRequired => 'Physical balance counted *';
+
+  @override
+  String reports_methodVariance(String method, String amount) {
+    return '$method variance: $amount';
+  }
+
+  @override
+  String reports_methodVarianceReason(String method) {
+    return 'Reason for $method variance';
+  }
+
+  @override
+  String reports_methodMatches(String method) {
+    return '$method matches';
+  }
+
+  @override
+  String get reports_confirmDeclaration =>
+      'I confirm that I have reviewed today\'s transactions and that the cash and stock figures entered above represent the closing figures for my shift.';
+
+  @override
+  String get reports_blockedCounts =>
+      'Enter a physical count for every watch-listed product';
+
+  @override
+  String get reports_blockedBalances =>
+      'Enter the physical balance for every payment method';
+
+  @override
+  String get reports_blockedReason =>
+      'Please provide a reason for the variance found';
+
+  @override
+  String get reports_blockedDeclaration =>
+      'Confirm the closing declaration to submit';
+
+  @override
+  String get reports_submitDailyClosing => 'Submit Daily Closing';
+
+  @override
+  String get reports_tabStock => 'Stock Reconciliation';
+
+  @override
+  String get reports_tabDebt => 'Debt';
+
+  @override
+  String get reports_tabProducts => 'Products';
+
+  @override
+  String get reports_outstandingNewDebt => 'Outstanding New Debt';
+
+  @override
+  String get reports_servicesPerformed => 'Services Performed';
+
+  @override
+  String get reports_productsSold => 'Products Sold';
+
+  @override
+  String reports_unitsCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count units',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get reports_totalRevenueToday => 'Total Revenue Today';
+
+  @override
+  String reports_generatedAtBy(String time, String name) {
+    return 'Generated at $time by $name';
+  }
 }

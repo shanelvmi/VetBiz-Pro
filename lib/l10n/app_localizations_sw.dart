@@ -3589,4 +3589,89 @@ class AppLocalizationsSw extends AppLocalizations {
   @override
   String get reports_countEachMethod =>
       'Hesabu ulicho nacho kwa kila njia iliyotumika leo - salio la pesa za simu, salio la benki na fedha taslimu kwenye droo.';
+
+  @override
+  String get reports_amountPaidOut => 'Kiasi kilicholipwa nje';
+
+  @override
+  String reports_noIncomeVia(String method) {
+    return 'Hakuna mapato yaliyoingia kupitia $method leo - ni matumizi tu. Hakuna haja ya hesabu halisi hapa.';
+  }
+
+  @override
+  String get reports_physicalBalanceRequired => 'Salio halisi lililohesabiwa *';
+
+  @override
+  String reports_methodVariance(String method, String amount) {
+    return 'Tofauti ya $method: $amount';
+  }
+
+  @override
+  String reports_methodVarianceReason(String method) {
+    return 'Sababu ya tofauti ya $method';
+  }
+
+  @override
+  String reports_methodMatches(String method) {
+    return '$method inalingana';
+  }
+
+  @override
+  String get reports_confirmDeclaration =>
+      'Nathibitisha kwamba nimepitia miamala ya leo na kwamba takwimu za fedha na stoo zilizowekwa hapo juu ni takwimu za kufunga zamu yangu.';
+
+  @override
+  String get reports_blockedCounts =>
+      'Weka hesabu halisi kwa kila bidhaa inayofuatiliwa';
+
+  @override
+  String get reports_blockedBalances =>
+      'Weka salio halisi kwa kila njia ya malipo';
+
+  @override
+  String get reports_blockedReason =>
+      'Tafadhali eleza sababu ya tofauti iliyopatikana';
+
+  @override
+  String get reports_blockedDeclaration =>
+      'Thibitisha tamko la kufunga ili kuwasilisha';
+
+  @override
+  String get reports_submitDailyClosing => 'Wasilisha Kufunga Siku';
+
+  @override
+  String get reports_tabStock => 'Ulinganisho wa Stoo';
+
+  @override
+  String get reports_tabDebt => 'Deni';
+
+  @override
+  String get reports_tabProducts => 'Bidhaa';
+
+  @override
+  String get reports_outstandingNewDebt => 'Deni Jipya Linalodaiwa';
+
+  @override
+  String get reports_servicesPerformed => 'Huduma Zilizotolewa';
+
+  @override
+  String get reports_productsSold => 'Bidhaa Zilizouzwa';
+
+  @override
+  String reports_unitsCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Vipimo $count',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get reports_totalRevenueToday => 'Jumla ya Mapato Leo';
+
+  @override
+  String reports_generatedAtBy(String time, String name) {
+    return 'Imetengenezwa saa $time na $name';
+  }
 }
