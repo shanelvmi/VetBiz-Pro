@@ -8009,6 +8009,126 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'This permanently deletes {invoice} and restores its stock. This cannot be undone.'**
   String sales_deleteBody(String invoice);
+
+  /// Message after deleting a sale.
+  ///
+  /// In en, this message translates to:
+  /// **'Sale deleted'**
+  String get sales_deleted;
+
+  /// Error message when deleting a sale fails.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t delete the sale'**
+  String get sales_deleteFailed;
+
+  /// Sale details panel title.
+  ///
+  /// In en, this message translates to:
+  /// **'Sale Details'**
+  String get sales_details;
+
+  /// Sale details: an item's quantity.
+  ///
+  /// In en, this message translates to:
+  /// **'× {quantity}'**
+  String sales_quantityTimes(String quantity);
+
+  /// Sale details totals row.
+  ///
+  /// In en, this message translates to:
+  /// **'Subtotal'**
+  String get sales_subtotal;
+
+  /// Sale details totals row.
+  ///
+  /// In en, this message translates to:
+  /// **'Discount'**
+  String get sales_discount;
+
+  /// Sale details totals row.
+  ///
+  /// In en, this message translates to:
+  /// **'Total Amount'**
+  String get sales_totalAmount;
+
+  /// Sale details totals row: the amount paid.
+  ///
+  /// In en, this message translates to:
+  /// **'Paid'**
+  String get sales_paid;
+
+  /// Sale details totals row.
+  ///
+  /// In en, this message translates to:
+  /// **'Balance'**
+  String get sales_balance;
+
+  /// Sales Archive, empty.
+  ///
+  /// In en, this message translates to:
+  /// **'No archived sales found'**
+  String get sales_archiveEmpty;
+
+  /// Sales Archive, empty.
+  ///
+  /// In en, this message translates to:
+  /// **'Try a different search or date range'**
+  String get sales_archiveEmptyHint;
+
+  /// Sales Archive title.
+  ///
+  /// In en, this message translates to:
+  /// **'Sales Archive'**
+  String get sales_archiveTitle;
+
+  /// Sales Archive subtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'{days, plural, other{Sales archived after {days} days}}'**
+  String sales_archiveSubtitle(int days);
+
+  /// Sales Archive banner without dates.
+  ///
+  /// In en, this message translates to:
+  /// **'Archived sales'**
+  String get sales_archivedSales;
+
+  /// Sales Archive footer. more is '+' when more pages may exist, or empty.
+  ///
+  /// In en, this message translates to:
+  /// **'{total, plural, other{Showing {start} to {end} of {total}{more} sales}}'**
+  String sales_archiveShowing(int start, int end, int total, String more);
+
+  /// Sale details: an item with no name.
+  ///
+  /// In en, this message translates to:
+  /// **'Item'**
+  String get sales_item;
+
+  /// Sales Archive search dialog title.
+  ///
+  /// In en, this message translates to:
+  /// **'Search Archived Sales'**
+  String get sales_searchArchiveTitle;
+
+  /// Sales Archive search dialog note.
+  ///
+  /// In en, this message translates to:
+  /// **'Archived sales are always fully paid - sales still owing money stay in your active Sales tab regardless of age.'**
+  String get sales_archiveFullyPaidNote;
+
+  /// Sales Archive search dialog note.
+  ///
+  /// In en, this message translates to:
+  /// **'Only sales before {date} have reached the archive - anything newer is still in your active Sales list.'**
+  String sales_archiveCutoffNote(String date);
+
+  /// Record Sale message when a product has nothing on the shelf.
+  ///
+  /// In en, this message translates to:
+  /// **'{product} has no stock available on the shelf'**
+  String sales_noShelfStock(String product);
 }
 
 class _AppLocalizationsDelegate

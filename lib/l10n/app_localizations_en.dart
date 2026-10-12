@@ -4609,4 +4609,85 @@ class AppLocalizationsEn extends AppLocalizations {
   String sales_deleteBody(String invoice) {
     return 'This permanently deletes $invoice and restores its stock. This cannot be undone.';
   }
+
+  @override
+  String get sales_deleted => 'Sale deleted';
+
+  @override
+  String get sales_deleteFailed => 'Couldn\'t delete the sale';
+
+  @override
+  String get sales_details => 'Sale Details';
+
+  @override
+  String sales_quantityTimes(String quantity) {
+    return '× $quantity';
+  }
+
+  @override
+  String get sales_subtotal => 'Subtotal';
+
+  @override
+  String get sales_discount => 'Discount';
+
+  @override
+  String get sales_totalAmount => 'Total Amount';
+
+  @override
+  String get sales_paid => 'Paid';
+
+  @override
+  String get sales_balance => 'Balance';
+
+  @override
+  String get sales_archiveEmpty => 'No archived sales found';
+
+  @override
+  String get sales_archiveEmptyHint => 'Try a different search or date range';
+
+  @override
+  String get sales_archiveTitle => 'Sales Archive';
+
+  @override
+  String sales_archiveSubtitle(int days) {
+    String _temp0 = intl.Intl.pluralLogic(
+      days,
+      locale: localeName,
+      other: 'Sales archived after $days days',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get sales_archivedSales => 'Archived sales';
+
+  @override
+  String sales_archiveShowing(int start, int end, int total, String more) {
+    String _temp0 = intl.Intl.pluralLogic(
+      total,
+      locale: localeName,
+      other: 'Showing $start to $end of $total$more sales',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get sales_item => 'Item';
+
+  @override
+  String get sales_searchArchiveTitle => 'Search Archived Sales';
+
+  @override
+  String get sales_archiveFullyPaidNote =>
+      'Archived sales are always fully paid - sales still owing money stay in your active Sales tab regardless of age.';
+
+  @override
+  String sales_archiveCutoffNote(String date) {
+    return 'Only sales before $date have reached the archive - anything newer is still in your active Sales list.';
+  }
+
+  @override
+  String sales_noShelfStock(String product) {
+    return '$product has no stock available on the shelf';
+  }
 }

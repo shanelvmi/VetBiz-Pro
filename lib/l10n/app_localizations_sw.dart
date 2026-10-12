@@ -4633,4 +4633,86 @@ class AppLocalizationsSw extends AppLocalizations {
   String sales_deleteBody(String invoice) {
     return 'Hii inafuta $invoice kabisa na kurudisha bidhaa zake. Haiwezi kurudishwa.';
   }
+
+  @override
+  String get sales_deleted => 'Mauzo yamefutwa';
+
+  @override
+  String get sales_deleteFailed => 'Imeshindikana kufuta mauzo';
+
+  @override
+  String get sales_details => 'Taarifa za Mauzo';
+
+  @override
+  String sales_quantityTimes(String quantity) {
+    return '× $quantity';
+  }
+
+  @override
+  String get sales_subtotal => 'Jumla Ndogo';
+
+  @override
+  String get sales_discount => 'Punguzo';
+
+  @override
+  String get sales_totalAmount => 'Jumla Kuu';
+
+  @override
+  String get sales_paid => 'Kilicholipwa';
+
+  @override
+  String get sales_balance => 'Salio';
+
+  @override
+  String get sales_archiveEmpty =>
+      'Hakuna mauzo yaliyohifadhiwa yaliyopatikana';
+
+  @override
+  String get sales_archiveEmptyHint => 'Jaribu utafutaji au kipindi tofauti';
+
+  @override
+  String get sales_archiveTitle => 'Hifadhi ya Mauzo';
+
+  @override
+  String sales_archiveSubtitle(int days) {
+    String _temp0 = intl.Intl.pluralLogic(
+      days,
+      locale: localeName,
+      other: 'Mauzo huhifadhiwa baada ya siku $days',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get sales_archivedSales => 'Mauzo yaliyohifadhiwa';
+
+  @override
+  String sales_archiveShowing(int start, int end, int total, String more) {
+    String _temp0 = intl.Intl.pluralLogic(
+      total,
+      locale: localeName,
+      other: 'Inaonyesha $start hadi $end kati ya $total$more ya mauzo',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get sales_item => 'Bidhaa';
+
+  @override
+  String get sales_searchArchiveTitle => 'Tafuta Mauzo Yaliyohifadhiwa';
+
+  @override
+  String get sales_archiveFullyPaidNote =>
+      'Mauzo yaliyohifadhiwa huwa yamelipwa yote - mauzo yanayodaiwa hubaki kwenye kichupo cha Mauzo bila kujali umri.';
+
+  @override
+  String sales_archiveCutoffNote(String date) {
+    return 'Mauzo ya kabla ya $date tu ndiyo yamefika kwenye hifadhi - mapya zaidi bado yako kwenye orodha ya Mauzo.';
+  }
+
+  @override
+  String sales_noShelfStock(String product) {
+    return '$product haina bidhaa rafuni';
+  }
 }
