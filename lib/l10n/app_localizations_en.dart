@@ -3257,4 +3257,80 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get services_errTotalAmount => 'Enter total amount';
+
+  @override
+  String services_totalPaidRequired(String currency) {
+    return 'Total Paid ($currency) *';
+  }
+
+  @override
+  String get services_errPaidAmount => 'Enter paid amount';
+
+  @override
+  String get services_transactionIdOptional => 'Transaction ID (optional)';
+
+  @override
+  String get services_errPaidOverTotal =>
+      'Total Paid cannot exceed Total Amount';
+
+  @override
+  String get services_updated => 'Service updated';
+
+  @override
+  String get services_added => 'Service added';
+
+  @override
+  String get services_saveFailed => 'Couldn\'t save the service';
+
+  @override
+  String get services_updateVisit => 'Update Visit';
+
+  @override
+  String get services_noClientFound => 'No client found';
+
+  @override
+  String get receipt_shareFailed => 'Couldn\'t share the receipt';
+
+  @override
+  String get receipt_pdfFailed => 'Couldn\'t generate the PDF';
+
+  @override
+  String get receipt_previewTitle => 'Receipt Preview';
+
+  @override
+  String get receipt_formatThermal => 'Receipt (Thermal)';
+
+  @override
+  String get receipt_formatA4 => 'A4 Format';
+
+  @override
+  String get receipt_shareSave => 'Share / Save';
+
+  @override
+  String get receipt_details => 'Receipt Details';
+
+  @override
+  String get receipt_number => 'Receipt Number';
+
+  @override
+  String get receipt_customer => 'Customer';
+
+  @override
+  String get receipt_quickActions => 'Quick Actions';
+
+  @override
+  String get receipt_infoNote =>
+      'This receipt shows the final amount paid for the selected transaction. You can print or share it for your records.';
+
+  @override
+  String get receipt_statusPartiallyPaid => 'Partially Paid';
+
+  @override
+  String get receipt_statusBalanceDue => 'Balance Due';
+
+  @override
+  String get receipt_statusPaidInFull => 'Paid in Full';
+
+  @override
+  String get common_notApplicable => 'N/A';
 }

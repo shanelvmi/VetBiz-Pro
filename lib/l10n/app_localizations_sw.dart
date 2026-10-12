@@ -3275,4 +3275,80 @@ class AppLocalizationsSw extends AppLocalizations {
 
   @override
   String get services_errTotalAmount => 'Weka jumla ya kiasi';
+
+  @override
+  String services_totalPaidRequired(String currency) {
+    return 'Jumla Iliyolipwa ($currency) *';
+  }
+
+  @override
+  String get services_errPaidAmount => 'Weka kiasi kilicholipwa';
+
+  @override
+  String get services_transactionIdOptional => 'Namba ya Muamala (si lazima)';
+
+  @override
+  String get services_errPaidOverTotal =>
+      'Jumla iliyolipwa haiwezi kuzidi jumla ya kiasi';
+
+  @override
+  String get services_updated => 'Huduma imesasishwa';
+
+  @override
+  String get services_added => 'Huduma imeongezwa';
+
+  @override
+  String get services_saveFailed => 'Imeshindikana kuhifadhi huduma';
+
+  @override
+  String get services_updateVisit => 'Sasisha Ziara';
+
+  @override
+  String get services_noClientFound => 'Hakuna mteja aliyepatikana';
+
+  @override
+  String get receipt_shareFailed => 'Imeshindikana kushiriki risiti';
+
+  @override
+  String get receipt_pdfFailed => 'Imeshindikana kutengeneza PDF';
+
+  @override
+  String get receipt_previewTitle => 'Hakiki ya Risiti';
+
+  @override
+  String get receipt_formatThermal => 'Risiti (Thermal)';
+
+  @override
+  String get receipt_formatA4 => 'Muundo wa A4';
+
+  @override
+  String get receipt_shareSave => 'Shiriki / Hifadhi';
+
+  @override
+  String get receipt_details => 'Maelezo ya Risiti';
+
+  @override
+  String get receipt_number => 'Namba ya Risiti';
+
+  @override
+  String get receipt_customer => 'Mteja';
+
+  @override
+  String get receipt_quickActions => 'Vitendo vya Haraka';
+
+  @override
+  String get receipt_infoNote =>
+      'Risiti hii inaonyesha kiasi cha mwisho kilicholipwa kwa muamala uliochaguliwa. Unaweza kuichapisha au kuishiriki kwa kumbukumbu zako.';
+
+  @override
+  String get receipt_statusPartiallyPaid => 'Imelipwa Sehemu';
+
+  @override
+  String get receipt_statusBalanceDue => 'Salio Linadaiwa';
+
+  @override
+  String get receipt_statusPaidInFull => 'Imelipwa Yote';
+
+  @override
+  String get common_notApplicable => 'Haipo';
 }

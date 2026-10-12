@@ -5767,6 +5767,150 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Enter total amount'**
   String get services_errTotalAmount;
+
+  /// Visit form field label.
+  ///
+  /// In en, this message translates to:
+  /// **'Total Paid ({currency}) *'**
+  String services_totalPaidRequired(String currency);
+
+  /// Visit form validation.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter paid amount'**
+  String get services_errPaidAmount;
+
+  /// Visit form field for non-cash payments.
+  ///
+  /// In en, this message translates to:
+  /// **'Transaction ID (optional)'**
+  String get services_transactionIdOptional;
+
+  /// Visit form warning.
+  ///
+  /// In en, this message translates to:
+  /// **'Total Paid cannot exceed Total Amount'**
+  String get services_errPaidOverTotal;
+
+  /// Message after saving an edit.
+  ///
+  /// In en, this message translates to:
+  /// **'Service updated'**
+  String get services_updated;
+
+  /// Message after recording a visit.
+  ///
+  /// In en, this message translates to:
+  /// **'Service added'**
+  String get services_added;
+
+  /// Error message.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t save the service'**
+  String get services_saveFailed;
+
+  /// Visit form save button when editing.
+  ///
+  /// In en, this message translates to:
+  /// **'Update Visit'**
+  String get services_updateVisit;
+
+  /// Visit form client search, no results.
+  ///
+  /// In en, this message translates to:
+  /// **'No client found'**
+  String get services_noClientFound;
+
+  /// Error message on the receipt preview.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t share the receipt'**
+  String get receipt_shareFailed;
+
+  /// Error message on the receipt preview.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t generate the PDF'**
+  String get receipt_pdfFailed;
+
+  /// Receipt preview screen title.
+  ///
+  /// In en, this message translates to:
+  /// **'Receipt Preview'**
+  String get receipt_previewTitle;
+
+  /// Receipt format choice: thermal printer.
+  ///
+  /// In en, this message translates to:
+  /// **'Receipt (Thermal)'**
+  String get receipt_formatThermal;
+
+  /// Receipt format choice: A4 page.
+  ///
+  /// In en, this message translates to:
+  /// **'A4 Format'**
+  String get receipt_formatA4;
+
+  /// Receipt preview button.
+  ///
+  /// In en, this message translates to:
+  /// **'Share / Save'**
+  String get receipt_shareSave;
+
+  /// Receipt preview side panel title.
+  ///
+  /// In en, this message translates to:
+  /// **'Receipt Details'**
+  String get receipt_details;
+
+  /// Receipt preview side panel row.
+  ///
+  /// In en, this message translates to:
+  /// **'Receipt Number'**
+  String get receipt_number;
+
+  /// Receipt preview side panel row.
+  ///
+  /// In en, this message translates to:
+  /// **'Customer'**
+  String get receipt_customer;
+
+  /// Receipt preview side panel section.
+  ///
+  /// In en, this message translates to:
+  /// **'Quick Actions'**
+  String get receipt_quickActions;
+
+  /// Receipt preview side panel note.
+  ///
+  /// In en, this message translates to:
+  /// **'This receipt shows the final amount paid for the selected transaction. You can print or share it for your records.'**
+  String get receipt_infoNote;
+
+  /// Receipt preview side panel status.
+  ///
+  /// In en, this message translates to:
+  /// **'Partially Paid'**
+  String get receipt_statusPartiallyPaid;
+
+  /// Receipt preview side panel status.
+  ///
+  /// In en, this message translates to:
+  /// **'Balance Due'**
+  String get receipt_statusBalanceDue;
+
+  /// Receipt preview side panel status.
+  ///
+  /// In en, this message translates to:
+  /// **'Paid in Full'**
+  String get receipt_statusPaidInFull;
+
+  /// Shown when a value is missing (not applicable).
+  ///
+  /// In en, this message translates to:
+  /// **'N/A'**
+  String get common_notApplicable;
 }
 
 class _AppLocalizationsDelegate
