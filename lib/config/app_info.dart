@@ -4,4 +4,10 @@ class AppInfo {
 
   static const String name = 'VetBiz Pro';
   static const String shortName = 'VetBiz';
+
+  /// The round logo's letters (login and register top bars): a mark, not a word to translate.
+  static const String logoMark = 'VB.';
+
+  /// The version shown in the login footer.
+  static const String versionLabel = 'v2.0.0';
 }

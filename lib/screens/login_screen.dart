@@ -16,6 +16,7 @@ import '../data/collections.dart';
 import '../config/app_timeouts.dart';
 import '../config/app_rules.dart';
 import '../config/app_info.dart';
+import '../l10n/l10n.dart';
 import '../ui/feedback/auth_error_messages.dart';
 import '../ui/feedback/app_feedback.dart';
 import '../ui/feedback/friendly_error.dart';
@@ -130,7 +131,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
     if (emailController.text.isEmpty || passwordController.text.length < AppRules.minPasswordLength) {
       setState(() {
-        error = 'Enter your email and a password of at least ${AppRules.minPasswordLength} characters.';
+        error = L10n.current.login_credentialsTooShort(AppRules.minPasswordLength);
         errorIsAboutCredentials = true;
         _shakeCount++;
         isLoggingIn = false;
@@ -188,8 +189,7 @@ class _LoginScreenState extends State<LoginScreen> {
           // Say so, instead of just handing the person back an idle form.
           setState(() {
             isLoggingIn = false;
-            error = 'Signing in is taking longer than expected. '
-                'Check your internet connection and try again.';
+            error = L10n.current.login_slowSignIn;
             errorIsAboutCredentials = false;
           });
           _startErrorTimer();
@@ -232,7 +232,7 @@ class _LoginScreenState extends State<LoginScreen> {
     final email = emailController.text.trim();
     if (email.isEmpty) {
       setState(() {
-        error = 'Enter your email to reset your password.';
+        error = L10n.current.login_resetNeedsEmail;
         errorIsAboutCredentials = true; // it's the email field that's empty
         _shakeCount++;
       });
@@ -246,8 +246,7 @@ class _LoginScreenState extends State<LoginScreen> {
     // solely on Firebase's own project-level email-enumeration-
     // protection setting, which this code has no way to verify is
     // actually turned on.
-    const vagueMessage = "If an account exists for this email, a reset link "
-        "has been sent. Check your inbox (and spam folder).";
+    final vagueMessage = L10n.current.login_resetSent;
     try {
       await _authService.sendPasswordReset(email);
       AppFeedback.info(vagueMessage);
@@ -264,7 +263,7 @@ class _LoginScreenState extends State<LoginScreen> {
       }
     } catch (e) {
       setState(() {
-        error = "Couldn't send the reset email. ${FriendlyError.messageFor(e)}";
+        error = L10n.current.login_resetFailed(FriendlyError.messageFor(e));
         errorIsAboutCredentials = false;
         _shakeCount++;
       });
@@ -315,7 +314,7 @@ class _LoginScreenState extends State<LoginScreen> {
                         height: 44,
                         decoration: BoxDecoration(color: context.colors.surface, shape: BoxShape.circle),
                         alignment: Alignment.center,
-                        child: Text('VB.', style: TextStyle(color: context.colors.primary, fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f16)),
+                        child: Text(AppInfo.logoMark, style: TextStyle(color: context.colors.primary, fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f16)),
                       ),
                       const SizedBox(width: AppSpacing.s12),
                       Flexible(
@@ -323,10 +322,10 @@ class _LoginScreenState extends State<LoginScreen> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            Text('${AppInfo.name} System',
+                            Text(context.l10n.common_appSystem(AppInfo.name),
                                 style: TextStyle(color: context.colors.onPrimary, fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f16)),
                             if (!isNarrow)
-                              Text('Smart Business & Vet Services Monitor',
+                              Text(context.l10n.login_tagline,
                                   overflow: TextOverflow.ellipsis,
                                   style: TextStyle(color: context.colors.onPrimary.withValues(alpha: AppAlpha.a70), fontSize: AppFontSize.f11_5)),
                           ],
@@ -364,7 +363,7 @@ class _LoginScreenState extends State<LoginScreen> {
                               decoration: const BoxDecoration(color: Colors.greenAccent, shape: BoxShape.circle),
                             ),
                             const SizedBox(width: AppSpacing.s6),
-                            Text('System Online',
+                            Text(context.l10n.login_systemOnline,
                                 style: TextStyle(color: context.colors.onPrimary, fontSize: AppFontSize.f12_5, fontWeight: AppFontWeight.semibold)),
                           ],
                         ),
@@ -405,14 +404,14 @@ class _LoginScreenState extends State<LoginScreen> {
               children: [
                 Icon(Icons.shield_outlined, color: context.colors.onPrimary.withValues(alpha: AppAlpha.a70), size: AppIconSize.i16),
                 const SizedBox(width: AppSpacing.s8),
-                Text('© 2026 VetBiz Pro System. All rights reserved.',
+                Text(context.l10n.login_copyright(AppInfo.name),
                     style: TextStyle(color: context.colors.onPrimary.withValues(alpha: AppAlpha.a70), fontSize: AppFontSize.f12)),
                 const Spacer(),
-                Text('v2.0.0', style: TextStyle(color: context.colors.onPrimary.withValues(alpha: AppAlpha.a70), fontSize: AppFontSize.f12)),
+                Text(AppInfo.versionLabel, style: TextStyle(color: context.colors.onPrimary.withValues(alpha: AppAlpha.a70), fontSize: AppFontSize.f12)),
                 const SizedBox(width: AppSpacing.s20),
-                const _FooterLink(label: 'Privacy Policy', destination: PrivacyPolicyScreen()),
+                _FooterLink(label: context.l10n.common_privacyPolicy, destination: const PrivacyPolicyScreen()),
                 const SizedBox(width: AppSpacing.s20),
-                const _FooterLink(label: 'Terms of Service', destination: TermsOfServiceScreen()),
+                _FooterLink(label: context.l10n.common_termsOfService, destination: const TermsOfServiceScreen()),
               ],
             );
           }
@@ -427,7 +426,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 children: [
                   Icon(Icons.shield_outlined, color: context.colors.onPrimary.withValues(alpha: AppAlpha.a70), size: AppIconSize.i16),
                   const SizedBox(width: AppSpacing.s8),
-                  Text('© 2026 VetBiz Pro System. All rights reserved.',
+                  Text(context.l10n.login_copyright(AppInfo.name),
                       style: TextStyle(color: context.colors.onPrimary.withValues(alpha: AppAlpha.a70), fontSize: AppFontSize.f12)),
                 ],
               ),
@@ -436,9 +435,9 @@ class _LoginScreenState extends State<LoginScreen> {
                 spacing: 20,
                 runSpacing: 4,
                 children: [
-                  Text('v2.0.0', style: TextStyle(color: context.colors.onPrimary.withValues(alpha: AppAlpha.a70), fontSize: AppFontSize.f12)),
-                  const _FooterLink(label: 'Privacy Policy', destination: PrivacyPolicyScreen()),
-                  const _FooterLink(label: 'Terms of Service', destination: TermsOfServiceScreen()),
+                  Text(AppInfo.versionLabel, style: TextStyle(color: context.colors.onPrimary.withValues(alpha: AppAlpha.a70), fontSize: AppFontSize.f12)),
+                  _FooterLink(label: context.l10n.common_privacyPolicy, destination: const PrivacyPolicyScreen()),
+                  _FooterLink(label: context.l10n.common_termsOfService, destination: const TermsOfServiceScreen()),
                 ],
               ),
             ],
@@ -481,11 +480,11 @@ class _LoginScreenState extends State<LoginScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('Welcome to', style: TextStyle(color: context.colors.onPrimary.withValues(alpha: AppAlpha.a85), fontSize: AppFontSize.f13)),
+                Text(context.l10n.login_welcomeTo, style: TextStyle(color: context.colors.onPrimary.withValues(alpha: AppAlpha.a85), fontSize: AppFontSize.f13)),
                 Text(AppInfo.name,
                     style: TextStyle(color: tealGlow, fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f19)),
                 const SizedBox(height: AppSpacing.s8),
-                Text('Stay updated with the latest news and announcements.',
+                Text(context.l10n.login_stayUpdated,
                     style: TextStyle(color: context.colors.onPrimary.withValues(alpha: AppAlpha.a85), fontSize: AppFontSize.f12_5)),
               ],
             ),
@@ -524,7 +523,7 @@ class _LoginScreenState extends State<LoginScreen> {
                         Icon(Icons.campaign_outlined, color: context.colors.textPrimary, size: AppIconSize.i18),
                         const SizedBox(width: AppSpacing.s8),
                         Flexible(
-                          child: Text('Announcements',
+                          child: Text(context.l10n.login_announcements,
                               overflow: TextOverflow.ellipsis,
                               style: TextStyle(fontWeight: AppFontWeight.bold, color: context.colors.textPrimary, fontSize: AppFontSize.f15)),
                         ),
@@ -604,7 +603,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   itemCount: docs.length,
                   itemBuilder: (context, index) {
                     final data = docs[index].data() as Map<String, dynamic>;
-                    final title = data['title'] ?? 'Notice';
+                    final title = data['title'] ?? context.l10n.login_announcementFallbackTitle;
                     final ts = data['timestamp'] as Timestamp?;
                     final bool isNew = ts != null &&
                         DateTime.now().difference(ts.toDate()).inHours < 48;
@@ -626,7 +625,7 @@ class _LoginScreenState extends State<LoginScreen> {
                             Padding(
                               padding: const EdgeInsets.only(bottom: AppSpacing.s6),
                               child: Chip(
-                                label: Text('URGENT', style: TextStyle(fontSize: AppFontSize.f10, color: context.colors.onPrimary)),
+                                label: Text(context.l10n.login_urgent, style: TextStyle(fontSize: AppFontSize.f10, color: context.colors.onPrimary)),
                                 backgroundColor: context.colors.danger,
                                 visualDensity: VisualDensity.compact,
                                 padding: EdgeInsets.zero,
@@ -686,9 +685,9 @@ class _LoginScreenState extends State<LoginScreen> {
           children: [
             Icon(Icons.inbox_outlined, size: AppIconSize.i48, color: context.colors.border),
             const SizedBox(height: AppSpacing.s10),
-            Text('No announcements', style: TextStyle(fontWeight: AppFontWeight.bold, color: context.colors.textPrimary, fontSize: AppFontSize.f14)),
+            Text(context.l10n.login_noAnnouncements, style: TextStyle(fontWeight: AppFontWeight.bold, color: context.colors.textPrimary, fontSize: AppFontSize.f14)),
             const SizedBox(height: AppSpacing.s4),
-            Text("You're all caught up!", style: TextStyle(color: context.colors.textHint, fontSize: AppFontSize.f12_5)),
+            Text(context.l10n.login_allCaughtUp, style: TextStyle(color: context.colors.textHint, fontSize: AppFontSize.f12_5)),
           ],
         ),
       ),
@@ -718,10 +717,10 @@ class _LoginScreenState extends State<LoginScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text('Secure. Reliable. Always Connected.',
+              Text(context.l10n.login_trustTitle,
                   style: TextStyle(fontWeight: AppFontWeight.bold, color: context.colors.textPrimary, fontSize: AppFontSize.f13)),
               const SizedBox(height: AppSpacing.s2),
-              Text('Your trusted partner in animal health and business growth.',
+              Text(context.l10n.login_trustBody,
                   style: TextStyle(color: context.colors.textMuted, fontSize: AppFontSize.f12)),
             ],
           ),
@@ -874,7 +873,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 IconButton(
                   icon: const Icon(Icons.close, size: AppIconSize.i16),
                   color: context.colors.dangerAccent,
-                  tooltip: 'Dismiss',
+                  tooltip: context.l10n.common_dismiss,
                   padding: EdgeInsets.zero,
                   constraints: const BoxConstraints(minWidth: 28, minHeight: 28),
                   visualDensity: VisualDensity.compact,
@@ -958,11 +957,11 @@ class _LoginScreenState extends State<LoginScreen> {
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  Text('Welcome back',
+                                  Text(context.l10n.login_welcomeBack,
                                       overflow: TextOverflow.ellipsis,
                                       style: TextStyle(fontSize: AppFontSize.f20, fontWeight: AppFontWeight.extraBold, color: context.colors.textPrimary)),
                                   const SizedBox(height: AppSpacing.s2),
-                                  Text('Log into your facility',
+                                  Text(context.l10n.login_logIntoFacility,
                                       overflow: TextOverflow.ellipsis,
                                       style: TextStyle(fontSize: AppFontSize.f13, color: context.colors.textMuted)),
                                 ],
@@ -971,7 +970,7 @@ class _LoginScreenState extends State<LoginScreen> {
                           ],
                         ),
                         const SizedBox(height: AppSpacing.s28),
-                        Text('Email', style: TextStyle(fontSize: AppFontSize.f13, fontWeight: AppFontWeight.semibold, color: context.colors.textPrimary)),
+                        Text(context.l10n.common_email, style: TextStyle(fontSize: AppFontSize.f13, fontWeight: AppFontWeight.semibold, color: context.colors.textPrimary)),
                         const SizedBox(height: AppSpacing.s6),
                         TextField(
                           controller: emailController,
@@ -981,13 +980,13 @@ class _LoginScreenState extends State<LoginScreen> {
                           onChanged: (_) => _onCredentialsEdited(),
                           onSubmitted: (_) => passwordFocusNode.requestFocus(),
                           decoration: _loginInputDecoration(
-                            hint: 'Enter your email',
+                            hint: context.l10n.login_emailHint,
                             icon: Icons.mail_outline,
                             hasError: fieldsInError,
                           ),
                         ),
                         const SizedBox(height: AppSpacing.s18),
-                        Text('Password', style: TextStyle(fontSize: AppFontSize.f13, fontWeight: AppFontWeight.semibold, color: context.colors.textPrimary)),
+                        Text(context.l10n.common_password, style: TextStyle(fontSize: AppFontSize.f13, fontWeight: AppFontWeight.semibold, color: context.colors.textPrimary)),
                         const SizedBox(height: AppSpacing.s6),
                         TextField(
                           controller: passwordController,
@@ -998,7 +997,7 @@ class _LoginScreenState extends State<LoginScreen> {
                           onChanged: (_) => _onCredentialsEdited(),
                           onSubmitted: (_) => _login(),
                           decoration: _loginInputDecoration(
-                            hint: 'Enter your password',
+                            hint: context.l10n.login_passwordHint,
                             icon: Icons.lock_outline,
                             hasError: fieldsInError,
                             suffix: GestureDetector(
@@ -1014,7 +1013,7 @@ class _LoginScreenState extends State<LoginScreen> {
                         const SizedBox(height: AppSpacing.s4),
                         Padding(
                           padding: const EdgeInsets.only(left: AppSpacing.s2),
-                          child: Text('Minimum 6 characters', style: TextStyle(color: context.colors.textHint, fontSize: AppFontSize.f11_5)),
+                          child: Text(context.l10n.login_minPasswordHint, style: TextStyle(color: context.colors.textHint, fontSize: AppFontSize.f11_5)),
                         ),
                         const SizedBox(height: AppSpacing.s12),
                         Row(
@@ -1031,7 +1030,7 @@ class _LoginScreenState extends State<LoginScreen> {
                               ),
                             ),
                             const SizedBox(width: AppSpacing.s8),
-                            Text('Remember Me', style: TextStyle(color: context.colors.textPrimary, fontSize: AppFontSize.f13)),
+                            Text(context.l10n.login_rememberMe, style: TextStyle(color: context.colors.textPrimary, fontSize: AppFontSize.f13)),
                             const Spacer(),
                             MouseRegion(
                               onEnter: (_) => setState(() => isForgotHovered = true),
@@ -1040,7 +1039,7 @@ class _LoginScreenState extends State<LoginScreen> {
                               child: GestureDetector(
                                 onTap: _forgotPassword,
                                 child: Text(
-                                  'Forgot Password?',
+                                  context.l10n.login_forgotPassword,
                                   style: TextStyle(
                                     color: isForgotHovered ? context.colors.accent : tealAccent,
                                     fontSize: AppFontSize.f13,
@@ -1072,9 +1071,9 @@ class _LoginScreenState extends State<LoginScreen> {
                                 text: TextSpan(
                                   style: TextStyle(fontSize: AppFontSize.f13, color: context.colors.textPrimary),
                                   children: [
-                                    const TextSpan(text: "Don't have an account? "),
+                                    TextSpan(text: context.l10n.login_noAccount),
                                     TextSpan(
-                                      text: 'Register',
+                                      text: context.l10n.login_register,
                                       style: TextStyle(
                                         color: isRegisterHovered ? context.colors.accent : tealAccent,
                                         fontWeight: AppFontWeight.bold,
@@ -1334,7 +1333,7 @@ class _AnimatedLoginButtonState extends State<_AnimatedLoginButton> with SingleT
         child: Semantics(
           button: true,
           enabled: enabled,
-          label: 'Login',
+          label: context.l10n.login_loginButton,
           child: SizedBox(
             width: double.infinity,
             height: 48,
@@ -1399,7 +1398,7 @@ class _AnimatedLoginButtonState extends State<_AnimatedLoginButton> with SingleT
                                   alignment: Alignment.center,
                                   children: [
                                     Center(
-                                      child: Text('Login',
+                                      child: Text(context.l10n.login_loginButton,
                                           style: TextStyle(
                                               color: Color.lerp(context.colors.onPrimary, context.colors.accent, t),
                                               fontWeight: AppFontWeight.semibold,
@@ -1499,7 +1498,7 @@ class _NewBadgeState extends State<_NewBadge> {
           borderRadius: BorderRadius.circular(AppRadius.r4),
         ),
         child: Text(
-          'NEW',
+          context.l10n.login_newBadge,
           style: TextStyle(
               color: context.colors.onPrimary,
               fontSize: AppFontSize.f10,
