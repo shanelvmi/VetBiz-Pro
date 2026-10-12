@@ -3110,4 +3110,90 @@ class AppLocalizationsSw extends AppLocalizations {
 
   @override
   String get services_paymentInfo => 'Taarifa za Malipo';
+
+  @override
+  String get services_transactionId => 'Namba ya Muamala';
+
+  @override
+  String get services_paidOn => 'Imelipwa Tarehe';
+
+  @override
+  String get services_providedBy => 'Imetolewa Na';
+
+  @override
+  String get services_serviceDate => 'Tarehe ya Huduma';
+
+  @override
+  String get services_createdOn => 'Imeundwa Tarehe';
+
+  @override
+  String get services_fallbackName => 'Huduma';
+
+  @override
+  String get services_archiveTitle => 'Kumbukumbu za Huduma';
+
+  @override
+  String services_archiveSubtitle(int days) {
+    String _temp0 = intl.Intl.pluralLogic(
+      days,
+      locale: localeName,
+      other: 'Huduma huhifadhiwa kwenye kumbukumbu baada ya siku $days',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get services_archiveEmpty =>
+      'Hakuna huduma zilizohifadhiwa zilizopatikana';
+
+  @override
+  String get services_archiveEmptyHint =>
+      'Jaribu utafutaji, aina au kipindi kingine';
+
+  @override
+  String services_archivePeriod(String start, String end) {
+    return 'Kipindi: $start – $end';
+  }
+
+  @override
+  String get services_archivedServices => 'Huduma zilizohifadhiwa';
+
+  @override
+  String services_foundCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count zimepatikana',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String services_archiveShowing(int start, int end, int total, String more) {
+    String _temp0 = intl.Intl.pluralLogic(
+      total,
+      locale: localeName,
+      other: 'Inaonyesha $start hadi $end kati ya huduma $total$more',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String services_pageOf(int page, int total) {
+    return 'Ukurasa $page kati ya $total';
+  }
+
+  @override
+  String services_notesValue(String notes) {
+    return 'Maelezo: $notes';
+  }
+
+  @override
+  String get services_searchArchiveTitle => 'Tafuta Huduma Zilizohifadhiwa';
+
+  @override
+  String get services_searchBy => 'Tafuta Kwa:';
+
+  @override
+  String get services_specificMonth => 'Mwezi Maalum';
 }

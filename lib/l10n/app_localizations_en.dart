@@ -3093,4 +3093,89 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get services_paymentInfo => 'Payment Information';
+
+  @override
+  String get services_transactionId => 'Transaction ID';
+
+  @override
+  String get services_paidOn => 'Paid On';
+
+  @override
+  String get services_providedBy => 'Provided By';
+
+  @override
+  String get services_serviceDate => 'Service Date';
+
+  @override
+  String get services_createdOn => 'Created On';
+
+  @override
+  String get services_fallbackName => 'Service';
+
+  @override
+  String get services_archiveTitle => 'Services Archive';
+
+  @override
+  String services_archiveSubtitle(int days) {
+    String _temp0 = intl.Intl.pluralLogic(
+      days,
+      locale: localeName,
+      other: 'Services archived after $days days',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get services_archiveEmpty => 'No archived services found';
+
+  @override
+  String get services_archiveEmptyHint =>
+      'Try a different search, category, or date range';
+
+  @override
+  String services_archivePeriod(String start, String end) {
+    return 'Period: $start – $end';
+  }
+
+  @override
+  String get services_archivedServices => 'Archived services';
+
+  @override
+  String services_foundCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count found',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String services_archiveShowing(int start, int end, int total, String more) {
+    String _temp0 = intl.Intl.pluralLogic(
+      total,
+      locale: localeName,
+      other: 'Showing $start to $end of $total$more services',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String services_pageOf(int page, int total) {
+    return 'Page $page of $total';
+  }
+
+  @override
+  String services_notesValue(String notes) {
+    return 'Notes: $notes';
+  }
+
+  @override
+  String get services_searchArchiveTitle => 'Search Archived Services';
+
+  @override
+  String get services_searchBy => 'Search By:';
+
+  @override
+  String get services_specificMonth => 'Specific Month';
 }

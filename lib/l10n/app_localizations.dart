@@ -5515,6 +5515,120 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Payment Information'**
   String get services_paymentInfo;
+
+  /// Details panel row: the mobile money or bank reference.
+  ///
+  /// In en, this message translates to:
+  /// **'Transaction ID'**
+  String get services_transactionId;
+
+  /// Details panel row.
+  ///
+  /// In en, this message translates to:
+  /// **'Paid On'**
+  String get services_paidOn;
+
+  /// Who provided the service (details panel, visit form).
+  ///
+  /// In en, this message translates to:
+  /// **'Provided By'**
+  String get services_providedBy;
+
+  /// Details panel row and visit form field.
+  ///
+  /// In en, this message translates to:
+  /// **'Service Date'**
+  String get services_serviceDate;
+
+  /// Details panel row.
+  ///
+  /// In en, this message translates to:
+  /// **'Created On'**
+  String get services_createdOn;
+
+  /// Shown when an archived service has no name.
+  ///
+  /// In en, this message translates to:
+  /// **'Service'**
+  String get services_fallbackName;
+
+  /// Archive screen title.
+  ///
+  /// In en, this message translates to:
+  /// **'Services Archive'**
+  String get services_archiveTitle;
+
+  /// Under the archive title.
+  ///
+  /// In en, this message translates to:
+  /// **'{days, plural, other{Services archived after {days} days}}'**
+  String services_archiveSubtitle(int days);
+
+  /// Archive, empty.
+  ///
+  /// In en, this message translates to:
+  /// **'No archived services found'**
+  String get services_archiveEmpty;
+
+  /// Archive, empty.
+  ///
+  /// In en, this message translates to:
+  /// **'Try a different search, category, or date range'**
+  String get services_archiveEmptyHint;
+
+  /// Archive banner with the chosen dates.
+  ///
+  /// In en, this message translates to:
+  /// **'Period: {start} – {end}'**
+  String services_archivePeriod(String start, String end);
+
+  /// Archive banner with no dates chosen.
+  ///
+  /// In en, this message translates to:
+  /// **'Archived services'**
+  String get services_archivedServices;
+
+  /// Archive banner: how many match.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, other{{count} found}}'**
+  String services_foundCount(int count);
+
+  /// Archive pagination; more is "+" when more can be loaded, else empty.
+  ///
+  /// In en, this message translates to:
+  /// **'{total, plural, other{Showing {start} to {end} of {total}{more} services}}'**
+  String services_archiveShowing(int start, int end, int total, String more);
+
+  /// Archive pagination.
+  ///
+  /// In en, this message translates to:
+  /// **'Page {page} of {total}'**
+  String services_pageOf(int page, int total);
+
+  /// Archive row: the service's notes.
+  ///
+  /// In en, this message translates to:
+  /// **'Notes: {notes}'**
+  String services_notesValue(String notes);
+
+  /// Archive search dialog title.
+  ///
+  /// In en, this message translates to:
+  /// **'Search Archived Services'**
+  String get services_searchArchiveTitle;
+
+  /// Archive search dialog.
+  ///
+  /// In en, this message translates to:
+  /// **'Search By:'**
+  String get services_searchBy;
+
+  /// Archive search dialog choice.
+  ///
+  /// In en, this message translates to:
+  /// **'Specific Month'**
+  String get services_specificMonth;
 }
 
 class _AppLocalizationsDelegate
