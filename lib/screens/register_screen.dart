@@ -96,7 +96,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
           setState(() {
             _isLookingUpFacility = false;
             _foundFacility = null;
-            _facilityLookupError = 'Invalid, expired, or already-used invite code';
+            _facilityLookupError = L10n.current.register_inviteInvalid;
           });
           return;
         }
@@ -117,7 +117,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
         setState(() {
           _isLookingUpFacility = false;
           _foundFacility = null;
-          _facilityLookupError = 'Could not check this code - try again';
+          _facilityLookupError = L10n.current.register_inviteCheckFailed;
         });
       }
     });
@@ -256,12 +256,12 @@ class _RegisterScreenState extends State<RegisterScreen> {
     // Say what's missing rather than doing nothing - pressing Add with the
     // name or type left empty used to be a silent no-op.
     if (name.isEmpty || type == null) {
-      AppFeedback.warning(name.isEmpty ? 'Enter the facility name first' : 'Choose the facility type first');
+      AppFeedback.warning(name.isEmpty ? L10n.current.register_enterFacilityNameFirst : L10n.current.register_chooseFacilityTypeFirst);
       return;
     }
 
     if (facilities.length >= _maxFacilities) {
-      AppFeedback.warning("You've reached the limit of $_maxFacilities facilities per account");
+      AppFeedback.warning(L10n.current.register_facilityLimit(_maxFacilities));
       return;
     }
 
@@ -276,7 +276,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
       });
     } catch (e, st) {
       // Was uncaught, so any failure here looked like Add just did nothing.
-      AppFeedback.error("Couldn't add this facility", error: e, stackTrace: st);
+      AppFeedback.error(L10n.current.register_addFacilityFailed, error: e, stackTrace: st);
     } finally {
       if (mounted) setState(() => _isAddingFacility = false);
     }
@@ -297,10 +297,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
   /// letter and a number, not special-character requirements that tend
   /// to frustrate more than they protect.
   String? _passwordIssue(String password) {
-    if (password.length < 8) return 'At least 8 characters';
-    if (!RegExp(r'[A-Za-z]').hasMatch(password)) return 'Add at least one letter';
-    if (!RegExp(r'[0-9]').hasMatch(password)) return 'Add at least one number';
-    if (_commonWeakPasswords.contains(password.toLowerCase())) return 'This password is too common - choose another';
+    if (password.length < 8) return L10n.current.register_pwMin8;
+    if (!RegExp(r'[A-Za-z]').hasMatch(password)) return L10n.current.register_pwNeedsLetter;
+    if (!RegExp(r'[0-9]').hasMatch(password)) return L10n.current.register_pwNeedsNumber;
+    if (_commonWeakPasswords.contains(password.toLowerCase())) return L10n.current.register_pwTooCommon;
     return null;
   }
 
@@ -323,18 +323,18 @@ class _RegisterScreenState extends State<RegisterScreen> {
     }
 
     if (!widget.isUpdating && password != confirmPassword) {
-      setState(() => error = "Passwords do not match");
+      setState(() => error = L10n.current.common_passwordsDoNotMatch);
       return;
     }
 
     if (selectedRole == 'Admin' && facilities.isEmpty) {
-      setState(() => error = "Please add at least one facility");
+      setState(() => error = L10n.current.register_addAtLeastOneFacility);
       return;
     }
 
     if (selectedRole == 'Assistant' && !widget.isUpdating) {
       if (_foundFacility == null) {
-        setState(() => error = "Enter a valid invite code");
+        setState(() => error = L10n.current.register_enterValidInvite);
         return;
       }
     }
@@ -358,7 +358,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
       };
       await FirebaseFirestore.instance.collection(Collections.users).doc(uid).update(updateData);
       if (mounted) {
-        AppFeedback.success('Profile updated');
+        AppFeedback.success(L10n.current.register_profileUpdated);
         if (widget.isModal) {
           // Opened as a modal over the Dashboard, which follows the user's
           // profile live - closing is all it takes to show the changes.
@@ -397,8 +397,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
       if (mounted) {
         AppFeedback.success(
-          'Account registered',
-          detail: "We've sent a verification link to your email. Check your Spam folder if it doesn't appear within a few minutes.",
+          L10n.current.register_accountRegistered,
+          detail: L10n.current.register_verifyEmailSent,
         );
 
         if (facilitiesWithId.length == 1) {
@@ -433,7 +433,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
       // _foundFacility was already verified via the live invite-code
       // lookup as it was typed - no need to re-validate here.
       if (_foundFacility == null) {
-        setState(() => error = 'Enter a valid invite code first');
+        setState(() => error = L10n.current.register_enterValidInviteFirst);
         return;
       }
       final facility = _foundFacility!;
@@ -452,8 +452,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
       if (mounted) {
         AppFeedback.success(
-          'Assistant registered, waiting for admin approval',
-          detail: "We've also sent a verification link to your email. Check your Spam folder if it doesn't appear.",
+          L10n.current.register_assistantRegistered,
+          detail: L10n.current.register_verifyEmailAlsoSent,
         );
         Navigator.pushReplacementNamed(context, '/login');
       }
@@ -462,26 +462,24 @@ class _RegisterScreenState extends State<RegisterScreen> {
     if (e.code == 'email-already-in-use') {
       setState(() {
         _submitAttempted = true;
-        _fieldErrors = {..._fieldErrors, 'email': 'This email is already registered'};
-        error = 'An account with this email already exists. If you\'re switching '
-            'facilities, this email can\'t register a second time - ask your '
-            'Platform Admin to add you to the new facility instead.';
+        _fieldErrors = {..._fieldErrors, 'email': L10n.current.register_emailAlreadyRegistered};
+        error = L10n.current.register_emailExists;
       });
     } else if (e.code == 'invalid-email') {
       setState(() {
         _submitAttempted = true;
-        _fieldErrors = {..._fieldErrors, 'email': 'Enter a valid email address, like name@example.com'};
-        error = 'Enter a valid email address.';
+        _fieldErrors = {..._fieldErrors, 'email': L10n.current.register_validEmailExample};
+        error = L10n.current.register_validEmail;
       });
     } else if (e.code == 'weak-password') {
       setState(() {
         _submitAttempted = true;
-        _fieldErrors = {..._fieldErrors, 'password': 'Choose a stronger password'};
-        error = 'Choose a stronger password.';
+        _fieldErrors = {..._fieldErrors, 'password': L10n.current.register_strongerPasswordField};
+        error = L10n.current.register_strongerPassword;
       });
     } else {
       // Through FriendlyError: Firebase's own text can be technical.
-      setState(() => error = "Couldn't create the account. ${FriendlyError.messageFor(e)}");
+      setState(() => error = L10n.current.register_createFailed(FriendlyError.messageFor(e)));
     }
   } on FirebaseFunctionsException catch (e) {
     // The server refused or couldn't finish: a bad or used-up invite, the
@@ -1133,15 +1131,16 @@ class _RegisterScreenState extends State<RegisterScreen> {
   // Top-to-bottom reading order: the toast lists them in this order and the
   // screen scrolls to the first one.
   static const List<String> _fieldOrder = ['name', 'email', 'phone', 'invite', 'facility', 'password', 'confirm'];
-  static const Map<String, String> _fieldLabels = {
-    'name': 'Full name',
-    'email': 'Email',
-    'phone': 'Phone number',
-    'invite': 'Invite code',
-    'facility': 'Facility',
-    'password': 'Password',
-    'confirm': 'Confirm password',
-  };
+  static String _fieldName(String field) => switch (field) {
+        'name' => L10n.current.register_fieldFullName,
+        'email' => L10n.current.common_email,
+        'phone' => L10n.current.register_fieldPhone,
+        'invite' => L10n.current.common_inviteCode,
+        'facility' => L10n.current.common_facility,
+        'password' => L10n.current.common_password,
+        'confirm' => L10n.current.register_fieldConfirmPassword,
+        _ => field,
+      };
 
   // Tanzanian numbers (0712 345 678, +255 712 345 678) and international ones
   // alike: digits with the usual separators, 9 to 15 digits in all.
@@ -1159,25 +1158,25 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
     final name = nameController.text.trim();
     if (name.isEmpty) {
-      errors['name'] = 'Enter your full name';
+      errors['name'] = L10n.current.register_enterFullName;
     } else if (name.length < 2) {
-      errors['name'] = 'Your name looks too short - enter your full name';
+      errors['name'] = L10n.current.register_nameTooShort;
     }
 
     if (!widget.isUpdating) {
       final email = emailController.text.trim();
       if (email.isEmpty) {
-        errors['email'] = 'Enter your email address';
+        errors['email'] = L10n.current.register_enterEmail;
       } else if (!_emailPattern.hasMatch(email)) {
-        errors['email'] = 'Enter a valid email address, like name@example.com';
+        errors['email'] = L10n.current.register_validEmailExample;
       }
     }
 
     final phone = phoneController.text.trim();
     if (phone.isEmpty) {
-      errors['phone'] = 'Enter your phone number';
+      errors['phone'] = L10n.current.register_enterPhone;
     } else if (!_isPlausiblePhone(phone)) {
-      errors['phone'] = 'Enter a valid phone number, like 0712 345 678';
+      errors['phone'] = L10n.current.register_validPhone;
     }
 
     if (!widget.isUpdating) {
@@ -1187,27 +1186,27 @@ class _RegisterScreenState extends State<RegisterScreen> {
           // pressing Add, so nothing was actually added.
           final pendingName = facilityNameController.text.trim();
           if (pendingName.isNotEmpty && _selectedFacilityType != null) {
-            errors['facility'] = 'Press Add to include "$pendingName" before you register';
+            errors['facility'] = L10n.current.register_pressAddToInclude(pendingName);
           } else if (pendingName.isNotEmpty) {
-            errors['facility'] = 'Choose the facility type, then press Add';
+            errors['facility'] = L10n.current.register_chooseTypeThenAdd;
           } else {
-            errors['facility'] = 'Add at least one facility: enter its name, choose its type, then press Add';
+            errors['facility'] = L10n.current.register_addOneFacilityHow;
           }
         }
       } else {
         final code = assistantFacilityCodeController.text.trim();
         if (code.isEmpty) {
-          errors['invite'] = 'Enter your invite code';
+          errors['invite'] = L10n.current.register_enterInviteCode;
         } else if (_isLookingUpFacility) {
-          errors['invite'] = 'Still checking your invite code - try again in a moment';
+          errors['invite'] = L10n.current.register_stillChecking;
         } else if (_foundFacility == null) {
-          errors['invite'] = _facilityLookupError ?? 'Enter a valid invite code';
+          errors['invite'] = _facilityLookupError ?? L10n.current.register_enterValidInvite;
         }
       }
 
       final password = passwordController.text.trim();
       if (password.isEmpty) {
-        errors['password'] = 'Create a password';
+        errors['password'] = L10n.current.register_createPassword;
       } else {
         final issue = _passwordIssue(password);
         if (issue != null) errors['password'] = issue;
@@ -1215,9 +1214,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
       final confirm = confirmPasswordController.text.trim();
       if (confirm.isEmpty) {
-        errors['confirm'] = 'Re-enter your password to confirm it';
+        errors['confirm'] = L10n.current.register_reenterToConfirm;
       } else if (confirm != password) {
-        errors['confirm'] = 'Passwords do not match';
+        errors['confirm'] = L10n.current.common_passwordsDoNotMatch;
       }
     }
 
@@ -1228,10 +1227,12 @@ class _RegisterScreenState extends State<RegisterScreen> {
   // name the fields.
   String _summaryFor(Map<String, String> errors) {
     if (errors.length == 1) return errors.values.first;
-    final labels = _fieldOrder.where(errors.containsKey).map((k) => _fieldLabels[k]!).toList();
+    final labels = _fieldOrder.where(errors.containsKey).map(_fieldName).toList();
     final shown = labels.take(3).join(', ');
     final more = labels.length - 3;
-    return 'Please fix ${labels.length} fields: $shown${more > 0 ? ' and $more more' : ''}.';
+    return more > 0
+        ? L10n.current.register_fixFieldsMore(labels.length, shown, more)
+        : L10n.current.register_fixFields(labels.length, shown);
   }
 
   // Typing after a failed attempt re-checks the form, so a field's error
