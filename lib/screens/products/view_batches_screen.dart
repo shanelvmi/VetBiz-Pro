@@ -29,15 +29,15 @@ class ViewBatchesScreen extends StatefulWidget {
   final Product product;
   final bool isModal;
   // Defaults to Products' original wording - Stock Store passes
-  // 'Remove from Sellable' explicitly, since the same action reads
+  // MoveToStockAction.removeFromSellable explicitly, since the same action reads
   // oddly as "move to stock" while already standing in the Stock
   // screen.
-  final String moveToStockLabel;
+  final MoveToStockAction moveToStockAction;
   const ViewBatchesScreen({
     super.key,
     required this.product,
     this.isModal = false,
-    this.moveToStockLabel = 'Move to Stock',
+    this.moveToStockAction = MoveToStockAction.moveToStock,
   });
 
   @override
@@ -76,13 +76,13 @@ class _ViewBatchesScreenState extends State<ViewBatchesScreen> {
       context: context,
       builder: (context) => StatefulBuilder(
         builder: (context, setDialogState) => AlertDialog(
-          title: Text(batch.batchNo?.isNotEmpty == true ? 'Batch ${batch.batchNo}' : 'Unlabeled Batch'),
+          title: Text(batch.batchNo?.isNotEmpty == true ? context.l10n.store_batchName(batch.batchNo!) : context.l10n.batch_unlabeledTitle),
           content: SingleChildScrollView(
             child: Column(
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('Currently: ${batch.stockQty} store · ${batch.sellableQty} sellable',
+                Text(context.l10n.batch_currently(batch.stockQty, batch.sellableQty),
                     style: TextStyle(fontSize: AppFontSize.f12_5, color: context.colors.textMuted)),
                 const SizedBox(height: AppSpacing.s14),
                 Row(
@@ -91,7 +91,7 @@ class _ViewBatchesScreenState extends State<ViewBatchesScreen> {
                       child: RadioListTile<String>(
                         contentPadding: EdgeInsets.zero,
                         dense: true,
-                        title: const Text('Add to it', style: TextStyle(fontSize: AppFontSize.f13)),
+                        title: Text(context.l10n.batch_modeAdd, style: const TextStyle(fontSize: AppFontSize.f13)),
                         value: 'add',
                         groupValue: mode,
                         onChanged: (v) => setDialogState(() => mode = v!),
@@ -101,7 +101,7 @@ class _ViewBatchesScreenState extends State<ViewBatchesScreen> {
                       child: RadioListTile<String>(
                         contentPadding: EdgeInsets.zero,
                         dense: true,
-                        title: const Text('Correct to', style: TextStyle(fontSize: AppFontSize.f13)),
+                        title: Text(context.l10n.batch_modeSet, style: const TextStyle(fontSize: AppFontSize.f13)),
                         value: 'set',
                         groupValue: mode,
                         onChanged: (v) => setDialogState(() => mode = v!),
@@ -111,8 +111,8 @@ class _ViewBatchesScreenState extends State<ViewBatchesScreen> {
                 ),
                 Text(
                   mode == 'add'
-                      ? 'Adds this amount on top of what\'s already there (a top-up delivery).'
-                      : 'Sets the exact amount on file right now (fixing a miscount).',
+                      ? context.l10n.batch_modeAddHint
+                      : context.l10n.batch_modeSetHint,
                   style: TextStyle(fontSize: AppFontSize.f11_5, color: context.colors.textMuted),
                 ),
                 const SizedBox(height: AppSpacing.s12),
@@ -121,7 +121,7 @@ class _ViewBatchesScreenState extends State<ViewBatchesScreen> {
                   keyboardType: TextInputType.number,
                   inputFormatters: [FilteringTextInputFormatter.digitsOnly],
                   decoration: InputDecoration(
-                    labelText: mode == 'add' ? 'Add to Store Qty' : 'Correct Store Qty to',
+                    labelText: mode == 'add' ? context.l10n.batch_addStoreQty : context.l10n.batch_setStoreQty,
                     isDense: true,
                     border: const OutlineInputBorder(),
                   ),
@@ -132,7 +132,7 @@ class _ViewBatchesScreenState extends State<ViewBatchesScreen> {
                   keyboardType: TextInputType.number,
                   inputFormatters: [FilteringTextInputFormatter.digitsOnly],
                   decoration: InputDecoration(
-                    labelText: mode == 'add' ? 'Add to Sellable Qty' : 'Correct Sellable Qty to',
+                    labelText: mode == 'add' ? context.l10n.batch_addSellableQty : context.l10n.batch_setSellableQty,
                     isDense: true,
                     border: const OutlineInputBorder(),
                   ),
@@ -169,7 +169,7 @@ class _ViewBatchesScreenState extends State<ViewBatchesScreen> {
                   return context.colors.primary;
                 }),
               ),
-              child: const Text('Cancel'),
+              child: Text(context.l10n.common_cancel),
             ),
             ElevatedButton(
               onPressed: isSaving
@@ -207,7 +207,7 @@ class _ViewBatchesScreenState extends State<ViewBatchesScreen> {
                         // indication anything had gone wrong.
                         setDialogState(() {
                           isSaving = false;
-                          errorText = 'Could not save: $e';
+                          errorText = context.l10n.batch_saveFailed('$e');
                         });
                       }
                     },
@@ -224,7 +224,7 @@ class _ViewBatchesScreenState extends State<ViewBatchesScreen> {
                       height: 18,
                       child: CircularProgressIndicator(strokeWidth: 2, color: context.colors.onPrimary),
                     )
-                  : const Text('Save'),
+                  : Text(context.l10n.common_save),
             ),
           ],
         ),
@@ -240,7 +240,7 @@ class _ViewBatchesScreenState extends State<ViewBatchesScreen> {
       context: context,
       builder: (context) => StatefulBuilder(
         builder: (context, setDialogState) => AlertDialog(
-          title: Text(isExpired ? 'Delete Expired Batch?' : 'Delete This Batch?'),
+          title: Text(isExpired ? context.l10n.batch_deleteExpiredTitle : context.l10n.batch_deleteTitle),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -260,7 +260,7 @@ class _ViewBatchesScreenState extends State<ViewBatchesScreen> {
                       SizedBox(width: AppSpacing.s6),
                       Expanded(
                         child: Text(
-                          'This batch has not expired - it still has good, sellable stock.',
+                          context.l10n.batch_notExpiredWarning,
                           style: TextStyle(color: context.colors.warning, fontSize: AppFontSize.f12, fontWeight: AppFontWeight.semibold),
                         ),
                       ),
@@ -269,9 +269,11 @@ class _ViewBatchesScreenState extends State<ViewBatchesScreen> {
                 ),
               ],
               Text(
-                'This permanently removes ${batch.batchNo?.isNotEmpty == true ? 'Batch ${batch.batchNo}' : 'this unlabeled batch'} '
-                'and subtracts its ${batch.stockQty} store and ${batch.sellableQty} sellable units from this product\'s '
-                'totals. This cannot be undone.',
+                context.l10n.batch_deleteBody(
+                  batch.batchNo?.isNotEmpty == true ? context.l10n.store_batchName(batch.batchNo!) : context.l10n.batch_thisUnlabeled,
+                  batch.stockQty,
+                  batch.sellableQty,
+                ),
                 style: const TextStyle(fontSize: AppFontSize.f13),
               ),
               if (errorText != null) ...[
@@ -305,7 +307,7 @@ class _ViewBatchesScreenState extends State<ViewBatchesScreen> {
                   return context.colors.primary;
                 }),
               ),
-              child: const Text('Cancel'),
+              child: Text(context.l10n.common_cancel),
             ),
             ElevatedButton(
               onPressed: isDeleting
@@ -325,7 +327,7 @@ class _ViewBatchesScreenState extends State<ViewBatchesScreen> {
                       } catch (e) {
                         setDialogState(() {
                           isDeleting = false;
-                          errorText = 'Could not delete: $e';
+                          errorText = context.l10n.batch_deleteFailed('$e');
                         });
                       }
                     },
@@ -342,7 +344,7 @@ class _ViewBatchesScreenState extends State<ViewBatchesScreen> {
                       height: 18,
                       child: CircularProgressIndicator(strokeWidth: 2, color: context.colors.onPrimary),
                     )
-                  : const Text('Delete'),
+                  : Text(context.l10n.common_delete),
             ),
           ],
         ),
@@ -366,7 +368,7 @@ class _ViewBatchesScreenState extends State<ViewBatchesScreen> {
         leading: widget.isModal
             ? IconButton(
                 icon: const Icon(Icons.close),
-                tooltip: 'Close',
+                tooltip: context.l10n.common_close,
                 onPressed: () => Navigator.of(context).pop(),
               )
             : null,
@@ -379,10 +381,10 @@ class _ViewBatchesScreenState extends State<ViewBatchesScreen> {
         foregroundColor: context.colors.onPrimary,
         hoverColor: context.colors.accent,
         icon: const Icon(Icons.add),
-        label: const Text('Add New Batch'),
+        label: Text(context.l10n.products_addNewBatch),
       ),
       body: facilityId == null
-          ? const Center(child: Text('No facility selected.'))
+          ? Center(child: Text(context.l10n.common_noFacilityDot))
           : Center(
               child: ConstrainedBox(
                 constraints: const BoxConstraints(maxWidth: 700),
@@ -403,12 +405,12 @@ class _ViewBatchesScreenState extends State<ViewBatchesScreen> {
                               return context.colors.primary;
                             }),
                           ),
-                          child: const Text('Edit Details'),
+                          child: Text(context.l10n.batch_editDetails),
                         ),
                       ),
                     ),
                     const SizedBox(height: AppSpacing.s16),
-                    const Text('Batches', style: TextStyle(fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f15)),
+                    Text(context.l10n.batch_batches, style: const TextStyle(fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f15)),
                     const SizedBox(height: AppSpacing.s8),
                     StreamBuilder<List<ProductBatch>>(
                       stream: _batchesStream,
@@ -422,7 +424,7 @@ class _ViewBatchesScreenState extends State<ViewBatchesScreen> {
                         if (snapshot.hasError) {
                           return Padding(
                             padding: const EdgeInsets.all(AppSpacing.s16),
-                            child: Text('Could not load batches: ${snapshot.error}'),
+                            child: Text(context.l10n.batch_loadFailed('${snapshot.error}')),
                           );
                         }
 
@@ -430,7 +432,7 @@ class _ViewBatchesScreenState extends State<ViewBatchesScreen> {
                         if (batches.isEmpty) {
                           return Padding(
                             padding: const EdgeInsets.all(AppSpacing.s16),
-                            child: Text('No batches recorded yet.', style: TextStyle(color: context.colors.textMuted)),
+                            child: Text(context.l10n.batch_noneYet, style: TextStyle(color: context.colors.textMuted)),
                           );
                         }
 
@@ -454,8 +456,8 @@ class _ViewBatchesScreenState extends State<ViewBatchesScreen> {
                                     Flexible(
                                       child: Text(
                                         batch.batchNo?.isNotEmpty == true
-                                            ? 'Batch ${batch.batchNo}'
-                                            : 'Unlabeled batch',
+                                            ? context.l10n.store_batchName(batch.batchNo!)
+                                            : context.l10n.batch_unlabeled,
                                       ),
                                     ),
                                     if (isDepleted) ...[
@@ -473,7 +475,7 @@ class _ViewBatchesScreenState extends State<ViewBatchesScreen> {
                                             Icon(Icons.circle, size: AppSizes.statusDot, color: context.colors.danger),
                                             SizedBox(width: AppSpacing.s4),
                                             Text(
-                                              'Out of Stock - 0 available',
+                                              context.l10n.batch_outOfStock,
                                               style: TextStyle(
                                                 color: context.colors.danger,
                                                 fontSize: AppFontSize.f11,
@@ -487,8 +489,8 @@ class _ViewBatchesScreenState extends State<ViewBatchesScreen> {
                                   ],
                                 ),
                                 subtitle: Text(
-                                  'Store: ${batch.stockQty} · Shelf: ${batch.sellableQty} · ${Money.symbolWhole(batch.buyPrice)}'
-                                  '${batch.expiry != null ? '\n${isExpired ? 'Expired' : 'Expires'} ${AppDateFormat.date.format(batch.expiry!)}' : ''}',
+                                  '${context.l10n.batch_rowQuantities(batch.stockQty, batch.sellableQty, Money.symbolWhole(batch.buyPrice))}'
+                                  '${batch.expiry != null ? '\n${isExpired ? context.l10n.batch_expiredOn(AppDateFormat.date.format(batch.expiry!)) : context.l10n.batch_expiresOn(AppDateFormat.date.format(batch.expiry!))}' : ''}',
                                 ),
                                 isThreeLine: batch.expiry != null,
                                 trailing: Row(
@@ -497,7 +499,7 @@ class _ViewBatchesScreenState extends State<ViewBatchesScreen> {
                                     if (batch.sellableQty > 0)
                                       IconButton(
                                         icon: const Icon(Icons.move_up_outlined, size: AppIconSize.i20),
-                                        tooltip: widget.moveToStockLabel,
+                                        tooltip: widget.moveToStockAction.label(context.l10n),
                                         style: ButtonStyle(
                                           foregroundColor: WidgetStateProperty.resolveWith<Color>((states) {
                                             if (states.contains(WidgetState.hovered)) return context.colors.accent;
@@ -505,12 +507,12 @@ class _ViewBatchesScreenState extends State<ViewBatchesScreen> {
                                           }),
                                         ),
                                         onPressed: () => promptQuantityAndMoveToStock(
-                                            context, widget.product, batch, actionLabel: widget.moveToStockLabel),
+                                            context, widget.product, batch, action: widget.moveToStockAction),
                                       ),
                                     if (isAdmin)
                                       IconButton(
                                         icon: const Icon(Icons.delete_outline, size: AppIconSize.i20),
-                                        tooltip: isExpired ? 'Delete expired batch' : 'Delete batch',
+                                        tooltip: isExpired ? context.l10n.batch_deleteExpiredTooltip : context.l10n.batch_deleteTooltip,
                                         style: ButtonStyle(
                                           foregroundColor: WidgetStateProperty.resolveWith<Color>((states) {
                                             if (states.contains(WidgetState.hovered)) return context.colors.dangerDeep;
@@ -521,7 +523,7 @@ class _ViewBatchesScreenState extends State<ViewBatchesScreen> {
                                       ),
                                     IconButton(
                                       icon: Icon(Icons.edit_outlined, size: AppIconSize.i20),
-                                      tooltip: 'Adjust quantity',
+                                      tooltip: context.l10n.batch_adjustQuantity,
                                       style: ButtonStyle(
                                         foregroundColor: WidgetStateProperty.resolveWith<Color>((states) {
                                           if (states.contains(WidgetState.hovered)) return context.colors.accent;
@@ -559,13 +561,13 @@ class _ViewBatchesScreenState extends State<ViewBatchesScreen> {
 Future<void> showViewBatchesScreen(
   BuildContext context, {
   required Product product,
-  String moveToStockLabel = 'Move to Stock',
+  MoveToStockAction moveToStockAction = MoveToStockAction.moveToStock,
 }) async {
   final isWideScreen = MediaQuery.of(context).size.width >= AppBreakpoints.medium;
 
   if (!isWideScreen) {
     await Navigator.of(context).push(
-      MaterialPageRoute(builder: (_) => ViewBatchesScreen(product: product, moveToStockLabel: moveToStockLabel)),
+      MaterialPageRoute(builder: (_) => ViewBatchesScreen(product: product, moveToStockAction: moveToStockAction)),
     );
     return;
   }
@@ -573,7 +575,7 @@ Future<void> showViewBatchesScreen(
   await showGeneralDialog(
     context: context,
     barrierDismissible: true,
-    barrierLabel: 'View Batches',
+    barrierLabel: context.l10n.products_viewBatches,
     barrierColor: context.colors.scrim.withValues(alpha: AppAlpha.a50),
     transitionDuration: AppMotion.normal,
     pageBuilder: (context, animation, secondaryAnimation) {
@@ -590,7 +592,7 @@ Future<void> showViewBatchesScreen(
           child: ClipRRect(
             borderRadius: BorderRadius.circular(AppRadius.r16),
             child: Material(
-              child: ViewBatchesScreen(product: product, isModal: true, moveToStockLabel: moveToStockLabel),
+              child: ViewBatchesScreen(product: product, isModal: true, moveToStockAction: moveToStockAction),
             ),
           ),
         ),

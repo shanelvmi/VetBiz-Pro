@@ -127,18 +127,18 @@ class StockAlertsScreen extends StatelessWidget {
 
   // ----- presentation per kind -----
 
-  static String _title(StockAlertKind k) {
+  static String _title(AppLocalizations l, StockAlertKind k) {
     switch (k) {
       case StockAlertKind.depleted:
-        return 'Out of Stock';
+        return l.alerts_outOfStock;
       case StockAlertKind.expired:
-        return 'Expired';
+        return l.products_statusExpired;
       case StockAlertKind.lowStock:
-        return 'Low Stock';
+        return l.products_statusLowStock;
       case StockAlertKind.expiringSoon:
-        return 'Expiring Soon';
+        return l.products_statusExpiringSoon;
       case StockAlertKind.restockShelf:
-        return 'Restock Shelf';
+        return l.products_restockShelf;
     }
   }
 
@@ -174,22 +174,22 @@ class StockAlertsScreen extends StatelessWidget {
   }
 
   // One-line summary, used by the compact bell dropdown.
-  static String _message(StockAlert a) {
+  static String _message(AppLocalizations l, StockAlert a) {
     final p = a.product;
     final dateFormat = AppDateFormat.date;
     switch (a.kind) {
       case StockAlertKind.depleted:
-        return '${p.name} - Shelf: ${p.sellableQty} · Store: ${p.stockQty}';
+        return l.alerts_messageStock(p.name, p.sellableQty, p.stockQty);
       case StockAlertKind.lowStock:
-        return '${p.name} - Shelf: ${p.sellableQty} · Store: ${p.stockQty}';
+        return l.alerts_messageStock(p.name, p.sellableQty, p.stockQty);
       case StockAlertKind.expired:
-        return '${p.name} - expired ${dateFormat.format(p.expiry!)} · ${p.totalStock} ${p.unit} on hand';
+        return l.alerts_messageExpired(p.name, dateFormat.format(p.expiry!), p.totalStock, l.productUnitLabel(p.unit));
       case StockAlertKind.expiringSoon:
         final days = p.expiry!.difference(DateTime.now()).inDays;
-        final when = days <= 0 ? 'today' : 'in $days day${days == 1 ? '' : 's'}';
-        return '${p.name} - expires $when (${dateFormat.format(p.expiry!)}) · ${p.totalStock} ${p.unit} on hand';
+        final when = days <= 0 ? l.alerts_today : l.alerts_inDays(days);
+        return l.alerts_messageExpiring(p.name, when, dateFormat.format(p.expiry!), p.totalStock, l.productUnitLabel(p.unit));
       case StockAlertKind.restockShelf:
-        return '${p.name} - ${p.sellableQty} on shelf · ${p.stockQty} in store';
+        return l.alerts_messageRestock(p.name, p.sellableQty, p.stockQty);
     }
   }
 
@@ -213,8 +213,8 @@ class StockAlertsScreen extends StatelessWidget {
         title: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Text('Product Alerts', style: TextStyle(fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f19, color: context.colors.textPrimary)),
-            Text('Stock and expiry problems that need action', style: TextStyle(fontSize: AppFontSize.f12, color: context.colors.textSecondary)),
+            Text(context.l10n.alerts_title, style: TextStyle(fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f19, color: context.colors.textPrimary)),
+            Text(context.l10n.alerts_subtitle, style: TextStyle(fontSize: AppFontSize.f12, color: context.colors.textSecondary)),
           ],
         ),
       ),
@@ -239,7 +239,7 @@ class StockAlertsScreen extends StatelessWidget {
           child: Row(
             children: [
               Text(
-                'Product Alerts',
+                context.l10n.alerts_title,
                 style: TextStyle(color: context.colors.onPrimary, fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f15),
               ),
               if (alerts.isNotEmpty) ...[
@@ -254,7 +254,7 @@ class StockAlertsScreen extends StatelessWidget {
               const Spacer(),
               IconButton(
                 icon: Icon(Icons.close, color: context.colors.onPrimary, size: AppIconSize.i20),
-                tooltip: 'Close',
+                tooltip: context.l10n.common_close,
                 onPressed: () => Navigator.of(context).pop(),
               ),
             ],
@@ -301,7 +301,7 @@ class StockAlertsScreen extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             Text(
-              alerts.length > shown.length ? 'View all ${alerts.length} alerts' : 'View all alerts',
+              alerts.length > shown.length ? context.l10n.alerts_viewAllCount(alerts.length) : context.l10n.alerts_viewAll,
               style: const TextStyle(fontSize: AppFontSize.f13, fontWeight: AppFontWeight.semibold),
             ),
             const SizedBox(width: AppSpacing.s4),
@@ -332,7 +332,7 @@ class StockAlertsScreen extends StatelessWidget {
       child: Row(
         children: [
           Text(
-            _title(h.kind).toUpperCase(),
+            _title(context.l10n, h.kind).toUpperCase(),
             style: TextStyle(fontSize: AppFontSize.f11_5, fontWeight: AppFontWeight.bold, letterSpacing: 0.6, color: color),
           ),
           const SizedBox(width: AppSpacing.s6),
@@ -368,9 +368,9 @@ class StockAlertsScreen extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(_title(alert.kind), style: const TextStyle(fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f13_5)),
+                  Text(_title(context.l10n, alert.kind), style: const TextStyle(fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f13_5)),
                   const SizedBox(height: AppSpacing.s2),
-                  Text(_message(alert), style: TextStyle(color: context.colors.textSoft, fontSize: AppFontSize.f12_5)),
+                  Text(_message(context.l10n, alert), style: TextStyle(color: context.colors.textSoft, fontSize: AppFontSize.f12_5)),
                 ],
               ),
             ),
@@ -398,10 +398,10 @@ Widget _caughtUpContent(BuildContext context) {
           child: Icon(Icons.check_circle_outline, color: context.colors.success, size: AppIconSize.i48),
         ),
         const SizedBox(height: AppSpacing.s16),
-        const Text("You're all caught up!", style: TextStyle(fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f17)),
+        Text(context.l10n.alerts_allCaughtUp, style: const TextStyle(fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f17)),
         const SizedBox(height: AppSpacing.s6),
         Text(
-          'No stock alerts right now.',
+          context.l10n.alerts_noneNow,
           textAlign: TextAlign.center,
           style: TextStyle(color: context.colors.textMuted, fontSize: AppFontSize.f13),
         ),
@@ -440,13 +440,13 @@ class _AlertsBodyState extends State<_AlertsBody> {
     StockAlertKind.expired,
   ];
 
-  static const Map<StockAlertKind, String> _cardHint = {
-    StockAlertKind.lowStock: 'Below minimum level',
-    StockAlertKind.depleted: 'Nothing left',
-    StockAlertKind.restockShelf: 'Store has stock',
-    StockAlertKind.expiringSoon: 'Within 30 days',
-    StockAlertKind.expired: 'Still on hand',
-  };
+  static String _cardHint(AppLocalizations l, StockAlertKind kind) => switch (kind) {
+        StockAlertKind.lowStock => l.alerts_hintLowStock,
+        StockAlertKind.depleted => l.alerts_hintDepleted,
+        StockAlertKind.restockShelf => l.alerts_hintRestockShelf,
+        StockAlertKind.expiringSoon => l.alerts_hintExpiringSoon,
+        StockAlertKind.expired => l.alerts_hintExpired,
+      };
 
   final TextEditingController _searchController = TextEditingController();
   final DateFormat _dateFormat = AppDateFormat.date;
@@ -480,7 +480,7 @@ class _AlertsBodyState extends State<_AlertsBody> {
   void _restock(Product p) => showAddBatchScreen(context, product: p);
 
   void _viewBatches(Product p) =>
-      showViewBatchesScreen(context, product: p, moveToStockLabel: 'Remove from Sellable');
+      showViewBatchesScreen(context, product: p, moveToStockAction: MoveToStockAction.removeFromSellable);
 
   // Pre-fills the release quantity with how many the shelf is short by
   // (never more than the store actually has).
@@ -509,9 +509,9 @@ class _AlertsBodyState extends State<_AlertsBody> {
     }
     if (!mounted) return;
     if (expiredOnShelf.length == 1) {
-      await promptQuantityAndMoveToStock(context, p, expiredOnShelf.first, actionLabel: 'Remove from Sellable');
+      await promptQuantityAndMoveToStock(context, p, expiredOnShelf.first, action: MoveToStockAction.removeFromSellable);
     } else {
-      await showViewBatchesScreen(context, product: p, moveToStockLabel: 'Remove from Sellable');
+      await showViewBatchesScreen(context, product: p, moveToStockAction: MoveToStockAction.removeFromSellable);
     }
   }
 
@@ -520,20 +520,20 @@ class _AlertsBodyState extends State<_AlertsBody> {
     switch (a.kind) {
       case StockAlertKind.depleted:
       case StockAlertKind.lowStock:
-        return (label: 'Restock', icon: Icons.add_box_outlined, onPressed: () => _restock(p), tooltip: null);
+        return (label: context.l10n.alerts_restock, icon: Icons.add_box_outlined, onPressed: () => _restock(p), tooltip: null);
       case StockAlertKind.restockShelf:
         return (
-          label: 'Move to shelf',
+          label: context.l10n.alerts_moveToShelf,
           icon: Icons.move_up,
           // Same rule as the Stock Store's own Release button.
           onPressed: isAdmin ? () => _moveToShelf(p) : null,
-          tooltip: isAdmin ? null : 'Only an admin can move stock to the shelf',
+          tooltip: isAdmin ? null : context.l10n.alerts_adminOnlyMove,
         );
       case StockAlertKind.expiringSoon:
-        return (label: 'View batches', icon: Icons.layers_outlined, onPressed: () => _viewBatches(p), tooltip: null);
+        return (label: context.l10n.alerts_viewBatches, icon: Icons.layers_outlined, onPressed: () => _viewBatches(p), tooltip: null);
       case StockAlertKind.expired:
         return (
-          label: 'Remove expired',
+          label: context.l10n.alerts_removeExpired,
           icon: Icons.remove_circle_outline,
           onPressed: () => _removeExpired(p),
           tooltip: null,
@@ -548,21 +548,21 @@ class _AlertsBodyState extends State<_AlertsBody> {
     switch (a.kind) {
       case StockAlertKind.depleted:
       case StockAlertKind.lowStock:
-        return ('${p.totalStock} in stock', 'Min. required: ${p.effectiveLowStockThreshold}');
+        return (context.l10n.alerts_inStock(p.totalStock), context.l10n.alerts_minRequired(p.effectiveLowStockThreshold));
       case StockAlertKind.restockShelf:
-        return ('${p.sellableQty} on shelf', 'Shelf minimum: ${p.effectiveShelfMinLevel}');
+        return (context.l10n.alerts_onShelf(p.sellableQty), context.l10n.alerts_shelfMinimum(p.effectiveShelfMinLevel));
       case StockAlertKind.expiringSoon:
         final days = p.expiry!.difference(DateTime.now()).inDays;
-        final when = days <= 0 ? 'Expires today' : 'Expires in $days day${days == 1 ? '' : 's'}';
-        return (when, '${_dateFormat.format(p.expiry!)} · ${p.totalStock} ${p.unit} on hand');
+        final when = days <= 0 ? context.l10n.alerts_expiresToday : context.l10n.alerts_expiresInDays(days);
+        return (when, context.l10n.alerts_dateOnHand(_dateFormat.format(p.expiry!), p.totalStock, context.l10n.productUnitLabel(p.unit)));
       case StockAlertKind.expired:
-        return ('Expired ${_dateFormat.format(p.expiry!)}', '${p.totalStock} ${p.unit} on hand');
+        return (context.l10n.batch_expiredOn(_dateFormat.format(p.expiry!)), context.l10n.alerts_onHand(p.totalStock, context.l10n.productUnitLabel(p.unit)));
     }
   }
 
   String _subtitleOf(Product p) {
     final supplier = p.supplier;
-    return (supplier != null && supplier.trim().isNotEmpty) ? '${supplier.trim()} · ${p.unit}' : p.unit;
+    return (supplier != null && supplier.trim().isNotEmpty) ? '${supplier.trim()} · ${context.l10n.productUnitLabel(p.unit)}' : context.l10n.productUnitLabel(p.unit);
   }
 
   bool _matchesSearch(StockAlert a, String q) {
@@ -570,7 +570,7 @@ class _AlertsBodyState extends State<_AlertsBody> {
     return p.name.toLowerCase().contains(q) ||
         _categoryOf(p).toLowerCase().contains(q) ||
         (p.supplier ?? '').toLowerCase().contains(q) ||
-        StockAlertsScreen._title(a.kind).toLowerCase().contains(q);
+        StockAlertsScreen._title(context.l10n, a.kind).toLowerCase().contains(q);
   }
 
   @override
@@ -697,8 +697,8 @@ class _AlertsBodyState extends State<_AlertsBody> {
                   ],
                 ),
                 const SizedBox(height: AppSpacing.s4),
-                Text(StockAlertsScreen._title(kind), style: TextStyle(fontSize: AppFontSize.f11_5, color: context.colors.textMuted)),
-                Text(_cardHint[kind] ?? '', style: TextStyle(fontSize: AppFontSize.f10_5, color: context.colors.textDisabled)),
+                Text(StockAlertsScreen._title(context.l10n, kind), style: TextStyle(fontSize: AppFontSize.f11_5, color: context.colors.textMuted)),
+                Text(_cardHint(context.l10n, kind), style: TextStyle(fontSize: AppFontSize.f10_5, color: context.colors.textDisabled)),
               ],
             ),
           ),
@@ -718,7 +718,7 @@ class _AlertsBodyState extends State<_AlertsBody> {
     final search = TextField(
       controller: _searchController,
       decoration: InputDecoration(
-        hintText: 'Search by product, category or alert...',
+        hintText: context.l10n.alerts_searchHint,
         hintStyle: const TextStyle(fontSize: AppFontSize.f13),
         prefixIcon: const Icon(Icons.search, size: AppIconSize.i20),
         filled: true,
@@ -749,7 +749,7 @@ class _AlertsBodyState extends State<_AlertsBody> {
     return LayoutBuilder(
       builder: (context, constraints) {
         final narrow = constraints.maxWidth < AppBreakpoints.filterRow;
-        final reset = hasActiveFilters ? TextButton(onPressed: _resetFilters, child: const Text('Reset')) : null;
+        final reset = hasActiveFilters ? TextButton(onPressed: _resetFilters, child: Text(context.l10n.common_reset)) : null;
 
         if (narrow) {
           return Column(
@@ -799,7 +799,7 @@ class _AlertsBodyState extends State<_AlertsBody> {
               // Shows the label; filters on the stored category.
               .map((v) => DropdownMenuItem(
                   value: v,
-                  child: Text('Category: ${v == 'All' ? context.l10n.common_all : context.l10n.productCategoryLabel(v)}',
+                  child: Text(context.l10n.common_filterValue(context.l10n.common_category, v == 'All' ? context.l10n.common_all : context.l10n.productCategoryLabel(v)),
                       overflow: TextOverflow.ellipsis)))
               .toList(),
           onChanged: (val) {
@@ -824,9 +824,9 @@ class _AlertsBodyState extends State<_AlertsBody> {
         children: [
           Icon(Icons.search_off, size: AppIconSize.i56, color: context.colors.textDisabled),
           const SizedBox(height: AppSpacing.s12),
-          Text('No alerts match your filters', style: TextStyle(fontSize: AppFontSize.f17, color: context.colors.textMuted)),
+          Text(context.l10n.alerts_noMatches, style: TextStyle(fontSize: AppFontSize.f17, color: context.colors.textMuted)),
           const SizedBox(height: AppSpacing.s8),
-          TextButton(onPressed: _resetFilters, child: const Text('Reset filters')),
+          TextButton(onPressed: _resetFilters, child: Text(context.l10n.common_resetFilters)),
         ],
       ),
     );
@@ -851,12 +851,12 @@ class _AlertsBodyState extends State<_AlertsBody> {
               decoration: BoxDecoration(border: Border(bottom: BorderSide(color: context.colors.textHint.withValues(alpha: AppAlpha.a20)))),
               child: Row(
                 children: [
-                  _headerCell('Product', flex: 4),
-                  _headerCell('Category', flex: 2),
-                  _headerCell('Alert', flex: 2),
-                  _headerCell('Details', flex: 3),
-                  _headerCell('Store / Shelf', flex: 2),
-                  _headerCell('Action', flex: 3),
+                  _headerCell(context.l10n.reports_colProduct, flex: 4),
+                  _headerCell(context.l10n.common_category, flex: 2),
+                  _headerCell(context.l10n.alerts_colAlert, flex: 2),
+                  _headerCell(context.l10n.common_details, flex: 3),
+                  _headerCell(context.l10n.alerts_colStoreShelf, flex: 2),
+                  _headerCell(context.l10n.alerts_colAction, flex: 3),
                 ],
               ),
             ),
@@ -900,7 +900,7 @@ class _AlertsBodyState extends State<_AlertsBody> {
           Icon(StockAlertsScreen._icon(kind), size: AppIconSize.i14, color: color),
           const SizedBox(width: AppSpacing.s4),
           Text(
-            StockAlertsScreen._title(kind),
+            StockAlertsScreen._title(context.l10n, kind),
             style: TextStyle(color: color, fontSize: AppFontSize.f11_5, fontWeight: AppFontWeight.semibold),
           ),
         ],
@@ -1005,9 +1005,9 @@ class _AlertsBodyState extends State<_AlertsBody> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('Store: ${p.stockQty}', style: const TextStyle(fontSize: AppFontSize.f12_5)),
+                Text(context.l10n.alerts_storeQty(p.stockQty), style: const TextStyle(fontSize: AppFontSize.f12_5)),
                 const SizedBox(height: AppSpacing.s2),
-                Text('Shelf: ${p.sellableQty}', style: const TextStyle(fontSize: AppFontSize.f12_5)),
+                Text(context.l10n.alerts_shelfQty(p.sellableQty), style: const TextStyle(fontSize: AppFontSize.f12_5)),
               ],
             ),
           ),
@@ -1079,7 +1079,7 @@ class _AlertsBodyState extends State<_AlertsBody> {
               const SizedBox(height: AppSpacing.s10),
               _twoLine(details.$1, details.$2),
               const SizedBox(height: AppSpacing.s6),
-              Text('Store: ${p.stockQty}  ·  Shelf: ${p.sellableQty}',
+              Text(context.l10n.alerts_storeShelfQty(p.stockQty, p.sellableQty),
                   style: TextStyle(fontSize: AppFontSize.f12, color: context.colors.textSoft)),
               const SizedBox(height: AppSpacing.s10),
               Align(alignment: Alignment.centerRight, child: _actionButton(a, isAdmin)),
@@ -1105,7 +1105,7 @@ class _AlertsBodyState extends State<_AlertsBody> {
         runSpacing: 4,
         children: [
           Text(
-            total == 0 ? 'No alerts' : 'Showing $start to $end of $total alert${total == 1 ? '' : 's'}',
+            total == 0 ? context.l10n.alerts_none : context.l10n.alerts_showingRange(start, end, total),
             style: TextStyle(fontSize: AppFontSize.f12_5, color: context.colors.textMuted),
           ),
           Row(
@@ -1115,7 +1115,7 @@ class _AlertsBodyState extends State<_AlertsBody> {
                 child: DropdownButton<int>(
                   value: _pageSize,
                   items: const [10, 25, 50]
-                      .map((n) => DropdownMenuItem(value: n, child: Text('$n per page')))
+                      .map((n) => DropdownMenuItem(value: n, child: Text(context.l10n.common_perPage(n))))
                       .toList(),
                   onChanged: (val) {
                     if (val != null) {
@@ -1132,7 +1132,7 @@ class _AlertsBodyState extends State<_AlertsBody> {
                 icon: const Icon(Icons.chevron_left),
                 onPressed: page > 1 ? () => setState(() => _page = page - 1) : null,
               ),
-              Text('Page $page', style: const TextStyle(fontSize: AppFontSize.f13)),
+              Text(context.l10n.common_page(page), style: const TextStyle(fontSize: AppFontSize.f13)),
               IconButton(
                 icon: const Icon(Icons.chevron_right),
                 onPressed: page < totalPages ? () => setState(() => _page = page + 1) : null,

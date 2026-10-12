@@ -12,6 +12,20 @@ import '../../ui/feedback/app_feedback.dart';
 import '../../constants/batch_move_reasons.dart';
 import '../../l10n/l10n.dart';
 
+/// The one action, worded two ways: Products says "Move to Stock", while
+/// the Stock Store and Product Alerts say "Remove from Sellable" (moving
+/// stock back to the store reads oddly while standing in the store). The
+/// success message is chosen by this value, never by comparing the label,
+/// which is translated.
+enum MoveToStockAction {
+  moveToStock,
+  removeFromSellable;
+
+  String label(AppLocalizations l) => switch (this) {
+        MoveToStockAction.moveToStock => l.batch_moveToStock,
+        MoveToStockAction.removeFromSellable => l.batch_removeFromSellable,
+      };
+}
 
 /// Prompts for a quantity and a reason, then moves a sellable batch
 /// back to Stock Store - called from View Batches' per-batch action,
@@ -23,8 +37,9 @@ Future<void> promptQuantityAndMoveToStock(
   BuildContext context,
   Product product,
   ProductBatch batch, {
-  String actionLabel = 'Move to Stock',
+  MoveToStockAction action = MoveToStockAction.moveToStock,
 }) async {
+  final actionLabel = action.label(context.l10n);
   final qtyController = TextEditingController(text: '${batch.sellableQty}');
   final notesController = TextEditingController();
   final isAlreadyExpired = batch.expiry != null && batch.expiry!.isBefore(DateTime.now());
@@ -48,9 +63,17 @@ Future<void> promptQuantityAndMoveToStock(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                '${product.name}${batch.batchNo?.isNotEmpty == true ? ' - Batch ${batch.batchNo}' : ''}'
-                '${batch.expiry != null ? ' (${isAlreadyExpired ? 'expired' : 'expires'} ${AppDateFormat.date.format(batch.expiry!)})' : ''}. '
-                'Up to ${batch.sellableQty} ${product.unit} can move back to Stock Store.',
+                context.l10n.batch_moveIntro(
+                  product.name,
+                  batch.batchNo?.isNotEmpty == true ? context.l10n.batch_moveBatchPart(batch.batchNo!) : '',
+                  batch.expiry == null
+                      ? ''
+                      : isAlreadyExpired
+                          ? context.l10n.batch_moveExpiredPart(AppDateFormat.date.format(batch.expiry!))
+                          : context.l10n.batch_moveExpiresPart(AppDateFormat.date.format(batch.expiry!)),
+                  batch.sellableQty,
+                  context.l10n.productUnitLabel(product.unit),
+                ),
                 style: const TextStyle(fontSize: AppFontSize.f13),
               ),
               const SizedBox(height: AppSpacing.s14),
@@ -58,7 +81,7 @@ Future<void> promptQuantityAndMoveToStock(
                 controller: qtyController,
                 keyboardType: TextInputType.number,
                 decoration: InputDecoration(
-                  labelText: 'Quantity to move (${product.unit})',
+                  labelText: context.l10n.batch_quantityToMove(context.l10n.productUnitLabel(product.unit)),
                   border: const OutlineInputBorder(),
                   isDense: true,
                   errorText: qtyErrorText,
@@ -68,7 +91,7 @@ Future<void> promptQuantityAndMoveToStock(
               DropdownButtonFormField<String>(
                 initialValue: reason,
                 decoration: InputDecoration(
-                  labelText: 'Reason',
+                  labelText: context.l10n.reports_reason,
                   border: const OutlineInputBorder(),
                   isDense: true,
                   errorText: reasonErrorText,
@@ -87,7 +110,7 @@ Future<void> promptQuantityAndMoveToStock(
               TextField(
                 controller: notesController,
                 decoration: InputDecoration(
-                  labelText: reason == kBatchMoveReasonOther ? 'Note (required for Other)' : 'Note (optional)',
+                  labelText: reason == kBatchMoveReasonOther ? context.l10n.batch_noteRequiredOther : context.l10n.batch_noteOptional,
                   border: const OutlineInputBorder(),
                   isDense: true,
                 ),
@@ -97,21 +120,21 @@ Future<void> promptQuantityAndMoveToStock(
           ),
         ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancel')),
+          TextButton(onPressed: () => Navigator.pop(ctx, false), child: Text(context.l10n.common_cancel)),
           ElevatedButton(
             style: ElevatedButton.styleFrom(backgroundColor: context.colors.primary, foregroundColor: context.colors.onPrimary),
             onPressed: () {
               final qty = int.tryParse(qtyController.text.trim()) ?? 0;
               var hasError = false;
               if (qty <= 0 || qty > batch.sellableQty) {
-                qtyErrorText = 'Enter a quantity up to ${batch.sellableQty}';
+                qtyErrorText = context.l10n.batch_quantityUpTo(batch.sellableQty);
                 hasError = true;
               }
               if (reason == null) {
-                reasonErrorText = 'Select a reason';
+                reasonErrorText = context.l10n.batch_selectReason;
                 hasError = true;
               } else if (reason == kBatchMoveReasonOther && notesController.text.trim().isEmpty) {
-                reasonErrorText = 'Describe the reason in the note below';
+                reasonErrorText = context.l10n.batch_describeReason;
                 hasError = true;
               }
               if (hasError) {
@@ -141,10 +164,10 @@ Future<void> promptQuantityAndMoveToStock(
       context,
       notes: notesController.text.trim().isNotEmpty ? notesController.text.trim() : null,
     );
-    AppFeedback.success(actionLabel == 'Move to Stock'
-        ? 'Moved $qty ${product.unit} back to Stock Store'
-        : 'Removed $qty ${product.unit} from Sellable');
+    AppFeedback.success(action == MoveToStockAction.moveToStock
+        ? L10n.current.batch_movedBack(qty, L10n.current.productUnitLabel(product.unit))
+        : L10n.current.batch_removedFromSellable(qty, L10n.current.productUnitLabel(product.unit)));
   } catch (e, st) {
-    AppFeedback.error("Couldn't move the stock", error: e, stackTrace: st);
+    AppFeedback.error(L10n.current.batch_moveFailed, error: e, stackTrace: st);
   }
 }

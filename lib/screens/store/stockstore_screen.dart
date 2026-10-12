@@ -11,6 +11,7 @@ import '../../services/product_catalog_service.dart';
 import '../products/add_edit_product_screen.dart';
 import '../products/add_batch_screen.dart';
 import '../products/view_batches_screen.dart';
+import '../products/move_expired_to_stock_dialog.dart';
 import '../products/stock_alerts_screen.dart';
 import 'release_to_shop_flow.dart';
 import '../../theme/app_breakpoints.dart';
@@ -673,7 +674,7 @@ class _StockStoreScreenState extends State<StockStoreScreen> {
                   if (value == 'add_batch') {
                     showAddBatchScreen(context, product: p);
                   } else if (value == 'view_batches') {
-                    showViewBatchesScreen(context, product: p, moveToStockLabel: 'Remove from Sellable');
+                    showViewBatchesScreen(context, product: p, moveToStockAction: MoveToStockAction.removeFromSellable);
                   } else if (value == 'delete') {
                     _deleteProduct(p.id);
                   }
@@ -1119,7 +1120,7 @@ class _StockStoreScreenState extends State<StockStoreScreen> {
                             if (value == 'add_batch') {
                               showAddBatchScreen(context, product: p);
                             } else if (value == 'view_batches') {
-                              showViewBatchesScreen(context, product: p, moveToStockLabel: 'Remove from Sellable');
+                              showViewBatchesScreen(context, product: p, moveToStockAction: MoveToStockAction.removeFromSellable);
                             } else if (value == 'delete') {
                               _deleteProduct(p.id);
                             }
