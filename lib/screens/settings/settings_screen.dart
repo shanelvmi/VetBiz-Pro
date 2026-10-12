@@ -13,6 +13,7 @@ import 'trash_screen.dart';
 import '../subscription/subscription_screen.dart';
 import '../dashboard/notifications_screen.dart';
 import '../../config/app_defaults.dart';
+import '../../l10n/l10n.dart';
 import '../../config/app_links.dart';
 import '../../config/app_info.dart';
 import '../../theme/app_text.dart';
@@ -62,9 +63,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text(
-          'Settings',
-          style: TextStyle(fontWeight: AppFontWeight.semibold, fontSize: AppFontSize.f20),
+        title: Text(
+          context.l10n.settings_title,
+          style: const TextStyle(fontWeight: AppFontWeight.semibold, fontSize: AppFontSize.f20),
         ),
         backgroundColor: context.colors.primary,
         foregroundColor: context.colors.onPrimary,
@@ -79,7 +80,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
             padding: const EdgeInsets.all(AppSpacing.s16),
             children: [
               if (isAdmin) ...[
-                _buildSectionTitle('Subscription'),
+                _buildSectionTitle(context.l10n.subscription_title),
                 const SizedBox(height: AppSpacing.s6),
                 Card(
                   elevation: cardElevation,
@@ -88,7 +89,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     children: [
                       _buildSettingsItem(
                         icon: Icons.workspace_premium_outlined,
-                        label: 'Subscription & Billing',
+                        label: context.l10n.settings_subscriptionBilling,
                         isLast: true,
                         onTap: () {
                           Navigator.push(
@@ -102,7 +103,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 ),
               ],
               const SizedBox(height: AppSpacing.s20),
-              _buildSectionTitle('Account & Data'),
+              _buildSectionTitle(context.l10n.settings_accountData),
               const SizedBox(height: AppSpacing.s6),
               Card(
                 elevation: cardElevation,
@@ -112,7 +113,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     if (isAdmin)
                       _buildSettingsItem(
                         icon: Icons.delete_outline,
-                        label: 'Trash',
+                        label: context.l10n.activityType_trash,
                         isLast: false,
                         onTap: () {
                           Navigator.push(
@@ -124,7 +125,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     if (isAdmin)
                       _buildSettingsItem(
                         icon: Icons.import_export,
-                        label: 'Export Data',
+                        label: context.l10n.settings_exportData,
                         isLast: false,
                         onTap: () {
                           Navigator.push(
@@ -136,7 +137,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     if (isAdmin)
                       _buildSettingsItem(
                         icon: Icons.schedule_outlined,
-                        label: 'Business Hours',
+                        label: context.l10n.hours_title,
                         isLast: false,
                         onTap: () {
                           Navigator.push(
@@ -147,7 +148,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       ),
                     _buildSettingsItem(
                       icon: Icons.manage_accounts_outlined,
-                      label: 'Manage Account',
+                      label: context.l10n.account_title,
                       isLast: true,
                       onTap: () {
                         Navigator.push(
@@ -160,7 +161,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 ),
               ),
               const SizedBox(height: AppSpacing.s16),
-              _buildSectionTitle('General'),
+              _buildSectionTitle(context.l10n.settings_general),
               const SizedBox(height: AppSpacing.s6),
               Card(
                 elevation: cardElevation,
@@ -169,7 +170,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   children: [
                     _buildSettingsItem(
                       icon: Icons.notifications_none,
-                      label: 'Notifications',
+                      label: context.l10n.common_notifications,
                       isLast: false,
                       onTap: () {
                         Navigator.push(
@@ -180,7 +181,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     ),
                     _buildSettingsItem(
                       icon: Icons.print_outlined,
-                      label: 'Printer & Receipt Settings',
+                      label: context.l10n.printer_title,
                       isLast: false,
                       onTap: () {
                         Navigator.push(
@@ -191,13 +192,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     ),
                     _buildSettingsItem(
                       icon: Icons.help_outline,
-                      label: 'Help & Support',
+                      label: context.l10n.settings_helpSupport,
                       isLast: false,
                       onTap: () => _showHelpSupportDialog(context),
                     ),
                     _buildSettingsItem(
                       icon: Icons.info_outline,
-                      label: 'App Info',
+                      label: context.l10n.settings_appInfo,
                       isLast: true,
                       onTap: () => _showAppInfoDialog(context),
                     ),
@@ -205,7 +206,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 ),
               ),
               const SizedBox(height: AppSpacing.s16),
-              _buildSectionTitle('Preferences'),
+              _buildSectionTitle(context.l10n.settings_preferences),
               const SizedBox(height: AppSpacing.s6),
               Card(
                 elevation: cardElevation,
@@ -214,21 +215,21 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   children: [
                     _buildSettingsItem(
                       icon: Icons.color_lens_outlined,
-                      label: 'UI Settings',
-                      trailingText: 'Theme & layout',
+                      label: context.l10n.uiSettings_title,
+                      trailingText: context.l10n.settings_themeLayout,
                       isLast: false,
                       onTap: () => showUiSettingsDialog(context),
                     ),
                     _buildSettingsItem(
                       icon: Icons.currency_exchange_outlined,
-                      label: 'Currency',
+                      label: context.l10n.settings_currency,
                       trailingText: AppDefaults.currencySymbol,
                       isLast: false,
                       onTap: () {}, // not a real choice - no picker to open
                     ),
                     _buildSettingsItem(
                       icon: Icons.language_outlined,
-                      label: 'Language / Lugha',
+                      label: context.l10n.settings_languageBoth,
                       trailingText: currentLanguageName,
                       isLast: true,
                       onTap: () => _showLanguageSelection(context, uiSettings),
@@ -239,7 +240,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               const SizedBox(height: _footerGap),
               Center(
                 child: Text(
-                  '${AppInfo.name} - v1.0.0',
+                  context.l10n.settings_versionLine(AppInfo.name, '1.0.0'),
                   style: TextStyle(
                     fontSize: AppFontSize.f12,
                     color: context.colors.textHint,
@@ -288,7 +289,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     width: double.infinity,
                     padding: const EdgeInsets.fromLTRB(AppSpacing.s20, AppSpacing.s24, AppSpacing.s20, AppSpacing.s16),
                     child: Text(
-                      'Settings',
+                      context.l10n.settings_title,
                       style: TextStyle(
                         fontWeight: AppFontWeight.bold,
                         fontSize: AppFontSize.f22,
@@ -301,81 +302,81 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       padding: const EdgeInsets.symmetric(horizontal: AppSpacing.s12),
                       children: [
                         if (isAdmin) ...[
-                          _buildSectionTitle('Subscription'),
+                          _buildSectionTitle(context.l10n.subscription_title),
                           const SizedBox(height: AppSpacing.s4),
                           _buildSidebarItem(
                             icon: Icons.workspace_premium_outlined,
-                            label: 'Subscription & Billing',
+                            label: context.l10n.settings_subscriptionBilling,
                             navigateKey: 'subscription',
                           ),
                           const SizedBox(height: AppSpacing.s16),
                         ],
-                        _buildSectionTitle('Account & Data'),
+                        _buildSectionTitle(context.l10n.settings_accountData),
                         const SizedBox(height: AppSpacing.s4),
                         if (isAdmin)
                           _buildSidebarItem(
                             icon: Icons.delete_outline,
-                            label: 'Trash',
+                            label: context.l10n.activityType_trash,
                             navigateKey: 'trash',
                           ),
                         if (isAdmin)
                           _buildSidebarItem(
                             icon: Icons.import_export,
-                            label: 'Export Data',
+                            label: context.l10n.settings_exportData,
                             navigateKey: 'export',
                           ),
                         if (isAdmin)
                           _buildSidebarItem(
                             icon: Icons.schedule_outlined,
-                            label: 'Business Hours',
+                            label: context.l10n.hours_title,
                             navigateKey: 'business_hours',
                           ),
                         _buildSidebarItem(
                           icon: Icons.manage_accounts_outlined,
-                          label: 'Manage Account',
+                          label: context.l10n.account_title,
                           navigateKey: 'manage_account',
                         ),
                         const SizedBox(height: AppSpacing.s16),
-                        _buildSectionTitle('General'),
+                        _buildSectionTitle(context.l10n.settings_general),
                         const SizedBox(height: AppSpacing.s4),
                         _buildSidebarItem(
                           icon: Icons.notifications_none,
-                          label: 'Notifications',
+                          label: context.l10n.common_notifications,
                           navigateKey: 'notifications',
                         ),
                         _buildSidebarItem(
                           icon: Icons.print_outlined,
-                          label: 'Printer & Receipt Settings',
+                          label: context.l10n.printer_title,
                           navigateKey: 'printer',
                         ),
                         _buildSidebarItem(
                           icon: Icons.help_outline,
-                          label: 'Help & Support',
+                          label: context.l10n.settings_helpSupport,
                           onTapDialog: () => _showHelpSupportDialog(context),
                         ),
                         _buildSidebarItem(
                           icon: Icons.info_outline,
-                          label: 'App Info',
+                          label: context.l10n.settings_appInfo,
                           onTapDialog: () => _showAppInfoDialog(context),
                         ),
                         const SizedBox(height: AppSpacing.s16),
-                        _buildSectionTitle('Preferences'),
+                        _buildSectionTitle(context.l10n.settings_preferences),
                         const SizedBox(height: AppSpacing.s4),
                         _buildSidebarItem(
                           icon: Icons.color_lens_outlined,
-                          label: 'UI Settings',
-                          trailingText: 'Theme & layout',
+                          label: context.l10n.uiSettings_title,
+                          trailingText: context.l10n.settings_themeLayout,
                           onTapDialog: () => showUiSettingsDialog(context),
                         ),
                         _buildSidebarItem(
                           icon: Icons.currency_exchange_outlined,
-                          label: 'Currency',
+                          label: context.l10n.settings_currency,
                           trailingText: AppDefaults.currencySymbol,
                           onTapDialog: () {}, // not a real choice - no picker to open
                         ),
                         _buildSidebarItem(
                           icon: Icons.language_outlined,
-                          label: 'Language / Lugha',
+                          label: context.l10n.settings_languageBoth,
                           trailingText: currentLanguageName,
                           onTapDialog: () => _showLanguageSelection(context, uiSettings),
                         ),
@@ -425,7 +426,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
           Icon(Icons.settings_outlined, size: AppIconSize.i56, color: context.colors.border),
           const SizedBox(height: AppSpacing.s12),
           Text(
-            'Select a setting from the left',
+            context.l10n.settings_selectPane,
             style: TextStyle(color: context.colors.textHint, fontSize: AppFontSize.f14),
           ),
         ],
@@ -506,7 +507,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                'SELECT LANGUAGE / CHAGUA LUGHA',
+                context.l10n.settings_selectLanguageBoth,
                 style: TextStyle(fontSize: AppFontSize.f11, fontWeight: AppFontWeight.bold, color: context.colors.primary, letterSpacing: 1.1),
               ),
               const SizedBox(height: AppSpacing.s10),
@@ -618,22 +619,22 @@ class _SettingsScreenState extends State<SettingsScreen> {
           children: [
             Icon(Icons.info_outline, color: context.colors.primary),
             const SizedBox(width: AppSpacing.s8),
-            const Text('App Info'),
+            Text(context.l10n.settings_appInfo),
           ],
         ),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            _infoRow('App Name', AppInfo.name),
-            _infoRow('Version', '1.0.0'),
-            _infoRow('Built For', 'Veterinary & agrovet business management'),
+            _infoRow(context.l10n.settings_appName, AppInfo.name),
+            _infoRow(context.l10n.settings_version, '1.0.0'),
+            _infoRow(context.l10n.settings_builtFor, context.l10n.settings_builtForValue),
           ],
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: Text('Close', style: TextStyle(color: context.colors.primary)),
+            child: Text(context.l10n.common_close, style: TextStyle(color: context.colors.primary)),
           ),
         ],
       ),
@@ -665,7 +666,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
           children: [
             Icon(Icons.help_outline, color: context.colors.primary),
             const SizedBox(width: AppSpacing.s8),
-            const Text('Help & Support'),
+            Text(context.l10n.settings_helpSupport),
           ],
         ),
         content: Column(
@@ -674,21 +675,21 @@ class _SettingsScreenState extends State<SettingsScreen> {
             ListTile(
               contentPadding: EdgeInsets.zero,
               leading: Icon(Icons.chat, color: context.colors.success),
-              title: const Text('WhatsApp'),
+              title: Text(context.l10n.debtors_viaWhatsApp),
               subtitle: const Text(AppContact.supportPhone),
               onTap: () => _launchUrl(AppLinks.whatsApp(AppContact.supportPhone).toString()),
             ),
             ListTile(
               contentPadding: EdgeInsets.zero,
               leading: Icon(Icons.call, color: context.colors.primary),
-              title: const Text('Call'),
+              title: Text(context.l10n.common_call),
               subtitle: const Text(AppContact.supportPhone),
               onTap: () => _launchUrl(AppLinks.tel(AppContact.supportPhone).toString()),
             ),
             ListTile(
               contentPadding: EdgeInsets.zero,
               leading: Icon(Icons.email_outlined, color: context.colors.primary),
-              title: const Text('Email'),
+              title: Text(context.l10n.common_email),
               subtitle: const Text(AppContact.supportEmail),
               onTap: () => _launchUrl(AppLinks.mailto(AppContact.supportEmail).toString()),
             ),
@@ -697,7 +698,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: Text('Close', style: TextStyle(color: context.colors.primary)),
+            child: Text(context.l10n.common_close, style: TextStyle(color: context.colors.primary)),
           ),
         ],
       ),

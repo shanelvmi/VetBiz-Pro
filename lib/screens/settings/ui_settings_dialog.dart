@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import '../../providers/ui_settings_provider.dart';
 import '../../utils/force_logout.dart';
 import '../../theme/app_palette.dart';
+import '../../l10n/l10n.dart';
 import '../../theme/app_text.dart';
 import '../../theme/app_dimens.dart';
 import '../../theme/theme_context.dart';
@@ -47,7 +48,7 @@ class _UiSettingsDialog extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    _sectionLabel(context, 'COLOUR THEME'),
+                    _sectionLabel(context, context.l10n.uiSettings_colourTheme),
                     const SizedBox(height: AppSpacing.s8),
                     for (final theme in AppColorTheme.all) ...[
                       _ThemeTile(
@@ -58,35 +59,35 @@ class _UiSettingsDialog extends StatelessWidget {
                       const SizedBox(height: AppSpacing.s8),
                     ],
                     const SizedBox(height: AppSpacing.s10),
-                    _sectionLabel(context, 'APPEARANCE'),
+                    _sectionLabel(context, context.l10n.uiSettings_appearance),
                     ListTile(
                       contentPadding: EdgeInsets.zero,
                       leading: Icon(Icons.dark_mode_outlined, color: context.colors.textHint),
-                      title: const Text('Dark Mode', style: TextStyle(fontWeight: AppFontWeight.semibold)),
-                      subtitle: const Text('Coming soon'),
+                      title: Text(context.l10n.uiSettings_darkMode, style: const TextStyle(fontWeight: AppFontWeight.semibold)),
+                      subtitle: Text(context.l10n.uiSettings_comingSoon),
                       trailing: const Switch(value: false, onChanged: null),
                     ),
                     const SizedBox(height: AppSpacing.s6),
-                    _sectionLabel(context, 'LAYOUT'),
+                    _sectionLabel(context, context.l10n.uiSettings_layout),
                     SwitchListTile(
                       contentPadding: EdgeInsets.zero,
                       secondary: Icon(Icons.view_sidebar_outlined, color: context.colors.primary),
-                      title: const Text('Layout Fixed Mode', style: TextStyle(fontWeight: AppFontWeight.semibold)),
-                      subtitle: const Text(
-                        'Keeps the sidebar open and hides its collapse button on large screens.',
+                      title: Text(context.l10n.uiSettings_layoutFixed, style: const TextStyle(fontWeight: AppFontWeight.semibold)),
+                      subtitle: Text(
+                        context.l10n.uiSettings_layoutFixedHint,
                       ),
                       value: settings.layoutFixed,
                       activeTrackColor: context.colors.primary,
                       onChanged: (value) => settings.setLayoutFixed(value),
                     ),
                     const SizedBox(height: AppSpacing.s6),
-                    _sectionLabel(context, 'SYSTEM'),
+                    _sectionLabel(context, context.l10n.uiSettings_system),
                     ListTile(
                       contentPadding: EdgeInsets.zero,
                       leading: Icon(Icons.refresh, color: context.colors.primary),
-                      title: const Text('System Refresh', style: TextStyle(fontWeight: AppFontWeight.semibold)),
-                      subtitle: const Text(
-                        'Reloads your data and takes you back to the start. You stay signed in.',
+                      title: Text(context.l10n.uiSettings_systemRefresh, style: const TextStyle(fontWeight: AppFontWeight.semibold)),
+                      subtitle: Text(
+                        context.l10n.uiSettings_systemRefreshHint,
                       ),
                       trailing: OutlinedButton(
                         onPressed: () => _confirmRefresh(context),
@@ -94,7 +95,7 @@ class _UiSettingsDialog extends StatelessWidget {
                           foregroundColor: context.colors.primary,
                           side: BorderSide(color: context.colors.primary),
                         ),
-                        child: const Text('Refresh'),
+                        child: Text(context.l10n.common_refresh),
                       ),
                     ),
                   ],
@@ -125,14 +126,14 @@ class _UiSettingsDialog extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text('UI Settings', style: TextStyle(fontSize: AppFontSize.f18, fontWeight: AppFontWeight.bold)),
-                Text('Saved on this device', style: TextStyle(fontSize: AppFontSize.f12, color: context.colors.textMuted)),
+                Text(context.l10n.uiSettings_title, style: const TextStyle(fontSize: AppFontSize.f18, fontWeight: AppFontWeight.bold)),
+                Text(context.l10n.uiSettings_savedOnDevice, style: TextStyle(fontSize: AppFontSize.f12, color: context.colors.textMuted)),
               ],
             ),
           ),
           IconButton(
             icon: const Icon(Icons.close),
-            tooltip: 'Close',
+            tooltip: context.l10n.common_close,
             onPressed: () => Navigator.of(context).pop(),
           ),
         ],
@@ -162,20 +163,19 @@ class _UiSettingsDialog extends StatelessWidget {
       context: context,
       builder: (ctx) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadius.r16)),
-        title: const Text('Refresh the app?'),
+        title: Text(context.l10n.uiSettings_refreshTitle),
         content: ConstrainedBox(
           constraints: const BoxConstraints(maxWidth: 360),
-          child: const Text(
-            "This reloads your data and takes you back to the start. You stay signed in, "
-            "but anything you haven't saved will be lost.",
+          child: Text(
+            context.l10n.uiSettings_refreshBody,
           ),
         ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancel')),
+          TextButton(onPressed: () => Navigator.pop(ctx, false), child: Text(context.l10n.common_cancel)),
           ElevatedButton(
             onPressed: () => Navigator.pop(ctx, true),
             style: ElevatedButton.styleFrom(backgroundColor: context.colors.primary, foregroundColor: context.colors.onPrimary),
-            child: const Text('Refresh'),
+            child: Text(context.l10n.common_refresh),
           ),
         ],
       ),
@@ -188,6 +188,15 @@ class _UiSettingsDialog extends StatelessWidget {
 
 /// One selectable colour theme. A theme that isn't built yet is shown dimmed,
 /// with a "Coming soon" tag, and can't be chosen.
+// A theme's name as shown, by its id; AppColorTheme.name stays the English
+// name, shown as is for a theme added later without a label.
+String _themeName(BuildContext context, AppColorTheme theme) => switch (theme.id) {
+      'kilimanjaro' => context.l10n.uiSettings_themeKilimanjaro,
+      'serengeti' => context.l10n.uiSettings_themeSerengeti,
+      'victoria' => context.l10n.uiSettings_themeVictoria,
+      _ => theme.name,
+    };
+
 class _ThemeTile extends StatelessWidget {
   final AppColorTheme theme;
   final bool selected;
@@ -228,7 +237,7 @@ class _ThemeTile extends StatelessWidget {
                 ),
                 const SizedBox(width: AppSpacing.s12),
                 Expanded(
-                  child: Text(theme.name, style: const TextStyle(fontWeight: AppFontWeight.semibold, fontSize: AppFontSize.f14_5)),
+                  child: Text(_themeName(context, theme), style: const TextStyle(fontWeight: AppFontWeight.semibold, fontSize: AppFontSize.f14_5)),
                 ),
                 if (!theme.available)
                   Container(
@@ -237,7 +246,7 @@ class _ThemeTile extends StatelessWidget {
                       color: context.colors.divider,
                       borderRadius: BorderRadius.circular(AppRadius.r20),
                     ),
-                    child: Text('Coming soon', style: TextStyle(fontSize: AppFontSize.f11, color: context.colors.textSoft)),
+                    child: Text(context.l10n.uiSettings_comingSoon, style: TextStyle(fontSize: AppFontSize.f11, color: context.colors.textSoft)),
                   )
                 else if (selected)
                   Icon(Icons.check_circle, color: context.colors.primary, size: AppIconSize.i22),

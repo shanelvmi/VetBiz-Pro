@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import '../../providers/client_provider.dart';
 import '../../providers/facility_provider.dart';
 import '../../theme/app_text.dart';
+import '../../l10n/l10n.dart';
 import '../../theme/app_dimens.dart';
 import '../../theme/theme_context.dart';
 import '../../ui/feedback/friendly_error.dart';
@@ -39,19 +40,15 @@ Future<void> showRebuildSearchIndexDialog(BuildContext context) async {
     barrierDismissible: false,
     builder: (dialogContext) => StatefulBuilder(
       builder: (dialogContext, setDialogState) => AlertDialog(
-        title: const Text('Rebuild Client Search Index'),
+        title: Text(dialogContext.l10n.searchIndex_title),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             if (resultMessage == null) ...[
-              const Text(
-                'This makes clients added before search was available '
-                'show up correctly when searched by name, and lets the app '
-                'spot a new client whose phone number or name matches one '
-                'you already have. It only needs to be run once - clients '
-                'that are already up to date are left alone.',
-                style: TextStyle(fontSize: AppFontSize.f13),
+              Text(
+                context.l10n.searchIndex_body,
+                style: const TextStyle(fontSize: AppFontSize.f13),
               ),
             ] else
               Text(resultMessage!, style: const TextStyle(fontSize: AppFontSize.f13)),
@@ -71,7 +68,7 @@ Future<void> showRebuildSearchIndexDialog(BuildContext context) async {
                   return dialogContext.colors.primary;
                 }),
               ),
-              child: const Text('Cancel'),
+              child: Text(context.l10n.common_cancel),
             ),
           if (resultMessage == null)
             ElevatedButton(
@@ -84,7 +81,7 @@ Future<void> showRebuildSearchIndexDialog(BuildContext context) async {
                       if (facilityId == null) {
                         setDialogState(() {
                           isRunning = false;
-                          resultMessage = 'No facility selected.';
+                          resultMessage = L10n.current.common_noFacilityDot;
                         });
                         return;
                       }
@@ -94,13 +91,13 @@ Future<void> showRebuildSearchIndexDialog(BuildContext context) async {
                         setDialogState(() {
                           isRunning = false;
                           resultMessage = updated == 0
-                              ? 'Nothing to update - every client is already searchable.'
-                              : 'Done. $updated client${updated == 1 ? '' : 's'} updated and now searchable.';
+                              ? L10n.current.searchIndex_nothing
+                              : L10n.current.searchIndex_done(updated);
                         });
                       } catch (e) {
                         setDialogState(() {
                           isRunning = false;
-                          resultMessage = 'Could not complete: ${FriendlyError.messageFor(e)}';
+                          resultMessage = L10n.current.searchIndex_failed(FriendlyError.messageFor(e));
                         });
                       }
                     },
@@ -111,7 +108,7 @@ Future<void> showRebuildSearchIndexDialog(BuildContext context) async {
                 }),
                 foregroundColor: WidgetStateProperty.all(dialogContext.colors.onPrimary),
               ),
-              child: const Text('Run Now'),
+              child: Text(context.l10n.searchIndex_run),
             ),
           if (resultMessage != null)
             ElevatedButton(
@@ -120,7 +117,7 @@ Future<void> showRebuildSearchIndexDialog(BuildContext context) async {
                 backgroundColor: WidgetStateProperty.all(dialogContext.colors.primary),
                 foregroundColor: WidgetStateProperty.all(dialogContext.colors.onPrimary),
               ),
-              child: const Text('Done'),
+              child: Text(context.l10n.common_done),
             ),
         ],
       ),

@@ -8,6 +8,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../providers/facility_provider.dart';
 import '../../data/collections.dart';
 import '../../theme/app_text.dart';
+import '../../l10n/l10n.dart';
 import '../../theme/app_dimens.dart';
 import '../../theme/theme_context.dart';
 import '../../ui/feedback/app_feedback.dart';
@@ -66,7 +67,7 @@ class _BusinessProfileScreenState extends State<BusinessProfileScreen> {
 
       if (mounted) {
         setState(() => _isUploading = false);
-        AppFeedback.success('Logo updated');
+        AppFeedback.success(L10n.current.profile_logoUpdated);
       }
     } catch (e, st) {
       if (mounted) {
@@ -74,7 +75,7 @@ class _BusinessProfileScreenState extends State<BusinessProfileScreen> {
           _isUploading = false;
           _pendingLogoBytes = null;
         });
-        AppFeedback.error("Couldn't update the logo", error: e, stackTrace: st);
+        AppFeedback.error(L10n.current.profile_logoFailed, error: e, stackTrace: st);
       }
     }
   }
@@ -83,13 +84,13 @@ class _BusinessProfileScreenState extends State<BusinessProfileScreen> {
   Widget build(BuildContext context) {
     final facilityProvider = Provider.of<FacilityProvider>(context);
     final selectedFacility = facilityProvider.selectedFacility;
-    final facilityName = selectedFacility?['name'] ?? 'Your facility';
+    final facilityName = selectedFacility?['name'] ?? context.l10n.profile_yourFacility;
     final logoUrl = selectedFacility?['logoUrl'];
 
     return Scaffold(
       backgroundColor: context.colors.background,
       appBar: AppBar(
-        title: const Text('Business Profile'),
+        title: Text(context.l10n.profile_title),
         centerTitle: true,
         backgroundColor: context.colors.primary,
         foregroundColor: context.colors.onPrimary,
@@ -136,7 +137,7 @@ class _BusinessProfileScreenState extends State<BusinessProfileScreen> {
                 ),
                 const SizedBox(height: AppSpacing.s16),
                 Text(
-                  'This logo appears on the dashboard, receipts, and anywhere your facility is shown throughout the app.',
+                  context.l10n.profile_logoHint,
                   textAlign: TextAlign.center,
                   style: TextStyle(color: context.colors.textMuted, fontSize: AppFontSize.f13),
                 ),
@@ -144,7 +145,7 @@ class _BusinessProfileScreenState extends State<BusinessProfileScreen> {
                 ElevatedButton.icon(
                   onPressed: _isUploading ? null : _changeLogo,
                   icon: const Icon(Icons.upload),
-                  label: Text(logoUrl != null ? 'Change Logo' : 'Upload Logo'),
+                  label: Text(logoUrl != null ? context.l10n.profile_changeLogo : context.l10n.profile_uploadLogo),
                   style: ButtonStyle(
                     backgroundColor: WidgetStateProperty.resolveWith<Color>((states) {
                       if (states.contains(WidgetState.hovered)) return context.colors.accent;
