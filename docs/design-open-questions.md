@@ -118,6 +118,16 @@ User-facing "VetBiz Pro" now reads `AppInfo.name` (titles, Settings, support lin
 - **"Payment Details"** is one key (`payments_detailsTitle`) for the Payments detail panel and the Subscription form's payment section. The Kiswahili ("Maelezo ya Malipo") fits both; split it if either should read differently.
 - **"No submissions yet." and "No submissions yet"** (Subscription screen with a full stop, Subscription history without) are two keys because the English differs.
 
+### Raised in step 2F, batch 2F-11 (wording and language; English kept as it was, one exception)
+
+- **The facility picker's footer bullet (the one English change).** The source held "Secure  â€¢  Reliable  â€¢  Built for..." (the "•" bullet saved with the wrong encoding, so it showed as "â€¢"). The key `facilityPicker_footer` holds the intended "•". The owner may prefer to keep the English exactly as it was; say so and it goes back.
+- **The typed confirmation in Delete Facility** compares with the stored facility name, or, for a facility with no name, the English fallback "this facility". That fallback stays English in every language (it is the text to type); the sentence 'Type "{name}" to confirm:' shows it.
+- **Reused keys**: "Activity Log" (`export_activityLog`), "Last Month" (`export_lastMonth`), "This Month" (`payments_thisMonth`), "Created On" (`services_createdOn`), "Product" (`reports_colProduct`, the fallback name of an unnamed product), "Copied to clipboard" (`invite_copied`), "{count} days" (`debtors_daysCount`, the retention and overdue choices), "Deactivate"/"Reactivate" and "Couldn't update the status" (Team screen keys). A Kiswahili change there changes the Facilities screen too.
+- **Two "no facilities" texts**: "No facilities found." (Facilities and Select Facility, one key) and the Team screen's "No facilities found for your account." Kept as two.
+- **Status wording mixes the stored word and the label**: "{name} will be marked Inactive." has the word typed in the sentence, while "Facility marked {status}" shows the status label. Both read the same in English.
+- **Dates and compact amounts** on this screen keep the screen's own "d Mon yyyy" and "h:mm AM" formats (unchanged, spec 2.4), so month names and AM/PM stay English; the "K"/"M" suffixes are typed in the code, not keys.
+- **The retention dialog duplicates the Activity Log screen's** (its own copy, taking a facility id). Its texts are keys here; 2F-12 should reuse them where the English is the same.
+
 ### Raised in step 2F, batch 2F-10 (wording and language; English kept as it was)
 
 - **The live subscription notice stays English underneath.** `SubscriptionProvider.attentionNotice` is compared with the stored `subscription_expiring` document's message (written in English by the Cloud Function) to tell whether the notice escalated, so it is built from the English ARB; the screen shows `attentionNoticeShown`. If the function's wording ever changes, both must change together. The stored document text itself (shown on other devices until the live row replaces it) stays English: server text, a future error-code/notice-code item.
