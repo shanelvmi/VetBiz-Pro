@@ -310,13 +310,13 @@ class _AddEditServiceScreenState extends State<AddEditServiceScreen> {
                   Icon(Icons.medical_services_outlined, color: context.colors.onPrimary, size: AppIconSize.i22),
                   const SizedBox(width: AppSpacing.s12),
                   Expanded(
-                    child: Text(isEditing ? 'Edit Visit' : 'Record Visit',
+                    child: Text(isEditing ? context.l10n.services_editVisit : context.l10n.services_recordVisit,
                         style: TextStyle(color: context.colors.onPrimary, fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f18)),
                   ),
                   if (widget.isModal)
                     IconButton(
                       icon: Icon(Icons.close, color: context.colors.onPrimary),
-                      tooltip: 'Close',
+                      tooltip: context.l10n.common_close,
                       onPressed: () => Navigator.of(context).pop(),
                     )
                   else
@@ -392,9 +392,9 @@ class _AddEditServiceScreenState extends State<AddEditServiceScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _sectionHeader(Icons.person_outline, 'Client Information'),
+          _sectionHeader(Icons.person_outline, context.l10n.clients_infoSection),
           const SizedBox(height: AppSpacing.s12),
-          const Text('Select Client *', style: TextStyle(fontWeight: AppFontWeight.semibold, fontSize: AppFontSize.f13)),
+          Text(context.l10n.services_selectClientRequired, style: TextStyle(fontWeight: AppFontWeight.semibold, fontSize: AppFontSize.f13)),
           const SizedBox(height: AppSpacing.s6),
           Row(
             key: _clientFieldKey,
@@ -404,7 +404,7 @@ class _AddEditServiceScreenState extends State<AddEditServiceScreen> {
                 child: TextFormField(
                   controller: _clientTextController,
                   decoration: InputDecoration(
-                    hintText: 'Search or select client...',
+                    hintText: context.l10n.services_clientSearchHint,
                     hintStyle: const TextStyle(fontSize: AppFontSize.f14),
                     filled: true,
                     fillColor: context.colors.surface,
@@ -428,7 +428,7 @@ class _AddEditServiceScreenState extends State<AddEditServiceScreen> {
                   },
                   validator: (value) {
                     if (_selectedClient == null) {
-                      return 'Please select a client';
+                      return context.l10n.services_errSelectClient;
                     }
                     return null;
                   },
@@ -437,7 +437,7 @@ class _AddEditServiceScreenState extends State<AddEditServiceScreen> {
               const SizedBox(width: AppSpacing.s8),
               IconButton(
                 icon: Icon(Icons.add, color: context.colors.onPrimary),
-                tooltip: 'Add New Client',
+                tooltip: context.l10n.services_addNewClient,
                 padding: const EdgeInsets.all(AppSpacing.s10),
                 constraints: const BoxConstraints(),
                 style: ButtonStyle(
@@ -480,16 +480,16 @@ class _AddEditServiceScreenState extends State<AddEditServiceScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _sectionHeader(Icons.description_outlined, 'Visit Details'),
+          _sectionHeader(Icons.description_outlined, context.l10n.services_visitDetails),
           const SizedBox(height: AppSpacing.s12),
               // SERVICE NAME
               TextFormField(
                 controller: _nameController,
-                decoration: _inputDecoration('Service Name'),
+                decoration: _inputDecoration(context.l10n.services_serviceName),
                 textCapitalization: TextCapitalization.sentences,
                 inputFormatters: [SentenceCapitalizationFormatter()],
                 validator: (v) =>
-                    v == null || v.isEmpty ? 'Enter service name' : null,
+                    v == null || v.isEmpty ? context.l10n.services_errServiceName : null,
               ),
 
               const SizedBox(height: AppSpacing.s10),
@@ -497,7 +497,7 @@ class _AddEditServiceScreenState extends State<AddEditServiceScreen> {
               // DESCRIPTION
               TextFormField(
                 controller: _descriptionController,
-                decoration: _inputDecoration('Description'),
+                decoration: _inputDecoration(context.l10n.common_description),
                 textCapitalization: TextCapitalization.sentences,
                 inputFormatters: [SentenceCapitalizationFormatter()],
                 maxLines: 3,
@@ -508,7 +508,7 @@ class _AddEditServiceScreenState extends State<AddEditServiceScreen> {
               // CATEGORY
               DropdownButtonFormField<String>(
                 initialValue: _selectedCategory,
-                decoration: _inputDecoration('Category'),
+                decoration: _inputDecoration(context.l10n.common_category),
                 items: _categories
                     .map((cat) =>
                         DropdownMenuItem(value: cat, child: Text(context.l10n.serviceCategoryLabel(cat))))
@@ -524,12 +524,12 @@ class _AddEditServiceScreenState extends State<AddEditServiceScreen> {
                   Expanded(
                     child: TextFormField(
                       controller: _providedByController,
-                      decoration: _inputDecoration('Provided By'),
+                      decoration: _inputDecoration(context.l10n.services_providedBy),
                       textCapitalization: TextCapitalization.sentences,
                       inputFormatters: [SentenceCapitalizationFormatter()],
                       validator: (v) =>
                           v == null || v.trim().isEmpty
-                              ? 'Enter provider'
+                              ? context.l10n.services_errProvider
                               : null,
                     ),
                   ),
@@ -538,7 +538,7 @@ class _AddEditServiceScreenState extends State<AddEditServiceScreen> {
                     child: InkWell(
                       onTap: () => _pickServiceDate(context),
                       child: InputDecorator(
-                        decoration: _inputDecoration('Service Date'),
+                        decoration: _inputDecoration(context.l10n.services_serviceDate),
                         child: Text(
                           AppDateFormat.date.format(_serviceDate!),
                           style: TextStyle(color: context.colors.primary),
@@ -569,11 +569,11 @@ class _AddEditServiceScreenState extends State<AddEditServiceScreen> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  const Text('Expenses (Items Used)',
+                  Text(context.l10n.services_itemsUsed,
                       style: TextStyle(fontWeight: AppFontWeight.bold)),
                   TextButton.icon(
                     icon: Icon(Icons.add, color: context.colors.primary),
-                    label: Text('Add Item', style: TextStyle(color: context.colors.primary)),
+                    label: Text(context.l10n.services_addItem, style: TextStyle(color: context.colors.primary)),
                     style: ButtonStyle(
                       overlayColor: WidgetStateProperty.all(
                         context.colors.accent.withValues(alpha: AppAlpha.a20),
@@ -602,11 +602,11 @@ class _AddEditServiceScreenState extends State<AddEditServiceScreen> {
                           children: [
                             TextFormField(
                               controller: item['name'],
-                              decoration: _inputDecoration('Item Name'),
+                              decoration: _inputDecoration(context.l10n.services_itemName),
                               textCapitalization: TextCapitalization.sentences,
                               inputFormatters: [SentenceCapitalizationFormatter()],
                               validator: (v) =>
-                                  v == null || v.isEmpty ? 'Enter name' : null,
+                                  v == null || v.isEmpty ? context.l10n.services_errItemName : null,
                               onTap: () => setState(() => _activeSuggestionRow = index),
                               onChanged: (val) {
                                 setState(() {
@@ -635,7 +635,7 @@ class _AddEditServiceScreenState extends State<AddEditServiceScreen> {
                                   return Padding(
                                     padding: const EdgeInsets.only(top: AppSpacing.s4, left: AppSpacing.s4),
                                     child: Text(
-                                      'No matching product - will be recorded as a plain expense.',
+                                      context.l10n.services_noMatchingProduct,
                                       style: TextStyle(fontSize: AppFontSize.f11, color: context.colors.textMuted),
                                     ),
                                   );
@@ -654,7 +654,7 @@ class _AddEditServiceScreenState extends State<AddEditServiceScreen> {
                                         dense: true,
                                         title: Text(product.name),
                                         subtitle: Text(
-                                          'Sellable: ${product.sellableQty} ${product.unit}',
+                                          context.l10n.services_sellableQty('${product.sellableQty}', context.l10n.productUnitLabel(product.unit)),
                                           style: const TextStyle(fontSize: AppFontSize.f11),
                                         ),
                                         onTap: () {
@@ -680,7 +680,7 @@ class _AddEditServiceScreenState extends State<AddEditServiceScreen> {
                                     Icon(Icons.check_circle, size: AppIconSize.i14, color: context.colors.successStrong),
                                     const SizedBox(width: AppSpacing.s4),
                                     Text(
-                                      'In stock - will deduct, no expense recorded',
+                                      context.l10n.services_inStockDeduct,
                                       style: TextStyle(fontSize: AppFontSize.f11, color: context.colors.successStrong),
                                     ),
                                   ],
@@ -694,14 +694,14 @@ class _AddEditServiceScreenState extends State<AddEditServiceScreen> {
                         flex: 1,
                         child: TextFormField(
                           controller: item['price'],
-                          decoration: _inputDecoration('Price'),
+                          decoration: _inputDecoration(context.l10n.products_price),
                           keyboardType: TextInputType.number,
                           inputFormatters: [
                             FilteringTextInputFormatter.digitsOnly,
                             ThousandsSeparatorInputFormatter()
                           ],
                           validator: (v) =>
-                              v == null || v.isEmpty ? 'Enter price' : null,
+                              v == null || v.isEmpty ? context.l10n.services_errPrice : null,
                         ),
                       ),
                       IconButton(
@@ -720,7 +720,7 @@ class _AddEditServiceScreenState extends State<AddEditServiceScreen> {
               Align(
                 alignment: Alignment.centerRight,
                 child: Text(
-                  'Total Items Cost: ${Money.symbolDecimal(itemsTotal)}',
+                  context.l10n.services_totalItemsCost(Money.symbolDecimal(itemsTotal)),
                   style: TextStyle(
                     fontSize: AppFontSize.f12,
                     color: context.colors.textHint,
@@ -744,9 +744,9 @@ class _AddEditServiceScreenState extends State<AddEditServiceScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _sectionHeader(Icons.receipt_long_outlined, 'Visit Summary'),
+          _sectionHeader(Icons.receipt_long_outlined, context.l10n.services_visitSummary),
           const SizedBox(height: AppSpacing.s14),
-          const Text('Total Amount (${AppDefaults.currencySymbol}) *', style: TextStyle(fontWeight: AppFontWeight.semibold, fontSize: AppFontSize.f13)),
+          Text(context.l10n.services_totalAmountRequired(AppDefaults.currencySymbol), style: TextStyle(fontWeight: AppFontWeight.semibold, fontSize: AppFontSize.f13)),
           const SizedBox(height: AppSpacing.s6),
           TextFormField(
             controller: _totalAmountController,
@@ -763,10 +763,10 @@ class _AddEditServiceScreenState extends State<AddEditServiceScreen> {
                 borderSide: BorderSide(color: context.colors.textHint.withValues(alpha: AppAlpha.a40)),
               ),
             ),
-            validator: (v) => v == null || v.isEmpty ? 'Enter total amount' : null,
+            validator: (v) => v == null || v.isEmpty ? context.l10n.services_errTotalAmount : null,
           ),
           const SizedBox(height: AppSpacing.s14),
-          const Text('Total Paid (${AppDefaults.currencySymbol}) *', style: TextStyle(fontWeight: AppFontWeight.semibold, fontSize: AppFontSize.f13)),
+          Text(context.l10n.services_totalPaidRequired(AppDefaults.currencySymbol), style: TextStyle(fontWeight: AppFontWeight.semibold, fontSize: AppFontSize.f13)),
           const SizedBox(height: AppSpacing.s6),
           TextFormField(
             controller: _totalPaidController,
@@ -783,7 +783,7 @@ class _AddEditServiceScreenState extends State<AddEditServiceScreen> {
                 borderSide: BorderSide(color: context.colors.textHint.withValues(alpha: AppAlpha.a40)),
               ),
             ),
-            validator: (v) => v == null || v.isEmpty ? 'Enter paid amount' : null,
+            validator: (v) => v == null || v.isEmpty ? context.l10n.services_errPaidAmount : null,
           ),
           if (_parseAmount(_totalPaidController.text) > 0) ...[
             const SizedBox(height: AppSpacing.s16),
@@ -802,7 +802,7 @@ class _AddEditServiceScreenState extends State<AddEditServiceScreen> {
                     children: [
                       Icon(Icons.credit_card_outlined, size: AppIconSize.i16, color: context.colors.primary),
                       const SizedBox(width: AppSpacing.s8),
-                      Text('Payment Method',
+                      Text(context.l10n.payments_method,
                           style: TextStyle(fontWeight: AppFontWeight.semibold, fontSize: AppFontSize.f13, color: context.colors.primary)),
                     ],
                   ),
@@ -834,7 +834,7 @@ class _AddEditServiceScreenState extends State<AddEditServiceScreen> {
                         children: [
                           Icon(iconForPaymentMethod(_paymentMethod ?? PaymentMethod.cash.key), size: AppIconSize.i18, color: context.colors.primary),
                           const SizedBox(width: AppSpacing.s10),
-                          Expanded(child: Text(_paymentMethod == null ? 'Select method' : context.l10n.paymentMethodLabel(_paymentMethod!))),
+                          Expanded(child: Text(_paymentMethod == null ? context.l10n.transactions_selectMethod : context.l10n.paymentMethodLabel(_paymentMethod!))),
                           Icon(Icons.expand_more, size: AppIconSize.i18, color: context.colors.textMuted),
                         ],
                       ),
@@ -845,7 +845,7 @@ class _AddEditServiceScreenState extends State<AddEditServiceScreen> {
             ),
             if (_paymentMethod != null && _paymentMethod != PaymentMethod.cash.key) ...[
               const SizedBox(height: AppSpacing.s14),
-              const Text('Transaction ID (optional)', style: TextStyle(fontWeight: AppFontWeight.semibold, fontSize: AppFontSize.f13)),
+              Text(context.l10n.services_transactionIdOptional, style: TextStyle(fontWeight: AppFontWeight.semibold, fontSize: AppFontSize.f13)),
               const SizedBox(height: AppSpacing.s6),
               TextFormField(
                 controller: _transactionIdController,
@@ -880,7 +880,7 @@ class _AddEditServiceScreenState extends State<AddEditServiceScreen> {
         children: [
           OutlinedButton.icon(
             icon: const Icon(Icons.close, size: AppIconSize.i16),
-            label: const Text('Cancel'),
+            label: Text(context.l10n.common_cancel),
             style: OutlinedButton.styleFrom(
               foregroundColor: context.colors.textPrimary,
               side: BorderSide(color: context.colors.textHint.withValues(alpha: AppAlpha.a40)),
@@ -902,13 +902,13 @@ class _AddEditServiceScreenState extends State<AddEditServiceScreen> {
                     final totalPaid = _parseAmount(_totalPaidController.text);
 
                     if (totalPaid > totalAmount) {
-                      AppFeedback.warning('Total Paid cannot exceed Total Amount');
+                      AppFeedback.warning(L10n.current.services_errPaidOverTotal);
                       setState(() => _isLoading = false);
                       return;
                     }
 
                     if (totalPaid > 0 && _paymentMethod == null) {
-                      AppFeedback.warning('Select how this payment was made');
+                      AppFeedback.warning(L10n.current.debtors_selectPaymentMethod);
                       setState(() => _isLoading = false);
                       return;
                     }
@@ -936,7 +936,7 @@ class _AddEditServiceScreenState extends State<AddEditServiceScreen> {
                       final facilityId = facilityProvider.selectedFacilityId;
 
                       if (facilityId == null) {
-                        AppFeedback.warning('No facility selected');
+                        AppFeedback.warning(L10n.current.common_noFacility);
                         setState(() => _isLoading = false);
                         return;
                       }
@@ -950,10 +950,10 @@ class _AddEditServiceScreenState extends State<AddEditServiceScreen> {
                       }
 
                       if (!mounted) return;
-                      AppFeedback.success(isEditing ? 'Service updated' : 'Service added');
+                      AppFeedback.success(isEditing ? L10n.current.services_updated : L10n.current.services_added);
                       Navigator.pop(context);
                     } catch (e, st) {
-                      AppFeedback.error("Couldn't save the service", error: e, stackTrace: st);
+                      AppFeedback.error(L10n.current.services_saveFailed, error: e, stackTrace: st);
                     } finally {
                       setState(() => _isLoading = false);
                     }
@@ -976,7 +976,7 @@ class _AddEditServiceScreenState extends State<AddEditServiceScreen> {
                     children: [
                       const Icon(Icons.medical_services_outlined, size: AppIconSize.i16),
                       const SizedBox(width: AppSpacing.s8),
-                      Text(isEditing ? 'Update Visit' : 'Record Visit'),
+                      Text(isEditing ? context.l10n.services_updateVisit : context.l10n.services_recordVisit),
                       const SizedBox(width: AppSpacing.s6),
                       const Icon(Icons.arrow_forward, size: AppIconSize.i16),
                     ],
@@ -1043,7 +1043,7 @@ class _AddEditServiceScreenState extends State<AddEditServiceScreen> {
                 )
               : _clientSearchResults.isEmpty
                   ? ListTile(
-                      title: const Text('No client found'),
+                      title: Text(context.l10n.services_noClientFound),
                       trailing: IconButton(
                         icon: const Icon(Icons.add),
                         onPressed: () => _addNewClient(context),
@@ -1091,7 +1091,7 @@ Future<void> showAddEditServiceScreen(BuildContext context, {Service? service}) 
   await showGeneralDialog(
     context: context,
     barrierDismissible: true,
-    barrierLabel: service != null ? 'Edit Visit' : 'Record Visit',
+    barrierLabel: service != null ? context.l10n.services_editVisit : context.l10n.services_recordVisit,
     barrierColor: context.colors.scrim.withValues(alpha: AppAlpha.a50),
     transitionDuration: AppMotion.normal,
     pageBuilder: (context, animation, secondaryAnimation) {

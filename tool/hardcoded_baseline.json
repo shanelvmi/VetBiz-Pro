@@ -518,7 +518,6 @@
       "lib/screens/sales/receipt_preview_screen.dart": 31,
       "lib/screens/sales/sales_archive_screen.dart": 27,
       "lib/screens/sales/sales_screen.dart": 32,
-      "lib/screens/services/add_edit_service_screen.dart": 20,
       "lib/services/role_change_service.dart": 1,
       "lib/services/session_validity_service.dart": 1
     },
