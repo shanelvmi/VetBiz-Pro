@@ -5844,4 +5844,86 @@ class AppLocalizationsSw extends AppLocalizations {
 
   @override
   String get insights_topProductsLast30 => 'Bidhaa 5 Bora - Siku 30 Zilizopita';
+
+  @override
+  String get insights_servicesByTypeLast30 =>
+      'Huduma kwa Aina - Siku 30 Zilizopita';
+
+  @override
+  String insights_totalOver14(String amount) {
+    return 'Jumla: $amount kwa siku 14';
+  }
+
+  @override
+  String insights_topSeller(String name, String amount) {
+    return 'Inayouzwa zaidi: $name · $amount';
+  }
+
+  @override
+  String insights_mostRequested(String name, String amount) {
+    return 'Inayoombwa zaidi: $name - $amount';
+  }
+
+  @override
+  String get insights_noSales14 => 'Hakuna mauzo katika siku 14 zilizopita.';
+
+  @override
+  String get insights_noSales30 => 'Hakuna mauzo katika siku 30 zilizopita.';
+
+  @override
+  String get insights_noServices30 =>
+      'Hakuna huduma katika siku 30 zilizopita.';
+
+  @override
+  String get notifications_subtitle =>
+      'Taarifa na tahadhari zote kutoka kituo chako';
+
+  @override
+  String notifications_loadFailed(String error) {
+    return 'Imeshindwa kupakia arifa: $error';
+  }
+
+  @override
+  String get notifications_catCritical => 'Muhimu Sana';
+
+  @override
+  String get notifications_catStock => 'Stoo';
+
+  @override
+  String get notifications_catPayments => 'Malipo';
+
+  @override
+  String get notifications_catDebts => 'Madeni';
+
+  @override
+  String get notifications_catSystem => 'Mfumo';
+
+  @override
+  String get notifications_catUpdates => 'Taarifa';
+
+  @override
+  String notifications_unreadCount(int count) {
+    return '$count hazijasomwa';
+  }
+
+  @override
+  String get notifications_allRead => 'Zote zimesomwa';
+
+  @override
+  String get notifications_searchHint => 'Tafuta arifa...';
+
+  @override
+  String get notifications_markAllRead => 'Weka zote zimesomwa';
+
+  @override
+  String get notifications_markAllAsRead => 'Weka zote kama zimesomwa';
+
+  @override
+  String get notifications_unread => 'Hazijasomwa';
+
+  @override
+  String get notifications_read => 'Zimesomwa';
+
+  @override
+  String get notifications_statusNew => 'Mpya';
 }

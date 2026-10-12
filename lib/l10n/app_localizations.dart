@@ -9989,6 +9989,144 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Top 5 Products - Last 30 Days'**
   String get insights_topProductsLast30;
+
+  /// Insights chart title.
+  ///
+  /// In en, this message translates to:
+  /// **'Services by Type - Last 30 Days'**
+  String get insights_servicesByTypeLast30;
+
+  /// Insights sales chart summary.
+  ///
+  /// In en, this message translates to:
+  /// **'Total: {amount} over 14 days'**
+  String insights_totalOver14(String amount);
+
+  /// Insights products chart summary.
+  ///
+  /// In en, this message translates to:
+  /// **'Top seller: {name} · {amount}'**
+  String insights_topSeller(String name, String amount);
+
+  /// Insights services chart summary.
+  ///
+  /// In en, this message translates to:
+  /// **'Most requested: {name} - {amount}'**
+  String insights_mostRequested(String name, String amount);
+
+  /// Insights sales chart when empty.
+  ///
+  /// In en, this message translates to:
+  /// **'No sales in the last 14 days.'**
+  String get insights_noSales14;
+
+  /// Insights products chart when empty.
+  ///
+  /// In en, this message translates to:
+  /// **'No sales in the last 30 days.'**
+  String get insights_noSales30;
+
+  /// Insights services chart when empty.
+  ///
+  /// In en, this message translates to:
+  /// **'No services in the last 30 days.'**
+  String get insights_noServices30;
+
+  /// Notifications screen subtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'All updates and alerts from your facility'**
+  String get notifications_subtitle;
+
+  /// Notifications when loading failed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not load alerts: {error}'**
+  String notifications_loadFailed(String error);
+
+  /// Notifications category card.
+  ///
+  /// In en, this message translates to:
+  /// **'Critical'**
+  String get notifications_catCritical;
+
+  /// Notifications category card.
+  ///
+  /// In en, this message translates to:
+  /// **'Stock'**
+  String get notifications_catStock;
+
+  /// Notifications category card.
+  ///
+  /// In en, this message translates to:
+  /// **'Payments'**
+  String get notifications_catPayments;
+
+  /// Notifications category card.
+  ///
+  /// In en, this message translates to:
+  /// **'Debts'**
+  String get notifications_catDebts;
+
+  /// Notifications category card.
+  ///
+  /// In en, this message translates to:
+  /// **'System'**
+  String get notifications_catSystem;
+
+  /// Notifications category card (everything else).
+  ///
+  /// In en, this message translates to:
+  /// **'Updates'**
+  String get notifications_catUpdates;
+
+  /// Notifications category card: how many are unread.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} unread'**
+  String notifications_unreadCount(int count);
+
+  /// Notifications category card with nothing unread.
+  ///
+  /// In en, this message translates to:
+  /// **'All read'**
+  String get notifications_allRead;
+
+  /// Notifications search box.
+  ///
+  /// In en, this message translates to:
+  /// **'Search notifications...'**
+  String get notifications_searchHint;
+
+  /// Notifications screen button.
+  ///
+  /// In en, this message translates to:
+  /// **'Mark all read'**
+  String get notifications_markAllRead;
+
+  /// Notifications dropdown button.
+  ///
+  /// In en, this message translates to:
+  /// **'Mark all as read'**
+  String get notifications_markAllAsRead;
+
+  /// Notifications status filter choice.
+  ///
+  /// In en, this message translates to:
+  /// **'Unread'**
+  String get notifications_unread;
+
+  /// Notifications status filter choice and status chip.
+  ///
+  /// In en, this message translates to:
+  /// **'Read'**
+  String get notifications_read;
+
+  /// Notifications status chip of an unread notification.
+  ///
+  /// In en, this message translates to:
+  /// **'New'**
+  String get notifications_statusNew;
 }
 
 class _AppLocalizationsDelegate

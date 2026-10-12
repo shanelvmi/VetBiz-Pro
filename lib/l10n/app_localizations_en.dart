@@ -5814,4 +5814,84 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get insights_topProductsLast30 => 'Top 5 Products - Last 30 Days';
+
+  @override
+  String get insights_servicesByTypeLast30 => 'Services by Type - Last 30 Days';
+
+  @override
+  String insights_totalOver14(String amount) {
+    return 'Total: $amount over 14 days';
+  }
+
+  @override
+  String insights_topSeller(String name, String amount) {
+    return 'Top seller: $name · $amount';
+  }
+
+  @override
+  String insights_mostRequested(String name, String amount) {
+    return 'Most requested: $name - $amount';
+  }
+
+  @override
+  String get insights_noSales14 => 'No sales in the last 14 days.';
+
+  @override
+  String get insights_noSales30 => 'No sales in the last 30 days.';
+
+  @override
+  String get insights_noServices30 => 'No services in the last 30 days.';
+
+  @override
+  String get notifications_subtitle =>
+      'All updates and alerts from your facility';
+
+  @override
+  String notifications_loadFailed(String error) {
+    return 'Could not load alerts: $error';
+  }
+
+  @override
+  String get notifications_catCritical => 'Critical';
+
+  @override
+  String get notifications_catStock => 'Stock';
+
+  @override
+  String get notifications_catPayments => 'Payments';
+
+  @override
+  String get notifications_catDebts => 'Debts';
+
+  @override
+  String get notifications_catSystem => 'System';
+
+  @override
+  String get notifications_catUpdates => 'Updates';
+
+  @override
+  String notifications_unreadCount(int count) {
+    return '$count unread';
+  }
+
+  @override
+  String get notifications_allRead => 'All read';
+
+  @override
+  String get notifications_searchHint => 'Search notifications...';
+
+  @override
+  String get notifications_markAllRead => 'Mark all read';
+
+  @override
+  String get notifications_markAllAsRead => 'Mark all as read';
+
+  @override
+  String get notifications_unread => 'Unread';
+
+  @override
+  String get notifications_read => 'Read';
+
+  @override
+  String get notifications_statusNew => 'New';
 }
