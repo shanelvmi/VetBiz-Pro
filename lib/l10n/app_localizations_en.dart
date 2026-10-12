@@ -3893,4 +3893,83 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get reports_savedNote =>
       'The report will be saved in the system and available for you and the admin to view or download at any time.';
+
+  @override
+  String get batch_mergedIntoExisting =>
+      'Added to the existing batch with this number and expiry';
+
+  @override
+  String get batch_added => 'New batch added';
+
+  @override
+  String get batch_addFailed => 'Couldn\'t add the batch';
+
+  @override
+  String get batch_addIntro =>
+      'Choose where this delivery goes - this is recorded as its own batch, separate from any existing stock.';
+
+  @override
+  String get batch_batchNoOptional => 'Batch No (optional)';
+
+  @override
+  String get batch_expiryDate => 'Expiry Date';
+
+  @override
+  String get batch_addStockTo => 'Add This Stock To';
+
+  @override
+  String get batch_storeHint =>
+      'Needs a separate \"Release\" step before it can be sold';
+
+  @override
+  String get batch_sellableOption => 'Sellable (straight to the shelf)';
+
+  @override
+  String get batch_sellableHint => 'Ready to sell immediately';
+
+  @override
+  String get batch_quantityReceived => 'Quantity Received';
+
+  @override
+  String get batch_validQuantity => 'Enter a valid quantity';
+
+  @override
+  String batch_buyPriceLabel(String currency) {
+    return 'Buy Price ($currency)';
+  }
+
+  @override
+  String get batch_addBatch => 'Add Batch';
+
+  @override
+  String get batch_moveToStock => 'Move to Stock';
+
+  @override
+  String get batch_removeFromSellable => 'Remove from Sellable';
+
+  @override
+  String batch_moveIntro(
+    String product,
+    String batchPart,
+    String expiryPart,
+    int quantity,
+    String unit,
+  ) {
+    return '$product$batchPart$expiryPart. Up to $quantity $unit can move back to Stock Store.';
+  }
+
+  @override
+  String batch_moveBatchPart(String batchNo) {
+    return ' - Batch $batchNo';
+  }
+
+  @override
+  String batch_moveExpiredPart(String date) {
+    return ' (expired $date)';
+  }
+
+  @override
+  String batch_moveExpiresPart(String date) {
+    return ' (expires $date)';
+  }
 }

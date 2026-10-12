@@ -6882,6 +6882,132 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'The report will be saved in the system and available for you and the admin to view or download at any time.'**
   String get reports_savedNote;
+
+  /// Message after adding a batch that matched an existing one.
+  ///
+  /// In en, this message translates to:
+  /// **'Added to the existing batch with this number and expiry'**
+  String get batch_mergedIntoExisting;
+
+  /// Message after adding a new batch.
+  ///
+  /// In en, this message translates to:
+  /// **'New batch added'**
+  String get batch_added;
+
+  /// Error message when adding a batch fails.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t add the batch'**
+  String get batch_addFailed;
+
+  /// Add New Batch, under the product name.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose where this delivery goes - this is recorded as its own batch, separate from any existing stock.'**
+  String get batch_addIntro;
+
+  /// Add New Batch field label.
+  ///
+  /// In en, this message translates to:
+  /// **'Batch No (optional)'**
+  String get batch_batchNoOptional;
+
+  /// Add New Batch field label.
+  ///
+  /// In en, this message translates to:
+  /// **'Expiry Date'**
+  String get batch_expiryDate;
+
+  /// Add New Batch, heading over the destination choice.
+  ///
+  /// In en, this message translates to:
+  /// **'Add This Stock To'**
+  String get batch_addStockTo;
+
+  /// Add New Batch, under the Stock Store choice.
+  ///
+  /// In en, this message translates to:
+  /// **'Needs a separate \"Release\" step before it can be sold'**
+  String get batch_storeHint;
+
+  /// Add New Batch destination choice.
+  ///
+  /// In en, this message translates to:
+  /// **'Sellable (straight to the shelf)'**
+  String get batch_sellableOption;
+
+  /// Add New Batch, under the Sellable choice.
+  ///
+  /// In en, this message translates to:
+  /// **'Ready to sell immediately'**
+  String get batch_sellableHint;
+
+  /// Add New Batch field label.
+  ///
+  /// In en, this message translates to:
+  /// **'Quantity Received'**
+  String get batch_quantityReceived;
+
+  /// Add New Batch quantity validation.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter a valid quantity'**
+  String get batch_validQuantity;
+
+  /// Add New Batch field label with the currency symbol.
+  ///
+  /// In en, this message translates to:
+  /// **'Buy Price ({currency})'**
+  String batch_buyPriceLabel(String currency);
+
+  /// Add New Batch save button and the dialog's screen-reader label.
+  ///
+  /// In en, this message translates to:
+  /// **'Add Batch'**
+  String get batch_addBatch;
+
+  /// Action that moves sellable stock of a batch back to the Stock Store (Products wording).
+  ///
+  /// In en, this message translates to:
+  /// **'Move to Stock'**
+  String get batch_moveToStock;
+
+  /// The same action, as worded in the Stock Store and Product Alerts.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove from Sellable'**
+  String get batch_removeFromSellable;
+
+  /// Move to Stock dialog text. batchPart and expiryPart are the texts below, or empty.
+  ///
+  /// In en, this message translates to:
+  /// **'{product}{batchPart}{expiryPart}. Up to {quantity} {unit} can move back to Stock Store.'**
+  String batch_moveIntro(
+    String product,
+    String batchPart,
+    String expiryPart,
+    int quantity,
+    String unit,
+  );
+
+  /// Part of batch_moveIntro (starts with a space).
+  ///
+  /// In en, this message translates to:
+  /// **' - Batch {batchNo}'**
+  String batch_moveBatchPart(String batchNo);
+
+  /// Part of batch_moveIntro (starts with a space).
+  ///
+  /// In en, this message translates to:
+  /// **' (expired {date})'**
+  String batch_moveExpiredPart(String date);
+
+  /// Part of batch_moveIntro (starts with a space).
+  ///
+  /// In en, this message translates to:
+  /// **' (expires {date})'**
+  String batch_moveExpiresPart(String date);
 }
 
 class _AppLocalizationsDelegate

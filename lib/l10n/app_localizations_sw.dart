@@ -3912,4 +3912,82 @@ class AppLocalizationsSw extends AppLocalizations {
   @override
   String get reports_savedNote =>
       'Ripoti itahifadhiwa kwenye mfumo na itapatikana kwako na kwa msimamizi kuitazama au kuipakua wakati wowote.';
+
+  @override
+  String get batch_mergedIntoExisting =>
+      'Imeongezwa kwenye batch iliyopo yenye namba na tarehe hii ya kuisha';
+
+  @override
+  String get batch_added => 'Batch mpya imeongezwa';
+
+  @override
+  String get batch_addFailed => 'Imeshindikana kuongeza batch';
+
+  @override
+  String get batch_addIntro =>
+      'Chagua mzigo huu uende wapi - unarekodiwa kama batch yake, tofauti na akiba iliyopo.';
+
+  @override
+  String get batch_batchNoOptional => 'Namba ya Batch (si lazima)';
+
+  @override
+  String get batch_expiryDate => 'Tarehe ya Kuisha';
+
+  @override
+  String get batch_addStockTo => 'Weka Bidhaa Hizi';
+
+  @override
+  String get batch_storeHint => 'Inahitaji hatua ya \"Toa\" kabla ya kuuzwa';
+
+  @override
+  String get batch_sellableOption => 'Za Kuuza (moja kwa moja rafuni)';
+
+  @override
+  String get batch_sellableHint => 'Tayari kuuzwa sasa hivi';
+
+  @override
+  String get batch_quantityReceived => 'Idadi Iliyopokelewa';
+
+  @override
+  String get batch_validQuantity => 'Weka idadi sahihi';
+
+  @override
+  String batch_buyPriceLabel(String currency) {
+    return 'Bei ya Kununua ($currency)';
+  }
+
+  @override
+  String get batch_addBatch => 'Ongeza Batch';
+
+  @override
+  String get batch_moveToStock => 'Rudisha Stoo';
+
+  @override
+  String get batch_removeFromSellable => 'Ondoa Kwenye za Kuuza';
+
+  @override
+  String batch_moveIntro(
+    String product,
+    String batchPart,
+    String expiryPart,
+    int quantity,
+    String unit,
+  ) {
+    return '$product$batchPart$expiryPart. Hadi $quantity $unit zinaweza kurudi Stoo.';
+  }
+
+  @override
+  String batch_moveBatchPart(String batchNo) {
+    return ' - Batch $batchNo';
+  }
+
+  @override
+  String batch_moveExpiredPart(String date) {
+    return ' (iliisha $date)';
+  }
+
+  @override
+  String batch_moveExpiresPart(String date) {
+    return ' (inaisha $date)';
+  }
 }
