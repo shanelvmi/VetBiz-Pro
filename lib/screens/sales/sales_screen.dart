@@ -265,14 +265,13 @@ class _SalesScreenState extends State<SalesScreen> {
                                   const SizedBox(width: AppSpacing.s8),
                                   Expanded(
                                     child: Text(
-                                      '${controller.newRecordsAvailable} new sale'
-                                      '${controller.newRecordsAvailable == 1 ? '' : 's'} available',
+                                      context.l10n.sales_newRecords(controller.newRecordsAvailable),
                                       style: TextStyle(fontSize: AppFontSize.f13, color: context.colors.primary),
                                     ),
                                   ),
                                   TextButton(
                                     onPressed: () => saleProvider.salesListController.refreshSession(),
-                                    child: const Text('Refresh'),
+                                    child: Text(context.l10n.common_refresh),
                                   ),
                                 ],
                               ),
@@ -290,7 +289,7 @@ class _SalesScreenState extends State<SalesScreen> {
                                             Icon(Icons.shopping_cart_outlined, size: AppIconSize.i64, color: context.colors.textDisabled),
                                             const SizedBox(height: AppSpacing.s16),
                                             Text(
-                                              _searchQuery.isEmpty ? 'No sales yet' : 'No sales match your filters',
+                                              _searchQuery.isEmpty ? context.l10n.sales_empty : context.l10n.sales_emptyFiltered,
                                               style: TextStyle(fontSize: AppFontSize.f18, color: context.colors.textMuted),
                                             ),
                                           ],
@@ -343,10 +342,10 @@ class _SalesScreenState extends State<SalesScreen> {
     final collected = summary?['totalCollected'] ?? 0.0;
 
     final metrics = [
-      ('Total Sales', '$count', Icons.receipt_long_outlined, context.colors.primary),
-      ('Revenue', Money.format(total), Icons.bar_chart, context.colors.info),
-      ('Collected', Money.format(collected), Icons.account_balance_wallet_outlined, context.colors.success),
-      ('Pending', Money.format(pending), Icons.pending_actions_outlined, context.colors.accent),
+      (context.l10n.reports_totalSales, '$count', Icons.receipt_long_outlined, context.colors.primary),
+      (context.l10n.reports_colRevenue, Money.format(total), Icons.bar_chart, context.colors.info),
+      (context.l10n.sales_collected, Money.format(collected), Icons.account_balance_wallet_outlined, context.colors.success),
+      (context.l10n.sales_pending, Money.format(pending), Icons.pending_actions_outlined, context.colors.accent),
     ];
 
     return LayoutBuilder(
@@ -410,7 +409,7 @@ class _SalesScreenState extends State<SalesScreen> {
             ),
             const SizedBox(height: AppSpacing.s4),
             Text(label, style: TextStyle(fontSize: AppFontSize.f11_5, color: context.colors.textMuted)),
-            Text('Last 30 days', style: TextStyle(fontSize: AppFontSize.f10_5, color: context.colors.textDisabled)),
+            Text(context.l10n.services_last30, style: TextStyle(fontSize: AppFontSize.f10_5, color: context.colors.textDisabled)),
           ],
         ),
       ),
@@ -423,7 +422,7 @@ class _SalesScreenState extends State<SalesScreen> {
         Navigator.push(context, MaterialPageRoute(builder: (_) => const SalesArchiveScreen()));
       },
       icon: const Icon(Icons.archive_outlined, size: AppIconSize.i16),
-      label: const Text('Archive'),
+      label: Text(context.l10n.services_archive),
       style: OutlinedButton.styleFrom(
         padding: const EdgeInsets.symmetric(horizontal: AppSpacing.s14, vertical: AppSpacing.s12),
         side: BorderSide(color: context.colors.textHint.withValues(alpha: AppAlpha.a30)),
@@ -435,6 +434,17 @@ class _SalesScreenState extends State<SalesScreen> {
 
   static const List<String> _dateFilterOptions = ['All time', 'Today', 'Last 7 days', 'Last 30 days', 'This month'];
   static const List<String> _statusFilterOptions = ['All', ...PaymentStatus.values];
+
+  // The options are the values: the sales list compares them. This is
+  // only what the dropdown shows.
+  String _dateFilterLabel(String value) => switch (value) {
+        'All time' => context.l10n.clients_allTime,
+        'Today' => context.l10n.common_today,
+        'Last 7 days' => context.l10n.services_last7,
+        'Last 30 days' => context.l10n.services_last30,
+        'This month' => context.l10n.services_thisMonth,
+        _ => value,
+      };
 
   Widget _buildFiltersToolbar(List<String> availableSellers) {
     final border = OutlineInputBorder(
@@ -451,7 +461,7 @@ class _SalesScreenState extends State<SalesScreen> {
           child: TextField(
             controller: _searchController,
             decoration: InputDecoration(
-              hintText: 'Search sale by product, client, invoice...',
+              hintText: context.l10n.sales_searchHint,
               hintStyle: const TextStyle(fontSize: AppFontSize.f13),
               prefixIcon: const Icon(Icons.search, size: AppIconSize.i20),
               filled: true,
@@ -483,7 +493,8 @@ class _SalesScreenState extends State<SalesScreen> {
         _toolbarDropdown<String>(
           value: _dateFilter,
           items: _dateFilterOptions,
-          label: 'Date',
+          label: context.l10n.common_date,
+          display: _dateFilterLabel,
           onChanged: (val) {
             setState(() => _dateFilter = val);
             _openSalesListSession();
@@ -493,7 +504,7 @@ class _SalesScreenState extends State<SalesScreen> {
         _toolbarDropdown<String>(
           value: _filterStatus,
           items: _statusFilterOptions,
-          label: 'Payment Status',
+          label: context.l10n.sales_paymentStatus,
           display: (v) => v == 'All' ? context.l10n.common_all : context.l10n.paymentStatusLabel(v),
           onChanged: (val) {
             setState(() => _filterStatus = val);
@@ -504,7 +515,8 @@ class _SalesScreenState extends State<SalesScreen> {
         _toolbarDropdown<String>(
           value: _sellerFilter,
           items: ['All', ...availableSellers],
-          label: 'Seller',
+          label: context.l10n.sales_seller,
+          display: (v) => v == 'All' ? context.l10n.common_all : v,
           onChanged: (val) {
             setState(() => _sellerFilter = val);
             _openSalesListSession();
@@ -524,7 +536,7 @@ class _SalesScreenState extends State<SalesScreen> {
               });
               _openSalesListSession();
             },
-            child: const Text('Reset'),
+            child: Text(context.l10n.common_reset),
           ),
         ],
       ],
@@ -552,7 +564,7 @@ class _SalesScreenState extends State<SalesScreen> {
           value: value,
           icon: Icon(Icons.arrow_drop_down, size: AppIconSize.i18, color: context.colors.primary),
           style: TextStyle(color: context.colors.textPrimary, fontSize: AppFontSize.f13),
-          items: items.map((v) => DropdownMenuItem(value: v, child: Text('$label: ${display?.call(v) ?? v}'))).toList(),
+          items: items.map((v) => DropdownMenuItem(value: v, child: Text(context.l10n.common_filterValue(label, display?.call(v) ?? '$v')))).toList(),
           onChanged: (val) {
             if (val != null) onChanged(val);
           },
@@ -571,14 +583,14 @@ class _SalesScreenState extends State<SalesScreen> {
       title: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Text('Sales Records', style: TextStyle(fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f19, color: context.colors.textPrimary)),
-          Text('Track and manage all sales transactions', style: TextStyle(fontSize: AppFontSize.f12, color: context.colors.textSecondary)),
+          Text(context.l10n.sales_title, style: TextStyle(fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f19, color: context.colors.textPrimary)),
+          Text(context.l10n.sales_subtitle, style: TextStyle(fontSize: AppFontSize.f12, color: context.colors.textSecondary)),
         ],
       ),
       actions: [
         IconButton(
           icon: const Icon(Icons.refresh),
-          tooltip: 'Refresh',
+          tooltip: context.l10n.common_refresh,
           onPressed: _loadRangeSummary,
         ),
         Padding(
@@ -593,7 +605,7 @@ class _SalesScreenState extends State<SalesScreen> {
               },
             ),
             icon: const Icon(Icons.add, size: AppIconSize.i18),
-            label: const Text('Record Sale'),
+            label: Text(context.l10n.sales_recordSale),
             style: ElevatedButton.styleFrom(
               backgroundColor: context.colors.primary,
               foregroundColor: context.colors.background,
@@ -619,13 +631,13 @@ class _SalesScreenState extends State<SalesScreen> {
           decoration: BoxDecoration(border: Border(bottom: BorderSide(color: context.colors.textHint.withValues(alpha: AppAlpha.a20)))),
           child: Row(
             children: [
-              _headerCell('Date', flex: 3),
-              _headerCell('Invoice No.', flex: 2),
-              _headerCell('Client', flex: 2),
-              _headerCell('Items', flex: 3),
-              _headerCell('Amount', flex: 2),
-              _headerCell('Payment Status', flex: 2),
-              _headerCell('Seller', flex: 2),
+              _headerCell(context.l10n.common_date, flex: 3),
+              _headerCell(context.l10n.sales_invoiceNo, flex: 2),
+              _headerCell(context.l10n.clients_client, flex: 2),
+              _headerCell(context.l10n.reports_colItems, flex: 3),
+              _headerCell(context.l10n.common_amount, flex: 2),
+              _headerCell(context.l10n.sales_paymentStatus, flex: 2),
+              _headerCell(context.l10n.sales_seller, flex: 2),
               _headerCell('', flex: 1),
             ],
           ),
@@ -682,7 +694,7 @@ class _SalesScreenState extends State<SalesScreen> {
             ),
             Expanded(
               flex: 2,
-              child: Text(sale.clientName ?? 'Walk-in', style: const TextStyle(fontSize: AppFontSize.f13), maxLines: 1, overflow: TextOverflow.ellipsis),
+              child: Text(sale.clientName ?? context.l10n.common_walkIn, style: const TextStyle(fontSize: AppFontSize.f13), maxLines: 1, overflow: TextOverflow.ellipsis),
             ),
             Expanded(
               flex: 3,
@@ -691,9 +703,9 @@ class _SalesScreenState extends State<SalesScreen> {
                   : Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text('${firstItem.name} \u00d7 ${firstItem.quantity}',
+                        Text(context.l10n.sales_firstItem(firstItem.name, '${firstItem.quantity}'),
                             style: const TextStyle(fontSize: AppFontSize.f13), maxLines: 1, overflow: TextOverflow.ellipsis),
-                        Text('${sale.items.length} item${sale.items.length == 1 ? '' : 's'}',
+                        Text(context.l10n.sales_itemCount(sale.items.length),
                             style: TextStyle(fontSize: AppFontSize.f11_5, color: context.colors.textHint)),
                       ],
                     ),
@@ -729,9 +741,9 @@ class _SalesScreenState extends State<SalesScreen> {
                   }
                 },
                 itemBuilder: (context) => [
-                  const PopupMenuItem(value: 'view', child: Text('View Details')),
+                  PopupMenuItem(value: 'view', child: Text(context.l10n.common_viewDetails)),
                   if (Provider.of<UserRoleProvider>(context, listen: false).isAdmin)
-                    PopupMenuItem(value: 'delete', child: Text('Delete', style: TextStyle(color: context.colors.dangerSoft))),
+                    PopupMenuItem(value: 'delete', child: Text(context.l10n.common_delete, style: TextStyle(color: context.colors.dangerSoft))),
                 ],
               ),
             ),
@@ -759,7 +771,7 @@ class _SalesScreenState extends State<SalesScreen> {
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           Text(
-            itemCount == 0 ? 'No sales' : 'Showing $pageStart to $pageEnd',
+            itemCount == 0 ? context.l10n.sales_none : context.l10n.common_showingRange(pageStart, pageEnd),
             style: TextStyle(fontSize: AppFontSize.f12_5, color: context.colors.textMuted),
           ),
           Row(
@@ -768,7 +780,7 @@ class _SalesScreenState extends State<SalesScreen> {
                 child: DropdownButton<int>(
                   value: pageSize,
                   items: const [10, 25, 50]
-                      .map((n) => DropdownMenuItem(value: n, child: Text('$n per page')))
+                      .map((n) => DropdownMenuItem(value: n, child: Text(context.l10n.common_perPage(n))))
                       .toList(),
                   onChanged: (val) {
                     if (val != null) saleProvider.salesListController.setPageSize(val);
@@ -780,7 +792,7 @@ class _SalesScreenState extends State<SalesScreen> {
                 icon: const Icon(Icons.chevron_left),
                 onPressed: controller.hasPreviousPage ? () => controller.goToPreviousPage() : null,
               ),
-              Text('Page ${controller.currentPage}', style: const TextStyle(fontSize: AppFontSize.f13)),
+              Text(context.l10n.common_page(controller.currentPage), style: const TextStyle(fontSize: AppFontSize.f13)),
               IconButton(
                 icon: controller.isLoading
                     ? const SizedBox(width: AppSpacing.s16, height: 16, child: CircularProgressIndicator(strokeWidth: 2))
@@ -804,13 +816,13 @@ class _SalesScreenState extends State<SalesScreen> {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Delete Sale?'),
-        content: Text('This permanently deletes ${_invoiceNo(sale)} and restores its stock. This cannot be undone.'),
+        title: Text(context.l10n.sales_deleteTitle),
+        content: Text(context.l10n.sales_deleteBody(_invoiceNo(sale))),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancel')),
+          TextButton(onPressed: () => Navigator.pop(ctx, false), child: Text(context.l10n.common_cancel)),
           TextButton(
             onPressed: () => Navigator.pop(ctx, true),
-            child: Text('Delete', style: TextStyle(color: context.colors.dangerSoft)),
+            child: Text(context.l10n.common_delete, style: TextStyle(color: context.colors.dangerSoft)),
           ),
         ],
       ),
@@ -827,9 +839,9 @@ class _SalesScreenState extends State<SalesScreen> {
       // A soft delete into trash_sales, but no Undo: restoring from Trash
       // puts the sale back without taking its stock out again or
       // re-creating its debt (listed in design-open-questions.md).
-      AppFeedback.success('Sale deleted');
+      AppFeedback.success(L10n.current.sales_deleted);
     } catch (e, st) {
-      AppFeedback.error("Couldn't delete the sale", error: e, stackTrace: st);
+      AppFeedback.error(L10n.current.sales_deleteFailed, error: e, stackTrace: st);
     }
   }
 
@@ -852,7 +864,7 @@ class _SalesScreenState extends State<SalesScreen> {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                const Text('Sale Details', style: TextStyle(fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f16)),
+                Text(context.l10n.sales_details, style: const TextStyle(fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f16)),
                 IconButton(
                   icon: const Icon(Icons.close, size: AppIconSize.i20),
                   onPressed: () => setState(() => _selectedSale = null),
@@ -877,8 +889,8 @@ class _SalesScreenState extends State<SalesScreen> {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                const Text('Items', style: TextStyle(fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f13_5)),
-                Text('${sale.items.length} item${sale.items.length == 1 ? '' : 's'}',
+                Text(context.l10n.reports_colItems, style: const TextStyle(fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f13_5)),
+                Text(context.l10n.sales_itemCount(sale.items.length),
                     style: TextStyle(fontSize: AppFontSize.f12, color: context.colors.textMuted)),
               ],
             ),
@@ -893,7 +905,7 @@ class _SalesScreenState extends State<SalesScreen> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(item.name, style: const TextStyle(fontSize: AppFontSize.f13_5, fontWeight: AppFontWeight.semibold)),
-                            Text('\u00d7 ${item.quantity}', style: TextStyle(fontSize: AppFontSize.f12, color: context.colors.textMuted)),
+                            Text(context.l10n.sales_quantityTimes('${item.quantity}'), style: TextStyle(fontSize: AppFontSize.f12, color: context.colors.textMuted)),
                           ],
                         ),
                       ),
@@ -909,17 +921,18 @@ class _SalesScreenState extends State<SalesScreen> {
                   ),
                 )),
             const Divider(height: 24),
-            _totalsRow('Subtotal', Money.format(subtotal)),
-            _totalsRow('Discount', Money.format(totalDiscount)),
-            _totalsRow('Total Amount', Money.format(sale.totalAmount), bold: true, color: context.colors.primary),
+            _totalsRow(context.l10n.sales_subtotal, Money.format(subtotal)),
+            _totalsRow(context.l10n.sales_discount, Money.format(totalDiscount)),
+            _totalsRow(context.l10n.sales_totalAmount, Money.format(sale.totalAmount), bold: true, color: context.colors.primary),
             const SizedBox(height: AppSpacing.s10),
-            _totalsRow('Paid', Money.format(sale.totalPaid), color: context.colors.success),
-            _totalsRow('Balance', Money.format(balance), bold: true),
+            _totalsRow(context.l10n.sales_paid, Money.format(sale.totalPaid), color: context.colors.success),
+            _totalsRow(context.l10n.sales_balance, Money.format(balance), bold: true),
             const Divider(height: 24),
-            _detailField(Icons.person_outline, 'Client', sale.clientName ?? 'Walk-in', subtitle: client?.phone),
-            _detailField(Icons.badge_outlined, 'Seller', sale.soldByName),
-            _detailField(Icons.payment_outlined, 'Payment Method', context.l10n.paymentMethodLabel(sale.paymentMethod ?? 'Not recorded')),
-            _detailField(Icons.edit_note_outlined, 'Notes', (sale.notes?.isNotEmpty == true) ? sale.notes! : '-'),
+            _detailField(Icons.person_outline, context.l10n.clients_client, sale.clientName ?? context.l10n.common_walkIn, subtitle: client?.phone),
+            _detailField(Icons.badge_outlined, context.l10n.sales_seller, sale.soldByName),
+            _detailField(Icons.payment_outlined, context.l10n.payments_method,
+                sale.paymentMethod != null ? context.l10n.paymentMethodLabel(sale.paymentMethod!) : context.l10n.team_notRecorded),
+            _detailField(Icons.edit_note_outlined, context.l10n.common_notes, (sale.notes?.isNotEmpty == true) ? sale.notes! : '-'),
             const SizedBox(height: AppSpacing.s20),
             Row(
               children: [
@@ -929,7 +942,7 @@ class _SalesScreenState extends State<SalesScreen> {
                       Navigator.push(context, MaterialPageRoute(builder: (_) => ReceiptPreviewScreen(sale: sale)));
                     },
                     icon: const Icon(Icons.print_outlined, size: AppIconSize.i16),
-                    label: const Text('Print'),
+                    label: Text(context.l10n.common_print),
                   ),
                 ),
                 const SizedBox(width: AppSpacing.s8),
@@ -939,7 +952,7 @@ class _SalesScreenState extends State<SalesScreen> {
                       Navigator.push(context, MaterialPageRoute(builder: (_) => ReceiptPreviewScreen(sale: sale)));
                     },
                     icon: const Icon(Icons.share_outlined, size: AppIconSize.i16),
-                    label: const Text('Share'),
+                    label: Text(context.l10n.common_share),
                   ),
                 ),
                 if (Provider.of<UserRoleProvider>(context).isAdmin) ...[
@@ -948,7 +961,7 @@ class _SalesScreenState extends State<SalesScreen> {
                     child: OutlinedButton.icon(
                       onPressed: () => _confirmDeleteSale(sale),
                       icon: Icon(Icons.delete_outline, size: AppIconSize.i16, color: context.colors.dangerSoft),
-                      label: Text('Delete', style: TextStyle(color: context.colors.dangerSoft)),
+                      label: Text(context.l10n.common_delete, style: TextStyle(color: context.colors.dangerSoft)),
                       style: OutlinedButton.styleFrom(side: BorderSide(color: context.colors.danger.withValues(alpha: AppAlpha.a50))),
                     ),
                   ),

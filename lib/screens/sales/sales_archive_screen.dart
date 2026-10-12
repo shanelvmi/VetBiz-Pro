@@ -263,12 +263,12 @@ class _SalesArchiveScreenState extends State<SalesArchiveScreen> {
                                     Icon(Icons.archive_outlined, size: AppIconSize.i64, color: context.colors.textDisabled),
                                     const SizedBox(height: AppSpacing.s16),
                                     Text(
-                                      'No archived sales found',
+                                      context.l10n.sales_archiveEmpty,
                                       style: TextStyle(fontSize: AppFontSize.f18, color: context.colors.textMuted),
                                     ),
                                     const SizedBox(height: AppSpacing.s8),
                                     Text(
-                                      'Try a different search or date range',
+                                      context.l10n.sales_archiveEmptyHint,
                                       style: TextStyle(fontSize: AppFontSize.f14, color: context.colors.textHint),
                                     ),
                                   ],
@@ -307,8 +307,8 @@ class _SalesArchiveScreenState extends State<SalesArchiveScreen> {
       title: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Text('Sales Archive', style: TextStyle(fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f19, color: context.colors.textPrimary)),
-          Text('Sales archived after $_archiveCutoffDays days', style: TextStyle(fontSize: AppFontSize.f12, color: context.colors.textSecondary)),
+          Text(context.l10n.sales_archiveTitle, style: TextStyle(fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f19, color: context.colors.textPrimary)),
+          Text(context.l10n.sales_archiveSubtitle(_archiveCutoffDays), style: TextStyle(fontSize: AppFontSize.f12, color: context.colors.textSecondary)),
         ],
       ),
       actions: [
@@ -317,7 +317,7 @@ class _SalesArchiveScreenState extends State<SalesArchiveScreen> {
           child: OutlinedButton.icon(
             onPressed: _showSearchDialog,
             icon: const Icon(Icons.date_range_outlined, size: AppIconSize.i16),
-            label: const Text('Date Range'),
+            label: Text(context.l10n.export_dateRange),
           ),
         ),
       ],
@@ -340,12 +340,12 @@ class _SalesArchiveScreenState extends State<SalesArchiveScreen> {
           Expanded(
             child: Text(
               _searchStart != null && _searchEnd != null
-                  ? 'Period: ${AppDateFormat.date.format(_searchStart!)} \u2013 ${AppDateFormat.date.format(_searchEnd!)}'
-                  : 'Archived sales',
+                  ? context.l10n.services_archivePeriod(AppDateFormat.date.format(_searchStart!), AppDateFormat.date.format(_searchEnd!))
+                  : context.l10n.sales_archivedSales,
               style: TextStyle(fontSize: AppFontSize.f12_5, color: context.colors.textSoft),
             ),
           ),
-          Text('$foundCount found', style: TextStyle(fontSize: AppFontSize.f12_5, fontWeight: AppFontWeight.semibold, color: context.colors.primary)),
+          Text(context.l10n.services_foundCount(foundCount), style: TextStyle(fontSize: AppFontSize.f12_5, fontWeight: AppFontWeight.semibold, color: context.colors.primary)),
           const SizedBox(width: AppSpacing.s12),
           Text(Money.format(totalAmount), style: TextStyle(fontSize: AppFontSize.f12_5, fontWeight: AppFontWeight.bold, color: context.colors.primary)),
         ],
@@ -361,7 +361,7 @@ class _SalesArchiveScreenState extends State<SalesArchiveScreen> {
     return TextField(
       controller: _searchController,
       decoration: InputDecoration(
-        hintText: 'Search sale by product, client, invoice...',
+        hintText: context.l10n.sales_searchHint,
         hintStyle: const TextStyle(fontSize: AppFontSize.f13),
         prefixIcon: const Icon(Icons.search, size: AppIconSize.i20),
         filled: true,
@@ -399,13 +399,13 @@ class _SalesArchiveScreenState extends State<SalesArchiveScreen> {
           decoration: BoxDecoration(border: Border(bottom: BorderSide(color: context.colors.textHint.withValues(alpha: AppAlpha.a20)))),
           child: Row(
             children: [
-              _headerCell('Date', flex: 3),
-              _headerCell('Invoice No.', flex: 2),
-              _headerCell('Client', flex: 2),
-              _headerCell('Items', flex: 3),
-              _headerCell('Amount', flex: 2),
-              _headerCell('Payment Status', flex: 2),
-              _headerCell('Seller', flex: 2),
+              _headerCell(context.l10n.common_date, flex: 3),
+              _headerCell(context.l10n.sales_invoiceNo, flex: 2),
+              _headerCell(context.l10n.clients_client, flex: 2),
+              _headerCell(context.l10n.reports_colItems, flex: 3),
+              _headerCell(context.l10n.common_amount, flex: 2),
+              _headerCell(context.l10n.sales_paymentStatus, flex: 2),
+              _headerCell(context.l10n.sales_seller, flex: 2),
             ],
           ),
         ),
@@ -465,7 +465,7 @@ class _SalesArchiveScreenState extends State<SalesArchiveScreen> {
             ),
             Expanded(
               flex: 2,
-              child: Text(sale['clientName'] ?? 'Walk-in', style: const TextStyle(fontSize: AppFontSize.f13), maxLines: 1, overflow: TextOverflow.ellipsis),
+              child: Text(sale['clientName'] ?? context.l10n.common_walkIn, style: const TextStyle(fontSize: AppFontSize.f13), maxLines: 1, overflow: TextOverflow.ellipsis),
             ),
             Expanded(
               flex: 3,
@@ -474,9 +474,9 @@ class _SalesArchiveScreenState extends State<SalesArchiveScreen> {
                   : Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text('${firstItem['name']} \u00d7 ${firstItem['quantity']}',
+                        Text(context.l10n.sales_firstItem('${firstItem['name']}', '${firstItem['quantity']}'),
                             style: const TextStyle(fontSize: AppFontSize.f13), maxLines: 1, overflow: TextOverflow.ellipsis),
-                        Text('${items.length} item${items.length == 1 ? '' : 's'}',
+                        Text(context.l10n.sales_itemCount(items.length),
                             style: TextStyle(fontSize: AppFontSize.f11_5, color: context.colors.textHint)),
                       ],
                     ),
@@ -498,7 +498,7 @@ class _SalesArchiveScreenState extends State<SalesArchiveScreen> {
             ),
             Expanded(
               flex: 2,
-              child: Text(sale['soldByName'] ?? 'Unknown', style: const TextStyle(fontSize: AppFontSize.f13), maxLines: 1, overflow: TextOverflow.ellipsis),
+              child: Text(sale['soldByName'] ?? context.l10n.common_unknown, style: const TextStyle(fontSize: AppFontSize.f13), maxLines: 1, overflow: TextOverflow.ellipsis),
             ),
           ],
         ),
@@ -524,8 +524,8 @@ class _SalesArchiveScreenState extends State<SalesArchiveScreen> {
         children: [
           Text(
             totalFiltered == 0
-                ? 'No sales'
-                : 'Showing ${pageStart + 1} to $pageEnd of $totalFiltered${_hasMore ? '+' : ''} sales',
+                ? context.l10n.sales_none
+                : context.l10n.sales_archiveShowing(pageStart + 1, pageEnd, totalFiltered, _hasMore ? '+' : ''),
             style: TextStyle(fontSize: AppFontSize.f12_5, color: context.colors.textMuted),
           ),
           Row(
@@ -534,7 +534,7 @@ class _SalesArchiveScreenState extends State<SalesArchiveScreen> {
                 child: DropdownButton<int>(
                   value: _displayPageSize,
                   items: const [10, 25, 50]
-                      .map((n) => DropdownMenuItem(value: n, child: Text('$n per page')))
+                      .map((n) => DropdownMenuItem(value: n, child: Text(context.l10n.common_perPage(n))))
                       .toList(),
                   onChanged: (val) {
                     if (val != null) {
@@ -551,7 +551,7 @@ class _SalesArchiveScreenState extends State<SalesArchiveScreen> {
                 icon: const Icon(Icons.chevron_left),
                 onPressed: _currentPageIndex > 0 ? () => setState(() => _currentPageIndex--) : null,
               ),
-              Text('Page ${_currentPageIndex + 1} of $totalPages', style: const TextStyle(fontSize: AppFontSize.f13)),
+              Text(context.l10n.services_pageOf(_currentPageIndex + 1, totalPages), style: const TextStyle(fontSize: AppFontSize.f13)),
               IconButton(
                 icon: _isLoadingMore
                     ? const SizedBox(width: AppSpacing.s16, height: 16, child: CircularProgressIndicator(strokeWidth: 2))
@@ -598,7 +598,7 @@ class _SalesArchiveScreenState extends State<SalesArchiveScreen> {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                const Text('Sale Details', style: TextStyle(fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f16)),
+                Text(context.l10n.sales_details, style: const TextStyle(fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f16)),
                 IconButton(
                   icon: const Icon(Icons.close, size: AppIconSize.i20),
                   onPressed: () => setState(() => _selectedSale = null),
@@ -623,8 +623,8 @@ class _SalesArchiveScreenState extends State<SalesArchiveScreen> {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                const Text('Items', style: TextStyle(fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f13_5)),
-                Text('${items.length} item${items.length == 1 ? '' : 's'}',
+                Text(context.l10n.reports_colItems, style: const TextStyle(fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f13_5)),
+                Text(context.l10n.sales_itemCount(items.length),
                     style: TextStyle(fontSize: AppFontSize.f12, color: context.colors.textMuted)),
               ],
             ),
@@ -641,8 +641,8 @@ class _SalesArchiveScreenState extends State<SalesArchiveScreen> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(item['name'] ?? 'Item', style: const TextStyle(fontSize: AppFontSize.f13_5, fontWeight: AppFontWeight.semibold)),
-                          Text('\u00d7 ${quantity.toInt()}', style: TextStyle(fontSize: AppFontSize.f12, color: context.colors.textMuted)),
+                          Text(item['name'] ?? context.l10n.sales_item, style: const TextStyle(fontSize: AppFontSize.f13_5, fontWeight: AppFontWeight.semibold)),
+                          Text(context.l10n.sales_quantityTimes('${quantity.toInt()}'), style: TextStyle(fontSize: AppFontSize.f12, color: context.colors.textMuted)),
                         ],
                       ),
                     ),
@@ -652,17 +652,18 @@ class _SalesArchiveScreenState extends State<SalesArchiveScreen> {
               );
             }),
             const Divider(height: 24),
-            _totalsRow('Subtotal', Money.format(subtotal)),
-            _totalsRow('Discount', Money.format(totalDiscount)),
-            _totalsRow('Total Amount', Money.format(total), bold: true, color: context.colors.primary),
+            _totalsRow(context.l10n.sales_subtotal, Money.format(subtotal)),
+            _totalsRow(context.l10n.sales_discount, Money.format(totalDiscount)),
+            _totalsRow(context.l10n.sales_totalAmount, Money.format(total), bold: true, color: context.colors.primary),
             const SizedBox(height: AppSpacing.s10),
-            _totalsRow('Paid', Money.format(paid), color: context.colors.success),
-            _totalsRow('Balance', Money.format(balance), bold: true),
+            _totalsRow(context.l10n.sales_paid, Money.format(paid), color: context.colors.success),
+            _totalsRow(context.l10n.sales_balance, Money.format(balance), bold: true),
             const Divider(height: 24),
-            _detailField(Icons.person_outline, 'Client', sale['clientName'] ?? 'Walk-in'),
-            _detailField(Icons.badge_outlined, 'Seller', sale['soldByName'] ?? 'Unknown'),
-            _detailField(Icons.payment_outlined, 'Payment Method', context.l10n.paymentMethodLabel((sale['paymentMethod'] as String?) ?? 'Not recorded')),
-            _detailField(Icons.edit_note_outlined, 'Notes',
+            _detailField(Icons.person_outline, context.l10n.clients_client, sale['clientName'] ?? context.l10n.common_walkIn),
+            _detailField(Icons.badge_outlined, context.l10n.sales_seller, sale['soldByName'] ?? context.l10n.common_unknown),
+            _detailField(Icons.payment_outlined, context.l10n.payments_method,
+                (sale['paymentMethod'] as String?) != null ? context.l10n.paymentMethodLabel(sale['paymentMethod'] as String) : context.l10n.team_notRecorded),
+            _detailField(Icons.edit_note_outlined, context.l10n.common_notes,
                 (sale['notes'] as String?)?.isNotEmpty == true ? sale['notes'] as String : '-'),
             const SizedBox(height: AppSpacing.s20),
             Row(
@@ -671,7 +672,7 @@ class _SalesArchiveScreenState extends State<SalesArchiveScreen> {
                   child: OutlinedButton.icon(
                     onPressed: () => _openReceipt(sale),
                     icon: const Icon(Icons.print_outlined, size: AppIconSize.i16),
-                    label: const Text('Print'),
+                    label: Text(context.l10n.common_print),
                   ),
                 ),
                 const SizedBox(width: AppSpacing.s8),
@@ -679,7 +680,7 @@ class _SalesArchiveScreenState extends State<SalesArchiveScreen> {
                   child: OutlinedButton.icon(
                     onPressed: () => _openReceipt(sale),
                     icon: const Icon(Icons.share_outlined, size: AppIconSize.i16),
-                    label: const Text('Share'),
+                    label: Text(context.l10n.common_share),
                   ),
                 ),
               ],
@@ -772,7 +773,7 @@ class _SearchArchiveDialogState extends State<_SearchArchiveDialog> {
 
     return AlertDialog(
       title: Text(
-        'Search Archived Sales',
+        context.l10n.sales_searchArchiveTitle,
         style: TextStyle(color: context.colors.primary),
       ),
       content: SingleChildScrollView(
@@ -800,9 +801,7 @@ class _SearchArchiveDialogState extends State<_SearchArchiveDialog> {
                   const SizedBox(width: AppSpacing.s8),
                   Expanded(
                     child: Text(
-                      'Archived sales are always fully paid - sales still '
-                      'owing money stay in your active Sales tab regardless '
-                      'of age.',
+                      context.l10n.sales_archiveFullyPaidNote,
                       style: TextStyle(
                           fontSize: AppFontSize.f12, color: context.colors.primary),
                     ),
@@ -811,16 +810,16 @@ class _SearchArchiveDialogState extends State<_SearchArchiveDialog> {
               ),
             ),
             const SizedBox(height: AppSpacing.s16),
-            const Text(
-              'Search By:',
-              style: TextStyle(fontWeight: AppFontWeight.bold),
+            Text(
+              context.l10n.services_searchBy,
+              style: const TextStyle(fontWeight: AppFontWeight.bold),
             ),
             const SizedBox(height: AppSpacing.s8),
             Row(
               children: [
                 Expanded(
                   child: ChoiceChip(
-                    label: const Text('Specific Month'),
+                    label: Text(context.l10n.services_specificMonth),
                     selected: _dateMode == 'month',
                     onSelected: (selected) {
                       if (selected) {
@@ -834,7 +833,7 @@ class _SearchArchiveDialogState extends State<_SearchArchiveDialog> {
                 const SizedBox(width: AppSpacing.s8),
                 Expanded(
                   child: ChoiceChip(
-                    label: const Text('Date Range'),
+                    label: Text(context.l10n.export_dateRange),
                     selected: _dateMode == 'range',
                     onSelected: (selected) {
                       if (selected) {
@@ -849,17 +848,16 @@ class _SearchArchiveDialogState extends State<_SearchArchiveDialog> {
             ),
             const SizedBox(height: AppSpacing.s8),
             Text(
-              'Only sales before $cutoffLabel have reached the archive - '
-              'anything newer is still in your active Sales list.',
+              context.l10n.sales_archiveCutoffNote(cutoffLabel),
               style: TextStyle(fontSize: AppFontSize.f11, color: context.colors.textMuted),
             ),
             const SizedBox(height: AppSpacing.s16),
 
             // ───────────── Month mode ─────────────
             if (_dateMode == 'month') ...[
-              const Text(
-                'Select Month:',
-                style: TextStyle(fontWeight: AppFontWeight.bold),
+              Text(
+                context.l10n.services_selectMonth,
+                style: const TextStyle(fontWeight: AppFontWeight.bold),
               ),
               const SizedBox(height: AppSpacing.s8),
               InkWell(
@@ -894,9 +892,9 @@ class _SearchArchiveDialogState extends State<_SearchArchiveDialog> {
 
             // ───────────── Range mode ─────────────
             else ...[
-              const Text(
-                'Start Date:',
-                style: TextStyle(fontWeight: AppFontWeight.bold),
+              Text(
+                context.l10n.dateRange_start,
+                style: const TextStyle(fontWeight: AppFontWeight.bold),
               ),
               const SizedBox(height: AppSpacing.s8),
               InkWell(
@@ -928,9 +926,9 @@ class _SearchArchiveDialogState extends State<_SearchArchiveDialog> {
                 ),
               ),
               const SizedBox(height: AppSpacing.s12),
-              const Text(
-                'End Date:',
-                style: TextStyle(fontWeight: AppFontWeight.bold),
+              Text(
+                context.l10n.dateRange_end,
+                style: const TextStyle(fontWeight: AppFontWeight.bold),
               ),
               const SizedBox(height: AppSpacing.s8),
               InkWell(
@@ -971,7 +969,7 @@ class _SearchArchiveDialogState extends State<_SearchArchiveDialog> {
           style: TextButton.styleFrom(
             foregroundColor: context.colors.primary,
           ),
-          child: const Text('Cancel'),
+          child: Text(context.l10n.common_cancel),
         ),
         ElevatedButton(
           onPressed: () {
@@ -1013,7 +1011,7 @@ class _SearchArchiveDialogState extends State<_SearchArchiveDialog> {
             ),
             foregroundColor: WidgetStateProperty.all(context.colors.background),
           ),
-          child: const Text('Search'),
+          child: Text(context.l10n.common_search),
         ),
       ],
     );
