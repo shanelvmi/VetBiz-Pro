@@ -1710,3 +1710,132 @@ notifications_allCaughtUpHint,"No urgent announcements, subscription issues, or 
 notifications_catPayment,Payment,Malipo,Notifications table: category of one notification.,draft
 notifications_catDebt,Debt,Deni,Notifications table: category of one notification.,draft
 notifications_catUpdate,Update,Taarifa,Notifications table: category of one notification.,draft
+selectFacility_slowLoad,This is taking longer than expected. Check your connection and try again.,Hii inachukua muda mrefu kuliko kawaida. Angalia muunganisho wako kisha ujaribu tena.,Select Facility screen: loading the facilities timed out.,draft
+selectFacility_loadFailed,Couldn't load your facilities. {error},Imeshindwa kupakia vituo vyako. {error},"Select Facility screen: loading failed; error is the friendly reason.",draft
+selectFacility_title,Select Facility,Chagua Kituo,Select Facility screen title.,draft
+selectFacility_proceed,Proceed,Endelea,Select Facility screen button after choosing one.,draft
+selectFacility_unnamed,Unnamed,Bila jina,Select Facility card: a facility with no name.,draft
+selectFacility_selected,Selected,Imechaguliwa,Select Facility card hint: this one is chosen.,draft
+selectFacility_clickToSelect,Click to select,Bofya kuchagua,Select Facility card hint on hover.,draft
+facilities_noneFound,No facilities found.,Hakuna vituo vilivyopatikana.,Facilities and Select Facility screens: the account has no facility.,draft
+facilityPicker_tagline,Manage. Care. Grow.,Simamia. Hudumia. Kua.,"Facility picker top bar, under the app name.",draft
+facilityPicker_logOut,Log Out,Toka,Facility picker profile menu item.,draft
+facilityPicker_title,Select Your Facility,Chagua Kituo Chako,Facility picker heading.,draft
+facilityPicker_intro,Choose the facility you want to manage. You can switch between your facilities at any time from the top menu.,Chagua kituo unachotaka kusimamia. Unaweza kuhamia kituo kingine wakati wowote kupitia menyu ya juu.,"Facility picker, under the heading.",draft
+facilityPicker_searchHint,"Search facility by name, location or type...","Tafuta kituo kwa jina, mahali au aina...",Facility picker search field.,draft
+facilityPicker_allTypes,All Types,Aina Zote,Facility picker type filter: no filter.,draft
+facilityPicker_filter,Filter,Chuja,Facility picker type filter button when nothing is chosen.,draft
+facilityPicker_unnamedFacility,Unnamed Facility,Kituo Bila Jina,Facility picker card: a facility with no name.,draft
+facilityPicker_typeNotSet,Type not set,Aina haijawekwa,Facility picker card: no facility type.,draft
+facilityPicker_locationNotSet,Location not set,Mahali hapajawekwa,Facility picker card: no address.,draft
+facilityPicker_staffCount,{count} Staff,Wafanyakazi {count},Facility picker card: how many people work there.,draft
+facilityPicker_openFacility,Open Facility,Fungua Kituo,Facility picker card button.,draft
+facilityPicker_setAsDefault,Set as Default,Weka kama Chaguo-msingi,Facility picker card menu item.,draft
+facilityPicker_default,Default,Chaguo-msingi,Facility picker card badge on the default facility.,draft
+facilityPicker_footer,Secure  •  Reliable  •  Built for Veterinary Businesses,Salama  •  Inaaminika  •  Imejengwa kwa Biashara za Mifugo,Facility picker footer.,draft
+facilityOwnership_owned,Owned,Inamilikiwa,Facility ownership (stored value 'Owned'): Edit Facility dropdown and About card.,draft
+facilityOwnership_rented,Rented,Imekodiwa,Facility ownership (stored value 'Rented'): Edit Facility dropdown and About card.,draft
+facilities_loadFailed,Couldn't load facilities,Imeshindwa kupakia vituo,Facilities screen: loading failed.,draft
+facilities_limitTitle,Facility Limit Reached,Kikomo cha Vituo Kimefikiwa,Facilities screen: dialog when the account has the most facilities allowed.,draft
+facilities_limitMessage,You've reached the limit of {max} facilities per account. Contact support if you need more.,Umefikia kikomo cha vituo {max} kwa kila akaunti. Wasiliana na huduma kwa wateja ukihitaji zaidi.,Facilities screen: facility limit dialog.,draft
+facilities_addTitle,Add Facility,Ongeza Kituo,Facilities screen: top bar button and Add dialog title.,draft
+facilities_logoOptional,Logo (optional),Nembo (si lazima),"Add Facility dialog, under the logo picker.",draft
+facilities_nameLabel,Facility Name,Jina la Kituo,Add and Edit Facility dialogs: name field.,draft
+facilities_nameAndTypeRequired,Enter a name and select a type,Weka jina na uchague aina,Add and Edit Facility dialogs: name or type missing.,draft
+facilities_adding,Adding...,Inaongeza...,Add Facility dialog button while saving.,draft
+facilities_added,Facility added,Kituo kimeongezwa,Message after adding a facility.,draft
+facilities_editTitle,Edit Facility,Hariri Kituo,Edit Facility dialog title and More Actions menu item.,draft
+facilities_tapToChangeLogo,Tap to change logo,Gusa kubadilisha nembo,"Edit Facility dialog, under the logo.",draft
+facilities_removeLogo,Remove logo,Ondoa nembo,Edit Facility dialog button.,draft
+facilities_businessEmailOptional,Business Email (optional),Barua pepe ya Biashara (si lazima),Edit Facility dialog field.,draft
+facilities_businessPhoneOptional,Business Phone (optional),Simu ya Biashara (si lazima),Edit Facility dialog field.,draft
+facilities_addressOptional,Address (optional),Anwani (si lazima),Edit Facility dialog field.,draft
+facilities_descriptionOptional,Description (optional),Maelezo (si lazima),Edit Facility dialog field.,draft
+facilities_taglineOptional,Tagline (optional),Kauli mbiu (si lazima),Edit Facility dialog field.,draft
+facilities_taglineHint,e.g. Agrovet & Animal Care,mf. Agrovet na Huduma kwa Wanyama,Edit Facility dialog: example tagline.,draft
+facilities_licenseOptional,License Number (optional),Namba ya Leseni (si lazima),Edit Facility dialog field.,draft
+facilities_tinOptional,TIN (optional),TIN (si lazima),Edit Facility dialog field (Tax Identification Number).,draft
+facilities_tinHint,Tax Identification Number,Namba ya Utambulisho wa Mlipakodi,Edit Facility dialog: TIN field hint.,draft
+facilities_ownershipOptional,Ownership (optional),Umiliki (si lazima),Edit Facility dialog field.,draft
+facilities_restockQuestion,How often do you typically restock?,Kwa kawaida unaongeza mzigo mara ngapi?,Edit Facility dialog: restock frequency field.,draft
+facilities_restockHelper,Used to suggest smart stock-level defaults from your sales history,Hutumika kupendekeza viwango vya akiba kutokana na historia ya mauzo yako,Edit Facility dialog: under the restock frequency field.,draft
+facilities_saveFailed,Couldn't save the changes. {error},Imeshindwa kuhifadhi mabadiliko. {error},"Edit Facility dialog: saving failed; error is the friendly reason.",draft
+facilities_updated,Facility updated,Kituo kimesasishwa,Message after editing a facility.,draft
+facilities_checkingAssistants,Checking that no assistants remain…,Inahakikisha hakuna msaidizi aliyebaki…,Shown while Delete Facility checks for assistants.,draft
+facilities_cannotDeleteTitle,Cannot Delete Facility,Haiwezekani Kufuta Kituo,Dialog title: the facility still has assistants.,draft
+facilities_cannotDeleteMessage,"{count, plural, =1{This facility still has 1 assistant assigned. Remove or reassign them first, then try again.} other{This facility still has {count} assistants assigned. Remove or reassign all of them first, then try again.}}","{count, plural, =1{Kituo hiki bado kina msaidizi 1. Mwondoe au mhamishe kwanza, kisha ujaribu tena.} other{Kituo hiki bado kina wasaidizi {count}. Waondoe au wahamishe wote kwanza, kisha ujaribu tena.}}",Cannot Delete Facility dialog: how many assistants remain.,draft
+facilities_deleteTitle,Delete Facility,Futa Kituo,Delete dialog title and More Actions menu item.,draft
+facilities_deleteWarning,"This permanently deletes ""{name}"" and everything in it - products, sales, clients, debts, payments, and history. This cannot be undone.","Hii inafuta kabisa ""{name}"" na kila kitu ndani yake - bidhaa, mauzo, wateja, madeni, malipo na historia. Hili haliwezi kutenduliwa.",Delete Facility dialog: what is deleted.,draft
+facilities_onlyFacilityWarning,"This is your only facility. Deleting it leaves your account with no facility - you will stay signed in, and can then add a new one or delete your account.","Hiki ndicho kituo chako pekee. Ukikifuta, akaunti yako itabaki bila kituo - utaendelea kuwa umeingia, na kisha unaweza kuongeza kipya au kufuta akaunti yako.",Delete Facility dialog: warning when it is the account's only facility.,draft
+facilities_typeToConfirm,"Type ""{name}"" to confirm:","Andika ""{name}"" kuthibitisha:","Delete Facility dialog: name is the exact text to type (the facility's name, never translated).",draft
+facilities_deleteFailed,Couldn't delete the facility. {error},Imeshindwa kufuta kituo. {error},"Delete Facility dialog: deleting failed; error is the friendly reason.",draft
+facilities_deleted,Facility deleted,Kituo kimefutwa,Message after deleting a facility.,draft
+facilities_title,Facilities,Vituo,Facilities screen title and breadcrumb.,draft
+facilities_subtitle,Manage all your veterinary facilities and branches,Simamia vituo vyako vyote vya mifugo na matawi,"Facilities screen, under the title.",draft
+facilities_noMatchFilters,No facilities match your filters. Try a different search or status.,Hakuna kituo kinacholingana na vichujio vyako. Jaribu utafutaji au hali nyingine.,Facilities screen detail area: nothing matches.,draft
+facilities_searchHint,Search facilities...,Tafuta vituo...,Facilities list search field.,draft
+facilities_noMatchFilter,No facilities match this filter.,Hakuna kituo kinacholingana na kichujio hiki.,Facilities list: nothing matches the status filter.,draft
+facilities_nameWithType,{name} {type},{name} {type},"Facilities list and header: the name with its type, e.g. Ukuli Agrovet.",draft
+facilities_moreActionsTooltip,More actions,Vitendo zaidi,Facility detail: tooltip of the More Actions menu.,draft
+facilities_moreActions,More Actions,Vitendo Zaidi,Facility detail: menu button.,draft
+facilities_switchToThis,Switch to This Facility,Hamia Kituo Hiki,Facility detail: More Actions menu item.,draft
+facilities_managerLine,{name} (Manager),{name} (Meneja),Facility detail header: who manages it.,draft
+facilities_joinedOn,Joined on {date},Kimejiunga tarehe {date},Facility detail header: when the facility was created.,draft
+facilities_code,Facility Code,Msimbo wa Kituo,Facility detail header label.,draft
+facilities_licenseNo,License No.,Namba ya Leseni,Facility detail header label.,draft
+facilities_notSet,Not set,Haijawekwa,"Facility detail: a value not filled in (license, ownership).",draft
+facilities_activityFallback,Activity,Shughuli,Facility activity list: an entry with no type.,draft
+facilities_viewProducts,View Products,Angalia Bidhaa,Facility metric card link.,draft
+facilities_viewAll,View All,Angalia Zote,Facility metric card link.,draft
+facilities_lowStockItems,Low Stock Items,Bidhaa Zenye Stoo Chache,Facility metric card.,draft
+facilities_viewItems,View Items,Angalia Vitu,Facility metric card link.,draft
+facilities_expiredItems,Expired Items,Bidhaa Zilizopitwa na Muda,Facility metric card.,draft
+facilities_totalSalesThisMonth,Total Sales (This Month),Jumla ya Mauzo (Mwezi Huu),Facility metric card.,draft
+facilities_viewReport,View Report,Angalia Ripoti,Facility metric card link.,draft
+facilities_tabOverview,Overview,Muhtasari,Facility detail tab.,draft
+facilities_tabInventory,Inventory Summary,Muhtasari wa Bidhaa,Facility detail tab.,draft
+facilities_tabSales,Sales Summary,Muhtasari wa Mauzo,Facility detail tab.,draft
+facilities_teamTabMessage,Manage this facility's team from the Team Members screen.,Simamia wafanyakazi wa kituo hiki kupitia skrini ya Wafanyakazi.,"Facility detail, Team Members tab.",draft
+facilities_openTeamMembers,Open Team Members,Fungua Wafanyakazi,"Facility detail, Team Members tab button.",draft
+facilities_noProducts,No products in this facility yet.,Bado hakuna bidhaa katika kituo hiki.,"Facility detail, Inventory Summary tab.",draft
+facilities_byCategory,By Category,Kwa Kundi,"Facility detail, Inventory Summary card title.",draft
+facilities_nothingNeedsAttention,Nothing low on stock or expired right now.,Hakuna bidhaa yenye stoo chache au iliyopitwa na muda kwa sasa.,"Facility detail, Needs Attention card.",draft
+facilities_recentSales,Recent Sales,Mauzo ya Karibuni,"Facility detail, Sales Summary card title.",draft
+facilities_noSalesYet,No sales recorded yet.,Bado hakuna mauzo yaliyorekodiwa.,"Facility detail, Sales Summary card.",draft
+facilities_walkInSale,Walk-in sale,Mauzo ya papo hapo,"Facility detail, Recent Sales: a sale with no client.",draft
+facilities_saleCount,"{count, plural, =1{1 sale} other{{count} sales}}","{count, plural, =1{mauzo 1} other{mauzo {count}}}","Facility detail, Sales Summary: number of sales in the month.",draft
+facilities_actionsTitle,Facility Actions,Vitendo vya Kituo,"Facility detail, Settings tab card title.",draft
+facilities_actionsIntro,"Settings specific to this facility. For your account, notifications, printer, currency, and app-wide preferences, use the main Settings screen.","Mipangilio ya kituo hiki pekee. Kwa akaunti yako, arifa, printa, sarafu na mapendeleo ya programu nzima, tumia skrini kuu ya Mipangilio.","Facility detail, Settings tab.",draft
+facilities_editDetails,Edit Facility Details,Hariri Taarifa za Kituo,"Facility detail, Settings tab action.",draft
+facilities_editDetailsHint,"Name, type, logo, contact info, license, and more.","Jina, aina, nembo, mawasiliano, leseni na zaidi.","Facility detail, Settings tab: under Edit Facility Details.",draft
+facilities_deactivateThis,Deactivate This Facility,Simamisha Kituo Hiki,"Facility detail, Settings tab action.",draft
+facilities_reactivateThis,Reactivate This Facility,Rejesha Kituo Hiki,"Facility detail, Settings tab action.",draft
+facilities_deactivateHint,Marks this facility as inactive. It stays in your list but is flagged as not operating.,Huweka kituo hiki kama hakifanyi kazi. Kinabaki kwenye orodha yako lakini kinaonyeshwa kuwa hakifanyi kazi.,"Facility detail, Settings tab: under Deactivate.",draft
+facilities_reactivateHint,Marks this facility as active again.,Huweka kituo hiki kama kinachofanya kazi tena.,"Facility detail, Settings tab: under Reactivate.",draft
+facilities_deleteThis,Delete This Facility,Futa Kituo Hiki,"Facility detail, Settings tab action.",draft
+facilities_deleteThisHint,Permanently removes this facility and its data. This cannot be undone.,Huondoa kabisa kituo hiki na data yake. Hili haliwezi kutenduliwa.,"Facility detail, Settings tab: under Delete.",draft
+facilities_retentionTitle,Activity Log Retention,Muda wa Kuhifadhi Kumbukumbu za Shughuli,"Facility detail, Settings tab card title.",draft
+facilities_retentionText,Logs older than this are automatically deleted for this facility. Currently: {count} days.,Kumbukumbu zilizozidi muda huu hufutwa kiotomatiki kwa kituo hiki. Kwa sasa: siku {count}.,"Facility detail, Settings tab: retention in days.",draft
+facilities_overdueTitle,Debt Overdue Threshold,Kikomo cha Deni Kuchelewa,"Facility detail, Settings tab card title.",draft
+facilities_overdueText,An unpaid debt is considered overdue once it is older than this many days. Currently: {count} days.,Deni lisilolipwa huhesabiwa kuwa limechelewa likipita idadi hii ya siku. Kwa sasa: siku {count}.,"Facility detail, Settings tab: overdue threshold in days.",draft
+facilities_deactivateConfirmTitle,Deactivate Facility?,Simamisha Kituo?,Dialog title.,draft
+facilities_reactivateConfirmTitle,Reactivate Facility?,Rejesha Kituo?,Dialog title.,draft
+facilities_deactivateConfirm,{name} will be marked Inactive. It stays in your facilities list but is flagged as not operating.,{name} kitawekwa kama Hakifanyi Kazi. Kinabaki kwenye orodha ya vituo vyako lakini kinaonyeshwa kuwa hakifanyi kazi.,Deactivate Facility dialog.,draft
+facilities_reactivateConfirm,{name} will be marked Active again.,{name} kitawekwa kama Kinafanya Kazi tena.,Reactivate Facility dialog.,draft
+facilities_markedStatus,Facility marked {status},Kituo sasa: {status},"Message after changing the status; status is the status label.",draft
+facilities_keepLogsFor,Keep Logs For,Hifadhi Kumbukumbu Kwa,Retention dialog title.,draft
+facilities_deleteOlderLogsTitle,Delete Older Logs Now?,Futa Kumbukumbu za Zamani Sasa?,Retention dialog: confirm a shorter window.,draft
+facilities_deleteOlderLogsMessage,Logs are currently kept for {current} days. Switching to {selected} days will permanently delete every log older than {selected} days right now - not just going forward. This cannot be undone.,"Kwa sasa kumbukumbu zinahifadhiwa kwa siku {current}. Ukibadilisha kuwa siku {selected}, kila kumbukumbu iliyozidi siku {selected} itafutwa kabisa sasa hivi - si kuanzia sasa tu. Hili haliwezi kutenduliwa.",Retention dialog: confirm a shorter window.,draft
+facilities_deleteAndSwitch,Delete and switch to {count} days,Futa na ubadilishe kuwa siku {count},Retention dialog button.,draft
+facilities_retentionSavedNotDeleted,"Saved. Logs older than {count} days will be hidden, but couldn't be deleted yet","Imehifadhiwa. Kumbukumbu zilizozidi siku {count} zitafichwa, lakini bado hazijaweza kufutwa","Retention saved, old logs not deleted yet (the reason follows).",draft
+facilities_retentionSavedDeleted,"Logs will now be kept for {days} days, {count, plural, =1{1 older log} other{{count} older logs}} deleted","Kumbukumbu sasa zitahifadhiwa kwa siku {days}, {count, plural, =1{kumbukumbu 1 ya zamani imefutwa} other{kumbukumbu {count} za zamani zimefutwa}}",Retention saved and old logs deleted.,draft
+facilities_retentionSaved,Logs will now be kept for {count} days,Kumbukumbu sasa zitahifadhiwa kwa siku {count},Retention saved.,draft
+facilities_saveSettingFailed,Couldn't save the setting,Imeshindwa kuhifadhi mpangilio,Retention or overdue setting not saved.,draft
+facilities_overdueAfterTitle,Overdue After,Imechelewa Baada ya,Overdue threshold dialog title.,draft
+facilities_overdueSaved,Debts are now overdue after {count} days,Madeni sasa yanachelewa baada ya siku {count},Overdue threshold saved.,draft
+facilities_aboutTitle,About this facility,Kuhusu kituo hiki,"Facility detail, Overview card title.",draft
+facilities_facilityType,Facility Type,Aina ya Kituo,"Facility detail, About card row.",draft
+facilities_ownership,Ownership,Umiliki,"Facility detail, About card row.",draft
+facilities_createdBy,Created By,Kimeundwa na,"Facility detail, About card row.",draft
+facilities_lastUpdated,Last Updated,Kilisasishwa Mwisho,"Facility detail, About card row.",draft
+facilities_viewAllActivity,View all activity,Angalia shughuli zote,"Facility detail, Recent Activity link.",draft
