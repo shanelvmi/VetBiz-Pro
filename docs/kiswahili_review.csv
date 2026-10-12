@@ -611,3 +611,297 @@ clients_businessName,Business Name,Jina la Biashara,Client form: business name f
 clients_businessNameHint,Enter business name,Weka jina la biashara,Client form: business name hint.,draft
 clients_update,Update Client,Sasisha Mteja,Save button when editing a client.,draft
 clients_save,Save Client,Hifadhi Mteja,Save button when adding a client.,draft
+common_tryAgainLower,Try again,Jaribu tena,"Try again button (lower-case ""again""), for example after a load error.",draft
+common_restore,Restore,Rejesha,Restore button or tooltip (brings an item back from Trash).,draft
+common_noFacilityDot,No facility selected.,Hakuna kituo kilichochaguliwa.,Screen text when no facility is chosen (with a full stop).,draft
+team_working,Working...,Inashughulikia...,Shown in a team member's row while a change is being saved.,draft
+team_actionDone,"{action, select, approved{{name} approved} rejected{{name} rejected} deactivated{{name} deactivated} reactivated{{name} reactivated} other{{name} {action}}}","{action, select, approved{{name} ameidhinishwa} rejected{{name} amekataliwa} deactivated{{name} amesimamishwa} reactivated{{name} amerejeshwa} other{{name} {action}}}","Message after a status change; action is the stored action key.",draft
+team_updateFailed,Couldn't update the assistant,Imeshindwa kusasisha msaidizi,Message when a status change failed.,draft
+team_removed,Assistant removed from this facility,Msaidizi ameondolewa kwenye kituo hiki,Message after removing an assistant.,draft
+team_removeFailed,Couldn't remove the assistant,Imeshindwa kumwondoa msaidizi,Message when removing failed.,draft
+team_reassigned,Assistant reassigned,Msaidizi amehamishwa,Message after moving an assistant to another facility.,draft
+team_reassignFailed,Couldn't reassign the assistant,Imeshindwa kumhamisha msaidizi,Message when moving failed.,draft
+team_thisAssistant,this assistant,msaidizi huyu,Stands in for a missing name in the middle of a sentence.,draft
+team_thisAssistantCap,This assistant,Msaidizi huyu,Stands in for a missing name at the start of a sentence.,draft
+team_thisPerson,this person,mtu huyu,Stands in for a missing name in the Reject dialog.,draft
+team_thisCoAdmin,this co-admin,msimamizi mwenza huyu,Stands in for a missing name in the Deactivate co-admin dialog.,draft
+team_moveTitle,Move {name},Mhamishe {name},Reassign dialog title.,draft
+team_moveBody,Choose the facility they should work in. They keep their account and their approval.,Chagua kituo atakachofanyia kazi. Akaunti yake na idhini yake vinabaki.,Reassign dialog text.,draft
+team_noOtherFacility,You don't run any other facility to move them to.,Huna kituo kingine cha kumhamishia.,Reassign dialog when there is nowhere to move them.,draft
+team_inviteTo,Invite Assistant To...,Mwalike Msaidizi Kwenye...,Picker title when the admin runs several facilities.,draft
+team_unknownFacility,Unknown facility,Kituo kisichojulikana,A facility whose name is missing.,draft
+team_you,You,Wewe,Actions cell on your own row.,draft
+team_facilityAdmin,Facility admin,Msimamizi wa kituo,Actions cell on the facility owner's row (seen by a co-admin).,draft
+team_approve,Approve,Idhinisha,Button that approves a waiting assistant.,draft
+team_reject,Reject,Kataa,Button (and confirm button) that rejects a waiting assistant.,draft
+team_deactivate,Deactivate,Simamisha,Button that pauses a team member's access.,draft
+team_reactivate,Reactivate,Rejesha,Button that gives a paused team member access again.,draft
+team_reassign,Reassign,Hamisha,Button that moves an assistant to another facility.,draft
+team_removeFromFacility,Remove from Facility,Ondoa Kwenye Kituo,Button that removes a paused assistant from the facility.,draft
+team_removeFromFacilityConfirm,Remove from facility,Ondoa kwenye kituo,Confirm button in the remove dialog.,draft
+team_deactivateTitle,Deactivate {name}?,Msimamishe {name}?,Deactivate co-admin dialog title.,draft
+team_deactivateBody,They'll be signed out straight away and can't log in until you reactivate them. This doesn't change their role - only the platform administrator can do that.,Atatolewa mara moja na hataweza kuingia hadi umrejeshe. Hii haibadilishi nafasi yake - ni msimamizi wa jukwaa pekee anayeweza kufanya hivyo.,Deactivate co-admin dialog text.,draft
+team_updateStatusFailed,Couldn't update the status,Imeshindwa kusasisha hali,Message when changing a co-admin's status failed.,draft
+team_facilityCount,"{count, plural, other{{count} facilities}}","{count, plural, other{Vituo {count}}}",Facility cell of an admin who runs several facilities.,draft
+team_removeTitle,Remove {name} from {facility}?,Mwondoe {name} kwenye {facility}?,Remove dialog title.,draft
+team_removePoint1,"{name} will no longer be part of {facility}, and won't see its records.","{name} hatakuwa tena sehemu ya {facility}, na hataona kumbukumbu zake.","Remove dialog, first point.",draft
+team_removePoint2,What {name} recorded stays in {facility}'s history.,Alichorekodi {name} kinabaki kwenye historia ya {facility}.,"Remove dialog, second point.",draft
+team_removePoint3,Their account is kept. When they next sign in they can enter an invite code to join a facility again.,Akaunti yake inabaki. Akiingia tena anaweza kuweka msimbo wa mwaliko ili ajiunge na kituo tena.,"Remove dialog, third point.",draft
+team_rejectTitle,Reject {name}?,Mkatae {name}?,Reject dialog title.,draft
+team_rejectPoint1,{name} is removed from {facility} and is no longer waiting for approval.,{name} ameondolewa kwenye {facility} na hasubiri tena idhini.,"Reject dialog, first point.",draft
+team_rejectPoint2,"When they next sign in they'll see the request wasn't approved, and be asked for an invite code - they can join again with a new one.","Akiingia tena ataona ombi halikuidhinishwa, na ataombwa msimbo wa mwaliko - anaweza kujiunga tena kwa msimbo mpya.","Reject dialog, second point.",draft
+team_rejectPoint3,They aren't sent a message. Tell them yourself if you'd like them to know.,Hatumiwi ujumbe. Mwambie mwenyewe ukipenda ajue.,"Reject dialog, third point.",draft
+team_title,Team Members,Wafanyakazi,Team screen title.,draft
+team_subtitle,Manage your team's access and status,Simamia ruhusa na hali ya wafanyakazi wako,Team screen subtitle.,draft
+team_inviteAssistant,Invite Assistant,Mwalike Msaidizi,"Button, tooltip and dialog title for inviting an assistant.",draft
+team_noAdmin,No logged in admin user found,Hakuna msimamizi aliyeingia,Team screen when no admin is signed in.,draft
+team_noFacilities,No facilities found for your account.,Hakuna vituo vilivyopatikana kwa akaunti yako.,Team screen when the admin has no facilities.,draft
+team_acrossFacilities,Across your facilities,Katika vituo vyako,Under the Total card.,draft
+team_haveAccess,Have access,Wana ruhusa,Under the Active card.,draft
+team_accessPaused,Access paused,Ruhusa imesimamishwa,Under the Deactivated card.,draft
+team_waitingApproval,Waiting Approval,Wanasubiri Idhini,Card title: assistants waiting for approval.,draft
+team_needDecision,Need your decision,Wanahitaji uamuzi wako,Under the Waiting Approval card.,draft
+team_searchHint,"Search by name, phone or facility...","Tafuta kwa jina, simu au kituo...",Team search box hint.,draft
+team_emptyTitle,No team members yet,Bado hakuna wafanyakazi,Team list when it is empty.,draft
+team_emptyHint,Use Invite Assistant to add your first team member.,Tumia Mwalike Msaidizi kuongeza mfanyakazi wako wa kwanza.,Under the empty team list.,draft
+team_noAssistants,No assistants yet,Bado hakuna wasaidizi,Team list (cards) when it is empty.,draft
+team_noMatches,No team members match your filters,Hakuna wafanyakazi wanaolingana na vichujio vyako,Team list when the filters match nobody.,draft
+team_colUserName,User name,Jina la mtumiaji,Team table header.,draft
+team_colRole,Role,Nafasi,Team table header.,draft
+team_notRecorded,Not recorded,Haijarekodiwa,Details panel: a date or value that was never saved.,draft
+team_registered,Registered,Amejisajili,History: when the account was created.,draft
+team_detailsTitle,Team Member Details,Maelezo ya Mfanyakazi,Details panel title.,draft
+team_nameYou,{name}  (you),{name}  (wewe),Details panel: your own name.,draft
+team_joined,Joined,Alijiunga,Details panel label.,draft
+team_askedAgain,Asked to join again: {date},Aliomba kujiunga tena: {date},"Details panel, under Joined.",draft
+team_approvedLabel,Approved,Aliidhinishwa,Details panel label: when the assistant was approved.,draft
+team_waitingForApproval,Waiting for approval,Anasubiri idhini,Details panel: not approved yet.,draft
+team_byName,by {name},na {name},Details panel: who made a change.,draft
+team_approvedBeforeRecords,Approved before approvals were recorded,Aliidhinishwa kabla idhini hazijaanza kurekodiwa,Details panel: an approval with no date.,draft
+team_lastStatusChange,Last status change,Mabadiliko ya mwisho ya hali,Details panel label.,draft
+team_byNameRole,by {name} ({role}),na {name} ({role}),"Details panel: who changed the status, with their stored role.",draft
+team_lastActive,Last active,Mara ya mwisho kuonekana,Details panel label.,draft
+team_history,History,Historia,Details panel heading.,draft
+team_historyLine,{when}  ·  by {name},{when}  ·  na {name},One history line: date and who did it.,draft
+team_useCardButtons,"Use the buttons on this person's card to approve, reject or remove them.","Tumia vitufe kwenye kadi ya mtu huyu kumwidhinisha, kumkataa au kumwondoa.",Details panel note.,draft
+team_noAssistantsPage,No assistants,Hakuna wasaidizi,Pagination bar when the list is empty.,draft
+team_showingRange,"{total, plural, =1{Showing {start} to {end} of 1 assistant} other{Showing {start} to {end} of {total} assistants}}","{total, plural, =1{Inaonyesha {start} hadi {end} kati ya msaidizi 1} other{Inaonyesha {start} hadi {end} kati ya wasaidizi {total}}}",Pagination bar.,draft
+invite_checking,Checking for an existing invite...,Inakagua kama kuna mwaliko uliopo...,Invite dialog while loading.,draft
+invite_checkFailed,Could not check for an existing invite: {error},Imeshindwa kukagua mwaliko uliopo: {error},"Invite dialog error; error is a friendly sentence.",draft
+invite_generating,Generating your invite code...,Inatengeneza msimbo wako wa mwaliko...,Invite dialog while creating a code.,draft
+invite_generateFailed,Could not generate an invite: {error},Imeshindwa kutengeneza mwaliko: {error},Invite dialog error.,draft
+invite_revoking,Revoking the code...,Inafuta msimbo...,Invite dialog while revoking.,draft
+invite_revokeFailed,Could not revoke: {error},Imeshindwa kufuta: {error},Invite dialog error.,draft
+invite_shareHint,Share this code with the person you're hiring - they'll enter it when registering as an Assistant.,Mpe mtu unayemwajiri msimbo huu - ataiweka anapojisajili kama Msaidizi.,"Invite dialog, above an active code.",draft
+invite_expires,Expires {date},Unaisha {date},Invite dialog: when the code stops working.,draft
+invite_copied,Copied to clipboard,Imenakiliwa,Message after copying the code.,draft
+invite_revoke,Revoke,Futa,Button that cancels the active code.,draft
+invite_generateNew,Generate a new one instead,Tengeneza mpya badala yake,Button that replaces the active code.,draft
+invite_generateHint,"Generate a one-time code for the person you're hiring - it works for 48 hours or until used once, whichever comes first.","Tengeneza msimbo wa mara moja kwa mtu unayemwajiri - unafanya kazi kwa saa 48 au hadi utumike mara moja, kinachotangulia.",Invite dialog when there is no active code.,draft
+invite_generate,Generate Invite Code,Tengeneza Msimbo wa Mwaliko,Button that creates a code.,draft
+settings_title,Settings,Mipangilio,Settings screen title.,draft
+settings_subscriptionBilling,Subscription & Billing,Usajili na Malipo,Settings item that opens Subscription.,draft
+settings_accountData,Account & Data,Akaunti na Data,Settings section heading.,draft
+settings_exportData,Export Data,Hamisha Data,Settings item that opens the export screen.,draft
+hours_title,Business Hours,Saa za Biashara,Settings item and Business Hours screen title.,draft
+account_title,Manage Account,Simamia Akaunti,Settings item and Manage Account screen title.,draft
+settings_general,General,Jumla,Settings section heading.,draft
+printer_title,Printer & Receipt Settings,Mipangilio ya Printa na Risiti,Settings item and printer screen title.,draft
+settings_helpSupport,Help & Support,Msaada,Settings item and the help dialog title.,draft
+settings_appInfo,App Info,Kuhusu Programu,Settings item and the app info dialog title.,draft
+settings_preferences,Preferences,Mapendeleo,Settings section heading.,draft
+uiSettings_title,UI Settings,Mipangilio ya Mwonekano,Settings item and the UI Settings dialog title.,draft
+settings_themeLayout,Theme & layout,Rangi na mpangilio,Beside the UI Settings item.,draft
+settings_currency,Currency,Sarafu,Settings item showing the currency.,draft
+settings_languageBoth,Language / Lugha,Language / Lugha,"Settings item for the language; both languages on purpose, so it can be found in either.",draft
+settings_selectLanguageBoth,SELECT LANGUAGE / CHAGUA LUGHA,SELECT LANGUAGE / CHAGUA LUGHA,"Language picker heading; both languages on purpose.",draft
+settings_versionLine,{appName} - v{version},{appName} - v{version},Footer of the Settings list.,draft
+settings_selectPane,Select a setting from the left,Chagua mpangilio upande wa kushoto,Wide Settings screen before anything is chosen.,draft
+settings_appName,App Name,Jina la Programu,App info dialog label.,draft
+settings_version,Version,Toleo,App info dialog label.,draft
+settings_builtFor,Built For,Imetengenezwa Kwa,App info dialog label.,draft
+settings_builtForValue,Veterinary & agrovet business management,Usimamizi wa biashara za mifugo na pembejeo za kilimo,App info dialog value.,draft
+uiSettings_colourTheme,COLOUR THEME,RANGI,UI Settings section heading.,draft
+uiSettings_appearance,APPEARANCE,MWONEKANO,UI Settings section heading.,draft
+uiSettings_darkMode,Dark Mode,Hali ya Giza,UI Settings option (not available yet).,draft
+uiSettings_comingSoon,Coming soon,Inakuja hivi karibuni,Under an option that is not available yet.,draft
+uiSettings_layout,LAYOUT,MPANGILIO,UI Settings section heading.,draft
+uiSettings_layoutFixed,Layout Fixed Mode,Mpangilio Usiobadilika,UI Settings option.,draft
+uiSettings_layoutFixedHint,Keeps the sidebar open and hides its collapse button on large screens.,Huacha menyu ya pembeni wazi na huficha kitufe cha kuifunga kwenye skrini kubwa.,Under Layout Fixed Mode.,draft
+uiSettings_system,SYSTEM,MFUMO,UI Settings section heading.,draft
+uiSettings_systemRefresh,System Refresh,Onyesha Upya Mfumo,UI Settings option.,draft
+uiSettings_systemRefreshHint,Reloads your data and takes you back to the start. You stay signed in.,Hupakia data yako upya na kukurudisha mwanzo. Unabaki umeingia.,Under System Refresh.,draft
+uiSettings_savedOnDevice,Saved on this device,Imehifadhiwa kwenye kifaa hiki,Under the UI Settings title.,draft
+uiSettings_refreshTitle,Refresh the app?,Onyesha upya programu?,System Refresh confirmation title.,draft
+uiSettings_refreshBody,"This reloads your data and takes you back to the start. You stay signed in, but anything you haven't saved will be lost.","Hii hupakia data yako upya na kukurudisha mwanzo. Unabaki umeingia, lakini chochote ambacho hujahifadhi kitapotea.",System Refresh confirmation text.,draft
+uiSettings_themeKilimanjaro,Kilimanjaro Green,Kijani cha Kilimanjaro,"Colour theme name (id ""kilimanjaro"").",draft
+uiSettings_themeSerengeti,Serengeti Yellow,Njano ya Serengeti,"Colour theme name (id ""serengeti"").",draft
+uiSettings_themeVictoria,Victoria Blue,Bluu ya Victoria,"Colour theme name (id ""victoria"").",draft
+hours_saved,Business hours saved,Saa za biashara zimehifadhiwa,Message after saving.,draft
+hours_saveFailed,Couldn't save the business hours,Imeshindwa kuhifadhi saa za biashara,Message when saving failed.,draft
+hours_intro,"Sets when the ""Generate Today's Report"" button becomes active in View Reports.","Huweka wakati kitufe cha ""Generate Today's Report"" kinapoanza kufanya kazi kwenye View Reports.","Business Hours screen intro; the quoted names are other screens' English texts until those are translated.",draft
+hours_weekdays,Weekdays (Mon–Fri),Siku za kazi (Jtatu–Ijumaa),Business Hours row title.,draft
+hours_saturday,Saturday,Jumamosi,Business Hours row title.,draft
+hours_sunday,Sunday,Jumapili,Business Hours row title.,draft
+hours_allowAnytime,Allow anytime,Ruhusu wakati wowote,Business Hours override switch.,draft
+hours_allowAnytimeHint,"Emergency override - makes the report button active regardless of the schedule above. Turn this on for an early closure, and back off once things return to normal.","Ruhusa ya dharura - huwezesha kitufe cha ripoti bila kujali ratiba hapo juu. Iwashe mnapofunga mapema, na uizime mambo yakirudi kawaida.",Under the override switch.,draft
+hours_save,Save Business Hours,Hifadhi Saa za Biashara,Save button.,draft
+hours_closedAllDay,Closed all day,Imefungwa siku nzima,Switch label on a day row.,draft
+hours_closesAt,Closes at {time},Inafungwa saa {time},Button showing the closing time.,draft
+hours_noClosingTime,No closing time needed - closed all day.,Hakuna muda wa kufunga unaohitajika - imefungwa siku nzima.,Day row when the day is closed.,draft
+profile_logoUpdated,Logo updated,Nembo imesasishwa,Message after uploading a logo.,draft
+profile_logoFailed,Couldn't update the logo,Imeshindwa kusasisha nembo,Message when uploading failed.,draft
+profile_yourFacility,Your facility,Kituo chako,Shown when the facility has no name.,draft
+profile_title,Business Profile,Wasifu wa Biashara,Business Profile screen title.,draft
+profile_logoHint,"This logo appears on the dashboard, receipts, and anywhere your facility is shown throughout the app.","Nembo hii inaonekana kwenye dashibodi, risiti, na popote kituo chako kinapoonyeshwa ndani ya programu.",Under the logo.,draft
+profile_changeLogo,Change Logo,Badilisha Nembo,Button when a logo exists.,draft
+profile_uploadLogo,Upload Logo,Pakia Nembo,Button when there is no logo.,draft
+searchIndex_title,Rebuild Client Search Index,Jenga Upya Faharasa ya Kutafuta Wateja,Rebuild dialog title.,draft
+searchIndex_body,"This makes clients added before search was available show up correctly when searched by name, and lets the app spot a new client whose phone number or name matches one you already have. It only needs to be run once - clients that are already up to date are left alone.","Hii huwafanya wateja walioongezwa kabla utafutaji haujakuwepo waonekane vizuri wanapotafutwa kwa jina, na huiwezesha programu kumtambua mteja mpya ambaye namba ya simu au jina lake linalingana na mteja uliye naye. Inahitaji kuendeshwa mara moja tu - wateja ambao tayari wako sawa hawaguswi.",Rebuild dialog text.,draft
+searchIndex_nothing,Nothing to update - every client is already searchable.,Hakuna cha kusasisha - kila mteja tayari anatafutika.,Rebuild result when nothing changed.,draft
+searchIndex_done,"{count, plural, =1{Done. 1 client updated and now searchable.} other{Done. {count} clients updated and now searchable.}}","{count, plural, =1{Imekamilika. Mteja 1 amesasishwa na sasa anatafutika.} other{Imekamilika. Wateja {count} wamesasishwa na sasa wanatafutika.}}",Rebuild result.,draft
+searchIndex_failed,Could not complete: {error},Imeshindwa kukamilisha: {error},"Rebuild error; error is a friendly sentence.",draft
+searchIndex_run,Run Now,Endesha Sasa,Button that starts the rebuild.,draft
+printer_unavailableConnect,Bluetooth printing isn't available on this platform. This screen needs a real Android or iOS build with Bluetooth hardware - it can't connect to a printer from a web browser.,Uchapishaji kwa Bluetooth haupatikani kwenye jukwaa hili. Skrini hii inahitaji programu halisi ya Android au iOS yenye Bluetooth - haiwezi kuunganisha printa kutoka kwenye kivinjari.,Printer screen when Bluetooth is missing (checking the connection).,draft
+printer_unavailableList,Bluetooth printing isn't available on this platform. This screen needs a real Android or iOS build with Bluetooth hardware - it can't list paired devices from a web browser.,Uchapishaji kwa Bluetooth haupatikani kwenye jukwaa hili. Skrini hii inahitaji programu halisi ya Android au iOS yenye Bluetooth - haiwezi kuonyesha vifaa vilivyounganishwa kutoka kwenye kivinjari.,Printer screen when Bluetooth is missing (listing devices).,draft
+printer_connected,Connected to {name},Imeunganishwa na {name},Message after connecting a printer.,draft
+printer_connectFailedNamed,Couldn't connect to {name},Imeshindwa kuunganisha na {name},Message when a printer refused to connect.,draft
+printer_connectFailed,Couldn't connect to the printer,Imeshindwa kuunganisha printa,Message when connecting failed.,draft
+printer_disconnectFailed,Couldn't disconnect the printer,Imeshindwa kutenganisha printa,Message when disconnecting failed.,draft
+printer_testSent,Test page sent to printer,Ukurasa wa majaribio umetumwa kwa printa,Message after a test print.,draft
+printer_testFailed,Couldn't print the test page,Imeshindwa kuchapisha ukurasa wa majaribio,Message when the test print failed.,draft
+printer_savedPrinter,Saved printer,Printa iliyohifadhiwa,A saved printer with no name.,draft
+printer_statusConnected,Connected,Imeunganishwa,Saved printer status.,draft
+printer_statusNotConnected,Not connected,Haijaunganishwa,Saved printer status.,draft
+printer_disconnect,Disconnect,Tenganisha,Button.,draft
+printer_forget,Forget this printer,Sahau printa hii,Tooltip.,draft
+printer_paired,Paired Devices,Vifaa Vilivyounganishwa,Section heading.,draft
+printer_pairHint,Pair your printer in your device's Bluetooth settings first - this list only shows devices already paired there.,Unganisha printa yako kwenye mipangilio ya Bluetooth ya kifaa chako kwanza - orodha hii inaonyesha tu vifaa vilivyokwisha unganishwa huko.,Under Paired Devices.,draft
+printer_noPaired,No paired devices found.,Hakuna vifaa vilivyounganishwa vilivyopatikana.,Paired list when it is empty.,draft
+printer_connect,Connect,Unganisha,Button that connects a device.,draft
+printer_printOptions,Print Options,Chaguo za Kuchapisha,Section heading.,draft
+printer_paperSize,Paper Size,Ukubwa wa Karatasi,Option label.,draft
+printer_paperWidth,{width}mm,{width}mm,"Paper size choice; width is the stored size (""58"" or ""80"").",draft
+printer_autoPrint,Auto-print receipt after each sale,Chapisha risiti kiotomatiki baada ya kila mauzo,Option label.,draft
+printer_sending,Sending...,Inatuma...,Test print button while sending.,draft
+printer_sendTest,Send Test Print,Tuma Jaribio la Kuchapisha,Test print button.,draft
+printer_connectFirst,Connect a printer above before testing.,Unganisha printa hapo juu kabla ya kujaribu.,Under the test button when nothing is connected.,draft
+common_serviceRecords,Service Records,Rekodi za Huduma,Trash tab and export dataset: performed services.,draft
+trash_restoreSaleTitle,Restore this sale?,Rejesha mauzo haya?,Restore confirmation title for a sale.,draft
+trash_restoreSaleBody,"The sale will be back in your sales list, but restoring will NOT change:
+• stock: the items stay back on the shelf, as they were put back when the sale was deleted
+• debt: the client's debt for this sale is not re-created
+• client balance: it stays as it is now
+
+Adjust these by hand if the sale really happened.","Mauzo yatarudi kwenye orodha yako ya mauzo, lakini kurejesha HAKUTABADILISHA:
+• akiba: bidhaa zinabaki rafuni, kama zilivyorudishwa mauzo yalipofutwa
+• deni: deni la mteja kwa mauzo haya halirudishwi
+• salio la mteja: linabaki kama lilivyo sasa
+
+Rekebisha haya kwa mkono ikiwa mauzo yalitokea kweli.",Restore confirmation text for a sale.,draft
+trash_restoreServiceTitle,Restore this service?,Rejesha huduma hii?,Restore confirmation title for a service.,draft
+trash_restoreServiceBody,"The service will be back in your services list, but restoring will NOT change:
+• stock: the items it used stay back in stock
+• debt: the client's debt for this service is not re-created
+• client balance: it stays as it is now
+• expenses: its expense transaction was deleted for good and does not come back
+
+Adjust these by hand if the service really happened.","Huduma itarudi kwenye orodha yako ya huduma, lakini kurejesha HAKUTABADILISHA:
+• akiba: bidhaa ilizotumia zinabaki stoo
+• deni: deni la mteja kwa huduma hii halirudishwi
+• salio la mteja: linabaki kama lilivyo sasa
+• matumizi: muamala wake wa matumizi ulifutwa kabisa na haurudi
+
+Rekebisha haya kwa mkono ikiwa huduma ilitolewa kweli.",Restore confirmation text for a service.,draft
+trash_restored,Item restored,Kipengee kimerejeshwa,Message after restoring.,draft
+trash_restoreFailed,Couldn't restore the item,Imeshindwa kurejesha kipengee,Message when restoring failed.,draft
+trash_deleteForeverTitle,Delete Forever?,Futa Kabisa?,Permanent delete confirmation title.,draft
+trash_deleteForeverBody,"""{label}"" will be permanently deleted. This cannot be undone.","""{label}"" itafutwa kabisa. Hili haliwezi kutenduliwa.",Permanent delete confirmation text.,draft
+trash_deleteForever,Delete Forever,Futa Kabisa,Button and tooltip that delete an item for good.,draft
+trash_deleted,Permanently deleted,Imefutwa kabisa,Message after a permanent delete.,draft
+trash_deleteFailed,Couldn't delete the item permanently,Imeshindwa kufuta kipengee kabisa,Message when a permanent delete failed.,draft
+trash_empty,Trash is empty,Takataka ni tupu,Trash tab with nothing in it.,draft
+trash_expiringBanner,"{count, plural, =1{1 item will be permanently deleted within {days} days. Restore now if you still need it.} other{{count} items will be permanently deleted within {days} days. Restore now if you still need them.}}","{count, plural, =1{Kipengee 1 kitafutwa kabisa ndani ya siku {days}. Kirejeshe sasa ikiwa bado unakihitaji.} other{Vipengee {count} vitafutwa kabisa ndani ya siku {days}. Virejeshe sasa ikiwa bado unavihitaji.}}",Warning above a Trash tab.,draft
+trash_deletingSoon,Deleting soon,Kinafutwa hivi karibuni,Item whose time in Trash is up.,draft
+trash_expiresTomorrow,Expires tomorrow,Kinaisha kesho,Item deleted for good tomorrow.,draft
+trash_expiresIn,"{count, plural, other{Expires in {count} days}}","{count, plural, other{Kinaisha baada ya siku {count}}}",Days until the item is deleted for good.,draft
+trash_deletedBy,Deleted by {name},Kimefutwa na {name},Who deleted the item (date unknown).,draft
+trash_deletedByOn,Deleted by {name} on {date},Kimefutwa na {name} tarehe {date},Who deleted the item and when.,draft
+export_title,Export Center,Kituo cha Kuhamisha Data,Export screen title.,draft
+export_step1,1. Select Dataset Category,1. Chagua Aina ya Data,Export section heading.,draft
+export_step2,2. Scope & Date Range Filtering,2. Kipindi na Tarehe,Export section heading.,draft
+export_step3,3. Output Document Layout,3. Muundo wa Faili,Export section heading.,draft
+export_salesTransactions,Sales & Transactions,Mauzo na Miamala,Export dataset name.,draft
+export_salesTransactionsHint,Sales (incl. archived) and transaction history,Mauzo (pamoja na yaliyohifadhiwa) na historia ya miamala,Export dataset description.,draft
+export_serviceRecordsHint,"Services performed (incl. archived), by client and category","Huduma zilizotolewa (pamoja na zilizohifadhiwa), kwa mteja na kundi",Export dataset description.,draft
+export_productCatalog,Product Inventory Catalog,Orodha ya Bidhaa na Akiba,Export dataset name.,draft
+export_productCatalogHint,"Current stock levels, costs, and SKU list","Viwango vya akiba vya sasa, gharama, na orodha ya bidhaa",Export dataset description.,draft
+export_clientDirectory,Client Directory & Balances,Orodha ya Wateja na Salio,Export dataset name.,draft
+export_clientDirectoryHint,Client contacts and current outstanding balances,Mawasiliano ya wateja na salio wanalodaiwa sasa,Export dataset description.,draft
+export_debtors,Debtors / Outstanding Balances,Wadaiwa / Salio Linalodaiwa,Export dataset name.,draft
+export_debtorsHint,Itemized list of everything currently owed,Orodha ya kila kinachodaiwa sasa,Export dataset description.,draft
+export_paymentsLedger,Payments Ledger,Daftari la Malipo,Export dataset name.,draft
+export_paymentsLedgerHint,"Every payment collected - sales, services, debts, other income","Kila malipo yaliyopokelewa - mauzo, huduma, madeni, mapato mengine",Export dataset description.,draft
+export_activityLog,Activity Log,Kumbukumbu za Shughuli,Export dataset name.,draft
+export_activityLogHint,"Who did what, and when","Nani alifanya nini, na lini",Export dataset description.,draft
+export_done,Exported {dataset},{dataset} imehamishwa,"Message after an export; dataset is its label.",draft
+export_failed,Couldn't export {dataset},Imeshindwa kuhamisha {dataset},Message when an export failed.,draft
+export_selectStart,Select Start Date,Chagua Tarehe ya Kuanza,Date picker heading.,draft
+export_selectEnd,Select End Date,Chagua Tarehe ya Mwisho,Date picker heading.,draft
+export_dateRange,Date Range,Kipindi,Date range dialog title.,draft
+export_last7,Last 7 Days,Siku 7 Zilizopita,Date range choice.,draft
+export_last30,Last 30 Days,Siku 30 Zilizopita,Date range choice.,draft
+export_lastMonth,Last Month,Mwezi Uliopita,Date range choice.,draft
+export_thisYear,This Year,Mwaka Huu,Date range choice.,draft
+export_allTime,All Time,Muda Wote,Date range choice: no dates.,draft
+export_customRange,Custom Range...,Chagua Tarehe...,Date range choice that opens the date pickers.,draft
+export_notApplicable,Not applicable - this is a current snapshot,Haihusiki - hii ni hali ya sasa,Date scope for datasets without dates.,draft
+export_pickRange,Please select a date range below,Tafadhali chagua kipindi hapa chini,Date scope before one is chosen.,draft
+export_allRecords,All Records (No Filters Applied),Rekodi Zote (Bila Vichujio),Date scope when All Time is chosen.,draft
+export_rangeLine,{start}  to  {end},{start}  hadi  {end},Date scope: the chosen dates.,draft
+export_scope,Date Selection Scope,Kipindi Kilichochaguliwa,Date scope label.,draft
+export_modify,Modify,Badilisha,Button that opens the date range dialog.,draft
+export_xlsx,Excel Workbook (.xlsx),Faili la Excel (.xlsx),File format choice.,draft
+export_xlsxHint,"Bolded headers, multiple sheets, real dates - opens clean, ready to keep","Vichwa vilivyokolezwa, kurasa kadhaa, tarehe halisi - linafunguka vizuri, tayari kuhifadhiwa",File format description.,draft
+export_csv,CSV (Plain Text),CSV (Maandishi Matupu),File format choice.,draft
+export_csvHint,"Universal, simple text - opens in Excel, Sheets, or any editor","Maandishi rahisi ya kawaida - yanafunguka kwenye Excel, Sheets, au kihariri chochote",File format description.,draft
+export_pickRangeFirst,Select a date range above before exporting.,Chagua kipindi hapo juu kabla ya kuhamisha.,Under the export button with no dates chosen.,draft
+export_pickRangeWarning,Select a date range before exporting,Chagua kipindi kabla ya kuhamisha,Message when exporting with no dates chosen.,draft
+export_generate,Generate & Export Data,Tengeneza na Hamisha Data,Export button.,draft
+account_logoutAllTitle,Log Out of All Devices?,Toka Kwenye Vifaa Vyote?,Confirmation title.,draft
+account_logoutAllBody,"This will clear active sessions and log you out on all other phones, tablets, or computers currently signed into your account.","Hii itafuta vipindi vilivyo hai na kukutoa kwenye simu, tableti au kompyuta nyingine zote zilizoingia kwenye akaunti yako.",Confirmation text.,draft
+account_logoutEverywhere,Log Out Everywhere,Toka Kila Mahali,Confirm button.,draft
+account_logoutAllFailed,Couldn't clear other sessions,Imeshindwa kufuta vipindi vingine,Message when signing out elsewhere failed.,draft
+account_thisFacility,this facility,kituo hiki,Stands in for a missing facility name.,draft
+account_wipeTitle,Wipe All Data?,Futa Data Yote?,Wipe confirmation title.,draft
+account_wipeFacility,"Business data for ""{facility}"" will be permanently wiped.","Data ya biashara ya ""{facility}"" itafutwa kabisa.","Wipe confirmation, first line.",draft
+account_wipeBody,"All records of sales, products, clients, and transactions for this facility are erased. Other facilities you have are not affected. Your login credentials remain unaffected.","Rekodi zote za mauzo, bidhaa, wateja na miamala za kituo hiki zinafutwa. Vituo vyako vingine haviguswi. Taarifa zako za kuingia hazibadiliki.",Wipe confirmation text.,draft
+account_wipe,Wipe Data,Futa Data,Wipe confirm button.,draft
+account_confirmTitle,Confirm Action,Thibitisha Kitendo,Typed confirmation title before a wipe.,draft
+account_typeErase,"Please type ""{word}"" to finalize clearing all records:","Tafadhali andika ""{word}"" ili kukamilisha kufuta rekodi zote:","Typed confirmation; word is the English word that must be typed.",draft
+account_wiped,All business data permanently wiped,Data yote ya biashara imefutwa kabisa,Message after a wipe.,draft
+account_wipeFailed,Couldn't clear the records,Imeshindwa kufuta rekodi,Message when a wipe failed.,draft
+account_cannotDeactivateTitle,Cannot Deactivate,Haiwezi Kusimamishwa,Dialog title for a Platform Admin account.,draft
+account_cannotDeactivateBody,"This account has Platform Admin access, so it can't be deactivated - not by you, and not by anyone else. This keeps the platform from ever being locked out of its own oversight tools.","Akaunti hii ina ruhusa ya Msimamizi wa Jukwaa, kwa hiyo haiwezi kusimamishwa - si na wewe, wala na mtu mwingine. Hii inazuia jukwaa kufungiwa nje ya zana zake za usimamizi.",Dialog text for a Platform Admin account.,draft
+account_deactivateTitle,Deactivate Account,Simamisha Akaunti,Dialog title and Manage Account item.,draft
+account_deactivateBody,"Are you sure you want to deactivate your account? You'll be signed out immediately, and will need your facility admin (or Platform Admin) to reactivate it before you can sign back in.","Una uhakika unataka kusimamisha akaunti yako? Utatolewa mara moja, na utahitaji msimamizi wa kituo chako (au Msimamizi wa Jukwaa) kuirejesha kabla hujaingia tena.",Deactivate confirmation text.,draft
+account_confirmDeactivation,Confirm Deactivation,Thibitisha Kusimamisha,Typed confirmation title before deactivating.,draft
+account_typeToConfirm,"Type ""{word}"" to confirm:","Andika ""{word}"" kuthibitisha:","Typed confirmation; word is the English word that must be typed.",draft
+account_deactivated,Your account has been deactivated.,Akaunti yako imesimamishwa.,Shown on the sign-in screen after deactivating.,draft
+account_deactivateFailed,Couldn't deactivate the account,Imeshindwa kusimamisha akaunti,Message when deactivating failed.,draft
+account_deleteTitle,Delete Account,Futa Akaunti,"Dialog title, button and Manage Account item.",draft
+account_deleteWarning,Deleting your account is permanent and cannot be undone. All your data will be erased.,Kufuta akaunti yako ni kwa kudumu na hakuwezi kutenduliwa. Data yako yote itafutwa.,Delete account dialog text.,draft
+account_deleted,Your account has been deleted,Akaunti yako imefutwa,Message after deleting the account.,draft
+account_deleteFailed,Couldn't delete the account,Imeshindwa kufuta akaunti,Message when deleting failed.,draft
+account_checking,Checking...,Inakagua...,Delete Account item while checking whether it is allowed.,draft
+account_platformAdminNoDelete,Platform Admin accounts can't be deleted from here.,Akaunti za Msimamizi wa Jukwaa haziwezi kufutwa hapa.,Delete Account item for a Platform Admin.,draft
+account_deleteOwnedFirst,Delete all facilities you own in View Facilities first.,Futa kwanza vituo vyote unavyomiliki kwenye View Facilities.,"Delete Account item for an owner; ""View Facilities"" is the screen's English name until it is translated.",draft
+account_deleteHint,Permanently delete your account. This action cannot be undone.,Futa akaunti yako kabisa. Kitendo hiki hakiwezi kutenduliwa.,Delete Account item.,draft
+account_dangerZone,Danger Zone,Eneo la Hatari,Section heading.,draft
+account_dangerHint,These actions affect your account and business data. Review carefully before proceeding.,Vitendo hivi vinaathiri akaunti yako na data ya biashara. Kagua kwa makini kabla ya kuendelea.,Under Danger Zone.,draft
+account_logoutAll,Log Out of All Devices,Toka Kwenye Vifaa Vyote,Manage Account item.,draft
+account_logoutAllHint,Disconnect your active profile session from all other active platforms.,Tenganisha kipindi chako kutoka kwenye vifaa vingine vyote.,Under Log Out of All Devices.,draft
+account_wipeAll,Wipe All Business Data,Futa Data Yote ya Biashara,Manage Account item.,draft
+account_wipeInProgress,"Erase in progress - please wait, this may take a moment...","Inafuta - tafadhali subiri, hii inaweza kuchukua muda...",Under Wipe All Business Data while it runs.,draft
+account_wipeHint,"Permanently delete records of transactions, sales, and products while keeping your log in profile.","Futa kabisa rekodi za miamala, mauzo na bidhaa huku ukibaki na wasifu wako wa kuingia.",Under Wipe All Business Data.,draft
+account_deactivateHint,Temporarily disable your account. Can be reactivated later.,Zima akaunti yako kwa muda. Inaweza kurejeshwa baadaye.,Under Deactivate Account.,draft
