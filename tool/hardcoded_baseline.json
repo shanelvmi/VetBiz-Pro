@@ -468,6 +468,12 @@
       "file": "lib/utils/export_texts.dart",
       "lineContains": "",
       "reason": "out of scope for step 2F (docs/PHASE2_LOCALISATION_SPEC.md 2.8): the text written into exported files (sheet names, headers, subtitles, fallback cells, share text) stays English, like receipts and PDFs; export_data_screen.dart itself is checked"
+    },
+    {
+      "rule": "R10",
+      "file": "lib/utils/receipt_texts.dart",
+      "lineContains": "",
+      "reason": "out of scope for step 2F (docs/PHASE2_LOCALISATION_SPEC.md 2.8): the receipt body drawn by the preview screens stays English, like the receipt PDF and the thermal printer; the screens' own buttons and panels are checked"
     }
   ],
   "counts": {
@@ -513,7 +519,6 @@
       "lib/screens/sales/sales_archive_screen.dart": 27,
       "lib/screens/sales/sales_screen.dart": 32,
       "lib/screens/services/add_edit_service_screen.dart": 20,
-      "lib/screens/services/service_receipt_preview_screen.dart": 31,
       "lib/services/role_change_service.dart": 1,
       "lib/services/session_validity_service.dart": 1
     },
