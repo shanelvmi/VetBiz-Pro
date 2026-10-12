@@ -10787,6 +10787,120 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Facility Actions'**
   String get facilities_actionsTitle;
+
+  /// Facility detail, Settings tab.
+  ///
+  /// In en, this message translates to:
+  /// **'Settings specific to this facility. For your account, notifications, printer, currency, and app-wide preferences, use the main Settings screen.'**
+  String get facilities_actionsIntro;
+
+  /// Facility detail, Settings tab action.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit Facility Details'**
+  String get facilities_editDetails;
+
+  /// Facility detail, Settings tab: under Edit Facility Details.
+  ///
+  /// In en, this message translates to:
+  /// **'Name, type, logo, contact info, license, and more.'**
+  String get facilities_editDetailsHint;
+
+  /// Facility detail, Settings tab action.
+  ///
+  /// In en, this message translates to:
+  /// **'Deactivate This Facility'**
+  String get facilities_deactivateThis;
+
+  /// Facility detail, Settings tab action.
+  ///
+  /// In en, this message translates to:
+  /// **'Reactivate This Facility'**
+  String get facilities_reactivateThis;
+
+  /// Facility detail, Settings tab: under Deactivate.
+  ///
+  /// In en, this message translates to:
+  /// **'Marks this facility as inactive. It stays in your list but is flagged as not operating.'**
+  String get facilities_deactivateHint;
+
+  /// Facility detail, Settings tab: under Reactivate.
+  ///
+  /// In en, this message translates to:
+  /// **'Marks this facility as active again.'**
+  String get facilities_reactivateHint;
+
+  /// Facility detail, Settings tab action.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete This Facility'**
+  String get facilities_deleteThis;
+
+  /// Facility detail, Settings tab: under Delete.
+  ///
+  /// In en, this message translates to:
+  /// **'Permanently removes this facility and its data. This cannot be undone.'**
+  String get facilities_deleteThisHint;
+
+  /// Facility detail, Settings tab card title.
+  ///
+  /// In en, this message translates to:
+  /// **'Activity Log Retention'**
+  String get facilities_retentionTitle;
+
+  /// Facility detail, Settings tab: retention in days.
+  ///
+  /// In en, this message translates to:
+  /// **'Logs older than this are automatically deleted for this facility. Currently: {count} days.'**
+  String facilities_retentionText(int count);
+
+  /// Facility detail, Settings tab card title.
+  ///
+  /// In en, this message translates to:
+  /// **'Debt Overdue Threshold'**
+  String get facilities_overdueTitle;
+
+  /// Facility detail, Settings tab: overdue threshold in days.
+  ///
+  /// In en, this message translates to:
+  /// **'An unpaid debt is considered overdue once it is older than this many days. Currently: {count} days.'**
+  String facilities_overdueText(int count);
+
+  /// Dialog title.
+  ///
+  /// In en, this message translates to:
+  /// **'Deactivate Facility?'**
+  String get facilities_deactivateConfirmTitle;
+
+  /// Dialog title.
+  ///
+  /// In en, this message translates to:
+  /// **'Reactivate Facility?'**
+  String get facilities_reactivateConfirmTitle;
+
+  /// Deactivate Facility dialog.
+  ///
+  /// In en, this message translates to:
+  /// **'{name} will be marked Inactive. It stays in your facilities list but is flagged as not operating.'**
+  String facilities_deactivateConfirm(String name);
+
+  /// Reactivate Facility dialog.
+  ///
+  /// In en, this message translates to:
+  /// **'{name} will be marked Active again.'**
+  String facilities_reactivateConfirm(String name);
+
+  /// Message after changing the status; status is the status label.
+  ///
+  /// In en, this message translates to:
+  /// **'Facility marked {status}'**
+  String facilities_markedStatus(String status);
+
+  /// Retention dialog title.
+  ///
+  /// In en, this message translates to:
+  /// **'Keep Logs For'**
+  String get facilities_keepLogsFor;
 }
 
 class _AppLocalizationsDelegate

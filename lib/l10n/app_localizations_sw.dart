@@ -6319,4 +6319,77 @@ class AppLocalizationsSw extends AppLocalizations {
 
   @override
   String get facilities_actionsTitle => 'Vitendo vya Kituo';
+
+  @override
+  String get facilities_actionsIntro =>
+      'Mipangilio ya kituo hiki pekee. Kwa akaunti yako, arifa, printa, sarafu na mapendeleo ya programu nzima, tumia skrini kuu ya Mipangilio.';
+
+  @override
+  String get facilities_editDetails => 'Hariri Taarifa za Kituo';
+
+  @override
+  String get facilities_editDetailsHint =>
+      'Jina, aina, nembo, mawasiliano, leseni na zaidi.';
+
+  @override
+  String get facilities_deactivateThis => 'Simamisha Kituo Hiki';
+
+  @override
+  String get facilities_reactivateThis => 'Rejesha Kituo Hiki';
+
+  @override
+  String get facilities_deactivateHint =>
+      'Huweka kituo hiki kama hakifanyi kazi. Kinabaki kwenye orodha yako lakini kinaonyeshwa kuwa hakifanyi kazi.';
+
+  @override
+  String get facilities_reactivateHint =>
+      'Huweka kituo hiki kama kinachofanya kazi tena.';
+
+  @override
+  String get facilities_deleteThis => 'Futa Kituo Hiki';
+
+  @override
+  String get facilities_deleteThisHint =>
+      'Huondoa kabisa kituo hiki na data yake. Hili haliwezi kutenduliwa.';
+
+  @override
+  String get facilities_retentionTitle =>
+      'Muda wa Kuhifadhi Kumbukumbu za Shughuli';
+
+  @override
+  String facilities_retentionText(int count) {
+    return 'Kumbukumbu zilizozidi muda huu hufutwa kiotomatiki kwa kituo hiki. Kwa sasa: siku $count.';
+  }
+
+  @override
+  String get facilities_overdueTitle => 'Kikomo cha Deni Kuchelewa';
+
+  @override
+  String facilities_overdueText(int count) {
+    return 'Deni lisilolipwa huhesabiwa kuwa limechelewa likipita idadi hii ya siku. Kwa sasa: siku $count.';
+  }
+
+  @override
+  String get facilities_deactivateConfirmTitle => 'Simamisha Kituo?';
+
+  @override
+  String get facilities_reactivateConfirmTitle => 'Rejesha Kituo?';
+
+  @override
+  String facilities_deactivateConfirm(String name) {
+    return '$name kitawekwa kama Hakifanyi Kazi. Kinabaki kwenye orodha ya vituo vyako lakini kinaonyeshwa kuwa hakifanyi kazi.';
+  }
+
+  @override
+  String facilities_reactivateConfirm(String name) {
+    return '$name kitawekwa kama Kinafanya Kazi tena.';
+  }
+
+  @override
+  String facilities_markedStatus(String status) {
+    return 'Kituo sasa: $status';
+  }
+
+  @override
+  String get facilities_keepLogsFor => 'Hifadhi Kumbukumbu Kwa';
 }

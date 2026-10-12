@@ -6284,4 +6284,76 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get facilities_actionsTitle => 'Facility Actions';
+
+  @override
+  String get facilities_actionsIntro =>
+      'Settings specific to this facility. For your account, notifications, printer, currency, and app-wide preferences, use the main Settings screen.';
+
+  @override
+  String get facilities_editDetails => 'Edit Facility Details';
+
+  @override
+  String get facilities_editDetailsHint =>
+      'Name, type, logo, contact info, license, and more.';
+
+  @override
+  String get facilities_deactivateThis => 'Deactivate This Facility';
+
+  @override
+  String get facilities_reactivateThis => 'Reactivate This Facility';
+
+  @override
+  String get facilities_deactivateHint =>
+      'Marks this facility as inactive. It stays in your list but is flagged as not operating.';
+
+  @override
+  String get facilities_reactivateHint =>
+      'Marks this facility as active again.';
+
+  @override
+  String get facilities_deleteThis => 'Delete This Facility';
+
+  @override
+  String get facilities_deleteThisHint =>
+      'Permanently removes this facility and its data. This cannot be undone.';
+
+  @override
+  String get facilities_retentionTitle => 'Activity Log Retention';
+
+  @override
+  String facilities_retentionText(int count) {
+    return 'Logs older than this are automatically deleted for this facility. Currently: $count days.';
+  }
+
+  @override
+  String get facilities_overdueTitle => 'Debt Overdue Threshold';
+
+  @override
+  String facilities_overdueText(int count) {
+    return 'An unpaid debt is considered overdue once it is older than this many days. Currently: $count days.';
+  }
+
+  @override
+  String get facilities_deactivateConfirmTitle => 'Deactivate Facility?';
+
+  @override
+  String get facilities_reactivateConfirmTitle => 'Reactivate Facility?';
+
+  @override
+  String facilities_deactivateConfirm(String name) {
+    return '$name will be marked Inactive. It stays in your facilities list but is flagged as not operating.';
+  }
+
+  @override
+  String facilities_reactivateConfirm(String name) {
+    return '$name will be marked Active again.';
+  }
+
+  @override
+  String facilities_markedStatus(String status) {
+    return 'Facility marked $status';
+  }
+
+  @override
+  String get facilities_keepLogsFor => 'Keep Logs For';
 }
