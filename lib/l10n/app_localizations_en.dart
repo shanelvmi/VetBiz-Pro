@@ -6148,4 +6148,73 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get facilities_onlyFacilityWarning =>
       'This is your only facility. Deleting it leaves your account with no facility - you will stay signed in, and can then add a new one or delete your account.';
+
+  @override
+  String facilities_typeToConfirm(String name) {
+    return 'Type \"$name\" to confirm:';
+  }
+
+  @override
+  String facilities_deleteFailed(String error) {
+    return 'Couldn\'t delete the facility. $error';
+  }
+
+  @override
+  String get facilities_deleted => 'Facility deleted';
+
+  @override
+  String get facilities_title => 'Facilities';
+
+  @override
+  String get facilities_subtitle =>
+      'Manage all your veterinary facilities and branches';
+
+  @override
+  String get facilities_noMatchFilters =>
+      'No facilities match your filters. Try a different search or status.';
+
+  @override
+  String get facilities_searchHint => 'Search facilities...';
+
+  @override
+  String get facilities_noMatchFilter => 'No facilities match this filter.';
+
+  @override
+  String facilities_nameWithType(String name, String type) {
+    return '$name $type';
+  }
+
+  @override
+  String get facilities_moreActionsTooltip => 'More actions';
+
+  @override
+  String get facilities_moreActions => 'More Actions';
+
+  @override
+  String get facilities_switchToThis => 'Switch to This Facility';
+
+  @override
+  String facilities_managerLine(String name) {
+    return '$name (Manager)';
+  }
+
+  @override
+  String facilities_joinedOn(String date) {
+    return 'Joined on $date';
+  }
+
+  @override
+  String get facilities_code => 'Facility Code';
+
+  @override
+  String get facilities_licenseNo => 'License No.';
+
+  @override
+  String get facilities_notSet => 'Not set';
+
+  @override
+  String get facilities_activityFallback => 'Activity';
+
+  @override
+  String get facilities_viewProducts => 'View Products';
 }

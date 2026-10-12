@@ -6182,4 +6182,74 @@ class AppLocalizationsSw extends AppLocalizations {
   @override
   String get facilities_onlyFacilityWarning =>
       'Hiki ndicho kituo chako pekee. Ukikifuta, akaunti yako itabaki bila kituo - utaendelea kuwa umeingia, na kisha unaweza kuongeza kipya au kufuta akaunti yako.';
+
+  @override
+  String facilities_typeToConfirm(String name) {
+    return 'Andika \"$name\" kuthibitisha:';
+  }
+
+  @override
+  String facilities_deleteFailed(String error) {
+    return 'Imeshindwa kufuta kituo. $error';
+  }
+
+  @override
+  String get facilities_deleted => 'Kituo kimefutwa';
+
+  @override
+  String get facilities_title => 'Vituo';
+
+  @override
+  String get facilities_subtitle =>
+      'Simamia vituo vyako vyote vya mifugo na matawi';
+
+  @override
+  String get facilities_noMatchFilters =>
+      'Hakuna kituo kinacholingana na vichujio vyako. Jaribu utafutaji au hali nyingine.';
+
+  @override
+  String get facilities_searchHint => 'Tafuta vituo...';
+
+  @override
+  String get facilities_noMatchFilter =>
+      'Hakuna kituo kinacholingana na kichujio hiki.';
+
+  @override
+  String facilities_nameWithType(String name, String type) {
+    return '$name $type';
+  }
+
+  @override
+  String get facilities_moreActionsTooltip => 'Vitendo zaidi';
+
+  @override
+  String get facilities_moreActions => 'Vitendo Zaidi';
+
+  @override
+  String get facilities_switchToThis => 'Hamia Kituo Hiki';
+
+  @override
+  String facilities_managerLine(String name) {
+    return '$name (Meneja)';
+  }
+
+  @override
+  String facilities_joinedOn(String date) {
+    return 'Kimejiunga tarehe $date';
+  }
+
+  @override
+  String get facilities_code => 'Msimbo wa Kituo';
+
+  @override
+  String get facilities_licenseNo => 'Namba ya Leseni';
+
+  @override
+  String get facilities_notSet => 'Haijawekwa';
+
+  @override
+  String get facilities_activityFallback => 'Shughuli';
+
+  @override
+  String get facilities_viewProducts => 'Angalia Bidhaa';
 }

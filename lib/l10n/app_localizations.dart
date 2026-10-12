@@ -10559,6 +10559,120 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'This is your only facility. Deleting it leaves your account with no facility - you will stay signed in, and can then add a new one or delete your account.'**
   String get facilities_onlyFacilityWarning;
+
+  /// Delete Facility dialog: name is the exact text to type (the facility's name, never translated).
+  ///
+  /// In en, this message translates to:
+  /// **'Type \"{name}\" to confirm:'**
+  String facilities_typeToConfirm(String name);
+
+  /// Delete Facility dialog: deleting failed; error is the friendly reason.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t delete the facility. {error}'**
+  String facilities_deleteFailed(String error);
+
+  /// Message after deleting a facility.
+  ///
+  /// In en, this message translates to:
+  /// **'Facility deleted'**
+  String get facilities_deleted;
+
+  /// Facilities screen title and breadcrumb.
+  ///
+  /// In en, this message translates to:
+  /// **'Facilities'**
+  String get facilities_title;
+
+  /// Facilities screen, under the title.
+  ///
+  /// In en, this message translates to:
+  /// **'Manage all your veterinary facilities and branches'**
+  String get facilities_subtitle;
+
+  /// Facilities screen detail area: nothing matches.
+  ///
+  /// In en, this message translates to:
+  /// **'No facilities match your filters. Try a different search or status.'**
+  String get facilities_noMatchFilters;
+
+  /// Facilities list search field.
+  ///
+  /// In en, this message translates to:
+  /// **'Search facilities...'**
+  String get facilities_searchHint;
+
+  /// Facilities list: nothing matches the status filter.
+  ///
+  /// In en, this message translates to:
+  /// **'No facilities match this filter.'**
+  String get facilities_noMatchFilter;
+
+  /// Facilities list and header: the name with its type, e.g. Ukuli Agrovet.
+  ///
+  /// In en, this message translates to:
+  /// **'{name} {type}'**
+  String facilities_nameWithType(String name, String type);
+
+  /// Facility detail: tooltip of the More Actions menu.
+  ///
+  /// In en, this message translates to:
+  /// **'More actions'**
+  String get facilities_moreActionsTooltip;
+
+  /// Facility detail: menu button.
+  ///
+  /// In en, this message translates to:
+  /// **'More Actions'**
+  String get facilities_moreActions;
+
+  /// Facility detail: More Actions menu item.
+  ///
+  /// In en, this message translates to:
+  /// **'Switch to This Facility'**
+  String get facilities_switchToThis;
+
+  /// Facility detail header: who manages it.
+  ///
+  /// In en, this message translates to:
+  /// **'{name} (Manager)'**
+  String facilities_managerLine(String name);
+
+  /// Facility detail header: when the facility was created.
+  ///
+  /// In en, this message translates to:
+  /// **'Joined on {date}'**
+  String facilities_joinedOn(String date);
+
+  /// Facility detail header label.
+  ///
+  /// In en, this message translates to:
+  /// **'Facility Code'**
+  String get facilities_code;
+
+  /// Facility detail header label.
+  ///
+  /// In en, this message translates to:
+  /// **'License No.'**
+  String get facilities_licenseNo;
+
+  /// Facility detail: a value not filled in (license, ownership).
+  ///
+  /// In en, this message translates to:
+  /// **'Not set'**
+  String get facilities_notSet;
+
+  /// Facility activity list: an entry with no type.
+  ///
+  /// In en, this message translates to:
+  /// **'Activity'**
+  String get facilities_activityFallback;
+
+  /// Facility metric card link.
+  ///
+  /// In en, this message translates to:
+  /// **'View Products'**
+  String get facilities_viewProducts;
 }
 
 class _AppLocalizationsDelegate
