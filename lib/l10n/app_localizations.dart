@@ -10673,6 +10673,120 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'View Products'**
   String get facilities_viewProducts;
+
+  /// Facility metric card link.
+  ///
+  /// In en, this message translates to:
+  /// **'View All'**
+  String get facilities_viewAll;
+
+  /// Facility metric card.
+  ///
+  /// In en, this message translates to:
+  /// **'Low Stock Items'**
+  String get facilities_lowStockItems;
+
+  /// Facility metric card link.
+  ///
+  /// In en, this message translates to:
+  /// **'View Items'**
+  String get facilities_viewItems;
+
+  /// Facility metric card.
+  ///
+  /// In en, this message translates to:
+  /// **'Expired Items'**
+  String get facilities_expiredItems;
+
+  /// Facility metric card.
+  ///
+  /// In en, this message translates to:
+  /// **'Total Sales (This Month)'**
+  String get facilities_totalSalesThisMonth;
+
+  /// Facility metric card link.
+  ///
+  /// In en, this message translates to:
+  /// **'View Report'**
+  String get facilities_viewReport;
+
+  /// Facility detail tab.
+  ///
+  /// In en, this message translates to:
+  /// **'Overview'**
+  String get facilities_tabOverview;
+
+  /// Facility detail tab.
+  ///
+  /// In en, this message translates to:
+  /// **'Inventory Summary'**
+  String get facilities_tabInventory;
+
+  /// Facility detail tab.
+  ///
+  /// In en, this message translates to:
+  /// **'Sales Summary'**
+  String get facilities_tabSales;
+
+  /// Facility detail, Team Members tab.
+  ///
+  /// In en, this message translates to:
+  /// **'Manage this facility\'s team from the Team Members screen.'**
+  String get facilities_teamTabMessage;
+
+  /// Facility detail, Team Members tab button.
+  ///
+  /// In en, this message translates to:
+  /// **'Open Team Members'**
+  String get facilities_openTeamMembers;
+
+  /// Facility detail, Inventory Summary tab.
+  ///
+  /// In en, this message translates to:
+  /// **'No products in this facility yet.'**
+  String get facilities_noProducts;
+
+  /// Facility detail, Inventory Summary card title.
+  ///
+  /// In en, this message translates to:
+  /// **'By Category'**
+  String get facilities_byCategory;
+
+  /// Facility detail, Needs Attention card.
+  ///
+  /// In en, this message translates to:
+  /// **'Nothing low on stock or expired right now.'**
+  String get facilities_nothingNeedsAttention;
+
+  /// Facility detail, Sales Summary card title.
+  ///
+  /// In en, this message translates to:
+  /// **'Recent Sales'**
+  String get facilities_recentSales;
+
+  /// Facility detail, Sales Summary card.
+  ///
+  /// In en, this message translates to:
+  /// **'No sales recorded yet.'**
+  String get facilities_noSalesYet;
+
+  /// Facility detail, Recent Sales: a sale with no client.
+  ///
+  /// In en, this message translates to:
+  /// **'Walk-in sale'**
+  String get facilities_walkInSale;
+
+  /// Facility detail, Sales Summary: number of sales in the month.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 sale} other{{count} sales}}'**
+  String facilities_saleCount(int count);
+
+  /// Facility detail, Settings tab card title.
+  ///
+  /// In en, this message translates to:
+  /// **'Facility Actions'**
+  String get facilities_actionsTitle;
 }
 
 class _AppLocalizationsDelegate

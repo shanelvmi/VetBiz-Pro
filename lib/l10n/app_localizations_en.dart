@@ -6217,4 +6217,71 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get facilities_viewProducts => 'View Products';
+
+  @override
+  String get facilities_viewAll => 'View All';
+
+  @override
+  String get facilities_lowStockItems => 'Low Stock Items';
+
+  @override
+  String get facilities_viewItems => 'View Items';
+
+  @override
+  String get facilities_expiredItems => 'Expired Items';
+
+  @override
+  String get facilities_totalSalesThisMonth => 'Total Sales (This Month)';
+
+  @override
+  String get facilities_viewReport => 'View Report';
+
+  @override
+  String get facilities_tabOverview => 'Overview';
+
+  @override
+  String get facilities_tabInventory => 'Inventory Summary';
+
+  @override
+  String get facilities_tabSales => 'Sales Summary';
+
+  @override
+  String get facilities_teamTabMessage =>
+      'Manage this facility\'s team from the Team Members screen.';
+
+  @override
+  String get facilities_openTeamMembers => 'Open Team Members';
+
+  @override
+  String get facilities_noProducts => 'No products in this facility yet.';
+
+  @override
+  String get facilities_byCategory => 'By Category';
+
+  @override
+  String get facilities_nothingNeedsAttention =>
+      'Nothing low on stock or expired right now.';
+
+  @override
+  String get facilities_recentSales => 'Recent Sales';
+
+  @override
+  String get facilities_noSalesYet => 'No sales recorded yet.';
+
+  @override
+  String get facilities_walkInSale => 'Walk-in sale';
+
+  @override
+  String facilities_saleCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count sales',
+      one: '1 sale',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get facilities_actionsTitle => 'Facility Actions';
 }

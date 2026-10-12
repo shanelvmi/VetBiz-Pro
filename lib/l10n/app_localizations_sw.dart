@@ -6252,4 +6252,71 @@ class AppLocalizationsSw extends AppLocalizations {
 
   @override
   String get facilities_viewProducts => 'Angalia Bidhaa';
+
+  @override
+  String get facilities_viewAll => 'Angalia Zote';
+
+  @override
+  String get facilities_lowStockItems => 'Bidhaa Zenye Stoo Chache';
+
+  @override
+  String get facilities_viewItems => 'Angalia Vitu';
+
+  @override
+  String get facilities_expiredItems => 'Bidhaa Zilizopitwa na Muda';
+
+  @override
+  String get facilities_totalSalesThisMonth => 'Jumla ya Mauzo (Mwezi Huu)';
+
+  @override
+  String get facilities_viewReport => 'Angalia Ripoti';
+
+  @override
+  String get facilities_tabOverview => 'Muhtasari';
+
+  @override
+  String get facilities_tabInventory => 'Muhtasari wa Bidhaa';
+
+  @override
+  String get facilities_tabSales => 'Muhtasari wa Mauzo';
+
+  @override
+  String get facilities_teamTabMessage =>
+      'Simamia wafanyakazi wa kituo hiki kupitia skrini ya Wafanyakazi.';
+
+  @override
+  String get facilities_openTeamMembers => 'Fungua Wafanyakazi';
+
+  @override
+  String get facilities_noProducts => 'Bado hakuna bidhaa katika kituo hiki.';
+
+  @override
+  String get facilities_byCategory => 'Kwa Kundi';
+
+  @override
+  String get facilities_nothingNeedsAttention =>
+      'Hakuna bidhaa yenye stoo chache au iliyopitwa na muda kwa sasa.';
+
+  @override
+  String get facilities_recentSales => 'Mauzo ya Karibuni';
+
+  @override
+  String get facilities_noSalesYet => 'Bado hakuna mauzo yaliyorekodiwa.';
+
+  @override
+  String get facilities_walkInSale => 'Mauzo ya papo hapo';
+
+  @override
+  String facilities_saleCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'mauzo $count',
+      one: 'mauzo 1',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get facilities_actionsTitle => 'Vitendo vya Kituo';
 }
