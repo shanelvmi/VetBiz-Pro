@@ -4477,4 +4477,77 @@ class AppLocalizationsSw extends AppLocalizations {
 
   @override
   String get products_editProduct => 'Hariri Bidhaa';
+
+  @override
+  String get products_updateProduct => 'Sasisha Bidhaa';
+
+  @override
+  String get products_saveProduct => 'Hifadhi Bidhaa';
+
+  @override
+  String get products_basicInfo => 'Taarifa za Msingi';
+
+  @override
+  String get products_productName => 'Jina la Bidhaa';
+
+  @override
+  String get products_nameRequired => 'Jina la bidhaa linahitajika';
+
+  @override
+  String products_alreadyExistsNamed(String name) {
+    return '\"$name\" tayari ipo';
+  }
+
+  @override
+  String get products_openBelowHint =>
+      'Unaongeza mzigo mpya au kusasisha idadi yake? Ifungue hapa chini - unaweza kuhariri taarifa na idadi yake hapo hapo.';
+
+  @override
+  String get products_openThisProduct => 'Fungua Bidhaa Hii';
+
+  @override
+  String get products_similarExist => 'Bidhaa zinazofanana tayari zipo';
+
+  @override
+  String get products_open => 'Fungua';
+
+  @override
+  String get products_details => 'Taarifa za Bidhaa';
+
+  @override
+  String get products_currentQuantity => 'Idadi ya Sasa';
+
+  @override
+  String get products_storeQty => 'Idadi Stoo';
+
+  @override
+  String get products_invalid => 'Si sahihi';
+
+  @override
+  String get products_shelfQty => 'Idadi Rafuni';
+
+  @override
+  String get products_quantityEditHint =>
+      'Kuhariri hizi kunarekebisha idadi halisi iliyopo sasa.';
+
+  @override
+  String products_manyBatchesHint(int count) {
+    return 'Bidhaa hii ina batch $count tofauti - zisimamie moja moja kwa usahihi.';
+  }
+
+  @override
+  String get products_manageBatches => 'Simamia Batch';
+
+  @override
+  String get products_addNewBatchLong =>
+      'Ongeza Batch Mpya (mzigo mpya, tarehe tofauti ya kuisha)';
+
+  @override
+  String get products_pricingStock => 'Bei na Akiba';
+
+  @override
+  String get products_additionalInfo => 'Taarifa za Ziada';
+
+  @override
+  String get products_minStockLevel => 'Kiwango cha Chini cha Akiba';
 }

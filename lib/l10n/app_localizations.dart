@@ -7757,6 +7757,138 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Edit Product'**
   String get products_editProduct;
+
+  /// Add/Edit Product save button when editing.
+  ///
+  /// In en, this message translates to:
+  /// **'Update Product'**
+  String get products_updateProduct;
+
+  /// Add/Edit Product save button when adding.
+  ///
+  /// In en, this message translates to:
+  /// **'Save Product'**
+  String get products_saveProduct;
+
+  /// Add/Edit Product section heading.
+  ///
+  /// In en, this message translates to:
+  /// **'Basic Information'**
+  String get products_basicInfo;
+
+  /// Add/Edit Product field label.
+  ///
+  /// In en, this message translates to:
+  /// **'Product Name'**
+  String get products_productName;
+
+  /// Add/Edit Product validation.
+  ///
+  /// In en, this message translates to:
+  /// **'Product name is required'**
+  String get products_nameRequired;
+
+  /// Add Product, a product with the same name exists.
+  ///
+  /// In en, this message translates to:
+  /// **'\"{name}\" already exists'**
+  String products_alreadyExistsNamed(String name);
+
+  /// Add Product, under the duplicate name warning.
+  ///
+  /// In en, this message translates to:
+  /// **'Adding new stock for it, or updating its quantity? Open it below - you can edit its details and quantity right there.'**
+  String get products_openBelowHint;
+
+  /// Add Product, duplicate name button.
+  ///
+  /// In en, this message translates to:
+  /// **'Open This Product'**
+  String get products_openThisProduct;
+
+  /// Add Product, similar names warning.
+  ///
+  /// In en, this message translates to:
+  /// **'Similar products already exist'**
+  String get products_similarExist;
+
+  /// Add Product, open a similar product.
+  ///
+  /// In en, this message translates to:
+  /// **'Open'**
+  String get products_open;
+
+  /// Add/Edit Product section heading.
+  ///
+  /// In en, this message translates to:
+  /// **'Product Details'**
+  String get products_details;
+
+  /// Edit Product, heading over the quantities.
+  ///
+  /// In en, this message translates to:
+  /// **'Current Quantity'**
+  String get products_currentQuantity;
+
+  /// Edit Product field label.
+  ///
+  /// In en, this message translates to:
+  /// **'Store Qty'**
+  String get products_storeQty;
+
+  /// Add/Edit Product number validation.
+  ///
+  /// In en, this message translates to:
+  /// **'Invalid'**
+  String get products_invalid;
+
+  /// Edit Product field label.
+  ///
+  /// In en, this message translates to:
+  /// **'Shelf Qty'**
+  String get products_shelfQty;
+
+  /// Edit Product, under the quantities.
+  ///
+  /// In en, this message translates to:
+  /// **'Editing these corrects the actual quantity on hand right now.'**
+  String get products_quantityEditHint;
+
+  /// Edit Product, when the product has several batches.
+  ///
+  /// In en, this message translates to:
+  /// **'This product has {count} separate batches - manage them individually for accuracy.'**
+  String products_manyBatchesHint(int count);
+
+  /// Edit Product button.
+  ///
+  /// In en, this message translates to:
+  /// **'Manage Batches'**
+  String get products_manageBatches;
+
+  /// Edit Product button.
+  ///
+  /// In en, this message translates to:
+  /// **'Add New Batch (new delivery, different expiry)'**
+  String get products_addNewBatchLong;
+
+  /// Add/Edit Product section heading.
+  ///
+  /// In en, this message translates to:
+  /// **'Pricing & Stock'**
+  String get products_pricingStock;
+
+  /// Add/Edit Product section heading.
+  ///
+  /// In en, this message translates to:
+  /// **'Additional Information'**
+  String get products_additionalInfo;
+
+  /// Add/Edit Product field label.
+  ///
+  /// In en, this message translates to:
+  /// **'Minimum Stock Level'**
+  String get products_minStockLevel;
 }
 
 class _AppLocalizationsDelegate

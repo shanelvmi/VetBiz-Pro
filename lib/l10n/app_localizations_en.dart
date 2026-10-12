@@ -4453,4 +4453,77 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get products_editProduct => 'Edit Product';
+
+  @override
+  String get products_updateProduct => 'Update Product';
+
+  @override
+  String get products_saveProduct => 'Save Product';
+
+  @override
+  String get products_basicInfo => 'Basic Information';
+
+  @override
+  String get products_productName => 'Product Name';
+
+  @override
+  String get products_nameRequired => 'Product name is required';
+
+  @override
+  String products_alreadyExistsNamed(String name) {
+    return '\"$name\" already exists';
+  }
+
+  @override
+  String get products_openBelowHint =>
+      'Adding new stock for it, or updating its quantity? Open it below - you can edit its details and quantity right there.';
+
+  @override
+  String get products_openThisProduct => 'Open This Product';
+
+  @override
+  String get products_similarExist => 'Similar products already exist';
+
+  @override
+  String get products_open => 'Open';
+
+  @override
+  String get products_details => 'Product Details';
+
+  @override
+  String get products_currentQuantity => 'Current Quantity';
+
+  @override
+  String get products_storeQty => 'Store Qty';
+
+  @override
+  String get products_invalid => 'Invalid';
+
+  @override
+  String get products_shelfQty => 'Shelf Qty';
+
+  @override
+  String get products_quantityEditHint =>
+      'Editing these corrects the actual quantity on hand right now.';
+
+  @override
+  String products_manyBatchesHint(int count) {
+    return 'This product has $count separate batches - manage them individually for accuracy.';
+  }
+
+  @override
+  String get products_manageBatches => 'Manage Batches';
+
+  @override
+  String get products_addNewBatchLong =>
+      'Add New Batch (new delivery, different expiry)';
+
+  @override
+  String get products_pricingStock => 'Pricing & Stock';
+
+  @override
+  String get products_additionalInfo => 'Additional Information';
+
+  @override
+  String get products_minStockLevel => 'Minimum Stock Level';
 }
