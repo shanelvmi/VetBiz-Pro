@@ -3972,4 +3972,81 @@ class AppLocalizationsEn extends AppLocalizations {
   String batch_moveExpiresPart(String date) {
     return ' (expires $date)';
   }
+
+  @override
+  String batch_quantityToMove(String unit) {
+    return 'Quantity to move ($unit)';
+  }
+
+  @override
+  String get batch_noteRequiredOther => 'Note (required for Other)';
+
+  @override
+  String get batch_noteOptional => 'Note (optional)';
+
+  @override
+  String batch_quantityUpTo(int max) {
+    return 'Enter a quantity up to $max';
+  }
+
+  @override
+  String get batch_selectReason => 'Select a reason';
+
+  @override
+  String get batch_describeReason => 'Describe the reason in the note below';
+
+  @override
+  String batch_movedBack(int quantity, String unit) {
+    return 'Moved $quantity $unit back to Stock Store';
+  }
+
+  @override
+  String batch_removedFromSellable(int quantity, String unit) {
+    return 'Removed $quantity $unit from Sellable';
+  }
+
+  @override
+  String get batch_moveFailed => 'Couldn\'t move the stock';
+
+  @override
+  String get batch_unlabeledTitle => 'Unlabeled Batch';
+
+  @override
+  String batch_currently(int stock, int sellable) {
+    return 'Currently: $stock store · $sellable sellable';
+  }
+
+  @override
+  String get batch_modeAdd => 'Add to it';
+
+  @override
+  String get batch_modeSet => 'Correct to';
+
+  @override
+  String get batch_modeAddHint =>
+      'Adds this amount on top of what\'s already there (a top-up delivery).';
+
+  @override
+  String get batch_modeSetHint =>
+      'Sets the exact amount on file right now (fixing a miscount).';
+
+  @override
+  String get batch_addStoreQty => 'Add to Store Qty';
+
+  @override
+  String get batch_setStoreQty => 'Correct Store Qty to';
+
+  @override
+  String get batch_addSellableQty => 'Add to Sellable Qty';
+
+  @override
+  String get batch_setSellableQty => 'Correct Sellable Qty to';
+
+  @override
+  String batch_saveFailed(String error) {
+    return 'Could not save: $error';
+  }
+
+  @override
+  String get batch_deleteExpiredTitle => 'Delete Expired Batch?';
 }

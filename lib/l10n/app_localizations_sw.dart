@@ -3990,4 +3990,81 @@ class AppLocalizationsSw extends AppLocalizations {
   String batch_moveExpiresPart(String date) {
     return ' (inaisha $date)';
   }
+
+  @override
+  String batch_quantityToMove(String unit) {
+    return 'Idadi ya kuhamisha ($unit)';
+  }
+
+  @override
+  String get batch_noteRequiredOther => 'Maelezo (lazima kwa Nyingine)';
+
+  @override
+  String get batch_noteOptional => 'Maelezo (si lazima)';
+
+  @override
+  String batch_quantityUpTo(int max) {
+    return 'Weka idadi isiyozidi $max';
+  }
+
+  @override
+  String get batch_selectReason => 'Chagua sababu';
+
+  @override
+  String get batch_describeReason => 'Eleza sababu kwenye maelezo hapa chini';
+
+  @override
+  String batch_movedBack(int quantity, String unit) {
+    return '$quantity $unit zimerudishwa Stoo';
+  }
+
+  @override
+  String batch_removedFromSellable(int quantity, String unit) {
+    return '$quantity $unit zimeondolewa kwenye za Kuuza';
+  }
+
+  @override
+  String get batch_moveFailed => 'Imeshindikana kuhamisha bidhaa';
+
+  @override
+  String get batch_unlabeledTitle => 'Batch Isiyo na Namba';
+
+  @override
+  String batch_currently(int stock, int sellable) {
+    return 'Sasa: $stock stoo · $sellable za kuuza';
+  }
+
+  @override
+  String get batch_modeAdd => 'Ongeza juu yake';
+
+  @override
+  String get batch_modeSet => 'Rekebisha iwe';
+
+  @override
+  String get batch_modeAddHint =>
+      'Inaongeza kiasi hiki juu ya kilichopo (mzigo wa nyongeza).';
+
+  @override
+  String get batch_modeSetHint =>
+      'Inaweka kiasi kamili kilichopo sasa (kurekebisha hesabu iliyokosewa).';
+
+  @override
+  String get batch_addStoreQty => 'Ongeza Idadi ya Stoo';
+
+  @override
+  String get batch_setStoreQty => 'Rekebisha Idadi ya Stoo iwe';
+
+  @override
+  String get batch_addSellableQty => 'Ongeza Idadi ya Kuuza';
+
+  @override
+  String get batch_setSellableQty => 'Rekebisha Idadi ya Kuuza iwe';
+
+  @override
+  String batch_saveFailed(String error) {
+    return 'Imeshindikana kuhifadhi: $error';
+  }
+
+  @override
+  String get batch_deleteExpiredTitle => 'Futa Batch Iliyoisha Muda?';
 }

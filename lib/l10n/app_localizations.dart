@@ -7008,6 +7008,132 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **' (expires {date})'**
   String batch_moveExpiresPart(String date);
+
+  /// Move to Stock dialog field label.
+  ///
+  /// In en, this message translates to:
+  /// **'Quantity to move ({unit})'**
+  String batch_quantityToMove(String unit);
+
+  /// Move to Stock dialog note label when the reason is Other.
+  ///
+  /// In en, this message translates to:
+  /// **'Note (required for Other)'**
+  String get batch_noteRequiredOther;
+
+  /// Move to Stock dialog note label.
+  ///
+  /// In en, this message translates to:
+  /// **'Note (optional)'**
+  String get batch_noteOptional;
+
+  /// Move to Stock dialog validation.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter a quantity up to {max}'**
+  String batch_quantityUpTo(int max);
+
+  /// Move to Stock dialog validation.
+  ///
+  /// In en, this message translates to:
+  /// **'Select a reason'**
+  String get batch_selectReason;
+
+  /// Move to Stock dialog validation when the reason is Other.
+  ///
+  /// In en, this message translates to:
+  /// **'Describe the reason in the note below'**
+  String get batch_describeReason;
+
+  /// Message after Move to Stock.
+  ///
+  /// In en, this message translates to:
+  /// **'Moved {quantity} {unit} back to Stock Store'**
+  String batch_movedBack(int quantity, String unit);
+
+  /// Message after Remove from Sellable.
+  ///
+  /// In en, this message translates to:
+  /// **'Removed {quantity} {unit} from Sellable'**
+  String batch_removedFromSellable(int quantity, String unit);
+
+  /// Error message when Move to Stock fails.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t move the stock'**
+  String get batch_moveFailed;
+
+  /// Adjust dialog title for a batch with no number.
+  ///
+  /// In en, this message translates to:
+  /// **'Unlabeled Batch'**
+  String get batch_unlabeledTitle;
+
+  /// Adjust dialog, current quantities.
+  ///
+  /// In en, this message translates to:
+  /// **'Currently: {stock} store · {sellable} sellable'**
+  String batch_currently(int stock, int sellable);
+
+  /// Adjust dialog choice.
+  ///
+  /// In en, this message translates to:
+  /// **'Add to it'**
+  String get batch_modeAdd;
+
+  /// Adjust dialog choice.
+  ///
+  /// In en, this message translates to:
+  /// **'Correct to'**
+  String get batch_modeSet;
+
+  /// Adjust dialog, explains Add to it.
+  ///
+  /// In en, this message translates to:
+  /// **'Adds this amount on top of what\'s already there (a top-up delivery).'**
+  String get batch_modeAddHint;
+
+  /// Adjust dialog, explains Correct to.
+  ///
+  /// In en, this message translates to:
+  /// **'Sets the exact amount on file right now (fixing a miscount).'**
+  String get batch_modeSetHint;
+
+  /// Adjust dialog field label.
+  ///
+  /// In en, this message translates to:
+  /// **'Add to Store Qty'**
+  String get batch_addStoreQty;
+
+  /// Adjust dialog field label.
+  ///
+  /// In en, this message translates to:
+  /// **'Correct Store Qty to'**
+  String get batch_setStoreQty;
+
+  /// Adjust dialog field label.
+  ///
+  /// In en, this message translates to:
+  /// **'Add to Sellable Qty'**
+  String get batch_addSellableQty;
+
+  /// Adjust dialog field label.
+  ///
+  /// In en, this message translates to:
+  /// **'Correct Sellable Qty to'**
+  String get batch_setSellableQty;
+
+  /// Adjust dialog error with the technical error text.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not save: {error}'**
+  String batch_saveFailed(String error);
+
+  /// Delete batch dialog title.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete Expired Batch?'**
+  String get batch_deleteExpiredTitle;
 }
 
 class _AppLocalizationsDelegate
