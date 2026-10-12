@@ -60,7 +60,7 @@ Common to all: apply spec sections 4 and 5, reuse existing keys (search the ARB 
 
 **2F-5 transactions, debtors, clients.** (The owner started this by hand; finish it if incomplete.) Hazards: the debtors reminder messages (see rules); client type, animal, crop and status lookups; transaction category lookup.
 
-**2F-6 `lib/screens/admin`, `lib/screens/settings`.** Hazards: Team Members status, role and history labels use the lookups; the typed-confirmation words in Manage Account (see rules); **business-hours weekday names** are stored keys (display through a lookup, keep the order); export screen file contents stay English; the printer test page stays English; Trash screen messages are on-screen text (localise); the UI Settings dialog; the invite dialog.
+**2F-6 `lib/screens/admin`, `lib/screens/settings`.** Hazards: Team Members status, role and history labels use the lookups; the typed-confirmation words in Manage Account (see rules); Business hours are stored as grouped fields (weekday, Saturday, Sunday); keep every stored field name and value unchanged and localise only the screen's own labels; export screen file contents stay English; the printer test page stays English; Trash screen messages are on-screen text (localise); the UI Settings dialog; the invite dialog.
 
 **2F-7 `lib/screens/reports`, `lib/screens/services`.** Hazards: report breakdowns show stored payment methods and activity types through lookups; the report PDF and the receipt BODY (the receipt layout shown in the preview) stay English, but the surrounding buttons and headings are localised; service category lookup; archive filters keep stored values in queries.
 
