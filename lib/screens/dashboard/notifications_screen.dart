@@ -21,6 +21,7 @@ import '../../theme/app_text.dart';
 import '../../theme/app_dimens.dart';
 import '../../theme/theme_context.dart';
 import '../../theme/app_breakpoints.dart';
+import '../../l10n/l10n.dart';
 
 /// Everything that needs your attention, facility-wide - subscription
 /// status, urgent announcements, payments, debts, and system messages.
@@ -188,6 +189,9 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
   ///     its place.
   List<FacilityNotification> _reconcileSubscription(List<FacilityNotification> stored) {
     final notice = _subscriptionProvider?.attentionNotice;
+    // Shown in the current language; [notice] stays English because its
+    // message is compared with the stored (English) one below.
+    final shown = _subscriptionProvider?.attentionNoticeShown;
     final result = <FacilityNotification>[];
     var placed = false;
 
@@ -214,8 +218,8 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
       result.add(FacilityNotification(
         id: n.id,
         type: n.type,
-        title: notice.title,
-        message: notice.message,
+        title: shown!.title,
+        message: shown.message,
         createdAt: hasEscalated ? DateTime.now() : n.createdAt,
         readAt: hasEscalated ? null : n.readAt,
         // Lifetime now follows the live state rather than the stored
@@ -234,8 +238,8 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
         FacilityNotification(
           id: 'subscription_expiring',
           type: NotificationType.subscriptionExpiring,
-          title: notice.title,
-          message: notice.message,
+          title: shown!.title,
+          message: shown.message,
           createdAt: now,
           // No document behind this row yet, so it can't be marked read
           // (_markAllAsRead updates documents by id, and updating one
@@ -310,7 +314,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
         final q = _searchQuery.trim().toLowerCase();
         if (!n.title.toLowerCase().contains(q) &&
             !n.message.toLowerCase().contains(q) &&
-            !n.type.categoryLabel.toLowerCase().contains(q)) {
+            !_categoryLabel(n.type.category).toLowerCase().contains(q)) {
           return false;
         }
       }
@@ -356,15 +360,15 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
         title: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Text('Notifications', style: TextStyle(fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f19, color: context.colors.textPrimary)),
-            Text('All updates and alerts from your facility', style: TextStyle(fontSize: AppFontSize.f12, color: context.colors.textSecondary)),
+            Text(context.l10n.common_notifications, style: TextStyle(fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f19, color: context.colors.textPrimary)),
+            Text(context.l10n.notifications_subtitle, style: TextStyle(fontSize: AppFontSize.f12, color: context.colors.textSecondary)),
           ],
         ),
       ),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
           : _error != null
-              ? Center(child: Padding(padding: const EdgeInsets.all(AppSpacing.s24), child: Text('Could not load alerts: $_error')))
+              ? Center(child: Padding(padding: const EdgeInsets.all(AppSpacing.s24), child: Text(context.l10n.notifications_loadFailed(_error!))))
               : _buildFullScreenBody(),
     );
   }
@@ -386,19 +390,40 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
   ];
 
   String _categoryName(NotificationCategory c) {
+    final l = context.l10n;
     switch (c) {
       case NotificationCategory.critical:
-        return 'Critical';
+        return l.notifications_catCritical;
       case NotificationCategory.stock:
-        return 'Stock';
+        return l.notifications_catStock;
       case NotificationCategory.payment:
-        return 'Payments';
+        return l.notifications_catPayments;
       case NotificationCategory.debt:
-        return 'Debts';
+        return l.notifications_catDebts;
       case NotificationCategory.system:
-        return 'System';
+        return l.notifications_catSystem;
       case NotificationCategory.other:
-        return 'Updates';
+        return l.notifications_catUpdates;
+    }
+  }
+
+  // One notification's category, in the singular (the table and the search):
+  // NotificationType.categoryLabel's words, in the current language.
+  String _categoryLabel(NotificationCategory c) {
+    final l = context.l10n;
+    switch (c) {
+      case NotificationCategory.critical:
+        return l.notifications_catCritical;
+      case NotificationCategory.stock:
+        return l.notifications_catStock;
+      case NotificationCategory.payment:
+        return l.notifications_catPayment;
+      case NotificationCategory.debt:
+        return l.notifications_catDebt;
+      case NotificationCategory.system:
+        return l.notifications_catSystem;
+      case NotificationCategory.other:
+        return l.notifications_catUpdate;
     }
   }
 
@@ -548,7 +573,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                 const SizedBox(height: AppSpacing.s4),
                 Text(_categoryName(category), style: TextStyle(fontSize: AppFontSize.f11_5, color: context.colors.textMuted)),
                 Text(
-                  unread > 0 ? '$unread unread' : 'All read',
+                  unread > 0 ? context.l10n.notifications_unreadCount(unread) : context.l10n.notifications_allRead,
                   style: TextStyle(
                     fontSize: AppFontSize.f10_5,
                     color: unread > 0 ? color : context.colors.textDisabled,
@@ -574,7 +599,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
     final search = TextField(
       controller: _searchController,
       decoration: InputDecoration(
-        hintText: 'Search notifications...',
+        hintText: context.l10n.notifications_searchHint,
         hintStyle: const TextStyle(fontSize: AppFontSize.f13),
         prefixIcon: const Icon(Icons.search, size: AppIconSize.i20),
         filled: true,
@@ -606,14 +631,14 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
     final markAll = OutlinedButton.icon(
       onPressed: hasUnread ? _markAllAsRead : null,
       icon: const Icon(Icons.done_all, size: AppIconSize.i16),
-      label: const Text('Mark all read'),
+      label: Text(context.l10n.notifications_markAllRead),
       style: OutlinedButton.styleFrom(
         foregroundColor: context.colors.primary,
         padding: const EdgeInsets.symmetric(horizontal: AppSpacing.s14, vertical: AppSpacing.s12),
         side: BorderSide(color: context.colors.textHint.withValues(alpha: AppAlpha.a30)),
       ),
     );
-    final reset = _hasActiveFilters ? TextButton(onPressed: _resetFilters, child: const Text('Reset')) : null;
+    final reset = _hasActiveFilters ? TextButton(onPressed: _resetFilters, child: Text(context.l10n.common_reset)) : null;
 
     return LayoutBuilder(
       builder: (context, constraints) {
@@ -673,8 +698,10 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
           isExpanded: expand,
           icon: Icon(Icons.arrow_drop_down, size: AppIconSize.i18, color: context.colors.primary),
           style: TextStyle(color: context.colors.textPrimary, fontSize: AppFontSize.f13),
+          // The values stay 'All' / 'Unread' / 'Read' (the filter compares
+          // them); only what is shown is localised.
           items: const ['All', 'Unread', 'Read']
-              .map((v) => DropdownMenuItem(value: v, child: Text('Status: $v')))
+              .map((v) => DropdownMenuItem(value: v, child: Text(context.l10n.common_filterValue(context.l10n.common_status, _statusLabel(v)))))
               .toList(),
           onChanged: (val) {
             if (val != null) {
@@ -689,12 +716,18 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
     );
   }
 
+  String _statusLabel(String value) => switch (value) {
+        'Unread' => context.l10n.notifications_unread,
+        'Read' => context.l10n.notifications_read,
+        _ => context.l10n.common_all,
+      };
+
   // [expand] is for the narrow layout, where this sits in a half-width slot
   // and its label must be able to shorten rather than overflow. In the wide
   // row it has no width limit, so it just sizes to its label.
   Widget _dateRangeButton({bool expand = false}) {
     final label = _dateRange == null
-        ? 'Date: All'
+        ? context.l10n.common_filterValue(context.l10n.common_date, context.l10n.common_all)
         : '${AppDateFormat.dateShort.format(_dateRange!.start)} - ${AppDateFormat.dateNoPadY.format(_dateRange!.end)}';
     final labelText = Text(
       label,
@@ -731,7 +764,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
           if (_dateRange != null)
             IconButton(
               icon: const Icon(Icons.close, size: AppIconSize.i16),
-              tooltip: 'Clear date range',
+              tooltip: context.l10n.notifications_clearDateRange,
               visualDensity: VisualDensity.compact,
               onPressed: () => setState(() {
                 _dateRange = null;
@@ -767,9 +800,9 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
         children: [
           Icon(Icons.notifications_none, size: AppIconSize.i64, color: context.colors.textDisabled),
           const SizedBox(height: AppSpacing.s16),
-          Text('No notifications', style: TextStyle(fontSize: AppFontSize.f18, color: context.colors.textMuted)),
+          Text(context.l10n.notifications_empty, style: TextStyle(fontSize: AppFontSize.f18, color: context.colors.textMuted)),
           const SizedBox(height: AppSpacing.s4),
-          Text('New updates from your facility will appear here.',
+          Text(context.l10n.notifications_emptyHint,
               style: TextStyle(fontSize: AppFontSize.f13, color: context.colors.textHint)),
         ],
       ),
@@ -783,9 +816,9 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
         children: [
           Icon(Icons.search_off, size: AppIconSize.i56, color: context.colors.textDisabled),
           const SizedBox(height: AppSpacing.s12),
-          Text('No notifications match your filters', style: TextStyle(fontSize: AppFontSize.f17, color: context.colors.textMuted)),
+          Text(context.l10n.notifications_noMatches, style: TextStyle(fontSize: AppFontSize.f17, color: context.colors.textMuted)),
           const SizedBox(height: AppSpacing.s8),
-          TextButton(onPressed: _resetFilters, child: const Text('Reset filters')),
+          TextButton(onPressed: _resetFilters, child: Text(context.l10n.common_resetFilters)),
         ],
       ),
     );
@@ -810,10 +843,10 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
               decoration: BoxDecoration(border: Border(bottom: BorderSide(color: context.colors.textHint.withValues(alpha: AppAlpha.a20)))),
               child: Row(
                 children: [
-                  _headerCell('Notification', flex: 6),
-                  _headerCell('Category', flex: 2),
-                  _headerCell('Date', flex: 2),
-                  _headerCell('Status', flex: 1),
+                  _headerCell(context.l10n.notifications_colNotification, flex: 6),
+                  _headerCell(context.l10n.common_category, flex: 2),
+                  _headerCell(context.l10n.common_date, flex: 2),
+                  _headerCell(context.l10n.common_status, flex: 1),
                 ],
               ),
             ),
@@ -853,7 +886,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
       padding: const EdgeInsets.symmetric(horizontal: AppSpacing.s8, vertical: AppSpacing.s4),
       decoration: BoxDecoration(color: color.withValues(alpha: AppAlpha.a10), borderRadius: BorderRadius.circular(AppRadius.r10)),
       child: Text(
-        n.type.categoryLabel,
+        _categoryLabel(n.type.category),
         maxLines: 1,
         overflow: TextOverflow.ellipsis,
         style: TextStyle(color: color, fontSize: AppFontSize.f11_5, fontWeight: AppFontWeight.semibold),
@@ -867,7 +900,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
       padding: const EdgeInsets.symmetric(horizontal: AppSpacing.s8, vertical: AppSpacing.s4),
       decoration: BoxDecoration(color: color.withValues(alpha: AppAlpha.a10), borderRadius: BorderRadius.circular(AppRadius.r10)),
       child: Text(
-        n.isRead ? 'Read' : 'New',
+        n.isRead ? context.l10n.notifications_read : context.l10n.notifications_statusNew,
         style: TextStyle(color: color, fontSize: AppFontSize.f11_5, fontWeight: AppFontWeight.semibold),
       ),
     );
@@ -1018,8 +1051,8 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
         children: [
           Text(
             total == 0
-                ? 'No notifications'
-                : 'Showing $start to $end of $total notification${total == 1 ? '' : 's'}',
+                ? context.l10n.notifications_empty
+                : context.l10n.notifications_showingRange(start, end, total),
             style: TextStyle(fontSize: AppFontSize.f12_5, color: context.colors.textMuted),
           ),
           Row(
@@ -1029,7 +1062,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                 child: DropdownButton<int>(
                   value: _pageSize,
                   items: const [10, 25, 50]
-                      .map((n) => DropdownMenuItem(value: n, child: Text('$n per page')))
+                      .map((n) => DropdownMenuItem(value: n, child: Text(context.l10n.common_perPage(n))))
                       .toList(),
                   onChanged: (val) {
                     if (val != null) {
@@ -1046,7 +1079,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                 icon: const Icon(Icons.chevron_left),
                 onPressed: page > 1 ? () => setState(() => _currentPage = page - 1) : null,
               ),
-              Text('Page $page', style: const TextStyle(fontSize: AppFontSize.f13)),
+              Text(context.l10n.common_page(page), style: const TextStyle(fontSize: AppFontSize.f13)),
               IconButton(
                 icon: const Icon(Icons.chevron_right),
                 onPressed: page < totalPages ? () => setState(() => _currentPage = page + 1) : null,
@@ -1077,7 +1110,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
           child: Row(
             children: [
               Text(
-                'Notifications',
+                context.l10n.common_notifications,
                 style: TextStyle(color: context.colors.onPrimary, fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f15),
               ),
               if (totalUnread > 0) ...[
@@ -1096,11 +1129,11 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                   foregroundColor: context.colors.onPrimary,
                   disabledForegroundColor: context.colors.onPrimary.withValues(alpha: AppAlpha.a40),
                 ),
-                child: const Text('Mark all as read', style: TextStyle(fontSize: AppFontSize.f12_5, fontWeight: AppFontWeight.semibold)),
+                child: Text(context.l10n.notifications_markAllAsRead, style: const TextStyle(fontSize: AppFontSize.f12_5, fontWeight: AppFontWeight.semibold)),
               ),
               IconButton(
                 icon: Icon(Icons.close, color: context.colors.onPrimary, size: AppIconSize.i20),
-                tooltip: 'Close',
+                tooltip: context.l10n.common_close,
                 onPressed: () => Navigator.of(context).pop(),
               ),
             ],
@@ -1115,7 +1148,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
               : _error != null
                   ? Padding(
                       padding: const EdgeInsets.all(AppSpacing.s24),
-                      child: Text('Could not load alerts: $_error'),
+                      child: Text(context.l10n.notifications_loadFailed(_error!)),
                     )
                   : SingleChildScrollView(
                       padding: const EdgeInsets.all(AppSpacing.s12),
@@ -1138,19 +1171,19 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
       children: [
         _buildUrgentAnnouncements(),
         if (_planNotices.isNotEmpty) ...[
-          _sectionHeader(Icons.workspace_premium_outlined, 'Your Plan', _planNotices.length, context.colors.info),
+          _sectionHeader(Icons.workspace_premium_outlined, context.l10n.notifications_yourPlan, _planNotices.length, context.colors.info),
           const SizedBox(height: AppSpacing.s8),
           ..._planNotices.map((n) => NotificationRow(notification: n)),
           const SizedBox(height: AppSpacing.s20),
         ],
         if (_needsAttention.isNotEmpty) ...[
-          _sectionHeader(Icons.priority_high, 'Needs Attention', _needsAttention.length, context.colors.warning),
+          _sectionHeader(Icons.priority_high, context.l10n.notifications_needsAttention, _needsAttention.length, context.colors.warning),
           const SizedBox(height: AppSpacing.s8),
           ..._needsAttention.map((n) => NotificationRow(notification: n)),
           const SizedBox(height: AppSpacing.s20),
         ],
         if (_earlier.isNotEmpty) ...[
-          _sectionHeader(Icons.history, 'Earlier', _earlier.length, context.colors.textHint),
+          _sectionHeader(Icons.history, context.l10n.notifications_earlier, _earlier.length, context.colors.textHint),
           const SizedBox(height: AppSpacing.s8),
           ..._earlier.map((n) => NotificationRow(notification: n)),
           const SizedBox(height: AppSpacing.s12),
@@ -1164,12 +1197,12 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                 navigator.push(MaterialPageRoute(builder: (_) => const NotificationsScreen()));
               },
               style: TextButton.styleFrom(foregroundColor: context.colors.primary),
-              child: const Row(
+              child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Text('View all notifications', style: TextStyle(fontSize: AppFontSize.f13, fontWeight: AppFontWeight.semibold)),
-                  SizedBox(width: AppSpacing.s4),
-                  Icon(Icons.arrow_forward, size: AppIconSize.i16),
+                  Text(context.l10n.notifications_viewAll, style: const TextStyle(fontSize: AppFontSize.f13, fontWeight: AppFontWeight.semibold)),
+                  const SizedBox(width: AppSpacing.s4),
+                  const Icon(Icons.arrow_forward, size: AppIconSize.i16),
                 ],
               ),
             ),
@@ -1193,10 +1226,10 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
             child: Icon(Icons.check_circle_outline, color: context.colors.success, size: AppIconSize.i48),
           ),
           const SizedBox(height: AppSpacing.s16),
-          const Text("You're all caught up!", style: TextStyle(fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f17)),
+          Text(context.l10n.alerts_allCaughtUp, style: const TextStyle(fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f17)),
           const SizedBox(height: AppSpacing.s6),
           Text(
-            'No urgent announcements, subscription issues, or stock alerts right now.',
+            context.l10n.notifications_allCaughtUpHint,
             textAlign: TextAlign.center,
             style: TextStyle(color: context.colors.textMuted, fontSize: AppFontSize.f13),
           ),
@@ -1244,7 +1277,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              _sectionHeader(Icons.campaign_outlined, 'Urgent Announcements', urgentDocs.length, context.colors.danger),
+              _sectionHeader(Icons.campaign_outlined, context.l10n.notifications_urgentAnnouncements, urgentDocs.length, context.colors.danger),
               const SizedBox(height: AppSpacing.s8),
               ...urgentDocs.map((doc) {
                 final data = doc.data() as Map<String, dynamic>;

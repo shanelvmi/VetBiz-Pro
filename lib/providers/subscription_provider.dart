@@ -66,18 +66,19 @@ class SubscriptionProvider with ChangeNotifier {
 
   /// What to tell someone in the calm trial - the message the blue blink is
   /// about. Live, like [attentionNotice]: the days left are worked out now, not
-  /// read from something written once and left to go stale.
+  /// read from something written once and left to go stale. Only shown, never
+  /// compared, so it is in the current language.
   ({String title, String message})? get trialInfoNotice {
     if (!isInCalmTrial) return null;
+    final l = L10n.current;
     final end = expiresAt;
     final days = daysRemaining;
     if (end == null || days == null) {
-      return (title: 'Free Trial', message: "You're on a free trial.");
+      return (title: l.subscription_freeTrialTitle, message: l.subscription_onFreeTrial);
     }
     return (
-      title: 'Free Trial',
-      message: 'You have $days day${days == 1 ? '' : 's'} left of your free trial, '
-          'ending on ${AppDateFormat.dateNoPad.format(end)}.',
+      title: l.subscription_freeTrialTitle,
+      message: l.subscription_trialDaysLeftEnding(days, AppDateFormat.dateNoPad.format(end)),
     );
   }
 
@@ -91,36 +92,40 @@ class SubscriptionProvider with ChangeNotifier {
   /// Notifications say "1 day left" while the banner already said
   /// "grace period". Wording matches that function exactly, so
   /// switching the source doesn't change what anyone reads.
-  ({String title, String message})? get attentionNotice {
+  ///
+  /// Always in English: the Notifications screen compares its message with
+  /// the stored document's (written in English by the function) to tell
+  /// whether the notice escalated. Show [attentionNoticeShown] instead.
+  ({String title, String message})? get attentionNotice => _attentionNoticeIn(lookupAppLocalizations(const Locale('en')));
+
+  /// [attentionNotice] in the current language, for display only.
+  ({String title, String message})? get attentionNoticeShown => _attentionNoticeIn(L10n.current);
+
+  ({String title, String message})? _attentionNoticeIn(AppLocalizations l) {
     // Same rule the function uses: no paid cycle date means this is a
     // trial, even after that trial has run out (status is then grace
     // or locked, so status alone can't tell them apart).
     final isTrial = _expiresAt == null;
-    final endedTitle = isTrial ? 'Trial Ended' : 'Subscription Expired';
+    final endedTitle = isTrial ? l.subscription_trialEndedTitle : l.subscription_expiredTitle;
 
     switch (_status) {
       case SubscriptionStatus.locked:
         return (
           title: endedTitle,
-          message: isTrial
-              ? 'Your trial has ended. The app is in read-only mode.'
-              : 'Your subscription has expired. The app is in read-only mode.',
+          message: isTrial ? l.subscription_trialEndedReadOnly : l.subscription_expiredReadOnly,
         );
       case SubscriptionStatus.grace:
         return (
           title: endedTitle,
-          message: isTrial
-              ? 'Your trial has ended. You have a few days of grace before read-only mode begins.'
-              : 'Your subscription has expired. You have a few days of grace before read-only mode begins.',
+          message: isTrial ? l.subscription_trialEndedGrace : l.subscription_expiredGrace,
         );
       case SubscriptionStatus.trial:
       case SubscriptionStatus.active:
         final days = daysRemaining;
         if (days == null || days > attentionThresholdDays) return null;
-        final plural = days == 1 ? '' : 's';
         return isTrial
-            ? (title: 'Trial Expiring Soon', message: 'Your trial expires in $days day$plural.')
-            : (title: 'Subscription Expiring Soon', message: 'Your subscription expires in $days day$plural.');
+            ? (title: l.subscription_trialExpiringSoonTitle, message: l.subscription_trialExpiresIn(days))
+            : (title: l.subscription_expiringSoonTitle, message: l.subscription_expiresIn(days));
     }
   }
 

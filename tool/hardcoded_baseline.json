@@ -488,12 +488,10 @@
     "R9": {},
     "R10": {
       "lib/constants/subscription_plans.dart": 4,
-      "lib/providers/subscription_provider.dart": 8,
       "lib/providers/user_role_provider.dart": 1,
       "lib/screens/activity/activity_log_screen.dart": 24,
       "lib/screens/dashboard/dashboard_screen.dart": 82,
       "lib/screens/dashboard/insights_screen.dart": 11,
-      "lib/screens/dashboard/notifications_screen.dart": 21,
       "lib/screens/debtors/add_payment_screen.dart": 1,
       "lib/screens/debtors/debtors_screen.dart": 2,
       "lib/screens/facilities/facility_picker_screen.dart": 13,
