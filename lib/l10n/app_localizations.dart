@@ -6864,6 +6864,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Accountability'**
   String get reports_accountability;
+
+  /// Accountability row label.
+  ///
+  /// In en, this message translates to:
+  /// **'Submitted by'**
+  String get reports_submittedByLabel;
+
+  /// Declaration panel of a draft.
+  ///
+  /// In en, this message translates to:
+  /// **'This declaration is confirmed as part of Submit Daily Closing, once physical stock and cash counts have been entered.'**
+  String get reports_declarationPending;
+
+  /// Declaration panel note.
+  ///
+  /// In en, this message translates to:
+  /// **'The report will be saved in the system and available for you and the admin to view or download at any time.'**
+  String get reports_savedNote;
 }
 
 class _AppLocalizationsDelegate

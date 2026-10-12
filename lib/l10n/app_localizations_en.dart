@@ -3882,4 +3882,15 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get reports_accountability => 'Accountability';
+
+  @override
+  String get reports_submittedByLabel => 'Submitted by';
+
+  @override
+  String get reports_declarationPending =>
+      'This declaration is confirmed as part of Submit Daily Closing, once physical stock and cash counts have been entered.';
+
+  @override
+  String get reports_savedNote =>
+      'The report will be saved in the system and available for you and the admin to view or download at any time.';
 }

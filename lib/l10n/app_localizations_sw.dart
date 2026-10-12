@@ -3901,4 +3901,15 @@ class AppLocalizationsSw extends AppLocalizations {
 
   @override
   String get reports_accountability => 'Uwajibikaji';
+
+  @override
+  String get reports_submittedByLabel => 'Imewasilishwa na';
+
+  @override
+  String get reports_declarationPending =>
+      'Tamko hili huthibitishwa wakati wa Kuwasilisha Kufunga Siku, baada ya hesabu za stoo na fedha kuwekwa.';
+
+  @override
+  String get reports_savedNote =>
+      'Ripoti itahifadhiwa kwenye mfumo na itapatikana kwako na kwa msimamizi kuitazama au kuipakua wakati wowote.';
 }
