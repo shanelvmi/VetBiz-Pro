@@ -7619,6 +7619,144 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Select a facility first'**
   String get products_selectFacilityFirst;
+
+  /// Add/Edit Product error.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t upload the image'**
+  String get products_imageUploadFailed;
+
+  /// Add/Edit Product photo box.
+  ///
+  /// In en, this message translates to:
+  /// **'Add photo'**
+  String get products_addPhoto;
+
+  /// Add/Edit Product field label.
+  ///
+  /// In en, this message translates to:
+  /// **'Batch No'**
+  String get products_batchNo;
+
+  /// Add/Edit Product field label.
+  ///
+  /// In en, this message translates to:
+  /// **'Expiry'**
+  String get products_expiry;
+
+  /// Add/Edit Product type field placeholder and dialog title.
+  ///
+  /// In en, this message translates to:
+  /// **'Select Type'**
+  String get products_selectType;
+
+  /// Add/Edit Product validation.
+  ///
+  /// In en, this message translates to:
+  /// **'Please select a category'**
+  String get products_selectCategoryError;
+
+  /// Add/Edit Product field label.
+  ///
+  /// In en, this message translates to:
+  /// **'Supplier'**
+  String get products_supplier;
+
+  /// Add/Edit Product field label.
+  ///
+  /// In en, this message translates to:
+  /// **'Buying Price ({currency})'**
+  String products_buyingPriceLabel(String currency);
+
+  /// Add/Edit Product field label.
+  ///
+  /// In en, this message translates to:
+  /// **'Selling Price ({currency})'**
+  String products_sellingPriceLabel(String currency);
+
+  /// Add/Edit Product price validation.
+  ///
+  /// In en, this message translates to:
+  /// **'Must be greater than 0'**
+  String get products_greaterThanZero;
+
+  /// Add/Edit Product field label.
+  ///
+  /// In en, this message translates to:
+  /// **'Quantity'**
+  String get products_quantity;
+
+  /// Add/Edit Product quantity validation.
+  ///
+  /// In en, this message translates to:
+  /// **'Cannot be negative'**
+  String get products_cannotBeNegative;
+
+  /// New product destination dialog title.
+  ///
+  /// In en, this message translates to:
+  /// **'Where should this product go?'**
+  String get products_destinationTitle;
+
+  /// New product destination choice.
+  ///
+  /// In en, this message translates to:
+  /// **'Sellable Product Catalog'**
+  String get products_destinationCatalog;
+
+  /// New product destination choice hint.
+  ///
+  /// In en, this message translates to:
+  /// **'Available for sales and transactions'**
+  String get products_destinationCatalogHint;
+
+  /// New product destination choice hint.
+  ///
+  /// In en, this message translates to:
+  /// **'Stored but not sellable yet'**
+  String get products_destinationStoreHint;
+
+  /// New product destination dialog button.
+  ///
+  /// In en, this message translates to:
+  /// **'Continue'**
+  String get products_continue;
+
+  /// Add/Edit Product warning.
+  ///
+  /// In en, this message translates to:
+  /// **'Product name already exists'**
+  String get products_nameExists;
+
+  /// Message after adding a product to the catalog.
+  ///
+  /// In en, this message translates to:
+  /// **'Product added to Sellable Catalog'**
+  String get products_addedToCatalog;
+
+  /// Message after adding a product to the Stock Store.
+  ///
+  /// In en, this message translates to:
+  /// **'Product added to Stock Store'**
+  String get products_addedToStore;
+
+  /// Message after editing a product.
+  ///
+  /// In en, this message translates to:
+  /// **'Product updated'**
+  String get products_updated;
+
+  /// Error message when saving a product fails.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t save the product'**
+  String get products_saveFailed;
+
+  /// Add/Edit Product title when editing.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit Product'**
+  String get products_editProduct;
 }
 
 class _AppLocalizationsDelegate

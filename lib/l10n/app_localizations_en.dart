@@ -4379,4 +4379,78 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get products_selectFacilityFirst => 'Select a facility first';
+
+  @override
+  String get products_imageUploadFailed => 'Couldn\'t upload the image';
+
+  @override
+  String get products_addPhoto => 'Add photo';
+
+  @override
+  String get products_batchNo => 'Batch No';
+
+  @override
+  String get products_expiry => 'Expiry';
+
+  @override
+  String get products_selectType => 'Select Type';
+
+  @override
+  String get products_selectCategoryError => 'Please select a category';
+
+  @override
+  String get products_supplier => 'Supplier';
+
+  @override
+  String products_buyingPriceLabel(String currency) {
+    return 'Buying Price ($currency)';
+  }
+
+  @override
+  String products_sellingPriceLabel(String currency) {
+    return 'Selling Price ($currency)';
+  }
+
+  @override
+  String get products_greaterThanZero => 'Must be greater than 0';
+
+  @override
+  String get products_quantity => 'Quantity';
+
+  @override
+  String get products_cannotBeNegative => 'Cannot be negative';
+
+  @override
+  String get products_destinationTitle => 'Where should this product go?';
+
+  @override
+  String get products_destinationCatalog => 'Sellable Product Catalog';
+
+  @override
+  String get products_destinationCatalogHint =>
+      'Available for sales and transactions';
+
+  @override
+  String get products_destinationStoreHint => 'Stored but not sellable yet';
+
+  @override
+  String get products_continue => 'Continue';
+
+  @override
+  String get products_nameExists => 'Product name already exists';
+
+  @override
+  String get products_addedToCatalog => 'Product added to Sellable Catalog';
+
+  @override
+  String get products_addedToStore => 'Product added to Stock Store';
+
+  @override
+  String get products_updated => 'Product updated';
+
+  @override
+  String get products_saveFailed => 'Couldn\'t save the product';
+
+  @override
+  String get products_editProduct => 'Edit Product';
 }

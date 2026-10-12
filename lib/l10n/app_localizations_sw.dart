@@ -4401,4 +4401,80 @@ class AppLocalizationsSw extends AppLocalizations {
 
   @override
   String get products_selectFacilityFirst => 'Chagua kituo kwanza';
+
+  @override
+  String get products_imageUploadFailed => 'Imeshindikana kupakia picha';
+
+  @override
+  String get products_addPhoto => 'Ongeza picha';
+
+  @override
+  String get products_batchNo => 'Namba ya Batch';
+
+  @override
+  String get products_expiry => 'Tarehe ya Kuisha';
+
+  @override
+  String get products_selectType => 'Chagua Aina';
+
+  @override
+  String get products_selectCategoryError => 'Tafadhali chagua kundi';
+
+  @override
+  String get products_supplier => 'Msambazaji';
+
+  @override
+  String products_buyingPriceLabel(String currency) {
+    return 'Bei ya Kununua ($currency)';
+  }
+
+  @override
+  String products_sellingPriceLabel(String currency) {
+    return 'Bei ya Kuuza ($currency)';
+  }
+
+  @override
+  String get products_greaterThanZero => 'Lazima iwe zaidi ya 0';
+
+  @override
+  String get products_quantity => 'Idadi';
+
+  @override
+  String get products_cannotBeNegative => 'Haiwezi kuwa hasi';
+
+  @override
+  String get products_destinationTitle => 'Bidhaa hii iende wapi?';
+
+  @override
+  String get products_destinationCatalog => 'Orodha ya Bidhaa za Kuuza';
+
+  @override
+  String get products_destinationCatalogHint =>
+      'Inapatikana kwa mauzo na miamala';
+
+  @override
+  String get products_destinationStoreHint =>
+      'Imehifadhiwa lakini bado haiuzwi';
+
+  @override
+  String get products_continue => 'Endelea';
+
+  @override
+  String get products_nameExists => 'Jina la bidhaa tayari lipo';
+
+  @override
+  String get products_addedToCatalog =>
+      'Bidhaa imeongezwa kwenye Orodha ya Kuuza';
+
+  @override
+  String get products_addedToStore => 'Bidhaa imeongezwa Stoo';
+
+  @override
+  String get products_updated => 'Bidhaa imesasishwa';
+
+  @override
+  String get products_saveFailed => 'Imeshindikana kuhifadhi bidhaa';
+
+  @override
+  String get products_editProduct => 'Hariri Bidhaa';
 }
