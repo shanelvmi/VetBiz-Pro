@@ -4857,4 +4857,69 @@ class AppLocalizationsSw extends AppLocalizations {
 
   @override
   String get sales_notesHint => 'Ongeza maelezo mengine (si lazima)...';
+
+  @override
+  String get common_dismiss => 'Funga';
+
+  @override
+  String get common_privacyPolicy => 'Sera ya Faragha';
+
+  @override
+  String get common_termsOfService => 'Masharti ya Huduma';
+
+  @override
+  String get common_logout => 'Toka';
+
+  @override
+  String get common_logIn => 'Ingia';
+
+  @override
+  String get common_inviteCode => 'Msimbo wa mwaliko';
+
+  @override
+  String get common_facilityName => 'Jina la kituo';
+
+  @override
+  String get common_facilityNameHint => 'mf. Ukuli';
+
+  @override
+  String get common_passwordsDoNotMatch => 'Nenosiri hazilingani';
+
+  @override
+  String common_appSystem(String appName) {
+    return 'Mfumo wa $appName';
+  }
+
+  @override
+  String get common_editProfile => 'Hariri Wasifu';
+
+  @override
+  String get login_tagline =>
+      'Ufuatiliaji Mahiri wa Biashara na Huduma za Mifugo';
+
+  @override
+  String get login_systemOnline => 'Mfumo Uko Hewani';
+
+  @override
+  String login_copyright(String appName) {
+    return '© 2026 Mfumo wa $appName. Haki zote zimehifadhiwa.';
+  }
+
+  @override
+  String get login_welcomeTo => 'Karibu';
+
+  @override
+  String get login_stayUpdated => 'Pata habari na matangazo mapya kila wakati.';
+
+  @override
+  String get login_announcements => 'Matangazo';
+
+  @override
+  String get login_urgent => 'DHARURA';
+
+  @override
+  String get login_announcementFallbackTitle => 'Taarifa';
+
+  @override
+  String get login_noAnnouncements => 'Hakuna matangazo';
 }

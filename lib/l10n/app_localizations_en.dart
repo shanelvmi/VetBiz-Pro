@@ -4829,4 +4829,69 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get sales_notesHint => 'Add any additional notes (optional)...';
+
+  @override
+  String get common_dismiss => 'Dismiss';
+
+  @override
+  String get common_privacyPolicy => 'Privacy Policy';
+
+  @override
+  String get common_termsOfService => 'Terms of Service';
+
+  @override
+  String get common_logout => 'Logout';
+
+  @override
+  String get common_logIn => 'Log in';
+
+  @override
+  String get common_inviteCode => 'Invite code';
+
+  @override
+  String get common_facilityName => 'Facility name';
+
+  @override
+  String get common_facilityNameHint => 'e.g. Ukuli';
+
+  @override
+  String get common_passwordsDoNotMatch => 'Passwords do not match';
+
+  @override
+  String common_appSystem(String appName) {
+    return '$appName System';
+  }
+
+  @override
+  String get common_editProfile => 'Edit Profile';
+
+  @override
+  String get login_tagline => 'Smart Business & Vet Services Monitor';
+
+  @override
+  String get login_systemOnline => 'System Online';
+
+  @override
+  String login_copyright(String appName) {
+    return '© 2026 $appName System. All rights reserved.';
+  }
+
+  @override
+  String get login_welcomeTo => 'Welcome to';
+
+  @override
+  String get login_stayUpdated =>
+      'Stay updated with the latest news and announcements.';
+
+  @override
+  String get login_announcements => 'Announcements';
+
+  @override
+  String get login_urgent => 'URGENT';
+
+  @override
+  String get login_announcementFallbackTitle => 'Notice';
+
+  @override
+  String get login_noAnnouncements => 'No announcements';
 }

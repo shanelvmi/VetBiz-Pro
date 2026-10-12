@@ -8357,6 +8357,126 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Add any additional notes (optional)...'**
   String get sales_notesHint;
+
+  /// Tooltip on the close button of an error alert.
+  ///
+  /// In en, this message translates to:
+  /// **'Dismiss'**
+  String get common_dismiss;
+
+  /// Link to the privacy policy (login footer, register terms line).
+  ///
+  /// In en, this message translates to:
+  /// **'Privacy Policy'**
+  String get common_privacyPolicy;
+
+  /// Link to the terms of service (login footer, register terms line).
+  ///
+  /// In en, this message translates to:
+  /// **'Terms of Service'**
+  String get common_termsOfService;
+
+  /// Button that signs the person out (loading, error and no-facility screens).
+  ///
+  /// In en, this message translates to:
+  /// **'Logout'**
+  String get common_logout;
+
+  /// Button on the register screen that goes to the login screen.
+  ///
+  /// In en, this message translates to:
+  /// **'Log in'**
+  String get common_logIn;
+
+  /// Field label for an invite code (register, no-facility screen).
+  ///
+  /// In en, this message translates to:
+  /// **'Invite code'**
+  String get common_inviteCode;
+
+  /// Field label for a new facility's name.
+  ///
+  /// In en, this message translates to:
+  /// **'Facility name'**
+  String get common_facilityName;
+
+  /// Example in the facility name field.
+  ///
+  /// In en, this message translates to:
+  /// **'e.g. Ukuli'**
+  String get common_facilityNameHint;
+
+  /// Register: the two passwords differ.
+  ///
+  /// In en, this message translates to:
+  /// **'Passwords do not match'**
+  String get common_passwordsDoNotMatch;
+
+  /// App title in the login and register top bar.
+  ///
+  /// In en, this message translates to:
+  /// **'{appName} System'**
+  String common_appSystem(String appName);
+
+  /// Edit Profile screen title.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit Profile'**
+  String get common_editProfile;
+
+  /// Login top bar, under the app title.
+  ///
+  /// In en, this message translates to:
+  /// **'Smart Business & Vet Services Monitor'**
+  String get login_tagline;
+
+  /// Login top bar status pill.
+  ///
+  /// In en, this message translates to:
+  /// **'System Online'**
+  String get login_systemOnline;
+
+  /// Login footer.
+  ///
+  /// In en, this message translates to:
+  /// **'© 2026 {appName} System. All rights reserved.'**
+  String login_copyright(String appName);
+
+  /// Login welcome card, above the app name.
+  ///
+  /// In en, this message translates to:
+  /// **'Welcome to'**
+  String get login_welcomeTo;
+
+  /// Login welcome card.
+  ///
+  /// In en, this message translates to:
+  /// **'Stay updated with the latest news and announcements.'**
+  String get login_stayUpdated;
+
+  /// Login announcements card title.
+  ///
+  /// In en, this message translates to:
+  /// **'Announcements'**
+  String get login_announcements;
+
+  /// Login announcement chip for an urgent announcement.
+  ///
+  /// In en, this message translates to:
+  /// **'URGENT'**
+  String get login_urgent;
+
+  /// Login announcement title when the announcement has none.
+  ///
+  /// In en, this message translates to:
+  /// **'Notice'**
+  String get login_announcementFallbackTitle;
+
+  /// Login announcements card, empty.
+  ///
+  /// In en, this message translates to:
+  /// **'No announcements'**
+  String get login_noAnnouncements;
 }
 
 class _AppLocalizationsDelegate
