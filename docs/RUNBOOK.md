@@ -93,7 +93,7 @@ Baseline when this runbook was written: analyze 38 infos (0 errors, 0 warnings);
 | Batch | Status | Commits | Notes (10 lines max) |
 |---|---|---|---|
 | 2F-5 transactions, debtors, clients | DONE | 4295fcb..c4acde2 | R10 1,078; analyze 38 (0 E, 0 W); 230 tests. 189 keys (all draft). English check: 206 found, 5 by hand, not found 0. Reminder sent to debtors kept English, exact text in design-open-questions.md (2F-5). |
-| 2F-6 admin, settings | IN PROGRESS | | |
+| 2F-6 admin, settings | DONE | b526d05..(this commit) | R10 1,078 -> 824 (254 moved; admin and settings at 0, export_data_screen allowlisted as a file: exported file text, 2.8). analyze 38 (0 E, 0 W) after every commit; 230 tests. 272 keys, all draft. English check: moved 305 | found 290 | by hand 15 | not found 0. Kept English: typed words ERASE/DEACTIVATE (compared), Trash titles (saved in activity text), exported file contents, activity descriptions. Check in Chrome, both languages: Team Members (approve, reject, deactivate, reassign, remove, details panel), Invite dialog, Settings list and dialogs, UI Settings, Business Hours, Profile, Printer, Trash (restore warnings, delete forever), Export (date range, formats, one export), Manage Account (wipe and deactivate typed words still English). |
 | 2F-7 reports, services | TODO | | |
 | 2F-8 products, sales | TODO | | |
 | 2F-9 login, register, main.dart screens | TODO, HARD STOP after | | |

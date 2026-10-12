@@ -118,6 +118,13 @@ User-facing "VetBiz Pro" now reads `AppInfo.name` (titles, Settings, support lin
 - **"Payment Details"** is one key (`payments_detailsTitle`) for the Payments detail panel and the Subscription form's payment section. The Kiswahili ("Maelezo ya Malipo") fits both; split it if either should read differently.
 - **"No submissions yet." and "No submissions yet"** (Subscription screen with a full stop, Subscription history without) are two keys because the English differs.
 
+### Raised in step 2F, batch 2F-6 (wording and language; English kept as it was)
+
+- **Other screens named inside sentences**: Business Hours says "Generate Today's Report" and "View Reports", Manage Account says "View Facilities". The Kiswahili drafts keep those names in English until the Reports and Facilities batches give them keys; then the sentences should take them as placeholders.
+- **Trash item titles stay English** ("Sale - {client} - {amount}", "Walk-in", "Transaction", "Untitled"): the same text goes into the saved "Permanently deleted: ..." activity description. Showing a label on screen while saving English needs two titles; decide in the activity batch (2F-12).
+- **Team Members fallbacks in saved text**: "The assistant" / "This co-admin" stand in for a missing name in both the activity description (saved) and the success message, so the message can show English in Kiswahili for a nameless person.
+- **Export screen is allowlisted for R10 as a whole file** (its remaining strings are inside the exported file). The guard test only accepts whole-file entries, so a new on-screen string added there later would not be caught; moving the file-building code to a service would remove the need.
+
 ### Raised in step 2F, batch 2F-5 (wording and language; English kept as it was)
 
 - **Debt reminder sent by WhatsApp or SMS** (`debtors_screen.dart` `_showReminderOptions`): the message goes to the debtor, not to the app's user, so it is not in the language files and stays English ("Hi {name}, this is a reminder from {facility} that you have an outstanding balance of {amount}. Kindly settle at your earliest convenience. Thank you!", with "us" when no facility name). Options: keep English; follow the app language; or (suggested) a facility setting for customer-facing language, together with receipts. A nameless debtor appears as "Unknown" in it, so that word stays English too.
