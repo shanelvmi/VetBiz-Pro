@@ -4715,4 +4715,84 @@ class AppLocalizationsSw extends AppLocalizations {
   String sales_noShelfStock(String product) {
     return '$product haina bidhaa rafuni';
   }
+
+  @override
+  String get sales_saleDiscount => 'Punguzo la Mauzo';
+
+  @override
+  String sales_discountAmountLabel(String currency) {
+    return 'Kiasi cha Punguzo ($currency)';
+  }
+
+  @override
+  String get sales_browseProducts => 'Vinjari Bidhaa';
+
+  @override
+  String get sales_browseFilterHint =>
+      'Chuja kwa jina, namba ya batch au kundi...';
+
+  @override
+  String get sales_filterByCategory => 'Chuja kwa kundi';
+
+  @override
+  String get sales_allCategories => 'Makundi Yote';
+
+  @override
+  String get sales_noProductsFound => 'Hakuna bidhaa zilizopatikana';
+
+  @override
+  String get sales_outOfStock => 'Imeisha';
+
+  @override
+  String sales_availablePrice(int quantity, String unit, String price) {
+    return '$quantity $unit zipo · $price';
+  }
+
+  @override
+  String get sales_expiredSaleBody =>
+      'Bidhaa hii imeisha muda. Bado unataka kuiuza?';
+
+  @override
+  String sales_expiredPortionLine(int quantity, String unit, String product) {
+    return '• $quantity $unit za $product';
+  }
+
+  @override
+  String get sales_sellAnyway => 'Uza Hata Hivyo';
+
+  @override
+  String get sales_addItemFirst =>
+      'Ongeza angalau bidhaa moja kabla ya kuhifadhi';
+
+  @override
+  String get sales_partialNeedsRegistered =>
+      'Chagua mteja aliyesajiliwa kuruhusu malipo ya sehemu';
+
+  @override
+  String get sales_walkInPayInFull =>
+      'Mauzo ya mteja wa papo hapo lazima yalipwe yote';
+
+  @override
+  String get sales_partialNeedsClient =>
+      'Chagua mteja kurekodi malipo ya sehemu';
+
+  @override
+  String get sales_orChooseWalkIn =>
+      'Au chagua Mteja wa Papo Hapo na pokea malipo yote';
+
+  @override
+  String get sales_selectPaymentMethod =>
+      'Chagua njia ya malipo kabla ya kuhifadhi';
+
+  @override
+  String get sales_savedWithDebt => 'Mauzo yamehifadhiwa na deni limerekodiwa';
+
+  @override
+  String get sales_saved => 'Mauzo yamehifadhiwa';
+
+  @override
+  String get sales_saveFailed => 'Imeshindikana kuhifadhi mauzo';
+
+  @override
+  String get sales_summary => 'Muhtasari wa Mauzo';
 }

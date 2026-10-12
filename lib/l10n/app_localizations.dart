@@ -8129,6 +8129,138 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{product} has no stock available on the shelf'**
   String sales_noShelfStock(String product);
+
+  /// Record Sale discount dialog title.
+  ///
+  /// In en, this message translates to:
+  /// **'Sale Discount'**
+  String get sales_saleDiscount;
+
+  /// Record Sale discount dialog field label.
+  ///
+  /// In en, this message translates to:
+  /// **'Discount Amount ({currency})'**
+  String sales_discountAmountLabel(String currency);
+
+  /// Record Sale button and the product browser title.
+  ///
+  /// In en, this message translates to:
+  /// **'Browse Products'**
+  String get sales_browseProducts;
+
+  /// Product browser search box.
+  ///
+  /// In en, this message translates to:
+  /// **'Filter by name, batch no or category...'**
+  String get sales_browseFilterHint;
+
+  /// Product browser category button tooltip.
+  ///
+  /// In en, this message translates to:
+  /// **'Filter by category'**
+  String get sales_filterByCategory;
+
+  /// Product browser category choice.
+  ///
+  /// In en, this message translates to:
+  /// **'All Categories'**
+  String get sales_allCategories;
+
+  /// Product browser, nothing found.
+  ///
+  /// In en, this message translates to:
+  /// **'No products found'**
+  String get sales_noProductsFound;
+
+  /// Product browser row.
+  ///
+  /// In en, this message translates to:
+  /// **'Out of stock'**
+  String get sales_outOfStock;
+
+  /// Product browser and search suggestion row. price is already formatted.
+  ///
+  /// In en, this message translates to:
+  /// **'{quantity} {unit} available · {price}'**
+  String sales_availablePrice(int quantity, String unit, String price);
+
+  /// Expired stock warning when selling.
+  ///
+  /// In en, this message translates to:
+  /// **'This product is expired. Do you still want to sell it?'**
+  String get sales_expiredSaleBody;
+
+  /// Expired stock warning, one line per product.
+  ///
+  /// In en, this message translates to:
+  /// **'• {quantity} {unit} of {product}'**
+  String sales_expiredPortionLine(int quantity, String unit, String product);
+
+  /// Expired stock warning button.
+  ///
+  /// In en, this message translates to:
+  /// **'Sell Anyway'**
+  String get sales_sellAnyway;
+
+  /// Record Sale warning.
+  ///
+  /// In en, this message translates to:
+  /// **'Add at least one item before saving'**
+  String get sales_addItemFirst;
+
+  /// Record Sale warning (walk-in with a partial payment).
+  ///
+  /// In en, this message translates to:
+  /// **'Select a registered client to allow a partial payment'**
+  String get sales_partialNeedsRegistered;
+
+  /// Record Sale warning, second line.
+  ///
+  /// In en, this message translates to:
+  /// **'Walk-in sales must be paid in full'**
+  String get sales_walkInPayInFull;
+
+  /// Record Sale warning (no client with a partial payment).
+  ///
+  /// In en, this message translates to:
+  /// **'Select a client to record a partial payment'**
+  String get sales_partialNeedsClient;
+
+  /// Record Sale warning, second line.
+  ///
+  /// In en, this message translates to:
+  /// **'Or choose Walk-in Customer and collect payment in full'**
+  String get sales_orChooseWalkIn;
+
+  /// Record Sale warning.
+  ///
+  /// In en, this message translates to:
+  /// **'Select a payment method before saving'**
+  String get sales_selectPaymentMethod;
+
+  /// Message after saving a sale on credit.
+  ///
+  /// In en, this message translates to:
+  /// **'Sale saved and debt recorded'**
+  String get sales_savedWithDebt;
+
+  /// Message after saving a sale.
+  ///
+  /// In en, this message translates to:
+  /// **'Sale saved'**
+  String get sales_saved;
+
+  /// Error message when saving a sale fails.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t save the sale'**
+  String get sales_saveFailed;
+
+  /// Record Sale section heading.
+  ///
+  /// In en, this message translates to:
+  /// **'Sale Summary'**
+  String get sales_summary;
 }
 
 class _AppLocalizationsDelegate

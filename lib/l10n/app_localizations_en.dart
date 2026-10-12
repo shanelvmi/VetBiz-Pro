@@ -4690,4 +4690,82 @@ class AppLocalizationsEn extends AppLocalizations {
   String sales_noShelfStock(String product) {
     return '$product has no stock available on the shelf';
   }
+
+  @override
+  String get sales_saleDiscount => 'Sale Discount';
+
+  @override
+  String sales_discountAmountLabel(String currency) {
+    return 'Discount Amount ($currency)';
+  }
+
+  @override
+  String get sales_browseProducts => 'Browse Products';
+
+  @override
+  String get sales_browseFilterHint =>
+      'Filter by name, batch no or category...';
+
+  @override
+  String get sales_filterByCategory => 'Filter by category';
+
+  @override
+  String get sales_allCategories => 'All Categories';
+
+  @override
+  String get sales_noProductsFound => 'No products found';
+
+  @override
+  String get sales_outOfStock => 'Out of stock';
+
+  @override
+  String sales_availablePrice(int quantity, String unit, String price) {
+    return '$quantity $unit available · $price';
+  }
+
+  @override
+  String get sales_expiredSaleBody =>
+      'This product is expired. Do you still want to sell it?';
+
+  @override
+  String sales_expiredPortionLine(int quantity, String unit, String product) {
+    return '• $quantity $unit of $product';
+  }
+
+  @override
+  String get sales_sellAnyway => 'Sell Anyway';
+
+  @override
+  String get sales_addItemFirst => 'Add at least one item before saving';
+
+  @override
+  String get sales_partialNeedsRegistered =>
+      'Select a registered client to allow a partial payment';
+
+  @override
+  String get sales_walkInPayInFull => 'Walk-in sales must be paid in full';
+
+  @override
+  String get sales_partialNeedsClient =>
+      'Select a client to record a partial payment';
+
+  @override
+  String get sales_orChooseWalkIn =>
+      'Or choose Walk-in Customer and collect payment in full';
+
+  @override
+  String get sales_selectPaymentMethod =>
+      'Select a payment method before saving';
+
+  @override
+  String get sales_savedWithDebt => 'Sale saved and debt recorded';
+
+  @override
+  String get sales_saved => 'Sale saved';
+
+  @override
+  String get sales_saveFailed => 'Couldn\'t save the sale';
+
+  @override
+  String get sales_summary => 'Sale Summary';
 }
