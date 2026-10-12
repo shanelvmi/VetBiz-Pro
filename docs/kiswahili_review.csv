@@ -905,3 +905,253 @@ account_wipeAll,Wipe All Business Data,Futa Data Yote ya Biashara,Manage Account
 account_wipeInProgress,"Erase in progress - please wait, this may take a moment...","Inafuta - tafadhali subiri, hii inaweza kuchukua muda...",Under Wipe All Business Data while it runs.,draft
 account_wipeHint,"Permanently delete records of transactions, sales, and products while keeping your log in profile.","Futa kabisa rekodi za miamala, mauzo na bidhaa huku ukibaki na wasifu wako wa kuingia.",Under Wipe All Business Data.,draft
 account_deactivateHint,Temporarily disable your account. Can be reactivated later.,Zima akaunti yako kwa muda. Inaweza kurejeshwa baadaye.,Under Deactivate Account.,draft
+common_walkIn,Walk-in,Mteja wa papo hapo,Shown in place of a client name when a record has none.,draft
+services_newRecords,"{count, plural, =1{1 new service available} other{{count} new services available}}","{count, plural, =1{Huduma 1 mpya ipo} other{Huduma {count} mpya zipo}}",Banner when new services arrived while the list was open.,draft
+services_empty,No services yet,Bado hakuna huduma,"Services list, empty.",draft
+services_emptyFiltered,No services match your filters,Hakuna huduma zinazolingana na vichujio vyako,"Services list, empty after a search or filter.",draft
+services_totalServices,Total Services,Jumla ya Huduma,Services metric card.,draft
+services_paidAmount,Paid Amount,Kiasi Kilicholipwa,Services metric card and the details panel.,draft
+services_digitalPayments,Digital Payments,Malipo ya Kidijitali,Services metric card: everything not paid in cash.,draft
+services_last30,Last 30 days,Siku 30 zilizopita,"Under each services metric card, and a date filter choice.",draft
+services_last7,Last 7 days,Siku 7 zilizopita,Services date filter choice.,draft
+services_thisMonth,This month,Mwezi huu,Services date filter choice.,draft
+services_subtitle,Track all services provided to your clients,Fuatilia huduma zote ulizowapa wateja wako,Under the Service Records title.,draft
+services_recordVisit,Record Visit,Rekodi Ziara,"Button that opens the visit form, and the form's title for a new visit.",draft
+services_archive,Archive,Kumbukumbu,Button that opens the services archive.,draft
+services_searchHint,"Search service by client, category, note...","Tafuta huduma kwa mteja, aina, maelezo...",Search box on the services list and archive.,draft
+services_colServiceCategory,Service / Category,Huduma / Aina,Services table column.,draft
+services_colProvider,Provider,Mtoa Huduma,Services table column: who provided the service.,draft
+services_none,No services,Hakuna huduma,Pagination bar when the list is empty.,draft
+services_deleteTitle,Delete Service?,Futa Huduma?,Delete dialog title.,draft
+services_deleteBody,"This moves the service to Trash and puts its stock back, removes its debt and updates the client's balance. Restoring from Trash brings back the record only.","Hii inahamisha huduma kwenye Tupio na kurudisha bidhaa zake stoo, inaondoa deni lake na kusasisha salio la mteja. Kurejesha kutoka Tupio kunarudisha rekodi pekee.",Delete dialog body.,draft
+services_movedToTrash,Service moved to Trash,Huduma imehamishiwa Tupio,Message after deleting a service.,draft
+services_deleteFailed,Couldn't delete the service,Imeshindikana kufuta huduma,Error message.,draft
+services_detailsTitle,Service Details,Maelezo ya Huduma,Details panel title.,draft
+services_paymentInfo,Payment Information,Taarifa za Malipo,Details panel section.,draft
+services_transactionId,Transaction ID,Namba ya Muamala,Details panel row: the mobile money or bank reference.,draft
+services_paidOn,Paid On,Imelipwa Tarehe,Details panel row.,draft
+services_providedBy,Provided By,Imetolewa Na,"Who provided the service (details panel, visit form).",draft
+services_serviceDate,Service Date,Tarehe ya Huduma,Details panel row and visit form field.,draft
+services_createdOn,Created On,Imeundwa Tarehe,Details panel row.,draft
+services_fallbackName,Service,Huduma,Shown when an archived service has no name.,draft
+services_archiveTitle,Services Archive,Kumbukumbu za Huduma,Archive screen title.,draft
+services_archiveSubtitle,"{days, plural, other{Services archived after {days} days}}","{days, plural, other{Huduma huhifadhiwa kwenye kumbukumbu baada ya siku {days}}}",Under the archive title.,draft
+services_archiveEmpty,No archived services found,Hakuna huduma zilizohifadhiwa zilizopatikana,"Archive, empty.",draft
+services_archiveEmptyHint,"Try a different search, category, or date range","Jaribu utafutaji, aina au kipindi kingine","Archive, empty.",draft
+services_archivePeriod,Period: {start} – {end},Kipindi: {start} – {end},Archive banner with the chosen dates.,draft
+services_archivedServices,Archived services,Huduma zilizohifadhiwa,Archive banner with no dates chosen.,draft
+services_foundCount,"{count, plural, other{{count} found}}","{count, plural, other{{count} zimepatikana}}",Archive banner: how many match.,draft
+services_archiveShowing,"{total, plural, other{Showing {start} to {end} of {total}{more} services}}","{total, plural, other{Inaonyesha {start} hadi {end} kati ya huduma {total}{more}}}","Archive pagination; more is ""+"" when more can be loaded, else empty.",draft
+services_pageOf,Page {page} of {total},Ukurasa {page} kati ya {total},Archive pagination.,draft
+services_notesValue,Notes: {notes},Maelezo: {notes},Archive row: the service's notes.,draft
+services_searchArchiveTitle,Search Archived Services,Tafuta Huduma Zilizohifadhiwa,Archive search dialog title.,draft
+services_searchBy,Search By:,Tafuta Kwa:,Archive search dialog.,draft
+services_specificMonth,Specific Month,Mwezi Maalum,Archive search dialog choice.,draft
+services_archiveCutoffNote,Only services before {date} have reached the archive.,Huduma za kabla ya {date} pekee ndizo zimefika kwenye kumbukumbu.,Archive search dialog.,draft
+services_selectMonth,Select Month:,Chagua Mwezi:,Archive search dialog.,draft
+services_editVisit,Edit Visit,Hariri Ziara,Visit form title when editing.,draft
+services_selectClientRequired,Select Client *,Chagua Mteja *,Visit form field label.,draft
+services_clientSearchHint,Search or select client...,Tafuta au chagua mteja...,Visit form client field.,draft
+services_errSelectClient,Please select a client,Tafadhali chagua mteja,Visit form validation.,draft
+services_addNewClient,Add New Client,Ongeza Mteja Mpya,Tooltip on the visit form's add-client button.,draft
+services_visitDetails,Visit Details,Maelezo ya Ziara,Visit form section.,draft
+services_serviceName,Service Name,Jina la Huduma,Visit form field.,draft
+services_errServiceName,Enter service name,Weka jina la huduma,Visit form validation.,draft
+services_errProvider,Enter provider,Weka mtoa huduma,Visit form validation.,draft
+services_itemsUsed,Expenses (Items Used),Gharama (Vitu Vilivyotumika),Visit form section: items used during the visit.,draft
+services_addItem,Add Item,Ongeza Kitu,Visit form button.,draft
+services_itemName,Item Name,Jina la Kitu,Visit form field.,draft
+services_errItemName,Enter name,Weka jina,Visit form validation for an item.,draft
+services_noMatchingProduct,No matching product - will be recorded as a plain expense.,Hakuna bidhaa inayolingana - itarekodiwa kama gharama ya kawaida.,"Visit form, under an item name with no product match.",draft
+services_sellableQty,Sellable: {quantity} {unit},Inauzika: {quantity} {unit},"Visit form product suggestion; unit is the product unit label.",draft
+services_inStockDeduct,"In stock - will deduct, no expense recorded","Ipo stoo - itapunguzwa, hakuna gharama itakayorekodiwa","Visit form, under an item matched to a product.",draft
+services_errPrice,Enter price,Weka bei,Visit form validation.,draft
+services_totalItemsCost,Total Items Cost: {amount},Jumla ya Gharama za Vitu: {amount},"Visit form; amount is pre-formatted.",draft
+services_visitSummary,Visit Summary,Muhtasari wa Ziara,Visit form section.,draft
+services_totalAmountRequired,Total Amount ({currency}) *,Jumla ya Kiasi ({currency}) *,Visit form field label.,draft
+services_errTotalAmount,Enter total amount,Weka jumla ya kiasi,Visit form validation.,draft
+services_totalPaidRequired,Total Paid ({currency}) *,Jumla Iliyolipwa ({currency}) *,Visit form field label.,draft
+services_errPaidAmount,Enter paid amount,Weka kiasi kilicholipwa,Visit form validation.,draft
+services_transactionIdOptional,Transaction ID (optional),Namba ya Muamala (si lazima),Visit form field for non-cash payments.,draft
+services_errPaidOverTotal,Total Paid cannot exceed Total Amount,Jumla iliyolipwa haiwezi kuzidi jumla ya kiasi,Visit form warning.,draft
+services_updated,Service updated,Huduma imesasishwa,Message after saving an edit.,draft
+services_added,Service added,Huduma imeongezwa,Message after recording a visit.,draft
+services_saveFailed,Couldn't save the service,Imeshindikana kuhifadhi huduma,Error message.,draft
+services_updateVisit,Update Visit,Sasisha Ziara,Visit form save button when editing.,draft
+services_noClientFound,No client found,Hakuna mteja aliyepatikana,"Visit form client search, no results.",draft
+receipt_shareFailed,Couldn't share the receipt,Imeshindikana kushiriki risiti,Error message on the receipt preview.,draft
+receipt_pdfFailed,Couldn't generate the PDF,Imeshindikana kutengeneza PDF,Error message on the receipt preview.,draft
+receipt_previewTitle,Receipt Preview,Hakiki ya Risiti,Receipt preview screen title.,draft
+receipt_formatThermal,Receipt (Thermal),Risiti (Thermal),Receipt format choice: thermal printer.,draft
+receipt_formatA4,A4 Format,Muundo wa A4,Receipt format choice: A4 page.,draft
+receipt_shareSave,Share / Save,Shiriki / Hifadhi,Receipt preview button.,draft
+receipt_details,Receipt Details,Maelezo ya Risiti,Receipt preview side panel title.,draft
+receipt_number,Receipt Number,Namba ya Risiti,Receipt preview side panel row.,draft
+receipt_customer,Customer,Mteja,Receipt preview side panel row.,draft
+receipt_quickActions,Quick Actions,Vitendo vya Haraka,Receipt preview side panel section.,draft
+receipt_infoNote,This receipt shows the final amount paid for the selected transaction. You can print or share it for your records.,Risiti hii inaonyesha kiasi cha mwisho kilicholipwa kwa muamala uliochaguliwa. Unaweza kuichapisha au kuishiriki kwa kumbukumbu zako.,Receipt preview side panel note.,draft
+receipt_statusPartiallyPaid,Partially Paid,Imelipwa Sehemu,Receipt preview side panel status.,draft
+receipt_statusBalanceDue,Balance Due,Salio Linadaiwa,Receipt preview side panel status.,draft
+receipt_statusPaidInFull,Paid in Full,Imelipwa Yote,Receipt preview side panel status.,draft
+common_notApplicable,N/A,Haipo,Shown when a value is missing (not applicable).,draft
+reports_thisYear,This year,Mwaka huu,Past Reports time filter choice.,draft
+reports_pastTitle,Past Reports,Ripoti Zilizopita,Past Reports screen title and the button that opens it.,draft
+reports_pastSubtitle,Every daily closing report for this facility,Kila ripoti ya kufunga siku ya kituo hiki,Under the Past Reports title.,draft
+reports_noneYet,No reports generated yet.,Bado hakuna ripoti iliyotengenezwa.,"Past Reports, empty.",draft
+reports_noMatch,No reports match your search.,Hakuna ripoti zinazolingana na utafutaji wako.,"Past Reports, empty after a search.",draft
+reports_loadMore,Load more,Pakia zaidi,Button under the Past Reports list.,draft
+reports_searchHint,Search reports...,Tafuta ripoti...,Past Reports search box.,draft
+reports_generatedCount,Reports generated,Ripoti zilizotengenezwa,Past Reports summary stat.,draft
+reports_loadedPeriod,Loaded period,Kipindi kilichopakiwa,Past Reports summary stat.,draft
+reports_latest,Latest,Ya hivi karibuni,Past Reports summary stat: date of the latest report.,draft
+reports_rowSummary,{amount} total revenue - generated by {name},Mapato ya jumla {amount} - imetengenezwa na {name},"Past Reports row; amount is pre-formatted.",draft
+reports_notSubmitted,Not submitted,Haijawasilishwa,Past Reports row badge for a draft.,draft
+reports_completed,Completed,Imekamilika,Past Reports row badge for a submitted report.,draft
+reports_submittedBy,Submitted by {name},Imewasilishwa na {name},Report header.,draft
+reports_draftNotSubmitted,Draft - not yet submitted,Rasimu - bado haijawasilishwa,Report header and status for a draft.,draft
+reports_pdf,PDF,PDF,Button that prints or downloads the report PDF.,draft
+reports_fullReport,Full Report,Ripoti Kamili,Full report dialog title.,draft
+reports_dailyClosingReport,Daily Closing Report,Ripoti ya Kufunga Siku,Full report heading.,draft
+reports_dailySummary,Daily Summary,Muhtasari wa Siku,Report section.,draft
+reports_totalSales,Total Sales,Jumla ya Mauzo,Report stat.,draft
+reports_serviceRevenue,Service Revenue,Mapato ya Huduma,Report stat.,draft
+reports_totalRevenue,Total Revenue,Jumla ya Mapato,Report stat.,draft
+reports_newDebtToday,New Debt Today,Deni Jipya Leo,Report stat.,draft
+reports_noSalesToday,No sales recorded today.,Hakuna mauzo yaliyorekodiwa leo.,"Report, empty section.",draft
+reports_vetServices,Veterinary Services,Huduma za Mifugo,Report section.,draft
+reports_noServicesToday,No services provided today.,Hakuna huduma zilizotolewa leo.,"Report, empty section.",draft
+reports_productMovement,Product Movement,Mwenendo wa Bidhaa,Report section.,draft
+reports_noMovementToday,No product movement today.,Hakuna mwenendo wa bidhaa leo.,"Report, empty section.",draft
+reports_movementLine,Sold: {sold} {unit}  |  Closing: {closing} {unit},Imeuzwa: {sold} {unit}  |  Kufunga: {closing} {unit},"Full report product line; unit is the product unit label.",draft
+reports_movementLineAdjusted,Sold: {sold} {unit}  |  Adjusted: {adjustment} {unit}  |  Closing: {closing} {unit},Imeuzwa: {sold} {unit}  |  Imerekebishwa: {adjustment} {unit}  |  Kufunga: {closing} {unit},Full report product line with an adjustment (adjustment carries its sign).,draft
+reports_expectedVsPhysical,Expected vs Physical Stock,Stoo Inayotarajiwa dhidi ya Halisi,Report section.,draft
+reports_noWatchlisted,No watch-listed products for this facility.,Hakuna bidhaa zinazofuatiliwa kwa kituo hiki.,"Report, empty section.",draft
+reports_countsNotSubmitted,Physical counts have not been submitted yet.,Hesabu halisi bado hazijawasilishwa.,"Report, stock section of a draft.",draft
+reports_expectedPhysical,Expected: {expected}  |  Physical: {physical},Inatarajiwa: {expected}  |  Halisi: {physical},"Full report stock line; physical is ""-"" when not counted.",draft
+reports_debtActivity,Debt Activity,Mwenendo wa Madeni,Report section.,draft
+reports_noDebtActivity,No debt activity today.,Hakuna mwenendo wa madeni leo.,"Report, empty section.",draft
+reports_expensesRecorded,Expenses Recorded,Gharama Zilizorekodiwa,Report section.,draft
+reports_noExpensesToday,No expenses recorded today.,Hakuna gharama zilizorekodiwa leo.,"Report, empty section.",draft
+reports_paymentReconciliation,Payment Reconciliation,Ulinganisho wa Malipo,Report section.,draft
+reports_noPaymentsToday,No payments recorded today.,Hakuna malipo yaliyorekodiwa leo.,"Report, empty section.",draft
+reports_expectedBalance,Expected balance,Salio linalotarajiwa,Payment reconciliation row.,draft
+reports_physicalBalance,Physical balance counted,Salio halisi lililohesabiwa,Payment reconciliation row.,draft
+reports_variance,Variance,Tofauti,Reconciliation row and status.,draft
+reports_varianceValue,{amount} - VARIANCE,{amount} - TOFAUTI,"Full report reconciliation; amount is pre-formatted.",draft
+reports_matchValue,{amount} - Match,{amount} - Inalingana,"Full report reconciliation; amount is pre-formatted.",draft
+reports_reason,Reason,Sababu,Reconciliation row: the reason for a variance.,draft
+reports_outflowOnly,"No income via {method} today - outflow only, no count needed.","Hakuna mapato kupitia {method} leo - matumizi tu, hakuna haja ya kuhesabu.","Full report reconciliation; method is the payment method label.",draft
+reports_notYetSubmitted,Not yet submitted.,Bado haijawasilishwa.,Full report reconciliation of a draft.,draft
+reports_paymentMethods,Payment Methods,Njia za Malipo,Report section and tab.,draft
+reports_noSalesShort,No sales today.,Hakuna mauzo leo.,"Payment methods, empty category.",draft
+reports_noServicesShort,No services today.,Hakuna huduma leo.,"Payment methods, empty category.",draft
+reports_noRepaymentsShort,No repayments today.,Hakuna marejesho leo.,"Payment methods, empty category.",draft
+reports_noOtherIncomeShort,No other income today.,Hakuna mapato mengine leo.,"Payment methods, empty category.",draft
+reports_declaration,Daily Closing Declaration,Tamko la Kufunga Siku,Report section.,draft
+reports_declarationConfirmed,Confirmed - I have reviewed today's transactions and that the cash and stock figures entered represent the closing figures for my shift.,Imethibitishwa - Nimepitia miamala ya leo na kwamba takwimu za fedha na stoo zilizowekwa ni takwimu za kufunga zamu yangu.,Declaration of a submitted report.,draft
+reports_notConfirmed,Not yet confirmed.,Bado haijathibitishwa.,Declaration of a draft.,draft
+reports_submitFailed,Couldn't submit the report,Imeshindikana kuwasilisha ripoti,Error message.,draft
+reports_reviewSubmit,Review & Submit,Pitia na Uwasilishe,Review dialog title.,draft
+reports_reviewIntro,"Sales, services, transactions, and debt activity have already been calculated automatically. Count the items below and enter what you actually find before submitting.","Mauzo, huduma, miamala na mwenendo wa madeni tayari vimekokotolewa. Hesabu vitu vilivyo hapa chini na uweke ulichokipata kabla ya kuwasilisha.",Review dialog intro.,draft
+reports_physicalStockCount,Physical Stock Count,Hesabu ya Stoo Halisi,Review dialog section.,draft
+reports_watchlistedHint,Watch-listed products only - count these before submitting.,Bidhaa zinazofuatiliwa pekee - zihesabu kabla ya kuwasilisha.,Review dialog stock section.,draft
+reports_expectedValue,Expected: {count},Inatarajiwa: {count},Review dialog: the expected closing count.,draft
+reports_physicalCount,Physical count,Hesabu halisi,Review dialog count field hint.,draft
+reports_varianceCount,{variance} variance,Tofauti {variance},"Review dialog; variance carries its sign.",draft
+reports_match,Match,Inalingana,Count matches the expected value.,draft
+reports_varianceReasonHint,"Reason for variance (e.g. damaged, unable to locate)","Sababu ya tofauti (mf. imeharibika, haipatikani)",Review dialog field hint.,draft
+reports_errVarianceReason,Please provide a reason for the variance.,Tafadhali eleza sababu ya tofauti.,Review dialog validation.,draft
+reports_countEachMethod,"Count what you actually have for each method used today - mobile money balance, bank balance, and cash in the drawer.","Hesabu ulicho nacho kwa kila njia iliyotumika leo - salio la pesa za simu, salio la benki na fedha taslimu kwenye droo.",Review dialog payment section.,draft
+reports_amountPaidOut,Amount paid out,Kiasi kilicholipwa nje,"Review dialog, a method with only outflow.",draft
+reports_noIncomeVia,No income came in via {method} today - just an outflow. No physical count needed here.,Hakuna mapato yaliyoingia kupitia {method} leo - ni matumizi tu. Hakuna haja ya hesabu halisi hapa.,"Review dialog; method is the payment method label.",draft
+reports_physicalBalanceRequired,Physical balance counted *,Salio halisi lililohesabiwa *,Review dialog field label.,draft
+reports_methodVariance,{method} variance: {amount},Tofauti ya {method}: {amount},"Review dialog; amount is pre-formatted with its sign.",draft
+reports_methodVarianceReason,Reason for {method} variance,Sababu ya tofauti ya {method},Review dialog field hint.,draft
+reports_methodMatches,{method} matches,{method} inalingana,Review dialog.,draft
+reports_confirmDeclaration,I confirm that I have reviewed today's transactions and that the cash and stock figures entered above represent the closing figures for my shift.,Nathibitisha kwamba nimepitia miamala ya leo na kwamba takwimu za fedha na stoo zilizowekwa hapo juu ni takwimu za kufunga zamu yangu.,Review dialog declaration checkbox.,draft
+reports_blockedCounts,Enter a physical count for every watch-listed product,Weka hesabu halisi kwa kila bidhaa inayofuatiliwa,Review dialog: why Submit is disabled.,draft
+reports_blockedBalances,Enter the physical balance for every payment method,Weka salio halisi kwa kila njia ya malipo,Review dialog: why Submit is disabled.,draft
+reports_blockedReason,Please provide a reason for the variance found,Tafadhali eleza sababu ya tofauti iliyopatikana,Review dialog: why Submit is disabled.,draft
+reports_blockedDeclaration,Confirm the closing declaration to submit,Thibitisha tamko la kufunga ili kuwasilisha,Review dialog: why Submit is disabled.,draft
+reports_submitDailyClosing,Submit Daily Closing,Wasilisha Kufunga Siku,Review dialog submit button.,draft
+reports_tabStock,Stock Reconciliation,Ulinganisho wa Stoo,Report tab.,draft
+reports_tabDebt,Debt,Deni,Report tab.,draft
+reports_tabProducts,Products,Bidhaa,Report tab.,draft
+reports_outstandingNewDebt,Outstanding New Debt,Deni Jipya Linalodaiwa,Report summary tile.,draft
+reports_servicesPerformed,Services Performed,Huduma Zilizotolewa,Report summary tile.,draft
+reports_productsSold,Products Sold,Bidhaa Zilizouzwa,Report summary tile.,draft
+reports_unitsCount,"{count, plural, other{{count} units}}","{count, plural, other{Vipimo {count}}}",Report summary tile: units sold.,draft
+reports_totalRevenueToday,Total Revenue Today,Jumla ya Mapato Leo,Report summary tile.,draft
+reports_generatedAtBy,Generated at {time} by {name},Imetengenezwa saa {time} na {name},Report summary footer.,draft
+reports_submittedAt,Submitted at {time},Imewasilishwa saa {time},Report summary footer.,draft
+reports_soldCount,Sold: {count},Imeuzwa: {count},Report product preview.,draft
+reports_colTime,Time,Muda,Report table column.,draft
+reports_colReceipt,Receipt,Risiti,Report table column.,draft
+reports_colItems,Items,Vitu,Report table column.,draft
+reports_colPayment,Payment,Malipo,Report table column.,draft
+reports_colService,Service,Huduma,Report table column.,draft
+reports_colNumber,Number,Idadi,Report table column: how many times.,draft
+reports_colRevenue,Revenue,Mapato,Report table column.,draft
+reports_totalServiceRevenue,Total Service Revenue,Jumla ya Mapato ya Huduma,Report total row.,draft
+reports_colProduct,Product,Bidhaa,Report table column.,draft
+reports_colUnit,Unit,Kipimo,Report table column.,draft
+reports_colOpening,Opening,Mwanzo,Report table column: opening amount.,draft
+reports_colAdded,Added,Imeongezwa,Report table column.,draft
+reports_colAdjusted,Adjusted,Imerekebishwa,Report table column.,draft
+reports_colSold,Sold,Imeuzwa,Report table column.,draft
+reports_colExpectedClosing,Expected Closing,Kufunga Kunakotarajiwa,Report table column.,draft
+reports_totalUnitsSold,Total Units Sold,Jumla ya Vipimo Vilivyouzwa,Report total row.,draft
+reports_systemTracked,"System-tracked - only products with movement today, or watch-listed products, are shown.","Inafuatiliwa na mfumo - bidhaa zenye mwenendo leo, au zinazofuatiliwa, ndizo zinaonyeshwa.",Report products tab note.,draft
+reports_watchlistedOnly,Watch-listed products only.,Bidhaa zinazofuatiliwa pekee.,Report stock tab note.,draft
+reports_colExpected,Expected,Inatarajiwa,Report table column.,draft
+reports_colPhysical,Physical,Halisi,Report table column.,draft
+reports_colDifference,Difference,Tofauti,Report table column.,draft
+reports_reasonValue,Reason: {reason},Sababu: {reason},Report stock row.,draft
+reports_newDebtTodayLower,New debt today,Deni jipya leo,Report debt tab row.,draft
+reports_repaymentsCollected,Repayments collected,Marejesho yaliyokusanywa,Report debt tab row.,draft
+reports_outstandingChange,Outstanding change,Mabadiliko ya deni,Report debt tab row.,draft
+reports_byCustomer,By Customer,Kwa Mteja,Report debt tab section.,draft
+reports_colNewDebt,New Debt,Deni Jipya,Report table column.,draft
+reports_colRepayment,Repayment,Marejesho,Report table column.,draft
+reports_colClosing,Closing,Kufunga,Report table column: closing amount.,draft
+reports_totalExpenses,Total Expenses,Jumla ya Gharama,Report total row.,draft
+reports_allTransactions,All Transactions,Miamala Yote,Report transactions tab section.,draft
+reports_transactionsNote,"Income and expenses recorded directly, separate from sales and service revenue.","Mapato na gharama zilizorekodiwa moja kwa moja, tofauti na mapato ya mauzo na huduma.",Report transactions tab note.,draft
+reports_noTransactionsToday,No transactions recorded today.,Hakuna miamala iliyorekodiwa leo.,"Report, empty section.",draft
+reports_everythingToday,"Everything recorded today, in order.","Kila kitu kilichorekodiwa leo, kwa mpangilio.",Report activity tab note.,draft
+reports_activityNotIncluded,"Not included - this draft was generated by an assistant, who can only see their own activity. Delete the draft and generate it again for the full log.","Haijajumuishwa - rasimu hii ilitengenezwa na msaidizi, anayeona shughuli zake tu. Futa rasimu na uitengeneze tena upate kumbukumbu kamili.",Report activity tab of an assistant's draft.,draft
+reports_noActivityToday,No activity recorded today.,Hakuna shughuli iliyorekodiwa leo.,"Report, empty section.",draft
+reports_colBy,By,Na,Report activity table column: who did it.,draft
+reports_combinedAll,Combined - All Payment Methods,Kwa Pamoja - Njia Zote za Malipo,Report payment methods tab section.,draft
+reports_combinedNote,"Sales, services, debt repayments, and other income together, by how it was actually received.","Mauzo, huduma, marejesho ya madeni na mapato mengine kwa pamoja, kulingana na jinsi yalivyopokelewa.",Report payment methods tab note.,draft
+reports_generateFailed,Couldn't generate the report,Imeshindikana kutengeneza ripoti,Error message.,draft
+reports_deleteDraftTitle,Delete Draft?,Futa Rasimu?,Delete draft dialog title.,draft
+reports_deleteDraftBody,"This clears today's draft report so it can be regenerated from scratch. It doesn't affect any of the underlying sales, services, or transactions - only this working snapshot.","Hii inafuta rasimu ya ripoti ya leo ili iweze kutengenezwa upya. Haiathiri mauzo, huduma au miamala yoyote - ni nakala hii ya kazi pekee.",Delete draft dialog body.,draft
+reports_deleteDraft,Delete Draft,Futa Rasimu,Delete draft button and action.,draft
+reports_deleteDraftFailed,Couldn't delete the draft,Imeshindikana kufuta rasimu,Error message.,draft
+reports_shareFailed,Couldn't share the report,Imeshindikana kushiriki ripoti,Error message.,draft
+reports_viewTitle,View Reports,Tazama Ripoti,Reports screen title.,draft
+reports_viewSubtitle,Daily closing report for this facility,Ripoti ya kufunga siku ya kituo hiki,Under the reports screen title.,draft
+reports_todaySubmitted,Today's Report - Submitted,Ripoti ya Leo - Imewasilishwa,Reports screen button when today's report is submitted.,draft
+reports_continueClosing,Continue Closing,Endelea Kufunga,Reports screen button for a draft.,draft
+reports_generateToday,Generate Today's Report,Tengeneza Ripoti ya Leo,Reports screen button.,draft
+reports_generateClosedToday,Generate Today's Report (closed today),Tengeneza Ripoti ya Leo (imefungwa leo),"Reports screen button, facility closed all day.",draft
+reports_generateAt,Generate Today's Report (at {time}),Tengeneza Ripoti ya Leo (saa {time}),Reports screen button before closing time.,draft
+reports_generateAfterClosing,Generate Today's Report (after closing time),Tengeneza Ripoti ya Leo (baada ya muda wa kufunga),"Reports screen button, no closing time set.",draft
+reports_tapGenerate,"Tap ""Generate Today's Report"" above to get started.","Gusa ""Tengeneza Ripoti ya Leo"" hapo juu kuanza.","Reports screen, no report yet.",draft
+reports_closedToday,This facility is marked closed today.,Kituo hiki kimewekwa kuwa kimefungwa leo.,"Reports screen, no report yet.",draft
+reports_availableAt,Available at {time}.,Inapatikana saa {time}.,"Reports screen, no report yet.",draft
+reports_availableOnceClosing,Available once today's closing time is reached.,Inapatikana muda wa kufunga wa leo ukifika.,"Reports screen, no report yet.",draft
+reports_noneToday,No report generated yet today,Bado hakuna ripoti iliyotengenezwa leo,"Reports screen, no report yet.",draft
+reports_todayHeading,Daily Closing Report - Today's Report,Ripoti ya Kufunga Siku - Ripoti ya Leo,Reports screen heading.,draft
+reports_viewFull,View Full Report,Tazama Ripoti Kamili,Quick action.,draft
+reports_viewFullHint,See all sections in detail,Ona sehemu zote kwa kina,Quick action subtitle.,draft
+reports_downloadPdf,Download PDF,Pakua PDF,Quick action.,draft
+reports_downloadPdfHint,Get a printable report,Pata ripoti ya kuchapisha,Quick action subtitle.,draft
+reports_deleteDraftHint,Clear today's draft to restart,Futa rasimu ya leo uanze upya,Quick action subtitle.,draft
+reports_shareWithAdmin,Share with Admin,Shiriki na Msimamizi,Quick action.,draft
+reports_shareWithAdminHint,Send report to your admin,Tuma ripoti kwa msimamizi wako,Quick action subtitle.,draft
+reports_accountability,Accountability,Uwajibikaji,Reports screen panel.,draft
+reports_submittedByLabel,Submitted by,Imewasilishwa na,Accountability row label.,draft
+reports_declarationPending,"This declaration is confirmed as part of Submit Daily Closing, once physical stock and cash counts have been entered.","Tamko hili huthibitishwa wakati wa Kuwasilisha Kufunga Siku, baada ya hesabu za stoo na fedha kuwekwa.",Declaration panel of a draft.,draft
+reports_savedNote,The report will be saved in the system and available for you and the admin to view or download at any time.,Ripoti itahifadhiwa kwenye mfumo na itapatikana kwako na kwa msimamizi kuitazama au kuipakua wakati wowote.,Declaration panel note.,draft
