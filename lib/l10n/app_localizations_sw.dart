@@ -4795,4 +4795,66 @@ class AppLocalizationsSw extends AppLocalizations {
 
   @override
   String get sales_summary => 'Muhtasari wa Mauzo';
+
+  @override
+  String get sales_totalItems => 'Jumla ya Bidhaa';
+
+  @override
+  String get sales_selectMethod => 'Chagua Njia';
+
+  @override
+  String sales_amountReceivedLabel(String currency) {
+    return 'Kiasi Kilichopokelewa ($currency) *';
+  }
+
+  @override
+  String sales_changeLabel(String currency) {
+    return 'Chenji ($currency)';
+  }
+
+  @override
+  String get sales_walkInCustomer => 'Mteja wa Papo Hapo';
+
+  @override
+  String get sales_noClientSelected => 'Hakuna mteja aliyechaguliwa';
+
+  @override
+  String get sales_productSearchHint =>
+      'Tafuta bidhaa kwa jina, namba ya batch au kundi...';
+
+  @override
+  String get sales_noProductsYet => 'Bado hakuna bidhaa zilizoongezwa';
+
+  @override
+  String get sales_addProductsHint =>
+      'Tafuta na ongeza bidhaa kwenye mauzo haya';
+
+  @override
+  String get sales_colBatchNo => 'Namba ya Batch';
+
+  @override
+  String sales_colUnitPrice(String currency) {
+    return 'Bei ya Kipimo ($currency)';
+  }
+
+  @override
+  String get sales_colQty => 'Idadi';
+
+  @override
+  String sales_colTotal(String currency) {
+    return 'Jumla ($currency)';
+  }
+
+  @override
+  String sales_batchShort(String batch) {
+    return 'Batch: $batch';
+  }
+
+  @override
+  String sales_expShort(String date) {
+    return 'Inaisha: $date';
+  }
+
+  @override
+  String get sales_notesHint => 'Ongeza maelezo mengine (si lazima)...';
 }

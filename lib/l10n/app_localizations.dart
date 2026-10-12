@@ -8261,6 +8261,102 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Sale Summary'**
   String get sales_summary;
+
+  /// Record Sale summary row.
+  ///
+  /// In en, this message translates to:
+  /// **'Total Items'**
+  String get sales_totalItems;
+
+  /// Record Sale payment method placeholder.
+  ///
+  /// In en, this message translates to:
+  /// **'Select Method'**
+  String get sales_selectMethod;
+
+  /// Record Sale field label.
+  ///
+  /// In en, this message translates to:
+  /// **'Amount Received ({currency}) *'**
+  String sales_amountReceivedLabel(String currency);
+
+  /// Record Sale field label: money given back.
+  ///
+  /// In en, this message translates to:
+  /// **'Change ({currency})'**
+  String sales_changeLabel(String currency);
+
+  /// Record Sale client choice for a customer with no record (not saved; a walk-in sale has no client name).
+  ///
+  /// In en, this message translates to:
+  /// **'Walk-in Customer'**
+  String get sales_walkInCustomer;
+
+  /// Record Sale, under Walk-in Customer.
+  ///
+  /// In en, this message translates to:
+  /// **'No client selected'**
+  String get sales_noClientSelected;
+
+  /// Record Sale product search box.
+  ///
+  /// In en, this message translates to:
+  /// **'Search product by name, batch no or category...'**
+  String get sales_productSearchHint;
+
+  /// Record Sale, empty item list.
+  ///
+  /// In en, this message translates to:
+  /// **'No products added yet'**
+  String get sales_noProductsYet;
+
+  /// Record Sale, empty item list.
+  ///
+  /// In en, this message translates to:
+  /// **'Search and add products to this sale'**
+  String get sales_addProductsHint;
+
+  /// Record Sale items table column.
+  ///
+  /// In en, this message translates to:
+  /// **'Batch No.'**
+  String get sales_colBatchNo;
+
+  /// Record Sale items table column.
+  ///
+  /// In en, this message translates to:
+  /// **'Unit Price ({currency})'**
+  String sales_colUnitPrice(String currency);
+
+  /// Record Sale items table column.
+  ///
+  /// In en, this message translates to:
+  /// **'Qty'**
+  String get sales_colQty;
+
+  /// Record Sale items table column.
+  ///
+  /// In en, this message translates to:
+  /// **'Total ({currency})'**
+  String sales_colTotal(String currency);
+
+  /// Record Sale item card.
+  ///
+  /// In en, this message translates to:
+  /// **'Batch: {batch}'**
+  String sales_batchShort(String batch);
+
+  /// Record Sale item card.
+  ///
+  /// In en, this message translates to:
+  /// **'Exp: {date}'**
+  String sales_expShort(String date);
+
+  /// Record Sale notes box.
+  ///
+  /// In en, this message translates to:
+  /// **'Add any additional notes (optional)...'**
+  String get sales_notesHint;
 }
 
 class _AppLocalizationsDelegate

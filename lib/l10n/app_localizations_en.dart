@@ -4768,4 +4768,65 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get sales_summary => 'Sale Summary';
+
+  @override
+  String get sales_totalItems => 'Total Items';
+
+  @override
+  String get sales_selectMethod => 'Select Method';
+
+  @override
+  String sales_amountReceivedLabel(String currency) {
+    return 'Amount Received ($currency) *';
+  }
+
+  @override
+  String sales_changeLabel(String currency) {
+    return 'Change ($currency)';
+  }
+
+  @override
+  String get sales_walkInCustomer => 'Walk-in Customer';
+
+  @override
+  String get sales_noClientSelected => 'No client selected';
+
+  @override
+  String get sales_productSearchHint =>
+      'Search product by name, batch no or category...';
+
+  @override
+  String get sales_noProductsYet => 'No products added yet';
+
+  @override
+  String get sales_addProductsHint => 'Search and add products to this sale';
+
+  @override
+  String get sales_colBatchNo => 'Batch No.';
+
+  @override
+  String sales_colUnitPrice(String currency) {
+    return 'Unit Price ($currency)';
+  }
+
+  @override
+  String get sales_colQty => 'Qty';
+
+  @override
+  String sales_colTotal(String currency) {
+    return 'Total ($currency)';
+  }
+
+  @override
+  String sales_batchShort(String batch) {
+    return 'Batch: $batch';
+  }
+
+  @override
+  String sales_expShort(String date) {
+    return 'Exp: $date';
+  }
+
+  @override
+  String get sales_notesHint => 'Add any additional notes (optional)...';
 }
