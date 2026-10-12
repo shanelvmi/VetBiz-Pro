@@ -4319,4 +4319,86 @@ class AppLocalizationsSw extends AppLocalizations {
     );
     return '$_temp0';
   }
+
+  @override
+  String get products_smartDefaultsRunning =>
+      'Inakokotoa upya viwango vya kujitegemea…';
+
+  @override
+  String products_smartDefaultsUpdated(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other:
+          'Viwango vya kujitegemea vimesasishwa kwa bidhaa $count zenye historia ya kutosha ya matumizi',
+      one:
+          'Viwango vya kujitegemea vimesasishwa kwa bidhaa 1 yenye historia ya kutosha ya matumizi',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get products_smartDefaultsNone =>
+      'Bado hakuna bidhaa yenye historia ya kutosha ya mauzo/huduma kukokotoa viwango vya kujitegemea';
+
+  @override
+  String get products_smartDefaultsFailed =>
+      'Imeshindikana kukokotoa upya viwango vya kujitegemea';
+
+  @override
+  String get products_shelfStockValue => 'Thamani ya Bidhaa Rafuni';
+
+  @override
+  String get products_watchlistFailed =>
+      'Imeshindikana kusasisha orodha ya ufuatiliaji';
+
+  @override
+  String products_confirmDeleteNamed(String name) {
+    return 'Una uhakika unataka kufuta \"$name\"?';
+  }
+
+  @override
+  String get products_noSellable => 'Hakuna bidhaa za kuuza';
+
+  @override
+  String get products_releaseFromStore => 'Toa bidhaa kutoka Stoo';
+
+  @override
+  String get products_sellable => 'Za Kuuza';
+
+  @override
+  String get products_nothingSellable => 'Imeisha - hakuna cha kuuza';
+
+  @override
+  String get products_sell => 'Uza';
+
+  @override
+  String get products_removeFromWatchlist => 'Ondoa kwenye Ufuatiliaji';
+
+  @override
+  String get products_addToWatchlist => 'Ongeza kwenye Ufuatiliaji';
+
+  @override
+  String get products_sellableTitle => 'Bidhaa za Kuuza';
+
+  @override
+  String get products_sellableSubtitle => 'Bidhaa zilizo tayari kuuzwa';
+
+  @override
+  String get products_recalculateTooltip =>
+      'Kokotoa upya viwango vya kujitegemea kutoka historia ya matumizi';
+
+  @override
+  String get products_searchHint => 'Tafuta bidhaa, chapa au batch...';
+
+  @override
+  String products_stockBatch(int quantity, String unit, String batch) {
+    return 'Stoo: $quantity $unit • Batch: $batch';
+  }
+
+  @override
+  String get products_watchlisted => 'Inafuatiliwa kwenye ripoti za kila siku';
+
+  @override
+  String get products_selectFacilityFirst => 'Chagua kituo kwanza';
 }

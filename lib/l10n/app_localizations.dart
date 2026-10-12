@@ -7493,6 +7493,132 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{total, plural, =1{Showing {start} to {end} of 1 alert} other{Showing {start} to {end} of {total} alerts}}'**
   String alerts_showingRange(int start, int end, int total);
+
+  /// Message while smart defaults are recalculated.
+  ///
+  /// In en, this message translates to:
+  /// **'Recalculating smart defaults…'**
+  String get products_smartDefaultsRunning;
+
+  /// Message after recalculating smart defaults.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{Updated smart defaults for 1 product with enough usage history} other{Updated smart defaults for {count} products with enough usage history}}'**
+  String products_smartDefaultsUpdated(int count);
+
+  /// Message when no product could be recalculated.
+  ///
+  /// In en, this message translates to:
+  /// **'No products have enough sales/service history yet to compute smart defaults'**
+  String get products_smartDefaultsNone;
+
+  /// Error message when recalculating fails.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t recalculate smart defaults'**
+  String get products_smartDefaultsFailed;
+
+  /// Sellable Products metric card.
+  ///
+  /// In en, this message translates to:
+  /// **'Shelf Stock Value'**
+  String get products_shelfStockValue;
+
+  /// Error message when the watchlist toggle fails.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t update the watchlist'**
+  String get products_watchlistFailed;
+
+  /// Delete product dialog text.
+  ///
+  /// In en, this message translates to:
+  /// **'Are you sure you want to delete \"{name}\"?'**
+  String products_confirmDeleteNamed(String name);
+
+  /// Sellable Products, empty.
+  ///
+  /// In en, this message translates to:
+  /// **'No sellable products'**
+  String get products_noSellable;
+
+  /// Sellable Products, empty hint.
+  ///
+  /// In en, this message translates to:
+  /// **'Release products from Stock Store'**
+  String get products_releaseFromStore;
+
+  /// Product card label over the sellable quantity.
+  ///
+  /// In en, this message translates to:
+  /// **'Sellable'**
+  String get products_sellable;
+
+  /// Tooltip on the Sell button when nothing is sellable.
+  ///
+  /// In en, this message translates to:
+  /// **'Out of stock - nothing sellable'**
+  String get products_nothingSellable;
+
+  /// Product card button.
+  ///
+  /// In en, this message translates to:
+  /// **'Sell'**
+  String get products_sell;
+
+  /// Product card menu item.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove from Watchlist'**
+  String get products_removeFromWatchlist;
+
+  /// Product card menu item.
+  ///
+  /// In en, this message translates to:
+  /// **'Add to Watchlist'**
+  String get products_addToWatchlist;
+
+  /// Sellable Products screen title.
+  ///
+  /// In en, this message translates to:
+  /// **'Sellable Products'**
+  String get products_sellableTitle;
+
+  /// Sellable Products screen subtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Products ready for sale'**
+  String get products_sellableSubtitle;
+
+  /// Sellable Products app bar button tooltip.
+  ///
+  /// In en, this message translates to:
+  /// **'Recalculate smart defaults from usage history'**
+  String get products_recalculateTooltip;
+
+  /// Sellable Products search box.
+  ///
+  /// In en, this message translates to:
+  /// **'Search product, brand or batch...'**
+  String get products_searchHint;
+
+  /// Product card line.
+  ///
+  /// In en, this message translates to:
+  /// **'Stock: {quantity} {unit} • Batch: {batch}'**
+  String products_stockBatch(int quantity, String unit, String batch);
+
+  /// Tooltip on the watchlist badge.
+  ///
+  /// In en, this message translates to:
+  /// **'Watch-listed for daily reports'**
+  String get products_watchlisted;
+
+  /// Add/Edit Product warning when no facility is selected.
+  ///
+  /// In en, this message translates to:
+  /// **'Select a facility first'**
+  String get products_selectFacilityFirst;
 }
 
 class _AppLocalizationsDelegate

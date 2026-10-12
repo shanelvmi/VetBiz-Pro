@@ -4300,4 +4300,83 @@ class AppLocalizationsEn extends AppLocalizations {
     );
     return '$_temp0';
   }
+
+  @override
+  String get products_smartDefaultsRunning => 'Recalculating smart defaults…';
+
+  @override
+  String products_smartDefaultsUpdated(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other:
+          'Updated smart defaults for $count products with enough usage history',
+      one: 'Updated smart defaults for 1 product with enough usage history',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get products_smartDefaultsNone =>
+      'No products have enough sales/service history yet to compute smart defaults';
+
+  @override
+  String get products_smartDefaultsFailed =>
+      'Couldn\'t recalculate smart defaults';
+
+  @override
+  String get products_shelfStockValue => 'Shelf Stock Value';
+
+  @override
+  String get products_watchlistFailed => 'Couldn\'t update the watchlist';
+
+  @override
+  String products_confirmDeleteNamed(String name) {
+    return 'Are you sure you want to delete \"$name\"?';
+  }
+
+  @override
+  String get products_noSellable => 'No sellable products';
+
+  @override
+  String get products_releaseFromStore => 'Release products from Stock Store';
+
+  @override
+  String get products_sellable => 'Sellable';
+
+  @override
+  String get products_nothingSellable => 'Out of stock - nothing sellable';
+
+  @override
+  String get products_sell => 'Sell';
+
+  @override
+  String get products_removeFromWatchlist => 'Remove from Watchlist';
+
+  @override
+  String get products_addToWatchlist => 'Add to Watchlist';
+
+  @override
+  String get products_sellableTitle => 'Sellable Products';
+
+  @override
+  String get products_sellableSubtitle => 'Products ready for sale';
+
+  @override
+  String get products_recalculateTooltip =>
+      'Recalculate smart defaults from usage history';
+
+  @override
+  String get products_searchHint => 'Search product, brand or batch...';
+
+  @override
+  String products_stockBatch(int quantity, String unit, String batch) {
+    return 'Stock: $quantity $unit • Batch: $batch';
+  }
+
+  @override
+  String get products_watchlisted => 'Watch-listed for daily reports';
+
+  @override
+  String get products_selectFacilityFirst => 'Select a facility first';
 }
