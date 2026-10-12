@@ -20,6 +20,7 @@ import '../../utils/force_logout.dart';
 import '../../utils/facility_limit_helper.dart';
 import '../admin/manage_assistants_screen.dart';
 import '../../data/collections.dart';
+import '../../data/facility_ownership.dart';
 import '../../data/facility_status.dart';
 import '../../data/fields.dart';
 import '../../data/user_role.dart';
@@ -342,7 +343,7 @@ class _FacilityScreenState extends State<FacilityScreen> {
       }
     } catch (e) {
       if (mounted) {
-        AppFeedback.error("Couldn't load facilities", error: e);
+        AppFeedback.error(L10n.current.facilities_loadFailed, error: e);
       }
     } finally {
       if (mounted) setState(() => isLoading = false);
@@ -380,15 +381,12 @@ class _FacilityScreenState extends State<FacilityScreen> {
       await showDialog(
         context: context,
         builder: (context) => AlertDialog(
-          title: const Text('Facility Limit Reached'),
-          content: Text(
-            "You've reached the limit of $maxFacilities facilities per account. "
-            'Contact support if you need more.',
-          ),
+          title: Text(context.l10n.facilities_limitTitle),
+          content: Text(context.l10n.facilities_limitMessage(maxFacilities)),
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context),
-              child: Text('OK', style: TextStyle(color: context.colors.primary)),
+              child: Text(context.l10n.common_ok, style: TextStyle(color: context.colors.primary)),
             ),
           ],
         ),
@@ -406,7 +404,7 @@ class _FacilityScreenState extends State<FacilityScreen> {
       context: context,
       builder: (dialogContext) => StatefulBuilder(
         builder: (dialogContext, setDialogState) => AlertDialog(
-          title: const Text('Add Facility'),
+          title: Text(context.l10n.facilities_addTitle),
           content: SingleChildScrollView(
             child: SizedBox(
               width: _dialogWidth(context),
@@ -450,7 +448,7 @@ class _FacilityScreenState extends State<FacilityScreen> {
                 const SizedBox(height: AppSpacing.s4),
                 Center(
                   child: Text(
-                    'Logo (optional)',
+                    context.l10n.facilities_logoOptional,
                     style: TextStyle(fontSize: AppFontSize.f11, color: context.colors.textMuted),
                   ),
                 ),
@@ -459,12 +457,12 @@ class _FacilityScreenState extends State<FacilityScreen> {
                   controller: nameController,
                   textCapitalization: TextCapitalization.sentences,
                   inputFormatters: [SentenceCapitalizationFormatter()],
-                  decoration: const InputDecoration(labelText: 'Facility Name'),
+                  decoration: InputDecoration(labelText: context.l10n.facilities_nameLabel),
                 ),
                 const SizedBox(height: AppSpacing.s12),
                 DropdownButtonFormField<String>(
                   initialValue: selectedType,
-                  decoration: const InputDecoration(labelText: 'Type'),
+                  decoration: InputDecoration(labelText: context.l10n.common_type),
                   items: kFacilityTypes.map((t) => DropdownMenuItem(value: t, child: Text(context.l10n.facilityTypeLabel(t)))).toList(),
                   onChanged: (val) => setDialogState(() => selectedType = val),
                 ),
@@ -485,7 +483,7 @@ class _FacilityScreenState extends State<FacilityScreen> {
                   return context.colors.primary;
                 }),
               ),
-              child: const Text('Cancel'),
+              child: Text(context.l10n.common_cancel),
             ),
             ElevatedButton(
               onPressed: _isAddingFacility
@@ -493,7 +491,7 @@ class _FacilityScreenState extends State<FacilityScreen> {
                   : () async {
                       final name = nameController.text.trim();
                       if (name.isEmpty || selectedType == null) {
-                        setDialogState(() => dialogError = 'Enter a name and select a type');
+                        setDialogState(() => dialogError = context.l10n.facilities_nameAndTypeRequired);
                         return;
                       }
                       setDialogState(() => dialogError = null);
@@ -532,10 +530,10 @@ class _FacilityScreenState extends State<FacilityScreen> {
                           child: CircularProgressIndicator(strokeWidth: 2, color: context.colors.onPrimary),
                         ),
                         SizedBox(width: AppSpacing.s8),
-                        Text('Adding...'),
+                        Text(context.l10n.facilities_adding),
                       ],
                     )
-                  : const Text('Add'),
+                  : Text(context.l10n.common_add),
             ),
           ],
         ),
@@ -573,7 +571,7 @@ class _FacilityScreenState extends State<FacilityScreen> {
     }
 
     if (mounted) {
-      AppFeedback.success('Facility added');
+      AppFeedback.success(L10n.current.facilities_added);
       await fetchFacilities();
     }
 
@@ -613,7 +611,7 @@ class _FacilityScreenState extends State<FacilityScreen> {
       context: context,
       builder: (dialogContext) => StatefulBuilder(
         builder: (dialogContext, setDialogState) => AlertDialog(
-          title: const Text('Edit Facility'),
+          title: Text(context.l10n.facilities_editTitle),
           content: SingleChildScrollView(
             child: SizedBox(
               width: _dialogWidth(context),
@@ -683,7 +681,7 @@ class _FacilityScreenState extends State<FacilityScreen> {
                 const SizedBox(height: AppSpacing.s4),
                 Center(
                   child: Text(
-                    'Tap to change logo',
+                    context.l10n.facilities_tapToChangeLogo,
                     style: TextStyle(fontSize: AppFontSize.f11, color: context.colors.textMuted),
                   ),
                 ),
@@ -703,7 +701,7 @@ class _FacilityScreenState extends State<FacilityScreen> {
                                 logoMarkedForRemoval = true;
                               }),
                       child: Text(
-                        'Remove logo',
+                        context.l10n.facilities_removeLogo,
                         style: TextStyle(fontSize: AppFontSize.f11, color: context.colors.dangerAccent),
                       ),
                     ),
@@ -714,12 +712,12 @@ class _FacilityScreenState extends State<FacilityScreen> {
                   controller: nameController,
                   textCapitalization: TextCapitalization.sentences,
                   inputFormatters: [SentenceCapitalizationFormatter()],
-                  decoration: const InputDecoration(labelText: 'Facility Name'),
+                  decoration: InputDecoration(labelText: context.l10n.facilities_nameLabel),
                 ),
                 const SizedBox(height: AppSpacing.s12),
                 DropdownButtonFormField<String>(
                   initialValue: selectedType,
-                  decoration: const InputDecoration(labelText: 'Type'),
+                  decoration: InputDecoration(labelText: context.l10n.common_type),
                   items: kFacilityTypes.map((t) => DropdownMenuItem(value: t, child: Text(context.l10n.facilityTypeLabel(t)))).toList(),
                   onChanged: (val) => setDialogState(() => selectedType = val),
                 ),
@@ -727,16 +725,16 @@ class _FacilityScreenState extends State<FacilityScreen> {
                 TextField(
                   controller: emailController,
                   keyboardType: TextInputType.emailAddress,
-                  decoration: const InputDecoration(
-                    labelText: 'Business Email (optional)',
+                  decoration: InputDecoration(
+                    labelText: context.l10n.facilities_businessEmailOptional,
                   ),
                 ),
                 const SizedBox(height: AppSpacing.s12),
                 TextField(
                   controller: phoneController,
                   keyboardType: TextInputType.phone,
-                  decoration: const InputDecoration(
-                    labelText: 'Business Phone (optional)',
+                  decoration: InputDecoration(
+                    labelText: context.l10n.facilities_businessPhoneOptional,
                   ),
                 ),
                 const SizedBox(height: AppSpacing.s12),
@@ -744,8 +742,8 @@ class _FacilityScreenState extends State<FacilityScreen> {
                   controller: addressController,
                   textCapitalization: TextCapitalization.sentences,
                   inputFormatters: [SentenceCapitalizationFormatter()],
-                  decoration: const InputDecoration(
-                    labelText: 'Address (optional)',
+                  decoration: InputDecoration(
+                    labelText: context.l10n.facilities_addressOptional,
                   ),
                 ),
                 const SizedBox(height: AppSpacing.s12),
@@ -754,8 +752,8 @@ class _FacilityScreenState extends State<FacilityScreen> {
                   textCapitalization: TextCapitalization.sentences,
                   inputFormatters: [SentenceCapitalizationFormatter()],
                   maxLines: 3,
-                  decoration: const InputDecoration(
-                    labelText: 'Description (optional)',
+                  decoration: InputDecoration(
+                    labelText: context.l10n.facilities_descriptionOptional,
                   ),
                 ),
                 const SizedBox(height: AppSpacing.s12),
@@ -763,40 +761,41 @@ class _FacilityScreenState extends State<FacilityScreen> {
                   controller: taglineController,
                   textCapitalization: TextCapitalization.sentences,
                   inputFormatters: [SentenceCapitalizationFormatter()],
-                  decoration: const InputDecoration(
-                    labelText: 'Tagline (optional)',
-                    hintText: 'e.g. Agrovet & Animal Care',
+                  decoration: InputDecoration(
+                    labelText: context.l10n.facilities_taglineOptional,
+                    hintText: context.l10n.facilities_taglineHint,
                   ),
                 ),
                 const SizedBox(height: AppSpacing.s12),
                 TextField(
                   controller: licenseController,
-                  decoration: const InputDecoration(
-                    labelText: 'License Number (optional)',
+                  decoration: InputDecoration(
+                    labelText: context.l10n.facilities_licenseOptional,
                   ),
                 ),
                 const SizedBox(height: AppSpacing.s12),
                 TextField(
                   controller: tinController,
-                  decoration: const InputDecoration(
-                    labelText: 'TIN (optional)',
-                    hintText: 'Tax Identification Number',
+                  decoration: InputDecoration(
+                    labelText: context.l10n.facilities_tinOptional,
+                    hintText: context.l10n.facilities_tinHint,
                   ),
                 ),
                 const SizedBox(height: AppSpacing.s12),
                 DropdownButtonFormField<String>(
                   initialValue: selectedOwnership,
-                  decoration: const InputDecoration(labelText: 'Ownership (optional)'),
-                  items: const [
-                    DropdownMenuItem(value: 'Owned', child: Text('Owned')),
-                    DropdownMenuItem(value: 'Rented', child: Text('Rented')),
+                  decoration: InputDecoration(labelText: context.l10n.facilities_ownershipOptional),
+                  // Shows the label; the facility stores the English value.
+                  items: [
+                    for (final o in FacilityOwnership.values)
+                      DropdownMenuItem(value: o, child: Text(context.l10n.facilityOwnershipLabel(o))),
                   ],
                   onChanged: (val) => setDialogState(() => selectedOwnership = val),
                 ),
                 const SizedBox(height: AppSpacing.s12),
                 DropdownButtonFormField<String>(
                   initialValue: selectedStatus,
-                  decoration: const InputDecoration(labelText: 'Status'),
+                  decoration: InputDecoration(labelText: context.l10n.common_status),
                   items: [
                     DropdownMenuItem(value: FacilityStatus.active.key, child: Text(context.l10n.facilityStatusLabel(FacilityStatus.active.key))),
                     DropdownMenuItem(value: FacilityStatus.inactive.key, child: Text(context.l10n.facilityStatusLabel(FacilityStatus.inactive.key))),
@@ -808,9 +807,9 @@ class _FacilityScreenState extends State<FacilityScreen> {
                 const SizedBox(height: AppSpacing.s12),
                 DropdownButtonFormField<String>(
                   initialValue: selectedRestockFrequency,
-                  decoration: const InputDecoration(
-                    labelText: 'How often do you typically restock?',
-                    helperText: 'Used to suggest smart stock-level defaults from your sales history',
+                  decoration: InputDecoration(
+                    labelText: context.l10n.facilities_restockQuestion,
+                    helperText: context.l10n.facilities_restockHelper,
                     helperMaxLines: 2,
                   ),
                   items: UsageCalculatorService.restockFrequencyOptions
@@ -838,7 +837,7 @@ class _FacilityScreenState extends State<FacilityScreen> {
                   return context.colors.primary;
                 }),
               ),
-              child: const Text('Cancel'),
+              child: Text(context.l10n.common_cancel),
             ),
             ElevatedButton(
               onPressed: isSaving
@@ -846,7 +845,7 @@ class _FacilityScreenState extends State<FacilityScreen> {
                   : () async {
                       final name = nameController.text.trim();
                       if (name.isEmpty || selectedType == null) {
-                        setDialogState(() => dialogError = 'Enter a name and select a type');
+                        setDialogState(() => dialogError = context.l10n.facilities_nameAndTypeRequired);
                         return;
                       }
                       setDialogState(() {
@@ -880,7 +879,7 @@ class _FacilityScreenState extends State<FacilityScreen> {
                       } catch (e) {
                         setDialogState(() {
                           isSaving = false;
-                          dialogError = "Couldn't save the changes. ${FriendlyError.messageFor(e)}";
+                          dialogError = L10n.current.facilities_saveFailed(FriendlyError.messageFor(e));
                         });
                       }
                     },
@@ -896,7 +895,7 @@ class _FacilityScreenState extends State<FacilityScreen> {
                       width: 18, height: 18,
                       child: CircularProgressIndicator(strokeWidth: 2, color: context.colors.onPrimary),
                     )
-                  : const Text('Save'),
+                  : Text(context.l10n.common_save),
             ),
           ],
         ),
@@ -1007,7 +1006,7 @@ class _FacilityScreenState extends State<FacilityScreen> {
     }
 
     if (!mounted) return;
-    AppFeedback.success('Facility updated');
+    AppFeedback.success(L10n.current.facilities_updated);
     await fetchFacilities();
   }
 
@@ -1029,7 +1028,7 @@ class _FacilityScreenState extends State<FacilityScreen> {
     // Facility kept refusing until the owner signed out and back in. The
     // server re-checks too, so this is only about telling the truth promptly.
     setState(() => _checkingBeforeDelete = true);
-    AppFeedback.info('Checking that no assistants remain…');
+    AppFeedback.info(L10n.current.facilities_checkingAssistants);
     List<Map<String, dynamic>> assistants;
     try {
       assistants = await _fetchAssistantsForFacility(facilityId);
@@ -1047,12 +1046,8 @@ class _FacilityScreenState extends State<FacilityScreen> {
       await showDialog(
         context: context,
         builder: (context) => AlertDialog(
-          title: const Text('Cannot Delete Facility'),
-          content: Text(
-            'This facility still has ${assistants.length} assistant${assistants.length == 1 ? '' : 's'} '
-            'assigned. Remove or reassign ${assistants.length == 1 ? 'them' : 'all of them'} first, '
-            'then try again.',
-          ),
+          title: Text(context.l10n.facilities_cannotDeleteTitle),
+          content: Text(context.l10n.facilities_cannotDeleteMessage(assistants.length)),
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context),
@@ -1062,7 +1057,7 @@ class _FacilityScreenState extends State<FacilityScreen> {
                   return context.colors.primary;
                 }),
               ),
-              child: const Text('OK'),
+              child: Text(context.l10n.common_ok),
             ),
           ],
         ),
@@ -1075,6 +1070,9 @@ class _FacilityScreenState extends State<FacilityScreen> {
 
   Future<void> _showDeleteConfirmationDialog(Map<String, dynamic> facility) async {
     final facilityId = facility[Fields.facilityId] as String;
+    // The text to type, compared below: stays the stored name (or this
+    // English fallback) in every language. Only the sentences around it are
+    // localised.
     final facilityName = facility['name'] as String? ?? 'this facility';
     final isOnlyFacility = facilities.length == 1;
     final confirmController = TextEditingController();
@@ -1087,15 +1085,14 @@ class _FacilityScreenState extends State<FacilityScreen> {
       barrierDismissible: false,
       builder: (dialogContext) => StatefulBuilder(
         builder: (dialogContext, setDialogState) => AlertDialog(
-          title: const Text('Delete Facility'),
+          title: Text(context.l10n.facilities_deleteTitle),
           content: SingleChildScrollView(
             child: Column(
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'This permanently deletes "$facilityName" and everything in it - '
-                  'products, sales, clients, debts, payments, and history. This cannot be undone.',
+                  context.l10n.facilities_deleteWarning(facilityName),
                   style: const TextStyle(fontSize: AppFontSize.f13),
                 ),
                 if (isOnlyFacility) ...[
@@ -1108,13 +1105,13 @@ class _FacilityScreenState extends State<FacilityScreen> {
                       border: Border.all(color: context.colors.dangerAccent.withValues(alpha: AppAlpha.a30)),
                     ),
                     child: Text(
-                      'This is your only facility. Deleting it leaves your account with no facility - you will stay signed in, and can then add a new one or delete your account.',
+                      context.l10n.facilities_onlyFacilityWarning,
                       style: TextStyle(fontSize: AppFontSize.f12_5, color: context.colors.dangerAccent, fontWeight: AppFontWeight.semibold),
                     ),
                   ),
                 ],
                 const SizedBox(height: AppSpacing.s16),
-                Text('Type "$facilityName" to confirm:', style: const TextStyle(fontSize: AppFontSize.f13, fontWeight: AppFontWeight.semibold)),
+                Text(context.l10n.facilities_typeToConfirm(facilityName), style: const TextStyle(fontSize: AppFontSize.f13, fontWeight: AppFontWeight.semibold)),
                 const SizedBox(height: AppSpacing.s8),
                 TextField(
                   controller: confirmController,
@@ -1137,7 +1134,7 @@ class _FacilityScreenState extends State<FacilityScreen> {
                   return context.colors.primary;
                 }),
               ),
-              child: const Text('Cancel'),
+              child: Text(context.l10n.common_cancel),
             ),
             ElevatedButton(
               onPressed: (!canConfirm || isDeleting)
@@ -1153,7 +1150,7 @@ class _FacilityScreenState extends State<FacilityScreen> {
                       } catch (e) {
                         setDialogState(() {
                           isDeleting = false;
-                          errorMessage = "Couldn't delete the facility. ${FriendlyError.messageFor(e)}";
+                          errorMessage = L10n.current.facilities_deleteFailed(FriendlyError.messageFor(e));
                         });
                       }
                     },
@@ -1166,7 +1163,7 @@ class _FacilityScreenState extends State<FacilityScreen> {
                       width: 18, height: 18,
                       child: CircularProgressIndicator(strokeWidth: 2, color: context.colors.onPrimary),
                     )
-                  : const Text('Delete'),
+                  : Text(context.l10n.common_delete),
             ),
           ],
         ),
@@ -1189,7 +1186,7 @@ class _FacilityScreenState extends State<FacilityScreen> {
     await callable.call({'facilityId': facilityId});
 
     if (!mounted) return;
-    AppFeedback.success('Facility deleted');
+    AppFeedback.success(L10n.current.facilities_deleted);
 
     await fetchFacilities();
     if (!mounted) return;
@@ -1251,15 +1248,15 @@ class _FacilityScreenState extends State<FacilityScreen> {
       title: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Text('Facilities', style: TextStyle(fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f19, color: context.colors.textPrimary)),
-          Text('Manage all your veterinary facilities and branches',
+          Text(context.l10n.facilities_title, style: TextStyle(fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f19, color: context.colors.textPrimary)),
+          Text(context.l10n.facilities_subtitle,
               style: TextStyle(fontSize: AppFontSize.f12, color: context.colors.textSecondary)),
         ],
       ),
       actions: [
         IconButton(
           icon: const Icon(Icons.refresh),
-          tooltip: 'Refresh',
+          tooltip: context.l10n.common_refresh,
           onPressed: fetchFacilities,
         ),
         Padding(
@@ -1267,7 +1264,7 @@ class _FacilityScreenState extends State<FacilityScreen> {
           child: ElevatedButton.icon(
             onPressed: _showAddFacilityDialog,
             icon: const Icon(Icons.add, size: AppIconSize.i18),
-            label: const Text('Add Facility'),
+            label: Text(context.l10n.facilities_addTitle),
             style: ElevatedButton.styleFrom(
               backgroundColor: context.colors.primary,
               foregroundColor: context.colors.background,
@@ -1288,7 +1285,7 @@ class _FacilityScreenState extends State<FacilityScreen> {
       body: Builder(
         builder: (context) {
           if (isLoading) return const Center(child: CircularProgressIndicator());
-          if (facilities.isEmpty) return const Center(child: Text("No facilities found."));
+          if (facilities.isEmpty) return Center(child: Text(context.l10n.facilities_noneFound));
 
           final filtered = facilities.where((f) {
             final name = (f['name'] ?? '').toString().toLowerCase();
@@ -1317,7 +1314,7 @@ class _FacilityScreenState extends State<FacilityScreen> {
                   padding: const EdgeInsets.all(AppSpacing.s24),
                   child: Center(
                     child: Text(
-                      'No facilities match your filters. Try a different search or status.',
+                      context.l10n.facilities_noMatchFilters,
                       textAlign: TextAlign.center,
                       style: TextStyle(color: context.colors.textMuted),
                     ),
@@ -1378,7 +1375,7 @@ class _FacilityScreenState extends State<FacilityScreen> {
                 TextField(
                   controller: _searchController,
                   decoration: InputDecoration(
-                    hintText: 'Search facilities...',
+                    hintText: context.l10n.facilities_searchHint,
                     prefixIcon: const Icon(Icons.search, size: AppIconSize.i20),
                     isDense: true,
                     contentPadding: const EdgeInsets.symmetric(vertical: AppSpacing.s12, horizontal: AppSpacing.s12),
@@ -1414,7 +1411,7 @@ class _FacilityScreenState extends State<FacilityScreen> {
                     padding: const EdgeInsets.all(AppSpacing.s20),
                     child: Center(
                       child: Text(
-                        'No facilities match this filter.',
+                        context.l10n.facilities_noMatchFilter,
                         textAlign: TextAlign.center,
                         style: TextStyle(color: context.colors.textMuted, fontSize: AppFontSize.f13),
                       ),
@@ -1460,9 +1457,9 @@ class _FacilityScreenState extends State<FacilityScreen> {
   /// rather than just "Ukuli" - falling back to the name alone if
   /// type isn't set.
   String _nameWithType(Map<String, dynamic> facility) {
-    final name = (facility['name'] as String?) ?? 'Facility';
+    final name = (facility['name'] as String?) ?? context.l10n.common_facility;
     final type = facility['type'] as String?;
-    return (type != null && type.isNotEmpty) ? '$name $type' : name;
+    return (type != null && type.isNotEmpty) ? context.l10n.facilities_nameWithType(name, context.l10n.facilityTypeLabel(type)) : name;
   }
 
   Widget _buildFacilityListRow(Map<String, dynamic> facility) {
@@ -1561,29 +1558,29 @@ class _FacilityScreenState extends State<FacilityScreen> {
           child: Wrap(
             crossAxisAlignment: WrapCrossAlignment.center,
             children: [
-              Text('Facilities', style: TextStyle(color: context.colors.textMuted, fontSize: AppFontSize.f14)),
+              Text(context.l10n.facilities_title, style: TextStyle(color: context.colors.textMuted, fontSize: AppFontSize.f14)),
               Icon(Icons.chevron_right, size: AppIconSize.i16, color: context.colors.textMuted),
               Text(
-                facility['name'] ?? 'Facility',
+                facility['name'] ?? context.l10n.common_facility,
                 style: const TextStyle(fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f14),
               ),
             ],
           ),
         ),
         PopupMenuButton<String>(
-          tooltip: 'More actions',
+          tooltip: context.l10n.facilities_moreActionsTooltip,
           child: Container(
             padding: const EdgeInsets.symmetric(horizontal: AppSpacing.s12, vertical: AppSpacing.s8),
             decoration: BoxDecoration(
               border: Border.all(color: context.colors.textHint.withValues(alpha: AppAlpha.a30)),
               borderRadius: BorderRadius.circular(AppRadius.r8),
             ),
-            child: const Row(
+            child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Icon(Icons.more_vert, size: AppIconSize.i18),
-                SizedBox(width: AppSpacing.s4),
-                Text('More Actions', style: TextStyle(fontSize: AppFontSize.f13)),
+                const Icon(Icons.more_vert, size: AppIconSize.i18),
+                const SizedBox(width: AppSpacing.s4),
+                Text(context.l10n.facilities_moreActions, style: const TextStyle(fontSize: AppFontSize.f13)),
               ],
             ),
           ),
@@ -1597,12 +1594,12 @@ class _FacilityScreenState extends State<FacilityScreen> {
             }
           },
           itemBuilder: (context) => [
-            const PopupMenuItem(value: 'edit', child: Text('Edit Facility')),
+            PopupMenuItem(value: 'edit', child: Text(context.l10n.facilities_editTitle)),
             if (facility[Fields.facilityId] != activeFacilityId)
-              const PopupMenuItem(value: 'switch', child: Text('Switch to This Facility')),
+              PopupMenuItem(value: 'switch', child: Text(context.l10n.facilities_switchToThis)),
             PopupMenuItem(
               value: 'delete',
-              child: Text('Delete Facility', style: TextStyle(color: context.colors.dangerSoft)),
+              child: Text(context.l10n.facilities_deleteTitle, style: TextStyle(color: context.colors.dangerSoft)),
             ),
           ],
         ),
@@ -1676,9 +1673,9 @@ class _FacilityScreenState extends State<FacilityScreen> {
                   _infoRow(Icons.phone_outlined, contact['phone']!),
                 if (contact?['email'] != null && contact!['email']!.isNotEmpty)
                   _infoRow(Icons.email_outlined, contact['email']!),
-                _infoRow(Icons.person_outline, '${_adminFullName ?? 'You'} (Manager)'),
+                _infoRow(Icons.person_outline, context.l10n.facilities_managerLine(_adminFullName ?? context.l10n.team_you)),
                 if (createdAt != null)
-                  _infoRow(Icons.calendar_today_outlined, 'Joined on ${_formatDate(createdAt)}'),
+                  _infoRow(Icons.calendar_today_outlined, context.l10n.facilities_joinedOn(_formatDate(createdAt))),
               ],
             ),
           ),
@@ -1694,7 +1691,7 @@ class _FacilityScreenState extends State<FacilityScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               mainAxisSize: MainAxisSize.min,
               children: [
-                Text('Facility Code', style: TextStyle(fontSize: AppFontSize.f11, color: context.colors.textMuted)),
+                Text(context.l10n.facilities_code, style: TextStyle(fontSize: AppFontSize.f11, color: context.colors.textMuted)),
                 Row(
                   children: [
                     Text(
@@ -1707,19 +1704,19 @@ class _FacilityScreenState extends State<FacilityScreen> {
                       constraints: const BoxConstraints(),
                       onPressed: () {
                         Clipboard.setData(ClipboardData(text: facility['code'] ?? ''));
-                        AppFeedback.success('Copied to clipboard');
+                        AppFeedback.success(L10n.current.invite_copied);
                       },
                     ),
                   ],
                 ),
                 const SizedBox(height: AppSpacing.s10),
-                Text('License No.', style: TextStyle(fontSize: AppFontSize.f11, color: context.colors.textMuted)),
+                Text(context.l10n.facilities_licenseNo, style: TextStyle(fontSize: AppFontSize.f11, color: context.colors.textMuted)),
                 Row(
                   children: [
                     Text(
                       (details?['licenseNo'] as String?)?.isNotEmpty == true
                           ? details!['licenseNo'] as String
-                          : 'Not set',
+                          : context.l10n.facilities_notSet,
                       style: const TextStyle(fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f14),
                     ),
                     if ((details?['licenseNo'] as String?)?.isNotEmpty == true)
@@ -1729,7 +1726,7 @@ class _FacilityScreenState extends State<FacilityScreen> {
                         constraints: const BoxConstraints(),
                         onPressed: () {
                           Clipboard.setData(ClipboardData(text: details!['licenseNo'] as String));
-                          AppFeedback.success('Copied to clipboard');
+                          AppFeedback.success(L10n.current.invite_copied);
                         },
                       ),
                   ],
@@ -1800,7 +1797,7 @@ class _FacilityScreenState extends State<FacilityScreen> {
         if (docs.isEmpty) {
           return Padding(
             padding: const EdgeInsets.symmetric(vertical: AppSpacing.s16),
-            child: Text('No activity yet.', style: TextStyle(color: context.colors.textMuted, fontSize: AppFontSize.f13)),
+            child: Text(context.l10n.dashboard_noActivityYet, style: TextStyle(color: context.colors.textMuted, fontSize: AppFontSize.f13)),
           );
         }
 
@@ -1829,7 +1826,7 @@ class _FacilityScreenState extends State<FacilityScreen> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          actionType.isEmpty ? 'Activity' : context.l10n.activityTypeLabel(actionType),
+                          actionType.isEmpty ? context.l10n.facilities_activityFallback : context.l10n.activityTypeLabel(actionType),
                           style: const TextStyle(fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f13),
                         ),
                         Text(description, style: TextStyle(fontSize: AppFontSize.f12_5, color: context.colors.textSoft)),
@@ -1862,16 +1859,16 @@ class _FacilityScreenState extends State<FacilityScreen> {
     final totalAmount = stats?['totalAmount'] as double? ?? 0.0;
 
     final metrics = [
-      ('Total Products', '$totalProducts', Icons.inventory_2_outlined, _tealAccent, 'View Products', 2),
-      ('Sellable Products', '$sellableProducts', Icons.shopping_cart_outlined, context.colors.success, 'View All', 2),
-      ('Low Stock Items', '$lowStockCount', Icons.warning_amber_outlined, context.colors.warning, 'View Items', 2),
-      ('Expired Items', '$expiredCount', Icons.remove_shopping_cart_outlined, context.colors.danger, 'View Items', 2),
+      (context.l10n.products_totalProducts, '$totalProducts', Icons.inventory_2_outlined, _tealAccent, context.l10n.facilities_viewProducts, 2),
+      (context.l10n.products_sellableTitle, '$sellableProducts', Icons.shopping_cart_outlined, context.colors.success, context.l10n.facilities_viewAll, 2),
+      (context.l10n.facilities_lowStockItems, '$lowStockCount', Icons.warning_amber_outlined, context.colors.warning, context.l10n.facilities_viewItems, 2),
+      (context.l10n.facilities_expiredItems, '$expiredCount', Icons.remove_shopping_cart_outlined, context.colors.danger, context.l10n.facilities_viewItems, 2),
       (
-        'Total Sales (This Month)',
+        context.l10n.facilities_totalSalesThisMonth,
         '${AppDefaults.currencyCode} ${_formatCompact(totalAmount)}',
         Icons.trending_up,
         context.colors.primary,
-        'View Report',
+        context.l10n.facilities_viewReport,
         3,
       ),
     ];
@@ -1962,25 +1959,30 @@ class _FacilityScreenState extends State<FacilityScreen> {
 
   // ==================== TABS ====================
 
-  static const List<String> _tabLabels = [
-    'Overview',
-    'Team Members',
-    'Inventory Summary',
-    'Sales Summary',
-    'Activity Log',
-    'Settings',
-  ];
+  // In tab order: _buildTabContent switches on the index.
+  List<String> _tabLabels() => [
+        context.l10n.facilities_tabOverview,
+        context.l10n.team_title,
+        context.l10n.facilities_tabInventory,
+        context.l10n.facilities_tabSales,
+        context.l10n.export_activityLog,
+        context.l10n.settings_title,
+      ];
+
+  /// The Team Members tab, which shows the assistant count.
+  static const int _teamTabIndex = 1;
 
   Widget _buildTabsRow() {
     final facilityId = _selectedFacilityIdForDetail;
     final assistantCount = _assistantsByFacility[facilityId]?.length ?? 0;
+    final tabLabels = _tabLabels();
 
     return SingleChildScrollView(
       scrollDirection: Axis.horizontal,
       child: Row(
-        children: List.generate(_tabLabels.length, (index) {
+        children: List.generate(tabLabels.length, (index) {
           final isSelected = _selectedTabIndex == index;
-          final label = _tabLabels[index];
+          final label = tabLabels[index];
           return InkWell(
             onTap: () => setState(() => _selectedTabIndex = index),
             child: Container(
@@ -2004,7 +2006,8 @@ class _FacilityScreenState extends State<FacilityScreen> {
                       color: isSelected ? context.colors.primary : context.colors.textPrimary,
                     ),
                   ),
-                  if (label == 'Team Members' && assistantCount > 0) ...[
+                  // By index, not by the label (the label is translated).
+                  if (index == _teamTabIndex && assistantCount > 0) ...[
                     const SizedBox(width: AppSpacing.s6),
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: AppSpacing.s6, vertical: AppSpacing.s2),
@@ -2033,9 +2036,9 @@ class _FacilityScreenState extends State<FacilityScreen> {
         // full Manage Assistants screen rather than a rebuilt view -
         // there's no separate "team members" concept to maintain here.
         return _buildComingSoonTab(
-          'Team Members',
-          'Manage this facility\'s team from the Team Members screen.',
-          actionLabel: 'Open Team Members',
+          context.l10n.team_title,
+          context.l10n.facilities_teamTabMessage,
+          actionLabel: context.l10n.facilities_openTeamMembers,
           onAction: () async {
             await Navigator.push(
               context,
