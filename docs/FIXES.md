@@ -1,7 +1,7 @@
 # FIXES (corrections found in review; do these FIRST, one commit each)
 
 Source: the assistant's audit of batch 2F-6 (commits b526d05..b5ec037).
-Status of this file: OPEN
+Status of this file: ALL DONE (item 1: 3144693; item 2: the commit "FIXES 2"; item 3 skipped, not APPROVED)
 
 ## 1. RUNBOOK.md: remove a wrong hazard
 

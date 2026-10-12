@@ -10,6 +10,7 @@ import 'package:excel/excel.dart' as xl;
 
 import '../../providers/facility_provider.dart';
 import '../../utils/web_download.dart';
+import '../../utils/export_texts.dart';
 import '../../data/collections.dart';
 import '../../data/fields.dart';
 import '../../config/money.dart';
@@ -136,7 +137,7 @@ class _ExportDataScreenState extends State<ExportDataScreen> {
   String _renderCsv(List<_ExportSection> sections, String? dateRangeLabel) {
     final buffer = StringBuffer();
     if (dateRangeLabel != null) {
-      buffer.writeln('Export Period: $dateRangeLabel');
+      buffer.writeln(ExportTexts.exportPeriod(dateRangeLabel));
       buffer.writeln();
     }
     for (var i = 0; i < sections.length; i++) {
@@ -231,7 +232,7 @@ class _ExportDataScreenState extends State<ExportDataScreen> {
       if (dateRangeLabel != null) {
         final start = xl.CellIndex.indexByColumnRow(columnIndex: 0, rowIndex: rowIndex);
         final end = xl.CellIndex.indexByColumnRow(columnIndex: lastColumn, rowIndex: rowIndex);
-        sheet.cell(start).value = xl.TextCellValue('Export Period: $dateRangeLabel');
+        sheet.cell(start).value = xl.TextCellValue(ExportTexts.exportPeriod(dateRangeLabel));
         sheet.cell(start).cellStyle = titleStyle;
         sheet.merge(start, end);
         rowIndex++;
@@ -315,9 +316,9 @@ class _ExportDataScreenState extends State<ExportDataScreen> {
       final dateRangeLabel = isSnapshot
           ? null
           : _selectedDateRange == null
-              ? 'All Records'
-              : '${DateFormat(DataKeys.isoDay).format(_selectedDateRange!.start)} to '
-                  '${DateFormat(DataKeys.isoDay).format(_selectedDateRange!.end)}';
+              ? ExportTexts.allRecords
+              : ExportTexts.dateRange(DateFormat(DataKeys.isoDay).format(_selectedDateRange!.start),
+                  DateFormat(DataKeys.isoDay).format(_selectedDateRange!.end));
 
       final baseName = _selectedDataType.replaceAll(RegExp(r'[^A-Za-z0-9]+'), '_');
       final timestamp = DateFormat(DataKeys.exportFileStamp).format(DateTime.now());
@@ -352,7 +353,7 @@ class _ExportDataScreenState extends State<ExportDataScreen> {
 
       final xfile = XFile.fromData(bytes, name: fileName, mimeType: mimeType);
 
-      await Share.shareXFiles([xfile], text: '${AppInfo.name} export: $_selectedDataType');
+      await Share.shareXFiles([xfile], text: ExportTexts.shareText(AppInfo.name, _selectedDataType));
 
       AppFeedback.success(L10n.current.export_done(_dataTypeLabel(_selectedDataType)));
     } catch (e, st) {
@@ -426,7 +427,7 @@ class _ExportDataScreenState extends State<ExportDataScreen> {
       final status = PaymentStatus.of(totalPaid, totalAmount);
       return [
         _asDate(data['timestamp']),
-        data['clientName'] ?? 'Walk-in',
+        data['clientName'] ?? ExportTexts.walkInClient,
         totalAmount,
         totalPaid,
         status,
@@ -455,15 +456,15 @@ class _ExportDataScreenState extends State<ExportDataScreen> {
 
     return [
       _ExportSection(
-        sheetName: 'Sales',
-        subtitle: 'Sales (${liveSales.length} active, ${archivedSales.length} archived)',
-        headers: ['Date', 'Client', 'Total Amount', 'Total Paid', 'Status', 'Profit'],
+        sheetName: ExportTexts.salesSheet,
+        subtitle: ExportTexts.salesSubtitle(liveSales.length, archivedSales.length),
+        headers: ExportTexts.salesHeaders,
         rows: saleRows,
       ),
       _ExportSection(
-        sheetName: 'Transactions',
-        subtitle: 'Transactions',
-        headers: ['Date', 'Type', 'Category', 'Description', 'Amount', 'Recorded By'],
+        sheetName: ExportTexts.transactionsSheet,
+        subtitle: ExportTexts.transactionsSubtitle,
+        headers: ExportTexts.transactionsHeaders,
         rows: transactionRows,
       ),
     ];
@@ -489,10 +490,10 @@ class _ExportDataScreenState extends State<ExportDataScreen> {
       final status = PaymentStatus.of(totalPaid, totalAmount);
       return [
         _asDate(data['serviceDate']),
-        data['clientName'] ?? 'N/A',
+        data['clientName'] ?? ExportTexts.notAvailable,
         data['name'] ?? '',
-        (data['category'] as String?)?.isNotEmpty == true ? data['category'] : 'Other',
-        data['providedByName'] ?? 'N/A',
+        (data['category'] as String?)?.isNotEmpty == true ? data['category'] : ExportTexts.otherCategory,
+        data['providedByName'] ?? ExportTexts.notAvailable,
         totalAmount,
         totalPaid,
         status,
@@ -501,9 +502,9 @@ class _ExportDataScreenState extends State<ExportDataScreen> {
 
     return [
       _ExportSection(
-        sheetName: 'Service Records',
-        subtitle: 'Services (${liveServices.length} active, ${archivedServices.length} archived)',
-        headers: ['Date', 'Client', 'Service', 'Category', 'Provided By', 'Total Amount', 'Total Paid', 'Status'],
+        sheetName: ExportTexts.servicesSheet,
+        subtitle: ExportTexts.servicesSubtitle(liveServices.length, archivedServices.length),
+        headers: ExportTexts.servicesHeaders,
         rows: rows,
       ),
     ];
@@ -572,9 +573,9 @@ class _ExportDataScreenState extends State<ExportDataScreen> {
 
     return [
       _ExportSection(
-        sheetName: 'Products',
-        subtitle: 'Products (${rows.length} rows, one per batch)',
-        headers: ['Name', 'Category', 'Type', 'Batch No', 'Stock Qty', 'Sellable Qty', 'Buy Price', 'Sell Price', 'Expiry'],
+        sheetName: ExportTexts.productsSheet,
+        subtitle: ExportTexts.productsSubtitle(rows.length),
+        headers: ExportTexts.productsHeaders,
         rows: rows,
       ),
     ];
@@ -601,9 +602,9 @@ class _ExportDataScreenState extends State<ExportDataScreen> {
 
     return [
       _ExportSection(
-        sheetName: 'Clients',
-        subtitle: 'Clients (${rows.length})',
-        headers: ['Name', 'Type', 'Phone', 'Address', 'Balance'],
+        sheetName: ExportTexts.clientsSheet,
+        subtitle: ExportTexts.clientsSubtitle(rows.length),
+        headers: ExportTexts.clientsHeaders,
         rows: rows,
       ),
     ];
@@ -622,7 +623,7 @@ class _ExportDataScreenState extends State<ExportDataScreen> {
     final rows = snapshot.docs.map((doc) {
       final data = doc.data();
       return [
-        data['clientName'] ?? 'Unknown',
+        data['clientName'] ?? ExportTexts.unknownClient,
         data['clientPhone'] ?? '',
         data['source'] ?? '',
         data['amountOwed'] ?? 0,
@@ -633,9 +634,9 @@ class _ExportDataScreenState extends State<ExportDataScreen> {
 
     return [
       _ExportSection(
-        sheetName: 'Debtors',
-        subtitle: 'Debtors (${rows.length} outstanding)',
-        headers: ['Client', 'Phone', 'Source', 'Amount Owed', 'Date Incurred', 'Last Updated'],
+        sheetName: ExportTexts.debtorsSheet,
+        subtitle: ExportTexts.debtorsSubtitle(rows.length),
+        headers: ExportTexts.debtorsHeaders,
         rows: rows,
       ),
     ];
@@ -648,16 +649,10 @@ class _ExportDataScreenState extends State<ExportDataScreen> {
     final payments = await _fetchWithRange(
         facilityId: facilityId, collection: Collections.payments, dateField: 'timestamp');
 
-    final labelFor = {
-      'sale': 'Sale payment',
-      'service': 'Service payment',
-      'debt_repayment': 'Debt repayment',
-    };
-
     final rows = payments
         .map((data) => {
               'date': _asDate(data['timestamp']),
-              'type': labelFor[data['source']] ?? 'Payment',
+              'type': ExportTexts.paymentTypeBySource[data['source']] ?? ExportTexts.paymentTypeFallback,
               'client': data['clientName'] ?? '',
               'amount': data['amount'] ?? 0,
             })
@@ -670,7 +665,7 @@ class _ExportDataScreenState extends State<ExportDataScreen> {
       if (type != 'other income') continue;
       rows.add({
         'date': _asDate(data['date']),
-        'type': 'Other income',
+        'type': ExportTexts.otherIncomeType,
         'client': data['description'] ?? '',
         'amount': data['amount'] ?? 0,
       });
@@ -684,9 +679,9 @@ class _ExportDataScreenState extends State<ExportDataScreen> {
 
     return [
       _ExportSection(
-        sheetName: 'Payments',
-        subtitle: 'Payments (${rows.length})',
-        headers: ['Date', 'Type', 'Client / Description', 'Amount'],
+        sheetName: ExportTexts.paymentsSheet,
+        subtitle: ExportTexts.paymentsSubtitle(rows.length),
+        headers: ExportTexts.paymentsHeaders,
         rows: rows.map((r) => [r['date'], r['type'], r['client'], r['amount']]).toList(),
       ),
     ];
@@ -712,9 +707,9 @@ class _ExportDataScreenState extends State<ExportDataScreen> {
 
     return [
       _ExportSection(
-        sheetName: 'Activity Log',
-        subtitle: 'Activity Log (${rows.length} entries)',
-        headers: ['Date', 'User', 'Action Type', 'Description'],
+        sheetName: ExportTexts.activitySheet,
+        subtitle: ExportTexts.activitySubtitle(rows.length),
+        headers: ExportTexts.activityHeaders,
         rows: rows,
       ),
     ];

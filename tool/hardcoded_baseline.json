@@ -465,9 +465,9 @@
     },
     {
       "rule": "R10",
-      "file": "lib/screens/settings/export_data_screen.dart",
+      "file": "lib/utils/export_texts.dart",
       "lineContains": "",
-      "reason": "out of scope for step 2F (docs/PHASE2_LOCALISATION_SPEC.md 2.8): the exported file's sheet subtitles and share text stay English, like receipts and PDFs; every on-screen text in this file is already in the language files (2F-6)"
+      "reason": "out of scope for step 2F (docs/PHASE2_LOCALISATION_SPEC.md 2.8): the text written into exported files (sheet names, headers, subtitles, fallback cells, share text) stays English, like receipts and PDFs; export_data_screen.dart itself is checked"
     }
   ],
   "counts": {
