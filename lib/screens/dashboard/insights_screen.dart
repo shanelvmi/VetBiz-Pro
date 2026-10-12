@@ -18,6 +18,7 @@ import '../../theme/theme_context.dart';
 import '../../theme/app_motion.dart';
 import '../../theme/app_breakpoints.dart';
 import '../../ui/feedback/friendly_error.dart';
+import '../../l10n/l10n.dart';
 
 /// A simple insights view - a 14-day sales trend and your top 5
 /// products by revenue over the last 30 days. Deliberately kept to two
@@ -241,19 +242,20 @@ class _InsightsScreenState extends State<InsightsScreen> {
       // trend - Monday alone isn't a week yet.
       final hasEnoughWeekData = today.weekday >= 2;
 
+      final vsYesterday = L10n.current.dashboard_vsYesterday;
       setState(() {
         _salesPulseTrend = KpiTrend(
           currentValue: todayTotals.totalSales,
           previousValue: yesterdayTotals.totalSales,
           higherIsBetter: true,
-          comparisonLabel: 'vs Yesterday',
+          comparisonLabel: vsYesterday,
           formatChange: (v) => Money.symbolPlain(v),
         );
         _serviceRevenuePulseTrend = KpiTrend(
           currentValue: todayTotals.totalServiceRevenue,
           previousValue: yesterdayTotals.totalServiceRevenue,
           higherIsBetter: true,
-          comparisonLabel: 'vs Yesterday',
+          comparisonLabel: vsYesterday,
           formatChange: (v) => Money.symbolPlain(v),
         );
         _outstandingPulseTrend = KpiTrend(
@@ -263,7 +265,7 @@ class _InsightsScreenState extends State<InsightsScreen> {
           // business-meaning rule as the dashboard's own Outstanding
           // Payment card.
           higherIsBetter: false,
-          comparisonLabel: 'vs Yesterday',
+          comparisonLabel: vsYesterday,
           formatChange: (v) => Money.symbolPlain(v),
         );
         _todayActivity = todayActivity;
@@ -281,9 +283,10 @@ class _InsightsScreenState extends State<InsightsScreen> {
 
   List<(String, KpiTrend)> _pulseMetrics() {
     final metrics = <(String, KpiTrend)>[];
-    if (_salesPulseTrend != null) metrics.add(('Sales', _salesPulseTrend!));
-    if (_serviceRevenuePulseTrend != null) metrics.add(('Service revenue', _serviceRevenuePulseTrend!));
-    if (_outstandingPulseTrend != null) metrics.add(('Outstanding payments', _outstandingPulseTrend!));
+    final l = context.l10n;
+    if (_salesPulseTrend != null) metrics.add((l.dashboard_sales, _salesPulseTrend!));
+    if (_serviceRevenuePulseTrend != null) metrics.add((l.insights_serviceRevenue, _serviceRevenuePulseTrend!));
+    if (_outstandingPulseTrend != null) metrics.add((l.insights_outstandingPayments, _outstandingPulseTrend!));
     return metrics;
   }
 
@@ -304,8 +307,9 @@ class _InsightsScreenState extends State<InsightsScreen> {
   //    surge get their own distinct reads rather than one generic
   //    "activity is up".
   String _pulseHeadline() {
+    final l = context.l10n;
     if (_hasEnoughWeekData && _weeklySalesRatio < 0.7) {
-      return 'Keep an eye on sales this week.';
+      return l.insights_watchSales;
     }
 
     final baseline = _recentAvgDailyActivity;
@@ -314,7 +318,7 @@ class _InsightsScreenState extends State<InsightsScreen> {
     // rather than falling into the ratio's fallback (which would
     // otherwise read as a misleadingly "steady" 1.0).
     if (baseline == 0 && _todayActivity == 0) {
-      return 'No activity recorded yet.';
+      return l.insights_noActivity;
     }
     // No baseline to compare against yet (a brand-new facility) - fall
     // back to a plain read of whether anything happened today at all,
@@ -322,14 +326,14 @@ class _InsightsScreenState extends State<InsightsScreen> {
     final ratio = baseline > 0 ? (_todayActivity / baseline) : 1.6;
 
     if (ratio >= 1.6) {
-      if (_todaySalesShare >= 0.65) return 'Sales are trending upward.';
-      if (_todaySalesShare <= 0.35) return 'Services are gaining momentum.';
-      return 'Strong business activity today.';
+      if (_todaySalesShare >= 0.65) return l.insights_salesTrendingUp;
+      if (_todaySalesShare <= 0.35) return l.insights_servicesGaining;
+      return l.insights_strongActivity;
     }
-    if (ratio >= 1.2) return 'Business is picking up.';
-    if (ratio >= 0.8) return 'Business is steady.';
-    if (ratio >= 0.5) return 'A quieter day so far.';
-    return 'Customer activity is slowing.';
+    if (ratio >= 1.2) return l.insights_pickingUp;
+    if (ratio >= 0.8) return l.insights_steady;
+    if (ratio >= 0.5) return l.insights_quieter;
+    return l.insights_slowing;
   }
 
   // The supporting line - a separate, always-present read on the
@@ -337,18 +341,19 @@ class _InsightsScreenState extends State<InsightsScreen> {
   // today's sales/service activity and deserves its own sentence
   // rather than being folded into the headline.
   String _pulseSentence() {
+    final l = context.l10n;
     final trend = _outstandingPulseTrend;
     // Both today's and yesterday's outstanding total were literally
     // zero - there's no debt to call "stable", so say that plainly
     // instead of implying steady debt at some nonzero amount.
-    if (trend == null || trend.hasNoChange) return 'No outstanding payments.';
-    if (trend.isNewActivity) return 'Outstanding payments are rising - worth following up.';
+    if (trend == null || trend.hasNoChange) return l.insights_noOutstanding;
+    if (trend.isNewActivity) return l.insights_outstandingRising;
     // A zero or negligible move isn't a real trend in either
     // direction - only call it rising/improving once the change is
     // large enough to actually mean something.
-    if (trend.percent.abs() < 1) return 'Outstanding payments are stable.';
-    if (trend.absoluteChange > 0) return 'Outstanding payments are rising - worth following up.';
-    return 'Outstanding payments are improving.';
+    if (trend.percent.abs() < 1) return l.insights_outstandingStable;
+    if (trend.absoluteChange > 0) return l.insights_outstandingRising;
+    return l.insights_outstandingImproving;
   }
 
   Widget _buildBusinessPulseCard() {
@@ -402,7 +407,7 @@ class _InsightsScreenState extends State<InsightsScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('Business Pulse',
+                Text(context.l10n.insights_businessPulse,
                     style: TextStyle(color: context.colors.onPrimary.withValues(alpha: AppAlpha.a85), fontSize: AppFontSize.f13, fontWeight: AppFontWeight.semibold)),
                 const SizedBox(height: AppSpacing.s4),
                 Text(_pulseHeadline(),
@@ -423,7 +428,7 @@ class _InsightsScreenState extends State<InsightsScreen> {
     return Scaffold(
       backgroundColor: context.colors.background,
       appBar: AppBar(
-        title: const Text('Insights'),
+        title: Text(context.l10n.insights_title),
         centerTitle: true,
         backgroundColor: context.colors.primary,
         foregroundColor: context.colors.onPrimary,
@@ -431,7 +436,7 @@ class _InsightsScreenState extends State<InsightsScreen> {
         leading: widget.isModal
             ? IconButton(
                 icon: const Icon(Icons.close),
-                tooltip: 'Close',
+                tooltip: context.l10n.common_close,
                 onPressed: () => Navigator.of(context).pop(),
               )
             : null,
@@ -439,7 +444,7 @@ class _InsightsScreenState extends State<InsightsScreen> {
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
           : _error != null
-              ? Center(child: Padding(padding: const EdgeInsets.all(AppSpacing.s24), child: Text("Couldn't load insights. ${FriendlyError.messageFor(_error!)}")))
+              ? Center(child: Padding(padding: const EdgeInsets.all(AppSpacing.s24), child: Text(context.l10n.insights_loadFailed(FriendlyError.messageFor(_error!)))))
               : Center(
                   child: ConstrainedBox(
                     constraints: const BoxConstraints(maxWidth: 800),
@@ -449,21 +454,21 @@ class _InsightsScreenState extends State<InsightsScreen> {
                         _buildBusinessPulseCard(),
                         const SizedBox(height: AppSpacing.s20),
                         _buildChartCard(
-                          title: 'Sales - Last 14 Days',
+                          title: context.l10n.insights_salesLast14,
                           summary: _trendSummary(),
                           chartHeight: 220,
                           chart: _buildTrendChart(),
                         ),
                         const SizedBox(height: AppSpacing.s20),
                         _buildChartCard(
-                          title: 'Top 5 Products - Last 30 Days',
+                          title: context.l10n.insights_topProductsLast30,
                           summary: _topProductSummary(),
                           chartHeight: 260,
                           chart: _buildTopProductsChart(),
                         ),
                         const SizedBox(height: AppSpacing.s20),
                         _buildChartCard(
-                          title: 'Services by Type - Last 30 Days',
+                          title: context.l10n.insights_servicesByTypeLast30,
                           summary: _serviceBreakdownSummary(),
                           chartHeight: 220,
                           chart: _buildServicesDonutChart(),
@@ -516,24 +521,31 @@ class _InsightsScreenState extends State<InsightsScreen> {
   String? _trendSummary() {
     if (_dailyTotals.every((v) => v == 0)) return null;
     final total = _dailyTotals.reduce((a, b) => a + b);
-    return 'Total: ${Money.symbolPlain(total)} over 14 days';
+    return context.l10n.insights_totalOver14(Money.symbolPlain(total));
   }
+
+  // The grouping keys stay the English 'Unknown' (a sale item with no name)
+  // and 'Other' (a service with no name, or everything past the top 5);
+  // only what is shown is localised. A real name is shown as it is.
+  String _productName(String key) => key == 'Unknown' ? context.l10n.common_unknown : key;
+
+  String _serviceName(String key) => key == 'Other' ? context.l10n.serviceCategory_other : key;
 
   String? _topProductSummary() {
     if (_topProducts.isEmpty) return null;
     final top = _topProducts.first;
-    return 'Top seller: ${top.key} · ${Money.symbolPlain(top.value)}';
+    return context.l10n.insights_topSeller(_productName(top.key), Money.symbolPlain(top.value));
   }
 
   String? _serviceBreakdownSummary() {
     if (_serviceBreakdown.isEmpty) return null;
     final top = _serviceBreakdown.first;
-    return 'Most requested: ${top.key} - ${Money.symbolPlain(top.value)}';
+    return context.l10n.insights_mostRequested(_serviceName(top.key), Money.symbolPlain(top.value));
   }
 
   Widget _buildTrendChart() {
     if (_dailyTotals.every((v) => v == 0)) {
-      return Center(child: Text('No sales in the last 14 days.', style: TextStyle(color: context.colors.textMuted)));
+      return Center(child: Text(context.l10n.insights_noSales14, style: TextStyle(color: context.colors.textMuted)));
     }
 
     return LineChart(
@@ -606,7 +618,7 @@ class _InsightsScreenState extends State<InsightsScreen> {
 
   Widget _buildTopProductsChart() {
     if (_topProducts.isEmpty) {
-      return Center(child: Text('No sales in the last 30 days.', style: TextStyle(color: context.colors.textMuted)));
+      return Center(child: Text(context.l10n.insights_noSales30, style: TextStyle(color: context.colors.textMuted)));
     }
 
     final maxValue = _topProducts.first.value;
@@ -624,7 +636,7 @@ class _InsightsScreenState extends State<InsightsScreen> {
         barTouchData: BarTouchData(
           touchTooltipData: BarTouchTooltipData(
             getTooltipItem: (group, groupIndex, rod, rodIndex) {
-              final name = _topProducts[group.x.toInt()].key;
+              final name = _productName(_topProducts[group.x.toInt()].key);
               return BarTooltipItem(
                 '$name\n${Money.symbolPlain(rod.toY)}',
                 TextStyle(color: context.colors.onPrimary, fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f12),
@@ -670,7 +682,7 @@ class _InsightsScreenState extends State<InsightsScreen> {
               getTitlesWidget: (value, meta) {
                 final idx = value.toInt();
                 if (idx < 0 || idx >= _topProducts.length) return const SizedBox.shrink();
-                final name = _topProducts[idx].key;
+                final name = _productName(_topProducts[idx].key);
                 final shortName = name.length > 9 ? '${name.substring(0, 9)}...' : name;
                 return Padding(
                   padding: const EdgeInsets.only(top: AppSpacing.s6),
@@ -697,7 +709,7 @@ class _InsightsScreenState extends State<InsightsScreen> {
 
   Widget _buildServicesDonutChart() {
     if (_serviceBreakdown.isEmpty) {
-      return Center(child: Text('No services in the last 30 days.', style: TextStyle(color: context.colors.textMuted)));
+      return Center(child: Text(context.l10n.insights_noServices30, style: TextStyle(color: context.colors.textMuted)));
     }
 
     final total = _serviceBreakdown.fold<double>(0.0, (runningTotal, e) => runningTotal + e.value);
@@ -746,7 +758,7 @@ class _InsightsScreenState extends State<InsightsScreen> {
                 Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Text(centerLabel.key,
+                    Text(_serviceName(centerLabel.key),
                         style: const TextStyle(fontSize: AppFontSize.f11, fontWeight: AppFontWeight.bold),
                         textAlign: TextAlign.center,
                         overflow: TextOverflow.ellipsis),
@@ -761,7 +773,7 @@ class _InsightsScreenState extends State<InsightsScreen> {
                 Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Text('Total', style: TextStyle(fontSize: AppFontSize.f10, color: context.colors.textMuted)),
+                    Text(context.l10n.common_total, style: TextStyle(fontSize: AppFontSize.f10, color: context.colors.textMuted)),
                     Text(Money.symbolPlain(total),
                         style: const TextStyle(fontSize: AppFontSize.f12, fontWeight: AppFontWeight.bold)),
                   ],
@@ -792,7 +804,7 @@ class _InsightsScreenState extends State<InsightsScreen> {
                       const SizedBox(width: AppSpacing.s6),
                       Expanded(
                         child: Text(
-                          _serviceBreakdown[i].key,
+                          _serviceName(_serviceBreakdown[i].key),
                           style: const TextStyle(fontSize: AppFontSize.f11),
                           overflow: TextOverflow.ellipsis,
                         ),
@@ -829,7 +841,7 @@ Future<void> showInsightsScreen(BuildContext context) async {
   await showGeneralDialog(
     context: context,
     barrierDismissible: true,
-    barrierLabel: 'Insights',
+    barrierLabel: context.l10n.insights_title,
     barrierColor: context.colors.scrim.withValues(alpha: AppAlpha.a50),
     transitionDuration: AppMotion.normal,
     pageBuilder: (context, animation, secondaryAnimation) {
