@@ -118,6 +118,16 @@ User-facing "VetBiz Pro" now reads `AppInfo.name` (titles, Settings, support lin
 - **"Payment Details"** is one key (`payments_detailsTitle`) for the Payments detail panel and the Subscription form's payment section. The Kiswahili ("Maelezo ya Malipo") fits both; split it if either should read differently.
 - **"No submissions yet." and "No submissions yet"** (Subscription screen with a full stop, Subscription history without) are two keys because the English differs.
 
+### Raised in step 2F, batch 2F-8 (wording and language; English kept as it was)
+
+- **"archived after 1 days", "of 1 sales"** (Sales Archive subtitle and pagination): `sales_archiveSubtitle` and `sales_archiveShowing` are ICU plurals with one `other` branch, like the services archive, so the English reads as before.
+- **One action, two wordings**: "Move to Stock" (Products) and "Remove from Sellable" (Stock Store, Product Alerts) are kept as they were. The success message is now chosen by `MoveToStockAction`, no longer by comparing the label.
+- **"Within 30 days"** (Product Alerts card hint) has the number typed into the text. If the expiring-soon window ever changes, this text has to change with it; a `{days}` placeholder would remove that risk.
+- **Same English, separate keys** because the meaning differs: "Pending" (`sales_pending`, an amount still owed, against the status names), "Paid" (`sales_paid`, the amount, against `paymentStatus_paid`), "Out of stock" (`sales_outOfStock`) and "Out of Stock" (`alerts_outOfStock`). Keys apart because the English differs: "Batch No" and "Batch No.", "Unlabeled Batch" and "Unlabeled batch", "Note (optional)" and "Notes (optional)".
+- **Receipt body stays English**: the sale receipt preview uses `ReceiptTexts`, which gains "Subtotal" and "Discount". The "SL-000123" invoice number and the PDF's fallback facility name "Facility" stay as typed.
+- **Saved values stay English**: the activity descriptions ("Added new product: ...", "Sale included expired stock (...)"), the seller name "Unknown" saved on a sale, and the debt source "Sale".
+- **Product Alerts search** now matches the alert names in the chosen language (it searched the English names before); in English nothing changes.
+
 ### Raised in step 2F, batch 2F-7 (wording and language; English kept as it was)
 
 - **"1 units", "1 found", "archived after 1 days", "of 1 services"** (report summary tile, services archive banner, subtitle and pagination): `reports_unitsCount`, `services_foundCount`, `services_archiveSubtitle` and `services_archiveShowing` are ICU plurals with one `other` branch, so the English reads as before. An `=1{...}` branch is a one-line change once agreed.
