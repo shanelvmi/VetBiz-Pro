@@ -118,12 +118,22 @@ User-facing "VetBiz Pro" now reads `AppInfo.name` (titles, Settings, support lin
 - **"Payment Details"** is one key (`payments_detailsTitle`) for the Payments detail panel and the Subscription form's payment section. The Kiswahili ("Maelezo ya Malipo") fits both; split it if either should read differently.
 - **"No submissions yet." and "No submissions yet"** (Subscription screen with a full stop, Subscription history without) are two keys because the English differs.
 
+### Raised in step 2F, batch 2F-7 (wording and language; English kept as it was)
+
+- **"1 units", "1 found", "archived after 1 days", "of 1 services"** (report summary tile, services archive banner, subtitle and pagination): `reports_unitsCount`, `services_foundCount`, `services_archiveSubtitle` and `services_archiveShowing` are ICU plurals with one `other` branch, so the English reads as before. An `=1{...}` branch is a one-line change once agreed.
+- **Receipt body stays English** (header, labels, totals, "Thank you for choosing us.", "Powered by ..."): moved to `lib/utils/receipt_texts.dart`, pinned by `test/receipt_texts_test.dart` and allowlisted as a file. The preview's buttons, format choices and "Receipt Details" panel are localised; the panel shows its own status keys. The sales receipt preview (2F-8) can use the same file.
+- **Share texts stay English**, like the files they go with: the service receipt's "Receipt" (`ReceiptTexts.shareText`) and the report PDF's "Daily Closing Report" (`DailyReportPdfService.shareText`).
+- **Saved or PDF-only fallbacks stay English**: "Unknown User" (saved in the report as `generatedByName`), "{app} Facility" (the facility name passed to the report PDF), and the "Draft report for ... deleted" activity description.
+- **Stored values now through lookups in the reports**: payment method names (also inside sentences such as "No income via {method} today"), transaction categories in the Expenses and Transactions tabs, and product units in the Full Report and the visit form's product suggestions. In English every known label equals its stored key, so the English reads as before.
+- **Same English, separate keys** because the meaning differs: "Reason: {reason}" (`subscription_rejectReason`, `reports_reasonValue`), "Service" (`debtSource_service`, `services_fallbackName`, `reports_colService`), "Products" (`activityType_products`, `reports_tabProducts`).
+- **2F-6 note on Business Hours**: "Generate Today's Report" and "View Reports" now have keys (`reports_generateToday`, `reports_viewTitle`); the Business Hours sentences can take them as placeholders. Not done here (it changes 2F-6 keys).
+
 ### Raised in step 2F, batch 2F-6 (wording and language; English kept as it was)
 
 - **Other screens named inside sentences**: Business Hours says "Generate Today's Report" and "View Reports", Manage Account says "View Facilities". The Kiswahili drafts keep those names in English until the Reports and Facilities batches give them keys; then the sentences should take them as placeholders.
 - **Trash item titles stay English** ("Sale - {client} - {amount}", "Walk-in", "Transaction", "Untitled"): the same text goes into the saved "Permanently deleted: ..." activity description. Showing a label on screen while saving English needs two titles; decide in the activity batch (2F-12).
 - **Team Members fallbacks in saved text**: "The assistant" / "This co-admin" stand in for a missing name in both the activity description (saved) and the success message, so the message can show English in Kiswahili for a nameless person.
-- **Export screen is allowlisted for R10 as a whole file** (its remaining strings are inside the exported file). The guard test only accepts whole-file entries, so a new on-screen string added there later would not be caught; moving the file-building code to a service would remove the need.
+- **Export screen is allowlisted for R10 as a whole file** (its remaining strings are inside the exported file). The guard test only accepts whole-file entries, so a new on-screen string added there later would not be caught; moving the file-building code to a service would remove the need. **Fixed (71c79c7):** the exported-file texts are in `lib/utils/export_texts.dart`, which is allowlisted instead; the screen is checked again.
 
 ### Raised in step 2F, batch 2F-5 (wording and language; English kept as it was)
 
