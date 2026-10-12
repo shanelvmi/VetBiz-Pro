@@ -6726,6 +6726,144 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Couldn\'t delete the draft'**
   String get reports_deleteDraftFailed;
+
+  /// Error message.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t share the report'**
+  String get reports_shareFailed;
+
+  /// Reports screen title.
+  ///
+  /// In en, this message translates to:
+  /// **'View Reports'**
+  String get reports_viewTitle;
+
+  /// Under the reports screen title.
+  ///
+  /// In en, this message translates to:
+  /// **'Daily closing report for this facility'**
+  String get reports_viewSubtitle;
+
+  /// Reports screen button when today's report is submitted.
+  ///
+  /// In en, this message translates to:
+  /// **'Today\'s Report - Submitted'**
+  String get reports_todaySubmitted;
+
+  /// Reports screen button for a draft.
+  ///
+  /// In en, this message translates to:
+  /// **'Continue Closing'**
+  String get reports_continueClosing;
+
+  /// Reports screen button.
+  ///
+  /// In en, this message translates to:
+  /// **'Generate Today\'s Report'**
+  String get reports_generateToday;
+
+  /// Reports screen button, facility closed all day.
+  ///
+  /// In en, this message translates to:
+  /// **'Generate Today\'s Report (closed today)'**
+  String get reports_generateClosedToday;
+
+  /// Reports screen button before closing time.
+  ///
+  /// In en, this message translates to:
+  /// **'Generate Today\'s Report (at {time})'**
+  String reports_generateAt(String time);
+
+  /// Reports screen button, no closing time set.
+  ///
+  /// In en, this message translates to:
+  /// **'Generate Today\'s Report (after closing time)'**
+  String get reports_generateAfterClosing;
+
+  /// Reports screen, no report yet.
+  ///
+  /// In en, this message translates to:
+  /// **'Tap \"Generate Today\'s Report\" above to get started.'**
+  String get reports_tapGenerate;
+
+  /// Reports screen, no report yet.
+  ///
+  /// In en, this message translates to:
+  /// **'This facility is marked closed today.'**
+  String get reports_closedToday;
+
+  /// Reports screen, no report yet.
+  ///
+  /// In en, this message translates to:
+  /// **'Available at {time}.'**
+  String reports_availableAt(String time);
+
+  /// Reports screen, no report yet.
+  ///
+  /// In en, this message translates to:
+  /// **'Available once today\'s closing time is reached.'**
+  String get reports_availableOnceClosing;
+
+  /// Reports screen, no report yet.
+  ///
+  /// In en, this message translates to:
+  /// **'No report generated yet today'**
+  String get reports_noneToday;
+
+  /// Reports screen heading.
+  ///
+  /// In en, this message translates to:
+  /// **'Daily Closing Report - Today\'s Report'**
+  String get reports_todayHeading;
+
+  /// Quick action.
+  ///
+  /// In en, this message translates to:
+  /// **'View Full Report'**
+  String get reports_viewFull;
+
+  /// Quick action subtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'See all sections in detail'**
+  String get reports_viewFullHint;
+
+  /// Quick action.
+  ///
+  /// In en, this message translates to:
+  /// **'Download PDF'**
+  String get reports_downloadPdf;
+
+  /// Quick action subtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Get a printable report'**
+  String get reports_downloadPdfHint;
+
+  /// Quick action subtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear today\'s draft to restart'**
+  String get reports_deleteDraftHint;
+
+  /// Quick action.
+  ///
+  /// In en, this message translates to:
+  /// **'Share with Admin'**
+  String get reports_shareWithAdmin;
+
+  /// Quick action subtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Send report to your admin'**
+  String get reports_shareWithAdminHint;
+
+  /// Reports screen panel.
+  ///
+  /// In en, this message translates to:
+  /// **'Accountability'**
+  String get reports_accountability;
 }
 
 class _AppLocalizationsDelegate

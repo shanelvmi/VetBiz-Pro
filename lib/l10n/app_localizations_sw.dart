@@ -3824,4 +3824,81 @@ class AppLocalizationsSw extends AppLocalizations {
 
   @override
   String get reports_deleteDraftFailed => 'Imeshindikana kufuta rasimu';
+
+  @override
+  String get reports_shareFailed => 'Imeshindikana kushiriki ripoti';
+
+  @override
+  String get reports_viewTitle => 'Tazama Ripoti';
+
+  @override
+  String get reports_viewSubtitle => 'Ripoti ya kufunga siku ya kituo hiki';
+
+  @override
+  String get reports_todaySubmitted => 'Ripoti ya Leo - Imewasilishwa';
+
+  @override
+  String get reports_continueClosing => 'Endelea Kufunga';
+
+  @override
+  String get reports_generateToday => 'Tengeneza Ripoti ya Leo';
+
+  @override
+  String get reports_generateClosedToday =>
+      'Tengeneza Ripoti ya Leo (imefungwa leo)';
+
+  @override
+  String reports_generateAt(String time) {
+    return 'Tengeneza Ripoti ya Leo (saa $time)';
+  }
+
+  @override
+  String get reports_generateAfterClosing =>
+      'Tengeneza Ripoti ya Leo (baada ya muda wa kufunga)';
+
+  @override
+  String get reports_tapGenerate =>
+      'Gusa \"Tengeneza Ripoti ya Leo\" hapo juu kuanza.';
+
+  @override
+  String get reports_closedToday => 'Kituo hiki kimewekwa kuwa kimefungwa leo.';
+
+  @override
+  String reports_availableAt(String time) {
+    return 'Inapatikana saa $time.';
+  }
+
+  @override
+  String get reports_availableOnceClosing =>
+      'Inapatikana muda wa kufunga wa leo ukifika.';
+
+  @override
+  String get reports_noneToday => 'Bado hakuna ripoti iliyotengenezwa leo';
+
+  @override
+  String get reports_todayHeading => 'Ripoti ya Kufunga Siku - Ripoti ya Leo';
+
+  @override
+  String get reports_viewFull => 'Tazama Ripoti Kamili';
+
+  @override
+  String get reports_viewFullHint => 'Ona sehemu zote kwa kina';
+
+  @override
+  String get reports_downloadPdf => 'Pakua PDF';
+
+  @override
+  String get reports_downloadPdfHint => 'Pata ripoti ya kuchapisha';
+
+  @override
+  String get reports_deleteDraftHint => 'Futa rasimu ya leo uanze upya';
+
+  @override
+  String get reports_shareWithAdmin => 'Shiriki na Msimamizi';
+
+  @override
+  String get reports_shareWithAdminHint => 'Tuma ripoti kwa msimamizi wako';
+
+  @override
+  String get reports_accountability => 'Uwajibikaji';
 }

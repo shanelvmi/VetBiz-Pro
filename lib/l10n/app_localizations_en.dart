@@ -3805,4 +3805,81 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get reports_deleteDraftFailed => 'Couldn\'t delete the draft';
+
+  @override
+  String get reports_shareFailed => 'Couldn\'t share the report';
+
+  @override
+  String get reports_viewTitle => 'View Reports';
+
+  @override
+  String get reports_viewSubtitle => 'Daily closing report for this facility';
+
+  @override
+  String get reports_todaySubmitted => 'Today\'s Report - Submitted';
+
+  @override
+  String get reports_continueClosing => 'Continue Closing';
+
+  @override
+  String get reports_generateToday => 'Generate Today\'s Report';
+
+  @override
+  String get reports_generateClosedToday =>
+      'Generate Today\'s Report (closed today)';
+
+  @override
+  String reports_generateAt(String time) {
+    return 'Generate Today\'s Report (at $time)';
+  }
+
+  @override
+  String get reports_generateAfterClosing =>
+      'Generate Today\'s Report (after closing time)';
+
+  @override
+  String get reports_tapGenerate =>
+      'Tap \"Generate Today\'s Report\" above to get started.';
+
+  @override
+  String get reports_closedToday => 'This facility is marked closed today.';
+
+  @override
+  String reports_availableAt(String time) {
+    return 'Available at $time.';
+  }
+
+  @override
+  String get reports_availableOnceClosing =>
+      'Available once today\'s closing time is reached.';
+
+  @override
+  String get reports_noneToday => 'No report generated yet today';
+
+  @override
+  String get reports_todayHeading => 'Daily Closing Report - Today\'s Report';
+
+  @override
+  String get reports_viewFull => 'View Full Report';
+
+  @override
+  String get reports_viewFullHint => 'See all sections in detail';
+
+  @override
+  String get reports_downloadPdf => 'Download PDF';
+
+  @override
+  String get reports_downloadPdfHint => 'Get a printable report';
+
+  @override
+  String get reports_deleteDraftHint => 'Clear today\'s draft to restart';
+
+  @override
+  String get reports_shareWithAdmin => 'Share with Admin';
+
+  @override
+  String get reports_shareWithAdminHint => 'Send report to your admin';
+
+  @override
+  String get reports_accountability => 'Accountability';
 }
