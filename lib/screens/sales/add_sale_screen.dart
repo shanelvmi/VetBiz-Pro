@@ -104,7 +104,7 @@ class _AddSaleScreenState extends State<AddSaleScreen> {
   // same product again reads naturally as "one more of these."
   void _addProductToSale(Product product) {
     if (product.sellableQty <= 0) {
-      AppFeedback.info('${product.name} has no stock available on the shelf');
+      AppFeedback.info(L10n.current.sales_noShelfStock(product.name));
       return;
     }
 
@@ -186,19 +186,19 @@ class _AddSaleScreenState extends State<AddSaleScreen> {
       context: context,
       builder: (dialogContext) {
         return AlertDialog(
-          title: const Text('Sale Discount'),
+          title: Text(context.l10n.sales_saleDiscount),
           content: TextField(
             controller: controller,
             keyboardType: TextInputType.number,
             inputFormatters: [FilteringTextInputFormatter.digitsOnly, ThousandsSeparatorInputFormatter()],
             autofocus: true,
             decoration: InputDecoration(
-              labelText: 'Discount Amount (${AppDefaults.currencySymbol})',
+              labelText: context.l10n.sales_discountAmountLabel(AppDefaults.currencySymbol),
               border: OutlineInputBorder(borderRadius: BorderRadius.circular(AppRadius.r10)),
             ),
           ),
           actions: [
-            TextButton(onPressed: () => Navigator.pop(dialogContext), child: const Text('Cancel')),
+            TextButton(onPressed: () => Navigator.pop(dialogContext), child: Text(context.l10n.common_cancel)),
             ElevatedButton(
               onPressed: () {
                 final value = parseThousands(controller.text);
@@ -209,7 +209,7 @@ class _AddSaleScreenState extends State<AddSaleScreen> {
                 Navigator.pop(dialogContext);
               },
               style: ElevatedButton.styleFrom(backgroundColor: context.colors.primary, foregroundColor: context.colors.onPrimary),
-              child: const Text('Apply'),
+              child: Text(context.l10n.common_apply),
             ),
           ],
         );
@@ -266,7 +266,7 @@ class _AddSaleScreenState extends State<AddSaleScreen> {
     await showGeneralDialog(
       context: context,
       barrierDismissible: true,
-      barrierLabel: 'Browse Products',
+      barrierLabel: context.l10n.sales_browseProducts,
       barrierColor: context.colors.scrim.withValues(alpha: AppAlpha.a50),
       transitionDuration: AppMotion.fast,
       pageBuilder: (dialogContext, animation, secondaryAnimation) {
@@ -315,7 +315,7 @@ class _AddSaleScreenState extends State<AddSaleScreen> {
                                 Icon(Icons.open_with, color: context.colors.onPrimaryMuted, size: AppIconSize.i16),
                                 const SizedBox(width: AppSpacing.s10),
                                 Expanded(
-                                  child: Text('Browse Products',
+                                  child: Text(context.l10n.sales_browseProducts,
                                       style: TextStyle(color: context.colors.onPrimary, fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f16)),
                                 ),
                                 IconButton(
@@ -341,7 +341,7 @@ class _AddSaleScreenState extends State<AddSaleScreen> {
                                     Expanded(
                                       child: TextField(
                                         decoration: InputDecoration(
-                                          hintText: 'Filter by name, batch no or category...',
+                                          hintText: context.l10n.sales_browseFilterHint,
                                           prefixIcon: const Icon(Icons.search, size: AppIconSize.i20),
                                           isDense: true,
                                           contentPadding: const EdgeInsets.symmetric(vertical: AppSpacing.s12, horizontal: AppSpacing.s12),
@@ -353,10 +353,10 @@ class _AddSaleScreenState extends State<AddSaleScreen> {
                                     const SizedBox(width: AppSpacing.s8),
                                     PopupMenuButton<String?>(
                                       initialValue: selectedCategory,
-                                      tooltip: 'Filter by category',
+                                      tooltip: context.l10n.sales_filterByCategory,
                                       onSelected: (category) => setDialogState(() => selectedCategory = category),
                                       itemBuilder: (context) => [
-                                        const PopupMenuItem(value: null, child: Text('All Categories')),
+                                        PopupMenuItem(value: null, child: Text(context.l10n.sales_allCategories)),
                                         // Shows the label; filters on the stored category.
                                         ...categories.map((c) => PopupMenuItem(value: c, child: Text(context.l10n.productCategoryLabel(c)))),
                                       ],
@@ -382,7 +382,7 @@ class _AddSaleScreenState extends State<AddSaleScreen> {
                                 const SizedBox(height: AppSpacing.s12),
                                 Expanded(
                                   child: filtered.isEmpty
-                                      ? const Center(child: Text('No products found'))
+                                      ? Center(child: Text(context.l10n.sales_noProductsFound))
                                       : ListView.builder(
                                           itemCount: filtered.length,
                                           itemBuilder: (context, index) {
@@ -418,8 +418,8 @@ class _AddSaleScreenState extends State<AddSaleScreen> {
                                                         const SizedBox(height: AppSpacing.s2),
                                                         Text(
                                                           outOfStock
-                                                              ? 'Out of stock'
-                                                              : '$remainingAvailable ${product.unit} available · ${Money.symbolDecimal(product.sellPrice)}',
+                                                              ? context.l10n.sales_outOfStock
+                                                              : context.l10n.sales_availablePrice(remainingAvailable, context.l10n.productUnitLabel(product.unit), Money.symbolDecimal(product.sellPrice)),
                                                           style: TextStyle(
                                                             fontSize: AppFontSize.f12,
                                                             color: outOfStock ? context.colors.danger : context.colors.textMuted,
@@ -618,7 +618,7 @@ class _AddSaleScreenState extends State<AddSaleScreen> {
           children: [
             Icon(Icons.warning_amber_rounded, color: context.colors.danger),
             SizedBox(width: AppSpacing.s8),
-            Text('Expired Stock'),
+            Text(context.l10n.store_expiredStockTitle),
           ],
         ),
         content: SizedBox(
@@ -627,23 +627,23 @@ class _AddSaleScreenState extends State<AddSaleScreen> {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text('This product is expired. Do you still want to sell it?',
+              Text(context.l10n.sales_expiredSaleBody,
                   style: TextStyle(fontSize: AppFontSize.f13_5)),
               const SizedBox(height: AppSpacing.s10),
               ...expiredPortion.map((e) => Padding(
                     padding: const EdgeInsets.only(bottom: AppSpacing.s4),
-                    child: Text('• ${e.$3} ${e.$2} of ${e.$1}',
+                    child: Text(context.l10n.sales_expiredPortionLine(e.$3, context.l10n.productUnitLabel(e.$2), e.$1),
                         style: TextStyle(fontSize: AppFontSize.f12_5, color: context.colors.dangerStrong)),
                   )),
             ],
           ),
         ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancel')),
+          TextButton(onPressed: () => Navigator.pop(ctx, false), child: Text(context.l10n.common_cancel)),
           ElevatedButton(
             style: ElevatedButton.styleFrom(backgroundColor: context.colors.danger, foregroundColor: context.colors.onPrimary),
             onPressed: () => Navigator.pop(ctx, true),
-            child: const Text('Sell Anyway'),
+            child: Text(context.l10n.sales_sellAnyway),
           ),
         ],
       ),
@@ -655,29 +655,29 @@ class _AddSaleScreenState extends State<AddSaleScreen> {
     if (_isSaving) return; // guards against a double-tap firing two saves at once
 
     if (items.isEmpty) {
-      AppFeedback.warning('Add at least one item before saving');
+      AppFeedback.warning(L10n.current.sales_addItemFirst);
       return;
     }
 
     if (isWalkIn && totalPaid < totalAmount) {
       AppFeedback.warning(
-        'Select a registered client to allow a partial payment',
-        detail: 'Walk-in sales must be paid in full',
+        L10n.current.sales_partialNeedsRegistered,
+        detail: L10n.current.sales_walkInPayInFull,
       );
       return;
     }
 
     if (!isWalkIn && selectedClient == null && totalPaid < totalAmount) {
       AppFeedback.warning(
-        'Select a client to record a partial payment',
-        detail: 'Or choose Walk-in Customer and collect payment in full',
+        L10n.current.sales_partialNeedsClient,
+        detail: L10n.current.sales_orChooseWalkIn,
       );
       return;
     }
 
     if (totalPaid > 0 && paymentMethod == null) {
       setState(() => _paymentMethodMissing = true);
-      AppFeedback.warning('Select a payment method before saving');
+      AppFeedback.warning(L10n.current.sales_selectPaymentMethod);
       return;
     }
 
@@ -708,7 +708,7 @@ class _AddSaleScreenState extends State<AddSaleScreen> {
 
       final facility = facilityProvider.selectedFacility;
       if (facility == null) {
-        AppFeedback.info('No facility selected');
+        AppFeedback.info(L10n.current.common_noFacility);
         return;
       }
 
@@ -815,9 +815,9 @@ class _AddSaleScreenState extends State<AddSaleScreen> {
 
       // Message for sale type
       if (saleOnCredit) {
-        AppFeedback.success('Sale saved and debt recorded');
+        AppFeedback.success(L10n.current.sales_savedWithDebt);
       } else {
-        AppFeedback.success('Sale saved');
+        AppFeedback.success(L10n.current.sales_saved);
       }
 
       // Reset form
@@ -836,7 +836,7 @@ class _AddSaleScreenState extends State<AddSaleScreen> {
     } catch (e, st) {
       // No Retry: the sale and its debt are saved in two separate calls, so
       // a retry after a half-finished save could record the sale twice.
-      AppFeedback.error("Couldn't save the sale", error: e, stackTrace: st);
+      AppFeedback.error(L10n.current.sales_saveFailed, error: e, stackTrace: st);
     } finally {
       if (mounted) setState(() => _isSaving = false);
     }
@@ -860,13 +860,13 @@ class _AddSaleScreenState extends State<AddSaleScreen> {
                 Icon(Icons.shopping_cart_outlined, color: context.colors.onPrimary, size: AppIconSize.i22),
                 const SizedBox(width: AppSpacing.s12),
                 Expanded(
-                  child: Text('Record Sale',
+                  child: Text(context.l10n.sales_recordSale,
                       style: TextStyle(color: context.colors.onPrimary, fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f18)),
                 ),
                 if (widget.isModal)
                   IconButton(
                     icon: Icon(Icons.close, color: context.colors.onPrimary),
-                    tooltip: 'Close',
+                    tooltip: context.l10n.common_close,
                     onPressed: () => Navigator.of(context).pop(),
                   )
                 else
@@ -931,7 +931,7 @@ class _AddSaleScreenState extends State<AddSaleScreen> {
         children: [
           OutlinedButton.icon(
             icon: const Icon(Icons.close, size: AppIconSize.i16),
-            label: const Text('Cancel'),
+            label: Text(context.l10n.common_cancel),
             style: OutlinedButton.styleFrom(
               foregroundColor: context.colors.textPrimary,
               side: BorderSide(color: context.colors.textHint.withValues(alpha: AppAlpha.a40)),
@@ -955,14 +955,14 @@ class _AddSaleScreenState extends State<AddSaleScreen> {
                     height: 18,
                     child: CircularProgressIndicator(strokeWidth: 2, color: context.colors.onPrimary),
                   )
-                : const Row(
+                : Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Icon(Icons.receipt_long_outlined, size: AppIconSize.i16),
-                      SizedBox(width: AppSpacing.s8),
-                      Text('Record Sale'),
-                      SizedBox(width: AppSpacing.s6),
-                      Icon(Icons.arrow_forward, size: AppIconSize.i16),
+                      const Icon(Icons.receipt_long_outlined, size: AppIconSize.i16),
+                      const SizedBox(width: AppSpacing.s8),
+                      Text(context.l10n.sales_recordSale),
+                      const SizedBox(width: AppSpacing.s6),
+                      const Icon(Icons.arrow_forward, size: AppIconSize.i16),
                     ],
                   ),
           ),
@@ -998,16 +998,16 @@ class _AddSaleScreenState extends State<AddSaleScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              _sectionHeader(Icons.receipt_long_outlined, 'Sale Summary'),
+              _sectionHeader(Icons.receipt_long_outlined, context.l10n.sales_summary),
               const SizedBox(height: AppSpacing.s14),
-              _summaryRow('Total Items', '$totalItemCount'),
+              _summaryRow(context.l10n.sales_totalItems, '$totalItemCount'),
               const SizedBox(height: AppSpacing.s10),
-              _summaryRow('Subtotal', Money.decimal(subtotal)),
+              _summaryRow(context.l10n.sales_subtotal, Money.decimal(subtotal)),
               const SizedBox(height: AppSpacing.s10),
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Text('Discount', style: TextStyle(fontSize: AppFontSize.f13, color: context.colors.textSoft)),
+                  Text(context.l10n.sales_discount, style: TextStyle(fontSize: AppFontSize.f13, color: context.colors.textSoft)),
                   Row(
                     children: [
                       Text(Money.decimal(saleDiscount),
@@ -1037,7 +1037,7 @@ class _AddSaleScreenState extends State<AddSaleScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text('Total Amount', style: TextStyle(fontSize: AppFontSize.f12_5, color: context.colors.textSoft)),
+              Text(context.l10n.sales_totalAmount, style: TextStyle(fontSize: AppFontSize.f12_5, color: context.colors.textSoft)),
               const SizedBox(height: AppSpacing.s4),
               Text(Money.symbolDecimal(totalAmount),
                   style: TextStyle(fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f24, color: context.colors.primary)),
@@ -1060,7 +1060,7 @@ class _AddSaleScreenState extends State<AddSaleScreen> {
                 children: [
                   Icon(Icons.credit_card_outlined, size: AppIconSize.i16, color: context.colors.primary),
                   const SizedBox(width: AppSpacing.s8),
-                  Text('Payment Method',
+                  Text(context.l10n.payments_method,
                       style: TextStyle(fontWeight: AppFontWeight.semibold, fontSize: AppFontSize.f13, color: context.colors.primary)),
                 ],
               ),
@@ -1101,7 +1101,7 @@ class _AddSaleScreenState extends State<AddSaleScreen> {
                       const SizedBox(width: AppSpacing.s10),
                       Expanded(
                         child: Text(
-                          paymentMethod == null ? 'Select Method' : context.l10n.paymentMethodLabel(paymentMethod!),
+                          paymentMethod == null ? context.l10n.sales_selectMethod : context.l10n.paymentMethodLabel(paymentMethod!),
                           style: TextStyle(color: _paymentMethodMissing ? context.colors.danger : (paymentMethod == null ? context.colors.textMuted : null)),
                         ),
                       ),
@@ -1114,7 +1114,7 @@ class _AddSaleScreenState extends State<AddSaleScreen> {
           ),
         ),
         const SizedBox(height: AppSpacing.s16),
-        const Text('Amount Received (${AppDefaults.currencySymbol}) *', style: TextStyle(fontWeight: AppFontWeight.semibold, fontSize: AppFontSize.f13)),
+        Text(context.l10n.sales_amountReceivedLabel(AppDefaults.currencySymbol), style: const TextStyle(fontWeight: AppFontWeight.semibold, fontSize: AppFontSize.f13)),
         const SizedBox(height: AppSpacing.s6),
         TextFormField(
           controller: totalPaidController,
@@ -1138,7 +1138,7 @@ class _AddSaleScreenState extends State<AddSaleScreen> {
           },
         ),
         const SizedBox(height: AppSpacing.s14),
-        const Text('Change (${AppDefaults.currencySymbol})', style: TextStyle(fontWeight: AppFontWeight.semibold, fontSize: AppFontSize.f13)),
+        Text(context.l10n.sales_changeLabel(AppDefaults.currencySymbol), style: const TextStyle(fontWeight: AppFontWeight.semibold, fontSize: AppFontSize.f13)),
         const SizedBox(height: AppSpacing.s6),
         Container(
           width: double.infinity,
@@ -1185,7 +1185,7 @@ class _AddSaleScreenState extends State<AddSaleScreen> {
           child: TextField(
             controller: clientController,
             decoration: InputDecoration(
-              hintText: 'Search or select client...',
+              hintText: context.l10n.services_clientSearchHint,
               hintStyle: const TextStyle(fontSize: AppFontSize.f14),
               filled: true,
               fillColor: context.colors.surface,
@@ -1212,7 +1212,7 @@ class _AddSaleScreenState extends State<AddSaleScreen> {
         const SizedBox(width: AppSpacing.s8),
         IconButton(
           icon: Icon(Icons.add, color: context.colors.onPrimary),
-          tooltip: 'Add New Client',
+          tooltip: context.l10n.services_addNewClient,
           padding: const EdgeInsets.all(AppSpacing.s10),
           constraints: const BoxConstraints(),
           style: ButtonStyle(
@@ -1254,9 +1254,9 @@ class _AddSaleScreenState extends State<AddSaleScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Text('Walk-in Customer',
+                  Text(context.l10n.sales_walkInCustomer,
                       style: TextStyle(fontWeight: AppFontWeight.semibold, fontSize: AppFontSize.f14, color: context.colors.primary)),
-                  Text('No client selected', style: TextStyle(fontSize: AppFontSize.f12, color: context.colors.textMuted)),
+                  Text(context.l10n.sales_noClientSelected, style: TextStyle(fontSize: AppFontSize.f12, color: context.colors.textMuted)),
                 ],
               ),
             ),
@@ -1289,9 +1289,9 @@ class _AddSaleScreenState extends State<AddSaleScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _sectionHeader(Icons.shopping_cart_outlined, 'Client Information'),
+          _sectionHeader(Icons.shopping_cart_outlined, context.l10n.clients_infoSection),
           const SizedBox(height: AppSpacing.s12),
-          const Text('Select Client *', style: TextStyle(fontWeight: AppFontWeight.semibold, fontSize: AppFontSize.f13)),
+          Text(context.l10n.services_selectClientRequired, style: const TextStyle(fontWeight: AppFontWeight.semibold, fontSize: AppFontSize.f13)),
           const SizedBox(height: AppSpacing.s6),
           isNarrow
               ? Column(
@@ -1326,7 +1326,7 @@ class _AddSaleScreenState extends State<AddSaleScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _sectionHeader(Icons.shopping_cart_outlined, 'Products'),
+          _sectionHeader(Icons.shopping_cart_outlined, context.l10n.reports_tabProducts),
           const SizedBox(height: AppSpacing.s12),
           Row(
             key: _productFieldRowKey,
@@ -1335,7 +1335,7 @@ class _AddSaleScreenState extends State<AddSaleScreen> {
                 child: TextField(
                   controller: productSearchController,
                   decoration: InputDecoration(
-                    hintText: 'Search product by name, batch no or category...',
+                    hintText: context.l10n.sales_productSearchHint,
                     hintStyle: const TextStyle(fontSize: AppFontSize.f14),
                     filled: true,
                     fillColor: context.colors.surface,
@@ -1358,7 +1358,7 @@ class _AddSaleScreenState extends State<AddSaleScreen> {
               const SizedBox(width: AppSpacing.s8),
               OutlinedButton.icon(
                 icon: const Icon(Icons.grid_view_outlined, size: AppIconSize.i16),
-                label: const Text('Browse Products'),
+                label: Text(context.l10n.sales_browseProducts),
                 style: OutlinedButton.styleFrom(
                   foregroundColor: context.colors.primary,
                   side: BorderSide(color: context.colors.primary.withValues(alpha: AppAlpha.a40)),
@@ -1386,10 +1386,10 @@ class _AddSaleScreenState extends State<AddSaleScreen> {
           children: [
             Icon(Icons.playlist_add_outlined, size: AppIconSize.i40, color: context.colors.border),
             const SizedBox(height: AppSpacing.s10),
-            Text('No products added yet',
+            Text(context.l10n.sales_noProductsYet,
                 style: TextStyle(fontWeight: AppFontWeight.semibold, color: context.colors.textMuted)),
             const SizedBox(height: AppSpacing.s4),
-            Text('Search and add products to this sale',
+            Text(context.l10n.sales_addProductsHint,
                 style: TextStyle(fontSize: AppFontSize.f12_5, color: context.colors.textHint)),
           ],
         ),
@@ -1427,12 +1427,12 @@ class _AddSaleScreenState extends State<AddSaleScreen> {
           child: Row(
             children: [
               SizedBox(width: AppSpacing.s22, child: Text('#', style: _tableHeaderStyle)),
-              Expanded(flex: 3, child: Text('Product', style: _tableHeaderStyle)),
-              Expanded(flex: 2, child: Text('Batch No.', style: _tableHeaderStyle)),
-              Expanded(flex: 2, child: Text('Expiry Date', style: _tableHeaderStyle)),
-              Expanded(flex: 2, child: Text('Unit Price (${AppDefaults.currencySymbol})', style: _tableHeaderStyle)),
-              SizedBox(width: _qtyColumnWidth, child: Text('Qty', style: _tableHeaderStyle, textAlign: TextAlign.center)),
-              Expanded(flex: 2, child: Text('Total (${AppDefaults.currencySymbol})', style: _tableHeaderStyle)),
+              Expanded(flex: 3, child: Text(context.l10n.reports_colProduct, style: _tableHeaderStyle)),
+              Expanded(flex: 2, child: Text(context.l10n.sales_colBatchNo, style: _tableHeaderStyle)),
+              Expanded(flex: 2, child: Text(context.l10n.batch_expiryDate, style: _tableHeaderStyle)),
+              Expanded(flex: 2, child: Text(context.l10n.sales_colUnitPrice(AppDefaults.currencySymbol), style: _tableHeaderStyle)),
+              SizedBox(width: _qtyColumnWidth, child: Text(context.l10n.sales_colQty, style: _tableHeaderStyle, textAlign: TextAlign.center)),
+              Expanded(flex: 2, child: Text(context.l10n.sales_colTotal(AppDefaults.currencySymbol), style: _tableHeaderStyle)),
               SizedBox(width: AppSpacing.s32, child: SizedBox.shrink()),
             ],
           ),
@@ -1559,8 +1559,8 @@ class _AddSaleScreenState extends State<AddSaleScreen> {
                     padding: const EdgeInsets.only(bottom: AppSpacing.s6),
                     child: Text(
                       [
-                        if (product?.batchNo != null) 'Batch: ${product!.batchNo}',
-                        if (product?.expiry != null) 'Exp: ${dateFormat.format(product!.expiry!)}',
+                        if (product?.batchNo != null) context.l10n.sales_batchShort(product!.batchNo!),
+                        if (product?.expiry != null) context.l10n.sales_expShort(dateFormat.format(product!.expiry!)),
                       ].join('  •  '),
                       style: TextStyle(fontSize: AppFontSize.f11_5, color: context.colors.textMuted),
                     ),
@@ -1615,7 +1615,7 @@ class _AddSaleScreenState extends State<AddSaleScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _sectionHeader(Icons.description_outlined, 'Notes'),
+          _sectionHeader(Icons.description_outlined, context.l10n.common_notes),
           const SizedBox(height: AppSpacing.s12),
           TextFormField(
             controller: notesController,
@@ -1624,7 +1624,7 @@ class _AddSaleScreenState extends State<AddSaleScreen> {
             textCapitalization: TextCapitalization.sentences,
             inputFormatters: [SentenceCapitalizationFormatter()],
             decoration: InputDecoration(
-              hintText: 'Add any additional notes (optional)...',
+              hintText: context.l10n.sales_notesHint,
               filled: true,
               fillColor: context.colors.surface,
               isDense: true,
@@ -1775,7 +1775,7 @@ class _AddSaleScreenState extends State<AddSaleScreen> {
                   iconColor: context.colors.primary,
                 ),
                 title: Text(product.name),
-                subtitle: Text('${product.sellableQty} ${product.unit} available · ${Money.symbolDecimal(product.sellPrice)}'),
+                subtitle: Text(context.l10n.sales_availablePrice(product.sellableQty, context.l10n.productUnitLabel(product.unit), Money.symbolDecimal(product.sellPrice))),
                 hoverColor: context.colors.accent.withValues(alpha: AppAlpha.a15),
                 onTap: () => _addProductToSale(product),
               );
@@ -1807,7 +1807,7 @@ Future<void> showAddSaleScreen(BuildContext context, {Product? product}) async {
   await showGeneralDialog(
     context: context,
     barrierDismissible: true,
-    barrierLabel: 'Record Sale',
+    barrierLabel: context.l10n.sales_recordSale,
     barrierColor: context.colors.scrim.withValues(alpha: AppAlpha.a50),
     transitionDuration: AppMotion.normal,
     pageBuilder: (context, animation, secondaryAnimation) {
