@@ -118,6 +118,15 @@ User-facing "VetBiz Pro" now reads `AppInfo.name` (titles, Settings, support lin
 - **"Payment Details"** is one key (`payments_detailsTitle`) for the Payments detail panel and the Subscription form's payment section. The Kiswahili ("Maelezo ya Malipo") fits both; split it if either should read differently.
 - **"No submissions yet." and "No submissions yet"** (Subscription screen with a full stop, Subscription history without) are two keys because the English differs.
 
+### Raised in step 2F, batch 2F-10 (wording and language; English kept as it was)
+
+- **The live subscription notice stays English underneath.** `SubscriptionProvider.attentionNotice` is compared with the stored `subscription_expiring` document's message (written in English by the Cloud Function) to tell whether the notice escalated, so it is built from the English ARB; the screen shows `attentionNoticeShown`. If the function's wording ever changes, both must change together. The stored document text itself (shown on other devices until the live row replaces it) stays English: server text, a future error-code/notice-code item.
+- **Raw error in "Could not load alerts: {error}"** (Notifications): the stream error is kept as text and shown as before (now a placeholder). It could go through `FriendlyError.messageFor`.
+- **Compact amounts end in "M"** ("Tsh 10.888M", Net Profit breakdown): kept as typed in the code, not a key.
+- **"Total Clients", "Collected", "Record Sale", "Record Visit", "Add Product", "Total Revenue", "This Week/Month/Year", "Last 7/30 days", "Activity Log"** on the Dashboard reuse keys from the screens that first had them; a Kiswahili change there changes the Dashboard too.
+- **Insights groups unnamed sale items under "Unknown" and unnamed services under "Other"** as English keys; only their display is localised, so an item really named "Unknown" or a service named "Other" is shown translated too.
+- **Notification categories have two wordings**: plural on the cards ("Payments", "Debts", "Updates") and singular in the table ("Payment", "Debt", "Update"). Kept, as before. `NotificationType.categoryLabel` (the model, still English) is now unused on screen; the 2F-12 sweep can remove or keep it.
+
 ### Raised in step 2F, batch 2F-9 (wording and language; English kept as it was)
 
 - **Two password minimums**: the login hint says "Minimum 6 characters" (the number typed into the text; the check itself uses `AppRules.minPasswordLength`, 6), while registration requires 8 ("At least 8 characters", also typed). A `{count}` placeholder would keep the hint in step with the rule; whether login should say 8 is the owner's call.
