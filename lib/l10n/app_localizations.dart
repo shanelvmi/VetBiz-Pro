@@ -11069,6 +11069,96 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'the security rules don\'t currently allow deleting logs'**
   String get activity_retentionNoPermission;
+
+  /// Product sort menu (Sellable Products, Stock Store).
+  ///
+  /// In en, this message translates to:
+  /// **'Name (A-Z)'**
+  String get products_sortNameAsc;
+
+  /// Product sort menu (Sellable Products, Stock Store).
+  ///
+  /// In en, this message translates to:
+  /// **'Name (Z-A)'**
+  String get products_sortNameDesc;
+
+  /// Product sort menu (Sellable Products, Stock Store).
+  ///
+  /// In en, this message translates to:
+  /// **'Price (Low-High)'**
+  String get products_sortPriceLowHigh;
+
+  /// Product sort menu (Sellable Products, Stock Store).
+  ///
+  /// In en, this message translates to:
+  /// **'Price (High-Low)'**
+  String get products_sortPriceHighLow;
+
+  /// Product sort menu (Sellable Products, Stock Store).
+  ///
+  /// In en, this message translates to:
+  /// **'Stock (Low-High)'**
+  String get products_sortStockLowHigh;
+
+  /// Product sort menu (Sellable Products, Stock Store).
+  ///
+  /// In en, this message translates to:
+  /// **'Stock (High-Low)'**
+  String get products_sortStockHighLow;
+
+  /// Product sort menu (Sellable Products, Stock Store).
+  ///
+  /// In en, this message translates to:
+  /// **'Expiry (Soonest First)'**
+  String get products_sortExpirySoonest;
+
+  /// Payments list: description of a payment that came from a sale.
+  ///
+  /// In en, this message translates to:
+  /// **'Sale payment'**
+  String get payments_sourceSale;
+
+  /// Payments list: description of a payment that came from a service.
+  ///
+  /// In en, this message translates to:
+  /// **'Service payment'**
+  String get payments_sourceService;
+
+  /// Payments list: description of a debt repayment.
+  ///
+  /// In en, this message translates to:
+  /// **'Debt repayment'**
+  String get payments_sourceDebtRepayment;
+
+  /// MembershipService.errorMessage: server unreachable or too slow.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not reach the server - check your connection and try again.'**
+  String get membership_unreachable;
+
+  /// MembershipService.errorMessage: the sign-in has expired.
+  ///
+  /// In en, this message translates to:
+  /// **'Please sign in again and retry.'**
+  String get membership_signInAgain;
+
+  /// MembershipService.errorMessage: any other server error with no message.
+  ///
+  /// In en, this message translates to:
+  /// **'Something went wrong. Please try again.'**
+  String get membership_generic;
+
+  /// Login screen message after a forced sign-out: an admin deactivated the account.
+  ///
+  /// In en, this message translates to:
+  /// **'Your account has been deactivated by an admin.'**
+  String get session_deactivatedByAdmin;
+
+  /// Login screen message after a forced sign-out: the session was revoked elsewhere.
+  ///
+  /// In en, this message translates to:
+  /// **'You were signed out because your account was signed out from another device.'**
+  String get session_signedOutElsewhere;
 }
 
 class _AppLocalizationsDelegate

@@ -6517,4 +6517,54 @@ class AppLocalizationsSw extends AppLocalizations {
   @override
   String get activity_retentionNoPermission =>
       'kanuni za usalama kwa sasa haziruhusu kufuta kumbukumbu';
+
+  @override
+  String get products_sortNameAsc => 'Jina (A-Z)';
+
+  @override
+  String get products_sortNameDesc => 'Jina (Z-A)';
+
+  @override
+  String get products_sortPriceLowHigh => 'Bei (Chini-Juu)';
+
+  @override
+  String get products_sortPriceHighLow => 'Bei (Juu-Chini)';
+
+  @override
+  String get products_sortStockLowHigh => 'Akiba (Chini-Juu)';
+
+  @override
+  String get products_sortStockHighLow => 'Akiba (Juu-Chini)';
+
+  @override
+  String get products_sortExpirySoonest => 'Kuisha Muda (Za Karibu Kwanza)';
+
+  @override
+  String get payments_sourceSale => 'Malipo ya mauzo';
+
+  @override
+  String get payments_sourceService => 'Malipo ya huduma';
+
+  @override
+  String get payments_sourceDebtRepayment => 'Malipo ya deni';
+
+  @override
+  String get membership_unreachable =>
+      'Imeshindwa kufikia seva - angalia mtandao wako kisha ujaribu tena.';
+
+  @override
+  String get membership_signInAgain =>
+      'Tafadhali ingia tena kisha ujaribu tena.';
+
+  @override
+  String get membership_generic =>
+      'Kuna tatizo limetokea. Tafadhali jaribu tena.';
+
+  @override
+  String get session_deactivatedByAdmin =>
+      'Akaunti yako imezimwa na msimamizi.';
+
+  @override
+  String get session_signedOutElsewhere =>
+      'Umetolewa kwa sababu akaunti yako ilitolewa kutoka kifaa kingine.';
 }

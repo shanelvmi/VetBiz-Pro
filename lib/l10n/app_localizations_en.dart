@@ -6479,4 +6479,52 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get activity_retentionNoPermission =>
       'the security rules don\'t currently allow deleting logs';
+
+  @override
+  String get products_sortNameAsc => 'Name (A-Z)';
+
+  @override
+  String get products_sortNameDesc => 'Name (Z-A)';
+
+  @override
+  String get products_sortPriceLowHigh => 'Price (Low-High)';
+
+  @override
+  String get products_sortPriceHighLow => 'Price (High-Low)';
+
+  @override
+  String get products_sortStockLowHigh => 'Stock (Low-High)';
+
+  @override
+  String get products_sortStockHighLow => 'Stock (High-Low)';
+
+  @override
+  String get products_sortExpirySoonest => 'Expiry (Soonest First)';
+
+  @override
+  String get payments_sourceSale => 'Sale payment';
+
+  @override
+  String get payments_sourceService => 'Service payment';
+
+  @override
+  String get payments_sourceDebtRepayment => 'Debt repayment';
+
+  @override
+  String get membership_unreachable =>
+      'Could not reach the server - check your connection and try again.';
+
+  @override
+  String get membership_signInAgain => 'Please sign in again and retry.';
+
+  @override
+  String get membership_generic => 'Something went wrong. Please try again.';
+
+  @override
+  String get session_deactivatedByAdmin =>
+      'Your account has been deactivated by an admin.';
+
+  @override
+  String get session_signedOutElsewhere =>
+      'You were signed out because your account was signed out from another device.';
 }
