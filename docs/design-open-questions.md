@@ -118,6 +118,15 @@ User-facing "VetBiz Pro" now reads `AppInfo.name` (titles, Settings, support lin
 - **"Payment Details"** is one key (`payments_detailsTitle`) for the Payments detail panel and the Subscription form's payment section. The Kiswahili ("Maelezo ya Malipo") fits both; split it if either should read differently.
 - **"No submissions yet." and "No submissions yet"** (Subscription screen with a full stop, Subscription history without) are two keys because the English differs.
 
+### Raised in step 2F, batch 2F-12 (wording and language; English kept as it was)
+
+- **The two retention dialogs still word the failed-delete message differently**: Activity Log "Saved - logs older than {count} days are now hidden" + "They could not be deleted yet: {problem}", Facilities "Saved. Logs older than {count} days will be hidden, but couldn't be deleted yet" + the reason. Kept as two keys; the rest of the dialog shares the `facilities_` keys (identical English), so a Kiswahili change there changes both screens.
+- **The retention refusal reason starts lower-case** ("the security rules don't currently allow deleting logs") because it was written to follow a colon; on Facilities it is the second line on its own. Any other failure is still shown as the raw error text (`'$error'` in `ActivityLogRetention.explainFailure`); it could go through `FriendlyError.messageFor`.
+- **"Unknown" activity type chip**: a log with no type groups under the English key "Unknown" (compared by the filter) and its chip shows it as stored.
+- **Payment source descriptions** ("Sale payment"...) are built when the Payments list loads, in the language of that moment; after a language switch they follow on the next load.
+- **"Could not reach the server - check your connection and try again."** (membership calls) and the sign-in screen's "We couldn't reach the server..." say the same thing in two wordings; kept as separate keys.
+- **`NotificationType.categoryLabel`** (English, unused on screen) is kept with a comment; removing it would be a code change outside localisation.
+
 ### Raised in step 2F, batch 2F-11 (wording and language; English kept as it was, one exception)
 
 - **The facility picker's footer bullet (the one English change).** The source held "Secure  â€¢  Reliable  â€¢  Built for..." (the "•" bullet saved with the wrong encoding, so it showed as "â€¢"). The key `facilityPicker_footer` holds the intended "•". The owner may prefer to keep the English exactly as it was; say so and it goes back.
