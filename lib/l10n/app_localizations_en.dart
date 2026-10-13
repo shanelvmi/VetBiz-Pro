@@ -6419,4 +6419,64 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get facilities_viewAllActivity => 'View all activity';
+
+  @override
+  String get activity_subtitle => 'Every recorded action for this facility';
+
+  @override
+  String get activity_searchHint => 'Search logs...';
+
+  @override
+  String activity_keepingLogsFor(int count) {
+    return 'Keeping logs for $count days';
+  }
+
+  @override
+  String get activity_empty => 'No activity logs found';
+
+  @override
+  String activity_autoDeleteAfter(int count) {
+    return 'Logs auto-delete after $count days';
+  }
+
+  @override
+  String get activity_noMatch => 'No logs match the selected filters.';
+
+  @override
+  String get activity_scopeNote =>
+      'You see your own activity, and anything about you. Other team matters are only visible to admins.';
+
+  @override
+  String activity_filterChip(String label, int count) {
+    return '$label · $count';
+  }
+
+  @override
+  String activity_retentionSavedHidden(int count) {
+    return 'Saved - logs older than $count days are now hidden';
+  }
+
+  @override
+  String activity_retentionNotDeletedDetail(String problem) {
+    return 'They could not be deleted yet: $problem';
+  }
+
+  @override
+  String activity_olderLogsDeleted(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count older logs deleted',
+      one: '1 older log deleted',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get activity_saveRetentionFailed =>
+      'Couldn\'t save the log retention setting';
+
+  @override
+  String get activity_retentionNoPermission =>
+      'the security rules don\'t currently allow deleting logs';
 }

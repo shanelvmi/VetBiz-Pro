@@ -10991,6 +10991,84 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'View all activity'**
   String get facilities_viewAllActivity;
+
+  /// Activity Log app bar, line under the title.
+  ///
+  /// In en, this message translates to:
+  /// **'Every recorded action for this facility'**
+  String get activity_subtitle;
+
+  /// Activity Log search box hint.
+  ///
+  /// In en, this message translates to:
+  /// **'Search logs...'**
+  String get activity_searchHint;
+
+  /// Activity Log, admin button that opens the retention dialog.
+  ///
+  /// In en, this message translates to:
+  /// **'Keeping logs for {count} days'**
+  String activity_keepingLogsFor(int count);
+
+  /// Activity Log, empty list.
+  ///
+  /// In en, this message translates to:
+  /// **'No activity logs found'**
+  String get activity_empty;
+
+  /// Activity Log, empty list, second line.
+  ///
+  /// In en, this message translates to:
+  /// **'Logs auto-delete after {count} days'**
+  String activity_autoDeleteAfter(int count);
+
+  /// Activity Log, nothing matches the chip and search.
+  ///
+  /// In en, this message translates to:
+  /// **'No logs match the selected filters.'**
+  String get activity_noMatch;
+
+  /// Activity Log, note shown to assistants above the list.
+  ///
+  /// In en, this message translates to:
+  /// **'You see your own activity, and anything about you. Other team matters are only visible to admins.'**
+  String get activity_scopeNote;
+
+  /// Activity Log summary chip: a type (or All) and how many logs it has.
+  ///
+  /// In en, this message translates to:
+  /// **'{label} · {count}'**
+  String activity_filterChip(String label, int count);
+
+  /// Activity Log retention: saved, but the delete failed (title).
+  ///
+  /// In en, this message translates to:
+  /// **'Saved - logs older than {count} days are now hidden'**
+  String activity_retentionSavedHidden(int count);
+
+  /// Activity Log retention: second line after a failed delete; problem is the reason.
+  ///
+  /// In en, this message translates to:
+  /// **'They could not be deleted yet: {problem}'**
+  String activity_retentionNotDeletedDetail(String problem);
+
+  /// Activity Log retention: second line, how many old logs were deleted.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 older log deleted} other{{count} older logs deleted}}'**
+  String activity_olderLogsDeleted(int count);
+
+  /// Activity Log retention: the save failed.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t save the log retention setting'**
+  String get activity_saveRetentionFailed;
+
+  /// Reason old logs could not be deleted (ActivityLogRetention.explainFailure); shown after "They could not be deleted yet:" and in the facility retention message.
+  ///
+  /// In en, this message translates to:
+  /// **'the security rules don\'t currently allow deleting logs'**
+  String get activity_retentionNoPermission;
 }
 
 class _AppLocalizationsDelegate

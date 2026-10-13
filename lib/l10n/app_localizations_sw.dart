@@ -6456,4 +6456,65 @@ class AppLocalizationsSw extends AppLocalizations {
 
   @override
   String get facilities_viewAllActivity => 'Angalia shughuli zote';
+
+  @override
+  String get activity_subtitle => 'Kila tendo lililorekodiwa kwa kituo hiki';
+
+  @override
+  String get activity_searchHint => 'Tafuta kumbukumbu...';
+
+  @override
+  String activity_keepingLogsFor(int count) {
+    return 'Kumbukumbu zinahifadhiwa kwa siku $count';
+  }
+
+  @override
+  String get activity_empty => 'Hakuna kumbukumbu za shughuli';
+
+  @override
+  String activity_autoDeleteAfter(int count) {
+    return 'Kumbukumbu hufutwa zenyewe baada ya siku $count';
+  }
+
+  @override
+  String get activity_noMatch =>
+      'Hakuna kumbukumbu zinazolingana na vichujio ulivyochagua.';
+
+  @override
+  String get activity_scopeNote =>
+      'Unaona shughuli zako mwenyewe, na chochote kinachokuhusu. Mambo mengine ya timu yanaonekana kwa wasimamizi tu.';
+
+  @override
+  String activity_filterChip(String label, int count) {
+    return '$label · $count';
+  }
+
+  @override
+  String activity_retentionSavedHidden(int count) {
+    return 'Imehifadhiwa - kumbukumbu zilizozidi siku $count sasa zimefichwa';
+  }
+
+  @override
+  String activity_retentionNotDeletedDetail(String problem) {
+    return 'Bado hazijaweza kufutwa: $problem';
+  }
+
+  @override
+  String activity_olderLogsDeleted(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Kumbukumbu $count za zamani zimefutwa',
+      one: 'Kumbukumbu 1 ya zamani imefutwa',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get activity_saveRetentionFailed =>
+      'Imeshindwa kuhifadhi muda wa kuhifadhi kumbukumbu';
+
+  @override
+  String get activity_retentionNoPermission =>
+      'kanuni za usalama kwa sasa haziruhusu kufuta kumbukumbu';
 }
