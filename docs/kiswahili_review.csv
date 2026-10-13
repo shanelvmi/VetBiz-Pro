@@ -1839,3 +1839,31 @@ facilities_ownership,Ownership,Umiliki,"Facility detail, About card row.",draft
 facilities_createdBy,Created By,Kimeundwa na,"Facility detail, About card row.",draft
 facilities_lastUpdated,Last Updated,Kilisasishwa Mwisho,"Facility detail, About card row.",draft
 facilities_viewAllActivity,View all activity,Angalia shughuli zote,"Facility detail, Recent Activity link.",draft
+activity_subtitle,Every recorded action for this facility,Kila tendo lililorekodiwa kwa kituo hiki,"Activity Log app bar, line under the title.",draft
+activity_searchHint,Search logs...,Tafuta kumbukumbu...,Activity Log search box hint.,draft
+activity_keepingLogsFor,Keeping logs for {count} days,Kumbukumbu zinahifadhiwa kwa siku {count},"Activity Log, admin button that opens the retention dialog.",draft
+activity_empty,No activity logs found,Hakuna kumbukumbu za shughuli,"Activity Log, empty list.",draft
+activity_autoDeleteAfter,Logs auto-delete after {count} days,Kumbukumbu hufutwa zenyewe baada ya siku {count},"Activity Log, empty list, second line.",draft
+activity_noMatch,No logs match the selected filters.,Hakuna kumbukumbu zinazolingana na vichujio ulivyochagua.,"Activity Log, nothing matches the chip and search.",draft
+activity_scopeNote,"You see your own activity, and anything about you. Other team matters are only visible to admins.","Unaona shughuli zako mwenyewe, na chochote kinachokuhusu. Mambo mengine ya timu yanaonekana kwa wasimamizi tu.","Activity Log, note shown to assistants above the list.",draft
+activity_filterChip,{label} · {count},{label} · {count},Activity Log summary chip: a type (or All) and how many logs it has.,draft
+activity_retentionSavedHidden,Saved - logs older than {count} days are now hidden,Imehifadhiwa - kumbukumbu zilizozidi siku {count} sasa zimefichwa,"Activity Log retention: saved, but the delete failed (title).",draft
+activity_retentionNotDeletedDetail,They could not be deleted yet: {problem},Bado hazijaweza kufutwa: {problem},"Activity Log retention: second line after a failed delete; problem is the reason.",draft
+activity_olderLogsDeleted,"{count, plural, =1{1 older log deleted} other{{count} older logs deleted}}","{count, plural, =1{Kumbukumbu 1 ya zamani imefutwa} other{Kumbukumbu {count} za zamani zimefutwa}}","Activity Log retention: second line, how many old logs were deleted.",draft
+activity_saveRetentionFailed,Couldn't save the log retention setting,Imeshindwa kuhifadhi muda wa kuhifadhi kumbukumbu,Activity Log retention: the save failed.,draft
+activity_retentionNoPermission,the security rules don't currently allow deleting logs,kanuni za usalama kwa sasa haziruhusu kufuta kumbukumbu,"Reason old logs could not be deleted (ActivityLogRetention.explainFailure); shown after ""They could not be deleted yet:"" and in the facility retention message.",draft
+products_sortNameAsc,Name (A-Z),Jina (A-Z),"Product sort menu (Sellable Products, Stock Store).",draft
+products_sortNameDesc,Name (Z-A),Jina (Z-A),"Product sort menu (Sellable Products, Stock Store).",draft
+products_sortPriceLowHigh,Price (Low-High),Bei (Chini-Juu),"Product sort menu (Sellable Products, Stock Store).",draft
+products_sortPriceHighLow,Price (High-Low),Bei (Juu-Chini),"Product sort menu (Sellable Products, Stock Store).",draft
+products_sortStockLowHigh,Stock (Low-High),Akiba (Chini-Juu),"Product sort menu (Sellable Products, Stock Store).",draft
+products_sortStockHighLow,Stock (High-Low),Akiba (Juu-Chini),"Product sort menu (Sellable Products, Stock Store).",draft
+products_sortExpirySoonest,Expiry (Soonest First),Kuisha Muda (Za Karibu Kwanza),"Product sort menu (Sellable Products, Stock Store).",draft
+payments_sourceSale,Sale payment,Malipo ya mauzo,Payments list: description of a payment that came from a sale.,draft
+payments_sourceService,Service payment,Malipo ya huduma,Payments list: description of a payment that came from a service.,draft
+payments_sourceDebtRepayment,Debt repayment,Malipo ya deni,Payments list: description of a debt repayment.,draft
+membership_unreachable,Could not reach the server - check your connection and try again.,Imeshindwa kufikia seva - angalia mtandao wako kisha ujaribu tena.,MembershipService.errorMessage: server unreachable or too slow.,draft
+membership_signInAgain,Please sign in again and retry.,Tafadhali ingia tena kisha ujaribu tena.,MembershipService.errorMessage: the sign-in has expired.,draft
+membership_generic,Something went wrong. Please try again.,Kuna tatizo limetokea. Tafadhali jaribu tena.,MembershipService.errorMessage: any other server error with no message.,draft
+session_deactivatedByAdmin,Your account has been deactivated by an admin.,Akaunti yako imezimwa na msimamizi.,Login screen message after a forced sign-out: an admin deactivated the account.,draft
+session_signedOutElsewhere,You were signed out because your account was signed out from another device.,Umetolewa kwa sababu akaunti yako ilitolewa kutoka kifaa kingine.,Login screen message after a forced sign-out: the session was revoked elsewhere.,draft
