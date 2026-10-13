@@ -237,7 +237,7 @@ class _ActivityLogScreenState extends State<ActivityLogScreen> {
     final selected = await showDialog<int>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Keep Logs For'),
+        title: Text(context.l10n.facilities_keepLogsFor),
         content: SizedBox(
           width: 320,
           child: Column(
@@ -247,14 +247,14 @@ class _ActivityLogScreenState extends State<ActivityLogScreen> {
                 value: days,
                 groupValue: current,
                 activeColor: context.colors.primary,
-                title: Text('$days days'),
+                title: Text(context.l10n.debtors_daysCount(days)),
                 onChanged: (val) => Navigator.pop(ctx, val),
               );
             }).toList(),
           ),
         ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
+          TextButton(onPressed: () => Navigator.pop(ctx), child: Text(context.l10n.common_cancel)),
         ],
       ),
     );
@@ -272,20 +272,16 @@ class _ActivityLogScreenState extends State<ActivityLogScreen> {
       final confirmed = await showDialog<bool>(
         context: context,
         builder: (ctx) => AlertDialog(
-          title: const Text('Delete Older Logs Now?'),
+          title: Text(context.l10n.facilities_deleteOlderLogsTitle),
           content: SizedBox(
             width: 360,
-            child: Text(
-              'Logs are currently kept for $current days. Switching to $selected days '
-              'will permanently delete every log older than $selected days right now - '
-              'not just going forward. This cannot be undone.',
-            ),
+            child: Text(context.l10n.facilities_deleteOlderLogsMessage(current, selected)),
           ),
           actions: [
-            TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancel')),
+            TextButton(onPressed: () => Navigator.pop(ctx, false), child: Text(context.l10n.common_cancel)),
             TextButton(
               onPressed: () => Navigator.pop(ctx, true),
-              child: Text('Delete and switch to $selected days', style: TextStyle(color: context.colors.danger)),
+              child: Text(context.l10n.facilities_deleteAndSwitch(selected), style: TextStyle(color: context.colors.danger)),
             ),
           ],
         ),
@@ -319,18 +315,18 @@ class _ActivityLogScreenState extends State<ActivityLogScreen> {
       if (!mounted) return;
       if (problem != null) {
         AppFeedback.warning(
-          'Saved - logs older than $selected days are now hidden',
-          detail: 'They could not be deleted yet: $problem',
+          L10n.current.activity_retentionSavedHidden(selected),
+          detail: L10n.current.activity_retentionNotDeletedDetail(problem),
         );
       } else if (deleted > 0) {
-        AppFeedback.success('Logs will now be kept for $selected days',
-            detail: '$deleted older log${deleted == 1 ? '' : 's'} deleted');
+        AppFeedback.success(L10n.current.facilities_retentionSaved(selected),
+            detail: L10n.current.activity_olderLogsDeleted(deleted));
       } else {
-        AppFeedback.success('Logs will now be kept for $selected days');
+        AppFeedback.success(L10n.current.facilities_retentionSaved(selected));
       }
     } catch (e, st) {
       if (!mounted) return;
-      AppFeedback.error("Couldn't save the log retention setting", error: e, stackTrace: st);
+      AppFeedback.error(L10n.current.activity_saveRetentionFailed, error: e, stackTrace: st);
     }
   }
 
@@ -353,7 +349,7 @@ class _ActivityLogScreenState extends State<ActivityLogScreen> {
       return Scaffold(
         backgroundColor: context.colors.background,
         appBar: AppBar(
-          title: Text('Activity Log', style: TextStyle(color: context.colors.textPrimary)),
+          title: Text(context.l10n.export_activityLog, style: TextStyle(color: context.colors.textPrimary)),
           backgroundColor: context.colors.surface,
           foregroundColor: context.colors.textPrimary,
           elevation: AppElevation.e1,
@@ -362,12 +358,12 @@ class _ActivityLogScreenState extends State<ActivityLogScreen> {
           leading: widget.isModal
               ? IconButton(
                   icon: Icon(Icons.close, color: context.colors.textPrimary),
-                  tooltip: 'Close',
+                  tooltip: context.l10n.common_close,
                   onPressed: () => Navigator.of(context).pop(),
                 )
               : null,
         ),
-        body: const Center(child: Text('No facility selected.')),
+        body: Center(child: Text(context.l10n.common_noFacilityDot)),
       );
     }
 
@@ -400,7 +396,7 @@ class _ActivityLogScreenState extends State<ActivityLogScreen> {
                   child: TextField(
                     controller: _searchController,
                     decoration: InputDecoration(
-                      hintText: 'Search logs...',
+                      hintText: context.l10n.activity_searchHint,
                       prefixIcon: const Icon(Icons.search, size: AppIconSize.i20),
                       isDense: true,
                       contentPadding: const EdgeInsets.symmetric(vertical: AppSpacing.s10, horizontal: AppSpacing.s12),
@@ -414,7 +410,7 @@ class _ActivityLogScreenState extends State<ActivityLogScreen> {
                   TextButton.icon(
                     onPressed: () => _showRetentionDialog(facilityId),
                     icon: const Icon(Icons.schedule_outlined, size: AppIconSize.i16),
-                    label: Text('Keeping logs for ${_retentionDays ?? _defaultRetentionDays} days'),
+                    label: Text(context.l10n.activity_keepingLogsFor(_retentionDays ?? _defaultRetentionDays)),
                     style: TextButton.styleFrom(foregroundColor: context.colors.primary, textStyle: const TextStyle(fontSize: AppFontSize.f12_5)),
                   ),
                 ],
@@ -456,7 +452,7 @@ class _ActivityLogScreenState extends State<ActivityLogScreen> {
                           color: context.colors.textDisabled),
                         const SizedBox(height: AppSpacing.s16),
                         Text(
-                          'No activity logs found',
+                          context.l10n.activity_empty,
                           style: TextStyle(
                             fontSize: AppFontSize.f18,
                             color: context.colors.textMuted,
@@ -464,7 +460,7 @@ class _ActivityLogScreenState extends State<ActivityLogScreen> {
                         ),
                         const SizedBox(height: AppSpacing.s8),
                         Text(
-                          'Logs auto-delete after ${_retentionDays ?? _defaultRetentionDays} days',
+                          context.l10n.activity_autoDeleteAfter(_retentionDays ?? _defaultRetentionDays),
                           style: TextStyle(
                             fontSize: AppFontSize.f14,
                             color: context.colors.textHint,
@@ -491,8 +487,8 @@ class _ActivityLogScreenState extends State<ActivityLogScreen> {
                 }).toList();
 
                 if (logs.isEmpty) {
-                  return const Center(
-                    child: Text('No logs match the selected filters.'),
+                  return Center(
+                    child: Text(context.l10n.activity_noMatch),
                   );
                 }
 
@@ -502,7 +498,7 @@ class _ActivityLogScreenState extends State<ActivityLogScreen> {
                   separatorBuilder: (_, __) => const Divider(height: 1),
                   itemBuilder: (context, index) {
                         final data = logs[index].data();
-                        final user = data['userName'] ?? 'Unknown';
+                        final user = data['userName'] ?? context.l10n.common_unknown;
                         final action = sanitizeForDisplay(data['description'] ?? '');
                         final type = data['actionType'] ?? '';
                         final timestamp = data['timestamp'];
@@ -631,15 +627,15 @@ class _ActivityLogScreenState extends State<ActivityLogScreen> {
       leading: widget.isModal
           ? IconButton(
               icon: const Icon(Icons.close),
-              tooltip: 'Close',
+              tooltip: context.l10n.common_close,
               onPressed: () => Navigator.of(context).pop(),
             )
           : null,
       title: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Text('Activity Log', style: TextStyle(fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f19, color: context.colors.textPrimary)),
-          Text('Every recorded action for this facility', style: TextStyle(fontSize: AppFontSize.f12, color: context.colors.textSecondary)),
+          Text(context.l10n.export_activityLog, style: TextStyle(fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f19, color: context.colors.textPrimary)),
+          Text(context.l10n.activity_subtitle, style: TextStyle(fontSize: AppFontSize.f12, color: context.colors.textSecondary)),
         ],
       ),
     );
@@ -690,7 +686,7 @@ class _ActivityLogScreenState extends State<ActivityLogScreen> {
           const SizedBox(width: AppSpacing.s8),
           Expanded(
             child: Text(
-              'You see your own activity, and anything about you. Other team matters are only visible to admins.',
+              context.l10n.activity_scopeNote,
               style: TextStyle(fontSize: AppFontSize.f12_5, color: Colors.blue.shade900),
             ),
           ),
@@ -710,7 +706,9 @@ class _ActivityLogScreenState extends State<ActivityLogScreen> {
 
         final typeCounts = <String, int>{};
         for (final doc in docs) {
-          final type = ActivityType.canonicalKey((doc['actionType'] ?? 'Unknown').toString());
+          // 'Unknown' is a grouping key the chip filters on (a stand-in for a
+          // stored type), so it stays English, like any unlisted stored type.
+          final type =ActivityType.canonicalKey((doc['actionType'] ?? 'Unknown').toString());
           typeCounts[type] = (typeCounts[type] ?? 0) + 1;
         }
 
@@ -757,7 +755,7 @@ class _ActivityLogScreenState extends State<ActivityLogScreen> {
                       padding: const EdgeInsets.only(right: AppSpacing.s8),
                       child: ChoiceChip(
                         key: _keyFor('All'),
-                        label: Text('All · $totalLogs'),
+                        label: Text(context.l10n.activity_filterChip(context.l10n.common_all, totalLogs)),
                         selected: selectedFilter == 'All',
                         onSelected: (_) => _selectFilterAndScrollIntoView('All'),
                         selectedColor: context.colors.accent,
@@ -769,7 +767,7 @@ class _ActivityLogScreenState extends State<ActivityLogScreen> {
                         child: ChoiceChip(
                           key: _keyFor(type),
                           // Shows the label; the chip filters on the stored type.
-                          label: Text('${context.l10n.activityTypeLabel(type)} · ${typeCounts[type]}'),
+                          label: Text(context.l10n.activity_filterChip(context.l10n.activityTypeLabel(type), typeCounts[type]!)),
                           selected: selectedFilter == type,
                           onSelected: (_) => _selectFilterAndScrollIntoView(type),
                           selectedColor: context.colors.accent,
@@ -809,7 +807,7 @@ Future<void> showActivityLog(BuildContext context) async {
   await showGeneralDialog(
     context: context,
     barrierDismissible: true,
-    barrierLabel: 'Activity Log',
+    barrierLabel: context.l10n.export_activityLog,
     barrierColor: context.colors.scrim.withValues(alpha: AppAlpha.a50),
     transitionDuration: AppMotion.normal,
     pageBuilder: (context, animation, secondaryAnimation) {
