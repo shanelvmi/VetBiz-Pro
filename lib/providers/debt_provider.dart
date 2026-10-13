@@ -183,6 +183,8 @@ class DebtProvider with ChangeNotifier {
             .doc(clientId)
             .get();
         if (doc.exists) {
+          // English on purpose: the name also goes into the reminder sent to
+          // the customer and into the debts export (both stay English).
           clientName = doc.data()?['name'] ?? 'Unknown';
         }
       } catch (_) {}

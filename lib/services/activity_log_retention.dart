@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../data/collections.dart';
 import '../config/app_limits.dart';
+import '../l10n/l10n.dart';
 
 /// Removes activity logs that have aged out of a facility's "keep logs for
 /// N days" setting.
@@ -48,10 +49,11 @@ class ActivityLogRetention {
     return deleted;
   }
 
-  /// A short, plain-English reason for a failed delete, for a snackbar.
+  /// A short reason for a failed delete, for a snackbar, in the current
+  /// language. Anything but a refusal is passed on as the error's own text.
   static String explainFailure(Object error) {
     if (error is FirebaseException && error.code == 'permission-denied') {
-      return "the security rules don't currently allow deleting logs";
+      return L10n.current.activity_retentionNoPermission;
     }
     return '$error';
   }

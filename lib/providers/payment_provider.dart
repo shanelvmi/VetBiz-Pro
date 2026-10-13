@@ -8,6 +8,7 @@ import 'sale_provider.dart';
 import 'service_provider.dart';
 import '../data/collections.dart';
 import '../data/fields.dart';
+import '../l10n/l10n.dart';
 
 class PaymentProvider with ChangeNotifier {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
@@ -90,14 +91,16 @@ class PaymentProvider with ChangeNotifier {
     );
   }
 
+  // Shown in the Payments list (and matched by its search); never saved.
+  // In the language of the moment the list was loaded.
   String _labelForSource(String source) {
     switch (source) {
       case 'sale':
-        return 'Sale payment';
+        return L10n.current.payments_sourceSale;
       case 'service':
-        return 'Service payment';
+        return L10n.current.payments_sourceService;
       case 'debt_repayment':
-        return 'Debt repayment';
+        return L10n.current.payments_sourceDebtRepayment;
       default:
         return source;
     }

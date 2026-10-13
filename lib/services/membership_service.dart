@@ -1,6 +1,7 @@
 import 'package:cloud_functions/cloud_functions.dart';
 import '../config/app_rules.dart';
 import '../ui/feedback/friendly_error.dart';
+import '../l10n/l10n.dart';
 
 /// The region the membership functions run in - the same one as the database
 /// (africa-south1, Johannesburg). They make several database round trips each,
@@ -160,13 +161,13 @@ class MembershipService {
       switch (error.code) {
         case 'unavailable':
         case 'deadline-exceeded':
-          return 'Could not reach the server - check your connection and try again.';
+          return L10n.current.membership_unreachable;
         case 'unauthenticated':
-          return 'Please sign in again and retry.';
+          return L10n.current.membership_signInAgain;
       }
       final message = error.message;
       if (message != null && message.isNotEmpty && message.toUpperCase() != 'INTERNAL') return message;
-      return 'Something went wrong. Please try again.';
+      return L10n.current.membership_generic;
     }
     // Anything else (Firestore, a timeout, a plain exception) used to reach
     // the screen as raw text; FriendlyError turns it into a sentence.

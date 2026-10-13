@@ -2,6 +2,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
 
 import '../utils/force_logout.dart';
+import '../l10n/l10n.dart';
 
 /// Detects when this device's session has been remotely revoked (via
 /// "Log Out of All Devices", triggered from a different session) and
@@ -40,7 +41,7 @@ class SessionValidityService {
           e.code == 'user-disabled' ||
           e.code == 'user-not-found') {
         await forceLogoutAndShowLogin(
-          message: 'You were signed out because your account was signed out from another device.',
+          message: L10n.current.session_signedOutElsewhere,
         );
       } else {
         debugPrint('SessionValidityService: unexpected auth error during check: ${e.code}');

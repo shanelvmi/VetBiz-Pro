@@ -9,6 +9,7 @@ import '../data/fields.dart';
 import '../data/user_role.dart';
 import '../data/user_status.dart';
 import '../config/app_timeouts.dart';
+import '../l10n/l10n.dart';
 
 /// Tracks the signed-in user's own role in real time (admin vs
 /// assistant), read from their `users/{uid}` document - the same
@@ -76,7 +77,7 @@ class UserRoleProvider with ChangeNotifier {
 
     clear();
     forceLogoutAndShowLogin(
-      message: 'Your account has been deactivated by an admin.',
+      message: L10n.current.session_deactivatedByAdmin,
     );
   }
 

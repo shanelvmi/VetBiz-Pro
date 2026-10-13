@@ -110,6 +110,8 @@ class RoleChangeService {
 
   static String newRoleFor(String role) => role == UserRole.admin.key ? UserRole.assistant.key : UserRole.admin.key;
 
+  // English on purpose: only the platform-admin console shows these, and
+  // they are written into the stored notification text (spec 2.5 and 2.8).
   static String roleLabel(String role) {
     if (role == UserRole.admin.key) return 'Admin';
     if (role == UserRole.assistant.key) return 'Assistant';

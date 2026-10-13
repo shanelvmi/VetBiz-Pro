@@ -1,6 +1,7 @@
 import '../models/product.dart';
 import '../constants/product_categories.dart';
 import '../config/app_limits.dart';
+import '../l10n/l10n.dart';
 
 /// How the catalog should be sorted. Kept as a closed set of named
 /// options (rather than a raw field name + direction) so the UI layer
@@ -17,22 +18,23 @@ enum ProductSortOption {
 }
 
 extension ProductSortOptionLabel on ProductSortOption {
+  // In the current language: the sort menus show it, and nothing saves it.
   String get label {
     switch (this) {
       case ProductSortOption.nameAsc:
-        return 'Name (A-Z)';
+        return L10n.current.products_sortNameAsc;
       case ProductSortOption.nameDesc:
-        return 'Name (Z-A)';
+        return L10n.current.products_sortNameDesc;
       case ProductSortOption.priceLowHigh:
-        return 'Price (Low-High)';
+        return L10n.current.products_sortPriceLowHigh;
       case ProductSortOption.priceHighLow:
-        return 'Price (High-Low)';
+        return L10n.current.products_sortPriceHighLow;
       case ProductSortOption.stockLowHigh:
-        return 'Stock (Low-High)';
+        return L10n.current.products_sortStockLowHigh;
       case ProductSortOption.stockHighLow:
-        return 'Stock (High-Low)';
+        return L10n.current.products_sortStockHighLow;
       case ProductSortOption.expirySoonestFirst:
-        return 'Expiry (Soonest First)';
+        return L10n.current.products_sortExpirySoonest;
     }
   }
 }

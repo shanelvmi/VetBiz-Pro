@@ -167,8 +167,9 @@ extension NotificationTypeDisplay on NotificationType {
     }
   }
 
-  // Short label for the category badge shown on each row in the full
-  // Notifications screen (e.g. "Critical", "Stock", "Payment").
+  // Short English name of the category ("Critical", "Stock", "Payment").
+  // Kept English: the Notifications screen shows its own localised label
+  // (_categoryLabel there), so nothing displays this one.
   String get categoryLabel {
     switch (category) {
       case NotificationCategory.critical:

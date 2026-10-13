@@ -57,7 +57,8 @@ const Map<String, List<String>> kProductCategoryGroups = {
 /// Which group a category belongs to - any category not found in the
 /// map above (e.g. a legacy value from before this grouping existed)
 /// falls back to "Miscellaneous" rather than being invisible under any
-/// group filter.
+/// group filter. It is a group KEY (compared by the filters), so it stays
+/// English; screens show it through the group label lookup.
 String groupOfCategory(String category) {
   for (final entry in kProductCategoryGroups.entries) {
     if (entry.value.contains(category)) return entry.key;
