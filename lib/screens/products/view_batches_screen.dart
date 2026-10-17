@@ -85,29 +85,29 @@ class _ViewBatchesScreenState extends State<ViewBatchesScreen> {
                 Text(context.l10n.batch_currently(batch.stockQty, batch.sellableQty),
                     style: TextStyle(fontSize: AppFontSize.f12_5, color: context.colors.textMuted)),
                 const SizedBox(height: AppSpacing.s14),
-                Row(
-                  children: [
-                    Expanded(
-                      child: RadioListTile<String>(
-                        contentPadding: EdgeInsets.zero,
-                        dense: true,
-                        title: Text(context.l10n.batch_modeAdd, style: const TextStyle(fontSize: AppFontSize.f13)),
-                        value: 'add',
-                        groupValue: mode,
-                        onChanged: (v) => setDialogState(() => mode = v!),
+                RadioGroup<String>(
+                  groupValue: mode,
+                  onChanged: (v) => setDialogState(() => mode = v!),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: RadioListTile<String>(
+                          contentPadding: EdgeInsets.zero,
+                          dense: true,
+                          title: Text(context.l10n.batch_modeAdd, style: const TextStyle(fontSize: AppFontSize.f13)),
+                          value: 'add',
+                        ),
                       ),
-                    ),
-                    Expanded(
-                      child: RadioListTile<String>(
-                        contentPadding: EdgeInsets.zero,
-                        dense: true,
-                        title: Text(context.l10n.batch_modeSet, style: const TextStyle(fontSize: AppFontSize.f13)),
-                        value: 'set',
-                        groupValue: mode,
-                        onChanged: (v) => setDialogState(() => mode = v!),
+                      Expanded(
+                        child: RadioListTile<String>(
+                          contentPadding: EdgeInsets.zero,
+                          dense: true,
+                          title: Text(context.l10n.batch_modeSet, style: const TextStyle(fontSize: AppFontSize.f13)),
+                          value: 'set',
+                        ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
                 Text(
                   mode == 'add'
