@@ -322,9 +322,9 @@ payments_reference,Reference,Kumbukumbu,Payments table header: receipt or invoic
 payments_recordedBy,Recorded By,Imerekodiwa na,Payments table header and detail label: staff member who recorded it.,draft
 payments_thisWeek,This Week,Wiki Hii,Payments metric card.,draft
 payments_thisMonth,This Month,Mwezi Huu,Payments metric card.,draft
-payments_paymentCount,"{count, plural, other{{count} payments}}","{count, plural, =1{malipo 1} other{malipo {count}}}","Number of payments under a metric card. English is always 'payments', as before. Reviewer note: English shows '1 payments' for one (unchanged); see design-open-questions.",draft
+payments_paymentCount,"{count, plural, =1{1 payment} other{{count} payments}}","{count, plural, =1{malipo 1} other{malipo {count}}}",Number of payments under a metric card.,draft
 payments_outstanding,Outstanding,Yanayodaiwa,Payments metric card: money still owed.,draft
-payments_debtCount,"{count, plural, other{{count} debts}}","{count, plural, =1{deni 1} other{madeni {count}}}","Number of open debts under the Outstanding card. English is always 'debts', as before. Reviewer note: English shows '1 debts' for one (unchanged); see design-open-questions.",draft
+payments_debtCount,"{count, plural, =1{1 debt} other{{count} debts}}","{count, plural, =1{deni 1} other{madeni {count}}}",Number of open debts under the Outstanding card.,draft
 payments_detailsTitle,Payment Details,Maelezo ya Malipo,"Title of the payment detail panel, and the payment section of the Subscription form.",draft
 payments_received,Payment Received,Malipo Yamepokelewa,Badge on the payment detail panel.,draft
 payments_noReceipt,No receipt available for this payment,Hakuna risiti ya malipo haya,Message when a payment has no receipt to print.,draft
@@ -401,7 +401,7 @@ products_addNewBatch,Add New Batch,Ongeza Bechi Mpya,Product menu item.,draft
 products_viewBatches,View Batches,Tazama Bechi,Product menu item.,draft
 products_stockAlerts,Stock Alerts,Tahadhari za Stoo,Tooltip of the stock alerts bell.,draft
 products_addProduct,Add Product,Ongeza Bidhaa,Button that opens the add-product form.,draft
-products_showingRange,"{total, plural, other{Showing {start} to {end} of {total} products}}","{total, plural, other{Inaonyesha {start} hadi {end} kati ya bidhaa {total}}}","Product list pagination. English always says 'products', as before.",draft
+products_showingRange,"{total, plural, =1{Showing {start} to {end} of 1 product} other{Showing {start} to {end} of {total} products}}","{total, plural, =1{Inaonyesha {start} hadi {end} kati ya bidhaa 1} other{Inaonyesha {start} hadi {end} kati ya bidhaa {total}}}",Product list pagination.,draft
 products_sellableBatch,Sellable: {quantity} {unit} • Batch: {batch},Inayouzwa: {quantity} {unit} • Bechi: {batch},Stock Store card line (unit already in the current language).,draft
 products_buyPrice,Buy: {price},Kununua: {price},Product card: buying price (already formatted).,draft
 products_expiryDate,Expiry: {date},Mwisho wa matumizi: {date},Product card: expiry date (already formatted).,draft
@@ -824,7 +824,7 @@ trash_empty,Trash is empty,Takataka ni tupu,Trash tab with nothing in it.,draft
 trash_expiringBanner,"{count, plural, =1{1 item will be permanently deleted within {days} days. Restore now if you still need it.} other{{count} items will be permanently deleted within {days} days. Restore now if you still need them.}}","{count, plural, =1{Kipengee 1 kitafutwa kabisa ndani ya siku {days}. Kirejeshe sasa ikiwa bado unakihitaji.} other{Vipengee {count} vitafutwa kabisa ndani ya siku {days}. Virejeshe sasa ikiwa bado unavihitaji.}}",Warning above a Trash tab.,draft
 trash_deletingSoon,Deleting soon,Kinafutwa hivi karibuni,Item whose time in Trash is up.,draft
 trash_expiresTomorrow,Expires tomorrow,Kinaisha kesho,Item deleted for good tomorrow.,draft
-trash_expiresIn,"{count, plural, other{Expires in {count} days}}","{count, plural, other{Kinaisha baada ya siku {count}}}",Days until the item is deleted for good.,draft
+trash_expiresIn,"{count, plural, =1{Expires in 1 day} other{Expires in {count} days}}","{count, plural, =1{Kinaisha baada ya siku 1} other{Kinaisha baada ya siku {count}}}",Days until the item is deleted for good.,draft
 trash_deletedBy,Deleted by {name},Kimefutwa na {name},Who deleted the item (date unknown).,draft
 trash_deletedByOn,Deleted by {name} on {date},Kimefutwa na {name} tarehe {date},Who deleted the item and when.,draft
 export_title,Export Center,Kituo cha Kuhamisha Data,Export screen title.,draft
@@ -935,13 +935,13 @@ services_serviceDate,Service Date,Tarehe ya Huduma,Details panel row and visit f
 services_createdOn,Created On,Imeundwa Tarehe,Details panel row.,draft
 services_fallbackName,Service,Huduma,Shown when an archived service has no name.,draft
 services_archiveTitle,Services Archive,Kumbukumbu za Huduma,Archive screen title.,draft
-services_archiveSubtitle,"{days, plural, other{Services archived after {days} days}}","{days, plural, other{Huduma huhifadhiwa kwenye kumbukumbu baada ya siku {days}}}",Under the archive title.,draft
+services_archiveSubtitle,"{days, plural, =1{Services archived after 1 day} other{Services archived after {days} days}}","{days, plural, =1{Huduma huhifadhiwa kwenye kumbukumbu baada ya siku 1} other{Huduma huhifadhiwa kwenye kumbukumbu baada ya siku {days}}}",Under the archive title.,draft
 services_archiveEmpty,No archived services found,Hakuna huduma zilizohifadhiwa zilizopatikana,"Archive, empty.",draft
 services_archiveEmptyHint,"Try a different search, category, or date range","Jaribu utafutaji, aina au kipindi kingine","Archive, empty.",draft
 services_archivePeriod,Period: {start} – {end},Kipindi: {start} – {end},Archive banner with the chosen dates.,draft
 services_archivedServices,Archived services,Huduma zilizohifadhiwa,Archive banner with no dates chosen.,draft
-services_foundCount,"{count, plural, other{{count} found}}","{count, plural, other{{count} zimepatikana}}",Archive banner: how many match.,draft
-services_archiveShowing,"{total, plural, other{Showing {start} to {end} of {total}{more} services}}","{total, plural, other{Inaonyesha {start} hadi {end} kati ya huduma {total}{more}}}","Archive pagination; more is ""+"" when more can be loaded, else empty.",draft
+services_foundCount,"{count, plural, =1{1 found} other{{count} found}}","{count, plural, =1{1 imepatikana} other{{count} zimepatikana}}",Archive banner: how many match.,draft
+services_archiveShowing,"{total, plural, =1{Showing {start} to {end} of 1{more} service} other{Showing {start} to {end} of {total}{more} services}}","{total, plural, =1{Inaonyesha {start} hadi {end} kati ya huduma 1{more}} other{Inaonyesha {start} hadi {end} kati ya huduma {total}{more}}}","Archive pagination; more is ""+"" when more can be loaded, else empty.",draft
 services_pageOf,Page {page} of {total},Ukurasa {page} kati ya {total},Archive pagination.,draft
 services_notesValue,Notes: {notes},Maelezo: {notes},Archive row: the service's notes.,draft
 services_searchArchiveTitle,Search Archived Services,Tafuta Huduma Zilizohifadhiwa,Archive search dialog title.,draft
@@ -1080,7 +1080,7 @@ reports_tabProducts,Products,Bidhaa,Report tab.,draft
 reports_outstandingNewDebt,Outstanding New Debt,Deni Jipya Linalodaiwa,Report summary tile.,draft
 reports_servicesPerformed,Services Performed,Huduma Zilizotolewa,Report summary tile.,draft
 reports_productsSold,Products Sold,Bidhaa Zilizouzwa,Report summary tile.,draft
-reports_unitsCount,"{count, plural, other{{count} units}}","{count, plural, other{Vipimo {count}}}",Report summary tile: units sold.,draft
+reports_unitsCount,"{count, plural, =1{1 unit} other{{count} units}}","{count, plural, =1{Kipimo 1} other{Vipimo {count}}}",Report summary tile: units sold.,draft
 reports_totalRevenueToday,Total Revenue Today,Jumla ya Mapato Leo,Report summary tile.,draft
 reports_generatedAtBy,Generated at {time} by {name},Imetengenezwa saa {time} na {name},Report summary footer.,draft
 reports_submittedAt,Submitted at {time},Imewasilishwa saa {time},Report summary footer.,draft
@@ -1352,9 +1352,9 @@ sales_balance,Balance,Salio,Sale details totals row.,draft
 sales_archiveEmpty,No archived sales found,Hakuna mauzo yaliyohifadhiwa yaliyopatikana,"Sales Archive, empty.",draft
 sales_archiveEmptyHint,Try a different search or date range,Jaribu utafutaji au kipindi tofauti,"Sales Archive, empty.",draft
 sales_archiveTitle,Sales Archive,Hifadhi ya Mauzo,Sales Archive title.,draft
-sales_archiveSubtitle,"{days, plural, other{Sales archived after {days} days}}","{days, plural, other{Mauzo huhifadhiwa baada ya siku {days}}}",Sales Archive subtitle.,draft
+sales_archiveSubtitle,"{days, plural, =1{Sales archived after 1 day} other{Sales archived after {days} days}}","{days, plural, =1{Mauzo huhifadhiwa baada ya siku 1} other{Mauzo huhifadhiwa baada ya siku {days}}}",Sales Archive subtitle.,draft
 sales_archivedSales,Archived sales,Mauzo yaliyohifadhiwa,Sales Archive banner without dates.,draft
-sales_archiveShowing,"{total, plural, other{Showing {start} to {end} of {total}{more} sales}}","{total, plural, other{Inaonyesha {start} hadi {end} kati ya {total}{more} ya mauzo}}","Sales Archive footer. more is '+' when more pages may exist, or empty.",draft
+sales_archiveShowing,"{total, plural, =1{Showing {start} to {end} of 1{more} sale} other{Showing {start} to {end} of {total}{more} sales}}","{total, plural, =1{Inaonyesha {start} hadi {end} kati ya 1{more} ya mauzo} other{Inaonyesha {start} hadi {end} kati ya {total}{more} ya mauzo}}","Sales Archive footer. more is '+' when more pages may exist, or empty.",draft
 sales_item,Item,Bidhaa,Sale details: an item with no name.,draft
 sales_searchArchiveTitle,Search Archived Sales,Tafuta Mauzo Yaliyohifadhiwa,Sales Archive search dialog title.,draft
 sales_archiveFullyPaidNote,Archived sales are always fully paid - sales still owing money stay in your active Sales tab regardless of age.,Mauzo yaliyohifadhiwa huwa yamelipwa yote - mauzo yanayodaiwa hubaki kwenye kichupo cha Mauzo bila kujali umri.,Sales Archive search dialog note.,draft
