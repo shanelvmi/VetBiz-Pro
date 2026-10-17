@@ -739,26 +739,26 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
       builder: (_) => StatefulBuilder(
         builder: (context, setDialogState) => AlertDialog(
           title: Text(context.l10n.products_destinationTitle),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              RadioListTile<ProductDestination>(
-                activeColor: context.colors.primary,
-                title: Text(context.l10n.products_destinationCatalog),
-                subtitle: Text(context.l10n.products_destinationCatalogHint),
-                value: ProductDestination.sellable,
-                groupValue: selected,
-                onChanged: (val) => setDialogState(() => selected = val!),
-              ),
-              RadioListTile<ProductDestination>(
-                activeColor: context.colors.primary,
-                title: Text(context.l10n.store_title),
-                subtitle: Text(context.l10n.products_destinationStoreHint),
-                value: ProductDestination.stockStore,
-                groupValue: selected,
-                onChanged: (val) => setDialogState(() => selected = val!),
-              ),
-            ],
+          content: RadioGroup<ProductDestination>(
+            groupValue: selected,
+            onChanged: (val) => setDialogState(() => selected = val!),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                RadioListTile<ProductDestination>(
+                  activeColor: context.colors.primary,
+                  title: Text(context.l10n.products_destinationCatalog),
+                  subtitle: Text(context.l10n.products_destinationCatalogHint),
+                  value: ProductDestination.sellable,
+                ),
+                RadioListTile<ProductDestination>(
+                  activeColor: context.colors.primary,
+                  title: Text(context.l10n.store_title),
+                  subtitle: Text(context.l10n.products_destinationStoreHint),
+                  value: ProductDestination.stockStore,
+                ),
+              ],
+            ),
           ),
           actions: [
             TextButton(
