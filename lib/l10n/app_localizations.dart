@@ -3047,7 +3047,7 @@ abstract class AppLocalizations {
   /// Under the Overdue Debtors metric; days is the facility's overdue limit.
   ///
   /// In en, this message translates to:
-  /// **'Over {days} days'**
+  /// **'{days, plural, =1{Over 1 day} other{Over {days} days}}'**
   String debtors_overDays(int days);
 
   /// Debtors metric card title.
@@ -3119,7 +3119,7 @@ abstract class AppLocalizations {
   /// How many days a debtor is overdue, in the table.
   ///
   /// In en, this message translates to:
-  /// **'{count, plural, other{{count} days}}'**
+  /// **'{count, plural, =1{1 day} other{{count} days}}'**
   String debtors_daysCount(int count);
 
   /// Button, tooltip and dialog title for reminding a debtor.

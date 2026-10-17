@@ -1639,7 +1639,13 @@ class AppLocalizationsSw extends AppLocalizations {
 
   @override
   String debtors_overDays(int days) {
-    return 'Zaidi ya siku $days';
+    String _temp0 = intl.Intl.pluralLogic(
+      days,
+      locale: localeName,
+      other: 'Zaidi ya siku $days',
+      one: 'Zaidi ya siku 1',
+    );
+    return '$_temp0';
   }
 
   @override
@@ -1685,6 +1691,7 @@ class AppLocalizationsSw extends AppLocalizations {
       count,
       locale: localeName,
       other: 'Siku $count',
+      one: 'Siku 1',
     );
     return '$_temp0';
   }

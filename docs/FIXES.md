@@ -1,7 +1,7 @@
 # FIXES (corrections found in review; do these FIRST, one commit each)
 
 Source: the owner's decisions after the audit of batches 2F-6 to 2F-12.
-Status of this file: OPEN
+Status of this file: ALL DONE (item 1: e725fc9; item 2: 8416978, report under item 2; item 3: the commit "FIXES 3"; ENFORCE-8-AT-LOGIN not set, so login enforces no minimum)
 (Earlier items from batches 2F-6 and 2F-7 are DONE; this file replaces that list.)
 
 ## 1. Login password message: stop quoting a wrong minimum

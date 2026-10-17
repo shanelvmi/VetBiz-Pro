@@ -188,7 +188,7 @@ User-facing "VetBiz Pro" now reads `AppInfo.name` (titles, Settings, support lin
 ### Raised in step 2F, batch 2F-5 (wording and language; English kept as it was)
 
 - **Debt reminder sent by WhatsApp or SMS** (`debtors_screen.dart` `_showReminderOptions`): the message goes to the debtor, not to the app's user, so it is not in the language files and stays English ("Hi {name}, this is a reminder from {facility} that you have an outstanding balance of {amount}. Kindly settle at your earliest convenience. Thank you!", with "us" when no facility name). Options: keep English; follow the app language; or (suggested) a facility setting for customer-facing language, together with receipts. A nameless debtor appears as "Unknown" in it, so that word stays English too.
-- **"1 days", "Over 1 days"** (Active Debts table and metric): `debtors_daysCount` is an ICU plural with one `other` branch and `debtors_overDays` a plain number, so the English reads as before. An `=1{1 day}` branch is a one-line change once agreed.
+- **"1 days", "Over 1 days"** (Active Debts table and metric): `debtors_daysCount` is an ICU plural with one `other` branch and `debtors_overDays` a plain number, so the English reads as before. An `=1{1 day}` branch is a one-line change once agreed. **Fixed (FIXES 3): both now read "1 day" and "Over 1 day"; the other slips above are unchanged.**
 - **"Total Owed" and "Total owed:"** on the debt screens (metric, table, panel vs the Record Payment header), and **"Could not load clients: ..."** next to the usual "Couldn't ..." messages: kept as they were.
 - **Active Debts CSV export** (headers, "Overdue"/"Current", the share text "Active Debts Export") stays English, like receipts and PDFs.
 
