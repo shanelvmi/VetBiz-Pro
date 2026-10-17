@@ -240,17 +240,19 @@ class _ActivityLogScreenState extends State<ActivityLogScreen> {
         title: Text(context.l10n.facilities_keepLogsFor),
         content: SizedBox(
           width: 320,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: _retentionOptions.map((days) {
-              return RadioListTile<int>(
-                value: days,
-                groupValue: current,
-                activeColor: context.colors.primary,
-                title: Text(context.l10n.debtors_daysCount(days)),
-                onChanged: (val) => Navigator.pop(ctx, val),
-              );
-            }).toList(),
+          child: RadioGroup<int>(
+            groupValue: current,
+            onChanged: (val) => Navigator.pop(ctx, val),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: _retentionOptions.map((days) {
+                return RadioListTile<int>(
+                  value: days,
+                  activeColor: context.colors.primary,
+                  title: Text(context.l10n.debtors_daysCount(days)),
+                );
+              }).toList(),
+            ),
           ),
         ),
         actions: [
