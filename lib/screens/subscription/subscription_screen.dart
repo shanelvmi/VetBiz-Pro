@@ -355,46 +355,51 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
 
               Text(context.l10n.subscription_choosePlan, style: TextStyle(fontWeight: AppFontWeight.bold, color: colors.primary)),
               const SizedBox(height: AppSpacing.s8),
-              ..._plans.map((plan) {
-                final effectivePrice = _effectivePrice(plan);
-                final hasDiscount = effectivePrice < plan.priceTsh;
-                return Card(
-                  margin: const EdgeInsets.only(bottom: AppSpacing.s8),
-                  child: RadioListTile<SubscriptionPlan>(
-                    value: plan,
-                    groupValue: _selectedPlan,
-                    activeColor: colors.primary,
-                    // Shown from the plan id; the English plan.label is what is saved.
-                    title: Text(context.l10n.subscriptionPlanLabel(plan.id)),
-                    subtitle: hasDiscount
-                        ? Row(
-                            children: [
-                              Text(
-                                Money.symbolPlain(plan.priceTsh),
-                                style: TextStyle(
-                                  decoration: TextDecoration.lineThrough,
-                                  color: colors.textHint,
-                                  fontSize: AppFontSize.f12_5,
-                                ),
-                              ),
-                              const SizedBox(width: AppSpacing.s6),
-                              Text(
-                                Money.symbolPlain(effectivePrice),
-                                style: TextStyle(
-                                  color: colors.success,
-                                  fontWeight: AppFontWeight.bold,
-                                  fontSize: AppFontSize.f13_5,
-                                ),
-                              ),
-                            ],
-                          )
-                        : Text(Money.symbolPlain(plan.priceTsh)),
-                    onChanged: (value) {
-                      if (value != null) setState(() => _selectedPlan = value);
-                    },
-                  ),
-                );
-              }),
+              RadioGroup<SubscriptionPlan>(
+                groupValue: _selectedPlan,
+                onChanged: (value) {
+                  if (value != null) setState(() => _selectedPlan = value);
+                },
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: _plans.map((plan) {
+                    final effectivePrice = _effectivePrice(plan);
+                    final hasDiscount = effectivePrice < plan.priceTsh;
+                    return Card(
+                      margin: const EdgeInsets.only(bottom: AppSpacing.s8),
+                      child: RadioListTile<SubscriptionPlan>(
+                        value: plan,
+                        activeColor: colors.primary,
+                        // Shown from the plan id; the English plan.label is what is saved.
+                        title: Text(context.l10n.subscriptionPlanLabel(plan.id)),
+                        subtitle: hasDiscount
+                            ? Row(
+                                children: [
+                                  Text(
+                                    Money.symbolPlain(plan.priceTsh),
+                                    style: TextStyle(
+                                      decoration: TextDecoration.lineThrough,
+                                      color: colors.textHint,
+                                      fontSize: AppFontSize.f12_5,
+                                    ),
+                                  ),
+                                  const SizedBox(width: AppSpacing.s6),
+                                  Text(
+                                    Money.symbolPlain(effectivePrice),
+                                    style: TextStyle(
+                                      color: colors.success,
+                                      fontWeight: AppFontWeight.bold,
+                                      fontSize: AppFontSize.f13_5,
+                                    ),
+                                  ),
+                                ],
+                              )
+                            : Text(Money.symbolPlain(plan.priceTsh)),
+                      ),
+                    );
+                  }).toList(),
+                ),
+              ),
 
               const SizedBox(height: AppSpacing.s16),
               Text(context.l10n.payments_detailsTitle, style: TextStyle(fontWeight: AppFontWeight.bold, color: colors.primary)),
