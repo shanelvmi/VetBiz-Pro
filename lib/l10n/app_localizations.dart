@@ -2036,10 +2036,10 @@ abstract class AppLocalizations {
   /// **'This Month'**
   String get payments_thisMonth;
 
-  /// Number of payments under a metric card. English is always 'payments', as before.
+  /// Number of payments under a metric card.
   ///
   /// In en, this message translates to:
-  /// **'{count, plural, other{{count} payments}}'**
+  /// **'{count, plural, =1{1 payment} other{{count} payments}}'**
   String payments_paymentCount(int count);
 
   /// Payments metric card: money still owed.
@@ -2048,10 +2048,10 @@ abstract class AppLocalizations {
   /// **'Outstanding'**
   String get payments_outstanding;
 
-  /// Number of open debts under the Outstanding card. English is always 'debts', as before.
+  /// Number of open debts under the Outstanding card.
   ///
   /// In en, this message translates to:
-  /// **'{count, plural, other{{count} debts}}'**
+  /// **'{count, plural, =1{1 debt} other{{count} debts}}'**
   String payments_debtCount(int count);
 
   /// Title of the payment detail panel, and the payment section of the Subscription form.
@@ -2510,10 +2510,10 @@ abstract class AppLocalizations {
   /// **'Add Product'**
   String get products_addProduct;
 
-  /// Product list pagination. English always says 'products', as before.
+  /// Product list pagination.
   ///
   /// In en, this message translates to:
-  /// **'{total, plural, other{Showing {start} to {end} of {total} products}}'**
+  /// **'{total, plural, =1{Showing {start} to {end} of 1 product} other{Showing {start} to {end} of {total} products}}'**
   String products_showingRange(int total, int start, int end);
 
   /// Stock Store card line (unit already in the current language).
@@ -4895,7 +4895,7 @@ abstract class AppLocalizations {
   /// Days until the item is deleted for good.
   ///
   /// In en, this message translates to:
-  /// **'{count, plural, other{Expires in {count} days}}'**
+  /// **'{count, plural, =1{Expires in 1 day} other{Expires in {count} days}}'**
   String trash_expiresIn(int count);
 
   /// Who deleted the item (date unknown).
@@ -5561,7 +5561,7 @@ abstract class AppLocalizations {
   /// Under the archive title.
   ///
   /// In en, this message translates to:
-  /// **'{days, plural, other{Services archived after {days} days}}'**
+  /// **'{days, plural, =1{Services archived after 1 day} other{Services archived after {days} days}}'**
   String services_archiveSubtitle(int days);
 
   /// Archive, empty.
@@ -5591,13 +5591,13 @@ abstract class AppLocalizations {
   /// Archive banner: how many match.
   ///
   /// In en, this message translates to:
-  /// **'{count, plural, other{{count} found}}'**
+  /// **'{count, plural, =1{1 found} other{{count} found}}'**
   String services_foundCount(int count);
 
   /// Archive pagination; more is "+" when more can be loaded, else empty.
   ///
   /// In en, this message translates to:
-  /// **'{total, plural, other{Showing {start} to {end} of {total}{more} services}}'**
+  /// **'{total, plural, =1{Showing {start} to {end} of 1{more} service} other{Showing {start} to {end} of {total}{more} services}}'**
   String services_archiveShowing(int start, int end, int total, String more);
 
   /// Archive pagination.
@@ -6436,7 +6436,7 @@ abstract class AppLocalizations {
   /// Report summary tile: units sold.
   ///
   /// In en, this message translates to:
-  /// **'{count, plural, other{{count} units}}'**
+  /// **'{count, plural, =1{1 unit} other{{count} units}}'**
   String reports_unitsCount(int count);
 
   /// Report summary tile.
@@ -8085,7 +8085,7 @@ abstract class AppLocalizations {
   /// Sales Archive subtitle.
   ///
   /// In en, this message translates to:
-  /// **'{days, plural, other{Sales archived after {days} days}}'**
+  /// **'{days, plural, =1{Sales archived after 1 day} other{Sales archived after {days} days}}'**
   String sales_archiveSubtitle(int days);
 
   /// Sales Archive banner without dates.
@@ -8097,7 +8097,7 @@ abstract class AppLocalizations {
   /// Sales Archive footer. more is '+' when more pages may exist, or empty.
   ///
   /// In en, this message translates to:
-  /// **'{total, plural, other{Showing {start} to {end} of {total}{more} sales}}'**
+  /// **'{total, plural, =1{Showing {start} to {end} of 1{more} sale} other{Showing {start} to {end} of {total}{more} sales}}'**
   String sales_archiveShowing(int start, int end, int total, String more);
 
   /// Sale details: an item with no name.

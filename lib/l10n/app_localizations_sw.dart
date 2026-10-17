@@ -1319,6 +1319,7 @@ class AppLocalizationsSw extends AppLocalizations {
       total,
       locale: localeName,
       other: 'Inaonyesha $start hadi $end kati ya bidhaa $total',
+      one: 'Inaonyesha $start hadi $end kati ya bidhaa 1',
     );
     return '$_temp0';
   }
@@ -2758,6 +2759,7 @@ class AppLocalizationsSw extends AppLocalizations {
       count,
       locale: localeName,
       other: 'Kinaisha baada ya siku $count',
+      one: 'Kinaisha baada ya siku 1',
     );
     return '$_temp0';
   }
@@ -3145,6 +3147,7 @@ class AppLocalizationsSw extends AppLocalizations {
       days,
       locale: localeName,
       other: 'Huduma huhifadhiwa kwenye kumbukumbu baada ya siku $days',
+      one: 'Huduma huhifadhiwa kwenye kumbukumbu baada ya siku 1',
     );
     return '$_temp0';
   }
@@ -3171,6 +3174,7 @@ class AppLocalizationsSw extends AppLocalizations {
       count,
       locale: localeName,
       other: '$count zimepatikana',
+      one: '1 imepatikana',
     );
     return '$_temp0';
   }
@@ -3181,6 +3185,7 @@ class AppLocalizationsSw extends AppLocalizations {
       total,
       locale: localeName,
       other: 'Inaonyesha $start hadi $end kati ya huduma $total$more',
+      one: 'Inaonyesha $start hadi $end kati ya huduma 1$more',
     );
     return '$_temp0';
   }
@@ -3670,6 +3675,7 @@ class AppLocalizationsSw extends AppLocalizations {
       count,
       locale: localeName,
       other: 'Vipimo $count',
+      one: 'Kipimo 1',
     );
     return '$_temp0';
   }
@@ -4686,6 +4692,7 @@ class AppLocalizationsSw extends AppLocalizations {
       days,
       locale: localeName,
       other: 'Mauzo huhifadhiwa baada ya siku $days',
+      one: 'Mauzo huhifadhiwa baada ya siku 1',
     );
     return '$_temp0';
   }
@@ -4699,6 +4706,7 @@ class AppLocalizationsSw extends AppLocalizations {
       total,
       locale: localeName,
       other: 'Inaonyesha $start hadi $end kati ya $total$more ya mauzo',
+      one: 'Inaonyesha $start hadi $end kati ya 1$more ya mauzo',
     );
     return '$_temp0';
   }

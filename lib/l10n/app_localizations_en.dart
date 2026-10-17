@@ -1019,6 +1019,7 @@ class AppLocalizationsEn extends AppLocalizations {
       count,
       locale: localeName,
       other: '$count payments',
+      one: '1 payment',
     );
     return '$_temp0';
   }
@@ -1032,6 +1033,7 @@ class AppLocalizationsEn extends AppLocalizations {
       count,
       locale: localeName,
       other: '$count debts',
+      one: '1 debt',
     );
     return '$_temp0';
   }
@@ -1312,6 +1314,7 @@ class AppLocalizationsEn extends AppLocalizations {
       total,
       locale: localeName,
       other: 'Showing $start to $end of $total products',
+      one: 'Showing $start to $end of 1 product',
     );
     return '$_temp0';
   }
@@ -2740,6 +2743,7 @@ class AppLocalizationsEn extends AppLocalizations {
       count,
       locale: localeName,
       other: 'Expires in $count days',
+      one: 'Expires in 1 day',
     );
     return '$_temp0';
   }
@@ -3128,6 +3132,7 @@ class AppLocalizationsEn extends AppLocalizations {
       days,
       locale: localeName,
       other: 'Services archived after $days days',
+      one: 'Services archived after 1 day',
     );
     return '$_temp0';
   }
@@ -3153,6 +3158,7 @@ class AppLocalizationsEn extends AppLocalizations {
       count,
       locale: localeName,
       other: '$count found',
+      one: '1 found',
     );
     return '$_temp0';
   }
@@ -3163,6 +3169,7 @@ class AppLocalizationsEn extends AppLocalizations {
       total,
       locale: localeName,
       other: 'Showing $start to $end of $total$more services',
+      one: 'Showing $start to $end of 1$more service',
     );
     return '$_temp0';
   }
@@ -3652,6 +3659,7 @@ class AppLocalizationsEn extends AppLocalizations {
       count,
       locale: localeName,
       other: '$count units',
+      one: '1 unit',
     );
     return '$_temp0';
   }
@@ -4661,6 +4669,7 @@ class AppLocalizationsEn extends AppLocalizations {
       days,
       locale: localeName,
       other: 'Sales archived after $days days',
+      one: 'Sales archived after 1 day',
     );
     return '$_temp0';
   }
@@ -4674,6 +4683,7 @@ class AppLocalizationsEn extends AppLocalizations {
       total,
       locale: localeName,
       other: 'Showing $start to $end of $total$more sales',
+      one: 'Showing $start to $end of 1$more sale',
     );
     return '$_temp0';
   }
