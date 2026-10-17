@@ -53,58 +53,64 @@ class _FacilityDetailScreenState extends State<FacilityDetailScreen> {
         builder: (context, setDialogState) => AlertDialog(
           title: const Text('Manual Subscription Update'),
           content: SingleChildScrollView(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text('Use this for payments collected outside the app, or to grant free access.'),
-                const SizedBox(height: AppSpacing.s12),
-                ...plans.map((plan) {
-                  return RadioListTile<String>(
+            child: RadioGroup<String>(
+              groupValue: isFree ? 'free' : selectedPlan.id,
+              // A plan id picks that plan; 'free' switches to free days.
+              onChanged: (value) {
+                if (value == null) return;
+                setDialogState(() {
+                  if (value == 'free') {
+                    isFree = true;
+                  } else {
+                    isFree = false;
+                    selectedPlan = plans.firstWhere((p) => p.id == value);
+                  }
+                });
+              },
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text('Use this for payments collected outside the app, or to grant free access.'),
+                  const SizedBox(height: AppSpacing.s12),
+                  ...plans.map((plan) {
+                    return RadioListTile<String>(
+                      contentPadding: EdgeInsets.zero,
+                      title: Text('${plan.label} - ${Money.symbolWhole(plan.priceTsh)}'),
+                      value: plan.id,
+                      activeColor: context.colors.primary,
+                    );
+                  }),
+                  RadioListTile<String>(
                     contentPadding: EdgeInsets.zero,
-                    title: Text('${plan.label} - ${Money.symbolWhole(plan.priceTsh)}'),
-                    value: plan.id,
-                    groupValue: isFree ? 'free' : selectedPlan.id,
+                    title: const Text('Free (custom number of days)'),
+                    value: 'free',
                     activeColor: context.colors.primary,
-                    onChanged: (value) {
-                      setDialogState(() {
-                        isFree = false;
-                        selectedPlan = plan;
-                      });
-                    },
-                  );
-                }),
-                RadioListTile<String>(
-                  contentPadding: EdgeInsets.zero,
-                  title: const Text('Free (custom number of days)'),
-                  value: 'free',
-                  groupValue: isFree ? 'free' : selectedPlan.id,
-                  activeColor: context.colors.primary,
-                  onChanged: (value) => setDialogState(() => isFree = true),
-                ),
-                if (isFree)
-                  Padding(
-                    padding: const EdgeInsets.only(left: AppSpacing.s32, top: AppSpacing.s4, bottom: AppSpacing.s4),
-                    child: TextField(
-                      controller: freeDaysController,
-                      keyboardType: TextInputType.number,
-                      cursorColor: context.colors.primary,
-                      decoration: const InputDecoration(
-                        labelText: 'Number of free days',
-                        isDense: true,
-                        border: OutlineInputBorder(),
+                  ),
+                  if (isFree)
+                    Padding(
+                      padding: const EdgeInsets.only(left: AppSpacing.s32, top: AppSpacing.s4, bottom: AppSpacing.s4),
+                      child: TextField(
+                        controller: freeDaysController,
+                        keyboardType: TextInputType.number,
+                        cursorColor: context.colors.primary,
+                        decoration: const InputDecoration(
+                          labelText: 'Number of free days',
+                          isDense: true,
+                          border: OutlineInputBorder(),
+                        ),
                       ),
                     ),
-                  ),
-                if (!isFree && selectedPlan.priceTsh <= 0)
-                  Padding(
-                    padding: const EdgeInsets.only(top: AppSpacing.s8),
-                    child: Text(
-                      'Pricing for this plan is not available right now.',
-                      style: TextStyle(fontSize: AppFontSize.f12_5, color: context.colors.textSoft),
+                  if (!isFree && selectedPlan.priceTsh <= 0)
+                    Padding(
+                      padding: const EdgeInsets.only(top: AppSpacing.s8),
+                      child: Text(
+                        'Pricing for this plan is not available right now.',
+                        style: TextStyle(fontSize: AppFontSize.f12_5, color: context.colors.textSoft),
+                      ),
                     ),
-                  ),
-              ],
+                ],
+              ),
             ),
           ),
           actions: [
