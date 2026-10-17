@@ -48,7 +48,4 @@ class AppRules {
   /// characters of its id are shown in its place (receipts, PDFs, the daily
   /// report).
   static const int fallbackReceiptIdLength = 6;
-
-  /// Shortest password the login form accepts (login_screen.dart).
-  static const int minPasswordLength = 6;
 }

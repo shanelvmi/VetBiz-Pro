@@ -4946,9 +4946,6 @@ class AppLocalizationsSw extends AppLocalizations {
   String get login_passwordHint => 'Weka nenosiri lako';
 
   @override
-  String get login_minPasswordHint => 'Angalau herufi 6';
-
-  @override
   String get login_rememberMe => 'Nikumbuke';
 
   @override
@@ -4967,9 +4964,7 @@ class AppLocalizationsSw extends AppLocalizations {
   String get login_newBadge => 'MPYA';
 
   @override
-  String login_credentialsTooShort(int count) {
-    return 'Weka barua pepe yako na nenosiri lenye angalau herufi $count.';
-  }
+  String get login_credentialsTooShort => 'Weka barua pepe yako na nenosiri.';
 
   @override
   String get login_slowSignIn =>

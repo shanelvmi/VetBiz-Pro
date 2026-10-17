@@ -4918,9 +4918,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get login_passwordHint => 'Enter your password';
 
   @override
-  String get login_minPasswordHint => 'Minimum 6 characters';
-
-  @override
   String get login_rememberMe => 'Remember Me';
 
   @override
@@ -4939,9 +4936,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get login_newBadge => 'NEW';
 
   @override
-  String login_credentialsTooShort(int count) {
-    return 'Enter your email and a password of at least $count characters.';
-  }
+  String get login_credentialsTooShort => 'Enter your email and password.';
 
   @override
   String get login_slowSignIn =>

@@ -8520,12 +8520,6 @@ abstract class AppLocalizations {
   /// **'Enter your password'**
   String get login_passwordHint;
 
-  /// Login, under the password field.
-  ///
-  /// In en, this message translates to:
-  /// **'Minimum 6 characters'**
-  String get login_minPasswordHint;
-
   /// Login checkbox: keep the email for next time.
   ///
   /// In en, this message translates to:
@@ -8562,11 +8556,11 @@ abstract class AppLocalizations {
   /// **'NEW'**
   String get login_newBadge;
 
-  /// Login error: email empty or password too short.
+  /// Login error: email or password empty.
   ///
   /// In en, this message translates to:
-  /// **'Enter your email and a password of at least {count} characters.'**
-  String login_credentialsTooShort(int count);
+  /// **'Enter your email and password.'**
+  String get login_credentialsTooShort;
 
   /// Login error when sign-in has not finished after a few seconds.
   ///

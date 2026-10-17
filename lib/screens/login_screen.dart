@@ -14,7 +14,6 @@ import 'legal/privacy_policy_screen.dart';
 import 'legal/terms_of_service_screen.dart';
 import '../data/collections.dart';
 import '../config/app_timeouts.dart';
-import '../config/app_rules.dart';
 import '../config/app_info.dart';
 import '../l10n/l10n.dart';
 import '../ui/feedback/auth_error_messages.dart';
@@ -129,9 +128,13 @@ class _LoginScreenState extends State<LoginScreen> {
       isLoggingIn = true;
     });
 
-    if (emailController.text.isEmpty || passwordController.text.length < AppRules.minPasswordLength) {
+    // Only checks that both fields were filled. No length check here:
+    // Firebase's own password-reset page accepts 6-character passwords and
+    // older accounts may have shorter ones, so a minimum at login could stop
+    // someone from even trying to sign in (docs/FIXES.md, item 1).
+    if (emailController.text.isEmpty || passwordController.text.isEmpty) {
       setState(() {
-        error = L10n.current.login_credentialsTooShort(AppRules.minPasswordLength);
+        error = L10n.current.login_credentialsTooShort;
         errorIsAboutCredentials = true;
         _shakeCount++;
         isLoggingIn = false;
@@ -1009,11 +1012,6 @@ class _LoginScreenState extends State<LoginScreen> {
                               ),
                             ),
                           ),
-                        ),
-                        const SizedBox(height: AppSpacing.s4),
-                        Padding(
-                          padding: const EdgeInsets.only(left: AppSpacing.s2),
-                          child: Text(context.l10n.login_minPasswordHint, style: TextStyle(color: context.colors.textHint, fontSize: AppFontSize.f11_5)),
                         ),
                         const SizedBox(height: AppSpacing.s12),
                         Row(

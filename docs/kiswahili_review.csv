@@ -1425,14 +1425,13 @@ login_welcomeBack,Welcome back,Karibu tena,Login form title.,draft
 login_logIntoFacility,Log into your facility,Ingia kwenye kituo chako,Login form subtitle.,draft
 login_emailHint,Enter your email,Weka barua pepe yako,Login email field hint.,draft
 login_passwordHint,Enter your password,Weka nenosiri lako,Login password field hint.,draft
-login_minPasswordHint,Minimum 6 characters,Angalau herufi 6,"Login, under the password field.",draft
 login_rememberMe,Remember Me,Nikumbuke,Login checkbox: keep the email for next time.,draft
 login_forgotPassword,Forgot Password?,Umesahau Nenosiri?,Login link that sends a password reset email.,draft
 login_noAccount,"Don't have an account? ","Huna akaunti? ","Login, before the Register link (ends with a space).",draft
 login_register,Register,Jisajili,Login link to the register screen.,draft
 login_loginButton,Login,Ingia,Login button.,draft
 login_newBadge,NEW,MPYA,Badge on an announcement less than two days old.,draft
-login_credentialsTooShort,Enter your email and a password of at least {count} characters.,Weka barua pepe yako na nenosiri lenye angalau herufi {count}.,Login error: email empty or password too short.,draft
+login_credentialsTooShort,Enter your email and password.,Weka barua pepe yako na nenosiri.,Login error: email or password empty.,draft
 login_slowSignIn,Signing in is taking longer than expected. Check your internet connection and try again.,Kuingia kunachukua muda mrefu kuliko kawaida. Angalia intaneti yako kisha ujaribu tena.,Login error when sign-in has not finished after a few seconds.,draft
 login_resetNeedsEmail,Enter your email to reset your password.,Weka barua pepe yako ili kubadilisha nenosiri.,Login: Forgot Password pressed with no email.,draft
 login_resetSent,"If an account exists for this email, a reset link has been sent. Check your inbox (and spam folder).","Kama akaunti ipo kwa barua pepe hii, kiungo cha kubadilisha nenosiri kimetumwa. Angalia sanduku la barua (na folda ya spam).",Login: after Forgot Password (the same whether or not the account exists).,draft
