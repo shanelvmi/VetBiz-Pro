@@ -165,25 +165,30 @@ class _AddBatchScreenState extends State<AddBatchScreen> {
                 ),
                 const SizedBox(height: AppSpacing.s12),
                 Text(context.l10n.batch_addStockTo, style: const TextStyle(fontWeight: AppFontWeight.semibold, fontSize: AppFontSize.f13)),
-                RadioListTile<String>(
-                  contentPadding: EdgeInsets.zero,
-                  dense: true,
-                  title: Text(context.l10n.store_title),
-                  subtitle: Text(context.l10n.batch_storeHint, style: const TextStyle(fontSize: AppFontSize.f11_5)),
-                  value: 'stock',
+                RadioGroup<String>(
                   groupValue: _destination,
-                  activeColor: context.colors.primary,
                   onChanged: (value) => setState(() => _destination = value!),
-                ),
-                RadioListTile<String>(
-                  contentPadding: EdgeInsets.zero,
-                  dense: true,
-                  title: Text(context.l10n.batch_sellableOption),
-                  subtitle: Text(context.l10n.batch_sellableHint, style: const TextStyle(fontSize: AppFontSize.f11_5)),
-                  value: 'sellable',
-                  groupValue: _destination,
-                  activeColor: context.colors.primary,
-                  onChanged: (value) => setState(() => _destination = value!),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      RadioListTile<String>(
+                        contentPadding: EdgeInsets.zero,
+                        dense: true,
+                        title: Text(context.l10n.store_title),
+                        subtitle: Text(context.l10n.batch_storeHint, style: const TextStyle(fontSize: AppFontSize.f11_5)),
+                        value: 'stock',
+                        activeColor: context.colors.primary,
+                      ),
+                      RadioListTile<String>(
+                        contentPadding: EdgeInsets.zero,
+                        dense: true,
+                        title: Text(context.l10n.batch_sellableOption),
+                        subtitle: Text(context.l10n.batch_sellableHint, style: const TextStyle(fontSize: AppFontSize.f11_5)),
+                        value: 'sellable',
+                        activeColor: context.colors.primary,
+                      ),
+                    ],
+                  ),
                 ),
                 const SizedBox(height: AppSpacing.s8),
                 TextFormField(
