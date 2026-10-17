@@ -1260,12 +1260,10 @@ class _AddSaleScreenState extends State<AddSaleScreen> {
                 ],
               ),
             ),
-            Radio<bool>(
-              value: true,
+            // A group of one: it only fires when walk-in is off (tapping it
+            // when already on does nothing), as the single Radio did.
+            RadioGroup<bool>(
               groupValue: isWalkIn,
-              activeColor: context.colors.primary,
-              materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-              visualDensity: VisualDensity.compact,
               onChanged: (_) => setState(() {
                 isWalkIn = !isWalkIn;
                 selectedClient = null;
@@ -1273,6 +1271,12 @@ class _AddSaleScreenState extends State<AddSaleScreen> {
                 totalPaid = 0;
                 totalPaidController.text = Money.decimal(totalPaid);
               }),
+              child: Radio<bool>(
+                value: true,
+                activeColor: context.colors.primary,
+                materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                visualDensity: VisualDensity.compact,
+              ),
             ),
           ],
         ),
