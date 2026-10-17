@@ -2597,17 +2597,19 @@ class _FacilityScreenState extends State<FacilityScreen> {
       context: context,
       builder: (ctx) => AlertDialog(
         title: Text(context.l10n.facilities_keepLogsFor),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: _retentionOptions.map((days) {
-            return RadioListTile<int>(
-              value: days,
-              groupValue: currentRetention,
-              activeColor: context.colors.primary,
-              title: Text(context.l10n.debtors_daysCount(days)),
-              onChanged: (val) => Navigator.pop(ctx, val),
-            );
-          }).toList(),
+        content: RadioGroup<int>(
+          groupValue: currentRetention,
+          onChanged: (val) => Navigator.pop(ctx, val),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: _retentionOptions.map((days) {
+              return RadioListTile<int>(
+                value: days,
+                activeColor: context.colors.primary,
+                title: Text(context.l10n.debtors_daysCount(days)),
+              );
+            }).toList(),
+          ),
         ),
         actions: [
           TextButton(onPressed: () => Navigator.pop(ctx), child: Text(context.l10n.common_cancel)),
@@ -2688,17 +2690,19 @@ class _FacilityScreenState extends State<FacilityScreen> {
       context: context,
       builder: (ctx) => AlertDialog(
         title: Text(context.l10n.facilities_overdueAfterTitle),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: _debtOverdueOptions.map((days) {
-            return RadioListTile<int>(
-              value: days,
-              groupValue: currentThreshold,
-              activeColor: context.colors.primary,
-              title: Text(context.l10n.debtors_daysCount(days)),
-              onChanged: (val) => Navigator.pop(ctx, val),
-            );
-          }).toList(),
+        content: RadioGroup<int>(
+          groupValue: currentThreshold,
+          onChanged: (val) => Navigator.pop(ctx, val),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: _debtOverdueOptions.map((days) {
+              return RadioListTile<int>(
+                value: days,
+                activeColor: context.colors.primary,
+                title: Text(context.l10n.debtors_daysCount(days)),
+              );
+            }).toList(),
+          ),
         ),
         actions: [
           TextButton(onPressed: () => Navigator.pop(ctx), child: Text(context.l10n.common_cancel)),
