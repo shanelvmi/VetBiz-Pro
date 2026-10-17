@@ -18,6 +18,14 @@ Do this instead:
 
 Do NOT change anything. Search the app and list, in the ledger row for this fix, every place where a user can set or change a password (registration, any change-password dialog in Manage Account or Settings, and anything that calls `updatePassword`, `confirmPasswordReset`, or creates a user with a password), and the minimum length each one checks. Also note that the password-reset email link opens Firebase's own page, which the app does not control. The owner will decide from this whether login can ever enforce 8.
 
+**Result (nothing changed):**
+- Registration, owner and assistant (`register_screen.dart` `_passwordIssue`, line 299; `auth_service.dart` `_createAccount` -> `createUserWithEmailAndPassword`, used by both sign-up paths): 8 characters, a letter, a number, not on the common-password list.
+- No other place sets a password. No call to `updatePassword` or `confirmPasswordReset` exists in `lib/` or `functions/`.
+- Dashboard profile "Change password" (`dashboard_screen.dart:1068`) and login "Forgot Password?" (`auth_service.dart:202`) only call `sendPasswordResetEmail`. The new password is set on Firebase's own reset page, which the app does not control: it checks Firebase's default minimum, 6, unless a password policy is set in the Firebase console.
+- Manage Account asks for the password only to re-authenticate before deleting the account (`reauthenticateWithCredential`); it sets nothing.
+- `functions/index.js` `sendAssistantCredentials` (1st gen) emails a password passed to it; nothing in `lib/` calls it, and it creates no account.
+- So an account can end up with a 6- or 7-character password through the reset page, or from before the 8 rule.
+
 ## 3. "1 day" and "Over 1 day" (APPROVED by the owner)
 
 In Active Debts the English reads "1 days" and "Over 1 days". Make them "1 day" and "Over 1 day" using ICU plural keys, in both languages:
