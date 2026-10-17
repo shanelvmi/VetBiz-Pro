@@ -842,13 +842,19 @@ class _ExportDataScreenState extends State<ExportDataScreen> {
           Card(
             elevation: cardElevation,
             margin: EdgeInsets.zero,
-            child: Column(
-              children: [
-                for (int i = 0; i < _dataTypes.length; i++) ...[
-                  if (i > 0) Divider(height: 1, color: context.colors.divider, indent: 56),
-                  _buildRadioTile(_dataTypes[i]),
+            child: RadioGroup<String>(
+              groupValue: _selectedDataType,
+              onChanged: (value) {
+                if (value != null) setState(() => _selectedDataType = value);
+              },
+              child: Column(
+                children: [
+                  for (int i = 0; i < _dataTypes.length; i++) ...[
+                    if (i > 0) Divider(height: 1, color: context.colors.divider, indent: 56),
+                    _buildRadioTile(_dataTypes[i]),
+                  ],
                 ],
-              ],
+              ),
             ),
           ),
           const SizedBox(height: AppSpacing.s20),
@@ -883,20 +889,26 @@ class _ExportDataScreenState extends State<ExportDataScreen> {
           Card(
             elevation: cardElevation,
             margin: EdgeInsets.zero,
-            child: Column(
-              children: [
-                _buildFormatTile(
-                  value: 'xlsx',
-                  title: context.l10n.export_xlsx,
-                  subtitle: context.l10n.export_xlsxHint,
-                ),
-                Divider(height: 1, color: context.colors.divider, indent: 56),
-                _buildFormatTile(
-                  value: 'csv',
-                  title: context.l10n.export_csv,
-                  subtitle: context.l10n.export_csvHint,
-                ),
-              ],
+            child: RadioGroup<String>(
+              groupValue: _selectedFormat,
+              onChanged: (val) {
+                if (val != null) setState(() => _selectedFormat = val);
+              },
+              child: Column(
+                children: [
+                  _buildFormatTile(
+                    value: 'xlsx',
+                    title: context.l10n.export_xlsx,
+                    subtitle: context.l10n.export_xlsxHint,
+                  ),
+                  Divider(height: 1, color: context.colors.divider, indent: 56),
+                  _buildFormatTile(
+                    value: 'csv',
+                    title: context.l10n.export_csv,
+                    subtitle: context.l10n.export_csvHint,
+                  ),
+                ],
+              ),
             ),
           ),
           const SizedBox(height: AppSpacing.s32),
@@ -947,31 +959,25 @@ class _ExportDataScreenState extends State<ExportDataScreen> {
     );
   }
 
+  // Its RadioGroup (the selected data type) is around the Step 1 card.
   Widget _buildRadioTile(String title) {
     return RadioListTile<String>(
       title: Text(_dataTypeLabel(title), style: const TextStyle(fontWeight: AppFontWeight.medium, fontSize: AppFontSize.f15)),
       subtitle: Text(_dataTypeHint(title), style: const TextStyle(fontSize: AppFontSize.f13)),
       value: title,
-      groupValue: _selectedDataType,
       activeColor: context.colors.primary,
       contentPadding: const EdgeInsets.symmetric(horizontal: AppSpacing.s16, vertical: AppSpacing.s4),
-      onChanged: (value) {
-        if (value != null) setState(() => _selectedDataType = value);
-      },
     );
   }
 
+  // Its RadioGroup (the selected format) is around the Step 3 card.
   Widget _buildFormatTile({required String value, required String title, required String subtitle}) {
     return RadioListTile<String>(
       title: Text(title, style: const TextStyle(fontWeight: AppFontWeight.medium, fontSize: AppFontSize.f15)),
       subtitle: Text(subtitle, style: const TextStyle(fontSize: AppFontSize.f13)),
       value: value,
-      groupValue: _selectedFormat,
       activeColor: context.colors.primary,
       contentPadding: const EdgeInsets.symmetric(horizontal: AppSpacing.s16, vertical: AppSpacing.s4),
-      onChanged: (val) {
-        if (val != null) setState(() => _selectedFormat = val);
-      },
     );
   }
 
