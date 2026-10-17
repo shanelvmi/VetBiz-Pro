@@ -406,40 +406,43 @@ Future<void> _showPromotionEditor(BuildContext context, {Promotion? existing}) a
                   ),
                 const SizedBox(height: AppSpacing.s12),
                 const Text('Who sees it', style: TextStyle(fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f13)),
-                RadioListTile<String>(
-                  contentPadding: EdgeInsets.zero,
-                  dense: true,
-                  title: const Text('Everyone'),
-                  value: 'everyone',
+                RadioGroup<String>(
                   groupValue: targetMode,
                   onChanged: (v) => setDialogState(() => targetMode = v!),
-                ),
-                RadioListTile<String>(
-                  contentPadding: EdgeInsets.zero,
-                  dense: true,
-                  title: const Text('Only facilities expiring soon'),
-                  subtitle: const Text('Within 7 days of their subscription ending', style: TextStyle(fontSize: AppFontSize.f11_5)),
-                  value: 'expiringSoon',
-                  groupValue: targetMode,
-                  onChanged: (v) => setDialogState(() => targetMode = v!),
-                ),
-                RadioListTile<String>(
-                  contentPadding: EdgeInsets.zero,
-                  dense: true,
-                  title: const Text('Specific facilities'),
-                  subtitle: Text(
-                    // A reward/relationship-based offer (e.g. a
-                    // facility that consistently pays on time) rather
-                    // than an urgency-based one - independent of
-                    // where they are in their billing cycle.
-                    selectedFacilities.isEmpty
-                        ? 'Pick which facilities see this, regardless of billing status'
-                        : '${selectedFacilities.length} selected',
-                    style: const TextStyle(fontSize: AppFontSize.f11_5),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      RadioListTile<String>(
+                        contentPadding: EdgeInsets.zero,
+                        dense: true,
+                        title: const Text('Everyone'),
+                        value: 'everyone',
+                      ),
+                      RadioListTile<String>(
+                        contentPadding: EdgeInsets.zero,
+                        dense: true,
+                        title: const Text('Only facilities expiring soon'),
+                        subtitle: const Text('Within 7 days of their subscription ending', style: TextStyle(fontSize: AppFontSize.f11_5)),
+                        value: 'expiringSoon',
+                      ),
+                      RadioListTile<String>(
+                        contentPadding: EdgeInsets.zero,
+                        dense: true,
+                        title: const Text('Specific facilities'),
+                        subtitle: Text(
+                          // A reward/relationship-based offer (e.g. a
+                          // facility that consistently pays on time) rather
+                          // than an urgency-based one - independent of
+                          // where they are in their billing cycle.
+                          selectedFacilities.isEmpty
+                              ? 'Pick which facilities see this, regardless of billing status'
+                              : '${selectedFacilities.length} selected',
+                          style: const TextStyle(fontSize: AppFontSize.f11_5),
+                        ),
+                        value: 'specificFacilities',
+                      ),
+                    ],
                   ),
-                  value: 'specificFacilities',
-                  groupValue: targetMode,
-                  onChanged: (v) => setDialogState(() => targetMode = v!),
                 ),
                 if (targetMode == 'specificFacilities') ...[
                   const SizedBox(height: AppSpacing.s4),
