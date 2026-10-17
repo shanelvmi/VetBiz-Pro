@@ -45,7 +45,7 @@ One, not in the language files, English until the owner decides its language (`d
 ## Wording problems noted (English kept, owner's decision)
 
 Full text in `docs/design-open-questions.md`, sections "Raised in step 2F". In short:
-- Singular slips still open: "1 payments", "1 debts", "of 1 products", "1 units", "1 found", "archived after 1 days", "of 1 sales", "of 1 services". ("1 day"/"Over 1 day" in Active Debts: fixed, FIXES 3.)
+- Singular slips: fixed. "1 day"/"Over 1 day" in Active Debts (FIXES 3); "1 payment", "1 debt", "of 1 product", "1 unit", "1 found", "archived after 1 day", "of 1 sale", "of 1 service", "Expires in 1 day" (plural pass after 2F-13, pinned by test/plural_labels_test.dart).
 - Login password: fixed (FIXES 1), login now checks only that both fields are filled; registration says "At least 8 characters". Enforcing 8 at login is the owner's option (report in `docs/FIXES.md`, item 2).
 - Same meaning, two wordings: "Logout"/"Log in"/"Login"/"Sign out"; "Move to Stock"/"Remove from Sellable"; the two retention dialogs' failed-delete messages; the two "could not reach the server" sentences; "Total Owed"/"Total owed:"; plural and singular notification categories; "Vet"/"Veterinary"; "No submissions yet." with and without a full stop; "No facilities found." twice.
 - Capitals: "Could Not Load Your Account"; "Ask your facility Admin"/"admin"; the retention refusal reason starts lower-case.

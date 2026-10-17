@@ -114,7 +114,7 @@ User-facing "VetBiz Pro" now reads `AppInfo.name` (titles, Settings, support lin
 
 ### Raised in step 2F, batch 2F-4 (wording; English kept as it was)
 
-- **"1 payments", "1 debts", "of 1 products".** The Payments metric cards (`payments_paymentCount`, `payments_debtCount`) and the Stock Store pagination (`products_showingRange`) never had a singular form in English. The keys are ICU plurals with one `other` branch, so the English reads exactly as before; the Kiswahili already has its own forms. Adding `=1{...}` English branches is a one-line change per key once agreed.
+- **"1 payments", "1 debts", "of 1 products".** The Payments metric cards (`payments_paymentCount`, `payments_debtCount`) and the Stock Store pagination (`products_showingRange`) never had a singular form in English. The keys are ICU plurals with one `other` branch, so the English reads exactly as before; the Kiswahili already has its own forms. Adding `=1{...}` English branches is a one-line change per key once agreed. **Fixed (plural pass after 2F-13): the English now has a singular for one.**
 - **"Payment Details"** is one key (`payments_detailsTitle`) for the Payments detail panel and the Subscription form's payment section. The Kiswahili ("Maelezo ya Malipo") fits both; split it if either should read differently.
 - **"No submissions yet." and "No submissions yet"** (Subscription screen with a full stop, Subscription history without) are two keys because the English differs.
 
@@ -160,7 +160,7 @@ User-facing "VetBiz Pro" now reads `AppInfo.name` (titles, Settings, support lin
 
 ### Raised in step 2F, batch 2F-8 (wording and language; English kept as it was)
 
-- **"archived after 1 days", "of 1 sales"** (Sales Archive subtitle and pagination): `sales_archiveSubtitle` and `sales_archiveShowing` are ICU plurals with one `other` branch, like the services archive, so the English reads as before.
+- **"archived after 1 days", "of 1 sales"** (Sales Archive subtitle and pagination): `sales_archiveSubtitle` and `sales_archiveShowing` are ICU plurals with one `other` branch, like the services archive, so the English reads as before. **Fixed (plural pass after 2F-13): the English now has a singular for one.**
 - **One action, two wordings**: "Move to Stock" (Products) and "Remove from Sellable" (Stock Store, Product Alerts) are kept as they were. The success message is now chosen by `MoveToStockAction`, no longer by comparing the label.
 - **"Within 30 days"** (Product Alerts card hint) has the number typed into the text. If the expiring-soon window ever changes, this text has to change with it; a `{days}` placeholder would remove that risk.
 - **Same English, separate keys** because the meaning differs: "Pending" (`sales_pending`, an amount still owed, against the status names), "Paid" (`sales_paid`, the amount, against `paymentStatus_paid`), "Out of stock" (`sales_outOfStock`) and "Out of Stock" (`alerts_outOfStock`). Keys apart because the English differs: "Batch No" and "Batch No.", "Unlabeled Batch" and "Unlabeled batch", "Note (optional)" and "Notes (optional)".
@@ -170,7 +170,7 @@ User-facing "VetBiz Pro" now reads `AppInfo.name` (titles, Settings, support lin
 
 ### Raised in step 2F, batch 2F-7 (wording and language; English kept as it was)
 
-- **"1 units", "1 found", "archived after 1 days", "of 1 services"** (report summary tile, services archive banner, subtitle and pagination): `reports_unitsCount`, `services_foundCount`, `services_archiveSubtitle` and `services_archiveShowing` are ICU plurals with one `other` branch, so the English reads as before. An `=1{...}` branch is a one-line change once agreed.
+- **"1 units", "1 found", "archived after 1 days", "of 1 services"** (report summary tile, services archive banner, subtitle and pagination): `reports_unitsCount`, `services_foundCount`, `services_archiveSubtitle` and `services_archiveShowing` are ICU plurals with one `other` branch, so the English reads as before. An `=1{...}` branch is a one-line change once agreed. **Fixed (plural pass after 2F-13): the English now has a singular for one.**
 - **Receipt body stays English** (header, labels, totals, "Thank you for choosing us.", "Powered by ..."): moved to `lib/utils/receipt_texts.dart`, pinned by `test/receipt_texts_test.dart` and allowlisted as a file. The preview's buttons, format choices and "Receipt Details" panel are localised; the panel shows its own status keys. The sales receipt preview (2F-8) can use the same file.
 - **Share texts stay English**, like the files they go with: the service receipt's "Receipt" (`ReceiptTexts.shareText`) and the report PDF's "Daily Closing Report" (`DailyReportPdfService.shareText`).
 - **Saved or PDF-only fallbacks stay English**: "Unknown User" (saved in the report as `generatedByName`), "{app} Facility" (the facility name passed to the report PDF), and the "Draft report for ... deleted" activity description.
