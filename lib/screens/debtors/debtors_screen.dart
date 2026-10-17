@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
+import '../../utils/export_texts.dart';
 import '../../utils/sentence_capitalization_formatter.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
@@ -730,7 +731,7 @@ class _DebtorsScreenState extends State<DebtorsScreen> {
                       AppDateFormat.date.format(debtor.client.oldestUnpaidDebtDate!),
                       style: const TextStyle(fontSize: AppFontSize.f13),
                     )
-                  : Text('\u2014', style: TextStyle(fontSize: AppFontSize.f13, color: context.colors.textHint)),
+                  : Text('—', style: TextStyle(fontSize: AppFontSize.f13, color: context.colors.textHint)),
             ),
             Expanded(
               flex: 2,
@@ -1288,7 +1289,7 @@ class _DebtorsScreenState extends State<DebtorsScreen> {
         name: 'active_debts_${DateFormat(DataKeys.fileDateStamp).format(DateTime.now())}.csv',
         mimeType: 'text/csv',
       );
-      await Share.shareXFiles([xfile], text: 'Active Debts Export');
+      await Share.shareXFiles([xfile], text: ExportTexts.activeDebtsShareText);
     } catch (e, st) {
       AppFeedback.error(L10n.current.debtors_exportFailed, error: e, stackTrace: st);
     }

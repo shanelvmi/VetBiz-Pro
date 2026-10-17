@@ -474,6 +474,18 @@
       "file": "lib/utils/receipt_texts.dart",
       "lineContains": "",
       "reason": "out of scope for step 2F (docs/PHASE2_LOCALISATION_SPEC.md 2.8): the receipt body drawn by the preview screens stays English, like the receipt PDF and the thermal printer; the screens' own buttons and panels are checked"
+    },
+    {
+      "rule": "R10",
+      "file": "lib/constants/subscription_plans.dart",
+      "lineContains": "",
+      "reason": "stored values shown as is in the operator console (docs/PHASE2_LOCALISATION_SPEC.md 2.5 and 2.8): the English plan label is saved as planLabel and compared in Subscription History; the app's own screens show it through subscriptionPlanLabel"
+    },
+    {
+      "rule": "R10",
+      "file": "lib/services/role_change_service.dart",
+      "lineContains": "",
+      "reason": "out of scope for step 2F (docs/PHASE2_LOCALISATION_SPEC.md 2.8): the operator console's role change; it writes notification titles and messages that are stored and shown as stored"
     }
   ],
   "counts": {
@@ -486,12 +498,7 @@
     "R7": {},
     "R8": {},
     "R9": {},
-    "R10": {
-      "lib/constants/subscription_plans.dart": 4,
-      "lib/screens/debtors/add_payment_screen.dart": 1,
-      "lib/screens/debtors/debtors_screen.dart": 2,
-      "lib/services/role_change_service.dart": 1
-    },
+    "R10": {},
     "R11": {}
   }
 }

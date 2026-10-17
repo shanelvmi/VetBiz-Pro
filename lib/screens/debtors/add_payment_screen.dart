@@ -126,7 +126,7 @@ class _AddPaymentScreenState extends State<AddPaymentScreen> {
               children: [
                 TextSpan(text: context.l10n.debtors_clientLabel(client.name), style: const TextStyle(fontWeight: AppFontWeight.bold)),
                 if (owed != null) ...[
-                  TextSpan(text: '  \u00b7  ${context.l10n.debtors_totalOwedLabel} ', style: TextStyle(fontSize: AppFontSize.f14, color: context.colors.textSoft)),
+                  TextSpan(text: '  ·  ${context.l10n.debtors_totalOwedLabel} ', style: TextStyle(fontSize: AppFontSize.f14, color: context.colors.textSoft)),
                   TextSpan(
                     text: Money.symbolPlain(owed),
                     style: TextStyle(fontWeight: AppFontWeight.bold, color: context.colors.dangerAccent),

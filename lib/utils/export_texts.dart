@@ -18,6 +18,9 @@ class ExportTexts {
   // The text passed to the share sheet with the file.
   static String shareText(String appName, String dataType) => '$appName export: $dataType';
 
+  // The share text sent with the Active Debts CSV (debtors_screen.dart).
+  static const String activeDebtsShareText = 'Active Debts Export';
+
   // Sales & Transactions
   static const String salesSheet = 'Sales';
   static String salesSubtitle(int active, int archived) => 'Sales ($active active, $archived archived)';
