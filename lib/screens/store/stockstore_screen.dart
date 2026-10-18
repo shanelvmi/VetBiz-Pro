@@ -191,7 +191,7 @@ class _StockStoreScreenState extends State<StockStoreScreen> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: AppSpacing.s14, vertical: AppSpacing.s10),
       decoration: BoxDecoration(
-        color: context.colors.background,
+        color: context.colors.raisedSurface,
         borderRadius: BorderRadius.circular(AppRadius.r12),
         border: Border.all(color: context.colors.textHint.withValues(alpha: AppAlpha.a15)),
         boxShadow: [
@@ -576,7 +576,7 @@ class _StockStoreScreenState extends State<StockStoreScreen> {
     return Container(
       padding: const EdgeInsets.all(AppSpacing.s10),
       decoration: BoxDecoration(
-        color: context.colors.background,
+        color: context.colors.raisedSurface,
         borderRadius: BorderRadius.circular(AppRadius.r12),
         boxShadow: [
           BoxShadow(
@@ -973,7 +973,7 @@ class _StockStoreScreenState extends State<StockStoreScreen> {
     return Container(
       padding: const EdgeInsets.all(AppSpacing.s14),
       decoration: BoxDecoration(
-        color: context.colors.background,
+        color: context.colors.raisedSurface,
         borderRadius: BorderRadius.circular(AppRadius.r14),
         boxShadow: [
           BoxShadow(
