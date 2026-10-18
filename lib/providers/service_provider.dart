@@ -287,81 +287,259 @@ class ServiceProvider extends ChangeNotifier {
     }
   }
 
+  /// A new service id, made on the device (no read, works offline). The
+  /// service form makes one when it opens and passes it to [addService] as
+  /// the service's id, so a retry of the same service reuses it.
+  String newServiceId() => _firestore.collection(Collections.services).doc().id;
+
   /// ===== ADD SERVICE =====
+  /// Records a service and everything it changes in ONE transaction
+  /// (docs/design/atomic_sales.md, option b): the service, one unit of
+  /// stock per item matched to a product (FIFO), the receipt number, the
+  /// client's balance, the debt (debts/service_{id}), the expense for the
+  /// items bought outside (transactions/service_{id}), the upfront payment
+  /// (payments/service_{id}) and the activity entry
+  /// (activity_logs/service_{id}). Either all of it is saved or none of it.
+  ///
+  /// [service].id is the id the form made when it opened; a retry passes
+  /// the same one. If that service is already saved (the first attempt
+  /// landed but its answer was lost), this returns its id and writes
+  /// nothing, so a retry can never record the service twice or deduct the
+  /// stock again.
+  ///
+  /// Nothing is swallowed: it throws [InsufficientStockException] when the
+  /// stock does not cover a matched item, and the Firestore error otherwise
+  /// (for example offline). In both cases nothing was written. The list on
+  /// screen gets the service only after the commit.
   Future<String?> addService(Service service) async {
-    if (_facilityId == null) return null;
+    final facilityId = _facilityId;
+    if (facilityId == null) return null;
 
-    final ref = _firestore
-        .collection(Collections.facilities)
-        .doc(_facilityId)
-        .collection(Collections.services);
+    final facilityRef = _firestore.collection(Collections.facilities).doc(facilityId);
+    final servicesRef = facilityRef.collection(Collections.services);
+    final serviceRef = service.id.isEmpty ? servicesRef.doc() : servicesRef.doc(service.id);
+    final serviceId = serviceRef.id;
 
-    var serviceToSave = service.copyWith();
-    final docRef = ref.doc(); // pre-allocate the ID, no write yet
+    // Read before the transaction: it can read nothing after its first
+    // write, and this doesn't change within a service.
+    final userInfo = await _currentUserInfo();
 
-    // Deduct stock FIRST (FIFO) so the saved service records exactly
-    // which batch(es) were actually consumed - same reasoning as Sales.
-    List<Map<String, dynamic>> updatedItems;
-    try {
-      updatedItems = await _deductStockForItems(serviceToSave.itemsUsed);
-    } catch (e) {
-      debugPrint('Error deducting stock for service: $e');
-      return null;
+    // Candidate batches are found by a query, which a transaction cannot
+    // run, so outside it (as deductSellableFIFO does); the transaction then
+    // re-reads each one, so it plans from current values.
+    final productIds = service.itemsUsed.map((item) => item['productId'] as String?).nonNulls.toSet();
+    final candidateRefs = <String, List<DocumentReference<Map<String, dynamic>>>>{};
+    for (final productId in productIds) {
+      final snap = await facilityRef
+          .collection(Collections.products)
+          .doc(productId)
+          .collection(Collections.batches)
+          .where('sellableQty', isGreaterThan: 0)
+          .get();
+      candidateRefs[productId] =
+          (snap.docs.toList()..sort(ProductProvider.compareByExpiry)).map((d) => d.reference).toList();
     }
-    serviceToSave = serviceToSave.copyWith(itemsUsed: updatedItems);
-    serviceToSave = serviceToSave.copyWith(receiptNumber: await nextReceiptNumber(_facilityId!, firestore: _firestore));
 
-    try {
-      await docRef.set({
+    final clientId = (service.clientId == null || service.clientId!.isEmpty) ? null : service.clientId;
+    final clientRef = clientId == null ? null : facilityRef.collection(Collections.clients).doc(clientId);
+
+    // The transaction returns null when the stock doesn't cover the
+    // service: it then ends having written nothing, and the exception is
+    // thrown below, outside it, so it reaches the screen as itself on
+    // every platform.
+    String? shortage;
+    final saved = await _firestore.runTransaction<Service?>((transaction) async {
+      shortage = null;
+
+      // --- Reads (all of them before any write) ---
+      final existing = await transaction.get(serviceRef);
+      if (existing.exists) {
+        // A retry of a service that was saved.
+        return Service.fromFirestore(existing.data()!, serviceId);
+      }
+
+      final receipt = await claimReceiptNumber(transaction, _firestore, facilityId);
+
+      final productSnaps = <String, DocumentSnapshot<Map<String, dynamic>>>{};
+      final batchSnaps = <String, List<DocumentSnapshot<Map<String, dynamic>>>>{};
+      for (final productId in productIds) {
+        batchSnaps[productId] = [
+          for (final ref in candidateRefs[productId]!) await transaction.get(ref),
+        ];
+        productSnaps[productId] =
+            await transaction.get(facilityRef.collection(Collections.products).doc(productId));
+      }
+
+      final clientSnap = clientRef == null ? null : await transaction.get(clientRef);
+
+      // --- Plan (writes nothing) ---
+      // One unit per item matched to a real product, FIFO (soonest-expiry
+      // batch first, same as Sales), recording the batches it came from so
+      // a delete or an edit can put it back. Items bought outside never
+      // touch stock.
+      final stockPlan = SellableStockPlan();
+      final updatedItems = <Map<String, dynamic>>[];
+      try {
+        for (final item in service.itemsUsed) {
+          final productId = item['productId'] as String?;
+          if (productId == null) {
+            updatedItems.add(item);
+            continue;
+          }
+          final allocations = stockPlan.take(
+            product: productSnaps[productId]!,
+            batches: batchSnaps[productId]!,
+            quantity: 1,
+          );
+          updatedItems.add({...item, 'batchAllocations': allocations});
+        }
+      } on InsufficientStockException catch (e) {
+        shortage = e.message;
+        return null;
+      }
+
+      final serviceToSave =
+          service.copyWith(id: serviceId, itemsUsed: updatedItems, receiptNumber: receipt.value);
+
+      // --- Writes ---
+      transaction.set(serviceRef, {
         ...serviceToSave.toMap(),
         ...serviceToSave.searchFields(),
         Fields.updatedAt: FieldValue.serverTimestamp(),
       });
+      stockPlan.apply(transaction);
+      receipt.write(transaction);
 
-      // Local cache (instant UI)
-      final saved = serviceToSave.copyWith(id: docRef.id);
-      _liveServices.insert(0, saved);
-      notifyListeners();
+      if (clientRef != null) {
+        _writeNewServiceDebt(transaction, facilityRef, clientRef, clientSnap!, serviceToSave);
+      }
 
-      // Handle debt and transaction
-      await _handleServiceDebt(saved, docRef.id);
-      await _handleServiceTransaction(saved, docRef.id);
+      // Only the items NOT matched to a real product become a new cash
+      // expense - stock-matched items were already paid for when that
+      // stock was purchased, so expensing them again here would
+      // double-count the cost. See Service.externalExpenseTotal.
+      final expenseAmount = serviceToSave.externalExpenseTotal;
+      if (expenseAmount > 0) {
+        // Same filter as Service.externalExpenseTotal - only the items that
+        // actually became this expense, so an audit can see exactly what
+        // was expensed without opening the service record separately.
+        final externalItemNames = serviceToSave.itemsUsed
+            .where((item) => item['productId'] == null)
+            .map((item) => (item['itemName'] ?? '').toString())
+            .where((itemName) => itemName.isNotEmpty)
+            .toList();
+        final itemsSummary = externalItemNames.isNotEmpty ? externalItemNames.join(', ') : 'N/A';
+        transaction.set(facilityRef.collection(Collections.transactions).doc('service_$serviceId'), {
+          'amount': expenseAmount,
+          'category': 'Vet Service Expenses',
+          'date': Timestamp.fromDate(DateTime.now()),
+          'description': 'Items used for ${serviceToSave.name}: $itemsSummary',
+          // The user's fullName from Firestore: Firebase Auth's own
+          // displayName is never set in this app.
+          'recordedBy': userInfo['userName']!,
+          'type': 'expense',
+          'serviceId': serviceId,
+          'paymentMethod': serviceToSave.paymentMethod ?? PaymentMethod.cash.key,
+        });
+      }
 
       // Record the upfront amount collected (if any) as a payment - the
       // same fix applied to sales, so dailyCollections captures cash
       // collected on services too, not just sales.
-      final userInfo = await _currentUserInfo();
-      if (saved.totalPaid > 0) {
-        await _firestore
-            .collection(Collections.facilities)
-            .doc(_facilityId)
-            .collection(Collections.payments)
-            .add({
-          'clientId': saved.clientId,
-          'clientName': saved.clientName,
-          'serviceId': docRef.id,
-          'amount': saved.totalPaid,
+      if (serviceToSave.totalPaid > 0) {
+        transaction.set(facilityRef.collection(Collections.payments).doc('service_$serviceId'), {
+          'clientId': serviceToSave.clientId,
+          'clientName': serviceToSave.clientName,
+          'serviceId': serviceId,
+          'amount': serviceToSave.totalPaid,
           'timestamp': FieldValue.serverTimestamp(),
           'paidById': userInfo[Fields.userId] ?? '',
           'source': 'service',
-          'paymentMethod': saved.paymentMethod,
-          'clientNameLower': (saved.clientName ?? '').toLowerCase(),
+          'paymentMethod': serviceToSave.paymentMethod,
+          'clientNameLower': (serviceToSave.clientName ?? '').toLowerCase(),
         });
       }
 
-      await ActivityLogger.logActivity(
-        facilityId: _facilityId!,
-        firestore: _firestore,
+      ActivityLogger.logActivityIn(
+        transaction,
+        facilityRef.collection(Collections.activityLogs).doc('service_$serviceId'),
         userId: userInfo[Fields.userId]!,
-        userName: userInfo['userName'],
+        userName: userInfo['userName'] ?? 'Unknown',
         actionType: ActivityType.services.key,
-        description: 'Recorded service for ${saved.clientName ?? 'Walk-in'} - ${Money.savedWhole(saved.totalAmount)}',
+        description:
+            'Recorded service for ${serviceToSave.clientName ?? 'Walk-in'} - ${Money.savedWhole(serviceToSave.totalAmount)}',
       );
 
-      return docRef.id;
-    } catch (e) {
-      debugPrint('ServiceProvider.addService error: $e');
-      rethrow;
+      return serviceToSave;
+    });
+
+    if (saved == null) throw InsufficientStockException(shortage ?? 'Not enough sellable stock');
+
+    // Only now, after the commit, does the list on screen show it.
+    if (_findCachedService(serviceId) == null) {
+      _liveServices.insert(0, saved);
+      notifyListeners();
+    }
+    return serviceId;
+  }
+
+  /// The debt part of [addService], inside its transaction: what
+  /// [_handleServiceDebt] does for a new service (no previous version, so
+  /// no old debt to replace). The client's balance goes up by what is
+  /// still owed; an unpaid service gets its debt as debts/service_{id}
+  /// (deterministic, so this service always maps to exactly one debt
+  /// document), and becomes the client's oldest unpaid debt if they had
+  /// none.
+  void _writeNewServiceDebt(
+    Transaction transaction,
+    DocumentReference<Map<String, dynamic>> facilityRef,
+    DocumentReference<Map<String, dynamic>> clientRef,
+    DocumentSnapshot<Map<String, dynamic>> clientSnap,
+    Service service,
+  ) {
+    final owed = service.totalAmount - service.totalPaid;
+    final clientData = clientSnap.data();
+    final rawOldest = clientData?['oldestUnpaidDebtDate'];
+    final update = <String, dynamic>{};
+
+    if (owed > 0) {
+      final debtRef = facilityRef.collection(Collections.debts).doc('service_${service.id}');
+      final debt = Debt(
+        id: debtRef.id,
+        clientId: service.clientId!,
+        clientName: service.clientName,
+        clientPhone: clientData?['phone'] as String?,
+        serviceId: service.id,
+        saleId: null,
+        source: 'Service',
+        amountOwed: owed,
+        timestamp: DateTime.now(),
+        updatedAt: DateTime.now(),
+        items: [
+          {
+            'serviceName': service.name,
+            'category': service.category,
+            'totalAmount': service.totalAmount,
+            'totalPaid': service.totalPaid,
+          }
+        ],
+      );
+      transaction.set(debtRef, debt.toMap());
+
+      // A brand-new debt, and the client had no other unpaid debt at
+      // all - this one becomes the (only, therefore oldest) unpaid debt.
+      if (rawOldest is! Timestamp) {
+        update['oldestUnpaidDebtDate'] = Timestamp.fromDate(debt.timestamp);
+      }
+    }
+    if (owed != 0) update['balance'] = FieldValue.increment(owed);
+    if (update.isEmpty) return;
+
+    if (clientSnap.exists) {
+      transaction.update(clientRef, update);
+    } else {
+      // As before: a client deleted while the form was open.
+      transaction.set(clientRef, update, SetOptions(merge: true));
     }
   }
 

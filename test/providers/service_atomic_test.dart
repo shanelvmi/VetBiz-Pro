@@ -5,12 +5,9 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:vetbiz_pro/data/activity_type.dart';
 import 'package:vetbiz_pro/data/collections.dart';
+import 'package:vetbiz_pro/providers/product_provider.dart';
 
 import '../helpers/fake_firestore.dart';
-
-// Fail on the old addService (random ids, separate writes); unskipped by the
-// commit that makes it one transaction.
-const _untilE1b = 'E1b: addService is not one transaction yet';
 
 void main() {
   test('addService twice with the same service id leaves one service, one debt, one expense, one stock deduction',
@@ -43,7 +40,7 @@ void main() {
     expect(client.data()?['balance'], 6000, reason: 'balance raised once');
     expect(first, 'retry1');
     expect(second, 'retry1');
-  }, skip: _untilE1b);
+  });
 
   test('a credit service leaves debts/service_{id} with the unpaid amount and the client balance equal to it',
       () async {
@@ -70,7 +67,7 @@ void main() {
     final payment = await facilityCollection(fs, Collections.payments).doc('service_credit1').get();
     expect(payment.data()?['amount'], 4000);
     expect(payment.data()?['serviceId'], 'credit1');
-  }, skip: _untilE1b);
+  });
 
   test('a service with an external item has its expense at transactions/service_{id}', () async {
     final fs = newFakeFirestore();
@@ -92,7 +89,7 @@ void main() {
     expect(expense.data()?['recordedBy'], testUserName);
     expect(await countDocs(fs, Collections.transactions), 1);
     expect(await sellableQty(fs, 'p1'), 4, reason: 'the stock item: one unit, no expense');
-  }, skip: _untilE1b);
+  });
 
   test('not enough stock leaves zero writes', () async {
     final fs = newFakeFirestore();
@@ -120,6 +117,16 @@ void main() {
     expect(storedData(fs), before);
   });
 
+  test('not enough stock throws InsufficientStockException, as a sale does', () async {
+    final fs = newFakeFirestore();
+    await seedProduct(fs, id: 'p1', legacyQty: 0);
+
+    await expectLater(
+      newServiceProvider(fs).addService(testService(id: 'short2', items: [serviceItem('Dewormer', productId: 'p1')])),
+      throwsA(isA<InsufficientStockException>()),
+    );
+  });
+
   test('a retry of a service that was saved returns it and writes nothing', () async {
     final fs = newFakeFirestore();
     await seedProduct(fs, id: 'p1', batchQty: {'b1': 5});
@@ -141,7 +148,7 @@ void main() {
 
     expect(retried, 'saved1');
     expect(storedData(fs), afterFirst);
-  }, skip: _untilE1b);
+  });
 
   test('the activity entry is activity_logs/service_{id} and passes the existing rule', () async {
     final fs = newFakeFirestore();
@@ -163,5 +170,5 @@ void main() {
     expect(data.keys.toSet().difference({'userId', 'userName', 'actionType', 'description', 'timestamp'}),
         isEmpty);
     expect(data['description'], startsWith('Recorded service for Walk-in - '));
-  }, skip: _untilE1b);
+  });
 }
