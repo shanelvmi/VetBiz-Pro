@@ -131,6 +131,16 @@ class _FacilityPickerScreenState extends State<FacilityPickerScreen> {
     }
   }
 
+  // The type chip label: the fill keeps the type colour; the label is the
+  // same colour in light, and in dark the chip label roles, lifted to 4.5
+  // on that fill (K6).
+  Color _typeLabelColor(String type) {
+    final fill = _typeColor(type);
+    if (fill == context.colors.info) return context.colors.infoChipLabel;
+    if (fill == context.colors.chart4) return context.colors.chart4ChipLabel;
+    return fill;
+  }
+
   List<Map<String, dynamic>> get _filteredFacilities {
     return widget.facilities.where((f) {
       final name = (f['facilityName'] as String? ?? '').toLowerCase();
@@ -192,7 +202,7 @@ class _FacilityPickerScreenState extends State<FacilityPickerScreen> {
 
   Widget _buildHeader() {
     return Container(
-      color: context.colors.primary,
+      color: context.colors.brandSurface,
       padding: const EdgeInsets.symmetric(horizontal: AppSpacing.s24, vertical: AppSpacing.s14),
       child: Row(
         children: [
@@ -200,16 +210,16 @@ class _FacilityPickerScreenState extends State<FacilityPickerScreen> {
             width: 34,
             height: 34,
             alignment: Alignment.center,
-            decoration: BoxDecoration(color: context.colors.surface, shape: BoxShape.circle),
+            decoration: BoxDecoration(color: context.colors.onBrandSurface, shape: BoxShape.circle),
             child: Text(AppInfo.logoInitials,
-                style: TextStyle(color: context.colors.primary, fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f13)),
+                style: TextStyle(color: context.colors.brandSurface, fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f13)),
           ),
           const SizedBox(width: AppSpacing.s10),
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(AppInfo.name, style: TextStyle(color: context.colors.onPrimary, fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f16)),
-              Text(context.l10n.facilityPicker_tagline, style: TextStyle(color: context.colors.onPrimaryMuted, fontSize: AppFontSize.f10_5)),
+              Text(AppInfo.name, style: TextStyle(color: context.colors.onBrandSurface, fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f16)),
+              Text(context.l10n.facilityPicker_tagline, style: TextStyle(color: context.colors.onBrandSurfaceMuted, fontSize: AppFontSize.f10_5)),
             ],
           ),
           const Spacer(),
@@ -227,13 +237,13 @@ class _FacilityPickerScreenState extends State<FacilityPickerScreen> {
                   avatarUrl: _currentUserAvatarUrl,
                   name: _currentUserName,
                   size: 32,
-                  backgroundColor: context.colors.surface,
-                  foregroundColor: context.colors.primary,
+                  backgroundColor: context.colors.onBrandSurface,
+                  foregroundColor: context.colors.brandSurface,
                 ),
                 const SizedBox(width: AppSpacing.s8),
                 Text(_currentUserName.isEmpty ? context.l10n.dashboard_account : _currentUserName,
-                    style: TextStyle(color: context.colors.onPrimary, fontWeight: AppFontWeight.semibold, fontSize: AppFontSize.f13)),
-                Icon(Icons.expand_more, color: context.colors.onPrimary, size: AppIconSize.i18),
+                    style: TextStyle(color: context.colors.onBrandSurface, fontWeight: AppFontWeight.semibold, fontSize: AppFontSize.f13)),
+                Icon(Icons.expand_more, color: context.colors.onBrandSurface, size: AppIconSize.i18),
               ],
             ),
           ),
@@ -440,7 +450,7 @@ class _FacilityPickerScreenState extends State<FacilityPickerScreen> {
                               borderRadius: BorderRadius.circular(AppRadius.r8),
                             ),
                             child: Text(type.isNotEmpty ? context.l10n.facilityTypeLabel(type) : context.l10n.facilityPicker_typeNotSet,
-                                style: TextStyle(color: type.isNotEmpty ? typeColor : context.colors.textMuted, fontSize: AppFontSize.f11, fontWeight: AppFontWeight.semibold)),
+                                style: TextStyle(color: type.isNotEmpty ? _typeLabelColor(type) : context.colors.textMuted, fontSize: AppFontSize.f11, fontWeight: AppFontWeight.semibold)),
                           ),
                         ],
                       ),

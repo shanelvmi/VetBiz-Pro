@@ -158,8 +158,8 @@ class _SelectFacilityScreenState extends State<SelectFacilityScreen> {
       appBar: AppBar(
         title: Text(context.l10n.selectFacility_title),
         centerTitle: true,
-        backgroundColor: context.colors.primary,
-        foregroundColor: context.colors.background,
+        backgroundColor: context.colors.brandSurface,
+        foregroundColor: context.colors.onBrandInk,
       ),
       body: loadError != null
           ? Center(
@@ -270,12 +270,12 @@ class _HoverCardState extends State<_HoverCard> {
           padding: const EdgeInsets.all(AppSpacing.s16),
           decoration: BoxDecoration(
             color: widget.isSelected
-                ? context.colors.accent.withValues(alpha: AppAlpha.a30)
+                ? context.colors.selectedCardFill
                 : context.colors.surface,
             borderRadius: BorderRadius.circular(AppRadius.r8),
             border: Border.all(
               color: widget.isSelected
-                  ? context.colors.primary
+                  ? context.colors.selectableCardInk
                   : Colors.transparent,
               width: 2,
             ),
@@ -289,7 +289,7 @@ class _HoverCardState extends State<_HoverCard> {
           ),
           child: Row(
             children: [
-              Icon(icon, color: context.colors.primary),
+              Icon(icon, color: context.colors.selectableCardInk),
               const SizedBox(width: AppSpacing.s16),
               Expanded(
                 child: Column(
@@ -300,7 +300,7 @@ class _HoverCardState extends State<_HoverCard> {
                       style: TextStyle(
                         fontSize: AppFontSize.f16,
                         fontWeight: AppFontWeight.bold,
-                        color: context.colors.primary,
+                        color: context.colors.selectableCardInk,
                       ),
                     ),
                     const SizedBox(height: AppSpacing.s4),
@@ -308,7 +308,7 @@ class _HoverCardState extends State<_HoverCard> {
                       context.l10n.facilityTypeLabel(type),
                       style: TextStyle(
                         fontSize: AppFontSize.f14,
-                        color: context.colors.primary.withValues(alpha: AppAlpha.a85),
+                        color: context.colors.selectableCardInk.withValues(alpha: AppAlpha.a85),
                       ),
                     ),
                   ],
@@ -324,7 +324,7 @@ class _HoverCardState extends State<_HoverCard> {
                     widget.isSelected ? context.l10n.selectFacility_selected : context.l10n.selectFacility_clickToSelect,
                     style: TextStyle(
                       fontSize: AppFontSize.f12,
-                      color: context.colors.primary.withValues(alpha: AppAlpha.a85),
+                      color: context.colors.selectableCardInk.withValues(alpha: AppAlpha.a85),
                       fontStyle: FontStyle.italic,
                     ),
                   ),

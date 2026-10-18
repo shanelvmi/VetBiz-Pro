@@ -85,6 +85,30 @@ class DarkDerivation {
     return lift(ink.withValues(alpha: AppAlpha.a85), 4.5, tint).withValues(alpha: 1);
   }
 
+  /// The Select Facility card's ink: the dark primary lifted until its type
+  /// line (85%) reaches 4.5 on the selected fill (the accent tint) and on
+  /// the unselected card (surface).
+  static Color selectableCardInk(AppColorTheme theme) {
+    var ink = primary(theme.primary).withValues(alpha: AppAlpha.a85);
+    for (final fill in [quickActionTintAccent(theme.accent), surface(theme.primary)]) {
+      ink = lift(ink, 4.5, fill);
+    }
+    return ink.withValues(alpha: 1);
+  }
+
+  /// A chip label in its own [mark] colour, on the mark's 10% tint: [mark]
+  /// lifted to 4.5 on that tint over the plain card (surface) and over the
+  /// default facility card (a 5% primary tint over surface).
+  static Color chipLabel(Color mark, Color lightPrimary) {
+    final card = surface(lightPrimary);
+    final defaultCard = ColorMath.composite(primary(lightPrimary).withValues(alpha: AppAlpha.a05), card);
+    var label = mark;
+    for (final over in [card, defaultCard]) {
+      label = lift(label, 4.5, ColorMath.composite(mark.withValues(alpha: AppAlpha.a10), over));
+    }
+    return label;
+  }
+
   /// Add Product's tint, of the accent.
   static Color quickActionTintAccent(Color accent) =>
       HSLColor.fromAHSL(1, HSLColor.fromColor(accent).hue, _tintAccentSaturation, _tintAccentL).toColor();

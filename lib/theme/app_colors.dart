@@ -101,6 +101,10 @@ class AppColors extends ThemeExtension<AppColors> {
     required this.statusOtherFill,
     required this.primaryNote,
     required this.onChartTooltip,
+    required this.selectedCardFill,
+    required this.selectableCardInk,
+    required this.infoChipLabel,
+    required this.chart4ChipLabel,
   });
 
   // Brand: the theme's own three colours (the roles derived from them are
@@ -322,6 +326,24 @@ class AppColors extends ThemeExtension<AppColors> {
   final Color statusPendingFill;
   final Color statusOtherFill;
 
+  // The Select Facility card (select_facility_screen). Fill of the selected
+  // card: light = accent 30% over the page as before; dark = the dark accent
+  // tint (quickActionTintAccent), opaque, as accent 30% over the dark page
+  // is bright enough that the primary name read 2.98 to 3.21 on it. Ink of
+  // the card (icon, name, the type and hint at 85%, the selected border):
+  // light = primary; dark = the dark primary lifted until the 85% type
+  // reaches 4.5 on the selected fill and on surface (it was 2.55 to 4.16)
+  // (K6).
+  final Color selectedCardFill;
+  final Color selectableCardInk;
+
+  // Label of a chip tinted 10% with its own mark colour (the facility type
+  // chips in the facility picker). Light = the mark itself (info, chart4)
+  // as before; dark = the mark lifted to 4.5 on its tint over the cards, as
+  // the 3.0 marks measured 3.08 to 4.49 there (K6).
+  final Color infoChipLabel;
+  final Color chart4ChipLabel;
+
   /// The roles for a colour theme. In Pasture every value is the exact
   /// legacy shade. The brand-linked roles and textMuted are derived from the
   /// theme (theme_derivation.dart, docs/design/themes.md sections 4 and 7);
@@ -417,6 +439,10 @@ class AppColors extends ThemeExtension<AppColors> {
         statusOtherFill: Colors.orange.shade100,
         primaryNote: theme.primary,
         onChartTooltip: Colors.white,
+        selectedCardFill: theme.accent.withValues(alpha: AppAlpha.a30),
+        selectableCardInk: theme.primary,
+        infoChipLabel: Colors.blue,
+        chart4ChipLabel: Colors.purple,
       );
   }
 
@@ -513,6 +539,10 @@ class AppColors extends ThemeExtension<AppColors> {
       statusOtherFill: const Color(0xFF3B2C16),
       primaryNote: DarkDerivation.primaryNote(theme.primary),
       onChartTooltip: Colors.white,
+      selectedCardFill: DarkDerivation.quickActionTintAccent(theme.accent),
+      selectableCardInk: DarkDerivation.selectableCardInk(theme),
+      infoChipLabel: DarkDerivation.chipLabel(mark(light.info), theme.primary),
+      chart4ChipLabel: DarkDerivation.chipLabel(mark(light.chart4), theme.primary),
     );
   }
 
@@ -601,6 +631,10 @@ class AppColors extends ThemeExtension<AppColors> {
     Color? statusOtherFill,
     Color? primaryNote,
     Color? onChartTooltip,
+    Color? selectedCardFill,
+    Color? selectableCardInk,
+    Color? infoChipLabel,
+    Color? chart4ChipLabel,
   }) =>
       AppColors(
         primary: primary ?? this.primary,
@@ -686,6 +720,10 @@ class AppColors extends ThemeExtension<AppColors> {
         statusOtherFill: statusOtherFill ?? this.statusOtherFill,
         primaryNote: primaryNote ?? this.primaryNote,
         onChartTooltip: onChartTooltip ?? this.onChartTooltip,
+        selectedCardFill: selectedCardFill ?? this.selectedCardFill,
+        selectableCardInk: selectableCardInk ?? this.selectableCardInk,
+        infoChipLabel: infoChipLabel ?? this.infoChipLabel,
+        chart4ChipLabel: chart4ChipLabel ?? this.chart4ChipLabel,
       );
 
   @override
@@ -776,6 +814,10 @@ class AppColors extends ThemeExtension<AppColors> {
       statusOtherFill: l(statusOtherFill, other.statusOtherFill),
       primaryNote: l(primaryNote, other.primaryNote),
       onChartTooltip: l(onChartTooltip, other.onChartTooltip),
+      selectedCardFill: l(selectedCardFill, other.selectedCardFill),
+      selectableCardInk: l(selectableCardInk, other.selectableCardInk),
+      infoChipLabel: l(infoChipLabel, other.infoChipLabel),
+      chart4ChipLabel: l(chart4ChipLabel, other.chart4ChipLabel),
     );
   }
 }
