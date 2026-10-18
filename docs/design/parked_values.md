@@ -37,8 +37,8 @@ Sources: every allowlist entry for R1 to R9 in `tool/hardcoded_baseline.json` (7
 | A20 | `login_screen.dart:366` | `Colors.greenAccent` #69F0AE | "System Online" dot | 1 | textHint (82) | KEEP | SEMANTIC (success) |
 | A21 | `platform_admin/subscription_requests_tab.dart:569` | `Colors.redAccent[700]` #D50000 | small bold label on a request card | 1 | dangerDeep (30) | KEEP | SEMANTIC (danger) |
 | A22 | `platform_admin/users_tab.dart:486, 490, 541, 566, 572, 576` | `Colors.deepPurple` #673AB7 | Platform Admin chip, its icon, avatar fill | 6 | chart2 (36) | ROLE `rolePlatformAdmin` = #673AB7 | ONE-OFF (role category, like roleOwner) |
-| A23 | `platform_admin/users_tab.dart:618` | `Colors.blue.shade100` #BBDEFB | pending status chip fill | 1 | border (37) | KEEP | SEMANTIC (info) |
-| A24 | `platform_admin/users_tab.dart:618` | `Colors.orange.shade100` #FFE0B2 | other status chip fill | 1 | border (46) | KEEP | SEMANTIC (warning) |
+| A23 | `platform_admin/users_tab.dart:618` | `Colors.blue.shade100` #BBDEFB | pending status chip fill | 1 | border (37) | RESOLVED by K5 (was KEEP): role `statusPendingFill` (light #BBDEFB exact) | SEMANTIC (info) |
+| A24 | `platform_admin/users_tab.dart:618` | `Colors.orange.shade100` #FFE0B2 | other status chip fill | 1 | border (46) | RESOLVED by K5 (was KEEP): role `statusOtherFill` (light #FFE0B2 exact) | SEMANTIC (warning) |
 
 A1 to A24 cover all 27 R1 entries: A12 is two entries (dashboard, insights), A16 five, A17 two; one entry each covers A3 and A4, A5 and A6, A23 and A24. Roles compared: every opaque `AppColors` role (`lib/theme/app_colors.dart:174`); the translucent ones (black87, white70...) are not snap targets.
 
@@ -118,7 +118,7 @@ C2, C5 and C10 keep their values. The others change by 20 to 100 ms: C1, C3, C4,
 ## For T0 (the theme work)
 
 - **BRAND-LINKED (derive per theme):** A3, A4, A5, A6 (the sidebar hover and press), A10, A11 (quick-action tints of the primary and accent), A16, A17 (the login teal and its glow, also the operator badge and the Total Products metric).
-- **SEMANTIC (same in every theme; contrast to check on each background):** A1, A2, A7, A8, A9, A20, A21, A23, A24.
+- **SEMANTIC (same in every theme; contrast to check on each background):** A1, A2, A7, A8, A9, A20, A21, A23, A24 (A23 and A24 are the roles `statusPendingFill` and `statusOtherFill` since K5).
 - **ONE-OFF (fixed):** A12 to A15 (service palette), A18, A19 (categories), A22 (Platform Admin), F6.
 
 OWNER DECISION: APPROVED with these changes: (1) A6 becomes a new role sidebarPress = #00695C (exact), not a snap; (2) A7 and A8 become new semantic roles warningBannerText = #C77800 and warningBannerFill = #FFF6E7 (exact), not snaps; (3) A10 and A11 become new brand-linked roles quickActionTintPrimary = #E3F0EC and quickActionTintAccent = #FCEFD9 (exact), which T0 will derive per theme; (4) A12 to A15 become four roles chartService1 to chartService4 with the exact values steel blue #5C7C99, sage #8FA998, terracotta #B98B6F and lavender #9B8AA6 (the Other slice uses chartService4), replacing the grey snaps. Everything else exactly as the table says.
