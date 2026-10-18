@@ -308,4 +308,94 @@ async function runChecks(db, { facilityId } = {}) {
   return out;
 }
 
-module.exports = { runChecks };
+// ---------------------------------------------------------------- report
+
+const DEFINITIONS = `## Definitions (from the app's code)
+
+- **Unpaid debt:** every document in \`debts\` is unpaid; \`amountOwed\` is what is still owed. Recording a payment against a debt (add_payment_screen) lowers \`amountOwed\` by the payment and DELETES the debt when nothing is left; it also lowers \`client.balance\` by the same amount (\`increment(-amount)\`) and raises the sale's or service's \`totalPaid\`. A payment recorded against a client without choosing a debt lowers the balance only, so it shows up below as a balance mismatch.
+- **Client balance (check 3):** \`client.balance\` should equal the sum of \`amountOwed\` of that client's debts (tolerance ${MONEY_TOLERANCE} TSh).
+- **Outstanding (checks 1, 8):** \`totalAmount - totalPaid\` > ${MONEY_TOLERANCE}. Only a record with a client gets a debt (walk-in sales cannot).
+- **Product vs batches (check 5):** an invariant in the app: \`_recalculateProductAggregates\` sets a product's \`sellableQty\` and \`stockQty\` to the sums of its batches, and every sale deducts both by the same amount. Products with no batch (legacy) are skipped.
+- **Possible duplicates (check 6):** same client (or both walk-in), same total, same items (sales: product, quantity, unit price; services: name, item, price), saved within 2 minutes. A hint only.
+- **Receipt numbers (check 7):** one shared sequence for sales and services; \`counters/receiptNumber.value\` is the last number given out. Records in Trash keep their number; a record deleted for good, or a failed save before E1a/E1b, leaves a gap.
+- **Service expense (check 8):** a service whose external items (no productId) cost more than 0 needs \`transactions/service_{id}\`, or (older) a transaction with that \`serviceId\` or the service's \`transactionId\`.`;
+
+const LABELS = [
+  ["salesWithoutDebt", "1. Sales with an outstanding amount but no debt"],
+  ["debtsWithoutRecord", "2. Debts whose sale or service does not exist"],
+  ["clientBalanceMismatch", "3. Clients whose balance differs from their unpaid debts"],
+  ["negativeQuantities", "4. Products and batches with a negative quantity"],
+  ["productVsBatches", "5. Products whose quantities differ from the sum of their batches"],
+  ["possibleDuplicateSales", "6a. POSSIBLE duplicate sales"],
+  ["possibleDuplicateServices", "6b. POSSIBLE duplicate services"],
+  ["servicesWithoutDebt", "8a. Services with an amount outstanding but no debt"],
+  ["servicesWithoutExpense", "8b. Services with external items but no expense transaction"],
+  ["paymentsWithoutRecord", "8c. Payments pointing at a missing sale or service"],
+];
+
+function section(title, r) {
+  const lines = [`### ${title}: ${r.count}`];
+  for (const e of r.examples) lines.push(`- ${e}`);
+  if (r.count > r.examples.length) lines.push(`- ... and ${r.count - r.examples.length} more`);
+  if (r.note) lines.push(`- _${r.note}_`);
+  return lines.join("\n");
+}
+
+function formatReport(results, { project, generatedAt }) {
+  const parts = [`# VetBiz Pro consistency report`, ``, `Project: ${project}. Generated: ${generatedAt}. Read-only: nothing was written.`, ``, `CONTAINS BUSINESS DATA: do not commit or share.`, ``, DEFINITIONS];
+  for (const [facilityId, r] of Object.entries(results)) {
+    parts.push(``, `## Facility ${facilityId}`, ``);
+    const sections = LABELS.slice(0, 7).map(([k, t]) => section(t, r[k]));
+    sections.push(section("7a. Receipt numbers used more than once", r.receiptNumbers.duplicated));
+    sections.push(section("7b. Receipt numbers missing (gaps up to the counter)", { ...r.receiptNumbers.gaps, note: r.receiptNumbers.note }));
+    sections.push(section("7c. Receipt numbers above the counter", r.receiptNumbers.aboveCounter));
+    for (const [k, t] of LABELS.slice(7)) sections.push(section(t, r[k]));
+    parts.push(sections.join("\n\n"));
+  }
+  return parts.join("\n") + "\n";
+}
+
+// ---------------------------------------------------------------- CLI
+
+function parseArgs(argv) {
+  const args = {};
+  for (let i = 0; i < argv.length; i++) {
+    const m = /^--(project|facility|out)$/.exec(argv[i]);
+    if (!m || argv[i + 1] == null) throw new Error(`unknown or incomplete argument: ${argv[i]}`);
+    args[m[1]] = argv[++i];
+  }
+  if (!args.project) throw new Error("--project is required, e.g. --project vetbiz-pro");
+  return args;
+}
+
+const REPO_ROOT = path.resolve(__dirname, "..", "..");
+
+function isInside(child, parent) {
+  const rel = path.relative(parent, child);
+  return rel === "" || (!rel.startsWith("..") && !path.isAbsolute(rel));
+}
+
+async function main() {
+  const args = parseArgs(process.argv.slice(2));
+  const outDir = path.resolve(args.out || path.join(os.homedir(), "VetBiz-Pro-reports"));
+  if (isInside(outDir, REPO_ROOT)) throw new Error(`--out must be outside the repo (${REPO_ROOT}): the report holds business data`);
+
+  const admin = require("firebase-admin");
+  admin.initializeApp({ projectId: args.project });
+  const results = await runChecks(admin.firestore(), { facilityId: args.facility });
+
+  const generatedAt = new Date().toISOString();
+  fs.mkdirSync(outDir, { recursive: true });
+  const file = path.join(outDir, `consistency-${args.project}-${generatedAt.replace(/[:.]/g, "-")}.md`);
+  fs.writeFileSync(file, formatReport(results, { project: args.project, generatedAt }));
+  console.log(`Report written to ${file}`);
+}
+
+if (require.main === module) {
+  main().catch((e) => {
+    console.error(e.message || e);
+    process.exit(1);
+  });
+}
+
+module.exports = { runChecks, formatReport, parseArgs, isInside, REPO_ROOT };
