@@ -509,13 +509,14 @@ class _RegisterScreenState extends State<RegisterScreen> {
   // logic both share, and is unchanged.
   // ======================================================================
 
-  // Alert timings with no token, the same as the login page's (D8): the fade-in,
-  // and the countdown restart after the pointer leaves the alert.
-  static const Duration _alertSwitch = Duration(milliseconds: 260);
-  static const Duration _alertHoverGrace = Duration(seconds: 3);
-  // Scrolling to the first field in error: 350 ms, between AppMotion.slow and
-  // slower. Kept exact (D8).
-  static const Duration _scrollToField = Duration(milliseconds: 350);
+  // Alert timings, the same as the login page's (parked_values.md C7, C5):
+  // the fade-in (was 260 ms) and the countdown restart after the pointer
+  // leaves the alert (3 s, same value).
+  static const Duration _alertSwitch = AppMotion.slow;
+  static const Duration _alertHoverGrace = AppMotion.toastLong;
+  // Scrolling to the first field in error (was 350 ms; a tie between slow
+  // and slower, so up; parked_values.md C11).
+  static const Duration _scrollToField = AppMotion.slower;
   // The welcome panel beside the form on wide screens: a size. Kept exact.
   static const double _welcomePanelWidth = 290;
 

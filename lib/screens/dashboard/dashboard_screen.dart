@@ -95,10 +95,10 @@ class DrawerHoverItem extends StatefulWidget {
 
 class _DrawerHoverItemState extends State<DrawerHoverItem> {
   bool _hovered = false;
-  // No token (D9, listed): the hover fill's fade (200 ms, between fast and
-  // normal) and the collapsed-label tooltip wait (300 ms; tooltipDelay is 400).
-  static const Duration _hoverFade = Duration(milliseconds: 200);
-  static const Duration _tooltipWait = Duration(milliseconds: 300);
+  // The hover fill's fade (was 200 ms) and the collapsed-label tooltip wait
+  // (300 ms), snapped to the nearest motion step (parked_values.md C1, C2).
+  static const Duration _hoverFade = AppMotion.normal;
+  static const Duration _tooltipWait = AppMotion.slow;
 
   @override
   Widget build(BuildContext context) {
@@ -346,9 +346,9 @@ class DashboardScreen extends StatefulWidget {
 }
 
 class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingObserver {
-  // The subscription banner's fade-and-scale switch: 550 ms, 50 above
-  // AppMotion.slowest. Kept exact and listed (D9).
-  static const Duration _bannerSwitch = Duration(milliseconds: 550);
+  // The subscription banner's fade-and-scale switch (was 550 ms), snapped to
+  // the nearest motion step (parked_values.md C3).
+  static const Duration _bannerSwitch = AppMotion.slowest;
   // Space under the profile panel so the Logout button does not cover it: a
   // size, kept exact (D9).
   static const double _logoutClearance = 80;

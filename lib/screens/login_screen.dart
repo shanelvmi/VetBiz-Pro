@@ -54,15 +54,16 @@ class _LoginScreenState extends State<LoginScreen> {
 
   Timer? _announcementTimer;
 
-  // The announcement carousel's page slide: 600 ms has no AppMotion step
-  // (100 from slowest). Kept exact and listed (D8).
-  static const Duration _announcementSlide = Duration(milliseconds: 600);
-  // Alert timings with no AppMotion or AppTimeouts entry; kept exact and
-  // listed (D8): the countdown restart after the pointer leaves the alert,
-  // the form card's shake, and the alert's fade-and-slide in.
-  static const Duration _alertHoverGrace = Duration(seconds: 3);
-  static const Duration _shakeDuration = Duration(milliseconds: 420);
-  static const Duration _alertSwitch = Duration(milliseconds: 260);
+  // The announcement carousel's page slide (was 600 ms), snapped to the
+  // nearest motion step (parked_values.md C4).
+  static const Duration _announcementSlide = AppMotion.slowest;
+  // Alert timings, snapped to the nearest token (parked_values.md C5-C7):
+  // the countdown restart after the pointer leaves the alert (3 s, same
+  // value), the form card's shake (was 420 ms), and the alert's
+  // fade-and-slide in (was 260 ms; a tie between normal and slow, so up).
+  static const Duration _alertHoverGrace = AppMotion.toastLong;
+  static const Duration _shakeDuration = AppMotion.slower;
+  static const Duration _alertSwitch = AppMotion.slow;
 
   OutlineInputBorder _fieldBorder(Color color) =>
       OutlineInputBorder(borderRadius: BorderRadius.circular(AppRadius.r16), borderSide: BorderSide(color: color));
@@ -1292,8 +1293,9 @@ class _AnimatedLoginButton extends StatefulWidget {
 
 class _AnimatedLoginButtonState extends State<_AnimatedLoginButton> with SingleTickerProviderStateMixin {
   late final AnimationController _controller;
-  // The hover sweep; no AppMotion step (50 from slower). Kept exact (D8).
-  static const Duration _hoverSweep = Duration(milliseconds: 450);
+  // The hover sweep (was 450 ms; a tie between slower and slowest, so up;
+  // parked_values.md C8).
+  static const Duration _hoverSweep = AppMotion.slowest;
 
   @override
   void initState() {
@@ -1452,9 +1454,10 @@ class _NewBadgeState extends State<_NewBadge> {
   bool visible = true;
   int blinkCount = 0;
   Timer? _blinkTimer;
-  // Blink step and how long the badge stays before fading; kept exact (D8).
-  static const Duration _blinkStep = Duration(milliseconds: 600);
-  static const Duration _blinkHold = Duration(seconds: 3);
+  // Blink step (was 600 ms) and how long the badge stays before fading (3 s,
+  // same value), snapped to the nearest token (parked_values.md C9, C10).
+  static const Duration _blinkStep = AppMotion.slowest;
+  static const Duration _blinkHold = AppMotion.toastLong;
 
   @override
   void initState() {

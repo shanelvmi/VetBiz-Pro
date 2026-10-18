@@ -196,110 +196,32 @@
     {
       "rule": "R5",
       "file": "lib/screens/dashboard/dashboard_screen.dart",
-      "lineContains": "_hoverFade = Duration(milliseconds: 200)",
-      "reason": "named drawer hover timing, between AppMotion.fast and normal; open question D9, for 2R"
-    },
-    {
-      "rule": "R5",
-      "file": "lib/screens/dashboard/dashboard_screen.dart",
-      "lineContains": "_tooltipWait = Duration(milliseconds: 300)",
-      "reason": "named drawer tooltip wait (AppTimeouts.tooltipDelay is 400); open question D9, for 2R"
-    },
-    {
-      "rule": "R5",
-      "file": "lib/screens/dashboard/dashboard_screen.dart",
-      "lineContains": "_bannerSwitch = Duration(milliseconds: 550)",
-      "reason": "named subscription banner switch, 50 ms above AppMotion.slowest; open question D9, for 2R"
-    },
-    {
-      "rule": "R5",
-      "file": "lib/screens/dashboard/dashboard_screen.dart",
       "lineContains": "duration: const Duration(milliseconds: 700),",
-      "reason": "the bell's _BlinkingDot blink, left as written (owner's D9 rule)"
+      "reason": "KEEP, owner (D9 rule): the bell's _BlinkingDot blink, left as written; docs/design/parked_values.md D1"
     },
     {
       "rule": "R5",
       "file": "lib/screens/dashboard/dashboard_screen.dart",
       "lineContains": "Timer.periodic(const Duration(milliseconds: 1400)",
-      "reason": "the bell's _BlinkingDot colour cycle, left as written (owner's D9 rule)"
+      "reason": "KEEP, owner (D9 rule): the bell's _BlinkingDot colour cycle, left as written; docs/design/parked_values.md D1"
     },
     {
       "rule": "R5",
       "file": "lib/screens/dashboard/dashboard_screen.dart",
       "lineContains": "duration: const Duration(milliseconds: 400),",
-      "reason": "the bell's _BlinkingDot colour fade, left as written (owner's D9 rule)"
+      "reason": "KEEP, owner (D9 rule): the bell's _BlinkingDot colour fade, left as written; docs/design/parked_values.md D1"
     },
     {
       "rule": "R5",
       "file": "lib/screens/dashboard/dashboard_screen.dart",
       "lineContains": "Future.delayed(const Duration(milliseconds: 900)",
-      "reason": "delay before the subscription pill shows, left as written (owner's D9 rule)"
-    },
-    {
-      "rule": "R5",
-      "file": "lib/screens/login_screen.dart",
-      "lineContains": "_announcementSlide = Duration(milliseconds: 600)",
-      "reason": "named login timing, no AppMotion step within reach; open question D8, for 2R"
-    },
-    {
-      "rule": "R5",
-      "file": "lib/screens/login_screen.dart",
-      "lineContains": "_alertHoverGrace = Duration(seconds: 3)",
-      "reason": "named login alert restart after hover, no AppTimeouts entry; open question D8, for 2R"
-    },
-    {
-      "rule": "R5",
-      "file": "lib/screens/login_screen.dart",
-      "lineContains": "_shakeDuration = Duration(milliseconds: 420)",
-      "reason": "named login card shake, no AppMotion step within reach; open question D8, for 2R"
-    },
-    {
-      "rule": "R5",
-      "file": "lib/screens/login_screen.dart",
-      "lineContains": "_alertSwitch = Duration(milliseconds: 260)",
-      "reason": "named login alert fade-in, no AppMotion step within reach; open question D8, for 2R"
-    },
-    {
-      "rule": "R5",
-      "file": "lib/screens/login_screen.dart",
-      "lineContains": "_hoverSweep = Duration(milliseconds: 450)",
-      "reason": "named Login button hover sweep, no AppMotion step within reach; open question D8, for 2R"
-    },
-    {
-      "rule": "R5",
-      "file": "lib/screens/login_screen.dart",
-      "lineContains": "_blinkStep = Duration(milliseconds: 600)",
-      "reason": "named NEW badge blink step; open question D8, for 2R"
-    },
-    {
-      "rule": "R5",
-      "file": "lib/screens/login_screen.dart",
-      "lineContains": "_blinkHold = Duration(seconds: 3)",
-      "reason": "named NEW badge blink hold; open question D8, for 2R"
-    },
-    {
-      "rule": "R5",
-      "file": "lib/screens/register_screen.dart",
-      "lineContains": "_alertSwitch = Duration(milliseconds: 260)",
-      "reason": "named register alert fade-in (as login); open question D8, for 2R"
-    },
-    {
-      "rule": "R5",
-      "file": "lib/screens/register_screen.dart",
-      "lineContains": "_alertHoverGrace = Duration(seconds: 3)",
-      "reason": "named register alert restart after hover (as login); open question D8, for 2R"
-    },
-    {
-      "rule": "R5",
-      "file": "lib/screens/register_screen.dart",
-      "lineContains": "_scrollToField = Duration(milliseconds: 350)",
-      "reason": "named scroll to the first field in error, 50 ms from slow and slower; open question D8, for 2R"
+      "reason": "KEEP, owner (D9 rule): delay before the subscription pill shows, left as written; docs/design/parked_values.md D2"
     },
     {
       "rule": "R7",
       "file": "lib/screens/dashboard/dashboard_screen.dart",
       "lineContains": "MediaQuery.of(context).size.width < 1024;",
-      "reason": "small-screen check beside the Layout Fixed Mode collapse logic, left as written (owner's D9 rule)"
+      "reason": "KEEP, owner (D9 rule): small-screen check beside the Layout Fixed Mode collapse logic, left as written; docs/design/parked_values.md D3"
     },
     {
       "rule": "R8",
