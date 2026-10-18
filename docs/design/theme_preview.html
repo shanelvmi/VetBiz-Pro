@@ -1,0 +1,170 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Theme Preview</title>
+<style>
+:root{--ink:#1d1d1d;--line:#e0e0e0}
+*{box-sizing:border-box}
+body{margin:0;font:14px/1.45 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;color:var(--ink);background:#fff}
+header{padding:20px 16px;border-bottom:1px solid var(--line)}
+header h1{margin:0 0 4px;font-size:20px}
+header p{margin:0;max-width:820px;color:#555}
+section{padding:20px 16px 12px;border-bottom:1px solid var(--line)}
+h2{margin:0 0 12px;font-size:18px}h2 small{font-weight:400;color:#666;font-size:13px}
+.sws{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px;margin-bottom:14px}
+.sw{display:grid;grid-template-columns:28px 1fr;column-gap:8px;align-items:center;background:#fff;border:1px solid var(--line);border-radius:8px;padding:6px 8px}
+.sw span{grid-row:span 2;width:28px;height:28px;border-radius:6px;border:1px solid rgba(0,0,0,.12)}
+.sw b{font-size:12px;font-weight:600;overflow-wrap:anywhere}.sw code{font-size:12px;color:#555}
+.mock{display:grid;grid-template-columns:220px 1fr;gap:14px}
+nav{border-radius:10px;padding:10px 8px;color:#fff;display:flex;flex-direction:column;gap:4px}
+.item{display:flex;gap:10px;align-items:center;padding:9px 12px;border-radius:8px}
+.item small{display:block;color:rgba(255,255,255,.7);font-size:11px}
+.ic{opacity:.9}
+.badge{margin-top:8px;font-size:12px;font-weight:600;padding:4px 8px;border-radius:8px;align-self:flex-start}
+.main{display:flex;flex-direction:column;gap:10px;min-width:0}
+.card{background:#fff;border-radius:10px;padding:14px;box-shadow:0 1px 3px rgba(0,0,0,.12)}
+.card h3{margin:0 0 4px;font-size:16px;color:rgba(0,0,0,.87)}
+.t2{margin:0 0 4px}
+.card a{display:inline-block;margin:4px 0 10px;font-weight:600;text-decoration:underline}
+.row{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+button{border:0;border-radius:8px;padding:10px 16px;font:inherit;font-weight:600}
+.chip{border:1px solid;border-radius:16px;padding:4px 12px;font-weight:600;font-size:13px}
+.qa{flex:1 1 160px;border-radius:10px;padding:14px;font-weight:600;color:rgba(0,0,0,.87)}
+.alert{border:1px solid;border-radius:24px;padding:8px 14px;font-weight:600}
+.grad{border-radius:10px;padding:16px;font-weight:600}
+.num{margin:10px 0 0;font-size:12px;color:#555}
+@media (max-width:640px){.mock{grid-template-columns:1fr}}
+</style></head><body>
+<header><h1>T0: the four colour themes</h1><p>Static preview for docs/design/themes.md. Every colour is the exact D10 value or the section 4 derivation (warm guard and visibility floor applied). Pasture is today's look. Contrast figures are computed (WCAG 2.1). The semantic colours (banner, danger alert) are the same in every theme.</p></header>
+<section style="background:#FDFDF9">
+<h2>Pasture (default) <small>id <code>pasture</code></small></h2>
+<div class="sws"><div class="sw"><span style="background:#2F5D62"></span><b>primary</b><code>#2F5D62</code></div><div class="sw"><span style="background:#FFB200"></span><b>accent</b><code>#FFB200</code></div><div class="sw"><span style="background:#FDFDF9"></span><b>background</b><code>#FDFDF9</code></div><div class="sw"><span style="background:#00796B"></span><b>sidebarHover</b><code>#00796B</code></div><div class="sw"><span style="background:#00695C"></span><b>sidebarPress</b><code>#00695C</code></div><div class="sw"><span style="background:#3E8E82"></span><b>brandTeal</b><code>#3E8E82</code></div><div class="sw"><span style="background:#7EE8CB"></span><b>brandTealGlow</b><code>#7EE8CB</code></div><div class="sw"><span style="background:#E3F0EC"></span><b>quickActionTintPrimary</b><code>#E3F0EC</code></div><div class="sw"><span style="background:#FCEFD9"></span><b>quickActionTintAccent</b><code>#FCEFD9</code></div></div>
+<div class="mock">
+ <nav style="background:#2F5D62">
+  <div class="item"><span class="ic">&#9632;</span><div>Dashboard<small>normal</small></div></div>
+  <div class="item" style="background:#00796B"><span class="ic">&#9632;</span><div>Sales<small>hover (sidebarHover)</small></div></div>
+  <div class="item" style="background:#00695C"><span class="ic">&#9632;</span><div>Products<small>press (sidebarPress)</small></div></div>
+  <div class="badge" style="color:#3E8E82;background:#fff">operator badge (brandTeal)</div>
+ </nav>
+ <div class="main">
+  <div class="card">
+   <h3>Today's sales</h3>
+   <p class="t2" style="color:#757575">textMuted #757575: 12 sales since 08:00</p>
+   <p class="t2" style="color:rgba(0,0,0,.54)">textSecondary: compared with yesterday</p>
+   <a style="color:#3E8E82">brandTeal link (login card)</a>
+   <div class="row">
+    <button style="background:#2F5D62;color:#fff">Primary button</button>
+    <button style="background:#FFB200;color:rgba(0,0,0,.87)">Accent button</button>
+    <span class="chip" style="background:#2F5D621A;color:#2F5D62;border-color:#2F5D6266">Chip</span>
+   </div>
+  </div>
+  <div class="row">
+   <div class="qa" style="background:#E3F0EC"><span style="color:#2F5D62">&#9679;</span> Record Visit</div>
+   <div class="qa" style="background:#FCEFD9"><span style="color:#FFB200">&#9679;</span> Add Product</div>
+  </div>
+  <div class="alert" style="background:#FFF6E7EB;color:#C77800;border-color:#C7780066">Subscription banner (warningBannerText on warningBannerFill, the same in every theme)</div>
+  <div class="alert" style="background:#FFF1F0;color:#B71C1C;border-color:#B71C1C55">Danger alert (dangerDeep on dangerSurface)</div>
+  <div class="grad" style="background:linear-gradient(90deg,#2F5D62,#3E8E82,#7EE8CB)"><span style="color:#fff">Login gradient: primary, brandTeal, brandTealGlow</span></div>
+ </div>
+</div>
+<p class="num">white on primary 7.34 &middot; primary on background 7.19 &middot; dark ink on accent 9.69 &middot; accent on primary 4.06 &middot; white on hover 5.32 &middot; brandTeal on white 3.89</p>
+</section>
+<section style="background:#F6F9FC">
+<h2>Clinic <small>id <code>clinic</code></small></h2>
+<div class="sws"><div class="sw"><span style="background:#0F4C81"></span><b>primary</b><code>#0F4C81</code></div><div class="sw"><span style="background:#5BC0EB"></span><b>accent</b><code>#5BC0EB</code></div><div class="sw"><span style="background:#F6F9FC"></span><b>background</b><code>#F6F9FC</code></div><div class="sw"><span style="background:#005A78"></span><b>sidebarHover</b><code>#005A78</code></div><div class="sw"><span style="background:#004F68"></span><b>sidebarPress</b><code>#004F68</code></div><div class="sw"><span style="background:#1195BA"></span><b>brandTeal</b><code>#1195BA</code></div><div class="sw"><span style="background:#7EDEE8"></span><b>brandTealGlow</b><code>#7EDEE8</code></div><div class="sw"><span style="background:#E3EFF0"></span><b>quickActionTintPrimary</b><code>#E3EFF0</code></div><div class="sw"><span style="background:#D9F4FC"></span><b>quickActionTintAccent</b><code>#D9F4FC</code></div></div>
+<div class="mock">
+ <nav style="background:#0F4C81">
+  <div class="item"><span class="ic">&#9632;</span><div>Dashboard<small>normal</small></div></div>
+  <div class="item" style="background:#005A78"><span class="ic">&#9632;</span><div>Sales<small>hover (sidebarHover)</small></div></div>
+  <div class="item" style="background:#004F68"><span class="ic">&#9632;</span><div>Products<small>press (sidebarPress)</small></div></div>
+  <div class="badge" style="color:#1195BA;background:#fff">operator badge (brandTeal)</div>
+ </nav>
+ <div class="main">
+  <div class="card">
+   <h3>Today's sales</h3>
+   <p class="t2" style="color:#727272">textMuted #727272: 12 sales since 08:00</p>
+   <p class="t2" style="color:rgba(0,0,0,.54)">textSecondary: compared with yesterday</p>
+   <a style="color:#1195BA">brandTeal link (login card)</a>
+   <div class="row">
+    <button style="background:#0F4C81;color:#fff">Primary button</button>
+    <button style="background:#5BC0EB;color:rgba(0,0,0,.87)">Accent button</button>
+    <span class="chip" style="background:#0F4C811A;color:#0F4C81;border-color:#0F4C8166">Chip</span>
+   </div>
+  </div>
+  <div class="row">
+   <div class="qa" style="background:#E3EFF0"><span style="color:#0F4C81">&#9679;</span> Record Visit</div>
+   <div class="qa" style="background:#D9F4FC"><span style="color:#5BC0EB">&#9679;</span> Add Product</div>
+  </div>
+  <div class="alert" style="background:#FFF6E7EB;color:#C77800;border-color:#C7780066">Subscription banner (warningBannerText on warningBannerFill, the same in every theme)</div>
+  <div class="alert" style="background:#FFF1F0;color:#B71C1C;border-color:#B71C1C55">Danger alert (dangerDeep on dangerSurface)</div>
+  <div class="grad" style="background:linear-gradient(90deg,#0F4C81,#1195BA,#7EDEE8)"><span style="color:#fff">Login gradient: primary, brandTeal, brandTealGlow</span></div>
+ </div>
+</div>
+<p class="num">white on primary 8.86 &middot; primary on background 8.38 &middot; dark ink on accent 8.61 &middot; accent on primary 4.30 &middot; white on hover 7.68 &middot; brandTeal on white 3.48</p>
+</section>
+<section style="background:#FBF7F0">
+<h2>Harvest <small>id <code>harvest</code></small></h2>
+<div class="sws"><div class="sw"><span style="background:#4A3426"></span><b>primary</b><code>#4A3426</code></div><div class="sw"><span style="background:#E3A72F"></span><b>accent</b><code>#E3A72F</code></div><div class="sw"><span style="background:#FBF7F0"></span><b>background</b><code>#FBF7F0</code></div><div class="sw"><span style="background:#64391D"></span><b>sidebarHover</b><code>#64391D</code></div><div class="sw"><span style="background:#583219"></span><b>sidebarPress</b><code>#583219</code></div><div class="sw"><span style="background:#754F37"></span><b>brandTeal</b><code>#754F37</code></div><div class="sw"><span style="background:#DDAA89"></span><b>brandTealGlow</b><code>#DDAA89</code></div><div class="sw"><span style="background:#F0E8E3"></span><b>quickActionTintPrimary</b><code>#F0E8E3</code></div><div class="sw"><span style="background:#FCEED9"></span><b>quickActionTintAccent</b><code>#FCEED9</code></div></div>
+<div class="mock">
+ <nav style="background:#4A3426">
+  <div class="item"><span class="ic">&#9632;</span><div>Dashboard<small>normal</small></div></div>
+  <div class="item" style="background:#64391D"><span class="ic">&#9632;</span><div>Sales<small>hover (sidebarHover)</small></div></div>
+  <div class="item" style="background:#583219"><span class="ic">&#9632;</span><div>Products<small>press (sidebarPress)</small></div></div>
+  <div class="badge" style="color:#754F37;background:#fff">operator badge (brandTeal)</div>
+ </nav>
+ <div class="main">
+  <div class="card">
+   <h3>Today's sales</h3>
+   <p class="t2" style="color:#727272">textMuted #727272: 12 sales since 08:00</p>
+   <p class="t2" style="color:rgba(0,0,0,.54)">textSecondary: compared with yesterday</p>
+   <a style="color:#754F37">brandTeal link (login card)</a>
+   <div class="row">
+    <button style="background:#4A3426;color:#fff">Primary button</button>
+    <button style="background:#E3A72F;color:rgba(0,0,0,.87)">Accent button</button>
+    <span class="chip" style="background:#4A34261A;color:#4A3426;border-color:#4A342666">Chip</span>
+   </div>
+  </div>
+  <div class="row">
+   <div class="qa" style="background:#F0E8E3"><span style="color:#4A3426">&#9679;</span> Record Visit</div>
+   <div class="qa" style="background:#FCEED9"><span style="color:#E3A72F">&#9679;</span> Add Product</div>
+  </div>
+  <div class="alert" style="background:#FFF6E7EB;color:#C77800;border-color:#C7780066">Subscription banner (warningBannerText on warningBannerFill, the same in every theme)</div>
+  <div class="alert" style="background:#FFF1F0;color:#B71C1C;border-color:#B71C1C55">Danger alert (dangerDeep on dangerSurface)</div>
+  <div class="grad" style="background:linear-gradient(90deg,#4A3426,#754F37,#DDAA89)"><span style="color:#fff">Login gradient: primary, brandTeal, brandTealGlow</span></div>
+ </div>
+</div>
+<p class="num">white on primary 11.60 &middot; primary on background 10.86 &middot; dark ink on accent 8.39 &middot; accent on primary 5.43 &middot; white on hover 9.79 &middot; brandTeal on white 7.17</p>
+</section>
+<section style="background:#F8FAFC">
+<h2>Ledger <small>id <code>ledger</code></small></h2>
+<div class="sws"><div class="sw"><span style="background:#1E293B"></span><b>primary</b><code>#1E293B</code></div><div class="sw"><span style="background:#8B9CFF"></span><b>accent</b><code>#8B9CFF</code></div><div class="sw"><span style="background:#F8FAFC"></span><b>background</b><code>#F8FAFC</code></div><div class="sw"><span style="background:#013559"></span><b>sidebarHover</b><code>#013559</code></div><div class="sw"><span style="background:#012D4A"></span><b>sidebarPress</b><code>#012D4A</code></div><div class="sw"><span style="background:#2F5165"></span><b>brandTeal</b><code>#2F5165</code></div><div class="sw"><span style="background:#7ECEE8"></span><b>brandTealGlow</b><code>#7ECEE8</code></div><div class="sw"><span style="background:#E3EDF0"></span><b>quickActionTintPrimary</b><code>#E3EDF0</code></div><div class="sw"><span style="background:#D9E1FC"></span><b>quickActionTintAccent</b><code>#D9E1FC</code></div></div>
+<div class="mock">
+ <nav style="background:#1E293B">
+  <div class="item"><span class="ic">&#9632;</span><div>Dashboard<small>normal</small></div></div>
+  <div class="item" style="background:#013559"><span class="ic">&#9632;</span><div>Sales<small>hover (sidebarHover)</small></div></div>
+  <div class="item" style="background:#012D4A"><span class="ic">&#9632;</span><div>Products<small>press (sidebarPress)</small></div></div>
+  <div class="badge" style="color:#2F5165;background:#fff">operator badge (brandTeal)</div>
+ </nav>
+ <div class="main">
+  <div class="card">
+   <h3>Today's sales</h3>
+   <p class="t2" style="color:#737373">textMuted #737373: 12 sales since 08:00</p>
+   <p class="t2" style="color:rgba(0,0,0,.54)">textSecondary: compared with yesterday</p>
+   <a style="color:#2F5165">brandTeal link (login card)</a>
+   <div class="row">
+    <button style="background:#1E293B;color:#fff">Primary button</button>
+    <button style="background:#8B9CFF;color:rgba(0,0,0,.87)">Accent button</button>
+    <span class="chip" style="background:#1E293B1A;color:#1E293B;border-color:#1E293B66">Chip</span>
+   </div>
+  </div>
+  <div class="row">
+   <div class="qa" style="background:#E3EDF0"><span style="color:#1E293B">&#9679;</span> Record Visit</div>
+   <div class="qa" style="background:#D9E1FC"><span style="color:#8B9CFF">&#9679;</span> Add Product</div>
+  </div>
+  <div class="alert" style="background:#FFF6E7EB;color:#C77800;border-color:#C7780066">Subscription banner (warningBannerText on warningBannerFill, the same in every theme)</div>
+  <div class="alert" style="background:#FFF1F0;color:#B71C1C;border-color:#B71C1C55">Danger alert (dangerDeep on dangerSurface)</div>
+  <div class="grad" style="background:linear-gradient(90deg,#1E293B,#2F5165,#7ECEE8)"><span style="color:#fff">Login gradient: primary, brandTeal, brandTealGlow</span></div>
+ </div>
+</div>
+<p class="num">white on primary 14.63 &middot; primary on background 13.98 &middot; dark ink on accent 7.16 &middot; accent on primary 5.78 &middot; white on hover 12.69 &middot; brandTeal on white 8.45</p>
+</section>
+</body></html>
