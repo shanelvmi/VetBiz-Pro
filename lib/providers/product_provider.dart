@@ -783,15 +783,7 @@ class ProductProvider with ChangeNotifier {
       return _deductLegacyAggregate(productRef: productRef, quantity: quantity, firestore: firestore);
     }
 
-    final candidates = candidateSnap.docs.toList()
-      ..sort((a, b) {
-        final aExp = a.data()['expiry'] as Timestamp?;
-        final bExp = b.data()['expiry'] as Timestamp?;
-        if (aExp == null && bExp == null) return 0;
-        if (aExp == null) return 1;
-        if (bExp == null) return -1;
-        return aExp.compareTo(bExp);
-      });
+    final candidates = candidateSnap.docs.toList()..sort(compareByExpiry);
 
     final allocations = <Map<String, dynamic>>[];
 
@@ -831,6 +823,18 @@ class ProductProvider with ChangeNotifier {
     });
 
     return allocations;
+  }
+
+  /// FIFO order for batches: soonest expiry first; no expiry sorts last
+  /// (treated as "keep aside", not urgent).
+  static int compareByExpiry(
+      DocumentSnapshot<Map<String, dynamic>> a, DocumentSnapshot<Map<String, dynamic>> b) {
+    final aExp = a.data()?['expiry'] as Timestamp?;
+    final bExp = b.data()?['expiry'] as Timestamp?;
+    if (aExp == null && bExp == null) return 0;
+    if (aExp == null) return 1;
+    if (bExp == null) return -1;
+    return aExp.compareTo(bExp);
   }
 
   Future<List<Map<String, dynamic>>> _deductLegacyAggregate({
@@ -1271,5 +1275,92 @@ class ProductProvider with ChangeNotifier {
   void dispose() {
     _subscription?.cancel();
     super.dispose();
+  }
+}
+
+/// Not enough sellable stock for a line of a sale, or its product is gone.
+/// Thrown before anything is written, so nothing needs undoing.
+class InsufficientStockException implements Exception {
+  final String message;
+  const InsufficientStockException(this.message);
+
+  @override
+  String toString() => 'InsufficientStockException: $message';
+}
+
+/// The FIFO deduction of [ProductProvider.deductSellableFIFO], split in two
+/// so a caller can make it part of its own transaction (SaleProvider.addSale):
+/// [take] plans one line from documents the caller has already read in that
+/// transaction and writes nothing; [apply] then writes every touched batch
+/// and product once. Several lines, even of the same product, are planned
+/// against the same reads: each [take] sees what the earlier ones left.
+class SellableStockPlan {
+  final Map<String, (DocumentReference, int)> _batches = {};
+  final Map<String, (DocumentReference, int)> _products = {};
+
+  /// Plans taking [quantity] of the product in [product] from [batches]
+  /// (fresh reads of its candidate batches, in [ProductProvider.compareByExpiry]
+  /// order). Returns the allocations, in the shape deductSellableFIFO returns
+  /// and restoreSellableFIFO reads. A product with no candidate batches uses
+  /// the legacy aggregate, as deductSellableFIFO does. Throws
+  /// [InsufficientStockException] when the stock does not cover it.
+  List<Map<String, dynamic>> take({
+    required DocumentSnapshot<Map<String, dynamic>> product,
+    required List<DocumentSnapshot<Map<String, dynamic>>> batches,
+    required int quantity,
+  }) {
+    if (quantity <= 0) return [];
+
+    if (batches.isEmpty) {
+      // Legacy path: no batch records for this product.
+      if (!product.exists) throw const InsufficientStockException('Product no longer exists');
+      final current = _current(_products, product);
+      if (quantity > current) throw const InsufficientStockException('Not enough sellable stock');
+      _products[product.reference.path] = (product.reference, current - quantity);
+      final buyPrice = (product.data()?['buyPrice'] ?? 0).toDouble();
+      return [
+        {'batchId': null, 'quantity': quantity, 'buyPrice': buyPrice}
+      ];
+    }
+
+    final allocations = <Map<String, dynamic>>[];
+    final planned = <String, (DocumentReference, int)>{};
+    int remaining = quantity;
+    for (final snap in batches) {
+      if (remaining <= 0) break;
+      if (!snap.exists) continue;
+      final available = planned[snap.reference.path]?.$2 ?? _current(_batches, snap);
+      if (available <= 0) continue;
+
+      final take = remaining < available ? remaining : available;
+      final buyPrice = (snap.data()?['buyPrice'] ?? 0).toDouble();
+      planned[snap.reference.path] = (snap.reference, available - take);
+      allocations.add({'batchId': snap.id, 'quantity': take, 'buyPrice': buyPrice});
+      remaining -= take;
+    }
+
+    if (remaining > 0) {
+      throw const InsufficientStockException('Not enough sellable stock across all batches');
+    }
+
+    _batches.addAll(planned);
+    if (product.exists) {
+      _products[product.reference.path] = (product.reference, _current(_products, product) - quantity);
+    }
+    return allocations;
+  }
+
+  /// Writes the planned quantities in [transaction]. Call it after every
+  /// read of the transaction.
+  void apply(Transaction transaction) {
+    for (final (ref, qty) in [..._batches.values, ..._products.values]) {
+      transaction.update(ref, {'sellableQty': qty});
+    }
+  }
+
+  // What is left of [snap]'s sellableQty after the lines planned so far.
+  static int _current(
+      Map<String, (DocumentReference, int)> planned, DocumentSnapshot<Map<String, dynamic>> snap) {
+    return planned[snap.reference.path]?.$2 ?? (snap.data()?['sellableQty'] ?? 0) as int;
   }
 }

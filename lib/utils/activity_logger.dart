@@ -40,20 +40,42 @@ class ActivityLogger {
           .collection(Collections.facilities)
           .doc(facilityId)
           .collection(Collections.activityLogs)
-          .add({
-        Fields.userId: userId,
-        'userName': userName,
-        'actionType': actionType,
-        'description': description,
-        if (targetUserId != null && targetUserId.isNotEmpty) 'targetUserId': targetUserId,
-        'timestamp': FieldValue.serverTimestamp(),
-      });
+          .add(_entry(userId, userName, actionType, description, targetUserId));
 
       debugPrint('✅ Activity logged: $actionType by $userName in facility $facilityId');
     } catch (e) {
       debugPrint('❌ Failed to log activity: $e');
     }
   }
+
+  /// Adds the entry to [transaction] as [ref], so it is saved with the
+  /// record it describes or not at all (SaleProvider.addSale). Unlike
+  /// [logActivity] it reads nothing and swallows nothing: the caller has
+  /// the user's name already, and a failure fails the whole transaction.
+  static void logActivityIn(
+    Transaction transaction,
+    DocumentReference<Map<String, dynamic>> ref, {
+    required String userId,
+    required String userName,
+    required String actionType,
+    required String description,
+    String? targetUserId,
+  }) {
+    transaction.set(ref, _entry(userId, userName, actionType, description, targetUserId));
+  }
+
+  // The shape firestore.rules accepts: the signed-in user's uid and the
+  // server's clock.
+  static Map<String, dynamic> _entry(String userId, String? userName, String actionType,
+          String description, String? targetUserId) =>
+      {
+        Fields.userId: userId,
+        'userName': userName,
+        'actionType': actionType,
+        'description': description,
+        if (targetUserId != null && targetUserId.isNotEmpty) 'targetUserId': targetUserId,
+        'timestamp': FieldValue.serverTimestamp(),
+      };
 
   /// Helper to get current FirebaseAuth userId and fullName
   static Future<Map<String, String>> getCurrentUserInfo() async {

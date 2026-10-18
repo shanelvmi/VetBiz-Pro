@@ -41,3 +41,34 @@ Future<int> nextReceiptNumber(String facilityId,
     return next;
   });
 }
+
+/// The next receipt number, claimed inside a caller's own transaction, so
+/// the number and the record it goes on are saved together or not at all
+/// (SaleProvider.addSale): no gap, and no number without its record.
+/// [claimReceiptNumber] reads the counter, so call it with the
+/// transaction's other reads; call [write] with its other writes.
+class ReceiptNumberClaim {
+  final DocumentReference<Map<String, dynamic>> _counterRef;
+  final int value;
+
+  ReceiptNumberClaim._(this._counterRef, this.value);
+
+  void write(Transaction transaction) =>
+      transaction.set(_counterRef, {'value': value}, SetOptions(merge: true));
+}
+
+Future<ReceiptNumberClaim> claimReceiptNumber(
+  Transaction transaction,
+  FirebaseFirestore firestore,
+  String facilityId, {
+  String counterName = 'receiptNumber',
+}) async {
+  final counterRef = firestore
+      .collection(Collections.facilities)
+      .doc(facilityId)
+      .collection(Collections.counters)
+      .doc(counterName);
+  final snapshot = await transaction.get(counterRef);
+  final current = (snapshot.data()?['value'] as num?)?.toInt() ?? 0;
+  return ReceiptNumberClaim._(counterRef, current + 1);
+}
