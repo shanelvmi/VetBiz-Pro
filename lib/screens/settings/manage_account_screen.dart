@@ -130,7 +130,7 @@ class _ManageAccountScreenState extends State<ManageAccountScreen> {
     final confirm = await showDialog<bool>(
       context: context,
       builder: (_) => AlertDialog(
-        backgroundColor: context.colors.background,
+        backgroundColor: context.colors.raisedSurface,
         title: Text(context.l10n.account_logoutAllTitle, style: TextStyle(color: context.colors.primary, fontWeight: AppFontWeight.bold)),
         content: SizedBox(
           width: _dialogWidth(context),
@@ -182,7 +182,7 @@ class _ManageAccountScreenState extends State<ManageAccountScreen> {
     final confirm = await showDialog<bool>(
       context: context,
       builder: (_) => AlertDialog(
-        backgroundColor: context.colors.background,
+        backgroundColor: context.colors.raisedSurface,
         title: Text(context.l10n.account_wipeTitle, style: TextStyle(color: context.colors.primary, fontWeight: AppFontWeight.bold)),
         content: SizedBox(
           width: _dialogWidth(context),
@@ -221,7 +221,7 @@ class _ManageAccountScreenState extends State<ManageAccountScreen> {
       builder: (context) {
         final controller = TextEditingController();
         return AlertDialog(
-          backgroundColor: context.colors.background,
+          backgroundColor: context.colors.raisedSurface,
           title: Text(context.l10n.account_confirmTitle, style: TextStyle(color: context.colors.primary, fontWeight: AppFontWeight.bold)),
           content: SizedBox(
             width: _dialogWidth(context),
@@ -314,7 +314,7 @@ class _ManageAccountScreenState extends State<ManageAccountScreen> {
         await showDialog<void>(
           context: context,
           builder: (_) => AlertDialog(
-            backgroundColor: context.colors.background,
+            backgroundColor: context.colors.raisedSurface,
             title: Text(context.l10n.account_cannotDeactivateTitle, style: TextStyle(color: context.colors.primary, fontWeight: AppFontWeight.bold)),
             content: SizedBox(
               width: _dialogWidth(context),
@@ -337,7 +337,7 @@ class _ManageAccountScreenState extends State<ManageAccountScreen> {
     final confirm = await showDialog<bool>(
       context: context,
       builder: (_) => AlertDialog(
-        backgroundColor: context.colors.background,
+        backgroundColor: context.colors.raisedSurface,
         title: Text(context.l10n.account_deactivateTitle, style: TextStyle(color: context.colors.primary, fontWeight: AppFontWeight.bold)),
         content: SizedBox(
           width: _dialogWidth(context),
@@ -368,7 +368,7 @@ class _ManageAccountScreenState extends State<ManageAccountScreen> {
       builder: (context) {
         final controller = TextEditingController();
         return AlertDialog(
-          backgroundColor: context.colors.background,
+          backgroundColor: context.colors.raisedSurface,
           title: Text(context.l10n.account_confirmDeactivation, style: TextStyle(color: context.colors.primary, fontWeight: AppFontWeight.bold)),
           content: SizedBox(
             width: _dialogWidth(context),
@@ -445,7 +445,7 @@ class _ManageAccountScreenState extends State<ManageAccountScreen> {
       context: context,
       barrierDismissible: false,
       builder: (_) => AlertDialog(
-        backgroundColor: context.colors.background,
+        backgroundColor: context.colors.raisedSurface,
         title: Text(context.l10n.account_deleteTitle, style: TextStyle(color: context.colors.primary, fontWeight: AppFontWeight.bold)),
         content: SizedBox(
           width: _dialogWidth(context),

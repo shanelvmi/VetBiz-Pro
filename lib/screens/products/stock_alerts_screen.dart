@@ -233,14 +233,14 @@ class StockAlertsScreen extends StatelessWidget {
         Container(
           padding: const EdgeInsets.fromLTRB(AppSpacing.s16, AppSpacing.s14, AppSpacing.s8, AppSpacing.s14),
           decoration: BoxDecoration(
-            color: context.colors.primary,
+            color: context.colors.brandSurface,
             borderRadius: const BorderRadius.vertical(top: Radius.circular(AppRadius.r12)),
           ),
           child: Row(
             children: [
               Text(
                 context.l10n.alerts_title,
-                style: TextStyle(color: context.colors.onPrimary, fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f15),
+                style: TextStyle(color: context.colors.onBrandSurface, fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f15),
               ),
               if (alerts.isNotEmpty) ...[
                 const SizedBox(width: AppSpacing.s8),
@@ -253,7 +253,7 @@ class StockAlertsScreen extends StatelessWidget {
               ],
               const Spacer(),
               IconButton(
-                icon: Icon(Icons.close, color: context.colors.onPrimary, size: AppIconSize.i20),
+                icon: Icon(Icons.close, color: context.colors.onBrandSurface, size: AppIconSize.i20),
                 tooltip: context.l10n.common_close,
                 onPressed: () => Navigator.of(context).pop(),
               ),

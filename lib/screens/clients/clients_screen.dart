@@ -346,7 +346,7 @@ class _ClientsScreenState extends State<ClientsScreen> {
     final confirm = await showDialog<bool>(
       context: context,
       builder: (_) => AlertDialog(
-        backgroundColor: context.colors.background,
+        backgroundColor: context.colors.raisedSurface,
         title: Text(context.l10n.clients_deleteTitle, style: TextStyle(color: context.colors.primary)),
         content: Text(context.l10n.clients_deleteBody(client.name)),
         actions: [

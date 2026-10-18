@@ -495,7 +495,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
   void _showLanguageSelection(BuildContext context, UiSettingsProvider uiSettings) {
     showModalBottomSheet(
       context: context,
-      backgroundColor: context.colors.background,
+      backgroundColor: context.colors.raisedSurface,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(AppRadius.r16)),
       ),
@@ -614,7 +614,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        backgroundColor: context.colors.background,
+        backgroundColor: context.colors.raisedSurface,
         title: Row(
           children: [
             Icon(Icons.info_outline, color: context.colors.primary),
@@ -661,7 +661,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        backgroundColor: context.colors.background,
+        backgroundColor: context.colors.raisedSurface,
         title: Row(
           children: [
             Icon(Icons.help_outline, color: context.colors.primary),
