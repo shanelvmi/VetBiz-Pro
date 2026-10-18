@@ -87,6 +87,7 @@ class AppColors extends ThemeExtension<AppColors> {
     required this.onAccent,
     required this.warningDeep,
     required this.infoDeep,
+    required this.raisedSurface,
   });
 
   // Brand: the theme's own three colours (the roles derived from them are
@@ -243,6 +244,11 @@ class AppColors extends ThemeExtension<AppColors> {
   final Color warningDeep;
   final Color infoDeep;
 
+  // A card that light draws in the page colour and lifts only by its
+  // shadow (the Products and Stock Store cards). Dark shadows are invisible,
+  // so in dark it is `surface`, lighter than the page (K3). Light: background.
+  final Color raisedSurface;
+
   /// The roles for a colour theme. In Pasture every value is the exact
   /// legacy shade. The brand-linked roles and textMuted are derived from the
   /// theme (theme_derivation.dart, docs/design/themes.md sections 4 and 7);
@@ -325,6 +331,7 @@ class AppColors extends ThemeExtension<AppColors> {
         onAccent: Colors.black87,
         warningDeep: Colors.orange.shade900,
         infoDeep: Colors.blue.shade900,
+        raisedSurface: theme.background,
       );
   }
 
@@ -408,6 +415,7 @@ class AppColors extends ThemeExtension<AppColors> {
       onAccent: background,
       warningDeep: text(light.warningDeep),
       infoDeep: text(light.infoDeep),
+      raisedSurface: surface,
     );
   }
 
@@ -483,6 +491,7 @@ class AppColors extends ThemeExtension<AppColors> {
     Color? onAccent,
     Color? warningDeep,
     Color? infoDeep,
+    Color? raisedSurface,
   }) =>
       AppColors(
         primary: primary ?? this.primary,
@@ -555,6 +564,7 @@ class AppColors extends ThemeExtension<AppColors> {
         onAccent: onAccent ?? this.onAccent,
         warningDeep: warningDeep ?? this.warningDeep,
         infoDeep: infoDeep ?? this.infoDeep,
+        raisedSurface: raisedSurface ?? this.raisedSurface,
       );
 
   @override
@@ -632,6 +642,7 @@ class AppColors extends ThemeExtension<AppColors> {
       onAccent: l(onAccent, other.onAccent),
       warningDeep: l(warningDeep, other.warningDeep),
       infoDeep: l(infoDeep, other.infoDeep),
+      raisedSurface: l(raisedSurface, other.raisedSurface),
     );
   }
 }

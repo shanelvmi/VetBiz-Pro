@@ -235,7 +235,7 @@ class _ProductsScreenState extends State<ProductsScreen> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: AppSpacing.s14, vertical: AppSpacing.s10),
       decoration: BoxDecoration(
-        color: context.colors.background,
+        color: context.colors.raisedSurface,
         borderRadius: BorderRadius.circular(AppRadius.r12),
         border: Border.all(color: context.colors.textHint.withValues(alpha: AppAlpha.a15)),
         boxShadow: [
@@ -636,7 +636,7 @@ class _ProductsScreenState extends State<ProductsScreen> {
     return Container(
       padding: const EdgeInsets.all(AppSpacing.s10),
       decoration: BoxDecoration(
-        color: context.colors.background,
+        color: context.colors.raisedSurface,
         borderRadius: BorderRadius.circular(AppRadius.r12),
         boxShadow: [
           BoxShadow(color: context.colors.shadow.withValues(alpha: AppAlpha.a05), blurRadius: 6, offset: const Offset(0, 2)),
@@ -1051,7 +1051,7 @@ class _ProductsScreenState extends State<ProductsScreen> {
         Container(
       padding: const EdgeInsets.all(AppSpacing.s14),
       decoration: BoxDecoration(
-        color: context.colors.background,
+        color: context.colors.raisedSurface,
         borderRadius: BorderRadius.circular(AppRadius.r14),
         boxShadow: [
           BoxShadow(color: context.colors.shadow.withValues(alpha: AppAlpha.a05), blurRadius: 8, offset: const Offset(0, 2)),

@@ -42,4 +42,23 @@ void main() {
       });
     }
   });
+
+  group('K3: raisedSurface (Products and Stock Store cards)', () {
+    for (final theme in AppColorTheme.all) {
+      test('${theme.id}: light is the page background, value for value', () {
+        final c = AppColors.fromTheme(theme);
+        expect(c.raisedSurface, c.background);
+        expect(c.raisedSurface, theme.background);
+      });
+
+      test('${theme.id}: dark is surface, lighter than the page; copyWith and lerp keep it', () {
+        final c = AppColors.fromTheme(theme, brightness: Brightness.dark);
+        expect(c.raisedSurface, c.surface);
+        expect(ColorMath.luminance(c.raisedSurface), greaterThan(ColorMath.luminance(c.background)));
+        for (final copy in [c.copyWith(), c.lerp(AppColors.fromTheme(theme), 0)]) {
+          expect(copy.raisedSurface, c.raisedSurface);
+        }
+      });
+    }
+  });
 }
