@@ -757,8 +757,6 @@ class _NoFacilityScreen extends StatefulWidget {
 }
 
 class _NoFacilityScreenState extends State<_NoFacilityScreen> {
-  static const Color _deepGreen = AppPalette.primary;
-
   final MembershipService _membership = MembershipService();
   final TextEditingController _codeController = TextEditingController();
   Timer? _debounce;
@@ -986,7 +984,7 @@ class _NoFacilityScreenState extends State<_NoFacilityScreen> {
           child: ElevatedButton(
             onPressed: _adding ? null : _addFacility,
             style: ElevatedButton.styleFrom(
-              backgroundColor: _deepGreen,
+              backgroundColor: context.colors.primary,
               foregroundColor: context.colors.onPrimary,
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadius.r14)),
             ),
@@ -1176,7 +1174,7 @@ class _NoFacilityScreenState extends State<_NoFacilityScreen> {
                     child: ElevatedButton(
                       onPressed: (found != null && !_joining) ? _join : null,
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: _deepGreen,
+                        backgroundColor: context.colors.primary,
                         foregroundColor: context.colors.onPrimary,
                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadius.r14)),
                       ),

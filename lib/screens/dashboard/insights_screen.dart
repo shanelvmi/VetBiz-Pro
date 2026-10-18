@@ -7,7 +7,6 @@ import '../../providers/facility_provider.dart';
 import '../../providers/debt_provider.dart';
 import '../../services/dashboard_summary_service.dart';
 import '../../widgets/summary_card.dart' show KpiTrend;
-import '../../theme/app_palette.dart';
 import '../../data/collections.dart';
 import '../../config/money.dart';
 import '../../config/app_ranges.dart';
@@ -32,12 +31,13 @@ class InsightsScreen extends StatefulWidget {
 }
 
 class _InsightsScreenState extends State<InsightsScreen> {
-  // The service breakdown slices: a fixed chart palette, not themed. The
-  // four muted colours are the chartService roles (parked_values.md A12-A15).
+  // The service breakdown slices. The two brand slices follow the colour
+  // theme (docs/design/themes.md section 6); the four muted colours are
+  // the chartService roles (parked_values.md A12-A15).
   List<Color> get _servicePalette => [
-        AppPalette.primary, // the brand teal
+        context.colors.primary, // the theme's primary (the brand teal in Pasture)
         context.colors.chartService1, // same muted steel blue used for Services on the main dashboard chart
-        AppPalette.accent, // the brand amber
+        context.colors.accent, // the theme's accent (the brand amber in Pasture)
         context.colors.chartService2, // muted sage green
         context.colors.chartService3, // muted terracotta
         context.colors.chartService4, // muted lavender - reserved for the "Other" slice
