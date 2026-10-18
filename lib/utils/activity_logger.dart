@@ -19,13 +19,15 @@ class ActivityLogger {
     // admin matters stay out of their view: an assistant reads only entries
     // they did (userId) or that are about them (this).
     String? targetUserId,
+    // Tests pass an in-memory Firestore; the app always uses the default.
+    FirebaseFirestore? firestore,
   }) async {
     try {
       // Fetch fullName from Firestore if userName not provided
       // 'Unknown' is stored in the log entry, so it stays English
       // (stored data is never translated, PHASE2_LOCALISATION_SPEC 2.5).
       if (userName == null || userName.isEmpty) {
-        final userDoc = await FirebaseFirestore.instance
+        final userDoc = await (firestore ?? FirebaseFirestore.instance)
             .collection(Collections.users)
             .doc(userId)
             .get();
@@ -34,7 +36,7 @@ class ActivityLogger {
             : 'Unknown';
       }
 
-      await FirebaseFirestore.instance
+      await (firestore ?? FirebaseFirestore.instance)
           .collection(Collections.facilities)
           .doc(facilityId)
           .collection(Collections.activityLogs)

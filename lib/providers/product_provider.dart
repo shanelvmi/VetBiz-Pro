@@ -763,10 +763,11 @@ class ProductProvider with ChangeNotifier {
     required String facilityId,
     required String productId,
     required int quantity,
+    FirebaseFirestore? firestore,
   }) async {
     if (quantity <= 0) return [];
 
-    final firestore = FirebaseFirestore.instance;
+    firestore ??= FirebaseFirestore.instance;
     final productRef =
         firestore.collection(Collections.facilities).doc(facilityId).collection(Collections.products).doc(productId);
     final batchesRef = productRef.collection(Collections.batches);
@@ -779,7 +780,7 @@ class ProductProvider with ChangeNotifier {
 
     if (candidateSnap.docs.isEmpty) {
       // No batches at all for this product - legacy path.
-      return _deductLegacyAggregate(productRef: productRef, quantity: quantity);
+      return _deductLegacyAggregate(productRef: productRef, quantity: quantity, firestore: firestore);
     }
 
     final candidates = candidateSnap.docs.toList()
@@ -835,9 +836,10 @@ class ProductProvider with ChangeNotifier {
   Future<List<Map<String, dynamic>>> _deductLegacyAggregate({
     required DocumentReference productRef,
     required int quantity,
+    required FirebaseFirestore firestore,
   }) async {
     double buyPrice = 0;
-    await FirebaseFirestore.instance.runTransaction((transaction) async {
+    await firestore.runTransaction((transaction) async {
       final snapshot = await transaction.get(productRef);
       if (!snapshot.exists) throw Exception('Product no longer exists');
       final data = snapshot.data() as Map<String, dynamic>;
@@ -861,10 +863,11 @@ class ProductProvider with ChangeNotifier {
     required String facilityId,
     required String productId,
     required List<Map<String, dynamic>> allocations,
+    FirebaseFirestore? firestore,
   }) async {
     if (allocations.isEmpty) return;
 
-    final firestore = FirebaseFirestore.instance;
+    firestore ??= FirebaseFirestore.instance;
     final productRef =
         firestore.collection(Collections.facilities).doc(facilityId).collection(Collections.products).doc(productId);
     final batchesRef = productRef.collection(Collections.batches);

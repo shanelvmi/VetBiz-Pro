@@ -24,8 +24,9 @@ import '../data/collections.dart';
 /// that following write then fails is a small gap in the sequence,
 /// not a duplicate number, which is an acceptable trade-off any real
 /// receipt numbering system already has to tolerate.
-Future<int> nextReceiptNumber(String facilityId, {String counterName = 'receiptNumber'}) async {
-  final firestore = FirebaseFirestore.instance;
+Future<int> nextReceiptNumber(String facilityId,
+    {String counterName = 'receiptNumber', FirebaseFirestore? firestore}) async {
+  firestore ??= FirebaseFirestore.instance;
   final counterRef = firestore
       .collection(Collections.facilities)
       .doc(facilityId)

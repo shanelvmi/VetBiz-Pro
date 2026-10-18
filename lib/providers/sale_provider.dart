@@ -16,7 +16,11 @@ import '../config/app_limits.dart';
 import '../config/app_ranges.dart';
 
 class SaleProvider extends ChangeNotifier {
-  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  final FirebaseFirestore _firestore;
+
+  // Who is signed in, for the activity entry. Tests pass their own; the app
+  // uses ActivityLogger.getCurrentUserInfo (FirebaseAuth).
+  final Future<Map<String, String>> Function() _currentUserInfo;
 
   /// How many sales to fetch per page. The live listener always holds the
   /// most recent [pageSize] sales in real time; older pages are fetched
@@ -42,7 +46,11 @@ class SaleProvider extends ChangeNotifier {
   bool _isLoadingMore = false;
   bool get isLoadingMore => _isLoadingMore;
 
-  SaleProvider() {
+  SaleProvider({
+    FirebaseFirestore? firestore,
+    Future<Map<String, String>> Function()? currentUserInfo,
+  })  : _firestore = firestore ?? FirebaseFirestore.instance,
+        _currentUserInfo = currentUserInfo ?? ActivityLogger.getCurrentUserInfo {
     salesListController = CursorPaginatedListController<Sale>(
       pageSize: AppLimits.pageSize,
       fetchPage: _fetchSalesListPage,
@@ -363,6 +371,7 @@ class SaleProvider extends ChangeNotifier {
             facilityId: facilityId,
             productId: item.productId,
             quantity: item.quantity,
+            firestore: _firestore,
           );
           deductedSoFar[item.productId] = allocations;
 
@@ -384,6 +393,7 @@ class SaleProvider extends ChangeNotifier {
             facilityId: facilityId,
             productId: entry.key,
             allocations: entry.value,
+            firestore: _firestore,
           );
         }
         debugPrint('Error deducting stock for sale, rolled back: $e');
@@ -392,7 +402,7 @@ class SaleProvider extends ChangeNotifier {
 
       saleToSave = saleToSave.copyWith(items: updatedItems);
       saleToSave = _computeProfits(saleToSave);
-      saleToSave = saleToSave.copyWith(receiptNumber: await nextReceiptNumber(facilityId));
+      saleToSave = saleToSave.copyWith(receiptNumber: await nextReceiptNumber(facilityId, firestore: _firestore));
 
       final docRef = await _firestore
           .collection(Collections.facilities)
@@ -437,8 +447,9 @@ class SaleProvider extends ChangeNotifier {
         });
       }
 
-      final userInfo = await ActivityLogger.getCurrentUserInfo();
+      final userInfo = await _currentUserInfo();
       await ActivityLogger.logActivity(
+        firestore: _firestore,
         facilityId: facilityId,
         userId: userInfo[Fields.userId]!,
         userName: userInfo['userName'],
