@@ -1,8 +1,6 @@
 // E1a (docs/design/atomic_sales.md section 5): a sale and everything it
 // changes succeed or fail together, and a retry with the same sale id
 // cannot record it twice.
-import 'dart:convert';
-
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:vetbiz_pro/data/activity_type.dart';
@@ -10,11 +8,6 @@ import 'package:vetbiz_pro/data/collections.dart';
 
 import '../helpers/fake_firestore.dart';
 
-// Skipped only until the transaction commit: on the old code the first two
-// fail (two sales; no debts/sale_{id}). The third fails only in the fake,
-// which keeps the writes of a transaction that throws (real Firestore rolls
-// them back, so on real Firestore the old code passes it, as the design says).
-const _untilE1a = 'E1a: fails on the old addSale until the transaction commit';
 
 void main() {
   test('addSale twice with the same sale id leaves one sale, one payment, one stock deduction',
@@ -35,7 +28,7 @@ void main() {
     expect(await sellableQty(fs, 'p1', 'b1'), 3, reason: 'batch deducted once');
     expect(first, 'retry1');
     expect(second, 'retry1');
-  }, skip: _untilE1a);
+  });
 
   test('a credit sale leaves debts/sale_{id} with the unpaid amount and the client balance equal to it',
       () async {
@@ -64,14 +57,13 @@ void main() {
     final payment = await facilityCollection(fs, Collections.payments).doc('sale_credit1').get();
     expect(payment.data()?['amount'], 1000);
     expect(payment.data()?['saleId'], 'credit1');
-  }, skip: _untilE1a);
+  });
 
   test('not enough stock for item 2 leaves zero writes', () async {
     final fs = newFakeFirestore();
     await seedProduct(fs, id: 'p1', batchQty: {'b1': 5});
     await seedProduct(fs, id: 'p2', batchQty: {'b2': 1});
-    // Parsed, so only values count, not the order keys are listed in.
-    final before = jsonDecode(fs.dump());
+    final before = storedData(fs);
     final sale = testSale(id: 'short1', items: [saleItem('p1', 2), saleItem('p2', 3)]);
 
     String? result;
@@ -83,8 +75,8 @@ void main() {
     await settle();
 
     expect(result, isNull);
-    expect(jsonDecode(fs.dump()), before);
-  }, skip: _untilE1a);
+    expect(storedData(fs), before);
+  });
 
   test('the activity entry passes the existing rule (own uid, server clock)', () async {
     final fs = newFakeFirestore();

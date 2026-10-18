@@ -1,6 +1,8 @@
 // Test harness for provider code that writes to Firestore: an in-memory
 // Firestore (fake_cloud_firestore), a signed-in user, and seed helpers for
 // the documents a sale touches. No Firebase app, no network.
+import 'dart:convert';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:fake_cloud_firestore/fake_cloud_firestore.dart';
 import 'package:vetbiz_pro/data/collections.dart';
@@ -108,3 +110,18 @@ Future<int> countDocs(FirebaseFirestore fs, String collection) async =>
 /// without awaiting it (and ignore SetOptions, and never roll back), so a
 /// check right after a call could see a write half done.
 Future<void> settle() => Future<void>.delayed(Duration.zero);
+
+/// Everything stored, parsed (so key order doesn't count) and without the
+/// empty nodes the fake leaves where a missing document was only read.
+Object? storedData(FakeFirebaseFirestore fs) => _pruneEmpty(jsonDecode(fs.dump()));
+
+Object? _pruneEmpty(Object? node) {
+  if (node is! Map) return node;
+  final pruned = <String, Object?>{};
+  node.forEach((key, value) {
+    final child = _pruneEmpty(value);
+    if (child is Map && child.isEmpty) return;
+    pruned[key as String] = child;
+  });
+  return pruned;
+}

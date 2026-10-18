@@ -9,7 +9,6 @@ import '../../utils/sentence_capitalization_formatter.dart';
 import '../../models/client.dart';
 import '../../models/product.dart';
 import '../../models/sale.dart';
-import '../../models/debt.dart';
 import '../../widgets/payment_method_selector.dart';
 import '../../utils/thousands_input_formatter.dart';
 
@@ -17,14 +16,11 @@ import '../../providers/client_provider.dart';
 import '../../providers/product_provider.dart';
 import '../../providers/sale_provider.dart';
 import '../../providers/facility_provider.dart';
-import '../../providers/debt_provider.dart';
 
 import '../../services/auth_service.dart';
-import '../../utils/activity_logger.dart';
 import '../clients/add_client_screen.dart';
 import '../../widgets/product_thumbnail.dart';
 import '../../data/collections.dart';
-import '../../data/activity_type.dart';
 import '../../config/money.dart';
 import '../../config/app_defaults.dart';
 import '../../config/app_timeouts.dart';
@@ -686,7 +682,6 @@ class _AddSaleScreenState extends State<AddSaleScreen> {
     final facilityProvider = Provider.of<FacilityProvider>(context, listen: false);
     final authService = Provider.of<AuthService>(context, listen: false);
     final saleProvider = Provider.of<SaleProvider>(context, listen: false);
-    final debtProvider = Provider.of<DebtProvider>(context, listen: false);
 
     final expiredPortion = await _simulateExpiredSalePortion();
     if (expiredPortion.isNotEmpty) {
@@ -780,35 +775,18 @@ class _AddSaleScreenState extends State<AddSaleScreen> {
         notes: notesController.text.trim().isEmpty ? null : notesController.text.trim(),
       );
 
-      final saleId = await saleProvider.addSale(sale, facilityId);
-      if (saleId == null) throw Exception('Sale could not be saved.');
-
+      // One transaction saves the sale with its stock, debt, payment, the
+      // client's balance and both activity entries (SaleProvider.addSale).
+      String? expiredStockNote;
       if (expiredPortion.isNotEmpty) {
         final unitsSummary = expiredPortion.map((e) => '${e.$3} ${e.$2} of ${e.$1}').join(', ');
-        await ActivityLogger.logActivity(
-          facilityId: facilityId,
-          userId: soldById,
-          userName: soldByName,
-          actionType: ActivityType.sales.key,
-          description: "Sale included expired stock ($unitsSummary), confirmed by $soldByName",
-        );
+        expiredStockNote = "Sale included expired stock ($unitsSummary), confirmed by $soldByName";
       }
-
-      final unpaidAmount = totalAmount - totalPaid;
-      if (unpaidAmount > 0 && selectedClient != null) {
-        final debt = Debt(
-          id: '',
-          clientId: selectedClient!.id,
-          clientName: selectedClient!.name,
-          clientPhone: selectedClient!.phone,
-          saleId: saleId,
-          amountOwed: unpaidAmount,
-          items: itemsWithDiscount.map((i) => i.toMap()).toList(),
-          timestamp: DateTime.now(),
-          updatedAt: DateTime.now(),
-          source: 'Sale',
-        );
-        await debtProvider.addDebt(debt, facilityId);
+      try {
+        await saleProvider.addSale(sale, facilityId, expiredStockNote: expiredStockNote);
+      } on InsufficientStockException {
+        // Same message as before the transaction.
+        throw Exception('Sale could not be saved.');
       }
 
       if (!mounted) return;

@@ -7,6 +7,7 @@ import 'product_provider.dart';
 import '../utils/activity_logger.dart';
 import '../utils/receipt_numbering.dart';
 import 'debt_provider.dart';
+import '../models/debt.dart';
 import '../services/cursor_paginated_list_controller.dart';
 import '../data/collections.dart';
 import '../data/fields.dart';
@@ -325,119 +326,164 @@ class SaleProvider extends ChangeNotifier {
     return _computeProfits(sale);
   }
 
-  /// Add a sale
-  Future<String?> addSale(Sale sale, String facilityId) async {
-    try {
-      var saleToSave = sale.copyWith(
-        totalPaid: sale.totalPaid.clamp(0, sale.totalAmount),
-      );
+  /// Records a sale and everything it changes in ONE transaction
+  /// (docs/design/atomic_sales.md, option b): the sale, the FIFO stock
+  /// deduction, the receipt number, the client's balance, the debt
+  /// (debts/sale_{id}), the upfront payment (payments/sale_{id}), the
+  /// expired-stock note and the activity entry (activity_logs/sale_{id}).
+  /// Either all of it is saved or none of it.
+  ///
+  /// [sale].id is the id the form made when it opened; a retry passes the
+  /// same one. If that sale is already saved (the first attempt landed but
+  /// its answer was lost), this returns its id and writes nothing, so a
+  /// retry can never record the sale twice or deduct the stock again.
+  ///
+  /// Nothing is swallowed: it throws [InsufficientStockException] when the
+  /// stock does not cover a line, and the Firestore error otherwise (for
+  /// example offline). In both cases nothing was written.
+  ///
+  /// [expiredStockNote] is the "Sale included expired stock ..." text the
+  /// screen built after the person confirmed; it is logged with the sale.
+  Future<String> addSale(Sale sale, String facilityId, {String? expiredStockNote}) async {
+    final facilityRef = _firestore.collection(Collections.facilities).doc(facilityId);
+    final salesRef = facilityRef.collection(Collections.sales);
+    final saleRef = sale.id.isEmpty ? salesRef.doc() : salesRef.doc(sale.id);
+    final saleId = saleRef.id;
 
-      // Denormalize the client's name onto the sale so future reads never
-      // need a separate lookup. If the caller already supplied clientName
-      // (the normal case - see AddSaleScreen), this is a no-op read-free path.
-      if ((saleToSave.clientName == null || saleToSave.clientName!.isEmpty) &&
-          saleToSave.clientId != null &&
-          saleToSave.clientId!.isNotEmpty) {
-        final clientDoc = await _firestore
-            .collection(Collections.facilities)
-            .doc(facilityId)
-            .collection(Collections.clients)
-            .doc(saleToSave.clientId)
-            .get();
-        final name = clientDoc.data()?['name'] as String?;
-        if (name != null) {
-          saleToSave = saleToSave.copyWith(clientName: name);
-        }
+    // Read before the transaction: it can read nothing after its first
+    // write, and this doesn't change within a sale.
+    final userInfo = await _currentUserInfo();
+
+    // Candidate batches are found by a query, which a transaction cannot
+    // run, so outside it (as deductSellableFIFO does); the transaction then
+    // re-reads each one, so it plans from current values.
+    final productIds = sale.items.map((i) => i.productId).toSet();
+    final candidateRefs = <String, List<DocumentReference<Map<String, dynamic>>>>{};
+    for (final productId in productIds) {
+      final snap = await facilityRef
+          .collection(Collections.products)
+          .doc(productId)
+          .collection(Collections.batches)
+          .where('sellableQty', isGreaterThan: 0)
+          .get();
+      candidateRefs[productId] =
+          (snap.docs.toList()..sort(ProductProvider.compareByExpiry)).map((d) => d.reference).toList();
+    }
+
+    final clientId = (sale.clientId == null || sale.clientId!.isEmpty) ? null : sale.clientId;
+    final clientRef = clientId == null ? null : facilityRef.collection(Collections.clients).doc(clientId);
+
+    // The transaction returns null when the stock doesn't cover the sale:
+    // it then ends having written nothing, and the exception is thrown
+    // below, outside it, so it reaches the screen as itself on every
+    // platform.
+    String? shortage;
+    final savedId = await _firestore.runTransaction<String?>((transaction) async {
+      shortage = null;
+
+      // --- Reads (all of them before any write) ---
+      final existing = await transaction.get(saleRef);
+      if (existing.exists) return saleId; // a retry of a sale that was saved
+
+      final receipt = await claimReceiptNumber(transaction, _firestore, facilityId);
+
+      final productSnaps = <String, DocumentSnapshot<Map<String, dynamic>>>{};
+      final batchSnaps = <String, List<DocumentSnapshot<Map<String, dynamic>>>>{};
+      for (final productId in productIds) {
+        batchSnaps[productId] = [
+          for (final ref in candidateRefs[productId]!) await transaction.get(ref),
+        ];
+        productSnaps[productId] =
+            await transaction.get(facilityRef.collection(Collections.products).doc(productId));
       }
 
-      // Deduct stock FIRST (FIFO - soonest-expiry batch consumed first),
-      // updating each item's cost price to reflect what was actually
-      // consumed, before the sale is ever written - this is what makes
-      // the saved sale's costing and its batchAllocations record
-      // accurate, instead of just a guess made before any stock was
-      // actually touched.
-      final deductedSoFar = <String, List<Map<String, dynamic>>>{};
+      final clientSnap = clientRef == null ? null : await transaction.get(clientRef);
+
+      // --- Plan (writes nothing) ---
+      // FIFO, soonest-expiry batch first; each item's cost price becomes
+      // what was actually consumed, so the saved costing and its
+      // batchAllocations are accurate, not a guess made before.
+      final stockPlan = SellableStockPlan();
       final updatedItems = <SaleItem>[];
-      // These FIFO helpers are pure Firestore operations - they don't
-      // depend on any cached state from a specific ProductProvider
-      // instance, so a plain local instance works fine here without
-      // needing BuildContext/Provider.of (which SaleProvider doesn't
-      // have access to).
-      final productHelper = ProductProvider();
-
       try {
-        for (final item in saleToSave.items) {
-          final allocations = await productHelper.deductSellableFIFO(
-            facilityId: facilityId,
-            productId: item.productId,
+        for (final item in sale.items) {
+          final allocations = stockPlan.take(
+            product: productSnaps[item.productId]!,
+            batches: batchSnaps[item.productId]!,
             quantity: item.quantity,
-            firestore: _firestore,
           );
-          deductedSoFar[item.productId] = allocations;
-
           final totalCost = allocations.fold<double>(
               0, (total, a) => total + (a['quantity'] as int) * (a['buyPrice'] as double));
           final weightedCostPrice = item.quantity > 0 ? totalCost / item.quantity : item.costPrice;
-
-          updatedItems.add(item.copyWith(
-            costPrice: weightedCostPrice,
-            batchAllocations: allocations,
-          ));
+          updatedItems.add(item.copyWith(costPrice: weightedCostPrice, batchAllocations: allocations));
         }
-      } catch (e) {
-        // Roll back whatever was already deducted before this item
-        // failed - never leave stock partially deducted for a sale that
-        // never actually gets recorded.
-        for (final entry in deductedSoFar.entries) {
-          await productHelper.restoreSellableFIFO(
-            facilityId: facilityId,
-            productId: entry.key,
-            allocations: entry.value,
-            firestore: _firestore,
-          );
-        }
-        debugPrint('Error deducting stock for sale, rolled back: $e');
+      } on InsufficientStockException catch (e) {
+        shortage = e.message;
         return null;
       }
 
-      saleToSave = saleToSave.copyWith(items: updatedItems);
-      saleToSave = _computeProfits(saleToSave);
-      saleToSave = saleToSave.copyWith(receiptNumber: await nextReceiptNumber(facilityId, firestore: _firestore));
+      var saleToSave = sale.copyWith(totalPaid: sale.totalPaid.clamp(0, sale.totalAmount));
+      // Denormalize the client's name onto the sale so future reads never
+      // need a separate lookup. The screen normally passes it already.
+      final clientData = clientSnap?.data();
+      if ((saleToSave.clientName == null || saleToSave.clientName!.isEmpty) &&
+          clientData?['name'] is String) {
+        saleToSave = saleToSave.copyWith(clientName: clientData!['name'] as String);
+      }
+      saleToSave = _computeProfits(saleToSave.copyWith(items: updatedItems));
+      saleToSave = saleToSave.copyWith(receiptNumber: receipt.value);
+      final outstanding = saleToSave.totalAmount - saleToSave.totalPaid;
 
-      final docRef = await _firestore
-          .collection(Collections.facilities)
-          .doc(facilityId)
-          .collection(Collections.sales)
-          .add({
+      // --- Writes ---
+      transaction.set(saleRef, {
         ...saleToSave.toMap(),
         ...saleToSave.searchFields(),
         'timestamp': FieldValue.serverTimestamp(),
         Fields.updatedAt: FieldValue.serverTimestamp(),
       });
+      stockPlan.apply(transaction);
+      receipt.write(transaction);
 
-      // Update client balance by the outstanding amount only - no re-scan
-      // of the client's sale history required.
-      final outstanding = saleToSave.totalAmount - saleToSave.totalPaid;
-      if (outstanding != 0) {
-        await _adjustClientBalance(saleToSave.clientId, outstanding, facilityId);
+      if (clientRef != null && outstanding > 0) {
+        // The client's balance goes up by the outstanding amount only - no
+        // re-scan of their sale history. The oldest unpaid date starts now
+        // if they owed nothing before.
+        final currentBalance = (clientData?['balance'] as num?)?.toDouble() ?? 0.0;
+        final balanceUpdate = <String, dynamic>{
+          'balance': FieldValue.increment(outstanding),
+          if (currentBalance <= 0) 'oldestUnpaidDebtDate': Timestamp.fromDate(DateTime.now()),
+        };
+        if (clientSnap!.exists) {
+          transaction.update(clientRef, balanceUpdate);
+        } else {
+          // As before: a client deleted while the form was open.
+          transaction.set(clientRef, balanceUpdate, SetOptions(merge: true));
+        }
+
+        final debt = Debt(
+          id: '',
+          clientId: clientId!,
+          clientName: saleToSave.clientName ?? '',
+          clientPhone: clientData?['phone'] as String? ?? '',
+          saleId: saleId,
+          amountOwed: outstanding,
+          items: sale.items.map((i) => i.toMap()).toList(),
+          timestamp: DateTime.now(),
+          updatedAt: DateTime.now(),
+          source: 'Sale',
+        );
+        transaction.set(facilityRef.collection(Collections.debts).doc('sale_$saleId'), debt.toMap());
       }
 
-      // Record the upfront amount actually collected (cash sale, or the
-      // down payment on a credit sale) as a payment. Without this, the
-      // `payments` collection only ever saw later debt repayments
-      // (see AddPaymentScreen) and missed every cash sale entirely - which
-      // meant nothing could reliably answer "how much cash did we actually
-      // collect on a given day". This is what feeds `dailyCollections` via
-      // the updateDailyCollections Cloud Function.
+      // The upfront amount actually collected (cash sale, or the down
+      // payment on a credit sale) is recorded as a payment, which feeds
+      // `dailyCollections` via the updateDailyCollections Cloud Function.
+      // Without it, cash sales never reached the `payments` collection.
       if (saleToSave.totalPaid > 0) {
-        await _firestore
-            .collection(Collections.facilities)
-            .doc(facilityId)
-            .collection(Collections.payments)
-            .add({
+        transaction.set(facilityRef.collection(Collections.payments).doc('sale_$saleId'), {
           'clientId': saleToSave.clientId,
           'clientName': saleToSave.clientName,
-          'saleId': docRef.id,
+          'saleId': saleId,
           'amount': saleToSave.totalPaid,
           'timestamp': FieldValue.serverTimestamp(),
           'paidById': saleToSave.soldById,
@@ -447,21 +493,31 @@ class SaleProvider extends ChangeNotifier {
         });
       }
 
-      final userInfo = await _currentUserInfo();
-      await ActivityLogger.logActivity(
-        firestore: _firestore,
-        facilityId: facilityId,
+      final logsRef = facilityRef.collection(Collections.activityLogs);
+      if (expiredStockNote != null) {
+        ActivityLogger.logActivityIn(
+          transaction,
+          logsRef.doc('sale_${saleId}_expired'),
+          userId: saleToSave.soldById,
+          userName: saleToSave.soldByName,
+          actionType: ActivityType.sales.key,
+          description: expiredStockNote,
+        );
+      }
+      ActivityLogger.logActivityIn(
+        transaction,
+        logsRef.doc('sale_$saleId'),
         userId: userInfo[Fields.userId]!,
-        userName: userInfo['userName'],
+        userName: userInfo['userName'] ?? 'Unknown',
         actionType: ActivityType.sales.key,
         description: 'Recorded sale to ${saleToSave.clientName ?? 'Walk-in'} - ${Money.savedWhole(saleToSave.totalAmount)}',
       );
 
-      return docRef.id;
-    } catch (e) {
-      debugPrint('Error adding sale: $e');
-      return null;
-    }
+      return saleId;
+    });
+
+    if (savedId == null) throw InsufficientStockException(shortage ?? 'Not enough sellable stock');
+    return savedId;
   }
 
   /// Apply payment to existing sale
