@@ -67,6 +67,19 @@ class AppColors extends ThemeExtension<AppColors> {
     required this.roleCoAdminStrong,
     required this.roleAssistant,
     required this.roleAssistantStrong,
+    required this.sidebarHover,
+    required this.sidebarPress,
+    required this.warningBannerText,
+    required this.warningBannerFill,
+    required this.quickActionTintPrimary,
+    required this.quickActionTintAccent,
+    required this.chartService1,
+    required this.chartService2,
+    required this.chartService3,
+    required this.chartService4,
+    required this.brandTeal,
+    required this.brandTealGlow,
+    required this.rolePlatformAdmin,
   });
 
   // Brand - the only roles that vary by colour theme for now.
@@ -170,6 +183,39 @@ class AppColors extends ThemeExtension<AppColors> {
   final Color roleAssistant;
   final Color roleAssistantStrong;
 
+  // Parked values given a role in R2 (docs/design/parked_values.md, owner
+  // approved): exact legacy values, so nothing changes on screen. The same
+  // in every theme for now; T0 derives the brand-linked ones per theme.
+  // Drawer item hover and the platform-admin button press (dashboard).
+  final Color sidebarHover;
+  final Color sidebarPress;
+
+  // The subscription banner's text and icon, and its fill (warning, not
+  // a theme colour).
+  final Color warningBannerText;
+  final Color warningBannerFill;
+
+  // Quick-action tints: Record Visit (of the primary), Add Product (of the
+  // accent). Brand-linked.
+  final Color quickActionTintPrimary;
+  final Color quickActionTintAccent;
+
+  // The services palette: steel blue (also the dashboard chart's
+  // Services), sage, terracotta, lavender (the "Other" slice) on insights.
+  final Color chartService1;
+  final Color chartService2;
+  final Color chartService3;
+  final Color chartService4;
+
+  // The login teal and its light glow (login and register gradients); the
+  // teal is also the insights accent, the Total Products metric and the
+  // operator sidebar badge. Brand-linked.
+  final Color brandTeal;
+  final Color brandTealGlow;
+
+  // The Platform Admin chip, icon and avatar (users_tab.dart).
+  final Color rolePlatformAdmin;
+
   /// The roles for a colour theme. Every value is the exact legacy shade.
   static AppColors fromTheme(AppColorTheme theme) => AppColors(
         primary: theme.primary,
@@ -224,6 +270,19 @@ class AppColors extends ThemeExtension<AppColors> {
         roleCoAdminStrong: Colors.teal.shade700,
         roleAssistant: Colors.blueGrey,
         roleAssistantStrong: Colors.blueGrey.shade700,
+        sidebarHover: Colors.teal.shade700,
+        sidebarPress: Colors.teal.shade800,
+        warningBannerText: const Color(0xFFC77800),
+        warningBannerFill: const Color(0xFFFFF6E7),
+        quickActionTintPrimary: const Color(0xFFE3F0EC),
+        quickActionTintAccent: const Color(0xFFFCEFD9),
+        chartService1: const Color(0xFF5C7C99),
+        chartService2: const Color(0xFF8FA998),
+        chartService3: const Color(0xFFB98B6F),
+        chartService4: const Color(0xFF9B8AA6),
+        brandTeal: const Color(0xFF3E8E82),
+        brandTealGlow: const Color(0xFF7EE8CB),
+        rolePlatformAdmin: Colors.deepPurple,
       );
 
   @override
@@ -280,6 +339,19 @@ class AppColors extends ThemeExtension<AppColors> {
     Color? roleCoAdminStrong,
     Color? roleAssistant,
     Color? roleAssistantStrong,
+    Color? sidebarHover,
+    Color? sidebarPress,
+    Color? warningBannerText,
+    Color? warningBannerFill,
+    Color? quickActionTintPrimary,
+    Color? quickActionTintAccent,
+    Color? chartService1,
+    Color? chartService2,
+    Color? chartService3,
+    Color? chartService4,
+    Color? brandTeal,
+    Color? brandTealGlow,
+    Color? rolePlatformAdmin,
   }) =>
       AppColors(
         primary: primary ?? this.primary,
@@ -334,6 +406,19 @@ class AppColors extends ThemeExtension<AppColors> {
         roleCoAdminStrong: roleCoAdminStrong ?? this.roleCoAdminStrong,
         roleAssistant: roleAssistant ?? this.roleAssistant,
         roleAssistantStrong: roleAssistantStrong ?? this.roleAssistantStrong,
+        sidebarHover: sidebarHover ?? this.sidebarHover,
+        sidebarPress: sidebarPress ?? this.sidebarPress,
+        warningBannerText: warningBannerText ?? this.warningBannerText,
+        warningBannerFill: warningBannerFill ?? this.warningBannerFill,
+        quickActionTintPrimary: quickActionTintPrimary ?? this.quickActionTintPrimary,
+        quickActionTintAccent: quickActionTintAccent ?? this.quickActionTintAccent,
+        chartService1: chartService1 ?? this.chartService1,
+        chartService2: chartService2 ?? this.chartService2,
+        chartService3: chartService3 ?? this.chartService3,
+        chartService4: chartService4 ?? this.chartService4,
+        brandTeal: brandTeal ?? this.brandTeal,
+        brandTealGlow: brandTealGlow ?? this.brandTealGlow,
+        rolePlatformAdmin: rolePlatformAdmin ?? this.rolePlatformAdmin,
       );
 
   @override
@@ -393,6 +478,19 @@ class AppColors extends ThemeExtension<AppColors> {
       roleCoAdminStrong: l(roleCoAdminStrong, other.roleCoAdminStrong),
       roleAssistant: l(roleAssistant, other.roleAssistant),
       roleAssistantStrong: l(roleAssistantStrong, other.roleAssistantStrong),
+      sidebarHover: l(sidebarHover, other.sidebarHover),
+      sidebarPress: l(sidebarPress, other.sidebarPress),
+      warningBannerText: l(warningBannerText, other.warningBannerText),
+      warningBannerFill: l(warningBannerFill, other.warningBannerFill),
+      quickActionTintPrimary: l(quickActionTintPrimary, other.quickActionTintPrimary),
+      quickActionTintAccent: l(quickActionTintAccent, other.quickActionTintAccent),
+      chartService1: l(chartService1, other.chartService1),
+      chartService2: l(chartService2, other.chartService2),
+      chartService3: l(chartService3, other.chartService3),
+      chartService4: l(chartService4, other.chartService4),
+      brandTeal: l(brandTeal, other.brandTeal),
+      brandTealGlow: l(brandTealGlow, other.brandTealGlow),
+      rolePlatformAdmin: l(rolePlatformAdmin, other.rolePlatformAdmin),
     );
   }
 }

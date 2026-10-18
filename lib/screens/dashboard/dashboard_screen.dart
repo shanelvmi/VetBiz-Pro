@@ -152,7 +152,7 @@ class _DrawerHoverItemState extends State<DrawerHoverItem> {
             curve: Curves.easeInOut,
             padding: EdgeInsets.symmetric(vertical: AppSpacing.s10, horizontal: widget.isCollapsed ? AppSpacing.s12 : AppSpacing.s16),
             decoration: BoxDecoration(
-              color: _hovered ? Colors.teal.shade700 : Colors.transparent,
+              color: _hovered ? context.colors.sidebarHover : Colors.transparent,
               borderRadius: BorderRadius.circular(AppRadius.r8),
             ),
             child: row,
@@ -346,9 +346,6 @@ class DashboardScreen extends StatefulWidget {
 }
 
 class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingObserver {
-  // The Services colour (glance strip, chart, quick actions): no role within
-  // 12; kept exact and listed in design-open-questions.md (D9).
-  static const Color servicesSteelBlue = Color(0xFF5C7C99);
   // The subscription banner's fade-and-scale switch: 550 ms, 50 above
   // AppMotion.slowest. Kept exact and listed (D9).
   static const Duration _bannerSwitch = Duration(milliseconds: 550);
@@ -1626,9 +1623,7 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
     // rather than a full background fill. Same deepened, burnt-amber
     // reasoning as before: the brand's own amber (accent) is too close to
     // yellow to read cleanly as an accent on a cream background.
-    const Color deepAmber = Color(0xFFC77800);
-    final accent = isLocked ? context.colors.dangerAccent : (isInTrialInfo ? context.colors.info : deepAmber);
-    const Color cream = Color(0xFFFFF6E7);
+    final accent = isLocked ? context.colors.dangerAccent : (isInTrialInfo ? context.colors.info : context.colors.warningBannerText);
 
     // Full sentence now that this sits in its own row above the filter
     // chips, rather than the shortened version needed when it was
@@ -1674,7 +1669,7 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
               key: const ValueKey('sub-banner-shown'),
               padding: const EdgeInsets.symmetric(horizontal: AppSpacing.s14, vertical: AppSpacing.s8),
               decoration: BoxDecoration(
-                color: cream.withValues(alpha: 0.92),
+                color: context.colors.warningBannerFill.withValues(alpha: 0.92),
                 borderRadius: BorderRadius.circular(AppRadius.r24),
                 border: Border.all(color: accent.withValues(alpha: AppAlpha.a40)),
                 boxShadow: [
@@ -2100,10 +2095,10 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
                             spots: [for (int i = 0; i < servicesByDay.length; i++) FlSpot(i.toDouble(), servicesByDay[i])],
                             isCurved: true,
                             preventCurveOverShooting: true,
-                            color: servicesSteelBlue,
+                            color: context.colors.chartService1,
                             barWidth: 3,
                             dotData: const FlDotData(show: false),
-                            belowBarData: BarAreaData(show: true, color: servicesSteelBlue.withValues(alpha: AppAlpha.a10)),
+                            belowBarData: BarAreaData(show: true, color: context.colors.chartService1.withValues(alpha: AppAlpha.a10)),
                           ),
                         ],
                       ),
@@ -2118,7 +2113,7 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
                 _chartLegendItem(context.colors.accent,
                     context.l10n.dashboard_seriesWithCurrency(context.l10n.dashboard_collections, AppDefaults.currencySymbol)),
                 const SizedBox(width: AppSpacing.s20),
-                _chartLegendItem(servicesSteelBlue,
+                _chartLegendItem(context.colors.chartService1,
                     context.l10n.dashboard_seriesWithCurrency(context.l10n.dashboard_services, AppDefaults.currencySymbol)),
               ],
             ),
@@ -2468,7 +2463,7 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
         icon: Icons.design_services,
         title: context.l10n.services_recordVisit,
         subtitle: context.l10n.dashboard_addServiceRecord,
-        backgroundColor: const Color(0xFFE3F0EC),
+        backgroundColor: context.colors.quickActionTintPrimary,
         accentColor: context.colors.primary,
         isDark: false,
         onTap: () async {
@@ -2484,7 +2479,7 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
         icon: Icons.add_box,
         title: context.l10n.products_addProduct,
         subtitle: context.l10n.dashboard_addProductToStore,
-        backgroundColor: const Color(0xFFFCEFD9),
+        backgroundColor: context.colors.quickActionTintAccent,
         accentColor: context.colors.accent,
         isDark: false,
         onTap: () => showAddEditProductScreen(context),
@@ -3165,8 +3160,8 @@ Widget _buildDrawerContent() {
     ).copyWith(
       overlayColor: WidgetStateProperty.resolveWith<Color?>(
         (states) {
-          if (states.contains(WidgetState.hovered)) return Colors.teal.shade700;
-          if (states.contains(WidgetState.pressed)) return Colors.teal.shade800;
+          if (states.contains(WidgetState.hovered)) return context.colors.sidebarHover;
+          if (states.contains(WidgetState.pressed)) return context.colors.sidebarPress;
           return null;
         },
       ),
@@ -3366,7 +3361,7 @@ Widget _buildDrawerContent() {
                 message: context.l10n.common_logout,
                 child: InkWell(
                   borderRadius: BorderRadius.circular(AppRadius.pill),
-                  hoverColor: Colors.teal.shade700,
+                  hoverColor: context.colors.sidebarHover,
                   onTap: () {
                     showDialog(
                       context: context,

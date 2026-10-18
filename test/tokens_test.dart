@@ -98,6 +98,61 @@ void main() {
     });
   });
 
+  // R2 (docs/design/parked_values.md): each parked value that became a role
+  // keeps its EXACT old value, in every theme, so the screen is unchanged.
+  // T0 may derive the brand-linked ones per theme; this test then changes.
+  group('R2 roles hold the exact parked values', () {
+    const pinned = <String, int>{
+      'sidebarHover': 0xFF00796B, // teal 700
+      'sidebarPress': 0xFF00695C, // teal 800
+      'warningBannerText': 0xFFC77800,
+      'warningBannerFill': 0xFFFFF6E7,
+      'quickActionTintPrimary': 0xFFE3F0EC,
+      'quickActionTintAccent': 0xFFFCEFD9,
+      'chartService1': 0xFF5C7C99,
+      'chartService2': 0xFF8FA998,
+      'chartService3': 0xFFB98B6F,
+      'chartService4': 0xFF9B8AA6,
+      'brandTeal': 0xFF3E8E82,
+      'brandTealGlow': 0xFF7EE8CB,
+      'rolePlatformAdmin': 0xFF673AB7, // deepPurple
+    };
+    Map<String, Color> roles(AppColors c) => {
+          'sidebarHover': c.sidebarHover,
+          'sidebarPress': c.sidebarPress,
+          'warningBannerText': c.warningBannerText,
+          'warningBannerFill': c.warningBannerFill,
+          'quickActionTintPrimary': c.quickActionTintPrimary,
+          'quickActionTintAccent': c.quickActionTintAccent,
+          'chartService1': c.chartService1,
+          'chartService2': c.chartService2,
+          'chartService3': c.chartService3,
+          'chartService4': c.chartService4,
+          'brandTeal': c.brandTeal,
+          'brandTealGlow': c.brandTealGlow,
+          'rolePlatformAdmin': c.rolePlatformAdmin,
+        };
+
+    for (final theme in AppColorTheme.all) {
+      test('theme ${theme.id}', () {
+        final c = AppColors.fromTheme(theme);
+        final got = roles(c);
+        expect(got.keys, pinned.keys);
+        for (final e in pinned.entries) {
+          expect(got[e.key]!.toARGB32(), e.value, reason: e.key);
+        }
+        // copyWith and lerp carry every new role.
+        final other = AppColors.fromTheme(AppColorTheme.all.last);
+        for (final copy in [c.copyWith(), c.lerp(other, 0)]) {
+          final kept = roles(copy);
+          for (final e in pinned.entries) {
+            expect(kept[e.key]!.toARGB32(), e.value, reason: e.key);
+          }
+        }
+      });
+    }
+  });
+
   group('AppTheme.build gives the theme main.dart used to build', () {
     final theme = AppTheme.build(AppColorTheme.kilimanjaro, Brightness.light);
 

@@ -154,44 +154,8 @@
     {
       "rule": "R1",
       "file": "lib/screens/dashboard/dashboard_screen.dart",
-      "lineContains": "Colors.teal.shade",
-      "reason": "drawer hover and press fills teal 700/800, no role for that purpose; open question D9, for 2R"
-    },
-    {
-      "rule": "R1",
-      "file": "lib/screens/dashboard/dashboard_screen.dart",
-      "lineContains": "Color deepAmber = Color(0xFFC77800)",
-      "reason": "subscription banner amber, no role within 12; open question D9, for 2R"
-    },
-    {
-      "rule": "R1",
-      "file": "lib/screens/dashboard/dashboard_screen.dart",
-      "lineContains": "Color cream = Color(0xFFFFF6E7)",
-      "reason": "subscription banner cream, no role within 12; open question D9, for 2R"
-    },
-    {
-      "rule": "R1",
-      "file": "lib/screens/dashboard/dashboard_screen.dart",
       "lineContains": "const _BlinkingDot({this.colors = const [Colors.redAccent]})",
-      "reason": "the bell's _BlinkingDot is left as written (owner's D9 rule); its red default"
-    },
-    {
-      "rule": "R1",
-      "file": "lib/screens/dashboard/dashboard_screen.dart",
-      "lineContains": "Color(0xFFE3F0EC)",
-      "reason": "Record Visit quick action tint, kept exact (no tint role); open question D9, for 2R"
-    },
-    {
-      "rule": "R1",
-      "file": "lib/screens/dashboard/dashboard_screen.dart",
-      "lineContains": "Color(0xFFFCEFD9)",
-      "reason": "Add Product quick action tint, kept exact (no tint role); open question D9, for 2R"
-    },
-    {
-      "rule": "R1",
-      "file": "lib/screens/dashboard/dashboard_screen.dart",
-      "lineContains": "servicesSteelBlue = Color(0xFF5C7C99)",
-      "reason": "services steel blue, no role within 12; open question D9, for 2R"
+      "reason": "KEEP, owner (D9 rule): the bell's _BlinkingDot red default is left as written; docs/design/parked_values.md A9"
     },
     {
       "rule": "R1",
