@@ -139,4 +139,4 @@ Direct `AppPalette` uses T1 must resolve (13 outside `lib/theme`, plus `pdf_pale
 
 T1 in small commits: (1) `AppColorTheme` with background and the four themes, legacy map, tests; (2) the derivation in `AppColors.fromTheme` with tests; (3) the dialog and labels (ARB, export tool); (4) the direct `AppPalette` uses of section 8. T1 is a HARD STOP: the owner views each theme on the 13 R0 screens. Rollback: revert T1's commits; a device that saved `clinic`, `harvest` or `ledger` falls back to `pasture` through `byId`, so nothing breaks. No server or rules change.
 
-OWNER DECISION: PENDING
+OWNER DECISION: APPROVED option 1 (derived roles with the warm guard and the visibility floor), the per-theme textMuted greys, testing infoStrong and the icon colours on surface, the colorThemeLabel lookup with four ARB keys, the legacy id mapping, and receipts, PDFs and the loading screen staying Pasture. The login link colour change is LATER (refinement).
