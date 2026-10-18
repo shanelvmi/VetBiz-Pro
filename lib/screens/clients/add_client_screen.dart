@@ -680,7 +680,7 @@ class _AddClientScreenState extends State<AddClientScreen> {
           Expanded(
             child: Text(
               context.l10n.clients_tip,
-              style: TextStyle(fontSize: AppFontSize.f12, color: context.colors.primary.withValues(alpha: AppAlpha.a85)),
+              style: TextStyle(fontSize: AppFontSize.f12, color: context.colors.primaryNote.withValues(alpha: AppAlpha.a85)),
             ),
           ),
         ],

@@ -257,7 +257,7 @@ class _ReportReviewScreenState extends State<ReportReviewScreen> {
           Expanded(
             child: Text(
               context.l10n.reports_reviewIntro,
-              style: TextStyle(fontSize: AppFontSize.f12_5, color: context.colors.primary.withValues(alpha: AppAlpha.a85)),
+              style: TextStyle(fontSize: AppFontSize.f12_5, color: context.colors.primaryNote.withValues(alpha: AppAlpha.a85)),
             ),
           ),
         ],

@@ -1,5 +1,6 @@
 import 'package:flutter/painting.dart';
 
+import 'app_dimens.dart';
 import 'app_palette.dart';
 import 'color_math.dart';
 
@@ -73,6 +74,15 @@ class DarkDerivation {
       if (ColorMath.contrast(ink, tint) >= 4.5) return tint;
     }
     return HSLColor.fromAHSL(1, hue, _tintPrimarySaturation, 0).toColor();
+  }
+
+  /// Brand note text drawn at 85% over a 5% tint of the dark primary (the
+  /// report review intro): the dark primary lifted until that note reaches
+  /// 4.5, with the tint over the lightest surface (surfaceMuted).
+  static Color primaryNote(Color lightPrimary) {
+    final ink = primary(lightPrimary);
+    final tint = ColorMath.composite(ink.withValues(alpha: AppAlpha.a05), surfaceMuted(lightPrimary));
+    return lift(ink.withValues(alpha: AppAlpha.a85), 4.5, tint).withValues(alpha: 1);
   }
 
   /// Add Product's tint, of the accent.
