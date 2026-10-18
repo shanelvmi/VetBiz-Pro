@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import 'app_dimens.dart';
 import 'app_palette.dart';
 import 'dark_derivation.dart';
 import 'theme_derivation.dart';
@@ -90,6 +91,11 @@ class AppColors extends ThemeExtension<AppColors> {
     required this.raisedSurface,
     required this.onBrandInk,
     required this.onBrandSurfaceMuted,
+    required this.onBrandSurfaceSubtle,
+    required this.brandTealOnBrand,
+    required this.photoScrim,
+    required this.onAccentChip,
+    required this.dangerLabel,
   });
 
   // Brand: the theme's own three colours (the roles derived from them are
@@ -259,6 +265,31 @@ class AppColors extends ThemeExtension<AppColors> {
   // so it stays white70 there.
   final Color onBrandInk;
   final Color onBrandSurfaceMuted;
+  // The faint ink on brandSurface (sidebar dividers; light = onPrimarySubtle,
+  // white24, and the same in dark, as brandSurface is) (K4b).
+  final Color onBrandSurfaceSubtle;
+
+  // brandTeal where it sits on brandSurface: the second stop of the login
+  // and register gradients and the operator's Go to Facility tile. Light =
+  // brandTeal; dark = the light brandTeal, because brandSurface keeps its
+  // light value too (dark brandTeal is lifted for the dark cards) (K4b).
+  final Color brandTealOnBrand;
+
+  // The overlay on the login and register photo, so the floating card reads
+  // on any photo. Light = black 20% (scrim at a20, as before); dark = black
+  // 50%, so the bright photo does not glare round the dark card (K4b).
+  final Color photoScrim;
+
+  // Label and checkmark of a selected chip filled with accent (the activity
+  // log filters). Light = what Material draws there today, the light
+  // scheme's onSecondaryContainer from the theme seed; dark = onAccent, as
+  // Material's light-on-dark label fails on the accent fill (K4b).
+  final Color onAccentChip;
+
+  // A small danger label on a light danger tint: Reason for rejection on a
+  // subscription request card (was KEEP A21, redAccent 700). A text role:
+  // lifted to 4.5 in dark like the other Deep roles (K4b).
+  final Color dangerLabel;
 
   /// The roles for a colour theme. In Pasture every value is the exact
   /// legacy shade. The brand-linked roles and textMuted are derived from the
@@ -345,6 +376,11 @@ class AppColors extends ThemeExtension<AppColors> {
         raisedSurface: theme.background,
         onBrandInk: theme.background,
         onBrandSurfaceMuted: Colors.white70,
+        onBrandSurfaceSubtle: Colors.white24,
+        brandTealOnBrand: ThemeDerivation.brandTeal(theme.primary),
+        photoScrim: Colors.black.withValues(alpha: AppAlpha.a20),
+        onAccentChip: ColorScheme.fromSeed(seedColor: theme.primary).onSecondaryContainer,
+        dangerLabel: Colors.redAccent.shade700,
       );
   }
 
@@ -431,6 +467,11 @@ class AppColors extends ThemeExtension<AppColors> {
       raisedSurface: surface,
       onBrandInk: Colors.white,
       onBrandSurfaceMuted: Colors.white70,
+      onBrandSurfaceSubtle: Colors.white24,
+      brandTealOnBrand: light.brandTeal,
+      photoScrim: Colors.black.withValues(alpha: AppAlpha.a50),
+      onAccentChip: background,
+      dangerLabel: text(light.dangerLabel),
     );
   }
 
@@ -509,6 +550,11 @@ class AppColors extends ThemeExtension<AppColors> {
     Color? raisedSurface,
     Color? onBrandInk,
     Color? onBrandSurfaceMuted,
+    Color? onBrandSurfaceSubtle,
+    Color? brandTealOnBrand,
+    Color? photoScrim,
+    Color? onAccentChip,
+    Color? dangerLabel,
   }) =>
       AppColors(
         primary: primary ?? this.primary,
@@ -584,6 +630,11 @@ class AppColors extends ThemeExtension<AppColors> {
         raisedSurface: raisedSurface ?? this.raisedSurface,
         onBrandInk: onBrandInk ?? this.onBrandInk,
         onBrandSurfaceMuted: onBrandSurfaceMuted ?? this.onBrandSurfaceMuted,
+        onBrandSurfaceSubtle: onBrandSurfaceSubtle ?? this.onBrandSurfaceSubtle,
+        brandTealOnBrand: brandTealOnBrand ?? this.brandTealOnBrand,
+        photoScrim: photoScrim ?? this.photoScrim,
+        onAccentChip: onAccentChip ?? this.onAccentChip,
+        dangerLabel: dangerLabel ?? this.dangerLabel,
       );
 
   @override
@@ -664,6 +715,11 @@ class AppColors extends ThemeExtension<AppColors> {
       raisedSurface: l(raisedSurface, other.raisedSurface),
       onBrandInk: l(onBrandInk, other.onBrandInk),
       onBrandSurfaceMuted: l(onBrandSurfaceMuted, other.onBrandSurfaceMuted),
+      onBrandSurfaceSubtle: l(onBrandSurfaceSubtle, other.onBrandSurfaceSubtle),
+      brandTealOnBrand: l(brandTealOnBrand, other.brandTealOnBrand),
+      photoScrim: l(photoScrim, other.photoScrim),
+      onAccentChip: l(onAccentChip, other.onAccentChip),
+      dangerLabel: l(dangerLabel, other.dangerLabel),
     );
   }
 }
