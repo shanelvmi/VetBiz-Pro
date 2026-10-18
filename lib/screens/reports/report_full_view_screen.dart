@@ -132,22 +132,22 @@ class ReportFullViewScreen extends StatelessWidget {
   Widget _header(BuildContext context) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: AppSpacing.s16, vertical: AppSpacing.s14),
-      decoration: BoxDecoration(color: context.colors.primary),
+      decoration: BoxDecoration(color: context.colors.brandSurface),
       child: Row(
         children: [
-          Icon(Icons.description_outlined, color: context.colors.onPrimary),
+          Icon(Icons.description_outlined, color: context.colors.onBrandSurface),
           const SizedBox(width: AppSpacing.s12),
           Expanded(
-            child: Text(context.l10n.reports_fullReport, style: TextStyle(color: context.colors.onPrimary, fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f18)),
+            child: Text(context.l10n.reports_fullReport, style: TextStyle(color: context.colors.onBrandSurface, fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f18)),
           ),
           if (isModal)
             IconButton(
-              icon: Icon(Icons.close, color: context.colors.onPrimary),
+              icon: Icon(Icons.close, color: context.colors.onBrandSurface),
               tooltip: context.l10n.common_close,
               onPressed: () => Navigator.of(context).pop(),
             )
           else
-            BackButton(color: context.colors.onPrimary),
+            BackButton(color: context.colors.onBrandSurface),
         ],
       ),
     );

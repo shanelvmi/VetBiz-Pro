@@ -1104,14 +1104,14 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
         Container(
           padding: const EdgeInsets.fromLTRB(AppSpacing.s16, AppSpacing.s14, AppSpacing.s8, AppSpacing.s14),
           decoration: BoxDecoration(
-            color: context.colors.primary,
+            color: context.colors.brandSurface,
             borderRadius: const BorderRadius.vertical(top: Radius.circular(AppRadius.r12)),
           ),
           child: Row(
             children: [
               Text(
                 context.l10n.common_notifications,
-                style: TextStyle(color: context.colors.onPrimary, fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f15),
+                style: TextStyle(color: context.colors.onBrandSurface, fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f15),
               ),
               if (totalUnread > 0) ...[
                 const SizedBox(width: AppSpacing.s8),
@@ -1126,13 +1126,13 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
               TextButton(
                 onPressed: totalUnread > 0 ? _markAllAsRead : null,
                 style: TextButton.styleFrom(
-                  foregroundColor: context.colors.onPrimary,
-                  disabledForegroundColor: context.colors.onPrimary.withValues(alpha: AppAlpha.a40),
+                  foregroundColor: context.colors.onBrandSurface,
+                  disabledForegroundColor: context.colors.onBrandSurface.withValues(alpha: AppAlpha.a40),
                 ),
                 child: Text(context.l10n.notifications_markAllAsRead, style: const TextStyle(fontSize: AppFontSize.f12_5, fontWeight: AppFontWeight.semibold)),
               ),
               IconButton(
-                icon: Icon(Icons.close, color: context.colors.onPrimary, size: AppIconSize.i20),
+                icon: Icon(Icons.close, color: context.colors.onBrandSurface, size: AppIconSize.i20),
                 tooltip: context.l10n.common_close,
                 onPressed: () => Navigator.of(context).pop(),
               ),

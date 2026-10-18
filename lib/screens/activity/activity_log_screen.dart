@@ -761,6 +761,8 @@ class _ActivityLogScreenState extends State<ActivityLogScreen> {
                         selected: selectedFilter == 'All',
                         onSelected: (_) => _selectFilterAndScrollIntoView('All'),
                         selectedColor: context.colors.accent,
+                        labelStyle: selectedFilter == 'All' ? TextStyle(color: context.colors.onAccentChip) : null,
+                        checkmarkColor: context.colors.onAccentChip,
                       ),
                     ),
                     ...sortedTypes.map((type) {
@@ -773,6 +775,8 @@ class _ActivityLogScreenState extends State<ActivityLogScreen> {
                           selected: selectedFilter == type,
                           onSelected: (_) => _selectFilterAndScrollIntoView(type),
                           selectedColor: context.colors.accent,
+                          labelStyle: selectedFilter == type ? TextStyle(color: context.colors.onAccentChip) : null,
+                          checkmarkColor: context.colors.onAccentChip,
                         ),
                       );
                     }),

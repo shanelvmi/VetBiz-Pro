@@ -243,8 +243,8 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
       appBar: AppBar(
         title: Text(context.l10n.subscription_title),
         centerTitle: true,
-        backgroundColor: colors.primary,
-        foregroundColor: colors.onPrimary,
+        backgroundColor: colors.brandSurface,
+        foregroundColor: colors.onBrandSurface,
         automaticallyImplyLeading: !widget.isModal,
         leading: widget.isModal
             ? IconButton(

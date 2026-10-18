@@ -827,8 +827,8 @@ class _ExportDataScreenState extends State<ExportDataScreen> {
       appBar: AppBar(
         centerTitle: true,
         title: Text(context.l10n.export_title, style: const TextStyle(fontWeight: AppFontWeight.semibold, fontSize: AppFontSize.f20)),
-        backgroundColor: context.colors.primary,
-        foregroundColor: context.colors.onPrimary,
+        backgroundColor: context.colors.brandSurface,
+        foregroundColor: context.colors.onBrandSurface,
         elevation: AppElevation.e0,
       ),
       body: Center(

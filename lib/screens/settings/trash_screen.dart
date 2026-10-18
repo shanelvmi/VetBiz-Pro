@@ -50,13 +50,13 @@ class _TrashScreenState extends State<TrashScreen> with SingleTickerProviderStat
       appBar: AppBar(
         title: Text(context.l10n.activityType_trash),
         centerTitle: true,
-        backgroundColor: context.colors.primary,
-        foregroundColor: context.colors.onPrimary,
+        backgroundColor: context.colors.brandSurface,
+        foregroundColor: context.colors.onBrandSurface,
         bottom: TabBar(
           controller: _tabController,
-          indicatorColor: context.colors.onPrimary,
-          labelColor: context.colors.onPrimary,
-          unselectedLabelColor: context.colors.onPrimaryMuted,
+          indicatorColor: context.colors.onBrandSurface,
+          labelColor: context.colors.onBrandSurface,
+          unselectedLabelColor: context.colors.onBrandSurfaceMuted,
           tabs: [
             Tab(text: context.l10n.activityType_products),
             Tab(text: context.l10n.clients_title),
