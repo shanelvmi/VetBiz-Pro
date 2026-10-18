@@ -29,19 +29,19 @@
       "rule": "R4",
       "file": "lib/services/daily_report_pdf_service.dart",
       "lineContains": "pw.SizedBox(width: 230,",
-      "reason": "printed column width of the summary stat lines (a size, not spacing)"
+      "reason": "KEEP: printed column width of the summary stat lines (a size, not spacing; no token within 4 px); docs/design/parked_values.md B1"
     },
     {
       "rule": "R4",
       "file": "lib/services/daily_report_pdf_service.dart",
       "lineContains": "pw.SizedBox(width: 70,",
-      "reason": "printed label-column width of the header block (a size, not spacing)"
+      "reason": "KEEP: printed label-column width of the header block (a size, not spacing; no token within 4 px); docs/design/parked_values.md B2"
     },
     {
       "rule": "R4",
       "file": "lib/services/receipt_pdf_service.dart",
       "lineContains": "pw.SizedBox(width: 100,",
-      "reason": "printed label-column width of the receipt details (a size, not spacing)"
+      "reason": "KEEP: printed label-column width of the receipt details (a size, not spacing; no token within 4 px); docs/design/parked_values.md B3"
     },
     {
       "rule": "R1",
@@ -183,21 +183,15 @@
     },
     {
       "rule": "R4",
-      "file": "lib/screens/admin/manage_assistants_screen.dart",
-      "lineContains": "vertical: 36)",
-      "reason": "empty-team gap 36, 4 px above s32, kept in D4 (beyond the snap rule); for 2R"
-    },
-    {
-      "rule": "R4",
       "file": "lib/screens/dashboard/dashboard_screen.dart",
       "lineContains": "EdgeInsets.symmetric(vertical: 40)",
-      "reason": "chart loading gap 40, 8 px above s32; open question D9, for 2R"
+      "reason": "KEEP: chart loading gap 40, 8 px above s32 (beyond the 4 px snap); docs/design/parked_values.md B5"
     },
     {
       "rule": "R4",
       "file": "lib/screens/facilities/facility_screen.dart",
       "lineContains": "EdgeInsets.symmetric(vertical: 40)",
-      "reason": "inventory and sales loading gaps 40 (x2), 8 px above s32; open question D10, for 2R"
+      "reason": "KEEP: inventory and sales loading gaps 40 (x2), 8 px above s32 (beyond the 4 px snap); docs/design/parked_values.md B6"
     },
     {
       "rule": "R5",

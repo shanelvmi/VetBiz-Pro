@@ -3347,7 +3347,7 @@ Widget _buildDrawerContent() {
               child: Tooltip(
                 message: context.l10n.common_close,
                 child: IconButton(
-                  icon: Icon(Icons.close, size: 28, color: context.colors.textSecondary),
+                  icon: Icon(Icons.close, size: AppIconSize.i32, color: context.colors.textSecondary),
                   onPressed: () => Navigator.of(context).pop(),
                 ),
               ),

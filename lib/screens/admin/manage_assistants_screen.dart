@@ -1289,7 +1289,7 @@ class _ManageAssistantsScreenState extends State<ManageAssistantsScreen> {
   // than pinned to the bottom of the screen.
   Widget _buildOnlySelfHint() {
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.s24, vertical: 36),
+      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.s24, vertical: AppSpacing.s32),
       child: Center(
         child: ConstrainedBox(
           constraints: const BoxConstraints(maxWidth: AppSizes.dialogSm),
