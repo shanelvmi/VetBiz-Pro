@@ -1,13 +1,15 @@
 // Test harness for provider code that writes to Firestore: an in-memory
 // Firestore (fake_cloud_firestore), a signed-in user, and seed helpers for
-// the documents a sale touches. No Firebase app, no network.
+// the documents a sale or a service touches. No Firebase app, no network.
 import 'dart:convert';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:fake_cloud_firestore/fake_cloud_firestore.dart';
 import 'package:vetbiz_pro/data/collections.dart';
 import 'package:vetbiz_pro/models/sale.dart';
+import 'package:vetbiz_pro/models/service.dart';
 import 'package:vetbiz_pro/providers/sale_provider.dart';
+import 'package:vetbiz_pro/providers/service_provider.dart';
 
 const testFacilityId = 'facility1';
 const testUserId = 'user1';
@@ -91,6 +93,44 @@ Sale testSale({
     soldById: testUserId,
     soldByName: testUserName,
     saleOnCredit: totalPaid < total,
+    paymentMethod: totalPaid > 0 ? 'Cash' : null,
+  );
+}
+
+/// A ServiceProvider on [fs], set to the test facility (addService saves to
+/// the facility it listens to).
+ServiceProvider newServiceProvider(FirebaseFirestore fs) =>
+    ServiceProvider(firestore: fs, currentUserInfo: testUserInfo)..listenToServices(testFacilityId);
+
+/// An item used on a service, as AddEditServiceScreen collects it: matched
+/// to a product (one unit comes out of its stock) or, with no [productId],
+/// bought outside (it becomes the service's expense).
+Map<String, dynamic> serviceItem(String name, {String? productId, double price = 500}) =>
+    {'itemName': name, 'price': price, 'productId': productId};
+
+/// A service as AddEditServiceScreen builds it, with the id the form made.
+Service testService({
+  required String id,
+  List<Map<String, dynamic>> items = const [],
+  double total = 10000,
+  double? paid,
+  String? clientId,
+  String? clientName,
+}) {
+  final totalPaid = paid ?? total;
+  return Service(
+    id: id,
+    category: 'Treatment',
+    name: 'Deworming',
+    description: '',
+    totalAmount: total,
+    totalPaid: totalPaid,
+    clientId: clientId,
+    clientName: clientName,
+    serviceDate: DateTime.now(),
+    providedByName: testUserName,
+    updatedAt: DateTime.now(),
+    itemsUsed: items,
     paymentMethod: totalPaid > 0 ? 'Cash' : null,
   );
 }

@@ -19,10 +19,20 @@ import '../config/app_ranges.dart';
 import '../config/payment_methods.dart';
 
 class ServiceProvider extends ChangeNotifier {
-  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
-  final DebtProvider debtProvider;
+  final FirebaseFirestore _firestore;
+  final DebtProvider? debtProvider;
 
-  ServiceProvider({required this.debtProvider}) {
+  // Who is signed in, for the activity entry, the expense and the payment.
+  // Tests pass their own; the app uses ActivityLogger.getCurrentUserInfo
+  // (FirebaseAuth).
+  final Future<Map<String, String>> Function() _currentUserInfo;
+
+  ServiceProvider({
+    this.debtProvider,
+    FirebaseFirestore? firestore,
+    Future<Map<String, String>> Function()? currentUserInfo,
+  })  : _firestore = firestore ?? FirebaseFirestore.instance,
+        _currentUserInfo = currentUserInfo ?? ActivityLogger.getCurrentUserInfo {
     servicesListController = CursorPaginatedListController<Service>(
       pageSize: AppLimits.pageSize,
       fetchPage: _fetchServicesListPage,
@@ -299,7 +309,7 @@ class ServiceProvider extends ChangeNotifier {
       return null;
     }
     serviceToSave = serviceToSave.copyWith(itemsUsed: updatedItems);
-    serviceToSave = serviceToSave.copyWith(receiptNumber: await nextReceiptNumber(_facilityId!));
+    serviceToSave = serviceToSave.copyWith(receiptNumber: await nextReceiptNumber(_facilityId!, firestore: _firestore));
 
     try {
       await docRef.set({
@@ -320,8 +330,8 @@ class ServiceProvider extends ChangeNotifier {
       // Record the upfront amount collected (if any) as a payment - the
       // same fix applied to sales, so dailyCollections captures cash
       // collected on services too, not just sales.
+      final userInfo = await _currentUserInfo();
       if (saved.totalPaid > 0) {
-        final user = FirebaseAuth.instance.currentUser;
         await _firestore
             .collection(Collections.facilities)
             .doc(_facilityId)
@@ -332,16 +342,16 @@ class ServiceProvider extends ChangeNotifier {
           'serviceId': docRef.id,
           'amount': saved.totalPaid,
           'timestamp': FieldValue.serverTimestamp(),
-          'paidById': user?.uid ?? '',
+          'paidById': userInfo[Fields.userId] ?? '',
           'source': 'service',
           'paymentMethod': saved.paymentMethod,
           'clientNameLower': (saved.clientName ?? '').toLowerCase(),
         });
       }
 
-      final userInfo = await ActivityLogger.getCurrentUserInfo();
       await ActivityLogger.logActivity(
         facilityId: _facilityId!,
+        firestore: _firestore,
         userId: userInfo[Fields.userId]!,
         userName: userInfo['userName'],
         actionType: ActivityType.services.key,
@@ -748,7 +758,7 @@ class ServiceProvider extends ChangeNotifier {
     // never actually set anywhere in this app (it uses a separate
     // fullName field in Firestore instead), so it was silently falling
     // back to 'System' for every single service expense.
-    final userInfo = await ActivityLogger.getCurrentUserInfo();
+    final userInfo = await _currentUserInfo();
     final name = userInfo['userName']!;
 
     // Same filter as Service.externalExpenseTotal - only the items that
@@ -799,6 +809,7 @@ class ServiceProvider extends ChangeNotifier {
 
         final allocations = await productHelper.deductSellableFIFO(
           facilityId: _facilityId!,
+          firestore: _firestore,
           productId: productId,
           quantity: 1,
         );
@@ -814,6 +825,7 @@ class ServiceProvider extends ChangeNotifier {
         if (productId == null) continue;
         await productHelper.restoreSellableFIFO(
           facilityId: _facilityId!,
+          firestore: _firestore,
           productId: productId,
           allocations: allocations,
         );
