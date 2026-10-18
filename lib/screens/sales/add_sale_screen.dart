@@ -46,6 +46,14 @@ class AddSaleScreen extends StatefulWidget {
 
 class _AddSaleScreenState extends State<AddSaleScreen> {
   bool _isSaving = false;
+  // Set synchronously on the first tap, so a double-click cannot start a
+  // second save during the awaits before _isSaving is set.
+  bool _saveStarted = false;
+  // The id of the sale this form will record, made when the form opens and
+  // again after each saved sale, never reused for a new one. A Retry after
+  // a failure keeps it, so a save that did land is not recorded twice
+  // (SaleProvider.addSale returns the saved one).
+  late String _saleId;
   bool _paymentMethodMissing = false;
   final TextEditingController clientController = TextEditingController();
   bool _showClientSuggestions = false;
@@ -492,6 +500,7 @@ class _AddSaleScreenState extends State<AddSaleScreen> {
   @override
   void initState() {
     super.initState();
+    _saleId = Provider.of<SaleProvider>(context, listen: false).newSaleId();
     totalPaid = 0.0;
     totalPaidController.text = Money.decimal(totalPaid);
     if (widget.prefilledProduct != null) {
@@ -648,6 +657,16 @@ class _AddSaleScreenState extends State<AddSaleScreen> {
 
   // --- Save Sale ---
   Future<void> _saveSale() async {
+    if (_saveStarted) return;
+    _saveStarted = true;
+    try {
+      await _recordSale();
+    } finally {
+      _saveStarted = false;
+    }
+  }
+
+  Future<void> _recordSale() async {
     if (_isSaving) return; // guards against a double-tap firing two saves at once
 
     if (items.isEmpty) {
@@ -756,7 +775,7 @@ class _AddSaleScreenState extends State<AddSaleScreen> {
           updatedItems.fold(0.0, (total, item) => total + item.unrealizedProfit);
 
       final sale = Sale(
-        id: '',
+        id: _saleId,
         clientId: selectedClient?.id,
         clientName: selectedClient?.name,
         timestamp: DateTime.now(),
@@ -784,9 +803,12 @@ class _AddSaleScreenState extends State<AddSaleScreen> {
       }
       try {
         await saleProvider.addSale(sale, facilityId, expiredStockNote: expiredStockNote);
-      } on InsufficientStockException {
-        // Same message as before the transaction.
-        throw Exception('Sale could not be saved.');
+      } on InsufficientStockException catch (_, st) {
+        // Same message as before the transaction, and no Retry: trying
+        // again cannot make the stock appear. Nothing was saved.
+        AppFeedback.error(L10n.current.sales_saveFailed,
+            error: Exception('Sale could not be saved.'), stackTrace: st);
+        return;
       }
 
       if (!mounted) return;
@@ -808,13 +830,17 @@ class _AddSaleScreenState extends State<AddSaleScreen> {
         paymentMethod = null;
         totalPaidController.text = Money.decimal(totalPaid);
         clientController.clear();
+        // The next sale from this form is a new sale.
+        _saleId = saleProvider.newSaleId();
       });
 
       Navigator.pop(context, true);
     } catch (e, st) {
-      // No Retry: the sale and its debt are saved in two separate calls, so
-      // a retry after a half-finished save could record the sale twice.
-      AppFeedback.error(L10n.current.sales_saveFailed, error: e, stackTrace: st);
+      // Nothing was saved (one transaction), so Retry is safe: it reuses
+      // the same sale id, and if the first try did land it is not repeated.
+      AppFeedback.error(L10n.current.sales_saveFailed, error: e, stackTrace: st, onRetry: () {
+        if (mounted) _saveSale();
+      });
     } finally {
       if (mounted) setState(() => _isSaving = false);
     }

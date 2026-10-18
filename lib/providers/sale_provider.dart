@@ -326,6 +326,11 @@ class SaleProvider extends ChangeNotifier {
     return _computeProfits(sale);
   }
 
+  /// A new sale id, made on the device (no read, works offline). The sale
+  /// form makes one when it opens and passes it to [addSale] as the sale's
+  /// id, so a retry of the same sale reuses it.
+  String newSaleId() => _firestore.collection(Collections.sales).doc().id;
+
   /// Records a sale and everything it changes in ONE transaction
   /// (docs/design/atomic_sales.md, option b): the sale, the FIFO stock
   /// deduction, the receipt number, the client's balance, the debt
