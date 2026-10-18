@@ -99,8 +99,10 @@ void main() {
   });
 
   // R2 (docs/design/parked_values.md): each parked value that became a role
-  // keeps its EXACT old value, in every theme, so the screen is unchanged.
-  // T0 may derive the brand-linked ones per theme; this test then changes.
+  // keeps its EXACT old value, so the screen is unchanged. T1 derives six of
+  // them per theme (docs/design/themes.md section 4): Pasture keeps all 13
+  // pins; the other themes keep the 7 non-brand pins, and their six derived
+  // values are pinned in theme_derivation_test.dart.
   group('R2 roles hold the exact parked values', () {
     const pinned = <String, int>{
       'sidebarHover': 0xFF00796B, // teal 700
@@ -116,6 +118,9 @@ void main() {
       'brandTeal': 0xFF3E8E82,
       'brandTealGlow': 0xFF7EE8CB,
       'rolePlatformAdmin': 0xFF673AB7, // deepPurple
+    };
+    const brandLinked = {
+      'sidebarHover', 'sidebarPress', 'quickActionTintPrimary', 'quickActionTintAccent', 'brandTeal', 'brandTealGlow',
     };
     Map<String, Color> roles(AppColors c) => {
           'sidebarHover': c.sidebarHover,
@@ -133,20 +138,29 @@ void main() {
           'rolePlatformAdmin': c.rolePlatformAdmin,
         };
 
+    test('Pasture: the six derived roles equal the R2 pins', () {
+      final got = roles(AppColors.fromTheme(AppColorTheme.pasture));
+      for (final key in brandLinked) {
+        expect(got[key]!.toARGB32(), pinned[key], reason: key);
+      }
+    });
+
     for (final theme in AppColorTheme.all) {
       test('theme ${theme.id}', () {
         final c = AppColors.fromTheme(theme);
         final got = roles(c);
         expect(got.keys, pinned.keys);
         for (final e in pinned.entries) {
+          if (theme != AppColorTheme.pasture && brandLinked.contains(e.key)) continue;
           expect(got[e.key]!.toARGB32(), e.value, reason: e.key);
         }
-        // copyWith and lerp carry every new role.
+        // copyWith and lerp carry every new role (for Pasture, `got` is
+        // exactly `pinned`, checked just above).
         final other = AppColors.fromTheme(AppColorTheme.all.last);
         for (final copy in [c.copyWith(), c.lerp(other, 0)]) {
           final kept = roles(copy);
-          for (final e in pinned.entries) {
-            expect(kept[e.key]!.toARGB32(), e.value, reason: e.key);
+          for (final e in got.entries) {
+            expect(kept[e.key]!.toARGB32(), e.value.toARGB32(), reason: e.key);
           }
         }
       });

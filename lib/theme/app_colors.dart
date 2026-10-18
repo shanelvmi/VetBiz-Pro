@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import 'app_palette.dart';
+import 'theme_derivation.dart';
 
 /// The app's colours by ROLE (what a colour is for), registered on the theme.
 ///
@@ -82,7 +83,8 @@ class AppColors extends ThemeExtension<AppColors> {
     required this.rolePlatformAdmin,
   });
 
-  // Brand - the only roles that vary by colour theme for now.
+  // Brand: the theme's own three colours (the roles derived from them are
+  // further down; see fromTheme).
   final Color primary;
   final Color accent;
   final Color background;
@@ -184,8 +186,10 @@ class AppColors extends ThemeExtension<AppColors> {
   final Color roleAssistantStrong;
 
   // Parked values given a role in R2 (docs/design/parked_values.md, owner
-  // approved): exact legacy values, so nothing changes on screen. The same
-  // in every theme for now; T0 derives the brand-linked ones per theme.
+  // approved): exact legacy values, so nothing changes in Pasture. The
+  // brand-linked ones (sidebar fills, quick-action tints, the login teal and
+  // glow) are derived per theme in fromTheme; the others are the same in
+  // every theme.
   // Drawer item hover and the platform-admin button press (dashboard).
   final Color sidebarHover;
   final Color sidebarPress;
@@ -216,8 +220,13 @@ class AppColors extends ThemeExtension<AppColors> {
   // The Platform Admin chip, icon and avatar (users_tab.dart).
   final Color rolePlatformAdmin;
 
-  /// The roles for a colour theme. Every value is the exact legacy shade.
-  static AppColors fromTheme(AppColorTheme theme) => AppColors(
+  /// The roles for a colour theme. In Pasture every value is the exact
+  /// legacy shade. The brand-linked roles and textMuted are derived from the
+  /// theme (theme_derivation.dart, docs/design/themes.md sections 4 and 7);
+  /// every other role is the same in every theme.
+  static AppColors fromTheme(AppColorTheme theme) {
+    final (hover, press) = ThemeDerivation.sidebarFills(theme.primary);
+    return AppColors(
         primary: theme.primary,
         accent: theme.accent,
         background: theme.background,
@@ -230,7 +239,7 @@ class AppColors extends ThemeExtension<AppColors> {
         textPrimary: Colors.black87,
         textSecondary: Colors.black54,
         textSoft: Colors.grey.shade700,
-        textMuted: Colors.grey.shade600,
+        textMuted: ThemeDerivation.textMuted(theme.background),
         textHint: Colors.grey,
         textDisabled: Colors.grey.shade400,
         borderStrong: Colors.grey.shade400,
@@ -270,20 +279,21 @@ class AppColors extends ThemeExtension<AppColors> {
         roleCoAdminStrong: Colors.teal.shade700,
         roleAssistant: Colors.blueGrey,
         roleAssistantStrong: Colors.blueGrey.shade700,
-        sidebarHover: Colors.teal.shade700,
-        sidebarPress: Colors.teal.shade800,
+        sidebarHover: hover,
+        sidebarPress: press,
         warningBannerText: const Color(0xFFC77800),
         warningBannerFill: const Color(0xFFFFF6E7),
-        quickActionTintPrimary: const Color(0xFFE3F0EC),
-        quickActionTintAccent: const Color(0xFFFCEFD9),
+        quickActionTintPrimary: ThemeDerivation.quickActionTintPrimary(theme.primary),
+        quickActionTintAccent: ThemeDerivation.quickActionTintAccent(theme.accent),
         chartService1: const Color(0xFF5C7C99),
         chartService2: const Color(0xFF8FA998),
         chartService3: const Color(0xFFB98B6F),
         chartService4: const Color(0xFF9B8AA6),
-        brandTeal: const Color(0xFF3E8E82),
-        brandTealGlow: const Color(0xFF7EE8CB),
+        brandTeal: ThemeDerivation.brandTeal(theme.primary),
+        brandTealGlow: ThemeDerivation.brandTealGlow(theme.primary),
         rolePlatformAdmin: Colors.deepPurple,
       );
+  }
 
   @override
   AppColors copyWith({
