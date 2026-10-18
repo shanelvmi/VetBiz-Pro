@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import 'app_palette.dart';
+import 'dark_derivation.dart';
 import 'theme_derivation.dart';
 
 /// The app's colours by ROLE (what a colour is for), registered on the theme.
@@ -81,6 +82,9 @@ class AppColors extends ThemeExtension<AppColors> {
     required this.brandTeal,
     required this.brandTealGlow,
     required this.rolePlatformAdmin,
+    required this.brandSurface,
+    required this.onBrandSurface,
+    required this.onAccent,
   });
 
   // Brand: the theme's own three colours (the roles derived from them are
@@ -220,11 +224,26 @@ class AppColors extends ThemeExtension<AppColors> {
   // The Platform Admin chip, icon and avatar (users_tab.dart).
   final Color rolePlatformAdmin;
 
+  // Dark Mode (docs/design/dark_mode.md option 1). In dark `primary` is a
+  // light tone (ink, and the fill of buttons with dark `onPrimary`), so the
+  // large brand areas (sidebar, login gradient, page headers) keep the deep
+  // brand colour through `brandSurface` with `onBrandSurface` on it, and
+  // `onAccent` is the ink on accent fills. In light they equal primary,
+  // onPrimary and textPrimary, so light does not change.
+  final Color brandSurface;
+  final Color onBrandSurface;
+  final Color onAccent;
+
   /// The roles for a colour theme. In Pasture every value is the exact
   /// legacy shade. The brand-linked roles and textMuted are derived from the
   /// theme (theme_derivation.dart, docs/design/themes.md sections 4 and 7);
   /// every other role is the same in every theme.
-  static AppColors fromTheme(AppColorTheme theme) {
+  /// [brightness] dark gives the Dark Mode roles (see _dark); light, the
+  /// default, is T1's path unchanged.
+  static AppColors fromTheme(AppColorTheme theme, {Brightness brightness = Brightness.light}) =>
+      brightness == Brightness.dark ? _dark(theme) : _light(theme);
+
+  static AppColors _light(AppColorTheme theme) {
     final (hover, press) = ThemeDerivation.sidebarFills(theme.primary);
     return AppColors(
         primary: theme.primary,
@@ -292,7 +311,91 @@ class AppColors extends ThemeExtension<AppColors> {
         brandTeal: ThemeDerivation.brandTeal(theme.primary),
         brandTealGlow: ThemeDerivation.brandTealGlow(theme.primary),
         rolePlatformAdmin: Colors.deepPurple,
+        brandSurface: theme.primary,
+        onBrandSurface: Colors.white,
+        onAccent: Colors.black87,
       );
+  }
+
+  /// Dark Mode (docs/design/dark_mode.md section 3): built from the light
+  /// roles by the rules in dark_derivation.dart.
+  static AppColors _dark(AppColorTheme theme) {
+    final light = _light(theme);
+    final background = DarkDerivation.background(theme.primary);
+    final surface = DarkDerivation.surface(theme.primary);
+    final surfaceMuted = DarkDerivation.surfaceMuted(theme.primary);
+    final mark = DarkDerivation.liftMark;
+    final text = DarkDerivation.liftText;
+    return light.copyWith(
+      primary: DarkDerivation.primary(theme.primary),
+      background: background,
+      surface: surface,
+      surfaceMuted: surfaceMuted,
+      onPrimary: background,
+      onPrimaryMuted: background.withValues(alpha: 0.85),
+      onPrimarySubtle: background.withValues(alpha: 0.24),
+      textStrong: Colors.white,
+      textPrimary: Colors.white.withValues(alpha: 0.87),
+      textSecondary: Colors.white.withValues(alpha: 0.70),
+      textSoft: Colors.grey.shade400,
+      // The first grey from grey 500 up that reaches 4.5 on surfaceMuted,
+      // and from #808080 up that reaches 3.0 on surface (hints).
+      textMuted: DarkDerivation.lift(Colors.grey.shade500, 4.5, surfaceMuted),
+      textHint: DarkDerivation.lift(const Color(0xFF808080), 3.0, surface),
+      textDisabled: Colors.white.withValues(alpha: 0.38),
+      borderStrong: Colors.white.withValues(alpha: 0.30),
+      border: Colors.white.withValues(alpha: 0.16),
+      divider: Colors.white.withValues(alpha: 0.10),
+      success: mark(light.success),
+      successStrong: text(light.successStrong),
+      danger: mark(light.danger),
+      dangerAccent: mark(light.dangerAccent),
+      dangerSoft: mark(light.dangerSoft),
+      dangerStrong: text(light.dangerStrong),
+      dangerDeep: text(light.dangerDeep),
+      warning: mark(light.warning),
+      warningStrong: text(light.warningStrong),
+      info: mark(light.info),
+      infoStrong: text(light.infoStrong),
+      infoNote: mark(light.infoNote),
+      infoNoteText: text(light.infoNoteText),
+      infoNoteTextSoft: text(light.infoNoteTextSoft),
+      trendUp: mark(light.trendUp),
+      trendDown: mark(light.trendDown),
+      // Dark fills for the two light alert fills; their text roles reach
+      // 4.5 on them (dark_mode.md section 5).
+      dangerSurface: const Color(0xFF321515),
+      warningBannerFill: const Color(0xFF302412),
+      warningBannerText: text(light.warningBannerText),
+      chart1: mark(light.chart1),
+      chart2: mark(light.chart2),
+      chart3: mark(light.chart3),
+      chart4: mark(light.chart4),
+      chart5: mark(light.chart5),
+      chart6: mark(light.chart6),
+      chart7: mark(light.chart7),
+      chart8: mark(light.chart8),
+      chart9: mark(light.chart9),
+      chartService1: mark(light.chartService1),
+      chartService2: mark(light.chartService2),
+      chartService3: mark(light.chartService3),
+      chartService4: mark(light.chartService4),
+      roleOwner: mark(light.roleOwner),
+      roleOwnerStrong: text(light.roleOwnerStrong),
+      roleCoAdmin: mark(light.roleCoAdmin),
+      roleCoAdminStrong: text(light.roleCoAdminStrong),
+      roleAssistant: mark(light.roleAssistant),
+      roleAssistantStrong: text(light.roleAssistantStrong),
+      rolePlatformAdmin: mark(light.rolePlatformAdmin),
+      // sidebarHover, sidebarPress and brandTealGlow sit on brandSurface
+      // (the light primary), so they keep their light values.
+      brandTeal: DarkDerivation.lift(light.brandTeal, 4.5, surface),
+      quickActionTintPrimary: DarkDerivation.quickActionTintPrimary(theme.primary),
+      quickActionTintAccent: DarkDerivation.quickActionTintAccent(theme.accent),
+      brandSurface: theme.primary,
+      onBrandSurface: Colors.white,
+      onAccent: background,
+    );
   }
 
   @override
@@ -362,6 +465,9 @@ class AppColors extends ThemeExtension<AppColors> {
     Color? brandTeal,
     Color? brandTealGlow,
     Color? rolePlatformAdmin,
+    Color? brandSurface,
+    Color? onBrandSurface,
+    Color? onAccent,
   }) =>
       AppColors(
         primary: primary ?? this.primary,
@@ -429,6 +535,9 @@ class AppColors extends ThemeExtension<AppColors> {
         brandTeal: brandTeal ?? this.brandTeal,
         brandTealGlow: brandTealGlow ?? this.brandTealGlow,
         rolePlatformAdmin: rolePlatformAdmin ?? this.rolePlatformAdmin,
+        brandSurface: brandSurface ?? this.brandSurface,
+        onBrandSurface: onBrandSurface ?? this.onBrandSurface,
+        onAccent: onAccent ?? this.onAccent,
       );
 
   @override
@@ -501,6 +610,9 @@ class AppColors extends ThemeExtension<AppColors> {
       brandTeal: l(brandTeal, other.brandTeal),
       brandTealGlow: l(brandTealGlow, other.brandTealGlow),
       rolePlatformAdmin: l(rolePlatformAdmin, other.rolePlatformAdmin),
+      brandSurface: l(brandSurface, other.brandSurface),
+      onBrandSurface: l(onBrandSurface, other.onBrandSurface),
+      onAccent: l(onAccent, other.onAccent),
     );
   }
 }
