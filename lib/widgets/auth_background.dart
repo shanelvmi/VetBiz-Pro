@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../data/collections.dart';
-import '../theme/app_dimens.dart';
 import '../theme/theme_context.dart';
 
 /// The full-bleed background for the signed-out screens (Register today;
@@ -36,7 +35,7 @@ class AuthBackground extends StatelessWidget {
             return Image.asset('assets/background.jpeg', fit: BoxFit.cover);
           },
         ),
-        Container(color: context.colors.scrim.withValues(alpha: AppAlpha.a20)),
+        Container(color: context.colors.photoScrim),
       ],
     );
   }

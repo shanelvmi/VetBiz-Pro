@@ -278,7 +278,7 @@ class _LoginScreenState extends State<LoginScreen> {
       padding: const EdgeInsets.symmetric(vertical: AppSpacing.s16),
       decoration: BoxDecoration(
         gradient: LinearGradient(
-          colors: [context.colors.primary, context.colors.brandTeal],
+          colors: [context.colors.brandSurface, context.colors.brandTealOnBrand],
           begin: Alignment.centerLeft,
           end: Alignment.centerRight,
         ),
@@ -312,9 +312,9 @@ class _LoginScreenState extends State<LoginScreen> {
                       Container(
                         width: 44,
                         height: 44,
-                        decoration: BoxDecoration(color: context.colors.surface, shape: BoxShape.circle),
+                        decoration: BoxDecoration(color: context.colors.onBrandSurface, shape: BoxShape.circle),
                         alignment: Alignment.center,
-                        child: Text(AppInfo.logoMark, style: TextStyle(color: context.colors.primary, fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f16)),
+                        child: Text(AppInfo.logoMark, style: TextStyle(color: context.colors.brandSurface, fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f16)),
                       ),
                       const SizedBox(width: AppSpacing.s12),
                       Flexible(
@@ -323,11 +323,11 @@ class _LoginScreenState extends State<LoginScreen> {
                           mainAxisSize: MainAxisSize.min,
                           children: [
                             Text(context.l10n.common_appSystem(AppInfo.name),
-                                style: TextStyle(color: context.colors.onPrimary, fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f16)),
+                                style: TextStyle(color: context.colors.onBrandSurface, fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f16)),
                             if (!isNarrow)
                               Text(context.l10n.login_tagline,
                                   overflow: TextOverflow.ellipsis,
-                                  style: TextStyle(color: context.colors.onPrimary.withValues(alpha: AppAlpha.a70), fontSize: AppFontSize.f11_5)),
+                                  style: TextStyle(color: context.colors.onBrandSurface.withValues(alpha: AppAlpha.a70), fontSize: AppFontSize.f11_5)),
                           ],
                         ),
                       ),
@@ -351,7 +351,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: AppSpacing.s12, vertical: AppSpacing.s6),
                         decoration: BoxDecoration(
-                          color: context.colors.surface.withValues(alpha: AppAlpha.a15),
+                          color: context.colors.onBrandSurface.withValues(alpha: AppAlpha.a15),
                           borderRadius: BorderRadius.circular(AppRadius.r20),
                         ),
                         child: Row(
@@ -364,7 +364,7 @@ class _LoginScreenState extends State<LoginScreen> {
                             ),
                             const SizedBox(width: AppSpacing.s6),
                             Text(context.l10n.login_systemOnline,
-                                style: TextStyle(color: context.colors.onPrimary, fontSize: AppFontSize.f12_5, fontWeight: AppFontWeight.semibold)),
+                                style: TextStyle(color: context.colors.onBrandSurface, fontSize: AppFontSize.f12_5, fontWeight: AppFontWeight.semibold)),
                           ],
                         ),
                       ),
@@ -372,8 +372,8 @@ class _LoginScreenState extends State<LoginScreen> {
                       Container(
                         width: 36,
                         height: 36,
-                        decoration: BoxDecoration(color: context.colors.surface.withValues(alpha: AppAlpha.a15), shape: BoxShape.circle),
-                        child: Icon(Icons.wb_sunny_outlined, color: context.colors.onPrimary, size: AppIconSize.i18),
+                        decoration: BoxDecoration(color: context.colors.onBrandSurface.withValues(alpha: AppAlpha.a15), shape: BoxShape.circle),
+                        child: Icon(Icons.wb_sunny_outlined, color: context.colors.onBrandSurface, size: AppIconSize.i18),
                       ),
                     ],
                   ),
@@ -392,7 +392,7 @@ class _LoginScreenState extends State<LoginScreen> {
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.symmetric(horizontal: AppSpacing.s24, vertical: AppSpacing.s12),
-      color: context.colors.primary,
+      color: context.colors.brandSurface,
       child: LayoutBuilder(
         builder: (context, constraints) {
           // Enough room for everything on a single line, spanning the
@@ -402,12 +402,12 @@ class _LoginScreenState extends State<LoginScreen> {
           if (constraints.maxWidth >= AppBreakpoints.compact) {
             return Row(
               children: [
-                Icon(Icons.shield_outlined, color: context.colors.onPrimary.withValues(alpha: AppAlpha.a70), size: AppIconSize.i16),
+                Icon(Icons.shield_outlined, color: context.colors.onBrandSurface.withValues(alpha: AppAlpha.a70), size: AppIconSize.i16),
                 const SizedBox(width: AppSpacing.s8),
                 Text(context.l10n.login_copyright(AppInfo.name),
-                    style: TextStyle(color: context.colors.onPrimary.withValues(alpha: AppAlpha.a70), fontSize: AppFontSize.f12)),
+                    style: TextStyle(color: context.colors.onBrandSurface.withValues(alpha: AppAlpha.a70), fontSize: AppFontSize.f12)),
                 const Spacer(),
-                Text(AppInfo.versionLabel, style: TextStyle(color: context.colors.onPrimary.withValues(alpha: AppAlpha.a70), fontSize: AppFontSize.f12)),
+                Text(AppInfo.versionLabel, style: TextStyle(color: context.colors.onBrandSurface.withValues(alpha: AppAlpha.a70), fontSize: AppFontSize.f12)),
                 const SizedBox(width: AppSpacing.s20),
                 _FooterLink(label: context.l10n.common_privacyPolicy, destination: const PrivacyPolicyScreen()),
                 const SizedBox(width: AppSpacing.s20),
@@ -424,10 +424,10 @@ class _LoginScreenState extends State<LoginScreen> {
               Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Icon(Icons.shield_outlined, color: context.colors.onPrimary.withValues(alpha: AppAlpha.a70), size: AppIconSize.i16),
+                  Icon(Icons.shield_outlined, color: context.colors.onBrandSurface.withValues(alpha: AppAlpha.a70), size: AppIconSize.i16),
                   const SizedBox(width: AppSpacing.s8),
                   Text(context.l10n.login_copyright(AppInfo.name),
-                      style: TextStyle(color: context.colors.onPrimary.withValues(alpha: AppAlpha.a70), fontSize: AppFontSize.f12)),
+                      style: TextStyle(color: context.colors.onBrandSurface.withValues(alpha: AppAlpha.a70), fontSize: AppFontSize.f12)),
                 ],
               ),
               Wrap(
@@ -435,7 +435,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 spacing: 20,
                 runSpacing: 4,
                 children: [
-                  Text(AppInfo.versionLabel, style: TextStyle(color: context.colors.onPrimary.withValues(alpha: AppAlpha.a70), fontSize: AppFontSize.f12)),
+                  Text(AppInfo.versionLabel, style: TextStyle(color: context.colors.onBrandSurface.withValues(alpha: AppAlpha.a70), fontSize: AppFontSize.f12)),
                   _FooterLink(label: context.l10n.common_privacyPolicy, destination: const PrivacyPolicyScreen()),
                   _FooterLink(label: context.l10n.common_termsOfService, destination: const TermsOfServiceScreen()),
                 ],
@@ -453,7 +453,7 @@ class _LoginScreenState extends State<LoginScreen> {
       padding: const EdgeInsets.all(AppSpacing.s20),
       decoration: BoxDecoration(
         gradient: LinearGradient(
-          colors: [context.colors.primary, context.colors.brandTeal],
+          colors: [context.colors.brandSurface, context.colors.brandTealOnBrand],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
@@ -473,19 +473,19 @@ class _LoginScreenState extends State<LoginScreen> {
                 BoxShadow(color: context.colors.brandTealGlow.withValues(alpha: AppAlpha.a30), blurRadius: 8),
               ],
             ),
-            child: Icon(Icons.chat_bubble_outline, color: context.colors.onPrimary, size: AppIconSize.i20),
+            child: Icon(Icons.chat_bubble_outline, color: context.colors.onBrandSurface, size: AppIconSize.i20),
           ),
           const SizedBox(width: AppSpacing.s14),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(context.l10n.login_welcomeTo, style: TextStyle(color: context.colors.onPrimary.withValues(alpha: AppAlpha.a85), fontSize: AppFontSize.f13)),
+                Text(context.l10n.login_welcomeTo, style: TextStyle(color: context.colors.onBrandSurface.withValues(alpha: AppAlpha.a85), fontSize: AppFontSize.f13)),
                 Text(AppInfo.name,
                     style: TextStyle(color: context.colors.brandTealGlow, fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f19)),
                 const SizedBox(height: AppSpacing.s8),
                 Text(context.l10n.login_stayUpdated,
-                    style: TextStyle(color: context.colors.onPrimary.withValues(alpha: AppAlpha.a85), fontSize: AppFontSize.f12_5)),
+                    style: TextStyle(color: context.colors.onBrandSurface.withValues(alpha: AppAlpha.a85), fontSize: AppFontSize.f12_5)),
               ],
             ),
           ),
@@ -928,7 +928,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   Container(
                     height: 4,
                     decoration: BoxDecoration(
-                      gradient: LinearGradient(colors: [context.colors.primary, context.colors.brandTeal, context.colors.brandTealGlow]),
+                      gradient: LinearGradient(colors: [context.colors.brandSurface, context.colors.brandTealOnBrand, context.colors.brandTealGlow]),
                     ),
                   ),
                   Padding(
@@ -1049,8 +1049,8 @@ class _LoginScreenState extends State<LoginScreen> {
                         _AnimatedLoginButton(
                           isLoading: isLoggingIn,
                           onPressed: isLoggingIn ? null : _login,
-                          primaryColor: context.colors.primary,
-                          accentColor: context.colors.brandTeal,
+                          primaryColor: context.colors.brandSurface,
+                          accentColor: context.colors.brandTealOnBrand,
                         ),
                         const SizedBox(height: AppSpacing.s20),
                         Center(
@@ -1145,7 +1145,7 @@ class _LoginScreenState extends State<LoginScreen> {
           // A subtle dark scrim - keeps the floating card and its
           // shadow clearly readable against the background photo
           // regardless of how bright or busy that photo is.
-          Positioned.fill(child: Container(color: context.colors.scrim.withValues(alpha: AppAlpha.a20))),
+          Positioned.fill(child: Container(color: context.colors.photoScrim)),
 
           // The single floating card holding every piece of content -
           // header, welcome/announcements, login form, and footer all
@@ -1370,9 +1370,9 @@ class _AnimatedLoginButtonState extends State<_AnimatedLoginButton> with SingleT
                                   decoration: BoxDecoration(
                                     gradient: LinearGradient(
                                       colors: [
-                                        context.colors.onPrimary.withValues(alpha: 0),
-                                        context.colors.onPrimary.withValues(alpha: AppAlpha.a40 * t),
-                                        context.colors.onPrimary.withValues(alpha: 0),
+                                        context.colors.onBrandSurface.withValues(alpha: 0),
+                                        context.colors.onBrandSurface.withValues(alpha: AppAlpha.a40 * t),
+                                        context.colors.onBrandSurface.withValues(alpha: 0),
                                       ],
                                     ),
                                   ),
@@ -1387,7 +1387,7 @@ class _AnimatedLoginButtonState extends State<_AnimatedLoginButton> with SingleT
                                   child: SizedBox(
                                     width: 20,
                                     height: 20,
-                                    child: CircularProgressIndicator(strokeWidth: 2.5, color: context.colors.onPrimary),
+                                    child: CircularProgressIndicator(strokeWidth: 2.5, color: context.colors.onBrandSurface),
                                   ),
                                 )
                               : Stack(
@@ -1396,7 +1396,7 @@ class _AnimatedLoginButtonState extends State<_AnimatedLoginButton> with SingleT
                                     Center(
                                       child: Text(context.l10n.login_loginButton,
                                           style: TextStyle(
-                                              color: Color.lerp(context.colors.onPrimary, context.colors.accent, t),
+                                              color: Color.lerp(context.colors.onBrandSurface, context.colors.accent, t),
                                               fontWeight: AppFontWeight.semibold,
                                               fontSize: AppFontSize.f15)),
                                     ),
@@ -1409,21 +1409,21 @@ class _AnimatedLoginButtonState extends State<_AnimatedLoginButton> with SingleT
                                         width: 32,
                                         height: 32,
                                         decoration: BoxDecoration(
-                                          color: context.colors.surface.withValues(alpha: AppAlpha.a20),
+                                          color: context.colors.onBrandSurface.withValues(alpha: AppAlpha.a20),
                                           shape: BoxShape.circle,
                                           border: Border.all(color: context.colors.brandTealGlow.withValues(alpha: AppAlpha.a50), width: 1.2),
                                           boxShadow: [
                                             BoxShadow(color: context.colors.brandTealGlow.withValues(alpha: AppAlpha.a30), blurRadius: 8),
                                           ],
                                         ),
-                                        child: Icon(Icons.arrow_forward, color: Color.lerp(context.colors.onPrimary, context.colors.accent, t), size: AppIconSize.i16),
+                                        child: Icon(Icons.arrow_forward, color: Color.lerp(context.colors.onBrandSurface, context.colors.accent, t), size: AppIconSize.i16),
                                       ),
                                     ),
                                     Align(
                                       alignment: Alignment.centerRight,
                                       child: Padding(
                                         padding: EdgeInsets.only(right: AppSpacing.s4),
-                                        child: Icon(Icons.arrow_forward, color: context.colors.onPrimary, size: AppIconSize.i18),
+                                        child: Icon(Icons.arrow_forward, color: context.colors.onBrandSurface, size: AppIconSize.i18),
                                       ),
                                     ),
                                   ],
@@ -1533,10 +1533,10 @@ class _FooterLinkState extends State<_FooterLink> {
         onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => widget.destination)),
         child: Text(widget.label,
             style: TextStyle(
-              color: _hovered ? context.colors.accent : context.colors.onPrimary.withValues(alpha: AppAlpha.a70),
+              color: _hovered ? context.colors.accent : context.colors.onBrandSurface.withValues(alpha: AppAlpha.a70),
               fontSize: AppFontSize.f12,
               decoration: TextDecoration.underline,
-              decorationColor: _hovered ? context.colors.accent : context.colors.onPrimary.withValues(alpha: AppAlpha.a40),
+              decorationColor: _hovered ? context.colors.accent : context.colors.onBrandSurface.withValues(alpha: AppAlpha.a40),
             )),
       ),
     );

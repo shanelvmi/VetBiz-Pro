@@ -773,7 +773,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
       padding: const EdgeInsets.symmetric(horizontal: AppSpacing.s16, vertical: AppSpacing.s14),
       decoration: BoxDecoration(
         gradient: LinearGradient(
-          colors: [context.colors.primary, context.colors.brandTeal],
+          colors: [context.colors.brandSurface, context.colors.brandTealOnBrand],
           begin: Alignment.centerLeft,
           end: Alignment.centerRight,
         ),
@@ -783,24 +783,24 @@ class _RegisterScreenState extends State<RegisterScreen> {
           Container(
             width: 44,
             height: 44,
-            decoration: BoxDecoration(color: context.colors.surface, shape: BoxShape.circle),
+            decoration: BoxDecoration(color: context.colors.onBrandSurface, shape: BoxShape.circle),
             alignment: Alignment.center,
-            child: Text(AppInfo.logoMark, style: TextStyle(color: context.colors.primary, fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f16)),
+            child: Text(AppInfo.logoMark, style: TextStyle(color: context.colors.brandSurface, fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f16)),
           ),
           const SizedBox(width: AppSpacing.s12),
           Expanded(
             child: Text(
               context.l10n.common_appSystem(AppInfo.name),
               overflow: TextOverflow.ellipsis,
-              style: TextStyle(color: context.colors.onPrimary, fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f16),
+              style: TextStyle(color: context.colors.onBrandSurface, fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f16),
             ),
           ),
           TextButton.icon(
             onPressed: _goToLogin,
-            icon: Icon(Icons.login, size: AppIconSize.i18, color: context.colors.onPrimary),
-            label: Text(context.l10n.common_logIn, style: TextStyle(color: context.colors.onPrimary, fontWeight: AppFontWeight.semibold)),
+            icon: Icon(Icons.login, size: AppIconSize.i18, color: context.colors.onBrandSurface),
+            label: Text(context.l10n.common_logIn, style: TextStyle(color: context.colors.onBrandSurface, fontWeight: AppFontWeight.semibold)),
             style: TextButton.styleFrom(
-              backgroundColor: context.colors.surface.withValues(alpha: AppAlpha.a15),
+              backgroundColor: context.colors.onBrandSurface.withValues(alpha: AppAlpha.a15),
               padding: const EdgeInsets.symmetric(horizontal: AppSpacing.s14, vertical: AppSpacing.s10),
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadius.r20)),
             ),
@@ -819,7 +819,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
               Icon(icon, color: context.colors.brandTealGlow, size: AppIconSize.i20),
               const SizedBox(width: AppSpacing.s10),
               Expanded(
-                child: Text(text, style: TextStyle(color: context.colors.onPrimary, fontSize: AppFontSize.f13_5, height: 1.4)),
+                child: Text(text, style: TextStyle(color: context.colors.onBrandSurface, fontSize: AppFontSize.f13_5, height: 1.4)),
               ),
             ],
           ),
@@ -829,7 +829,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
       padding: const EdgeInsets.all(AppSpacing.s24),
       decoration: BoxDecoration(
         gradient: LinearGradient(
-          colors: [context.colors.primary, context.colors.brandTeal],
+          colors: [context.colors.brandSurface, context.colors.brandTealOnBrand],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
@@ -847,32 +847,32 @@ class _RegisterScreenState extends State<RegisterScreen> {
               shape: BoxShape.circle,
               border: Border.all(color: context.colors.brandTealGlow.withValues(alpha: AppAlpha.a70), width: 1.4),
             ),
-            child: Icon(Icons.rocket_launch_outlined, color: context.colors.onPrimary, size: AppIconSize.i22),
+            child: Icon(Icons.rocket_launch_outlined, color: context.colors.onBrandSurface, size: AppIconSize.i22),
           ),
           const SizedBox(height: AppSpacing.s18),
           Text(
             context.l10n.register_createYourAccount,
-            style: TextStyle(color: context.colors.onPrimary, fontSize: AppFontSize.f24, fontWeight: AppFontWeight.extraBold, height: 1.15),
+            style: TextStyle(color: context.colors.onBrandSurface, fontSize: AppFontSize.f24, fontWeight: AppFontWeight.extraBold, height: 1.15),
           ),
           const SizedBox(height: AppSpacing.s8),
           Text(
             context.l10n.register_setUpApp(AppInfo.name),
-            style: TextStyle(color: context.colors.onPrimary.withValues(alpha: AppAlpha.a85), fontSize: AppFontSize.f13_5, height: 1.45),
+            style: TextStyle(color: context.colors.onBrandSurface.withValues(alpha: AppAlpha.a85), fontSize: AppFontSize.f13_5, height: 1.45),
           ),
           const SizedBox(height: AppSpacing.s24),
           benefit(Icons.check_circle_outline, context.l10n.register_benefitAllInOne),
           benefit(Icons.check_circle_outline, context.l10n.register_benefitInvite),
           benefit(Icons.check_circle_outline, context.l10n.register_benefitTrial),
           const SizedBox(height: AppSpacing.s6),
-          Divider(color: context.colors.onPrimary.withValues(alpha: AppAlpha.a30)),
+          Divider(color: context.colors.onBrandSurface.withValues(alpha: AppAlpha.a30)),
           const SizedBox(height: AppSpacing.s10),
-          Text(context.l10n.register_alreadyHaveAccount, style: TextStyle(color: context.colors.onPrimary.withValues(alpha: AppAlpha.a85), fontSize: AppFontSize.f13)),
+          Text(context.l10n.register_alreadyHaveAccount, style: TextStyle(color: context.colors.onBrandSurface.withValues(alpha: AppAlpha.a85), fontSize: AppFontSize.f13)),
           const SizedBox(height: AppSpacing.s8),
           OutlinedButton(
             onPressed: _goToLogin,
             style: OutlinedButton.styleFrom(
-              foregroundColor: context.colors.onPrimary,
-              side: BorderSide(color: context.colors.onPrimary.withValues(alpha: 0.6)),
+              foregroundColor: context.colors.onBrandSurface,
+              side: BorderSide(color: context.colors.onBrandSurface.withValues(alpha: 0.6)),
               padding: const EdgeInsets.symmetric(horizontal: AppSpacing.s22, vertical: AppSpacing.s12),
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadius.r12)),
             ),
@@ -889,7 +889,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
       padding: const EdgeInsets.all(AppSpacing.s16),
       decoration: BoxDecoration(
         gradient: LinearGradient(
-          colors: [context.colors.primary, context.colors.brandTeal],
+          colors: [context.colors.brandSurface, context.colors.brandTealOnBrand],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
@@ -905,7 +905,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
               shape: BoxShape.circle,
               border: Border.all(color: context.colors.brandTealGlow.withValues(alpha: AppAlpha.a70), width: 1.2),
             ),
-            child: Icon(Icons.rocket_launch_outlined, color: context.colors.onPrimary, size: AppIconSize.i20),
+            child: Icon(Icons.rocket_launch_outlined, color: context.colors.onBrandSurface, size: AppIconSize.i20),
           ),
           const SizedBox(width: AppSpacing.s12),
           Expanded(
@@ -914,12 +914,12 @@ class _RegisterScreenState extends State<RegisterScreen> {
               children: [
                 Text(
                   context.l10n.register_createYourAccount,
-                  style: TextStyle(color: context.colors.onPrimary, fontSize: AppFontSize.f17, fontWeight: AppFontWeight.extraBold),
+                  style: TextStyle(color: context.colors.onBrandSurface, fontSize: AppFontSize.f17, fontWeight: AppFontWeight.extraBold),
                 ),
                 const SizedBox(height: AppSpacing.s2),
                 Text(
                   context.l10n.register_setUpCentre,
-                  style: TextStyle(color: context.colors.onPrimary.withValues(alpha: AppAlpha.a85), fontSize: AppFontSize.f12_5),
+                  style: TextStyle(color: context.colors.onBrandSurface.withValues(alpha: AppAlpha.a85), fontSize: AppFontSize.f12_5),
                 ),
               ],
             ),
@@ -1006,26 +1006,26 @@ class _RegisterScreenState extends State<RegisterScreen> {
       appBar: PreferredSize(
         preferredSize: const Size.fromHeight(64),
         child: Container(
-          color: context.colors.primary,
+          color: context.colors.brandSurface,
           padding: const EdgeInsets.symmetric(horizontal: AppSpacing.s20),
           child: SafeArea(
             bottom: false,
             child: Row(
               children: [
-                Icon(Icons.manage_accounts_outlined, color: context.colors.onPrimary, size: AppIconSize.i22),
+                Icon(Icons.manage_accounts_outlined, color: context.colors.onBrandSurface, size: AppIconSize.i22),
                 const SizedBox(width: AppSpacing.s12),
                 Expanded(
                   child: Text(context.l10n.common_editProfile,
-                      style: TextStyle(color: context.colors.onPrimary, fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f18)),
+                      style: TextStyle(color: context.colors.onBrandSurface, fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f18)),
                 ),
                 if (widget.isModal)
                   IconButton(
-                    icon: Icon(Icons.close, color: context.colors.onPrimary),
+                    icon: Icon(Icons.close, color: context.colors.onBrandSurface),
                     tooltip: context.l10n.common_close,
                     onPressed: _goBack,
                   )
                 else
-                  BackButton(color: context.colors.onPrimary, onPressed: _goBack),
+                  BackButton(color: context.colors.onBrandSurface, onPressed: _goBack),
               ],
             ),
           ),
@@ -1979,7 +1979,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   label: Text(context.l10n.common_add),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: context.colors.accent,
-                    foregroundColor: context.colors.textPrimary,
+                    foregroundColor: context.colors.onAccent,
                     disabledBackgroundColor: context.colors.divider,
                     elevation: AppElevation.e0,
                     padding: const EdgeInsets.symmetric(horizontal: AppSpacing.s16),
