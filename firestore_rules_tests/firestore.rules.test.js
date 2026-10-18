@@ -528,3 +528,70 @@ test('activity log create: a member can NOT backdate an entry (a device date ins
   await assertFails(logsOf('assistant').add(entry('assistant', new Date(2020, 0, 1))));
   await assertFails(logsOf('assistant').add({ userId: 'assistant', userName: 'x', actionType: 'Sale', description: 'no time' }));
 });
+
+// ======================================================================
+// STOCK FLOOR (E1c) - a product's or a batch's stockQty / sellableQty can
+// never be written below zero, by anyone. An old document that is ALREADY
+// negative (from past bugs) keeps working: a change that leaves the
+// quantity exactly as it was is allowed, and the quantity can be raised
+// to zero or more, but not to another negative value.
+// ======================================================================
+
+const products = (uid) => as(uid).collection('facilities').doc('F1').collection('products');
+const batches = (uid, productId) => products(uid).doc(productId).collection('batches');
+
+// P5: an ordinary product with 5 of each, and one batch b5 the same.
+// PLEGACY: a product left at -3 by an old bug, and its batch bLegacy too.
+const seedStock = async () => {
+  await env.withSecurityRulesDisabled(async (ctx) => {
+    const p = ctx.firestore().collection('facilities').doc('F1').collection('products');
+    await p.doc('P5').set({ name: 'Dawa', stockQty: 5, sellableQty: 5 });
+    await p.doc('P5').collection('batches').doc('b5').set({ batchNo: 'A1', stockQty: 5, sellableQty: 5 });
+    await p.doc('PLEGACY').set({ name: 'Old', stockQty: -3, sellableQty: -3 });
+    await p.doc('PLEGACY').collection('batches').doc('bLegacy').set({ batchNo: 'L1', stockQty: -3, sellableQty: -3 });
+  });
+};
+
+test('stock floor: an update to -1 is refused, for an assistant and for an admin (product and batch)', async () => {
+  await seedStock();
+  for (const uid of ['assistant', 'owner']) {
+    await assertFails(products(uid).doc('P5').update({ sellableQty: -1 }));
+    await assertFails(products(uid).doc('P5').update({ stockQty: -1 }));
+    await assertFails(batches(uid, 'P5').doc('b5').update({ sellableQty: -1 }));
+    await assertFails(batches(uid, 'P5').doc('b5').update({ stockQty: -1 }));
+  }
+});
+
+test('stock floor: 5 to 0 is allowed (selling the last units), product and batch', async () => {
+  await seedStock();
+  await assertSucceeds(products('assistant').doc('P5').update({ sellableQty: 0, stockQty: 0 }));
+  await assertSucceeds(batches('assistant', 'P5').doc('b5').update({ sellableQty: 0, stockQty: 0 }));
+});
+
+test('stock floor: a legacy product at -3 can still have its name changed (quantities untouched, or rewritten as they are)', async () => {
+  await seedStock();
+  await assertSucceeds(products('owner').doc('PLEGACY').update({ name: 'Old renamed' }));
+  // updateProduct writes the whole document back with set(), quantities included.
+  await assertSucceeds(products('owner').doc('PLEGACY').set({ name: 'Old again', stockQty: -3, sellableQty: -3 }));
+  await assertSucceeds(batches('owner', 'PLEGACY').doc('bLegacy').update({ batchNo: 'L2' }));
+});
+
+test('stock floor: at -3 a quantity can NOT be changed to -2, but CAN be changed to 0', async () => {
+  await seedStock();
+  await assertFails(products('owner').doc('PLEGACY').update({ sellableQty: -2 }));
+  await assertFails(products('owner').doc('PLEGACY').update({ stockQty: -2 }));
+  await assertFails(batches('owner', 'PLEGACY').doc('bLegacy').update({ sellableQty: -2 }));
+  await assertFails(batches('owner', 'PLEGACY').doc('bLegacy').update({ stockQty: -2 }));
+  await assertSucceeds(products('owner').doc('PLEGACY').update({ sellableQty: 0, stockQty: 0 }));
+  await assertSucceeds(batches('owner', 'PLEGACY').doc('bLegacy').update({ sellableQty: 0, stockQty: 0 }));
+});
+
+test('stock floor: creating a product or a batch with a negative quantity is refused; zero or more is allowed', async () => {
+  await seedStock();
+  await assertFails(products('owner').doc('PNEW').set({ name: 'New', stockQty: -1, sellableQty: 0 }));
+  await assertFails(products('owner').doc('PNEW').set({ name: 'New', stockQty: 0, sellableQty: -1 }));
+  await assertFails(batches('owner', 'P5').doc('bNew').set({ batchNo: 'N1', stockQty: -1, sellableQty: 0 }));
+  await assertFails(batches('owner', 'P5').doc('bNew').set({ batchNo: 'N1', stockQty: 0, sellableQty: -1 }));
+  await assertSucceeds(products('owner').doc('PNEW').set({ name: 'New', stockQty: 0, sellableQty: 4 }));
+  await assertSucceeds(batches('assistant', 'P5').doc('bNew').set({ batchNo: 'N1', stockQty: 4, sellableQty: 0 }));
+});
