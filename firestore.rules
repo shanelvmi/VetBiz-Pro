@@ -93,6 +93,19 @@ service cloud.firestore {
       let affected = request.resource.data.diff(resource.data).affectedKeys();
       return affected.hasOnly(['stockQty', 'sellableQty', 'expiry', 'batchNo', 'updatedAt']);
     }
+    // Stock can never go below zero, on a product or a batch (E1c). A
+    // quantity that is written must be zero or more - except one left
+    // exactly as it was: some old documents are already negative from
+    // past bugs, and editing such a product's name must still work. Any
+    // change to it must land at zero or above.
+    function isQuantityAtOrAboveZero(field) {
+      let next = request.resource.data;
+      return !(field in next) || next[field] >= 0 ||
+        (resource != null && field in resource.data && next[field] == resource.data[field]);
+    }
+    function areStockQuantitiesAtOrAboveZero() {
+      return isQuantityAtOrAboveZero('stockQty') && isQuantityAtOrAboveZero('sellableQty');
+    }
     function isOnlyMarkingNotificationRead() {
       let affected = request.resource.data.diff(resource.data).affectedKeys();
       return affected.hasOnly(['readAt']);
@@ -193,11 +206,13 @@ service cloud.firestore {
       // ========== 📦 Products ==========
       match /products/{productId} {
         allow read: if isAuthenticated() && isInFacility(facilityId);
-        allow create: if isAuthenticated() && isInFacility(facilityId);
-        allow update: if isAuthenticated() && isInFacility(facilityId) && (isAdmin() || isOnlyChangingStockFields());
+        allow create: if isAuthenticated() && isInFacility(facilityId) && areStockQuantitiesAtOrAboveZero();
+        allow update: if isAuthenticated() && isInFacility(facilityId) && (isAdmin() || isOnlyChangingStockFields()) &&
+          areStockQuantitiesAtOrAboveZero();
         allow delete: if isAuthenticated() && isInFacility(facilityId) && isAdmin();
         match /batches/{batchId} {
-          allow read, write: if isAuthenticated() && isInFacility(facilityId);
+          allow read, delete: if isAuthenticated() && isInFacility(facilityId);
+          allow create, update: if isAuthenticated() && isInFacility(facilityId) && areStockQuantitiesAtOrAboveZero();
         }
       }
       // ========== 💵 Sales ==========
