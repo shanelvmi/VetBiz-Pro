@@ -78,8 +78,10 @@ const reviewColumns = ['key', 'english', 'kiswahili', 'notes', 'status'];
 String toCsv(List<List<String>> rows) {
   String cell(String s) =>
       RegExp(r'[",;\r\n]|^\s|\s$').hasMatch(s) ? '"${s.replaceAll('"', '""')}"' : s;
-  // A BOM and CRLF, so Excel opens it as UTF-8 (Kiswahili and "…" intact).
-  return '﻿${rows.map((r) => r.map(cell).join(',')).join('\r\n')}\r\n';
+  // A BOM, so Excel opens it as UTF-8 (Kiswahili and "…" intact). LF line
+  // ends: git stores the CSV with LF (.gitattributes), and a CRLF file showed
+  // as modified after every export. Excel reads LF; parseCsv reads both.
+  return '﻿${rows.map((r) => r.map(cell).join(',')).join('\n')}\n';
 }
 
 /// Reads what Excel saves: with or without a BOM, comma or semicolon
@@ -100,6 +102,11 @@ List<List<String>> parseCsv(String text) {
         i++;
       } else if (c == '"') {
         quoted = false;
+      } else if (c == '\r') {
+        // A line break inside a cell, as Excel saves it (CRLF): the ARB has
+        // LF, so an untouched cell must read back the same.
+        if (i + 1 < text.length && text[i + 1] == '\n') i++;
+        cell.write('\n');
       } else {
         cell.write(c);
       }

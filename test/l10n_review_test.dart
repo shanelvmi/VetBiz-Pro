@@ -29,6 +29,24 @@ void main() {
     expect(parseCsv('key;english;kiswahili;notes;status\r\nk;a;b;;draft\r\n')[1], ['k', 'a', 'b', '', 'draft']);
   });
 
+  test('export writes LF line ends and keeps the BOM', () {
+    final csv = toCsv([reviewColumns, ['k', 'a', 'mstari\nmwingine', '', 'draft']]);
+    expect(csv.startsWith('﻿'), isTrue);
+    expect(csv.contains('\r'), isFalse);
+  });
+
+  test('import reads a CRLF file (Excel) and an LF file the same, line breaks in cells included', () {
+    final lf = toCsv(edited([['a_save', 'Save', 'Hifadhi\nsasa', 'Save button.', 'draft']]));
+    final crlf = lf.replaceAll('\n', '\r\n');
+    expect(parseCsv(crlf), parseCsv(lf));
+    final fromLf = sw();
+    final fromCrlf = sw();
+    applyReview(en(), fromLf, parseCsv(lf));
+    applyReview(en(), fromCrlf, parseCsv(crlf));
+    expect(fromCrlf.values, fromLf.values);
+    expect(fromCrlf.values['a_save'], 'Hifadhi\nsasa');
+  });
+
   test('export lists every English key, with the context as notes', () {
     final rows = reviewRows(en(), sw());
     expect(rows.first, reviewColumns);
@@ -107,6 +125,14 @@ void main() {
       final status = parseCsv(out.csv)..[2][4] = 'reviewed';
       expect(exportBlockers(en(), sw(), toCsv(status), out.snapshot), ['a_sold']);
       expect(exportBlockers(en(), sw(), 'not,the,header\r\n', out.snapshot), isNotEmpty);
+    });
+
+    test('a CSV saved by Excel with CRLF and no changed cell is not an edit; a changed cell still is', () {
+      final s = sw()..values['a_save'] = 'Hifadhi\nsasa';
+      final out = exported(en(), s);
+      final crlf = out.csv.replaceAll('\n', '\r\n');
+      expect(exportBlockers(en(), s, crlf, out.snapshot), isEmpty);
+      expect(exportBlockers(en(), s, crlf.replaceFirst('Umeuza', 'Uliuza'), out.snapshot), ['a_sold']);
     });
 
     test('import, then export: the imported rows no longer block it', () {

@@ -7,7 +7,7 @@
 
 ## 0. Where the project stands
 
-Phase 2 foundation is done: every style value is a token or is allowlisted with a reason, config and data constants are centralised, feedback goes through `AppFeedback`, and the app is localised (1,839 keys, English and Kiswahili, all Kiswahili still `draft`). The guard (`tool/check_hardcoded.dart`) is at zero for R1 to R11, with 81 allowlist entries. Analyze is at 38 infos before Q1 and Q2; tests are about 247.
+Phase 2 foundation is done: every style value is a token or is allowlisted with a reason, config and data constants are centralised, feedback goes through `AppFeedback`, and the app is localised (1,839 keys, English and Kiswahili, all Kiswahili still `draft`). The guard (`tool/check_hardcoded.dart`) is at zero for R1 to R11, with 81 allowlist entries. Q1 (Radio to RadioGroup) and the plural pass are done and pushed; analyze is at 2 infos (the two `dart:html` ones that Q2 fixes); tests are about 247.
 
 ## 1. Stop types and resume protocol
 
@@ -21,7 +21,9 @@ Same resume protocol as `docs/RUNBOOK.md` section 1 (read the ledger and `git lo
 
 ## 2. Owner decisions, with defaults
 
-**OWNER APPROVAL: PENDING**   (the owner changes this word to APPROVED to accept every default below; batches in block B, C and D must not start while it says PENDING. Any default can be edited in place first.)
+**OWNER APPROVAL: APPROVED**   (the owner approved every default below, with the two edits already applied in D5 and D10.)
+
+**THEME CHOICE: CHOSEN**   (the owner chose, after research and a contrast check: Pasture stays the default, and the new themes are Clinic, Harvest and Ledger. The exact colours are in D10 below. The old names Kilimanjaro Green, Serengeti Yellow and Victoria Blue are retired.)
 
 | # | Decision | Default |
 |---|---|---|
@@ -29,18 +31,18 @@ Same resume protocol as `docs/RUNBOOK.md` section 1 (read the ledger and `git lo
 | D2 | Negative amounts | One shape, "-Tsh 12,500" |
 | D3 | Decimals | Totals, balances and amounts shown whole shillings; unit prices keep up to 2 decimals where the stored value has them. Stored numbers never change |
 | D4 | Saved activity text | New entries use "Tsh 12,500" (with the separator). Old entries stay as they are |
-| D5 | Tigo Pesa and Mixx by Yas | Merged for display, filters and report grouping (stored keys unchanged); Tigo Pesa gets the phone icon |
+| D5 | Tigo Pesa and Mixx by Yas | One name only: "Mixx by Yas". Records stored as 'Tigo Pesa' are SHOWN as "Mixx by Yas" in lists, filters, report grouping and icons (the phone icon), and "Tigo Pesa" is never shown as a separate option. Stored keys never change |
 | D6 | App name | "VetBiz Pro" everywhere except legal text and the two-tone wordmark; the footer reads "© 2026 VetBiz Pro. All rights reserved." |
 | D7 | `trendUp` and `trendDown` | Stay separate roles, not merged into success and danger |
 | D8 | Parked style values (the allowlist entries for R1 to R9) | A colour with no role: add a role named by purpose if it is used twice or more, otherwise snap to the nearest role within 24 per channel. A size or duration: nearest token within 4 px or 100 ms, else keep. Each treatment is listed for the owner to see first (batch R1) |
 | D9 | Wording | "Sign in" and "Sign out" for verbs, "Sign in" for the screen title; "All Statuses" for the filter; the capital slips listed in `docs/L10N_STATUS.md`; keep "Move to Stock" and "Remove from Sellable" (different actions). Stored values never change |
-| D10 | Themes | Three: Kilimanjaro Green (current), Serengeti Yellow, Victoria Blue. Text on every primary must pass WCAG AA contrast (4.5:1); a theme may set its own `onPrimary` (dark text on yellow) |
+| D10 | Themes | FOUR themes, ids and names: `pasture` "Pasture" (default: primary #2F5D62, accent #FFB200, background #FDFDF9), `clinic` "Clinic" (primary #0F4C81, accent #5BC0EB, background #F6F9FC), `harvest` "Harvest" (primary #4A3426, accent #E3A72F, background #FBF7F0), `ledger` "Ledger" (primary #1E293B, accent #8B9CFF, background #F8FAFC). `onPrimary` is white in all four. Computed contrast already verified by the assistant: white on primary 7.3, 8.9, 11.6 and 14.6; primary on background 7.2, 8.4, 10.9 and 14.0; dark ink on accent 8.2, 7.2, 6.9 and 5.8; accent on primary 4.1, 4.3, 5.4 and 5.8. Rules for any theme: those four checks must keep passing in a test (4.5, 4.5, 4.5, 3.0); the accent is for interactive and selected states only; no theme may rely on colour alone to show a state; theme names are labels only, kept in one place (`AppColorTheme`). Legacy ids: the old id `kilimanjaro` maps to `pasture`; the old ids `serengeti` and `victoria` were never selectable, and any unknown saved id falls back to `pasture`; add a test for this. |
 | D11 | Dark Mode | System, Light, Dark setting in UI Settings. Dark applies to all three colour themes. Receipts, PDFs and the thermal printer always stay light |
 
 ## 3. Block A: finish the quality items (no owner decisions)
 
 - **Q1 Radio to RadioGroup** and **Q2 `dart:html` to `package:web`:** as specified in `docs/RUNBOOK.md` section 4 (Q2 is a HARD STOP).
-- **Q3 Line endings.** `lib/l10n/app_en.arb`, `app_sw.arb` and `docs/kiswahili_review.csv` have mixed CRLF and LF. Add a `.gitattributes` with `*.arb text eol=lf`, `*.csv text eol=lf`, `*.json text eol=lf`, and normalise only those files in one commit. The tools that write them must keep writing LF. Verify with tests and a diff that the text content is identical. Do not renormalise anything else.
+- **Q3 Line endings.** `lib/l10n/app_en.arb`, `app_sw.arb` and `docs/kiswahili_review.csv` have mixed CRLF and LF. Add a `.gitattributes` with `*.arb text eol=lf`, `*.csv text eol=lf`, `*.json text eol=lf`, and normalise only those files in one commit. The tools that write them must keep writing LF. Verify with tests and a diff that the text content is identical. Also include the generated `lib/l10n/app_localizations*.dart` files: Flutter regenerates them with LF, and `pub get` was observed to rewrite the checked-in copies with line-ending changes only. Normalise them to LF too, and add `lib/l10n/app_localizations*.dart text eol=lf` to the `.gitattributes`. Do not renormalise anything else.
 
 ## 4. Block E: data integrity and security (design first; these protect real businesses)
 
@@ -79,7 +81,7 @@ Messages sent to customers (the debtor reminder by WhatsApp or SMS, and later re
 
 ## 6. Block C: colour themes
 
-**T0 Palette proposals (DESIGN STOP).** Write `docs/design/themes.md` and a static `docs/design/theme_preview.html` (inline CSS only) showing, for each of the three themes, the primary, accent and background, and a mock row of a button, a card, a chip and an alert. Propose the hex values and `onPrimary` for Serengeti Yellow and Victoria Blue, with a table of contrast ratios (computed, not estimated) for text on primary, on accent, on surface and on background, and for each semantic role (success, warning, danger, info) on the background. Reject any pair under 4.5:1 for text or 3:1 for icons and large text, and say what you changed to fix it.
+**T0 Theme design (DESIGN STOP; do not start while THEME CHOICE says PENDING).** Write `docs/design/themes.md` and a static `docs/design/theme_preview.html` (inline CSS only) for the owner's CHOSEN set (see D10), showing for each theme the primary, accent and background, and a mock row of a sidebar item, a button, a card, a chip and an alert. Include a table of contrast ratios (computed, not estimated) for text on primary, on accent, on surface and on background, and for each semantic role (success, warning, danger, info) on each theme's background. Reject any pair under 4.5:1 for text or 3:1 for icons and large text, and say what you changed to fix it. Also check that no theme's primary is so close to the danger red that errors would be hard to notice. **Derived colours (the part that usually breaks):** audit every `AppColors` role that is brand-linked rather than semantic (the sidebar hover fill, the teal glow, the deep-green variants, tints of the primary, chart roles that were taken from the brand, and anything named after the old green), and for each one write the rule that derives it from the theme's primary, accent and background (for example "primary blended 12% with white"), with the old Pasture value reproduced EXACTLY by that rule so Pasture does not change by a single value. Semantic roles (success, warning, danger, info) are not derived from the theme and stay the same in every theme, but their contrast on each theme's background must pass.
 
 **T1 Implement (after APPROVED).** Wire the two themes into `AppPalette` and `AppColorTheme`, remove "coming soon" in the UI Settings dialog, keep the choice saved on the device. Add tests: each theme builds a complete `AppColors`; every text role on every surface role passes the contrast threshold, computed in the test; the saved theme survives a restart. **HARD STOP:** the owner views each theme on the 13 screens of R0.
 
@@ -97,12 +99,13 @@ Update `CLAUDE.md` on disk (never committed) with the rules learned, write `docs
 
 ## 9. Ledger (update the batch's row in its last commit)
 
-Baseline: analyze 38 infos before Q1 and Q2; the guard at zero; keys 1,839.
+Baseline: analyze 2 infos (the `dart:html` ones, fixed by Q2); the guard at zero; keys 1,839.
 
 | Batch | Status | Commits | Notes (10 lines max) |
 |---|---|---|---|
-| Q1, Q2 (in RUNBOOK.md) | DONE (Q2 HARD STOP: owner checks an export download in Chrome) | see RUNBOOK.md | analyze 38 -> 2 -> 0 |
-| Q3 line endings | TODO | | |
+| Q1 (in RUNBOOK.md) | DONE (9b0136f..d1a9c8e) | | |
+| Q2 (in RUNBOOK.md) | DONE (f3ce926, owner confirmed the downloads) | | |
+| Q3 line endings | DONE | e187249..(this commit) | .gitattributes: *.arb, *.csv, *.json, lib/l10n/app_localizations*.dart text eol=lf. Index changed only for app_en.arb and app_sw.arb (3,530 CRLF lines each); CSV, JSON and generated files were already LF in git. Proof: for all 6 files, HEAD with CRLF->LF hashes the same as the new blob; diff --ignore-cr-at-eol empty. Owner decision (asked in session): the CSV tool wrote CRLF on purpose, which left the CSV "modified" after every export under eol=lf; toCsv now writes LF and keeps the BOM, and parseCsv reads CRLF inside quoted cells as LF, so an Excel CRLF save with no changed cell is not an edit and import never writes CR into app_sw.arb. 3 tests added (export LF + BOM; import CRLF = LF; Excel CRLF save not an edit, a changed cell still is). After export and flutter gen-l10n, git status shows no change. analyze 0 issues (No issues found); 250 tests. Not renormalised: working copies of other CRLF files (index already LF). Check: next owner Excel review, save, run the import, then the export: it must not refuse. |
 | E1-design sale and debt atomic | TODO, DESIGN STOP | | |
 | E1 implement | BLOCKED until E1-design APPROVED | | |
 | E2-design delete and restore | TODO, DESIGN STOP | | |
@@ -113,12 +116,12 @@ Baseline: analyze 38 infos before Q1 and Q2; the guard at zero; keys 1,839.
 | E5-design customer language | TODO, DESIGN STOP | | |
 | E5 implement | BLOCKED until E5-design APPROVED | | |
 | R0 baseline screenshots | OWNER | | |
-| R1 parked values table | BLOCKED until OWNER APPROVAL | DESIGN STOP | |
+| R1 parked values table | TODO (after block E) | DESIGN STOP | |
 | R2 apply parked values | BLOCKED until R1 APPROVED | | |
-| R3 money, payments, name | BLOCKED until OWNER APPROVAL | | |
-| R4 wording | BLOCKED until OWNER APPROVAL | | |
+| R3 money, payments, name | TODO (after R2) | | |
+| R4 wording | TODO (after R3) | | |
 | R5 compare | HARD STOP | | |
-| T0 palettes | BLOCKED until OWNER APPROVAL | DESIGN STOP | |
+| T0 theme design | TODO (after block B) | DESIGN STOP | |
 | T1 themes | BLOCKED until T0 APPROVED | HARD STOP | |
 | K0 dark audit | BLOCKED until T1 DONE | DESIGN STOP | |
 | K1 dark setting and roles | BLOCKED until K0 APPROVED | | |
