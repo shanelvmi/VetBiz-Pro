@@ -230,7 +230,7 @@ class _OverviewDetailsScreenState extends State<OverviewDetailsScreen> {
               final day = _dailyEarnings[group.x.toInt()].key;
               return BarTooltipItem(
                 '${AppDateFormat.dateShort.format(day)}\n${Money.symbolPlain(rod.toY)}',
-                TextStyle(color: context.colors.onPrimary, fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f12),
+                TextStyle(color: context.colors.onChartTooltip, fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f12),
               );
             },
           ),

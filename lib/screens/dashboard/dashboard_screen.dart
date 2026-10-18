@@ -2049,7 +2049,7 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
                                 };
                                 return LineTooltipItem(
                                   '${AppDateFormat.dateShort.format(day)}\n${context.l10n.common_filterValue(label, Money.format(spot.y))}',
-                                  TextStyle(color: context.colors.onPrimary, fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f12),
+                                  TextStyle(color: context.colors.onChartTooltip, fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f12),
                                 );
                               }).toList();
                             },

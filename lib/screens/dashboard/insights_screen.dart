@@ -383,12 +383,12 @@ class _InsightsScreenState extends State<InsightsScreen> {
       padding: const EdgeInsets.all(AppSpacing.s20),
       decoration: BoxDecoration(
         gradient: LinearGradient(
-          colors: [context.colors.primary, context.colors.brandTeal],
+          colors: [context.colors.brandSurface, context.colors.brandTealOnBrand],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
         borderRadius: BorderRadius.circular(AppRadius.r16),
-        boxShadow: [BoxShadow(color: context.colors.primary.withValues(alpha: AppAlpha.a30), blurRadius: 16, offset: const Offset(0, 6))],
+        boxShadow: [BoxShadow(color: context.colors.brandSurface.withValues(alpha: AppAlpha.a30), blurRadius: 16, offset: const Offset(0, 6))],
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -396,8 +396,8 @@ class _InsightsScreenState extends State<InsightsScreen> {
           Container(
             width: 44,
             height: 44,
-            decoration: BoxDecoration(color: context.colors.surface.withValues(alpha: AppAlpha.a15), borderRadius: BorderRadius.circular(AppRadius.r12)),
-            child: Icon(Icons.monitor_heart_outlined, color: context.colors.onPrimary, size: AppIconSize.i22),
+            decoration: BoxDecoration(color: context.colors.onBrandSurface.withValues(alpha: AppAlpha.a15), borderRadius: BorderRadius.circular(AppRadius.r12)),
+            child: Icon(Icons.monitor_heart_outlined, color: context.colors.onBrandSurface, size: AppIconSize.i22),
           ),
           const SizedBox(width: AppSpacing.s14),
           Expanded(
@@ -405,13 +405,13 @@ class _InsightsScreenState extends State<InsightsScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(context.l10n.insights_businessPulse,
-                    style: TextStyle(color: context.colors.onPrimary.withValues(alpha: AppAlpha.a85), fontSize: AppFontSize.f13, fontWeight: AppFontWeight.semibold)),
+                    style: TextStyle(color: context.colors.onBrandSurface.withValues(alpha: AppAlpha.a85), fontSize: AppFontSize.f13, fontWeight: AppFontWeight.semibold)),
                 const SizedBox(height: AppSpacing.s4),
                 Text(_pulseHeadline(),
-                    style: TextStyle(color: context.colors.onPrimary, fontSize: AppFontSize.f18, fontWeight: AppFontWeight.bold)),
+                    style: TextStyle(color: context.colors.onBrandSurface, fontSize: AppFontSize.f18, fontWeight: AppFontWeight.bold)),
                 const SizedBox(height: AppSpacing.s6),
                 Text(_pulseSentence(),
-                    style: TextStyle(color: context.colors.onPrimary.withValues(alpha: AppAlpha.a85), fontSize: AppFontSize.f13, height: 1.4)),
+                    style: TextStyle(color: context.colors.onBrandSurface.withValues(alpha: AppAlpha.a85), fontSize: AppFontSize.f13, height: 1.4)),
               ],
             ),
           ),
@@ -427,8 +427,8 @@ class _InsightsScreenState extends State<InsightsScreen> {
       appBar: AppBar(
         title: Text(context.l10n.insights_title),
         centerTitle: true,
-        backgroundColor: context.colors.primary,
-        foregroundColor: context.colors.onPrimary,
+        backgroundColor: context.colors.brandSurface,
+        foregroundColor: context.colors.onBrandSurface,
         automaticallyImplyLeading: !widget.isModal,
         leading: widget.isModal
             ? IconButton(
@@ -563,7 +563,7 @@ class _InsightsScreenState extends State<InsightsScreen> {
                 final day = _trendStart.add(Duration(days: spot.x.toInt()));
                 return LineTooltipItem(
                   '${AppDateFormat.dateShort.format(day)}\n${Money.symbolPlain(spot.y)}',
-                  TextStyle(color: context.colors.onPrimary, fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f12),
+                  TextStyle(color: context.colors.onChartTooltip, fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f12),
                 );
               }).toList();
             },
@@ -636,7 +636,7 @@ class _InsightsScreenState extends State<InsightsScreen> {
               final name = _productName(_topProducts[group.x.toInt()].key);
               return BarTooltipItem(
                 '$name\n${Money.symbolPlain(rod.toY)}',
-                TextStyle(color: context.colors.onPrimary, fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f12),
+                TextStyle(color: context.colors.onChartTooltip, fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f12),
               );
             },
           ),

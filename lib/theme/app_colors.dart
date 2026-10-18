@@ -97,6 +97,7 @@ class AppColors extends ThemeExtension<AppColors> {
     required this.onAccentChip,
     required this.dangerLabel,
     required this.quoteFill,
+    required this.onChartTooltip,
   });
 
   // Brand: the theme's own three colours (the roles derived from them are
@@ -299,6 +300,12 @@ class AppColors extends ThemeExtension<AppColors> {
   // theme's light text measured 1.09 (K5).
   final Color quoteFill;
 
+  // Text in a chart tooltip (dashboard, Insights, operator overview).
+  // fl_chart fills its tooltips with its own fixed blueGrey.darken(15) in
+  // both modes, so the ink is white in both; it was onPrimary, which is
+  // white only in light (K5).
+  final Color onChartTooltip;
+
   /// The roles for a colour theme. In Pasture every value is the exact
   /// legacy shade. The brand-linked roles and textMuted are derived from the
   /// theme (theme_derivation.dart, docs/design/themes.md sections 4 and 7);
@@ -390,6 +397,7 @@ class AppColors extends ThemeExtension<AppColors> {
         onAccentChip: ColorScheme.fromSeed(seedColor: theme.primary).onSecondaryContainer,
         dangerLabel: Colors.redAccent.shade700,
         quoteFill: Colors.blue.shade100,
+        onChartTooltip: Colors.white,
       );
   }
 
@@ -482,6 +490,7 @@ class AppColors extends ThemeExtension<AppColors> {
       onAccentChip: background,
       dangerLabel: text(light.dangerLabel),
       quoteFill: const Color(0xFF162B3B),
+      onChartTooltip: Colors.white,
     );
   }
 
@@ -566,6 +575,7 @@ class AppColors extends ThemeExtension<AppColors> {
     Color? onAccentChip,
     Color? dangerLabel,
     Color? quoteFill,
+    Color? onChartTooltip,
   }) =>
       AppColors(
         primary: primary ?? this.primary,
@@ -647,6 +657,7 @@ class AppColors extends ThemeExtension<AppColors> {
         onAccentChip: onAccentChip ?? this.onAccentChip,
         dangerLabel: dangerLabel ?? this.dangerLabel,
         quoteFill: quoteFill ?? this.quoteFill,
+        onChartTooltip: onChartTooltip ?? this.onChartTooltip,
       );
 
   @override
@@ -733,6 +744,7 @@ class AppColors extends ThemeExtension<AppColors> {
       onAccentChip: l(onAccentChip, other.onAccentChip),
       dangerLabel: l(dangerLabel, other.dangerLabel),
       quoteFill: l(quoteFill, other.quoteFill),
+      onChartTooltip: l(onChartTooltip, other.onChartTooltip),
     );
   }
 }
