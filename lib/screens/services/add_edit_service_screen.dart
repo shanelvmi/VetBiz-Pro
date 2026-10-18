@@ -60,6 +60,15 @@ class _AddEditServiceScreenState extends State<AddEditServiceScreen> {
 
 
   bool _isLoading = false;
+  // Set synchronously on the first tap, so a double-click cannot start a
+  // second save before the first one has finished.
+  bool _saveStarted = false;
+  // The id of the service this form will record (a new service only),
+  // made when the form opens and again after each saved service, never
+  // reused for a new one. A Retry after a failure keeps it, so a save that
+  // did land is not recorded twice (ServiceProvider.addService returns the
+  // saved one).
+  late String _serviceId;
 
   final List<Map<String, TextEditingController>> _itemsUsedControllers = [];
   // Parallel to _itemsUsedControllers - null unless that row's name field
@@ -86,6 +95,7 @@ class _AddEditServiceScreenState extends State<AddEditServiceScreen> {
   @override
   void initState() {
     super.initState();
+    _serviceId = Provider.of<ServiceProvider>(context, listen: false).newServiceId();
 
     // Defensive: makes sure the item-name autocomplete below has real
     // product data even if this screen is somehow reached before
@@ -890,74 +900,7 @@ class _AddEditServiceScreenState extends State<AddEditServiceScreen> {
             onPressed: _isLoading ? null : () => Navigator.of(context).pop(),
           ),
           ElevatedButton(
-            onPressed: _isLoading
-                ? null
-                : () async {
-                    if (_isLoading) return; // guards against a double-tap firing two saves at once
-                    if (!_formKey.currentState!.validate()) return;
-
-                    setState(() => _isLoading = true);
-
-                    final totalAmount = _parseAmount(_totalAmountController.text);
-                    final totalPaid = _parseAmount(_totalPaidController.text);
-
-                    if (totalPaid > totalAmount) {
-                      AppFeedback.warning(L10n.current.services_errPaidOverTotal);
-                      setState(() => _isLoading = false);
-                      return;
-                    }
-
-                    if (totalPaid > 0 && _paymentMethod == null) {
-                      AppFeedback.warning(L10n.current.debtors_selectPaymentMethod);
-                      setState(() => _isLoading = false);
-                      return;
-                    }
-
-                    final service = Service(
-                      id: widget.service?.id ?? '',
-                      category: _selectedCategory ?? 'Other',
-                      name: _nameController.text.trim(),
-                      description: _descriptionController.text.trim(),
-                      totalAmount: totalAmount,
-                      totalPaid: totalPaid,
-                      clientId: _selectedClient?.id,
-                      clientName: _clientTextController.text.trim(),
-                      serviceDate: _serviceDate,
-                      providedByName: _providedByController.text.trim(),
-                      updatedAt: DateTime.now(),
-                      itemsUsed: _collectItemsUsed(),
-                      paymentMethod: totalPaid > 0 ? _paymentMethod : null,
-                      transactionId: _paymentMethod != null && _paymentMethod != PaymentMethod.cash.key && _transactionIdController.text.trim().isNotEmpty
-                          ? _transactionIdController.text.trim()
-                          : null,
-                    );
-
-                    try {
-                      final facilityId = facilityProvider.selectedFacilityId;
-
-                      if (facilityId == null) {
-                        AppFeedback.warning(L10n.current.common_noFacility);
-                        setState(() => _isLoading = false);
-                        return;
-                      }
-
-                      serviceProvider.listenToServices(facilityId);
-
-                      if (widget.service == null) {
-                        await serviceProvider.addService(service);
-                      } else {
-                        await serviceProvider.updateService(service);
-                      }
-
-                      if (!mounted) return;
-                      AppFeedback.success(isEditing ? L10n.current.services_updated : L10n.current.services_added);
-                      Navigator.pop(context);
-                    } catch (e, st) {
-                      AppFeedback.error(L10n.current.services_saveFailed, error: e, stackTrace: st);
-                    } finally {
-                      setState(() => _isLoading = false);
-                    }
-                  },
+            onPressed: _isLoading ? null : () => _saveService(isEditing, serviceProvider, facilityProvider),
             style: ElevatedButton.styleFrom(
               backgroundColor: context.colors.primary,
               foregroundColor: context.colors.background,
@@ -985,6 +928,108 @@ class _AddEditServiceScreenState extends State<AddEditServiceScreen> {
         ],
       ),
     );
+  }
+
+  // --- Save Service ---
+  Future<void> _saveService(
+      bool isEditing, ServiceProvider serviceProvider, FacilityProvider facilityProvider) async {
+    if (_saveStarted) return;
+    _saveStarted = true;
+    try {
+      await _recordService(isEditing, serviceProvider, facilityProvider);
+    } finally {
+      _saveStarted = false;
+    }
+  }
+
+  Future<void> _recordService(
+      bool isEditing, ServiceProvider serviceProvider, FacilityProvider facilityProvider) async {
+    if (_isLoading) return; // guards against a double-tap firing two saves at once
+    if (!_formKey.currentState!.validate()) return;
+
+    setState(() => _isLoading = true);
+
+    final totalAmount = _parseAmount(_totalAmountController.text);
+    final totalPaid = _parseAmount(_totalPaidController.text);
+
+    if (totalPaid > totalAmount) {
+      AppFeedback.warning(L10n.current.services_errPaidOverTotal);
+      setState(() => _isLoading = false);
+      return;
+    }
+
+    if (totalPaid > 0 && _paymentMethod == null) {
+      AppFeedback.warning(L10n.current.debtors_selectPaymentMethod);
+      setState(() => _isLoading = false);
+      return;
+    }
+
+    final service = Service(
+      id: widget.service?.id ?? _serviceId,
+      category: _selectedCategory ?? 'Other',
+      name: _nameController.text.trim(),
+      description: _descriptionController.text.trim(),
+      totalAmount: totalAmount,
+      totalPaid: totalPaid,
+      clientId: _selectedClient?.id,
+      clientName: _clientTextController.text.trim(),
+      serviceDate: _serviceDate,
+      providedByName: _providedByController.text.trim(),
+      updatedAt: DateTime.now(),
+      itemsUsed: _collectItemsUsed(),
+      paymentMethod: totalPaid > 0 ? _paymentMethod : null,
+      transactionId: _paymentMethod != null && _paymentMethod != PaymentMethod.cash.key && _transactionIdController.text.trim().isNotEmpty
+          ? _transactionIdController.text.trim()
+          : null,
+    );
+
+    try {
+      final facilityId = facilityProvider.selectedFacilityId;
+
+      if (facilityId == null) {
+        AppFeedback.warning(L10n.current.common_noFacility);
+        setState(() => _isLoading = false);
+        return;
+      }
+
+      serviceProvider.listenToServices(facilityId);
+
+      if (widget.service == null) {
+        // One transaction saves the service with its stock, debt, expense,
+        // payment, the client's balance and the activity entry
+        // (ServiceProvider.addService).
+        try {
+          await serviceProvider.addService(service);
+        } on InsufficientStockException catch (_, st) {
+          // Same message as any failed save, and no Retry: trying again
+          // cannot make the stock appear. Nothing was saved.
+          AppFeedback.error(L10n.current.services_saveFailed,
+              error: Exception('Service could not be saved.'), stackTrace: st);
+          return;
+        }
+        // The next service from this form is a new service.
+        _serviceId = serviceProvider.newServiceId();
+      } else {
+        await serviceProvider.updateService(service);
+      }
+
+      if (!mounted) return;
+      AppFeedback.success(isEditing ? L10n.current.services_updated : L10n.current.services_added);
+      Navigator.pop(context);
+    } catch (e, st) {
+      if (isEditing) {
+        AppFeedback.error(L10n.current.services_saveFailed, error: e, stackTrace: st);
+      } else {
+        // Nothing was saved (one transaction), so Retry is safe: it reuses
+        // the same service id, and if the first try did land it is not
+        // repeated.
+        AppFeedback.error(L10n.current.services_saveFailed, error: e, stackTrace: st, onRetry: () {
+          if (mounted) _saveService(isEditing, serviceProvider, facilityProvider);
+        });
+      }
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
   }
 
   /// The client-name suggestions, shown as a genuine overlay positioned
