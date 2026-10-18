@@ -29,6 +29,8 @@ class AppSpacing {
 class AppRadius {
   AppRadius._();
 
+  // The Markdown quote box (flutter_markdown's own default corner).
+  static const double r2 = 2;
   static const double r4 = 4;
   static const double r6 = 6;
   static const double r7 = 7;

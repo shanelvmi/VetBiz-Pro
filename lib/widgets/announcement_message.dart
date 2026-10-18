@@ -3,6 +3,7 @@ import 'package:flutter_markdown/flutter_markdown.dart';
 import 'package:markdown/markdown.dart' as md;
 import 'package:url_launcher/url_launcher.dart';
 
+import '../theme/app_dimens.dart';
 import '../theme/theme_context.dart';
 
 /// Custom inline markdown syntax for per-selection color, since
@@ -69,6 +70,9 @@ class AnnouncementMessage extends StatelessWidget {
       styleSheet: MarkdownStyleSheet(
         p: TextStyle(fontSize: fontSize),
         a: TextStyle(fontSize: fontSize, color: context.colors.info, decoration: TextDecoration.underline),
+        // The quote box: the plugin's own blue 100 and corner in light, a
+        // dark tint in dark (K5).
+        blockquoteDecoration: BoxDecoration(color: context.colors.quoteFill, borderRadius: BorderRadius.circular(AppRadius.r2)),
       ),
     );
   }

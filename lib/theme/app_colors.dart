@@ -96,6 +96,7 @@ class AppColors extends ThemeExtension<AppColors> {
     required this.photoScrim,
     required this.onAccentChip,
     required this.dangerLabel,
+    required this.quoteFill,
   });
 
   // Brand: the theme's own three colours (the roles derived from them are
@@ -291,6 +292,13 @@ class AppColors extends ThemeExtension<AppColors> {
   // lifted to 4.5 in dark like the other Deep roles (K4b).
   final Color dangerLabel;
 
+  // The fill of a Markdown quote box (> text) in an announcement message.
+  // Light = flutter_markdown's own default, blue 100, so light does not
+  // change; dark = a dark tint of the same hue (HSL 207, 0.45, 0.16, the
+  // quickActionTintAccent level), as the plugin's blue under the dark
+  // theme's light text measured 1.09 (K5).
+  final Color quoteFill;
+
   /// The roles for a colour theme. In Pasture every value is the exact
   /// legacy shade. The brand-linked roles and textMuted are derived from the
   /// theme (theme_derivation.dart, docs/design/themes.md sections 4 and 7);
@@ -381,6 +389,7 @@ class AppColors extends ThemeExtension<AppColors> {
         photoScrim: Colors.black.withValues(alpha: AppAlpha.a20),
         onAccentChip: ColorScheme.fromSeed(seedColor: theme.primary).onSecondaryContainer,
         dangerLabel: Colors.redAccent.shade700,
+        quoteFill: Colors.blue.shade100,
       );
   }
 
@@ -472,6 +481,7 @@ class AppColors extends ThemeExtension<AppColors> {
       photoScrim: Colors.black.withValues(alpha: AppAlpha.a50),
       onAccentChip: background,
       dangerLabel: text(light.dangerLabel),
+      quoteFill: const Color(0xFF162B3B),
     );
   }
 
@@ -555,6 +565,7 @@ class AppColors extends ThemeExtension<AppColors> {
     Color? photoScrim,
     Color? onAccentChip,
     Color? dangerLabel,
+    Color? quoteFill,
   }) =>
       AppColors(
         primary: primary ?? this.primary,
@@ -635,6 +646,7 @@ class AppColors extends ThemeExtension<AppColors> {
         photoScrim: photoScrim ?? this.photoScrim,
         onAccentChip: onAccentChip ?? this.onAccentChip,
         dangerLabel: dangerLabel ?? this.dangerLabel,
+        quoteFill: quoteFill ?? this.quoteFill,
       );
 
   @override
@@ -720,6 +732,7 @@ class AppColors extends ThemeExtension<AppColors> {
       photoScrim: l(photoScrim, other.photoScrim),
       onAccentChip: l(onAccentChip, other.onAccentChip),
       dangerLabel: l(dangerLabel, other.dangerLabel),
+      quoteFill: l(quoteFill, other.quoteFill),
     );
   }
 }

@@ -2,7 +2,7 @@ import 'dart:ui';
 
 import 'package:vetbiz_pro/theme/app_colors.dart';
 
-/// Every AppColors role by name (the 68 of dark_mode_test plus K3's warningDeep, infoDeep and raisedSurface, K4a's onBrandInk and onBrandSurfaceMuted, K4b's onBrandSurfaceSubtle, brandTealOnBrand, photoScrim, onAccentChip and dangerLabel), so a test
+/// Every AppColors role by name (the 68 of dark_mode_test plus K3's warningDeep, infoDeep and raisedSurface, K4a's onBrandInk and onBrandSurfaceMuted, K4b's onBrandSurfaceSubtle, brandTealOnBrand, photoScrim, onAccentChip and dangerLabel, K5's quoteFill), so a test
 /// can compare two sets of roles value for value.
 Map<String, Color> allColorRoles(AppColors c) => {
       'primary': c.primary, 'accent': c.accent, 'background': c.background,
@@ -34,4 +34,5 @@ Map<String, Color> allColorRoles(AppColors c) => {
       'onBrandInk': c.onBrandInk, 'onBrandSurfaceMuted': c.onBrandSurfaceMuted,
       'onBrandSurfaceSubtle': c.onBrandSurfaceSubtle, 'brandTealOnBrand': c.brandTealOnBrand,
       'photoScrim': c.photoScrim, 'onAccentChip': c.onAccentChip, 'dangerLabel': c.dangerLabel,
+      'quoteFill': c.quoteFill,
     };
