@@ -2,6 +2,7 @@ import 'package:flutter/widgets.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../config/app_defaults.dart';
+import '../data/ui_theme_mode.dart';
 import '../l10n/l10n.dart';
 import '../theme/app_palette.dart';
 
@@ -14,10 +15,12 @@ class UiSettingsProvider with ChangeNotifier {
   static const String _layoutFixedKey = 'ui_layout_fixed';
   static const String _colorThemeKey = 'ui_color_theme';
   static const String _languageKey = 'ui_language';
+  static const String _themeModeKey = 'ui_theme_mode';
 
   bool _layoutFixed = false;
   String _colorThemeId = AppColorTheme.defaultId;
   String _languageCode = AppDefaults.defaultLanguage;
+  UiThemeMode _themeMode = UiThemeMode.defaultMode;
   bool _loaded = false;
 
   UiSettingsProvider() {
@@ -40,6 +43,10 @@ class UiSettingsProvider with ChangeNotifier {
 
   Locale get locale => Locale(_languageCode);
 
+  /// System, Light or Dark (Dark Mode). System follows the platform's
+  /// setting, live (on the web: the browser's prefers-color-scheme).
+  UiThemeMode get themeMode => _themeMode;
+
   Future<void> _load() async {
     try {
       final prefs = await SharedPreferences.getInstance();
@@ -59,6 +66,8 @@ class UiSettingsProvider with ChangeNotifier {
         _languageCode = language!;
         L10n.setLocale(locale);
       }
+      // An unknown or missing value leaves the default.
+      _themeMode = UiThemeMode.fromKey(prefs.getString(_themeModeKey));
     } catch (e) {
       // Settings are a convenience: if they can't be read, the defaults stand.
       debugPrint('[UI SETTINGS] could not read saved settings: $e');
@@ -106,6 +115,19 @@ class UiSettingsProvider with ChangeNotifier {
       await prefs.setString(_colorThemeKey, theme.id);
     } catch (e) {
       debugPrint('[UI SETTINGS] could not save colour theme: $e');
+    }
+  }
+
+  /// Chooses System, Light or Dark.
+  Future<void> setThemeMode(UiThemeMode mode) async {
+    if (mode == _themeMode) return;
+    _themeMode = mode;
+    notifyListeners();
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString(_themeModeKey, mode.key);
+    } catch (e) {
+      debugPrint('[UI SETTINGS] could not save theme mode: $e');
     }
   }
 }

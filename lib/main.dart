@@ -96,7 +96,7 @@ class VetBizProApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Watched so a colour-theme or language change in Settings rebuilds the app.
+    // Watched so a colour-theme, Dark Mode or language change in Settings rebuilds the app.
     final uiSettings = context.watch<UiSettingsProvider>();
     final colorTheme = uiSettings.colorTheme;
 
@@ -107,6 +107,10 @@ class VetBizProApp extends StatelessWidget {
       scaffoldMessengerKey: AppFeedback.messengerKey,
       title: AppInfo.name,
       theme: AppTheme.build(colorTheme, Brightness.light),
+      // Dark Mode (docs/design/dark_mode.md section 6): System follows the
+      // platform, live; the default is Light.
+      darkTheme: AppTheme.build(colorTheme, Brightness.dark),
+      themeMode: uiSettings.themeMode.themeMode,
       debugShowCheckedModeBanner: false,
       // Our texts plus Flutter's own (date picker, OK/Cancel, tooltips).
       // Dates and amounts we format ourselves stay fixed (AppDateFormat, Money).
