@@ -615,7 +615,7 @@ class _UsersTabState extends State<UsersTab> {
                     status == UserStatus.pending.key ? 'Awaiting Approval' : status,
                     style: const TextStyle(fontSize: AppFontSize.f11),
                   ),
-                  backgroundColor: status == UserStatus.pending.key ? Colors.blue.shade100 : Colors.orange.shade100,
+                  backgroundColor: status == UserStatus.pending.key ? context.colors.statusPendingFill : context.colors.statusOtherFill,
                   visualDensity: VisualDensity.compact,
                 ),
             ],

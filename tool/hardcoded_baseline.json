@@ -158,12 +158,6 @@
       "reason": "KEEP: System Online dot, no role within 24 per channel (one use); docs/design/parked_values.md A20"
     },
     {
-      "rule": "R1",
-      "file": "lib/screens/platform_admin/users_tab.dart",
-      "lineContains": "Colors.blue.shade100 : Colors.orange.shade100",
-      "reason": "KEEP: pending and other status chip fills, no role within 24 per channel (one use each); docs/design/parked_values.md A23, A24"
-    },
-    {
       "rule": "R4",
       "file": "lib/screens/dashboard/dashboard_screen.dart",
       "lineContains": "EdgeInsets.symmetric(vertical: 40)",

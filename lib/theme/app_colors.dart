@@ -97,6 +97,8 @@ class AppColors extends ThemeExtension<AppColors> {
     required this.onAccentChip,
     required this.dangerLabel,
     required this.quoteFill,
+    required this.statusPendingFill,
+    required this.statusOtherFill,
     required this.primaryNote,
     required this.onChartTooltip,
   });
@@ -312,6 +314,14 @@ class AppColors extends ThemeExtension<AppColors> {
   // lifted until that note reaches 4.5 (it measured 3.83 to 4.37) (K5).
   final Color primaryNote;
 
+  // The fills of the user status chips in the operator console (Awaiting
+  // Approval, and any other non-active status), whose label is Material's
+  // chip text. Light = blue 100 and orange 100 as before (were KEEP A23,
+  // A24); dark = dark tints of the same hues (HSL 207 and 36, 0.45, 0.16),
+  // as the light fills under the dark chip text measured 1.21 to 1.35 (K5).
+  final Color statusPendingFill;
+  final Color statusOtherFill;
+
   /// The roles for a colour theme. In Pasture every value is the exact
   /// legacy shade. The brand-linked roles and textMuted are derived from the
   /// theme (theme_derivation.dart, docs/design/themes.md sections 4 and 7);
@@ -403,6 +413,8 @@ class AppColors extends ThemeExtension<AppColors> {
         onAccentChip: ColorScheme.fromSeed(seedColor: theme.primary).onSecondaryContainer,
         dangerLabel: Colors.redAccent.shade700,
         quoteFill: Colors.blue.shade100,
+        statusPendingFill: Colors.blue.shade100,
+        statusOtherFill: Colors.orange.shade100,
         primaryNote: theme.primary,
         onChartTooltip: Colors.white,
       );
@@ -497,6 +509,8 @@ class AppColors extends ThemeExtension<AppColors> {
       onAccentChip: background,
       dangerLabel: text(light.dangerLabel),
       quoteFill: const Color(0xFF162B3B),
+      statusPendingFill: const Color(0xFF162B3B),
+      statusOtherFill: const Color(0xFF3B2C16),
       primaryNote: DarkDerivation.primaryNote(theme.primary),
       onChartTooltip: Colors.white,
     );
@@ -583,6 +597,8 @@ class AppColors extends ThemeExtension<AppColors> {
     Color? onAccentChip,
     Color? dangerLabel,
     Color? quoteFill,
+    Color? statusPendingFill,
+    Color? statusOtherFill,
     Color? primaryNote,
     Color? onChartTooltip,
   }) =>
@@ -666,6 +682,8 @@ class AppColors extends ThemeExtension<AppColors> {
         onAccentChip: onAccentChip ?? this.onAccentChip,
         dangerLabel: dangerLabel ?? this.dangerLabel,
         quoteFill: quoteFill ?? this.quoteFill,
+        statusPendingFill: statusPendingFill ?? this.statusPendingFill,
+        statusOtherFill: statusOtherFill ?? this.statusOtherFill,
         primaryNote: primaryNote ?? this.primaryNote,
         onChartTooltip: onChartTooltip ?? this.onChartTooltip,
       );
@@ -754,6 +772,8 @@ class AppColors extends ThemeExtension<AppColors> {
       onAccentChip: l(onAccentChip, other.onAccentChip),
       dangerLabel: l(dangerLabel, other.dangerLabel),
       quoteFill: l(quoteFill, other.quoteFill),
+      statusPendingFill: l(statusPendingFill, other.statusPendingFill),
+      statusOtherFill: l(statusOtherFill, other.statusOtherFill),
       primaryNote: l(primaryNote, other.primaryNote),
       onChartTooltip: l(onChartTooltip, other.onChartTooltip),
     );
