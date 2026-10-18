@@ -88,6 +88,8 @@ class AppColors extends ThemeExtension<AppColors> {
     required this.warningDeep,
     required this.infoDeep,
     required this.raisedSurface,
+    required this.onBrandInk,
+    required this.onBrandSurfaceMuted,
   });
 
   // Brand: the theme's own three colours (the roles derived from them are
@@ -249,6 +251,15 @@ class AppColors extends ThemeExtension<AppColors> {
   // so in dark it is `surface`, lighter than the page (K3). Light: background.
   final Color raisedSurface;
 
+  // Ink on brandSurface (K4a). onBrandInk: where light draws the page colour
+  // (background, off-white) on the brand fill instead of white (the Add
+  // Product header and its category dialogs); light = background, dark =
+  // onBrandSurface, as the K2 sidebar ink. onBrandSurfaceMuted: the dimmed
+  // ink (light = onPrimaryMuted, white70); brandSurface is the same in dark,
+  // so it stays white70 there.
+  final Color onBrandInk;
+  final Color onBrandSurfaceMuted;
+
   /// The roles for a colour theme. In Pasture every value is the exact
   /// legacy shade. The brand-linked roles and textMuted are derived from the
   /// theme (theme_derivation.dart, docs/design/themes.md sections 4 and 7);
@@ -332,6 +343,8 @@ class AppColors extends ThemeExtension<AppColors> {
         warningDeep: Colors.orange.shade900,
         infoDeep: Colors.blue.shade900,
         raisedSurface: theme.background,
+        onBrandInk: theme.background,
+        onBrandSurfaceMuted: Colors.white70,
       );
   }
 
@@ -416,6 +429,8 @@ class AppColors extends ThemeExtension<AppColors> {
       warningDeep: text(light.warningDeep),
       infoDeep: text(light.infoDeep),
       raisedSurface: surface,
+      onBrandInk: Colors.white,
+      onBrandSurfaceMuted: Colors.white70,
     );
   }
 
@@ -492,6 +507,8 @@ class AppColors extends ThemeExtension<AppColors> {
     Color? warningDeep,
     Color? infoDeep,
     Color? raisedSurface,
+    Color? onBrandInk,
+    Color? onBrandSurfaceMuted,
   }) =>
       AppColors(
         primary: primary ?? this.primary,
@@ -565,6 +582,8 @@ class AppColors extends ThemeExtension<AppColors> {
         warningDeep: warningDeep ?? this.warningDeep,
         infoDeep: infoDeep ?? this.infoDeep,
         raisedSurface: raisedSurface ?? this.raisedSurface,
+        onBrandInk: onBrandInk ?? this.onBrandInk,
+        onBrandSurfaceMuted: onBrandSurfaceMuted ?? this.onBrandSurfaceMuted,
       );
 
   @override
@@ -643,6 +662,8 @@ class AppColors extends ThemeExtension<AppColors> {
       warningDeep: l(warningDeep, other.warningDeep),
       infoDeep: l(infoDeep, other.infoDeep),
       raisedSurface: l(raisedSurface, other.raisedSurface),
+      onBrandInk: l(onBrandInk, other.onBrandInk),
+      onBrandSurfaceMuted: l(onBrandSurfaceMuted, other.onBrandSurfaceMuted),
     );
   }
 }
