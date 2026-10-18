@@ -33,18 +33,15 @@ class InsightsScreen extends StatefulWidget {
 
 class _InsightsScreenState extends State<InsightsScreen> {
   // The service breakdown slices: a fixed chart palette, not themed. The
-  // four muted hexes have no role (listed in design-open-questions.md, D9).
-  static const List<Color> _servicePalette = [
-    AppPalette.primary, // the brand teal
-    Color(0xFF5C7C99), // same muted steel blue used for Services on the main dashboard chart
-    AppPalette.accent, // the brand amber
-    Color(0xFF8FA998), // muted sage green
-    Color(0xFFB98B6F), // muted terracotta
-    Color(0xFF9B8AA6), // muted lavender - reserved for the "Other" slice
-  ];
-
-  // The header gradient's second teal, as on the login page (no role; D8).
-  static const Color _tealAccent = Color(0xFF3E8E82);
+  // four muted colours are the chartService roles (parked_values.md A12-A15).
+  List<Color> get _servicePalette => [
+        AppPalette.primary, // the brand teal
+        context.colors.chartService1, // same muted steel blue used for Services on the main dashboard chart
+        AppPalette.accent, // the brand amber
+        context.colors.chartService2, // muted sage green
+        context.colors.chartService3, // muted terracotta
+        context.colors.chartService4, // muted lavender - reserved for the "Other" slice
+      ];
 
   bool _isLoading = true;
   Object? _error;
@@ -386,7 +383,7 @@ class _InsightsScreenState extends State<InsightsScreen> {
       padding: const EdgeInsets.all(AppSpacing.s20),
       decoration: BoxDecoration(
         gradient: LinearGradient(
-          colors: [context.colors.primary, _tealAccent],
+          colors: [context.colors.primary, context.colors.brandTeal],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),

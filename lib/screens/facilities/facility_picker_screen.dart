@@ -127,7 +127,7 @@ class _FacilityPickerScreenState extends State<FacilityPickerScreen> {
       case 'ambulatory vet':
         return context.colors.info;
       default:
-        return Colors.purple;
+        return context.colors.chart4;
     }
   }
 

@@ -49,8 +49,6 @@ class _FacilityScreenState extends State<FacilityScreen> {
   // them on a wide one. Sizes, kept exact (D10).
   static const double _listPanelHeight = 360;
   static const double _listPanelWidth = 340;
-  // The Total Products metric's teal, as on the login page (no role; D8).
-  static const Color _tealAccent = Color(0xFF3E8E82);
 
   final FirebaseAuth _auth = FirebaseAuth.instance;
   late final User? currentUser;
@@ -1859,7 +1857,7 @@ class _FacilityScreenState extends State<FacilityScreen> {
     final totalAmount = stats?['totalAmount'] as double? ?? 0.0;
 
     final metrics = [
-      (context.l10n.products_totalProducts, '$totalProducts', Icons.inventory_2_outlined, _tealAccent, context.l10n.facilities_viewProducts, 2),
+      (context.l10n.products_totalProducts, '$totalProducts', Icons.inventory_2_outlined, context.colors.brandTeal, context.l10n.facilities_viewProducts, 2),
       (context.l10n.products_sellableTitle, '$sellableProducts', Icons.shopping_cart_outlined, context.colors.success, context.l10n.facilities_viewAll, 2),
       (context.l10n.facilities_lowStockItems, '$lowStockCount', Icons.warning_amber_outlined, context.colors.warning, context.l10n.facilities_viewItems, 2),
       (context.l10n.facilities_expiredItems, '$expiredCount', Icons.remove_shopping_cart_outlined, context.colors.danger, context.l10n.facilities_viewItems, 2),

@@ -159,51 +159,9 @@
     },
     {
       "rule": "R1",
-      "file": "lib/screens/dashboard/insights_screen.dart",
-      "lineContains": "Color(0xFF5C7C99), //",
-      "reason": "service breakdown palette (steel blue), no chart role; open question D9, for 2R"
-    },
-    {
-      "rule": "R1",
-      "file": "lib/screens/dashboard/insights_screen.dart",
-      "lineContains": "Color(0xFF8FA998), //",
-      "reason": "service breakdown palette (sage), no chart role; open question D9, for 2R"
-    },
-    {
-      "rule": "R1",
-      "file": "lib/screens/dashboard/insights_screen.dart",
-      "lineContains": "Color(0xFFB98B6F), //",
-      "reason": "service breakdown palette (terracotta), no chart role; open question D9, for 2R"
-    },
-    {
-      "rule": "R1",
-      "file": "lib/screens/dashboard/insights_screen.dart",
-      "lineContains": "Color(0xFF9B8AA6), //",
-      "reason": "service breakdown palette (lavender), no chart role; open question D9, for 2R"
-    },
-    {
-      "rule": "R1",
-      "file": "lib/screens/dashboard/insights_screen.dart",
-      "lineContains": "_tealAccent = Color(0xFF3E8E82)",
-      "reason": "the login teal #3E8E82, no role within 12; open question D8, for 2R"
-    },
-    {
-      "rule": "R1",
       "file": "lib/screens/dashboard/notifications_screen.dart",
       "lineContains": "Color(0xFFE59A00)",
-      "reason": "debt category amber, no role within 12; open question D9, for 2R"
-    },
-    {
-      "rule": "R1",
-      "file": "lib/screens/facilities/facility_picker_screen.dart",
-      "lineContains": "return Colors.purple;",
-      "reason": "facility type colour (other types), chart4's value but not its purpose; open question D10, for 2R"
-    },
-    {
-      "rule": "R1",
-      "file": "lib/screens/facilities/facility_screen.dart",
-      "lineContains": "_tealAccent = Color(0xFF3E8E82)",
-      "reason": "the login teal #3E8E82 (Total Products metric); open question D10, for 2R"
+      "reason": "KEEP: debt category amber, no role within 24 per channel (one use); docs/design/parked_values.md A18"
     },
     {
       "rule": "R1",
