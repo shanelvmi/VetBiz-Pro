@@ -44,18 +44,6 @@
       "reason": "KEEP: printed label-column width of the receipt details (a size, not spacing; no token within 4 px); docs/design/parked_values.md B3"
     },
     {
-      "rule": "R1",
-      "file": "lib/main.dart",
-      "lineContains": "color: Colors.orange.shade900",
-      "reason": "KEEP: removed-from-facility note text, orange 900, no role within 24 per channel (one use); docs/design/parked_values.md A1"
-    },
-    {
-      "rule": "R1",
-      "file": "lib/screens/activity/activity_log_screen.dart",
-      "lineContains": "color: Colors.blue.shade900",
-      "reason": "KEEP: assistant scope note text, blue 900, no role within 24 per channel (one use); docs/design/parked_values.md A2"
-    },
-    {
       "rule": "R5",
       "file": "lib/screens/platform_admin/subscription_requests_tab.dart",
       "lineContains": "Duration(days: plan.durationDays)",

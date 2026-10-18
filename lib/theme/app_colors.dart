@@ -85,6 +85,8 @@ class AppColors extends ThemeExtension<AppColors> {
     required this.brandSurface,
     required this.onBrandSurface,
     required this.onAccent,
+    required this.warningDeep,
+    required this.infoDeep,
   });
 
   // Brand: the theme's own three colours (the roles derived from them are
@@ -234,6 +236,13 @@ class AppColors extends ThemeExtension<AppColors> {
   final Color onBrandSurface;
   final Color onAccent;
 
+  // Deep text on a light warning or info tint: the removed-from-facility
+  // note (orange 900, main.dart) and the assistant scope note (blue 900,
+  // activity log). Text roles: lifted to 4.5 in dark like the other Deep
+  // roles (K3; were the KEEP entries A1 and A2).
+  final Color warningDeep;
+  final Color infoDeep;
+
   /// The roles for a colour theme. In Pasture every value is the exact
   /// legacy shade. The brand-linked roles and textMuted are derived from the
   /// theme (theme_derivation.dart, docs/design/themes.md sections 4 and 7);
@@ -314,6 +323,8 @@ class AppColors extends ThemeExtension<AppColors> {
         brandSurface: theme.primary,
         onBrandSurface: Colors.white,
         onAccent: Colors.black87,
+        warningDeep: Colors.orange.shade900,
+        infoDeep: Colors.blue.shade900,
       );
   }
 
@@ -395,6 +406,8 @@ class AppColors extends ThemeExtension<AppColors> {
       brandSurface: theme.primary,
       onBrandSurface: Colors.white,
       onAccent: background,
+      warningDeep: text(light.warningDeep),
+      infoDeep: text(light.infoDeep),
     );
   }
 
@@ -468,6 +481,8 @@ class AppColors extends ThemeExtension<AppColors> {
     Color? brandSurface,
     Color? onBrandSurface,
     Color? onAccent,
+    Color? warningDeep,
+    Color? infoDeep,
   }) =>
       AppColors(
         primary: primary ?? this.primary,
@@ -538,6 +553,8 @@ class AppColors extends ThemeExtension<AppColors> {
         brandSurface: brandSurface ?? this.brandSurface,
         onBrandSurface: onBrandSurface ?? this.onBrandSurface,
         onAccent: onAccent ?? this.onAccent,
+        warningDeep: warningDeep ?? this.warningDeep,
+        infoDeep: infoDeep ?? this.infoDeep,
       );
 
   @override
@@ -613,6 +630,8 @@ class AppColors extends ThemeExtension<AppColors> {
       brandSurface: l(brandSurface, other.brandSurface),
       onBrandSurface: l(onBrandSurface, other.onBrandSurface),
       onAccent: l(onAccent, other.onAccent),
+      warningDeep: l(warningDeep, other.warningDeep),
+      infoDeep: l(infoDeep, other.infoDeep),
     );
   }
 }

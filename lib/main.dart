@@ -1123,7 +1123,7 @@ class _NoFacilityScreenState extends State<_NoFacilityScreen> {
                         Expanded(
                           child: Text(
                             context.l10n.noFacility_noticeMistake(widget.notice!),
-                            style: TextStyle(fontSize: AppFontSize.f13, color: Colors.orange.shade900, height: 1.35),
+                            style: TextStyle(fontSize: AppFontSize.f13, color: context.colors.warningDeep, height: 1.35),
                           ),
                         ),
                       ],

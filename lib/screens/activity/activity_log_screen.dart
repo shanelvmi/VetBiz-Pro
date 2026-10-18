@@ -689,7 +689,7 @@ class _ActivityLogScreenState extends State<ActivityLogScreen> {
           Expanded(
             child: Text(
               context.l10n.activity_scopeNote,
-              style: TextStyle(fontSize: AppFontSize.f12_5, color: Colors.blue.shade900),
+              style: TextStyle(fontSize: AppFontSize.f12_5, color: context.colors.infoDeep),
             ),
           ),
         ],
