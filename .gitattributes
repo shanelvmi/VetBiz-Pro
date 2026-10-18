@@ -1,0 +1,7 @@
+# Q3 (docs/RUNBOOK2.md section 3): these files are stored with LF only.
+# The ARB, CSV and snapshot tools and flutter gen-l10n write them; the CSV
+# tool writes CRLF for Excel, and git stores it as LF.
+*.arb text eol=lf
+*.csv text eol=lf
+*.json text eol=lf
+lib/l10n/app_localizations*.dart text eol=lf
