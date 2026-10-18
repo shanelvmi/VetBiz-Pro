@@ -229,7 +229,7 @@ class _FeedbackCardState extends State<_FeedbackCard> {
 
   @override
   Widget build(BuildContext context) {
-    final c = Theme.of(context).extension<AppColors>() ?? AppColors.fromTheme(AppColorTheme.kilimanjaro);
+    final c = Theme.of(context).extension<AppColors>() ?? AppColors.fromTheme(AppColorTheme.pasture);
     final (badgeFill, glyphColor) = widget.kind.colors(c);
     final reduceMotion = MediaQuery.maybeDisableAnimationsOf(context) ?? false;
     final buttonStyle = TextButton.styleFrom(

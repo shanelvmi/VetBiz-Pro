@@ -8,9 +8,10 @@ import 'package:flutter/material.dart';
 /// definition now points here. The values are exactly the ones they replaced,
 /// so nothing looks different.
 ///
-/// Still `const` on purpose: today's colours are fixed. When the other colour
-/// themes arrive (UI Settings, phase 2) these become values read at run time -
-/// that is the step that needs `const` taken off the widgets using them.
+/// These are the Pasture theme's colours (the default). Screens read the
+/// chosen theme through `context.colors`; only what must stay Pasture in
+/// every theme reads these directly (receipts and PDFs, the loading screen,
+/// docs/design/themes.md section 8).
 class AppPalette {
   AppPalette._();
 
@@ -24,60 +25,81 @@ class AppPalette {
   static const Color background = Color(0xFFFDFDF9);
 }
 
-/// A colour theme the person can choose in UI Settings.
+/// A colour theme the person can choose in UI Settings
+/// (docs/design/themes.md, RUNBOOK2 D10).
 ///
-/// Only Kilimanjaro Green (today's look) is selectable so far. The others are
-/// listed so the dialog shows what is coming; their swatches are previews, and
-/// the full palettes are settled when they are built (phase 2).
+/// A theme is only its three base colours. Every brand-linked role (the
+/// sidebar hover, the login teal, the quick-action tints...) is derived from
+/// them in `AppColors.fromTheme`, so adding a theme is one entry in [all]
+/// plus its label in `colorThemeLabel`. [name] is the English, technical
+/// name; what is shown comes from the ARB through `colorThemeLabel`.
 class AppColorTheme {
   final String id;
   final String name;
   final Color primary;
   final Color accent;
-  final bool available;
+  final Color background;
 
   const AppColorTheme({
     required this.id,
     required this.name,
     required this.primary,
     required this.accent,
-    required this.available,
+    required this.background,
   });
 
-  static const AppColorTheme kilimanjaro = AppColorTheme(
-    id: 'kilimanjaro',
-    name: 'Kilimanjaro Green',
+  /// Today's look, exactly (the old "Kilimanjaro Green").
+  static const AppColorTheme pasture = AppColorTheme(
+    id: 'pasture',
+    name: 'Pasture',
     primary: AppPalette.primary,
     accent: AppPalette.accent,
-    available: true,
+    background: AppPalette.background,
   );
 
-  static const AppColorTheme serengeti = AppColorTheme(
-    id: 'serengeti',
-    name: 'Serengeti Yellow',
-    primary: Color(0xFFD9A406),
-    accent: Color(0xFF6B4F1D),
-    available: false,
+  static const AppColorTheme clinic = AppColorTheme(
+    id: 'clinic',
+    name: 'Clinic',
+    primary: Color(0xFF0F4C81),
+    accent: Color(0xFF5BC0EB),
+    background: Color(0xFFF6F9FC),
   );
 
-  static const AppColorTheme victoria = AppColorTheme(
-    id: 'victoria',
-    name: 'Victoria Blue',
-    primary: Color(0xFF1E6FA8),
-    accent: Color(0xFF4FB3D9),
-    available: false,
+  static const AppColorTheme harvest = AppColorTheme(
+    id: 'harvest',
+    name: 'Harvest',
+    primary: Color(0xFF4A3426),
+    accent: Color(0xFFE3A72F),
+    background: Color(0xFFFBF7F0),
   );
 
-  static const List<AppColorTheme> all = [kilimanjaro, serengeti, victoria];
+  static const AppColorTheme ledger = AppColorTheme(
+    id: 'ledger',
+    name: 'Ledger',
+    primary: Color(0xFF1E293B),
+    accent: Color(0xFF8B9CFF),
+    background: Color(0xFFF8FAFC),
+  );
 
-  static const String defaultId = 'kilimanjaro';
+  static const List<AppColorTheme> all = [pasture, clinic, harvest, ledger];
 
-  /// The theme with this id - or today's look if it's one we don't know (an old
+  static const String defaultId = 'pasture';
+
+  /// Ids saved by older builds -> the theme they now mean. Only
+  /// `kilimanjaro` was ever selectable (so ever saved); `serengeti` and
+  /// `victoria` never were, and fall back like any unknown id.
+  static const Map<String, String> legacyIds = {'kilimanjaro': 'pasture'};
+
+  /// True when [id] is an old id that [byId] maps to a current theme.
+  static bool isLegacyId(String? id) => legacyIds.containsKey(id);
+
+  /// The theme with this id - or Pasture if it's one we don't know (an old
   /// or hand-edited saved value must never leave the app without a theme).
   static AppColorTheme byId(String? id) {
+    final current = legacyIds[id] ?? id;
     for (final t in all) {
-      if (t.id == id) return t;
+      if (t.id == current) return t;
     }
-    return kilimanjaro;
+    return pasture;
   }
 }

@@ -9,7 +9,7 @@ import 'package:vetbiz_pro/ui/feedback/friendly_error.dart';
 import 'package:vetbiz_pro/widgets/firestore_error_view.dart';
 
 Future<void> _show(WidgetTester tester, Object? error) => tester.pumpWidget(MaterialApp(
-      theme: AppTheme.build(AppColorTheme.kilimanjaro, Brightness.light),
+      theme: AppTheme.build(AppColorTheme.pasture, Brightness.light),
       localizationsDelegates: AppLocalizations.localizationsDelegates,
       supportedLocales: AppLocalizations.supportedLocales,
       home: Scaffold(body: SingleChildScrollView(child: FirestoreErrorView(error: error))),

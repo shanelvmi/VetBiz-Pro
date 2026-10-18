@@ -17,7 +17,7 @@ void main() {
       expect(actual.toARGB32(), legacy.toARGB32(), reason: role);
 
   group('AppColors default (Kilimanjaro Green) equals the legacy colours', () {
-    final c = AppColors.fromTheme(AppColorTheme.kilimanjaro);
+    final c = AppColors.fromTheme(AppColorTheme.pasture);
     final legacy = <String, (Color, Color)>{
       'primary': (c.primary, AppPalette.primary),
       'accent': (c.accent, AppPalette.accent),
@@ -89,7 +89,7 @@ void main() {
 
     test('copyWith with no arguments and lerp at 0 keep every role', () {
       final copy = c.copyWith();
-      final lerped = c.lerp(AppColors.fromTheme(AppColorTheme.victoria), 0);
+      final lerped = c.lerp(AppColors.fromTheme(AppColorTheme.clinic), 0);
       for (final pair in [(copy, 'copyWith'), (lerped, 'lerp')]) {
         same(pair.$1.primary, c.primary, '${pair.$2} primary');
         same(pair.$1.textMuted, c.textMuted, '${pair.$2} textMuted');
@@ -154,7 +154,7 @@ void main() {
   });
 
   group('AppTheme.build gives the theme main.dart used to build', () {
-    final theme = AppTheme.build(AppColorTheme.kilimanjaro, Brightness.light);
+    final theme = AppTheme.build(AppColorTheme.pasture, Brightness.light);
 
     test('colour scheme and page background', () {
       expect(theme.useMaterial3, isTrue);

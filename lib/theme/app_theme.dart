@@ -7,7 +7,7 @@ import 'app_palette.dart';
 ///
 /// Moved here unchanged from `VetBizProApp.build` in main.dart, so the theme
 /// lives with the rest of the look and can follow the colour theme chosen in
-/// UI Settings. With the default theme (Kilimanjaro Green) the result is
+/// UI Settings. With the default theme (Pasture) the result is
 /// identical to what main.dart built before.
 class AppTheme {
   AppTheme._();
@@ -19,7 +19,7 @@ class AppTheme {
     // Flutter's default blue individually.
     final Color primaryDeepGreen = theme.primary;
     final Color warmAmber = theme.accent;
-    const Color offWhite = AppPalette.background;
+    final Color offWhite = theme.background;
 
     final colorScheme = ColorScheme.fromSeed(
       seedColor: primaryDeepGreen,

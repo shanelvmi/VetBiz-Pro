@@ -186,8 +186,8 @@ class _UiSettingsDialog extends StatelessWidget {
   }
 }
 
-/// One selectable colour theme. A theme that isn't built yet is shown dimmed,
-/// with a "Coming soon" tag, and can't be chosen.
+/// One selectable colour theme: its two swatches, its name, and a tick when
+/// it is the one in use.
 // A theme's name as shown, by its id; AppColorTheme.name stays the English
 // name, shown as is for a theme added later without a label.
 String _themeName(BuildContext context, AppColorTheme theme) => switch (theme.id) {
@@ -206,52 +206,40 @@ class _ThemeTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Opacity(
-      opacity: theme.available ? 1 : 0.55,
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          borderRadius: BorderRadius.circular(AppRadius.r12),
-          onTap: theme.available ? onTap : null,
-          child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: AppSpacing.s14, vertical: AppSpacing.s12),
-            decoration: BoxDecoration(
-              color: selected ? context.colors.primary.withValues(alpha: AppAlpha.a05) : null,
-              borderRadius: BorderRadius.circular(AppRadius.r12),
-              border: Border.all(
-                color: selected ? context.colors.primary : context.colors.border,
-                width: selected ? 1.6 : 1,
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        borderRadius: BorderRadius.circular(AppRadius.r12),
+        onTap: onTap,
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: AppSpacing.s14, vertical: AppSpacing.s12),
+          decoration: BoxDecoration(
+            color: selected ? context.colors.primary.withValues(alpha: AppAlpha.a05) : null,
+            borderRadius: BorderRadius.circular(AppRadius.r12),
+            border: Border.all(
+              color: selected ? context.colors.primary : context.colors.border,
+              width: selected ? 1.6 : 1,
+            ),
+          ),
+          child: Row(
+            children: [
+              SizedBox(
+                width: 44,
+                height: 28,
+                child: Stack(
+                  children: [
+                    Positioned(left: 0, top: 0, child: _dot(context, theme.primary, 28)),
+                    Positioned(left: 18, top: 5, child: _dot(context, theme.accent, 20)),
+                  ],
+                ),
               ),
-            ),
-            child: Row(
-              children: [
-                SizedBox(
-                  width: 44,
-                  height: 28,
-                  child: Stack(
-                    children: [
-                      Positioned(left: 0, top: 0, child: _dot(context, theme.primary, 28)),
-                      Positioned(left: 18, top: 5, child: _dot(context, theme.accent, 20)),
-                    ],
-                  ),
-                ),
-                const SizedBox(width: AppSpacing.s12),
-                Expanded(
-                  child: Text(_themeName(context, theme), style: const TextStyle(fontWeight: AppFontWeight.semibold, fontSize: AppFontSize.f14_5)),
-                ),
-                if (!theme.available)
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: AppSpacing.s8, vertical: AppSpacing.s3),
-                    decoration: BoxDecoration(
-                      color: context.colors.divider,
-                      borderRadius: BorderRadius.circular(AppRadius.r20),
-                    ),
-                    child: Text(context.l10n.uiSettings_comingSoon, style: TextStyle(fontSize: AppFontSize.f11, color: context.colors.textSoft)),
-                  )
-                else if (selected)
-                  Icon(Icons.check_circle, color: context.colors.primary, size: AppIconSize.i22),
-              ],
-            ),
+              const SizedBox(width: AppSpacing.s12),
+              Expanded(
+                child: Text(_themeName(context, theme), style: const TextStyle(fontWeight: AppFontWeight.semibold, fontSize: AppFontSize.f14_5)),
+              ),
+              if (selected)
+                Icon(Icons.check_circle, color: context.colors.primary, size: AppIconSize.i22),
+            ],
           ),
         ),
       ),

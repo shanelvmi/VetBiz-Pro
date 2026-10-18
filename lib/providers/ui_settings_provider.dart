@@ -44,9 +44,14 @@ class UiSettingsProvider with ChangeNotifier {
     try {
       final prefs = await SharedPreferences.getInstance();
       _layoutFixed = prefs.getBool(_layoutFixedKey) ?? false;
-      // Only a theme that can actually be used is restored.
-      final saved = AppColorTheme.byId(prefs.getString(_colorThemeKey));
-      if (saved.available) _colorThemeId = saved.id;
+      // An unknown id falls back to Pasture (byId). An id saved by an older
+      // build ('kilimanjaro') is written back as its new id once, so the old
+      // id does not linger.
+      final savedId = prefs.getString(_colorThemeKey);
+      _colorThemeId = AppColorTheme.byId(savedId).id;
+      if (AppColorTheme.isLegacyId(savedId)) {
+        await prefs.setString(_colorThemeKey, _colorThemeId);
+      }
       // Likewise only a language the app has texts for; anything else
       // (a code from an older or newer build) leaves the default.
       final language = prefs.getString(_languageKey);
@@ -90,10 +95,10 @@ class UiSettingsProvider with ChangeNotifier {
     }
   }
 
-  /// Chooses a colour theme. A theme that isn't available yet is ignored.
+  /// Chooses a colour theme. An unknown id means Pasture (byId).
   Future<void> setColorTheme(String id) async {
     final theme = AppColorTheme.byId(id);
-    if (!theme.available || theme.id == _colorThemeId) return;
+    if (theme.id == _colorThemeId) return;
     _colorThemeId = theme.id;
     notifyListeners();
     try {

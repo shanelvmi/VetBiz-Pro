@@ -15,7 +15,7 @@ void main() {
     addTearDown(tester.view.reset);
     await tester.pumpWidget(MaterialApp(
       scaffoldMessengerKey: AppFeedback.messengerKey,
-      theme: AppTheme.build(AppColorTheme.kilimanjaro, Brightness.light),
+      theme: AppTheme.build(AppColorTheme.pasture, Brightness.light),
       home: const Scaffold(body: SizedBox.expand()),
     ));
   }

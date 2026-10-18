@@ -220,7 +220,7 @@ class AppColors extends ThemeExtension<AppColors> {
   static AppColors fromTheme(AppColorTheme theme) => AppColors(
         primary: theme.primary,
         accent: theme.accent,
-        background: AppPalette.background,
+        background: theme.background,
         surface: Colors.white,
         surfaceMuted: Colors.grey.shade100,
         onPrimary: Colors.white,

@@ -6,7 +6,7 @@ import 'package:vetbiz_pro/theme/app_colors.dart';
 import 'package:vetbiz_pro/theme/app_palette.dart';
 
 void main() {
-  final c = AppColors.fromTheme(AppColorTheme.kilimanjaro);
+  final c = AppColors.fromTheme(AppColorTheme.pasture);
 
   test("old 'Sale' entries look like 'Sales'", () {
     expect(ActivityTypeStyle.icon(ActivityType.sale.key), ActivityTypeStyle.icon(ActivityType.sales.key));
