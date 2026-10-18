@@ -723,8 +723,10 @@ settings_builtFor,Built For,Imetengenezwa Kwa,App info dialog label.,draft
 settings_builtForValue,Veterinary & agrovet business management,Usimamizi wa biashara za mifugo na pembejeo za kilimo,App info dialog value.,draft
 uiSettings_colourTheme,COLOUR THEME,RANGI,UI Settings section heading.,draft
 uiSettings_appearance,APPEARANCE,MWONEKANO,UI Settings section heading.,draft
-uiSettings_darkMode,Dark Mode,Hali ya Giza,UI Settings option (not available yet).,draft
-uiSettings_comingSoon,Coming soon,Inakuja hivi karibuni,Under an option that is not available yet.,draft
+uiSettings_darkMode,Dark Mode,Hali ya Giza,"UI Settings option: System, Light or Dark.",draft
+uiSettings_themeModeSystem,System,Kama Kifaa,Dark Mode choice: follow the device's own light or dark setting.,draft
+uiSettings_themeModeLight,Light,Mwanga,Dark Mode choice: always light.,draft
+uiSettings_themeModeDark,Dark,Giza,Dark Mode choice: always dark.,draft
 uiSettings_layout,LAYOUT,MPANGILIO,UI Settings section heading.,draft
 uiSettings_layoutFixed,Layout Fixed Mode,Mpangilio Usiobadilika,UI Settings option.,draft
 uiSettings_layoutFixedHint,Keeps the sidebar open and hides its collapse button on large screens.,Huacha menyu ya pembeni wazi na huficha kitufe cha kuifunga kwenye skrini kubwa.,Under Layout Fixed Mode.,draft

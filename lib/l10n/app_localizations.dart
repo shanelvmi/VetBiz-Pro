@@ -4418,17 +4418,29 @@ abstract class AppLocalizations {
   /// **'APPEARANCE'**
   String get uiSettings_appearance;
 
-  /// UI Settings option (not available yet).
+  /// UI Settings option: System, Light or Dark.
   ///
   /// In en, this message translates to:
   /// **'Dark Mode'**
   String get uiSettings_darkMode;
 
-  /// Under an option that is not available yet.
+  /// Dark Mode choice: follow the device's own light or dark setting.
   ///
   /// In en, this message translates to:
-  /// **'Coming soon'**
-  String get uiSettings_comingSoon;
+  /// **'System'**
+  String get uiSettings_themeModeSystem;
+
+  /// Dark Mode choice: always light.
+  ///
+  /// In en, this message translates to:
+  /// **'Light'**
+  String get uiSettings_themeModeLight;
+
+  /// Dark Mode choice: always dark.
+  ///
+  /// In en, this message translates to:
+  /// **'Dark'**
+  String get uiSettings_themeModeDark;
 
   /// UI Settings section heading.
   ///

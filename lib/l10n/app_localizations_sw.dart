@@ -2473,7 +2473,13 @@ class AppLocalizationsSw extends AppLocalizations {
   String get uiSettings_darkMode => 'Hali ya Giza';
 
   @override
-  String get uiSettings_comingSoon => 'Inakuja hivi karibuni';
+  String get uiSettings_themeModeSystem => 'Kama Kifaa';
+
+  @override
+  String get uiSettings_themeModeLight => 'Mwanga';
+
+  @override
+  String get uiSettings_themeModeDark => 'Giza';
 
   @override
   String get uiSettings_layout => 'MPANGILIO';

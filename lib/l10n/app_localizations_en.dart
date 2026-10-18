@@ -2461,7 +2461,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get uiSettings_darkMode => 'Dark Mode';
 
   @override
-  String get uiSettings_comingSoon => 'Coming soon';
+  String get uiSettings_themeModeSystem => 'System';
+
+  @override
+  String get uiSettings_themeModeLight => 'Light';
+
+  @override
+  String get uiSettings_themeModeDark => 'Dark';
 
   @override
   String get uiSettings_layout => 'LAYOUT';

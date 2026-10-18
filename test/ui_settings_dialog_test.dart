@@ -3,6 +3,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import 'package:vetbiz_pro/data/ui_theme_mode.dart';
 import 'package:vetbiz_pro/l10n/l10n.dart';
 import 'package:vetbiz_pro/providers/ui_settings_provider.dart';
 import 'package:vetbiz_pro/screens/settings/ui_settings_dialog.dart';
@@ -42,8 +43,8 @@ void main() {
     for (final name in ['Pasture', 'Clinic', 'Harvest', 'Ledger']) {
       expect(find.text(name), findsOneWidget, reason: name);
     }
-    // Only Dark Mode is still "Coming soon"; no theme is.
-    expect(find.text('Coming soon'), findsOneWidget);
+    // Nothing is "Coming soon" any more (Dark Mode works since K1).
+    expect(find.text('Coming soon'), findsNothing);
 
     for (final theme in [AppColorTheme.clinic, AppColorTheme.harvest, AppColorTheme.ledger, AppColorTheme.pasture]) {
       await tester.tap(find.text(theme.name));
@@ -79,5 +80,52 @@ void main() {
     for (final t in AppColorTheme.all) {
       expect(find.text(sw.colorThemeLabel(t.id)), findsOneWidget, reason: t.id);
     }
+  });
+
+  testWidgets('Dark Mode: System, Light, Dark; choosing Dark rebuilds the app dark', (tester) async {
+    final ui = UiSettingsProvider();
+    late BuildContext appContext;
+    await tester.pumpWidget(ChangeNotifierProvider.value(
+      value: ui,
+      child: Consumer<UiSettingsProvider>(
+        builder: (_, s, __) => MaterialApp(
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          locale: s.locale,
+          theme: AppTheme.build(s.colorTheme, Brightness.light),
+          darkTheme: AppTheme.build(s.colorTheme, Brightness.dark),
+          themeMode: s.themeMode.themeMode,
+          home: Builder(builder: (context) {
+            appContext = context;
+            return const Scaffold();
+          }),
+        ),
+      ),
+    ));
+    await tester.pumpAndSettle();
+    AppColors colors() => Theme.of(appContext).extension<AppColors>()!;
+    final light = AppColors.fromTheme(AppColorTheme.pasture);
+    final dark = AppColors.fromTheme(AppColorTheme.pasture, brightness: Brightness.dark);
+    expect(ui.themeMode, UiThemeMode.light);
+    expect(colors().surface, light.surface);
+
+    showUiSettingsDialog(appContext);
+    await tester.pumpAndSettle();
+    for (final label in ['System', 'Light', 'Dark']) {
+      expect(find.text(label), findsOneWidget, reason: label);
+    }
+
+    await tester.tap(find.text('Dark'));
+    await tester.pumpAndSettle();
+    expect(ui.themeMode, UiThemeMode.dark);
+    expect(Theme.of(appContext).brightness, Brightness.dark);
+    expect(colors().surface, dark.surface);
+    expect(colors().primary, dark.primary);
+
+    await tester.tap(find.text('Light'));
+    await tester.pumpAndSettle();
+    expect(ui.themeMode, UiThemeMode.light);
+    expect(colors().surface, light.surface);
+    expect(colors().primary, light.primary);
   });
 }

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../../data/ui_theme_mode.dart';
 import '../../providers/ui_settings_provider.dart';
 import '../../utils/force_logout.dart';
 import '../../theme/app_palette.dart';
@@ -11,8 +12,8 @@ import '../../theme/theme_context.dart';
 
 /// UI Settings: how the app looks and lays itself out.
 ///
-/// The four colour themes (T1), Layout Fixed Mode and System Refresh work.
-/// Dark Mode is shown as "Coming soon" (RUNBOOK2 block D).
+/// The four colour themes (T1), Dark Mode (System, Light or Dark; K1),
+/// Layout Fixed Mode and System Refresh.
 Future<void> showUiSettingsDialog(BuildContext context) {
   return showDialog<void>(
     context: context,
@@ -61,10 +62,21 @@ class _UiSettingsDialog extends StatelessWidget {
                     _sectionLabel(context, context.l10n.uiSettings_appearance),
                     ListTile(
                       contentPadding: EdgeInsets.zero,
-                      leading: Icon(Icons.dark_mode_outlined, color: context.colors.textHint),
+                      leading: Icon(Icons.dark_mode_outlined, color: context.colors.primary),
                       title: Text(context.l10n.uiSettings_darkMode, style: const TextStyle(fontWeight: AppFontWeight.semibold)),
-                      subtitle: Text(context.l10n.uiSettings_comingSoon),
-                      trailing: const Switch(value: false, onChanged: null),
+                    ),
+                    // Saves the stored id (UiThemeMode.key), never the label.
+                    SizedBox(
+                      width: double.infinity,
+                      child: SegmentedButton<UiThemeMode>(
+                        showSelectedIcon: false,
+                        segments: [
+                          for (final mode in UiThemeMode.values)
+                            ButtonSegment(value: mode, label: Text(_themeModeLabel(context, mode))),
+                        ],
+                        selected: {settings.themeMode},
+                        onSelectionChanged: (choice) => settings.setThemeMode(choice.first),
+                      ),
                     ),
                     const SizedBox(height: AppSpacing.s6),
                     _sectionLabel(context, context.l10n.uiSettings_layout),
@@ -106,6 +118,12 @@ class _UiSettingsDialog extends StatelessWidget {
       ),
     );
   }
+
+  static String _themeModeLabel(BuildContext context, UiThemeMode mode) => switch (mode) {
+        UiThemeMode.system => context.l10n.uiSettings_themeModeSystem,
+        UiThemeMode.light => context.l10n.uiSettings_themeModeLight,
+        UiThemeMode.dark => context.l10n.uiSettings_themeModeDark,
+      };
 
   Widget _buildHeader(BuildContext context) {
     return Padding(
