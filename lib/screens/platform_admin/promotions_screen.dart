@@ -34,8 +34,8 @@ class PromotionsScreen extends StatelessWidget {
       appBar: AppBar(
         title: const Text('Promotions'),
         centerTitle: true,
-        backgroundColor: context.colors.primary,
-        foregroundColor: context.colors.onPrimary,
+        backgroundColor: context.colors.brandSurface,
+        foregroundColor: context.colors.onBrandSurface,
         automaticallyImplyLeading: !isModal,
         leading: isModal
             ? IconButton(

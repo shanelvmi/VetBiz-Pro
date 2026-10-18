@@ -272,8 +272,8 @@ class _FacilityDetailScreenState extends State<FacilityDetailScreen> {
       appBar: AppBar(
         title: const Text('Facility Details'),
         centerTitle: true,
-        backgroundColor: context.colors.primary,
-        foregroundColor: context.colors.onPrimary,
+        backgroundColor: context.colors.brandSurface,
+        foregroundColor: context.colors.onBrandSurface,
       ),
       body: StreamBuilder<DocumentSnapshot>(
         stream: FirebaseFirestore.instance.collection(Collections.facilities).doc(widget.facilityId).snapshots(),

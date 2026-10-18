@@ -159,12 +159,6 @@
     },
     {
       "rule": "R1",
-      "file": "lib/screens/platform_admin/subscription_requests_tab.dart",
-      "lineContains": "Colors.redAccent[700]",
-      "reason": "KEEP: request card label, redAccent 700, no role within 24 per channel (one use); docs/design/parked_values.md A21"
-    },
-    {
-      "rule": "R1",
       "file": "lib/screens/platform_admin/users_tab.dart",
       "lineContains": "Colors.blue.shade100 : Colors.orange.shade100",
       "reason": "KEEP: pending and other status chip fills, no role within 24 per channel (one use each); docs/design/parked_values.md A23, A24"

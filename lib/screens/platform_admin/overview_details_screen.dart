@@ -152,8 +152,8 @@ class _OverviewDetailsScreenState extends State<OverviewDetailsScreen> {
       appBar: AppBar(
         title: const Text('Overview Details'),
         centerTitle: true,
-        backgroundColor: context.colors.primary,
-        foregroundColor: context.colors.onPrimary,
+        backgroundColor: context.colors.brandSurface,
+        foregroundColor: context.colors.onBrandSurface,
         automaticallyImplyLeading: !widget.isModal,
         leading: widget.isModal
             ? IconButton(

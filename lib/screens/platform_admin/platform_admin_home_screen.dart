@@ -348,10 +348,10 @@ class _PlatformAdminHomeScreenState extends State<PlatformAdminHomeScreen> {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: AppSpacing.s16),
       child: _isSidebarCollapsed
-          ? Icon(Icons.storefront, color: context.colors.onPrimary, size: AppIconSize.i24)
+          ? Icon(Icons.storefront, color: context.colors.onBrandSurface, size: AppIconSize.i24)
           : Text(
               AppInfo.name,
-              style: TextStyle(color: context.colors.onPrimary, fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f16, letterSpacing: 0.3),
+              style: TextStyle(color: context.colors.onBrandSurface, fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f16, letterSpacing: 0.3),
             ),
     );
   }
@@ -368,7 +368,7 @@ class _PlatformAdminHomeScreenState extends State<PlatformAdminHomeScreen> {
       child: Text(
         label.toUpperCase(),
         style: TextStyle(
-          color: context.colors.onPrimary.withValues(alpha: AppAlpha.a50),
+          color: context.colors.onBrandSurface.withValues(alpha: AppAlpha.a50),
           fontSize: AppFontSize.f11,
           fontWeight: AppFontWeight.bold,
           letterSpacing: 0.8,
@@ -407,7 +407,7 @@ class _PlatformAdminHomeScreenState extends State<PlatformAdminHomeScreen> {
         child: Row(
           mainAxisAlignment: collapsed ? MainAxisAlignment.center : MainAxisAlignment.start,
           children: [
-            Icon(icon, color: selected ? context.colors.accent : context.colors.onPrimaryMuted, size: AppIconSize.i20),
+            Icon(icon, color: selected ? context.colors.accent : context.colors.onBrandSurfaceMuted, size: AppIconSize.i20),
             if (!collapsed) ...[
               const SizedBox(width: AppSpacing.s6),
               Expanded(
@@ -415,7 +415,7 @@ class _PlatformAdminHomeScreenState extends State<PlatformAdminHomeScreen> {
                   label,
                   overflow: TextOverflow.ellipsis,
                   style: TextStyle(
-                    color: selected ? context.colors.onPrimary : context.colors.onPrimaryMuted,
+                    color: selected ? context.colors.onBrandSurface : context.colors.onBrandSurfaceMuted,
                     fontWeight: selected ? AppFontWeight.semibold : AppFontWeight.regular,
                     fontSize: AppFontSize.f14,
                   ),
@@ -460,7 +460,7 @@ class _PlatformAdminHomeScreenState extends State<PlatformAdminHomeScreen> {
             },
           );
         }),
-        Divider(color: context.colors.onPrimarySubtle, height: 1),
+        Divider(color: context.colors.onBrandSurfaceSubtle, height: 1),
         _buildGroupLabel('Others', collapsed: collapsed),
         _buildTile(
           icon: Icons.settings_outlined,
@@ -496,21 +496,21 @@ class _PlatformAdminHomeScreenState extends State<PlatformAdminHomeScreen> {
         margin: EdgeInsets.fromLTRB(collapsed ? AppSpacing.s8 : AppSpacing.s20, AppSpacing.s3, AppSpacing.s6, AppSpacing.s3),
         padding: EdgeInsets.only(left: collapsed ? 0 : AppSpacing.s6, right: collapsed ? 0 : AppSpacing.s4, top: AppSpacing.s12, bottom: AppSpacing.s12),
         decoration: BoxDecoration(
-          color: context.colors.brandTeal.withValues(alpha: AppAlpha.a15),
+          color: context.colors.brandTealOnBrand.withValues(alpha: AppAlpha.a15),
           borderRadius: BorderRadius.circular(AppRadius.r10),
-          border: Border.all(color: context.colors.brandTeal.withValues(alpha: AppAlpha.a50), width: 1),
+          border: Border.all(color: context.colors.brandTealOnBrand.withValues(alpha: AppAlpha.a50), width: 1),
         ),
         child: Row(
           mainAxisAlignment: collapsed ? MainAxisAlignment.center : MainAxisAlignment.start,
           children: [
-            Icon(Icons.storefront_outlined, color: context.colors.brandTeal, size: AppIconSize.i20),
+            Icon(Icons.storefront_outlined, color: context.colors.brandTealOnBrand, size: AppIconSize.i20),
             if (!collapsed) ...[
               const SizedBox(width: AppSpacing.s6),
               Expanded(
                 child: Text(
                   'Go to Facility',
                   overflow: TextOverflow.ellipsis,
-                  style: TextStyle(color: context.colors.onPrimary, fontWeight: AppFontWeight.semibold, fontSize: AppFontSize.f14),
+                  style: TextStyle(color: context.colors.onBrandSurface, fontWeight: AppFontWeight.semibold, fontSize: AppFontSize.f14),
                 ),
               ),
             ],
@@ -545,17 +545,17 @@ class _PlatformAdminHomeScreenState extends State<PlatformAdminHomeScreen> {
       duration: AppMotion.normal,
       curve: Curves.easeInOut,
       width: _isSidebarCollapsed ? AppSizes.sidebarCollapsed : AppSizes.platformAdminSidebarExpanded,
-      color: context.colors.primary,
+      color: context.colors.brandSurface,
       child: Column(
         children: [
           _buildBrandMark(),
-          Divider(color: context.colors.onPrimarySubtle, height: 1),
+          Divider(color: context.colors.onBrandSurfaceSubtle, height: 1),
           Expanded(
             child: SingleChildScrollView(
               child: _buildNavColumn(collapsed: _isSidebarCollapsed),
             ),
           ),
-          Divider(color: context.colors.onPrimarySubtle, height: 1),
+          Divider(color: context.colors.onBrandSurfaceSubtle, height: 1),
           _buildLogoutTile(collapsed: _isSidebarCollapsed),
           const SizedBox(height: AppSpacing.s4),
           Padding(
@@ -563,7 +563,7 @@ class _PlatformAdminHomeScreenState extends State<PlatformAdminHomeScreen> {
             child: IconButton(
               icon: Icon(
                 _isSidebarCollapsed ? Icons.chevron_right : Icons.chevron_left,
-                color: context.colors.onPrimaryMuted,
+                color: context.colors.onBrandSurfaceMuted,
               ),
               tooltip: _isSidebarCollapsed ? 'Expand menu' : 'Collapse menu',
               onPressed: _toggleSidebarCollapsed,
@@ -579,12 +579,12 @@ class _PlatformAdminHomeScreenState extends State<PlatformAdminHomeScreen> {
   // here at all.
   Widget _buildMobileDrawer() {
     return Drawer(
-      backgroundColor: context.colors.primary,
+      backgroundColor: context.colors.brandSurface,
       child: SafeArea(
         child: Column(
           children: [
             _buildBrandMark(),
-            Divider(color: context.colors.onPrimarySubtle, height: 1),
+            Divider(color: context.colors.onBrandSurfaceSubtle, height: 1),
             Expanded(
               child: SingleChildScrollView(
                 child: _buildNavColumn(
@@ -593,7 +593,7 @@ class _PlatformAdminHomeScreenState extends State<PlatformAdminHomeScreen> {
                 ),
               ),
             ),
-            Divider(color: context.colors.onPrimarySubtle, height: 1),
+            Divider(color: context.colors.onBrandSurfaceSubtle, height: 1),
             _buildLogoutTile(collapsed: false, onNavigate: () => Navigator.pop(context)),
             const SizedBox(height: AppSpacing.s8),
           ],

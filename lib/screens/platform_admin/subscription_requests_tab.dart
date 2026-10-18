@@ -566,7 +566,7 @@ class _SubscriptionRequestsTabState extends State<SubscriptionRequestsTab> {
                               children: [
                                 Text(
                                   'Reason for rejection',
-                                  style: TextStyle(fontSize: AppFontSize.f11, fontWeight: AppFontWeight.bold, color: Colors.redAccent[700]),
+                                  style: TextStyle(fontSize: AppFontSize.f11, fontWeight: AppFontWeight.bold, color: context.colors.dangerLabel),
                                 ),
                                 const SizedBox(height: AppSpacing.s3),
                                 Text(reviewNote, style: const TextStyle(fontSize: AppFontSize.f13)),

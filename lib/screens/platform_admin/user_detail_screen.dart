@@ -533,8 +533,8 @@ class _UserDetailScreenState extends State<UserDetailScreen> {
       appBar: AppBar(
         title: Text(_userData['fullName'] ?? 'User'),
         centerTitle: true,
-        backgroundColor: context.colors.primary,
-        foregroundColor: context.colors.onPrimary,
+        backgroundColor: context.colors.brandSurface,
+        foregroundColor: context.colors.onBrandSurface,
       ),
       body: Center(
         child: ConstrainedBox(
