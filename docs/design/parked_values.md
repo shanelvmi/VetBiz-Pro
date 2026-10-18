@@ -121,4 +121,4 @@ C2, C5 and C10 keep their values. The others change by 20 to 100 ms: C1, C3, C4,
 - **SEMANTIC (same in every theme; contrast to check on each background):** A1, A2, A7, A8, A9, A20, A21, A23, A24.
 - **ONE-OFF (fixed):** A12 to A15 (service palette), A18, A19 (categories), A22 (Platform Admin), F6.
 
-OWNER DECISION: PENDING
+OWNER DECISION: APPROVED with these changes: (1) A6 becomes a new role sidebarPress = #00695C (exact), not a snap; (2) A7 and A8 become new semantic roles warningBannerText = #C77800 and warningBannerFill = #FFF6E7 (exact), not snaps; (3) A10 and A11 become new brand-linked roles quickActionTintPrimary = #E3F0EC and quickActionTintAccent = #FCEFD9 (exact), which T0 will derive per theme; (4) A12 to A15 become four roles chartService1 to chartService4 with the exact values steel blue #5C7C99, sage #8FA998, terracotta #B98B6F and lavender #9B8AA6 (the Other slice uses chartService4), replacing the grey snaps. Everything else exactly as the table says.
