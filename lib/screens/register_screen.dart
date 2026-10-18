@@ -509,9 +509,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
   // logic both share, and is unchanged.
   // ======================================================================
 
-  // The login page's two teals (no role; listed in design-open-questions.md, D8).
-  static const Color tealAccent = Color(0xFF3E8E82);
-  static const Color tealGlow = Color(0xFF7EE8CB);
   // Alert timings with no token, the same as the login page's (D8): the fade-in,
   // and the countdown restart after the pointer leaves the alert.
   static const Duration _alertSwitch = Duration(milliseconds: 260);
@@ -775,7 +772,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
       padding: const EdgeInsets.symmetric(horizontal: AppSpacing.s16, vertical: AppSpacing.s14),
       decoration: BoxDecoration(
         gradient: LinearGradient(
-          colors: [context.colors.primary, tealAccent],
+          colors: [context.colors.primary, context.colors.brandTeal],
           begin: Alignment.centerLeft,
           end: Alignment.centerRight,
         ),
@@ -818,7 +815,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Icon(icon, color: tealGlow, size: AppIconSize.i20),
+              Icon(icon, color: context.colors.brandTealGlow, size: AppIconSize.i20),
               const SizedBox(width: AppSpacing.s10),
               Expanded(
                 child: Text(text, style: TextStyle(color: context.colors.onPrimary, fontSize: AppFontSize.f13_5, height: 1.4)),
@@ -831,7 +828,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
       padding: const EdgeInsets.all(AppSpacing.s24),
       decoration: BoxDecoration(
         gradient: LinearGradient(
-          colors: [context.colors.primary, tealAccent],
+          colors: [context.colors.primary, context.colors.brandTeal],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
@@ -845,9 +842,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
             width: 46,
             height: 46,
             decoration: BoxDecoration(
-              color: tealGlow.withValues(alpha: AppAlpha.a20),
+              color: context.colors.brandTealGlow.withValues(alpha: AppAlpha.a20),
               shape: BoxShape.circle,
-              border: Border.all(color: tealGlow.withValues(alpha: AppAlpha.a70), width: 1.4),
+              border: Border.all(color: context.colors.brandTealGlow.withValues(alpha: AppAlpha.a70), width: 1.4),
             ),
             child: Icon(Icons.rocket_launch_outlined, color: context.colors.onPrimary, size: AppIconSize.i22),
           ),
@@ -891,7 +888,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
       padding: const EdgeInsets.all(AppSpacing.s16),
       decoration: BoxDecoration(
         gradient: LinearGradient(
-          colors: [context.colors.primary, tealAccent],
+          colors: [context.colors.primary, context.colors.brandTeal],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
@@ -903,9 +900,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
             width: 40,
             height: 40,
             decoration: BoxDecoration(
-              color: tealGlow.withValues(alpha: AppAlpha.a20),
+              color: context.colors.brandTealGlow.withValues(alpha: AppAlpha.a20),
               shape: BoxShape.circle,
-              border: Border.all(color: tealGlow.withValues(alpha: AppAlpha.a70), width: 1.2),
+              border: Border.all(color: context.colors.brandTealGlow.withValues(alpha: AppAlpha.a70), width: 1.2),
             ),
             child: Icon(Icons.rocket_launch_outlined, color: context.colors.onPrimary, size: AppIconSize.i20),
           ),
@@ -1364,7 +1361,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
               Container(
                 width: 32,
                 height: 32,
-                decoration: BoxDecoration(color: tealGlow.withValues(alpha: AppAlpha.a30), shape: BoxShape.circle),
+                decoration: BoxDecoration(color: context.colors.brandTealGlow.withValues(alpha: AppAlpha.a30), shape: BoxShape.circle),
                 child: Icon(icon, color: context.colors.primary, size: AppIconSize.i18),
               ),
               const SizedBox(width: AppSpacing.s10),
@@ -1528,7 +1525,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
               children: [
                 CircleAvatar(
                   radius: 34,
-                  backgroundColor: tealGlow.withValues(alpha: AppAlpha.a30),
+                  backgroundColor: context.colors.brandTealGlow.withValues(alpha: AppAlpha.a30),
                   backgroundImage: _imageBytes != null
                       ? MemoryImage(_imageBytes!)
                       : (hasUploaded ? NetworkImage(avatarUrl!) as ImageProvider : null),
@@ -1835,7 +1832,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
           Container(
             width: 36,
             height: 36,
-            decoration: BoxDecoration(color: tealGlow.withValues(alpha: AppAlpha.a20), shape: BoxShape.circle),
+            decoration: BoxDecoration(color: context.colors.brandTealGlow.withValues(alpha: AppAlpha.a20), shape: BoxShape.circle),
             child: Icon(Icons.storefront_outlined, color: context.colors.primary, size: AppIconSize.i18),
           ),
           const SizedBox(width: AppSpacing.s12),
@@ -2096,7 +2093,7 @@ class _LegalLinkState extends State<_LegalLink> {
 
   @override
   Widget build(BuildContext context) {
-    final color = _hovered ? context.colors.accent : _RegisterScreenState.tealAccent;
+    final color = _hovered ? context.colors.accent : context.colors.brandTeal;
     return MouseRegion(
       cursor: SystemMouseCursors.click,
       onEnter: (_) => setState(() => _hovered = true),

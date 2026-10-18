@@ -483,11 +483,11 @@ class _UsersTabState extends State<UsersTab> {
               padding: const EdgeInsets.fromLTRB(AppSpacing.s12, AppSpacing.s8, AppSpacing.s12, AppSpacing.s4),
               child: Row(
                 children: [
-                  const Icon(Icons.workspace_premium, size: AppIconSize.i14, color: Colors.deepPurple),
+                  Icon(Icons.workspace_premium, size: AppIconSize.i14, color: context.colors.rolePlatformAdmin),
                   const SizedBox(width: AppSpacing.s6),
                   Text(
                     'Platform Admins (${platformAdminDocs.length})',
-                    style: const TextStyle(fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f12_5, color: Colors.deepPurple),
+                    style: TextStyle(fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f12_5, color: context.colors.rolePlatformAdmin),
                   ),
                 ],
               ),
@@ -538,7 +538,7 @@ class _UsersTabState extends State<UsersTab> {
           child: Row(
             children: [
               CircleAvatar(
-                backgroundColor: isPlatformAdmin ? Colors.deepPurple : context.colors.primary,
+                backgroundColor: isPlatformAdmin ? context.colors.rolePlatformAdmin : context.colors.primary,
                 child: Text(
                   name.isNotEmpty ? name[0].toUpperCase() : '?',
                   style: TextStyle(color: context.colors.onPrimary),
@@ -563,17 +563,17 @@ class _UsersTabState extends State<UsersTab> {
                           Container(
                             padding: const EdgeInsets.symmetric(horizontal: AppSpacing.s6, vertical: AppSpacing.s2),
                             decoration: BoxDecoration(
-                              color: Colors.deepPurple.withValues(alpha: AppAlpha.a10),
+                              color: context.colors.rolePlatformAdmin.withValues(alpha: AppAlpha.a10),
                               borderRadius: BorderRadius.circular(AppRadius.r8),
                             ),
-                            child: const Row(
+                            child: Row(
                               mainAxisSize: MainAxisSize.min,
                               children: [
-                                Icon(Icons.workspace_premium, size: AppIconSize.i12, color: Colors.deepPurple),
-                                SizedBox(width: AppSpacing.s3),
+                                Icon(Icons.workspace_premium, size: AppIconSize.i12, color: context.colors.rolePlatformAdmin),
+                                const SizedBox(width: AppSpacing.s3),
                                 Text(
                                   'Platform Admin',
-                                  style: TextStyle(fontSize: AppFontSize.f10, color: Colors.deepPurple, fontWeight: AppFontWeight.bold),
+                                  style: TextStyle(fontSize: AppFontSize.f10, color: context.colors.rolePlatformAdmin, fontWeight: AppFontWeight.bold),
                                 ),
                               ],
                             ),

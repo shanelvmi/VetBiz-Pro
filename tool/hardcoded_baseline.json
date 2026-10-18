@@ -47,13 +47,13 @@
       "rule": "R1",
       "file": "lib/main.dart",
       "lineContains": "color: Colors.orange.shade900",
-      "reason": "no colour role for orange 900 (removed-from-facility note text); in design-open-questions.md for 2R"
+      "reason": "KEEP: removed-from-facility note text, orange 900, no role within 24 per channel (one use); docs/design/parked_values.md A1"
     },
     {
       "rule": "R1",
       "file": "lib/screens/activity/activity_log_screen.dart",
       "lineContains": "color: Colors.blue.shade900",
-      "reason": "no colour role for blue 900 (assistant scope note text); in design-open-questions.md for 2R"
+      "reason": "KEEP: assistant scope note text, blue 900, no role within 24 per channel (one use); docs/design/parked_values.md A2"
     },
     {
       "rule": "R5",
@@ -149,7 +149,7 @@
       "rule": "R1",
       "file": "lib/screens/admin/manage_assistants_screen.dart",
       "lineContains": "Colors.teal",
-      "reason": "Reassign button teal and empty-team icon teal 300, kept in D4 (colours not covered by the snap rule); D4 Other teal question, for 2R"
+      "reason": "KEEP: empty-team icon teal 300, no role within 24 per channel (one use); the Reassign button teal snapped to roleCoAdmin; docs/design/parked_values.md A3, A4"
     },
     {
       "rule": "R1",
@@ -167,55 +167,19 @@
       "rule": "R1",
       "file": "lib/screens/login_screen.dart",
       "lineContains": "Colors.greenAccent",
-      "reason": "System Online dot, no role within 12; open question D8, for 2R"
-    },
-    {
-      "rule": "R1",
-      "file": "lib/screens/login_screen.dart",
-      "lineContains": "tealAccent = Color(0xFF3E8E82)",
-      "reason": "login teal, no role within 12; open question D8, for 2R"
-    },
-    {
-      "rule": "R1",
-      "file": "lib/screens/login_screen.dart",
-      "lineContains": "tealGlow = Color(0xFF7EE8CB)",
-      "reason": "login light teal glow, no role within 12; open question D8, for 2R"
-    },
-    {
-      "rule": "R1",
-      "file": "lib/screens/register_screen.dart",
-      "lineContains": "tealAccent = Color(0xFF3E8E82)",
-      "reason": "login teal (register copy), no role within 12; open question D8, for 2R"
-    },
-    {
-      "rule": "R1",
-      "file": "lib/screens/register_screen.dart",
-      "lineContains": "tealGlow = Color(0xFF7EE8CB)",
-      "reason": "login light teal glow (register copy), no role within 12; open question D8, for 2R"
-    },
-    {
-      "rule": "R1",
-      "file": "lib/screens/platform_admin/platform_admin_home_screen.dart",
-      "lineContains": "tealGlow = Color(0xFF3E8E82)",
-      "reason": "sidebar facility badge teal (the login teal), no role within 12; open question D7, for 2R"
+      "reason": "KEEP: System Online dot, no role within 24 per channel (one use); docs/design/parked_values.md A20"
     },
     {
       "rule": "R1",
       "file": "lib/screens/platform_admin/subscription_requests_tab.dart",
       "lineContains": "Colors.redAccent[700]",
-      "reason": "no danger role within 12 of redAccent 700; open question D7, for 2R"
-    },
-    {
-      "rule": "R1",
-      "file": "lib/screens/platform_admin/users_tab.dart",
-      "lineContains": "Colors.deepPurple",
-      "reason": "Platform Admin badge colour (x6), no role; open question D7, for 2R"
+      "reason": "KEEP: request card label, redAccent 700, no role within 24 per channel (one use); docs/design/parked_values.md A21"
     },
     {
       "rule": "R1",
       "file": "lib/screens/platform_admin/users_tab.dart",
       "lineContains": "Colors.blue.shade100 : Colors.orange.shade100",
-      "reason": "pending / other status chip fills, no role within 12; open question D7, for 2R"
+      "reason": "KEEP: pending and other status chip fills, no role within 24 per channel (one use each); docs/design/parked_values.md A23, A24"
     },
     {
       "rule": "R4",

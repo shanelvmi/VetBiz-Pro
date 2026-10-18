@@ -54,10 +54,6 @@ class _LoginScreenState extends State<LoginScreen> {
 
   Timer? _announcementTimer;
 
-  // Two teals of the login design with no role (more than 12 from every
-  // role); kept exact and listed in design-open-questions.md (D8).
-  static const Color tealAccent = Color(0xFF3E8E82);
-  static const Color tealGlow = Color(0xFF7EE8CB);
   // The announcement carousel's page slide: 600 ms has no AppMotion step
   // (100 from slowest). Kept exact and listed (D8).
   static const Duration _announcementSlide = Duration(milliseconds: 600);
@@ -281,7 +277,7 @@ class _LoginScreenState extends State<LoginScreen> {
       padding: const EdgeInsets.symmetric(vertical: AppSpacing.s16),
       decoration: BoxDecoration(
         gradient: LinearGradient(
-          colors: [context.colors.primary, tealAccent],
+          colors: [context.colors.primary, context.colors.brandTeal],
           begin: Alignment.centerLeft,
           end: Alignment.centerRight,
         ),
@@ -456,7 +452,7 @@ class _LoginScreenState extends State<LoginScreen> {
       padding: const EdgeInsets.all(AppSpacing.s20),
       decoration: BoxDecoration(
         gradient: LinearGradient(
-          colors: [context.colors.primary, tealAccent],
+          colors: [context.colors.primary, context.colors.brandTeal],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
@@ -469,11 +465,11 @@ class _LoginScreenState extends State<LoginScreen> {
             width: 44,
             height: 44,
             decoration: BoxDecoration(
-              color: tealGlow.withValues(alpha: AppAlpha.a15),
+              color: context.colors.brandTealGlow.withValues(alpha: AppAlpha.a15),
               borderRadius: BorderRadius.circular(AppRadius.r12),
-              border: Border.all(color: tealGlow.withValues(alpha: AppAlpha.a50), width: 1.2),
+              border: Border.all(color: context.colors.brandTealGlow.withValues(alpha: AppAlpha.a50), width: 1.2),
               boxShadow: [
-                BoxShadow(color: tealGlow.withValues(alpha: AppAlpha.a30), blurRadius: 8),
+                BoxShadow(color: context.colors.brandTealGlow.withValues(alpha: AppAlpha.a30), blurRadius: 8),
               ],
             ),
             child: Icon(Icons.chat_bubble_outline, color: context.colors.onPrimary, size: AppIconSize.i20),
@@ -485,7 +481,7 @@ class _LoginScreenState extends State<LoginScreen> {
               children: [
                 Text(context.l10n.login_welcomeTo, style: TextStyle(color: context.colors.onPrimary.withValues(alpha: AppAlpha.a85), fontSize: AppFontSize.f13)),
                 Text(AppInfo.name,
-                    style: TextStyle(color: tealGlow, fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f19)),
+                    style: TextStyle(color: context.colors.brandTealGlow, fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f19)),
                 const SizedBox(height: AppSpacing.s8),
                 Text(context.l10n.login_stayUpdated,
                     style: TextStyle(color: context.colors.onPrimary.withValues(alpha: AppAlpha.a85), fontSize: AppFontSize.f12_5)),
@@ -706,11 +702,11 @@ class _LoginScreenState extends State<LoginScreen> {
           width: 36,
           height: 36,
           decoration: BoxDecoration(
-            color: tealGlow.withValues(alpha: AppAlpha.a10),
+            color: context.colors.brandTealGlow.withValues(alpha: AppAlpha.a10),
             shape: BoxShape.circle,
-            border: Border.all(color: tealGlow.withValues(alpha: AppAlpha.a30), width: 1),
+            border: Border.all(color: context.colors.brandTealGlow.withValues(alpha: AppAlpha.a30), width: 1),
             boxShadow: [
-              BoxShadow(color: tealGlow.withValues(alpha: AppAlpha.a15), blurRadius: 5),
+              BoxShadow(color: context.colors.brandTealGlow.withValues(alpha: AppAlpha.a15), blurRadius: 5),
             ],
           ),
           child: Icon(Icons.verified_user_outlined, color: context.colors.primary, size: AppIconSize.i18),
@@ -931,7 +927,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   Container(
                     height: 4,
                     decoration: BoxDecoration(
-                      gradient: LinearGradient(colors: [context.colors.primary, tealAccent, tealGlow]),
+                      gradient: LinearGradient(colors: [context.colors.primary, context.colors.brandTeal, context.colors.brandTealGlow]),
                     ),
                   ),
                   Padding(
@@ -946,11 +942,11 @@ class _LoginScreenState extends State<LoginScreen> {
                               width: 42,
                               height: 42,
                               decoration: BoxDecoration(
-                                color: tealGlow.withValues(alpha: AppAlpha.a20),
+                                color: context.colors.brandTealGlow.withValues(alpha: AppAlpha.a20),
                                 shape: BoxShape.circle,
-                                border: Border.all(color: tealGlow.withValues(alpha: AppAlpha.a70), width: 1.4),
+                                border: Border.all(color: context.colors.brandTealGlow.withValues(alpha: AppAlpha.a70), width: 1.4),
                                 boxShadow: [
-                                  BoxShadow(color: tealGlow.withValues(alpha: AppAlpha.a50), blurRadius: 14),
+                                  BoxShadow(color: context.colors.brandTealGlow.withValues(alpha: AppAlpha.a50), blurRadius: 14),
                                 ],
                               ),
                               child: Icon(Icons.lock_outline, color: context.colors.primary, size: AppIconSize.i20),
@@ -1039,7 +1035,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                 child: Text(
                                   context.l10n.login_forgotPassword,
                                   style: TextStyle(
-                                    color: isForgotHovered ? context.colors.accent : tealAccent,
+                                    color: isForgotHovered ? context.colors.accent : context.colors.brandTeal,
                                     fontSize: AppFontSize.f13,
                                     fontWeight: AppFontWeight.semibold,
                                   ),
@@ -1053,7 +1049,7 @@ class _LoginScreenState extends State<LoginScreen> {
                           isLoading: isLoggingIn,
                           onPressed: isLoggingIn ? null : _login,
                           primaryColor: context.colors.primary,
-                          accentColor: tealAccent,
+                          accentColor: context.colors.brandTeal,
                         ),
                         const SizedBox(height: AppSpacing.s20),
                         Center(
@@ -1073,7 +1069,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                     TextSpan(
                                       text: context.l10n.login_register,
                                       style: TextStyle(
-                                        color: isRegisterHovered ? context.colors.accent : tealAccent,
+                                        color: isRegisterHovered ? context.colors.accent : context.colors.brandTeal,
                                         fontWeight: AppFontWeight.bold,
                                       ),
                                     ),
@@ -1413,9 +1409,9 @@ class _AnimatedLoginButtonState extends State<_AnimatedLoginButton> with SingleT
                                         decoration: BoxDecoration(
                                           color: context.colors.surface.withValues(alpha: AppAlpha.a20),
                                           shape: BoxShape.circle,
-                                          border: Border.all(color: _LoginScreenState.tealGlow.withValues(alpha: AppAlpha.a50), width: 1.2),
+                                          border: Border.all(color: context.colors.brandTealGlow.withValues(alpha: AppAlpha.a50), width: 1.2),
                                           boxShadow: [
-                                            BoxShadow(color: _LoginScreenState.tealGlow.withValues(alpha: AppAlpha.a30), blurRadius: 8),
+                                            BoxShadow(color: context.colors.brandTealGlow.withValues(alpha: AppAlpha.a30), blurRadius: 8),
                                           ],
                                         ),
                                         child: Icon(Icons.arrow_forward, color: Color.lerp(context.colors.onPrimary, context.colors.accent, t), size: AppIconSize.i16),

@@ -64,7 +64,6 @@ class PlatformAdminHomeScreen extends StatefulWidget {
 }
 
 class _PlatformAdminHomeScreenState extends State<PlatformAdminHomeScreen> {
-  static const Color tealGlow = Color(0xFF3E8E82);
 
   // Same breakpoint the main Dashboard already uses for this exact
   // sidebar-vs-drawer decision - kept consistent with the rest of the
@@ -497,14 +496,14 @@ class _PlatformAdminHomeScreenState extends State<PlatformAdminHomeScreen> {
         margin: EdgeInsets.fromLTRB(collapsed ? AppSpacing.s8 : AppSpacing.s20, AppSpacing.s3, AppSpacing.s6, AppSpacing.s3),
         padding: EdgeInsets.only(left: collapsed ? 0 : AppSpacing.s6, right: collapsed ? 0 : AppSpacing.s4, top: AppSpacing.s12, bottom: AppSpacing.s12),
         decoration: BoxDecoration(
-          color: tealGlow.withValues(alpha: AppAlpha.a15),
+          color: context.colors.brandTeal.withValues(alpha: AppAlpha.a15),
           borderRadius: BorderRadius.circular(AppRadius.r10),
-          border: Border.all(color: tealGlow.withValues(alpha: AppAlpha.a50), width: 1),
+          border: Border.all(color: context.colors.brandTeal.withValues(alpha: AppAlpha.a50), width: 1),
         ),
         child: Row(
           mainAxisAlignment: collapsed ? MainAxisAlignment.center : MainAxisAlignment.start,
           children: [
-            const Icon(Icons.storefront_outlined, color: tealGlow, size: AppIconSize.i20),
+            Icon(Icons.storefront_outlined, color: context.colors.brandTeal, size: AppIconSize.i20),
             if (!collapsed) ...[
               const SizedBox(width: AppSpacing.s6),
               Expanded(

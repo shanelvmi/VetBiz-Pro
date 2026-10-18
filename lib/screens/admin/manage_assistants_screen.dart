@@ -694,7 +694,7 @@ class _ManageAssistantsScreenState extends State<ManageAssistantsScreen> {
         _actionButton(
           label: context.l10n.team_reassign,
           icon: Icons.swap_horiz,
-          color: Colors.teal,
+          color: context.colors.roleCoAdmin,
           onPressed: () => _showFacilityPickerDialog(
             doc.id,
             name: (data['fullName'] ?? context.l10n.team_thisAssistant).toString(),
