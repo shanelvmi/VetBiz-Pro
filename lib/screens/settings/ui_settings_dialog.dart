@@ -11,9 +11,8 @@ import '../../theme/theme_context.dart';
 
 /// UI Settings: how the app looks and lays itself out.
 ///
-/// Phase 1: Layout Fixed Mode and System Refresh work. The colour themes other
-/// than today's, and Dark Mode, are shown as "Coming soon" - they need every
-/// screen to read its colours from one place first.
+/// The four colour themes (T1), Layout Fixed Mode and System Refresh work.
+/// Dark Mode is shown as "Coming soon" (RUNBOOK2 block D).
 Future<void> showUiSettingsDialog(BuildContext context) {
   return showDialog<void>(
     context: context,
@@ -188,14 +187,12 @@ class _UiSettingsDialog extends StatelessWidget {
 
 /// One selectable colour theme: its two swatches, its name, and a tick when
 /// it is the one in use.
-// A theme's name as shown, by its id; AppColorTheme.name stays the English
-// name, shown as is for a theme added later without a label.
-String _themeName(BuildContext context, AppColorTheme theme) => switch (theme.id) {
-      'kilimanjaro' => context.l10n.uiSettings_themeKilimanjaro,
-      'serengeti' => context.l10n.uiSettings_themeSerengeti,
-      'victoria' => context.l10n.uiSettings_themeVictoria,
-      _ => theme.name,
-    };
+// A theme's name as shown, through colorThemeLabel; AppColorTheme.name stays
+// the English name, shown as is for a theme added later without a label.
+String _themeName(BuildContext context, AppColorTheme theme) {
+  final label = context.l10n.colorThemeLabel(theme.id);
+  return label == theme.id ? theme.name : label;
+}
 
 class _ThemeTile extends StatelessWidget {
   final AppColorTheme theme;

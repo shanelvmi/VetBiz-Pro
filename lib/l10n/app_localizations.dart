@@ -4484,23 +4484,29 @@ abstract class AppLocalizations {
   /// **'This reloads your data and takes you back to the start. You stay signed in, but anything you haven\'t saved will be lost.'**
   String get uiSettings_refreshBody;
 
-  /// Colour theme name (id "kilimanjaro").
+  /// Colour theme name (id "pasture").
   ///
   /// In en, this message translates to:
-  /// **'Kilimanjaro Green'**
-  String get uiSettings_themeKilimanjaro;
+  /// **'Pasture'**
+  String get uiSettings_themePasture;
 
-  /// Colour theme name (id "serengeti").
+  /// Colour theme name (id "clinic").
   ///
   /// In en, this message translates to:
-  /// **'Serengeti Yellow'**
-  String get uiSettings_themeSerengeti;
+  /// **'Clinic'**
+  String get uiSettings_themeClinic;
 
-  /// Colour theme name (id "victoria").
+  /// Colour theme name (id "harvest").
   ///
   /// In en, this message translates to:
-  /// **'Victoria Blue'**
-  String get uiSettings_themeVictoria;
+  /// **'Harvest'**
+  String get uiSettings_themeHarvest;
+
+  /// Colour theme name (id "ledger").
+  ///
+  /// In en, this message translates to:
+  /// **'Ledger'**
+  String get uiSettings_themeLedger;
 
   /// Message after saving.
   ///

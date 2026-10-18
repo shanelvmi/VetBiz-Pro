@@ -2494,13 +2494,16 @@ class AppLocalizationsEn extends AppLocalizations {
       'This reloads your data and takes you back to the start. You stay signed in, but anything you haven\'t saved will be lost.';
 
   @override
-  String get uiSettings_themeKilimanjaro => 'Kilimanjaro Green';
+  String get uiSettings_themePasture => 'Pasture';
 
   @override
-  String get uiSettings_themeSerengeti => 'Serengeti Yellow';
+  String get uiSettings_themeClinic => 'Clinic';
 
   @override
-  String get uiSettings_themeVictoria => 'Victoria Blue';
+  String get uiSettings_themeHarvest => 'Harvest';
+
+  @override
+  String get uiSettings_themeLedger => 'Ledger';
 
   @override
   String get hours_saved => 'Business hours saved';

@@ -2506,13 +2506,16 @@ class AppLocalizationsSw extends AppLocalizations {
       'Hii hupakia data yako upya na kukurudisha mwanzo. Unabaki umeingia, lakini chochote ambacho hujahifadhi kitapotea.';
 
   @override
-  String get uiSettings_themeKilimanjaro => 'Kijani cha Kilimanjaro';
+  String get uiSettings_themePasture => 'Malisho';
 
   @override
-  String get uiSettings_themeSerengeti => 'Njano ya Serengeti';
+  String get uiSettings_themeClinic => 'Kliniki';
 
   @override
-  String get uiSettings_themeVictoria => 'Bluu ya Victoria';
+  String get uiSettings_themeHarvest => 'Mavuno';
+
+  @override
+  String get uiSettings_themeLedger => 'Daftari';
 
   @override
   String get hours_saved => 'Saa za biashara zimehifadhiwa';

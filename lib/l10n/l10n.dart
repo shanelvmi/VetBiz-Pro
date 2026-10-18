@@ -4,6 +4,7 @@ import '../config/app_defaults.dart';
 import 'app_localizations.dart';
 
 export 'app_localizations.dart';
+export 'color_theme_labels.dart';
 export 'crop_labels.dart';
 export 'stored_labels.dart';
 export 'transaction_category_labels.dart';

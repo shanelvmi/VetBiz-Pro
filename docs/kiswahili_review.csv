@@ -734,9 +734,10 @@ uiSettings_systemRefreshHint,Reloads your data and takes you back to the start. 
 uiSettings_savedOnDevice,Saved on this device,Imehifadhiwa kwenye kifaa hiki,Under the UI Settings title.,draft
 uiSettings_refreshTitle,Refresh the app?,Onyesha upya programu?,System Refresh confirmation title.,draft
 uiSettings_refreshBody,"This reloads your data and takes you back to the start. You stay signed in, but anything you haven't saved will be lost.","Hii hupakia data yako upya na kukurudisha mwanzo. Unabaki umeingia, lakini chochote ambacho hujahifadhi kitapotea.",System Refresh confirmation text.,draft
-uiSettings_themeKilimanjaro,Kilimanjaro Green,Kijani cha Kilimanjaro,"Colour theme name (id ""kilimanjaro"").",draft
-uiSettings_themeSerengeti,Serengeti Yellow,Njano ya Serengeti,"Colour theme name (id ""serengeti"").",draft
-uiSettings_themeVictoria,Victoria Blue,Bluu ya Victoria,"Colour theme name (id ""victoria"").",draft
+uiSettings_themePasture,Pasture,Malisho,"Colour theme name (id ""pasture"").",draft
+uiSettings_themeClinic,Clinic,Kliniki,"Colour theme name (id ""clinic"").",draft
+uiSettings_themeHarvest,Harvest,Mavuno,"Colour theme name (id ""harvest"").",draft
+uiSettings_themeLedger,Ledger,Daftari,"Colour theme name (id ""ledger"").",draft
 hours_saved,Business hours saved,Saa za biashara zimehifadhiwa,Message after saving.,draft
 hours_saveFailed,Couldn't save the business hours,Imeshindwa kuhifadhi saa za biashara,Message when saving failed.,draft
 hours_intro,"Sets when the ""Generate Today's Report"" button becomes active in View Reports.","Huweka wakati kitufe cha ""Generate Today's Report"" kinapoanza kufanya kazi kwenye View Reports.","Business Hours screen intro; the quoted names are other screens' English texts until those are translated.",draft
