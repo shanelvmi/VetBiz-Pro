@@ -28,6 +28,7 @@ import '../../theme/theme_context.dart';
 import '../../ui/feedback/friendly_error.dart';
 import '../../constants/client_options.dart';
 import '../../l10n/l10n.dart';
+import '../../widgets/printable_theme.dart';
 
 class ClientsScreen extends StatefulWidget {
   const ClientsScreen({super.key});
@@ -321,7 +322,9 @@ class _ClientsScreenState extends State<ClientsScreen> {
     }
   }
 
-  Color _colorForType(String type) {
+  // [at]: a context under PrintableTheme (the client card PNG).
+  Color _colorForType(String type, [BuildContext? at]) {
+    final context = at ?? this.context;
     switch (type) {
       case 'Farmer':
         return context.colors.primary;
@@ -456,7 +459,6 @@ class _ClientsScreenState extends State<ClientsScreen> {
 
   Widget _buildDetailsPanel(Client client) {
     final types = client.types.isNotEmpty ? client.types : [kClientTypeOther];
-    final accent = _colorForType(types.first);
     final latestNote = client.debtorNotes.isNotEmpty ? client.debtorNotes.last['text'] as String? : null;
 
     return Container(
@@ -483,7 +485,10 @@ class _ClientsScreenState extends State<ClientsScreen> {
             const SizedBox(height: AppSpacing.s12),
             RepaintBoundary(
               key: _clientCardKey,
-              child: Container(
+              child: PrintableTheme(
+                builder: (context) {
+                final accent = _colorForType(types.first, context);
+                return Container(
                 color: context.colors.surface,
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -528,15 +533,15 @@ class _ClientsScreenState extends State<ClientsScreen> {
               ],
             ),
             const Divider(height: 32),
-            _detailLabel(context.l10n.common_address),
+            _detailLabel(context, context.l10n.common_address),
             Text(client.address, style: const TextStyle(fontSize: AppFontSize.f14)),
             const SizedBox(height: AppSpacing.s16),
-            _detailLabel(context.l10n.clients_clientType),
+            _detailLabel(context, context.l10n.clients_clientType),
             Wrap(
               spacing: AppSpacing.s6,
               runSpacing: AppSpacing.s6,
               children: types.map((type) {
-                final typeAccent = _colorForType(type);
+                final typeAccent = _colorForType(type, context);
                 return Container(
                   padding: const EdgeInsets.symmetric(horizontal: AppSpacing.s8, vertical: AppSpacing.s3),
                   decoration: BoxDecoration(color: typeAccent.withValues(alpha: AppAlpha.a10), borderRadius: BorderRadius.circular(AppRadius.r10)),
@@ -552,13 +557,13 @@ class _ClientsScreenState extends State<ClientsScreen> {
               }).toList(),
             ),
             const SizedBox(height: AppSpacing.s16),
-            _detailLabel(context.l10n.clients_joinedOn),
+            _detailLabel(context, context.l10n.clients_joinedOn),
             Text(
               client.createdAt != null ? AppDateFormat.date.format(client.createdAt!) : '-',
               style: const TextStyle(fontSize: AppFontSize.f14),
             ),
             const SizedBox(height: AppSpacing.s16),
-            _detailLabel(context.l10n.common_status),
+            _detailLabel(context, context.l10n.common_status),
             Container(
               padding: const EdgeInsets.symmetric(horizontal: AppSpacing.s8, vertical: AppSpacing.s3),
               decoration: BoxDecoration(
@@ -583,20 +588,22 @@ class _ClientsScreenState extends State<ClientsScreen> {
                 return Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    _detailLabel(context.l10n.clients_totalTransactions),
+                    _detailLabel(context, context.l10n.clients_totalTransactions),
                     Text('$count', style: const TextStyle(fontSize: AppFontSize.f14)),
                     const SizedBox(height: AppSpacing.s16),
-                    _detailLabel(context.l10n.clients_totalSpent),
+                    _detailLabel(context, context.l10n.clients_totalSpent),
                     Text(Money.symbolPlain(total), style: const TextStyle(fontSize: AppFontSize.f14)),
                   ],
                 );
               },
             ),
             const SizedBox(height: AppSpacing.s16),
-            _detailLabel(context.l10n.common_notes),
+            _detailLabel(context, context.l10n.common_notes),
             Text(latestNote ?? context.l10n.common_noNotes, style: TextStyle(fontSize: AppFontSize.f13_5, color: latestNote == null ? context.colors.textHint : context.colors.textPrimary)),
                   ],
                 ),
+              );
+              },
               ),
             ),
             const SizedBox(height: AppSpacing.s24),
@@ -621,7 +628,7 @@ class _ClientsScreenState extends State<ClientsScreen> {
     );
   }
 
-  Widget _detailLabel(String label) {
+  Widget _detailLabel(BuildContext context, String label) {
     return Padding(
       padding: const EdgeInsets.only(bottom: AppSpacing.s4),
       child: Text(label, style: TextStyle(fontSize: AppFontSize.f11_5, color: context.colors.textMuted, fontWeight: AppFontWeight.semibold)),

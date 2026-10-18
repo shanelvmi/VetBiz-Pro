@@ -15,6 +15,7 @@ import '../settings/printer_settings_screen.dart';
 import '../../utils/web_download.dart';
 import '../../utils/receipt_texts.dart';
 import '../../l10n/l10n.dart';
+import '../../widgets/printable_theme.dart';
 import '../../config/money.dart';
 import '../../config/app_rules.dart';
 import '../../config/payment_methods.dart';
@@ -220,8 +221,8 @@ class _ServiceReceiptPreviewScreenState extends State<ServiceReceiptPreviewScree
       appBar: AppBar(
         title: Text(context.l10n.receipt_previewTitle),
         centerTitle: true,
-        backgroundColor: context.colors.primary,
-        foregroundColor: context.colors.onPrimary,
+        backgroundColor: context.colors.brandSurface,
+        foregroundColor: context.colors.onBrandSurface,
       ),
       body: LayoutBuilder(
         builder: (context, constraints) {
@@ -231,18 +232,21 @@ class _ServiceReceiptPreviewScreenState extends State<ServiceReceiptPreviewScree
               padding: const EdgeInsets.all(AppSpacing.s24),
               child: RepaintBoundary(
                 key: _receiptKey,
-                child: _buildReceiptCard(
-                  service: service,
-                  balance: balance,
-                  facilityName: facilityName,
-                  facilityType: facilityType,
-                  logoUrl: logoUrl,
-                  facilityPhone: facilityPhone,
-                  facilityEmail: facilityEmail,
-                  facilityAddress: facilityAddress,
-                  facilityTagline: facilityTagline,
-                  facilityTin: facilityTin,
-                  statusText: statusText,
+                child: PrintableTheme(
+                  builder: (context) => _buildReceiptCard(
+                    context: context,
+                    service: service,
+                    balance: balance,
+                    facilityName: facilityName,
+                    facilityType: facilityType,
+                    logoUrl: logoUrl,
+                    facilityPhone: facilityPhone,
+                    facilityEmail: facilityEmail,
+                    facilityAddress: facilityAddress,
+                    facilityTagline: facilityTagline,
+                    facilityTin: facilityTin,
+                    statusText: statusText,
+                  ),
                 ),
               ),
             ),
@@ -253,23 +257,25 @@ class _ServiceReceiptPreviewScreenState extends State<ServiceReceiptPreviewScree
           final receipt = _selectedFormat == 'a4'
               ? Padding(
                   padding: const EdgeInsets.all(AppSpacing.s24),
-                  child: PdfPreview(
-                    build: (format) => ReceiptPdfService.buildServiceBytes(
-                      service,
-                      facilityName: facilityName,
-                      facilityType: facilityType,
-                      facilityPhone: facilityPhone,
-                      facilityEmail: facilityEmail,
-                      facilityAddress: facilityAddress,
-                      facilityTagline: facilityTagline,
-                      facilityTin: facilityTin,
+                  child: PrintableTheme(
+                    builder: (_) => PdfPreview(
+                      build: (format) => ReceiptPdfService.buildServiceBytes(
+                        service,
+                        facilityName: facilityName,
+                        facilityType: facilityType,
+                        facilityPhone: facilityPhone,
+                        facilityEmail: facilityEmail,
+                        facilityAddress: facilityAddress,
+                        facilityTagline: facilityTagline,
+                        facilityTin: facilityTin,
+                      ),
+                      allowPrinting: false,
+                      allowSharing: false,
+                      canChangePageFormat: false,
+                      canChangeOrientation: false,
+                      canDebug: false,
+                      useActions: false,
                     ),
-                    allowPrinting: false,
-                    allowSharing: false,
-                    canChangePageFormat: false,
-                    canChangeOrientation: false,
-                    canDebug: false,
-                    useActions: false,
                   ),
                 )
               : thermalReceipt;
@@ -395,6 +401,7 @@ class _ServiceReceiptPreviewScreenState extends State<ServiceReceiptPreviewScree
   }
 
   Widget _buildReceiptCard({
+    required BuildContext context,
     required Service service,
     required double balance,
     required String facilityName,
