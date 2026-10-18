@@ -149,4 +149,4 @@ What was changed to pass, and what stays a known fail:
 
 K1 ships with the default `light`, so it is invisible until someone chooses Dark. Rollback: revert the K commits; a saved `ui_theme_mode` is then ignored (an unread key), and the app is light as today. No server, rules or index change.
 
-OWNER DECISION: PENDING
+OWNER DECISION: APPROVED option 1 (the Material 3 split with brandSurface, onBrandSurface and onAccent), default mode Light until K5, the logo plate, the loading-screen flash accepted, and K1 keeps the coded rule's values where they differ from the table by rounding (updating the table and listing each difference). K2 to K4 are checked in Dark for Pasture and Harvest; all four themes at K5.
