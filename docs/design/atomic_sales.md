@@ -101,4 +101,4 @@ Regression guards (pass on both): not enough stock for item 2 leaves zero writes
 
 **Rollback:** revert the app commits; the data shape is unchanged (deterministic ids are ordinary ids to the old code, which finds sale debts by the `saleId` query, `sale_provider.dart:556`). The rules floor can stay.
 
-OWNER DECISION: PENDING
+OWNER DECISION: APPROVED option (b), runTransaction, with these conditions: (1) the stock floor rule applies only when the quantity changes and tolerates unchanged legacy negative values, after checking every writer; (2) a new sale id is created for every new sale, including "add another"; (3) a read-only consistency check script follows; (4) dev dependency fake_cloud_firestore approved, version pinned.
