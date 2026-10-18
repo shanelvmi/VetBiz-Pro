@@ -101,7 +101,7 @@ Baseline: analyze 38 infos before Q1 and Q2; the guard at zero; keys 1,839.
 
 | Batch | Status | Commits | Notes (10 lines max) |
 |---|---|---|---|
-| Q1, Q2 (in RUNBOOK.md) | TODO | | |
+| Q1, Q2 (in RUNBOOK.md) | DONE (Q2 HARD STOP: owner checks an export download in Chrome) | see RUNBOOK.md | analyze 38 -> 2 -> 0 |
 | Q3 line endings | TODO | | |
 | E1-design sale and debt atomic | TODO, DESIGN STOP | | |
 | E1 implement | BLOCKED until E1-design APPROVED | | |

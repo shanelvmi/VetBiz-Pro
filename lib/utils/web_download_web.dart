@@ -1,5 +1,7 @@
-import 'dart:html' as html;
+import 'dart:js_interop';
 import 'dart:typed_data';
+
+import 'package:web/web.dart' as web;
 
 /// Triggers a standard browser file download - the fallback for when
 /// the Web Share API's file-sharing fails, which happens reliably on
@@ -8,10 +10,10 @@ import 'dart:typed_data';
 /// just via a different, more universally-supported mechanism than
 /// the native share sheet.
 void downloadFileWeb(Uint8List bytes, String filename, {String mimeType = 'image/png'}) {
-  final blob = html.Blob([bytes], mimeType);
-  final url = html.Url.createObjectUrlFromBlob(blob);
-  html.AnchorElement(href: url)
+  final blob = web.Blob(<JSAny>[bytes.toJS].toJS, web.BlobPropertyBag(type: mimeType));
+  final url = web.URL.createObjectURL(blob);
+  (web.HTMLAnchorElement()..href = url)
     ..setAttribute('download', filename)
     ..click();
-  html.Url.revokeObjectUrl(url);
+  web.URL.revokeObjectURL(url);
 }
