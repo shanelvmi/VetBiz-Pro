@@ -13,6 +13,8 @@ Phase 2 foundation is done: every style value is a token or is allowlisted with 
 
 Same resume protocol as `docs/RUNBOOK.md` section 1 (read the ledger and `git log`, finish any half-done batch without redoing committed work, update the ledger row in the batch's last commit). Do ONE batch per session unless the owner says otherwise.
 
+**Block order (the owner chose the faster route):** after E1-check come R0 (owner screenshots), R1, R2, T0, T1, K0, K1, K2 to K5. Then, LATER: E2 to E5, R3, R4 and R5 (R5 compares the wording list, so it follows R4). The ledger (section 9) is in this order.
+
 - **HARD STOP:** the owner must look at the app. Write what to check in the ledger row, print it in under 15 lines, stop.
 - **DESIGN STOP:** write the design document the batch asks for, then stop. Do NOT write feature code. The owner approves by changing the line `OWNER DECISION: PENDING` in that document to `OWNER DECISION: APPROVED option N` (or edits it). Never start the implementation batch until that line says APPROVED.
 - **BLOCKED:** a gate failed twice for the same cause, or a logic change seems necessary. Record the exact error and stop.
@@ -111,22 +113,22 @@ Baseline: analyze 2 infos (the `dart:html` ones, fixed by Q2); the guard at zero
 | E1b services (runTransaction) | DONE pending the owner's Chrome checks (f29310c..ba8c2a3, 269 tests; short stock now shows "Couldn't save the service" with no Retry and writes nothing, where it used to show "Service added" and save nothing; the owner accepted the new behaviour) | f29310c..ba8c2a3 | analyze 0 issues; 262 -> 263 (+5 skipped) -> 269 tests. addService = one transaction: reads service doc (exists: return it), counter, batches, products, client; writes service, stock (1 unit per matched item, SellableStockPlan), counter, balance + oldestUnpaidDebtDate, debts/service_{id}, transactions/service_{id}, payments/service_{id}, activity_logs/service_{id}; list updated after commit. Old code vs new tests: 2 services (want 1); no debts/service_credit1, transactions/service_exp1, activity_logs/service_log1 (random ids); retry returned a new id; short-stock guard passed on both. Short stock: before, addService returned null and the screen said "Service added" with nothing saved; now "Couldn't save the service", no Retry, nothing written. Other errors: Retry with the same id. Edit path untouched: updateService, _handleServiceDebt, _handleServiceTransaction, _deductStockForItems unchanged (only the injected Firestore passed through); edit errors keep no Retry. No new text, no ARB change. Check: cash + stock item; external item (expense id service_...); credit to client (debt service_..., balance = it); double-click = 1 service; offline = nothing saved, stock and counter unchanged, Retry online = no duplicate; short stock error. |
 | E1c stock floor rule | DONE, NOT DEPLOYED (owner deploys: app first, then save the live rules to firestore.rules-backup, then `firebase deploy --only firestore:rules`; check a sale, a service and a product edit) | c3e8054, 737b706, (this commit) | Helper `areStockQuantitiesAtOrAboveZero()` on products create/update and batches create/update (batch `write` split; read/delete unchanged): a written stockQty/sellableQty must be >= 0 unless left exactly as it was. Writers checked (lib/ and functions/; functions only read or delete): never negative = addProduct + first batch, new batch, adjustExistingBatch (clamped), legacy quantity edit (validated), _deductLegacyAggregate, moveToSellable, batch values in FIFO/SellableStockPlan, _adjustProductStock (clamped). Negative only from bad old data = product aggregates recomputed from batches when a batch is negative (addBatch, deleteBatch, adjust); product sellableQty in deductSellableFIFO, SellableStockPlan, moveBatchToStock when the product total is below its batches'; merge or restore onto a negative; Trash restore of a product trashed while negative (a create: now refused). updateProduct rewrites quantities unchanged: allowed. Not floored: thresholds, stock logs. Rules tests 66 -> 71, each proven to fail by a mutation; functions 92; flutter 269; analyze 0 issues. |
 | E1-check consistency script | DONE, NOT RUN on production (the owner runs it) | 5acb58e..(this commit) | `functions/scripts/check_consistency.js` (not in index.js, no new dependency): only get(); 8 checks per facility, each a count + up to 10 ids; report outside the repo (`<home>/VetBiz-Pro-reports/consistency-<project>-<time>.md`, or `--out`; an --out inside the repo is refused). Definitions in the report: every debt document is unpaid, `amountOwed` = what is left; a payment on a debt lowers amountOwed (deletes the debt at 0), the client balance and raises totalPaid; a payment on a client with no debt chosen lowers only the balance (shows as a mismatch). Product = sum of batches IS an invariant (`_recalculateProductAggregates`; legacy no-batch products skipped). Tests: a write guard (set/update/delete/create/add/batch/transaction throw at every level), all checks through it, data unchanged; a planted set() fails 5 of 6 tests; each check on fake data. functions 92 -> 98, flutter 269, analyze 0 issues. Commit 5acb58e is 311 lines (over 300). Owner, from `functions`: `gcloud auth application-default login`, `gcloud auth application-default set-quota-project vetbiz-pro`, then `node scripts/check_consistency.js --project vetbiz-pro [--facility <id>] [--out <folder>]`. |
-| E2-design delete and restore | TODO, DESIGN STOP | | |
-| E2 implement | BLOCKED until E2-design APPROVED | | |
-| E3 client soft delete | TODO | | |
-| E4-design security | TODO, DESIGN STOP | | |
-| E4 implement | BLOCKED until E4-design APPROVED | | |
-| E5-design customer language | TODO, DESIGN STOP | | |
-| E5 implement | BLOCKED until E5-design APPROVED | | |
 | R0 baseline screenshots | OWNER | | |
-| R1 parked values table | TODO (after block E) | DESIGN STOP | |
+| R1 parked values table | TODO (after E1-check and R0) | DESIGN STOP | |
 | R2 apply parked values | BLOCKED until R1 APPROVED | | |
-| R3 money, payments, name | TODO (after R2) | | |
-| R4 wording | TODO (after R3) | | |
-| R5 compare | HARD STOP | | |
-| T0 theme design | TODO (after block B) | DESIGN STOP | |
+| T0 theme design | TODO (after R2) | DESIGN STOP | |
 | T1 themes | BLOCKED until T0 APPROVED | HARD STOP | |
 | K0 dark audit | BLOCKED until T1 DONE | DESIGN STOP | |
 | K1 dark setting and roles | BLOCKED until K0 APPROVED | | |
 | K2 to K5 dark visual fixes | BLOCKED until K1 DONE | HARD STOP each | |
+| E2-design delete and restore | LATER (after K5), DESIGN STOP | | |
+| E2 implement | BLOCKED until E2-design APPROVED | | |
+| E3 client soft delete | LATER (after K5) | | |
+| E4-design security | LATER (after K5), DESIGN STOP | | |
+| E4 implement | BLOCKED until E4-design APPROVED | | |
+| E5-design customer language | LATER (after K5), DESIGN STOP | | |
+| E5 implement | BLOCKED until E5-design APPROVED | | |
+| R3 money, payments, name | LATER (after K5 and block E) | | |
+| R4 wording | LATER (after R3) | | |
+| R5 compare | LATER (after R4), HARD STOP | | |
 | LATER (noted, not scheduled) | LATER | | (1) Sales: a deleted client can be recreated as a stub client record by a sale to it; belongs to E3 (client soft delete). (2) The daily-summary triggers (`functions/index.js`) are not idempotent: an at-least-once re-delivery counts a document twice. |
