@@ -1,0 +1,162 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Dark Preview</title>
+<!-- K0 (docs/design/dark_mode.md): the proposed DARK values for the four themes. Static: inline CSS, no script. Values computed, not estimated. -->
+<style>
+*{box-sizing:border-box}
+body{margin:0;font:14px/1.45 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;color:#1d1d1d;background:#f4f4f4}
+header{padding:20px 16px;background:#fff;border-bottom:1px solid #e0e0e0}
+header h1{margin:0 0 4px;font-size:20px}header p{margin:0;max-width:860px;color:#555}
+section{padding:18px 16px;background:var(--background);color:var(--textPrimary);border-bottom:4px solid #000}
+h2{margin:0 0 12px;font-size:18px;color:var(--textStrong)}h2 small{font-weight:400;color:var(--textMuted);font-size:13px}
+.sws{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:8px;margin-bottom:14px}
+.sw{display:flex;gap:8px;align-items:center;background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:6px 8px;font-size:12px}
+.sw span{flex:none;width:24px;height:24px;border-radius:6px;border:1px solid var(--borderStrong)}
+.mock{display:grid;grid-template-columns:220px 1fr;gap:14px}
+nav{background:var(--brandSurface);color:var(--onBrandSurface);border-radius:10px;padding:10px 8px;display:flex;flex-direction:column;gap:4px}
+.item{padding:9px 12px;border-radius:8px}.item small{display:block;opacity:.7;font-size:11px}
+.hover{background:var(--sidebarHover)}.press{background:var(--sidebarPress)}
+.glow{color:var(--brandTealGlow);font-weight:700;padding:4px 12px}
+main{display:flex;flex-direction:column;gap:12px;min-width:0}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px}
+.muted{background:var(--surfaceMuted)}
+.row{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.t1{color:var(--textStrong);font-weight:700}.t2{color:var(--textPrimary)}.t3{color:var(--textSecondary)}
+.t4{color:var(--textSoft)}.t5{color:var(--textMuted)}.t6{color:var(--textHint)}.t7{color:var(--textDisabled)}
+.btn{border:0;border-radius:10px;padding:9px 16px;font:inherit;font-weight:600;background:var(--primary);color:var(--onPrimary)}
+.btn2{border:1px solid var(--primary);border-radius:10px;padding:8px 15px;font:inherit;font-weight:600;background:transparent;color:var(--primary)}
+.chip{border-radius:999px;padding:3px 10px;font-size:12px;font-weight:600}
+.acc{background:var(--accent);color:var(--onAccent)}
+.ok{color:var(--successStrong);border:1px solid var(--success)}.info{color:var(--infoStrong);border:1px solid var(--info)}
+.link{color:var(--brandTeal);font-weight:600}
+.alert{background:var(--dangerSurface);color:var(--dangerDeep);border-radius:10px;padding:10px 12px;font-weight:600}
+.banner{background:var(--warningBannerFill);color:var(--warningBannerText);border-radius:10px;padding:10px 12px;font-weight:600}
+.qa{display:grid;grid-template-columns:1fr 1fr;gap:10px}.qa div{border-radius:12px;padding:14px;font-weight:600}
+.qp{background:var(--quickActionTintPrimary);color:var(--primary)}.qc{background:var(--quickActionTintAccent);color:var(--textPrimary)}
+.bars{display:flex;gap:6px;align-items:flex-end;height:60px}.bars i{display:block;width:18px;border-radius:4px 4px 0 0}
+.light{background:#fff;color:#000;border-radius:10px;padding:10px 12px;border:1px dashed var(--borderStrong)}
+@media (max-width:640px){.mock{grid-template-columns:1fr}}
+.pasture{--background:#0E1718;--surface:#162325;--surfaceMuted:#1E2F31;--primary:#509EA7;--accent:#FFB200;--onPrimary:#0E1718;--onPrimaryMuted:rgba(14,23,24,0.85);--onAccent:#0E1718;--onPrimarySubtle:rgba(14,23,24,0.24);--textStrong:#FFFFFF;--textPrimary:rgba(255,255,255,0.87);--textSecondary:rgba(255,255,255,0.70);--textSoft:#BDBDBD;--textMuted:#9E9E9E;--textHint:#808080;--textDisabled:rgba(255,255,255,0.38);--borderStrong:rgba(255,255,255,0.30);--border:rgba(255,255,255,0.16);--divider:rgba(255,255,255,0.10);--brandSurface:#2F5D62;--onBrandSurface:#FFFFFF;--sidebarHover:#00796B;--sidebarPress:#00695C;--brandTealGlow:#7EE8CB;--brandTeal:#419588;--quickActionTintPrimary:#1B2F32;--quickActionTintAccent:#3B3016;--scrim:#000000;--shadow:#000000;--success:#4CAF50;--danger:#F44336;--dangerAccent:#FF5252;--dangerSoft:#EF5350;--warning:#FF9800;--info:#2196F3;--infoNote:#78909C;--trendUp:#10B981;--trendDown:#EF4444;--chart1:#5177A9;--chart2:#8667B0;--chart3:#B56A00;--chart4:#BC37D3;--chart5:#607D8B;--chart6:#009688;--chart7:#606FC7;--chart8:#FFA000;--chart9:#FF5722;--chartService1:#5C7C99;--chartService2:#8FA998;--chartService3:#B98B6F;--chartService4:#9B8AA6;--roleOwner:#606FC7;--roleCoAdmin:#009688;--roleAssistant:#607D8B;--rolePlatformAdmin:#8861CD;--successStrong:#42A847;--dangerStrong:#E17272;--dangerDeep:#E96F6F;--warningStrong:#EF6C00;--infoStrong:#4597E9;--infoNoteText:#7B97A4;--infoNoteTextSoft:#7E99A6;--warningBannerText:#D68100;--roleOwnerStrong:#8490DA;--roleCoAdminStrong:#00A794;--roleAssistantStrong:#7E99A6;--warningBannerFill:#302412;--dangerSurface:#321515}
+.clinic{--background:#0E1318;--surface:#161E25;--surfaceMuted:#1E2831;--primary:#4992D1;--accent:#5BC0EB;--onPrimary:#0E1318;--onPrimaryMuted:rgba(14,19,24,0.85);--onAccent:#0E1318;--onPrimarySubtle:rgba(14,19,24,0.24);--textStrong:#FFFFFF;--textPrimary:rgba(255,255,255,0.87);--textSecondary:rgba(255,255,255,0.70);--textSoft:#BDBDBD;--textMuted:#9E9E9E;--textHint:#808080;--textDisabled:rgba(255,255,255,0.38);--borderStrong:rgba(255,255,255,0.30);--border:rgba(255,255,255,0.16);--divider:rgba(255,255,255,0.10);--brandSurface:#0F4C81;--onBrandSurface:#FFFFFF;--sidebarHover:#005A78;--sidebarPress:#004F68;--brandTealGlow:#7EDEE8;--brandTeal:#1195BA;--quickActionTintPrimary:#1B2732;--quickActionTintAccent:#16303B;--scrim:#000000;--shadow:#000000;--success:#4CAF50;--danger:#F44336;--dangerAccent:#FF5252;--dangerSoft:#EF5350;--warning:#FF9800;--info:#2196F3;--infoNote:#78909C;--trendUp:#10B981;--trendDown:#EF4444;--chart1:#5177A9;--chart2:#8667B0;--chart3:#B56A00;--chart4:#BC37D3;--chart5:#607D8B;--chart6:#009688;--chart7:#606FC7;--chart8:#FFA000;--chart9:#FF5722;--chartService1:#5C7C99;--chartService2:#8FA998;--chartService3:#B98B6F;--chartService4:#9B8AA6;--roleOwner:#606FC7;--roleCoAdmin:#009688;--roleAssistant:#607D8B;--rolePlatformAdmin:#8861CD;--successStrong:#42A847;--dangerStrong:#E17272;--dangerDeep:#E96F6F;--warningStrong:#EF6C00;--infoStrong:#4597E9;--infoNoteText:#7B97A4;--infoNoteTextSoft:#7E99A6;--warningBannerText:#D68100;--roleOwnerStrong:#8490DA;--roleCoAdminStrong:#00A794;--roleAssistantStrong:#7E99A6;--warningBannerFill:#302412;--dangerSurface:#321515}
+.harvest{--background:#18120E;--surface:#251C16;--surfaceMuted:#31251E;--primary:#B58463;--accent:#E3A72F;--onPrimary:#18120E;--onPrimaryMuted:rgba(24,18,14,0.85);--onAccent:#18120E;--onPrimarySubtle:rgba(24,18,14,0.24);--textStrong:#FFFFFF;--textPrimary:rgba(255,255,255,0.87);--textSecondary:rgba(255,255,255,0.70);--textSoft:#BDBDBD;--textMuted:#9E9E9E;--textHint:#808080;--textDisabled:rgba(255,255,255,0.38);--borderStrong:rgba(255,255,255,0.30);--border:rgba(255,255,255,0.16);--divider:rgba(255,255,255,0.10);--brandSurface:#4A3426;--onBrandSurface:#FFFFFF;--sidebarHover:#64391D;--sidebarPress:#583219;--brandTealGlow:#DDAA89;--brandTeal:#B07A58;--quickActionTintPrimary:#32241B;--quickActionTintAccent:#3B2F16;--scrim:#000000;--shadow:#000000;--success:#4CAF50;--danger:#F44336;--dangerAccent:#FF5252;--dangerSoft:#EF5350;--warning:#FF9800;--info:#2196F3;--infoNote:#78909C;--trendUp:#10B981;--trendDown:#EF4444;--chart1:#5177A9;--chart2:#8667B0;--chart3:#B56A00;--chart4:#BC37D3;--chart5:#607D8B;--chart6:#009688;--chart7:#606FC7;--chart8:#FFA000;--chart9:#FF5722;--chartService1:#5C7C99;--chartService2:#8FA998;--chartService3:#B98B6F;--chartService4:#9B8AA6;--roleOwner:#606FC7;--roleCoAdmin:#009688;--roleAssistant:#607D8B;--rolePlatformAdmin:#8861CD;--successStrong:#42A847;--dangerStrong:#E17272;--dangerDeep:#E96F6F;--warningStrong:#EF6C00;--infoStrong:#4597E9;--infoNoteText:#7B97A4;--infoNoteTextSoft:#7E99A6;--warningBannerText:#D68100;--roleOwnerStrong:#8490DA;--roleCoAdminStrong:#00A794;--roleAssistantStrong:#7E99A6;--warningBannerFill:#302412;--dangerSurface:#321515}
+.ledger{--background:#0E1218;--surface:#161C25;--surfaceMuted:#1E2531;--primary:#708DBA;--accent:#8B9CFF;--onPrimary:#0E1218;--onPrimaryMuted:rgba(14,18,24,0.85);--onAccent:#0E1218;--onPrimarySubtle:rgba(14,18,24,0.24);--textStrong:#FFFFFF;--textPrimary:rgba(255,255,255,0.87);--textSecondary:rgba(255,255,255,0.70);--textSoft:#BDBDBD;--textMuted:#9E9E9E;--textHint:#808080;--textDisabled:rgba(255,255,255,0.38);--borderStrong:rgba(255,255,255,0.30);--border:rgba(255,255,255,0.16);--divider:rgba(255,255,255,0.10);--brandSurface:#1E293B;--onBrandSurface:#FFFFFF;--sidebarHover:#013559;--sidebarPress:#012D4A;--brandTealGlow:#7ECEE8;--brandTeal:#518CAE;--quickActionTintPrimary:#1B2332;--quickActionTintAccent:#161C3B;--scrim:#000000;--shadow:#000000;--success:#4CAF50;--danger:#F44336;--dangerAccent:#FF5252;--dangerSoft:#EF5350;--warning:#FF9800;--info:#2196F3;--infoNote:#78909C;--trendUp:#10B981;--trendDown:#EF4444;--chart1:#5177A9;--chart2:#8667B0;--chart3:#B56A00;--chart4:#BC37D3;--chart5:#607D8B;--chart6:#009688;--chart7:#606FC7;--chart8:#FFA000;--chart9:#FF5722;--chartService1:#5C7C99;--chartService2:#8FA998;--chartService3:#B98B6F;--chartService4:#9B8AA6;--roleOwner:#606FC7;--roleCoAdmin:#009688;--roleAssistant:#607D8B;--rolePlatformAdmin:#8861CD;--successStrong:#42A847;--dangerStrong:#E17272;--dangerDeep:#E96F6F;--warningStrong:#EF6C00;--infoStrong:#4597E9;--infoNoteText:#7B97A4;--infoNoteTextSoft:#7E99A6;--warningBannerText:#D68100;--roleOwnerStrong:#8490DA;--roleCoAdminStrong:#00A794;--roleAssistantStrong:#7E99A6;--warningBannerFill:#302412;--dangerSurface:#321515}
+</style></head><body>
+<header><h1>Dark Mode preview (K0, proposal)</h1>
+<p>The proposed dark values of docs/design/dark_mode.md, option 1, for each colour theme: the sidebar on <code>brandSurface</code> with hover and press, cards on <code>surface</code> and <code>surfaceMuted</code>, every text role, buttons, chips, alerts, the quick-action cards, chart colours, and a receipt preview that stays light (D11). Light mode is not shown: it does not change.</p></header>
+<section class="pasture">
+<h2>Pasture <small>dark</small></h2>
+<div class="sws">
+<div class="sw"><span style="background:var(--background)"></span>background</div>
+<div class="sw"><span style="background:var(--surface)"></span>surface</div>
+<div class="sw"><span style="background:var(--surfaceMuted)"></span>surfaceMuted</div>
+<div class="sw"><span style="background:var(--primary)"></span>primary</div>
+<div class="sw"><span style="background:var(--accent)"></span>accent</div>
+<div class="sw"><span style="background:var(--brandSurface)"></span>brandSurface</div>
+<div class="sw"><span style="background:var(--brandTeal)"></span>brandTeal</div>
+</div>
+<div class="mock">
+<nav><div class="item">Dashboard<small>onBrandSurface on brandSurface</small></div>
+<div class="item hover">Sales<small>sidebarHover</small></div>
+<div class="item press">Products<small>sidebarPress</small></div>
+<div class="glow">VetBiz Pro (brandTealGlow)</div></nav>
+<main>
+<div class="card"><div class="t1">textStrong: Today's sales</div><div class="t2">textPrimary: 12 sales, Tsh 245,000</div>
+<div class="t3">textSecondary: last updated 10:42</div><div class="t4">textSoft: Mkoani branch</div>
+<div class="t5">textMuted: 3 items low on stock</div><div class="t6">textHint: Search products</div><div class="t7">textDisabled: unavailable</div></div>
+<div class="card muted row"><button class="btn">Add Sale</button><button class="btn2">Export</button>
+<span class="chip acc">Selected</span><span class="chip ok">Paid</span><span class="chip info">Move to shelf</span><a class="link">Forgot password?</a></div>
+<div class="qa"><div class="qp">Record Visit</div><div class="qc">Add Product</div></div>
+<div class="alert">That phone number is already used by another client.</div>
+<div class="banner">Your free trial ends in 3 days.</div>
+<div class="card row"><div class="bars"><i style="height:60%;background:var(--chart1)"></i><i style="height:80%;background:var(--chart2)"></i><i style="height:45%;background:var(--chart3)"></i><i style="height:70%;background:var(--chart4)"></i><i style="height:55%;background:var(--chart6)"></i><i style="height:90%;background:var(--chart7)"></i><i style="height:40%;background:var(--chartService1)"></i><i style="height:65%;background:var(--chartService3)"></i></div>
+<div class="light">Receipt preview: stays light</div></div>
+</main></div>
+</section>
+<section class="clinic">
+<h2>Clinic <small>dark</small></h2>
+<div class="sws">
+<div class="sw"><span style="background:var(--background)"></span>background</div>
+<div class="sw"><span style="background:var(--surface)"></span>surface</div>
+<div class="sw"><span style="background:var(--surfaceMuted)"></span>surfaceMuted</div>
+<div class="sw"><span style="background:var(--primary)"></span>primary</div>
+<div class="sw"><span style="background:var(--accent)"></span>accent</div>
+<div class="sw"><span style="background:var(--brandSurface)"></span>brandSurface</div>
+<div class="sw"><span style="background:var(--brandTeal)"></span>brandTeal</div>
+</div>
+<div class="mock">
+<nav><div class="item">Dashboard<small>onBrandSurface on brandSurface</small></div>
+<div class="item hover">Sales<small>sidebarHover</small></div>
+<div class="item press">Products<small>sidebarPress</small></div>
+<div class="glow">VetBiz Pro (brandTealGlow)</div></nav>
+<main>
+<div class="card"><div class="t1">textStrong: Today's sales</div><div class="t2">textPrimary: 12 sales, Tsh 245,000</div>
+<div class="t3">textSecondary: last updated 10:42</div><div class="t4">textSoft: Mkoani branch</div>
+<div class="t5">textMuted: 3 items low on stock</div><div class="t6">textHint: Search products</div><div class="t7">textDisabled: unavailable</div></div>
+<div class="card muted row"><button class="btn">Add Sale</button><button class="btn2">Export</button>
+<span class="chip acc">Selected</span><span class="chip ok">Paid</span><span class="chip info">Move to shelf</span><a class="link">Forgot password?</a></div>
+<div class="qa"><div class="qp">Record Visit</div><div class="qc">Add Product</div></div>
+<div class="alert">That phone number is already used by another client.</div>
+<div class="banner">Your free trial ends in 3 days.</div>
+<div class="card row"><div class="bars"><i style="height:60%;background:var(--chart1)"></i><i style="height:80%;background:var(--chart2)"></i><i style="height:45%;background:var(--chart3)"></i><i style="height:70%;background:var(--chart4)"></i><i style="height:55%;background:var(--chart6)"></i><i style="height:90%;background:var(--chart7)"></i><i style="height:40%;background:var(--chartService1)"></i><i style="height:65%;background:var(--chartService3)"></i></div>
+<div class="light">Receipt preview: stays light</div></div>
+</main></div>
+</section>
+<section class="harvest">
+<h2>Harvest <small>dark</small></h2>
+<div class="sws">
+<div class="sw"><span style="background:var(--background)"></span>background</div>
+<div class="sw"><span style="background:var(--surface)"></span>surface</div>
+<div class="sw"><span style="background:var(--surfaceMuted)"></span>surfaceMuted</div>
+<div class="sw"><span style="background:var(--primary)"></span>primary</div>
+<div class="sw"><span style="background:var(--accent)"></span>accent</div>
+<div class="sw"><span style="background:var(--brandSurface)"></span>brandSurface</div>
+<div class="sw"><span style="background:var(--brandTeal)"></span>brandTeal</div>
+</div>
+<div class="mock">
+<nav><div class="item">Dashboard<small>onBrandSurface on brandSurface</small></div>
+<div class="item hover">Sales<small>sidebarHover</small></div>
+<div class="item press">Products<small>sidebarPress</small></div>
+<div class="glow">VetBiz Pro (brandTealGlow)</div></nav>
+<main>
+<div class="card"><div class="t1">textStrong: Today's sales</div><div class="t2">textPrimary: 12 sales, Tsh 245,000</div>
+<div class="t3">textSecondary: last updated 10:42</div><div class="t4">textSoft: Mkoani branch</div>
+<div class="t5">textMuted: 3 items low on stock</div><div class="t6">textHint: Search products</div><div class="t7">textDisabled: unavailable</div></div>
+<div class="card muted row"><button class="btn">Add Sale</button><button class="btn2">Export</button>
+<span class="chip acc">Selected</span><span class="chip ok">Paid</span><span class="chip info">Move to shelf</span><a class="link">Forgot password?</a></div>
+<div class="qa"><div class="qp">Record Visit</div><div class="qc">Add Product</div></div>
+<div class="alert">That phone number is already used by another client.</div>
+<div class="banner">Your free trial ends in 3 days.</div>
+<div class="card row"><div class="bars"><i style="height:60%;background:var(--chart1)"></i><i style="height:80%;background:var(--chart2)"></i><i style="height:45%;background:var(--chart3)"></i><i style="height:70%;background:var(--chart4)"></i><i style="height:55%;background:var(--chart6)"></i><i style="height:90%;background:var(--chart7)"></i><i style="height:40%;background:var(--chartService1)"></i><i style="height:65%;background:var(--chartService3)"></i></div>
+<div class="light">Receipt preview: stays light</div></div>
+</main></div>
+</section>
+<section class="ledger">
+<h2>Ledger <small>dark</small></h2>
+<div class="sws">
+<div class="sw"><span style="background:var(--background)"></span>background</div>
+<div class="sw"><span style="background:var(--surface)"></span>surface</div>
+<div class="sw"><span style="background:var(--surfaceMuted)"></span>surfaceMuted</div>
+<div class="sw"><span style="background:var(--primary)"></span>primary</div>
+<div class="sw"><span style="background:var(--accent)"></span>accent</div>
+<div class="sw"><span style="background:var(--brandSurface)"></span>brandSurface</div>
+<div class="sw"><span style="background:var(--brandTeal)"></span>brandTeal</div>
+</div>
+<div class="mock">
+<nav><div class="item">Dashboard<small>onBrandSurface on brandSurface</small></div>
+<div class="item hover">Sales<small>sidebarHover</small></div>
+<div class="item press">Products<small>sidebarPress</small></div>
+<div class="glow">VetBiz Pro (brandTealGlow)</div></nav>
+<main>
+<div class="card"><div class="t1">textStrong: Today's sales</div><div class="t2">textPrimary: 12 sales, Tsh 245,000</div>
+<div class="t3">textSecondary: last updated 10:42</div><div class="t4">textSoft: Mkoani branch</div>
+<div class="t5">textMuted: 3 items low on stock</div><div class="t6">textHint: Search products</div><div class="t7">textDisabled: unavailable</div></div>
+<div class="card muted row"><button class="btn">Add Sale</button><button class="btn2">Export</button>
+<span class="chip acc">Selected</span><span class="chip ok">Paid</span><span class="chip info">Move to shelf</span><a class="link">Forgot password?</a></div>
+<div class="qa"><div class="qp">Record Visit</div><div class="qc">Add Product</div></div>
+<div class="alert">That phone number is already used by another client.</div>
+<div class="banner">Your free trial ends in 3 days.</div>
+<div class="card row"><div class="bars"><i style="height:60%;background:var(--chart1)"></i><i style="height:80%;background:var(--chart2)"></i><i style="height:45%;background:var(--chart3)"></i><i style="height:70%;background:var(--chart4)"></i><i style="height:55%;background:var(--chart6)"></i><i style="height:90%;background:var(--chart7)"></i><i style="height:40%;background:var(--chartService1)"></i><i style="height:65%;background:var(--chartService3)"></i></div>
+<div class="light">Receipt preview: stays light</div></div>
+</main></div>
+</section>
+</body></html>
