@@ -75,6 +75,14 @@ import '../../theme/app_text.dart';
 import '../../theme/app_motion.dart';
 import '../../l10n/l10n.dart';
 
+// The light ink on the brand areas (sidebar items and labels, the logo
+// plate, the profile drawer buttons). In light it stays `background`, value
+// for value as before; in dark `background` is the dark page colour, which
+// would vanish on brandSurface, so it is onBrandSurface (white) there
+// (dark_mode.md section 4, K2).
+Color _onBrandInk(BuildContext context) =>
+    Theme.of(context).brightness == Brightness.dark ? context.colors.onBrandSurface : context.colors.background;
+
 class DrawerHoverItem extends StatefulWidget {
   final IconData icon;
   final String title;
@@ -116,7 +124,7 @@ class _DrawerHoverItemState extends State<DrawerHoverItem> {
         return Row(
           mainAxisAlignment: canShowLabel ? MainAxisAlignment.start : MainAxisAlignment.center,
           children: [
-            Icon(widget.icon, color: context.colors.background),
+            Icon(widget.icon, color: _onBrandInk(context)),
             if (canShowLabel) ...[
               const SizedBox(width: AppSpacing.s16),
               Expanded(
@@ -125,7 +133,7 @@ class _DrawerHoverItemState extends State<DrawerHoverItem> {
                   child: Text(
                     widget.title,
                     style: TextStyle(
-                      color: context.colors.background,
+                      color: _onBrandInk(context),
                       fontWeight: AppFontWeight.medium,
                     ),
                     overflow: TextOverflow.ellipsis,
@@ -2447,7 +2455,7 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
         icon: Icons.add_shopping_cart,
         title: context.l10n.sales_recordSale,
         subtitle: context.l10n.dashboard_createNewSale,
-        backgroundColor: context.colors.primary,
+        backgroundColor: context.colors.brandSurface,
         accentColor: context.colors.primary,
         isDark: true,
         onTap: () async {
@@ -2515,11 +2523,11 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
     required bool isDark,
     required VoidCallback onTap,
   }) {
-    final textColor = isDark ? context.colors.onPrimary : context.colors.textPrimary;
-    final subtitleColor = isDark ? context.colors.onPrimary.withValues(alpha: AppAlpha.a85) : context.colors.textSoft;
-    final iconCircleColor = isDark ? context.colors.onPrimary.withValues(alpha: AppAlpha.a20) : accentColor.withValues(alpha: AppAlpha.a15);
-    final iconColor = isDark ? context.colors.onPrimary : accentColor;
-    final chevronColor = isDark ? context.colors.onPrimary : accentColor;
+    final textColor = isDark ? context.colors.onBrandSurface : context.colors.textPrimary;
+    final subtitleColor = isDark ? context.colors.onBrandSurface.withValues(alpha: AppAlpha.a85) : context.colors.textSoft;
+    final iconCircleColor = isDark ? context.colors.onBrandSurface.withValues(alpha: AppAlpha.a20) : accentColor.withValues(alpha: AppAlpha.a15);
+    final iconColor = isDark ? context.colors.onBrandSurface : accentColor;
+    final chevronColor = isDark ? context.colors.onBrandSurface : accentColor;
 
     return InkWell(
       onTap: onTap,
@@ -2842,7 +2850,7 @@ Widget _buildDrawerContent() {
       height: logoSize,
       padding: const EdgeInsets.all(AppSpacing.s4),
       decoration: BoxDecoration(
-        color: context.colors.background,
+        color: _onBrandInk(context),
         borderRadius: BorderRadius.circular(AppRadius.r10),
       ),
       // BoxFit.contain rather than a forced circular crop, so a
@@ -3039,7 +3047,7 @@ Widget _buildDrawerContent() {
                   Expanded(
                     child: Text(
                       context.l10n.nav_platformAdmin,
-                      style: TextStyle(color: context.colors.onPrimary, fontWeight: AppFontWeight.semibold),
+                      style: TextStyle(color: context.colors.onBrandSurface, fontWeight: AppFontWeight.semibold),
                       overflow: TextOverflow.ellipsis,
                     ),
                   ),
@@ -3061,7 +3069,7 @@ Widget _buildDrawerContent() {
         ? const SizedBox.shrink()
         : Text(
             '@${AppInfo.name}',
-            style: TextStyle(fontSize: AppFontSize.f12, color: context.colors.background),
+            style: TextStyle(fontSize: AppFontSize.f12, color: _onBrandInk(context)),
           ),
   );
 
@@ -3090,7 +3098,7 @@ Widget _buildDrawerContent() {
                 textAlign: TextAlign.center,
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
-                style: TextStyle(fontSize: AppFontSize.f15, fontWeight: AppFontWeight.bold, color: context.colors.background),
+                style: TextStyle(fontSize: AppFontSize.f15, fontWeight: AppFontWeight.bold, color: _onBrandInk(context)),
               ),
               if (facilityIdForTagline != null)
                 StreamBuilder<DocumentSnapshot>(
@@ -3105,7 +3113,7 @@ Widget _buildDrawerContent() {
                         textAlign: TextAlign.center,
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
-                        style: TextStyle(fontSize: AppFontSize.f11, color: context.colors.background.withValues(alpha: AppAlpha.a70)),
+                        style: TextStyle(fontSize: AppFontSize.f11, color: _onBrandInk(context).withValues(alpha: AppAlpha.a70)),
                       ),
                     );
                   },
@@ -3119,9 +3127,9 @@ Widget _buildDrawerContent() {
     children: [
       logoSection,
       facilityNameSection,
-      Divider(thickness: 1.2, color: context.colors.onPrimary.withValues(alpha: AppAlpha.a50)),
+      Divider(thickness: 1.2, color: context.colors.onBrandSurface.withValues(alpha: AppAlpha.a50)),
       items,
-      Divider(thickness: 1.2, color: context.colors.onPrimary.withValues(alpha: AppAlpha.a50)),
+      Divider(thickness: 1.2, color: context.colors.onBrandSurface.withValues(alpha: AppAlpha.a50)),
       settings,
       platformAdminItem,
     ],
@@ -3136,7 +3144,7 @@ Widget _buildDrawerContent() {
     duration: AppMotion.slower,
     curve: Curves.easeInOutCubic,
     width: effectivelyCollapsed ? 72 : 250,
-    color: context.colors.primary,
+    color: context.colors.brandSurface,
     child: Column(
       children: [
         Expanded(
@@ -3153,8 +3161,8 @@ Widget _buildDrawerContent() {
   // --------------------- END DRAWER ---------------------
   Widget _buildEndDrawerContent() {
     final buttonStyle = ElevatedButton.styleFrom(
-      backgroundColor: context.colors.primary,
-      foregroundColor: context.colors.background,
+      backgroundColor: context.colors.brandSurface,
+      foregroundColor: _onBrandInk(context),
       padding: const EdgeInsets.symmetric(horizontal: AppSpacing.s20, vertical: AppSpacing.s14),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadius.r8)),
     ).copyWith(
@@ -3387,12 +3395,12 @@ Widget _buildDrawerContent() {
                   },
                   child: Ink(
                     decoration: ShapeDecoration(
-                      color: context.colors.primary,
+                      color: context.colors.brandSurface,
                       shape: CircleBorder(),
                     ),
                     child: Padding(
                       padding: EdgeInsets.all(AppSpacing.s8),
-                      child: Icon(Icons.power_settings_new, size: AppIconSize.i16, color: context.colors.onPrimary),
+                      child: Icon(Icons.power_settings_new, size: AppIconSize.i16, color: context.colors.onBrandSurface),
                     ),
                   ),
                 ),
