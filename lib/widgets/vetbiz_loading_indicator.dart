@@ -4,6 +4,7 @@ import '../theme/app_breakpoints.dart';
 import '../theme/app_dimens.dart';
 import '../theme/app_motion.dart';
 import '../theme/app_palette.dart';
+import '../theme/app_theme.dart';
 import '../theme/app_text.dart';
 import '../theme/theme_context.dart';
 
@@ -42,6 +43,21 @@ class VetBizLoadingIndicator extends StatefulWidget {
 
   @override
   State<VetBizLoadingIndicator> createState() => _VetBizLoadingIndicatorState();
+}
+
+/// Keeps the startup loading screen (main.dart) Pasture light in every mode
+/// (T1; dark_mode.md section 4): it shows before the saved settings are read,
+/// on the light [VetBizLoadingIndicator.backgroundColor] page, so the roles
+/// read under it must be the light ones even when the app theme is dark.
+class VetBizLoadingTheme extends StatelessWidget {
+  final WidgetBuilder builder;
+
+  const VetBizLoadingTheme({super.key, required this.builder});
+
+  static final ThemeData data = AppTheme.build(AppColorTheme.pasture, Brightness.light);
+
+  @override
+  Widget build(BuildContext context) => Theme(data: data, child: Builder(builder: builder));
 }
 
 class _VetBizLoadingIndicatorState extends State<VetBizLoadingIndicator> with TickerProviderStateMixin {

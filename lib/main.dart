@@ -628,8 +628,13 @@ class _AuthLoadingScreenState extends State<_AuthLoadingScreen> {
     super.dispose();
   }
 
+  // The page is the light AppPalette.background in every mode, so the text,
+  // spinner and button on it read the light Pasture roles too; under the dark
+  // app theme they would be the dark ones and fail on it (K2 note).
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context) => VetBizLoadingTheme(builder: _buildScreen);
+
+  Widget _buildScreen(BuildContext context) {
     return Scaffold(
       backgroundColor: VetBizLoadingIndicator.backgroundColor,
       body: SafeArea(
