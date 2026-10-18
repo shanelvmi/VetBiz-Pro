@@ -103,3 +103,8 @@ Future<int> sellableQty(FirebaseFirestore fs, String productId, [String? batchId
 
 Future<int> countDocs(FirebaseFirestore fs, String collection) async =>
     (await facilityCollection(fs, collection).get()).docs.length;
+
+/// Lets the fake finish its writes. Its transactions apply each write
+/// without awaiting it (and ignore SetOptions, and never roll back), so a
+/// check right after a call could see a write half done.
+Future<void> settle() => Future<void>.delayed(Duration.zero);
