@@ -311,26 +311,26 @@ class _AddEditServiceScreenState extends State<AddEditServiceScreen> {
         appBar: PreferredSize(
           preferredSize: const Size.fromHeight(64),
           child: Container(
-            color: context.colors.primary,
+            color: context.colors.brandSurface,
             padding: const EdgeInsets.symmetric(horizontal: AppSpacing.s20),
             child: SafeArea(
               bottom: false,
               child: Row(
                 children: [
-                  Icon(Icons.medical_services_outlined, color: context.colors.onPrimary, size: AppIconSize.i22),
+                  Icon(Icons.medical_services_outlined, color: context.colors.onBrandSurface, size: AppIconSize.i22),
                   const SizedBox(width: AppSpacing.s12),
                   Expanded(
                     child: Text(isEditing ? context.l10n.services_editVisit : context.l10n.services_recordVisit,
-                        style: TextStyle(color: context.colors.onPrimary, fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f18)),
+                        style: TextStyle(color: context.colors.onBrandSurface, fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f18)),
                   ),
                   if (widget.isModal)
                     IconButton(
-                      icon: Icon(Icons.close, color: context.colors.onPrimary),
+                      icon: Icon(Icons.close, color: context.colors.onBrandSurface),
                       tooltip: context.l10n.common_close,
                       onPressed: () => Navigator.of(context).pop(),
                     )
                   else
-                    BackButton(color: context.colors.onPrimary),
+                    BackButton(color: context.colors.onBrandSurface),
                 ],
               ),
             ),

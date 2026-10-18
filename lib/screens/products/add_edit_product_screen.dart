@@ -606,7 +606,7 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
     return showDialog(
       context: context,
       builder: (context) => Dialog(
-        backgroundColor: context.colors.primary.withValues(alpha: 0.95),
+        backgroundColor: context.colors.brandSurface.withValues(alpha: 0.95),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadius.r12)),
         child: Container(
           padding: const EdgeInsets.symmetric(vertical: AppSpacing.s12, horizontal: AppSpacing.s8),
@@ -622,7 +622,7 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
                 child: Text(
                   context.l10n.transactions_selectCategoryTitle,
                   style: TextStyle(
-                    color: context.colors.background,
+                    color: context.colors.onBrandInk,
                     fontSize: AppFontSize.f15,
                     fontWeight: AppFontWeight.bold,
                   ),
@@ -639,7 +639,7 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
                       contentPadding: const EdgeInsets.symmetric(horizontal: AppSpacing.s8),
                       title: Text(
                         context.l10n.productCategoryLabel(cat),
-                        style: TextStyle(color: context.colors.background, fontSize: AppFontSize.f13),
+                        style: TextStyle(color: context.colors.onBrandInk, fontSize: AppFontSize.f13),
                       ),
                       onTap: () {
                         if (!mounted) return;
@@ -663,7 +663,7 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
     return showDialog(
       context: context,
       builder: (context) => Dialog(
-        backgroundColor: context.colors.primary.withValues(alpha: 0.95),
+        backgroundColor: context.colors.brandSurface.withValues(alpha: 0.95),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadius.r12)),
         child: Container(
           padding: const EdgeInsets.symmetric(vertical: AppSpacing.s12, horizontal: AppSpacing.s8),
@@ -679,7 +679,7 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
                 child: Text(
                   context.l10n.products_selectType,
                   style: TextStyle(
-                    color: context.colors.background,
+                    color: context.colors.onBrandInk,
                     fontSize: AppFontSize.f15,
                     fontWeight: AppFontWeight.bold,
                   ),
@@ -696,7 +696,7 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
                       contentPadding: const EdgeInsets.symmetric(horizontal: AppSpacing.s8),
                       title: Text(
                         context.l10n.productTypeLabel(t),
-                        style: TextStyle(color: context.colors.background, fontSize: AppFontSize.f13),
+                        style: TextStyle(color: context.colors.onBrandInk, fontSize: AppFontSize.f13),
                       ),
                       onTap: () {
                         if (!mounted) return;
@@ -1037,22 +1037,22 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: context.colors.primary,
-        iconTheme: IconThemeData(color: context.colors.background),
+        backgroundColor: context.colors.brandSurface,
+        iconTheme: IconThemeData(color: context.colors.onBrandInk),
         centerTitle: false,
         // Icon before the title, same as Add Sale's header.
         title: Row(
           children: [
-            Icon(Icons.inventory_2_outlined, color: context.colors.background, size: AppIconSize.i22),
+            Icon(Icons.inventory_2_outlined, color: context.colors.onBrandInk, size: AppIconSize.i22),
             const SizedBox(width: AppSpacing.s12),
-            Text(appBarTitle, style: TextStyle(color: context.colors.background, fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f18)),
+            Text(appBarTitle, style: TextStyle(color: context.colors.onBrandInk, fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f18)),
           ],
         ),
         automaticallyImplyLeading: !widget.isModal,
         actions: widget.isModal
             ? [
                 IconButton(
-                  icon: Icon(Icons.close, color: context.colors.background),
+                  icon: Icon(Icons.close, color: context.colors.onBrandInk),
                   tooltip: context.l10n.common_close,
                   onPressed: () => Navigator.of(context).pop(),
                 ),

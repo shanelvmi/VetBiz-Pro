@@ -179,26 +179,26 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
       appBar: PreferredSize(
         preferredSize: const Size.fromHeight(64),
         child: Container(
-          color: context.colors.primary,
+          color: context.colors.brandSurface,
           padding: const EdgeInsets.symmetric(horizontal: AppSpacing.s20),
           child: SafeArea(
             bottom: false,
             child: Row(
               children: [
-                Icon(Icons.receipt_long_outlined, color: context.colors.onPrimary, size: AppIconSize.i22),
+                Icon(Icons.receipt_long_outlined, color: context.colors.onBrandSurface, size: AppIconSize.i22),
                 const SizedBox(width: AppSpacing.s12),
                 Expanded(
                   child: Text(isEditing ? context.l10n.transactions_edit : context.l10n.transactions_record,
-                      style: TextStyle(color: context.colors.onPrimary, fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f18)),
+                      style: TextStyle(color: context.colors.onBrandSurface, fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f18)),
                 ),
                 if (widget.isModal)
                   IconButton(
-                    icon: Icon(Icons.close, color: context.colors.onPrimary),
+                    icon: Icon(Icons.close, color: context.colors.onBrandSurface),
                     tooltip: context.l10n.common_close,
                     onPressed: () => Navigator.of(context).pop(),
                   )
                 else
-                  BackButton(color: context.colors.onPrimary),
+                  BackButton(color: context.colors.onBrandSurface),
               ],
             ),
           ),

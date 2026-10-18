@@ -294,7 +294,7 @@ class _AddSaleScreenState extends State<AddSaleScreen> {
                     width: 480,
                     constraints: const BoxConstraints(maxHeight: 560),
                     decoration: BoxDecoration(
-                      color: context.colors.background,
+                      color: context.colors.raisedSurface,
                       borderRadius: BorderRadius.circular(AppRadius.r16),
                       boxShadow: [BoxShadow(color: context.colors.shadow.withValues(alpha: AppAlpha.a30), blurRadius: 20)],
                     ),
@@ -311,19 +311,19 @@ class _AddSaleScreenState extends State<AddSaleScreen> {
                           child: Container(
                             padding: const EdgeInsets.symmetric(horizontal: AppSpacing.s16, vertical: AppSpacing.s12),
                             decoration: BoxDecoration(
-                              color: context.colors.primary,
+                              color: context.colors.brandSurface,
                               borderRadius: const BorderRadius.vertical(top: Radius.circular(AppRadius.r16)),
                             ),
                             child: Row(
                               children: [
-                                Icon(Icons.open_with, color: context.colors.onPrimaryMuted, size: AppIconSize.i16),
+                                Icon(Icons.open_with, color: context.colors.onBrandSurfaceMuted, size: AppIconSize.i16),
                                 const SizedBox(width: AppSpacing.s10),
                                 Expanded(
                                   child: Text(context.l10n.sales_browseProducts,
-                                      style: TextStyle(color: context.colors.onPrimary, fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f16)),
+                                      style: TextStyle(color: context.colors.onBrandSurface, fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f16)),
                                 ),
                                 IconButton(
-                                  icon: Icon(Icons.close, color: context.colors.onPrimary, size: AppIconSize.i20),
+                                  icon: Icon(Icons.close, color: context.colors.onBrandSurface, size: AppIconSize.i20),
                                   padding: EdgeInsets.zero,
                                   constraints: const BoxConstraints(),
                                   onPressed: () => Navigator.pop(dialogContext),
@@ -855,26 +855,26 @@ class _AddSaleScreenState extends State<AddSaleScreen> {
       appBar: PreferredSize(
         preferredSize: const Size.fromHeight(64),
         child: Container(
-          color: context.colors.primary,
+          color: context.colors.brandSurface,
           padding: const EdgeInsets.symmetric(horizontal: AppSpacing.s20),
           child: SafeArea(
             bottom: false,
             child: Row(
               children: [
-                Icon(Icons.shopping_cart_outlined, color: context.colors.onPrimary, size: AppIconSize.i22),
+                Icon(Icons.shopping_cart_outlined, color: context.colors.onBrandSurface, size: AppIconSize.i22),
                 const SizedBox(width: AppSpacing.s12),
                 Expanded(
                   child: Text(context.l10n.sales_recordSale,
-                      style: TextStyle(color: context.colors.onPrimary, fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f18)),
+                      style: TextStyle(color: context.colors.onBrandSurface, fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f18)),
                 ),
                 if (widget.isModal)
                   IconButton(
-                    icon: Icon(Icons.close, color: context.colors.onPrimary),
+                    icon: Icon(Icons.close, color: context.colors.onBrandSurface),
                     tooltip: context.l10n.common_close,
                     onPressed: () => Navigator.of(context).pop(),
                   )
                 else
-                  BackButton(color: context.colors.onPrimary),
+                  BackButton(color: context.colors.onBrandSurface),
               ],
             ),
           ),

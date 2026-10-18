@@ -123,8 +123,8 @@ class _AddBatchScreenState extends State<AddBatchScreen> {
       appBar: AppBar(
         title: Text(context.l10n.products_addNewBatch),
         centerTitle: true,
-        backgroundColor: context.colors.primary,
-        foregroundColor: context.colors.onPrimary,
+        backgroundColor: context.colors.brandSurface,
+        foregroundColor: context.colors.onBrandSurface,
         automaticallyImplyLeading: !widget.isModal,
         leading: widget.isModal
             ? IconButton(
