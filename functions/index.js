@@ -2,63 +2,9 @@ const functions = require("firebase-functions/v1");
 const { onSchedule } = require("firebase-functions/v2/scheduler");
 const { onDocumentWritten, onDocumentCreated, onDocumentUpdated } = require("firebase-functions/v2/firestore");
 const admin = require("firebase-admin");
-const nodemailer = require("nodemailer");
 
 admin.initializeApp();
 const db = admin.firestore();
-
-// ---------------------------------------------------------------------------
-// Email credentials: NEVER hardcode these. Set them as Cloud Functions
-// secrets (Secret Manager-backed, not committed to git) once, from your
-// machine:
-//
-//   firebase functions:secrets:set GMAIL_USER
-//   firebase functions:secrets:set GMAIL_PASS   (a Gmail *App Password*, not your login password)
-//
-// They're then available to the function below as process.env.GMAIL_USER /
-// process.env.GMAIL_PASS at runtime - they are never present in source code
-// or in the git history.
-// ---------------------------------------------------------------------------
-
-exports.sendAssistantCredentials = functions
-  .runWith({ secrets: ["GMAIL_USER", "GMAIL_PASS"] })
-  .https.onCall(async (data, context) => {
-    const { email, name, phone, password } = data;
-
-    const transporter = nodemailer.createTransport({
-      service: "gmail",
-      auth: {
-        user: process.env.GMAIL_USER,
-        pass: process.env.GMAIL_PASS,
-      },
-    });
-
-    const mailOptions = {
-      from: `VetBiz Admin <${process.env.GMAIL_USER}>`,
-      to: email,
-      subject: "VetBiz Assistant Login Credentials",
-      text: `Hello ${name},
-
-You have been registered as an assistant on the VetBiz system.
-
-📧 Email: ${email}
-📱 Phone: ${phone}
-🔐 Password: ${password}
-
-Please log in using these credentials and change your password after logging in.
-
-Thank you,
-VetBiz Admin Team`,
-    };
-
-    try {
-      await transporter.sendMail(mailOptions);
-      return { success: true };
-    } catch (error) {
-      console.error("Email send error:", error);
-      throw new functions.https.HttpsError("internal", "Email sending failed");
-    }
-  });
 
 // ---------------------------------------------------------------------------
 // Archiving: keeps the live `sales` subcollection small so day-to-day queries
@@ -1129,116 +1075,6 @@ exports.deleteOwnFacility = functions.https.onCall(async (data, context) => {
 });
 
 /**
- * Remove Assistant - a facility Admin removing an assistant from their
- * facility. Deletes both the Firestore users/{uid} document AND the
- * actual Firebase Auth account - a client can only ever delete its own
- * signed-in Auth account, never someone else's, so without this
- * server-side step the assistant's email/password stayed valid in Auth
- * forever even after their Firestore profile was gone. That silently
- * broke two things: logging in succeeded at the Auth layer but found no
- * profile to route from, and the same email couldn't be used to
- * register anywhere else either, since Firebase Auth enforces unique
- * emails project-wide, not per-facility.
- */
-exports.removeAssistant = functions.https.onCall(async (data, context) => {
-  if (!context.auth) {
-    throw new functions.https.HttpsError(
-      "unauthenticated",
-      "You must be signed in to do this."
-    );
-  }
-
-  const assistantUid = data && data.assistantUid;
-  if (!assistantUid || typeof assistantUid !== "string") {
-    throw new functions.https.HttpsError(
-      "invalid-argument",
-      "assistantUid is required."
-    );
-  }
-
-  const callerUid = context.auth.uid;
-
-  const assistantDoc = await db.collection("users").doc(assistantUid).get();
-
-  if (!assistantDoc.exists) {
-    // Firestore doc already gone - still attempt the Auth cleanup in
-    // case that's the part that's actually left dangling (e.g. a
-    // previous removal that used the old, direct-delete client path,
-    // from before this function existed). Nothing left to check
-    // permissions against at that point, so this is deliberately
-    // best-effort rather than blocking.
-    try {
-      await admin.auth().deleteUser(assistantUid);
-    } catch (error) {
-      // Already gone from Auth too, or never existed - either way,
-      // there's genuinely nothing left to remove.
-    }
-    return { success: true };
-  }
-
-  const assistantData = assistantDoc.data();
-  if (assistantData.role !== "assistant") {
-    throw new functions.https.HttpsError(
-      "failed-precondition",
-      "This account is not an assistant."
-    );
-  }
-
-  // Caller must be an admin of a facility this assistant actually
-  // belongs to - checked here server-side, not just assumed from the
-  // client, since deleting a Firebase Auth account is irreversible.
-  const callerDoc = await db.collection("users").doc(callerUid).get();
-  const callerData = callerDoc.data();
-  if (!callerData || callerData.role !== "admin") {
-    throw new functions.https.HttpsError(
-      "permission-denied",
-      "Only an admin can remove an assistant."
-    );
-  }
-
-  const callerFacilityIds = callerData.facilityIds || [];
-  const assistantFacilityIds = assistantData.facilityIds || [];
-  const sharesAFacility = assistantFacilityIds.some((id) =>
-    callerFacilityIds.includes(id)
-  );
-  if (!sharesAFacility) {
-    throw new functions.https.HttpsError(
-      "permission-denied",
-      "This assistant is not assigned to any facility you administer."
-    );
-  }
-
-  try {
-    await db.collection("users").doc(assistantUid).delete();
-  } catch (error) {
-    console.error(
-      `removeAssistant: failed to delete Firestore doc for ${assistantUid}:`,
-      error
-    );
-    throw new functions.https.HttpsError(
-      "internal",
-      `Could not remove this assistant's profile: ${error.message || error}`
-    );
-  }
-
-  try {
-    await admin.auth().deleteUser(assistantUid);
-  } catch (error) {
-    // The Firestore profile is already gone at this point - the part
-    // that actually caused the silent-login-failure and
-    // can't-re-register symptoms. A failure here is logged but doesn't
-    // roll back or fail the whole operation, since the assistant's
-    // access to this facility is already fully revoked either way.
-    console.error(
-      `removeAssistant: failed to delete Auth account for ${assistantUid}:`,
-      error
-    );
-  }
-
-  return { success: true };
-});
-
-/**
  * Remove User (Platform Admin) - permanently deletes a deactivated
  * user's account (Firestore profile + Firebase Auth), platform-wide -
  * not scoped to sharing a facility with the caller, since a Platform
@@ -1283,8 +1119,9 @@ exports.platformRemoveUser = functions.https.onCall(async (data, context) => {
 
   if (!targetDoc.exists) {
     // Firestore doc already gone - still attempt the Auth cleanup in
-    // case that's the part left dangling, same reasoning as
-    // removeAssistant above.
+    // case that's the part left dangling (an account whose profile was
+    // removed by an older path). Safe here: only a Platform Admin gets
+    // this far.
     try {
       await admin.auth().deleteUser(targetUid);
     } catch (error) {

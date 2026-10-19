@@ -68,8 +68,19 @@ test("nothing in the app calls a membership function without the region", () => 
 });
 
 test("the older functions are untouched: still 1st gen in us-central1", () => {
-  for (const name of ["deleteFacility", "deleteOwnFacility", "removeAssistant", "platformRemoveUser", "wipeFacilityData", "revokeAllSessions"]) {
+  for (const name of ["deleteFacility", "deleteOwnFacility", "platformRemoveUser", "wipeFacilityData", "revokeAllSessions"]) {
     assert.strictEqual(exported[name].__endpoint.platform, "gcfv1", `${name} changed generation`);
+  }
+});
+
+// E4b2 (callables_review.md W1, W2): two leftovers from before the membership
+// functions, never called by the app. sendAssistantCredentials checked nothing
+// (anyone could make the project's Gmail send mail to any address);
+// removeAssistant deleted an Auth account with no permission check when the
+// profile was missing. Deleted, and must stay deleted.
+test("the unsafe leftovers are not exported: sendAssistantCredentials, removeAssistant", () => {
+  for (const name of ["sendAssistantCredentials", "removeAssistant"]) {
+    assert.strictEqual(exported[name], undefined, `index.js still exports ${name}`);
   }
 });
 
