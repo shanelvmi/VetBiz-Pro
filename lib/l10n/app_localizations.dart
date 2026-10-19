@@ -386,6 +386,12 @@ abstract class AppLocalizations {
   /// **'This photo is too large. Choose a smaller one.'**
   String get error_photoTooLarge;
 
+  /// Error toast second line when an assistant tries Edit Service, Edit Transaction or deleting a transaction (admin-only, E4d-2); nothing is saved.
+  ///
+  /// In en, this message translates to:
+  /// **'Only an admin can edit or delete this record.'**
+  String get error_adminOnly;
+
   /// Sign-in error for a wrong password OR an unknown email (one message on purpose, so it does not reveal which emails are registered).
   ///
   /// In en, this message translates to:

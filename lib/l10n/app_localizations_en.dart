@@ -156,6 +156,9 @@ class AppLocalizationsEn extends AppLocalizations {
       'This photo is too large. Choose a smaller one.';
 
   @override
+  String get error_adminOnly => 'Only an admin can edit or delete this record.';
+
+  @override
   String get login_wrongCredentials => 'Incorrect email or password.';
 
   @override

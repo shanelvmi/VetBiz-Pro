@@ -156,6 +156,10 @@ class AppLocalizationsSw extends AppLocalizations {
       'Picha hii ni kubwa mno. Chagua iliyo ndogo zaidi.';
 
   @override
+  String get error_adminOnly =>
+      'Ni admin tu anayeweza kuhariri au kufuta rekodi hii.';
+
+  @override
   String get login_wrongCredentials => 'Barua pepe au nenosiri si sahihi.';
 
   @override
