@@ -46,6 +46,7 @@
   "error_notFound": ["Kitu hicho hakipo tena.","Second line of an error message: the record was deleted (FriendlyError).","draft"],
   "error_alreadyExists": ["Hicho tayari kipo.","Second line of an error message: a duplicate (FriendlyError).","draft"],
   "error_rateLimited": ["Maombi ni mengi mno. Subiri kidogo kisha ujaribu tena.","Second line of an error message: rate limited (FriendlyError).","draft"],
+  "error_photoTooLarge": ["Picha hii ni kubwa mno. Chagua iliyo ndogo zaidi.","Error toast when a picked photo is still over the upload size limit (5 MB) after scaling down; nothing is uploaded.","draft"],
   "login_wrongCredentials": ["Barua pepe au nenosiri si sahihi.","Sign-in error for a wrong password OR an unknown email (one message on purpose, so it does not reveal which emails are registered).","draft"],
   "login_accountDisabled": ["Akaunti hii imezimwa. Wasiliana na msimamizi wako.","Sign-in error: the account was disabled.","draft"],
   "login_tooManyAttempts": ["Umejaribu mara nyingi mno. Subiri kidogo kisha ujaribu tena.","Sign-in error: too many failed attempts.","draft"],

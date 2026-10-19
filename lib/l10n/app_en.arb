@@ -94,6 +94,8 @@
   "@error_alreadyExists": {"description":"Second line of an error message: a duplicate (FriendlyError)."},
   "error_rateLimited": "Too many requests. Wait a moment and try again.",
   "@error_rateLimited": {"description":"Second line of an error message: rate limited (FriendlyError)."},
+  "error_photoTooLarge": "This photo is too large. Choose a smaller one.",
+  "@error_photoTooLarge": {"description":"Error toast when a picked photo is still over the upload size limit (5 MB) after scaling down; nothing is uploaded."},
   "login_wrongCredentials": "Incorrect email or password.",
   "@login_wrongCredentials": {"description":"Sign-in error for a wrong password OR an unknown email (one message on purpose, so it does not reveal which emails are registered)."},
   "login_accountDisabled": "This account has been disabled. Contact your admin.",
