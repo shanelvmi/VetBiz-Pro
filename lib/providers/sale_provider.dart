@@ -23,6 +23,9 @@ class SaleProvider extends ChangeNotifier {
   // uses ActivityLogger.getCurrentUserInfo (FirebaseAuth).
   final Future<Map<String, String>> Function() _currentUserInfo;
 
+  // What a trash copy's deletedBy holds. Tests pass their own.
+  final String Function() _deletedBy;
+
   /// How many sales to fetch per page. The live listener always holds the
   /// most recent [pageSize] sales in real time; older pages are fetched
   /// on demand via [loadMoreSales] and are NOT kept live (they don't need
@@ -50,8 +53,10 @@ class SaleProvider extends ChangeNotifier {
   SaleProvider({
     FirebaseFirestore? firestore,
     Future<Map<String, String>> Function()? currentUserInfo,
+    String Function()? deletedBy,
   })  : _firestore = firestore ?? FirebaseFirestore.instance,
-        _currentUserInfo = currentUserInfo ?? ActivityLogger.getCurrentUserInfo {
+        _currentUserInfo = currentUserInfo ?? ActivityLogger.getCurrentUserInfo,
+        _deletedBy = deletedBy ?? _signedInUser {
     salesListController = CursorPaginatedListController<Sale>(
       pageSize: AppLimits.pageSize,
       fetchPage: _fetchSalesListPage,
@@ -591,7 +596,6 @@ class SaleProvider extends ChangeNotifier {
       }
 
       if (sale != null) {
-        final user = FirebaseAuth.instance.currentUser;
         await _firestore
             .collection(Collections.facilities)
             .doc(facilityId)
@@ -600,7 +604,7 @@ class SaleProvider extends ChangeNotifier {
             .set({
           ...sale.toMap(),
           'deletedAt': FieldValue.serverTimestamp(),
-          'deletedBy': user?.email ?? user?.uid ?? 'Unknown',
+          'deletedBy': _deletedBy(),
         });
       }
 
@@ -787,6 +791,11 @@ class SaleProvider extends ChangeNotifier {
       result[clientId] = (result[clientId] ?? 0) + debt;
     }
     return result;
+  }
+
+  static String _signedInUser() {
+    final user = FirebaseAuth.instance.currentUser;
+    return user?.email ?? user?.uid ?? 'Unknown';
   }
 
   @override

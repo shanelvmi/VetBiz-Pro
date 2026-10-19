@@ -14,6 +14,10 @@ import 'package:vetbiz_pro/providers/service_provider.dart';
 const testFacilityId = 'facility1';
 const testUserId = 'user1';
 const testUserName = 'Asha Seller';
+const testUserEmail = 'asha@example.com';
+
+/// What a trash copy's deletedBy holds for the signed-in user.
+String testDeletedBy() => testUserEmail;
 
 /// What ActivityLogger.getCurrentUserInfo returns for the signed-in user.
 Future<Map<String, String>> testUserInfo() async =>
@@ -22,7 +26,7 @@ Future<Map<String, String>> testUserInfo() async =>
 FakeFirebaseFirestore newFakeFirestore() => FakeFirebaseFirestore();
 
 SaleProvider newSaleProvider(FirebaseFirestore firestore) =>
-    SaleProvider(firestore: firestore, currentUserInfo: testUserInfo);
+    SaleProvider(firestore: firestore, currentUserInfo: testUserInfo, deletedBy: testDeletedBy);
 
 DocumentReference<Map<String, dynamic>> facilityDoc(FirebaseFirestore fs) =>
     fs.collection(Collections.facilities).doc(testFacilityId);
@@ -100,7 +104,7 @@ Sale testSale({
 /// A ServiceProvider on [fs], set to the test facility (addService saves to
 /// the facility it listens to).
 ServiceProvider newServiceProvider(FirebaseFirestore fs) =>
-    ServiceProvider(firestore: fs, currentUserInfo: testUserInfo)..listenToServices(testFacilityId);
+    ServiceProvider(firestore: fs, currentUserInfo: testUserInfo, deletedBy: testDeletedBy)..listenToServices(testFacilityId);
 
 /// An item used on a service, as AddEditServiceScreen collects it: matched
 /// to a product (one unit comes out of its stock) or, with no [productId],
