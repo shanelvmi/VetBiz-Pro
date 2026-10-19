@@ -286,6 +286,20 @@ function servicesAndPayments(d) {
   return { servicesWithoutDebt: result(noDebt), servicesWithoutExpense: result(noExpense), paymentsWithoutRecord: result(badPayments) };
 }
 
+// (9) E2: a service with external items must have its expense at
+// transactions/service_{id}, the id addService (E1b) and the Trash restore
+// (E2) write. A service recorded before E1b whose expense has a random id
+// shows here too; 8b says whether it has an expense at all.
+function servicesWithoutServiceExpense(d) {
+  const txIds = new Set(d.transactions.map((x) => x.id));
+  const missing = [];
+  for (const s of d.services) {
+    const expense = externalExpenseTotal(s.data);
+    if (expense > 0 && !txIds.has(`service_${s.id}`)) missing.push(`${s.id} (external items ${expense})`);
+  }
+  return result(missing);
+}
+
 function checkFacility(d) {
   return {
     salesWithoutDebt: salesWithoutDebt(d),
@@ -297,6 +311,7 @@ function checkFacility(d) {
     possibleDuplicateServices: possibleDuplicates(d.services, (s) => millis(s.createdAt) ?? millis(s.serviceDate), serviceItemsKey),
     receiptNumbers: receiptNumbers(d),
     ...servicesAndPayments(d),
+    servicesWithoutServiceExpense: servicesWithoutServiceExpense(d),
   };
 }
 
@@ -318,7 +333,8 @@ const DEFINITIONS = `## Definitions (from the app's code)
 - **Product vs batches (check 5):** an invariant in the app: \`_recalculateProductAggregates\` sets a product's \`sellableQty\` and \`stockQty\` to the sums of its batches, and every sale deducts both by the same amount. Products with no batch (legacy) are skipped.
 - **Possible duplicates (check 6):** same client (or both walk-in), same total, same items (sales: product, quantity, unit price; services: name, item, price), saved within 2 minutes. A hint only.
 - **Receipt numbers (check 7):** one shared sequence for sales and services; \`counters/receiptNumber.value\` is the last number given out. Records in Trash keep their number; a record deleted for good, or a failed save before E1a/E1b, leaves a gap.
-- **Service expense (check 8):** a service whose external items (no productId) cost more than 0 needs \`transactions/service_{id}\`, or (older) a transaction with that \`serviceId\` or the service's \`transactionId\`.`;
+- **Service expense (check 8):** a service whose external items (no productId) cost more than 0 needs \`transactions/service_{id}\`, or (older) a transaction with that \`serviceId\` or the service's \`transactionId\`.
+- **Service expense id (check 9):** the same services, but only \`transactions/service_{id}\` counts (written by addService since E1b and by a Trash restore since E2). Run it before a delete and after the restore: the count must not change.`;
 
 const LABELS = [
   ["salesWithoutDebt", "1. Sales with an outstanding amount but no debt"],
@@ -331,6 +347,7 @@ const LABELS = [
   ["servicesWithoutDebt", "8a. Services with an amount outstanding but no debt"],
   ["servicesWithoutExpense", "8b. Services with external items but no expense transaction"],
   ["paymentsWithoutRecord", "8c. Payments pointing at a missing sale or service"],
+  ["servicesWithoutServiceExpense", "9. Services with external items but no transactions/service_{id}"],
 ];
 
 function section(title, r) {

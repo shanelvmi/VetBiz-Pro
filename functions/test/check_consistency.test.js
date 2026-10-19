@@ -67,6 +67,10 @@ function seeded() {
   db.seed(`${F}/services`, "sv1", { clientId: "cOk", name: "Vaccination", totalAmount: 5000, totalPaid: 5000, receiptNumber: 7, createdAt: at("2026-10-03T08:00:00Z"), itemsUsed: [{ itemName: "Syringe", price: 300 }] });
   db.seed(`${F}/services`, "sv2", { clientId: "cOk", name: "Deworming", totalAmount: 4000, totalPaid: 1000, createdAt: at("2026-10-03T09:00:00Z"), itemsUsed: [{ itemName: "Gloves", price: 200 }, { productId: "P1", itemName: "Dawa", price: 900 }] });
   db.seed(`${F}/transactions`, "service_sv1", { type: "expense", serviceId: "sv1", amount: 300 });
+  // (9) sv3: its expense is linked by serviceId under a random id (fine for
+  // 8b, flagged by 9), as a service saved before E1b.
+  db.seed(`${F}/services`, "sv3", { name: "Dipping", totalAmount: 900, totalPaid: 900, createdAt: at("2026-10-03T10:00:00Z"), itemsUsed: [{ itemName: "Acaricide", price: 150 }] });
+  db.seed(`${F}/transactions`, "txRandom", { type: "expense", serviceId: "sv3", amount: 150 });
   db.seed(`${F}/debts`, "service_svOld", { clientId: "cWrong", serviceId: "svOld", amountOwed: 0 });
   db.seed(`${F}/trash_services`, "svOld", { name: "Old" });
 
@@ -130,6 +134,7 @@ test("each check finds exactly the planted problem", async () => {
   assert.deepStrictEqual(r.servicesWithoutDebt.examples, ["sv2 (owes 3000)"]);
   assert.deepStrictEqual(r.servicesWithoutExpense.examples, ["sv2 (external items 200)"]);
   assert.deepStrictEqual(r.paymentsWithoutRecord.examples, ["pT -> sale sT (in Trash)"]);
+  assert.deepStrictEqual(r.servicesWithoutServiceExpense.examples, ["sv2 (external items 200)", "sv3 (external items 150)"]);
 });
 
 test("duplicates more than two minutes apart, or with different items, are not flagged", async () => {
@@ -160,7 +165,7 @@ test("at most 10 examples per check, with the full count", async () => {
 
 test("the report has every check and the definitions; arguments and the out folder are checked", async () => {
   const text = formatReport(await runChecks(readOnly(seeded())), { project: "demo", generatedAt: "now" });
-  for (const n of ["1.", "2.", "3.", "4.", "5.", "6a.", "6b.", "7a.", "7b.", "7c.", "8a.", "8b.", "8c."]) assert.ok(text.includes(`### ${n}`), n);
+  for (const n of ["1.", "2.", "3.", "4.", "5.", "6a.", "6b.", "7a.", "7b.", "7c.", "8a.", "8b.", "8c.", "9."]) assert.ok(text.includes(`### ${n}`), n);
   assert.match(text, /Unpaid debt/);
   assert.deepStrictEqual(parseArgs(["--project", "p", "--facility", "F1", "--out", "x"]), { project: "p", facility: "F1", out: "x" });
   assert.throws(() => parseArgs(["--facility", "F1"]), /--project is required/);
