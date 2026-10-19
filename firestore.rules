@@ -307,9 +307,28 @@ service cloud.firestore {
       // submitted report can never be deleted by anyone.
       match /dailyReports/{reportId} {
         allow read: if isAuthenticated() && isInFacility(facilityId);
-        allow create: if isAuthenticated() && isInFacility(facilityId);
-        allow update: if isAuthenticated() && isInFacility(facilityId) && resource.data.status == 'draft';
+        // E4c (a1): every member reads the report, so the day's activity
+        // log may not be in it; it lives in private/activityLog below.
+        allow create: if isAuthenticated() && isInFacility(facilityId) &&
+          (!('activityLogEntries' in request.resource.data) || request.resource.data.activityLogEntries.size() == 0);
+        // E4c (C3): a draft can only be submitted. These are exactly the
+        // fields DailyReportService.submitUpdate writes; the figures can't
+        // be rewritten.
+        allow update: if isAuthenticated() && isInFacility(facilityId) && resource.data.status == 'draft' &&
+          request.resource.data.diff(resource.data).affectedKeys()
+            .hasOnly(['status', 'submittedAt', 'productMovement', 'paymentReconciliation', 'declarationConfirmed']) &&
+          request.resource.data.status == 'submitted';
         allow delete: if isAuthenticated() && isInFacility(facilityId) && isAdmin() && resource.data.status == 'draft';
+
+        // E4c (a1): the day's activity log, admins only (an assistant may
+        // read only their own entries of the log). Written once with the
+        // report by the admin who generates it; deleted with a draft.
+        match /private/{docId} {
+          allow read: if isAuthenticated() && isInFacility(facilityId) && isAdmin();
+          allow create: if isAuthenticated() && isInFacility(facilityId) && isAdmin() && docId == 'activityLog';
+          allow update: if false;
+          allow delete: if isAuthenticated() && isInFacility(facilityId) && isAdmin();
+        }
       }
       match /trash_products/{productId} {
         allow read, write: if isAuthenticated() && isInFacility(facilityId) && isAdmin();
