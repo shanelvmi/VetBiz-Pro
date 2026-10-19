@@ -2196,6 +2196,8 @@
   "@reports_activityNotIncluded": {"description":"Report activity tab of an assistant's draft."},
   "reports_noActivityToday": "No activity recorded today.",
   "@reports_noActivityToday": {"description":"Report, empty section."},
+  "reports_activityLogNotSaved": "No activity log was saved with this report.",
+  "@reports_activityLogNotSaved": {"description":"Report activity tab when the report has no stored activity log (made before the log moved to its own admin-only record)."},
   "reports_colBy": "By",
   "@reports_colBy": {"description":"Report activity table column: who did it."},
   "reports_combinedAll": "Combined - All Payment Methods",

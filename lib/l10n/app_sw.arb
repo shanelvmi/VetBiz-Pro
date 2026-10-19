@@ -2196,6 +2196,8 @@
   "@reports_activityNotIncluded": {"x-review":"draft"},
   "reports_noActivityToday": "Hakuna shughuli iliyorekodiwa leo.",
   "@reports_noActivityToday": {"x-review":"draft"},
+  "reports_activityLogNotSaved": "Hakuna kumbukumbu ya shughuli iliyohifadhiwa pamoja na ripoti hii.",
+  "@reports_activityLogNotSaved": {"x-review":"draft"},
   "reports_colBy": "Na",
   "@reports_colBy": {"x-review":"draft"},
   "reports_combinedAll": "Kwa Pamoja - Njia Zote za Malipo",
