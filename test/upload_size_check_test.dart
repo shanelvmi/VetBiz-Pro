@@ -88,7 +88,7 @@ void main() {
     // logo, payment proof, product image, poster.
     expect(found, 8);
     expect(problems, isEmpty);
-  }, skip: 'the pickers follow in E4a-fix (4)');
+  });
 }
 
 /// The text between the call's opening parenthesis (just before [start])

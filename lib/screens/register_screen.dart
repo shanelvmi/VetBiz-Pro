@@ -10,6 +10,8 @@ import 'package:cloud_functions/cloud_functions.dart';
 import '../services/auth_service.dart';
 import '../services/membership_service.dart';
 import '../utils/facility_activation.dart';
+import '../utils/upload_size_check.dart';
+import '../config/app_limits.dart';
 import '../utils/facility_code_generator.dart';
 import '../constants/facility_types.dart';
 import '../utils/facility_limit_helper.dart';
@@ -232,9 +234,18 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
   Future<void> pickImage() async {
     final picker = ImagePicker();
-    final file = await picker.pickImage(source: ImageSource.gallery);
+    final file = await picker.pickImage(
+      source: ImageSource.gallery,
+      maxWidth: AppLimits.avatarImageMaxSide,
+      maxHeight: AppLimits.avatarImageMaxSide,
+      imageQuality: AppLimits.pickedImageQuality,
+    );
     if (file != null) {
-      _imageBytes = await file.readAsBytes();
+      final bytes = await file.readAsBytes();
+      // Both avatar uploads (uploadImage, AuthService) send _imageBytes,
+      // so a photo refused here is never uploaded.
+      if (!UploadSizeCheck.allow(bytes)) return;
+      _imageBytes = bytes;
       setState(() {});
     }
   }

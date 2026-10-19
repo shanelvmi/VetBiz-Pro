@@ -6,6 +6,8 @@ import 'package:firebase_storage/firebase_storage.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 import '../../providers/facility_provider.dart';
+import '../../config/app_limits.dart';
+import '../../utils/upload_size_check.dart';
 import '../../data/collections.dart';
 import '../../data/upload_content_types.dart';
 import '../../theme/app_text.dart';
@@ -38,10 +40,16 @@ class _BusinessProfileScreenState extends State<BusinessProfileScreen> {
     final facilityId = facilityProvider.selectedFacility?['id'];
     if (facilityId == null) return;
 
-    final pickedFile = await _picker.pickImage(source: ImageSource.gallery);
+    final pickedFile = await _picker.pickImage(
+      source: ImageSource.gallery,
+      maxWidth: AppLimits.logoImageMaxSide,
+      maxHeight: AppLimits.logoImageMaxSide,
+      imageQuality: AppLimits.pickedImageQuality,
+    );
     if (pickedFile == null) return;
 
     final bytes = await pickedFile.readAsBytes();
+    if (!UploadSizeCheck.allow(bytes)) return;
     setState(() {
       _pendingLogoBytes = bytes;
       _isUploading = true;

@@ -9,6 +9,8 @@ import 'package:markdown/markdown.dart' as md;
 
 import '../../widgets/hover_elevate_card.dart';
 import '../../widgets/announcement_message.dart';
+import '../../config/app_limits.dart';
+import '../../utils/upload_size_check.dart';
 import '../../data/collections.dart';
 import '../../data/upload_content_types.dart';
 import '../../data/fields.dart';
@@ -466,12 +468,18 @@ class _AnnouncementsTabState extends State<AnnouncementsTab> {
 
   Future<void> _uploadPoster() async {
     final picker = ImagePicker();
-    final file = await picker.pickImage(source: ImageSource.gallery, imageQuality: 85);
+    final file = await picker.pickImage(
+      source: ImageSource.gallery,
+      maxWidth: AppLimits.posterImageMaxSide,
+      maxHeight: AppLimits.posterImageMaxSide,
+      imageQuality: AppLimits.pickedImageQuality,
+    );
     if (file == null) return;
+    final Uint8List bytes = await file.readAsBytes();
+    if (!UploadSizeCheck.allow(bytes)) return;
 
     setState(() => _isUploadingPoster = true);
     try {
-      final Uint8List bytes = await file.readAsBytes();
       final ref = FirebaseStorage.instance.ref().child('login_poster/poster.jpg');
       await ref.putData(bytes, UploadContentTypes.jpeg);
       final url = await ref.getDownloadURL();

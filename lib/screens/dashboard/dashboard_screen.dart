@@ -20,6 +20,7 @@ import '../../services/dashboard_summary_service.dart';
 import '../../services/sales_summary_service.dart';
 import 'package:fl_chart/fl_chart.dart';
 import '../../utils/text_sanitizer.dart';
+import '../../utils/upload_size_check.dart';
 
 import '../../widgets/summary_card.dart';
 import '../../widgets/initials_avatar.dart';
@@ -1007,10 +1008,16 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
   Future<void> pickProfileImage() async {
     if (user == null) return;
 
-    final pickedFile = await _picker.pickImage(source: ImageSource.gallery);
+    final pickedFile = await _picker.pickImage(
+      source: ImageSource.gallery,
+      maxWidth: AppLimits.avatarImageMaxSide,
+      maxHeight: AppLimits.avatarImageMaxSide,
+      imageQuality: AppLimits.pickedImageQuality,
+    );
     if (pickedFile == null) return;
 
     final bytes = await pickedFile.readAsBytes();
+    if (!UploadSizeCheck.allow(bytes)) return;
     setState(() => _profileBytes = bytes);
 
     try {

@@ -18,6 +18,8 @@ import '../../theme/app_dimens.dart';
 import '../../theme/app_motion.dart';
 import '../../theme/app_text.dart';
 import '../../theme/theme_context.dart';
+import '../../config/app_limits.dart';
+import '../../utils/upload_size_check.dart';
 import '../../data/collections.dart';
 import '../../data/upload_content_types.dart';
 import '../../data/fields.dart';
@@ -141,9 +143,15 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
   }
 
   Future<void> _pickProofImage() async {
-    final picked = await _picker.pickImage(source: ImageSource.gallery, imageQuality: 70);
+    final picked = await _picker.pickImage(
+      source: ImageSource.gallery,
+      maxWidth: AppLimits.paymentProofImageMaxSide,
+      maxHeight: AppLimits.paymentProofImageMaxSide,
+      imageQuality: AppLimits.pickedImageQuality,
+    );
     if (picked == null) return;
     final bytes = await picked.readAsBytes();
+    if (!UploadSizeCheck.allow(bytes)) return;
     setState(() => _proofBytes = bytes);
   }
 

@@ -14,6 +14,7 @@ import '../../providers/facility_provider.dart';
 import '../../models/product.dart';
 import '../../services/usage_calculator_service.dart';
 import '../../utils/facility_activation.dart';
+import '../../utils/upload_size_check.dart';
 import '../../constants/facility_types.dart';
 import '../../services/sales_summary_service.dart';
 import '../../utils/force_logout.dart';
@@ -421,12 +422,13 @@ class _FacilityScreenState extends State<FacilityScreen> {
                         : () async {
                             final picked = await _picker.pickImage(
                               source: ImageSource.gallery,
-                              maxWidth: 512,
-                              maxHeight: 512,
-                              imageQuality: 85,
+                              maxWidth: AppLimits.logoImageMaxSide,
+                              maxHeight: AppLimits.logoImageMaxSide,
+                              imageQuality: AppLimits.pickedImageQuality,
                             );
                             if (picked == null) return;
                             final bytes = await picked.readAsBytes();
+                            if (!UploadSizeCheck.allow(bytes)) return;
                             setDialogState(() => pendingLogoBytes = bytes);
                           },
                     child: Container(
@@ -627,12 +629,13 @@ class _FacilityScreenState extends State<FacilityScreen> {
                         : () async {
                             final picked = await _picker.pickImage(
                               source: ImageSource.gallery,
-                              maxWidth: 512,
-                              maxHeight: 512,
-                              imageQuality: 85,
+                              maxWidth: AppLimits.logoImageMaxSide,
+                              maxHeight: AppLimits.logoImageMaxSide,
+                              imageQuality: AppLimits.pickedImageQuality,
                             );
                             if (picked == null) return;
                             final bytes = await picked.readAsBytes();
+                            if (!UploadSizeCheck.allow(bytes)) return;
                             // Picking a new logo implicitly cancels any
                             // pending removal - the user is replacing
                             // it, not removing it.

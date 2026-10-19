@@ -9,6 +9,8 @@ import 'package:uuid/uuid.dart';
 import 'package:intl/intl.dart';
 
 import '../../utils/activity_logger.dart';
+import '../../utils/upload_size_check.dart';
+import '../../config/app_limits.dart';
 import '../../utils/navigator_key.dart';
 import '../../utils/thousands_input_formatter.dart';
 import '../../models/product.dart';
@@ -134,10 +136,16 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
       return;
     }
 
-    final pickedFile = await _imagePicker.pickImage(source: ImageSource.gallery, imageQuality: 85);
+    final pickedFile = await _imagePicker.pickImage(
+      source: ImageSource.gallery,
+      maxWidth: AppLimits.productImageMaxSide,
+      maxHeight: AppLimits.productImageMaxSide,
+      imageQuality: AppLimits.pickedImageQuality,
+    );
     if (pickedFile == null) return;
 
     final bytes = await pickedFile.readAsBytes();
+    if (!UploadSizeCheck.allow(bytes)) return;
     setState(() {
       _imageBytes = bytes;
       _isUploadingImage = true;
