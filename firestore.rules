@@ -439,7 +439,12 @@ service cloud.firestore {
       // reliably; an immutable log, so no update or delete path -
       // same principle as activity_logs.
       match /stockAdditions/{additionId} {
-        allow read, create: if isAuthenticated() && isInFacility(facilityId);
+        allow read: if isAuthenticated() && isInFacility(facilityId);
+        // E4d-2 (C10): with the server's clock, so an entry can't be
+        // backdated into another day's report. Its writers (addProduct,
+        // addBatch, moveToSellable) record no author, so none is checked.
+        allow create: if isAuthenticated() && isInFacility(facilityId) &&
+          request.resource.data.timestamp == request.time;
         allow update, delete: if false;
       }
       // ========== 📦 Stock Adjustments (Nested) ==========
@@ -449,7 +454,12 @@ service cloud.firestore {
       // figure in Product Movement; an immutable log, same principle
       // as stockAdditions and activity_logs above.
       match /stock_adjustments/{adjustmentId} {
-        allow read, create: if isAuthenticated() && isInFacility(facilityId);
+        allow read: if isAuthenticated() && isInFacility(facilityId);
+        // E4d-2 (C10): only in your own name and with the server's clock,
+        // like activity_logs (writers: moveBatchToStock, Edit Product).
+        allow create: if isAuthenticated() && isInFacility(facilityId) &&
+          request.resource.data.userId == request.auth.uid &&
+          request.resource.data.timestamp == request.time;
         allow update, delete: if false;
       }
       // ========== 📝 Activity Logs (Nested) ==========

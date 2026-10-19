@@ -1164,3 +1164,42 @@ test('C9 [E4d-2]: the next receipt number is taken as the app takes it (set valu
   await assertSucceeds(counterOf('assistant').set({ value: 42 }, { merge: true }));
   await assertSucceeds(counterOf('owner').set({ value: 43 }, { merge: true }));
 });
+
+// ---------------------------------------------------------------------------
+// C10 stock logs, create. stockAdditions (addProduct, addBatch,
+// moveToSellable: productId, sellableDelta, stockDelta, timestamp) carry no
+// author, so only the time is checked; stock_adjustments (moveBatchToStock,
+// Edit Product's quantity change: written here from those writers, which
+// are not injectable / live in the screen) also name their author, userId.
+
+const stockLog = (uid, collection) => as(uid).collection('facilities').doc('F1').collection(collection);
+const addition = (timestamp) => ({ productId: 'P5', sellableDelta: 3, stockDelta: -3, timestamp });
+const adjustment = (userId, timestamp) => ({
+  productId: 'P5', productName: 'Dawa', oldStockQty: 5, oldSellableQty: 5, newStockQty: 2, newSellableQty: 5,
+  userId, userName: 'Neema Assistant', source: 'Moved batch to Stock Store', reason: 'Damaged', timestamp,
+});
+
+test('C10 [E4d-2]: a stock addition can NOT be backdated or left without a time', async () => {
+  for (const uid of ['assistant', 'owner']) {
+    await assertFails(stockLog(uid, 'stockAdditions').add(addition(new Date(2026, 0, 1))));
+    await assertFails(stockLog(uid, 'stockAdditions').add({ productId: 'P5', sellableDelta: 3, stockDelta: -3 }));
+  }
+});
+
+test('C10 [E4d-2]: a stock adjustment can NOT be filed under someone else, or backdated', async () => {
+  for (const uid of ['assistant', 'owner']) {
+    const other = uid === 'owner' ? 'assistant' : 'owner';
+    await assertFails(stockLog(uid, 'stock_adjustments').add(adjustment(other, serverTime())));
+    await assertFails(stockLog(uid, 'stock_adjustments').add(adjustment(uid, new Date())));
+    await assertFails(stockLog(uid, 'stock_adjustments').add({ ...adjustment(uid, serverTime()), userId: null }));
+  }
+});
+
+test('C10 [E4d-2]: members log stock with the server\'s time, adjustments in their own name (the writers\' shapes)', async () => {
+  for (const uid of ['assistant', 'coadmin']) {
+    await assertSucceeds(stockLog(uid, 'stockAdditions').add(addition(serverTime())));
+    await assertSucceeds(stockLog(uid, 'stock_adjustments').add(adjustment(uid, serverTime())));
+    const { reason, ...productEdit } = adjustment(uid, serverTime());
+    await assertSucceeds(stockLog(uid, 'stock_adjustments').add({ ...productEdit, source: 'Product edit' }));
+  }
+});
