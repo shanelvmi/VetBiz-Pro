@@ -194,6 +194,8 @@ User-facing "VetBiz Pro" now reads `AppInfo.name` (titles, Settings, support lin
 
 ### Trash and restore: books consistency (audit after D6, read-only)
 
+**Resolved by E2** (docs/design/delete_restore.md, option a): sale and service delete and restore are one transaction each and reverse every effect; Undo is back for both; the two restore warnings and the wrong "permanently deletes" text are gone. **Wording for the owner to check** (composed, not given word for word): the service delete body is the sale's with the owner's phrase: "{invoice} moves to Trash, its stock goes back, and its debt and its expense are removed until you restore it. [Money already received ({paid}) stays in your payments.] You can undo this now or restore it from Trash for 30 days." The table below is the state before E2.
+
 `TrashService.restore` (used by the Trash screen and every Undo) only copies the document back from `trash_*` to its live collection, drops `deletedAt`/`deletedBy`, and logs "Restored ...". Anything else the delete changed is reversed only if a server trigger reacts to the document reappearing (the `onDocumentWritten` daily summaries do).
 
 | Item | What deleting it changes besides moving the document | Reversed by Restore / Undo? |

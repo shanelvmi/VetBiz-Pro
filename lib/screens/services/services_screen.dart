@@ -27,6 +27,7 @@ import '../../theme/app_dimens.dart';
 import '../../theme/theme_context.dart';
 import '../../theme/app_breakpoints.dart';
 import '../../ui/feedback/app_feedback.dart';
+import '../../ui/feedback/restore_feedback.dart';
 import '../../l10n/l10n.dart';
 import '../../data/payment_status.dart';
 
@@ -771,8 +772,15 @@ class _ServicesScreenState extends State<ServicesScreen> {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: Text(context.l10n.services_deleteTitle),
-        content: Text(context.l10n.services_deleteBody),
+        title: Text(context.l10n.services_deleteThisTitle),
+        content: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: AppSizes.dialogSm),
+          // The upfront payment stays counted while the service is in
+          // Trash (owner condition 3), so the dialog says so when there is one.
+          child: Text(service.totalPaid > 0
+              ? context.l10n.services_deleteToTrashBodyPaid(_invoiceNo(service), Money.symbolPlain(service.totalPaid))
+              : context.l10n.services_deleteToTrashBody(_invoiceNo(service))),
+        ),
         actions: [
           TextButton(onPressed: () => Navigator.pop(ctx, false), child: Text(context.l10n.common_cancel)),
           TextButton(
@@ -784,15 +792,25 @@ class _ServicesScreenState extends State<ServicesScreen> {
     );
     if (confirmed != true || !mounted) return;
 
+    // Read before the await: Undo may run after this screen is gone.
+    final serviceProvider = Provider.of<ServiceProvider>(context, listen: false);
+    final facilityId = serviceProvider.facilityId;
     try {
-      await Provider.of<ServiceProvider>(context, listen: false).deleteService(service.id);
+      await serviceProvider.deleteService(service.id);
       if (!mounted) return;
       if (_selectedService?.id == service.id) setState(() => _selectedService = null);
       _openServicesListSession(forceRefresh: true);
-      // No Undo: deleteService also puts stock back, removes the debt and
-      // hard-deletes the service's expenses, and a restore reverses none of
-      // that (design-open-questions.md, "Trash and restore"). Same as sales.
-      AppFeedback.success(L10n.current.services_movedToTrash);
+      // Undo is the Trash restore, which takes the stock again and
+      // re-creates the debt, the balance and the expense (E2,
+      // delete_restore.md).
+      if (facilityId == null) return;
+      RestoreFeedback.offerUndo(
+        TrashedRecord.service,
+        restore: () => serviceProvider.restoreService(service.id, facilityId),
+        onRestored: () {
+          if (mounted) _openServicesListSession(forceRefresh: true);
+        },
+      );
     } catch (e, st) {
       AppFeedback.error(L10n.current.services_deleteFailed, error: e, stackTrace: st);
     }

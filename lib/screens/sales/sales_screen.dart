@@ -23,6 +23,7 @@ import '../../theme/app_dimens.dart';
 import '../../theme/theme_context.dart';
 import '../../theme/app_breakpoints.dart';
 import '../../ui/feedback/app_feedback.dart';
+import '../../ui/feedback/restore_feedback.dart';
 import '../../l10n/l10n.dart';
 import '../../data/payment_status.dart';
 
@@ -816,8 +817,15 @@ class _SalesScreenState extends State<SalesScreen> {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: Text(context.l10n.sales_deleteTitle),
-        content: Text(context.l10n.sales_deleteBody(_invoiceNo(sale))),
+        title: Text(context.l10n.sales_deleteThisTitle),
+        content: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: AppSizes.dialogSm),
+          // The upfront payment stays counted while the sale is in Trash
+          // (owner condition 3), so the dialog says so when there is one.
+          child: Text(sale.totalPaid > 0
+              ? context.l10n.sales_deleteToTrashBodyPaid(_invoiceNo(sale), Money.symbolPlain(sale.totalPaid))
+              : context.l10n.sales_deleteToTrashBody(_invoiceNo(sale))),
+        ),
         actions: [
           TextButton(onPressed: () => Navigator.pop(ctx, false), child: Text(context.l10n.common_cancel)),
           TextButton(
@@ -836,10 +844,17 @@ class _SalesScreenState extends State<SalesScreen> {
       if (!mounted) return;
       if (_selectedSale?.id == sale.id) setState(() => _selectedSale = null);
       _openSalesListSession(forceRefresh: true);
-      // A soft delete into trash_sales, but no Undo: restoring from Trash
-      // puts the sale back without taking its stock out again or
-      // re-creating its debt (listed in design-open-questions.md).
-      AppFeedback.success(L10n.current.sales_deleted);
+      // Undo is the Trash restore, which takes the stock again and
+      // re-creates the debt and the balance (E2, delete_restore.md).
+      // The provider and the facility were read before: Undo may run after
+      // this screen is gone.
+      RestoreFeedback.offerUndo(
+        TrashedRecord.sale,
+        restore: () => saleProvider.restoreSale(sale.id, facilityId),
+        onRestored: () {
+          if (mounted) _openSalesListSession(forceRefresh: true);
+        },
+      );
     } catch (e, st) {
       AppFeedback.error(L10n.current.sales_deleteFailed, error: e, stackTrace: st);
     }

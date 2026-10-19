@@ -16,6 +16,7 @@ import '../../theme/app_text.dart';
 import '../../theme/app_dimens.dart';
 import '../../theme/theme_context.dart';
 import '../../ui/feedback/app_feedback.dart';
+import '../../ui/feedback/restore_feedback.dart';
 
 class TrashScreen extends StatefulWidget {
   const TrashScreen({super.key});
@@ -136,49 +137,18 @@ class _TrashList extends StatelessWidget {
     this.titleBuilder,
   });
 
-  /// What Restore will NOT put back, for the types whose delete changed
-  /// more than the document itself (design-open-questions.md, "Trash and
-  /// restore: books consistency"). Null where Restore is complete.
-  /// Restore only moves the document back; these lines just say so before
-  /// the user commits to it.
-  ({String title, String body})? _restoreWarning(AppLocalizations l) {
-    if (liveCollection == Collections.sales) {
-      return (
-        title: l.trash_restoreSaleTitle,
-        body: l.trash_restoreSaleBody,
-      );
-    }
-    if (liveCollection == Collections.services) {
-      return (
-        title: l.trash_restoreServiceTitle,
-        body: l.trash_restoreServiceBody,
-      );
-    }
-    return null;
-  }
+  // Sales and services restore with their stock, debt and balance (E2,
+  // delete_restore.md), so no warning first; a refusal says why.
+  TrashedRecord? get _record => liveCollection == Collections.sales
+      ? TrashedRecord.sale
+      : liveCollection == Collections.services
+          ? TrashedRecord.service
+          : null;
 
   Future<void> _restore(BuildContext context, String id, Map<String, dynamic> data) async {
-    final warning = _restoreWarning(context.l10n);
-    if (warning != null) {
-      final confirm = await showDialog<bool>(
-        context: context,
-        builder: (context) => AlertDialog(
-          title: Text(warning.title),
-          content: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: AppSizes.dialogSm),
-            child: Text(warning.body),
-          ),
-          actions: [
-            TextButton(onPressed: () => Navigator.pop(context, false), child: Text(context.l10n.common_cancel)),
-            TextButton(onPressed: () => Navigator.pop(context, true), child: Text(context.l10n.common_restore)),
-          ],
-        ),
-      );
-      if (confirm != true) return;
-    }
-
+    final record = _record;
     try {
-      await TrashService.restore(
+      final result = await TrashService.restore(
         facilityId: facilityId,
         trashCollection: trashCollection,
         liveCollection: liveCollection,
@@ -186,9 +156,17 @@ class _TrashList extends StatelessWidget {
         data: data,
       );
 
-      AppFeedback.success(L10n.current.trash_restored);
+      if (record != null) {
+        RestoreFeedback.restored(record, result);
+      } else {
+        AppFeedback.success(L10n.current.trash_restored);
+      }
     } catch (e, st) {
-      AppFeedback.error(L10n.current.trash_restoreFailed, error: e, stackTrace: st);
+      if (record != null) {
+        RestoreFeedback.failed(record, e, st);
+      } else {
+        AppFeedback.error(L10n.current.trash_restoreFailed, error: e, stackTrace: st);
+      }
     }
   }
 
