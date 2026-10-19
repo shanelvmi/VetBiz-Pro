@@ -90,7 +90,7 @@ Future<FakeFirebaseFirestore> creditSale({double paid = 1000}) async {
 
 void main() {
   // --- Delete ---
-  test(skip: pendingE2, 'delete puts the stock back on its batches, removes the debt, lowers the balance, keeps the payment', () async {
+  test('delete puts the stock back on its batches, removes the debt, lowers the balance, keeps the payment', () async {
     final fs = await creditSale();
     expect(await sellableQty(fs, 'p1', 'b1'), 0);
 
@@ -108,7 +108,7 @@ void main() {
     expect(deleted['payments'], 1, reason: 'the upfront payment stays counted (condition 3)');
   });
 
-  test(skip: pendingE2, 'delete is one step: a trash copy that says its stock was returned, and its activity entry', () async {
+  test('delete is one step: a trash copy that says its stock was returned, and its activity entry', () async {
     final fs = await creditSale();
 
     await deleteSale(fs, 's1');
@@ -122,7 +122,7 @@ void main() {
     expect(logs.docs.where((d) => d.id.startsWith('delete_sale_s1_')).length, 1);
   });
 
-  test(skip: pendingE2, 'a second delete of the same sale writes nothing', () async {
+  test('a second delete of the same sale writes nothing', () async {
     final fs = await creditSale();
     await deleteSale(fs, 's1');
     final afterFirst = storedData(fs);

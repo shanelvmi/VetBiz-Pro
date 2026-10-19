@@ -1,13 +1,13 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import '../models/sale.dart';
 import 'product_provider.dart';
 import '../utils/activity_logger.dart';
 import '../utils/receipt_numbering.dart';
 import 'debt_provider.dart';
 import '../models/debt.dart';
+import '../services/record_trash.dart';
 import '../services/cursor_paginated_list_controller.dart';
 import '../data/collections.dart';
 import '../data/fields.dart';
@@ -23,8 +23,8 @@ class SaleProvider extends ChangeNotifier {
   // uses ActivityLogger.getCurrentUserInfo (FirebaseAuth).
   final Future<Map<String, String>> Function() _currentUserInfo;
 
-  // What a trash copy's deletedBy holds. Tests pass their own.
-  final String Function() _deletedBy;
+  // Delete to Trash and restore from it (docs/design/delete_restore.md).
+  late final RecordTrash _trash;
 
   /// How many sales to fetch per page. The live listener always holds the
   /// most recent [pageSize] sales in real time; older pages are fetched
@@ -55,8 +55,9 @@ class SaleProvider extends ChangeNotifier {
     Future<Map<String, String>> Function()? currentUserInfo,
     String Function()? deletedBy,
   })  : _firestore = firestore ?? FirebaseFirestore.instance,
-        _currentUserInfo = currentUserInfo ?? ActivityLogger.getCurrentUserInfo,
-        _deletedBy = deletedBy ?? _signedInUser {
+        _currentUserInfo = currentUserInfo ?? ActivityLogger.getCurrentUserInfo {
+    _trash = RecordTrash(_firestore, trashedSaleType,
+        currentUserInfo: _currentUserInfo, deletedBy: deletedBy ?? RecordTrash.signedInUser);
     salesListController = CursorPaginatedListController<Sale>(
       pageSize: AppLimits.pageSize,
       fetchPage: _fetchSalesListPage,
@@ -458,10 +459,14 @@ class SaleProvider extends ChangeNotifier {
         // The client's balance goes up by the outstanding amount only - no
         // re-scan of their sale history. The oldest unpaid date starts now
         // if they owed nothing before.
+        // One moment for both: the debt's date IS the oldest unpaid date it
+        // sets, which AddPaymentScreen compares exactly and a restore from
+        // Trash gives back (owner condition 6 of delete_restore.md).
+        final now = DateTime.now();
         final currentBalance = (clientData?['balance'] as num?)?.toDouble() ?? 0.0;
         final balanceUpdate = <String, dynamic>{
           'balance': FieldValue.increment(outstanding),
-          if (currentBalance <= 0) 'oldestUnpaidDebtDate': Timestamp.fromDate(DateTime.now()),
+          if (currentBalance <= 0) 'oldestUnpaidDebtDate': Timestamp.fromDate(now),
         };
         if (clientSnap!.exists) {
           transaction.update(clientRef, balanceUpdate);
@@ -478,8 +483,8 @@ class SaleProvider extends ChangeNotifier {
           saleId: saleId,
           amountOwed: outstanding,
           items: sale.items.map((i) => i.toMap()).toList(),
-          timestamp: DateTime.now(),
-          updatedAt: DateTime.now(),
+          timestamp: now,
+          updatedAt: now,
           source: 'Sale',
         );
         transaction.set(facilityRef.collection(Collections.debts).doc('sale_$saleId'), debt.toMap());
@@ -570,92 +575,43 @@ class SaleProvider extends ChangeNotifier {
     await _adjustClientBalance(sale.clientId, -paymentToAdd, facilityId);
   }
 
-  /// Delete a sale. Also restores stock and reverses any outstanding balance
-  /// it contributed to the client - the previous version silently left both
-  /// of those out of sync when a sale was deleted.
-  Future<void> deleteSale(String saleId, String facilityId) async {
-    try {
-      final index = _liveSales.indexWhere((s) => s.id == saleId);
-      final olderIndex = index == -1 ? _olderSales.indexWhere((s) => s.id == saleId) : -1;
+  /// Moves a sale to Trash in ONE transaction: the trash copy, its stock
+  /// back on the batches it came from, its debt removed, the client's
+  /// balance and oldest unpaid date lowered, and the activity entry. The
+  /// upfront payment stays counted. Nothing is swallowed: an error means
+  /// nothing changed.
+  Future<void> deleteSale(String saleId, String facilityId) => _trash.delete(facilityId, saleId);
 
-      Sale? sale;
-      if (index != -1) {
-        sale = _liveSales[index];
-      } else if (olderIndex != -1) {
-        sale = _olderSales[olderIndex];
-      } else {
-        final doc = await _firestore
-            .collection(Collections.facilities)
-            .doc(facilityId)
-            .collection(Collections.sales)
-            .doc(saleId)
-            .get();
-        if (doc.exists && doc.data() != null) {
-          sale = Sale.fromFirestore(doc.data(), doc.id);
-        }
-      }
-
-      if (sale != null) {
-        await _firestore
-            .collection(Collections.facilities)
-            .doc(facilityId)
-            .collection(Collections.trashSales)
-            .doc(saleId)
-            .set({
-          ...sale.toMap(),
-          'deletedAt': FieldValue.serverTimestamp(),
-          'deletedBy': _deletedBy(),
-        });
-      }
-
-      await _firestore
-          .collection(Collections.facilities)
-          .doc(facilityId)
-          .collection(Collections.sales)
-          .doc(saleId)
-          .delete();
-
-      if (sale != null) {
-        await _restoreStock(sale, facilityId);
-
-        // Clean up any debt record this sale created before adjusting
-        // balance below - previously left behind permanently, still
-        // showing the client owing money for a sale that no longer
-        // exists. Ordered before the balance adjustment specifically so
-        // that adjustment's own oldestUnpaidDebtDate recompute (if it
-        // ends up needing one) sees this debt already gone, not a stale
-        // entry still counting itself.
-        final debtSnap = await _firestore
-            .collection(Collections.facilities)
-            .doc(facilityId)
-            .collection(Collections.debts)
-            .where('saleId', isEqualTo: saleId)
-            .get();
-        for (final debtDoc in debtSnap.docs) {
-          await debtDoc.reference.delete();
-        }
-
-        final outstanding = sale.totalAmount - sale.totalPaid;
-        if (outstanding != 0) {
-          await _adjustClientBalance(sale.clientId, -outstanding, facilityId);
-        }
-      }
-
-      if (sale != null) {
-        final userInfo = await ActivityLogger.getCurrentUserInfo();
-        await ActivityLogger.logActivity(
-          facilityId: facilityId,
-          userId: userInfo[Fields.userId]!,
-          userName: userInfo['userName'],
-          actionType: ActivityType.sales.key,
-          description: 'Deleted sale to ${sale.clientName ?? 'Walk-in'} - ${Money.savedWhole(sale.totalAmount)}',
-        );
-      }
-    } catch (e) {
-      debugPrint('Error deleting sale: $e');
-      rethrow;
-    }
-  }
+  /// A sale, for RecordTrash.
+  static final trashedSaleType = TrashedRecordType(
+    liveCollection: Collections.sales,
+    trashCollection: Collections.trashSales,
+    idPrefix: 'sale',
+    debtLinkField: 'saleId',
+    itemsField: 'items',
+    itemNameField: 'name',
+    oneUnitPerItem: false,
+    actionType: ActivityType.sales.key,
+    deletedDescription: (data) =>
+        'Deleted sale to ${data['clientName'] ?? 'Walk-in'} - ${Money.savedWhole((data['totalAmount'] as num?) ?? 0)}',
+    searchFields: (id, data) => Sale.fromFirestore(data, id).searchFields(),
+    newDebt: (id, data, owed, clientPhone) {
+      final sale = Sale.fromFirestore(data, id);
+      // As addSale writes it, dated at the sale.
+      return Debt(
+        id: '',
+        clientId: sale.clientId!,
+        clientName: sale.clientName ?? '',
+        clientPhone: clientPhone ?? '',
+        saleId: id,
+        amountOwed: owed,
+        items: sale.items.map((i) => i.toMap()).toList(),
+        timestamp: sale.timestamp,
+        updatedAt: DateTime.now(),
+        source: 'Sale',
+      ).toMap();
+    },
+  );
 
   /// Compute per-item and total realized/unrealized profit
   Sale _computeProfits(Sale sale) {
@@ -682,40 +638,6 @@ class SaleProvider extends ChangeNotifier {
       realizedProfit: realizedProfit,
       unrealizedProfit: unrealizedProfit,
     );
-  }
-
-  /// Deduct stock quantities
-  /// Restore stock quantities (used when a sale is deleted) - restores
-  /// each item to the exact batch(es) it was originally deducted from
-  /// (recorded on the item as `batchAllocations` at sale time), rather
-  /// than just bumping a generic total. Sales made before batch tracking
-  /// existed have an empty allocations list and fall back to a plain
-  /// aggregate restore, same as before.
-  Future<void> _restoreStock(Sale sale, String facilityId) async {
-    final productHelper = ProductProvider();
-
-    for (final item in sale.items) {
-      if (item.batchAllocations.isNotEmpty) {
-        await productHelper.restoreSellableFIFO(
-          facilityId: facilityId,
-          productId: item.productId,
-          allocations: item.batchAllocations,
-        );
-      } else {
-        final productRef = _firestore
-            .collection(Collections.facilities)
-            .doc(facilityId)
-            .collection(Collections.products)
-            .doc(item.productId);
-
-        await _firestore.runTransaction((transaction) async {
-          final snapshot = await transaction.get(productRef);
-          if (!snapshot.exists) return;
-          final currentStock = (snapshot.data()?['sellableQty'] ?? 0).toDouble();
-          transaction.update(productRef, {'sellableQty': currentStock + item.quantity});
-        });
-      }
-    }
   }
 
   /// Adjust a client's running balance by [delta] (positive = they owe more,
@@ -791,11 +713,6 @@ class SaleProvider extends ChangeNotifier {
       result[clientId] = (result[clientId] ?? 0) + debt;
     }
     return result;
-  }
-
-  static String _signedInUser() {
-    final user = FirebaseAuth.instance.currentUser;
-    return user?.email ?? user?.uid ?? 'Unknown';
   }
 
   @override
