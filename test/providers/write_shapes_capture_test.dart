@@ -21,18 +21,24 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:fake_cloud_firestore/fake_cloud_firestore.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:vetbiz_pro/data/collections.dart';
+import 'package:vetbiz_pro/models/product.dart';
 import 'package:vetbiz_pro/models/sale.dart';
 import 'package:vetbiz_pro/models/service.dart';
+import 'package:vetbiz_pro/models/transaction.dart';
+import 'package:vetbiz_pro/providers/product_provider.dart';
+import 'package:vetbiz_pro/providers/transaction_provider.dart';
 
 import '../helpers/fake_firestore.dart';
 
 const _fixture = 'firestore_rules_tests/fixtures/app_write_shapes.json';
 const _write = bool.fromEnvironment('WRITE_SHAPES');
 
+// E4d-2 adds the receipt counters, the stock additions log and the
+// transactions Trash.
 const _collections = [
   Collections.products, Collections.sales, Collections.services, Collections.debts, Collections.clients,
   Collections.payments, Collections.transactions, Collections.trashSales, Collections.trashServices,
-  Collections.trashClients,
+  Collections.trashClients, Collections.counters, Collections.stockAdditions, Collections.trashTransactions,
 ];
 const _everyone = ['owner', 'coadmin', 'assistant'];
 const _admins = ['owner', 'coadmin'];
@@ -62,14 +68,22 @@ Future<Map<String, Map<String, Object?>>> _snapshot(FakeFirebaseFirestore fs) as
 }
 
 // Auto ids (an add() inside the provider) are random: named by order.
+// Fixed ids the app chooses that happen to look like one are kept.
+const _fixedIds = {'expenseReceiptNumber'};
 String _stablePath(String path, Map<String, String> autoIds) => path.split('/').map((s) {
-      if (RegExp(r'^[A-Za-z0-9]{20}$').hasMatch(s)) return autoIds.putIfAbsent(s, () => 'auto${autoIds.length + 1}');
+      if (!_fixedIds.contains(s) && RegExp(r'^[A-Za-z0-9]{20}$').hasMatch(s)) {
+        return autoIds.putIfAbsent(s, () => 'auto${autoIds.length + 1}');
+      }
       return s;
     }).join('/');
 
 final _flows = <Map<String, Object?>>[];
 
-Future<void> _record(FakeFirebaseFirestore fs, String name, List<String> roles, Future<void> Function() run) async {
+/// [roles] make this write in the app; [refused] are refused it (E4d-2: the
+/// app hides the button and the provider throws), and the rules suite
+/// replays it as them expecting a refusal.
+Future<void> _record(FakeFirebaseFirestore fs, String name, List<String> roles, Future<void> Function() run,
+    {List<String> refused = const []}) async {
   final before = await _snapshot(fs);
   await run();
   await settle();
@@ -89,7 +103,17 @@ Future<void> _record(FakeFirebaseFirestore fs, String name, List<String> roles, 
   changes.sort((x, y) => (x['path'] as String).compareTo(y['path'] as String));
   // No separate seed: the replay seeds each change's "before" (the rules
   // read only those documents, plus the users and the facility).
-  _flows.add({'name': name, 'roles': roles, 'changes': changes});
+  _flows.add({'name': name, 'roles': roles, 'refused': refused, 'changes': changes});
+}
+
+// The writes are done; only the activity entry is left, which asks
+// Firebase for the app (ActivityLogger): none in a unit test.
+Future<void> _ignoringActivityLog(Future<void> Function() run) async {
+  try {
+    await run();
+  } catch (e) {
+    if (!'$e'.contains('no-app')) rethrow;
+  }
 }
 
 /// A repayment as AddPaymentScreen._save writes it
@@ -145,22 +169,14 @@ void main() {
             items: [serviceItem('Dawa', productId: 'p1'), serviceItem('Gloves', price: 700)])));
     await _record(fs, 'payment on a service debt, partial', _everyone,
         () => _repay(fs, debtId: 'service_v1', amount: 1000, paymentId: 'pay3'));
-    // Edit Service (open to assistants): the total goes up, so the debt is
-    // rewritten with a HIGHER amountOwed. No external item, so no expense
-    // transaction is deleted (that delete is admin-only today).
+    // Edit Service (admin-only since E4d-2): the total goes up, so the debt
+    // is rewritten with a HIGHER amountOwed. No external item, so no
+    // expense transaction is deleted.
     await services.addService(testService(id: 'v2', total: 5000, paid: 0, clientId: 'c2', clientName: 'Neema'));
     await settle();
-    await _record(fs, 'updateService raises the unpaid amount (Edit Service)', _everyone,
-        () async {
-      try {
-        await services.updateService(testService(id: 'v2', total: 8000, paid: 0, clientId: 'c2', clientName: 'Neema'));
-      } catch (e) {
-        // Its last step, the activity entry, asks Firebase for the user
-        // (ActivityLogger.getCurrentUserInfo): no app in a unit test. Every
-        // write before it is done.
-        if (!'$e'.contains('no-app')) rethrow;
-      }
-    });
+    await _record(fs, 'updateService raises the unpaid amount (Edit Service)', _admins, refused: ['assistant'],
+        () => _ignoringActivityLog(
+            () => services.updateService(testService(id: 'v2', total: 8000, paid: 0, clientId: 'c2', clientName: 'Neema'))));
     await _record(fs, 'deleteSale credit (to Trash)', _admins, () => sales.deleteSale('credit1', testFacilityId));
     await _record(fs, 'restoreSale credit (from Trash)', _admins,
         () => restoreFromTrash(fs, Collections.trashSales, Collections.sales, 'credit1'));
@@ -170,12 +186,51 @@ void main() {
     await _record(fs, 'deleteClient with no debt (to Trash)', _admins,
         () => newClientProvider(fs).deleteClient(testFacilityId, 'c3'));
 
+    // ---- E4d-2 ----
+    await _record(fs, 'payment on a service debt, settles it', _everyone,
+        () => _repay(fs, debtId: 'service_v2', amount: 8000, paymentId: 'pay4'));
+    // Edit Service on a service with an external item: its expense is
+    // deleted and written again (_handleServiceTransaction).
+    await services.addService(testService(id: 'v3', total: 6000, paid: 6000, items: [serviceItem('Gloves', price: 700)]));
+    await settle();
+    await _record(fs, 'updateService with an external item (Edit Service)', _admins, refused: ['assistant'],
+        () => _ignoringActivityLog(() => services.updateService(
+            testService(id: 'v3', total: 6000, paid: 6000, items: [serviceItem('Gloves', price: 900)]))));
+
+    final transactions = TransactionProvider(firestore: fs, currentUserInfo: testUserInfo, isAdmin: () => true);
+    TransactionModel expense(String description, double amount) => TransactionModel(
+        id: '', date: DateTime.now(), description: description, amount: amount, type: 'expense',
+        category: 'Transport', recordedBy: testUserName);
+    await _record(fs, 'addTransaction, the first expense (its counter is created)', _everyone,
+        () => _ignoringActivityLog(() => transactions.addTransaction(expense('Fuel', 3000), testFacilityId)));
+    await _record(fs, 'addTransaction, the next expense (its counter goes up)', _everyone,
+        () => _ignoringActivityLog(() => transactions.addTransaction(expense('Water', 1000), testFacilityId)));
+    // As AddTransactionScreen builds it: same id, date and recordedBy, the
+    // form's fields, and no receiptNumber (the edit drops it).
+    final fuel = (await facilityCollection(fs, Collections.transactions).where('description', isEqualTo: 'Fuel').get()).docs.single;
+    final edited = TransactionModel(
+        id: fuel.id, date: (fuel.data()['date'] as Timestamp).toDate(), description: 'Fuel to the farm', amount: 3500,
+        type: 'expense', category: 'Transport', recordedBy: fuel.data()['recordedBy'] as String);
+    await _record(fs, 'updateTransaction (Edit Transaction)', _admins, refused: ['assistant'],
+        () => _ignoringActivityLog(() => transactions.updateTransaction(edited, testFacilityId)));
+    await _record(fs, 'deleteTransaction (to Trash)', _admins, refused: ['assistant'],
+        () => _ignoringActivityLog(() => transactions.deleteTransaction(testFacilityId, fuel.id)));
+
+    final products = ProductProvider(firestore: fs);
+    await _record(fs, 'addProduct with its first batch (Add Product)', _admins, refused: ['assistant'],
+        () => products.addProduct(Product(
+            id: '', name: 'Dewormer', batchNo: 'D1', expiry: DateTime(2030, 6, 1), buyPrice: 1500, sellPrice: 2500,
+            stockQty: 10, unit: 'pcs', type: 'Medicine', category: 'Dewormers', facilityId: testFacilityId)));
+    await _record(fs, 'addBatch to an existing product (Add Batch)', _everyone,
+        () => products.addBatch(facilityId: testFacilityId, productId: 'p1', batchNo: 'B9',
+            expiry: DateTime(2031, 1, 1), buyPrice: 1100, stockQty: 5));
+
     // One document change per line, so a diff shows what moved.
     final shape = [
       '{"note": "Generated by test/providers/write_shapes_capture_test.dart; do not edit by hand. Paths are under facilities/{facility}.",',
       ' "flows": [',
       for (var i = 0; i < _flows.length; i++) ...[
-        '  {"name": ${jsonEncode(_flows[i]['name'])}, "roles": ${jsonEncode(_flows[i]['roles'])}, "changes": [',
+        '  {"name": ${jsonEncode(_flows[i]['name'])}, "roles": ${jsonEncode(_flows[i]['roles'])}, "refused": ${jsonEncode(_flows[i]['refused'])}, "changes": [',
         for (final (j, c) in (_flows[i]['changes'] as List).indexed)
           '   ${jsonEncode(c)}${j == (_flows[i]['changes'] as List).length - 1 ? '' : ','}',
         '  ]}${i == _flows.length - 1 ? '' : ','}',
@@ -191,7 +246,7 @@ void main() {
     Object? structure(Object? json) => (json as Map)['flows'] is List
         ? [
             for (final f in (json['flows'] as List).cast<Map>())
-              [f['name'], f['roles'], for (final c in (f['changes'] as List).cast<Map>()) [c['path'], (c['before'] as Map?)?.keys.toList()?..sort(), (c['after'] as Map?)?.keys.toList()?..sort()]]
+              [f['name'], f['roles'], f['refused'], for (final c in (f['changes'] as List).cast<Map>()) [c['path'], (c['before'] as Map?)?.keys.toList()?..sort(), (c['after'] as Map?)?.keys.toList()?..sort()]]
           ]
         : null;
     expect(file.existsSync(), isTrue, reason: 'run with --dart-define=WRITE_SHAPES=true to create $_fixture');

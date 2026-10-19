@@ -817,10 +817,21 @@ const seedShape = async (changes, uid) => {
     for (const c of changes) if (c.before) await f1(ctx.firestore(), c.path).set(decodeShape(c.before, uid));
   });
 };
+// [E4d-2] Fields the app writes with FieldValue.serverTimestamp() (checked in
+// the writers: product_provider.dart addProduct, addBatch, moveToSellable)
+// are replayed the same way: the fake stored a time there, and the rule
+// compares them with request.time (C10).
+const SERVER_TIME_FIELDS = { stockAdditions: ['timestamp'] };
+const withServerTime = (path, data) => {
+  const fields = SERVER_TIME_FIELDS[path.split('/')[0]] || [];
+  return { ...data, ...Object.fromEntries(fields.map((f) => [f, serverTime()])) };
+};
 const replayShape = (uid, changes) => {
   const db = as(uid);
   const batch = db.batch();
-  for (const c of changes) c.after ? batch.set(f1(db, c.path), decodeShape(c.after, uid)) : batch.delete(f1(db, c.path));
+  for (const c of changes) {
+    c.after ? batch.set(f1(db, c.path), withServerTime(c.path, decodeShape(c.after, uid))) : batch.delete(f1(db, c.path));
+  }
   return batch.commit();
 };
 
@@ -831,6 +842,18 @@ test('app shapes [E4d-1]: the fixture holds the flows E4d-1 depends on', () => {
     'updateService raises the unpaid amount (Edit Service)', 'deleteSale credit (to Trash)',
     'restoreSale credit (from Trash)', 'deleteService (to Trash)', 'restoreService (from Trash)']) {
     assert.ok(names.includes(n), `missing flow: ${n}`);
+  }
+});
+
+test('app shapes [E4d-2]: the fixture holds the flows E4d-2 depends on, refused to assistants where the owner decided', () => {
+  const byName = Object.fromEntries(appShapes.flows.map((f) => [f.name, f]));
+  for (const n of ['payment on a service debt, settles it', 'addTransaction, the first expense (its counter is created)',
+    'addTransaction, the next expense (its counter goes up)', 'addBatch to an existing product (Add Batch)']) {
+    assert.deepStrictEqual(byName[n] && byName[n].roles, ['owner', 'coadmin', 'assistant'], `flow: ${n}`);
+  }
+  for (const n of ['updateService raises the unpaid amount (Edit Service)', 'updateService with an external item (Edit Service)',
+    'updateTransaction (Edit Transaction)', 'deleteTransaction (to Trash)', 'addProduct with its first batch (Add Product)']) {
+    assert.deepStrictEqual(byName[n] && [byName[n].roles, byName[n].refused], [['owner', 'coadmin'], ['assistant']], `flow: ${n}`);
   }
 });
 
