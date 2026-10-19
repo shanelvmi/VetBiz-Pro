@@ -23,6 +23,7 @@ import '../../constants/product_units.dart';
 import '../../constants/product_types.dart';
 
 import '../../data/collections.dart';
+import '../../data/upload_content_types.dart';
 import '../../data/fields.dart';
 import '../../data/activity_type.dart';
 import '../../config/app_defaults.dart';
@@ -151,7 +152,7 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
       // flat path any authenticated user could write to.
       final storageRef =
           FirebaseStorage.instance.ref().child('product_images/$facilityId/${const Uuid().v4()}.jpg');
-      await storageRef.putData(bytes);
+      await storageRef.putData(bytes, UploadContentTypes.jpeg);
       final downloadUrl = await storageRef.getDownloadURL();
       if (!mounted) return;
       setState(() {

@@ -7,6 +7,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 
 import '../../providers/facility_provider.dart';
 import '../../data/collections.dart';
+import '../../data/upload_content_types.dart';
 import '../../theme/app_text.dart';
 import '../../l10n/l10n.dart';
 import '../../theme/app_dimens.dart';
@@ -48,7 +49,7 @@ class _BusinessProfileScreenState extends State<BusinessProfileScreen> {
 
     try {
       final storageRef = FirebaseStorage.instance.ref().child('facility_logos/$facilityId.png');
-      await storageRef.putData(bytes);
+      await storageRef.putData(bytes, UploadContentTypes.png);
       final rawDownloadUrl = await storageRef.getDownloadURL();
       // Firebase Storage returns the same URL for repeat uploads to the
       // same path (the access token doesn't change just because the

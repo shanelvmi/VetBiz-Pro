@@ -55,6 +55,7 @@ import '../products/add_edit_product_screen.dart';
 import '../services/add_edit_service_screen.dart';
 import '../register_screen.dart';
 import '../../data/collections.dart';
+import '../../data/upload_content_types.dart';
 import '../../data/fields.dart';
 import '../../data/user_role.dart';
 import '../../data/user_status.dart';
@@ -1014,7 +1015,7 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
 
     try {
       final storageRef = FirebaseStorage.instance.ref().child('user_avatars/${user!.uid}.png');
-      await storageRef.putData(bytes);
+      await storageRef.putData(bytes, UploadContentTypes.png);
       final downloadUrl = await storageRef.getDownloadURL();
       await userDoc.update({'avatarUrl': downloadUrl});
 

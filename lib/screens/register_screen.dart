@@ -19,6 +19,7 @@ import 'legal/terms_of_service_screen.dart';
 import '../widgets/auth_background.dart';
 import '../services/role_change_service.dart';
 import '../data/collections.dart';
+import '../data/upload_content_types.dart';
 import '../data/fields.dart';
 import '../data/user_role.dart';
 import '../config/app_timeouts.dart';
@@ -241,7 +242,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
   Future<String?> uploadImage(String uid) async {
     if (_imageBytes == null) return avatarUrl;
     final ref = FirebaseStorage.instance.ref().child('avatars/$uid.jpg');
-    await ref.putData(_imageBytes!);
+    await ref.putData(_imageBytes!, UploadContentTypes.jpeg);
     return await ref.getDownloadURL();
   }
 

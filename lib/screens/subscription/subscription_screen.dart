@@ -19,6 +19,7 @@ import '../../theme/app_motion.dart';
 import '../../theme/app_text.dart';
 import '../../theme/theme_context.dart';
 import '../../data/collections.dart';
+import '../../data/upload_content_types.dart';
 import '../../data/fields.dart';
 import '../../data/payment_submission_status.dart';
 import '../../config/payment_methods.dart';
@@ -166,7 +167,7 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
       if (_proofBytes != null) {
         final ref = FirebaseStorage.instance.ref().child(
             'payment_proofs/$facilityId/${DateTime.now().millisecondsSinceEpoch}.jpg');
-        await ref.putData(_proofBytes!).timeout(
+        await ref.putData(_proofBytes!, UploadContentTypes.jpeg).timeout(
           AppTimeouts.proofUpload,
           // A TimeoutException, so FriendlyError shows its "took too long"
           // sentence and this one appears under Details.

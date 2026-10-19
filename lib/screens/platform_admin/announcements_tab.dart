@@ -10,6 +10,7 @@ import 'package:markdown/markdown.dart' as md;
 import '../../widgets/hover_elevate_card.dart';
 import '../../widgets/announcement_message.dart';
 import '../../data/collections.dart';
+import '../../data/upload_content_types.dart';
 import '../../data/fields.dart';
 import '../../config/app_date_format.dart';
 import '../../theme/app_text.dart';
@@ -472,7 +473,7 @@ class _AnnouncementsTabState extends State<AnnouncementsTab> {
     try {
       final Uint8List bytes = await file.readAsBytes();
       final ref = FirebaseStorage.instance.ref().child('login_poster/poster.jpg');
-      await ref.putData(bytes);
+      await ref.putData(bytes, UploadContentTypes.jpeg);
       final url = await ref.getDownloadURL();
 
       await FirebaseFirestore.instance.collection(Collections.appConfig).doc('login_poster').set({

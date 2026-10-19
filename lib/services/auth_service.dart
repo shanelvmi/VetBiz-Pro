@@ -8,6 +8,7 @@ import 'package:firebase_storage/firebase_storage.dart';
 
 import 'membership_service.dart';
 import '../data/collections.dart';
+import '../data/upload_content_types.dart';
 import '../data/fields.dart';
 import '../data/user_status.dart';
 
@@ -163,7 +164,7 @@ class AuthService {
       if (avatarBytes != null) {
         try {
           final ref = FirebaseStorage.instanceFor(app: secondaryApp).ref().child('avatars/${cred.user!.uid}.jpg');
-          await ref.putData(avatarBytes);
+          await ref.putData(avatarBytes, UploadContentTypes.jpeg);
           avatarUrl = await ref.getDownloadURL();
         } catch (_) {
           // The photo is optional - registering without it beats failing here.

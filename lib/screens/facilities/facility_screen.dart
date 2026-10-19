@@ -20,6 +20,7 @@ import '../../utils/force_logout.dart';
 import '../../utils/facility_limit_helper.dart';
 import '../admin/manage_assistants_screen.dart';
 import '../../data/collections.dart';
+import '../../data/upload_content_types.dart';
 import '../../data/facility_ownership.dart';
 import '../../data/facility_status.dart';
 import '../../data/fields.dart';
@@ -553,7 +554,7 @@ class _FacilityScreenState extends State<FacilityScreen> {
     if (logoBytes != null) {
       try {
         final storageRef = FirebaseStorage.instance.ref().child('facility_logos/$newFacilityId.png');
-        await storageRef.putData(logoBytes);
+        await storageRef.putData(logoBytes, UploadContentTypes.png);
         final rawDownloadUrl = await storageRef.getDownloadURL();
         final downloadUrl = '$rawDownloadUrl&cb=${DateTime.now().millisecondsSinceEpoch}';
         await FirebaseFirestore.instance
@@ -930,7 +931,7 @@ class _FacilityScreenState extends State<FacilityScreen> {
 
     if (logoBytes != null) {
       final storageRef = FirebaseStorage.instance.ref().child('facility_logos/$facilityId.png');
-      await storageRef.putData(logoBytes);
+      await storageRef.putData(logoBytes, UploadContentTypes.png);
       final rawDownloadUrl = await storageRef.getDownloadURL();
       // Same cache-busting reasoning as before: Storage returns the
       // same URL for repeat uploads to the same path, so without this,
