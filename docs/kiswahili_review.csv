@@ -558,9 +558,12 @@ clients_percentOfClients,{percent}% of clients,{percent}% ya wateja,"Beside the 
 clients_lastAdded,Last Added,Aliyeongezwa Mwisho,Clients metric card: the newest client.,draft
 clients_searchHint,"Search by name, phone, address...","Tafuta kwa jina, simu, anwani...",Clients search box hint.,draft
 clients_deleteTitle,Delete Client,Futa Mteja,Delete confirmation title.,draft
-clients_deleteBody,"Delete ""{name}"" permanently?","Futa ""{name}"" kabisa?",Delete confirmation text.,draft
-clients_deleted,Client deleted,Mteja amefutwa,Message after deleting a client.,draft
 clients_deleteFailed,Couldn't delete the client,Imeshindwa kufuta mteja,Message when deleting failed.,draft
+clients_deleteToTrashBody,"""{name}"" moves to Trash. You can undo this now or restore it from Trash for 30 days.","""{name}"" anahamishiwa Tupio. Unaweza kutendua sasa au kumrejesha kutoka Tupio ndani ya siku 30.",Delete client dialog text.,draft
+clients_movedToTrash,Client moved to Trash,Mteja amehamishiwa Tupio,Message after deleting a client (with Undo).,draft
+clients_restored,Client restored,Mteja amerejeshwa,Message after Undo restores a client.,draft
+clients_restoreFailed,Couldn't restore the client,Imeshindwa kumrejesha mteja,Message when Undo could not restore a client.,draft
+clients_deleteRefusedOwes,This client still owes {amount}. Settle or remove the debts first.,Mteja huyu bado anadaiwa {amount}. Kamilisha malipo au ondoa madeni kwanza.,"Why deleting a client was refused; amount is pre-formatted money.",draft
 clients_shareFailed,Couldn't share the client card,Imeshindwa kushiriki kadi ya mteja,Message when sharing the client card failed.,draft
 clients_detailsTitle,Client Details,Maelezo ya Mteja,Details panel title.,draft
 clients_clientType,Client Type,Aina ya Mteja,Details label and form section heading.,draft
