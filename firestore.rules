@@ -27,6 +27,9 @@ service cloud.firestore {
       let theirFacilityIds = get(/databases/$(database)/documents/users/$(userId)).data.get('facilityIds', []);
       return myFacilityIds.hasAny(theirFacilityIds);
     }
+    function myFacilityIds() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data.get('facilityIds', []);
+    }
 
     // True if the requester CREATED this facility - i.e. is its owner.
     function isFacilityCreator(facilityId) {
@@ -131,7 +134,13 @@ service cloud.firestore {
     }
     // ========== 👤 Users Collection ==========
     match /users/{userId} {
-      allow read: if isAuthenticated() && (request.auth.uid == userId || isAdmin() || isPlatformAdmin());
+      // E4a: an admin reads only the people who share a facility with
+      // them. "Any admin" was every profile in the database (email, phone,
+      // invite codes), and anyone can register as an admin. The target's
+      // facilities come from resource.data, so a team query costs no
+      // extra read; the emulator suite runs the app's real team queries.
+      allow read: if isAuthenticated() && (request.auth.uid == userId || isPlatformAdmin() ||
+        (isAdmin() && resource.data.get('facilityIds', []).hasAny(myFacilityIds())));
 
       // A profile is NEVER created from the app. The server creates it -
       // registerOwner for an owner, joinWithInvite for an assistant - and

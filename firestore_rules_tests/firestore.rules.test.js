@@ -341,6 +341,60 @@ test('users read: an admin can load the team (users in my facilities); an assist
   await assertFails(as('assistant').collection('users').where('facilityIds', 'array-contains-any', ['F1']).get());
 });
 
+// E4a (b1): a profile holds email, phone and the facilities' invite codes,
+// and anyone can register as the admin of a facility of their own. So
+// "is an admin" alone must not open every profile: only an admin who
+// shares a facility with the person.
+test('users read [E4a]: an admin of another facility can NOT read F1\'s profiles, list every user, or query F1\'s team', async () => {
+  await assertFails(users('outsider').doc('owner').get());
+  await assertFails(users('outsider').doc('assistant').get());
+  await assertFails(users('outsider').get());
+  await assertFails(users('outsider').where('facilityIds', 'array-contains-any', ['F1']).get());
+  await assertFails(users('outsider').where('role', '==', 'assistant').where('facilityIds', 'array-contains-any', ['F1']).get());
+  await assertFails(users('outsider').where('role', '==', 'assistant').where('facilityIds', 'array-contains', 'F1').get());
+  await assertFails(users('outsider').where('role', '==', 'assistant').where('status', '==', 'pending').where('facilityIds', 'array-contains', 'F1').get());
+});
+
+test('users read [E4a]: the owner can NOT read the profile of someone in no facility of theirs', async () => {
+  await assertFails(users('owner').doc('outsider').get());
+});
+
+// The where clauses below are copied from the app, so a rule that refuses
+// a real screen fails here and not in production.
+test('users read [E4a]: the owner and the Co-admin run exactly the app\'s team queries', async () => {
+  for (const uid of ['owner', 'coadmin']) {
+    // manage_assistants_screen.dart:187-191
+    await assertSucceeds(users(uid).where('facilityIds', 'array-contains-any', ['F1']).get());
+    // facility_picker_screen.dart:81-86
+    await assertSucceeds(users(uid).where('role', '==', 'assistant').where('facilityIds', 'array-contains-any', ['F1']).get());
+    // facility_screen.dart:351-355
+    await assertSucceeds(users(uid).where('role', '==', 'assistant').where('facilityIds', 'array-contains', 'F1').get());
+    // dashboard_screen.dart:499-503
+    await assertSucceeds(users(uid).where('role', '==', 'assistant').where('status', '==', 'pending').where('facilityIds', 'array-contains', 'F1').get());
+    // payments_screen.dart:195, the name of whoever recorded a payment
+    await assertSucceeds(users(uid).doc('assistant').get());
+  }
+});
+
+test('users read [E4a]: everyone reads their own profile; an assistant reads only their own', async () => {
+  for (const uid of ['owner', 'coadmin', 'assistant', 'outsider', 'pa']) {
+    await assertSucceeds(users(uid).doc(uid).get());
+  }
+  await assertFails(users('assistant').doc('owner').get());
+  await assertFails(users('assistant').doc('coadmin').get());
+  await assertFails(users('assistant').doc('outsider').get());
+});
+
+test('users read [E4a]: a Platform Admin reads any profile and lists every user (the operator console)', async () => {
+  for (const uid of ['owner', 'assistant', 'outsider']) {
+    await assertSucceeds(users('pa').doc(uid).get());
+  }
+  // users_tab.dart:105
+  await assertSucceeds(users('pa').orderBy('fullName').get());
+  // role_change_service.dart:250
+  await assertSucceeds(users('pa').where('role', '==', 'admin').where('facilityIds', 'array-contains', 'F1').get());
+});
+
 // ======================================================================
 // FACILITIES
 // ======================================================================
