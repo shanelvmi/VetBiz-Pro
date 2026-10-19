@@ -62,4 +62,32 @@ class AppLimits {
 
   /// "Is there more than one?" reads (a client's remaining debts).
   static const int moreThanOneCheck = 2;
+
+  // Picked images (E4a-fix). storage.rules refuses an upload over 5 MB,
+  // and a phone photo is often bigger, so every picker that feeds an
+  // upload scales the image down at the source: image_picker keeps the
+  // aspect ratio inside a square of the given side, in pixels.
+
+  /// Profile photos (dashboard avatar, registration avatar).
+  static const double avatarImageMaxSide = 512;
+
+  /// Facility logos (facility_screen add and edit, business profile).
+  static const double logoImageMaxSide = 1024;
+
+  /// Product photos (add_edit_product_screen).
+  static const double productImageMaxSide = 1280;
+
+  /// Subscription payment proofs: large enough that the receipt text
+  /// stays legible for the reviewer.
+  static const double paymentProofImageMaxSide = 1600;
+
+  /// The login poster (announcements_tab).
+  static const double posterImageMaxSide = 1600;
+
+  /// JPEG quality (0-100) for every picked image.
+  static const int pickedImageQuality = 85;
+
+  /// The largest upload storage.rules accepts (`request.resource.size <=
+  /// 5 * 1024 * 1024`). Keep the two equal.
+  static const int maxUploadBytes = 5 * 1024 * 1024;
 }
