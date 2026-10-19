@@ -11,9 +11,27 @@ const membership = require("../membership");
 const NOW = new Date("2026-10-05T10:00:00Z");
 const hoursFromNow = (h) => new Date(NOW.getTime() + h * 60 * 60 * 1000);
 
+// Firebase Auth, recording what C2 does to each account: disabled[uid] is the
+// last value set, revoked lists every revokeRefreshTokens call.
+class FakeAuth {
+  constructor() {
+    this.disabled = {};
+    this.revoked = [];
+    this.missing = new Set();
+  }
+  async updateUser(uid, props) {
+    if (this.missing.has(uid)) throw Object.assign(new Error("no user record"), { code: "auth/user-not-found" });
+    this.disabled[uid] = props.disabled;
+  }
+  async revokeRefreshTokens(uid) {
+    this.revoked.push(uid);
+  }
+}
+
 // [sequence]: forces the random numbers, to provoke a code collision.
 function setup(sequence) {
   const db = new FakeDb();
+  const auth = new FakeAuth();
   db.clock = () => NOW;
   let counter = 0;
   let i = 0;
@@ -22,20 +40,22 @@ function setup(sequence) {
     : (n) => (counter++ * 7 + 3) % n;
   const fns = membership.create({
     db,
+    auth,
     FieldValue,
     Timestamp: FakeTimestamp,
     HttpsError,
     randomInt,
     now: () => NOW,
   });
-  return { db, fns };
+  return { db, fns, auth };
 }
 
 const as = (uid, email) => ({ auth: { uid, token: { email: email || `${uid}@example.com` } } });
 
-const entry = (id, name, type, code) => ({ facilityId: id, name, type, code });
-const F1 = entry("F1", "Ukuli", "Agrovet", "AAAA1111");
-const F2 = entry("F2", "Other Vet", "Vet Clinic", "BBBB2222");
+// A profile's copy of a facility: no code since E4b (b3).
+const entry = (id, name, type) => ({ facilityId: id, name, type });
+const F1 = entry("F1", "Ukuli", "Agrovet");
+const F2 = entry("F2", "Other Vet", "Vet Clinic");
 
 // Two separate businesses: F1 (owner, a Co-admin, an Assistant) and F2 (its
 // own owner), plus a Platform Admin.
@@ -146,7 +166,8 @@ describe("registerOwner", () => {
     const f = result.facilities[0];
     assert.equal(f.name, "Ukuli");
     assert.equal(f.type, "Agrovet");
-    assert.match(f.code, /^[A-Z0-9]{8}$/);
+    // E4b (b3): the profile's copy has no code; the code is on the facility.
+    assert.deepEqual(Object.keys(f).sort(), ["facilityId", "name", "type"]);
 
     const user = db.read("users", "newowner");
     assert.equal(user.role, "admin");
@@ -158,7 +179,7 @@ describe("registerOwner", () => {
 
     const facility = db.read("facilities", f.facilityId);
     assert.equal(facility.createdBy, "newowner");
-    assert.equal(facility.code, f.code);
+    assert.match(facility.code, /^[A-Z0-9]{8}$/);
     // 14 days by default, to the end of that day in Tanzania.
     assert.equal(facility.trialExpiresAt.toDate().toISOString(), "2026-10-19T20:59:59.000Z");
   });
@@ -544,7 +565,7 @@ describe("keeping each member's copy of a facility's name in step", () => {
     for (const uid of ["owner", "coadmin", "assistant"]) {
       assert.equal(db.read("users", uid).facilities[0].name, "Ukuli Renamed", uid);
       assert.equal(db.read("users", uid).facilities[0].type, "Vet Clinic", uid);
-      assert.equal(db.read("users", uid).facilities[0].code, "AAAA1111", "the code is kept");
+      assert.ok(!("code" in db.read("users", uid).facilities[0]), `${uid}: no code is copied (E4b)`);
     }
     assert.equal(db.read("users", "outsider").facilities[0].name, "Other Vet");
   });
@@ -1092,5 +1113,158 @@ describe("the waiting-for-approval notice is cleared by the decision", () => {
     seedInvite(w.db, "ZX94R6");
     await w.fns.joinFacilityWithInvite({ code: "ZX94R6" }, as("newbie", "newbie@example.com"));
     assert.equal(waiting(w.db, "F1", "newbie").length, 1, "exactly one - for the new request");
+  });
+});
+
+// ======================================================================
+// E4b (b3): the facility code no longer rides on profiles. Profiles are read
+// by other admins; the code stays on the facility document.
+// ======================================================================
+
+describe("E4b (b3): no profile carries the facility code", () => {
+  const noCode = (list, who) => {
+    assert.ok(Array.isArray(list) && list.length > 0, `${who}: has facilities`);
+    for (const f of list) assert.deepEqual(Object.keys(f).sort(), ["facilityId", "name", "type"], who);
+  };
+
+  test("addFacility: the profile's copy and the answer have no code; the facility has one", async () => {
+    const { db, fns } = setup();
+    seedWorld(db);
+    const added = await fns.addFacility({ name: "Ukuli Clinic", type: "Vet Clinic" }, as("owner"));
+    noCode([added], "answer");
+    noCode(db.read("users", "owner").facilities, "owner");
+    assert.match(db.read("facilities", added.facilityId).code, /^[A-Z0-9]{8}$/);
+  });
+
+  test("joinWithInvite, joinFacilityWithInvite and reassignAssistant copy no code", async () => {
+    const { db, fns } = setup();
+    seedWorld(db);
+    seedInvite(db, "JK72P4");
+    await fns.joinWithInvite({ code: "JK7-2P4", fullName: "Neema Joseph", phone: "0755 111 222" }, as("newbie"));
+    noCode(db.read("users", "newbie").facilities, "joinWithInvite");
+
+    db.seed("users", "removed", { role: "assistant", status: "deactivated", fullName: "Baraka", facilityIds: [], facilities: [] });
+    seedInvite(db, "PQ34RS");
+    await fns.joinFacilityWithInvite({ code: "PQ34RS" }, as("removed"));
+    noCode(db.read("users", "removed").facilities, "joinFacilityWithInvite");
+
+    db.seed("facilities", "F3", { name: "Ukuli Two", type: "Vet Clinic", code: "CCCC3333", createdBy: "owner" });
+    db.seed("users", "owner", { role: "admin", status: "active", facilityIds: ["F1", "F3"], facilities: [F1] });
+    await fns.reassignAssistant({ assistantUid: "assistant", newFacilityId: "F3" }, as("owner"));
+    noCode(db.read("users", "assistant").facilities, "reassignAssistant");
+  });
+});
+
+// ======================================================================
+// E4b (C2): the rules never check status, so a deactivated assistant's token
+// still worked. With no active membership left, the Auth account is disabled
+// and its refresh tokens revoked; reactivating turns it back on. An ID token
+// already issued stays valid until it expires (up to an hour).
+// ======================================================================
+
+describe("E4b (C2): sign-in follows active membership", () => {
+  const deactivate = { assistantUid: "assistant", action: "deactivate" };
+
+  test("deactivated: the account is disabled and its sessions revoked", async () => {
+    const { db, fns, auth } = setup();
+    seedWorld(db);
+    const r = await fns.setAssistantStatus(deactivate, as("owner"));
+    assert.equal(db.read("users", "assistant").status, "deactivated");
+    assert.equal(auth.disabled.assistant, true);
+    assert.deepEqual(auth.revoked, ["assistant"]);
+    assert.equal(r.signIn, "disabled");
+  });
+
+  test("removed from their only facility: disabled and revoked", async () => {
+    const { db, fns, auth } = setup();
+    seedWorld(db);
+    const r = await fns.removeAssistantFromFacility({ assistantUid: "assistant", facilityId: "F1" }, as("owner"));
+    assert.deepEqual(db.read("users", "assistant").facilityIds, []);
+    assert.equal(auth.disabled.assistant, true);
+    assert.deepEqual(auth.revoked, ["assistant"]);
+    assert.equal(r.signIn, "disabled");
+  });
+
+  test("removed from one of two facilities while active: keeps access", async () => {
+    const { db, fns, auth } = setup();
+    seedWorld(db);
+    db.seed("users", "assistant", { role: "assistant", status: "active", facilityIds: ["F1", "F2"], facilities: [F1, F2] });
+    const r = await fns.removeAssistantFromFacility({ assistantUid: "assistant", facilityId: "F1" }, as("owner"));
+    assert.deepEqual(db.read("users", "assistant").facilityIds, ["F2"]);
+    assert.ok(!("assistant" in auth.disabled), "the account is not touched");
+    assert.deepEqual(auth.revoked, []);
+    assert.equal(r.signIn, "unchanged");
+  });
+
+  test("removed from one of two while deactivated: no active membership left, disabled", async () => {
+    const { db, fns, auth } = setup();
+    seedWorld(db);
+    db.seed("users", "assistant", { role: "assistant", status: "deactivated", facilityIds: ["F1", "F2"], facilities: [F1, F2] });
+    await fns.removeAssistantFromFacility({ assistantUid: "assistant", facilityId: "F1" }, as("owner"));
+    assert.equal(auth.disabled.assistant, true);
+  });
+
+  test("reactivated: the account is enabled again, nothing revoked", async () => {
+    const { db, fns, auth } = setup();
+    seedWorld(db);
+    await fns.setAssistantStatus(deactivate, as("owner"));
+    auth.revoked = [];
+    const r = await fns.setAssistantStatus({ assistantUid: "assistant", action: "reactivate" }, as("owner"));
+    assert.equal(db.read("users", "assistant").status, "active");
+    assert.equal(auth.disabled.assistant, false);
+    assert.deepEqual(auth.revoked, []);
+    assert.equal(r.signIn, "enabled");
+  });
+
+  test("approve and reject leave the account alone", async () => {
+    const { db, fns, auth } = setup();
+    seedWorld(db);
+    db.seed("users", "p1", { role: "assistant", status: "pending", facilityIds: ["F1"], facilities: [F1] });
+    db.seed("users", "p2", { role: "assistant", status: "pending", facilityIds: ["F1"], facilities: [F1] });
+    await fns.setAssistantStatus({ assistantUid: "p1", action: "approve" }, as("owner"));
+    await fns.setAssistantStatus({ assistantUid: "p2", action: "reject" }, as("owner"));
+    assert.deepEqual(auth.disabled, {});
+    assert.deepEqual(auth.revoked, []);
+  });
+
+  test("a refused change touches no account", async () => {
+    const { db, fns, auth } = setup();
+    seedWorld(db);
+    await rejects(fns.setAssistantStatus(deactivate, as("outsider")), "permission-denied");
+    await rejects(fns.removeAssistantFromFacility({ assistantUid: "assistant", facilityId: "F1" }, as("assistant")), "permission-denied");
+    assert.deepEqual(auth.disabled, {});
+    assert.deepEqual(auth.revoked, []);
+  });
+
+  test("no Auth account: the status still changes", async () => {
+    const { db, fns, auth } = setup();
+    seedWorld(db);
+    auth.missing.add("assistant");
+    const r = await fns.setAssistantStatus(deactivate, as("owner"));
+    assert.equal(db.read("users", "assistant").status, "deactivated");
+    assert.equal(r.signIn, "unchanged");
+  });
+
+  test("an Auth failure does not undo the change, and is reported", async () => {
+    const { db, fns, auth } = setup();
+    seedWorld(db);
+    auth.updateUser = async () => {
+      throw Object.assign(new Error("backend down"), { code: "auth/internal-error" });
+    };
+    const original = console.error;
+    console.error = () => {};
+    try {
+      const r = await fns.setAssistantStatus(deactivate, as("owner"));
+      assert.equal(db.read("users", "assistant").status, "deactivated");
+      assert.equal(r.signIn, "failed");
+    } finally {
+      console.error = original;
+    }
+  });
+
+  test("membership.create refuses to run without Auth", () => {
+    assert.throws(() =>
+      membership.create({ db: new FakeDb(), FieldValue, Timestamp: FakeTimestamp, HttpsError, randomInt: () => 0 })
+    );
   });
 });

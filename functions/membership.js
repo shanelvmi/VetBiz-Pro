@@ -69,12 +69,15 @@ function inviteProblem(invite, now) {
   return null;
 }
 
+// A member's copy of one facility, on their profile: id, name and type only.
+// The facility's code is NOT copied (E4b, b3): profiles are read by other
+// admins, and the code lives on the facility document, which only its
+// members can read.
 function facilityEntry(facilityId, data) {
   return {
     facilityId,
     name: (data && data.name) || "",
     type: (data && data.type) || "",
-    code: (data && data.code) || "",
   };
 }
 
@@ -137,7 +140,10 @@ function pendingAssistantNotification(assistantUid, assistantName, facilityName,
 
 // ---------------------------------------------------------------------------
 
-function create({ db, FieldValue, Timestamp, HttpsError, randomInt, now = () => new Date() }) {
+function create({ db, auth, FieldValue, Timestamp, HttpsError, randomInt, now = () => new Date() }) {
+  // Firebase Auth (admin.auth()): C2 needs it, so it is required rather than
+  // quietly skipped when missing.
+  if (!auth) throw new Error("membership.create needs auth");
   const invalid = (message) => new HttpsError("invalid-argument", message);
 
   function requireAuth(context) {
@@ -331,7 +337,7 @@ function create({ db, FieldValue, Timestamp, HttpsError, randomInt, now = () => 
           createdAt: FieldValue.serverTimestamp(),
           trialExpiresAt: trialEnds,
         });
-        entries.push({ facilityId: ref.id, name: f.name, type: f.type, code });
+        entries.push(facilityEntry(ref.id, f));
       }
 
       tx.set(userRef, {
@@ -514,7 +520,7 @@ function create({ db, FieldValue, Timestamp, HttpsError, randomInt, now = () => 
         createdAt: FieldValue.serverTimestamp(),
         trialExpiresAt: trialEnds,
       });
-      const entry = { facilityId: ref.id, name, type, code };
+      const entry = facilityEntry(ref.id, { name, type });
       // Both lists, together: "facilities" is what the screens show,
       // "facilityIds" is what every access rule checks.
       tx.update(userRef, {
@@ -603,6 +609,34 @@ function create({ db, FieldValue, Timestamp, HttpsError, randomInt, now = () => 
     }
   }
 
+  // C2 (E4b): firestore.rules never check a person's status, so a deactivated
+  // assistant's token still read and wrote their facility's data; the app
+  // signing them out was the only barrier. So when a change leaves someone
+  // with NO active membership (deactivated, or in no facility any more), their
+  // Auth account is disabled and their refresh tokens revoked; reactivating
+  // turns it back on. Someone still active in another facility keeps access.
+  // An ID token already issued stays valid until it expires (up to an hour):
+  // revoking stops it being renewed, not the one in hand.
+  function hasActiveMembership(status, facilityIds) {
+    return status === "active" && facilityIds.length > 0;
+  }
+
+  // After the database change has committed. A failure here doesn't undo
+  // that change (a retry would be refused as already done); it is logged and
+  // reported as signIn: "failed".
+  async function setSignInAccess(uid, enabled) {
+    try {
+      await auth.updateUser(uid, { disabled: !enabled });
+      if (!enabled) await auth.revokeRefreshTokens(uid);
+      return enabled ? "enabled" : "disabled";
+    } catch (e) {
+      // No Auth account to sign in with: nothing to disable or enable.
+      if (e && e.code === "auth/user-not-found") return "unchanged";
+      console.error(`Could not ${enabled ? "enable" : "disable"} sign-in for ${uid}: ${e && e.message}`);
+      return "failed";
+    }
+  }
+
   async function reassignAssistant(data, context) {
     const callerUid = requireAuth(context);
     const assistantUid = cleanId(data && data.assistantUid, "assistantUid");
@@ -638,6 +672,7 @@ function create({ db, FieldValue, Timestamp, HttpsError, randomInt, now = () => 
     const assistantUid = cleanId(data && data.assistantUid, "assistantUid");
     const facilityId = cleanId(data && data.facilityId, "facilityId");
 
+    let activeLeft = true;
     const result = await db.runTransaction(async (tx) => {
       const caller = await loadCallerAdmin(tx, callerUid);
       const assistantRef = db.collection("users").doc(assistantUid);
@@ -649,8 +684,10 @@ function create({ db, FieldValue, Timestamp, HttpsError, randomInt, now = () => 
         throw new HttpsError("permission-denied", "That assistant is not in a facility you administer.");
       }
 
+      const remainingIds = idsOf(assistant).filter((id) => id !== facilityId);
+      activeLeft = hasActiveMembership(assistant.status || "pending", remainingIds);
       tx.update(assistantRef, {
-        facilityIds: idsOf(assistant).filter((id) => id !== facilityId),
+        facilityIds: remainingIds,
         facilities: (Array.isArray(assistant.facilities) ? assistant.facilities : []).filter(
           (f) => !(f && f.facilityId === facilityId)
         ),
@@ -659,6 +696,8 @@ function create({ db, FieldValue, Timestamp, HttpsError, randomInt, now = () => 
     });
 
     await clearPendingNotices(facilityId, assistantUid);
+    // Still active in another facility: their sign-in is left as it is.
+    result.signIn = activeLeft ? "unchanged" : await setSignInAccess(assistantUid, false);
     return result;
   }
 
@@ -687,6 +726,7 @@ function create({ db, FieldValue, Timestamp, HttpsError, randomInt, now = () => 
     if (!rule) throw invalid("Unknown action.");
 
     let theirFacilityId = "";
+    let activeAfter = true;
     const result = await db.runTransaction(async (tx) => {
       const caller = await loadCallerAdmin(tx, callerUid);
       const assistantRef = db.collection("users").doc(assistantUid);
@@ -747,12 +787,18 @@ function create({ db, FieldValue, Timestamp, HttpsError, randomInt, now = () => 
           },
         });
       }
+      activeAfter = hasActiveMembership(rule.to, patch.facilityIds || idsOf(assistant));
       tx.update(assistantRef, patch);
       return { success: true, status: rule.to };
     });
 
     // The question "should this person be let in?" has been answered.
     if (action === "approve" || action === "reject") await clearPendingNotices(theirFacilityId, assistantUid);
+    // C2: deactivating takes sign-in away when nothing active is left (status
+    // is one field, so a deactivated person is inactive everywhere);
+    // reactivating gives it back. Approve and reject leave it alone.
+    if (action === "deactivate" && !activeAfter) result.signIn = await setSignInAccess(assistantUid, false);
+    if (action === "reactivate") result.signIn = await setSignInAccess(assistantUid, true);
     return result;
   }
 
