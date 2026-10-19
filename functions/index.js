@@ -1471,7 +1471,8 @@ const { onCall, HttpsError } = require("firebase-functions/v2/https");
 const MEMBERSHIP_REGION = "africa-south1";
 const membership = require("./membership").create({
   db,
-  // Deactivating or removing an assistant disables their sign-in (C2).
+  // Deactivating an assistant disables their sign-in; removing one signs
+  // them out (C2, E4b2).
   auth: admin.auth(),
   FieldValue: admin.firestore.FieldValue,
   Timestamp: admin.firestore.Timestamp,

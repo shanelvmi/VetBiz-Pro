@@ -1157,9 +1157,12 @@ describe("E4b (b3): no profile carries the facility code", () => {
 
 // ======================================================================
 // E4b (C2): the rules never check status, so a deactivated assistant's token
-// still worked. With no active membership left, the Auth account is disabled
-// and its refresh tokens revoked; reactivating turns it back on. An ID token
-// already issued stays valid until it expires (up to an hour).
+// still worked. Deactivated with no active membership left: the Auth account
+// is disabled and its refresh tokens revoked; reactivating turns it back on.
+// Removed from their last facility (E4b2, owner's change): only the sessions
+// are revoked, the account stays enabled, so they can sign in and join
+// another facility with an invite code. An ID token already issued stays
+// valid until it expires (up to an hour).
 // ======================================================================
 
 describe("E4b (C2): sign-in follows active membership", () => {
@@ -1175,14 +1178,20 @@ describe("E4b (C2): sign-in follows active membership", () => {
     assert.equal(r.signIn, "disabled");
   });
 
-  test("removed from their only facility: disabled and revoked", async () => {
+  test("removed from their only facility: NOT disabled, sessions revoked, can still join with an invite", async () => {
     const { db, fns, auth } = setup();
     seedWorld(db);
     const r = await fns.removeAssistantFromFacility({ assistantUid: "assistant", facilityId: "F1" }, as("owner"));
     assert.deepEqual(db.read("users", "assistant").facilityIds, []);
-    assert.equal(auth.disabled.assistant, true);
+    assert.ok(!("assistant" in auth.disabled), "the account must not be disabled");
     assert.deepEqual(auth.revoked, ["assistant"]);
-    assert.equal(r.signIn, "disabled");
+    assert.equal(r.signIn, "revoked");
+
+    seedInvite(db, "NEWJ8B");
+    const joined = await fns.joinFacilityWithInvite({ code: "NEWJ8B" }, as("assistant"));
+    assert.equal(joined.facilityName, "Ukuli");
+    assert.equal(db.read("users", "assistant").status, "pending");
+    assert.ok(!("assistant" in auth.disabled), "joining does not touch the account either");
   });
 
   test("removed from one of two facilities while active: keeps access", async () => {
@@ -1196,12 +1205,31 @@ describe("E4b (C2): sign-in follows active membership", () => {
     assert.equal(r.signIn, "unchanged");
   });
 
-  test("removed from one of two while deactivated: no active membership left, disabled", async () => {
+  test("removed from one of two while deactivated: sessions revoked, the account not touched by the removal", async () => {
     const { db, fns, auth } = setup();
     seedWorld(db);
     db.seed("users", "assistant", { role: "assistant", status: "deactivated", facilityIds: ["F1", "F2"], facilities: [F1, F2] });
-    await fns.removeAssistantFromFacility({ assistantUid: "assistant", facilityId: "F1" }, as("owner"));
-    assert.equal(auth.disabled.assistant, true);
+    const r = await fns.removeAssistantFromFacility({ assistantUid: "assistant", facilityId: "F1" }, as("owner"));
+    assert.ok(!("assistant" in auth.disabled), "removal never disables (the deactivation already did)");
+    assert.deepEqual(auth.revoked, ["assistant"]);
+    assert.equal(r.signIn, "revoked");
+  });
+
+  test("removal: a failed revoke does not undo the removal, and is reported", async () => {
+    const { db, fns, auth } = setup();
+    seedWorld(db);
+    auth.revokeRefreshTokens = async () => {
+      throw Object.assign(new Error("backend down"), { code: "auth/internal-error" });
+    };
+    const original = console.error;
+    console.error = () => {};
+    try {
+      const r = await fns.removeAssistantFromFacility({ assistantUid: "assistant", facilityId: "F1" }, as("owner"));
+      assert.deepEqual(db.read("users", "assistant").facilityIds, []);
+      assert.equal(r.signIn, "failed");
+    } finally {
+      console.error = original;
+    }
   });
 
   test("reactivated: the account is enabled again, nothing revoked", async () => {

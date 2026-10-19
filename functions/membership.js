@@ -611,10 +611,14 @@ function create({ db, auth, FieldValue, Timestamp, HttpsError, randomInt, now = 
 
   // C2 (E4b): firestore.rules never check a person's status, so a deactivated
   // assistant's token still read and wrote their facility's data; the app
-  // signing them out was the only barrier. So when a change leaves someone
-  // with NO active membership (deactivated, or in no facility any more), their
-  // Auth account is disabled and their refresh tokens revoked; reactivating
-  // turns it back on. Someone still active in another facility keeps access.
+  // signing them out was the only barrier. So deactivating someone with NO
+  // active membership left disables their Auth account and revokes their
+  // refresh tokens; reactivating turns it back on. Removing someone from their
+  // last facility only revokes their sessions (E4b2, owner's change): the
+  // rules already refuse a person in no facility, and the account must stay
+  // usable to join another facility with an invite code
+  // (joinFacilityWithInvite). Someone still active in another facility keeps
+  // access.
   // An ID token already issued stays valid until it expires (up to an hour):
   // revoking stops it being renewed, not the one in hand.
   function hasActiveMembership(status, facilityIds) {
@@ -633,6 +637,19 @@ function create({ db, auth, FieldValue, Timestamp, HttpsError, randomInt, now = 
       // No Auth account to sign in with: nothing to disable or enable.
       if (e && e.code === "auth/user-not-found") return "unchanged";
       console.error(`Could not ${enabled ? "enable" : "disable"} sign-in for ${uid}: ${e && e.message}`);
+      return "failed";
+    }
+  }
+
+  // Signs the person out everywhere without disabling the account. Reported
+  // the same way as setSignInAccess.
+  async function revokeSessions(uid) {
+    try {
+      await auth.revokeRefreshTokens(uid);
+      return "revoked";
+    } catch (e) {
+      if (e && e.code === "auth/user-not-found") return "unchanged";
+      console.error(`Could not revoke the sessions of ${uid}: ${e && e.message}`);
       return "failed";
     }
   }
@@ -697,7 +714,8 @@ function create({ db, auth, FieldValue, Timestamp, HttpsError, randomInt, now = 
 
     await clearPendingNotices(facilityId, assistantUid);
     // Still active in another facility: their sign-in is left as it is.
-    result.signIn = activeLeft ? "unchanged" : await setSignInAccess(assistantUid, false);
+    // Otherwise signed out, but never disabled: see revokeSessions.
+    result.signIn = activeLeft ? "unchanged" : await revokeSessions(assistantUid);
     return result;
   }
 
