@@ -420,7 +420,17 @@ service cloud.firestore {
           (isPlatformAdmin() || (isInFacility(facilityId) && isAdmin()));
       }
       match /counters/{counterId} {
-        allow read, write: if isAuthenticated() && isInFacility(facilityId);
+        allow read: if isAuthenticated() && isInFacility(facilityId);
+        // E4d-2 (C9): a receipt counter only grows, so a receipt number is
+        // never handed out twice. Every writer sets {value: old + 1}, merged
+        // (receipt_numbering.dart); the first one creates it at 1.
+        allow create: if isAuthenticated() && isInFacility(facilityId) &&
+          request.resource.data.keys().hasOnly(['value']) &&
+          request.resource.data.value is int && request.resource.data.value > 0;
+        allow update: if isAuthenticated() && isInFacility(facilityId) &&
+          request.resource.data.diff(resource.data).affectedKeys().hasOnly(['value']) &&
+          request.resource.data.value is int && request.resource.data.value > resource.data.get('value', 0);
+        allow delete: if false;
       }
       // Stock-addition log - one entry per addBatch() call, recording
       // exactly how much sellable/stock quantity was added that call

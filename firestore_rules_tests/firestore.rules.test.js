@@ -1130,3 +1130,37 @@ for (const flow of appShapes.flows) {
     });
   }
 }
+
+// ---------------------------------------------------------------------------
+// C9 counters: a receipt counter only grows, and is never deleted. Every
+// writer sets {value: old + 1} (receipt_numbering.dart: claimReceiptNumber
+// in the sale and service transactions, nextReceiptNumber for expenses and
+// other income; captured, create and update, everyone).
+
+const counterOf = (uid, id = 'receiptNumber') => f1(as(uid), `counters/${id}`);
+const seedCounter = () => env.withSecurityRulesDisabled(async (ctx) => {
+  await f1(ctx.firestore(), 'counters/receiptNumber').set({ value: 41 });
+});
+
+test('C9 [E4d-2]: nobody lowers, resets, keeps or deletes a receipt counter (assistant and admin)', async () => {
+  for (const uid of ['assistant', 'owner']) {
+    await seedCounter();
+    for (const change of [{ value: 40 }, { value: 0 }, { value: 41 }, { value: '42' }, { value: 42, note: 'x' }]) {
+      await assertFails(counterOf(uid).update(change));
+    }
+    await assertFails(counterOf(uid).set({ value: 1 }));
+    await assertFails(counterOf(uid).delete());
+  }
+});
+
+test('C9 [E4d-2]: a new counter starts above zero and holds only its value', async () => {
+  await assertFails(counterOf('assistant', 'otherIncomeReceiptNumber').set({ value: 0 }));
+  await assertFails(counterOf('assistant', 'otherIncomeReceiptNumber').set({ value: 1, note: 'x' }));
+  await assertSucceeds(counterOf('assistant', 'otherIncomeReceiptNumber').set({ value: 1 }, { merge: true }));
+});
+
+test('C9 [E4d-2]: the next receipt number is taken as the app takes it (set value + 1, merged)', async () => {
+  await seedCounter();
+  await assertSucceeds(counterOf('assistant').set({ value: 42 }, { merge: true }));
+  await assertSucceeds(counterOf('owner').set({ value: 43 }, { merge: true }));
+});
