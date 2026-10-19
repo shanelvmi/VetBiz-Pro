@@ -9,8 +9,6 @@ import 'package:vetbiz_pro/models/restore_outcome.dart';
 
 import '../helpers/fake_firestore.dart';
 
-const _skip = 'E3: until the delete to Trash lands';
-
 /// Client c1 as the app stores one, with [balance] (negative: credit).
 Future<FakeFirebaseFirestore> withClient({double balance = 0}) async {
   final fs = newFakeFirestore();
@@ -58,7 +56,7 @@ void main() {
     expect(Map.of(copy)..remove('deletedAt')..remove('deletedBy'), before);
     final logs = await facilityCollection(fs, Collections.activityLogs).get();
     expect(logs.docs.where((d) => d.id.startsWith('delete_client_c1_')).length, 1);
-  }, skip: _skip);
+  });
 
   test('a client with a balance above zero is refused, naming the amount, and nothing is written', () async {
     final fs = await withClient(balance: 5000);
@@ -71,7 +69,7 @@ void main() {
     await settle();
 
     expect(storedData(fs), before);
-  }, skip: _skip);
+  });
 
   test('a client with a debts document is refused even at balance 0, and nothing is written', () async {
     final fs = await withClient();
@@ -85,7 +83,7 @@ void main() {
     await settle();
 
     expect(storedData(fs), before);
-  }, skip: _skip);
+  });
 
   test('a second delete of the same client writes nothing and keeps the first trash copy', () async {
     final fs = await withClient();
@@ -96,7 +94,7 @@ void main() {
     await deleteClient(fs, 'c1');
 
     expect(storedData(fs), afterFirst);
-  }, skip: _skip);
+  });
 
   test('restore brings the client back exactly, with the same balance, and touches no debt', () async {
     final fs = await withClient(balance: -1500);
@@ -113,7 +111,7 @@ void main() {
     expect(await countDocs(fs, Collections.debts), 1);
     final logs = await facilityCollection(fs, Collections.activityLogs).get();
     expect(logs.docs.where((d) => d.id.startsWith('restore_client_c1_')).length, 1);
-  }, skip: _skip);
+  });
 
   test('a second restore (a retry, a double tap) writes nothing', () async {
     final fs = await withClient();
@@ -125,5 +123,5 @@ void main() {
 
     expect(result, RestoreResult.alreadyRestored);
     expect(storedData(fs), afterFirst);
-  }, skip: _skip);
+  });
 }

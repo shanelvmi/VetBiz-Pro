@@ -28,7 +28,8 @@ Future<Map<String, String>> testUserInfo() async =>
 
 FakeFirebaseFirestore newFakeFirestore() => FakeFirebaseFirestore();
 
-ClientProvider newClientProvider(FirebaseFirestore firestore) => ClientProvider(firestore: firestore);
+ClientProvider newClientProvider(FirebaseFirestore firestore) =>
+    ClientProvider(firestore: firestore, currentUserInfo: testUserInfo, deletedBy: testDeletedBy);
 
 SaleProvider newSaleProvider(FirebaseFirestore firestore) =>
     SaleProvider(firestore: firestore, currentUserInfo: testUserInfo, deletedBy: testDeletedBy);

@@ -1,7 +1,13 @@
 import 'dart:async';
+import 'dart:math' as math;
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/foundation.dart';
+import '../data/activity_type.dart';
 import '../models/client.dart';
+import '../models/client_delete_refusal.dart';
+import '../models/restore_outcome.dart';
+import '../services/record_trash.dart';
+import '../utils/activity_logger.dart';
 import '../utils/client_duplicate_matcher.dart';
 import '../utils/paginated_stream_loader.dart';
 import '../services/cursor_paginated_list_controller.dart';
@@ -39,9 +45,18 @@ class SimilarClientMatch {
 //   into the current page yet.
 class ClientProvider with ChangeNotifier, PaginatedStreamLoader<Client> {
   final FirebaseFirestore _firestore;
+  final Future<Map<String, String>> Function() _currentUserInfo;
+  final String Function() _deletedBy;
 
-  /// [firestore] is for tests; the app uses the default.
-  ClientProvider({FirebaseFirestore? firestore}) : _firestore = firestore ?? FirebaseFirestore.instance {
+  /// [firestore], [currentUserInfo] and [deletedBy] are for tests; the app
+  /// uses the defaults.
+  ClientProvider({
+    FirebaseFirestore? firestore,
+    Future<Map<String, String>> Function()? currentUserInfo,
+    String Function()? deletedBy,
+  })  : _firestore = firestore ?? FirebaseFirestore.instance,
+        _currentUserInfo = currentUserInfo ?? ActivityLogger.getCurrentUserInfo,
+        _deletedBy = deletedBy ?? RecordTrash.signedInUser {
     clientsListController = CursorPaginatedListController<Client>(
       pageSize: AppLimits.pageSize,
       fetchPage: _fetchClientsListPage,
@@ -677,15 +692,118 @@ class ClientProvider with ChangeNotifier, PaginatedStreamLoader<Client> {
     await docRef.update(client.toMap());
   }
 
-  /// Delete a client
+  /// Moves a client to Trash (E3), in ONE transaction: the trash copy (the
+  /// client as stored, plus deletedAt and deletedBy), the delete, and the
+  /// activity entry. Refused with [ClientDeleteRefusedException], writing
+  /// nothing, while the client still owes money: a balance above zero or
+  /// any debts document for them (owner decision: the balance comes from
+  /// the debts, so they must not go to Trash with the client). A second
+  /// delete of a client already gone writes nothing.
   Future<void> deleteClient(String facilityId, String clientId) async {
-    final docRef = _firestore
-        .collection(Collections.facilities)
-        .doc(facilityId)
-        .collection(Collections.clients)
-        .doc(clientId);
+    final facilityRef = _firestore.collection(Collections.facilities).doc(facilityId);
+    final clientRef = facilityRef.collection(Collections.clients).doc(clientId);
+    final userInfo = await _currentUserInfo();
 
-    await docRef.delete();
+    // A query cannot run in a transaction, so the debts are found here and
+    // re-read inside it. A debt made after this query comes with a balance
+    // increment in the same transaction (addSale, addService), and the
+    // client read below sees that.
+    final debtRefs = [
+      for (final d in (await facilityRef.collection(Collections.debts).where('clientId', isEqualTo: clientId).get()).docs)
+        d.reference,
+    ];
+    final logRef = facilityRef
+        .collection(Collections.activityLogs)
+        .doc('delete_client_${clientId}_${DateTime.now().millisecondsSinceEpoch}');
+
+    // Thrown outside the transaction, so it reaches the screen as itself on
+    // every platform (as RecordTrash does).
+    ClientDeleteRefusedException? refusal;
+    await _firestore.runTransaction((transaction) async {
+      refusal = null;
+      final data = (await transaction.get(clientRef)).data();
+      if (data == null) return; // already deleted
+      var hasDebt = false;
+      var debtsOwed = 0.0;
+      for (final ref in debtRefs) {
+        final debt = (await transaction.get(ref)).data();
+        if (debt == null) continue;
+        hasDebt = true;
+        debtsOwed += ((debt['amountOwed'] as num?) ?? 0).toDouble();
+      }
+      final balance = ((data['balance'] as num?) ?? 0).toDouble();
+      if (balance > 0 || hasDebt) {
+        refusal = ClientDeleteRefusedException(math.max(balance, debtsOwed));
+        return;
+      }
+
+      transaction.set(facilityRef.collection(Collections.trashClients).doc(clientId), {
+        ...data,
+        'deletedAt': FieldValue.serverTimestamp(),
+        'deletedBy': _deletedBy(),
+      });
+      transaction.delete(clientRef);
+      ActivityLogger.logActivityIn(
+        transaction,
+        logRef,
+        userId: userInfo[Fields.userId]!,
+        userName: userInfo['userName'] ?? 'Unknown',
+        actionType: ActivityType.trash.key,
+        // Saved activity text: stays English.
+        description: 'Deleted client ${data['name'] ?? clientId}',
+      );
+    });
+    if (refusal != null) throw refusal!;
+  }
+
+  /// Puts a client back from Trash (E3) exactly as stored, in one
+  /// transaction with its activity entry. Balances and debts are not
+  /// touched: the balance is the one the client had (never above zero, the
+  /// delete refuses that) and comes from the debts. Already back (a second
+  /// tap, a retry after a lost answer): writes nothing and returns
+  /// [RestoreResult.alreadyRestored]. Not in Trash any more, or a client
+  /// with the same id exists again: a StateError, nothing written.
+  Future<RestoreResult> restoreClient(String clientId, String facilityId) async {
+    final facilityRef = _firestore.collection(Collections.facilities).doc(facilityId);
+    final clientRef = facilityRef.collection(Collections.clients).doc(clientId);
+    final trashRef = facilityRef.collection(Collections.trashClients).doc(clientId);
+    final userInfo = await _currentUserInfo();
+
+    StateError? stop;
+    final result = await _firestore.runTransaction<RestoreResult?>((transaction) async {
+      stop = null;
+      final liveExists = (await transaction.get(clientRef)).exists;
+      final data = (await transaction.get(trashRef)).data();
+      if (data == null) {
+        if (liveExists) return RestoreResult.alreadyRestored;
+        stop = StateError('${Collections.trashClients}/$clientId is no longer in Trash');
+        return null;
+      }
+      if (liveExists) {
+        // Never overwrite a live client (a sale can re-create one as a
+        // stub, RUNBOOK2 LATER 1): the trash copy stays.
+        stop = StateError('${Collections.clients}/$clientId exists again');
+        return null;
+      }
+
+      transaction.set(clientRef, Map.of(data)..remove('deletedAt')..remove('deletedBy'));
+      transaction.delete(trashRef);
+      final deletedAt = data['deletedAt'];
+      ActivityLogger.logActivityIn(
+        transaction,
+        facilityRef
+            .collection(Collections.activityLogs)
+            .doc('restore_client_${clientId}_${deletedAt is Timestamp ? deletedAt.millisecondsSinceEpoch : 0}'),
+        userId: userInfo[Fields.userId]!,
+        userName: userInfo['userName'] ?? 'Unknown',
+        actionType: ActivityType.trash.key,
+        description: 'Restored ${data['name'] ?? Collections.clients}',
+      );
+      return RestoreResult.restored;
+    });
+
+    if (result == null) throw stop!;
+    return result;
   }
 
   @override

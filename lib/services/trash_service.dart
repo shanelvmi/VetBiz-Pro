@@ -4,6 +4,7 @@ import '../data/activity_type.dart';
 import '../data/collections.dart';
 import '../data/fields.dart';
 import '../models/restore_outcome.dart';
+import '../providers/client_provider.dart';
 import '../providers/sale_provider.dart';
 import '../providers/service_provider.dart';
 import '../utils/activity_logger.dart';
@@ -19,9 +20,10 @@ import '../utils/activity_logger.dart';
 /// ServiceProvider.restoreService (E2, docs/design/delete_restore.md): one
 /// transaction that also takes the stock again and re-creates the debt, the
 /// balance and a service's expense, or refuses with a
-/// [RestoreRefusedException] and writes nothing. Products, clients and
-/// transactions move back as before. [firestore] and [currentUserInfo] are
-/// for tests; the app uses the defaults.
+/// [RestoreRefusedException] and writes nothing. Clients go to
+/// ClientProvider.restoreClient (E3): one transaction, balances and debts
+/// untouched. Products and transactions move back as before. [firestore]
+/// and [currentUserInfo] are for tests; the app uses the defaults.
 class TrashService {
   TrashService._();
 
@@ -51,6 +53,14 @@ class TrashService {
       final provider = ServiceProvider(firestore: firestore, currentUserInfo: currentUserInfo);
       try {
         return await provider.restoreService(id, facilityId);
+      } finally {
+        provider.dispose();
+      }
+    }
+    if (liveCollection == Collections.clients) {
+      final provider = ClientProvider(firestore: firestore, currentUserInfo: currentUserInfo);
+      try {
+        return await provider.restoreClient(id, facilityId);
       } finally {
         provider.dispose();
       }
@@ -85,8 +95,9 @@ class TrashService {
 
   /// [restore], for a caller that only knows the id (the Undo on a delete
   /// message): reads the trash document first. Throws a StateError if it is
-  /// no longer in Trash (already restored, or deleted for good); a sale or a
-  /// service already back returns [RestoreResult.alreadyRestored] instead.
+  /// no longer in Trash (already restored, or deleted for good); a sale, a
+  /// service or a client already back returns [RestoreResult.alreadyRestored]
+  /// instead.
   static Future<RestoreResult> restoreById({
     required String facilityId,
     required String trashCollection,
@@ -96,11 +107,14 @@ class TrashService {
     Future<Map<String, String>> Function()? currentUserInfo,
   }) async {
     final fs = firestore ?? FirebaseFirestore.instance;
-    final isSaleOrService = liveCollection == Collections.sales || liveCollection == Collections.services;
-    final snap = isSaleOrService
+    // These read their trash copy inside their own restore transaction.
+    final readsItsOwnCopy = liveCollection == Collections.sales ||
+        liveCollection == Collections.services ||
+        liveCollection == Collections.clients;
+    final snap = readsItsOwnCopy
         ? null
         : await fs.collection(Collections.facilities).doc(facilityId).collection(trashCollection).doc(id).get();
-    final data = isSaleOrService ? const <String, dynamic>{} : snap!.data();
+    final data = readsItsOwnCopy ? const <String, dynamic>{} : snap!.data();
     if (data == null) throw StateError('$trashCollection/$id is no longer in Trash');
     return restore(
       facilityId: facilityId,
