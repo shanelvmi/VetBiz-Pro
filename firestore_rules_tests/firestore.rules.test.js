@@ -1054,3 +1054,53 @@ test('C4 update [E4d-2]: an admin may raise or rewrite a debt, but not below zer
   await assertSucceeds(debtsOf('coadmin').doc('sale_D1').update({ amountOwed: 8000, items: [] }));
   await assertFails(debtsOf('owner').doc('sale_D1').update({ amountOwed: -5 }));
 });
+
+// ---------------------------------------------------------------------------
+// C6 services: an assistant only records payments on a service - the
+// fields the payment's copyWith(totalPaid, updatedAt).toMap() changes
+// (captured: totalPaid, updatedAt, totalServiceProfit,
+// unrealizedServiceProfit; it does not write paymentStatus). Admins edit.
+
+const servicesOf = (uid) => as(uid).collection('facilities').doc('F1').collection('services');
+const seedService = () => env.withSecurityRulesDisabled(async (ctx) => {
+  await f1(ctx.firestore(), 'services/V6').set({
+    category: 'Treatment', name: 'Deworming', description: '', totalAmount: 10000, totalPaid: 4000,
+    clientId: 'c2', clientName: 'Neema', serviceDate: new Date(2026, 9, 1), providedByName: 'Neema Assistant',
+    updatedAt: new Date(2026, 9, 1), itemsUsed: [{ itemName: 'Gloves', price: 700, productId: null }],
+    totalServiceProfit: 3300, unrealizedServiceProfit: 6000, paymentMethod: 'Cash', receiptNumber: 12,
+    transactionId: null, clientNameLower: 'neema', paymentStatus: 'Partial',
+  });
+});
+
+test('C6 services [E4d-2]: an assistant can NOT change a service\'s amount, items, client, date, receipt or status', async () => {
+  await seedService();
+  for (const change of [{ totalAmount: 1 }, { itemsUsed: [] }, { clientId: 'c1' }, { serviceDate: new Date() },
+    { receiptNumber: 1 }, { providedByName: 'Someone' }, { paymentStatus: 'Paid' }, { name: 'Other' }]) {
+    await assertFails(servicesOf('assistant').doc('V6').update({ ...change, updatedAt: new Date() }));
+  }
+});
+
+test('C6 services [E4d-2]: an assistant can NOT write Edit Service\'s service change (either captured edit)', async () => {
+  for (const name of ['updateService raises the unpaid amount (Edit Service)', 'updateService with an external item (Edit Service)']) {
+    const flow = appShapes.flows.find((f) => f.name === name);
+    assert.ok(flow.refused.includes('assistant'), name);
+    const serviceOnly = flow.changes.filter((c) => c.path.startsWith('services/'));
+    assert.strictEqual(serviceOnly.length, 1, name);
+    await seedShape(serviceOnly, 'assistant');
+    await assertFails(replayShape('assistant', serviceOnly));
+    await assertSucceeds(replayShape('owner', serviceOnly));
+  }
+});
+
+test('C6 services [E4d-2]: an assistant records a payment on a service (the payment\'s fields)', async () => {
+  await seedService();
+  await assertSucceeds(servicesOf('assistant').doc('V6').update({
+    totalPaid: 5000, totalServiceProfit: 4300, unrealizedServiceProfit: 5000, updatedAt: new Date(),
+  }));
+});
+
+test('C6 services [E4d-2]: admins still edit a service', async () => {
+  await seedService();
+  await assertSucceeds(servicesOf('owner').doc('V6').update({ totalAmount: 12000, updatedAt: new Date() }));
+  await assertSucceeds(servicesOf('coadmin').doc('V6').update({ itemsUsed: [], clientId: 'c1' }));
+});

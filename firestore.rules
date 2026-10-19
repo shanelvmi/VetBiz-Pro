@@ -255,7 +255,13 @@ service cloud.firestore {
       // ========== 🛠️ Services ==========
       match /services/{serviceId} {
         allow read: if isAuthenticated() && isInFacility(facilityId);
-        allow update: if isAuthenticated() && isInFacility(facilityId);
+        // E4d-2 (C6 services), owner decision: Edit Service is admin-only;
+        // an assistant only records payments on a service - the fields
+        // AddPaymentScreen's copyWith(totalPaid, updatedAt).toMap() changes
+        // (it does not write paymentStatus). Admins as before.
+        allow update: if isAuthenticated() && isInFacility(facilityId) &&
+          (isAdmin() || request.resource.data.diff(resource.data).affectedKeys()
+            .hasOnly(['totalPaid', 'updatedAt', 'totalServiceProfit', 'unrealizedServiceProfit']));
         allow delete: if isAuthenticated() && isInFacility(facilityId) && isAdmin();
         allow create: if isAuthenticated() && isInFacility(facilityId) && !isSubscriptionLocked(facilityId);
       }
