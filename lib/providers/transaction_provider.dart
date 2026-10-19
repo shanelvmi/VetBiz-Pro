@@ -15,9 +15,18 @@ import '../config/money.dart';
 import '../config/app_limits.dart';
 
 class TransactionProvider with ChangeNotifier {
-  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  final FirebaseFirestore _firestore;
 
-  TransactionProvider() {
+  // Who is signed in, for the activity entries and the trash copy. Tests
+  // pass their own; the app uses ActivityLogger.getCurrentUserInfo
+  // (FirebaseAuth).
+  final Future<Map<String, String>> Function() _currentUserInfo;
+
+  TransactionProvider({
+    FirebaseFirestore? firestore,
+    Future<Map<String, String>> Function()? currentUserInfo,
+  })  : _firestore = firestore ?? FirebaseFirestore.instance,
+        _currentUserInfo = currentUserInfo ?? ActivityLogger.getCurrentUserInfo {
     transactionsListController = CursorPaginatedListController<TransactionModel>(
       pageSize: AppLimits.pageSize,
       fetchPage: _fetchTransactionsListPage,
@@ -273,7 +282,7 @@ class TransactionProvider with ChangeNotifier {
 
       final counterName =
           transaction.type == 'expense' ? 'expenseReceiptNumber' : 'otherIncomeReceiptNumber';
-      final receiptNumber = await nextReceiptNumber(facilityId, counterName: counterName);
+      final receiptNumber = await nextReceiptNumber(facilityId, counterName: counterName, firestore: _firestore);
 
       final newTransaction = transaction.copyWith(id: docRef.id, receiptNumber: receiptNumber);
 
@@ -285,7 +294,7 @@ class TransactionProvider with ChangeNotifier {
         notifyListeners();
       }
 
-      final userInfo = await ActivityLogger.getCurrentUserInfo();
+      final userInfo = await _currentUserInfo();
       await ActivityLogger.logActivity(
         facilityId: facilityId,
         userId: userInfo[Fields.userId]!,
@@ -304,12 +313,8 @@ class TransactionProvider with ChangeNotifier {
   /// UPDATE TRANSACTION
   /// ---------------------------------------------------
   Future<void> updateTransaction(
-      TransactionModel updatedTransaction, BuildContext context) async {
+      TransactionModel updatedTransaction, String? facilityId) async {
     try {
-      final facilityId =
-          Provider.of<FacilityProvider>(context, listen: false)
-              .selectedFacilityId;
-
       if (facilityId == null || facilityId.isEmpty) {
         debugPrint('Facility ID missing, cannot update transaction.');
         return;
@@ -332,7 +337,7 @@ class TransactionProvider with ChangeNotifier {
         }
       }
 
-      final userInfo = await ActivityLogger.getCurrentUserInfo();
+      final userInfo = await _currentUserInfo();
       await ActivityLogger.logActivity(
         facilityId: facilityId,
         userId: userInfo[Fields.userId]!,
@@ -350,12 +355,8 @@ class TransactionProvider with ChangeNotifier {
   /// DELETE TRANSACTION
   /// ---------------------------------------------------
   Future<void> deleteTransaction(
-      BuildContext context, String transactionId) async {
+      String? facilityId, String transactionId) async {
     try {
-      final facilityId =
-          Provider.of<FacilityProvider>(context, listen: false)
-              .selectedFacilityId;
-
       final existingIndex = _liveTransactions.indexWhere((t) => t.id == transactionId);
       final deletedDescription = existingIndex != -1
           ? _liveTransactions[existingIndex].description
@@ -375,7 +376,7 @@ class TransactionProvider with ChangeNotifier {
       final snapshot = await docRef.get();
       if (!snapshot.exists) return;
 
-      final userInfo = await ActivityLogger.getCurrentUserInfo();
+      final userInfo = await _currentUserInfo();
 
       // Moved to `trash_transactions` instead of erased permanently, so
       // an accidental delete can be undone from the Trash screen - same

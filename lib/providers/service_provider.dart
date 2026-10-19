@@ -914,7 +914,7 @@ class ServiceProvider extends ChangeNotifier {
   Future<List<Map<String, dynamic>>> _deductStockForItems(List<Map<String, dynamic>> items) async {
     if (_facilityId == null) return items;
 
-    final productHelper = ProductProvider();
+    final productHelper = ProductProvider(firestore: _firestore);
     final updated = <Map<String, dynamic>>[];
     final deductedSoFar = <int, List<Map<String, dynamic>>>{};
 
@@ -962,7 +962,7 @@ class ServiceProvider extends ChangeNotifier {
   /// available; falls back to the old +1 aggregate adjustment for
   /// services recorded before batch tracking existed.
   Future<void> _restoreStockForItems(List<Map<String, dynamic>> items) async {
-    final productHelper = ProductProvider();
+    final productHelper = ProductProvider(firestore: _firestore);
 
     for (final item in items) {
       final productId = item['productId'] as String?;

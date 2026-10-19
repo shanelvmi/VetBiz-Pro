@@ -594,7 +594,7 @@ class _TransactionScreenState extends State<TransactionScreen> {
     final facilityId = _facilityId;
 
     try {
-      await transactionProvider.deleteTransaction(context, tx.id);
+      await transactionProvider.deleteTransaction(facilityId, tx.id);
       if (!mounted) return;
       if (_selectedTransaction?.id == tx.id) setState(() => _selectedTransaction = null);
       // deleteTransaction moves it to Trash (a soft delete), so Undo puts

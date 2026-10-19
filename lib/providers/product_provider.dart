@@ -12,6 +12,12 @@ import '../data/fields.dart';
 import '../data/activity_type.dart';
 
 class ProductProvider with ChangeNotifier {
+  // Tests pass an in-memory Firestore (E4d-2 captures Add Product and Add
+  // Batch for the rules suite); the app uses the default instance.
+  final FirebaseFirestore _firestore;
+
+  ProductProvider({FirebaseFirestore? firestore}) : _firestore = firestore ?? FirebaseFirestore.instance;
+
   final List<Product> _products = [];
 
   /// -------------------------------
@@ -56,7 +62,7 @@ class ProductProvider with ChangeNotifier {
     _facilityId = facilityId;
     _subscription?.cancel();
 
-    _subscription = FirebaseFirestore.instance
+    _subscription = _firestore
         .collection(Collections.facilities)
         .doc(facilityId)
         .collection(Collections.products)
@@ -83,7 +89,7 @@ class ProductProvider with ChangeNotifier {
   /// -------------------------------
   Future<void> fetchProducts(String facilityId) async {
     try {
-      final snapshot = await FirebaseFirestore.instance
+      final snapshot = await _firestore
           .collection(Collections.facilities)
           .doc(facilityId)
           .collection(Collections.products)
@@ -119,7 +125,7 @@ class ProductProvider with ChangeNotifier {
 
       if (facilityId.isEmpty) return;
 
-      final docRef = FirebaseFirestore.instance
+      final docRef = _firestore
           .collection(Collections.facilities)
           .doc(facilityId)
           .collection(Collections.products)
@@ -159,7 +165,7 @@ class ProductProvider with ChangeNotifier {
       // starting amount to be inferred as an unexplained "Adjusted"
       // figure with nothing behind it.
       if (product.stockQty > 0 || product.sellableQty > 0) {
-        await FirebaseFirestore.instance
+        await _firestore
             .collection(Collections.facilities)
             .doc(facilityId)
             .collection(Collections.stockAdditions)
@@ -210,7 +216,7 @@ class ProductProvider with ChangeNotifier {
     required String productId,
     required bool isWatchlisted,
   }) async {
-    await FirebaseFirestore.instance
+    await _firestore
         .collection(Collections.facilities)
         .doc(facilityId)
         .collection(Collections.products)
@@ -231,7 +237,7 @@ class ProductProvider with ChangeNotifier {
     String destination = 'stock',
   }) async {
     try {
-      final productRef = FirebaseFirestore.instance
+      final productRef = _firestore
           .collection(Collections.facilities)
           .doc(facilityId)
           .collection(Collections.products)
@@ -268,7 +274,7 @@ class ProductProvider with ChangeNotifier {
       final wasMerged = matchedBatchRef != null;
 
       if (matchedBatchRef != null) {
-        await FirebaseFirestore.instance.runTransaction((transaction) async {
+        await _firestore.runTransaction((transaction) async {
           final batchSnap = await transaction.get(matchedBatchRef!);
           if (!batchSnap.exists) return;
           final data = batchSnap.data() as Map<String, dynamic>;
@@ -313,7 +319,7 @@ class ProductProvider with ChangeNotifier {
       // that timestamp and the batch's current sellableQty total can't
       // be trusted to represent only today's addition once it already
       // had stock from before.
-      await FirebaseFirestore.instance
+      await _firestore
           .collection(Collections.facilities)
           .doc(facilityId)
           .collection(Collections.stockAdditions)
@@ -337,7 +343,7 @@ class ProductProvider with ChangeNotifier {
 
       Map<String, dynamic>? finalAggregates;
 
-      await FirebaseFirestore.instance.runTransaction((transaction) async {
+      await _firestore.runTransaction((transaction) async {
         final freshDocs = <DocumentSnapshot>[];
         for (final ref in allBatchRefs) {
           freshDocs.add(await transaction.get(ref));
@@ -419,7 +425,7 @@ class ProductProvider with ChangeNotifier {
     required String productId,
     required String batchId,
   }) async {
-    final productRef = FirebaseFirestore.instance
+    final productRef = _firestore
         .collection(Collections.facilities)
         .doc(facilityId)
         .collection(Collections.products)
@@ -431,7 +437,7 @@ class ProductProvider with ChangeNotifier {
 
     Map<String, dynamic>? finalAggregates;
 
-    await FirebaseFirestore.instance.runTransaction((transaction) async {
+    await _firestore.runTransaction((transaction) async {
       final freshDocs = <DocumentSnapshot>[];
       for (final ref in allBatchRefs) {
         freshDocs.add(await transaction.get(ref));
@@ -569,7 +575,7 @@ class ProductProvider with ChangeNotifier {
     int? stockQty,
     int? sellableQty,
   }) async {
-    final productRef = FirebaseFirestore.instance
+    final productRef = _firestore
         .collection(Collections.facilities)
         .doc(facilityId)
         .collection(Collections.products)
@@ -584,7 +590,7 @@ class ProductProvider with ChangeNotifier {
 
     Map<String, dynamic>? finalAggregates;
 
-    await FirebaseFirestore.instance.runTransaction((transaction) async {
+    await _firestore.runTransaction((transaction) async {
       // All reads before any writes, every one of them - see the note
       // above this method's previous version for exactly why that order
       // matters.
@@ -689,7 +695,7 @@ class ProductProvider with ChangeNotifier {
   /// for seeing at a glance which delivery should be sold/used first,
   /// even before Sales enforces that automatically (a later phase).
   Stream<List<ProductBatch>> streamBatchesForProduct(String facilityId, String productId) {
-    return FirebaseFirestore.instance
+    return _firestore
         .collection(Collections.facilities)
         .doc(facilityId)
         .collection(Collections.products)
@@ -716,7 +722,7 @@ class ProductProvider with ChangeNotifier {
         updatedAt: DateTime.now(),
       );
 
-      await FirebaseFirestore.instance
+      await _firestore
           .collection(Collections.facilities)
           .doc(facilityId)
           .collection(Collections.products)
@@ -767,7 +773,7 @@ class ProductProvider with ChangeNotifier {
   }) async {
     if (quantity <= 0) return [];
 
-    firestore ??= FirebaseFirestore.instance;
+    firestore ??= _firestore;
     final productRef =
         firestore.collection(Collections.facilities).doc(facilityId).collection(Collections.products).doc(productId);
     final batchesRef = productRef.collection(Collections.batches);
@@ -871,7 +877,7 @@ class ProductProvider with ChangeNotifier {
   }) async {
     if (allocations.isEmpty) return;
 
-    firestore ??= FirebaseFirestore.instance;
+    firestore ??= _firestore;
     final productRef =
         firestore.collection(Collections.facilities).doc(facilityId).collection(Collections.products).doc(productId);
     final batchesRef = productRef.collection(Collections.batches);
@@ -921,7 +927,7 @@ class ProductProvider with ChangeNotifier {
     }
 
     final facilityId = product.facilityId;
-    final productRef = FirebaseFirestore.instance
+    final productRef = _firestore
         .collection(Collections.facilities)
         .doc(facilityId)
         .collection(Collections.products)
@@ -955,7 +961,7 @@ class ProductProvider with ChangeNotifier {
             return aExp.compareTo(bExp);
           });
 
-        await FirebaseFirestore.instance.runTransaction((transaction) async {
+        await _firestore.runTransaction((transaction) async {
           final freshDocs = <DocumentSnapshot>[];
           for (final doc in candidates) {
             freshDocs.add(await transaction.get(doc.reference));
@@ -996,7 +1002,7 @@ class ProductProvider with ChangeNotifier {
           });
         });
       } else {
-        await FirebaseFirestore.instance.runTransaction((transaction) async {
+        await _firestore.runTransaction((transaction) async {
           final snapshot = await transaction.get(productRef);
           if (!snapshot.exists) {
             throw Exception('Product no longer exists');
@@ -1039,7 +1045,7 @@ class ProductProvider with ChangeNotifier {
       // warehouse instead of a new supplier delivery. This is what
       // lets the Daily Report count it under "Added" instead of an
       // unexplained "Adjusted" figure.
-      await FirebaseFirestore.instance
+      await _firestore
           .collection(Collections.facilities)
           .doc(facilityId)
           .collection(Collections.stockAdditions)
@@ -1101,7 +1107,7 @@ class ProductProvider with ChangeNotifier {
     }
 
     final facilityId = product.facilityId;
-    final productRef = FirebaseFirestore.instance
+    final productRef = _firestore
         .collection(Collections.facilities)
         .doc(facilityId)
         .collection(Collections.products)
@@ -1118,7 +1124,7 @@ class ProductProvider with ChangeNotifier {
       late int newStockQty;
       late int newSellableQty;
 
-      await FirebaseFirestore.instance.runTransaction((transaction) async {
+      await _firestore.runTransaction((transaction) async {
         final batchSnap = await transaction.get(batchRef);
         final productSnap = await transaction.get(productRef);
         if (!batchSnap.exists) throw Exception('Batch no longer exists');
@@ -1156,7 +1162,7 @@ class ProductProvider with ChangeNotifier {
         notifyListeners();
       }
 
-      await FirebaseFirestore.instance
+      await _firestore
           .collection(Collections.facilities)
           .doc(facilityId)
           .collection(Collections.stockAdjustments)
@@ -1209,7 +1215,7 @@ class ProductProvider with ChangeNotifier {
 
       if (facilityId == null || facilityId.isEmpty) return;
 
-      final docRef = FirebaseFirestore.instance
+      final docRef = _firestore
           .collection(Collections.facilities)
           .doc(facilityId)
           .collection(Collections.products)
@@ -1220,7 +1226,7 @@ class ProductProvider with ChangeNotifier {
 
       final userInfo = await ActivityLogger.getCurrentUserInfo();
 
-      await FirebaseFirestore.instance
+      await _firestore
           .collection(Collections.facilities)
           .doc(facilityId)
           .collection(Collections.trashProducts)

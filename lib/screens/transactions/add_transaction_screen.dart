@@ -104,7 +104,7 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
         note: note,
       );
       try {
-        await provider.updateTransaction(updated, context);
+        await provider.updateTransaction(updated, facilityId);
         if (!context.mounted) return;
         AppFeedback.success(L10n.current.transactions_updated);
         Navigator.pop(context);
