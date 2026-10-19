@@ -220,7 +220,11 @@ service cloud.firestore {
           areStockQuantitiesAtOrAboveZero();
         allow delete: if isAuthenticated() && isInFacility(facilityId) && isAdmin();
         match /batches/{batchId} {
-          allow read, delete: if isAuthenticated() && isInFacility(facilityId);
+          allow read: if isAuthenticated() && isInFacility(facilityId);
+          // E4d-1 (C8): deleting a batch takes its stock out with no Trash
+          // and no log; only admins can (the app's delete button is
+          // admin-only, ProductProvider.deleteBatch).
+          allow delete: if isAuthenticated() && isInFacility(facilityId) && isAdmin();
           allow create, update: if isAuthenticated() && isInFacility(facilityId) && areStockQuantitiesAtOrAboveZero();
         }
       }

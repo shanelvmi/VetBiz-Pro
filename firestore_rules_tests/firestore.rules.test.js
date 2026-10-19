@@ -842,3 +842,34 @@ for (const flow of appShapes.flows) {
     });
   }
 }
+
+// Deleting a batch (ProductProvider.deleteBatch, product_provider.dart:458,
+// not injectable, so written from the source): the batch goes and the
+// product's totals are recalculated, in one transaction.
+const seedBatchToDelete = () => env.withSecurityRulesDisabled(async (ctx) => {
+  const p = f1(ctx.firestore(), 'products/PB');
+  await p.set({ name: 'Dawa', stockQty: 5, sellableQty: 7, expiry: new Date(2030, 0, 1) });
+  await p.collection('batches').doc('keep').set({ batchNo: 'K', stockQty: 5, sellableQty: 4, expiry: new Date(2030, 0, 1) });
+  await p.collection('batches').doc('gone').set({ batchNo: 'G', stockQty: 0, sellableQty: 3, expiry: new Date(2026, 0, 1) });
+});
+const deleteBatchShape = (uid) => {
+  const db = as(uid);
+  const batch = db.batch();
+  batch.delete(f1(db, 'products/PB/batches/gone'));
+  batch.update(f1(db, 'products/PB'), { stockQty: 5, sellableQty: 4, expiry: new Date(2030, 0, 1), updatedAt: serverTime() });
+  return batch.commit();
+};
+
+test('C8 [E4d-1]: the owner and the Co-admin delete a batch (the app\'s write)', async () => {
+  await seedBatchToDelete();
+  await assertSucceeds(deleteBatchShape('owner'));
+  await seedBatchToDelete();
+  await assertSucceeds(deleteBatchShape('coadmin'));
+});
+
+test('C8 [E4d-1]: an assistant can NOT delete a batch (no Trash, no log)', async () => {
+  await seedBatchToDelete();
+  await assertFails(deleteBatchShape('assistant'));
+  await assertFails(f1(as('assistant'), 'products/PB/batches/gone').delete());
+});
+
