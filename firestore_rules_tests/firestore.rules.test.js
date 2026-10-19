@@ -977,3 +977,50 @@ test('C6 [E4d-1]: admins still edit a sale, as today', async () => {
   await assertSucceeds(sales('owner').doc('S6').update({ totalAmount: 5000 }));
   await assertSucceeds(sales('coadmin').doc('S6').update({ clientId: 'c2' }));
 });
+
+
+// ======================================================================
+// [E4d-2] THE OWNER'S DECISION (C4 update, C6 services, C7), C12 products,
+// C9 counters, C10 stock logs, C11 payment claims.
+// docs/design/e4d2_writer_audit.md lists every writer.
+// ======================================================================
+
+// A flow the app refuses to a role (the button is hidden and the provider
+// throws AdminOnlyException), replayed as that role: the rules refuse it too.
+const assertRefusedShape = async (name, uid) => {
+  const flow = appShapes.flows.find((f) => f.name === name);
+  assert.ok(flow && flow.refused.includes(uid), `${name}: not refused to ${uid} in the fixture`);
+  await seedShape(flow.changes, uid);
+  await assertFails(replayShape(uid, flow.changes));
+};
+
+// ---------------------------------------------------------------------------
+// C7 transactions: members record; editing and deleting are admin-only.
+
+const transactionsOf = (uid) => as(uid).collection('facilities').doc('F1').collection('transactions');
+const seedTransaction = () => env.withSecurityRulesDisabled(async (ctx) => {
+  await f1(ctx.firestore(), 'transactions/T7').set({
+    date: new Date(2026, 9, 1), description: 'Fuel', descriptionLower: 'fuel', amount: 3000, type: 'expense',
+    category: 'Transport', recordedBy: 'Neema Assistant', receiptNumber: 4,
+  });
+});
+
+test('C7 [E4d-2]: an assistant can NOT edit a transaction (Edit Transaction\'s shape, or any change)', async () => {
+  await assertRefusedShape('updateTransaction (Edit Transaction)', 'assistant');
+  await seedTransaction();
+  await assertFails(transactionsOf('assistant').doc('T7').update({ amount: 1 }));
+  await assertFails(transactionsOf('assistant').doc('T7').set({ amount: 1 }));
+});
+
+test('C7 [E4d-2]: an assistant can NOT delete a transaction, with or without the Trash copy', async () => {
+  await assertRefusedShape('deleteTransaction (to Trash)', 'assistant');
+  await seedTransaction();
+  await assertFails(transactionsOf('assistant').doc('T7').delete());
+});
+
+test('C7 [E4d-2]: an assistant still records one; admins edit and delete', async () => {
+  await assertSucceeds(transactionsOf('assistant').doc('T8').set({ amount: 500, type: 'expense', recordedBy: 'Neema' }));
+  await seedTransaction();
+  await assertSucceeds(transactionsOf('coadmin').doc('T7').update({ amount: 3500 }));
+  await assertSucceeds(transactionsOf('owner').doc('T7').delete());
+});

@@ -261,8 +261,11 @@ service cloud.firestore {
       }
       // ========== 🛠️ Transactions ==========
       match /transactions/{transactionId} {
-        allow read, create, update: if isAuthenticated() && isInFacility(facilityId);
-        allow delete: if isAuthenticated() && isInFacility(facilityId) && isAdmin();
+        allow read, create: if isAuthenticated() && isInFacility(facilityId);
+        // E4d-2 (C7), owner decision: assistants record (Add Transaction, a
+        // service's expense); only an admin edits or deletes one
+        // (TransactionProvider refuses an assistant first).
+        allow update, delete: if isAuthenticated() && isInFacility(facilityId) && isAdmin();
       }
       // ========== 👥 Clients ==========
       match /clients/{clientId} {
