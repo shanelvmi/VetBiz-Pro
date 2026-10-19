@@ -873,3 +873,48 @@ test('C8 [E4d-1]: an assistant can NOT delete a batch (no Trash, no log)', async
   await assertFails(f1(as('assistant'), 'products/PB/batches/gone').delete());
 });
 
+
+// ---------------------------------------------------------------------------
+// C4 debts.
+
+const debtsOf = (uid) => as(uid).collection('facilities').doc('F1').collection('debts');
+const seedDebt = () => env.withSecurityRulesDisabled(async (ctx) => {
+  const db = ctx.firestore();
+  await f1(db, 'clients/cD').set({ name: 'Juma', balance: 5000 });
+  await f1(db, 'debts/sale_D1').set({ clientId: 'cD', amountOwed: 5000, saleId: 'D1', source: 'Sale', timestamp: new Date() });
+});
+
+test('C4 [E4d-1]: a debt must name a client and owe more than zero (assistant and admin)', async () => {
+  for (const uid of ['assistant', 'owner']) {
+    await assertFails(debtsOf(uid).doc(`zero-${uid}`).set({ clientId: 'c1', amountOwed: 0 }));
+    await assertFails(debtsOf(uid).doc(`neg-${uid}`).set({ clientId: 'c1', amountOwed: -100 }));
+    await assertFails(debtsOf(uid).doc(`noclient-${uid}`).set({ amountOwed: 100 }));
+    await assertSucceeds(debtsOf(uid).doc(`ok-${uid}`).set({ clientId: 'c1', amountOwed: 100 }));
+  }
+});
+
+test('C4 [E4d-1]: an assistant can NOT delete a debt without lowering the client\'s balance (forgiving it)', async () => {
+  await seedDebt();
+  await assertFails(debtsOf('assistant').doc('sale_D1').delete());
+  // ...nor by "lowering" it by nothing.
+  const db = as('assistant');
+  const batch = db.batch();
+  batch.delete(f1(db, 'debts/sale_D1'));
+  batch.update(f1(db, 'clients/cD'), { balance: 5000 });
+  await assertFails(batch.commit());
+});
+
+test('C4 [E4d-1]: an assistant deletes a debt in the same write that lowers the balance (a payment that settles it)', async () => {
+  await seedDebt();
+  const db = as('assistant');
+  const batch = db.batch();
+  batch.delete(f1(db, 'debts/sale_D1'));
+  batch.update(f1(db, 'clients/cD'), { balance: firebase.firestore.FieldValue.increment(-5000) });
+  await assertSucceeds(batch.commit());
+});
+
+test('C4 [E4d-1]: an admin may delete a debt on its own, as today', async () => {
+  await seedDebt();
+  await assertSucceeds(debtsOf('coadmin').doc('sale_D1').delete());
+});
+

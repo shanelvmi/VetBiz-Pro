@@ -106,6 +106,13 @@ service cloud.firestore {
       return !(field in next) || next[field] >= 0 ||
         (resource != null && field in resource.data && next[field] == resource.data[field]);
     }
+    // True when this request (batch or transaction) leaves the client's
+    // balance lower than it was: 2 lookups, only on a debt delete (C4).
+    function isLoweringClientBalance(facilityId, clientId) {
+      let path = /databases/$(database)/documents/facilities/$(facilityId)/clients/$(clientId);
+      return clientId is string && exists(path) && existsAfter(path) &&
+        getAfter(path).data.get('balance', 0) < get(path).data.get('balance', 0);
+    }
     function areStockQuantitiesAtOrAboveZero() {
       return isQuantityAtOrAboveZero('stockQty') && isQuantityAtOrAboveZero('sellableQty');
     }
@@ -257,7 +264,18 @@ service cloud.firestore {
       }
       // ========== 💰 Debts ==========
       match /debts/{debtId} {
-        allow read, write: if isAuthenticated() && isInFacility(facilityId);
+        allow read: if isAuthenticated() && isInFacility(facilityId);
+        // E4d-1 (C4): a debt is owed BY a client, and owes something.
+        allow create: if isAuthenticated() && isInFacility(facilityId) &&
+          request.resource.data.clientId is string && request.resource.data.amountOwed > 0;
+        // Unchanged: Edit Service (open to assistants) rewrites the debt,
+        // and can raise it (docs/design/e4d1_writer_audit.md, C4 update).
+        allow update: if isAuthenticated() && isInFacility(facilityId);
+        // E4d-1 (C4): an admin, or the same write lowers the client's
+        // balance (a repayment that settles it, a service edited down to
+        // paid). Deleting it alone would forgive the debt.
+        allow delete: if isAuthenticated() && isInFacility(facilityId) &&
+          (isAdmin() || isLoweringClientBalance(facilityId, resource.data.clientId));
       }
       // ========== 🗄️ Archived Sales (read-only for clients) ==========
       match /archived_sales/{saleId} {
