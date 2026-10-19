@@ -1505,6 +1505,9 @@ exports.removeAssistantFromFacility = membershipCallable("removeAssistantFromFac
 // Approve, reject, deactivate or reactivate an assistant - stamped by the
 // server, with a history. Reject also removes them from the facility.
 exports.setAssistantStatus = membershipCallable("setAssistantStatus");
+// The operator console's deactivate / reactivate (Platform Admins only),
+// which also switches the person's sign-in off or on (E4b2, W5).
+exports.platformSetUserStatus = membershipCallable("platformSetUserStatus");
 
 // Called by the Edit Facility screen right after saving, so the new name
 // shows straight away.

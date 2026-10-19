@@ -138,17 +138,36 @@ class MembershipService {
   /// they land on the invite-code screen when they next sign in.
   ///
   /// [action] is a `MembershipHistoryAction.request`: 'approve', 'reject', 'deactivate' or 'reactivate'.
-  Future<void> setAssistantStatus({required String assistantUid, required String action}) async {
-    await _call('setAssistantStatus', {'assistantUid': assistantUid, 'action': action});
+  ///
+  /// Returns the server's `signIn` answer (see [signInFailed]).
+  Future<String> setAssistantStatus({required String assistantUid, required String action}) async {
+    return _signIn(await _call('setAssistantStatus', {'assistantUid': assistantUid, 'action': action}));
   }
 
   Future<void> reassignAssistant({required String assistantUid, required String newFacilityId}) async {
     await _call('reassignAssistant', {'assistantUid': assistantUid, 'newFacilityId': newFacilityId});
   }
 
-  Future<void> removeAssistantFromFacility({required String assistantUid, required String facilityId}) async {
-    await _call('removeAssistantFromFacility', {'assistantUid': assistantUid, 'facilityId': facilityId});
+  /// Returns the server's `signIn` answer (see [signInFailed]).
+  Future<String> removeAssistantFromFacility({required String assistantUid, required String facilityId}) async {
+    return _signIn(await _call('removeAssistantFromFacility', {'assistantUid': assistantUid, 'facilityId': facilityId}));
   }
+
+  /// Operator console only: a Platform Admin sets any user's status to
+  /// 'active' or 'deactivated' (a `UserStatus` key). The server checks the
+  /// caller is a Platform Admin and switches the person's sign-in to match.
+  /// Returns the server's `signIn` answer (see [signInFailed]).
+  Future<String> platformSetUserStatus({required String userId, required String status}) async {
+    return _signIn(await _call('platformSetUserStatus', {'userId': userId, 'status': status}));
+  }
+
+  /// What the server says it did to the person's sign-in after a status
+  /// change or a removal (C2): 'disabled', 'enabled', 'revoked', 'unchanged',
+  /// or this one, when the change itself was saved but Firebase Auth could not
+  /// be updated. The admin is told, since the person may still be signed in.
+  static const String signInFailed = 'failed';
+
+  static String _signIn(Map<String, dynamic> data) => (data['signIn'] ?? '').toString();
 
   /// Brings every member's copy of a facility's name and type into line after
   /// it's been edited.

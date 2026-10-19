@@ -84,6 +84,15 @@ test("the unsafe leftovers are not exported: sendAssistantCredentials, removeAss
   }
 });
 
+// E4b2 (W5): the operator console's deactivate / reactivate wrote `status`
+// itself, which left the person's sign-in on. It must ask the server.
+test("the operator console does not write a user's status itself: platformSetUserStatus", () => {
+  const screen = fs.readFileSync(path.join(LIB, "screens", "platform_admin", "user_detail_screen.dart"), "utf8");
+  assert.ok(!/\.update\(\{[^}]*Fields\.status\s*:/s.test(screen), "user_detail_screen.dart still writes Fields.status");
+  assert.ok(screen.includes(".platformSetUserStatus("), "user_detail_screen.dart does not call platformSetUserStatus");
+  assert.ok(calledByApp.includes("platformSetUserStatus"), "membership_service.dart does not call platformSetUserStatus");
+});
+
 // ---------------------------------------------------------------------------
 // Constants the app and the server both know (Phase 2 spec, section 6). Read
 // from the real Dart source as text, like the region above.

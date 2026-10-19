@@ -1386,3 +1386,87 @@ describe("E4b2 (W4): deleteOwnFacility", () => {
     assert.deepEqual(index.recursivelyDeleted, []);
   });
 });
+
+// ======================================================================
+// E4b2 (W5): a Platform Admin's deactivate / reactivate. It used to be a
+// status write from the operator console, which left sign-in on. Now the
+// server sets the status and switches sign-in the same way as C2.
+// ======================================================================
+
+describe("E4b2 (W5): platformSetUserStatus", () => {
+  const set = (fns, uid, status, caller = "pa") => fns.platformSetUserStatus({ userId: uid, status }, as(caller));
+
+  test("deactivate: status stamped as the Platform Admin's, account disabled, sessions revoked", async () => {
+    const { db, fns, auth } = setup();
+    seedWorld(db);
+    const r = await set(fns, "assistant", "deactivated");
+    const u = db.read("users", "assistant");
+    assert.equal(u.status, "deactivated");
+    assert.equal(u.statusChangedBy, "pa@example.com");
+    assert.equal(u.statusChangedByRole, "Platform Admin");
+    assert.ok(u.statusChangedAt, "stamped");
+    assert.equal(auth.disabled.assistant, true);
+    assert.deepEqual(auth.revoked, ["assistant"]);
+    assert.deepEqual(r, { success: true, status: "deactivated", signIn: "disabled" });
+  });
+
+  test("reactivate: active again, account enabled, nothing revoked", async () => {
+    const { db, fns, auth } = setup();
+    seedWorld(db);
+    await set(fns, "owner", "deactivated");
+    auth.revoked = [];
+    const r = await set(fns, "owner", "active");
+    assert.equal(db.read("users", "owner").status, "active");
+    assert.equal(auth.disabled.owner, false);
+    assert.deepEqual(auth.revoked, []);
+    assert.equal(r.signIn, "enabled");
+  });
+
+  test("only a Platform Admin: an admin, an assistant and no sign-in are refused, nothing changes", async () => {
+    const { db, fns, auth } = setup();
+    seedWorld(db);
+    await rejects(set(fns, "assistant", "deactivated", "owner"), "permission-denied");
+    await rejects(set(fns, "owner", "deactivated", "assistant"), "permission-denied");
+    await rejects(fns.platformSetUserStatus({ userId: "assistant", status: "deactivated" }, {}), "unauthenticated");
+    assert.equal(db.read("users", "assistant").status, "active");
+    assert.deepEqual(auth.disabled, {});
+  });
+
+  test("a Platform Admin's own account can't be changed this way", async () => {
+    const { db, fns, auth } = setup();
+    seedWorld(db);
+    db.seed("platform_admins", "pa2", {});
+    db.seed("users", "pa2", { role: "admin", status: "active", facilityIds: [], facilities: [] });
+    await rejects(set(fns, "pa2", "deactivated"), "failed-precondition");
+    assert.equal(db.read("users", "pa2").status, "active");
+    assert.deepEqual(auth.disabled, {});
+  });
+
+  test("only active or deactivated; a missing user is not found", async () => {
+    const { db, fns } = setup();
+    seedWorld(db);
+    for (const status of ["pending", "rejected", "", undefined, 1]) {
+      await rejects(set(fns, "assistant", status), "invalid-argument");
+    }
+    await rejects(fns.platformSetUserStatus({ status: "active" }, as("pa")), "invalid-argument");
+    await rejects(set(fns, "nobody", "deactivated"), "not-found");
+    assert.equal(db.read("users", "assistant").status, "active");
+  });
+
+  test("an Auth failure does not undo the status, and is reported", async () => {
+    const { db, fns, auth } = setup();
+    seedWorld(db);
+    auth.updateUser = async () => {
+      throw Object.assign(new Error("backend down"), { code: "auth/internal-error" });
+    };
+    const original = console.error;
+    console.error = () => {};
+    try {
+      const r = await set(fns, "assistant", "deactivated");
+      assert.equal(db.read("users", "assistant").status, "deactivated");
+      assert.equal(r.signIn, "failed");
+    } finally {
+      console.error = original;
+    }
+  });
+});

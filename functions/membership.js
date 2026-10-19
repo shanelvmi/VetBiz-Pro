@@ -821,6 +821,43 @@ function create({ db, auth, FieldValue, Timestamp, HttpsError, randomInt, now = 
   }
 
   // ======================================================================
+  // A PLATFORM ADMIN DEACTIVATES OR REACTIVATES ANY USER (E4b2, W5)
+  // ======================================================================
+  //
+  // The operator console used to write the status itself, so a person it
+  // deactivated kept their sign-in (C2 only covered facility admins). Here the
+  // status is set and sign-in switched the same way: deactivated = disabled
+  // and signed out everywhere, active = enabled. Any user, admin or assistant,
+  // except a Platform Admin (their access is removed in the Admins tab first).
+  async function platformSetUserStatus(data, context) {
+    const callerUid = requireAuth(context);
+    const userId = cleanId(data && data.userId, "userId");
+    const status = data && data.status;
+    if (status !== "active" && status !== "deactivated") throw invalid("Unknown status.");
+
+    const callerPa = await db.collection("platform_admins").doc(callerUid).get();
+    if (!callerPa.exists) throw new HttpsError("permission-denied", "Only a Platform Admin can do this.");
+    const targetPa = await db.collection("platform_admins").doc(userId).get();
+    if (targetPa.exists) {
+      throw new HttpsError("failed-precondition", "A Platform Admin's own account can't be deactivated or reactivated this way.");
+    }
+
+    const userRef = db.collection("users").doc(userId);
+    const userSnap = await userRef.get();
+    if (!userSnap.exists) throw new HttpsError("not-found", "User not found.");
+
+    // statusChanged* are the fields the console's details already show.
+    await userRef.update({
+      status,
+      statusChangedBy: emailOf(context) || callerUid,
+      statusChangedByRole: "Platform Admin",
+      statusChangedAt: FieldValue.serverTimestamp(),
+    });
+    const signIn = await setSignInAccess(userId, status === "active");
+    return { success: true, status, signIn };
+  }
+
+  // ======================================================================
   // KEEP EACH MEMBER'S COPY OF A FACILITY'S NAME AND TYPE IN STEP
   // ======================================================================
   //
@@ -881,6 +918,7 @@ function create({ db, auth, FieldValue, Timestamp, HttpsError, randomInt, now = 
     reassignAssistant,
     removeAssistantFromFacility,
     setAssistantStatus,
+    platformSetUserStatus,
     syncFacilityDetails,
     propagateFacilityDetails,
   };

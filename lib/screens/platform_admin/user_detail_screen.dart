@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:cloud_functions/cloud_functions.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import '../../services/membership_service.dart';
 import '../../services/role_change_service.dart';
 import '../../data/collections.dart';
 import '../../data/fields.dart';
@@ -259,12 +260,9 @@ class _UserDetailScreenState extends State<UserDetailScreen> {
 
     try {
       final admin = FirebaseAuth.instance.currentUser;
-      await FirebaseFirestore.instance.collection(Collections.users).doc(widget.userId).update({
-        Fields.status: newStatus,
-        'statusChangedBy': admin?.email ?? admin?.uid ?? 'Unknown',
-        'statusChangedByRole': 'Platform Admin',
-        'statusChangedAt': FieldValue.serverTimestamp(),
-      });
+      // The server sets the status (and statusChanged*) and switches the
+      // person's sign-in to match; a write from here left it on (E4b2, W5).
+      final signIn = await MembershipService().platformSetUserStatus(userId: widget.userId, status: newStatus);
       if (!mounted) return;
       setState(() {
         _userData[Fields.status] = newStatus;
@@ -272,7 +270,11 @@ class _UserDetailScreenState extends State<UserDetailScreen> {
         _userData['statusChangedByRole'] = 'Platform Admin';
         _userData['statusChangedAt'] = Timestamp.now();
       });
-      AppFeedback.success('Status updated to $newStatus');
+      if (signIn == MembershipService.signInFailed) {
+        AppFeedback.warning("Status updated to $newStatus, but their sign-in could not be switched. Change the status again.");
+      } else {
+        AppFeedback.success('Status updated to $newStatus');
+      }
     } catch (e, st) {
       AppFeedback.error("Couldn't update the status", error: e, stackTrace: st);
     }
