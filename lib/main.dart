@@ -61,22 +61,30 @@ void main() async {
   runApp(
     MultiProvider(
       providers: [
+        // First, so the providers below can ask it who is signed in: Edit
+        // Service, Edit Transaction and deleting a transaction are
+        // admin-only (E4d-2), and those providers check it at the call.
+        ChangeNotifierProvider(create: (_) => UserRoleProvider()),
         ChangeNotifierProvider(create: (_) => DebtProvider()),
         ChangeNotifierProvider(create: (_) => PaymentProvider()),
         ChangeNotifierProvider(
           create: (context) => ServiceProvider(
             debtProvider: Provider.of<DebtProvider>(context, listen: false),
+            isAdmin: () => Provider.of<UserRoleProvider>(context, listen: false).isAdmin,
           ),
         ),
         ChangeNotifierProvider(create: (_) => SaleProvider()),
         ChangeNotifierProvider(create: (_) => ProductProvider()),
         ChangeNotifierProvider(create: (_) => ClientProvider()),
-        ChangeNotifierProvider(create: (_) => TransactionProvider()),
+        ChangeNotifierProvider(
+          create: (context) => TransactionProvider(
+            isAdmin: () => Provider.of<UserRoleProvider>(context, listen: false).isAdmin,
+          ),
+        ),
         ChangeNotifierProvider(create: (_) => FacilityProvider()),
         ChangeNotifierProvider(create: (_) => SettingsProvider()),
         ChangeNotifierProvider(create: (_) => UiSettingsProvider()),
         ChangeNotifierProvider(create: (_) => SubscriptionProvider()),
-        ChangeNotifierProvider(create: (_) => UserRoleProvider()),
         Provider<AuthService>(create: (_) => AuthService()),
       ],
       child: const VetBizProApp(),

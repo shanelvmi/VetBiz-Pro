@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../models/transaction.dart';
+import '../models/admin_only_refusal.dart';
 import 'facility_provider.dart';
 import '../utils/activity_logger.dart';
 import '../utils/receipt_numbering.dart';
@@ -22,11 +23,19 @@ class TransactionProvider with ChangeNotifier {
   // (FirebaseAuth).
   final Future<Map<String, String>> Function() _currentUserInfo;
 
+  // Whether the signed-in person is an admin (UserRoleProvider in the app).
+  // Editing and deleting a transaction are admin-only (owner decision,
+  // E4d-2); without one, nobody is.
+  final bool Function() _isAdmin;
+  static bool _nobodyIsAdmin() => false;
+
   TransactionProvider({
     FirebaseFirestore? firestore,
     Future<Map<String, String>> Function()? currentUserInfo,
+    bool Function()? isAdmin,
   })  : _firestore = firestore ?? FirebaseFirestore.instance,
-        _currentUserInfo = currentUserInfo ?? ActivityLogger.getCurrentUserInfo {
+        _currentUserInfo = currentUserInfo ?? ActivityLogger.getCurrentUserInfo,
+        _isAdmin = isAdmin ?? _nobodyIsAdmin {
     transactionsListController = CursorPaginatedListController<TransactionModel>(
       pageSize: AppLimits.pageSize,
       fetchPage: _fetchTransactionsListPage,
@@ -314,6 +323,8 @@ class TransactionProvider with ChangeNotifier {
   /// ---------------------------------------------------
   Future<void> updateTransaction(
       TransactionModel updatedTransaction, String? facilityId) async {
+    // Admin-only (owner decision, E4d-2): refused before anything is written.
+    if (!_isAdmin()) throw const AdminOnlyException();
     try {
       if (facilityId == null || facilityId.isEmpty) {
         debugPrint('Facility ID missing, cannot update transaction.');
@@ -356,6 +367,8 @@ class TransactionProvider with ChangeNotifier {
   /// ---------------------------------------------------
   Future<void> deleteTransaction(
       String? facilityId, String transactionId) async {
+    // Admin-only (owner decision, E4d-2): refused before anything is written.
+    if (!_isAdmin()) throw const AdminOnlyException();
     try {
       final existingIndex = _liveTransactions.indexWhere((t) => t.id == transactionId);
       final deletedDescription = existingIndex != -1

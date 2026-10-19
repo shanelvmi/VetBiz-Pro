@@ -109,8 +109,11 @@ Sale testSale({
 
 /// A ServiceProvider on [fs], set to the test facility (addService saves to
 /// the facility it listens to).
-ServiceProvider newServiceProvider(FirebaseFirestore fs) =>
-    ServiceProvider(firestore: fs, currentUserInfo: testUserInfo, deletedBy: testDeletedBy)..listenToServices(testFacilityId);
+/// The signed-in user is an admin unless [admin] is false (Edit Service is
+/// admin-only, E4d-2).
+ServiceProvider newServiceProvider(FirebaseFirestore fs, {bool admin = true}) =>
+    ServiceProvider(firestore: fs, currentUserInfo: testUserInfo, deletedBy: testDeletedBy, isAdmin: () => admin)
+      ..listenToServices(testFacilityId);
 
 /// An item used on a service, as AddEditServiceScreen collects it: matched
 /// to a product (one unit comes out of its stock) or, with no [productId],

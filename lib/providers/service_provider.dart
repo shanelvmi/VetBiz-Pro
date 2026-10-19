@@ -4,6 +4,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 
 import '../models/service.dart';
 import '../models/debt.dart';
+import '../models/admin_only_refusal.dart';
 import '../models/restore_outcome.dart';
 import '../services/record_trash.dart';
 import 'debt_provider.dart';
@@ -28,6 +29,12 @@ class ServiceProvider extends ChangeNotifier {
   // (FirebaseAuth).
   final Future<Map<String, String>> Function() _currentUserInfo;
 
+  // Whether the signed-in person is an admin (UserRoleProvider in the app).
+  // Edit Service is admin-only (owner decision, E4d-2). Without one, nobody
+  // is: a provider made for something else (TrashService) never edits.
+  final bool Function() _isAdmin;
+  static bool _nobodyIsAdmin() => false;
+
   // Delete to Trash and restore from it (docs/design/delete_restore.md).
   late final RecordTrash _trash;
 
@@ -36,8 +43,10 @@ class ServiceProvider extends ChangeNotifier {
     FirebaseFirestore? firestore,
     Future<Map<String, String>> Function()? currentUserInfo,
     String Function()? deletedBy,
+    bool Function()? isAdmin,
   })  : _firestore = firestore ?? FirebaseFirestore.instance,
-        _currentUserInfo = currentUserInfo ?? ActivityLogger.getCurrentUserInfo {
+        _currentUserInfo = currentUserInfo ?? ActivityLogger.getCurrentUserInfo,
+        _isAdmin = isAdmin ?? _nobodyIsAdmin {
     _trash = RecordTrash(_firestore, trashedServiceType,
         currentUserInfo: _currentUserInfo, deletedBy: deletedBy ?? RecordTrash.signedInUser);
     servicesListController = CursorPaginatedListController<Service>(
@@ -545,6 +554,8 @@ class ServiceProvider extends ChangeNotifier {
 
   /// ===== UPDATE SERVICE =====
   Future<void> updateService(Service service) async {
+    // Admin-only (owner decision, E4d-2): refused before anything is written.
+    if (!_isAdmin()) throw const AdminOnlyException();
     if (_facilityId == null || service.id.isEmpty) return;
 
     final doc = _firestore

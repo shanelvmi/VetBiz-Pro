@@ -5,6 +5,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 
 import '../../config/money.dart';
 import '../../l10n/l10n.dart';
+import '../../models/admin_only_refusal.dart';
 import '../../models/client_delete_refusal.dart';
 import '../../models/restore_outcome.dart';
 import 'auth_error_messages.dart';
@@ -62,6 +63,9 @@ class FriendlyError {
     if (error is ClientDeleteRefusedException) {
       return L10n.current.clients_deleteRefusedOwes(Money.format(error.owed));
     }
+    // E4d-2, owner decision: Edit Service, Edit Transaction and deleting a
+    // transaction are admin-only.
+    if (error is AdminOnlyException) return L10n.current.error_adminOnly;
     return fallback;
   }
 
