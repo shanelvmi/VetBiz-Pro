@@ -558,9 +558,11 @@ class _TransactionScreenState extends State<TransactionScreen> {
               },
               itemBuilder: (context) => [
                 PopupMenuItem(value: 'view', child: Text(context.l10n.common_viewDetails)),
-                PopupMenuItem(value: 'edit', child: Text(context.l10n.common_edit)),
-                if (Provider.of<UserRoleProvider>(context, listen: false).isAdmin)
+                // Edit and Delete are admin-only (owner decision, E4d-2).
+                if (Provider.of<UserRoleProvider>(context, listen: false).isAdmin) ...[
+                  PopupMenuItem(value: 'edit', child: Text(context.l10n.common_edit)),
                   PopupMenuItem(value: 'delete', child: Text(context.l10n.common_delete, style: TextStyle(color: context.colors.dangerSoft))),
+                ],
               ],
             ),
           ),

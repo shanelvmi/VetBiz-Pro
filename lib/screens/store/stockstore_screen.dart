@@ -751,6 +751,9 @@ class _StockStoreScreenState extends State<StockStoreScreen> {
           ],
         ),
         const SizedBox(width: AppSpacing.s4),
+        // Creating a product is admin-only (owner decision, E4d-2); an
+        // assistant still adds batches to existing products.
+        if (Provider.of<UserRoleProvider>(context).isAdmin)
         Padding(
           padding: const EdgeInsets.only(right: AppSpacing.s12),
           child: ElevatedButton.icon(

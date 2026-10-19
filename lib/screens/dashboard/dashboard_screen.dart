@@ -2491,6 +2491,8 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
           _refreshDashboardData();
         },
       ),
+      // Creating a product is admin-only (owner decision, E4d-2).
+      if (Provider.of<UserRoleProvider>(context).isAdmin)
       _quickActionCard(
         icon: Icons.add_box,
         title: context.l10n.products_addProduct,
