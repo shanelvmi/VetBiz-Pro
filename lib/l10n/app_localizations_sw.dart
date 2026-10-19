@@ -2111,6 +2111,10 @@ class AppLocalizationsSw extends AppLocalizations {
   String get team_removeFailed => 'Imeshindwa kumwondoa msaidizi';
 
   @override
+  String get team_signInSwitchFailed =>
+      'Msaidizi amesimamishwa, lakini kuingia kwake hakukuweza kuzimwa. Mrejeshe kisha umsimamishe tena.';
+
+  @override
   String get team_reassigned => 'Msaidizi amehamishwa';
 
   @override

@@ -2100,6 +2100,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get team_removeFailed => 'Couldn\'t remove the assistant';
 
   @override
+  String get team_signInSwitchFailed =>
+      'The assistant was deactivated, but their sign-in could not be switched off. Reactivate and deactivate again.';
+
+  @override
   String get team_reassigned => 'Assistant reassigned';
 
   @override

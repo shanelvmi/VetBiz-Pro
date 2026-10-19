@@ -3818,6 +3818,12 @@ abstract class AppLocalizations {
   /// **'Couldn\'t remove the assistant'**
   String get team_removeFailed;
 
+  /// Warning after deactivating or removing an assistant when the server saved the change but could not switch off their sign-in (Firebase Auth); they may still be signed in.
+  ///
+  /// In en, this message translates to:
+  /// **'The assistant was deactivated, but their sign-in could not be switched off. Reactivate and deactivate again.'**
+  String get team_signInSwitchFailed;
+
   /// Message after moving an assistant to another facility.
   ///
   /// In en, this message translates to:
