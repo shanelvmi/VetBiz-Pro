@@ -54,7 +54,7 @@ Future<FakeFirebaseFirestore> creditService() async {
 
 void main() {
   // --- Delete ---
-  test(skip: pendingE2, 'delete puts the stock back, removes the debt and the expense, keeps the payment; the copy keeps the expense',
+  test('delete puts the stock back, removes the debt and the expense, keeps the payment; the copy keeps the expense',
       () async {
     final fs = await creditService();
 
@@ -78,7 +78,7 @@ void main() {
     expect(logs.docs.where((d) => d.id.startsWith('delete_service_v1_')).length, 1);
   });
 
-  test(skip: pendingE2, 'test 5: a service not in the cached list gets its stock back on delete', () async {
+  test('test 5: a service not in the cached list gets its stock back on delete', () async {
     final fs = await creditService();
     expect(await sellableQty(fs, 'p1'), 4);
 

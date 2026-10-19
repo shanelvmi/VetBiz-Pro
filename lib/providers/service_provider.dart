@@ -1,10 +1,10 @@
 import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 
 import '../models/service.dart';
 import '../models/debt.dart';
+import '../services/record_trash.dart';
 import 'debt_provider.dart';
 import 'product_provider.dart';
 import '../utils/activity_logger.dart';
@@ -27,8 +27,8 @@ class ServiceProvider extends ChangeNotifier {
   // (FirebaseAuth).
   final Future<Map<String, String>> Function() _currentUserInfo;
 
-  // What a trash copy's deletedBy holds. Tests pass their own.
-  final String Function() _deletedBy;
+  // Delete to Trash and restore from it (docs/design/delete_restore.md).
+  late final RecordTrash _trash;
 
   ServiceProvider({
     this.debtProvider,
@@ -36,8 +36,9 @@ class ServiceProvider extends ChangeNotifier {
     Future<Map<String, String>> Function()? currentUserInfo,
     String Function()? deletedBy,
   })  : _firestore = firestore ?? FirebaseFirestore.instance,
-        _currentUserInfo = currentUserInfo ?? ActivityLogger.getCurrentUserInfo,
-        _deletedBy = deletedBy ?? _signedInUser {
+        _currentUserInfo = currentUserInfo ?? ActivityLogger.getCurrentUserInfo {
+    _trash = RecordTrash(_firestore, trashedServiceType,
+        currentUserInfo: _currentUserInfo, deletedBy: deletedBy ?? RecordTrash.signedInUser);
     servicesListController = CursorPaginatedListController<Service>(
       pageSize: AppLimits.pageSize,
       fetchPage: _fetchServicesListPage,
@@ -423,29 +424,11 @@ class ServiceProvider extends ChangeNotifier {
       // expense - stock-matched items were already paid for when that
       // stock was purchased, so expensing them again here would
       // double-count the cost. See Service.externalExpenseTotal.
-      final expenseAmount = serviceToSave.externalExpenseTotal;
-      if (expenseAmount > 0) {
-        // Same filter as Service.externalExpenseTotal - only the items that
-        // actually became this expense, so an audit can see exactly what
-        // was expensed without opening the service record separately.
-        final externalItemNames = serviceToSave.itemsUsed
-            .where((item) => item['productId'] == null)
-            .map((item) => (item['itemName'] ?? '').toString())
-            .where((itemName) => itemName.isNotEmpty)
-            .toList();
-        final itemsSummary = externalItemNames.isNotEmpty ? externalItemNames.join(', ') : 'N/A';
-        transaction.set(facilityRef.collection(Collections.transactions).doc('service_$serviceId'), {
-          'amount': expenseAmount,
-          'category': 'Vet Service Expenses',
-          'date': Timestamp.fromDate(DateTime.now()),
-          'description': 'Items used for ${serviceToSave.name}: $itemsSummary',
-          // The user's fullName from Firestore: Firebase Auth's own
-          // displayName is never set in this app.
-          'recordedBy': userInfo['userName']!,
-          'type': 'expense',
-          'serviceId': serviceId,
-          'paymentMethod': serviceToSave.paymentMethod ?? PaymentMethod.cash.key,
-        });
+      // The user's fullName from Firestore: Firebase Auth's own displayName
+      // is never set in this app.
+      final expense = _newExpense(serviceToSave, serviceId, userInfo['userName']!);
+      if (expense != null) {
+        transaction.set(facilityRef.collection(Collections.transactions).doc('service_$serviceId'), expense);
       }
 
       // Record the upfront amount collected (if any) as a payment - the
@@ -638,136 +621,86 @@ class ServiceProvider extends ChangeNotifier {
   }
 
   /// ===== DELETE =====
-  /// Moves the service to `trash_services` instead of erasing it
-  /// permanently, so an accidental delete can be undone from the Trash
-  /// screen. Auto-purged after 30 days by a scheduled Cloud Function.
+  /// Moves the service to `trash_services` in ONE transaction (auto-purged
+  /// after 30 days by a scheduled Cloud Function): the trash copy (with its
+  /// expense, so a restore can give it back), its stock back on the batches
+  /// it came from (always, cached or not), its debt and expense removed,
+  /// the client's balance and oldest unpaid date lowered, and the activity
+  /// entry. The upfront payment stays counted. Nothing is swallowed.
   Future<void> deleteService(String id) async {
-    if (_facilityId == null) return;
-
-    // Captured before deletion so any deducted stock can be restored,
-    // and reused below for the trash copy - avoids a second read.
-    final existing = _findCachedService(id);
-
-    final doc = _firestore
-        .collection(Collections.facilities)
-        .doc(_facilityId)
-        .collection(Collections.services)
-        .doc(id);
-
-    Map<String, dynamic>? dataForTrash;
-    if (existing != null) {
-      dataForTrash = existing.toMap();
-    } else {
-      final snapshot = await doc.get();
-      if (snapshot.exists) dataForTrash = snapshot.data();
-    }
-
-    if (dataForTrash != null) {
-      await _firestore
-          .collection(Collections.facilities)
-          .doc(_facilityId)
-          .collection(Collections.trashServices)
-          .doc(id)
-          .set({
-        ...dataForTrash,
-        'deletedAt': FieldValue.serverTimestamp(),
-        'deletedBy': _deletedBy(),
-      });
-    }
-
-    await doc.delete();
-
+    final facilityId = _facilityId;
+    if (facilityId == null) return;
+    await _trash.delete(facilityId, id);
     _liveServices.removeWhere((s) => s.id == id);
     _olderServices.removeWhere((s) => s.id == id);
     notifyListeners();
+  }
 
-    // Delete associated transactions
-    final tx = _firestore
-        .collection(Collections.facilities)
-        .doc(_facilityId)
-        .collection(Collections.transactions)
-        .where('serviceId', isEqualTo: id);
+  /// A service, for RecordTrash.
+  static final trashedServiceType = TrashedRecordType(
+    liveCollection: Collections.services,
+    trashCollection: Collections.trashServices,
+    idPrefix: 'service',
+    debtLinkField: 'serviceId',
+    itemsField: 'itemsUsed',
+    itemNameField: 'itemName',
+    oneUnitPerItem: true,
+    actionType: ActivityType.services.key,
+    deletedDescription: (data) =>
+        'Deleted service for ${data['clientName'] ?? 'Walk-in'} - ${Money.savedAsStored(data['totalAmount'] ?? 0)}',
+    searchFields: (id, data) => Service.fromFirestore(data, id).searchFields(),
+    newDebt: (id, data, owed, clientPhone) {
+      final service = Service.fromFirestore(data, id);
+      // As _writeNewServiceDebt writes it, dated at the service.
+      return Debt(
+        id: 'service_$id',
+        clientId: service.clientId!,
+        clientName: service.clientName,
+        clientPhone: clientPhone,
+        serviceId: id,
+        saleId: null,
+        source: 'Service',
+        amountOwed: owed,
+        timestamp: service.serviceDate ?? DateTime.now(),
+        updatedAt: DateTime.now(),
+        items: [
+          {
+            'serviceName': service.name,
+            'category': service.category,
+            'totalAmount': service.totalAmount,
+            'totalPaid': service.totalPaid,
+          }
+        ],
+      ).toMap();
+    },
+    recomputedExpense: (id, data, recordedBy) => _newExpense(Service.fromFirestore(data, id), id, recordedBy),
+  );
 
-    final snap = await tx.get();
-    for (var d in snap.docs) {
-      await d.reference.delete();
-    }
-
-    // Reverse whatever this service still owed against the client's
-    // balance, and remove its own debt record if it had one -
-    // previously neither happened at all, leaving Client.balance
-    // overstated and a stale debt entry behind for a service that no
-    // longer exists (the same gap deleteSale already correctly closes
-    // for sales).
-    final totalAmount = (existing?.totalAmount ?? (dataForTrash?['totalAmount'] as num?)?.toDouble() ?? 0.0);
-    final totalPaid = (existing?.totalPaid ?? (dataForTrash?['totalPaid'] as num?)?.toDouble() ?? 0.0);
-    final clientId = existing?.clientId ?? dataForTrash?['clientId'] as String?;
-    final owed = totalAmount - totalPaid;
-    final debtRefForDeletedService =
-        _firestore.collection(Collections.facilities).doc(_facilityId).collection(Collections.debts).doc('service_$id');
-    try {
-      final cleanupBatch = _firestore.batch();
-      if (clientId != null && owed != 0) {
-        cleanupBatch.set(
-          _firestore.collection(Collections.facilities).doc(_facilityId).collection(Collections.clients).doc(clientId),
-          {'balance': FieldValue.increment(-owed)},
-          SetOptions(merge: true),
-        );
-      }
-      cleanupBatch.delete(debtRefForDeletedService);
-
-      if (clientId != null && owed > 0) {
-        // Same reasoning as _handleServiceDebt's paid-off branch - only
-        // worth a recompute if this service's own debt was actually the
-        // one holding the client's recorded oldest-unpaid date.
-        final clientRef = _firestore.collection(Collections.facilities).doc(_facilityId).collection(Collections.clients).doc(clientId);
-        final clientDoc = await clientRef.get();
-        final rawOldest = clientDoc.data()?['oldestUnpaidDebtDate'];
-        final currentOldest = rawOldest is Timestamp ? rawOldest.toDate() : null;
-        final thisDebtDoc = await debtRefForDeletedService.get();
-        final rawThis = thisDebtDoc.data()?['timestamp'];
-        final thisDebtTimestamp = rawThis is Timestamp ? rawThis.toDate() : null;
-
-        if (currentOldest != null && thisDebtTimestamp != null && thisDebtTimestamp.isAtSameMomentAs(currentOldest)) {
-          final remainingSnap = await _firestore
-              .collection(Collections.facilities)
-              .doc(_facilityId)
-              .collection(Collections.debts)
-              .where('clientId', isEqualTo: clientId)
-              .orderBy('timestamp')
-              .limit(AppLimits.moreThanOneCheck)
-              .get();
-          final remainingDocs = remainingSnap.docs.where((d) => d.id != debtRefForDeletedService.id).toList();
-          final nextTs = remainingDocs.isEmpty ? null : remainingDocs.first.data()['timestamp'];
-          final newOldest = nextTs is Timestamp ? nextTs.toDate() : null;
-          cleanupBatch.set(
-            clientRef,
-            {'oldestUnpaidDebtDate': newOldest != null ? Timestamp.fromDate(newOldest) : null},
-            SetOptions(merge: true),
-          );
-        }
-      }
-
-      await cleanupBatch.commit();
-    } catch (e) {
-      debugPrint('Error reversing client balance / cleaning up debt on service delete: $e');
-    }
-
-    // Restore any stock this service had previously deducted.
-    if (existing != null) {
-      await _restoreStockForItems(existing.itemsUsed);
-    }
-
-    if (dataForTrash != null && _facilityId != null) {
-      final userInfo = await ActivityLogger.getCurrentUserInfo();
-      await ActivityLogger.logActivity(
-        facilityId: _facilityId!,
-        userId: userInfo[Fields.userId]!,
-        userName: userInfo['userName'],
-        actionType: ActivityType.services.key,
-        description: 'Deleted service for ${dataForTrash['clientName'] ?? 'Walk-in'} - ${Money.savedAsStored(dataForTrash['totalAmount'] ?? 0)}',
-      );
-    }
+  /// The expense for the items of [service] bought outside, as
+  /// transactions/service_{id} holds it; null when there are none. Only the
+  /// items NOT matched to a real product count (Service.externalExpenseTotal).
+  static Map<String, dynamic>? _newExpense(Service service, String serviceId, String recordedBy) {
+    final expenseAmount = service.externalExpenseTotal;
+    if (expenseAmount <= 0) return null;
+    // Same filter as Service.externalExpenseTotal - only the items that
+    // actually became this expense, so an audit can see exactly what
+    // was expensed without opening the service record separately.
+    final externalItemNames = service.itemsUsed
+        .where((item) => item['productId'] == null)
+        .map((item) => (item['itemName'] ?? '').toString())
+        .where((itemName) => itemName.isNotEmpty)
+        .toList();
+    final itemsSummary = externalItemNames.isNotEmpty ? externalItemNames.join(', ') : 'N/A';
+    return {
+      'amount': expenseAmount,
+      'category': 'Vet Service Expenses',
+      'date': Timestamp.fromDate(DateTime.now()),
+      'description': 'Items used for ${service.name}: $itemsSummary',
+      'recordedBy': recordedBy,
+      'type': 'expense',
+      'serviceId': serviceId,
+      'paymentMethod': service.paymentMethod ?? PaymentMethod.cash.key,
+    };
   }
 
   /// ===== DEBT =====
@@ -1077,11 +1010,6 @@ class ServiceProvider extends ChangeNotifier {
     } catch (e) {
       debugPrint('Could not adjust stock for product $productId: $e');
     }
-  }
-
-  static String _signedInUser() {
-    final user = FirebaseAuth.instance.currentUser;
-    return user?.email ?? user?.uid ?? 'Unknown';
   }
 
   @override
