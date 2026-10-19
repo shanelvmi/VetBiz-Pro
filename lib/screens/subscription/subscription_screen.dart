@@ -31,6 +31,15 @@ import '../../config/app_date_format.dart';
 import '../../ui/feedback/app_feedback.dart';
 import '../../l10n/l10n.dart';
 
+/// Who submitted a payment claim, as the claim stores it: submittedBy is
+/// for people to read (the email, which the review shows; the uid when
+/// the account has none), submittedById is the uid firestore.rules checks
+/// against the signed-in person (E4d-3, C11).
+Map<String, Object?> paymentClaimSubmitter({String? email, String? uid}) => {
+      'submittedBy': email ?? uid ?? 'Unknown',
+      'submittedById': uid,
+    };
+
 class SubscriptionScreen extends StatefulWidget {
   final bool isModal;
   const SubscriptionScreen({super.key, this.isModal = false});
@@ -209,7 +218,7 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
         'proofImageUrl': proofUrl,
         Fields.status: PaymentSubmissionStatus.pending.key,
         'submittedAt': FieldValue.serverTimestamp(),
-        'submittedBy': user?.email ?? user?.uid ?? 'Unknown',
+        ...paymentClaimSubmitter(email: user?.email, uid: user?.uid),
       });
 
       if (!mounted) return;

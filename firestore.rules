@@ -411,9 +411,11 @@ service cloud.firestore {
       match /payment_submissions/{submissionId} {
         allow read: if isAuthenticated() && (isInFacility(facilityId) || isPlatformAdmin());
         // E4d-2 (C11): a claim starts pending; only the Platform Admin's
-        // review (update, below) approves or rejects it. Its submitter is not
-        // checked: the app stores an email there, not the uid.
+        // review (update, below) approves or rejects it. E4d-3: and only in
+        // your own name - submittedById is the uid (submittedBy, the email,
+        // stays for people to read).
         allow create: if isAuthenticated() && isInFacility(facilityId) &&
+          request.resource.data.submittedById == request.auth.uid &&
           request.resource.data.status == 'pending';
         allow update: if isAuthenticated() && isPlatformAdmin();
         allow delete: if false;
