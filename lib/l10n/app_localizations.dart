@@ -4820,30 +4820,6 @@ abstract class AppLocalizations {
   /// **'Service Records'**
   String get common_serviceRecords;
 
-  /// Restore confirmation title for a sale.
-  ///
-  /// In en, this message translates to:
-  /// **'Restore this sale?'**
-  String get trash_restoreSaleTitle;
-
-  /// Restore confirmation text for a sale.
-  ///
-  /// In en, this message translates to:
-  /// **'The sale will be back in your sales list, but restoring will NOT change:\n• stock: the items stay back on the shelf, as they were put back when the sale was deleted\n• debt: the client\'s debt for this sale is not re-created\n• client balance: it stays as it is now\n\nAdjust these by hand if the sale really happened.'**
-  String get trash_restoreSaleBody;
-
-  /// Restore confirmation title for a service.
-  ///
-  /// In en, this message translates to:
-  /// **'Restore this service?'**
-  String get trash_restoreServiceTitle;
-
-  /// Restore confirmation text for a service.
-  ///
-  /// In en, this message translates to:
-  /// **'The service will be back in your services list, but restoring will NOT change:\n• stock: the items it used stay back in stock\n• debt: the client\'s debt for this service is not re-created\n• client balance: it stays as it is now\n• expenses: its expense transaction was deleted for good and does not come back\n\nAdjust these by hand if the service really happened.'**
-  String get trash_restoreServiceBody;
-
   /// Message after restoring.
   ///
   /// In en, this message translates to:
@@ -5497,18 +5473,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'No services'**
   String get services_none;
-
-  /// Delete dialog title.
-  ///
-  /// In en, this message translates to:
-  /// **'Delete Service?'**
-  String get services_deleteTitle;
-
-  /// Delete dialog body.
-  ///
-  /// In en, this message translates to:
-  /// **'This moves the service to Trash and puts its stock back, removes its debt and updates the client\'s balance. Restoring from Trash brings back the record only.'**
-  String get services_deleteBody;
 
   /// Message after deleting a service.
   ///
@@ -8015,24 +7979,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'No sales'**
   String get sales_none;
-
-  /// Delete sale dialog title.
-  ///
-  /// In en, this message translates to:
-  /// **'Delete Sale?'**
-  String get sales_deleteTitle;
-
-  /// Delete sale dialog text.
-  ///
-  /// In en, this message translates to:
-  /// **'This permanently deletes {invoice} and restores its stock. This cannot be undone.'**
-  String sales_deleteBody(String invoice);
-
-  /// Message after deleting a sale.
-  ///
-  /// In en, this message translates to:
-  /// **'Sale deleted'**
-  String get sales_deleted;
 
   /// Error message when deleting a sale fails.
   ///

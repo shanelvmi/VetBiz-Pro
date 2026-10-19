@@ -2704,20 +2704,6 @@ class AppLocalizationsSw extends AppLocalizations {
   String get common_serviceRecords => 'Rekodi za Huduma';
 
   @override
-  String get trash_restoreSaleTitle => 'Rejesha mauzo haya?';
-
-  @override
-  String get trash_restoreSaleBody =>
-      'Mauzo yatarudi kwenye orodha yako ya mauzo, lakini kurejesha HAKUTABADILISHA:\n• akiba: bidhaa zinabaki rafuni, kama zilivyorudishwa mauzo yalipofutwa\n• deni: deni la mteja kwa mauzo haya halirudishwi\n• salio la mteja: linabaki kama lilivyo sasa\n\nRekebisha haya kwa mkono ikiwa mauzo yalitokea kweli.';
-
-  @override
-  String get trash_restoreServiceTitle => 'Rejesha huduma hii?';
-
-  @override
-  String get trash_restoreServiceBody =>
-      'Huduma itarudi kwenye orodha yako ya huduma, lakini kurejesha HAKUTABADILISHA:\n• akiba: bidhaa ilizotumia zinabaki stoo\n• deni: deni la mteja kwa huduma hii halirudishwi\n• salio la mteja: linabaki kama lilivyo sasa\n• matumizi: muamala wake wa matumizi ulifutwa kabisa na haurudi\n\nRekebisha haya kwa mkono ikiwa huduma ilitolewa kweli.';
-
-  @override
   String get trash_restored => 'Kipengee kimerejeshwa';
 
   @override
@@ -3109,13 +3095,6 @@ class AppLocalizationsSw extends AppLocalizations {
 
   @override
   String get services_none => 'Hakuna huduma';
-
-  @override
-  String get services_deleteTitle => 'Futa Huduma?';
-
-  @override
-  String get services_deleteBody =>
-      'Hii inahamisha huduma kwenye Tupio na kurudisha bidhaa zake stoo, inaondoa deni lake na kusasisha salio la mteja. Kurejesha kutoka Tupio kunarudisha rekodi pekee.';
 
   @override
   String get services_movedToTrash => 'Huduma imehamishiwa Tupio';
@@ -4647,17 +4626,6 @@ class AppLocalizationsSw extends AppLocalizations {
 
   @override
   String get sales_none => 'Hakuna mauzo';
-
-  @override
-  String get sales_deleteTitle => 'Futa Mauzo?';
-
-  @override
-  String sales_deleteBody(String invoice) {
-    return 'Hii inafuta $invoice kabisa na kurudisha bidhaa zake. Haiwezi kurudishwa.';
-  }
-
-  @override
-  String get sales_deleted => 'Mauzo yamefutwa';
 
   @override
   String get sales_deleteFailed => 'Imeshindikana kufuta mauzo';

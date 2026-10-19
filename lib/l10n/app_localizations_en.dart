@@ -2688,20 +2688,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get common_serviceRecords => 'Service Records';
 
   @override
-  String get trash_restoreSaleTitle => 'Restore this sale?';
-
-  @override
-  String get trash_restoreSaleBody =>
-      'The sale will be back in your sales list, but restoring will NOT change:\n• stock: the items stay back on the shelf, as they were put back when the sale was deleted\n• debt: the client\'s debt for this sale is not re-created\n• client balance: it stays as it is now\n\nAdjust these by hand if the sale really happened.';
-
-  @override
-  String get trash_restoreServiceTitle => 'Restore this service?';
-
-  @override
-  String get trash_restoreServiceBody =>
-      'The service will be back in your services list, but restoring will NOT change:\n• stock: the items it used stay back in stock\n• debt: the client\'s debt for this service is not re-created\n• client balance: it stays as it is now\n• expenses: its expense transaction was deleted for good and does not come back\n\nAdjust these by hand if the service really happened.';
-
-  @override
   String get trash_restored => 'Item restored';
 
   @override
@@ -3094,13 +3080,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get services_none => 'No services';
-
-  @override
-  String get services_deleteTitle => 'Delete Service?';
-
-  @override
-  String get services_deleteBody =>
-      'This moves the service to Trash and puts its stock back, removes its debt and updates the client\'s balance. Restoring from Trash brings back the record only.';
 
   @override
   String get services_movedToTrash => 'Service moved to Trash';
@@ -4625,17 +4604,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get sales_none => 'No sales';
-
-  @override
-  String get sales_deleteTitle => 'Delete Sale?';
-
-  @override
-  String sales_deleteBody(String invoice) {
-    return 'This permanently deletes $invoice and restores its stock. This cannot be undone.';
-  }
-
-  @override
-  String get sales_deleted => 'Sale deleted';
 
   @override
   String get sales_deleteFailed => 'Couldn\'t delete the sale';
