@@ -4,6 +4,7 @@ import 'package:cloud_functions/cloud_functions.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
 import '../../l10n/l10n.dart';
+import '../../models/restore_outcome.dart';
 import 'auth_error_messages.dart';
 
 /// Turns an error into one sentence a person can read, and keeps the
@@ -54,7 +55,20 @@ class FriendlyError {
     }
     if (error is FirebaseException) return _forCode(error.code);
     if (error is TimeoutException) return tooSlow;
+    if (error is RestoreRefusedException) return _restoreRefusal(error);
     return fallback;
+  }
+
+  // Why a restore from Trash was refused (docs/design/delete_restore.md,
+  // owner conditions 1, 2 and 4). The product is the name stored on the line.
+  static String _restoreRefusal(RestoreRefusedException e) {
+    final product = e.productName ?? '';
+    return switch (e.reason) {
+      RestoreRefusal.notEnoughStock =>
+        L10n.current.trash_restoreNotEnoughStock(product, e.needed ?? 0, e.available ?? 0),
+      RestoreRefusal.clientGone => L10n.current.trash_restoreClientGone,
+      RestoreRefusal.productGone => L10n.current.trash_restoreProductGone(product),
+    };
   }
 
   // firebase_storage reports its own codes on a plain FirebaseException:
