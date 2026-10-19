@@ -215,6 +215,10 @@ User-facing "VetBiz Pro" now reads `AppInfo.name` (titles, Settings, support lin
 
 Incomplete: **sales** and **services**. After restoring either one, stock is too high and the client's balance and debts are too low. The Trash screen's Restore now asks for confirmation for these two and says what it will not change (behaviour unchanged). Open: make `TrashService` re-apply stock, debt and balance for sales and services (and decide what to do about the hard-deleted service expenses). The Services Undo is withdrawn until then (see Decided, "Undo after the Trash audit").
 
+### Raised in E4b2 (wording; the owner's English used as given)
+
+- **team_signInSwitchFailed** ("The assistant was deactivated, but their sign-in could not be switched off. Reactivate and deactivate again.") is shown, as decided, for every signIn "failed" answer of setAssistantStatus and removeAssistantFromFacility. It fits a failed deactivation. After a failed reactivation (sign-in could not be switched back ON) or a failed removal (sessions could not be revoked; the account is never disabled) the sentence is not accurate. Owner decides whether those two get their own sentences.
+
 ## Decided
 
 ### D11 (decided and done in batch D11)

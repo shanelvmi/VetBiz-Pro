@@ -250,7 +250,7 @@ class _ManageAssistantsScreenState extends State<ManageAssistantsScreen> {
     final name = (data['fullName'] ?? 'The assistant').toString();
     final facilityId = _facilityIdOf(data);
     try {
-      await MembershipService().setAssistantStatus(assistantUid: userId, action: action.request);
+      final signIn = await MembershipService().setAssistantStatus(assistantUid: userId, action: action.request);
 
       // Worth a line in the Activity Log - and a rejection especially, since
       // the person disappears from this list.
@@ -268,7 +268,12 @@ class _ManageAssistantsScreenState extends State<ManageAssistantsScreen> {
       }
       if (!mounted) return;
       if (action == MembershipHistoryAction.rejected && _selectedUserId == userId) setState(() => _selectedUserId = null);
-      AppFeedback.success(L10n.current.team_actionDone(name, action.key));
+      // Saved, but Firebase Auth refused (C2): they may still be signed in.
+      if (signIn == MembershipService.signInFailed) {
+        AppFeedback.warning(L10n.current.team_signInSwitchFailed);
+      } else {
+        AppFeedback.success(L10n.current.team_actionDone(name, action.key));
+      }
     } catch (e, st) {
       debugPrint('Error (${action.request}) for assistant: $e');
       // FriendlyError shows the server's own message for a Functions error,
@@ -281,16 +286,20 @@ class _ManageAssistantsScreenState extends State<ManageAssistantsScreen> {
   // account itself - deactivating or permanently removing an account
   // is Platform-Admin-only. A boss can still "fire" an assistant from
   // their own team without needing to contact a Platform Admin for
-  // something this routine; the assistant's login stays fully active
-  // and they could be invited to a facility again later.
+  // something this routine; the assistant's login stays active (they are
+  // only signed out, C2) and they could be invited to a facility again later.
   // Moving or removing an assistant changes WHO BELONGS to a facility, which is
   // decided by the server, not written from here: it checks you administer the
   // facility, and keeps the two lists on their profile (the one the screens
   // show and the one every access rule checks) in step.
   Future<void> _removeFromFacility(String userId, String facilityId) async {
     try {
-      await MembershipService().removeAssistantFromFacility(assistantUid: userId, facilityId: facilityId);
-      AppFeedback.success(L10n.current.team_removed);
+      final signIn = await MembershipService().removeAssistantFromFacility(assistantUid: userId, facilityId: facilityId);
+      if (signIn == MembershipService.signInFailed) {
+        AppFeedback.warning(L10n.current.team_signInSwitchFailed);
+      } else {
+        AppFeedback.success(L10n.current.team_removed);
+      }
     } catch (e, st) {
       debugPrint('Error removing assistant from facility: $e');
       AppFeedback.error(L10n.current.team_removeFailed, error: e, stackTrace: st);
