@@ -9,10 +9,11 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:vetbiz_pro/data/collections.dart';
 import 'package:vetbiz_pro/models/product.dart';
 import 'package:vetbiz_pro/providers/product_provider.dart';
+import 'package:vetbiz_pro/services/daily_report_service.dart';
 
 import '../helpers/fake_firestore.dart';
 
-const _skip = 'E4d-3: the fix lands in a later commit';
+const String? _skip = null;
 
 // moveToSellable takes a BuildContext it does not use.
 class _NoContext extends Fake implements BuildContext {}
@@ -62,4 +63,18 @@ void main() {
     expect(additions.map((a) => [a['sellableDelta'], a['userId']]), containsAll([[4, testUserId]]));
     expect(additions.every((a) => a['userId'] == testUserId), isTrue);
   }, skip: _skip);
+
+  test('the daily report sums the entries as before: the author is ignored', () async {
+    await products.addProduct(_dewormer());
+    final productId = (await facilityCollection(fs, Collections.products).get()).docs.single.id;
+    await _ignoringActivityLog(products.moveToSellable(_dewormer(id: productId), 4, _NoContext()));
+    await products.addBatch(facilityId: testFacilityId, productId: productId, batchNo: 'D2',
+        expiry: DateTime(2031, 1, 1), buyPrice: 1500, stockQty: 3, destination: 'sellable');
+    expect(DailyReportService.sellableAddedByProduct(await _additions(fs)), {productId: 7});
+    expect(DailyReportService.sellableAddedByProduct([
+      {'productId': 'p1', 'sellableDelta': 2},
+      {'productId': 'p1', 'sellableDelta': 3, 'userId': testUserId},
+      {'sellableDelta': 9, 'userId': testUserId},
+    ]), {'p1': 5});
+  });
 }

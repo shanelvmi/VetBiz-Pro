@@ -1195,13 +1195,13 @@ test('C9 [E4d-2]: the next receipt number is taken as the app takes it (set valu
 
 // ---------------------------------------------------------------------------
 // C10 stock logs, create. stockAdditions (addProduct, addBatch,
-// moveToSellable: productId, sellableDelta, stockDelta, timestamp) carry no
-// author, so only the time is checked; stock_adjustments (moveBatchToStock,
+// moveToSellable: productId, sellableDelta, stockDelta, userId, timestamp;
+// the author since E4d-3, captured) and stock_adjustments (moveBatchToStock,
 // Edit Product's quantity change: written here from those writers, which
 // are not injectable / live in the screen) also name their author, userId.
 
 const stockLog = (uid, collection) => as(uid).collection('facilities').doc('F1').collection(collection);
-const addition = (timestamp) => ({ productId: 'P5', sellableDelta: 3, stockDelta: -3, timestamp });
+const addition = (userId, timestamp) => ({ productId: 'P5', sellableDelta: 3, stockDelta: -3, userId, timestamp });
 const adjustment = (userId, timestamp) => ({
   productId: 'P5', productName: 'Dawa', oldStockQty: 5, oldSellableQty: 5, newStockQty: 2, newSellableQty: 5,
   userId, userName: 'Neema Assistant', source: 'Moved batch to Stock Store', reason: 'Damaged', timestamp,
@@ -1209,8 +1209,18 @@ const adjustment = (userId, timestamp) => ({
 
 test('C10 [E4d-2]: a stock addition can NOT be backdated or left without a time', async () => {
   for (const uid of ['assistant', 'owner']) {
-    await assertFails(stockLog(uid, 'stockAdditions').add(addition(new Date(2026, 0, 1))));
-    await assertFails(stockLog(uid, 'stockAdditions').add({ productId: 'P5', sellableDelta: 3, stockDelta: -3 }));
+    await assertFails(stockLog(uid, 'stockAdditions').add(addition(uid, new Date(2026, 0, 1))));
+    await assertFails(stockLog(uid, 'stockAdditions').add({ productId: 'P5', sellableDelta: 3, stockDelta: -3, userId: uid }));
+  }
+});
+
+test('C10 [E4d-3]: a stock addition can NOT be filed under someone else, or without an author', async () => {
+  for (const uid of ['assistant', 'owner']) {
+    const other = uid === 'owner' ? 'assistant' : 'owner';
+    await assertFails(stockLog(uid, 'stockAdditions').add(addition(other, serverTime())));
+    await assertFails(stockLog(uid, 'stockAdditions').add(addition(null, serverTime())));
+    const { userId, ...noAuthor } = addition(uid, serverTime());
+    await assertFails(stockLog(uid, 'stockAdditions').add(noAuthor));
   }
 });
 
@@ -1225,7 +1235,7 @@ test('C10 [E4d-2]: a stock adjustment can NOT be filed under someone else, or ba
 
 test('C10 [E4d-2]: members log stock with the server\'s time, adjustments in their own name (the writers\' shapes)', async () => {
   for (const uid of ['assistant', 'coadmin']) {
-    await assertSucceeds(stockLog(uid, 'stockAdditions').add(addition(serverTime())));
+    await assertSucceeds(stockLog(uid, 'stockAdditions').add(addition(uid, serverTime())));
     await assertSucceeds(stockLog(uid, 'stock_adjustments').add(adjustment(uid, serverTime())));
     const { reason, ...productEdit } = adjustment(uid, serverTime());
     await assertSucceeds(stockLog(uid, 'stock_adjustments').add({ ...productEdit, source: 'Product edit' }));

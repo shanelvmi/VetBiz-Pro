@@ -36,6 +36,20 @@ class DailyReportService {
     return entries.map((e) => ActivityLogEntry.fromMap(Map<String, dynamic>.from(e as Map))).toList();
   }
 
+  /// The day's stockAdditions entries summed per product: only productId
+  /// and sellableDelta count; anything else on an entry (its author,
+  /// userId, since E4d-3) is ignored.
+  static Map<String, int> sellableAddedByProduct(Iterable<Map<String, dynamic>> additions) {
+    final addedByProduct = <String, int>{};
+    for (final data in additions) {
+      final productId = data['productId'] as String?;
+      if (productId == null) continue;
+      final delta = (data['sellableDelta'] as num?)?.toInt() ?? 0;
+      addedByProduct[productId] = (addedByProduct[productId] ?? 0) + delta;
+    }
+    return addedByProduct;
+  }
+
   /// The only change a draft may get (E4c, C3): these fields, and nothing
   /// else - firestore.rules lists exactly these keys.
   static Map<String, dynamic> submitUpdate({
@@ -497,14 +511,7 @@ class DailyReportService {
     // current sellableQty total isn't the same as what was added
     // today if it already had stock from before - this log is what
     // makes "Added" reliable in both cases.
-    final addedByProduct = <String, int>{};
-    for (final doc in stockAdditionsSnap.docs) {
-      final data = doc.data();
-      final productId = data['productId'] as String?;
-      if (productId == null) continue;
-      final delta = (data['sellableDelta'] as num?)?.toInt() ?? 0;
-      addedByProduct[productId] = (addedByProduct[productId] ?? 0) + delta;
-    }
+    final addedByProduct = sellableAddedByProduct(stockAdditionsSnap.docs.map((doc) => doc.data()));
 
     // Today's logged stock quantity edits - explains an "Adjusted"
     // figure with who changed it and what it went from/to, whenever

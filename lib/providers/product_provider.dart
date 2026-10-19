@@ -170,6 +170,9 @@ class ProductProvider with ChangeNotifier {
       // starting amount to be inferred as an unexplained "Adjusted"
       // figure with nothing behind it.
       if (product.stockQty > 0 || product.sellableQty > 0) {
+        // Its author: firestore.rules accepts an entry only in the
+        // signed-in person's own name (E4d-3, C10).
+        final userId = (await _currentUserInfo())[Fields.userId];
         await _firestore
             .collection(Collections.facilities)
             .doc(facilityId)
@@ -178,6 +181,7 @@ class ProductProvider with ChangeNotifier {
           'productId': docRef.id,
           'sellableDelta': product.sellableQty,
           'stockDelta': product.stockQty,
+          Fields.userId: userId,
           'timestamp': FieldValue.serverTimestamp(),
         });
       }
@@ -323,7 +327,9 @@ class ProductProvider with ChangeNotifier {
       // compute "Added" reliably, since a merge alone never touches
       // that timestamp and the batch's current sellableQty total can't
       // be trusted to represent only today's addition once it already
-      // had stock from before.
+      // had stock from before. In the signed-in person's own name, which
+      // firestore.rules checks (E4d-3, C10).
+      final userId = (await _currentUserInfo())[Fields.userId];
       await _firestore
           .collection(Collections.facilities)
           .doc(facilityId)
@@ -332,6 +338,7 @@ class ProductProvider with ChangeNotifier {
         'productId': productId,
         'sellableDelta': toSellable ? stockQty : 0,
         'stockDelta': toSellable ? 0 : stockQty,
+        Fields.userId: userId,
         'timestamp': FieldValue.serverTimestamp(),
       });
 
@@ -1058,6 +1065,8 @@ class ProductProvider with ChangeNotifier {
         'productId': product.id,
         'sellableDelta': qty,
         'stockDelta': -qty,
+        // Its author, checked by firestore.rules (E4d-3, C10).
+        Fields.userId: userId,
         'timestamp': FieldValue.serverTimestamp(),
       });
 

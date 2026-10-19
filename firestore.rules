@@ -455,9 +455,11 @@ service cloud.firestore {
       match /stockAdditions/{additionId} {
         allow read: if isAuthenticated() && isInFacility(facilityId);
         // E4d-2 (C10): with the server's clock, so an entry can't be
-        // backdated into another day's report. Its writers (addProduct,
-        // addBatch, moveToSellable) record no author, so none is checked.
+        // backdated into another day's report. E4d-3: and only in your own
+        // name - its writers (addProduct, addBatch, moveToSellable) record
+        // the author's uid in userId, like stock_adjustments below.
         allow create: if isAuthenticated() && isInFacility(facilityId) &&
+          request.resource.data.userId == request.auth.uid &&
           request.resource.data.timestamp == request.time;
         allow update, delete: if false;
       }

@@ -19,6 +19,7 @@ import 'dart:io';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:fake_cloud_firestore/fake_cloud_firestore.dart';
+import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:vetbiz_pro/data/collections.dart';
 import 'package:vetbiz_pro/models/product.dart';
@@ -29,6 +30,9 @@ import 'package:vetbiz_pro/providers/product_provider.dart';
 import 'package:vetbiz_pro/providers/transaction_provider.dart';
 
 import '../helpers/fake_firestore.dart';
+
+// moveToSellable takes a BuildContext it does not use.
+class _NoContext extends Fake implements BuildContext {}
 
 const _fixture = 'firestore_rules_tests/fixtures/app_write_shapes.json';
 const _write = bool.fromEnvironment('WRITE_SHAPES');
@@ -216,7 +220,7 @@ void main() {
     await _record(fs, 'deleteTransaction (to Trash)', _admins, refused: ['assistant'],
         () => _ignoringActivityLog(() => transactions.deleteTransaction(testFacilityId, fuel.id)));
 
-    final products = ProductProvider(firestore: fs);
+    final products = ProductProvider(firestore: fs, currentUserInfo: testUserInfo);
     await _record(fs, 'addProduct with its first batch (Add Product)', _admins, refused: ['assistant'],
         () => products.addProduct(Product(
             id: '', name: 'Dewormer', batchNo: 'D1', expiry: DateTime(2030, 6, 1), buyPrice: 1500, sellPrice: 2500,
@@ -224,6 +228,11 @@ void main() {
     await _record(fs, 'addBatch to an existing product (Add Batch)', _everyone,
         () => products.addBatch(facilityId: testFacilityId, productId: 'p1', batchNo: 'B9',
             expiry: DateTime(2031, 1, 1), buyPrice: 1100, stockQty: 5));
+    // ---- E4d-3 ---- the third stockAdditions writer (Release to the shelf).
+    final p1 = (await facilityCollection(fs, Collections.products).doc('p1').get()).data()!;
+    await _record(fs, 'moveToSellable (Release)', _everyone,
+        () => _ignoringActivityLog(() => products.moveToSellable(
+            Product.fromFirestore({...p1, 'facilityId': testFacilityId}, 'p1'), 2, _NoContext())));
 
     // One document change per line, so a diff shows what moved.
     final shape = [
