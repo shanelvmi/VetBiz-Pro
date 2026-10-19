@@ -96,6 +96,8 @@
   "@error_rateLimited": {"description":"Second line of an error message: rate limited (FriendlyError)."},
   "error_photoTooLarge": "This photo is too large. Choose a smaller one.",
   "@error_photoTooLarge": {"description":"Error toast when a picked photo is still over the upload size limit (5 MB) after scaling down; nothing is uploaded."},
+  "error_adminOnly": "Only an admin can edit or delete this record.",
+  "@error_adminOnly": {"description":"Error toast second line when an assistant tries Edit Service, Edit Transaction or deleting a transaction (admin-only, E4d-2); nothing is saved."},
   "login_wrongCredentials": "Incorrect email or password.",
   "@login_wrongCredentials": {"description":"Sign-in error for a wrong password OR an unknown email (one message on purpose, so it does not reveal which emails are registered)."},
   "login_accountDisabled": "This account has been disabled. Contact your admin.",

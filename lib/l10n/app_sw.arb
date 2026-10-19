@@ -96,6 +96,8 @@
   "@error_rateLimited": {"x-review":"draft"},
   "error_photoTooLarge": "Picha hii ni kubwa mno. Chagua iliyo ndogo zaidi.",
   "@error_photoTooLarge": {"x-review":"draft"},
+  "error_adminOnly": "Ni admin tu anayeweza kuhariri au kufuta rekodi hii.",
+  "@error_adminOnly": {"x-review":"draft"},
   "login_wrongCredentials": "Barua pepe au nenosiri si sahihi.",
   "@login_wrongCredentials": {"x-review":"draft"},
   "login_accountDisabled": "Akaunti hii imezimwa. Wasiliana na msimamizi wako.",

@@ -47,6 +47,7 @@ error_notFound,That item no longer exists.,Kitu hicho hakipo tena.,Second line o
 error_alreadyExists,That already exists.,Hicho tayari kipo.,Second line of an error message: a duplicate (FriendlyError).,draft
 error_rateLimited,Too many requests. Wait a moment and try again.,Maombi ni mengi mno. Subiri kidogo kisha ujaribu tena.,Second line of an error message: rate limited (FriendlyError).,draft
 error_photoTooLarge,This photo is too large. Choose a smaller one.,Picha hii ni kubwa mno. Chagua iliyo ndogo zaidi.,"Error toast when a picked photo is still over the upload size limit (5 MB) after scaling down; nothing is uploaded.",draft
+error_adminOnly,Only an admin can edit or delete this record.,Ni admin tu anayeweza kuhariri au kufuta rekodi hii.,"Error toast second line when an assistant tries Edit Service, Edit Transaction or deleting a transaction (admin-only, E4d-2); nothing is saved.",draft
 login_wrongCredentials,Incorrect email or password.,Barua pepe au nenosiri si sahihi.,"Sign-in error for a wrong password OR an unknown email (one message on purpose, so it does not reveal which emails are registered).",draft
 login_accountDisabled,This account has been disabled. Contact your admin.,Akaunti hii imezimwa. Wasiliana na msimamizi wako.,Sign-in error: the account was disabled.,draft
 login_tooManyAttempts,Too many attempts. Wait a moment and try again.,Umejaribu mara nyingi mno. Subiri kidogo kisha ujaribu tena.,Sign-in error: too many failed attempts.,draft
