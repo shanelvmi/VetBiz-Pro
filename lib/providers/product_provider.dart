@@ -1364,3 +1364,44 @@ class SellableStockPlan {
     return planned[snap.reference.path]?.$2 ?? (snap.data()?['sellableQty'] ?? 0) as int;
   }
 }
+
+/// The reverse of [SellableStockPlan], for a sale or a service deleted to
+/// Trash inside the caller's transaction: puts each line's quantity back on
+/// the batches its batchAllocations name, and on the product, as
+/// [ProductProvider.restoreSellableFIFO] does. A line with no allocations
+/// (recorded before batch tracking) goes back on the product only. A batch
+/// or a product that is gone is skipped, as before. Call [add] for every
+/// line, then [read] before the transaction's first write, then [apply].
+class SellableStockReturn {
+  final Map<String, (DocumentReference<Map<String, dynamic>>, int)> _adds = {};
+  final Map<String, DocumentSnapshot<Map<String, dynamic>>> _reads = {};
+
+  /// Puts back [quantity] of [product]: by [allocations] when there are any.
+  void add(DocumentReference<Map<String, dynamic>> product, List<Map<String, dynamic>> allocations, int quantity) {
+    var total = 0;
+    for (final allocation in allocations) {
+      final qty = (allocation['quantity'] ?? 0) as int;
+      total += qty;
+      final batchId = allocation['batchId'] as String?;
+      if (batchId != null) _addTo(product.collection(Collections.batches).doc(batchId), qty);
+    }
+    _addTo(product, allocations.isEmpty ? quantity : total);
+  }
+
+  void _addTo(DocumentReference<Map<String, dynamic>> ref, int qty) =>
+      _adds[ref.path] = (ref, (_adds[ref.path]?.$2 ?? 0) + qty);
+
+  Future<void> read(Transaction transaction) async {
+    for (final (ref, _) in _adds.values) {
+      _reads[ref.path] = await transaction.get(ref);
+    }
+  }
+
+  void apply(Transaction transaction) {
+    for (final (ref, qty) in _adds.values) {
+      final snap = _reads[ref.path]!;
+      if (!snap.exists || qty == 0) continue;
+      transaction.update(ref, {'sellableQty': ((snap.data()?['sellableQty'] ?? 0) as int) + qty});
+    }
+  }
+}
