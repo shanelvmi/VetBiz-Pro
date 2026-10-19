@@ -15,8 +15,13 @@ class ProductProvider with ChangeNotifier {
   // Tests pass an in-memory Firestore (E4d-2 captures Add Product and Add
   // Batch for the rules suite); the app uses the default instance.
   final FirebaseFirestore _firestore;
+  // The signed-in person (ActivityLogger.getCurrentUserInfo in the app; tests
+  // pass their own): the author of stock logs and activity entries.
+  final Future<Map<String, String>> Function() _currentUserInfo;
 
-  ProductProvider({FirebaseFirestore? firestore}) : _firestore = firestore ?? FirebaseFirestore.instance;
+  ProductProvider({FirebaseFirestore? firestore, Future<Map<String, String>> Function()? currentUserInfo})
+      : _firestore = firestore ?? FirebaseFirestore.instance,
+        _currentUserInfo = currentUserInfo ?? ActivityLogger.getCurrentUserInfo;
 
   final List<Product> _products = [];
 
@@ -934,7 +939,7 @@ class ProductProvider with ChangeNotifier {
         .doc(product.id);
 
     try {
-      final userInfo = await ActivityLogger.getCurrentUserInfo();
+      final userInfo = await _currentUserInfo();
       final userId = userInfo[Fields.userId]!;
       final userName = userInfo['userName']!;
 
@@ -1115,7 +1120,7 @@ class ProductProvider with ChangeNotifier {
     final batchRef = productRef.collection(Collections.batches).doc(batch.id);
 
     try {
-      final userInfo = await ActivityLogger.getCurrentUserInfo();
+      final userInfo = await _currentUserInfo();
       final userId = userInfo[Fields.userId]!;
       final userName = userInfo['userName']!;
 
@@ -1224,7 +1229,7 @@ class ProductProvider with ChangeNotifier {
       final snapshot = await docRef.get();
       if (!snapshot.exists) return;
 
-      final userInfo = await ActivityLogger.getCurrentUserInfo();
+      final userInfo = await _currentUserInfo();
 
       await _firestore
           .collection(Collections.facilities)
