@@ -238,7 +238,14 @@ service cloud.firestore {
       // ========== 💵 Sales ==========
       match /sales/{saleId} {
         allow read: if isAuthenticated() && isInFacility(facilityId);
-        allow update: if isAuthenticated() && isInFacility(facilityId);
+        // E4d-1 (C6): an assistant only records payments on a sale - the
+        // fields Sale.applyPayment changes (AddPaymentScreen), plus
+        // paymentStatus. items must stay open (applyPayment rewrites each
+        // item's realized/unrealized profit); the amounts, client, date,
+        // receipt number and seller can't change. Admins as before.
+        allow update: if isAuthenticated() && isInFacility(facilityId) &&
+          (isAdmin() || request.resource.data.diff(resource.data).affectedKeys()
+            .hasOnly(['totalPaid', 'items', 'realizedProfit', 'unrealizedProfit', 'updatedAt', 'paymentStatus']));
         allow delete: if isAuthenticated() && isInFacility(facilityId) && isAdmin();
         // New sales are blocked once locked - existing sales can still be
         // paid down or edited (collecting money you're owed shouldn't

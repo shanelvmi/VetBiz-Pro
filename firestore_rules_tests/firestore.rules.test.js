@@ -918,3 +918,39 @@ test('C4 [E4d-1]: an admin may delete a debt on its own, as today', async () => 
   await assertSucceeds(debtsOf('coadmin').doc('sale_D1').delete());
 });
 
+
+// ---------------------------------------------------------------------------
+// C6 sales: an assistant only records payments on a sale.
+
+const seedSale = () => env.withSecurityRulesDisabled(async (ctx) => {
+  await f1(ctx.firestore(), 'sales/S6').set({
+    clientId: 'c1', clientName: 'Juma', totalAmount: 6000, totalPaid: 1000, receiptNumber: 41,
+    timestamp: new Date(2026, 9, 1), updatedAt: new Date(2026, 9, 1), soldById: 'assistant', saleOnCredit: true,
+    items: [{ productId: 'p1', quantity: 3, unitPrice: 2000, realizedProfit: 500, unrealizedProfit: 2500 }],
+    realizedProfit: 500, unrealizedProfit: 2500, totalProfit: 3000, paymentStatus: 'Partial',
+  });
+});
+const sales = (uid) => as(uid).collection('facilities').doc('F1').collection('sales');
+
+test('C6 [E4d-1]: an assistant can NOT change a past sale\'s amounts, client, date or receipt number', async () => {
+  await seedSale();
+  for (const change of [{ totalAmount: 1 }, { clientId: 'c2' }, { timestamp: new Date() }, { receiptNumber: 1 },
+    { totalProfit: 0 }, { soldById: 'owner' }, { saleOnCredit: false }]) {
+    await assertFails(sales('assistant').doc('S6').update({ ...change, updatedAt: new Date() }));
+  }
+});
+
+test('C6 [E4d-1]: an assistant records a payment on a sale (the fields Sale.applyPayment changes)', async () => {
+  await seedSale();
+  await assertSucceeds(sales('assistant').doc('S6').update({
+    totalPaid: 2000, realizedProfit: 1000, unrealizedProfit: 2000, updatedAt: new Date(),
+    items: [{ productId: 'p1', quantity: 3, unitPrice: 2000, realizedProfit: 1000, unrealizedProfit: 2000 }],
+    paymentStatus: 'Partial',
+  }));
+});
+
+test('C6 [E4d-1]: admins still edit a sale, as today', async () => {
+  await seedSale();
+  await assertSucceeds(sales('owner').doc('S6').update({ totalAmount: 5000 }));
+  await assertSucceeds(sales('coadmin').doc('S6').update({ clientId: 'c2' }));
+});
