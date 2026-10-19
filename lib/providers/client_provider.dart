@@ -38,9 +38,10 @@ class SimilarClientMatch {
 //   the right client regardless of whether that client has been loaded
 //   into the current page yet.
 class ClientProvider with ChangeNotifier, PaginatedStreamLoader<Client> {
-  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  final FirebaseFirestore _firestore;
 
-  ClientProvider() {
+  /// [firestore] is for tests; the app uses the default.
+  ClientProvider({FirebaseFirestore? firestore}) : _firestore = firestore ?? FirebaseFirestore.instance {
     clientsListController = CursorPaginatedListController<Client>(
       pageSize: AppLimits.pageSize,
       fetchPage: _fetchClientsListPage,

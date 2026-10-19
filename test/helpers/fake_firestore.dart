@@ -6,6 +6,7 @@ import 'dart:convert';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:fake_cloud_firestore/fake_cloud_firestore.dart';
 import 'package:vetbiz_pro/data/collections.dart';
+import 'package:vetbiz_pro/providers/client_provider.dart';
 import 'package:vetbiz_pro/models/sale.dart';
 import 'package:vetbiz_pro/models/service.dart';
 import 'package:vetbiz_pro/providers/sale_provider.dart';
@@ -26,6 +27,8 @@ Future<Map<String, String>> testUserInfo() async =>
     {'userId': testUserId, 'userName': testUserName};
 
 FakeFirebaseFirestore newFakeFirestore() => FakeFirebaseFirestore();
+
+ClientProvider newClientProvider(FirebaseFirestore firestore) => ClientProvider(firestore: firestore);
 
 SaleProvider newSaleProvider(FirebaseFirestore firestore) =>
     SaleProvider(firestore: firestore, currentUserInfo: testUserInfo, deletedBy: testDeletedBy);
