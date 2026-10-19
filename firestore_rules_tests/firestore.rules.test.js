@@ -1024,3 +1024,33 @@ test('C7 [E4d-2]: an assistant still records one; admins edit and delete', async
   await assertSucceeds(transactionsOf('coadmin').doc('T7').update({ amount: 3500 }));
   await assertSucceeds(transactionsOf('owner').doc('T7').delete());
 });
+
+// ---------------------------------------------------------------------------
+// C4 debts, update: an admin (Edit Service rewrites the debt and may raise
+// it), or an assistant lowering amountOwed only, as a payment does
+// (AddPaymentScreen: {amountOwed}). Never below zero. (seedDebt: cD owes 5000.)
+
+test('C4 update [E4d-2]: an assistant can NOT raise a debt, keep it, change what it is, or take it below zero', async () => {
+  await seedDebt();
+  for (const change of [{ amountOwed: 6000 }, { amountOwed: 5000, updatedAt: new Date() }, { amountOwed: -1 },
+    { clientId: 'c2' }, { amountOwed: 4000, clientId: 'c2' }, { amountOwed: 4000, items: [] }, { saleId: 'other' }]) {
+    await assertFails(debtsOf('assistant').doc('sale_D1').update(change));
+  }
+});
+
+test('C4 update [E4d-2]: an assistant can NOT replay Edit Service, which raises the debt', async () => {
+  await assertRefusedShape('updateService raises the unpaid amount (Edit Service)', 'assistant');
+});
+
+test('C4 update [E4d-2]: an assistant lowers a debt (a payment), with or without updatedAt', async () => {
+  await seedDebt();
+  await assertSucceeds(debtsOf('assistant').doc('sale_D1').update({ amountOwed: 4000 }));
+  await assertSucceeds(debtsOf('assistant').doc('sale_D1').update({ amountOwed: 3000, updatedAt: new Date() }));
+});
+
+test('C4 update [E4d-2]: an admin may raise or rewrite a debt, but not below zero', async () => {
+  await seedDebt();
+  await assertSucceeds(debtsOf('owner').doc('sale_D1').update({ amountOwed: 9000, updatedAt: new Date() }));
+  await assertSucceeds(debtsOf('coadmin').doc('sale_D1').update({ amountOwed: 8000, items: [] }));
+  await assertFails(debtsOf('owner').doc('sale_D1').update({ amountOwed: -5 }));
+});

@@ -278,9 +278,15 @@ service cloud.firestore {
         // E4d-1 (C4): a debt is owed BY a client, and owes something.
         allow create: if isAuthenticated() && isInFacility(facilityId) &&
           request.resource.data.clientId is string && request.resource.data.amountOwed > 0;
-        // Unchanged: Edit Service (open to assistants) rewrites the debt,
-        // and can raise it (docs/design/e4d1_writer_audit.md, C4 update).
-        allow update: if isAuthenticated() && isInFacility(facilityId);
+        // E4d-2 (C4 update), owner decision: an admin (Edit Service rewrites
+        // the debt and may raise it), or anyone lowering amountOwed alone,
+        // as a payment does (AddPaymentScreen: {amountOwed}). Never below
+        // zero: a payment that settles it deletes it instead.
+        allow update: if isAuthenticated() && isInFacility(facilityId) &&
+          request.resource.data.amountOwed is number && request.resource.data.amountOwed >= 0 &&
+          (isAdmin() ||
+            (request.resource.data.diff(resource.data).affectedKeys().hasOnly(['amountOwed', 'updatedAt']) &&
+             request.resource.data.amountOwed < resource.data.amountOwed));
         // E4d-1 (C4): an admin, or the same write lowers the client's
         // balance (a repayment that settles it, a service edited down to
         // paid). Deleting it alone would forgive the debt.
