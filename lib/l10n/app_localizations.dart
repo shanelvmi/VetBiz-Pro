@@ -6691,6 +6691,12 @@ abstract class AppLocalizations {
   /// **'No activity recorded today.'**
   String get reports_noActivityToday;
 
+  /// Report activity tab when the report has no stored activity log (made before the log moved to its own admin-only record).
+  ///
+  /// In en, this message translates to:
+  /// **'No activity log was saved with this report.'**
+  String get reports_activityLogNotSaved;
+
   /// Report activity table column: who did it.
   ///
   /// In en, this message translates to:

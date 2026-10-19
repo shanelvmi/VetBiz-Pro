@@ -3820,6 +3820,10 @@ class AppLocalizationsSw extends AppLocalizations {
   String get reports_noActivityToday => 'Hakuna shughuli iliyorekodiwa leo.';
 
   @override
+  String get reports_activityLogNotSaved =>
+      'Hakuna kumbukumbu ya shughuli iliyohifadhiwa pamoja na ripoti hii.';
+
+  @override
   String get reports_colBy => 'Na';
 
   @override

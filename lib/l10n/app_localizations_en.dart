@@ -3803,6 +3803,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get reports_noActivityToday => 'No activity recorded today.';
 
   @override
+  String get reports_activityLogNotSaved =>
+      'No activity log was saved with this report.';
+
+  @override
   String get reports_colBy => 'By';
 
   @override
