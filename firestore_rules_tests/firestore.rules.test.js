@@ -1059,7 +1059,7 @@ test('C4 update [E4d-2]: an admin may raise or rewrite a debt, but not below zer
 // C6 services: an assistant only records payments on a service - the
 // fields the payment's copyWith(totalPaid, updatedAt).toMap() changes
 // (captured: totalPaid, updatedAt, totalServiceProfit,
-// unrealizedServiceProfit; it does not write paymentStatus). Admins edit.
+// unrealizedServiceProfit; since E4d-3 also paymentStatus). Admins edit.
 
 const servicesOf = (uid) => as(uid).collection('facilities').doc('F1').collection('services');
 const seedService = () => env.withSecurityRulesDisabled(async (ctx) => {
@@ -1097,6 +1097,34 @@ test('C6 services [E4d-2]: an assistant records a payment on a service (the paym
   await assertSucceeds(servicesOf('assistant').doc('V6').update({
     totalPaid: 5000, totalServiceProfit: 4300, unrealizedServiceProfit: 5000, updatedAt: new Date(),
   }));
+});
+
+// [E4d-3] A payment also writes paymentStatus (Service.toMap), so the
+// Paid/Partial/Unpaid filter follows it; only to the status of the new
+// totalPaid against totalAmount (PaymentStatus.of).
+const servicePayment = (totalPaid, paymentStatus) => ({
+  totalPaid, totalServiceProfit: totalPaid - 700, unrealizedServiceProfit: 10000 - totalPaid, updatedAt: new Date(), paymentStatus,
+});
+
+test('C6 services [E4d-3]: an assistant\'s payment refreshes paymentStatus (settles: Paid; part: stays Partial)', async () => {
+  await seedService();
+  await assertSucceeds(servicesOf('assistant').doc('V6').update(servicePayment(5000, 'Partial')));
+  await assertSucceeds(servicesOf('assistant').doc('V6').update(servicePayment(10000, 'Paid')));
+});
+
+test('C6 services [E4d-3]: an assistant can NOT write a paymentStatus its amounts do not give', async () => {
+  await seedService();
+  for (const [paid, status] of [[5000, 'Paid'], [5000, 'Unpaid'], [10000, 'Partial'], [4000, 'Paid'], [5000, 'paid']]) {
+    await assertFails(servicesOf('assistant').doc('V6').update(servicePayment(paid, status)));
+  }
+  await assertFails(servicesOf('assistant').doc('V6').update({ ...servicePayment(10000, 'Paid'), paymentStatus: null }));
+});
+
+test('C6 services [E4d-3]: the captured payments write paymentStatus (partial: Partial, settles: Paid)', async () => {
+  const status = (name, path) => appShapes.flows.find((f) => f.name === name).changes.find((c) => c.path === path).after.paymentStatus;
+  assert.strictEqual(status('payment on a service debt, partial', 'services/v1'), 'Partial');
+  assert.strictEqual(status('payment on a service debt, settles it', 'services/v2'), 'Paid');
+  assert.strictEqual(status('payment on a sale debt, settles it', 'sales/part1'), 'Paid');
 });
 
 test('C6 services [E4d-2]: admins still edit a service', async () => {

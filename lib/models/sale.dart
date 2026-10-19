@@ -245,6 +245,9 @@ class Sale {
       if (paymentMethod != null) 'paymentMethod': paymentMethod,
       if (receiptNumber != null) 'receiptNumber': receiptNumber,
       if (notes != null) 'notes': notes,
+      // Also here, not only in searchFields(): a payment writes toMap()
+      // alone (AddPaymentScreen), and the status filter must follow it (E4d-3).
+      'paymentStatus': PaymentStatus.of(totalPaid, totalAmount),
     };
   }
 

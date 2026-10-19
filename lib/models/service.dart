@@ -137,6 +137,10 @@ class Service {
       'paymentMethod': paymentMethod,
       'receiptNumber': receiptNumber,
       'transactionId': transactionId,
+      // Also here, not only in searchFields(): a payment writes toMap()
+      // alone (AddPaymentScreen), and the status filter must follow it
+      // (E4d-3). The rules let an assistant write only this value.
+      'paymentStatus': PaymentStatus.of(totalPaid, totalAmount),
     };
   }
 

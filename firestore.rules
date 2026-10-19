@@ -116,6 +116,13 @@ service cloud.firestore {
     function areStockQuantitiesAtOrAboveZero() {
       return isQuantityAtOrAboveZero('stockQty') && isQuantityAtOrAboveZero('sellableQty');
     }
+    // The stored paymentStatus is the one PaymentStatus.of gives
+    // (lib/data/payment_status.dart): Paid once totalPaid reaches
+    // totalAmount, Partial when something is paid, else Unpaid (E4d-3).
+    function hasPaymentStatusOfItsAmounts(data) {
+      return data.get('paymentStatus', null) == (data.totalPaid >= data.totalAmount ? 'Paid'
+        : (data.totalPaid > 0 ? 'Partial' : 'Unpaid'));
+    }
     function isOnlyMarkingNotificationRead() {
       let affected = request.resource.data.diff(resource.data).affectedKeys();
       return affected.hasOnly(['readAt']);
@@ -260,11 +267,14 @@ service cloud.firestore {
         allow read: if isAuthenticated() && isInFacility(facilityId);
         // E4d-2 (C6 services), owner decision: Edit Service is admin-only;
         // an assistant only records payments on a service - the fields
-        // AddPaymentScreen's copyWith(totalPaid, updatedAt).toMap() changes
-        // (it does not write paymentStatus). Admins as before.
+        // AddPaymentScreen's copyWith(totalPaid, updatedAt).toMap() changes.
+        // E4d-3: that includes paymentStatus, and only to the status its
+        // amounts give, so the Paid/Partial/Unpaid filter follows the
+        // payment. Admins as before.
         allow update: if isAuthenticated() && isInFacility(facilityId) &&
-          (isAdmin() || request.resource.data.diff(resource.data).affectedKeys()
-            .hasOnly(['totalPaid', 'updatedAt', 'totalServiceProfit', 'unrealizedServiceProfit']));
+          (isAdmin() || (request.resource.data.diff(resource.data).affectedKeys()
+            .hasOnly(['totalPaid', 'updatedAt', 'totalServiceProfit', 'unrealizedServiceProfit', 'paymentStatus']) &&
+            hasPaymentStatusOfItsAmounts(request.resource.data)));
         allow delete: if isAuthenticated() && isInFacility(facilityId) && isAdmin();
         allow create: if isAuthenticated() && isInFacility(facilityId) && !isSubscriptionLocked(facilityId);
       }

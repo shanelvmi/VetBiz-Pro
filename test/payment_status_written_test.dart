@@ -8,7 +8,7 @@ import 'package:vetbiz_pro/data/payment_status.dart';
 
 import 'helpers/fake_firestore.dart';
 
-const _skip = 'E4d-3: the fix lands in a later commit';
+const String? _skip = null;
 
 void main() {
   test('a service payment writes the new paymentStatus (as AddPaymentScreen writes it)', () {
