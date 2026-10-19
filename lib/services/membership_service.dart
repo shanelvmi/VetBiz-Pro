@@ -116,7 +116,8 @@ class MembershipService {
   }
 
   /// Adds a facility for the signed-in admin. The server enforces the facility
-  /// limit and sets the trial. Returns {facilityId, name, type, code}.
+  /// limit and sets the trial. Returns {facilityId, name, type}: the code stays
+  /// on the facility document (E4b, b3).
   Future<Map<String, dynamic>> addFacility({required String name, required String type}) {
     return _call('addFacility', {'name': name, 'type': type});
   }

@@ -11,6 +11,7 @@ import '../services/auth_service.dart';
 import '../services/membership_service.dart';
 import '../utils/facility_activation.dart';
 import '../utils/upload_size_check.dart';
+import '../services/facility_codes.dart';
 import '../config/app_limits.dart';
 import '../utils/facility_code_generator.dart';
 import '../constants/facility_types.dart';
@@ -151,6 +152,29 @@ class _RegisterScreenState extends State<RegisterScreen> {
   // locally-built list of what they're about to create.
   StreamSubscription<DocumentSnapshot>? _facilitiesSub;
 
+  // Each saved facility's code, from the facility document: profiles no
+  // longer carry it (E4b, b3). The list being built during sign-up has
+  // no facility id yet, so its tiles keep the code they were given.
+  Map<String, String> _facilityCodes = {};
+
+  String _codeOf(Map<String, dynamic> facility) =>
+      _facilityCodes[facility[Fields.facilityId]] ?? (facility['code'] as String?) ?? '';
+
+  Future<void> _loadFacilityCodes() async {
+    try {
+      final codes = await FacilityCodes().fetch(facilities.map((f) => (f[Fields.facilityId] ?? '').toString()));
+      if (!mounted) return;
+      setState(() {
+        _facilityCodes = codes;
+        if (selectedRole == 'Assistant' && facilities.isNotEmpty) {
+          assistantFacilityCodeController.text = _codeOf(facilities.first);
+        }
+      });
+    } catch (e) {
+      debugPrint('RegisterScreen could not read the facility codes: $e');
+    }
+  }
+
   void _startLiveFacilitiesListener() {
     final uid = FirebaseAuth.instance.currentUser?.uid;
     if (uid == null) return;
@@ -169,9 +193,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
         facilities = List<Map<String, dynamic>>.from(updatedFacilities);
         if (selectedRole == 'Assistant' && facilities.isNotEmpty) {
           assistantFacilityNameController.text = facilities.first['name'] ?? '';
-          assistantFacilityCodeController.text = facilities.first['code'] ?? '';
+          assistantFacilityCodeController.text = _codeOf(facilities.first);
         }
       });
+      _loadFacilityCodes();
     }, onError: (e) {
       debugPrint('RegisterScreen facilities listener error: $e');
     });
@@ -221,7 +246,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
         facilities = List<Map<String, dynamic>>.from(data['facilities']);
         if (selectedRole == 'Assistant' && facilities.isNotEmpty) {
           assistantFacilityNameController.text = facilities.first['name'] ?? '';
-          assistantFacilityCodeController.text = facilities.first['code'] ?? '';
+          assistantFacilityCodeController.text = _codeOf(facilities.first);
         }
       }
 
@@ -1865,7 +1890,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 ),
                 const SizedBox(height: AppSpacing.s3),
                 Text(
-                  context.l10n.register_facilityTypeAndCode(context.l10n.facilityTypeLabel(f['type'] ?? ''), f['code'] ?? ''),
+                  context.l10n.register_facilityTypeAndCode(context.l10n.facilityTypeLabel(f['type'] ?? ''), _codeOf(f)),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: TextStyle(fontSize: AppFontSize.f12, color: context.colors.textMuted),

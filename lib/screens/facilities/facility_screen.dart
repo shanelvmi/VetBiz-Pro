@@ -15,6 +15,7 @@ import '../../models/product.dart';
 import '../../services/usage_calculator_service.dart';
 import '../../utils/facility_activation.dart';
 import '../../utils/upload_size_check.dart';
+import '../../services/facility_codes.dart';
 import '../../constants/facility_types.dart';
 import '../../services/sales_summary_service.dart';
 import '../../utils/force_logout.dart';
@@ -227,6 +228,9 @@ class _FacilityScreenState extends State<FacilityScreen> {
         _logoByFacility[facilityId] = (logoUrl != null && logoUrl.isNotEmpty) ? logoUrl : null;
         _contactByFacility[facilityId] = {'email': email, 'phone': phone};
         _detailsByFacility[facilityId] = {
+          // From the facility document: profiles no longer carry the code
+          // (E4b, b3).
+          FacilityCodes.field: facilityDoc.data()?[FacilityCodes.field] as String?,
           'address': address,
           'description': description,
           'tagline': tagline,
@@ -1291,7 +1295,7 @@ class _FacilityScreenState extends State<FacilityScreen> {
 
           final filtered = facilities.where((f) {
             final name = (f['name'] ?? '').toString().toLowerCase();
-            final code = (f['code'] ?? '').toString().toLowerCase();
+            final code = (_detailsByFacility[f[Fields.facilityId]]?[FacilityCodes.field] ?? '').toString().toLowerCase();
             final matchesSearch =
                 _searchQuery.isEmpty || name.contains(_searchQuery) || code.contains(_searchQuery);
             final status = _detailsByFacility[f[Fields.facilityId]]?[Fields.status] as String? ?? FacilityStatus.active.key;
@@ -1697,7 +1701,7 @@ class _FacilityScreenState extends State<FacilityScreen> {
                 Row(
                   children: [
                     Text(
-                      facility['code'] ?? '-',
+                      (details?[FacilityCodes.field] as String?) ?? '-',
                       style: const TextStyle(fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f14),
                     ),
                     IconButton(
@@ -1705,7 +1709,7 @@ class _FacilityScreenState extends State<FacilityScreen> {
                       padding: EdgeInsets.zero,
                       constraints: const BoxConstraints(),
                       onPressed: () {
-                        Clipboard.setData(ClipboardData(text: facility['code'] ?? ''));
+                        Clipboard.setData(ClipboardData(text: (details?[FacilityCodes.field] as String?) ?? ''));
                         AppFeedback.success(L10n.current.invite_copied);
                       },
                     ),

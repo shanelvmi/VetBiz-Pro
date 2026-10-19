@@ -96,7 +96,6 @@ class _UserDetailScreenState extends State<UserDetailScreen> {
                                   Fields.facilityId: doc.id,
                                   'name': data['name'],
                                   'type': data['type'],
-                                  'code': data['code'],
                                 }),
                               );
                             },
