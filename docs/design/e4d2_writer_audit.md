@@ -59,4 +59,14 @@ The first write of each counter is a create (`value: 1`); every later one is an 
 
 ## Result
 
-(filled in at the end of the batch)
+App first (`f46702a`, `6c674d8`): the three provider methods throw `AdminOnlyException` for an assistant before any write (shown as `error_adminOnly`); Edit (services, transactions) and Add Product are hidden from assistants. Captured (`87b64e2`): 21 flows, 6 refused to the assistant. Rules, one group per commit; each new refusal test failed on the previous rules:
+
+- **C7** (`73f7b6a`): transactions update and delete admin only; create for members. Applied.
+- **C4 update** (`ccfd7c9`): `amountOwed` a number >= 0; an admin, or only `amountOwed`/`updatedAt` changing to a lower value (the payment). Applied.
+- **C6 services** (`641eac9`): an assistant changes only `totalPaid, updatedAt, totalServiceProfit, unrealizedServiceProfit`. No `paymentStatus` (the payment does not write it). Applied.
+- **C12** (`3c5eeb4`): products create admin only. Applied.
+- **C9** (`40f02ea`): create `{value}` an int > 0; update only `value`, an int above the stored one; delete false. Applied.
+- **C10** (`d58ae09`): `stock_adjustments` create: `userId == uid` and `timestamp == request.time`. Applied. `stockAdditions` create: `timestamp == request.time` only. **The author half is NOT applied:** no stockAdditions writer records an author (refuses every real entry). Owner decides: add an author field (for example `userId`) to the three writers, then the rule.
+- **C11** (this commit): create needs `status == 'pending'`. Applied. **The submitter half is NOT applied:** `submittedBy` holds the email (uid only without one), so "submitter == uid" refuses every real claim. Owner decides: also write `submittedById: uid`, then the rule (or check `request.auth.token.email`).
+
+firestore.rules: match 39 -> 39, allow 95 -> 100, functions 19 -> 19. Rules tests 131 -> 177.

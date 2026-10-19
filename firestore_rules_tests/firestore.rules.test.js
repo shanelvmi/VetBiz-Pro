@@ -1203,3 +1203,32 @@ test('C10 [E4d-2]: members log stock with the server\'s time, adjustments in the
     await assertSucceeds(stockLog(uid, 'stock_adjustments').add({ ...productEdit, source: 'Product edit' }));
   }
 });
+
+// ---------------------------------------------------------------------------
+// C11 payment_submissions, create: a claim starts 'pending'; only the
+// Platform Admin's review changes it. The writer (SubscriptionScreen's
+// submit) stores the submitter's EMAIL in submittedBy, not the uid, so the
+// submitter is not checked (writer audit).
+
+const claimsOf = (uid) => as(uid).collection('facilities').doc('F1').collection('payment_submissions');
+const claim = (status) => ({
+  facilityId: 'F1', facilityName: 'Ukuli', planId: 'basic_monthly', planLabel: 'Basic (Monthly)', amount: 20000,
+  promotionLabel: null, discountPercent: null, method: 'M-Pesa', reference: 'QX12', proofImageUrl: null,
+  status, submittedAt: serverTime(), submittedBy: 'neema@example.com',
+});
+
+test('C11 [E4d-2]: a payment claim can NOT be created already approved, rejected, or without a status', async () => {
+  for (const uid of ['assistant', 'owner']) {
+    await assertFails(claimsOf(uid).add(claim('approved')));
+    await assertFails(claimsOf(uid).add(claim('rejected')));
+    const { status, ...noStatus } = claim('pending');
+    await assertFails(claimsOf(uid).add(noStatus));
+  }
+});
+
+test('C11 [E4d-2]: members submit a claim as the app does (pending); the review stays the Platform Admin\'s', async () => {
+  await assertSucceeds(claimsOf('assistant').add(claim('pending')));
+  const ref = await claimsOf('owner').add(claim('pending'));
+  await assertFails(f1(as('owner'), `payment_submissions/${ref.id}`).update({ status: 'approved' }));
+  await assertSucceeds(f1(as('pa'), `payment_submissions/${ref.id}`).update({ status: 'approved' }));
+});
