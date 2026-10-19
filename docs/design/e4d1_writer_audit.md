@@ -53,3 +53,5 @@ The shapes marked *captured* are recorded from the real provider code in `firest
 - **C6 services**: REFUSES a real shape: an assistant's Edit Service changes any field. Not applied: owner decision (make Edit Service admin-only, or move it to the server).
 - **C7** ("admin, or recordedBy == uid on the same day"): REFUSES a real shape: `recordedBy` holds a NAME, never a uid, so every assistant edit (Edit is open to everyone) would be refused. Not applied: owner decision (write a `recordedById` at create, or make Edit admin-only).
 - **C8** (batch delete admin only): applied.
+
+OWNER DECISION: Edit Service and Edit Transaction (and deleting a transaction) become admin-only: assistants record, take payments and see everything, the owner corrects. Creating a product becomes admin-only (assistants still add batches to existing products). This settles C4 update (an assistant may only lower a debt's amountOwed, through the payment shape), C6 services (an assistant may change only the payment fields, like sales), C7 (transactions: create for members, update and delete for admins) and C12 (products create: admin).
