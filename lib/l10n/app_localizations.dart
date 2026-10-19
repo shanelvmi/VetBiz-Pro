@@ -3446,6 +3446,36 @@ abstract class AppLocalizations {
   /// **'Couldn\'t delete the client'**
   String get clients_deleteFailed;
 
+  /// Delete client dialog text.
+  ///
+  /// In en, this message translates to:
+  /// **'\"{name}\" moves to Trash. You can undo this now or restore it from Trash for 30 days.'**
+  String clients_deleteToTrashBody(String name);
+
+  /// Message after deleting a client (with Undo).
+  ///
+  /// In en, this message translates to:
+  /// **'Client moved to Trash'**
+  String get clients_movedToTrash;
+
+  /// Message after Undo restores a client.
+  ///
+  /// In en, this message translates to:
+  /// **'Client restored'**
+  String get clients_restored;
+
+  /// Message when Undo could not restore a client.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t restore the client'**
+  String get clients_restoreFailed;
+
+  /// Why deleting a client was refused; amount is pre-formatted money.
+  ///
+  /// In en, this message translates to:
+  /// **'This client still owes {amount}. Settle or remove the debts first.'**
+  String clients_deleteRefusedOwes(String amount);
+
   /// Message when sharing the client card failed.
   ///
   /// In en, this message translates to:

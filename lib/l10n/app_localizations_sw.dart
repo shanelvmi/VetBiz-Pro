@@ -1883,6 +1883,25 @@ class AppLocalizationsSw extends AppLocalizations {
   String get clients_deleteFailed => 'Imeshindwa kufuta mteja';
 
   @override
+  String clients_deleteToTrashBody(String name) {
+    return '\"$name\" anahamishiwa Tupio. Unaweza kutendua sasa au kumrejesha kutoka Tupio ndani ya siku 30.';
+  }
+
+  @override
+  String get clients_movedToTrash => 'Mteja amehamishiwa Tupio';
+
+  @override
+  String get clients_restored => 'Mteja amerejeshwa';
+
+  @override
+  String get clients_restoreFailed => 'Imeshindwa kumrejesha mteja';
+
+  @override
+  String clients_deleteRefusedOwes(String amount) {
+    return 'Mteja huyu bado anadaiwa $amount. Kamilisha malipo au ondoa madeni kwanza.';
+  }
+
+  @override
   String get clients_shareFailed => 'Imeshindwa kushiriki kadi ya mteja';
 
   @override

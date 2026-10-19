@@ -1872,6 +1872,25 @@ class AppLocalizationsEn extends AppLocalizations {
   String get clients_deleteFailed => 'Couldn\'t delete the client';
 
   @override
+  String clients_deleteToTrashBody(String name) {
+    return '\"$name\" moves to Trash. You can undo this now or restore it from Trash for 30 days.';
+  }
+
+  @override
+  String get clients_movedToTrash => 'Client moved to Trash';
+
+  @override
+  String get clients_restored => 'Client restored';
+
+  @override
+  String get clients_restoreFailed => 'Couldn\'t restore the client';
+
+  @override
+  String clients_deleteRefusedOwes(String amount) {
+    return 'This client still owes $amount. Settle or remove the debts first.';
+  }
+
+  @override
   String get clients_shareFailed => 'Couldn\'t share the client card';
 
   @override
