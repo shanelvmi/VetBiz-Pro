@@ -39,6 +39,13 @@ The stored transaction is `{...toMap(), ...searchFields()}` (`transaction_provid
 
 ## Result
 
-(filled in by the batch's commits)
+Tests first (`cdfa12e`, skipped; each failed unskipped on the old code for the right reason), then one change per commit:
+
+- **(1)** (`f2ff198`): `updateService` reads the stored service as the previous state (stock, what was owed) and keeps its `receiptNumber`, read again inside the write (a transaction). `updateTransaction` writes only the form's fields with `update()` in a transaction that reads the stored document (receiptNumber, serviceId, date, recordedBy stay; an empty payment method or note still removes it). Edit Service starts with the service's client (`clientOfEditedService`). Proven: an unchanged edit leaves every stored document as it was except `updatedAt` (cached service, uncached service, transaction, service expense: only its missing `descriptionLower` is added).
+- **(2)** (`c817603`): `Service.toMap` and `Sale.toMap` write `paymentStatus`. Rule (services, assistant): `paymentStatus` allowed, and only the value its amounts give (`hasPaymentStatusOfItsAmounts`); a mutation without that check fails the new test and the E4d-2 one.
+- **(3)** C10 (`1dfe0ab`): the three writers write `userId`; rule `userId == request.auth.uid`. `DailyReportService.sellableAddedByProduct` (the same sum) ignores it, tested. Captured + `moveToSellable (Release)`.
+- **(4)** C11 (`0a8c8ce`): `submittedById` (uid) beside `submittedBy` (email); rule `submittedById == request.auth.uid`.
+
+firestore.rules: match 39 -> 39, allow 100 -> 100, functions 19 -> 20. Rules tests 177 -> 185, flutter 588 -> 608, functions 128. LATER: an Edit Service with an external item still re-dates its expense to today under a new id (`_handleServiceTransaction`).
 
 OWNER DECISION: given in the E4d-3 prompt (fix (1) and (2), C10 `userId`, C11 `submittedById`).
