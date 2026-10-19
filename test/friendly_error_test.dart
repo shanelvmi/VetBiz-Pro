@@ -6,6 +6,7 @@ import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:vetbiz_pro/l10n/l10n.dart';
+import 'package:vetbiz_pro/models/client_delete_refusal.dart';
 import 'package:vetbiz_pro/ui/feedback/auth_error_messages.dart';
 import 'package:vetbiz_pro/ui/feedback/friendly_error.dart';
 
@@ -110,6 +111,11 @@ void main() {
       }
       expect(out.trim(), isNotEmpty);
     }
+  });
+
+  test('a refused client delete names what the client still owes (E3)', () {
+    expect(FriendlyError.messageFor(const ClientDeleteRefusedException(12500)),
+        'This client still owes Tsh 12,500. Settle or remove the debts first.');
   });
 
   test('details give the code and message, for the Details action', () {

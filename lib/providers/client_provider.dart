@@ -756,6 +756,12 @@ class ClientProvider with ChangeNotifier, PaginatedStreamLoader<Client> {
     if (refusal != null) throw refusal!;
   }
 
+  /// Starts the Clients list over after a client goes to Trash or comes
+  /// back: its pages are fetched once, so it would keep showing (or keep
+  /// missing) them until a Refresh. The live list behind the pickers and
+  /// Debtors follows on its own.
+  void refreshClientsList() => unawaited(clientsListController.refreshSession());
+
   /// Puts a client back from Trash (E3) exactly as stored, in one
   /// transaction with its activity entry. Balances and debts are not
   /// touched: the balance is the one the client had (never above zero, the

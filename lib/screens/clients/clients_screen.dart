@@ -16,6 +16,7 @@ import '../../utils/web_download.dart';
 import '../../models/client.dart';
 import 'add_client_screen.dart';
 import '../../services/cursor_paginated_list_controller.dart';
+import '../../services/trash_service.dart';
 import '../../data/collections.dart';
 import '../../config/money.dart';
 import '../../config/app_timeouts.dart';
@@ -351,7 +352,7 @@ class _ClientsScreenState extends State<ClientsScreen> {
       builder: (_) => AlertDialog(
         backgroundColor: context.colors.raisedSurface,
         title: Text(context.l10n.clients_deleteTitle, style: TextStyle(color: context.colors.primary)),
-        content: Text(context.l10n.clients_deleteBody(client.name)),
+        content: Text(context.l10n.clients_deleteToTrashBody(client.name)),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
@@ -383,14 +384,36 @@ class _ClientsScreenState extends State<ClientsScreen> {
     if (facilityId != null) {
       try {
         await clientProvider.deleteClient(facilityId, client.id);
-        if (!mounted) return;
-        if (_selectedClient?.id == client.id) setState(() => _selectedClient = null);
-        // A hard delete (nothing goes to trash_clients), so no Undo: see
-        // design-open-questions.md, "make client deletion soft?".
-        AppFeedback.success(L10n.current.clients_deleted);
+        clientProvider.refreshClientsList();
+        if (mounted && _selectedClient?.id == client.id) setState(() => _selectedClient = null);
+        // deleteClient moves the client to Trash (E3), so Undo puts them
+        // back with the Trash screen's own restore.
+        AppFeedback.undo(
+          L10n.current.clients_movedToTrash,
+          onUndo: () => _undoDeleteClient(clientProvider, facilityId, client.id),
+        );
       } catch (e, st) {
+        // A client who still owes money is refused, nothing written; the
+        // second line names the amount (FriendlyError).
         AppFeedback.error(L10n.current.clients_deleteFailed, error: e, stackTrace: st);
       }
+    }
+  }
+
+  // Static: Undo may run after this screen is gone (ClientProvider is
+  // app-wide).
+  static Future<void> _undoDeleteClient(ClientProvider clientProvider, String facilityId, String clientId) async {
+    try {
+      await TrashService.restoreById(
+        facilityId: facilityId,
+        trashCollection: Collections.trashClients,
+        liveCollection: Collections.clients,
+        id: clientId,
+      );
+      clientProvider.refreshClientsList();
+      AppFeedback.success(L10n.current.clients_restored);
+    } catch (e, st) {
+      AppFeedback.error(L10n.current.clients_restoreFailed, error: e, stackTrace: st);
     }
   }
 

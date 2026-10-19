@@ -3,7 +3,9 @@ import 'dart:async';
 import 'package:cloud_functions/cloud_functions.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
+import '../../config/money.dart';
 import '../../l10n/l10n.dart';
+import '../../models/client_delete_refusal.dart';
 import '../../models/restore_outcome.dart';
 import 'auth_error_messages.dart';
 
@@ -56,6 +58,10 @@ class FriendlyError {
     if (error is FirebaseException) return _forCode(error.code);
     if (error is TimeoutException) return tooSlow;
     if (error is RestoreRefusedException) return _restoreRefusal(error);
+    // E3, owner decision: a client who still owes money is not deleted.
+    if (error is ClientDeleteRefusedException) {
+      return L10n.current.clients_deleteRefusedOwes(Money.format(error.owed));
+    }
     return fallback;
   }
 
