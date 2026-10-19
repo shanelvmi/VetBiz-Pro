@@ -152,6 +152,10 @@ class AppLocalizationsEn extends AppLocalizations {
       'Too many requests. Wait a moment and try again.';
 
   @override
+  String get error_photoTooLarge =>
+      'This photo is too large. Choose a smaller one.';
+
+  @override
   String get login_wrongCredentials => 'Incorrect email or password.';
 
   @override

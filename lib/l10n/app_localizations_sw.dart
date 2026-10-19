@@ -152,6 +152,10 @@ class AppLocalizationsSw extends AppLocalizations {
       'Maombi ni mengi mno. Subiri kidogo kisha ujaribu tena.';
 
   @override
+  String get error_photoTooLarge =>
+      'Picha hii ni kubwa mno. Chagua iliyo ndogo zaidi.';
+
+  @override
   String get login_wrongCredentials => 'Barua pepe au nenosiri si sahihi.';
 
   @override

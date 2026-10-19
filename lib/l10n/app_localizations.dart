@@ -380,6 +380,12 @@ abstract class AppLocalizations {
   /// **'Too many requests. Wait a moment and try again.'**
   String get error_rateLimited;
 
+  /// Error toast when a picked photo is still over the upload size limit (5 MB) after scaling down; nothing is uploaded.
+  ///
+  /// In en, this message translates to:
+  /// **'This photo is too large. Choose a smaller one.'**
+  String get error_photoTooLarge;
+
   /// Sign-in error for a wrong password OR an unknown email (one message on purpose, so it does not reveal which emails are registered).
   ///
   /// In en, this message translates to:
