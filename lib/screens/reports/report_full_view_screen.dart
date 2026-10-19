@@ -11,6 +11,7 @@ import '../../theme/app_dimens.dart';
 import '../../theme/theme_context.dart';
 import '../../theme/app_breakpoints.dart';
 import '../../theme/app_motion.dart';
+import 'report_activity_log_loader.dart';
 
 /// Opens the full report as a single continuous scroll, mirroring the
 /// PDF's own section order - this is the "what would the PDF look
@@ -109,12 +110,21 @@ class ReportFullViewScreen extends StatelessWidget {
                       _paymentReconciliationSection(context),
                       const SizedBox(height: AppSpacing.s16),
                       _paymentMethodsSection(context),
-                      // Admins only - it lists everyone's activity.
-                      if (Provider.of<UserRoleProvider>(context, listen: false).isAdmin &&
-                          report.activityLogEntries.isNotEmpty) ...[
-                        const SizedBox(height: AppSpacing.s16),
-                        _activityLogSection(context),
-                      ],
+                      // Admins only - it lists everyone's activity. Read from
+                      // the admin-only subdocument (E4c, a1); shown only
+                      // when it has entries, as before.
+                      if (Provider.of<UserRoleProvider>(context, listen: false).isAdmin && report.activityLogIncluded)
+                        ReportActivityLogLoader(
+                          report: report,
+                          builder: (context, snapshot) {
+                            final entries = snapshot.data;
+                            if (entries == null || entries.isEmpty) return const SizedBox.shrink();
+                            return Padding(
+                              padding: const EdgeInsets.only(top: AppSpacing.s16),
+                              child: _activityLogSection(context, entries),
+                            );
+                          },
+                        ),
                       const SizedBox(height: AppSpacing.s16),
                       _declarationSection(context),
                       const SizedBox(height: AppSpacing.s24),
@@ -434,14 +444,14 @@ class ReportFullViewScreen extends StatelessWidget {
     );
   }
 
-  Widget _activityLogSection(BuildContext context) {
+  Widget _activityLogSection(BuildContext context, List<ActivityLogEntry> entries) {
     return _card(context, 
       Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           _sectionHeader(context, context.l10n.export_activityLog),
           const SizedBox(height: AppSpacing.s8),
-          for (final entry in report.activityLogEntries)
+          for (final entry in entries)
             Padding(
               padding: const EdgeInsets.symmetric(vertical: AppSpacing.s3),
               child: Text('${AppDateFormat.time24.format(entry.time)}  ${entry.description} - ${entry.userName}',

@@ -10,6 +10,7 @@ import '../../theme/app_text.dart';
 import '../../theme/app_dimens.dart';
 import '../../theme/theme_context.dart';
 import '../../l10n/l10n.dart';
+import 'report_activity_log_loader.dart';
 
 /// The full tabbed report layout (Summary through Activity Log) -
 /// extracted as its own reusable widget since both the main "today's
@@ -876,15 +877,34 @@ class _ReportTabbedContentState extends State<ReportTabbedContent> with SingleTi
             const SizedBox(height: AppSpacing.s10),
             if (!report.activityLogIncluded)
               _emptyState(context.l10n.reports_activityNotIncluded)
-            else if (report.activityLogEntries.isEmpty)
-              _emptyState(context.l10n.reports_noActivityToday)
-            else ...[
-              _tableHeaderRow(
-                  [context.l10n.reports_colTime, context.l10n.common_type, context.l10n.common_description, context.l10n.reports_colBy],
-                  [1, 2, 4, 2]),
-              const Divider(height: 1),
-              for (final entry in report.activityLogEntries) _buildActivityRow(entry),
-            ],
+            else
+              // From the admin-only subdocument (E4c, a1); this tab is
+              // built for admins only.
+              ReportActivityLogLoader(
+                report: report,
+                builder: (context, snapshot) {
+                  if (snapshot.connectionState != ConnectionState.done) {
+                    return const Padding(
+                      padding: EdgeInsets.all(AppSpacing.s16),
+                      child: Center(child: CircularProgressIndicator()),
+                    );
+                  }
+                  if (snapshot.hasError) return _emptyState(context.l10n.error_couldNotLoad);
+                  final entries = snapshot.data;
+                  if (entries == null) return _emptyState(context.l10n.reports_activityLogNotSaved);
+                  if (entries.isEmpty) return _emptyState(context.l10n.reports_noActivityToday);
+                  return Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      _tableHeaderRow(
+                          [context.l10n.reports_colTime, context.l10n.common_type, context.l10n.common_description, context.l10n.reports_colBy],
+                          [1, 2, 4, 2]),
+                      const Divider(height: 1),
+                      for (final entry in entries) _buildActivityRow(entry),
+                    ],
+                  );
+                },
+              ),
           ],
         ),
       ),
