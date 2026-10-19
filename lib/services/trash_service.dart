@@ -3,6 +3,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import '../data/activity_type.dart';
 import '../data/collections.dart';
 import '../data/fields.dart';
+import '../models/restore_outcome.dart';
 import '../utils/activity_logger.dart';
 
 /// Putting something back from Trash.
@@ -18,18 +19,20 @@ class TrashService {
   /// (the trash-only fields deletedAt and deletedBy are dropped), then logs
   /// "Restored (the item's name)" in the activity log. [data] is the trash document's
   /// data.
-  static Future<void> restore({
+  static Future<RestoreResult> restore({
     required String facilityId,
     required String trashCollection,
     required String liveCollection,
     required String id,
     required Map<String, dynamic> data,
+    FirebaseFirestore? firestore,
+    Future<Map<String, String>> Function()? currentUserInfo,
   }) async {
     final restoredData = Map<String, dynamic>.from(data)
       ..remove('deletedAt')
       ..remove('deletedBy');
 
-    final firestore = FirebaseFirestore.instance;
+    firestore ??= FirebaseFirestore.instance;
     final batch = firestore.batch();
 
     batch.set(
@@ -49,19 +52,22 @@ class TrashService {
     );
 
     await batch.commit();
-    await _logRestore(facilityId, liveCollection, data);
+    await _logRestore(facilityId, liveCollection, data, firestore, currentUserInfo);
+    return RestoreResult.restored;
   }
 
   /// [restore], for a caller that only knows the id (the Undo on a delete
   /// message): reads the trash document first. Throws a StateError if it is
   /// no longer in Trash (already restored, or deleted for good).
-  static Future<void> restoreById({
+  static Future<RestoreResult> restoreById({
     required String facilityId,
     required String trashCollection,
     required String liveCollection,
     required String id,
+    FirebaseFirestore? firestore,
+    Future<Map<String, String>> Function()? currentUserInfo,
   }) async {
-    final snap = await FirebaseFirestore.instance
+    final snap = await (firestore ?? FirebaseFirestore.instance)
         .collection(Collections.facilities)
         .doc(facilityId)
         .collection(trashCollection)
@@ -69,18 +75,22 @@ class TrashService {
         .get();
     final data = snap.data();
     if (data == null) throw StateError('$trashCollection/$id is no longer in Trash');
-    await restore(
+    return restore(
       facilityId: facilityId,
       trashCollection: trashCollection,
       liveCollection: liveCollection,
       id: id,
       data: data,
+      firestore: firestore,
+      currentUserInfo: currentUserInfo,
     );
   }
 
-  static Future<void> _logRestore(String facilityId, String liveCollection, Map<String, dynamic> data) async {
-    final userInfo = await ActivityLogger.getCurrentUserInfo();
+  static Future<void> _logRestore(String facilityId, String liveCollection, Map<String, dynamic> data,
+      FirebaseFirestore firestore, Future<Map<String, String>> Function()? currentUserInfo) async {
+    final userInfo = await (currentUserInfo ?? ActivityLogger.getCurrentUserInfo)();
     await ActivityLogger.logActivity(
+      firestore: firestore,
       facilityId: facilityId,
       userId: userInfo[Fields.userId]!,
       userName: userInfo['userName'],

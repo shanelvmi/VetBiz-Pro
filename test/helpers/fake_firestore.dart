@@ -10,6 +10,8 @@ import 'package:vetbiz_pro/models/sale.dart';
 import 'package:vetbiz_pro/models/service.dart';
 import 'package:vetbiz_pro/providers/sale_provider.dart';
 import 'package:vetbiz_pro/providers/service_provider.dart';
+import 'package:vetbiz_pro/models/restore_outcome.dart';
+import 'package:vetbiz_pro/services/trash_service.dart';
 
 const testFacilityId = 'facility1';
 const testUserId = 'user1';
@@ -146,6 +148,18 @@ Future<int> sellableQty(FirebaseFirestore fs, String productId, [String? batchId
       : await productRef.collection(Collections.batches).doc(batchId).get();
   return (snap.data()?['sellableQty'] as num).toInt();
 }
+
+/// Restores [id] from Trash as the Trash screen and the Undo do.
+Future<RestoreResult> restoreFromTrash(
+        FirebaseFirestore fs, String trashCollection, String liveCollection, String id) =>
+    TrashService.restoreById(
+      facilityId: testFacilityId,
+      trashCollection: trashCollection,
+      liveCollection: liveCollection,
+      id: id,
+      firestore: fs,
+      currentUserInfo: testUserInfo,
+    );
 
 Future<int> countDocs(FirebaseFirestore fs, String collection) async =>
     (await facilityCollection(fs, collection).get()).docs.length;
