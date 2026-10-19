@@ -10,9 +10,6 @@ import 'package:vetbiz_pro/models/sale.dart';
 
 import '../helpers/fake_firestore.dart';
 
-// Skipped until the E2 commit that implements it.
-const pendingE2 = 'E2: not implemented yet';
-
 /// What a delete and a restore must leave as they found it.
 Future<Map<String, Object?>> books(FakeFirebaseFirestore fs, {required String saleId, String? clientId}) async {
   final client =
@@ -133,7 +130,7 @@ void main() {
   });
 
   // --- Restore ---
-  test(skip: pendingE2, 'a credit sale deleted and restored gives back its stock, debt, balance and oldest unpaid date', () async {
+  test('a credit sale deleted and restored gives back its stock, debt, balance and oldest unpaid date', () async {
     final fs = await creditSale();
     final before = await books(fs, saleId: 's1', clientId: 'c1');
     expect(before['debt'], isNotNull);
@@ -151,7 +148,7 @@ void main() {
     expect(await books(fs, saleId: 's1', clientId: 'c1'), before);
   });
 
-  test(skip: pendingE2, 'a cash sale deleted and restored gives back its stock and touches no client', () async {
+  test('a cash sale deleted and restored gives back its stock and touches no client', () async {
     final fs = newFakeFirestore();
     await seedProduct(fs, id: 'p1', batchQty: {'b1': 2, 'b2': 5});
     await newSaleProvider(fs).addSale(testSale(id: 's1', items: [saleItem('p1', 3)]), testFacilityId);
@@ -165,7 +162,7 @@ void main() {
     expect(await books(fs, saleId: 's1'), before);
   });
 
-  test(skip: pendingE2, 'condition 6: a partly repaid credit sale deleted and restored gives back the same debt, balance and oldest date',
+  test('condition 6: a partly repaid credit sale deleted and restored gives back the same debt, balance and oldest date',
       () async {
     final fs = await creditSale();
     await repay(fs, saleId: 's1', amount: 2000);
@@ -183,7 +180,7 @@ void main() {
     expect(await books(fs, saleId: 's1', clientId: 'c1'), before);
   });
 
-  test(skip: pendingE2, 'restore twice (a retry after a lost answer): one sale, stock taken once, balance raised once', () async {
+  test('restore twice (a retry after a lost answer): one sale, stock taken once, balance raised once', () async {
     final fs = await creditSale();
     final before = await books(fs, saleId: 's1', clientId: 'c1');
     await deleteSale(fs, 's1');
@@ -197,7 +194,7 @@ void main() {
     expect(await books(fs, saleId: 's1', clientId: 'c1'), before);
   });
 
-  test(skip: pendingE2, 'condition 1: not enough stock to restore: refused naming the product, nothing written', () async {
+  test('condition 1: not enough stock to restore: refused naming the product, nothing written', () async {
     final fs = await creditSale();
     await deleteSale(fs, 's1');
     // Sold out in between: 1 of the 7 left.
@@ -219,7 +216,7 @@ void main() {
     expect(storedData(fs), before);
   });
 
-  test(skip: pendingE2, 'condition 2: the client no longer exists: refused, nothing written', () async {
+  test('condition 2: the client no longer exists: refused, nothing written', () async {
     final fs = await creditSale();
     await deleteSale(fs, 's1');
     await facilityCollection(fs, Collections.clients).doc('c1').delete();
@@ -233,7 +230,7 @@ void main() {
     expect(storedData(fs), before);
   });
 
-  test(skip: pendingE2, 'condition 4: a product in the sale no longer exists: refused naming it, nothing written', () async {
+  test('condition 4: a product in the sale no longer exists: refused naming it, nothing written', () async {
     final fs = await creditSale();
     await deleteSale(fs, 's1');
     final productRef = facilityCollection(fs, Collections.products).doc('p1');
@@ -253,7 +250,7 @@ void main() {
     expect(storedData(fs), before);
   });
 
-  test(skip: pendingE2, 'condition 5 and test 7: a trash copy from the old delete restores with its effects, search fields and updatedAt',
+  test('condition 5 and test 7: a trash copy from the old delete restores with its effects, search fields and updatedAt',
       () async {
     final fs = newFakeFirestore();
     await seedProduct(fs, id: 'p1', batchQty: {'b1': 2, 'b2': 5});

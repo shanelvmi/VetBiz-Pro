@@ -9,9 +9,6 @@ import 'package:vetbiz_pro/models/restore_outcome.dart';
 
 import '../helpers/fake_firestore.dart';
 
-// Skipped until the E2 commit that implements it.
-const pendingE2 = 'E2: not implemented yet';
-
 Future<Map<String, Object?>> books(FakeFirebaseFirestore fs, {required String serviceId}) async {
   final client = (await facilityCollection(fs, Collections.clients).doc('c1').get()).data();
   final service = (await facilityCollection(fs, Collections.services).doc(serviceId).get()).data()
@@ -92,7 +89,7 @@ void main() {
   });
 
   // --- Restore ---
-  test(skip: pendingE2, 'test 4: a service with a stock item and an external item deleted and restored gives back stock, debt, balance and expense',
+  test('test 4: a service with a stock item and an external item deleted and restored gives back stock, debt, balance and expense',
       () async {
     final fs = await creditService();
     final before = await books(fs, serviceId: 'v1');
@@ -115,7 +112,7 @@ void main() {
     expect(await books(fs, serviceId: 'v1'), before);
   });
 
-  test(skip: pendingE2, 'restore twice: one service, stock taken once, one expense, balance raised once', () async {
+  test('restore twice: one service, stock taken once, one expense, balance raised once', () async {
     final fs = await creditService();
     final before = await books(fs, serviceId: 'v1');
     await newServiceProvider(fs).deleteService('v1');
@@ -130,7 +127,7 @@ void main() {
     expect(await books(fs, serviceId: 'v1'), before);
   });
 
-  test(skip: pendingE2, 'condition 1: not enough stock to restore a service: refused naming the item, nothing written', () async {
+  test('condition 1: not enough stock to restore a service: refused naming the item, nothing written', () async {
     final fs = await creditService();
     await newServiceProvider(fs).deleteService('v1');
     await settle();
@@ -151,7 +148,7 @@ void main() {
     expect(storedData(fs), before);
   });
 
-  test(skip: pendingE2, 'condition 4: the product of a stock item no longer exists: refused, nothing written', () async {
+  test('condition 4: the product of a stock item no longer exists: refused, nothing written', () async {
     final fs = await creditService();
     await newServiceProvider(fs).deleteService('v1');
     await settle();
@@ -168,7 +165,7 @@ void main() {
     expect(storedData(fs), before);
   });
 
-  test(skip: pendingE2, 'test 6 and condition 5: a service trashed by the old code (no trashedExpense) gets its expense recomputed',
+  test('test 6 and condition 5: a service trashed by the old code (no trashedExpense) gets its expense recomputed',
       () async {
     final fs = newFakeFirestore();
     await seedProduct(fs, id: 'p1', batchQty: {'b1': 5});

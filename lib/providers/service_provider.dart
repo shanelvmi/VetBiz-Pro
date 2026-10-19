@@ -4,6 +4,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 
 import '../models/service.dart';
 import '../models/debt.dart';
+import '../models/restore_outcome.dart';
 import '../services/record_trash.dart';
 import 'debt_provider.dart';
 import 'product_provider.dart';
@@ -635,6 +636,10 @@ class ServiceProvider extends ChangeNotifier {
     _olderServices.removeWhere((s) => s.id == id);
     notifyListeners();
   }
+
+  /// Puts a service back from Trash with its stock, debt, balance and
+  /// expense, in ONE transaction (RecordTrash.restore: refusals, retries).
+  Future<RestoreResult> restoreService(String id, String facilityId) => _trash.restore(facilityId, id);
 
   /// A service, for RecordTrash.
   static final trashedServiceType = TrashedRecordType(

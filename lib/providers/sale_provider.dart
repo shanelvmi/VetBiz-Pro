@@ -7,6 +7,7 @@ import '../utils/activity_logger.dart';
 import '../utils/receipt_numbering.dart';
 import 'debt_provider.dart';
 import '../models/debt.dart';
+import '../models/restore_outcome.dart';
 import '../services/record_trash.dart';
 import '../services/cursor_paginated_list_controller.dart';
 import '../data/collections.dart';
@@ -581,6 +582,10 @@ class SaleProvider extends ChangeNotifier {
   /// upfront payment stays counted. Nothing is swallowed: an error means
   /// nothing changed.
   Future<void> deleteSale(String saleId, String facilityId) => _trash.delete(facilityId, saleId);
+
+  /// Puts a sale back from Trash with its stock, debt and balance, in ONE
+  /// transaction (RecordTrash.restore: refusals, retries).
+  Future<RestoreResult> restoreSale(String saleId, String facilityId) => _trash.restore(facilityId, saleId);
 
   /// A sale, for RecordTrash.
   static final trashedSaleType = TrashedRecordType(
