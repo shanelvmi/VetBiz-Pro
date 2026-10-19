@@ -1104,3 +1104,29 @@ test('C6 services [E4d-2]: admins still edit a service', async () => {
   await assertSucceeds(servicesOf('owner').doc('V6').update({ totalAmount: 12000, updatedAt: new Date() }));
   await assertSucceeds(servicesOf('coadmin').doc('V6').update({ itemsUsed: [], clientId: 'c1' }));
 });
+
+// ---------------------------------------------------------------------------
+// C12 products: creating one is admin-only (owner decision); an assistant
+// still adds batches to existing products (Add Batch, captured: everyone).
+
+test('C12 [E4d-2]: an assistant can NOT create a product (Add Product\'s shape, or directly)', async () => {
+  await assertRefusedShape('addProduct with its first batch (Add Product)', 'assistant');
+  await assertFails(products('assistant').doc('PNEW').set({ name: 'New', stockQty: 0, sellableQty: 4 }));
+});
+
+test('C12 [E4d-2]: admins create products; an assistant adds a batch to an existing one', async () => {
+  await seedStock();
+  await assertSucceeds(products('owner').doc('PNEW').set({ name: 'New', stockQty: 0, sellableQty: 4 }));
+  await assertSucceeds(products('coadmin').doc('PNEW2').set({ name: 'New 2', stockQty: 3, sellableQty: 0 }));
+  await assertSucceeds(batches('assistant', 'P5').doc('bNew').set({ batchNo: 'N1', stockQty: 4, sellableQty: 0 }));
+});
+
+// Every flow the app refuses to a role is refused by the rules as well.
+for (const flow of appShapes.flows) {
+  for (const uid of flow.refused) {
+    test(`app shapes [E4d-2]: refused to ${uid} - ${flow.name}`, async () => {
+      await seedShape(flow.changes, uid);
+      await assertFails(replayShape(uid, flow.changes));
+    });
+  }
+}

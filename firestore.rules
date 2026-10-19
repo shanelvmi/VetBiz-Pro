@@ -222,7 +222,10 @@ service cloud.firestore {
       // ========== 📦 Products ==========
       match /products/{productId} {
         allow read: if isAuthenticated() && isInFacility(facilityId);
-        allow create: if isAuthenticated() && isInFacility(facilityId) && areStockQuantitiesAtOrAboveZero();
+        // E4d-2 (C12), owner decision: only an admin creates a product (Add
+        // Product is hidden from assistants); assistants still add batches
+        // to existing products (batches below, and isOnlyChangingStockFields).
+        allow create: if isAuthenticated() && isInFacility(facilityId) && isAdmin() && areStockQuantitiesAtOrAboveZero();
         allow update: if isAuthenticated() && isInFacility(facilityId) && (isAdmin() || isOnlyChangingStockFields()) &&
           areStockQuantitiesAtOrAboveZero();
         allow delete: if isAuthenticated() && isInFacility(facilityId) && isAdmin();
