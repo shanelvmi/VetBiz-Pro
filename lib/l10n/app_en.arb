@@ -1240,6 +1240,8 @@
   "@team_removed": {"description":"Message after removing an assistant."},
   "team_removeFailed": "Couldn't remove the assistant",
   "@team_removeFailed": {"description":"Message when removing failed."},
+  "team_signInSwitchFailed": "The assistant was deactivated, but their sign-in could not be switched off. Reactivate and deactivate again.",
+  "@team_signInSwitchFailed": {"description":"Warning after deactivating or removing an assistant when the server saved the change but could not switch off their sign-in (Firebase Auth); they may still be signed in."},
   "team_reassigned": "Assistant reassigned",
   "@team_reassigned": {"description":"Message after moving an assistant to another facility."},
   "team_reassignFailed": "Couldn't reassign the assistant",

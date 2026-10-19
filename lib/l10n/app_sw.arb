@@ -1240,6 +1240,8 @@
   "@team_removed": {"x-review":"draft"},
   "team_removeFailed": "Imeshindwa kumwondoa msaidizi",
   "@team_removeFailed": {"x-review":"draft"},
+  "team_signInSwitchFailed": "Msaidizi amesimamishwa, lakini kuingia kwake hakukuweza kuzimwa. Mrejeshe kisha umsimamishe tena.",
+  "@team_signInSwitchFailed": {"x-review":"draft"},
   "team_reassigned": "Msaidizi amehamishwa",
   "@team_reassigned": {"x-review":"draft"},
   "team_reassignFailed": "Imeshindwa kumhamisha msaidizi",

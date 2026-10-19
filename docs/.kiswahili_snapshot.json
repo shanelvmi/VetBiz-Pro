@@ -619,6 +619,7 @@
   "team_updateFailed": ["Imeshindwa kusasisha msaidizi","Message when a status change failed.","draft"],
   "team_removed": ["Msaidizi ameondolewa kwenye kituo hiki","Message after removing an assistant.","draft"],
   "team_removeFailed": ["Imeshindwa kumwondoa msaidizi","Message when removing failed.","draft"],
+  "team_signInSwitchFailed": ["Msaidizi amesimamishwa, lakini kuingia kwake hakukuweza kuzimwa. Mrejeshe kisha umsimamishe tena.","Warning after deactivating or removing an assistant when the server saved the change but could not switch off their sign-in (Firebase Auth); they may still be signed in.","draft"],
   "team_reassigned": ["Msaidizi amehamishwa","Message after moving an assistant to another facility.","draft"],
   "team_reassignFailed": ["Imeshindwa kumhamisha msaidizi","Message when moving failed.","draft"],
   "team_thisAssistant": ["msaidizi huyu","Stands in for a missing name in the middle of a sentence.","draft"],
