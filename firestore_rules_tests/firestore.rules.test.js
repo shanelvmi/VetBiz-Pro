@@ -788,3 +788,57 @@ test('reports [E4c]: an admin deletes a draft with its log (one batch); an assis
   batch.delete(ref);
   await assertSucceeds(batch.commit());
 });
+
+// ======================================================================
+// MONEY AND STOCK WRITES [E4d-1]. C4 debts, C6 sales, C8 batch delete.
+//
+// GUARDS: every write shape the app really makes, captured from the
+// provider code by test/providers/write_shapes_capture_test.dart into
+// fixtures/app_write_shapes.json, replayed as each role that makes it, as
+// ONE batch per flow (the app's transaction or batch). They pass on the
+// rules before and after E4d-1.
+// ======================================================================
+
+const appShapes = require('./fixtures/app_write_shapes.json');
+const f1 = (db, p) => db.doc(`facilities/F1/${p}`);
+// The capture ran as the harness user 'user1' (test/helpers/fake_firestore.dart):
+// the app writes the signed-in person's uid there, so the replay does too.
+const CAPTURE_UID = 'user1';
+const decodeShape = (v, uid) => {
+  if (v === CAPTURE_UID && uid) return uid;
+  if (v && typeof v === 'object' && !Array.isArray(v)) {
+    if (typeof v.$ts === 'string') return new Date(v.$ts);
+    return Object.fromEntries(Object.entries(v).map(([k, x]) => [k, decodeShape(x, uid)]));
+  }
+  return Array.isArray(v) ? v.map((x) => decodeShape(x, uid)) : v;
+};
+const seedShape = async (changes, uid) => {
+  await env.withSecurityRulesDisabled(async (ctx) => {
+    for (const c of changes) if (c.before) await f1(ctx.firestore(), c.path).set(decodeShape(c.before, uid));
+  });
+};
+const replayShape = (uid, changes) => {
+  const db = as(uid);
+  const batch = db.batch();
+  for (const c of changes) c.after ? batch.set(f1(db, c.path), decodeShape(c.after, uid)) : batch.delete(f1(db, c.path));
+  return batch.commit();
+};
+
+test('app shapes [E4d-1]: the fixture holds the flows E4d-1 depends on', () => {
+  const names = appShapes.flows.map((f) => f.name);
+  for (const n of ['addSale cash, walk-in', 'addSale credit, nothing paid', 'addSale partly paid',
+    'payment on a sale debt, partial', 'payment on a sale debt, settles it', 'payment on a service debt, partial',
+    'updateService raises the unpaid amount (Edit Service)', 'deleteSale credit (to Trash)',
+    'restoreSale credit (from Trash)', 'deleteService (to Trash)', 'restoreService (from Trash)']) {
+    assert.ok(names.includes(n), `missing flow: ${n}`);
+  }
+});
+
+for (const flow of appShapes.flows) {
+  for (const uid of flow.roles) {
+    test(`app shapes [E4d-1]: ${uid} - ${flow.name}`, async () => {
+      await seedShape(flow.changes, uid);
+      await assertSucceeds(replayShape(uid, flow.changes));
+    });
+  }
+}
