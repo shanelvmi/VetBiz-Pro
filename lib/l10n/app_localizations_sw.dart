@@ -6586,4 +6586,74 @@ class AppLocalizationsSw extends AppLocalizations {
   @override
   String get session_signedOutElsewhere =>
       'Umetolewa kwa sababu akaunti yako ilitolewa kutoka kifaa kingine.';
+
+  @override
+  String get sales_deleteThisTitle => 'Futa mauzo haya?';
+
+  @override
+  String sales_deleteToTrashBody(String invoice) {
+    return '$invoice inahamishiwa Tupio na bidhaa zake zinarudi rafuni. Kama yaliuzwa kwa mkopo, deni la mteja linaondolewa pia. Unaweza kutendua sasa au kuyarejesha kutoka Tupio ndani ya siku 30.';
+  }
+
+  @override
+  String sales_deleteToTrashBodyPaid(String invoice, String paid) {
+    return '$invoice inahamishiwa Tupio na bidhaa zake zinarudi rafuni. Kama yaliuzwa kwa mkopo, deni la mteja linaondolewa pia. Pesa iliyokwisha pokelewa ($paid) inabaki kwenye malipo yako. Unaweza kutendua sasa au kuyarejesha kutoka Tupio ndani ya siku 30.';
+  }
+
+  @override
+  String get sales_movedToTrash => 'Mauzo yamehamishiwa Tupio';
+
+  @override
+  String get sales_restored => 'Mauzo yamerejeshwa';
+
+  @override
+  String get sales_restoredDetail =>
+      'Akiba, deni na salio la mteja vimesasishwa.';
+
+  @override
+  String get sales_cantRestore => 'Haiwezekani kurejesha mauzo haya';
+
+  @override
+  String get services_deleteThisTitle => 'Futa huduma hii?';
+
+  @override
+  String services_deleteToTrashBody(String invoice) {
+    return '$invoice inahamishiwa Tupio, bidhaa zake zinarudi stoo, na deni lake na gharama yake vinaondolewa hadi utakapoirejesha. Unaweza kutendua sasa au kuirejesha kutoka Tupio ndani ya siku 30.';
+  }
+
+  @override
+  String services_deleteToTrashBodyPaid(String invoice, String paid) {
+    return '$invoice inahamishiwa Tupio, bidhaa zake zinarudi stoo, na deni lake na gharama yake vinaondolewa hadi utakapoirejesha. Pesa iliyokwisha pokelewa ($paid) inabaki kwenye malipo yako. Unaweza kutendua sasa au kuirejesha kutoka Tupio ndani ya siku 30.';
+  }
+
+  @override
+  String get services_restored => 'Huduma imerejeshwa';
+
+  @override
+  String get services_restoredDetail =>
+      'Akiba, deni, gharama na salio la mteja vimesasishwa.';
+
+  @override
+  String get services_cantRestore => 'Haiwezekani kurejesha huduma hii';
+
+  @override
+  String get trash_restoredOldCopy =>
+      'Kipengee hiki kilifutwa kabla ya sasisho. Kagua akiba yake baadaye.';
+
+  @override
+  String trash_restoreNotEnoughStock(
+    String product,
+    int needed,
+    int available,
+  ) {
+    return 'Hakuna $product ya kutosha stoo: zinahitajika $needed, zimebaki $available. Ongeza akiba kwanza.';
+  }
+
+  @override
+  String get trash_restoreClientGone => 'Mteja hayupo tena.';
+
+  @override
+  String trash_restoreProductGone(String product) {
+    return '$product haipo tena.';
+  }
 }

@@ -11171,6 +11171,108 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'You were signed out because your account was signed out from another device.'**
   String get session_signedOutElsewhere;
+
+  /// Delete sale dialog title (moves the sale to Trash).
+  ///
+  /// In en, this message translates to:
+  /// **'Delete this sale?'**
+  String get sales_deleteThisTitle;
+
+  /// Delete sale dialog text when no money was received.
+  ///
+  /// In en, this message translates to:
+  /// **'{invoice} moves to Trash and its stock goes back on the shelf. If it was sold on credit, the client\'s debt is removed too. You can undo this now or restore it from Trash for 30 days.'**
+  String sales_deleteToTrashBody(String invoice);
+
+  /// Delete sale dialog text when money was received; paid is pre-formatted money.
+  ///
+  /// In en, this message translates to:
+  /// **'{invoice} moves to Trash and its stock goes back on the shelf. If it was sold on credit, the client\'s debt is removed too. Money already received ({paid}) stays in your payments. You can undo this now or restore it from Trash for 30 days.'**
+  String sales_deleteToTrashBodyPaid(String invoice, String paid);
+
+  /// Message after deleting a sale (with Undo).
+  ///
+  /// In en, this message translates to:
+  /// **'Sale moved to Trash'**
+  String get sales_movedToTrash;
+
+  /// Message after a sale is restored (Undo or Trash).
+  ///
+  /// In en, this message translates to:
+  /// **'Sale restored'**
+  String get sales_restored;
+
+  /// Second line after a sale is restored.
+  ///
+  /// In en, this message translates to:
+  /// **'Stock, debt and client balance are updated.'**
+  String get sales_restoredDetail;
+
+  /// Title when a sale cannot be restored; the reason is the second line.
+  ///
+  /// In en, this message translates to:
+  /// **'Can\'t restore this sale'**
+  String get sales_cantRestore;
+
+  /// Delete service dialog title (moves the service to Trash).
+  ///
+  /// In en, this message translates to:
+  /// **'Delete this service?'**
+  String get services_deleteThisTitle;
+
+  /// Delete service dialog text when no money was received.
+  ///
+  /// In en, this message translates to:
+  /// **'{invoice} moves to Trash, its stock goes back, and its debt and its expense are removed until you restore it. You can undo this now or restore it from Trash for 30 days.'**
+  String services_deleteToTrashBody(String invoice);
+
+  /// Delete service dialog text when money was received; paid is pre-formatted money.
+  ///
+  /// In en, this message translates to:
+  /// **'{invoice} moves to Trash, its stock goes back, and its debt and its expense are removed until you restore it. Money already received ({paid}) stays in your payments. You can undo this now or restore it from Trash for 30 days.'**
+  String services_deleteToTrashBodyPaid(String invoice, String paid);
+
+  /// Message after a service is restored (Undo or Trash).
+  ///
+  /// In en, this message translates to:
+  /// **'Service restored'**
+  String get services_restored;
+
+  /// Second line after a service is restored.
+  ///
+  /// In en, this message translates to:
+  /// **'Stock, debt, expense and client balance are updated.'**
+  String get services_restoredDetail;
+
+  /// Title when a service cannot be restored; the reason is the second line.
+  ///
+  /// In en, this message translates to:
+  /// **'Can\'t restore this service'**
+  String get services_cantRestore;
+
+  /// Extra line after restoring a sale or service deleted by the old version.
+  ///
+  /// In en, this message translates to:
+  /// **'This item was deleted before the update. Check its stock afterwards.'**
+  String get trash_restoredOldCopy;
+
+  /// Why a restore was refused: the stock does not cover a product. product is the stored item name.
+  ///
+  /// In en, this message translates to:
+  /// **'Not enough {product} in stock: {needed} needed, {available} left. Add stock first.'**
+  String trash_restoreNotEnoughStock(String product, int needed, int available);
+
+  /// Why a restore was refused: the client was deleted.
+  ///
+  /// In en, this message translates to:
+  /// **'The client no longer exists.'**
+  String get trash_restoreClientGone;
+
+  /// Why a restore was refused: a product was deleted. product is the stored item name.
+  ///
+  /// In en, this message translates to:
+  /// **'{product} no longer exists.'**
+  String trash_restoreProductGone(String product);
 }
 
 class _AppLocalizationsDelegate

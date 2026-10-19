@@ -6548,4 +6548,74 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get session_signedOutElsewhere =>
       'You were signed out because your account was signed out from another device.';
+
+  @override
+  String get sales_deleteThisTitle => 'Delete this sale?';
+
+  @override
+  String sales_deleteToTrashBody(String invoice) {
+    return '$invoice moves to Trash and its stock goes back on the shelf. If it was sold on credit, the client\'s debt is removed too. You can undo this now or restore it from Trash for 30 days.';
+  }
+
+  @override
+  String sales_deleteToTrashBodyPaid(String invoice, String paid) {
+    return '$invoice moves to Trash and its stock goes back on the shelf. If it was sold on credit, the client\'s debt is removed too. Money already received ($paid) stays in your payments. You can undo this now or restore it from Trash for 30 days.';
+  }
+
+  @override
+  String get sales_movedToTrash => 'Sale moved to Trash';
+
+  @override
+  String get sales_restored => 'Sale restored';
+
+  @override
+  String get sales_restoredDetail =>
+      'Stock, debt and client balance are updated.';
+
+  @override
+  String get sales_cantRestore => 'Can\'t restore this sale';
+
+  @override
+  String get services_deleteThisTitle => 'Delete this service?';
+
+  @override
+  String services_deleteToTrashBody(String invoice) {
+    return '$invoice moves to Trash, its stock goes back, and its debt and its expense are removed until you restore it. You can undo this now or restore it from Trash for 30 days.';
+  }
+
+  @override
+  String services_deleteToTrashBodyPaid(String invoice, String paid) {
+    return '$invoice moves to Trash, its stock goes back, and its debt and its expense are removed until you restore it. Money already received ($paid) stays in your payments. You can undo this now or restore it from Trash for 30 days.';
+  }
+
+  @override
+  String get services_restored => 'Service restored';
+
+  @override
+  String get services_restoredDetail =>
+      'Stock, debt, expense and client balance are updated.';
+
+  @override
+  String get services_cantRestore => 'Can\'t restore this service';
+
+  @override
+  String get trash_restoredOldCopy =>
+      'This item was deleted before the update. Check its stock afterwards.';
+
+  @override
+  String trash_restoreNotEnoughStock(
+    String product,
+    int needed,
+    int available,
+  ) {
+    return 'Not enough $product in stock: $needed needed, $available left. Add stock first.';
+  }
+
+  @override
+  String get trash_restoreClientGone => 'The client no longer exists.';
+
+  @override
+  String trash_restoreProductGone(String product) {
+    return '$product no longer exists.';
+  }
 }
