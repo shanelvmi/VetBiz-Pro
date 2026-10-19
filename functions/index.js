@@ -2,6 +2,8 @@ const functions = require("firebase-functions/v1");
 const { onSchedule } = require("firebase-functions/v2/scheduler");
 const { onDocumentWritten, onDocumentCreated, onDocumentUpdated } = require("firebase-functions/v2/firestore");
 const admin = require("firebase-admin");
+// The same "active admin" test the membership functions use (E4b2).
+const { isActiveAdmin } = require("./membership").helpers;
 
 admin.initializeApp();
 const db = admin.firestore();
@@ -504,22 +506,39 @@ exports.wipeFacilityData = functions.https.onCall(async (data, context) => {
   // Confirm the caller is an admin and actually belongs to this facility -
   // mirrors the same check used in Firestore security rules, done here
   // explicitly since this bypasses those rules entirely (Admin SDK).
-  const userDoc = await db.collection("users").doc(context.auth.uid).get();
-  const userData = userDoc.data();
+  //
+  // E4b2 (W3): the role alone let a DEACTIVATED admin still listed in the
+  // facility wipe it, and any Co-admin too. Now: an active admin
+  // (isActiveAdmin, shared with membership.js) who created this facility,
+  // or a Platform Admin.
+  const callerUid = context.auth.uid;
+  const platformAdminDoc = await db.collection("platform_admins").doc(callerUid).get();
+  if (!platformAdminDoc.exists) {
+    const userDoc = await db.collection("users").doc(callerUid).get();
+    const userData = userDoc.data();
 
-  if (!userData || userData.role !== "admin") {
-    throw new functions.https.HttpsError(
-      "permission-denied",
-      "Only an admin can wipe business data."
-    );
-  }
+    if (!isActiveAdmin(userData)) {
+      throw new functions.https.HttpsError(
+        "permission-denied",
+        "Only an admin can wipe business data."
+      );
+    }
 
-  const facilityIds = userData.facilityIds || [];
-  if (!facilityIds.includes(facilityId)) {
-    throw new functions.https.HttpsError(
-      "permission-denied",
-      "You do not belong to this facility."
-    );
+    const facilityIds = userData.facilityIds || [];
+    if (!facilityIds.includes(facilityId)) {
+      throw new functions.https.HttpsError(
+        "permission-denied",
+        "You do not belong to this facility."
+      );
+    }
+
+    const facilityDoc = await db.collection("facilities").doc(facilityId).get();
+    if (!facilityDoc.exists || facilityDoc.data().createdBy !== callerUid) {
+      throw new functions.https.HttpsError(
+        "permission-denied",
+        "Only the admin who created this facility can wipe its data."
+      );
+    }
   }
 
   const facilityRef = db.collection("facilities").doc(facilityId);
@@ -995,6 +1014,16 @@ exports.deleteOwnFacility = functions.https.onCall(async (data, context) => {
     throw new functions.https.HttpsError(
       "permission-denied",
       "Only this facility's admin can delete it."
+    );
+  }
+
+  // E4b2 (W4): and still an active admin - a creator who was later
+  // deactivated or demoted could delete everything in it before.
+  const callerDoc = await db.collection("users").doc(callerUid).get();
+  if (!isActiveAdmin(callerDoc.data())) {
+    throw new functions.https.HttpsError(
+      "permission-denied",
+      "Only an active admin can delete a facility."
     );
   }
 

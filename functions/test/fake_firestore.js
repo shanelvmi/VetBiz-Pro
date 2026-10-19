@@ -143,6 +143,10 @@ class FakeCollection {
     q.filters = [...this.filters, { field, op, value }];
     return q;
   }
+  // The fake returns every match; enough for the "is anyone left?" checks.
+  limit() {
+    return this;
+  }
   async get() {
     const docs = this.db
       .all(this.name)
@@ -157,7 +161,7 @@ class FakeCollection {
         });
       })
       .map((ref) => ref.snapshot());
-    return { docs, empty: docs.length === 0, size: docs.length };
+    return { docs, empty: docs.length === 0, size: docs.length, forEach: (fn) => docs.forEach(fn) };
   }
 }
 

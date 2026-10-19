@@ -1268,3 +1268,93 @@ describe("E4b (C2): sign-in follows active membership", () => {
     );
   });
 });
+
+// ======================================================================
+// E4b2 (callables_review.md W3, W4): the facility-wide deletes in index.js,
+// loaded for real with firebase-admin replaced by the fakes (fake_admin.js).
+// Both are irreversible, so both need an ACTIVE admin (isActiveAdmin): a
+// deactivated admin still listed in the facility could wipe it before.
+// Wiping needs the facility's creator or a Platform Admin; a Co-admin can't.
+// ======================================================================
+
+const { loadIndexWithFakes } = require("./fake_admin");
+
+describe("E4b2 (W3): wipeFacilityData", () => {
+  const index = loadIndexWithFakes(FakeAuth);
+  const wipe = (uid) => index.exported.wipeFacilityData.run({ facilityId: "F1" }, as(uid));
+  const fresh = () => {
+    index.reset();
+    seedWorld(index.db);
+    return index.db;
+  };
+
+  test("the creator, an active admin, wipes the facility's records", async () => {
+    fresh();
+    assert.deepEqual(await wipe("owner"), { success: true });
+    assert.ok(index.recursivelyDeleted.includes("facilities/F1/sales"));
+  });
+
+  test("a Platform Admin may, without being a member", async () => {
+    fresh();
+    assert.deepEqual(await wipe("pa"), { success: true });
+    assert.ok(index.recursivelyDeleted.includes("facilities/F1/sales"));
+  });
+
+  test("a deactivated admin is refused, even the creator", async () => {
+    const db = fresh();
+    db.seed("users", "owner", { role: "admin", status: "deactivated", facilityIds: ["F1"], facilities: [F1] });
+    await rejects(wipe("owner"), "permission-denied");
+    assert.deepEqual(index.recursivelyDeleted, []);
+  });
+
+  test("a Co-admin is refused: only the creator or a Platform Admin", async () => {
+    fresh();
+    await rejects(wipe("coadmin"), "permission-denied");
+    assert.deepEqual(index.recursivelyDeleted, []);
+  });
+
+  test("a non-member and an assistant are refused", async () => {
+    fresh();
+    await rejects(wipe("outsider"), "permission-denied");
+    await rejects(wipe("assistant"), "permission-denied");
+    assert.deepEqual(index.recursivelyDeleted, []);
+  });
+
+  test("no sign-in, or no facility id, is refused", async () => {
+    fresh();
+    await rejects(index.exported.wipeFacilityData.run({ facilityId: "F1" }, {}), "unauthenticated");
+    await rejects(index.exported.wipeFacilityData.run({}, as("owner")), "invalid-argument");
+  });
+});
+
+describe("E4b2 (W4): deleteOwnFacility", () => {
+  const index = loadIndexWithFakes(FakeAuth);
+  const del = (uid) => index.exported.deleteOwnFacility.run({ facilityId: "F1" }, as(uid));
+  // No assistant left in F1, so only the caller's own checks decide.
+  const fresh = () => {
+    index.reset();
+    seedWorld(index.db);
+    index.db.docs.delete("users/assistant");
+    return index.db;
+  };
+
+  test("the creator, an active admin, deletes it", async () => {
+    fresh();
+    const r = await del("owner");
+    assert.equal(r.success, true);
+    assert.ok(index.recursivelyDeleted.includes("facilities/F1"));
+  });
+
+  test("a deactivated creator is refused", async () => {
+    const db = fresh();
+    db.seed("users", "owner", { role: "admin", status: "deactivated", facilityIds: ["F1"], facilities: [F1] });
+    await rejects(del("owner"), "permission-denied");
+    assert.deepEqual(index.recursivelyDeleted, []);
+  });
+
+  test("someone who is not the creator is refused, as before", async () => {
+    fresh();
+    await rejects(del("coadmin"), "permission-denied");
+    assert.deepEqual(index.recursivelyDeleted, []);
+  });
+});
