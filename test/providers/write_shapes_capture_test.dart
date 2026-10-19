@@ -206,7 +206,7 @@ void main() {
     await _record(fs, 'addTransaction, the next expense (its counter goes up)', _everyone,
         () => _ignoringActivityLog(() => transactions.addTransaction(expense('Water', 1000), testFacilityId)));
     // As AddTransactionScreen builds it: same id, date and recordedBy, the
-    // form's fields, and no receiptNumber (the edit drops it).
+    // form's fields, and no receiptNumber (the provider keeps the stored one, E4d-3).
     final fuel = (await facilityCollection(fs, Collections.transactions).where('description', isEqualTo: 'Fuel').get()).docs.single;
     final edited = TransactionModel(
         id: fuel.id, date: (fuel.data()['date'] as Timestamp).toDate(), description: 'Fuel to the farm', amount: 3500,

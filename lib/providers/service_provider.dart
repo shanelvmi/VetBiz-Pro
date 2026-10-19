@@ -542,8 +542,10 @@ class ServiceProvider extends ChangeNotifier {
   }
 
   /// Looks up a service already held in memory (live or older page) -
-  /// used by update/delete to know what the PREVIOUS item list was, so
-  /// stock deductions can be correctly reconciled.
+  /// used after addService to know whether the list already shows it.
+  /// Not for an edit's PREVIOUS item list: the cache holds only the live
+  /// page and loaded older pages (E4d-3; updateService reads the stored
+  /// service instead).
   Service? _findCachedService(String id) {
     final liveIndex = _liveServices.indexWhere((s) => s.id == id);
     if (liveIndex != -1) return _liveServices[liveIndex];
@@ -564,10 +566,15 @@ class ServiceProvider extends ChangeNotifier {
         .collection(Collections.services)
         .doc(service.id);
 
-    // Captured before we overwrite the cache - this is what tells us
-    // which stock deductions the OLD item list made, so we can reverse
-    // exactly those before applying the new list.
-    final previous = _findCachedService(service.id);
+    // The STORED service, read before anything is written - this is what
+    // tells us which stock deductions the OLD item list made, so we can
+    // reverse exactly those before applying the new list, and what was
+    // owed before (the debt and the client's balance). Not the cache: a
+    // service outside the cached pages used to have its stock taken and
+    // its debt added to the balance a second time (E4d-3).
+    final storedSnap = await doc.get();
+    if (!storedSnap.exists) throw StateError('The service no longer exists.');
+    final previous = Service.fromFirestore(storedSnap.data()!, service.id);
 
     var updated = service.copyWith();
 
@@ -576,16 +583,21 @@ class ServiceProvider extends ChangeNotifier {
       // then deduct the new item list (FIFO) - this is what lets the
       // saved service record which batches the NEW list actually came
       // from, instead of writing stale data first and reconciling after.
-      if (previous != null) {
-        await _restoreStockForItems(previous.itemsUsed);
-      }
+      await _restoreStockForItems(previous.itemsUsed);
       final updatedItems = await _deductStockForItems(updated.itemsUsed);
       updated = updated.copyWith(itemsUsed: updatedItems);
 
-      await doc.update({
-        ...updated.toMap(),
-        ...updated.searchFields(),
-        Fields.updatedAt: FieldValue.serverTimestamp(),
+      // The receipt number belongs to the stored service (claimed when it
+      // was recorded); the form has none and used to write null over it.
+      // Read inside the same write, so the edit keeps it (E4d-3).
+      await _firestore.runTransaction((transaction) async {
+        final stored = await transaction.get(doc);
+        updated = updated.copyWith(receiptNumber: (stored.data()?['receiptNumber'] as num?)?.toInt());
+        transaction.update(doc, {
+          ...updated.toMap(),
+          ...updated.searchFields(),
+          Fields.updatedAt: FieldValue.serverTimestamp(),
+        });
       });
 
       final liveIndex = _liveServices.indexWhere((s) => s.id == service.id);

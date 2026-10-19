@@ -29,6 +29,16 @@ import '../../theme/app_motion.dart';
 import '../../ui/feedback/app_feedback.dart';
 import '../../l10n/l10n.dart';
 
+/// The client an Edit Service form starts with: the service's own, so an
+/// unchanged edit keeps it and saves without picking the client again; the
+/// field's validator refused the form until then (E4d-3). Only its id is
+/// saved; typing in the field clears it, as for a new service.
+Client? clientOfEditedService(Service? service) {
+  final clientId = service?.clientId;
+  if (clientId == null || clientId.isEmpty) return null;
+  return Client(id: clientId, name: service!.clientName ?? '', phone: '', address: '');
+}
+
 class AddEditServiceScreen extends StatefulWidget {
   final Service? service;
   final bool isModal;
@@ -117,6 +127,7 @@ class _AddEditServiceScreenState extends State<AddEditServiceScreen> {
     _transactionIdController =
         TextEditingController(text: widget.service?.transactionId ?? '');
 
+    _selectedClient = clientOfEditedService(widget.service);
     _selectedCategory = widget.service?.category ?? _categories.first;
 
     // Prefill date: today if new, original if editing

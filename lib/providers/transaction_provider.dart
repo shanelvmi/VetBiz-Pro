@@ -318,6 +318,10 @@ class TransactionProvider with ChangeNotifier {
     }
   }
 
+  /// What an edit never writes: they belong to the stored transaction, not
+  /// to the Edit Transaction form (E4d-3).
+  static const _keptOnEdit = ['date', 'recordedBy', 'receiptNumber'];
+
   /// ---------------------------------------------------
   /// UPDATE TRANSACTION
   /// ---------------------------------------------------
@@ -331,19 +335,42 @@ class TransactionProvider with ChangeNotifier {
         return;
       }
 
-      await _firestore
+      final ref = _firestore
           .collection(Collections.facilities)
           .doc(facilityId)
           .collection(Collections.transactions)
-          .doc(updatedTransaction.id)
-          .set({...updatedTransaction.toMap(), ...updatedTransaction.searchFields()});
+          .doc(updatedTransaction.id);
+
+      // Only the fields AddTransactionScreen edits are written. The rest
+      // stays as stored, read inside the same write: the receipt number, a
+      // service expense's serviceId, the date and who recorded it. A set()
+      // used to replace the whole document and drop the first two (E4d-3).
+      // An empty payment method or note removes the stored one, as before.
+      late TransactionModel saved;
+      await _firestore.runTransaction((transaction) async {
+        final stored = await transaction.get(ref);
+        if (!stored.exists) throw StateError('The transaction no longer exists.');
+        transaction.update(ref, {
+          ...updatedTransaction.toMap(),
+          if (updatedTransaction.paymentMethod == null) 'paymentMethod': FieldValue.delete(),
+          if (updatedTransaction.note == null) 'note': FieldValue.delete(),
+          ...updatedTransaction.searchFields(),
+        }..removeWhere((field, _) => _keptOnEdit.contains(field)));
+        final kept = TransactionModel.fromFirestore(stored.data()!, ref.id);
+        saved = TransactionModel(
+          id: kept.id, date: kept.date, recordedBy: kept.recordedBy, receiptNumber: kept.receiptNumber,
+          description: updatedTransaction.description, amount: updatedTransaction.amount,
+          type: updatedTransaction.type, category: updatedTransaction.category,
+          paymentMethod: updatedTransaction.paymentMethod, note: updatedTransaction.note,
+        );
+      });
 
       // Update local list only if not listening in realtime
       if (_subscription == null) {
         final index = _liveTransactions.indexWhere(
             (t) => t.id == updatedTransaction.id);
         if (index != -1) {
-          _liveTransactions[index] = updatedTransaction;
+          _liveTransactions[index] = saved;
           notifyListeners();
         }
       }

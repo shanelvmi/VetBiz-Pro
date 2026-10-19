@@ -13,7 +13,7 @@ import 'package:vetbiz_pro/providers/transaction_provider.dart';
 
 import '../helpers/fake_firestore.dart';
 
-const _skip = 'E4d-3: the fix lands in the next commit';
+const String? _skip = null;
 
 // The writes are done; only the activity entry is left, which asks
 // Firebase for the app (ActivityLogger.logActivity): none in a unit test.
@@ -146,7 +146,9 @@ void main() {
       expect(before['serviceId'], 'v3');
       await _ignoringActivityLog(
           _transactions(fs).updateTransaction(_asEditTransactionBuilds(before, 'service_v3'), testFacilityId));
-      expect(await stored(fs, 'service_v3'), before);
+      // addService writes no search field on its expense; the edit adds it.
+      expect(await stored(fs, 'service_v3'),
+          {...before, 'descriptionLower': (before['description'] as String).toLowerCase()});
     }, skip: _skip);
 
     test('an edit that changes the amount keeps the receipt number', () async {
