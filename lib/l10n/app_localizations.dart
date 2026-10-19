@@ -3428,18 +3428,6 @@ abstract class AppLocalizations {
   /// **'Delete Client'**
   String get clients_deleteTitle;
 
-  /// Delete confirmation text.
-  ///
-  /// In en, this message translates to:
-  /// **'Delete \"{name}\" permanently?'**
-  String clients_deleteBody(String name);
-
-  /// Message after deleting a client.
-  ///
-  /// In en, this message translates to:
-  /// **'Client deleted'**
-  String get clients_deleted;
-
   /// Message when deleting failed.
   ///
   /// In en, this message translates to:

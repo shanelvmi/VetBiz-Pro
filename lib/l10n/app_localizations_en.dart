@@ -1861,14 +1861,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get clients_deleteTitle => 'Delete Client';
 
   @override
-  String clients_deleteBody(String name) {
-    return 'Delete \"$name\" permanently?';
-  }
-
-  @override
-  String get clients_deleted => 'Client deleted';
-
-  @override
   String get clients_deleteFailed => 'Couldn\'t delete the client';
 
   @override

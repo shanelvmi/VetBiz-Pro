@@ -1872,14 +1872,6 @@ class AppLocalizationsSw extends AppLocalizations {
   String get clients_deleteTitle => 'Futa Mteja';
 
   @override
-  String clients_deleteBody(String name) {
-    return 'Futa \"$name\" kabisa?';
-  }
-
-  @override
-  String get clients_deleted => 'Mteja amefutwa';
-
-  @override
   String get clients_deleteFailed => 'Imeshindwa kufuta mteja';
 
   @override
