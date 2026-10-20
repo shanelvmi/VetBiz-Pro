@@ -58,7 +58,7 @@ common_hideDetails,Hide details,Ficha maelezo,Hides the technical text shown by 
 dateRange_title,Select Date Range,Chagua Kipindi cha Tarehe,"Title of the custom date range dialog (Payments, Transactions).",draft
 dateRange_start,Start Date:,Tarehe ya Kuanza:,Label above the start date in the date range dialog.,draft
 dateRange_end,End Date:,Tarehe ya Mwisho:,Label above the end date in the date range dialog.,draft
-error_couldNotLoad,Could not load data,Imeshindikana kupakia taarifa,Heading of the error shown when a list fails to load (FirestoreErrorView).,draft
+error_couldNotLoad,Couldn't load data,Imeshindwa kupakia taarifa,Heading of the error shown when a list fails to load (FirestoreErrorView).,draft
 error_indexNeeded,This view needs a one-time database index to be created first.,Ukurasa huu unahitaji faharasa ya hifadhidata itengenezwe mara moja kwanza.,Error shown when a Firestore query needs an index (FirestoreErrorView).,draft
 error_createIndex,Create Missing Index,Tengeneza Faharasa Inayokosekana,Button that opens Firebase Console to create a missing index (FirestoreErrorView).,draft
 error_createIndexHint,This opens Firebase Console with the exact index needed already filled in.,Hii inafungua Firebase Console ikiwa na faharasa inayohitajika tayari imejazwa.,Small text under Create Missing Index (FirestoreErrorView).,draft
@@ -72,7 +72,7 @@ payments_method,Payment Method,Njia ya Malipo,Label above the payment method chi
 products_categoriesHeading,CATEGORIES,MAKUNDI,Upper-case heading of the categories list in the product catalog side panel.,draft
 products_stockStatusHeading,STOCK STATUS,HALI YA STOO,Upper-case heading of the stock status list in the product catalog side panel.,draft
 products_allProducts,All Products,Bidhaa Zote,Row that shows every product (product catalog side panel).,draft
-products_statusAll,All Status,Hali Zote,Stock status filter: no filter (product catalog side panel).,draft
+products_statusAll,All Statuses,Hali Zote,Stock status filter: no filter (product catalog side panel).,draft
 products_statusInStock,In Stock,Ipo Stoo,Stock status filter: in stock.,draft
 products_statusLowStock,Low Stock,Stoo Chache,Stock status filter: low stock.,draft
 products_statusReorderSoon,Reorder Soon,Agiza Karibuni,Stock status filter: should be reordered soon.,draft
@@ -362,7 +362,7 @@ subscription_rejectReason,Reason: {reason},Sababu: {reason},Why a payment was re
 subscription_noReason,No reason was given,Hakuna sababu iliyotolewa,A rejected payment with no reason.,draft
 subscription_historyTitle,Subscription History,Historia ya Usajili,Subscription history screen title.,draft
 subscription_historySubtitle,Your payments and their review status,Malipo yako na hali ya ukaguzi wake,Subscription history subtitle.,draft
-subscription_historyLoadError,Could not load history: {error},Imeshindwa kupakia historia: {error},Subscription history failed to load (error already in friendly words).,draft
+subscription_historyLoadError,Couldn't load history: {error},Imeshindwa kupakia historia: {error},Subscription history failed to load (error already in friendly words).,draft
 subscription_noSubmissionsYet,No submissions yet,Bado hakuna malipo yaliyotumwa,"Subscription history, empty.",draft
 subscription_noSubmissionsHint,Payments you submit will be listed here.,Malipo utakayotuma yataonekana hapa.,"Subscription history, empty: second line.",draft
 subscription_totalSubmissions,Total Submissions,Jumla ya Malipo Yaliyotumwa,Subscription history summary card.,draft
@@ -578,7 +578,7 @@ clients_emptySearch,"No clients match ""{query}""","Hakuna wateja wanaolingana n
 clients_empty,No clients found,Hakuna wateja waliopatikana,Clients list when it is empty.,draft
 clients_client,Client,Mteja,Clients table header.,draft
 clients_indexNeeded,This filter needs a one-time database index to be created first.,Kichujio hiki kinahitaji faharasa ya hifadhidata itengenezwe mara moja kwanza.,Clients list error when a database index is missing.,draft
-clients_loadError,Could not load clients: {error},Imeshindwa kupakia wateja: {error},"Clients list error; error is FriendlyError's sentence.",draft
+clients_loadError,Couldn't load clients: {error},Imeshindwa kupakia wateja: {error},"Clients list error; error is FriendlyError's sentence.",draft
 clients_createIndex,Create Index,Tengeneza Faharasa,Button that opens the console to create the missing index.,draft
 clients_indexBuildingHint,This takes a minute or two to finish building after you create it - then try this filter again.,Hii huchukua dakika moja au mbili kukamilika baada ya kuitengeneza - kisha jaribu kichujio hiki tena.,Under the Create Index button.,draft
 clients_none,No clients,Hakuna wateja,Pagination bar when the list is empty.,draft
@@ -645,7 +645,7 @@ team_reassign,Reassign,Hamisha,Button that moves an assistant to another facilit
 team_removeFromFacility,Remove from Facility,Ondoa Kwenye Kituo,Button that removes a paused assistant from the facility.,draft
 team_removeFromFacilityConfirm,Remove from facility,Ondoa kwenye kituo,Confirm button in the remove dialog.,draft
 team_deactivateTitle,Deactivate {name}?,Msimamishe {name}?,Deactivate co-admin dialog title.,draft
-team_deactivateBody,They'll be signed out straight away and can't log in until you reactivate them. This doesn't change their role - only the platform administrator can do that.,Atatolewa mara moja na hataweza kuingia hadi umrejeshe. Hii haibadilishi nafasi yake - ni msimamizi wa jukwaa pekee anayeweza kufanya hivyo.,Deactivate co-admin dialog text.,draft
+team_deactivateBody,They'll be signed out straight away and can't sign in until you reactivate them. This doesn't change their role - only the platform administrator can do that.,Atatolewa mara moja na hataweza kuingia hadi umrejeshe. Hii haibadilishi nafasi yake - ni msimamizi wa jukwaa pekee anayeweza kufanya hivyo.,Deactivate co-admin dialog text.,draft
 team_updateStatusFailed,Couldn't update the status,Imeshindwa kusasisha hali,Message when changing a co-admin's status failed.,draft
 team_facilityCount,"{count, plural, other{{count} facilities}}","{count, plural, other{Vituo {count}}}",Facility cell of an admin who runs several facilities.,draft
 team_removeTitle,Remove {name} from {facility}?,Mwondoe {name} kwenye {facility}?,Remove dialog title.,draft
@@ -659,7 +659,7 @@ team_rejectPoint3,They aren't sent a message. Tell them yourself if you'd like t
 team_title,Team Members,Wafanyakazi,Team screen title.,draft
 team_subtitle,Manage your team's access and status,Simamia ruhusa na hali ya wafanyakazi wako,Team screen subtitle.,draft
 team_inviteAssistant,Invite Assistant,Mwalike Msaidizi,"Button, tooltip and dialog title for inviting an assistant.",draft
-team_noAdmin,No logged in admin user found,Hakuna msimamizi aliyeingia,Team screen when no admin is signed in.,draft
+team_noAdmin,No signed-in admin user found,Hakuna msimamizi aliyeingia,Team screen when no admin is signed in.,draft
 team_noFacilities,No facilities found for your account.,Hakuna vituo vilivyopatikana kwa akaunti yako.,Team screen when the admin has no facilities.,draft
 team_acrossFacilities,Across your facilities,Katika vituo vyako,Under the Total card.,draft
 team_haveAccess,Have access,Wana ruhusa,Under the Active card.,draft
@@ -692,11 +692,11 @@ team_useCardButtons,"Use the buttons on this person's card to approve, reject or
 team_noAssistantsPage,No assistants,Hakuna wasaidizi,Pagination bar when the list is empty.,draft
 team_showingRange,"{total, plural, =1{Showing {start} to {end} of 1 assistant} other{Showing {start} to {end} of {total} assistants}}","{total, plural, =1{Inaonyesha {start} hadi {end} kati ya msaidizi 1} other{Inaonyesha {start} hadi {end} kati ya wasaidizi {total}}}",Pagination bar.,draft
 invite_checking,Checking for an existing invite...,Inakagua kama kuna mwaliko uliopo...,Invite dialog while loading.,draft
-invite_checkFailed,Could not check for an existing invite: {error},Imeshindwa kukagua mwaliko uliopo: {error},"Invite dialog error; error is a friendly sentence.",draft
+invite_checkFailed,Couldn't check for an existing invite: {error},Imeshindwa kukagua mwaliko uliopo: {error},"Invite dialog error; error is a friendly sentence.",draft
 invite_generating,Generating your invite code...,Inatengeneza msimbo wako wa mwaliko...,Invite dialog while creating a code.,draft
-invite_generateFailed,Could not generate an invite: {error},Imeshindwa kutengeneza mwaliko: {error},Invite dialog error.,draft
+invite_generateFailed,Couldn't generate an invite: {error},Imeshindwa kutengeneza mwaliko: {error},Invite dialog error.,draft
 invite_revoking,Revoking the code...,Inafuta msimbo...,Invite dialog while revoking.,draft
-invite_revokeFailed,Could not revoke: {error},Imeshindwa kufuta: {error},Invite dialog error.,draft
+invite_revokeFailed,Couldn't revoke: {error},Imeshindwa kufuta: {error},Invite dialog error.,draft
 invite_shareHint,Share this code with the person you're hiring - they'll enter it when registering as an Assistant.,Mpe mtu unayemwajiri msimbo huu - ataiweka anapojisajili kama Msaidizi.,"Invite dialog, above an active code.",draft
 invite_expires,Expires {date},Unaisha {date},Invite dialog: when the code stops working.,draft
 invite_copied,Copied to clipboard,Imenakiliwa,Message after copying the code.,draft
@@ -768,7 +768,7 @@ searchIndex_title,Rebuild Client Search Index,Jenga Upya Faharasa ya Kutafuta Wa
 searchIndex_body,"This makes clients added before search was available show up correctly when searched by name, and lets the app spot a new client whose phone number or name matches one you already have. It only needs to be run once - clients that are already up to date are left alone.","Hii huwafanya wateja walioongezwa kabla utafutaji haujakuwepo waonekane vizuri wanapotafutwa kwa jina, na huiwezesha programu kumtambua mteja mpya ambaye namba ya simu au jina lake linalingana na mteja uliye naye. Inahitaji kuendeshwa mara moja tu - wateja ambao tayari wako sawa hawaguswi.",Rebuild dialog text.,draft
 searchIndex_nothing,Nothing to update - every client is already searchable.,Hakuna cha kusasisha - kila mteja tayari anatafutika.,Rebuild result when nothing changed.,draft
 searchIndex_done,"{count, plural, =1{Done. 1 client updated and now searchable.} other{Done. {count} clients updated and now searchable.}}","{count, plural, =1{Imekamilika. Mteja 1 amesasishwa na sasa anatafutika.} other{Imekamilika. Wateja {count} wamesasishwa na sasa wanatafutika.}}",Rebuild result.,draft
-searchIndex_failed,Could not complete: {error},Imeshindwa kukamilisha: {error},"Rebuild error; error is a friendly sentence.",draft
+searchIndex_failed,Couldn't complete: {error},Imeshindwa kukamilisha: {error},"Rebuild error; error is a friendly sentence.",draft
 searchIndex_run,Run Now,Endesha Sasa,Button that starts the rebuild.,draft
 printer_unavailableConnect,Bluetooth printing isn't available on this platform. This screen needs a real Android or iOS build with Bluetooth hardware - it can't connect to a printer from a web browser.,Uchapishaji kwa Bluetooth haupatikani kwenye jukwaa hili. Skrini hii inahitaji programu halisi ya Android au iOS yenye Bluetooth - haiwezi kuunganisha printa kutoka kwenye kivinjari.,Printer screen when Bluetooth is missing (checking the connection).,draft
 printer_unavailableList,Bluetooth printing isn't available on this platform. This screen needs a real Android or iOS build with Bluetooth hardware - it can't list paired devices from a web browser.,Uchapishaji kwa Bluetooth haupatikani kwenye jukwaa hili. Skrini hii inahitaji programu halisi ya Android au iOS yenye Bluetooth - haiwezi kuonyesha vifaa vilivyounganishwa kutoka kwenye kivinjari.,Printer screen when Bluetooth is missing (listing devices).,draft
@@ -850,14 +850,14 @@ export_csvHint,"Universal, simple text - opens in Excel, Sheets, or any editor",
 export_pickRangeFirst,Select a date range above before exporting.,Chagua kipindi hapo juu kabla ya kuhamisha.,Under the export button with no dates chosen.,draft
 export_pickRangeWarning,Select a date range before exporting,Chagua kipindi kabla ya kuhamisha,Message when exporting with no dates chosen.,draft
 export_generate,Generate & Export Data,Tengeneza na Hamisha Data,Export button.,draft
-account_logoutAllTitle,Log Out of All Devices?,Toka Kwenye Vifaa Vyote?,Confirmation title.,draft
-account_logoutAllBody,"This will clear active sessions and log you out on all other phones, tablets, or computers currently signed into your account.","Hii itafuta vipindi vilivyo hai na kukutoa kwenye simu, tableti au kompyuta nyingine zote zilizoingia kwenye akaunti yako.",Confirmation text.,draft
-account_logoutEverywhere,Log Out Everywhere,Toka Kila Mahali,Confirm button.,draft
+account_logoutAllTitle,Sign Out of All Devices?,Toka Kwenye Vifaa Vyote?,Confirmation title.,draft
+account_logoutAllBody,"This will clear active sessions and sign you out on all other phones, tablets, or computers currently signed into your account.","Hii itafuta vipindi vilivyo hai na kukutoa kwenye simu, tableti au kompyuta nyingine zote zilizoingia kwenye akaunti yako.",Confirmation text.,draft
+account_logoutEverywhere,Sign Out Everywhere,Toka Kila Mahali,Confirm button.,draft
 account_logoutAllFailed,Couldn't clear other sessions,Imeshindwa kufuta vipindi vingine,Message when signing out elsewhere failed.,draft
 account_thisFacility,this facility,kituo hiki,Stands in for a missing facility name.,draft
 account_wipeTitle,Wipe All Data?,Futa Data Yote?,Wipe confirmation title.,draft
 account_wipeFacility,"Business data for ""{facility}"" will be permanently wiped.","Data ya biashara ya ""{facility}"" itafutwa kabisa.","Wipe confirmation, first line.",draft
-account_wipeBody,"All records of sales, products, clients, and transactions for this facility are erased. Other facilities you have are not affected. Your login credentials remain unaffected.","Rekodi zote za mauzo, bidhaa, wateja na miamala za kituo hiki zinafutwa. Vituo vyako vingine haviguswi. Taarifa zako za kuingia hazibadiliki.",Wipe confirmation text.,draft
+account_wipeBody,"All records of sales, products, clients, and transactions for this facility are erased. Other facilities you have are not affected. Your sign-in credentials remain unaffected.","Rekodi zote za mauzo, bidhaa, wateja na miamala za kituo hiki zinafutwa. Vituo vyako vingine haviguswi. Taarifa zako za kuingia hazibadiliki.",Wipe confirmation text.,draft
 account_wipe,Wipe Data,Futa Data,Wipe confirm button.,draft
 account_confirmTitle,Confirm Action,Thibitisha Kitendo,Typed confirmation title before a wipe.,draft
 account_typeErase,"Please type ""{word}"" to finalize clearing all records:","Tafadhali andika ""{word}"" ili kukamilisha kufuta rekodi zote:","Typed confirmation; word is the English word that must be typed.",draft
@@ -881,11 +881,11 @@ account_deleteOwnedFirst,Delete all facilities you own in View Facilities first.
 account_deleteHint,Permanently delete your account. This action cannot be undone.,Futa akaunti yako kabisa. Kitendo hiki hakiwezi kutenduliwa.,Delete Account item.,draft
 account_dangerZone,Danger Zone,Eneo la Hatari,Section heading.,draft
 account_dangerHint,These actions affect your account and business data. Review carefully before proceeding.,Vitendo hivi vinaathiri akaunti yako na data ya biashara. Kagua kwa makini kabla ya kuendelea.,Under Danger Zone.,draft
-account_logoutAll,Log Out of All Devices,Toka Kwenye Vifaa Vyote,Manage Account item.,draft
-account_logoutAllHint,Disconnect your active profile session from all other active platforms.,Tenganisha kipindi chako kutoka kwenye vifaa vingine vyote.,Under Log Out of All Devices.,draft
+account_logoutAll,Sign Out of All Devices,Toka Kwenye Vifaa Vyote,Manage Account item.,draft
+account_logoutAllHint,Disconnect your active profile session from all other active platforms.,Tenganisha kipindi chako kutoka kwenye vifaa vingine vyote.,Under Sign Out of All Devices.,draft
 account_wipeAll,Wipe All Business Data,Futa Data Yote ya Biashara,Manage Account item.,draft
 account_wipeInProgress,"Erase in progress - please wait, this may take a moment...","Inafuta - tafadhali subiri, hii inaweza kuchukua muda...",Under Wipe All Business Data while it runs.,draft
-account_wipeHint,"Permanently delete records of transactions, sales, and products while keeping your log in profile.","Futa kabisa rekodi za miamala, mauzo na bidhaa huku ukibaki na wasifu wako wa kuingia.",Under Wipe All Business Data.,draft
+account_wipeHint,"Permanently delete records of transactions, sales, and products while keeping your sign-in profile.","Futa kabisa rekodi za miamala, mauzo na bidhaa huku ukibaki na wasifu wako wa kuingia.",Under Wipe All Business Data.,draft
 account_deactivateHint,Temporarily disable your account. Can be reactivated later.,Zima akaunti yako kwa muda. Inaweza kurejeshwa baadaye.,Under Deactivate Account.,draft
 common_walkIn,Walk-in,Mteja wa papo hapo,Shown in place of a client name when a record has none.,draft
 services_newRecords,"{count, plural, =1{1 new service available} other{{count} new services available}}","{count, plural, =1{Huduma 1 mpya ipo} other{Huduma {count} mpya zipo}}",Banner when new services arrived while the list was open.,draft
@@ -1175,16 +1175,16 @@ batch_addStoreQty,Add to Store Qty,Ongeza Idadi ya Stoo,Adjust dialog field labe
 batch_setStoreQty,Correct Store Qty to,Rekebisha Idadi ya Stoo iwe,Adjust dialog field label.,draft
 batch_addSellableQty,Add to Sellable Qty,Ongeza Idadi ya Kuuza,Adjust dialog field label.,draft
 batch_setSellableQty,Correct Sellable Qty to,Rekebisha Idadi ya Kuuza iwe,Adjust dialog field label.,draft
-batch_saveFailed,Could not save: {error},Imeshindikana kuhifadhi: {error},Adjust dialog error with the technical error text.,draft
+batch_saveFailed,Couldn't save: {error},Imeshindwa kuhifadhi: {error},Adjust dialog error with the technical error text.,draft
 batch_deleteExpiredTitle,Delete Expired Batch?,Futa Batch Iliyoisha Muda?,Delete batch dialog title.,draft
 batch_deleteTitle,Delete This Batch?,Futa Batch Hii?,Delete batch dialog title.,draft
 batch_notExpiredWarning,"This batch has not expired - it still has good, sellable stock.",Batch hii bado haijaisha muda - bado ina bidhaa nzuri za kuuza.,Delete batch dialog warning.,draft
 batch_deleteBody,This permanently removes {batch} and subtracts its {stock} store and {sellable} sellable units from this product's totals. This cannot be undone.,Hii inaondoa {batch} kabisa na kutoa vipimo vyake {stock} vya stoo na {sellable} vya kuuza kwenye jumla ya bidhaa hii. Haiwezi kurudishwa.,Delete batch dialog text. batch is store_batchName or batch_thisUnlabeled.,draft
 batch_thisUnlabeled,this unlabeled batch,batch hii isiyo na namba,Part of batch_deleteBody.,draft
-batch_deleteFailed,Could not delete: {error},Imeshindikana kufuta: {error},Delete batch dialog error with the technical error text.,draft
+batch_deleteFailed,Couldn't delete: {error},Imeshindwa kufuta: {error},Delete batch dialog error with the technical error text.,draft
 batch_editDetails,Edit Details,Hariri Taarifa,View Batches button.,draft
 batch_batches,Batches,Batch,View Batches section heading.,draft
-batch_loadFailed,Could not load batches: {error},Imeshindikana kupakia batch: {error},View Batches load error with the technical error text.,draft
+batch_loadFailed,Couldn't load batches: {error},Imeshindwa kupakia batch: {error},View Batches load error with the technical error text.,draft
 batch_noneYet,No batches recorded yet.,Bado hakuna batch iliyorekodiwa.,"View Batches, empty.",draft
 batch_unlabeled,Unlabeled batch,Batch isiyo na namba,View Batches row title for a batch with no number.,draft
 batch_outOfStock,Out of Stock - 0 available,Imeisha - 0 zipo,View Batches row badge.,draft
@@ -1379,8 +1379,8 @@ sales_notesHint,Add any additional notes (optional)...,Ongeza maelezo mengine (s
 common_dismiss,Dismiss,Funga,Tooltip on the close button of an error alert.,draft
 common_privacyPolicy,Privacy Policy,Sera ya Faragha,"Link to the privacy policy (login footer, register terms line).",draft
 common_termsOfService,Terms of Service,Masharti ya Huduma,"Link to the terms of service (login footer, register terms line).",draft
-common_logout,Logout,Toka,"Button that signs the person out (loading, error and no-facility screens).",draft
-common_logIn,Log in,Ingia,Button on the register screen that goes to the login screen.,draft
+common_logout,Sign out,Toka,"Button that signs the person out (loading, error and no-facility screens).",draft
+common_logIn,Sign in,Ingia,Button on the register screen that goes to the login screen.,draft
 common_inviteCode,Invite code,Msimbo wa mwaliko,"Field label for an invite code (register, no-facility screen).",draft
 common_facilityName,Facility name,Jina la kituo,Field label for a new facility's name.,draft
 common_facilityNameHint,e.g. Ukuli,mf. Ukuli,Example in the facility name field.,draft
@@ -1399,14 +1399,14 @@ login_allCaughtUp,You're all caught up!,Umeshaona yote!,"Login announcements car
 login_trustTitle,Secure. Reliable. Always Connected.,Salama. Imara. Daima Mtandaoni.,Login trust footer.,draft
 login_trustBody,Your trusted partner in animal health and business growth.,Mshirika wako wa kuaminika katika afya ya mifugo na ukuaji wa biashara.,Login trust footer.,draft
 login_welcomeBack,Welcome back,Karibu tena,Login form title.,draft
-login_logIntoFacility,Log into your facility,Ingia kwenye kituo chako,Login form subtitle.,draft
+login_logIntoFacility,Sign in to your facility,Ingia kwenye kituo chako,Login form subtitle.,draft
 login_emailHint,Enter your email,Weka barua pepe yako,Login email field hint.,draft
 login_passwordHint,Enter your password,Weka nenosiri lako,Login password field hint.,draft
 login_rememberMe,Remember Me,Nikumbuke,Login checkbox: keep the email for next time.,draft
 login_forgotPassword,Forgot Password?,Umesahau Nenosiri?,Login link that sends a password reset email.,draft
 login_noAccount,"Don't have an account? ","Huna akaunti? ","Login, before the Register link (ends with a space).",draft
 login_register,Register,Jisajili,Login link to the register screen.,draft
-login_loginButton,Login,Ingia,Login button.,draft
+login_loginButton,Sign in,Ingia,Login button.,draft
 login_newBadge,NEW,MPYA,Badge on an announcement less than two days old.,draft
 login_credentialsTooShort,Enter your email and password.,Weka barua pepe yako na nenosiri.,Login error: email or password empty.,draft
 login_slowSignIn,Signing in is taking longer than expected. Check your internet connection and try again.,Kuingia kunachukua muda mrefu kuliko kawaida. Angalia intaneti yako kisha ujaribu tena.,Login error when sign-in has not finished after a few seconds.,draft
@@ -1414,7 +1414,7 @@ login_resetNeedsEmail,Enter your email to reset your password.,Weka barua pepe y
 login_resetSent,"If an account exists for this email, a reset link has been sent. Check your inbox (and spam folder).","Kama akaunti ipo kwa barua pepe hii, kiungo cha kubadilisha nenosiri kimetumwa. Angalia sanduku la barua (na folda ya spam).",Login: after Forgot Password (the same whether or not the account exists).,draft
 login_resetFailed,Couldn't send the reset email. {reason},Imeshindwa kutuma barua pepe ya kubadilisha nenosiri. {reason},"Login: the reset email could not be sent; reason is a FriendlyError message.",draft
 register_inviteInvalid,"Invalid, expired, or already-used invite code","Msimbo wa mwaliko si sahihi, umeisha muda, au umeshatumika",Register: the invite code typed was not accepted.,draft
-register_inviteCheckFailed,Could not check this code - try again,Imeshindwa kukagua msimbo huu - jaribu tena,Register: the invite code lookup failed.,draft
+register_inviteCheckFailed,Couldn't check this code - try again,Imeshindwa kukagua msimbo huu - jaribu tena,Register: the invite code lookup failed.,draft
 register_enterFacilityNameFirst,Enter the facility name first,Weka jina la kituo kwanza,Register: Add pressed with no facility name.,draft
 register_chooseFacilityTypeFirst,Choose the facility type first,Chagua aina ya kituo kwanza,Register: Add pressed with no facility type.,draft
 register_facilityLimit,You've reached the limit of {max} facilities per account,Umefikia kikomo cha vituo {max} kwa kila akaunti,Register: Add pressed at the facility limit.,draft
@@ -1444,7 +1444,7 @@ register_setUpCentre,Set up your agrovet or veterinary centre in a few minutes.,
 register_benefitAllInOne,"Sales, stock, clients and debts in one place","Mauzo, stoo, wateja na madeni sehemu moja",Register welcome panel benefit.,draft
 register_benefitInvite,"Invite your team with secure, one-time codes",Alika timu yako kwa misimbo salama ya kutumika mara moja,Register welcome panel benefit.,draft
 register_benefitTrial,Every new facility starts with a trial period,Kila kituo kipya kinaanza na kipindi cha majaribio,Register welcome panel benefit.,draft
-register_alreadyHaveAccount,Already have an account?,Una akaunti tayari?,"Register welcome panel, above Log in.",draft
+register_alreadyHaveAccount,Already have an account?,Una akaunti tayari?,"Register welcome panel, above Sign in.",draft
 register_createAccount,Create account,Fungua akaunti,Register submit button.,draft
 register_termsPrefix,"By creating an account you agree to our ","Kwa kufungua akaunti unakubali ","Register terms line, before the Terms of Service link (ends with a space).",draft
 register_termsAnd," and "," na ","Register terms line, between the two links (spaces on both sides).",draft
@@ -1482,7 +1482,7 @@ register_roleAdminSubtitle,I own or manage a facility,Ninamiliki au ninasimamia 
 register_roleAssistantSubtitle,I have an invite code,Nina msimbo wa mwaliko,"Register role card, Assistant.",draft
 register_roleLocked,Your role can't be changed here.,Nafasi yako haiwezi kubadilishwa hapa.,"Edit Profile, under the role cards.",draft
 register_yourFacilities,Your facilities,Vituo vyako,Register section title (owner).,draft
-register_askAdminForInvite,Ask your facility Admin for an invite code to join their team.,Muombe Msimamizi wa kituo chako msimbo wa mwaliko ili ujiunge na timu yake.,"Register, assistant facility section.",draft
+register_askAdminForInvite,Ask your facility admin for an invite code to join their team.,Muombe msimamizi wa kituo chako msimbo wa mwaliko ili ujiunge na timu yake.,"Register, assistant facility section.",draft
 register_joining,Joining: {facility},Unajiunga na: {facility},"Register, the facility an invite code leads to (facility is ""name (type)"").",draft
 register_facilityTypeAndCode,{type}  ·  Code: {code},{type}  ·  Msimbo: {code},Register facility tile: its type and its code.,draft
 register_addOneToContinue,Add at least one facility to continue.,Ongeza angalau kituo kimoja ili kuendelea.,"Register, owner facility section, empty.",draft
@@ -1505,14 +1505,14 @@ entry_timeoutExplanation,This is taking longer than expected. Check your interne
 entry_unreachable,We couldn't reach the server. Check your internet connection and try again.,Hatukuweza kufikia seva. Angalia intaneti yako kisha ujaribu tena.,Account loading error screen: server unreachable.,draft
 entry_accessRefused,"Your account couldn't be opened because access was refused. Try again, and if it keeps happening, contact support.","Akaunti yako haikuweza kufunguliwa kwa sababu ruhusa ilikataliwa. Jaribu tena, na hili likiendelea, wasiliana na msaada.",Account loading error screen: permission denied.,draft
 entry_loadFailed,Something went wrong while loading your account details. Check your connection and try again.,Hitilafu imetokea wakati wa kupakia taarifa za akaunti yako. Angalia mtandao wako kisha ujaribu tena.,Account loading error screen: any other error.,draft
-entry_couldNotLoadTitle,Could Not Load Your Account,Imeshindwa Kufungua Akaunti Yako,Account loading error screen title.,draft
+entry_couldNotLoadTitle,Couldn't load your account,Imeshindwa kufungua akaunti yako,Account loading error screen title.,draft
 noFacility_enterName,Enter the facility name.,Weka jina la kituo.,No-facility screen: Add facility pressed with no name.,draft
 noFacility_chooseType,Choose the facility type.,Chagua aina ya kituo.,No-facility screen: Add facility pressed with no type.,draft
 noFacility_wrongPassword,That password isn't right.,Nenosiri hilo si sahihi.,Delete-account dialog error.,draft
 noFacility_tooManyAttempts,Too many attempts. Wait a few minutes and try again.,Majaribio mengi mno. Subiri dakika chache kisha ujaribu tena.,Delete-account dialog error.,draft
 noFacility_unreachable,We couldn't reach the server. Check your connection and try again.,Hatukuweza kufikia seva. Angalia mtandao wako kisha ujaribu tena.,Delete-account dialog error.,draft
-noFacility_deleteFailed,Could not delete the account.,Imeshindwa kufuta akaunti.,Delete-account dialog error.,draft
-noFacility_deleteFailedWith,Could not delete the account: {error},Imeshindwa kufuta akaunti: {error},"Delete-account dialog error; error is the raw error text (kept as before).",draft
+noFacility_deleteFailed,Couldn't delete the account.,Imeshindwa kufuta akaunti.,Delete-account dialog error.,draft
+noFacility_deleteFailedWith,Couldn't delete the account: {error},Imeshindwa kufuta akaunti: {error},"Delete-account dialog error; error is the raw error text (kept as before).",draft
 noFacility_aFacility,a facility,kituo,Stands in for a missing facility name in noFacility_stillOwns.,draft
 noFacility_cantDeleteTitle,Can't delete the account yet,Akaunti haiwezi kufutwa bado,Dialog title: the account still owns a facility.,draft
 noFacility_stillOwns,"This account still owns ""{name}"", which isn't on your profile. Contact support so it can be sorted out first.","Akaunti hii bado inamiliki ""{name}"", ambacho hakiko kwenye wasifu wako. Wasiliana na msaada ili lishughulikiwe kwanza.",Dialog body: the account still owns a facility.,draft
@@ -1620,7 +1620,7 @@ dashboard_phoneLabel,"Phone: ","Simu: ",Profile panel label before the phone num
 dashboard_roleLabel,"Role: ","Nafasi: ",Profile panel label before the role.,draft
 dashboard_viewFacilities,View Facilities,Tazama Vituo,Profile panel button (admin).,draft
 dashboard_changePassword,Change Password,Badilisha Nenosiri,Profile panel button.,draft
-dashboard_logoutConfirm,Are you sure you want to logout?,Una uhakika unataka kutoka?,Profile panel logout dialog.,draft
+dashboard_logoutConfirm,Are you sure you want to sign out?,Una uhakika unataka kutoka?,Profile panel logout dialog.,draft
 nav_stock,Stock,Stoo,Sidebar item: opens the Stock Store.,draft
 nav_products,Products,Bidhaa,Sidebar item: opens Sellable Products.,draft
 nav_sales,Sales,Mauzo,Sidebar item: opens Sales.,draft
@@ -1656,7 +1656,7 @@ insights_noSales14,No sales in the last 14 days.,Hakuna mauzo katika siku 14 zil
 insights_noSales30,No sales in the last 30 days.,Hakuna mauzo katika siku 30 zilizopita.,Insights products chart when empty.,draft
 insights_noServices30,No services in the last 30 days.,Hakuna huduma katika siku 30 zilizopita.,Insights services chart when empty.,draft
 notifications_subtitle,All updates and alerts from your facility,Taarifa na tahadhari zote kutoka kituo chako,Notifications screen subtitle.,draft
-notifications_loadFailed,Could not load alerts: {error},Imeshindwa kupakia arifa: {error},Notifications when loading failed.,draft
+notifications_loadFailed,Couldn't load alerts: {error},Imeshindwa kupakia arifa: {error},Notifications when loading failed.,draft
 notifications_catCritical,Critical,Muhimu Sana,Notifications category card.,draft
 notifications_catStock,Stock,Stoo,Notifications category card.,draft
 notifications_catPayments,Payments,Malipo,Notifications category card.,draft
@@ -1695,7 +1695,7 @@ selectFacility_selected,Selected,Imechaguliwa,Select Facility card hint: this on
 selectFacility_clickToSelect,Click to select,Bofya kuchagua,Select Facility card hint on hover.,draft
 facilities_noneFound,No facilities found.,Hakuna vituo vilivyopatikana.,Facilities and Select Facility screens: the account has no facility.,draft
 facilityPicker_tagline,Manage. Care. Grow.,Simamia. Hudumia. Kua.,"Facility picker top bar, under the app name.",draft
-facilityPicker_logOut,Log Out,Toka,Facility picker profile menu item.,draft
+facilityPicker_logOut,Sign out,Toka,Facility picker profile menu item.,draft
 facilityPicker_title,Select Your Facility,Chagua Kituo Chako,Facility picker heading.,draft
 facilityPicker_intro,Choose the facility you want to manage. You can switch between your facilities at any time from the top menu.,Chagua kituo unachotaka kusimamia. Unaweza kuhamia kituo kingine wakati wowote kupitia menyu ya juu.,"Facility picker, under the heading.",draft
 facilityPicker_searchHint,"Search facility by name, location or type...","Tafuta kituo kwa jina, mahali au aina...",Facility picker search field.,draft
@@ -1827,7 +1827,7 @@ activity_retentionSavedHidden,Saved - logs older than {count} days are now hidde
 activity_retentionNotDeletedDetail,They could not be deleted yet: {problem},Bado hazijaweza kufutwa: {problem},"Activity Log retention: second line after a failed delete; problem is the reason.",draft
 activity_olderLogsDeleted,"{count, plural, =1{1 older log deleted} other{{count} older logs deleted}}","{count, plural, =1{Kumbukumbu 1 ya zamani imefutwa} other{Kumbukumbu {count} za zamani zimefutwa}}","Activity Log retention: second line, how many old logs were deleted.",draft
 activity_saveRetentionFailed,Couldn't save the log retention setting,Imeshindwa kuhifadhi muda wa kuhifadhi kumbukumbu,Activity Log retention: the save failed.,draft
-activity_retentionNoPermission,the security rules don't currently allow deleting logs,kanuni za usalama kwa sasa haziruhusu kufuta kumbukumbu,"Reason old logs could not be deleted (ActivityLogRetention.explainFailure); shown after ""They could not be deleted yet:"" and in the facility retention message.",draft
+activity_retentionNoPermission,The security rules don't currently allow deleting logs,Kanuni za usalama kwa sasa haziruhusu kufuta kumbukumbu,"Reason old logs could not be deleted (ActivityLogRetention.explainFailure); shown after ""They could not be deleted yet:"" and in the facility retention message.",draft
 products_sortNameAsc,Name (A-Z),Jina (A-Z),"Product sort menu (Sellable Products, Stock Store).",draft
 products_sortNameDesc,Name (Z-A),Jina (Z-A),"Product sort menu (Sellable Products, Stock Store).",draft
 products_sortPriceLowHigh,Price (Low-High),Bei (Chini-Juu),"Product sort menu (Sellable Products, Stock Store).",draft
@@ -1838,7 +1838,7 @@ products_sortExpirySoonest,Expiry (Soonest First),Kuisha Muda (Za Karibu Kwanza)
 payments_sourceSale,Sale payment,Malipo ya mauzo,Payments list: description of a payment that came from a sale.,draft
 payments_sourceService,Service payment,Malipo ya huduma,Payments list: description of a payment that came from a service.,draft
 payments_sourceDebtRepayment,Debt repayment,Malipo ya deni,Payments list: description of a debt repayment.,draft
-membership_unreachable,Could not reach the server - check your connection and try again.,Imeshindwa kufikia seva - angalia mtandao wako kisha ujaribu tena.,MembershipService.errorMessage: server unreachable or too slow.,draft
+membership_unreachable,Couldn't reach the server - check your connection and try again.,Imeshindwa kufikia seva - angalia mtandao wako kisha ujaribu tena.,MembershipService.errorMessage: server unreachable or too slow.,draft
 membership_signInAgain,Please sign in again and retry.,Tafadhali ingia tena kisha ujaribu tena.,MembershipService.errorMessage: the sign-in has expired.,draft
 membership_generic,Something went wrong. Please try again.,Kuna tatizo limetokea. Tafadhali jaribu tena.,MembershipService.errorMessage: any other server error with no message.,draft
 session_deactivatedByAdmin,Your account has been deactivated by an admin.,Akaunti yako imezimwa na msimamizi.,Login screen message after a forced sign-out: an admin deactivated the account.,draft
