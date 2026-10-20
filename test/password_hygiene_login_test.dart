@@ -193,16 +193,23 @@ void main() {
   }, skip: pendingP1b);
 
   group('the eye closes by itself', () {
-    for (final state in [AppLifecycleState.inactive, AppLifecycleState.hidden, AppLifecycleState.paused]) {
+    // The real order, away and back (Flutter asserts each step is valid).
+    const away = [AppLifecycleState.inactive, AppLifecycleState.hidden, AppLifecycleState.paused];
+    for (final state in away) {
       testWidgets('when the app goes ${state.name}', (tester) async {
         await pumpLogin(tester);
         await typeBoth(tester);
         await openEye(tester);
-        tester.binding.handleAppLifecycleStateChanged(state);
+        final steps = away.sublist(0, away.indexOf(state) + 1);
+        for (final step in steps) {
+          tester.binding.handleAppLifecycleStateChanged(step);
+        }
         await tester.pump();
         expect(pw(tester).obscureText, isTrue);
         expect(pw(tester).controller!.text, password, reason: 'only hidden, not cleared');
-        tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.resumed);
+        for (final step in [...steps.reversed.skip(1), AppLifecycleState.resumed]) {
+          tester.binding.handleAppLifecycleStateChanged(step);
+        }
         await finish(tester);
       }, skip: pendingP1b);
     }
