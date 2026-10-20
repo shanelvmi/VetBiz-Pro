@@ -190,8 +190,8 @@ class ReceiptPdfService {
                 .map((item) => [
                       item.category.isNotEmpty ? '${item.name}\n${item.category}' : item.name,
                       '${item.quantity}',
-                      Money.decimal(item.unitPrice),
-                      Money.decimal(item.quantity * item.unitPrice - item.discount),
+                      Money.unitPricePlain(item.unitPrice),
+                      Money.plain(item.quantity * item.unitPrice - item.discount),
                     ])
                 .toList(),
           ),
@@ -263,13 +263,13 @@ class ReceiptPdfService {
           ]),
           pw.SizedBox(height: AppSpacing.s14),
           _itemsTable([
-            [service.name, '1', Money.decimal(serviceFeePortion), Money.decimal(serviceFeePortion)],
+            [service.name, '1', Money.plain(serviceFeePortion), Money.plain(serviceFeePortion)],
             for (final item in service.itemsUsed)
               [
                 (item['itemName'] ?? '').toString(),
                 '1',
-                Money.decimal((item['price'] is num) ? (item['price'] as num).toDouble() : 0.0),
-                Money.decimal((item['price'] is num) ? (item['price'] as num).toDouble() : 0.0),
+                Money.plain((item['price'] is num) ? (item['price'] as num).toDouble() : 0.0),
+                Money.plain((item['price'] is num) ? (item['price'] as num).toDouble() : 0.0),
               ],
           ]),
           pw.SizedBox(height: AppSpacing.s12),
@@ -447,17 +447,17 @@ class ReceiptPdfService {
           crossAxisAlignment: pw.CrossAxisAlignment.stretch,
           children: [
             if (discount > 0) ...[
-              row('Subtotal', Money.symbolDecimal(subtotal)),
-              row('Discount', Money.symbolDecimal(-discount)),
+              row('Subtotal', Money.format(subtotal)),
+              row('Discount', Money.format(-discount)),
             ],
             pw.Container(
               margin: const pw.EdgeInsets.symmetric(vertical: AppSpacing.s4),
               padding: const pw.EdgeInsets.symmetric(horizontal: AppSpacing.s8, vertical: AppSpacing.s6),
               color: _lightGrey,
-              child: row('TOTAL', Money.symbolDecimal(total), bold: true),
+              child: row('TOTAL', Money.format(total), bold: true),
             ),
-            row('Paid', Money.symbolDecimal(paid)),
-            if (balance > 0) row('Balance', Money.symbolDecimal(balance), bold: true, color: _red),
+            row('Paid', Money.format(paid)),
+            if (balance > 0) row('Balance', Money.format(balance), bold: true, color: _red),
             pw.SizedBox(height: AppSpacing.s6),
             pw.Align(
               alignment: pw.Alignment.centerRight,

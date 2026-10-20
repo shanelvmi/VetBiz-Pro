@@ -528,7 +528,7 @@ class _ReceiptPreviewScreenState extends State<ReceiptPreviewScreen> {
               ),
             ),
             Expanded(flex: 1, child: Text('${item.quantity}', style: const TextStyle(fontSize: AppFontSize.f12_5))),
-            Expanded(flex: 2, child: Text(Money.plain(item.unitPrice), textAlign: TextAlign.right, style: const TextStyle(fontSize: AppFontSize.f12_5))),
+            Expanded(flex: 2, child: Text(Money.unitPricePlain(item.unitPrice), textAlign: TextAlign.right, style: const TextStyle(fontSize: AppFontSize.f12_5))),
             Expanded(flex: 2, child: Text(Money.plain(lineTotal), textAlign: TextAlign.right, style: const TextStyle(fontSize: AppFontSize.f12_5, fontWeight: AppFontWeight.semibold))),
           ],
         ),

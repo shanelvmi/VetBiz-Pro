@@ -29,7 +29,26 @@ class Money {
   static String plain(num amount) => _plain.format(amount);
 
   /// "12,500" or "12,500.5": grouping, and up to three decimals when present.
+  /// For a text field people edit only: a prefill rounded to whole shillings
+  /// would be saved rounded. Everything shown uses [format] or [plain] (R3, D3).
   static String decimal(num amount) => _decimal.format(amount);
+
+  static final NumberFormat _unitPrice = NumberFormat('#,##0.##', AppDefaults.numberLocale);
+
+  /// A unit price: "Tsh 1,250", or "Tsh 1,250.5" / "Tsh 1,250.75" when the
+  /// stored price has decimals (at most two). Totals, balances and other
+  /// amounts are whole shillings ([format]); stored numbers never change (R3, D3).
+  static String unitPrice(num amount) =>
+      '${amount < 0 ? '-' : ''}${AppDefaults.currencySymbol} ${unitPricePlain(amount.abs())}';
+
+  /// [unitPrice] without the symbol: "1,250.5", for a column headed "Price".
+  static String unitPricePlain(num amount) => _unitPrice.format(amount);
+
+  /// A document value whose type is not known (a subscription amount, stored
+  /// as 50000 or 50000.0), shown like [format]: "Tsh 50,000". Missing or not
+  /// a number: "Tsh 0".
+  static String formatStored(Object? amount) =>
+      format(amount is num ? amount : num.tryParse('${amount ?? ''}') ?? 0);
 
   /// "Tsh 12,500.5": the symbol, a space, then [decimal]. A negative is
   /// "-Tsh 12,500", the same shape as [format] (R3, D2).
@@ -40,7 +59,7 @@ class Money {
   /// million it shows "Tsh 10.888M" (three decimals), below that the usual
   /// figure. A negative is "-Tsh 10.888M" (R3, D2).
   static String compactMillions(num amount) {
-    if (amount.abs() < 1000000) return symbolDecimal(amount);
+    if (amount.abs() < 1000000) return format(amount);
     final millions = (amount.abs() / 1000000).toStringAsFixed(3);
     return '${amount < 0 ? '-' : ''}${AppDefaults.currencySymbol} ${millions}M';
   }

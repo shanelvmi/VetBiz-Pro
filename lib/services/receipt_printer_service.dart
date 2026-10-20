@@ -131,9 +131,9 @@ class ReceiptPrinterService {
     for (final item in sale.items) {
       bytes += generator.text(item.name, styles: const PosStyles(bold: true));
       bytes += generator.row([
-        PosColumn(text: '${item.quantity} ${item.unit} x ${item.unitPrice.toStringAsFixed(0)}', width: 8),
+        PosColumn(text: '${item.quantity} ${item.unit} x ${Money.unitPricePlain(item.unitPrice)}', width: 8),
         PosColumn(
-          text: (item.quantity * item.unitPrice - item.discount).toStringAsFixed(0),
+          text: Money.plain(item.quantity * item.unitPrice - item.discount),
           width: 4,
           styles: const PosStyles(align: PosAlign.right),
         ),
@@ -144,7 +144,7 @@ class ReceiptPrinterService {
     bytes += generator.row([
       PosColumn(text: 'Total', width: 6, styles: const PosStyles(bold: true)),
       PosColumn(
-        text: Money.symbolWhole(sale.totalAmount),
+        text: Money.format(sale.totalAmount),
         width: 6,
         styles: const PosStyles(align: PosAlign.right, bold: true),
       ),
@@ -152,7 +152,7 @@ class ReceiptPrinterService {
     bytes += generator.row([
       PosColumn(text: 'Paid', width: 6),
       PosColumn(
-        text: Money.symbolWhole(sale.totalPaid),
+        text: Money.format(sale.totalPaid),
         width: 6,
         styles: const PosStyles(align: PosAlign.right),
       ),
@@ -162,7 +162,7 @@ class ReceiptPrinterService {
       bytes += generator.row([
         PosColumn(text: 'Balance', width: 6, styles: const PosStyles(bold: true)),
         PosColumn(
-          text: Money.symbolWhole((sale.totalAmount - sale.totalPaid)),
+          text: Money.format((sale.totalAmount - sale.totalPaid)),
           width: 6,
           styles: const PosStyles(align: PosAlign.right, bold: true),
         ),
@@ -204,7 +204,7 @@ class ReceiptPrinterService {
       bytes += generator.row([
         PosColumn(text: name, width: 8),
         PosColumn(
-          text: price.toStringAsFixed(0),
+          text: Money.plain(price),
           width: 4,
           styles: const PosStyles(align: PosAlign.right),
         ),
@@ -215,7 +215,7 @@ class ReceiptPrinterService {
     bytes += generator.row([
       PosColumn(text: 'Total', width: 6, styles: const PosStyles(bold: true)),
       PosColumn(
-        text: Money.symbolWhole(service.totalAmount),
+        text: Money.format(service.totalAmount),
         width: 6,
         styles: const PosStyles(align: PosAlign.right, bold: true),
       ),
@@ -223,7 +223,7 @@ class ReceiptPrinterService {
     bytes += generator.row([
       PosColumn(text: 'Paid', width: 6),
       PosColumn(
-        text: Money.symbolWhole(service.totalPaid),
+        text: Money.format(service.totalPaid),
         width: 6,
         styles: const PosStyles(align: PosAlign.right),
       ),
@@ -233,7 +233,7 @@ class ReceiptPrinterService {
       bytes += generator.row([
         PosColumn(text: 'Balance', width: 6, styles: const PosStyles(bold: true)),
         PosColumn(
-          text: Money.symbolWhole((service.totalAmount - service.totalPaid)),
+          text: Money.format((service.totalAmount - service.totalPaid)),
           width: 6,
           styles: const PosStyles(align: PosAlign.right, bold: true),
         ),
@@ -282,7 +282,7 @@ class ReceiptPrinterService {
     bytes += generator.row([
       PosColumn(text: isExpense ? 'Expense' : 'Other Income', width: 6, styles: const PosStyles(bold: true)),
       PosColumn(
-        text: Money.symbolWhole(transaction.amount),
+        text: Money.format(transaction.amount),
         width: 6,
         styles: const PosStyles(align: PosAlign.right, bold: true),
       ),

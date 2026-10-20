@@ -78,11 +78,64 @@ void main() {
     1: 'Tsh 1',
     999: 'Tsh 999',
     12500: 'Tsh 12,500',
-    12500.5: 'Tsh 12,500.5',
+    12500.5: 'Tsh 12,501',
     1234567.89: 'Tsh 1.235M',
     -12500: '-Tsh 12,500',
     -10000888: '-Tsh 10.001M',
     1e12: 'Tsh 1000000.000M',
+  });
+
+  // D3: totals whole shillings (format, plain); unit prices up to 2 decimals.
+  // A total of 12,500.5 shows "Tsh 12,501" (intl rounds half away from zero).
+  r3Pins('plain', Money.plain, {
+    0: '0',
+    1: '1',
+    999: '999',
+    12500: '12,500',
+    12500.5: '12,501',
+    1234567.89: '1,234,568',
+    -12500: '-12,500',
+    1e12: '1,000,000,000,000',
+  });
+  r3Pins('unitPrice', Money.unitPrice, {
+    0: 'Tsh 0',
+    1: 'Tsh 1',
+    999: 'Tsh 999',
+    12500: 'Tsh 12,500',
+    12500.5: 'Tsh 12,500.5',
+    1234567.89: 'Tsh 1,234,567.89',
+    1250.756: 'Tsh 1,250.76',
+    -12500: '-Tsh 12,500',
+    -12500.5: '-Tsh 12,500.5',
+    1e12: 'Tsh 1,000,000,000,000',
+  });
+  r3Pins('unitPricePlain', Money.unitPricePlain, {
+    0: '0',
+    1: '1',
+    999: '999',
+    12500: '12,500',
+    12500.5: '12,500.5',
+    1234567.89: '1,234,567.89',
+    -12500: '-12,500',
+    1e12: '1,000,000,000,000',
+  });
+  test('R3: Money.formatStored prints a stored value of any type like format', () {
+    for (final e in <Object?, String>{
+      0: 'Tsh 0',
+      1: 'Tsh 1',
+      999: 'Tsh 999',
+      50000: 'Tsh 50,000',
+      50000.0: 'Tsh 50,000',
+      '50000': 'Tsh 50,000',
+      12500.5: 'Tsh 12,501',
+      1234567.89: 'Tsh 1,234,568',
+      -12500: '-Tsh 12,500',
+      1e12: 'Tsh 1,000,000,000,000',
+      null: 'Tsh 0',
+      'n/a': 'Tsh 0',
+    }.entries) {
+      expect(Money.formatStored(e.key), e.value, reason: '${e.key}');
+    }
   });
 
   // D1: one spelling, "Tsh". The facility card said "TZS".

@@ -63,8 +63,8 @@ transactions_screen 316, 465, 537, 584, 706; add_sale 1046, 1596; add_edit_servi
 `symbolDecimal` -> `unitPrice` (unit prices): add_sale 426, 1578, 1786 (product sell price, item unit price).
 
 `decimal` (display) -> `plain`: add_sale 1009, 1017, 1155, 1507; report_tabbed_content 469, 749-752, 788, 846;
-daily_report_pdf 247, 280, 328, 342, 461-464, 483; receipt_pdf 194, 266 (x2), 272.
-`decimal` -> `unitPricePlain`: add_sale 1478; receipt_pdf 193, 271.
+daily_report_pdf 247, 280, 328, 342, 461-464, 483; receipt_pdf 194, 266 (x2), 271, 272.
+`decimal` -> `unitPricePlain`: add_sale 1478; receipt_pdf 193. (receipt_pdf 271, a service item, -> `plain`, as its preview.)
 `decimal` KEPT (a text field's prefill, parsed back on save): add_sale 187, 505, 831, 1243, 1276, 1715; add_batch 55;
 platform_settings 477; report_review 55; thousands_input_formatter 38.
 
