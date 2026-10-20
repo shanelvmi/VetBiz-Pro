@@ -681,7 +681,7 @@ class _AddEditServiceScreenState extends State<AddEditServiceScreen> {
                                         onTap: () {
                                           item['name']!.text = product.name;
                                           item['price']!.text =
-                                              Money.plain(product.sellPrice);
+                                              Money.unitPricePlain(product.sellPrice);
                                           setState(() {
                                             _itemsUsedProductIds[index] = product.id;
                                             _activeSuggestionRow = null;
@@ -741,7 +741,7 @@ class _AddEditServiceScreenState extends State<AddEditServiceScreen> {
               Align(
                 alignment: Alignment.centerRight,
                 child: Text(
-                  context.l10n.services_totalItemsCost(Money.symbolDecimal(itemsTotal)),
+                  context.l10n.services_totalItemsCost(Money.format(itemsTotal)),
                   style: TextStyle(
                     fontSize: AppFontSize.f12,
                     color: context.colors.textHint,

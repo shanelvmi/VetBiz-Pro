@@ -51,8 +51,8 @@ void main() {
     }
   });
 
-  // D2: one negative shape, "-Tsh 12,500" (symbolPlain, which printed
-  // "Tsh -12,500", is gone; its callers use format).
+  // D2: one negative shape, "-Tsh 12,500" (symbolPlain and
+  // symbolDecimal, which printed "Tsh -12,500", are gone; callers use format).
   r3Pins('format', Money.format, {
     0: 'Tsh 0',
     1: 'Tsh 1',
@@ -60,16 +60,6 @@ void main() {
     12500: 'Tsh 12,500',
     12500.5: 'Tsh 12,501',
     1234567.89: 'Tsh 1,234,568',
-    -12500: '-Tsh 12,500',
-    1e12: 'Tsh 1,000,000,000,000',
-  });
-  r3Pins('symbolDecimal', Money.symbolDecimal, {
-    0: 'Tsh 0',
-    1: 'Tsh 1',
-    999: 'Tsh 999',
-    12500: 'Tsh 12,500',
-    12500.5: 'Tsh 12,500.5',
-    1234567.89: 'Tsh 1,234,567.89',
     -12500: '-Tsh 12,500',
     1e12: 'Tsh 1,000,000,000,000',
   });

@@ -1375,7 +1375,7 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
                                 final cards = [
                                       SummaryCard(
                                         title: context.l10n.dashboard_totalProductValue,
-                                        value: Money.symbolDecimal(productProvider.totalProductValue),
+                                        value: Money.format(productProvider.totalProductValue),
                                         icon: Icons.inventory,
                                         color: context.colors.primary,
                                         shadow: true,
@@ -1386,13 +1386,13 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
                                               (_previousSnapshot?['totalProductValue'] as num?)?.toDouble() ?? 0,
                                           higherIsBetter: true,
                                           comparisonLabel: _comparisonLabelForFilter(selectedFilter),
-                                          formatChange: (v) => Money.symbolDecimal(v),
+                                          formatChange: (v) => Money.format(v),
                                           isLoading: _isPreviousSnapshotLoading,
                                         ),
                                       ),
                                       SummaryCard(
                                         title: context.l10n.dashboard_totalSales(_periodLabel(selectedFilter)),
-                                        value: Money.symbolDecimal(_periodTotals.totalSales),
+                                        value: Money.format(_periodTotals.totalSales),
                                         icon: Icons.shopping_cart,
                                         color: context.colors.accent,
                                         shadow: true,
@@ -1402,13 +1402,13 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
                                           previousValue: _previousPeriodTotals.totalSales,
                                           higherIsBetter: true,
                                           comparisonLabel: _comparisonLabelForFilter(selectedFilter),
-                                          formatChange: (v) => Money.symbolDecimal(v),
+                                          formatChange: (v) => Money.format(v),
                                           isLoading: _isPreviousPeriodLoading,
                                         ),
                                       ),
                                       SummaryCard(
                                         title: context.l10n.dashboard_totalCollected(_periodLabel(selectedFilter)),
-                                        value: Money.symbolDecimal(_periodTotals.totalCollected),
+                                        value: Money.format(_periodTotals.totalCollected),
                                         icon: Icons.attach_money,
                                         color: context.colors.primary,
                                         shadow: true,
@@ -1418,14 +1418,14 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
                                           previousValue: _previousPeriodTotals.totalCollected,
                                           higherIsBetter: true,
                                           comparisonLabel: _comparisonLabelForFilter(selectedFilter),
-                                          formatChange: (v) => Money.symbolDecimal(v),
+                                          formatChange: (v) => Money.format(v),
                                           isLoading: _isPreviousPeriodLoading,
                                         ),
                                       ),
                                       SummaryCard(
                                         title: context.l10n.dashboard_netProfit(_periodLabel(selectedFilter)),
                                         value: Provider.of<UserRoleProvider>(context).isAdmin
-                                            ? Money.symbolDecimal(_periodTotals.netProfit)
+                                            ? Money.format(_periodTotals.netProfit)
                                             : '*****',
                                         icon: Icons.trending_up,
                                         color: context.colors.primary,
@@ -1443,7 +1443,7 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
                                                 previousValue: _previousPeriodTotals.netProfit,
                                                 higherIsBetter: true,
                                                 comparisonLabel: _comparisonLabelForFilter(selectedFilter),
-                                                formatChange: (v) => Money.symbolDecimal(v),
+                                                formatChange: (v) => Money.format(v),
                                                 isLoading: _isPreviousPeriodLoading,
                                               )
                                             : null,
@@ -1460,7 +1460,7 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
                                       ),
                                       SummaryCard(
                                         title: context.l10n.dashboard_totalExpenses(_periodLabel(selectedFilter)),
-                                        value: Money.symbolDecimal(_periodTotals.totalExpenses),
+                                        value: Money.format(_periodTotals.totalExpenses),
                                         icon: Icons.trending_down,
                                         color: context.colors.danger,
                                         shadow: true,
@@ -1473,13 +1473,13 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
                                           // number itself went up.
                                           higherIsBetter: false,
                                           comparisonLabel: _comparisonLabelForFilter(selectedFilter),
-                                          formatChange: (v) => Money.symbolDecimal(v),
+                                          formatChange: (v) => Money.format(v),
                                           isLoading: _isPreviousPeriodLoading,
                                         ),
                                       ),
                                       SummaryCard(
                                         title: context.l10n.dashboard_outstandingPayment,
-                                        value: Money.symbolDecimal(debtProvider.totalOutstanding()),
+                                        value: Money.format(debtProvider.totalOutstanding()),
                                         icon: Icons.account_balance_wallet,
                                         color: context.colors.accent,
                                         shadow: true,
@@ -1492,7 +1492,7 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
                                           // outcome here too.
                                           higherIsBetter: false,
                                           comparisonLabel: _comparisonLabelForFilter(selectedFilter),
-                                          formatChange: (v) => Money.symbolDecimal(v),
+                                          formatChange: (v) => Money.format(v),
                                           isLoading: _isPreviousSnapshotLoading,
                                         ),
                                       ),
@@ -2351,7 +2351,7 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
           else ...[
             _glanceStat(Icons.shopping_cart_outlined, '${_glanceSaleCount ?? 0}', context.l10n.dashboard_sales, context.colors.primary),
             _glanceStat(Icons.build_outlined, '${_glanceServiceCount ?? 0}', context.l10n.dashboard_services, context.colors.chart1),
-            _glanceStat(Icons.payments_outlined, Money.symbolDecimal(_glanceCollected ?? 0), context.l10n.sales_collected, context.colors.primary),
+            _glanceStat(Icons.payments_outlined, Money.format(_glanceCollected ?? 0), context.l10n.sales_collected, context.colors.primary),
           ],
           _glanceStat(Icons.folder_outlined, '$debtorCount', context.l10n.dashboard_outstandingDebts(debtorCount), context.colors.accent),
           OutlinedButton.icon(

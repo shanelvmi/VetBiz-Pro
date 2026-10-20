@@ -423,7 +423,7 @@ class _AddSaleScreenState extends State<AddSaleScreen> {
                                                         Text(
                                                           outOfStock
                                                               ? context.l10n.sales_outOfStock
-                                                              : context.l10n.sales_availablePrice(remainingAvailable, context.l10n.productUnitLabel(product.unit), Money.symbolDecimal(product.sellPrice)),
+                                                              : context.l10n.sales_availablePrice(remainingAvailable, context.l10n.productUnitLabel(product.unit), Money.unitPrice(product.sellPrice)),
                                                           style: TextStyle(
                                                             fontSize: AppFontSize.f12,
                                                             color: outOfStock ? context.colors.danger : context.colors.textMuted,
@@ -1006,7 +1006,7 @@ class _AddSaleScreenState extends State<AddSaleScreen> {
               const SizedBox(height: AppSpacing.s14),
               _summaryRow(context.l10n.sales_totalItems, '$totalItemCount'),
               const SizedBox(height: AppSpacing.s10),
-              _summaryRow(context.l10n.sales_subtotal, Money.decimal(subtotal)),
+              _summaryRow(context.l10n.sales_subtotal, Money.plain(subtotal)),
               const SizedBox(height: AppSpacing.s10),
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -1014,7 +1014,7 @@ class _AddSaleScreenState extends State<AddSaleScreen> {
                   Text(context.l10n.sales_discount, style: TextStyle(fontSize: AppFontSize.f13, color: context.colors.textSoft)),
                   Row(
                     children: [
-                      Text(Money.decimal(saleDiscount),
+                      Text(Money.plain(saleDiscount),
                           style: const TextStyle(fontWeight: AppFontWeight.semibold, fontSize: AppFontSize.f13)),
                       const SizedBox(width: AppSpacing.s6),
                       InkWell(
@@ -1043,7 +1043,7 @@ class _AddSaleScreenState extends State<AddSaleScreen> {
             children: [
               Text(context.l10n.sales_totalAmount, style: TextStyle(fontSize: AppFontSize.f12_5, color: context.colors.textSoft)),
               const SizedBox(height: AppSpacing.s4),
-              Text(Money.symbolDecimal(totalAmount),
+              Text(Money.format(totalAmount),
                   style: TextStyle(fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f24, color: context.colors.primary)),
             ],
           ),
@@ -1152,7 +1152,7 @@ class _AddSaleScreenState extends State<AddSaleScreen> {
             borderRadius: BorderRadius.circular(AppRadius.r10),
             border: Border.all(color: context.colors.textHint.withValues(alpha: AppAlpha.a30)),
           ),
-          child: Text(Money.decimal(change), style: TextStyle(color: context.colors.textMuted)),
+          child: Text(Money.plain(change), style: TextStyle(color: context.colors.textMuted)),
         ),
       ],
     );
@@ -1475,7 +1475,7 @@ class _AddSaleScreenState extends State<AddSaleScreen> {
                 ),
                 Expanded(
                   flex: 2,
-                  child: Text(Money.decimal(item.unitPrice), style: const TextStyle(fontSize: AppFontSize.f13)),
+                  child: Text(Money.unitPricePlain(item.unitPrice), style: const TextStyle(fontSize: AppFontSize.f13)),
                 ),
                 SizedBox(
                   width: _qtyColumnWidth,
@@ -1504,7 +1504,7 @@ class _AddSaleScreenState extends State<AddSaleScreen> {
                 Expanded(
                   flex: 2,
                   child: Text(
-                    Money.decimal((item.unitPrice * item.quantity) - item.discount),
+                    Money.plain((item.unitPrice * item.quantity) - item.discount),
                     style: const TextStyle(fontSize: AppFontSize.f13, fontWeight: AppFontWeight.semibold),
                   ),
                 ),
@@ -1575,7 +1575,7 @@ class _AddSaleScreenState extends State<AddSaleScreen> {
                   ),
                 Row(
                   children: [
-                    Text(Money.symbolDecimal(item.unitPrice),
+                    Text(Money.unitPrice(item.unitPrice),
                         style: TextStyle(fontSize: AppFontSize.f13, color: context.colors.textSoft)),
                     const Spacer(),
                     InkWell(
@@ -1593,7 +1593,7 @@ class _AddSaleScreenState extends State<AddSaleScreen> {
                       child: Icon(Icons.add_circle_outline, size: AppIconSize.i20, color: context.colors.primary),
                     ),
                     const SizedBox(width: AppSpacing.s10),
-                    Text(Money.symbolDecimal((item.unitPrice * item.quantity) - item.discount),
+                    Text(Money.format((item.unitPrice * item.quantity) - item.discount),
                         style: const TextStyle(fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f14)),
                   ],
                 ),
@@ -1783,7 +1783,7 @@ class _AddSaleScreenState extends State<AddSaleScreen> {
                   iconColor: context.colors.primary,
                 ),
                 title: Text(product.name),
-                subtitle: Text(context.l10n.sales_availablePrice(product.sellableQty, context.l10n.productUnitLabel(product.unit), Money.symbolDecimal(product.sellPrice))),
+                subtitle: Text(context.l10n.sales_availablePrice(product.sellableQty, context.l10n.productUnitLabel(product.unit), Money.unitPrice(product.sellPrice))),
                 hoverColor: context.colors.accent.withValues(alpha: AppAlpha.a15),
                 onTap: () => _addProductToSale(product),
               );

@@ -585,7 +585,7 @@ Widget buildSubmissionCard(BuildContext context, Map<String, dynamic> data, AppC
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text('$planName - ${Money.symbolAsStored(data['amount'] ?? 0)}',
+                    Text('$planName - ${Money.formatStored(data['amount'] ?? 0)}',
                         style: const TextStyle(fontSize: AppFontSize.f14)),
                     const SizedBox(height: AppSpacing.s2),
                     Text(

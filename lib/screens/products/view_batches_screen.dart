@@ -394,7 +394,7 @@ class _ViewBatchesScreenState extends State<ViewBatchesScreen> {
                     Card(
                       child: ListTile(
                         title: Text(widget.product.name, style: const TextStyle(fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f16)),
-                        subtitle: Text('${context.l10n.productCategoryLabel(widget.product.category)} · ${Money.symbolWhole(widget.product.sellPrice)}'),
+                        subtitle: Text('${context.l10n.productCategoryLabel(widget.product.category)} · ${Money.unitPrice(widget.product.sellPrice)}'),
                         trailing: TextButton(
                           onPressed: () {
                             showAddEditProductScreen(context, product: widget.product);
@@ -489,7 +489,7 @@ class _ViewBatchesScreenState extends State<ViewBatchesScreen> {
                                   ],
                                 ),
                                 subtitle: Text(
-                                  '${context.l10n.batch_rowQuantities(batch.stockQty, batch.sellableQty, Money.symbolWhole(batch.buyPrice))}'
+                                  '${context.l10n.batch_rowQuantities(batch.stockQty, batch.sellableQty, Money.unitPrice(batch.buyPrice))}'
                                   '${batch.expiry != null ? '\n${isExpired ? context.l10n.batch_expiredOn(AppDateFormat.date.format(batch.expiry!)) : context.l10n.batch_expiresOn(AppDateFormat.date.format(batch.expiry!))}' : ''}',
                                 ),
                                 isThreeLine: batch.expiry != null,

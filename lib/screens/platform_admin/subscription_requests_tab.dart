@@ -305,7 +305,7 @@ class _SubscriptionRequestsTabState extends State<SubscriptionRequestsTab> {
                             Icon(Icons.sell_outlined, size: AppIconSize.i16, color: context.colors.primary),
                             const SizedBox(width: AppSpacing.s6),
                             Text(
-                              '${data['planLabel'] ?? ''} · ${Money.symbolAsStored(data['amount'] ?? 0)}',
+                              '${data['planLabel'] ?? ''} · ${Money.formatStored(data['amount'] ?? 0)}',
                               style: TextStyle(fontSize: AppFontSize.f14, fontWeight: AppFontWeight.semibold, color: context.colors.primary),
                             ),
                           ],
@@ -531,7 +531,7 @@ class _SubscriptionRequestsTabState extends State<SubscriptionRequestsTab> {
                             Icon(Icons.sell_outlined, size: AppIconSize.i16, color: context.colors.primary),
                             const SizedBox(width: AppSpacing.s6),
                             Text(
-                              '${data['planLabel'] ?? ''} · ${Money.symbolAsStored(data['amount'] ?? 0)}',
+                              '${data['planLabel'] ?? ''} · ${Money.formatStored(data['amount'] ?? 0)}',
                               style: TextStyle(fontSize: AppFontSize.f14, fontWeight: AppFontWeight.semibold, color: context.colors.primary),
                             ),
                           ],

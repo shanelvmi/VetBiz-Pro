@@ -102,7 +102,7 @@ class _TrashScreenState extends State<TrashScreen> with SingleTickerProviderStat
                       titleBuilder: (data) {
                         final client = (data['clientName'] as String?) ?? 'Walk-in';
                         final amount = (data['totalAmount'] as num?) ?? 0;
-                        return 'Sale - $client - ${Money.symbolWhole(amount)}';
+                        return 'Sale - $client - ${Money.format(amount)}';
                       },
                     ),
                     _TrashList(
@@ -114,7 +114,7 @@ class _TrashScreenState extends State<TrashScreen> with SingleTickerProviderStat
                         final type = (data['type'] as String?) ?? '';
                         final amount = (data['amount'] as num?) ?? 0;
                         final label = description.isNotEmpty ? description : (type.isNotEmpty ? type : 'Transaction');
-                        return '$label - ${Money.symbolWhole(amount)}';
+                        return '$label - ${Money.format(amount)}';
                       },
                     ),
                   ],

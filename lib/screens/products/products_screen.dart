@@ -705,7 +705,7 @@ class _ProductsScreenState extends State<ProductsScreen> {
           ),
           Expanded(
             flex: 2,
-            child: _labelValue(context.l10n.products_price, Money.format(p.sellPrice)),
+            child: _labelValue(context.l10n.products_price, Money.unitPrice(p.sellPrice)),
           ),
           Row(
             mainAxisSize: MainAxisSize.min,
@@ -1152,7 +1152,7 @@ class _ProductsScreenState extends State<ProductsScreen> {
                         Expanded(
                           child: _labelValue(context.l10n.products_sellable, '${p.sellableQty} ${context.l10n.productUnitLabel(p.unit)}', valueColor: statusColor),
                         ),
-                        Expanded(child: _labelValue(context.l10n.products_price, Money.format(p.sellPrice))),
+                        Expanded(child: _labelValue(context.l10n.products_price, Money.unitPrice(p.sellPrice))),
                       ],
                     ),
                     const SizedBox(height: AppSpacing.s8),
@@ -1170,7 +1170,7 @@ class _ProductsScreenState extends State<ProductsScreen> {
                       style: TextStyle(fontSize: AppFontSize.f12_5, color: context.colors.textSoft),
                     ),
                     Text(
-                      context.l10n.products_buyPrice(Money.format(p.buyPrice)),
+                      context.l10n.products_buyPrice(Money.unitPrice(p.buyPrice)),
                       style: TextStyle(fontSize: AppFontSize.f12_5, color: context.colors.textSoft),
                     ),
                     if (p.expiry != null)

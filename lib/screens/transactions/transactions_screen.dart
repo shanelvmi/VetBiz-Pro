@@ -313,7 +313,7 @@ class _TransactionScreenState extends State<TransactionScreen> {
             child: isLoading
                 ? SizedBox(key: const ValueKey('loading'), height: 20, width: 20, child: CircularProgressIndicator(strokeWidth: 2, color: color))
                 : Text(
-                    Money.symbolDecimal(amount),
+                    Money.format(amount),
                     key: const ValueKey('loaded'),
                     style: const TextStyle(fontSize: AppFontSize.f18, fontWeight: AppFontWeight.bold),
                   ),
@@ -462,7 +462,7 @@ class _TransactionScreenState extends State<TransactionScreen> {
                 style: TextStyle(fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f12_5, color: context.colors.primary),
               ),
               Text(
-                context.l10n.common_totalValue(Money.symbolDecimal(dayTotal)),
+                context.l10n.common_totalValue(Money.format(dayTotal)),
                 style: TextStyle(
                   fontSize: AppFontSize.f12_5,
                   fontWeight: AppFontWeight.bold,
@@ -534,7 +534,7 @@ class _TransactionScreenState extends State<TransactionScreen> {
           Expanded(
             flex: 2,
             child: Text(
-              Money.symbolDecimal(tx.amount),
+              Money.format(tx.amount),
               style: TextStyle(fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f13, color: accentColor),
             ),
           ),
@@ -581,7 +581,7 @@ class _TransactionScreenState extends State<TransactionScreen> {
         content: Text(
           context.l10n.transactions_deleteBody(
             tx.description.isEmpty ? _typeLabel(tx.type) : tx.description,
-            Money.symbolDecimal(tx.amount),
+            Money.format(tx.amount),
           ),
         ),
         actions: [
@@ -703,7 +703,7 @@ class _TransactionScreenState extends State<TransactionScreen> {
             ),
             const SizedBox(height: AppSpacing.s12),
             Text(
-              Money.symbolDecimal(tx.amount),
+              Money.format(tx.amount),
               style: TextStyle(fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f22, color: accentColor),
             ),
             const SizedBox(height: AppSpacing.s4),

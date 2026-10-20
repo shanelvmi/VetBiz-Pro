@@ -76,7 +76,7 @@ class _FacilityDetailScreenState extends State<FacilityDetailScreen> {
                   ...plans.map((plan) {
                     return RadioListTile<String>(
                       contentPadding: EdgeInsets.zero,
-                      title: Text('${plan.label} - ${Money.symbolWhole(plan.priceTsh)}'),
+                      title: Text('${plan.label} - ${Money.format(plan.priceTsh)}'),
                       value: plan.id,
                       activeColor: context.colors.primary,
                     );
@@ -365,7 +365,7 @@ class _FacilityDetailScreenState extends State<FacilityDetailScreen> {
                             margin: const EdgeInsets.only(bottom: AppSpacing.s6),
                             child: ListTile(
                               dense: true,
-                              title: Text('${subData['planLabel'] ?? ''} - ${Money.symbolAsStored(subData['amount'] ?? 0)}'),
+                              title: Text('${subData['planLabel'] ?? ''} - ${Money.formatStored(subData['amount'] ?? 0)}'),
                               subtitle: Text(
                                 '${subData['method'] ?? ''}'
                                 '${submittedAt != null ? ' - ${AppDateFormat.date.format(submittedAt)}' : ''}',
