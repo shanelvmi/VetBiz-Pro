@@ -14,7 +14,7 @@ void main() {
 
   test('the name and the version live in AppInfo', () {
     expect(AppInfo.name, 'VetBiz Pro');
-    expect(AppInfo.version, '2.0.0');
+    expect(AppInfo.version, '1.0.0');
     expect(AppInfo.versionLabel, 'v${AppInfo.version}');
   });
 
@@ -27,7 +27,7 @@ void main() {
     expect(lookupAppLocalizations(const Locale('en')).login_copyright(AppInfo.name),
         '© 2026 VetBiz Pro. All rights reserved.');
     expect(lookupAppLocalizations(const Locale('en')).settings_versionLine(AppInfo.name, AppInfo.version),
-        'VetBiz Pro - v2.0.0');
+        'VetBiz Pro - v1.0.0');
   });
 
   test('no screen types a version or "VetBiz Pro System"', () {
@@ -37,5 +37,11 @@ void main() {
       expect(src.contains('VetBiz Pro System'), isFalse, reason: f.path);
       expect(RegExp(r"settings_versionLine\([^)]*'").hasMatch(src), isFalse, reason: '${f.path} types the version');
     }
+  });
+
+  test('AppInfo.version matches the pubspec.yaml version (before the +)', () {
+    final line = File('pubspec.yaml').readAsLinesSync().firstWhere((l) => l.startsWith('version:'));
+    final pubspecVersion = line.substring('version:'.length).trim().split('+').first;
+    expect(AppInfo.version, pubspecVersion);
   });
 }

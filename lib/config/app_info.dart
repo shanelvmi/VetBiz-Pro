@@ -13,7 +13,7 @@ class AppInfo {
 
   /// The app's version, typed in one place (R3, D6): Settings shows it in its
   /// version line, the login footer as [versionLabel].
-  static const String version = '2.0.0';
+  static const String version = '1.0.0';
 
   /// The version shown in the login footer.
   static const String versionLabel = 'v$version';
