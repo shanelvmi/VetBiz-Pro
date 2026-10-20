@@ -6643,4 +6643,32 @@ class AppLocalizationsSw extends AppLocalizations {
   String trash_restoreProductGone(String product) {
     return '$product haipo tena.';
   }
+
+  @override
+  String get register_accountCreatedSignIn =>
+      'Akaunti yako imefunguliwa, lakini hatukuweza kukuingiza moja kwa moja. Tafadhali ingia kwa barua pepe na nenosiri lako.';
+
+  @override
+  String membership_tooManyInviteAttempts(int minutes) {
+    String _temp0 = intl.Intl.pluralLogic(
+      minutes,
+      locale: localeName,
+      other: 'dakika $minutes',
+      one: 'dakika 1',
+    );
+    return 'Misimbo mingi ya mwaliko si sahihi. Subiri $_temp0 kisha ujaribu tena.';
+  }
+
+  @override
+  String get update_title => 'Unahitaji kusasisha';
+
+  @override
+  String update_body(String appName, String current, String minimum) {
+    return 'Toleo hili la $appName ($current) haliwezi kutumika tena. Tafadhali sasisha hadi toleo $minimum au jipya zaidi.';
+  }
+
+  @override
+  String update_howTo(String appName) {
+    return 'Kwenye kompyuta, pakia upya ukurasa huu. Kwenye simu, sakinisha toleo jipya zaidi la $appName.';
+  }
 }

@@ -11249,6 +11249,36 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{product} no longer exists.'**
   String trash_restoreProductGone(String product);
+
+  /// Register: the account was made but the automatic sign-in after it failed (AuthService, AccountCreatedException).
+  ///
+  /// In en, this message translates to:
+  /// **'Your account was created, but we could not sign you in automatically. Please sign in with your email and password.'**
+  String get register_accountCreatedSignIn;
+
+  /// Shown when the server refuses invite codes after too many wrong ones (P1 rate limit). minutes is the server's window, AppRules.inviteAttemptWindowMinutes.
+  ///
+  /// In en, this message translates to:
+  /// **'Too many wrong invite codes. Wait {minutes, plural, =1{1 minute} other{{minutes} minutes}} and try again.'**
+  String membership_tooManyInviteAttempts(int minutes);
+
+  /// Heading of the Update required screen (minimum app version gate).
+  ///
+  /// In en, this message translates to:
+  /// **'Update required'**
+  String get update_title;
+
+  /// Update required screen. current is the running version, minimum the lowest one allowed (platform_config/settings.minimumVersion).
+  ///
+  /// In en, this message translates to:
+  /// **'This version of {appName} ({current}) can no longer be used. Please update to version {minimum} or later.'**
+  String update_body(String appName, String current, String minimum);
+
+  /// Update required screen: how to update.
+  ///
+  /// In en, this message translates to:
+  /// **'On a computer, reload this page. On a phone, install the latest version of {appName}.'**
+  String update_howTo(String appName);
 }
 
 class _AppLocalizationsDelegate

@@ -6604,4 +6604,32 @@ class AppLocalizationsEn extends AppLocalizations {
   String trash_restoreProductGone(String product) {
     return '$product no longer exists.';
   }
+
+  @override
+  String get register_accountCreatedSignIn =>
+      'Your account was created, but we could not sign you in automatically. Please sign in with your email and password.';
+
+  @override
+  String membership_tooManyInviteAttempts(int minutes) {
+    String _temp0 = intl.Intl.pluralLogic(
+      minutes,
+      locale: localeName,
+      other: '$minutes minutes',
+      one: '1 minute',
+    );
+    return 'Too many wrong invite codes. Wait $_temp0 and try again.';
+  }
+
+  @override
+  String get update_title => 'Update required';
+
+  @override
+  String update_body(String appName, String current, String minimum) {
+    return 'This version of $appName ($current) can no longer be used. Please update to version $minimum or later.';
+  }
+
+  @override
+  String update_howTo(String appName) {
+    return 'On a computer, reload this page. On a phone, install the latest version of $appName.';
+  }
 }
