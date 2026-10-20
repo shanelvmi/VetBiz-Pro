@@ -15,6 +15,7 @@ import 'utils/facility_activation.dart';
 import 'utils/activity_signal.dart';
 import 'utils/presence_heartbeat.dart';
 import 'widgets/maintenance_gate.dart';
+import 'widgets/password_field_guard.dart';
 import 'l10n/l10n.dart';
 
 import 'services/auth_service.dart';
@@ -904,6 +905,8 @@ class _NoFacilityScreenState extends State<_NoFacilityScreen> {
                 TextField(
                   controller: passwordController,
                   obscureText: true,
+                  autocorrect: false,
+                  enableSuggestions: false,
                   decoration: InputDecoration(labelText: ctx.l10n.common_password, prefixIcon: const Icon(Icons.lock_outline)),
                 ),
                 if (dialogError != null) ...[
@@ -939,6 +942,8 @@ class _NoFacilityScreenState extends State<_NoFacilityScreen> {
                         if (!ctx.mounted) return;
                         setDialogState(() {
                           deleting = false;
+                          // A refused password does not stay in the field (P1b).
+                          if (PasswordFieldGuard.rejectedAttempt(e)) passwordController.clear();
                           dialogError = _deleteAccountError(e);
                         });
                       }

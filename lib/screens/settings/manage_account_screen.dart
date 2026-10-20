@@ -23,6 +23,7 @@ import '../../theme/app_dimens.dart';
 import '../../theme/theme_context.dart';
 import '../../ui/feedback/app_feedback.dart';
 import '../../l10n/l10n.dart';
+import '../../widgets/password_field_guard.dart';
 
 class ManageAccountScreen extends StatefulWidget {
   const ManageAccountScreen({super.key});
@@ -464,6 +465,8 @@ class _ManageAccountScreenState extends State<ManageAccountScreen> {
             const SizedBox(height: AppSpacing.s8),
             TextField(
               controller: _deletePasswordController,
+              autocorrect: false,
+              enableSuggestions: false,
               decoration: InputDecoration(
                 labelText: context.l10n.common_password,
                 prefixIcon: const Icon(Icons.lock),
@@ -511,6 +514,8 @@ class _ManageAccountScreenState extends State<ManageAccountScreen> {
                       Navigator.pop(context);
                       AppFeedback.info(L10n.current.account_deleted);
                     } catch (e, st) {
+                      // A refused password does not stay in the field (P1b).
+                      if (PasswordFieldGuard.rejectedAttempt(e)) _deletePasswordController.clear();
                       AppFeedback.error(L10n.current.account_deleteFailed, error: e, stackTrace: st);
                     } finally {
                       setState(() => _isDeleting = false);
