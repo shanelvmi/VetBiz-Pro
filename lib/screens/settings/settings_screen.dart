@@ -240,7 +240,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               const SizedBox(height: _footerGap),
               Center(
                 child: Text(
-                  context.l10n.settings_versionLine(AppInfo.name, '1.0.0'),
+                  context.l10n.settings_versionLine(AppInfo.name, AppInfo.version),
                   style: TextStyle(
                     fontSize: AppFontSize.f12,
                     color: context.colors.textHint,

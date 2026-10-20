@@ -322,7 +322,7 @@ class _LoginScreenState extends State<LoginScreen> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            Text(context.l10n.common_appSystem(AppInfo.name),
+                            Text(AppInfo.name,
                                 style: TextStyle(color: context.colors.onBrandSurface, fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f16)),
                             if (!isNarrow)
                               Text(context.l10n.login_tagline,

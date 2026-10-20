@@ -827,7 +827,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
           const SizedBox(width: AppSpacing.s12),
           Expanded(
             child: Text(
-              context.l10n.common_appSystem(AppInfo.name),
+              AppInfo.name,
               overflow: TextOverflow.ellipsis,
               style: TextStyle(color: context.colors.onBrandSurface, fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f16),
             ),
