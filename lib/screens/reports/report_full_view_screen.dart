@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import '../../models/daily_report.dart';
 import '../../providers/user_role_provider.dart';
 import '../../config/money.dart';
+import '../../config/payment_methods.dart';
 import '../../config/app_date_format.dart';
 import '../../l10n/l10n.dart';
 import '../../theme/app_text.dart';
@@ -391,21 +392,13 @@ class ReportFullViewScreen extends StatelessWidget {
   }
 
   Widget _paymentMethodsSection(BuildContext context) {
-    final combined = <String, double>{};
-    for (final entry in report.salesByPaymentMethod.entries) {
-      combined[entry.key] = (combined[entry.key] ?? 0) + entry.value;
-    }
-    for (final entry in report.servicesByPaymentMethod.entries) {
-      combined[entry.key] = (combined[entry.key] ?? 0) + entry.value;
-    }
-    for (final entry in report.repaymentsByPaymentMethod.entries) {
-      combined[entry.key] = (combined[entry.key] ?? 0) + entry.value;
-    }
-    for (final entry in report.otherIncomeByPaymentMethod.entries) {
-      combined[entry.key] = (combined[entry.key] ?? 0) + entry.value;
-    }
-
-    Widget category(String title, Map<String, double> byMethod, String emptyText) {
+    final combined = PaymentMethod.combineShown([
+      report.salesByPaymentMethod,
+      report.servicesByPaymentMethod,
+      report.repaymentsByPaymentMethod,
+      report.otherIncomeByPaymentMethod,
+    ]);
+Widget category(String title, Map<String, double> byMethod, String emptyText) {
       return Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -434,10 +427,10 @@ class ReportFullViewScreen extends StatelessWidget {
             const SizedBox(height: AppSpacing.s12),
             const Divider(height: 1),
             const SizedBox(height: AppSpacing.s12),
-            category(context.l10n.payments_typeSales, report.salesByPaymentMethod, context.l10n.reports_noSalesShort),
-            category(context.l10n.payments_typeServices, report.servicesByPaymentMethod, context.l10n.reports_noServicesShort),
-            category(context.l10n.payments_typeDebtRepayments, report.repaymentsByPaymentMethod, context.l10n.reports_noRepaymentsShort),
-            category(context.l10n.payments_typeOtherIncome, report.otherIncomeByPaymentMethod, context.l10n.reports_noOtherIncomeShort),
+            category(context.l10n.payments_typeSales, PaymentMethod.mergeShown(report.salesByPaymentMethod), context.l10n.reports_noSalesShort),
+            category(context.l10n.payments_typeServices, PaymentMethod.mergeShown(report.servicesByPaymentMethod), context.l10n.reports_noServicesShort),
+            category(context.l10n.payments_typeDebtRepayments, PaymentMethod.mergeShown(report.repaymentsByPaymentMethod), context.l10n.reports_noRepaymentsShort),
+            category(context.l10n.payments_typeOtherIncome, PaymentMethod.mergeShown(report.otherIncomeByPaymentMethod), context.l10n.reports_noOtherIncomeShort),
           ],
         ],
       ),

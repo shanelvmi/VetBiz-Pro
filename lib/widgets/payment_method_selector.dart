@@ -18,13 +18,13 @@ final List<String> kPaymentMethods = [for (final m in PaymentMethod.recordable) 
 
 IconData iconForPaymentMethod(String method) => switch (PaymentMethod.fromKey(method)) {
       PaymentMethod.cash => Icons.payments_outlined,
-      PaymentMethod.mPesa || PaymentMethod.mixxByYas || PaymentMethod.haloPesa || PaymentMethod.airtelMoney =>
+      // Tigo Pesa (only on old records) is Mixx by Yas's old name, so it gets
+      // the same phone icon (R3, D5).
+      PaymentMethod.mPesa || PaymentMethod.mixxByYas || PaymentMethod.tigoPesa || PaymentMethod.haloPesa || PaymentMethod.airtelMoney =>
         Icons.phone_android,
       PaymentMethod.bankTransfer => Icons.account_balance_outlined,
-      // Tigo Pesa (only on old records) and any unknown key keep the generic
-      // icon they always had. Giving Tigo Pesa the phone icon is listed in
-      // design-open-questions.md.
-      PaymentMethod.tigoPesa || null => Icons.payment,
+      // Any unknown key keeps the generic icon.
+      null => Icons.payment,
     };
 
 /// A row of selectable chips, each carrying its own icon - one tap to

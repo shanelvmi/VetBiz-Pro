@@ -182,7 +182,7 @@ class ReceiptPdfService {
             _kvPair('Receipt #', sale.receiptNumber?.toString() ?? sale.id.substring(0, sale.id.length < AppRules.fallbackReceiptIdLength ? sale.id.length : AppRules.fallbackReceiptIdLength)),
             _kvPair('Date', _dateTime.format(sale.timestamp)),
             _kvPair('Customer', sale.clientName ?? 'Walk-in'),
-            _kvPair('Payment Method', sale.paymentMethod ?? PaymentMethod.onCredit),
+            _kvPair('Payment Method', PaymentMethod.shownKey(sale.paymentMethod ?? PaymentMethod.onCredit)),
           ]),
           pw.SizedBox(height: AppSpacing.s14),
           _itemsTable(
@@ -259,7 +259,7 @@ class ReceiptPdfService {
             _kvPair('Date', _dateTime.format(serviceDate)),
             _kvPair('Customer', service.clientName ?? 'Walk-in'),
             _kvPair('Provided By', service.providedByName ?? 'N/A'),
-            _kvPair('Payment Method', service.paymentMethod ?? PaymentMethod.onCredit),
+            _kvPair('Payment Method', PaymentMethod.shownKey(service.paymentMethod ?? PaymentMethod.onCredit)),
           ]),
           pw.SizedBox(height: AppSpacing.s14),
           _itemsTable([

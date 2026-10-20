@@ -6,6 +6,7 @@ import '../models/ledger_entry.dart';
 import '../services/snapshot_ledger_controller.dart';
 import 'sale_provider.dart';
 import 'service_provider.dart';
+import '../config/payment_methods.dart';
 import '../data/collections.dart';
 import '../data/fields.dart';
 import '../l10n/l10n.dart';
@@ -19,6 +20,12 @@ class PaymentProvider with ChangeNotifier {
       countNewEntries: _countNewLedgerEntries,
     );
   }
+
+  /// The Payments method filter: Mixx by Yas also finds the records stored as
+  /// 'Tigo Pesa' (R3, D5); stored keys never change. `whereIn` uses the same
+  /// indexes as the equality filter it replaces.
+  static Query<Map<String, dynamic>> whereShownMethod(Query<Map<String, dynamic>> query, String method) =>
+      query.where('paymentMethod', whereIn: PaymentMethod.storedKeysFor(method));
 
   List<Payment> _payments = [];
   List<Payment> get payments => [..._payments];
@@ -143,7 +150,7 @@ class PaymentProvider with ChangeNotifier {
         paymentsQuery = paymentsQuery.where('source', isEqualTo: q.typeFilter);
       }
       if (q.methodFilter != null) {
-        paymentsQuery = paymentsQuery.where('paymentMethod', isEqualTo: q.methodFilter);
+        paymentsQuery = whereShownMethod(paymentsQuery, q.methodFilter!);
       }
 
       if (q.initialClientId == null && q.searchTerm.isNotEmpty) {
@@ -185,7 +192,7 @@ class PaymentProvider with ChangeNotifier {
           .where('date', isLessThanOrEqualTo: Timestamp.fromDate(effectiveEnd))
           .orderBy('date', descending: true);
       if (q.methodFilter != null) {
-        txQuery = txQuery.where('paymentMethod', isEqualTo: q.methodFilter);
+        txQuery = whereShownMethod(txQuery, q.methodFilter!);
       }
 
       final txSnap = await txQuery.get();
@@ -243,7 +250,7 @@ class PaymentProvider with ChangeNotifier {
         paymentsQuery = paymentsQuery.where('source', isEqualTo: q.typeFilter);
       }
       if (q.methodFilter != null) {
-        paymentsQuery = paymentsQuery.where('paymentMethod', isEqualTo: q.methodFilter);
+        paymentsQuery = whereShownMethod(paymentsQuery, q.methodFilter!);
       }
       final agg = await paymentsQuery.count().get();
       total += agg.count ?? 0;
@@ -255,7 +262,7 @@ class PaymentProvider with ChangeNotifier {
           .where('type', isEqualTo: 'other income')
           .where('date', isGreaterThan: Timestamp.fromDate(after));
       if (q.methodFilter != null) {
-        txQuery = txQuery.where('paymentMethod', isEqualTo: q.methodFilter);
+        txQuery = whereShownMethod(txQuery, q.methodFilter!);
       }
       final agg = await txQuery.count().get();
       total += agg.count ?? 0;

@@ -3,6 +3,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:intl/intl.dart';
 
 import 'subscription_screen.dart' show submissionStatusColor;
+import '../../config/payment_methods.dart';
 import '../../data/collections.dart';
 import '../../data/fields.dart';
 import '../../data/payment_submission_status.dart';
@@ -219,7 +220,8 @@ class _SubscriptionHistoryScreenState extends State<SubscriptionHistoryScreen> {
     }
 
     final plans = <String>{for (final s in all) if (s.planLabel.isNotEmpty) s.planLabel}.toList()..sort();
-    final methods = <String>{for (final s in all) if (s.method.isNotEmpty) s.method}.toList()..sort();
+    // One choice per shown name: Tigo Pesa records are under Mixx by Yas (R3, D5).
+    final methods = PaymentMethod.shownChoices([for (final s in all) if (s.method.isNotEmpty) s.method]);
     // A chosen plan/method can vanish if the data changes underneath it.
     final plan = (_planFilter == 'All' || plans.contains(_planFilter)) ? _planFilter : 'All';
     final method = (_methodFilter == 'All' || methods.contains(_methodFilter)) ? _methodFilter : 'All';
@@ -228,9 +230,9 @@ class _SubscriptionHistoryScreenState extends State<SubscriptionHistoryScreen> {
     final filtered = all.where((s) {
       if (_statusFilter != null && s.status != _statusFilter) return false;
       if (plan != 'All' && s.planLabel != plan) return false;
-      if (method != 'All' && s.method != method) return false;
+      if (method != 'All' && PaymentMethod.shownKey(s.method) != method) return false;
       if (q.isNotEmpty) {
-        final hay = '${s.planLabel} ${s.method} ${s.reference} ${s.reviewNote} ${s.status} ${s.promotionLabel ?? ''}'
+        final hay = '${s.planLabel} ${PaymentMethod.shownKey(s.method)} ${s.reference} ${s.reviewNote} ${s.status} ${s.promotionLabel ?? ''}'
             .toLowerCase();
         if (!hay.contains(q)) return false;
       }

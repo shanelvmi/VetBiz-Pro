@@ -575,7 +575,7 @@ class _ServiceReceiptPreviewScreenState extends State<ServiceReceiptPreviewScree
                 value2: service.serviceDate != null ? AppDateFormat.dateTime24.format(service.serviceDate!) : null),
             infoLine(ReceiptTexts.customer, service.clientName ?? ReceiptTexts.walkIn),
             infoLine(ReceiptTexts.providedBy, service.providedByName ?? ReceiptTexts.notAvailable),
-            infoLine(ReceiptTexts.paymentMethod, service.paymentMethod ?? PaymentMethod.onCredit),
+            infoLine(ReceiptTexts.paymentMethod, PaymentMethod.shownKey(service.paymentMethod ?? PaymentMethod.onCredit)),
             const SizedBox(height: AppSpacing.s10),
             // ---- Items table ----
             itemsTableHeader(),
@@ -602,7 +602,7 @@ class _ServiceReceiptPreviewScreenState extends State<ServiceReceiptPreviewScree
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(ReceiptTexts.paymentMethod, style: TextStyle(fontSize: AppFontSize.f10_5, color: context.colors.textMuted)),
-                      Text(service.paymentMethod ?? PaymentMethod.onCredit, style: const TextStyle(fontSize: AppFontSize.f12_5, fontWeight: AppFontWeight.semibold)),
+                      Text(PaymentMethod.shownKey(service.paymentMethod ?? PaymentMethod.onCredit), style: const TextStyle(fontSize: AppFontSize.f12_5, fontWeight: AppFontWeight.semibold)),
                     ],
                   ),
                 ),

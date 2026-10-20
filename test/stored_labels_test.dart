@@ -56,7 +56,9 @@ void main() {
 
   test('payment methods, and On Credit', () {
     checkStoredList(StoredValueLabels.paymentMethod, [for (final m in PaymentMethod.values) m.key, PaymentMethod.onCredit],
-        (l, v) => l.paymentMethodLabel(v));
+        (l, v) => l.paymentMethodLabel(v),
+        // R3, D5: Tigo Pesa is shown as Mixx by Yas, never under its old name.
+        english: {'Tigo Pesa': 'Mixx by Yas'});
   });
 
   test('activity types, ignoring case like their readers', () {

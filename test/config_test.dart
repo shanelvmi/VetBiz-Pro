@@ -29,8 +29,9 @@ void main() {
       expect(iconForPaymentMethod(k), Icons.phone_android, reason: k);
     }
     expect(iconForPaymentMethod('Bank Transfer'), Icons.account_balance_outlined);
-    // Old records: Tigo Pesa, and anything unknown, keep the generic icon.
-    expect(iconForPaymentMethod('Tigo Pesa'), Icons.payment);
+    // R3, D5: an old Tigo Pesa record has Mixx by Yas's phone icon (it had the
+    // generic one); anything unknown keeps the generic icon.
+    expect(iconForPaymentMethod('Tigo Pesa'), Icons.phone_android);
     expect(iconForPaymentMethod('Barter'), Icons.payment);
   });
 

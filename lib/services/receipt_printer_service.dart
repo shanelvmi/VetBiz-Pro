@@ -7,6 +7,7 @@ import '../models/sale.dart';
 import '../models/service.dart';
 import '../models/transaction.dart';
 import '../config/money.dart';
+import '../config/payment_methods.dart';
 import '../config/app_info.dart';
 
 /// Real Bluetooth thermal-printer integration - connects to a printer
@@ -275,7 +276,7 @@ class ReceiptPrinterService {
     bytes += generator.text('Date: ${transaction.date.toLocal().toString().split('.').first}');
     bytes += generator.text('Recorded by: ${transaction.recordedBy}');
     if (transaction.paymentMethod != null) {
-      bytes += generator.text('Payment Method: ${transaction.paymentMethod}');
+      bytes += generator.text('Payment Method: ${PaymentMethod.shownKey(transaction.paymentMethod!)}');
     }
     bytes += generator.hr();
 

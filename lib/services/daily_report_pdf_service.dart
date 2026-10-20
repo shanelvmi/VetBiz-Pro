@@ -245,7 +245,7 @@ class DailyReportPdfService {
                       s.customerName,
                       '${s.itemCount}',
                       Money.plain(s.amount),
-                      s.paymentMethod,
+                      PaymentMethod.shownKey(s.paymentMethod),
                     ])
                 .toList(),
             flex: [2, 2, 3, 1, 2, 2],
@@ -257,7 +257,7 @@ class DailyReportPdfService {
               padding: const pw.EdgeInsets.only(top: AppSpacing.s4),
               child: pw.Wrap(
                 spacing: 24,
-                children: report.salesByPaymentMethod.entries
+                children: PaymentMethod.mergeShown(report.salesByPaymentMethod).entries
                     .map((e) => pw.Text('${e.key}: ${Money.format(e.value)}', style: const pw.TextStyle(fontSize: AppFontSize.f9, color: PdfColors.grey700)))
                     .toList(),
               ),
@@ -288,20 +288,13 @@ class DailyReportPdfService {
   }
 
   static pw.Widget _paymentMethodsSection(DailyReport report) {
-    final combined = <String, double>{};
-    for (final entry in report.salesByPaymentMethod.entries) {
-      combined[entry.key] = (combined[entry.key] ?? 0) + entry.value;
-    }
-    for (final entry in report.servicesByPaymentMethod.entries) {
-      combined[entry.key] = (combined[entry.key] ?? 0) + entry.value;
-    }
-    for (final entry in report.repaymentsByPaymentMethod.entries) {
-      combined[entry.key] = (combined[entry.key] ?? 0) + entry.value;
-    }
-    for (final entry in report.otherIncomeByPaymentMethod.entries) {
-      combined[entry.key] = (combined[entry.key] ?? 0) + entry.value;
-    }
-    final combinedTotal = combined.values.fold(0.0, (sum, v) => sum + v);
+    final combined = PaymentMethod.combineShown([
+      report.salesByPaymentMethod,
+      report.servicesByPaymentMethod,
+      report.repaymentsByPaymentMethod,
+      report.otherIncomeByPaymentMethod,
+    ]);
+final combinedTotal = combined.values.fold(0.0, (sum, v) => sum + v);
 
     if (combined.isEmpty) {
       return pw.Column(
@@ -348,18 +341,18 @@ class DailyReportPdfService {
         pw.Row(
           crossAxisAlignment: pw.CrossAxisAlignment.start,
           children: [
-            categoryColumn('Sales', report.salesByPaymentMethod, 'No sales today.'),
+            categoryColumn('Sales', PaymentMethod.mergeShown(report.salesByPaymentMethod), 'No sales today.'),
             pw.SizedBox(width: AppSpacing.s16),
-            categoryColumn('Services', report.servicesByPaymentMethod, 'No services today.'),
+            categoryColumn('Services', PaymentMethod.mergeShown(report.servicesByPaymentMethod), 'No services today.'),
           ],
         ),
         pw.SizedBox(height: AppSpacing.s10),
         pw.Row(
           crossAxisAlignment: pw.CrossAxisAlignment.start,
           children: [
-            categoryColumn('Debt Repayments', report.repaymentsByPaymentMethod, 'No repayments today.'),
+            categoryColumn('Debt Repayments', PaymentMethod.mergeShown(report.repaymentsByPaymentMethod), 'No repayments today.'),
             pw.SizedBox(width: AppSpacing.s16),
-            categoryColumn('Other Income', report.otherIncomeByPaymentMethod, 'No other income today.'),
+            categoryColumn('Other Income', PaymentMethod.mergeShown(report.otherIncomeByPaymentMethod), 'No other income today.'),
           ],
         ),
       ],
@@ -506,7 +499,7 @@ class DailyReportPdfService {
       children: [
         _sectionTitle('Payment Reconciliation'),
         for (final p in report.paymentReconciliation) ...[
-          pw.Text(p.method, style: pw.TextStyle(fontSize: AppFontSize.f10, fontWeight: pw.FontWeight.bold, color: _deepGreen)),
+          pw.Text(PaymentMethod.shownKey(p.method), style: pw.TextStyle(fontSize: AppFontSize.f10, fontWeight: pw.FontWeight.bold, color: _deepGreen)),
           _statLine('Expected balance', Money.format(p.expected)),
           if (p.physicalCount != null) ...[
             _statLine('Physical balance counted', Money.format(p.physicalCount!), bold: true),
@@ -523,7 +516,7 @@ class DailyReportPdfService {
                 child: pw.Text('Reason: ${p.varianceReason}', style: pw.TextStyle(fontSize: AppFontSize.f9, color: _grey, fontStyle: pw.FontStyle.italic)),
               ),
           ] else if (!p.requiresCount)
-            _emptyNote('No income via ${p.method} today - outflow only, no count needed.')
+            _emptyNote('No income via ${PaymentMethod.shownKey(p.method)} today - outflow only, no count needed.')
           else
             _emptyNote('Not yet submitted.'),
           if (p != report.paymentReconciliation.last) pw.SizedBox(height: AppSpacing.s6),

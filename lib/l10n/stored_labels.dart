@@ -137,7 +137,8 @@ class StoredValueLabels {
     PaymentMethod.haloPesa.key: (l) => l.paymentMethod_haloPesa,
     PaymentMethod.airtelMoney.key: (l) => l.paymentMethod_airtelMoney,
     PaymentMethod.bankTransfer.key: (l) => l.paymentMethod_bankTransfer,
-    PaymentMethod.tigoPesa.key: (l) => l.paymentMethod_tigoPesa,
+    // R3, D5: Tigo Pesa is shown under its new name, never as its own.
+    PaymentMethod.tigoPesa.key: (l) => l.paymentMethod_mixxByYas,
     PaymentMethod.onCredit: (l) => l.paymentMethod_onCredit,
   });
 

@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import '../../models/daily_report.dart';
 import '../../providers/user_role_provider.dart';
 import '../../config/money.dart';
+import '../../config/payment_methods.dart';
 import '../../config/app_date_format.dart';
 import '../../theme/activity_type_style.dart';
 import '../../theme/app_text.dart';
@@ -486,7 +487,7 @@ class _ReportTabbedContentState extends State<ReportTabbedContent> with SingleTi
             children: [
               _sectionHeader(Icons.credit_card_outlined, context.l10n.reports_paymentMethods),
               const SizedBox(height: AppSpacing.s8),
-              for (final e in report.salesByPaymentMethod.entries)
+              for (final e in PaymentMethod.mergeShown(report.salesByPaymentMethod).entries)
                 _statRow(context.l10n.paymentMethodLabel(e.key), Money.format(e.value)),
             ],
           ),
@@ -536,7 +537,7 @@ class _ReportTabbedContentState extends State<ReportTabbedContent> with SingleTi
             children: [
               _sectionHeader(Icons.credit_card_outlined, context.l10n.reports_paymentMethods),
               const SizedBox(height: AppSpacing.s8),
-              for (final e in report.servicesByPaymentMethod.entries)
+              for (final e in PaymentMethod.mergeShown(report.servicesByPaymentMethod).entries)
                 _statRow(context.l10n.paymentMethodLabel(e.key), Money.format(e.value)),
             ],
           ),
@@ -942,20 +943,13 @@ class _ReportTabbedContentState extends State<ReportTabbedContent> with SingleTi
   // ---------- Payment Methods ----------
 
   Widget _buildPaymentMethodsTab() {
-    final combined = <String, double>{};
-    for (final entry in report.salesByPaymentMethod.entries) {
-      combined[entry.key] = (combined[entry.key] ?? 0) + entry.value;
-    }
-    for (final entry in report.servicesByPaymentMethod.entries) {
-      combined[entry.key] = (combined[entry.key] ?? 0) + entry.value;
-    }
-    for (final entry in report.repaymentsByPaymentMethod.entries) {
-      combined[entry.key] = (combined[entry.key] ?? 0) + entry.value;
-    }
-    for (final entry in report.otherIncomeByPaymentMethod.entries) {
-      combined[entry.key] = (combined[entry.key] ?? 0) + entry.value;
-    }
-    final combinedTotal = combined.values.fold(0.0, (sum, v) => sum + v);
+    final combined = PaymentMethod.combineShown([
+      report.salesByPaymentMethod,
+      report.servicesByPaymentMethod,
+      report.repaymentsByPaymentMethod,
+      report.otherIncomeByPaymentMethod,
+    ]);
+final combinedTotal = combined.values.fold(0.0, (sum, v) => sum + v);
 
     Widget categoryCard(IconData icon, String title, Map<String, double> byMethod, String emptyText) {
       return Expanded(
@@ -1001,10 +995,10 @@ class _ReportTabbedContentState extends State<ReportTabbedContent> with SingleTi
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            categoryCard(Icons.shopping_cart_outlined, context.l10n.payments_typeSales, report.salesByPaymentMethod,
+            categoryCard(Icons.shopping_cart_outlined, context.l10n.payments_typeSales, PaymentMethod.mergeShown(report.salesByPaymentMethod),
                 context.l10n.reports_noSalesShort),
             const SizedBox(width: AppSpacing.s16),
-            categoryCard(Icons.medical_services_outlined, context.l10n.payments_typeServices, report.servicesByPaymentMethod,
+            categoryCard(Icons.medical_services_outlined, context.l10n.payments_typeServices, PaymentMethod.mergeShown(report.servicesByPaymentMethod),
                 context.l10n.reports_noServicesShort),
           ],
         ),
@@ -1014,10 +1008,10 @@ class _ReportTabbedContentState extends State<ReportTabbedContent> with SingleTi
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            categoryCard(Icons.people_alt_outlined, context.l10n.payments_typeDebtRepayments, report.repaymentsByPaymentMethod,
+            categoryCard(Icons.people_alt_outlined, context.l10n.payments_typeDebtRepayments, PaymentMethod.mergeShown(report.repaymentsByPaymentMethod),
                 context.l10n.reports_noRepaymentsShort),
             const SizedBox(width: AppSpacing.s16),
-            categoryCard(Icons.savings_outlined, context.l10n.payments_typeOtherIncome, report.otherIncomeByPaymentMethod,
+            categoryCard(Icons.savings_outlined, context.l10n.payments_typeOtherIncome, PaymentMethod.mergeShown(report.otherIncomeByPaymentMethod),
                 context.l10n.reports_noOtherIncomeShort),
           ],
         ),

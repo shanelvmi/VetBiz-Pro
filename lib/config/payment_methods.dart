@@ -46,6 +46,36 @@ enum PaymentMethod {
     cash,
   ];
 
+  /// What a stored key is SHOWN, filtered and grouped as (R3, D5): Tigo Pesa
+  /// is Mixx by Yas's old name, so a record stored as 'Tigo Pesa' reads as
+  /// Mixx by Yas everywhere. The stored key itself never changes.
+  static String shownKey(String key) => key == tigoPesa.key ? mixxByYas.key : key;
+
+  /// The stored keys a filter on [shown] must match: Mixx by Yas finds the
+  /// old Tigo Pesa records too.
+  static List<String> storedKeysFor(String shown) =>
+      shown == mixxByYas.key ? [mixxByYas.key, tigoPesa.key] : [shown];
+
+  /// Amounts by stored key, summed under each key's [shownKey] (one Mixx by
+  /// Yas row for both keys), in first-seen order. Display only: a report
+  /// document keeps what it stored.
+  static Map<String, double> combineShown(Iterable<Map<String, double>> byMethod) {
+    final merged = <String, double>{};
+    for (final map in byMethod) {
+      for (final e in map.entries) {
+        final key = shownKey(e.key);
+        merged[key] = (merged[key] ?? 0) + e.value;
+      }
+    }
+    return merged;
+  }
+
+  /// [combineShown] for one map.
+  static Map<String, double> mergeShown(Map<String, double> byMethod) => combineShown([byMethod]);
+
+  /// A filter's choices for the stored keys in a list: each shown key once, sorted.
+  static List<String> shownChoices(Iterable<String> keys) => {for (final k in keys) shownKey(k)}.toList()..sort();
+
   /// The stored key's method, or null for a key the app doesn't know (an
   /// old or hand-edited record must still display, not crash).
   static PaymentMethod? fromKey(String? key) {

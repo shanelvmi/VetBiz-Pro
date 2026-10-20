@@ -608,7 +608,7 @@ class _ReceiptPreviewScreenState extends State<ReceiptPreviewScreen> {
             infoLine(ReceiptTexts.receiptNo, sale.receiptNumber?.toString() ?? sale.id.substring(0, sale.id.length < AppRules.fallbackReceiptIdLength ? sale.id.length : AppRules.fallbackReceiptIdLength),
                 label2: ReceiptTexts.date, value2: AppDateFormat.dateTime24.format(sale.timestamp)),
             infoLine(ReceiptTexts.customer, sale.clientName ?? ReceiptTexts.walkIn),
-            infoLine(ReceiptTexts.paymentMethod, sale.paymentMethod ?? PaymentMethod.onCredit),
+            infoLine(ReceiptTexts.paymentMethod, PaymentMethod.shownKey(sale.paymentMethod ?? PaymentMethod.onCredit)),
             const SizedBox(height: AppSpacing.s10),
             // ---- Items table ----
             itemsTableHeader(),
@@ -636,7 +636,7 @@ class _ReceiptPreviewScreenState extends State<ReceiptPreviewScreen> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(ReceiptTexts.paymentMethod, style: TextStyle(fontSize: AppFontSize.f10_5, color: context.colors.textMuted)),
-                      Text(sale.paymentMethod ?? PaymentMethod.onCredit, style: const TextStyle(fontSize: AppFontSize.f12_5, fontWeight: AppFontWeight.semibold)),
+                      Text(PaymentMethod.shownKey(sale.paymentMethod ?? PaymentMethod.onCredit), style: const TextStyle(fontSize: AppFontSize.f12_5, fontWeight: AppFontWeight.semibold)),
                     ],
                   ),
                 ),

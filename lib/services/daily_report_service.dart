@@ -10,7 +10,9 @@ import '../config/app_rules.dart';
 import '../config/payment_methods.dart';
 
 class DailyReportService {
-  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  DailyReportService({FirebaseFirestore? firestore}) : _firestore = firestore ?? FirebaseFirestore.instance;
+
+  final FirebaseFirestore _firestore;
 
   String _dateKey(DateTime d) =>
       '${d.year.toString().padLeft(4, '0')}-${d.month.toString().padLeft(2, '0')}-${d.day.toString().padLeft(2, '0')}';
@@ -336,7 +338,10 @@ class DailyReportService {
       final data = doc.data();
       final source = (data['source'] as String?) ?? 'sale';
       final amount = (data['amount'] as num?)?.toDouble() ?? 0.0;
-      final method = (data['paymentMethod'] as String?) ?? 'Unknown';
+      // Grouped by the name shown (R3, D5): a Tigo Pesa payment counts under
+      // Mixx by Yas, one row and one reconciliation count. The payment keeps
+      // its stored key.
+      final method = PaymentMethod.shownKey((data['paymentMethod'] as String?) ?? 'Unknown');
       final clientId = data['clientId'] as String?;
 
       if (source == 'sale') {
@@ -377,7 +382,7 @@ class DailyReportService {
       final type = (data['type'] as String?) ?? '';
       final amount = (data['amount'] as num?)?.toDouble() ?? 0.0;
       final category = (data['category'] as String?) ?? 'Uncategorized';
-      final method = (data['paymentMethod'] as String?) ?? '';
+      final method = PaymentMethod.shownKey((data['paymentMethod'] as String?) ?? '');
       final description = (data['description'] as String?) ?? '';
       final date = (data['date'] as Timestamp?)?.toDate() ?? now;
 
