@@ -378,7 +378,7 @@ class _AddPaymentScreenState extends State<AddPaymentScreen> {
         userId: userInfo[Fields.userId]!,
         userName: userInfo['userName'],
         actionType: ActivityType.debtors.key,
-        description: 'Recorded payment of ${Money.savedWhole(amount)} from ${selectedClient!.name}',
+        description: 'Recorded payment of ${Money.saved(amount)} from ${selectedClient!.name}',
       );
 
       if (!mounted) return;

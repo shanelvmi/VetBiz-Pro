@@ -70,16 +70,9 @@ class Money {
     return '${amount < 0 ? '-' : ''}${AppDefaults.currencySymbol} $digits';
   }
 
-  // SAVED text. Activity and transaction descriptions are stored in
-  // Firestore, so what they say is history. These keep today's exact output
-  // (no thousands separator) on purpose; making saved amounts readable is a
-  // refinement decision (design-open-questions.md, step 2R), not a migration.
-
-  /// "Tsh 12500": whole shillings, no thousands separator
-  /// (`amount.toStringAsFixed(0)`).
-  static String savedWhole(num amount) => '${AppDefaults.currencySymbol} ${amount.toStringAsFixed(0)}';
-
-  /// "Tsh 12500" or "Tsh 12500.0": the stored value exactly as Dart prints it,
-  /// for an amount read back from a document whose type isn't known.
-  static String savedAsStored(Object amount) => '${AppDefaults.currencySymbol} $amount';
+  /// SAVED text: activity and transaction descriptions written to Firestore,
+  /// for example "Recorded sale to Walk-in - Tsh 12,500". New entries read like
+  /// the screens (R3, D4); old entries keep what they say ("Tsh 12500"), and
+  /// nothing parses an amount back out of a description.
+  static String saved(num amount) => format(amount);
 }

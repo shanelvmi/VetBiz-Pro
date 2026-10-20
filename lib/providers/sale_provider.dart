@@ -526,7 +526,7 @@ class SaleProvider extends ChangeNotifier {
         userId: userInfo[Fields.userId]!,
         userName: userInfo['userName'] ?? 'Unknown',
         actionType: ActivityType.sales.key,
-        description: 'Recorded sale to ${saleToSave.clientName ?? 'Walk-in'} - ${Money.savedWhole(saleToSave.totalAmount)}',
+        description: 'Recorded sale to ${saleToSave.clientName ?? 'Walk-in'} - ${Money.saved(saleToSave.totalAmount)}',
       );
 
       return saleId;
@@ -598,7 +598,7 @@ class SaleProvider extends ChangeNotifier {
     oneUnitPerItem: false,
     actionType: ActivityType.sales.key,
     deletedDescription: (data) =>
-        'Deleted sale to ${data['clientName'] ?? 'Walk-in'} - ${Money.savedWhole((data['totalAmount'] as num?) ?? 0)}',
+        'Deleted sale to ${data['clientName'] ?? 'Walk-in'} - ${Money.saved((data['totalAmount'] as num?) ?? 0)}',
     searchFields: (id, data) => Sale.fromFirestore(data, id).searchFields(),
     newDebt: (id, data, owed, clientPhone) {
       final sale = Sale.fromFirestore(data, id);

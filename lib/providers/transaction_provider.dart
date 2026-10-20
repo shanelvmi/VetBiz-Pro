@@ -309,7 +309,7 @@ class TransactionProvider with ChangeNotifier {
         userId: userInfo[Fields.userId]!,
         userName: userInfo['userName'],
         actionType: ActivityType.transactions.key,
-        description: 'Added ${newTransaction.type}: ${newTransaction.description} - ${Money.savedWhole(newTransaction.amount)}',
+        description: 'Added ${newTransaction.type}: ${newTransaction.description} - ${Money.saved(newTransaction.amount)}',
       );
 
     } catch (e) {
@@ -381,7 +381,7 @@ class TransactionProvider with ChangeNotifier {
         userId: userInfo[Fields.userId]!,
         userName: userInfo['userName'],
         actionType: ActivityType.transactions.key,
-        description: 'Updated ${updatedTransaction.type}: ${updatedTransaction.description} - ${Money.savedWhole(updatedTransaction.amount)}',
+        description: 'Updated ${updatedTransaction.type}: ${updatedTransaction.description} - ${Money.saved(updatedTransaction.amount)}',
       );
     } catch (e) {
       debugPrint('Error updating transaction: $e');

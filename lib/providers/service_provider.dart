@@ -465,7 +465,7 @@ class ServiceProvider extends ChangeNotifier {
         userName: userInfo['userName'] ?? 'Unknown',
         actionType: ActivityType.services.key,
         description:
-            'Recorded service for ${serviceToSave.clientName ?? 'Walk-in'} - ${Money.savedWhole(serviceToSave.totalAmount)}',
+            'Recorded service for ${serviceToSave.clientName ?? 'Walk-in'} - ${Money.saved(serviceToSave.totalAmount)}',
       );
 
       return serviceToSave;
@@ -620,7 +620,7 @@ class ServiceProvider extends ChangeNotifier {
         userId: userInfo[Fields.userId]!,
         userName: userInfo['userName'],
         actionType: ActivityType.services.key,
-        description: 'Updated service for ${updated.clientName ?? 'Walk-in'} - ${Money.savedWhole(updated.totalAmount)}',
+        description: 'Updated service for ${updated.clientName ?? 'Walk-in'} - ${Money.saved(updated.totalAmount)}',
       );
     } catch (e) {
       debugPrint('ServiceProvider.updateService error: $e');
@@ -675,7 +675,7 @@ class ServiceProvider extends ChangeNotifier {
     oneUnitPerItem: true,
     actionType: ActivityType.services.key,
     deletedDescription: (data) =>
-        'Deleted service for ${data['clientName'] ?? 'Walk-in'} - ${Money.savedAsStored(data['totalAmount'] ?? 0)}',
+        'Deleted service for ${data['clientName'] ?? 'Walk-in'} - ${Money.saved((data['totalAmount'] as num?) ?? 0)}',
     searchFields: (id, data) => Service.fromFirestore(data, id).searchFields(),
     newDebt: (id, data, owed, clientPhone) {
       final service = Service.fromFirestore(data, id);

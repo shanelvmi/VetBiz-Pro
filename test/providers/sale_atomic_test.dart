@@ -101,6 +101,7 @@ void main() {
       expect(data.keys.toSet().difference({'userId', 'userName', 'actionType', 'description', 'timestamp'}),
           isEmpty);
     }
-    expect(logs.docs.first.data()['description'], startsWith('Recorded sale to Walk-in - '));
+    // R3, D4: new saved text has the thousands separator (was "Tsh 2000").
+    expect(logs.docs.first.data()['description'], 'Recorded sale to Walk-in - Tsh 2,000');
   });
 }
