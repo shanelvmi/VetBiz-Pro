@@ -455,7 +455,7 @@ abstract class AppLocalizations {
   /// Heading of the error shown when a list fails to load (FirestoreErrorView).
   ///
   /// In en, this message translates to:
-  /// **'Could not load data'**
+  /// **'Couldn\'t load data'**
   String get error_couldNotLoad;
 
   /// Error shown when a Firestore query needs an index (FirestoreErrorView).
@@ -539,7 +539,7 @@ abstract class AppLocalizations {
   /// Stock status filter: no filter (product catalog side panel).
   ///
   /// In en, this message translates to:
-  /// **'All Status'**
+  /// **'All Statuses'**
   String get products_statusAll;
 
   /// Stock status filter: in stock.
@@ -2279,7 +2279,7 @@ abstract class AppLocalizations {
   /// Subscription history failed to load (error already in friendly words).
   ///
   /// In en, this message translates to:
-  /// **'Could not load history: {error}'**
+  /// **'Couldn\'t load history: {error}'**
   String subscription_historyLoadError(String error);
 
   /// Subscription history, empty.
@@ -3551,7 +3551,7 @@ abstract class AppLocalizations {
   /// Clients list error; error is FriendlyError's sentence.
   ///
   /// In en, this message translates to:
-  /// **'Could not load clients: {error}'**
+  /// **'Couldn\'t load clients: {error}'**
   String clients_loadError(String error);
 
   /// Button that opens the console to create the missing index.
@@ -3953,7 +3953,7 @@ abstract class AppLocalizations {
   /// Deactivate co-admin dialog text.
   ///
   /// In en, this message translates to:
-  /// **'They\'ll be signed out straight away and can\'t log in until you reactivate them. This doesn\'t change their role - only the platform administrator can do that.'**
+  /// **'They\'ll be signed out straight away and can\'t sign in until you reactivate them. This doesn\'t change their role - only the platform administrator can do that.'**
   String get team_deactivateBody;
 
   /// Message when changing a co-admin's status failed.
@@ -4037,7 +4037,7 @@ abstract class AppLocalizations {
   /// Team screen when no admin is signed in.
   ///
   /// In en, this message translates to:
-  /// **'No logged in admin user found'**
+  /// **'No signed-in admin user found'**
   String get team_noAdmin;
 
   /// Team screen when the admin has no facilities.
@@ -4235,7 +4235,7 @@ abstract class AppLocalizations {
   /// Invite dialog error; error is a friendly sentence.
   ///
   /// In en, this message translates to:
-  /// **'Could not check for an existing invite: {error}'**
+  /// **'Couldn\'t check for an existing invite: {error}'**
   String invite_checkFailed(String error);
 
   /// Invite dialog while creating a code.
@@ -4247,7 +4247,7 @@ abstract class AppLocalizations {
   /// Invite dialog error.
   ///
   /// In en, this message translates to:
-  /// **'Could not generate an invite: {error}'**
+  /// **'Couldn\'t generate an invite: {error}'**
   String invite_generateFailed(String error);
 
   /// Invite dialog while revoking.
@@ -4259,7 +4259,7 @@ abstract class AppLocalizations {
   /// Invite dialog error.
   ///
   /// In en, this message translates to:
-  /// **'Could not revoke: {error}'**
+  /// **'Couldn\'t revoke: {error}'**
   String invite_revokeFailed(String error);
 
   /// Invite dialog, above an active code.
@@ -4691,7 +4691,7 @@ abstract class AppLocalizations {
   /// Rebuild error; error is a friendly sentence.
   ///
   /// In en, this message translates to:
-  /// **'Could not complete: {error}'**
+  /// **'Couldn\'t complete: {error}'**
   String searchIndex_failed(String error);
 
   /// Button that starts the rebuild.
@@ -5183,19 +5183,19 @@ abstract class AppLocalizations {
   /// Confirmation title.
   ///
   /// In en, this message translates to:
-  /// **'Log Out of All Devices?'**
+  /// **'Sign Out of All Devices?'**
   String get account_logoutAllTitle;
 
   /// Confirmation text.
   ///
   /// In en, this message translates to:
-  /// **'This will clear active sessions and log you out on all other phones, tablets, or computers currently signed into your account.'**
+  /// **'This will clear active sessions and sign you out on all other phones, tablets, or computers currently signed into your account.'**
   String get account_logoutAllBody;
 
   /// Confirm button.
   ///
   /// In en, this message translates to:
-  /// **'Log Out Everywhere'**
+  /// **'Sign Out Everywhere'**
   String get account_logoutEverywhere;
 
   /// Message when signing out elsewhere failed.
@@ -5225,7 +5225,7 @@ abstract class AppLocalizations {
   /// Wipe confirmation text.
   ///
   /// In en, this message translates to:
-  /// **'All records of sales, products, clients, and transactions for this facility are erased. Other facilities you have are not affected. Your login credentials remain unaffected.'**
+  /// **'All records of sales, products, clients, and transactions for this facility are erased. Other facilities you have are not affected. Your sign-in credentials remain unaffected.'**
   String get account_wipeBody;
 
   /// Wipe confirm button.
@@ -5369,10 +5369,10 @@ abstract class AppLocalizations {
   /// Manage Account item.
   ///
   /// In en, this message translates to:
-  /// **'Log Out of All Devices'**
+  /// **'Sign Out of All Devices'**
   String get account_logoutAll;
 
-  /// Under Log Out of All Devices.
+  /// Under Sign Out of All Devices.
   ///
   /// In en, this message translates to:
   /// **'Disconnect your active profile session from all other active platforms.'**
@@ -5393,7 +5393,7 @@ abstract class AppLocalizations {
   /// Under Wipe All Business Data.
   ///
   /// In en, this message translates to:
-  /// **'Permanently delete records of transactions, sales, and products while keeping your log in profile.'**
+  /// **'Permanently delete records of transactions, sales, and products while keeping your sign-in profile.'**
   String get account_wipeHint;
 
   /// Under Deactivate Account.
@@ -7144,7 +7144,7 @@ abstract class AppLocalizations {
   /// Adjust dialog error with the technical error text.
   ///
   /// In en, this message translates to:
-  /// **'Could not save: {error}'**
+  /// **'Couldn\'t save: {error}'**
   String batch_saveFailed(String error);
 
   /// Delete batch dialog title.
@@ -7180,7 +7180,7 @@ abstract class AppLocalizations {
   /// Delete batch dialog error with the technical error text.
   ///
   /// In en, this message translates to:
-  /// **'Could not delete: {error}'**
+  /// **'Couldn\'t delete: {error}'**
   String batch_deleteFailed(String error);
 
   /// View Batches button.
@@ -7198,7 +7198,7 @@ abstract class AppLocalizations {
   /// View Batches load error with the technical error text.
   ///
   /// In en, this message translates to:
-  /// **'Could not load batches: {error}'**
+  /// **'Couldn\'t load batches: {error}'**
   String batch_loadFailed(String error);
 
   /// View Batches, empty.
@@ -8379,13 +8379,13 @@ abstract class AppLocalizations {
   /// Button that signs the person out (loading, error and no-facility screens).
   ///
   /// In en, this message translates to:
-  /// **'Logout'**
+  /// **'Sign out'**
   String get common_logout;
 
   /// Button on the register screen that goes to the login screen.
   ///
   /// In en, this message translates to:
-  /// **'Log in'**
+  /// **'Sign in'**
   String get common_logIn;
 
   /// Field label for an invite code (register, no-facility screen).
@@ -8499,7 +8499,7 @@ abstract class AppLocalizations {
   /// Login form subtitle.
   ///
   /// In en, this message translates to:
-  /// **'Log into your facility'**
+  /// **'Sign in to your facility'**
   String get login_logIntoFacility;
 
   /// Login email field hint.
@@ -8541,7 +8541,7 @@ abstract class AppLocalizations {
   /// Login button.
   ///
   /// In en, this message translates to:
-  /// **'Login'**
+  /// **'Sign in'**
   String get login_loginButton;
 
   /// Badge on an announcement less than two days old.
@@ -8589,7 +8589,7 @@ abstract class AppLocalizations {
   /// Register: the invite code lookup failed.
   ///
   /// In en, this message translates to:
-  /// **'Could not check this code - try again'**
+  /// **'Couldn\'t check this code - try again'**
   String get register_inviteCheckFailed;
 
   /// Register: Add pressed with no facility name.
@@ -8766,7 +8766,7 @@ abstract class AppLocalizations {
   /// **'Every new facility starts with a trial period'**
   String get register_benefitTrial;
 
-  /// Register welcome panel, above Log in.
+  /// Register welcome panel, above Sign in.
   ///
   /// In en, this message translates to:
   /// **'Already have an account?'**
@@ -8997,7 +8997,7 @@ abstract class AppLocalizations {
   /// Register, assistant facility section.
   ///
   /// In en, this message translates to:
-  /// **'Ask your facility Admin for an invite code to join their team.'**
+  /// **'Ask your facility admin for an invite code to join their team.'**
   String get register_askAdminForInvite;
 
   /// Register, the facility an invite code leads to (facility is "name (type)").
@@ -9135,7 +9135,7 @@ abstract class AppLocalizations {
   /// Account loading error screen title.
   ///
   /// In en, this message translates to:
-  /// **'Could Not Load Your Account'**
+  /// **'Couldn\'t load your account'**
   String get entry_couldNotLoadTitle;
 
   /// No-facility screen: Add facility pressed with no name.
@@ -9171,13 +9171,13 @@ abstract class AppLocalizations {
   /// Delete-account dialog error.
   ///
   /// In en, this message translates to:
-  /// **'Could not delete the account.'**
+  /// **'Couldn\'t delete the account.'**
   String get noFacility_deleteFailed;
 
   /// Delete-account dialog error; error is the raw error text (kept as before).
   ///
   /// In en, this message translates to:
-  /// **'Could not delete the account: {error}'**
+  /// **'Couldn\'t delete the account: {error}'**
   String noFacility_deleteFailedWith(String error);
 
   /// Stands in for a missing facility name in noFacility_stillOwns.
@@ -9813,7 +9813,7 @@ abstract class AppLocalizations {
   /// Profile panel logout dialog.
   ///
   /// In en, this message translates to:
-  /// **'Are you sure you want to logout?'**
+  /// **'Are you sure you want to sign out?'**
   String get dashboard_logoutConfirm;
 
   /// Sidebar item: opens the Stock Store.
@@ -10029,7 +10029,7 @@ abstract class AppLocalizations {
   /// Notifications when loading failed.
   ///
   /// In en, this message translates to:
-  /// **'Could not load alerts: {error}'**
+  /// **'Couldn\'t load alerts: {error}'**
   String notifications_loadFailed(String error);
 
   /// Notifications category card.
@@ -10263,7 +10263,7 @@ abstract class AppLocalizations {
   /// Facility picker profile menu item.
   ///
   /// In en, this message translates to:
-  /// **'Log Out'**
+  /// **'Sign out'**
   String get facilityPicker_logOut;
 
   /// Facility picker heading.
@@ -11055,7 +11055,7 @@ abstract class AppLocalizations {
   /// Reason old logs could not be deleted (ActivityLogRetention.explainFailure); shown after "They could not be deleted yet:" and in the facility retention message.
   ///
   /// In en, this message translates to:
-  /// **'the security rules don\'t currently allow deleting logs'**
+  /// **'The security rules don\'t currently allow deleting logs'**
   String get activity_retentionNoPermission;
 
   /// Product sort menu (Sellable Products, Stock Store).
@@ -11121,7 +11121,7 @@ abstract class AppLocalizations {
   /// MembershipService.errorMessage: server unreachable or too slow.
   ///
   /// In en, this message translates to:
-  /// **'Could not reach the server - check your connection and try again.'**
+  /// **'Couldn\'t reach the server - check your connection and try again.'**
   String get membership_unreachable;
 
   /// MembershipService.errorMessage: the sign-in has expired.

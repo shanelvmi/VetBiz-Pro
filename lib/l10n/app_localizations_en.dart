@@ -191,7 +191,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get dateRange_end => 'End Date:';
 
   @override
-  String get error_couldNotLoad => 'Could not load data';
+  String get error_couldNotLoad => 'Couldn\'t load data';
 
   @override
   String get error_indexNeeded =>
@@ -242,7 +242,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get products_allProducts => 'All Products';
 
   @override
-  String get products_statusAll => 'All Status';
+  String get products_statusAll => 'All Statuses';
 
   @override
   String get products_statusInStock => 'In Stock';
@@ -1171,7 +1171,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String subscription_historyLoadError(String error) {
-    return 'Could not load history: $error';
+    return 'Couldn\'t load history: $error';
   }
 
   @override
@@ -1938,7 +1938,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String clients_loadError(String error) {
-    return 'Could not load clients: $error';
+    return 'Couldn\'t load clients: $error';
   }
 
   @override
@@ -2174,7 +2174,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get team_deactivateBody =>
-      'They\'ll be signed out straight away and can\'t log in until you reactivate them. This doesn\'t change their role - only the platform administrator can do that.';
+      'They\'ll be signed out straight away and can\'t sign in until you reactivate them. This doesn\'t change their role - only the platform administrator can do that.';
 
   @override
   String get team_updateStatusFailed => 'Couldn\'t update the status';
@@ -2236,7 +2236,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get team_inviteAssistant => 'Invite Assistant';
 
   @override
-  String get team_noAdmin => 'No logged in admin user found';
+  String get team_noAdmin => 'No signed-in admin user found';
 
   @override
   String get team_noFacilities => 'No facilities found for your account.';
@@ -2357,7 +2357,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String invite_checkFailed(String error) {
-    return 'Could not check for an existing invite: $error';
+    return 'Couldn\'t check for an existing invite: $error';
   }
 
   @override
@@ -2365,7 +2365,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String invite_generateFailed(String error) {
-    return 'Could not generate an invite: $error';
+    return 'Couldn\'t generate an invite: $error';
   }
 
   @override
@@ -2373,7 +2373,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String invite_revokeFailed(String error) {
-    return 'Could not revoke: $error';
+    return 'Couldn\'t revoke: $error';
   }
 
   @override
@@ -2616,7 +2616,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String searchIndex_failed(String error) {
-    return 'Could not complete: $error';
+    return 'Couldn\'t complete: $error';
   }
 
   @override
@@ -2911,14 +2911,14 @@ class AppLocalizationsEn extends AppLocalizations {
   String get export_generate => 'Generate & Export Data';
 
   @override
-  String get account_logoutAllTitle => 'Log Out of All Devices?';
+  String get account_logoutAllTitle => 'Sign Out of All Devices?';
 
   @override
   String get account_logoutAllBody =>
-      'This will clear active sessions and log you out on all other phones, tablets, or computers currently signed into your account.';
+      'This will clear active sessions and sign you out on all other phones, tablets, or computers currently signed into your account.';
 
   @override
-  String get account_logoutEverywhere => 'Log Out Everywhere';
+  String get account_logoutEverywhere => 'Sign Out Everywhere';
 
   @override
   String get account_logoutAllFailed => 'Couldn\'t clear other sessions';
@@ -2936,7 +2936,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get account_wipeBody =>
-      'All records of sales, products, clients, and transactions for this facility are erased. Other facilities you have are not affected. Your login credentials remain unaffected.';
+      'All records of sales, products, clients, and transactions for this facility are erased. Other facilities you have are not affected. Your sign-in credentials remain unaffected.';
 
   @override
   String get account_wipe => 'Wipe Data';
@@ -3019,7 +3019,7 @@ class AppLocalizationsEn extends AppLocalizations {
       'These actions affect your account and business data. Review carefully before proceeding.';
 
   @override
-  String get account_logoutAll => 'Log Out of All Devices';
+  String get account_logoutAll => 'Sign Out of All Devices';
 
   @override
   String get account_logoutAllHint =>
@@ -3034,7 +3034,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get account_wipeHint =>
-      'Permanently delete records of transactions, sales, and products while keeping your log in profile.';
+      'Permanently delete records of transactions, sales, and products while keeping your sign-in profile.';
 
   @override
   String get account_deactivateHint =>
@@ -4070,7 +4070,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String batch_saveFailed(String error) {
-    return 'Could not save: $error';
+    return 'Couldn\'t save: $error';
   }
 
   @override
@@ -4093,7 +4093,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String batch_deleteFailed(String error) {
-    return 'Could not delete: $error';
+    return 'Couldn\'t delete: $error';
   }
 
   @override
@@ -4104,7 +4104,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String batch_loadFailed(String error) {
-    return 'Could not load batches: $error';
+    return 'Couldn\'t load batches: $error';
   }
 
   @override
@@ -4857,10 +4857,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get common_termsOfService => 'Terms of Service';
 
   @override
-  String get common_logout => 'Logout';
+  String get common_logout => 'Sign out';
 
   @override
-  String get common_logIn => 'Log in';
+  String get common_logIn => 'Sign in';
 
   @override
   String get common_inviteCode => 'Invite code';
@@ -4921,7 +4921,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get login_welcomeBack => 'Welcome back';
 
   @override
-  String get login_logIntoFacility => 'Log into your facility';
+  String get login_logIntoFacility => 'Sign in to your facility';
 
   @override
   String get login_emailHint => 'Enter your email';
@@ -4942,7 +4942,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get login_register => 'Register';
 
   @override
-  String get login_loginButton => 'Login';
+  String get login_loginButton => 'Sign in';
 
   @override
   String get login_newBadge => 'NEW';
@@ -4973,7 +4973,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get register_inviteCheckFailed =>
-      'Could not check this code - try again';
+      'Couldn\'t check this code - try again';
 
   @override
   String get register_enterFacilityNameFirst => 'Enter the facility name first';
@@ -5210,7 +5210,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get register_askAdminForInvite =>
-      'Ask your facility Admin for an invite code to join their team.';
+      'Ask your facility admin for an invite code to join their team.';
 
   @override
   String register_joining(String facility) {
@@ -5300,7 +5300,7 @@ class AppLocalizationsEn extends AppLocalizations {
       'Something went wrong while loading your account details. Check your connection and try again.';
 
   @override
-  String get entry_couldNotLoadTitle => 'Could Not Load Your Account';
+  String get entry_couldNotLoadTitle => 'Couldn\'t load your account';
 
   @override
   String get noFacility_enterName => 'Enter the facility name.';
@@ -5320,11 +5320,11 @@ class AppLocalizationsEn extends AppLocalizations {
       'We couldn\'t reach the server. Check your connection and try again.';
 
   @override
-  String get noFacility_deleteFailed => 'Could not delete the account.';
+  String get noFacility_deleteFailed => 'Couldn\'t delete the account.';
 
   @override
   String noFacility_deleteFailedWith(String error) {
-    return 'Could not delete the account: $error';
+    return 'Couldn\'t delete the account: $error';
   }
 
   @override
@@ -5735,7 +5735,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get dashboard_changePassword => 'Change Password';
 
   @override
-  String get dashboard_logoutConfirm => 'Are you sure you want to logout?';
+  String get dashboard_logoutConfirm => 'Are you sure you want to sign out?';
 
   @override
   String get nav_stock => 'Stock';
@@ -5855,7 +5855,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String notifications_loadFailed(String error) {
-    return 'Could not load alerts: $error';
+    return 'Couldn\'t load alerts: $error';
   }
 
   @override
@@ -5988,7 +5988,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get facilityPicker_tagline => 'Manage. Care. Grow.';
 
   @override
-  String get facilityPicker_logOut => 'Log Out';
+  String get facilityPicker_logOut => 'Sign out';
 
   @override
   String get facilityPicker_title => 'Select Your Facility';
@@ -6485,7 +6485,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get activity_retentionNoPermission =>
-      'the security rules don\'t currently allow deleting logs';
+      'The security rules don\'t currently allow deleting logs';
 
   @override
   String get products_sortNameAsc => 'Name (A-Z)';
@@ -6519,7 +6519,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get membership_unreachable =>
-      'Could not reach the server - check your connection and try again.';
+      'Couldn\'t reach the server - check your connection and try again.';
 
   @override
   String get membership_signInAgain => 'Please sign in again and retry.';

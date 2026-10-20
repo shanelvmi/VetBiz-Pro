@@ -192,7 +192,7 @@ class AppLocalizationsSw extends AppLocalizations {
   String get dateRange_end => 'Tarehe ya Mwisho:';
 
   @override
-  String get error_couldNotLoad => 'Imeshindikana kupakia taarifa';
+  String get error_couldNotLoad => 'Imeshindwa kupakia taarifa';
 
   @override
   String get error_indexNeeded =>
@@ -4087,7 +4087,7 @@ class AppLocalizationsSw extends AppLocalizations {
 
   @override
   String batch_saveFailed(String error) {
-    return 'Imeshindikana kuhifadhi: $error';
+    return 'Imeshindwa kuhifadhi: $error';
   }
 
   @override
@@ -4110,7 +4110,7 @@ class AppLocalizationsSw extends AppLocalizations {
 
   @override
   String batch_deleteFailed(String error) {
-    return 'Imeshindikana kufuta: $error';
+    return 'Imeshindwa kufuta: $error';
   }
 
   @override
@@ -4121,7 +4121,7 @@ class AppLocalizationsSw extends AppLocalizations {
 
   @override
   String batch_loadFailed(String error) {
-    return 'Imeshindikana kupakia batch: $error';
+    return 'Imeshindwa kupakia batch: $error';
   }
 
   @override
@@ -5235,7 +5235,7 @@ class AppLocalizationsSw extends AppLocalizations {
 
   @override
   String get register_askAdminForInvite =>
-      'Muombe Msimamizi wa kituo chako msimbo wa mwaliko ili ujiunge na timu yake.';
+      'Muombe msimamizi wa kituo chako msimbo wa mwaliko ili ujiunge na timu yake.';
 
   @override
   String register_joining(String facility) {
@@ -5325,7 +5325,7 @@ class AppLocalizationsSw extends AppLocalizations {
       'Hitilafu imetokea wakati wa kupakia taarifa za akaunti yako. Angalia mtandao wako kisha ujaribu tena.';
 
   @override
-  String get entry_couldNotLoadTitle => 'Imeshindwa Kufungua Akaunti Yako';
+  String get entry_couldNotLoadTitle => 'Imeshindwa kufungua akaunti yako';
 
   @override
   String get noFacility_enterName => 'Weka jina la kituo.';
@@ -6522,7 +6522,7 @@ class AppLocalizationsSw extends AppLocalizations {
 
   @override
   String get activity_retentionNoPermission =>
-      'kanuni za usalama kwa sasa haziruhusu kufuta kumbukumbu';
+      'Kanuni za usalama kwa sasa haziruhusu kufuta kumbukumbu';
 
   @override
   String get products_sortNameAsc => 'Jina (A-Z)';

@@ -24,9 +24,9 @@ void main() {
 
     test('transport and sign-in codes keep their sentences', () {
       expect(MembershipService.errorMessage(_FunctionsError('unavailable', 'UNAVAILABLE')),
-          'Could not reach the server - check your connection and try again.');
+          "Couldn't reach the server - check your connection and try again.");
       expect(MembershipService.errorMessage(_FunctionsError('deadline-exceeded', 'DEADLINE_EXCEEDED')),
-          'Could not reach the server - check your connection and try again.');
+          "Couldn't reach the server - check your connection and try again.");
       expect(MembershipService.errorMessage(_FunctionsError('unauthenticated', 'x')), 'Please sign in again and retry.');
     });
 
