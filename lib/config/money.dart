@@ -31,13 +31,19 @@ class Money {
   /// "12,500" or "12,500.5": grouping, and up to three decimals when present.
   static String decimal(num amount) => _decimal.format(amount);
 
-  /// "Tsh 12,500": the symbol, a space, then [plain]. Screens built this by
-  /// hand ('Tsh ${formatter.format(x)}'). Not the same as [format] for a
-  /// negative amount ("Tsh -12,500" here, "-Tsh 12,500" there), so both stay.
-  static String symbolPlain(num amount) => '${AppDefaults.currencySymbol} ${plain(amount)}';
+  /// "Tsh 12,500.5": the symbol, a space, then [decimal]. A negative is
+  /// "-Tsh 12,500", the same shape as [format] (R3, D2).
+  static String symbolDecimal(num amount) =>
+      '${amount < 0 ? '-' : ''}${AppDefaults.currencySymbol} ${decimal(amount.abs())}';
 
-  /// "Tsh 12,500.5": the symbol, a space, then [decimal].
-  static String symbolDecimal(num amount) => '${AppDefaults.currencySymbol} ${decimal(amount)}';
+  /// The dashboard's breakdown under Net Profit has little room: from a
+  /// million it shows "Tsh 10.888M" (three decimals), below that the usual
+  /// figure. A negative is "-Tsh 10.888M" (R3, D2).
+  static String compactMillions(num amount) {
+    if (amount.abs() < 1000000) return symbolDecimal(amount);
+    final millions = (amount.abs() / 1000000).toStringAsFixed(3);
+    return '${amount < 0 ? '-' : ''}${AppDefaults.currencySymbol} ${millions}M';
+  }
 
   /// The facility card's short form: "Tsh 999", "Tsh 12.5K", "Tsh 1.2M" (one
   /// decimal from a thousand), and "-Tsh 12.5K" for a negative. The card

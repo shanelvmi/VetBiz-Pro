@@ -615,7 +615,7 @@ class _ClientsScreenState extends State<ClientsScreen> {
                     Text('$count', style: const TextStyle(fontSize: AppFontSize.f14)),
                     const SizedBox(height: AppSpacing.s16),
                     _detailLabel(context, context.l10n.clients_totalSpent),
-                    Text(Money.symbolPlain(total), style: const TextStyle(fontSize: AppFontSize.f14)),
+                    Text(Money.format(total), style: const TextStyle(fontSize: AppFontSize.f14)),
                   ],
                 );
               },

@@ -32,13 +32,6 @@ void main() {
     }
   });
 
-  test('symbolPlain / symbolDecimal equal the hand-built "Tsh \${formatter.format(x)}"', () {
-    for (final a in amounts) {
-      expect(Money.symbolPlain(a), 'Tsh ${legacyPlain.format(a)}', reason: '$a');
-      expect(Money.symbolDecimal(a), 'Tsh ${legacyDecimal.format(a)}', reason: '$a');
-    }
-  });
-
   test('saved text keeps its exact legacy shape (no thousands separator)', () {
     for (final a in amounts) {
       expect(Money.savedWhole(a), 'Tsh ${a.toStringAsFixed(0)}', reason: '$a');
@@ -56,6 +49,40 @@ void main() {
     for (final a in amounts) {
       expect(Money.plain(a), emptySymbol.format(a), reason: '$a');
     }
+  });
+
+  // D2: one negative shape, "-Tsh 12,500" (symbolPlain, which printed
+  // "Tsh -12,500", is gone; its callers use format).
+  r3Pins('format', Money.format, {
+    0: 'Tsh 0',
+    1: 'Tsh 1',
+    999: 'Tsh 999',
+    12500: 'Tsh 12,500',
+    12500.5: 'Tsh 12,501',
+    1234567.89: 'Tsh 1,234,568',
+    -12500: '-Tsh 12,500',
+    1e12: 'Tsh 1,000,000,000,000',
+  });
+  r3Pins('symbolDecimal', Money.symbolDecimal, {
+    0: 'Tsh 0',
+    1: 'Tsh 1',
+    999: 'Tsh 999',
+    12500: 'Tsh 12,500',
+    12500.5: 'Tsh 12,500.5',
+    1234567.89: 'Tsh 1,234,567.89',
+    -12500: '-Tsh 12,500',
+    1e12: 'Tsh 1,000,000,000,000',
+  });
+  r3Pins('compactMillions', Money.compactMillions, {
+    0: 'Tsh 0',
+    1: 'Tsh 1',
+    999: 'Tsh 999',
+    12500: 'Tsh 12,500',
+    12500.5: 'Tsh 12,500.5',
+    1234567.89: 'Tsh 1.235M',
+    -12500: '-Tsh 12,500',
+    -10000888: '-Tsh 10.001M',
+    1e12: 'Tsh 1000000.000M',
   });
 
   // D1: one spelling, "Tsh". The facility card said "TZS".

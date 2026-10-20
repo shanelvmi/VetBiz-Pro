@@ -780,7 +780,7 @@ class _ServicesScreenState extends State<ServicesScreen> {
           // The upfront payment stays counted while the service is in
           // Trash (owner condition 3), so the dialog says so when there is one.
           child: Text(service.totalPaid > 0
-              ? context.l10n.services_deleteToTrashBodyPaid(_invoiceNo(service), Money.symbolPlain(service.totalPaid))
+              ? context.l10n.services_deleteToTrashBodyPaid(_invoiceNo(service), Money.format(service.totalPaid))
               : context.l10n.services_deleteToTrashBody(_invoiceNo(service))),
         ),
         actions: [

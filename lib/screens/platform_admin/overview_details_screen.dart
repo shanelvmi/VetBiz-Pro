@@ -229,7 +229,7 @@ class _OverviewDetailsScreenState extends State<OverviewDetailsScreen> {
             getTooltipItem: (group, groupIndex, rod, rodIndex) {
               final day = _dailyEarnings[group.x.toInt()].key;
               return BarTooltipItem(
-                '${AppDateFormat.dateShort.format(day)}\n${Money.symbolPlain(rod.toY)}',
+                '${AppDateFormat.dateShort.format(day)}\n${Money.format(rod.toY)}',
                 TextStyle(color: context.colors.onChartTooltip, fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f12),
               );
             },
@@ -304,7 +304,7 @@ class _OverviewDetailsScreenState extends State<OverviewDetailsScreen> {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Text(entry.key, style: const TextStyle(fontWeight: AppFontWeight.semibold, fontSize: AppFontSize.f13)),
-                      Text(Money.symbolPlain(entry.value),
+                      Text(Money.format(entry.value),
                           style: TextStyle(fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f13, color: context.colors.primary)),
                     ],
                   ),
@@ -403,7 +403,7 @@ class _OverviewDetailsScreenState extends State<OverviewDetailsScreen> {
                   ),
                 ),
                 Text(
-                  Money.symbolPlain(payment['amount']),
+                  Money.format(payment['amount']),
                   style: TextStyle(fontWeight: AppFontWeight.bold, color: context.colors.primary),
                 ),
               ],

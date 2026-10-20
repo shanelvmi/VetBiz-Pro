@@ -194,7 +194,7 @@ class _OverviewTabState extends State<OverviewTab> {
                   ),
                   _StatCard(
                     label: 'Revenue This Month',
-                    value: Money.symbolPlain(stats['monthRevenue']),
+                    value: Money.format(stats['monthRevenue']),
                     color: context.colors.success,
                     icon: Icons.payments,
                   ),

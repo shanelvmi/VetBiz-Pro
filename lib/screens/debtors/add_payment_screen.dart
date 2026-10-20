@@ -128,7 +128,7 @@ class _AddPaymentScreenState extends State<AddPaymentScreen> {
                 if (owed != null) ...[
                   TextSpan(text: '  ·  ${context.l10n.debtors_totalOwedLabel} ', style: TextStyle(fontSize: AppFontSize.f14, color: context.colors.textSoft)),
                   TextSpan(
-                    text: Money.symbolPlain(owed),
+                    text: Money.format(owed),
                     style: TextStyle(fontWeight: AppFontWeight.bold, color: context.colors.dangerAccent),
                   ),
                 ],
@@ -382,7 +382,7 @@ class _AddPaymentScreenState extends State<AddPaymentScreen> {
       );
 
       if (!mounted) return;
-      AppFeedback.success(L10n.current.debtors_paymentRecorded(Money.symbolPlain(amount), selectedClient!.name));
+      AppFeedback.success(L10n.current.debtors_paymentRecorded(Money.format(amount), selectedClient!.name));
       if (mounted) Navigator.pop(context, true);
     } catch (e, st) {
       AppFeedback.error(L10n.current.debtors_paymentSaveFailed, error: e, stackTrace: st);
@@ -442,7 +442,7 @@ class _AddPaymentScreenState extends State<AddPaymentScreen> {
                           displayStringForOption: (c) {
                             final balance = widget.debtorBalances?[c.id];
                             if (balance == null) return c.name;
-                            return '${Money.symbolPlain(balance)} \u2014 ${c.name}';
+                            return '${Money.format(balance)} \u2014 ${c.name}';
                           },
                           optionsBuilder: (textEditingValue) {
                             final q = textEditingValue.text.trim().toLowerCase();
@@ -486,7 +486,7 @@ class _AddPaymentScreenState extends State<AddPaymentScreen> {
               const SizedBox(height: AppSpacing.s16),
               if (widget.amountOwed != null)
                 Text(
-                  context.l10n.debtors_amountOwed(Money.symbolPlain(widget.amountOwed!)),
+                  context.l10n.debtors_amountOwed(Money.format(widget.amountOwed!)),
                   style: TextStyle(fontSize: AppFontSize.f14, color: context.colors.dangerAccent),
                 ),
               const SizedBox(height: AppSpacing.s12),

@@ -246,14 +246,14 @@ class _InsightsScreenState extends State<InsightsScreen> {
           previousValue: yesterdayTotals.totalSales,
           higherIsBetter: true,
           comparisonLabel: vsYesterday,
-          formatChange: (v) => Money.symbolPlain(v),
+          formatChange: (v) => Money.format(v),
         );
         _serviceRevenuePulseTrend = KpiTrend(
           currentValue: todayTotals.totalServiceRevenue,
           previousValue: yesterdayTotals.totalServiceRevenue,
           higherIsBetter: true,
           comparisonLabel: vsYesterday,
-          formatChange: (v) => Money.symbolPlain(v),
+          formatChange: (v) => Money.format(v),
         );
         _outstandingPulseTrend = KpiTrend(
           currentValue: debtProvider.totalOutstanding(),
@@ -263,7 +263,7 @@ class _InsightsScreenState extends State<InsightsScreen> {
           // Payment card.
           higherIsBetter: false,
           comparisonLabel: vsYesterday,
-          formatChange: (v) => Money.symbolPlain(v),
+          formatChange: (v) => Money.format(v),
         );
         _todayActivity = todayActivity;
         _todaySalesShare = todaySalesShare;
@@ -518,7 +518,7 @@ class _InsightsScreenState extends State<InsightsScreen> {
   String? _trendSummary() {
     if (_dailyTotals.every((v) => v == 0)) return null;
     final total = _dailyTotals.reduce((a, b) => a + b);
-    return context.l10n.insights_totalOver14(Money.symbolPlain(total));
+    return context.l10n.insights_totalOver14(Money.format(total));
   }
 
   // The grouping keys stay the English 'Unknown' (a sale item with no name)
@@ -531,13 +531,13 @@ class _InsightsScreenState extends State<InsightsScreen> {
   String? _topProductSummary() {
     if (_topProducts.isEmpty) return null;
     final top = _topProducts.first;
-    return context.l10n.insights_topSeller(_productName(top.key), Money.symbolPlain(top.value));
+    return context.l10n.insights_topSeller(_productName(top.key), Money.format(top.value));
   }
 
   String? _serviceBreakdownSummary() {
     if (_serviceBreakdown.isEmpty) return null;
     final top = _serviceBreakdown.first;
-    return context.l10n.insights_mostRequested(_serviceName(top.key), Money.symbolPlain(top.value));
+    return context.l10n.insights_mostRequested(_serviceName(top.key), Money.format(top.value));
   }
 
   Widget _buildTrendChart() {
@@ -562,7 +562,7 @@ class _InsightsScreenState extends State<InsightsScreen> {
               return touchedSpots.map((spot) {
                 final day = _trendStart.add(Duration(days: spot.x.toInt()));
                 return LineTooltipItem(
-                  '${AppDateFormat.dateShort.format(day)}\n${Money.symbolPlain(spot.y)}',
+                  '${AppDateFormat.dateShort.format(day)}\n${Money.format(spot.y)}',
                   TextStyle(color: context.colors.onChartTooltip, fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f12),
                 );
               }).toList();
@@ -635,7 +635,7 @@ class _InsightsScreenState extends State<InsightsScreen> {
             getTooltipItem: (group, groupIndex, rod, rodIndex) {
               final name = _productName(_topProducts[group.x.toInt()].key);
               return BarTooltipItem(
-                '$name\n${Money.symbolPlain(rod.toY)}',
+                '$name\n${Money.format(rod.toY)}',
                 TextStyle(color: context.colors.onChartTooltip, fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f12),
               );
             },
@@ -759,7 +759,7 @@ class _InsightsScreenState extends State<InsightsScreen> {
                         style: const TextStyle(fontSize: AppFontSize.f11, fontWeight: AppFontWeight.bold),
                         textAlign: TextAlign.center,
                         overflow: TextOverflow.ellipsis),
-                    Text(Money.symbolPlain(centerLabel.value),
+                    Text(Money.format(centerLabel.value),
                         style: TextStyle(fontSize: AppFontSize.f10, color: context.colors.textMuted)),
                     if (centerPercent != null)
                       Text('${centerPercent.toStringAsFixed(0)}%',
@@ -771,7 +771,7 @@ class _InsightsScreenState extends State<InsightsScreen> {
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     Text(context.l10n.common_total, style: TextStyle(fontSize: AppFontSize.f10, color: context.colors.textMuted)),
-                    Text(Money.symbolPlain(total),
+                    Text(Money.format(total),
                         style: const TextStyle(fontSize: AppFontSize.f12, fontWeight: AppFontWeight.bold)),
                   ],
                 ),

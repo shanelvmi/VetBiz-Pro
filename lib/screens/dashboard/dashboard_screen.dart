@@ -2423,12 +2423,7 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
   // it - "Tsh 10.888M" instead of "Tsh 10,000,888". Only kicks in at a
   // million or more; anything smaller uses the normal formatter, which
   // already fits comfortably in the space available.
-  String _formatCompactAmount(double value) {
-    if (value.abs() >= 1000000) {
-      return '${AppDefaults.currencySymbol} ${(value / 1000000).toStringAsFixed(3)}M';
-    }
-    return Money.symbolDecimal(value);
-  }
+  String _formatCompactAmount(double value) => Money.compactMillions(value);
 
   Widget _profitBreakdownDot(String label, double value, Color color) {
     return Row(

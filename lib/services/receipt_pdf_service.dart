@@ -448,7 +448,7 @@ class ReceiptPdfService {
           children: [
             if (discount > 0) ...[
               row('Subtotal', Money.symbolDecimal(subtotal)),
-              row('Discount', '- ${Money.symbolDecimal(discount)}'),
+              row('Discount', Money.symbolDecimal(-discount)),
             ],
             pw.Container(
               margin: const pw.EdgeInsets.symmetric(vertical: AppSpacing.s4),

@@ -394,7 +394,7 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
                             ? Row(
                                 children: [
                                   Text(
-                                    Money.symbolPlain(plan.priceTsh),
+                                    Money.format(plan.priceTsh),
                                     style: TextStyle(
                                       decoration: TextDecoration.lineThrough,
                                       color: colors.textHint,
@@ -403,7 +403,7 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
                                   ),
                                   const SizedBox(width: AppSpacing.s6),
                                   Text(
-                                    Money.symbolPlain(effectivePrice),
+                                    Money.format(effectivePrice),
                                     style: TextStyle(
                                       color: colors.success,
                                       fontWeight: AppFontWeight.bold,
@@ -412,7 +412,7 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
                                   ),
                                 ],
                               )
-                            : Text(Money.symbolPlain(plan.priceTsh)),
+                            : Text(Money.format(plan.priceTsh)),
                       ),
                     );
                   }).toList(),

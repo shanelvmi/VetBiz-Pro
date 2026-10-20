@@ -564,7 +564,7 @@ class _PaymentsScreenState extends State<PaymentsScreen> {
                       Row(
                         children: [
                           Text(
-                            Money.symbolPlain(metric?.amount ?? 0),
+                            Money.format(metric?.amount ?? 0),
                             style: const TextStyle(fontSize: AppFontSize.f18, fontWeight: AppFontWeight.bold),
                           ),
                           if (metric?.trendPercent != null) ...[
@@ -611,7 +611,7 @@ class _PaymentsScreenState extends State<PaymentsScreen> {
                       Row(
                         children: [
                           Text(
-                            Money.symbolPlain(_outstandingAmount ?? 0),
+                            Money.format(_outstandingAmount ?? 0),
                             style: TextStyle(fontSize: AppFontSize.f18, fontWeight: AppFontWeight.bold, color: context.colors.accent),
                           ),
                           if (trendPercent != null) ...[
@@ -698,7 +698,7 @@ class _PaymentsScreenState extends State<PaymentsScreen> {
               ),
             ),
             const SizedBox(height: AppSpacing.s12),
-            Text(Money.symbolPlain(e.amount), style: const TextStyle(fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f22)),
+            Text(Money.format(e.amount), style: const TextStyle(fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f22)),
             const SizedBox(height: AppSpacing.s4),
             Container(
               padding: const EdgeInsets.symmetric(horizontal: AppSpacing.s8, vertical: AppSpacing.s3),
@@ -902,7 +902,7 @@ class _PaymentsScreenState extends State<PaymentsScreen> {
         ],
         const SizedBox(width: AppSpacing.s16),
         Text(
-          context.l10n.common_totalValue(Money.symbolPlain(total)),
+          context.l10n.common_totalValue(Money.format(total)),
           style: TextStyle(fontSize: AppFontSize.f13, fontWeight: AppFontWeight.bold, color: context.colors.primary),
         ),
       ],
@@ -1006,7 +1006,7 @@ class _PaymentsScreenState extends State<PaymentsScreen> {
                   style: TextStyle(fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f12_5, color: context.colors.primary),
                 ),
                 Text(
-                  Money.symbolPlain(dayTotal),
+                  Money.format(dayTotal),
                   style: TextStyle(fontSize: AppFontSize.f12_5, fontWeight: AppFontWeight.bold, color: context.colors.primary),
                 ),
               ],
@@ -1078,7 +1078,7 @@ class _PaymentsScreenState extends State<PaymentsScreen> {
           Expanded(
             flex: 2,
             child: Text(
-              Money.symbolPlain(e.amount),
+              Money.format(e.amount),
               style: TextStyle(fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f13, color: context.colors.primary),
             ),
           ),

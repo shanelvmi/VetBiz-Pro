@@ -823,7 +823,7 @@ class _SalesScreenState extends State<SalesScreen> {
           // The upfront payment stays counted while the sale is in Trash
           // (owner condition 3), so the dialog says so when there is one.
           child: Text(sale.totalPaid > 0
-              ? context.l10n.sales_deleteToTrashBodyPaid(_invoiceNo(sale), Money.symbolPlain(sale.totalPaid))
+              ? context.l10n.sales_deleteToTrashBodyPaid(_invoiceNo(sale), Money.format(sale.totalPaid))
               : context.l10n.sales_deleteToTrashBody(_invoiceNo(sale))),
         ),
         actions: [

@@ -1369,14 +1369,14 @@ class _DebtorsScreenState extends State<DebtorsScreen> {
     // the language files, until the owner decides its language (2F-5).
     final message =
         'Hi $clientName, this is a reminder from $facilityName that you have an outstanding '
-        'balance of ${Money.symbolPlain(amountOwed)}. Kindly settle at your earliest '
+        'balance of ${Money.format(amountOwed)}. Kindly settle at your earliest '
         'convenience. Thank you!';
 
     final choice = await showDialog<String>(
       context: context,
       builder: (context) => AlertDialog(
         title: Text(context.l10n.debtors_sendReminder),
-        content: Text(context.l10n.debtors_reminderBody(clientName, Money.symbolPlain(amountOwed))),
+        content: Text(context.l10n.debtors_reminderBody(clientName, Money.format(amountOwed))),
         actions: [
           TextButton(onPressed: () => Navigator.pop(context, null), child: Text(context.l10n.common_cancel)),
           TextButton(

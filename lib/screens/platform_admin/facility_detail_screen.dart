@@ -327,7 +327,7 @@ class _FacilityDetailScreenState extends State<FacilityDetailScreen> {
                             Text('Signed up: ${AppDateFormat.date.format(createdAt)}',
                                 style: const TextStyle(fontSize: AppFontSize.f12)),
                           if (data['lastPaymentAmount'] != null)
-                            Text('Last payment: ${Money.symbolPlain(data['lastPaymentAmount'])}'),
+                            Text('Last payment: ${Money.format(data['lastPaymentAmount'])}'),
                         ],
                       ),
                     ),
