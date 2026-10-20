@@ -1064,12 +1064,6 @@ abstract class AppLocalizations {
   /// **'Bank Transfer'**
   String get paymentMethod_bankTransfer;
 
-  /// Payment method: payment chips and menus, payment filters (stored value 'Tigo Pesa').
-  ///
-  /// In en, this message translates to:
-  /// **'Tigo Pesa'**
-  String get paymentMethod_tigoPesa;
-
   /// Payment method: payment chips and menus, payment filters (stored value 'On Credit').
   ///
   /// In en, this message translates to:
@@ -1880,7 +1874,7 @@ abstract class AppLocalizations {
   /// **'{label}: {value}'**
   String common_filterValue(String label, String value);
 
-  /// A total next to a list (amount already formatted, e.g. TSh 12,000).
+  /// A total next to a list (amount already formatted, e.g. Tsh 12,000).
   ///
   /// In en, this message translates to:
   /// **'Total: {amount}'**
@@ -8418,12 +8412,6 @@ abstract class AppLocalizations {
   /// **'Passwords do not match'**
   String get common_passwordsDoNotMatch;
 
-  /// App title in the login and register top bar.
-  ///
-  /// In en, this message translates to:
-  /// **'{appName} System'**
-  String common_appSystem(String appName);
-
   /// Edit Profile screen title.
   ///
   /// In en, this message translates to:
@@ -8445,7 +8433,7 @@ abstract class AppLocalizations {
   /// Login footer.
   ///
   /// In en, this message translates to:
-  /// **'© 2026 {appName} System. All rights reserved.'**
+  /// **'© 2026 {appName}. All rights reserved.'**
   String login_copyright(String appName);
 
   /// Login welcome card, above the app name.

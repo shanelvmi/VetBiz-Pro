@@ -511,9 +511,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get paymentMethod_bankTransfer => 'Bank Transfer';
 
   @override
-  String get paymentMethod_tigoPesa => 'Tigo Pesa';
-
-  @override
   String get paymentMethod_onCredit => 'On Credit';
 
   @override
@@ -4878,11 +4875,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get common_passwordsDoNotMatch => 'Passwords do not match';
 
   @override
-  String common_appSystem(String appName) {
-    return '$appName System';
-  }
-
-  @override
   String get common_editProfile => 'Edit Profile';
 
   @override
@@ -4893,7 +4885,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String login_copyright(String appName) {
-    return '© 2026 $appName System. All rights reserved.';
+    return '© 2026 $appName. All rights reserved.';
   }
 
   @override

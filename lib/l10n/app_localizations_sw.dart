@@ -513,9 +513,6 @@ class AppLocalizationsSw extends AppLocalizations {
   String get paymentMethod_bankTransfer => 'Uhamisho wa Benki';
 
   @override
-  String get paymentMethod_tigoPesa => 'Tigo Pesa';
-
-  @override
   String get paymentMethod_onCredit => 'Kwa Mkopo';
 
   @override
@@ -4905,11 +4902,6 @@ class AppLocalizationsSw extends AppLocalizations {
   String get common_passwordsDoNotMatch => 'Nenosiri hazilingani';
 
   @override
-  String common_appSystem(String appName) {
-    return 'Mfumo wa $appName';
-  }
-
-  @override
   String get common_editProfile => 'Hariri Wasifu';
 
   @override
@@ -4921,7 +4913,7 @@ class AppLocalizationsSw extends AppLocalizations {
 
   @override
   String login_copyright(String appName) {
-    return '© 2026 Mfumo wa $appName. Haki zote zimehifadhiwa.';
+    return '© 2026 $appName. Haki zote zimehifadhiwa.';
   }
 
   @override
