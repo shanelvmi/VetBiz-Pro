@@ -27,7 +27,7 @@ import '../../data/facility_ownership.dart';
 import '../../data/facility_status.dart';
 import '../../data/fields.dart';
 import '../../data/user_role.dart';
-import '../../config/app_defaults.dart';
+import '../../config/money.dart';
 import '../../config/app_limits.dart';
 import '../../config/app_ranges.dart';
 import '../../config/app_rules.dart';
@@ -1216,15 +1216,6 @@ class _FacilityScreenState extends State<FacilityScreen> {
     }
   }
 
-  /// "1,200,000" -> "1.2M", "45,000" -> "45K" - keeps the stats row
-  /// readable at a glance instead of a long, precise figure that
-  /// doesn't matter for a quick "how's this shop doing" check.
-  String _formatCompact(double value) {
-    if (value >= 1000000) return '${(value / 1000000).toStringAsFixed(1)}M';
-    if (value >= 1000) return '${(value / 1000).toStringAsFixed(1)}K';
-    return value.toStringAsFixed(0);
-  }
-
   Widget buildStatusChip(String status) {
     final chipColor = switch (FacilityStatus.fromKey(status)) {
       FacilityStatus.active => context.colors.success,
@@ -1871,7 +1862,7 @@ class _FacilityScreenState extends State<FacilityScreen> {
       (context.l10n.facilities_expiredItems, '$expiredCount', Icons.remove_shopping_cart_outlined, context.colors.danger, context.l10n.facilities_viewItems, 2),
       (
         context.l10n.facilities_totalSalesThisMonth,
-        '${AppDefaults.currencyCode} ${_formatCompact(totalAmount)}',
+        Money.compact(totalAmount),
         Icons.trending_up,
         context.colors.primary,
         context.l10n.facilities_viewReport,
@@ -2334,7 +2325,7 @@ class _FacilityScreenState extends State<FacilityScreen> {
                               Text(_formatDate(ts.toDate()),
                                   style: TextStyle(fontSize: AppFontSize.f12, color: context.colors.textHint)),
                             const SizedBox(width: AppSpacing.s10),
-                            Text('${AppDefaults.currencySymbol} ${_formatCompact(totalAmount)}',
+                            Text(Money.compact(totalAmount),
                                 style: const TextStyle(fontSize: AppFontSize.f13_5, fontWeight: AppFontWeight.bold)),
                           ],
                         ),
@@ -2355,7 +2346,7 @@ class _FacilityScreenState extends State<FacilityScreen> {
       children: [
         Text(label, style: TextStyle(fontSize: AppFontSize.f12, color: context.colors.textMuted)),
         const SizedBox(height: AppSpacing.s4),
-        Text('${AppDefaults.currencySymbol} ${_formatCompact(amount)}', style: const TextStyle(fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f18)),
+        Text(Money.compact(amount), style: const TextStyle(fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f18)),
         Text(context.l10n.facilities_saleCount(count), style: TextStyle(fontSize: AppFontSize.f12, color: context.colors.textMuted)),
       ],
     );

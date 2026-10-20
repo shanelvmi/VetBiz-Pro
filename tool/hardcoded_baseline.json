@@ -200,18 +200,6 @@
       "reason": "KEEP, owner (D9 rule): small-screen check beside the Layout Fixed Mode collapse logic, left as written; docs/design/parked_values.md D3"
     },
     {
-      "rule": "R8",
-      "file": "lib/screens/sales/receipt_preview_screen.dart",
-      "lineContains": "'TSh ${Money.plain(",
-      "reason": "the TOTAL line's 'TSh' spelling, left as typed; Money open question (step 2C), for 2R"
-    },
-    {
-      "rule": "R8",
-      "file": "lib/screens/services/service_receipt_preview_screen.dart",
-      "lineContains": "'TSh ${Money.plain(",
-      "reason": "the TOTAL line's 'TSh' spelling, left as typed; Money open question (step 2C), for 2R"
-    },
-    {
       "rule": "R10",
       "file": "lib/screens/platform_admin/",
       "lineContains": "",

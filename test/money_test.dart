@@ -58,6 +58,18 @@ void main() {
     }
   });
 
+  // D1: one spelling, "Tsh". The facility card said "TZS".
+  r3Pins('compact', Money.compact, {
+    0: 'Tsh 0',
+    1: 'Tsh 1',
+    999: 'Tsh 999',
+    12500: 'Tsh 12.5K',
+    12500.5: 'Tsh 12.5K',
+    1234567.89: 'Tsh 1.2M',
+    -12500: '-Tsh 12.5K',
+    1e12: 'Tsh 1000000.0M',
+  });
+
   test('the exact strings people see', () {
     expect(Money.format(12500), 'Tsh 12,500');
     expect(Money.format(-12500), '-Tsh 12,500');
@@ -65,5 +77,15 @@ void main() {
     expect(Money.decimal(12500), '12,500');
     expect(Money.decimal(12500.5), '12,500.5');
     expect(Money.decimal(1234567.891), '1,234,567.891');
+  });
+}
+
+/// R3 (docs/RUNBOOK2.md D1 to D4): the exact text each Money method prints for
+/// the owner's sample amounts. These ARE the decisions; change them only with one.
+void r3Pins(String name, String Function(num) method, Map<num, String> expected) {
+  test('R3: Money.$name prints exactly what the decisions say', () {
+    for (final e in expected.entries) {
+      expect(method(e.key), e.value, reason: '${e.key}');
+    }
   });
 }

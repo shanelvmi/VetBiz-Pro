@@ -621,7 +621,7 @@ class _ReceiptPreviewScreenState extends State<ReceiptPreviewScreen> {
             Container(
               padding: const EdgeInsets.symmetric(horizontal: AppSpacing.s10, vertical: AppSpacing.s8),
               color: context.colors.primary.withValues(alpha: AppAlpha.a10),
-              child: totalsRow(ReceiptTexts.total, 'TSh ${Money.plain(sale.totalAmount)}', bold: true),
+              child: totalsRow(ReceiptTexts.total, Money.format(sale.totalAmount), bold: true),
             ),
             const SizedBox(height: AppSpacing.s8),
             totalsRow(ReceiptTexts.paid, Money.plain(sale.totalPaid)),
