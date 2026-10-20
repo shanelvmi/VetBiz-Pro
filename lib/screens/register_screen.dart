@@ -34,6 +34,7 @@ import '../theme/app_breakpoints.dart';
 import '../theme/app_motion.dart';
 import '../ui/feedback/app_feedback.dart';
 import '../ui/feedback/friendly_error.dart';
+import '../widgets/password_field_guard.dart';
 import '../../l10n/l10n.dart';
 
 class RegisterScreen extends StatefulWidget {
@@ -59,8 +60,12 @@ class _RegisterScreenState extends State<RegisterScreen> {
   final TextEditingController nameController = TextEditingController();
   final TextEditingController emailController = TextEditingController();
   final TextEditingController phoneController = TextEditingController();
-  final TextEditingController passwordController = TextEditingController();
-  final TextEditingController confirmPasswordController = TextEditingController();
+  // The two password fields, with the shared hygiene rules (P1b): emptied
+  // after a failed registration, hidden again by themselves.
+  final PasswordFieldGuard _password = PasswordFieldGuard();
+  final PasswordFieldGuard _confirm = PasswordFieldGuard();
+  TextEditingController get passwordController => _password.controller;
+  TextEditingController get confirmPasswordController => _confirm.controller;
   final TextEditingController assistantFacilityNameController = TextEditingController();
   final TextEditingController assistantFacilityCodeController = TextEditingController();
 
@@ -212,12 +217,28 @@ class _RegisterScreenState extends State<RegisterScreen> {
     _facilitiesSub?.cancel();
     _maxFacilitiesSubscription?.cancel();
     _errorTimer?.cancel();
+    _password.dispose();
+    _confirm.dispose();
     super.dispose();
+  }
+
+  // An eye opened or closed: redraw the fields.
+  void _onPasswordGuardChanged() {
+    if (mounted) setState(() {});
+  }
+
+  // The registration was tried and failed: neither password stays on
+  // screen. Everything else typed is kept for the next try.
+  void _clearPasswordsAfterFailure() {
+    _password.clearAndHide();
+    _confirm.clearAndHide();
   }
 
   @override
   void initState() {
     super.initState();
+    _password.addListener(_onPasswordGuardChanged);
+    _confirm.addListener(_onPasswordGuardChanged);
     _maxFacilitiesSubscription = streamMaxFacilitiesPerAdmin().listen((limit) {
       if (mounted) setState(() => _maxFacilities = limit);
     });
@@ -500,6 +521,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
       }
     }
   } on FirebaseAuthException catch (e) {
+    _clearPasswordsAfterFailure();
     if (e.code == 'email-already-in-use') {
       setState(() {
         _submitAttempted = true;
@@ -523,6 +545,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
       setState(() => error = L10n.current.register_createFailed(FriendlyError.messageFor(e)));
     }
   } on FirebaseFunctionsException catch (e) {
+    _clearPasswordsAfterFailure();
     // The server refused or couldn't finish: a bad or used-up invite, the
     // facility limit, a connection problem. Its message is written to be shown.
     final message = MembershipService.errorMessage(e);
@@ -535,6 +558,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
       error = message;
     });
   } catch (e, stackTrace) {
+    _clearPasswordsAfterFailure();
     debugPrint('🔥 Error: $e\n📌 Stack: $stackTrace');
     // AccountCreatedException's message is written to be shown; anything
     // else is raw exception text.
@@ -562,8 +586,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
   static const double _welcomePanelWidth = 290;
 
   bool _isSubmitting = false;
-  bool _obscurePassword = true;
-  bool _obscureConfirm = true;
 
   Timer? _errorTimer;
   String? _errorTimerFor;
@@ -2050,18 +2072,21 @@ class _RegisterScreenState extends State<RegisterScreen> {
           context.l10n.common_password,
           TextField(
             controller: passwordController,
-            obscureText: _obscurePassword,
+            focusNode: _password.focusNode,
+            obscureText: _password.obscured,
+            autocorrect: false,
+            enableSuggestions: false,
             onChanged: (_) => _onFieldChanged(),
             decoration: _decoration(
               hint: context.l10n.register_createPassword,
               icon: Icons.lock_outline,
               suffix: IconButton(
                 icon: Icon(
-                  _obscurePassword ? Icons.visibility_outlined : Icons.visibility_off_outlined,
+                  _password.obscured ? Icons.visibility_outlined : Icons.visibility_off_outlined,
                   size: AppIconSize.i20,
                   color: context.colors.textHint,
                 ),
-                onPressed: () => setState(() => _obscurePassword = !_obscurePassword),
+                onPressed: _password.toggle,
               ),
               helper: password.isEmpty
                   ? context.l10n.register_passwordRule
@@ -2080,7 +2105,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
           context.l10n.register_fieldConfirmPassword,
           TextField(
             controller: confirmPasswordController,
-            obscureText: _obscureConfirm,
+            focusNode: _confirm.focusNode,
+            obscureText: _confirm.obscured,
+            autocorrect: false,
+            enableSuggestions: false,
             onChanged: (_) => _onFieldChanged(),
             decoration: _decoration(
               hint: context.l10n.register_reenterPassword,
@@ -2096,11 +2124,11 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     ),
                   IconButton(
                     icon: Icon(
-                      _obscureConfirm ? Icons.visibility_outlined : Icons.visibility_off_outlined,
+                      _confirm.obscured ? Icons.visibility_outlined : Icons.visibility_off_outlined,
                       size: AppIconSize.i20,
                       color: context.colors.textHint,
                     ),
-                    onPressed: () => setState(() => _obscureConfirm = !_obscureConfirm),
+                    onPressed: _confirm.toggle,
                   ),
                 ],
               ),
