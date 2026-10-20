@@ -10,6 +10,9 @@ import '../theme/app_motion.dart';
 import '../theme/app_text.dart';
 import '../theme/theme_context.dart';
 import '../data/collections.dart';
+import '../config/app_info.dart';
+import '../utils/app_version.dart';
+import 'update_required_screen.dart';
 
 /// Wraps the entire app (see main.dart's MaterialApp.builder) so a
 /// maintenance-mode block applies regardless of which screen or dialog
@@ -44,34 +47,60 @@ import '../data/collections.dart';
 /// AppEntryPoint itself had already been torn down and never
 /// remounted. Keeping this gate's own output shape constant removes
 /// that risk at its source.
+///
+/// The same config document also holds the minimum app version (P1):
+/// `minimumVersion`, a dotted version like "1.0.0". A running
+/// [AppInfo.version] lower than it shows [UpdateRequiredScreen] instead,
+/// on the same terms as maintenance (signed out and Platform Admins pass;
+/// an absent or unreadable value blocks nobody). It is checked before
+/// maintenance: an old app stays blocked after maintenance ends.
 class MaintenanceGate extends StatefulWidget {
   final Widget child;
-  const MaintenanceGate({super.key, required this.child});
+
+  /// Test seams (P1); the app passes none of them. [uidChanges] and
+  /// [initialUid] stand in for FirebaseAuth, [firestore] for the database,
+  /// [appVersion] for [AppInfo.version].
+  final Stream<String?>? uidChanges;
+  final String? initialUid;
+  final FirebaseFirestore? firestore;
+  final String appVersion;
+
+  const MaintenanceGate({
+    super.key,
+    required this.child,
+    this.uidChanges,
+    this.initialUid,
+    this.firestore,
+    this.appVersion = AppInfo.version,
+  });
 
   @override
   State<MaintenanceGate> createState() => _MaintenanceGateState();
 }
 
 class _MaintenanceGateState extends State<MaintenanceGate> {
-  StreamSubscription<User?>? _authSub;
+  StreamSubscription<String?>? _authSub;
   StreamSubscription<DocumentSnapshot<Map<String, dynamic>>>? _platformAdminSub;
   StreamSubscription<DocumentSnapshot<Map<String, dynamic>>>? _configSub;
 
-  User? _user;
+  String? _uid;
   bool _isPlatformAdmin = false;
   Map<String, dynamic>? _configData;
 
   @override
   void initState() {
     super.initState();
-    _authSub = FirebaseAuth.instance.authStateChanges().listen(_onAuthChanged);
+    final uidChanges = widget.uidChanges ?? FirebaseAuth.instance.authStateChanges().map((user) => user?.uid);
+    _authSub = uidChanges.listen(_onAuthChanged);
     // Known synchronously and immediately, rather than waiting for the
     // stream's first event - avoids a one-frame flash of "signed out"
     // for someone already signed in from a previous session.
-    _onAuthChanged(FirebaseAuth.instance.currentUser);
+    _onAuthChanged(widget.uidChanges != null ? widget.initialUid : FirebaseAuth.instance.currentUser?.uid);
   }
 
-  void _onAuthChanged(User? user) {
+  FirebaseFirestore get _db => widget.firestore ?? FirebaseFirestore.instance;
+
+  void _onAuthChanged(String? uid) {
     if (!mounted) return;
 
     _platformAdminSub?.cancel();
@@ -80,16 +109,16 @@ class _MaintenanceGateState extends State<MaintenanceGate> {
     _configSub = null;
 
     setState(() {
-      _user = user;
+      _uid = uid;
       _isPlatformAdmin = false;
       _configData = null;
     });
 
-    if (user == null) return;
+    if (uid == null) return;
 
-    _platformAdminSub = FirebaseFirestore.instance
+    _platformAdminSub = _db
         .collection(Collections.platformAdmins)
-        .doc(user.uid)
+        .doc(uid)
         .snapshots()
         .listen((snap) {
       if (!mounted) return;
@@ -102,7 +131,7 @@ class _MaintenanceGateState extends State<MaintenanceGate> {
       _configSub?.cancel();
       _configSub = null;
       if (!isPlatformAdmin) {
-        _configSub = FirebaseFirestore.instance
+        _configSub = _db
             .collection(Collections.platformConfig)
             .doc('settings')
             .snapshots()
@@ -124,8 +153,16 @@ class _MaintenanceGateState extends State<MaintenanceGate> {
 
   @override
   Widget build(BuildContext context) {
-    if (_user == null) return widget.child;
+    if (_uid == null) return widget.child;
     if (_isPlatformAdmin) return widget.child;
+
+    final minimumVersion = _configData?['minimumVersion'];
+    if (AppVersion.isBelowMinimum(widget.appVersion, minimumVersion)) {
+      return UpdateRequiredScreen(
+        currentVersion: widget.appVersion,
+        minimumVersion: (minimumVersion as String).trim(),
+      );
+    }
 
     final isMaintenanceMode = _configData?['maintenanceMode'] as bool? ?? false;
     if (!isMaintenanceMode) return widget.child;
