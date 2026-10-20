@@ -160,7 +160,6 @@ paymentMethod_mixxByYas,Mixx by Yas,Mixx by Yas,"Payment method: payment chips a
 paymentMethod_haloPesa,HaloPesa,HaloPesa,"Payment method: payment chips and menus, payment filters (stored value 'HaloPesa').",draft
 paymentMethod_airtelMoney,Airtel Money,Airtel Money,"Payment method: payment chips and menus, payment filters (stored value 'Airtel Money').",draft
 paymentMethod_bankTransfer,Bank Transfer,Uhamisho wa Benki,"Payment method: payment chips and menus, payment filters (stored value 'Bank Transfer').",draft
-paymentMethod_tigoPesa,Tigo Pesa,Tigo Pesa,"Payment method: payment chips and menus, payment filters (stored value 'Tigo Pesa').",draft
 paymentMethod_onCredit,On Credit,Kwa Mkopo,"Payment method: payment chips and menus, payment filters (stored value 'On Credit').",draft
 activityType_account,Account,Akaunti,"Activity type: Activity Log filter chips and entry badges, activity lists (stored value 'Account').",draft
 activityType_debtors,Debtors,Wadaiwa,"Activity type: Activity Log filter chips and entry badges, activity lists (stored value 'Debtors').",draft
@@ -296,7 +295,7 @@ incomeCategory_assetDisposal,Asset Disposal Income,Mapato ya Kuuza Mali,"Income 
 incomeCategory_other,Other Income,Mapato Mengine,"Income category: Add Transaction picker, Transactions list and details (stored value 'Other Income').",draft
 common_method,Method,Njia,"Payment method, short: filter names and table headers (Payments, Subscription history).",draft
 common_filterValue,{label}: {value},{label}: {value},"A filter showing its name and chosen value, e.g. 'Type: Sales', 'Method: All'.",draft
-common_totalValue,Total: {amount},Jumla: {amount},"A total next to a list (amount already formatted, e.g. TSh 12,000).",draft
+common_totalValue,Total: {amount},Jumla: {amount},"A total next to a list (amount already formatted, e.g. Tsh 12,000).",draft
 common_today,Today,Leo,Today: metric card and day heading.,draft
 common_yesterday,Yesterday,Jana,Yesterday: day heading in a list grouped by day.,draft
 common_perPage,{count} per page,{count} kwa ukurasa,Page-size choice under a paged list.,draft
@@ -1386,11 +1385,10 @@ common_inviteCode,Invite code,Msimbo wa mwaliko,"Field label for an invite code 
 common_facilityName,Facility name,Jina la kituo,Field label for a new facility's name.,draft
 common_facilityNameHint,e.g. Ukuli,mf. Ukuli,Example in the facility name field.,draft
 common_passwordsDoNotMatch,Passwords do not match,Nenosiri hazilingani,Register: the two passwords differ.,draft
-common_appSystem,{appName} System,Mfumo wa {appName},App title in the login and register top bar.,draft
 common_editProfile,Edit Profile,Hariri Wasifu,Edit Profile screen title.,draft
 login_tagline,Smart Business & Vet Services Monitor,Ufuatiliaji Mahiri wa Biashara na Huduma za Mifugo,"Login top bar, under the app title.",draft
 login_systemOnline,System Online,Mfumo Uko Hewani,Login top bar status pill.,draft
-login_copyright,© 2026 {appName} System. All rights reserved.,© 2026 Mfumo wa {appName}. Haki zote zimehifadhiwa.,Login footer.,draft
+login_copyright,© 2026 {appName}. All rights reserved.,© 2026 {appName}. Haki zote zimehifadhiwa.,Login footer.,draft
 login_welcomeTo,Welcome to,Karibu,"Login welcome card, above the app name.",draft
 login_stayUpdated,Stay updated with the latest news and announcements.,Pata habari na matangazo mapya kila wakati.,Login welcome card.,draft
 login_announcements,Announcements,Matangazo,Login announcements card title.,draft

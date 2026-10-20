@@ -7,42 +7,6 @@ Format: file, line, value, what it seems to be for.
 
 For step 2R. Each needs before/after screenshots first; the owner's leanings are noted, not decided.
 
-### Money (raised in step 2C, for step 2R)
-
-Leanings: one currency spelling, "Tsh"; one decimals rule; one shape for a negative amount.
-
-Every amount below keeps its exact current output through a named `Money` method, so each can be changed in one place later.
-
-- **Saved text with no thousands separator** (`Money.savedWhole`, `Money.savedAsStored`): activity descriptions written to Firestore, e.g. "Recorded sale to Walk-in - Tsh 12500". `sale_provider.dart` (recorded, deleted sale), `service_provider.dart` (recorded, updated service; the deleted-service one prints the stored value as Dart does, so a stored double reads "Tsh 12500.0"), `transaction_provider.dart` (added, updated), `add_payment_screen.dart` (recorded payment). Old entries keep what they say; should NEW entries use "Tsh 12,500"? (A mixed log is the cost.)
-- **On-screen and printed amounts with no thousands separator** (`Money.symbolWhole`): `facility_detail_screen.dart` plan price, `view_batches_screen.dart` (sell price, batch buy price), `trash_screen.dart` (item titles), `receipt_printer_service.dart` (thermal receipt: total, paid, balance, transaction amount). Not saved, so these could simply switch to `Money.symbolPlain`.
-- **Raw stored values** (`Money.symbolAsStored`): subscription amounts shown as stored ("Tsh 50000", or "Tsh 50000.0" for a double): `facility_detail_screen.dart`, `subscription_requests_tab.dart` (2), `subscription_screen.dart`.
-- **Three spellings of the currency**: "Tsh" (everywhere, `AppDefaults.currencySymbol`), "TSh" on the TOTAL line of the two receipt previews (`receipt_preview_screen.dart:609`, `service_receipt_preview_screen.dart:584`, left as typed: no home for it), and "TZS" before the facility card's compact total (`facility_screen.dart:1936`, now `AppDefaults.currencyCode`) where the same screen's other two totals say "Tsh". One spelling?
-- **Two shapes for a negative amount**: `Money.format` gives "-Tsh 12,500", `Money.symbolPlain` gives "Tsh -12,500". Each screen keeps the one it had.
-- **Decimals**: reports, PDFs, the dashboard and transactions use `Money.decimal` (up to 3 decimals, "12,500.5"); most other screens round to whole shillings. One rule?
-
-### Payment methods: Tigo Pesa and Mixx by Yas (raised in step 2C, for step 2R)
-
-Leaning: merge Tigo Pesa into Mixx by Yas for display, filters and report grouping (stored keys unchanged).
-
-Stored keys never change, and both display everywhere. Three places treat them as two different methods today; each is kept as it is:
-
-- Icon (`lib/widgets/payment_method_selector.dart`, `iconForPaymentMethod`): Mixx by Yas gets the mobile-money phone icon; an old record stored as 'Tigo Pesa' gets the generic payment icon. Give Tigo Pesa the phone icon too?
-- Daily report breakdowns (`daily_report_service.dart`, report screens, PDF): totals are grouped by the stored string, so a day with both shows two rows. Count them as one (display only; the stored keys stay)?
-- Payments ledger filter (`payments_screen.dart:860`) and the subscription history filter: the ledger's method filter lists only current methods, so old 'Tigo Pesa' entries can only be seen under "All"; the history filter lists both as separate choices. Merge?
-
-### App name (raised in step 2C, for step 2R)
-
-Leaning: one name, "VetBiz Pro".
-
-User-facing "VetBiz Pro" now reads `AppInfo.name` (titles, Settings, support line, register intro, report fallback names, export share text, PDF and thermal-receipt headers and footers). These keep the name typed, on purpose:
-
-- **Must stay literal**: code identifiers (`VetBizProApp`, `VetBizLoadingIndicator`, `VetBizLoadingStyle`); the Dart package `vetbiz_pro` and bundle ids (`com.example.vetbiz_pro`, `com.example.vetbizPro`) across android/ios/linux/macos; the Firebase project id `vetbiz-pro` (`.firebaserc`, `firebase.json`); the asset `assets/vetbizpro_illustration.png`.
-- **Legal text, left as written**: `lib/screens/legal/privacy_policy_screen.dart`, `terms_of_service_screen.dart`, and the "© 2026 VetBiz Pro System. All rights reserved." lines (`login_screen.dart:424, 446`).
-- **The two-tone wordmark**: "VetBiz " and "Pro" as separately styled spans (`receipt_preview_screen.dart:568, 655`, `service_receipt_preview_screen.dart:542, 630`, `receipt_pdf_service.dart:342`). A logo, not a sentence: a new name would need a design decision.
-- **Server text** (not touched in Phase 2): the credential email in `functions/index.js:37-51` says "VetBiz Admin" and "the VetBiz system".
-- **Two names in use**: "VetBiz Pro" and "VetBiz Pro System" (login header, register header, © line). One name?
-- **The version** "v1.0.0" is typed in Settings (`settings_screen.dart:239`); it could come from the build (pubspec) instead.
-
 ### Raised in step 2D, batch D6
 
 - **Alpha 0.95**, `lib/screens/products/add_edit_product_screen.dart` (the brand-green category and type picker dialogs' background, x2): 0.1 above `a85`, no step. Kept as is (owner, after D6); listed for 2R.
@@ -220,6 +184,10 @@ Incomplete: **sales** and **services**. After restoring either one, stock is too
 - **team_signInSwitchFailed** ("The assistant was deactivated, but their sign-in could not be switched off. Reactivate and deactivate again.") is shown, as decided, for every signIn "failed" answer of setAssistantStatus and removeAssistantFromFacility. It fits a failed deactivation. After a failed reactivation (sign-in could not be switched back ON) or a failed removal (sessions could not be revoked; the account is never disabled) the sentence is not accurate. Owner decides whether those two get their own sentences.
 
 ## Decided
+
+### Money, payment methods, app name (decided D1 to D6 in docs/RUNBOOK2.md; done in batch R3)
+
+The three Open sections raised in step 2C. Every place each decision touched, old to new, is in `docs/design/r3_audit.md`. Left as they were, on purpose: text-field prefills keep `Money.decimal` (a rounded prefill would be saved rounded); CSV/Excel cells keep raw numbers and stored payment keys; legal text, the two-tone wordmark and the server credential email ("VetBiz Admin", `functions/`) keep their wording. Old activity entries keep "Tsh 12500"; report drafts generated before R3 that hold both Tigo Pesa and Mixx by Yas keep two reconciliation rows (their breakdowns merge on screen and in the PDF).
 
 ### D11 (decided and done in batch D11)
 

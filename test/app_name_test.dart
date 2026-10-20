@@ -1,8 +1,10 @@
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:vetbiz_pro/config/app_info.dart';
+import 'package:vetbiz_pro/l10n/l10n.dart';
 
 // R3, D6: one app name, "VetBiz Pro" (legal text and the two-tone wordmark
 // excepted), and the version typed once, in AppInfo.
@@ -22,6 +24,10 @@ void main() {
     for (final lang in ['en', 'sw']) {
       expect(arb(lang).containsKey('common_appSystem'), isFalse, reason: 'the "VetBiz Pro System" header key is gone');
     }
+    expect(lookupAppLocalizations(const Locale('en')).login_copyright(AppInfo.name),
+        '© 2026 VetBiz Pro. All rights reserved.');
+    expect(lookupAppLocalizations(const Locale('en')).settings_versionLine(AppInfo.name, AppInfo.version),
+        'VetBiz Pro - v2.0.0');
   });
 
   test('no screen types a version or "VetBiz Pro System"', () {
