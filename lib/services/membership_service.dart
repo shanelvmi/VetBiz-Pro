@@ -184,6 +184,10 @@ class MembershipService {
           return L10n.current.membership_unreachable;
         case 'unauthenticated':
           return L10n.current.membership_signInAgain;
+        // P1: only the invite-code callables refuse this way (too many wrong
+        // codes); the server's English sentence is replaced by the ARB one.
+        case 'resource-exhausted':
+          return L10n.current.membership_tooManyInviteAttempts(AppRules.inviteAttemptWindowMinutes);
       }
       final message = error.message;
       if (message != null && message.isNotEmpty && message.toUpperCase() != 'INTERNAL') return message;

@@ -121,7 +121,11 @@ class _RegisterScreenState extends State<RegisterScreen> {
         setState(() {
           _isLookingUpFacility = false;
           _foundFacility = null;
-          _facilityLookupError = L10n.current.register_inviteCheckFailed;
+          // P1: after too many wrong codes the server says so; any other
+          // failure keeps the usual "try again".
+          _facilityLookupError = e is FirebaseFunctionsException && e.code == 'resource-exhausted'
+              ? MembershipService.errorMessage(e)
+              : L10n.current.register_inviteCheckFailed;
         });
       }
     });

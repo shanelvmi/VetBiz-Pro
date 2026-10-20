@@ -16,6 +16,11 @@ class AppRules {
   // Mirrored in functions/membership.js (INVITE_VALIDITY_MS).
   static const Duration inviteValidity = Duration(hours: 48);
 
+  /// How long a caller waits after too many wrong invite codes (P1), shown
+  /// in the refusal. The server decides; this only words it.
+  // Mirrored in functions/membership.js (INVITE_ATTEMPT_WINDOW_MS); test/p1_texts_test.dart checks it.
+  static const int inviteAttemptWindowMinutes = 15;
+
   /// Days after a subscription or trial ends before the facility locks.
   // Mirrored in firestore.rules (isSubscriptionLocked) and functions/index.js (kGracePeriodDays).
   static const int gracePeriodDays = 3;

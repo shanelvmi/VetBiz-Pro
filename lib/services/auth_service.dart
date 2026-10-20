@@ -7,6 +7,7 @@ import 'dart:typed_data';
 import 'package:firebase_storage/firebase_storage.dart';
 
 import 'membership_service.dart';
+import '../l10n/l10n.dart';
 import '../data/collections.dart';
 import '../data/upload_content_types.dart';
 import '../data/fields.dart';
@@ -129,9 +130,9 @@ class AuthService {
     try {
       await _auth.signInWithEmailAndPassword(email: email, password: password);
     } catch (_) {
-      throw AccountCreatedException(
-          'Your account was created, but we could not sign you in automatically. '
-          'Please log in with your email and password.');
+      // No BuildContext in a service, so L10n.current (P1: it was English in
+      // both languages).
+      throw AccountCreatedException(L10n.current.register_accountCreatedSignIn);
     }
     return created;
   }
@@ -260,7 +261,7 @@ class AuthService {
 }
 
 /// The account WAS created, but something afterwards failed - so the person
-/// should be told to log in, not to register again. Its message is meant to be
+/// should be told to sign in, not to register again. Its message is meant to be
 /// shown as it is.
 class AccountCreatedException implements Exception {
   final String message;
