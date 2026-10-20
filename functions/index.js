@@ -1483,9 +1483,16 @@ const membership = require("./membership").create({
 // membership.js takes (data, context); a 2nd gen callable receives one request
 // object. This adapts one to the other, so membership.js - and its unit
 // tests - stay exactly as they were.
+//
+// ipHash (P1): the invite-code rate limit counts a caller with no account by
+// IP. Only the hash is passed on; the raw address never leaves this adapter.
+const { hashIp } = require("./membership").helpers;
 function membershipCallable(name) {
   return onCall({ region: MEMBERSHIP_REGION }, (request) =>
-    membership[name](request.data, { auth: request.auth })
+    membership[name](request.data, {
+      auth: request.auth,
+      ipHash: hashIp(request.rawRequest && request.rawRequest.ip),
+    })
   );
 }
 

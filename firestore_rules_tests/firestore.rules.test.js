@@ -1280,3 +1280,15 @@ test('C11 [E4d-2]: members submit a claim as the app does (pending); the review 
   await assertFails(f1(as('owner'), `payment_submissions/${ref.id}`).update({ status: 'approved' }));
   await assertSucceeds(f1(as('pa'), `payment_submissions/${ref.id}`).update({ status: 'approved' }));
 });
+
+// P1: the invite-code rate limit's counts (inviteAttempts) are written by
+// the server (Admin SDK) only. No rule matches the collection, so every
+// client read and write is refused; this pins that.
+test('P1: inviteAttempts is server-only: nobody can read, list or write it from the app', async () => {
+  for (const db of [signedOut(), as('newbie'), as('assistant'), as('owner'), as('pa')]) {
+    await assertFails(db.collection('inviteAttempts').doc('uid_newbie').get());
+    await assertFails(db.collection('inviteAttempts').get());
+    await assertFails(db.collection('inviteAttempts').doc('uid_newbie').set({ failures: 0 }));
+    await assertFails(db.collection('inviteAttempts').doc('uid_newbie').delete());
+  }
+});

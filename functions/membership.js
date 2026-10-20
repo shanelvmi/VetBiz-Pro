@@ -1,5 +1,7 @@
 "use strict";
 
+const { createHash } = require("crypto");
+
 /**
  * MEMBERSHIP - everything that decides WHO belongs to WHICH facility, and in
  * what role.
@@ -40,9 +42,23 @@ const EAT_OFFSET_MS = 3 * 60 * 60 * 1000;
 
 const INVALID_INVITE_MESSAGE = "Invalid, expired, or already-used invite code";
 
+// P1: invite-code rate limiting. After this many FAILED codes within the
+// window the caller is refused (resource-exhausted) until the window, counted
+// from the first failure, has passed. A success clears the count.
+const INVITE_ATTEMPT_LIMIT = 5;
+const INVITE_ATTEMPT_WINDOW_MS = 15 * 60 * 1000;
+const TOO_MANY_INVITE_ATTEMPTS_MESSAGE = "Too many wrong invite codes. Wait 15 minutes and try again.";
+
 // ---------------------------------------------------------------------------
 // Pure helpers
 // ---------------------------------------------------------------------------
+
+// A caller with no account is counted by IP, stored only as this hash: the
+// raw address is never written anywhere.
+function hashIp(ip) {
+  if (typeof ip !== "string" || ip.length === 0) return null;
+  return createHash("sha256").update(`vetbiz-invite-attempts:${ip}`).digest("hex");
+}
 
 /** "jk7 2p4", "JK7-2P4" and "jk72p4" are all the same code. */
 function normalizeInviteCode(input) {
@@ -282,12 +298,98 @@ function create({ db, auth, FieldValue, Timestamp, HttpsError, randomInt, now = 
     }
   }
 
-  async function checkInviteCode(data) {
+  // ======================================================================
+  // INVITE-CODE RATE LIMITING (P1)
+  // ======================================================================
+  //
+  // A 6-character code can be guessed by trying many, so every callable that
+  // takes one counts the caller's FAILED codes in inviteAttempts/{key}, a
+  // server-only collection (no rule matches it, so clients can't read or
+  // write it). The key is the uid when signed in, otherwise the IP hash that
+  // index.js passes as context.ipHash; with neither there is nothing to count
+  // by, and no limit. The check runs BEFORE the code is looked up, so a
+  // refusal says nothing about the code.
+  function attemptKey(context) {
+    if (context && context.auth && context.auth.uid) return `uid_${context.auth.uid}`;
+    if (context && typeof context.ipHash === "string" && context.ipHash) return `ip_${context.ipHash}`;
+    return null;
+  }
+
+  const attemptsRef = (key) => db.collection("inviteAttempts").doc(key);
+
+  // The window's start, while it is still open; null once it has passed.
+  function openWindowStart(attempts, at) {
+    const start = attempts && attempts.windowStart && typeof attempts.windowStart.toDate === "function"
+      ? attempts.windowStart.toDate()
+      : null;
+    return start && at.getTime() - start.getTime() < INVITE_ATTEMPT_WINDOW_MS ? start : null;
+  }
+
+  async function assertInviteAttemptsLeft(key) {
+    if (!key) return;
+    const snap = await attemptsRef(key).get();
+    const attempts = snap.exists ? snap.data() : null;
+    if (openWindowStart(attempts, now()) && (attempts.failures || 0) >= INVITE_ATTEMPT_LIMIT) {
+      throw new HttpsError("resource-exhausted", TOO_MANY_INVITE_ATTEMPTS_MESSAGE);
+    }
+  }
+
+  // Best-effort, like notify(): the caller's answer is the same either way.
+  async function recordInviteFailure(key) {
+    if (!key) return;
+    try {
+      await db.runTransaction(async (tx) => {
+        const ref = attemptsRef(key);
+        const snap = await tx.get(ref);
+        const attempts = snap.exists ? snap.data() : null;
+        const at = now();
+        const start = openWindowStart(attempts, at);
+        tx.set(ref, start
+          ? { failures: (attempts.failures || 0) + 1, windowStart: attempts.windowStart }
+          : { failures: 1, windowStart: Timestamp.fromDate(at) });
+      });
+    } catch (e) {
+      console.warn(`Could not count a failed invite code for ${key}: ${e && e.message}`);
+    }
+  }
+
+  async function clearInviteFailures(key) {
+    if (!key) return;
+    try {
+      await attemptsRef(key).delete();
+    } catch (e) {
+      console.warn(`Could not clear the failed invite codes for ${key}: ${e && e.message}`);
+    }
+  }
+
+  // Runs a join with the limit: refused while locked out, a wrong code
+  // (INVALID_INVITE_MESSAGE) counted, a success clearing the count. Other
+  // refusals (no profile, already in a facility, a bad name) are not guesses
+  // and are not counted.
+  async function withInviteAttempts(context, join) {
+    const key = attemptKey(context);
+    await assertInviteAttemptsLeft(key);
+    try {
+      const result = await join();
+      await clearInviteFailures(key);
+      return result;
+    } catch (e) {
+      if (e && e.code === "failed-precondition" && e.message === INVALID_INVITE_MESSAGE) await recordInviteFailure(key);
+      throw e;
+    }
+  }
+
+  async function checkInviteCode(data, context) {
+    const key = attemptKey(context);
+    await assertInviteAttemptsLeft(key);
     const code = normalizeInviteCode(data && data.code);
-    if (!code) return { valid: false };
-    const snap = await db.collection("inviteCodes").doc(code).get();
-    const invite = snap.exists ? snap.data() : null;
-    if (inviteProblem(invite, now())) return { valid: false };
+    const snap = code ? await db.collection("inviteCodes").doc(code).get() : null;
+    const invite = snap && snap.exists ? snap.data() : null;
+    if (inviteProblem(invite, now())) {
+      await recordInviteFailure(key);
+      return { valid: false };
+    }
+    await clearInviteFailures(key);
     return { valid: true, facilityName: invite.facilityName || "", facilityType: invite.facilityType || "" };
   }
 
@@ -911,8 +1013,9 @@ function create({ db, auth, FieldValue, Timestamp, HttpsError, randomInt, now = 
   return {
     checkInviteCode,
     registerOwner,
-    joinWithInvite,
-    joinFacilityWithInvite,
+    // Both take an invite code, so both go through the P1 limit.
+    joinWithInvite: (data, context) => withInviteAttempts(context, () => joinWithInvite(data, context)),
+    joinFacilityWithInvite: (data, context) => withInviteAttempts(context, () => joinFacilityWithInvite(data, context)),
     addFacility,
     createInviteCode,
     reassignAssistant,
@@ -927,5 +1030,5 @@ function create({ db, auth, FieldValue, Timestamp, HttpsError, randomInt, now = 
 module.exports = {
   create,
   // Exposed for tests.
-  helpers: { normalizeInviteCode, trialExpiry, inviteProblem, isActiveAdmin, FACILITY_TYPES, INVITE_ALPHABET, INVITE_CODE_LENGTH },
+  helpers: { normalizeInviteCode, hashIp, trialExpiry, inviteProblem, isActiveAdmin, FACILITY_TYPES, INVITE_ALPHABET, INVITE_CODE_LENGTH },
 };

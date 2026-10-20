@@ -800,6 +800,9 @@ describe("joinFacilityWithInvite", () => {
     seedInvite(db, "OLD222", { expiresAt: new FakeTimestamp(hoursFromNow(-1)) });
     const messages = new Set();
     for (const code of ["NOPE99", "USED11", "OLD222", "", "!!", null]) {
+      // Six wrong codes from one caller would hit the P1 limit on the sixth; the
+      // limit has its own tests, so the count is cleared between attempts here.
+      db.docs.delete("inviteAttempts/uid_removed");
       await assert.rejects(fns.joinFacilityWithInvite({ code }, as("removed")), (e) => {
         assert.equal(e.code, "failed-precondition");
         messages.add(e.message);
@@ -1468,5 +1471,127 @@ describe("E4b2 (W5): platformSetUserStatus", () => {
     } finally {
       console.error = original;
     }
+  });
+});
+
+// ======================================================================
+// P1: invite-code rate limiting. Every callable that takes an invite code
+// (checkInviteCode, joinWithInvite, joinFacilityWithInvite) counts the
+// caller's FAILED codes in a server-only document (inviteAttempts/{key}):
+// the uid when signed in, otherwise a hash of the IP (never the raw IP).
+// After 5 failures within 15 minutes the caller is refused with
+// resource-exhausted, before the code is even looked up, so the refusal
+// says nothing about the code. A success clears the count.
+// ======================================================================
+describe("P1: invite-code rate limiting", () => {
+  const MINUTE = 60 * 1000;
+
+  function limited() {
+    const db = new FakeDb();
+    const clock = { t: NOW.getTime() };
+    db.clock = () => new Date(clock.t);
+    const fns = membership.create({
+      db,
+      auth: new FakeAuth(),
+      FieldValue,
+      Timestamp: FakeTimestamp,
+      HttpsError,
+      randomInt: (n) => 3 % n,
+      now: () => new Date(clock.t),
+    });
+    seedWorld(db);
+    seedInvite(db, "JK72P4", { expiresAt: new FakeTimestamp(hoursFromNow(47)) });
+    return { db, fns, clock };
+  }
+  const anon = (ip) => ({ ipHash: membership.helpers.hashIp(ip) });
+  const fail = (fns, ctx) => fns.checkInviteCode({ code: "NOPE22" }, ctx);
+
+  test("5 failures, then the 6th attempt is refused, even with the right code", async () => {
+    const { fns } = limited();
+    for (let i = 0; i < 5; i++) assert.deepEqual(await fail(fns, as("u1")), { valid: false });
+    await rejects(fail(fns, as("u1")), "resource-exhausted");
+    await rejects(fns.checkInviteCode({ code: "JK72P4" }, as("u1")), "resource-exhausted");
+  });
+
+  test("the refusal carries a plain message", async () => {
+    const { fns } = limited();
+    for (let i = 0; i < 5; i++) await fail(fns, as("u1"));
+    await assert.rejects(fail(fns, as("u1")), (e) => /Too many wrong invite codes/.test(e.message));
+  });
+
+  test("a success clears the count", async () => {
+    const { db, fns } = limited();
+    for (let i = 0; i < 4; i++) await fail(fns, as("u1"));
+    assert.equal((await fns.checkInviteCode({ code: "JK72P4" }, as("u1"))).valid, true);
+    assert.equal(db.read("inviteAttempts", "uid_u1"), undefined);
+    for (let i = 0; i < 5; i++) assert.deepEqual(await fail(fns, as("u1")), { valid: false });
+    await rejects(fail(fns, as("u1")), "resource-exhausted");
+  });
+
+  test("the window expires: 15 minutes after the first failure the caller may try again", async () => {
+    const { fns, clock } = limited();
+    for (let i = 0; i < 5; i++) await fail(fns, as("u1"));
+    clock.t += 14 * MINUTE;
+    await rejects(fail(fns, as("u1")), "resource-exhausted");
+    clock.t += 1 * MINUTE;
+    assert.deepEqual(await fail(fns, as("u1")), { valid: false });
+  });
+
+  test("two different callers do not affect each other (uids and IPs)", async () => {
+    const { fns } = limited();
+    for (let i = 0; i < 5; i++) await fail(fns, as("u1"));
+    for (let i = 0; i < 5; i++) await fail(fns, anon("10.0.0.1"));
+    await rejects(fail(fns, as("u1")), "resource-exhausted");
+    await rejects(fail(fns, anon("10.0.0.1")), "resource-exhausted");
+    assert.deepEqual(await fail(fns, as("u2")), { valid: false });
+    assert.deepEqual(await fail(fns, anon("10.0.0.2")), { valid: false });
+  });
+
+  test("a different callable for the same caller shares the count", async () => {
+    const { db, fns } = limited();
+    db.seed("users", "removed", { role: "assistant", status: "deactivated", facilityIds: [], facilities: [] });
+    for (let i = 0; i < 3; i++) await fail(fns, as("removed"));
+    await rejects(fns.joinFacilityWithInvite({ code: "NOPE22" }, as("removed")), "failed-precondition");
+    await rejects(fns.joinWithInvite({ code: "NOPE22", fullName: "Neema", phone: "0755 111 222" }, as("removed")), "already-exists");
+    await rejects(fns.joinFacilityWithInvite({ code: "NOPE22" }, as("removed")), "failed-precondition");
+    await rejects(fns.joinFacilityWithInvite({ code: "JK72P4" }, as("removed")), "resource-exhausted");
+    assert.equal(db.read("users", "removed").facilityIds.length, 0, "refused before anything was written");
+  });
+
+  test("joinWithInvite counts a wrong code, and a successful join clears the count", async () => {
+    const { db, fns } = limited();
+    const join = (code) => fns.joinWithInvite({ code, fullName: "Neema Joseph", phone: "0755 111 222" }, as("newbie"));
+    for (let i = 0; i < 4; i++) await rejects(join("NOPE22"), "failed-precondition");
+    assert.equal(db.read("inviteAttempts", "uid_newbie").failures, 4);
+    await join("JK72P4");
+    assert.equal(db.read("inviteAttempts", "uid_newbie"), undefined);
+  });
+
+  test("other refusals (not a code problem) are not counted", async () => {
+    const { db, fns } = limited();
+    for (let i = 0; i < 6; i++) {
+      await rejects(fns.joinFacilityWithInvite({ code: "JK72P4" }, as("assistant")), "failed-precondition");
+    }
+    assert.equal(db.read("inviteAttempts", "uid_assistant"), undefined);
+  });
+
+  test("the IP is stored only as a hash", async () => {
+    const { db, fns } = limited();
+    await fail(fns, anon("196.249.1.2"));
+    const ids = db.all("inviteAttempts");
+    assert.equal(ids.length, 1);
+    assert.equal(JSON.stringify([ids, db.read("inviteAttempts", ids[0])]).includes("196.249"), false);
+    assert.match(membership.helpers.hashIp("196.249.1.2"), /^[0-9a-f]{64}$/);
+    assert.equal(membership.helpers.hashIp(undefined), null);
+  });
+
+  test("index.js passes a hash of rawRequest.ip to checkInviteCode", async () => {
+    const index = loadIndexWithFakes(FakeAuth);
+    index.reset();
+    const call = () => index.exported.checkInviteCode.run({ data: { code: "NOPE22" }, rawRequest: { ip: "41.59.0.9" } });
+    for (let i = 0; i < 5; i++) assert.deepEqual(await call(), { valid: false });
+    await rejects(call(), "resource-exhausted");
+    const ids = index.db.all("inviteAttempts");
+    assert.deepEqual(ids, [`ip_${membership.helpers.hashIp("41.59.0.9")}`]);
   });
 });
