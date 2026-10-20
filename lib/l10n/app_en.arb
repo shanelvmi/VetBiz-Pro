@@ -3709,5 +3709,15 @@
   "trash_restoreClientGone": "The client no longer exists.",
   "@trash_restoreClientGone": {"description":"Why a restore was refused: the client was deleted."},
   "trash_restoreProductGone": "{product} no longer exists.",
-  "@trash_restoreProductGone": {"description":"Why a restore was refused: a product was deleted. product is the stored item name.","placeholders":{"product":{"type":"String"}}}
+  "@trash_restoreProductGone": {"description":"Why a restore was refused: a product was deleted. product is the stored item name.","placeholders":{"product":{"type":"String"}}},
+  "register_accountCreatedSignIn": "Your account was created, but we could not sign you in automatically. Please sign in with your email and password.",
+  "@register_accountCreatedSignIn": {"description":"Register: the account was made but the automatic sign-in after it failed (AuthService, AccountCreatedException)."},
+  "membership_tooManyInviteAttempts": "Too many wrong invite codes. Wait {minutes, plural, =1{1 minute} other{{minutes} minutes}} and try again.",
+  "@membership_tooManyInviteAttempts": {"description":"Shown when the server refuses invite codes after too many wrong ones (P1 rate limit). minutes is the server's window, AppRules.inviteAttemptWindowMinutes.","placeholders":{"minutes":{"type":"int"}}},
+  "update_title": "Update required",
+  "@update_title": {"description":"Heading of the Update required screen (minimum app version gate)."},
+  "update_body": "This version of {appName} ({current}) can no longer be used. Please update to version {minimum} or later.",
+  "@update_body": {"description":"Update required screen. current is the running version, minimum the lowest one allowed (platform_config/settings.minimumVersion).","placeholders":{"appName":{"type":"String"},"current":{"type":"String"},"minimum":{"type":"String"}}},
+  "update_howTo": "On a computer, reload this page. On a phone, install the latest version of {appName}.",
+  "@update_howTo": {"description":"Update required screen: how to update.","placeholders":{"appName":{"type":"String"}}}
 }

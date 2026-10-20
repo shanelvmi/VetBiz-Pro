@@ -3709,5 +3709,15 @@
   "trash_restoreClientGone": "Mteja hayupo tena.",
   "@trash_restoreClientGone": {"x-review":"draft"},
   "trash_restoreProductGone": "{product} haipo tena.",
-  "@trash_restoreProductGone": {"x-review":"draft"}
+  "@trash_restoreProductGone": {"x-review":"draft"},
+  "register_accountCreatedSignIn": "Akaunti yako imefunguliwa, lakini hatukuweza kukuingiza moja kwa moja. Tafadhali ingia kwa barua pepe na nenosiri lako.",
+  "@register_accountCreatedSignIn": {"x-review":"draft"},
+  "membership_tooManyInviteAttempts": "Misimbo mingi ya mwaliko si sahihi. Subiri {minutes, plural, =1{dakika 1} other{dakika {minutes}}} kisha ujaribu tena.",
+  "@membership_tooManyInviteAttempts": {"x-review":"draft"},
+  "update_title": "Unahitaji kusasisha",
+  "@update_title": {"x-review":"draft"},
+  "update_body": "Toleo hili la {appName} ({current}) haliwezi kutumika tena. Tafadhali sasisha hadi toleo {minimum} au jipya zaidi.",
+  "@update_body": {"x-review":"draft"},
+  "update_howTo": "Kwenye kompyuta, pakia upya ukurasa huu. Kwenye simu, sakinisha toleo jipya zaidi la {appName}.",
+  "@update_howTo": {"x-review":"draft"}
 }
