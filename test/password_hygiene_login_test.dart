@@ -13,9 +13,8 @@ import 'package:vetbiz_pro/theme/app_theme.dart';
 // P1b: password hygiene on the sign-in screen. The owner found that after a
 // failed sign-in the password stayed in the field, readable if the eye had
 // been opened, for anyone walking up to an unattended screen.
-// Skipped until the fix lands (run unskipped first: 17 of 18 failed on the old
-// code, the password still there or still readable).
-const bool pendingP1b = true;
+// Written before the fix and run against the old code (1f02ccc): 17 of 18
+// failed for the right reason, the password still there or still readable.
 
 class _FakeCredential implements UserCredential {
   @override
@@ -116,7 +115,7 @@ void main() {
         expect(em(tester).controller!.text, email);
         expect(pw(tester).focusNode!.hasFocus, isTrue);
         await finish(tester);
-      }, skip: pendingP1b);
+      });
     }
 
     testWidgets('focus returns to the password field after the button was used', (tester) async {
@@ -131,7 +130,7 @@ void main() {
       expect(pw(tester).controller!.text, isEmpty);
       expect(pw(tester).focusNode!.hasFocus, isTrue);
       await finish(tester);
-    }, skip: pendingP1b);
+    });
   });
 
   group('a failure that made no attempt keeps the password', () {
@@ -143,7 +142,7 @@ void main() {
       expect(auth.calls, 0);
       expect(pw(tester).controller!.text, password);
       await finish(tester);
-    }, skip: pendingP1b);
+    });
 
     testWidgets('a malformed email (invalid-email): kept, and hidden again', (tester) async {
       final auth = await pumpLogin(tester);
@@ -155,7 +154,7 @@ void main() {
       expect(pw(tester).controller!.text, password);
       expect(pw(tester).obscureText, isTrue);
       await finish(tester);
-    }, skip: pendingP1b);
+    });
   });
 
   group('a network or unknown error hides the password but keeps it', () {
@@ -177,7 +176,7 @@ void main() {
         expect(pw(tester).obscureText, isTrue);
         expect(em(tester).controller!.text, email);
         await finish(tester);
-      }, skip: pendingP1b);
+      });
     });
   });
 
@@ -190,7 +189,7 @@ void main() {
     expect(auth.passwordWhenCalled, password);
     expect(pw(tester).controller!.text, isEmpty);
     await finish(tester);
-  }, skip: pendingP1b);
+  });
 
   group('the eye closes by itself', () {
     // The real order, away and back (Flutter asserts each step is valid).
@@ -211,7 +210,7 @@ void main() {
           tester.binding.handleAppLifecycleStateChanged(step);
         }
         await finish(tester);
-      }, skip: pendingP1b);
+      });
     }
 
     testWidgets('when the password field loses focus', (tester) async {
@@ -224,7 +223,7 @@ void main() {
       expect(pw(tester).focusNode!.hasFocus, isFalse);
       expect(pw(tester).obscureText, isTrue);
       await finish(tester);
-    }, skip: pendingP1b);
+    });
 
     testWidgets('after AppTimeouts.passwordReveal, and opening it again restarts the count', (tester) async {
       expect(AppTimeouts.passwordReveal, const Duration(seconds: AppTimeouts.passwordRevealSeconds));
@@ -242,7 +241,7 @@ void main() {
       await tester.pump(const Duration(seconds: 1));
       expect(pw(tester).obscureText, isTrue);
       await finish(tester);
-    }, skip: pendingP1b);
+    });
   });
 
   testWidgets('the password field: no autocorrect, no suggestions', (tester) async {
@@ -250,5 +249,5 @@ void main() {
     expect(pw(tester).autocorrect, isFalse);
     expect(pw(tester).enableSuggestions, isFalse);
     await finish(tester);
-  }, skip: pendingP1b);
+  });
 }

@@ -9,6 +9,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import '../services/auth_service.dart';
 import '../widgets/announcement_message.dart';
+import '../widgets/password_field_guard.dart';
 import '../utils/navigator_key.dart';
 import 'legal/privacy_policy_screen.dart';
 import 'legal/terms_of_service_screen.dart';
@@ -42,12 +43,14 @@ class _LoginScreenState extends State<LoginScreen> {
   late final AuthService _authService = widget.authService ?? AuthService();
   FirebaseFirestore get _db => widget.firestore ?? FirebaseFirestore.instance;
   final TextEditingController emailController = TextEditingController();
-  final TextEditingController passwordController = TextEditingController();
+  // The password's text, focus and eye, with the shared hygiene rules
+  // (P1b): cleared after a rejected attempt, hidden again by itself.
+  final PasswordFieldGuard _password = PasswordFieldGuard();
+  TextEditingController get passwordController => _password.controller;
+  FocusNode get passwordFocusNode => _password.focusNode;
 
   bool rememberMe = false;
-  bool obscurePassword = true;
   bool isLoggingIn = false;
-  final FocusNode passwordFocusNode = FocusNode();
   String? error;
   // True when the current error is about the credentials themselves (unknown
   // email, wrong password, empty fields) - the two inputs are outlined in
@@ -78,6 +81,7 @@ class _LoginScreenState extends State<LoginScreen> {
   @override
   void initState() {
     super.initState();
+    _password.addListener(_onPasswordGuardChanged);
     _loadRememberedEmail();
     if (widget.errorMessage != null) {
       // Deferred to after the first frame - setState during initState
@@ -101,11 +105,15 @@ class _LoginScreenState extends State<LoginScreen> {
     }
   }
 
+  // The eye opened, closed or emptied: redraw the field.
+  void _onPasswordGuardChanged() {
+    if (mounted) setState(() {});
+  }
+
   @override
   void dispose() {
     emailController.dispose();
-    passwordController.dispose();
-    passwordFocusNode.dispose();
+    _password.dispose();
     _announcementTimer?.cancel();
     _errorTimer?.cancel();
     super.dispose();
@@ -165,6 +173,8 @@ class _LoginScreenState extends State<LoginScreen> {
         emailController.text.trim(),
         passwordController.text.trim(),
       );
+      // Not left in the field behind the screen that replaces this one.
+      _password.clearAndHide();
       final signedInUser = credential.user;
       debugPrint('[LOGIN] Sign-in succeeded for uid=${signedInUser?.uid ?? "unknown"}');
 
@@ -208,6 +218,9 @@ class _LoginScreenState extends State<LoginScreen> {
     } on FirebaseAuthException catch (e) {
       debugPrint('[LOGIN] FirebaseAuthException: ${e.code} - ${e.message}');
       if (!mounted) return;
+      // A refused password is emptied and the cursor put back for the next
+      // try; any other failure only hides it.
+      if (_password.afterFailedAttempt(e)) passwordFocusNode.requestFocus();
       setState(() {
         error = _friendlyAuthError(e);
         errorIsAboutCredentials = _isCredentialError(e);
@@ -218,6 +231,7 @@ class _LoginScreenState extends State<LoginScreen> {
     } catch (e) {
       debugPrint('[LOGIN] Unexpected error: $e');
       if (!mounted) return;
+      _password.afterFailedAttempt(e);
       setState(() {
         error = FriendlyError.messageFor(e);
         errorIsAboutCredentials = false;
@@ -998,7 +1012,9 @@ class _LoginScreenState extends State<LoginScreen> {
                         TextField(
                           controller: passwordController,
                           focusNode: passwordFocusNode,
-                          obscureText: obscurePassword,
+                          obscureText: _password.obscured,
+                          autocorrect: false,
+                          enableSuggestions: false,
                           style: TextStyle(color: context.colors.textPrimary),
                           textInputAction: TextInputAction.done,
                           onChanged: (_) => _onCredentialsEdited(),
@@ -1008,9 +1024,9 @@ class _LoginScreenState extends State<LoginScreen> {
                             icon: Icons.lock_outline,
                             hasError: fieldsInError,
                             suffix: GestureDetector(
-                              onTap: () => setState(() => obscurePassword = !obscurePassword),
+                              onTap: _password.toggle,
                               child: Icon(
-                                obscurePassword ? Icons.visibility_outlined : Icons.visibility_off_outlined,
+                                _password.obscured ?Icons.visibility_outlined : Icons.visibility_off_outlined,
                                 color: context.colors.textHint,
                                 size: AppIconSize.i20,
                               ),
