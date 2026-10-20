@@ -182,18 +182,18 @@ class _ReportTabbedContentState extends State<ReportTabbedContent> with SingleTi
     // plain Row/Expanded instead, same as the count is fixed and
     // known ahead of time.
     final row1 = [
-      _summaryTile(context.l10n.reports_totalSales, Money.symbolDecimal(report.salesTotalValue), Icons.shopping_cart_outlined, context.colors.info),
-      _summaryTile(context.l10n.reports_serviceRevenue, Money.symbolDecimal(report.servicesTotalValue), Icons.medical_services_outlined, context.colors.success),
-      _summaryTile(context.l10n.payments_typeDebtRepayments, Money.symbolDecimal(report.repaymentsValue), Icons.people_alt_outlined, context.colors.chart4),
-      _summaryTile(context.l10n.transactions_expenses, Money.symbolDecimal(report.totalExpenses), Icons.receipt_long_outlined, context.colors.danger),
-      _summaryTile(context.l10n.payments_typeOtherIncome, Money.symbolDecimal(report.totalOtherIncome), Icons.savings_outlined, context.colors.primary),
+      _summaryTile(context.l10n.reports_totalSales, Money.format(report.salesTotalValue), Icons.shopping_cart_outlined, context.colors.info),
+      _summaryTile(context.l10n.reports_serviceRevenue, Money.format(report.servicesTotalValue), Icons.medical_services_outlined, context.colors.success),
+      _summaryTile(context.l10n.payments_typeDebtRepayments, Money.format(report.repaymentsValue), Icons.people_alt_outlined, context.colors.chart4),
+      _summaryTile(context.l10n.transactions_expenses, Money.format(report.totalExpenses), Icons.receipt_long_outlined, context.colors.danger),
+      _summaryTile(context.l10n.payments_typeOtherIncome, Money.format(report.totalOtherIncome), Icons.savings_outlined, context.colors.primary),
     ];
     final row2 = [
-      _summaryTile(context.l10n.reports_outstandingNewDebt, Money.symbolDecimal(report.newDebtValue), Icons.warning_amber_outlined, context.colors.warning),
+      _summaryTile(context.l10n.reports_outstandingNewDebt, Money.format(report.newDebtValue), Icons.warning_amber_outlined, context.colors.warning),
       _summaryTile(context.l10n.transactions_title, '$transactionsCount', Icons.sync_alt_outlined, context.colors.chart5),
       _summaryTile(context.l10n.reports_servicesPerformed, '${report.servicesCount}', Icons.build_outlined, context.colors.chart6),
       _summaryTile(context.l10n.reports_productsSold, context.l10n.reports_unitsCount(productsSoldUnits), Icons.inventory_2_outlined, context.colors.accent.withValues(alpha: AppAlpha.a85)),
-      _summaryTile(context.l10n.reports_totalRevenueToday, Money.symbolDecimal(revenue), Icons.trending_up_outlined, context.colors.primary),
+      _summaryTile(context.l10n.reports_totalRevenueToday, Money.format(revenue), Icons.trending_up_outlined, context.colors.primary),
     ];
 
     return Padding(
@@ -321,7 +321,7 @@ class _ReportTabbedContentState extends State<ReportTabbedContent> with SingleTi
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         Expanded(child: Text(s.customerName, style: const TextStyle(fontSize: AppFontSize.f12_5), overflow: TextOverflow.ellipsis)),
-                        Text(Money.symbolDecimal(s.amount), style: const TextStyle(fontSize: AppFontSize.f12_5, fontWeight: AppFontWeight.semibold)),
+                        Text(Money.format(s.amount), style: const TextStyle(fontSize: AppFontSize.f12_5, fontWeight: AppFontWeight.semibold)),
                       ],
                     ),
                   ),
@@ -347,7 +347,7 @@ class _ReportTabbedContentState extends State<ReportTabbedContent> with SingleTi
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         Expanded(child: Text(s.serviceName, style: const TextStyle(fontSize: AppFontSize.f12_5), overflow: TextOverflow.ellipsis)),
-                        Text(Money.symbolDecimal(s.revenue), style: const TextStyle(fontSize: AppFontSize.f12_5, fontWeight: AppFontWeight.semibold)),
+                        Text(Money.format(s.revenue), style: const TextStyle(fontSize: AppFontSize.f12_5, fontWeight: AppFontWeight.semibold)),
                       ],
                     ),
                   ),
@@ -399,7 +399,7 @@ class _ReportTabbedContentState extends State<ReportTabbedContent> with SingleTi
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         Expanded(child: Text(c.clientName, style: const TextStyle(fontSize: AppFontSize.f12_5), overflow: TextOverflow.ellipsis)),
-                        Text(Money.symbolDecimal(c.closingDebt), style: const TextStyle(fontSize: AppFontSize.f12_5, fontWeight: AppFontWeight.semibold)),
+                        Text(Money.format(c.closingDebt), style: const TextStyle(fontSize: AppFontSize.f12_5, fontWeight: AppFontWeight.semibold)),
                       ],
                     ),
                   ),
@@ -466,14 +466,14 @@ class _ReportTabbedContentState extends State<ReportTabbedContent> with SingleTi
                       Expanded(flex: 2, child: Text(s.receiptNo, style: const TextStyle(fontSize: AppFontSize.f12_5))),
                       Expanded(flex: 3, child: Text(s.customerName, style: const TextStyle(fontSize: AppFontSize.f12_5))),
                       Expanded(flex: 1, child: Text('${s.itemCount}', style: const TextStyle(fontSize: AppFontSize.f12_5))),
-                      Expanded(flex: 2, child: Text(Money.decimal(s.amount), style: const TextStyle(fontSize: AppFontSize.f12_5, fontWeight: AppFontWeight.semibold))),
+                      Expanded(flex: 2, child: Text(Money.plain(s.amount), style: const TextStyle(fontSize: AppFontSize.f12_5, fontWeight: AppFontWeight.semibold))),
                       Expanded(flex: 2, child: Text(context.l10n.paymentMethodLabel(s.paymentMethod), style: const TextStyle(fontSize: AppFontSize.f12_5))),
                     ],
                   ),
                 ),
               const Divider(height: 1),
               const SizedBox(height: AppSpacing.s8),
-              _statRow(context.l10n.reports_totalSales, Money.symbolDecimal(report.salesTotalValue), bold: true),
+              _statRow(context.l10n.reports_totalSales, Money.format(report.salesTotalValue), bold: true),
             ],
           ],
         ),
@@ -487,7 +487,7 @@ class _ReportTabbedContentState extends State<ReportTabbedContent> with SingleTi
               _sectionHeader(Icons.credit_card_outlined, context.l10n.reports_paymentMethods),
               const SizedBox(height: AppSpacing.s8),
               for (final e in report.salesByPaymentMethod.entries)
-                _statRow(context.l10n.paymentMethodLabel(e.key), Money.symbolDecimal(e.value)),
+                _statRow(context.l10n.paymentMethodLabel(e.key), Money.format(e.value)),
             ],
           ),
         ),
@@ -517,13 +517,13 @@ class _ReportTabbedContentState extends State<ReportTabbedContent> with SingleTi
                     children: [
                       Expanded(flex: 4, child: Text(s.serviceName, style: const TextStyle(fontSize: AppFontSize.f13))),
                       Expanded(flex: 2, child: Text('${s.count}', style: const TextStyle(fontSize: AppFontSize.f13))),
-                      Expanded(flex: 2, child: Text(Money.symbolDecimal(s.revenue), style: const TextStyle(fontSize: AppFontSize.f13, fontWeight: AppFontWeight.semibold))),
+                      Expanded(flex: 2, child: Text(Money.format(s.revenue), style: const TextStyle(fontSize: AppFontSize.f13, fontWeight: AppFontWeight.semibold))),
                     ],
                   ),
                 ),
               const Divider(height: 1),
               const SizedBox(height: AppSpacing.s8),
-              _statRow(context.l10n.reports_totalServiceRevenue, Money.symbolDecimal(report.servicesTotalValue), bold: true),
+              _statRow(context.l10n.reports_totalServiceRevenue, Money.format(report.servicesTotalValue), bold: true),
             ],
           ],
         ),
@@ -537,7 +537,7 @@ class _ReportTabbedContentState extends State<ReportTabbedContent> with SingleTi
               _sectionHeader(Icons.credit_card_outlined, context.l10n.reports_paymentMethods),
               const SizedBox(height: AppSpacing.s8),
               for (final e in report.servicesByPaymentMethod.entries)
-                _statRow(context.l10n.paymentMethodLabel(e.key), Money.symbolDecimal(e.value)),
+                _statRow(context.l10n.paymentMethodLabel(e.key), Money.format(e.value)),
             ],
           ),
         ),
@@ -716,9 +716,9 @@ class _ReportTabbedContentState extends State<ReportTabbedContent> with SingleTi
           children: [
             _sectionHeader(Icons.people_alt_outlined, context.l10n.reports_debtActivity),
             const SizedBox(height: AppSpacing.s10),
-            _statRow(context.l10n.reports_newDebtTodayLower, Money.symbolDecimal(report.newDebtValue)),
-            _statRow(context.l10n.reports_repaymentsCollected, Money.symbolDecimal(report.repaymentsValue)),
-            _statRow(context.l10n.reports_outstandingChange, Money.symbolDecimal(report.outstandingChange), bold: true),
+            _statRow(context.l10n.reports_newDebtTodayLower, Money.format(report.newDebtValue)),
+            _statRow(context.l10n.reports_repaymentsCollected, Money.format(report.repaymentsValue)),
+            _statRow(context.l10n.reports_outstandingChange, Money.format(report.outstandingChange), bold: true),
           ],
         ),
       ),
@@ -746,10 +746,10 @@ class _ReportTabbedContentState extends State<ReportTabbedContent> with SingleTi
                   child: Row(
                     children: [
                       Expanded(flex: 3, child: Text(c.clientName, style: const TextStyle(fontSize: AppFontSize.f13, fontWeight: AppFontWeight.medium))),
-                      Expanded(flex: 2, child: Text(Money.decimal(c.openingDebt), style: const TextStyle(fontSize: AppFontSize.f12_5))),
-                      Expanded(flex: 2, child: Text(Money.decimal(c.newDebt), style: const TextStyle(fontSize: AppFontSize.f12_5))),
-                      Expanded(flex: 2, child: Text(Money.decimal(c.repayment), style: const TextStyle(fontSize: AppFontSize.f12_5))),
-                      Expanded(flex: 2, child: Text(Money.decimal(c.closingDebt), style: const TextStyle(fontSize: AppFontSize.f12_5, fontWeight: AppFontWeight.semibold))),
+                      Expanded(flex: 2, child: Text(Money.plain(c.openingDebt), style: const TextStyle(fontSize: AppFontSize.f12_5))),
+                      Expanded(flex: 2, child: Text(Money.plain(c.newDebt), style: const TextStyle(fontSize: AppFontSize.f12_5))),
+                      Expanded(flex: 2, child: Text(Money.plain(c.repayment), style: const TextStyle(fontSize: AppFontSize.f12_5))),
+                      Expanded(flex: 2, child: Text(Money.plain(c.closingDebt), style: const TextStyle(fontSize: AppFontSize.f12_5, fontWeight: AppFontWeight.semibold))),
                     ],
                   ),
                 ),
@@ -785,13 +785,13 @@ class _ReportTabbedContentState extends State<ReportTabbedContent> with SingleTi
                       Expanded(flex: 2, child: Text(AppDateFormat.time24.format(e.time), style: const TextStyle(fontSize: AppFontSize.f12_5))),
                       Expanded(flex: 4, child: Text(e.description, style: const TextStyle(fontSize: AppFontSize.f12_5))),
                       Expanded(flex: 3, child: Text(context.l10n.transactionCategoryLabel(e.category), style: const TextStyle(fontSize: AppFontSize.f12_5))),
-                      Expanded(flex: 2, child: Text(Money.decimal(e.amount), style: const TextStyle(fontSize: AppFontSize.f12_5, fontWeight: AppFontWeight.semibold))),
+                      Expanded(flex: 2, child: Text(Money.plain(e.amount), style: const TextStyle(fontSize: AppFontSize.f12_5, fontWeight: AppFontWeight.semibold))),
                     ],
                   ),
                 ),
               const Divider(height: 1),
               const SizedBox(height: AppSpacing.s8),
-              _statRow(context.l10n.reports_totalExpenses, Money.symbolDecimal(report.totalExpenses), bold: true),
+              _statRow(context.l10n.reports_totalExpenses, Money.format(report.totalExpenses), bold: true),
             ],
           ],
         ),
@@ -843,7 +843,7 @@ class _ReportTabbedContentState extends State<ReportTabbedContent> with SingleTi
                       ),
                       Expanded(
                         flex: 2,
-                        child: Text('${entry.isExpense ? '-' : '+'}${Money.decimal(entry.item.amount)}',
+                        child: Text('${entry.isExpense ? '-' : '+'}${Money.plain(entry.item.amount)}',
                             style: TextStyle(fontSize: AppFontSize.f12_5, fontWeight: AppFontWeight.semibold, color: entry.isExpense ? context.colors.dangerStrong : context.colors.successStrong)),
                       ),
                     ],
@@ -851,8 +851,8 @@ class _ReportTabbedContentState extends State<ReportTabbedContent> with SingleTi
                 ),
               const Divider(height: 1),
               const SizedBox(height: AppSpacing.s8),
-              _statRow(context.l10n.payments_typeOtherIncome, Money.symbolDecimal(report.totalOtherIncome)),
-              _statRow(context.l10n.transactions_expenses, Money.symbolDecimal(report.totalExpenses), bold: true),
+              _statRow(context.l10n.payments_typeOtherIncome, Money.format(report.totalOtherIncome)),
+              _statRow(context.l10n.transactions_expenses, Money.format(report.totalExpenses), bold: true),
             ],
           ],
         ),
@@ -969,7 +969,7 @@ class _ReportTabbedContentState extends State<ReportTabbedContent> with SingleTi
                 _emptyState(emptyText)
               else
                 for (final entry in byMethod.entries)
-                  _statRow(context.l10n.paymentMethodLabel(entry.key), Money.symbolDecimal(entry.value)),
+                  _statRow(context.l10n.paymentMethodLabel(entry.key), Money.format(entry.value)),
             ],
           ),
         ),
@@ -989,9 +989,9 @@ class _ReportTabbedContentState extends State<ReportTabbedContent> with SingleTi
             if (combined.isEmpty)
               _emptyState(context.l10n.reports_noPaymentsToday)
             else ...[
-              for (final entry in combined.entries) _statRow(context.l10n.paymentMethodLabel(entry.key), Money.symbolDecimal(entry.value)),
+              for (final entry in combined.entries) _statRow(context.l10n.paymentMethodLabel(entry.key), Money.format(entry.value)),
               const Divider(height: 18),
-              _statRow(context.l10n.common_total, Money.symbolDecimal(combinedTotal), bold: true),
+              _statRow(context.l10n.common_total, Money.format(combinedTotal), bold: true),
             ],
           ],
         ),

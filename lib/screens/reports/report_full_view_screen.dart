@@ -226,14 +226,14 @@ class ReportFullViewScreen extends StatelessWidget {
         children: [
           _sectionHeader(context, context.l10n.reports_dailySummary),
           const SizedBox(height: AppSpacing.s8),
-          _statRow(context, context.l10n.reports_totalSales, Money.symbolDecimal(report.salesTotalValue)),
-          _statRow(context, context.l10n.reports_serviceRevenue, Money.symbolDecimal(report.servicesTotalValue)),
-          _statRow(context, context.l10n.reports_totalRevenue, Money.symbolDecimal(revenue), bold: true),
+          _statRow(context, context.l10n.reports_totalSales, Money.format(report.salesTotalValue)),
+          _statRow(context, context.l10n.reports_serviceRevenue, Money.format(report.servicesTotalValue)),
+          _statRow(context, context.l10n.reports_totalRevenue, Money.format(revenue), bold: true),
           if (report.totalOtherIncome > 0)
-            _statRow(context, context.l10n.payments_typeOtherIncome, Money.symbolDecimal(report.totalOtherIncome)),
-          _statRow(context, context.l10n.payments_typeDebtRepayments, Money.symbolDecimal(report.repaymentsValue)),
-          _statRow(context, context.l10n.transactions_expenses, Money.symbolDecimal(report.totalExpenses)),
-          _statRow(context, context.l10n.reports_newDebtToday, Money.symbolDecimal(report.newDebtValue)),
+            _statRow(context, context.l10n.payments_typeOtherIncome, Money.format(report.totalOtherIncome)),
+          _statRow(context, context.l10n.payments_typeDebtRepayments, Money.format(report.repaymentsValue)),
+          _statRow(context, context.l10n.transactions_expenses, Money.format(report.totalExpenses)),
+          _statRow(context, context.l10n.reports_newDebtToday, Money.format(report.newDebtValue)),
         ],
       ),
     );
@@ -249,7 +249,7 @@ class ReportFullViewScreen extends StatelessWidget {
           if (report.salesLineItems.isEmpty)
             _emptyState(context, context.l10n.reports_noSalesToday)
           else
-            for (final s in report.salesLineItems) _statRow(context, s.customerName, Money.symbolDecimal(s.amount)),
+            for (final s in report.salesLineItems) _statRow(context, s.customerName, Money.format(s.amount)),
         ],
       ),
     );
@@ -265,7 +265,7 @@ class ReportFullViewScreen extends StatelessWidget {
           if (report.serviceBreakdown.isEmpty)
             _emptyState(context, context.l10n.reports_noServicesToday)
           else
-            for (final s in report.serviceBreakdown) _statRow(context, s.serviceName, Money.symbolDecimal(s.revenue)),
+            for (final s in report.serviceBreakdown) _statRow(context, s.serviceName, Money.format(s.revenue)),
         ],
       ),
     );
@@ -324,7 +324,7 @@ class ReportFullViewScreen extends StatelessWidget {
           if (report.clientDebtEntries.isEmpty)
             _emptyState(context, context.l10n.reports_noDebtActivity)
           else
-            for (final c in report.clientDebtEntries) _statRow(context, c.clientName, Money.symbolDecimal(c.closingDebt)),
+            for (final c in report.clientDebtEntries) _statRow(context, c.clientName, Money.format(c.closingDebt)),
         ],
       ),
     );
@@ -340,7 +340,7 @@ class ReportFullViewScreen extends StatelessWidget {
           if (report.expenseLineItems.isEmpty)
             _emptyState(context, context.l10n.reports_noExpensesToday)
           else
-            for (final e in report.expenseLineItems) _statRow(context, e.description, Money.symbolDecimal(e.amount)),
+            for (final e in report.expenseLineItems) _statRow(context, e.description, Money.format(e.amount)),
         ],
       ),
     );
@@ -367,15 +367,15 @@ class ReportFullViewScreen extends StatelessWidget {
           const SizedBox(height: AppSpacing.s8),
           for (final p in report.paymentReconciliation) ...[
             Text(context.l10n.paymentMethodLabel(p.method), style: const TextStyle(fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f13)),
-            _statRow(context, context.l10n.reports_expectedBalance, Money.symbolDecimal(p.expected)),
+            _statRow(context, context.l10n.reports_expectedBalance, Money.format(p.expected)),
             if (p.physicalCount != null) ...[
-              _statRow(context, context.l10n.reports_physicalBalance, Money.symbolDecimal(p.physicalCount!), bold: true),
+              _statRow(context, context.l10n.reports_physicalBalance, Money.format(p.physicalCount!), bold: true),
               _statRow(
                   context,
                   context.l10n.reports_variance,
                   (p.variance != null && p.variance != 0)
-                      ? context.l10n.reports_varianceValue(Money.symbolDecimal(p.variance!))
-                      : context.l10n.reports_matchValue(Money.symbolDecimal(0)),
+                      ? context.l10n.reports_varianceValue(Money.format(p.variance!))
+                      : context.l10n.reports_matchValue(Money.format(0)),
                   bold: p.variance != null && p.variance != 0),
               if (p.varianceReason != null && p.varianceReason!.isNotEmpty)
                 _statRow(context, context.l10n.reports_reason, p.varianceReason!),
@@ -414,7 +414,7 @@ class ReportFullViewScreen extends StatelessWidget {
             _emptyState(context, emptyText)
           else
             for (final entry in byMethod.entries)
-              _statRow(context, context.l10n.paymentMethodLabel(entry.key), Money.symbolDecimal(entry.value)),
+              _statRow(context, context.l10n.paymentMethodLabel(entry.key), Money.format(entry.value)),
           const SizedBox(height: AppSpacing.s10),
         ],
       );
@@ -430,7 +430,7 @@ class ReportFullViewScreen extends StatelessWidget {
             _emptyState(context, context.l10n.reports_noPaymentsToday)
           else ...[
             for (final entry in combined.entries)
-              _statRow(context, context.l10n.paymentMethodLabel(entry.key), Money.symbolDecimal(entry.value), bold: true),
+              _statRow(context, context.l10n.paymentMethodLabel(entry.key), Money.format(entry.value), bold: true),
             const SizedBox(height: AppSpacing.s12),
             const Divider(height: 1),
             const SizedBox(height: AppSpacing.s12),

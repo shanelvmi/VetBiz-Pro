@@ -391,7 +391,7 @@ class _PastReportsScreenState extends State<PastReportsScreen> {
                     Text(AppDateFormat.dateLong.format(report.reportDate),
                         style: const TextStyle(fontWeight: AppFontWeight.semibold, fontSize: AppFontSize.f13_5)),
                     const SizedBox(height: AppSpacing.s2),
-                    Text(context.l10n.reports_rowSummary(Money.symbolDecimal(revenue), report.generatedByName),
+                    Text(context.l10n.reports_rowSummary(Money.format(revenue), report.generatedByName),
                         style: TextStyle(fontSize: AppFontSize.f12, color: context.colors.textMuted)),
                   ],
                 ),

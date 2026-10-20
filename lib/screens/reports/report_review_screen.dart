@@ -414,7 +414,7 @@ class _ReportReviewScreenState extends State<ReportReviewScreen> {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(context.l10n.reports_amountPaidOut, style: TextStyle(fontSize: AppFontSize.f13, color: context.colors.textSoft)),
-              Text(Money.symbolDecimal(p.expected.abs()),
+              Text(Money.format(p.expected.abs()),
                   style: const TextStyle(fontSize: AppFontSize.f13, fontWeight: AppFontWeight.bold)),
             ],
           ),
@@ -448,7 +448,7 @@ class _ReportReviewScreenState extends State<ReportReviewScreen> {
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             Text(context.l10n.reports_expectedBalance, style: TextStyle(fontSize: AppFontSize.f13, color: context.colors.textSoft)),
-            Text(Money.symbolDecimal(p.expected),
+            Text(Money.format(p.expected),
                 style: const TextStyle(fontSize: AppFontSize.f13, fontWeight: AppFontWeight.bold)),
           ],
         ),
@@ -480,7 +480,7 @@ class _ReportReviewScreenState extends State<ReportReviewScreen> {
               const SizedBox(width: AppSpacing.s4),
               Text(
                   context.l10n.reports_methodVariance(
-                      context.l10n.paymentMethodLabel(p.method), '${variance > 0 ? '+' : ''}${Money.symbolDecimal(variance)}'),
+                      context.l10n.paymentMethodLabel(p.method), '${variance > 0 ? '+' : ''}${Money.format(variance)}'),
                   style: TextStyle(fontSize: AppFontSize.f13, fontWeight: AppFontWeight.semibold, color: context.colors.dangerStrong)),
             ],
           ),
