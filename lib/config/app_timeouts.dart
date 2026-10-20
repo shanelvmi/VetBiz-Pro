@@ -39,6 +39,11 @@ class AppTimeouts {
   /// (login_screen.dart).
   static const Duration loginSafetyNet = Duration(seconds: 6);
 
+  /// How long a password stays readable after its eye is opened, before it
+  /// hides itself again (P1b: an unattended screen must not show it).
+  static const int passwordRevealSeconds = 10;
+  static const Duration passwordReveal = Duration(seconds: passwordRevealSeconds);
+
   // Loading data.
 
   /// The user's role (user_role_provider.dart).

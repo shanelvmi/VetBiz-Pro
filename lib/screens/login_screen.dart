@@ -26,14 +26,21 @@ import '../theme/theme_context.dart';
 
 class LoginScreen extends StatefulWidget {
   final String? errorMessage;
-  const LoginScreen({super.key, this.errorMessage});
+  // Tests only (P1b): a stand-in for signing in and for the two public
+  // documents this screen reads, so it can be built without Firebase.
+  @visibleForTesting
+  final AuthService? authService;
+  @visibleForTesting
+  final FirebaseFirestore? firestore;
+  const LoginScreen({super.key, this.errorMessage, this.authService, this.firestore});
 
   @override
   State<LoginScreen> createState() => _LoginScreenState();
 }
 
 class _LoginScreenState extends State<LoginScreen> {
-  final AuthService _authService = AuthService();
+  late final AuthService _authService = widget.authService ?? AuthService();
+  FirebaseFirestore get _db => widget.firestore ?? FirebaseFirestore.instance;
   final TextEditingController emailController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
 
@@ -552,7 +559,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
   Widget _buildAnnouncementsScrollable() {
     return StreamBuilder<QuerySnapshot>(
-      stream: FirebaseFirestore.instance
+      stream: _db
           .collection(Collections.publicAnnouncements)
           .orderBy('timestamp', descending: true)
           .snapshots(),
@@ -1125,7 +1132,7 @@ class _LoginScreenState extends State<LoginScreen> {
           // bundled default otherwise.
           Positioned.fill(
             child: StreamBuilder<DocumentSnapshot>(
-              stream: FirebaseFirestore.instance.collection(Collections.appConfig).doc('login_poster').snapshots(),
+              stream: _db.collection(Collections.appConfig).doc('login_poster').snapshots(),
               builder: (context, snapshot) {
                 final posterUrl = snapshot.data?.data() != null
                     ? (snapshot.data!.data() as Map<String, dynamic>)['posterUrl'] as String?
