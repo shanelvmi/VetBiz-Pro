@@ -1,8 +1,11 @@
+import 'dart:async';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 
 import '../../config/app_date_format.dart';
 import '../../config/app_limits.dart';
+import '../../config/app_timeouts.dart';
 import '../../config/money.dart';
 import '../../data/collections.dart';
 import '../../data/fields.dart';
@@ -31,7 +34,9 @@ Stream<List<LogDoc>> recentActivityStream(FirebaseFirestore firestore, String fa
   final logs = firestore.collection(Collections.facilities).doc(facilityId).collection(Collections.activityLogs);
   if (isAdmin) {
     final query = logs.orderBy('timestamp', descending: true).limit(AppLimits.recentActivityCount);
-    return (snapshotsOf ?? (q) => q.snapshots())(query).map((s) => s.docs);
+    // Shared, so a feed rebuilt elsewhere after a resize gets the entries at
+    // once (DASH-1).
+    return shareLatest(() => (snapshotsOf ?? (q) => q.snapshots())(query).map((s) => s.docs));
   }
   return mergedLogStream([
     logs.where(Fields.userId, isEqualTo: uid).orderBy('timestamp', descending: true).limit(AppLimits.recentActivityCount),
@@ -81,14 +86,59 @@ class DashboardLowerPanels extends StatelessWidget {
 
 /// The dashboard's Recent Activity card. [stream] is null while there is no
 /// facility yet.
-class RecentActivityFeed extends StatelessWidget {
+///
+/// The dashboard gives it a GlobalKey, so a resize that moves it to the
+/// other layout branch keeps this state and its subscription (DASH-1). It
+/// never spins for ever: with no answer after
+/// AppTimeouts.liveCardFirstAnswer, or on an error, it says it couldn't load
+/// and offers Retry, which calls [onRetry] (the dashboard opens a new
+/// stream).
+class RecentActivityFeed extends StatefulWidget {
   final Stream<List<LogDoc>>? stream;
+  final VoidCallback? onRetry;
 
-  const RecentActivityFeed({super.key, required this.stream});
+  const RecentActivityFeed({super.key, required this.stream, this.onRetry});
+
+  @override
+  State<RecentActivityFeed> createState() => _RecentActivityFeedState();
+}
+
+class _RecentActivityFeedState extends State<RecentActivityFeed> {
+  Timer? _firstAnswer;
+  bool _answered = false;
+  bool _timedOut = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _waitForFirstAnswer();
+  }
+
+  @override
+  void didUpdateWidget(RecentActivityFeed oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.stream != widget.stream) _waitForFirstAnswer();
+  }
+
+  @override
+  void dispose() {
+    _firstAnswer?.cancel();
+    super.dispose();
+  }
+
+  void _waitForFirstAnswer() {
+    _firstAnswer?.cancel();
+    _answered = false;
+    _timedOut = false;
+    if (widget.stream == null) return;
+    _firstAnswer = Timer(AppTimeouts.liveCardFirstAnswer, () {
+      if (mounted && !_answered) setState(() => _timedOut = true);
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
-    final stream = this.stream;
+    final stream = widget.stream;
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(AppSpacing.s18),
@@ -127,11 +177,21 @@ class RecentActivityFeed extends StatelessWidget {
             StreamBuilder<List<LogDoc>>(
               stream: stream,
               builder: (context, snapshot) {
-                if (snapshot.hasError) {
+                if (snapshot.hasData || snapshot.hasError) {
+                  _answered = true;
+                  _firstAnswer?.cancel();
+                }
+                if (snapshot.hasError || (!snapshot.hasData && _timedOut)) {
                   return Padding(
                     padding: const EdgeInsets.symmetric(vertical: AppSpacing.s20),
                     child: Center(
-                      child: Text(context.l10n.dashboard_recentActivityLoadFailed, style: TextStyle(color: context.colors.textMuted)),
+                      child: Column(
+                        children: [
+                          Text(context.l10n.dashboard_recentActivityLoadFailed, style: TextStyle(color: context.colors.textMuted)),
+                          if (widget.onRetry != null)
+                            TextButton(onPressed: widget.onRetry, child: Text(context.l10n.common_retry)),
+                        ],
+                      ),
                     ),
                   );
                 }

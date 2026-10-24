@@ -597,6 +597,11 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
   // stream each time.
   Stream<List<LogDoc>>? _recentActivityStream;
   String? _recentActivityKey;
+  // The feed is built in one of two layout branches (side by side when wide,
+  // stacked when narrow). This key moves the same feed, with its state and
+  // subscription, from one to the other on a resize, instead of building a
+  // new one (DASH-1).
+  final _recentActivityFeedKey = GlobalKey();
 
   // What each role sees: recentActivityStream (dashboard_panels.dart).
   Stream<List<LogDoc>> _recentActivityStreamFor(String facilityId, bool isAdmin) {
@@ -1797,7 +1802,10 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
   Widget _buildRecentActivityFeed() {
     final facilityId = _lastLoadedFacilityId;
     return RecentActivityFeed(
+      key: _recentActivityFeedKey,
       stream: facilityId == null ? null : _recentActivityStreamFor(facilityId, Provider.of<UserRoleProvider>(context).isAdmin),
+      // A new stream (the cached one may have failed).
+      onRetry: () => setState(() => _recentActivityStream = null),
     );
   }
 

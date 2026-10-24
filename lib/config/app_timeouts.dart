@@ -11,6 +11,11 @@ class AppTimeouts {
   /// Outer bound on deciding the first screen after sign-in.
   static const Duration decideFirstScreen = Duration(seconds: 30);
 
+  /// How long a live card (the dashboard's Recent Activity) waits for its
+  /// first answer before it says it couldn't load and offers Retry, instead
+  /// of spinning for ever (DASH-1).
+  static const Duration liveCardFirstAnswer = Duration(seconds: 15);
+
   /// Reading the user's profile.
   static const Duration profileRead = Duration(seconds: 15);
 
