@@ -14,7 +14,7 @@ import 'package:vetbiz_pro/models/notification_state.dart';
 import 'package:vetbiz_pro/services/notification_state_service.dart';
 
 // Until the implementation: every call throws UnimplementedError('NOTIF-2b').
-const _skipUntilImplemented = true;
+const _skipUntilImplemented = false;
 
 final now0 = DateTime(2026, 10, 24, 10);
 

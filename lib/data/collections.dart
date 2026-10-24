@@ -27,6 +27,10 @@ class Collections {
   static const String payments = 'payments';
   static const String transactions = 'transactions';
   static const String notifications = 'notifications';
+
+  /// Each person's own read, unread and removed notifications, one document
+  /// per person under the facility (NOTIF-2a rule, NOTIF-2b service).
+  static const String notificationState = 'notificationState';
   static const String activityLogs = 'activity_logs';
   static const String stockAdditions = 'stockAdditions';
   static const String stockAdjustments = 'stock_adjustments';

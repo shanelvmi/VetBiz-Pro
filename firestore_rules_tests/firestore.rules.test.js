@@ -1424,3 +1424,13 @@ test('NOTIF-2a: notifications themselves are unchanged - no delete from the app;
   }
   await assertFails(f1(as('assistant'), 'notifications/n1').update({ title: 'changed' }));
 });
+
+test('NOTIF-2b: the service\'s own write - set with merge, entries nested in their map, a delete among them - passes', async () => {
+  const mine = stateOf(as('owner'), 'owner');
+  await assertSucceeds(mine.set({ removed: { n1: new Date(), n2: new Date() }, updatedAt: serverTime() }, { merge: true }));
+  // markRead: one entry in, one off unread; Undo: an entry off removed.
+  await assertSucceeds(mine.set({ read: { n1: new Date() }, unread: { n1: FieldValue.delete() }, updatedAt: serverTime() }, { merge: true }));
+  await assertSucceeds(mine.set({ removed: { n2: FieldValue.delete() }, updatedAt: serverTime() }, { merge: true }));
+  assert.deepStrictEqual(Object.keys((await mine.get()).data().removed), ['n1']);
+  await assertSucceeds(mine.set({ seenStage: { subscription_expiring: 'grace' }, updatedAt: serverTime() }, { merge: true }));
+});

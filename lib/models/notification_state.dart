@@ -22,12 +22,30 @@ class NotificationState {
   static const NotificationState empty = NotificationState();
 
   /// The stored document; null (none yet) is the empty state.
-  factory NotificationState.fromMap(Map<String, dynamic>? data) => throw UnimplementedError('NOTIF-2b');
+  factory NotificationState.fromMap(Map<String, dynamic>? data) {
+    Map<String, DateTime> times(Object? map) => {
+          if (map is Map)
+            for (final e in map.entries)
+              if (notificationStateTime(e.value) != null) e.key as String: notificationStateTime(e.value)!,
+        };
+    final stages = data?['seenStage'];
+    return NotificationState(
+      read: times(data?['read']),
+      unread: times(data?['unread']),
+      removed: times(data?['removed']),
+      seenStage: {
+        if (stages is Map)
+          for (final e in stages.entries)
+            if (e.value is String) e.key as String: e.value as String,
+      },
+    );
+  }
 
   /// When I read [id]: my own read, else the facility-wide readAt from
   /// before NOTIF-2 ([sharedReadAt]), unless I marked it unread; null when
   /// it is unread for me.
-  DateTime? readAtForMe(String id, {DateTime? sharedReadAt}) => throw UnimplementedError('NOTIF-2b');
+  DateTime? readAtForMe(String id, {DateTime? sharedReadAt}) =>
+      unread.containsKey(id) ? null : (read[id] ?? sharedReadAt);
 
   bool isReadByMe(String id, {DateTime? sharedReadAt}) => readAtForMe(id, sharedReadAt: sharedReadAt) != null;
 
