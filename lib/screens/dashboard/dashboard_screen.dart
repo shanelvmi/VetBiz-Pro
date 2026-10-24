@@ -19,7 +19,6 @@ import '../../services/session_validity_service.dart';
 import '../../services/dashboard_summary_service.dart';
 import '../../services/sales_summary_service.dart';
 import 'package:fl_chart/fl_chart.dart';
-import '../../utils/text_sanitizer.dart';
 import '../../utils/upload_size_check.dart';
 
 import '../../widgets/summary_card.dart';
@@ -44,6 +43,7 @@ import '../../providers/ui_settings_provider.dart';
 import '../../providers/user_role_provider.dart';
 import '../../utils/merged_query_stream.dart';
 import '../subscription/subscription_screen.dart';
+import 'dashboard_panels.dart';
 import 'notifications_screen.dart';
 import 'insights_screen.dart';
 import '../../utils/subscription_guard.dart';
@@ -68,7 +68,6 @@ import '../../config/app_ranges.dart';
 import '../../config/app_date_format.dart';
 import '../../config/app_links.dart';
 import '../../config/app_info.dart';
-import '../../theme/activity_type_style.dart';
 import '../../theme/app_dimens.dart';
 import '../../theme/theme_context.dart';
 import '../../theme/app_breakpoints.dart';
@@ -601,23 +600,14 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
   Stream<List<LogDoc>>? _recentActivityStream;
   String? _recentActivityKey;
 
-  // An admin sees the latest entries; an ASSISTANT only the latest that are
-  // theirs (what they did, or what is about them) - not the admin matters of
-  // the facility. See firestore.rules: the rule only allows the scoped query.
+  // What each role sees: recentActivityStream (dashboard_panels.dart).
   Stream<List<LogDoc>> _recentActivityStreamFor(String facilityId, bool isAdmin) {
     final key = '$facilityId|$isAdmin';
     final cached = _recentActivityStream;
     if (_recentActivityKey == key && cached != null) return cached;
     _recentActivityKey = key;
-    final logs = FirebaseFirestore.instance.collection(Collections.facilities).doc(facilityId).collection(Collections.activityLogs);
-    if (isAdmin) {
-      return _recentActivityStream = logs.orderBy('timestamp', descending: true).limit(AppLimits.recentActivityCount).snapshots().map((s) => s.docs);
-    }
-    final uid = FirebaseAuth.instance.currentUser?.uid ?? '';
-    return _recentActivityStream = mergedLogStream([
-      logs.where(Fields.userId, isEqualTo: uid).orderBy('timestamp', descending: true).limit(AppLimits.recentActivityCount),
-      logs.where('targetUserId', isEqualTo: uid).orderBy('timestamp', descending: true).limit(AppLimits.recentActivityCount),
-    ], limit: AppLimits.recentActivityCount);
+    return _recentActivityStream = recentActivityStream(FirebaseFirestore.instance, facilityId,
+        isAdmin: isAdmin, uid: FirebaseAuth.instance.currentUser?.uid ?? '');
   }
   String? _lastLoadedFilter;
   StreamSubscription<DashboardPeriodTotals>? _periodTotalsSub;
@@ -1548,22 +1538,12 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
                             const SizedBox(height: AppSpacing.s16),
                             _buildTodayGlanceStrip(glanceDebtorCount),
                             const SizedBox(height: AppSpacing.s16),
-                            if (isLargeScreen)
-                              Row(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Expanded(flex: 2, child: _buildSalesRevenueChart()),
-                                  const SizedBox(width: AppSpacing.s16),
-                                  Expanded(child: _buildRecentActivityFeed()),
-                                ],
-                              )
-                            else ...[
-                              _buildSalesRevenueChart(),
-                              const SizedBox(height: AppSpacing.s16),
-                              _buildRecentActivityFeed(),
-                            ],
-                            const SizedBox(height: AppSpacing.s16),
-                            _buildQuickActionCards(context),
+                            DashboardLowerPanels(
+                              wide: isLargeScreen,
+                              chart: _buildSalesRevenueChart(),
+                              feed: _buildRecentActivityFeed(),
+                              quickActions: _buildQuickActionCards(context),
+                            ),
                           ],
                         ),
                                 ),
@@ -1813,109 +1793,8 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
 
   Widget _buildRecentActivityFeed() {
     final facilityId = _lastLoadedFacilityId;
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(AppSpacing.s18),
-      decoration: BoxDecoration(
-        color: context.colors.surface,
-        borderRadius: BorderRadius.circular(AppRadius.r12),
-        border: Border.all(color: context.colors.textHint.withValues(alpha: AppAlpha.a15)),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Row(
-                children: [
-                  Icon(Icons.history, size: AppIconSize.i18, color: context.colors.primary),
-                  const SizedBox(width: AppSpacing.s8),
-                  Text(context.l10n.dashboard_recentActivity, style: const TextStyle(fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f14_5)),
-                ],
-              ),
-              TextButton(
-                // Opens as a modal over the Dashboard (full screen on a phone).
-                onPressed: () => showActivityLog(context),
-                child: Text(context.l10n.dashboard_viewAll),
-              ),
-            ],
-          ),
-          const SizedBox(height: AppSpacing.s8),
-          if (facilityId == null)
-            Padding(
-              padding: const EdgeInsets.symmetric(vertical: AppSpacing.s20),
-              child: Center(child: Text(context.l10n.dashboard_noActivityYet, style: TextStyle(color: context.colors.textMuted))),
-            )
-          else
-            StreamBuilder<List<LogDoc>>(
-              stream: _recentActivityStreamFor(facilityId, Provider.of<UserRoleProvider>(context).isAdmin),
-              builder: (context, snapshot) {
-                if (snapshot.hasError) {
-                  return Padding(
-                    padding: const EdgeInsets.symmetric(vertical: AppSpacing.s20),
-                    child: Center(
-                      child: Text(context.l10n.dashboard_recentActivityLoadFailed, style: TextStyle(color: context.colors.textMuted)),
-                    ),
-                  );
-                }
-                if (!snapshot.hasData) {
-                  return const Padding(
-                    padding: EdgeInsets.symmetric(vertical: AppSpacing.s20),
-                    child: Center(child: CircularProgressIndicator(strokeWidth: 2)),
-                  );
-                }
-                final docs = snapshot.data!;
-                if (docs.isEmpty) {
-                  return Padding(
-                    padding: const EdgeInsets.symmetric(vertical: AppSpacing.s20),
-                    child: Center(child: Text(context.l10n.dashboard_noActivityYet, style: TextStyle(color: context.colors.textMuted))),
-                  );
-                }
-                return Column(
-                  children: [
-                    for (int i = 0; i < docs.length; i++) ...[
-                      if (i > 0) Divider(height: 1, color: context.colors.textHint.withValues(alpha: AppAlpha.a15)),
-                      _activityTile(docs[i].data()),
-                    ],
-                  ],
-                );
-              },
-            ),
-        ],
-      ),
-    );
-  }
-
-  Widget _activityTile(Map<String, dynamic> data) {
-    final actionType = (data['actionType'] as String?) ?? '';
-    final description = sanitizeForDisplay((data['description'] as String?) ?? '');
-    final timestamp = data['timestamp'];
-    String timeStr = '';
-    if (timestamp is Timestamp) {
-      timeStr = AppDateFormat.time12.format(timestamp.toDate());
-    }
-    final color = ActivityTypeStyle.color(actionType, context.colors);
-
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: AppSpacing.s10),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Container(
-            width: 32,
-            height: 32,
-            decoration: BoxDecoration(color: color.withValues(alpha: AppAlpha.a10), borderRadius: BorderRadius.circular(AppRadius.r8)),
-            child: Icon(ActivityTypeStyle.icon(actionType), size: AppIconSize.i16, color: color),
-          ),
-          const SizedBox(width: AppSpacing.s10),
-          Expanded(
-            child: Text(description, style: const TextStyle(fontSize: AppFontSize.f12_5), maxLines: 2, overflow: TextOverflow.ellipsis),
-          ),
-          const SizedBox(width: AppSpacing.s8),
-          Text(timeStr, style: TextStyle(fontSize: AppFontSize.f11, color: context.colors.textHint)),
-        ],
-      ),
+    return RecentActivityFeed(
+      stream: facilityId == null ? null : _recentActivityStreamFor(facilityId, Provider.of<UserRoleProvider>(context).isAdmin),
     );
   }
 
