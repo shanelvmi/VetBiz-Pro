@@ -362,6 +362,7 @@
   "subscription_noReason": ["Hakuna sababu iliyotolewa","A rejected payment with no reason.","draft"],
   "subscription_historyTitle": ["Historia ya Usajili","Subscription history screen title.","draft"],
   "subscription_historySubtitle": ["Malipo yako na hali ya ukaguzi wake","Subscription history subtitle.","draft"],
+  "subscription_platformTeam": ["Timu ya {appName}","Subscription history, Submitted by: a record the platform team made itself. appName is AppInfo.name.","draft"],
   "subscription_historyLoadError": ["Imeshindwa kupakia historia: {error}","Subscription history failed to load (error already in friendly words).","draft"],
   "subscription_noSubmissionsYet": ["Bado hakuna malipo yaliyotumwa","Subscription history, empty.","draft"],
   "subscription_noSubmissionsHint": ["Malipo utakayotuma yataonekana hapa.","Subscription history, empty: second line.","draft"],
