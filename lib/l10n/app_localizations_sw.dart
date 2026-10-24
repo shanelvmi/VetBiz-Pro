@@ -2519,7 +2519,7 @@ class AppLocalizationsSw extends AppLocalizations {
 
   @override
   String get uiSettings_systemRefreshHint =>
-      'Hupakia data yako upya na kukurudisha mwanzo. Unabaki umeingia.';
+      'Hupakia upya data yako yote. Unabaki umeingia.';
 
   @override
   String get uiSettings_savedOnDevice => 'Imehifadhiwa kwenye kifaa hiki';
@@ -2530,6 +2530,13 @@ class AppLocalizationsSw extends AppLocalizations {
   @override
   String get uiSettings_refreshBody =>
       'Hii hupakia data yako upya na kukurudisha mwanzo. Unabaki umeingia, lakini chochote ambacho hujahifadhi kitapotea.';
+
+  @override
+  String get uiSettings_refreshDone => 'Data yako imesasishwa.';
+
+  @override
+  String get uiSettings_refreshFailed =>
+      'Imeshindikana kuonyesha upya data yako.';
 
   @override
   String get uiSettings_themePasture => 'Malisho';

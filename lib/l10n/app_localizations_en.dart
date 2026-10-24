@@ -2506,7 +2506,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get uiSettings_systemRefreshHint =>
-      'Reloads your data and takes you back to the start. You stay signed in.';
+      'Reloads all your data. You stay signed in.';
 
   @override
   String get uiSettings_savedOnDevice => 'Saved on this device';
@@ -2517,6 +2517,12 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get uiSettings_refreshBody =>
       'This reloads your data and takes you back to the start. You stay signed in, but anything you haven\'t saved will be lost.';
+
+  @override
+  String get uiSettings_refreshDone => 'Your data is up to date.';
+
+  @override
+  String get uiSettings_refreshFailed => 'Couldn\'t refresh your data.';
 
   @override
   String get uiSettings_themePasture => 'Pasture';

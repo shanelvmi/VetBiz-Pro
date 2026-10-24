@@ -4505,7 +4505,7 @@ abstract class AppLocalizations {
   /// Under System Refresh.
   ///
   /// In en, this message translates to:
-  /// **'Reloads your data and takes you back to the start. You stay signed in.'**
+  /// **'Reloads all your data. You stay signed in.'**
   String get uiSettings_systemRefreshHint;
 
   /// Under the UI Settings title.
@@ -4525,6 +4525,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'This reloads your data and takes you back to the start. You stay signed in, but anything you haven\'t saved will be lost.'**
   String get uiSettings_refreshBody;
+
+  /// Shown after System Refresh has reloaded the data.
+  ///
+  /// In en, this message translates to:
+  /// **'Your data is up to date.'**
+  String get uiSettings_refreshDone;
+
+  /// Shown when System Refresh can't reach the server; the reason follows.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t refresh your data.'**
+  String get uiSettings_refreshFailed;
 
   /// Colour theme name (id "pasture").
   ///
