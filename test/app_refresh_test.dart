@@ -36,9 +36,6 @@ import 'package:vetbiz_pro/theme/app_theme.dart';
 
 import 'helpers/fake_firestore.dart';
 
-// Until the fix: today's refresh goes to the front door and leaves every list open.
-const _skipUntilFix = true;
-
 const _dashboard = 'DASHBOARD (stand-in)';
 const _clientsScreen = 'CLIENTS SCREEN (stand-in)';
 
@@ -219,7 +216,6 @@ void main() {
       expect(app.facility.selectedFacilityId, testFacilityId);
       expect((app.ui.layoutFixed, app.ui.themeMode), (true, UiThemeMode.dark));
     },
-    skip: _skipUntilFix,
   );
 
   testWidgets('every list session is started over, Payments included', (tester) async {
@@ -278,7 +274,7 @@ void main() {
     expect(services.servicesListController.hasOpenSession, isFalse);
     expect(transactions.transactionsListController.hasOpenSession, isFalse);
     expect(payments.ledgerController.hasOpenSession, isFalse);
-  }, skip: _skipUntilFix);
+  });
 
   testWidgets('offline: a friendly error, and the screen stays as it was', (tester) async {
     final app = await _signedInOnClientsScreen(tester);
@@ -292,5 +288,5 @@ void main() {
     expect(find.text('No connection. Check your internet and try again.'), findsOneWidget);
     expect(app.clientNames(), ['Juma'], reason: 'nothing was cleared');
     expect(app.pushedUsers, isEmpty);
-  }, skip: _skipUntilFix);
+  });
 }

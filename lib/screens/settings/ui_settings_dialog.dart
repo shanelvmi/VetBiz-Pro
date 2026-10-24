@@ -3,7 +3,7 @@ import 'package:provider/provider.dart';
 
 import '../../data/ui_theme_mode.dart';
 import '../../providers/ui_settings_provider.dart';
-import '../../utils/force_logout.dart';
+import '../../utils/app_refresh.dart';
 import '../../theme/app_palette.dart';
 import '../../l10n/l10n.dart';
 import '../../theme/app_text.dart';
@@ -173,8 +173,8 @@ class _UiSettingsDialog extends StatelessWidget {
     );
   }
 
-  // Refreshing takes you back to the start and drops anything unsaved, so it
-  // asks first rather than firing from a stray tap.
+  // Refreshing reloads everything and opens the dashboard, dropping anything
+  // unsaved, so it asks first rather than firing from a stray tap.
   Future<void> _confirmRefresh(BuildContext context) async {
     final go = await showDialog<bool>(
       context: context,
@@ -199,7 +199,7 @@ class _UiSettingsDialog extends StatelessWidget {
     );
     if (go != true) return;
     if (context.mounted) Navigator.of(context).pop(); // close UI Settings first
-    await returnToAccountDecision();
+    await refreshAppData();
   }
 }
 
