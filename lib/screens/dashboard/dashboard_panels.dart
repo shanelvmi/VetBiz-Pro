@@ -18,11 +18,18 @@ import '../activity/activity_log_screen.dart';
 /// entries; an ASSISTANT only the latest that are theirs (what they did, or
 /// what is about them, [uid]) - not the admin matters of the facility. See
 /// firestore.rules: the rule only allows the scoped query.
+///
+/// [snapshotsOf] is for tests: cloud_firestore shares one live stream per
+/// query between listeners (a broadcast that replays nothing), the fake
+/// Firestore does not. The app uses Query.snapshots.
 Stream<List<LogDoc>> recentActivityStream(FirebaseFirestore firestore, String facilityId,
-    {required bool isAdmin, required String uid}) {
+    {required bool isAdmin,
+    required String uid,
+    @visibleForTesting Stream<QuerySnapshot<Map<String, dynamic>>> Function(Query<Map<String, dynamic>>)? snapshotsOf}) {
   final logs = firestore.collection(Collections.facilities).doc(facilityId).collection(Collections.activityLogs);
   if (isAdmin) {
-    return logs.orderBy('timestamp', descending: true).limit(AppLimits.recentActivityCount).snapshots().map((s) => s.docs);
+    final query = logs.orderBy('timestamp', descending: true).limit(AppLimits.recentActivityCount);
+    return (snapshotsOf ?? (q) => q.snapshots())(query).map((s) => s.docs);
   }
   return mergedLogStream([
     logs.where(Fields.userId, isEqualTo: uid).orderBy('timestamp', descending: true).limit(AppLimits.recentActivityCount),
