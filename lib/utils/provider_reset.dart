@@ -8,6 +8,7 @@ import '../providers/client_provider.dart';
 import '../providers/service_provider.dart';
 import '../providers/transaction_provider.dart';
 import '../providers/debt_provider.dart';
+import '../providers/payment_provider.dart';
 import '../providers/subscription_provider.dart';
 import '../providers/user_role_provider.dart';
 
@@ -29,6 +30,7 @@ void resetAllUserProviders(BuildContext context) {
   Provider.of<ServiceProvider>(context, listen: false).clear();
   Provider.of<TransactionProvider>(context, listen: false).clear();
   Provider.of<DebtProvider>(context, listen: false).clear();
+  Provider.of<PaymentProvider>(context, listen: false).clear();
   Provider.of<SubscriptionProvider>(context, listen: false).clear();
   Provider.of<UserRoleProvider>(context, listen: false).clear();
 }

@@ -85,6 +85,7 @@ class SaleProvider extends ChangeNotifier {
   /// Clear all sales and stop listening.
   void clear() {
     _liveSales = [];
+    salesListController.disposeSession();
     _olderSales.clear();
     _lastDocument = null;
     _hasMore = true;

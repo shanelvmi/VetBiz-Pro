@@ -75,6 +75,7 @@ class TransactionProvider with ChangeNotifier {
     _subscription = null;
     _facilityId = null;
     _liveTransactions.clear();
+    transactionsListController.disposeSession();
     _olderTransactions.clear();
     _lastDocument = null;
     _hasMore = true;

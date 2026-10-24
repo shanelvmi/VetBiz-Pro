@@ -85,6 +85,7 @@ class ServiceProvider extends ChangeNotifier {
   /// Clear provider
   void clear() {
     _servicesSubscription?.cancel();
+    servicesListController.disposeSession();
     _liveServices = [];
     _olderServices.clear();
     _lastDocument = null;

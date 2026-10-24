@@ -518,6 +518,18 @@ class PaymentProvider with ChangeNotifier {
     }
   }
 
+  /// Forgets this facility's payments and closes the ledger session - on
+  /// sign-out, a facility switch and System Refresh, like the other
+  /// providers (provider_reset.dart).
+  void clear() {
+    _subscription?.cancel();
+    _subscription = null;
+    _payments = [];
+    _ledgerFacilityId = null;
+    ledgerController.disposeSession();
+    notifyListeners();
+  }
+
   @override
   void dispose() {
     _subscription?.cancel();

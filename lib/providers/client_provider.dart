@@ -121,6 +121,10 @@ class ClientProvider with ChangeNotifier, PaginatedStreamLoader<Client> {
   void clear() {
     _clients.clear();
     _hasLoaded = false;
+    // The list pages too: an open session would otherwise be reused as it
+    // was when the screen opens again (its filters don't name the facility).
+    clientsListController.disposeSession();
+    debtorsListController.disposeSession();
     notifyListeners();
   }
 
