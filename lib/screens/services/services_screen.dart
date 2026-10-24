@@ -801,17 +801,14 @@ class _ServicesScreenState extends State<ServicesScreen> {
       await serviceProvider.deleteService(service.id);
       if (!mounted) return;
       if (_selectedService?.id == service.id) setState(() => _selectedService = null);
-      _openServicesListSession(forceRefresh: true);
       // Undo is the Trash restore, which takes the stock again and
       // re-creates the debt, the balance and the expense (E2,
-      // delete_restore.md).
+      // delete_restore.md). The list starts over by itself after the delete
+      // and after the restore (RecordChanges, BUG-1).
       if (facilityId == null) return;
       RestoreFeedback.offerUndo(
         TrashedRecord.service,
         restore: () => serviceProvider.restoreService(service.id, facilityId),
-        onRestored: () {
-          if (mounted) _openServicesListSession(forceRefresh: true);
-        },
       );
     } catch (e, st) {
       AppFeedback.error(L10n.current.services_deleteFailed, error: e, stackTrace: st);

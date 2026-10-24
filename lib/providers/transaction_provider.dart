@@ -9,6 +9,7 @@ import 'facility_provider.dart';
 import '../utils/activity_logger.dart';
 import '../utils/receipt_numbering.dart';
 import '../services/cursor_paginated_list_controller.dart';
+import '../services/record_changes.dart';
 import '../data/collections.dart';
 import '../data/fields.dart';
 import '../data/activity_type.dart';
@@ -41,6 +42,8 @@ class TransactionProvider with ChangeNotifier {
       fetchPage: _fetchTransactionsListPage,
       countCreatedAfter: _countNewTransactions,
     );
+    // A service's expense transaction goes to Trash and comes back with it.
+    _recordChanges = RecordChanges.listen({Collections.transactions, Collections.services}, _onTransactionsChanged);
   }
 
   /// Same fix as Sales/Services: only stream the most recent [pageSize]
@@ -54,6 +57,7 @@ class TransactionProvider with ChangeNotifier {
   List<TransactionModel> get transactions => [..._liveTransactions, ..._olderTransactions];
 
   StreamSubscription<QuerySnapshot<Map<String, dynamic>>>? _subscription;
+  late final StreamSubscription<RecordChange> _recordChanges;
   String? _facilityId;
 
   DocumentSnapshot<Map<String, dynamic>>? _lastDocument;
@@ -205,6 +209,18 @@ class TransactionProvider with ChangeNotifier {
     }, onError: (error) {
       debugPrint("Transaction listen error: $error");
     });
+  }
+
+  /// A transaction (or a service with its expense) went to Trash or came
+  /// back (BUG-1): the list starts over from its first page, and older pages
+  /// loaded behind the live window are dropped and the window listened to
+  /// again (as SaleProvider).
+  void _onTransactionsChanged(String facilityId) {
+    if (facilityId != _facilityId) return;
+    unawaited(transactionsListController.refreshSession());
+    if (_olderTransactions.isEmpty) return;
+    _facilityId = null; // listenToTransactions skips the facility it already has
+    listenToTransactions(facilityId);
   }
 
   /// Fetch the next page of older transactions (one-time read, not live).
@@ -434,6 +450,7 @@ class TransactionProvider with ChangeNotifier {
       });
 
       await docRef.delete();
+      RecordChanges.changed(facilityId, Collections.transactions);
 
       if (_subscription == null) {
         _liveTransactions.removeWhere((t) => t.id == transactionId);
@@ -475,6 +492,7 @@ class TransactionProvider with ChangeNotifier {
   @override
   void dispose() {
     _subscription?.cancel();
+    _recordChanges.cancel();
     super.dispose();
   }
 }

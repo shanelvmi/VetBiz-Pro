@@ -8,6 +8,8 @@ import '../providers/client_provider.dart';
 import '../providers/sale_provider.dart';
 import '../providers/service_provider.dart';
 import '../utils/activity_logger.dart';
+import 'record_changes.dart';
+import 'record_trash.dart';
 
 /// Putting something back from Trash.
 ///
@@ -16,14 +18,16 @@ import '../utils/activity_logger.dart';
 /// instead of a second copy. Throws if the restore fails; the caller tells
 /// the user.
 ///
-/// Sales and services go to SaleProvider.restoreSale and
-/// ServiceProvider.restoreService (E2, docs/design/delete_restore.md): one
-/// transaction that also takes the stock again and re-creates the debt, the
-/// balance and a service's expense, or refuses with a
-/// [RestoreRefusedException] and writes nothing. Clients go to
-/// ClientProvider.restoreClient (E3): one transaction, balances and debts
-/// untouched. Products and transactions move back as before. [firestore]
-/// and [currentUserInfo] are for tests; the app uses the defaults.
+/// Sales and services go to the restore behind SaleProvider.restoreSale and
+/// ServiceProvider.restoreService (RecordTrash, E2,
+/// docs/design/delete_restore.md): one transaction that also takes the stock
+/// again and re-creates the debt, the balance and a service's expense, or
+/// refuses with a [RestoreRefusedException] and writes nothing. Clients go
+/// to ClientProvider.restoreFromTrash (E3): one transaction, balances and
+/// debts untouched. Products and transactions move back as before. Every
+/// restore is announced through RecordChanges, so the lists update
+/// (BUG-1). [firestore] and [currentUserInfo] are for tests; the app uses
+/// the defaults.
 class TrashService {
   TrashService._();
 
@@ -41,29 +45,21 @@ class TrashService {
     Future<Map<String, String>> Function()? currentUserInfo,
   }) async {
     firestore ??= FirebaseFirestore.instance;
-    if (liveCollection == Collections.sales) {
-      final provider = SaleProvider(firestore: firestore, currentUserInfo: currentUserInfo);
-      try {
-        return await provider.restoreSale(id, facilityId);
-      } finally {
-        provider.dispose();
-      }
-    }
-    if (liveCollection == Collections.services) {
-      final provider = ServiceProvider(firestore: firestore, currentUserInfo: currentUserInfo);
-      try {
-        return await provider.restoreService(id, facilityId);
-      } finally {
-        provider.dispose();
-      }
+    currentUserInfo ??= ActivityLogger.getCurrentUserInfo;
+    // The same restore the providers run, without building a provider of
+    // its own: the app's providers hear about it through RecordChanges
+    // (BUG-1), so their lists show the record again at once.
+    final recordType = liveCollection == Collections.sales
+        ? SaleProvider.trashedSaleType
+        : liveCollection == Collections.services
+            ? ServiceProvider.trashedServiceType
+            : null;
+    if (recordType != null) {
+      return RecordTrash(firestore, recordType, currentUserInfo: currentUserInfo, deletedBy: RecordTrash.signedInUser)
+          .restore(facilityId, id);
     }
     if (liveCollection == Collections.clients) {
-      final provider = ClientProvider(firestore: firestore, currentUserInfo: currentUserInfo);
-      try {
-        return await provider.restoreClient(id, facilityId);
-      } finally {
-        provider.dispose();
-      }
+      return ClientProvider.restoreFromTrash(firestore, id, facilityId, currentUserInfo: currentUserInfo);
     }
 
     final restoredData = Map<String, dynamic>.from(data)
@@ -89,7 +85,8 @@ class TrashService {
     );
 
     await batch.commit();
-    await _logRestore(firestore, currentUserInfo ?? ActivityLogger.getCurrentUserInfo, facilityId, liveCollection, data);
+    RecordChanges.changed(facilityId, liveCollection);
+    await _logRestore(firestore, currentUserInfo, facilityId, liveCollection, data);
     return RestoreResult.restored;
   }
 

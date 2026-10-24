@@ -6,6 +6,7 @@ import '../data/activity_type.dart';
 import '../models/client.dart';
 import '../models/client_delete_refusal.dart';
 import '../models/restore_outcome.dart';
+import '../services/record_changes.dart';
 import '../services/record_trash.dart';
 import '../utils/activity_logger.dart';
 import '../utils/client_duplicate_matcher.dart';
@@ -66,6 +67,8 @@ class ClientProvider with ChangeNotifier, PaginatedStreamLoader<Client> {
       pageSize: AppLimits.pageSize,
       fetchPage: _fetchDebtorsListPage,
     );
+    _recordChanges = RecordChanges.listen(
+        {Collections.clients, Collections.sales, Collections.services}, _onRecordsChanged);
   }
 
   @override
@@ -82,6 +85,7 @@ class ClientProvider with ChangeNotifier, PaginatedStreamLoader<Client> {
   bool get hasLoaded => _hasLoaded;
 
   StreamSubscription<QuerySnapshot<Map<String, dynamic>>>? _clientsSubscription;
+  late final StreamSubscription<RecordChange> _recordChanges;
 
   /// Real-time listening to ALL clients for a facility - kept unbounded
   /// deliberately, since this is what Debtors relies on via
@@ -754,13 +758,18 @@ class ClientProvider with ChangeNotifier, PaginatedStreamLoader<Client> {
       );
     });
     if (refusal != null) throw refusal!;
+    RecordChanges.changed(facilityId, Collections.clients);
   }
 
-  /// Starts the Clients list over after a client goes to Trash or comes
-  /// back: its pages are fetched once, so it would keep showing (or keep
-  /// missing) them until a Refresh. The live list behind the pickers and
-  /// Debtors follows on its own.
-  void refreshClientsList() => unawaited(clientsListController.refreshSession());
+  /// Starts the Clients and Debtors lists over after a client goes to Trash
+  /// or comes back, or a sale or a service does (their balance changes): the
+  /// pages are fetched once, so they would keep showing (or keep missing)
+  /// them until a Refresh (BUG-1). The live list behind the pickers follows
+  /// on its own.
+  void _onRecordsChanged(String facilityId) {
+    if (facilityId == _clientsListFacilityId) unawaited(clientsListController.refreshSession());
+    if (facilityId == _debtorsListFacilityId) unawaited(debtorsListController.refreshSession());
+  }
 
   /// Puts a client back from Trash (E3) exactly as stored, in one
   /// transaction with its activity entry. Balances and debts are not
@@ -769,14 +778,19 @@ class ClientProvider with ChangeNotifier, PaginatedStreamLoader<Client> {
   /// tap, a retry after a lost answer): writes nothing and returns
   /// [RestoreResult.alreadyRestored]. Not in Trash any more, or a client
   /// with the same id exists again: a StateError, nothing written.
-  Future<RestoreResult> restoreClient(String clientId, String facilityId) async {
-    final facilityRef = _firestore.collection(Collections.facilities).doc(facilityId);
+  Future<RestoreResult> restoreClient(String clientId, String facilityId) =>
+      restoreFromTrash(_firestore, clientId, facilityId, currentUserInfo: _currentUserInfo);
+
+  /// [restoreClient], for TrashService, which has no ClientProvider.
+  static Future<RestoreResult> restoreFromTrash(FirebaseFirestore firestore, String clientId, String facilityId,
+      {required Future<Map<String, String>> Function() currentUserInfo}) async {
+    final facilityRef = firestore.collection(Collections.facilities).doc(facilityId);
     final clientRef = facilityRef.collection(Collections.clients).doc(clientId);
     final trashRef = facilityRef.collection(Collections.trashClients).doc(clientId);
-    final userInfo = await _currentUserInfo();
+    final userInfo = await currentUserInfo();
 
     StateError? stop;
-    final result = await _firestore.runTransaction<RestoreResult?>((transaction) async {
+    final result = await firestore.runTransaction<RestoreResult?>((transaction) async {
       stop = null;
       final liveExists = (await transaction.get(clientRef)).exists;
       final data = (await transaction.get(trashRef)).data();
@@ -809,12 +823,14 @@ class ClientProvider with ChangeNotifier, PaginatedStreamLoader<Client> {
     });
 
     if (result == null) throw stop!;
+    RecordChanges.changed(facilityId, Collections.clients);
     return result;
   }
 
   @override
   void dispose() {
     _clientsSubscription?.cancel();
+    _recordChanges.cancel();
     super.dispose();
   }
 }

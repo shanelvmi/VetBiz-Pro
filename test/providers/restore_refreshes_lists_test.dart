@@ -18,8 +18,6 @@ import 'package:vetbiz_pro/providers/service_provider.dart';
 
 import '../helpers/fake_firestore.dart';
 
-const _bug1 = 'BUG-1: un-skipped by the fix';
-
 final _yesterday = DateTime.now().subtract(const Duration(days: 1));
 
 /// The n-th record's time: s1 is the oldest, s4 the newest.
@@ -70,7 +68,7 @@ void main() {
       await sales.deleteSale('s2', testFacilityId);
       await settleLists();
       expect(salesShown(sales), ['s4', 's3', 's1']);
-    }, skip: _bug1);
+    });
 
     test('restored from the Trash screen: back at once, in its place', () async {
       final fs = newFakeFirestore();
@@ -80,7 +78,7 @@ void main() {
 
       await restoreFromTrashScreen(fs, Collections.trashSales, Collections.sales, 's2');
       expect(salesShown(sales), ['s4', 's3', 's2', 's1']);
-    }, skip: _bug1);
+    });
 
     test('restored by Undo: back at once, in its place', () async {
       final fs = newFakeFirestore();
@@ -91,7 +89,7 @@ void main() {
       await sales.restoreSale('s2', testFacilityId);
       await settleLists();
       expect(salesShown(sales), ['s4', 's3', 's2', 's1']);
-    }, skip: _bug1);
+    });
   });
 
   group('Services list (a stock item and an item bought outside)', () {
@@ -103,7 +101,7 @@ void main() {
       await services.deleteService('v2');
       await settleLists();
       expect(servicesShown(services), ['v4', 'v3', 'v1']);
-    }, skip: _bug1);
+    });
 
     test('restored from the Trash screen: back at once, in its place', () async {
       final fs = newFakeFirestore();
@@ -113,7 +111,7 @@ void main() {
 
       await restoreFromTrashScreen(fs, Collections.trashServices, Collections.services, 'v2');
       expect(servicesShown(services), ['v4', 'v3', 'v2', 'v1']);
-    }, skip: _bug1);
+    });
 
     test('restored by Undo: back at once, in its place', () async {
       final fs = newFakeFirestore();
@@ -124,7 +122,7 @@ void main() {
       await services.restoreService('v2', testFacilityId);
       await settleLists();
       expect(servicesShown(services), ['v4', 'v3', 'v2', 'v1']);
-    }, skip: _bug1);
+    });
   });
 
   group('A credit sale: Active Debts and Payments', () {
@@ -175,7 +173,7 @@ void main() {
         }
         expect(debtors(clients), {'c1': 5000});
         expect(paymentsShown(payments), [1000]);
-      }, skip: _bug1);
+      });
     }
   });
 }

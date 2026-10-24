@@ -8,6 +8,7 @@ import '../utils/receipt_numbering.dart';
 import 'debt_provider.dart';
 import '../models/debt.dart';
 import '../models/restore_outcome.dart';
+import '../services/record_changes.dart';
 import '../services/record_trash.dart';
 import '../services/cursor_paginated_list_controller.dart';
 import '../data/collections.dart';
@@ -43,6 +44,7 @@ class SaleProvider extends ChangeNotifier {
 
   String? _facilityId;
   StreamSubscription<QuerySnapshot<Map<String, dynamic>>>? _salesSubscription;
+  late final StreamSubscription<RecordChange> _recordChanges;
 
   DocumentSnapshot<Map<String, dynamic>>? _lastDocument;
   bool _hasMore = true;
@@ -64,6 +66,7 @@ class SaleProvider extends ChangeNotifier {
       fetchPage: _fetchSalesListPage,
       countCreatedAfter: _countNewSales,
     );
+    _recordChanges = RecordChanges.listen({Collections.sales}, _onSalesChanged);
   }
 
   /// Initialize provider: listen to real-time updates for [facilityId].
@@ -289,6 +292,19 @@ class SaleProvider extends ChangeNotifier {
     }, onError: (e) {
       debugPrint('Error listening to sales: $e');
     });
+  }
+
+  /// A sale went to Trash or came back (BUG-1): the Sales list starts over
+  /// from its first page, and older pages loaded behind the live window are
+  /// dropped and the window listened to again, since they are fetched once
+  /// and would keep showing (or keep missing) it.
+  void _onSalesChanged(String facilityId) {
+    if (facilityId != _facilityId) return;
+    unawaited(salesListController.refreshSession());
+    if (_olderSales.isEmpty) return;
+    _olderSales.clear();
+    _hasMore = true;
+    listenToSales(facilityId);
   }
 
   /// Fetch the next page of older sales (one-time read, not live).
@@ -723,6 +739,7 @@ class SaleProvider extends ChangeNotifier {
   @override
   void dispose() {
     _salesSubscription?.cancel();
+    _recordChanges.cancel();
     super.dispose();
   }
 }

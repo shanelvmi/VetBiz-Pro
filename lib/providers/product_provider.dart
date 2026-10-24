@@ -6,6 +6,7 @@ import 'package:provider/provider.dart';
 import '../models/product.dart';
 import '../models/product_batch.dart';
 import 'facility_provider.dart';
+import '../services/record_changes.dart';
 import '../utils/activity_logger.dart';
 import '../data/collections.dart';
 import '../data/fields.dart';
@@ -1252,6 +1253,7 @@ class ProductProvider with ChangeNotifier {
       });
 
       await docRef.delete();
+      RecordChanges.changed(facilityId, Collections.products);
 
       _products.removeWhere((p) => p.id == productId);
       notifyListeners();

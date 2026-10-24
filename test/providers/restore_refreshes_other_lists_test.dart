@@ -18,8 +18,6 @@ import 'package:vetbiz_pro/providers/transaction_provider.dart';
 
 import '../helpers/fake_firestore.dart';
 
-const _bug1 = 'BUG-1: un-skipped by the fix';
-
 final _yesterday = DateTime.now().subtract(const Duration(days: 1));
 
 /// The facility the screens pass to ProductProvider.deleteProduct.
@@ -127,7 +125,7 @@ void main() {
         expect(oldest(transactions), ['t01', 't02', 't03']);
         expect(transactions.transactions, hasLength(30));
         expect(ledger(payments), ['t02']);
-      }, skip: _bug1);
+      });
     }
   });
 
@@ -158,7 +156,7 @@ void main() {
       await clients.deleteClient(testFacilityId, 'c2');
       await settleLists();
       expect(shown(clients), ['c4', 'c3', 'c1']);
-    }, skip: _bug1);
+    });
 
     for (final viaUndo in [false, true]) {
       test('restored ${viaUndo ? 'by Undo' : 'from the Trash screen'}: back at once, in its place', () async {
@@ -171,7 +169,7 @@ void main() {
             ? await restoreByUndo(fs, Collections.trashClients, Collections.clients, 'c2')
             : await restoreFromTrashScreen(fs, Collections.trashClients, Collections.clients, 'c2');
         expect(shown(clients), ['c4', 'c3', 'c2', 'c1']);
-      }, skip: _bug1);
+      });
     }
   });
 }

@@ -7,6 +7,7 @@ import '../data/fields.dart';
 import '../models/restore_outcome.dart';
 import '../providers/product_provider.dart';
 import '../utils/activity_logger.dart';
+import 'record_changes.dart';
 
 /// What differs between a sale and a service for [RecordTrash].
 class TrashedRecordType {
@@ -166,6 +167,7 @@ class RecordTrash {
         description: type.deletedDescription(data),
       );
     });
+    RecordChanges.changed(facilityId, type.liveCollection);
   }
 
   /// Puts the record back with every effect its delete reversed: the stock
@@ -321,6 +323,7 @@ class RecordTrash {
     });
 
     if (result == null) throw stop!;
+    RecordChanges.changed(facilityId, type.liveCollection);
     return result;
   }
 

@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
-import '../../providers/client_provider.dart';
 import '../../providers/facility_provider.dart';
 import '../../utils/activity_logger.dart';
 import '../../data/collections.dart';
@@ -148,11 +147,9 @@ class _TrashList extends StatelessWidget {
 
   Future<void> _restore(BuildContext context, String id, Map<String, dynamic> data) async {
     final record = _record;
-    // Read before the await: a restored client must show in the Clients
-    // list again (its pages are fetched once, E3).
-    final clientProvider =
-        liveCollection == Collections.clients ? Provider.of<ClientProvider>(context, listen: false) : null;
     try {
+      // The lists that show the record (Sales, Services, Clients, ...) start
+      // over on their own (RecordChanges, BUG-1).
       final result = await TrashService.restore(
         facilityId: facilityId,
         trashCollection: trashCollection,
@@ -160,7 +157,6 @@ class _TrashList extends StatelessWidget {
         id: id,
         data: data,
       );
-      clientProvider?.refreshClientsList();
 
       if (record != null) {
         RestoreFeedback.restored(record, result);

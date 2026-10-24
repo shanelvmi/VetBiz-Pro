@@ -6,6 +6,7 @@ import '../models/service.dart';
 import '../models/debt.dart';
 import '../models/admin_only_refusal.dart';
 import '../models/restore_outcome.dart';
+import '../services/record_changes.dart';
 import '../services/record_trash.dart';
 import 'debt_provider.dart';
 import 'product_provider.dart';
@@ -54,6 +55,7 @@ class ServiceProvider extends ChangeNotifier {
       fetchPage: _fetchServicesListPage,
       countCreatedAfter: _countNewServices,
     );
+    _recordChanges = RecordChanges.listen({Collections.services}, _onServicesChanged);
   }
 
   /// How many services to fetch per page. The live listener holds the
@@ -68,6 +70,7 @@ class ServiceProvider extends ChangeNotifier {
   List<Service> get services => [..._liveServices, ..._olderServices];
 
   StreamSubscription<QuerySnapshot<Map<String, dynamic>>>? _servicesSubscription;
+  late final StreamSubscription<RecordChange> _recordChanges;
   String? _facilityId;
 
   String? get facilityId => _facilityId;
@@ -268,6 +271,18 @@ class ServiceProvider extends ChangeNotifier {
     }, onError: (e) {
       debugPrint('ServiceProvider listen error: $e');
     });
+  }
+
+  /// A service went to Trash or came back (BUG-1): the Services list starts
+  /// over from its first page, and older pages loaded behind the live window
+  /// are dropped and the window listened to again (as SaleProvider).
+  void _onServicesChanged(String facilityId) {
+    if (facilityId != _facilityId) return;
+    unawaited(servicesListController.refreshSession());
+    if (_olderServices.isEmpty) return;
+    _servicesSubscription?.cancel();
+    _servicesSubscription = null;
+    listenToServices(facilityId);
   }
 
   /// Fetch the next page of older services (one-time read, not live).
@@ -1043,6 +1058,7 @@ class ServiceProvider extends ChangeNotifier {
   @override
   void dispose() {
     _servicesSubscription?.cancel();
+    _recordChanges.cancel();
     super.dispose();
   }
 }

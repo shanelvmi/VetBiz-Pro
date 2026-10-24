@@ -3,6 +3,7 @@ import 'package:flutter/foundation.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../models/payment.dart';
 import '../models/ledger_entry.dart';
+import '../services/record_changes.dart';
 import '../services/snapshot_ledger_controller.dart';
 import 'sale_provider.dart';
 import 'service_provider.dart';
@@ -20,7 +21,15 @@ class PaymentProvider with ChangeNotifier {
       fetchLedger: _fetchLedger,
       countNewEntries: _countNewLedgerEntries,
     );
+    // The ledger lists other income from transactions, fetched once
+    // (BUG-1): it starts over when one goes to Trash or comes back. Sales
+    // and services do not touch it: their payments stay counted.
+    _recordChanges = RecordChanges.listen({Collections.transactions}, (facilityId) {
+      if (facilityId == _ledgerFacilityId) unawaited(ledgerController.refreshSession());
+    });
   }
+
+  late final StreamSubscription<RecordChange> _recordChanges;
 
   /// The Payments method filter: Mixx by Yas also finds the records stored as
   /// 'Tigo Pesa' (R3, D5); stored keys never change. `whereIn` uses the same
@@ -512,6 +521,7 @@ class PaymentProvider with ChangeNotifier {
   @override
   void dispose() {
     _subscription?.cancel();
+    _recordChanges.cancel();
     super.dispose();
   }
 }

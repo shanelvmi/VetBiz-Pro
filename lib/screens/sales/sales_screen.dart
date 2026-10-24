@@ -843,17 +843,14 @@ class _SalesScreenState extends State<SalesScreen> {
       await saleProvider.deleteSale(sale.id, facilityId);
       if (!mounted) return;
       if (_selectedSale?.id == sale.id) setState(() => _selectedSale = null);
-      _openSalesListSession(forceRefresh: true);
       // Undo is the Trash restore, which takes the stock again and
       // re-creates the debt and the balance (E2, delete_restore.md).
       // The provider and the facility were read before: Undo may run after
-      // this screen is gone.
+      // this screen is gone. The list starts over by itself after the delete
+      // and after the restore (RecordChanges, BUG-1).
       RestoreFeedback.offerUndo(
         TrashedRecord.sale,
         restore: () => saleProvider.restoreSale(sale.id, facilityId),
-        onRestored: () {
-          if (mounted) _openSalesListSession(forceRefresh: true);
-        },
       );
     } catch (e, st) {
       AppFeedback.error(L10n.current.sales_deleteFailed, error: e, stackTrace: st);

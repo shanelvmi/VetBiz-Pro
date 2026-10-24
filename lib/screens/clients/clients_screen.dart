@@ -384,13 +384,12 @@ class _ClientsScreenState extends State<ClientsScreen> {
     if (facilityId != null) {
       try {
         await clientProvider.deleteClient(facilityId, client.id);
-        clientProvider.refreshClientsList();
         if (mounted && _selectedClient?.id == client.id) setState(() => _selectedClient = null);
         // deleteClient moves the client to Trash (E3), so Undo puts them
         // back with the Trash screen's own restore.
         AppFeedback.undo(
           L10n.current.clients_movedToTrash,
-          onUndo: () => _undoDeleteClient(clientProvider, facilityId, client.id),
+          onUndo: () => _undoDeleteClient(facilityId, client.id),
         );
       } catch (e, st) {
         // A client who still owes money is refused, nothing written; the
@@ -400,9 +399,9 @@ class _ClientsScreenState extends State<ClientsScreen> {
     }
   }
 
-  // Static: Undo may run after this screen is gone (ClientProvider is
-  // app-wide).
-  static Future<void> _undoDeleteClient(ClientProvider clientProvider, String facilityId, String clientId) async {
+  // Static: Undo may run after this screen is gone. The Clients list starts
+  // over by itself after the restore (RecordChanges, BUG-1).
+  static Future<void> _undoDeleteClient(String facilityId, String clientId) async {
     try {
       await TrashService.restoreById(
         facilityId: facilityId,
@@ -410,7 +409,6 @@ class _ClientsScreenState extends State<ClientsScreen> {
         liveCollection: Collections.clients,
         id: clientId,
       );
-      clientProvider.refreshClientsList();
       AppFeedback.success(L10n.current.clients_restored);
     } catch (e, st) {
       AppFeedback.error(L10n.current.clients_restoreFailed, error: e, stackTrace: st);
