@@ -737,10 +737,12 @@ uiSettings_layoutFixed,Layout Fixed Mode,Mpangilio Usiobadilika,UI Settings opti
 uiSettings_layoutFixedHint,Keeps the sidebar open and hides its collapse button on large screens.,Huacha menyu ya pembeni wazi na huficha kitufe cha kuifunga kwenye skrini kubwa.,Under Layout Fixed Mode.,draft
 uiSettings_system,SYSTEM,MFUMO,UI Settings section heading.,draft
 uiSettings_systemRefresh,System Refresh,Onyesha Upya Mfumo,UI Settings option.,draft
-uiSettings_systemRefreshHint,Reloads your data and takes you back to the start. You stay signed in.,Hupakia data yako upya na kukurudisha mwanzo. Unabaki umeingia.,Under System Refresh.,draft
+uiSettings_systemRefreshHint,Reloads all your data. You stay signed in.,Hupakia upya data yako yote. Unabaki umeingia.,Under System Refresh.,draft
 uiSettings_savedOnDevice,Saved on this device,Imehifadhiwa kwenye kifaa hiki,Under the UI Settings title.,draft
 uiSettings_refreshTitle,Refresh the app?,Onyesha upya programu?,System Refresh confirmation title.,draft
 uiSettings_refreshBody,"This reloads your data and takes you back to the start. You stay signed in, but anything you haven't saved will be lost.","Hii hupakia data yako upya na kukurudisha mwanzo. Unabaki umeingia, lakini chochote ambacho hujahifadhi kitapotea.",System Refresh confirmation text.,draft
+uiSettings_refreshDone,Your data is up to date.,Data yako imesasishwa.,Shown after System Refresh has reloaded the data.,draft
+uiSettings_refreshFailed,Couldn't refresh your data.,Imeshindikana kuonyesha upya data yako.,"Shown when System Refresh can't reach the server; the reason follows.",draft
 uiSettings_themePasture,Pasture,Malisho,"Colour theme name (id ""pasture"").",draft
 uiSettings_themeClinic,Clinic,Kliniki,"Colour theme name (id ""clinic"").",draft
 uiSettings_themeHarvest,Harvest,Mavuno,"Colour theme name (id ""harvest"").",draft
