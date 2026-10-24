@@ -108,7 +108,18 @@ class SubscriptionProvider with ChangeNotifier {
   /// How far [attentionNotice] has escalated, as a stored key (NOTIF-2b): what a
   /// person's seenStage is compared with. Replaces the comparison of the
   /// English message in the Notifications screen in NOTIF-2c.
-  SubscriptionNoticeStage get attentionStage => throw UnimplementedError('NOTIF-2b');
+  SubscriptionNoticeStage get attentionStage {
+    switch (_status) {
+      case SubscriptionStatus.locked:
+        return SubscriptionNoticeStage.locked;
+      case SubscriptionStatus.grace:
+        return SubscriptionNoticeStage.grace;
+      case SubscriptionStatus.trial:
+      case SubscriptionStatus.active:
+        final days = daysRemaining;
+        return (days == null || days > attentionThresholdDays) ? SubscriptionNoticeStage.none : SubscriptionNoticeStage.expiring;
+    }
+  }
 
   /// [attentionNotice] in the current language, for display only.
   ({String title, String message})? get attentionNoticeShown => _attentionNoticeIn(L10n.current);

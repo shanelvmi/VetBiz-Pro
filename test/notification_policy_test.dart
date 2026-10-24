@@ -17,7 +17,7 @@ const dismissible = NotificationClass.dismissible;
 const routine = NotificationClass.routine;
 
 // Until the implementation: every call throws UnimplementedError('NOTIF-2b').
-const _skipUntilImplemented = true;
+const _skipUntilImplemented = false;
 
 final t0 = DateTime(2026, 10, 1, 9);
 DateTime days(DateTime from, int n) => from.add(Duration(days: n));
