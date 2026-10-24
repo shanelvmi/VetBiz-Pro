@@ -171,4 +171,4 @@ No index is needed (no new query shape).
 - **D5:** urgent announcements are DISMISSIBLE.
 - **D6:** NOTIF-2e (server cleanup at 120 days), yes or no.
 
-OWNER DECISION: PENDING
+OWNER DECISION: APPROVED with the defaults for D1 to D5 (per-person read and removal, 30 and 90 days, a number on the bell, urgent announcements dismissible). D6 (NOTIF-2e, the scheduled cleanup) is deferred until after the first customers; the rest are batches NOTIF-2a to NOTIF-2d. LATER: per-category notification preferences.
