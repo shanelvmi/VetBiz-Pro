@@ -159,12 +159,6 @@
     },
     {
       "rule": "R4",
-      "file": "lib/screens/dashboard/sales_revenue_chart.dart",
-      "lineContains": "EdgeInsets.symmetric(vertical: 40)",
-      "reason": "KEEP: chart loading gap 40, 8 px above s32 (beyond the 4 px snap); docs/design/parked_values.md B5"
-    },
-    {
-      "rule": "R4",
       "file": "lib/screens/facilities/facility_screen.dart",
       "lineContains": "EdgeInsets.symmetric(vertical: 40)",
       "reason": "KEEP: inventory and sales loading gaps 40 (x2), 8 px above s32 (beyond the 4 px snap); docs/design/parked_values.md B6"

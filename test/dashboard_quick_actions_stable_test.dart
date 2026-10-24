@@ -20,9 +20,6 @@ import 'package:vetbiz_pro/theme/app_palette.dart';
 import 'package:vetbiz_pro/theme/app_theme.dart';
 import 'package:vetbiz_pro/utils/merged_query_stream.dart';
 
-// Skipped until the DASH-1 B fix.
-const _skipB = true;
-
 const _quickActions = Key('quickActions');
 
 /// [entries] activity entries, as the feed's query returns them.
@@ -50,7 +47,7 @@ Widget _panels({required bool loaded, required Stream<List<LogDoc>> feed}) => Ma
               glance: TodayGlanceStrip(
                 saleCount: loaded ? 3 : null,
                 serviceCount: loaded ? 1 : null,
-                collected: loaded ? 0 : null,
+                collected: loaded ? 12500 : null,
                 isLoading: !loaded,
                 debtorCount: 2,
               ),
@@ -104,7 +101,7 @@ void main() {
         await tester.pump();
         expect(find.text(entries == 0 ? 'No activity yet.' : 'Entry 1'), findsWidgets);
         expect(tester.getTopLeft(find.byKey(_quickActions)).dy, whileLoading);
-      }, skip: _skipB);
+      });
     }
   }
 }

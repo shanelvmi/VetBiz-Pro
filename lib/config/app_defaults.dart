@@ -8,6 +8,12 @@ class AppDefaults {
   /// As shown on screen, before an amount: "Tsh 12,500".
   static const String currencySymbol = 'Tsh';
 
+  /// The amount whose room the Today at a Glance strip keeps, hidden, for
+  /// the money collected while it loads, so the strip keeps its lines when
+  /// the real amount comes (DASH-1). A typical day; a much longer amount
+  /// can still wrap onto one more line.
+  static const double glanceAmountPlaceholder = 100000;
+
   /// Tanzania, without the '+' (client_duplicate_matcher.dart, register_screen.dart).
   static const String countryCallingCode = '255';
 

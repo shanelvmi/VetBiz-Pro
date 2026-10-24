@@ -49,6 +49,7 @@ class SalesRevenueChart extends StatelessWidget {
     final collectionsByDay = this.collectionsByDay;
     final servicesByDay = this.servicesByDay;
     final hasData = salesByDay != null && collectionsByDay != null && servicesByDay != null;
+    final loading = !hasData && isLoading;
 
     // Total Revenue = Sales + Services + Other Income - not just Sales
     // alone. Collections stays out of this figure deliberately: it's
@@ -107,46 +108,52 @@ class SalesRevenueChart extends StatelessWidget {
             ],
           ),
           const SizedBox(height: AppSpacing.s14),
-          if (!hasData && isLoading)
-            const Padding(
-              padding: EdgeInsets.symmetric(vertical: 40),
-              child: Center(child: CircularProgressIndicator()),
-            )
-          else ...[
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.end,
-              children: [
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(Money.format(currentTotal),
-                        style: TextStyle(fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f22, color: context.colors.textPrimary)),
-                    Text(context.l10n.reports_totalRevenue, style: TextStyle(fontSize: AppFontSize.f12, color: context.colors.textMuted)),
-                  ],
-                ),
-                if (trendPercent != null) ...[
-                  const SizedBox(width: AppSpacing.s12),
-                  Padding(
-                    padding: const EdgeInsets.only(bottom: AppSpacing.s4),
-                    child: Row(
-                      children: [
-                        Icon(trendPercent >= 0 ? Icons.arrow_upward : Icons.arrow_downward,
-                            size: AppIconSize.i14, color: trendPercent >= 0 ? context.colors.success : context.colors.danger),
-                        Text(context.l10n.dashboard_vsLastPeriod(trendPercent.abs().toStringAsFixed(1)),
-                            style: TextStyle(
-                                fontSize: AppFontSize.f12,
-                                fontWeight: AppFontWeight.semibold,
-                                color: trendPercent >= 0 ? context.colors.success : context.colors.danger)),
-                      ],
-                    ),
+          // While the first load runs the card keeps the shape it has once loaded
+          // (DASH-1): the total keeps its room, hidden, and the spinner sits in
+          // the chart's own box, so nothing below the card moves.
+          ...[
+            Visibility(
+              visible: !loading,
+              maintainSize: true,
+              maintainAnimation: true,
+              maintainState: true,
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(Money.format(currentTotal),
+                          style: TextStyle(fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f22, color: context.colors.textPrimary)),
+                      Text(context.l10n.reports_totalRevenue, style: TextStyle(fontSize: AppFontSize.f12, color: context.colors.textMuted)),
+                    ],
                   ),
+                  if (trendPercent != null) ...[
+                    const SizedBox(width: AppSpacing.s12),
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: AppSpacing.s4),
+                      child: Row(
+                        children: [
+                          Icon(trendPercent >= 0 ? Icons.arrow_upward : Icons.arrow_downward,
+                              size: AppIconSize.i14, color: trendPercent >= 0 ? context.colors.success : context.colors.danger),
+                          Text(context.l10n.dashboard_vsLastPeriod(trendPercent.abs().toStringAsFixed(1)),
+                              style: TextStyle(
+                                  fontSize: AppFontSize.f12,
+                                  fontWeight: AppFontWeight.semibold,
+                                  color: trendPercent >= 0 ? context.colors.success : context.colors.danger)),
+                        ],
+                      ),
+                    ),
+                  ],
                 ],
-              ],
+              ),
             ),
             const SizedBox(height: AppSpacing.s16),
             SizedBox(
               height: 220,
-              child: !hasData || (salesByDay.every((v) => v == 0) && collectionsByDay.every((v) => v == 0))
+              child: loading
+                  ? const Center(child: CircularProgressIndicator())
+                  : !hasData || (salesByDay.every((v) => v == 0) && collectionsByDay.every((v) => v == 0))
                   ? Center(child: Text(context.l10n.dashboard_noActivityInPeriod, style: TextStyle(color: context.colors.textMuted)))
                   : LineChart(
                       LineChartData(

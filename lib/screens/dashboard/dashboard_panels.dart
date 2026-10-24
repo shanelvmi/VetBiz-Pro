@@ -4,6 +4,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 
 import '../../config/app_date_format.dart';
+import '../../config/app_defaults.dart';
 import '../../config/app_limits.dart';
 import '../../config/app_timeouts.dart';
 import '../../config/money.dart';
@@ -169,10 +170,7 @@ class _RecentActivityFeedState extends State<RecentActivityFeed> {
           ),
           const SizedBox(height: AppSpacing.s8),
           if (stream == null)
-            Padding(
-              padding: const EdgeInsets.symmetric(vertical: AppSpacing.s20),
-              child: Center(child: Text(context.l10n.dashboard_noActivityYet, style: TextStyle(color: context.colors.textMuted))),
-            )
+            _reserved(context, Center(child: Text(context.l10n.dashboard_noActivityYet, style: TextStyle(color: context.colors.textMuted))))
           else
             StreamBuilder<List<LogDoc>>(
               stream: stream,
@@ -182,10 +180,11 @@ class _RecentActivityFeedState extends State<RecentActivityFeed> {
                   _firstAnswer?.cancel();
                 }
                 if (snapshot.hasError || (!snapshot.hasData && _timedOut)) {
-                  return Padding(
-                    padding: const EdgeInsets.symmetric(vertical: AppSpacing.s20),
-                    child: Center(
+                  return _reserved(
+                    context,
+                    Center(
                       child: Column(
+                        mainAxisSize: MainAxisSize.min,
                         children: [
                           Text(context.l10n.dashboard_recentActivityLoadFailed, style: TextStyle(color: context.colors.textMuted)),
                           if (widget.onRetry != null)
@@ -196,30 +195,48 @@ class _RecentActivityFeedState extends State<RecentActivityFeed> {
                   );
                 }
                 if (!snapshot.hasData) {
-                  return const Padding(
-                    padding: EdgeInsets.symmetric(vertical: AppSpacing.s20),
-                    child: Center(child: CircularProgressIndicator(strokeWidth: 2)),
-                  );
+                  return _reserved(context, const Center(child: CircularProgressIndicator(strokeWidth: 2)));
                 }
                 final docs = snapshot.data!;
                 if (docs.isEmpty) {
-                  return Padding(
-                    padding: const EdgeInsets.symmetric(vertical: AppSpacing.s20),
-                    child: Center(child: Text(context.l10n.dashboard_noActivityYet, style: TextStyle(color: context.colors.textMuted))),
-                  );
+                  return _reserved(context, Center(child: Text(context.l10n.dashboard_noActivityYet, style: TextStyle(color: context.colors.textMuted))));
                 }
-                return Column(
-                  children: [
-                    for (int i = 0; i < docs.length; i++) ...[
-                      if (i > 0) Divider(height: 1, color: context.colors.textHint.withValues(alpha: AppAlpha.a15)),
-                      _activityTile(context, docs[i].data()),
-                    ],
-                  ],
-                );
+                return _reserved(context, _tiles(context, [for (final d in docs) d.data()]), fill: false);
               },
             ),
         ],
       ),
+    );
+  }
+
+  // The feed keeps the height of a full list in every state (DASH-1): an
+  // invisible list of AppLimits.recentActivityCount one-line entries sits
+  // under what is shown, so loading, an error, an empty feed or a short one
+  // never moves what comes below. A small state ([fill]) is centred in that
+  // room; the list starts at the top and may grow past it (two-line entries).
+  Widget _reserved(BuildContext context, Widget child, {bool fill = true}) {
+    return Stack(
+      children: [
+        Visibility(
+          visible: false,
+          maintainSize: true,
+          maintainAnimation: true,
+          maintainState: true,
+          child: _tiles(context, List.filled(AppLimits.recentActivityCount, const <String, dynamic>{})),
+        ),
+        fill ? Positioned.fill(child: child) : child,
+      ],
+    );
+  }
+
+  Widget _tiles(BuildContext context, List<Map<String, dynamic>> entries) {
+    return Column(
+      children: [
+        for (int i = 0; i < entries.length; i++) ...[
+          if (i > 0) Divider(height: 1, color: context.colors.textHint.withValues(alpha: AppAlpha.a15)),
+          _activityTile(context, entries[i]),
+        ],
+      ],
     );
   }
 
@@ -276,6 +293,7 @@ class TodayGlanceStrip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final loading = saleCount == null && isLoading;
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: AppSpacing.s18, vertical: AppSpacing.s14),
       decoration: BoxDecoration(
@@ -289,13 +307,11 @@ class TodayGlanceStrip extends StatelessWidget {
         runSpacing: 10,
         children: [
           Text(context.l10n.dashboard_todayAtAGlance, style: TextStyle(fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f13_5, color: context.colors.textPrimary)),
-          if (saleCount == null && isLoading)
-            const SizedBox(width: AppSpacing.s16, height: 16, child: CircularProgressIndicator(strokeWidth: 2))
-          else ...[
-            _glanceStat(context, Icons.shopping_cart_outlined, '${saleCount ?? 0}', context.l10n.dashboard_sales, context.colors.primary),
-            _glanceStat(context, Icons.build_outlined, '${serviceCount ?? 0}', context.l10n.dashboard_services, context.colors.chart1),
-            _glanceStat(context, Icons.payments_outlined, Money.format(collected ?? 0), context.l10n.sales_collected, context.colors.primary),
-          ],
+          // While the first load runs the three stats keep their place with the
+          // values hidden, so the strip does not grow when they come (DASH-1).
+          _glanceStat(context, Icons.shopping_cart_outlined, '${saleCount ?? 0}', context.l10n.dashboard_sales, context.colors.primary, hideValue: loading),
+          _glanceStat(context, Icons.build_outlined, '${serviceCount ?? 0}', context.l10n.dashboard_services, context.colors.chart1, hideValue: loading),
+          _glanceStat(context, Icons.payments_outlined, Money.format(collected ?? (loading ? AppDefaults.glanceAmountPlaceholder : 0)), context.l10n.sales_collected, context.colors.primary, hideValue: loading),
           _glanceStat(context, Icons.folder_outlined, '$debtorCount', context.l10n.dashboard_outstandingDebts(debtorCount), context.colors.accent),
           OutlinedButton.icon(
             onPressed: () => showInsightsScreen(context),
@@ -308,13 +324,20 @@ class TodayGlanceStrip extends StatelessWidget {
     );
   }
 
-  Widget _glanceStat(BuildContext context, IconData icon, String value, String label, Color color) {
+  Widget _glanceStat(BuildContext context, IconData icon, String value, String label, Color color,
+      {bool hideValue = false}) {
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
         Icon(icon, size: AppIconSize.i16, color: color),
         const SizedBox(width: AppSpacing.s6),
-        Text(value, style: TextStyle(fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f14, color: color)),
+        Visibility(
+          visible: !hideValue,
+          maintainSize: true,
+          maintainAnimation: true,
+          maintainState: true,
+          child: Text(value, style: TextStyle(fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f14, color: color)),
+        ),
         const SizedBox(width: AppSpacing.s4),
         Text(label, style: TextStyle(fontSize: AppFontSize.f12_5, color: context.colors.textMuted)),
       ],
