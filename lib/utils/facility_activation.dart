@@ -21,6 +21,11 @@ import '../theme/app_text.dart';
 import '../theme/theme_context.dart';
 import '../data/fields.dart';
 
+/// The screen a facility opens on. Tests put a stand-in here (REFRESH-1): the
+/// real DashboardScreen needs the whole signed-in app around it.
+@visibleForTesting
+Widget Function() dashboardScreenBuilder = () => const DashboardScreen(key: ValueKey('dashboard'));
+
 /// The one place that turns "here's a facility" into "you're now looking
 /// at its Dashboard" - resets every provider, wires up every real-time
 /// listener for the chosen facility, and navigates. Used directly from
@@ -179,7 +184,7 @@ class _DashboardEntryLoaderState extends State<_DashboardEntryLoader> {
       switchInCurve: Curves.easeOut,
       transitionBuilder: (child, animation) => FadeTransition(opacity: animation, child: child),
       child: _ready
-          ? const DashboardScreen(key: ValueKey('dashboard'))
+          ? dashboardScreenBuilder()
           : Scaffold(
               key: const ValueKey('loading'),
               backgroundColor: context.colors.background,

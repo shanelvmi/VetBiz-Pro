@@ -17,6 +17,12 @@ enum SubscriptionStatus { trial, active, grace, locked }
 /// nothing here, or anywhere else in the app that reads subscription
 /// status, needs to change.
 class SubscriptionProvider with ChangeNotifier {
+  SubscriptionProvider({FirebaseFirestore? firestore}) : _firestore = firestore;
+
+  // Null: the app's own Firestore. Tests pass an in-memory one (REFRESH-1).
+  final FirebaseFirestore? _firestore;
+  FirebaseFirestore get _db => _firestore ?? FirebaseFirestore.instance;
+
   StreamSubscription<DocumentSnapshot>? _subscription;
   String? _facilityId;
 
@@ -150,7 +156,7 @@ class SubscriptionProvider with ChangeNotifier {
     _facilityId = facilityId;
     _subscription?.cancel();
 
-    _subscription = FirebaseFirestore.instance
+    _subscription = _db
         .collection(Collections.facilities)
         .doc(facilityId)
         .snapshots()

@@ -6,7 +6,11 @@ import '../data/collections.dart';
 import '../config/app_limits.dart';
 
 class DebtProvider with ChangeNotifier {
-  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  DebtProvider({FirebaseFirestore? firestore}) : _injectedFirestore = firestore;
+
+  // Null: the app's own Firestore. Tests pass an in-memory one (REFRESH-1).
+  final FirebaseFirestore? _injectedFirestore;
+  FirebaseFirestore get _firestore => _injectedFirestore ?? FirebaseFirestore.instance;
 
   /// This client's oldest still-existing debt's own timestamp - null if
   /// they have none left. Individual debt records are the source of

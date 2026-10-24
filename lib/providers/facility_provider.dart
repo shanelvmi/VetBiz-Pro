@@ -30,7 +30,11 @@ class FacilityProvider with ChangeNotifier {
   int _debtOverdueDays = 30;
   StreamSubscription<DocumentSnapshot>? _facilitySub;
 
-  FacilityProvider() {
+  // Null: the app's own Firestore. Tests pass an in-memory one (REFRESH-1).
+  final FirebaseFirestore? _firestore;
+  FirebaseFirestore get _db => _firestore ?? FirebaseFirestore.instance;
+
+  FacilityProvider({FirebaseFirestore? firestore}) : _firestore = firestore {
     _loadFromPrefs(); // auto-load facility on provider init
   }
 
@@ -46,7 +50,7 @@ class FacilityProvider with ChangeNotifier {
   // included the logo at all.
   void listenToFacility(String facilityId) {
     _facilitySub?.cancel();
-    _facilitySub = FirebaseFirestore.instance
+    _facilitySub = _db
         .collection(Collections.facilities)
         .doc(facilityId)
         .snapshots()
@@ -116,6 +120,19 @@ class FacilityProvider with ChangeNotifier {
     await prefs.setString('facilityName', name);
     await prefs.setString('facilityType', type);
     if (logoUrl != null) await prefs.setString('facilityLogoUrl', logoUrl);
+  }
+
+  /// Asks the server itself (not the local cache) for this facility: a full
+  /// refresh (System Refresh, REFRESH-1) first checks the data can be
+  /// reloaded at all. Throws when the server can't be reached.
+  Future<void> checkServerReachable() async {
+    final id = _facilityId;
+    if (id == null) return;
+    await _db
+        .collection(Collections.facilities)
+        .doc(id)
+        .get(const GetOptions(source: Source.server))
+        .timeout(AppTimeouts.facilityLoad);
   }
 
   // ==================== CLEAR FACILITY ====================
@@ -268,7 +285,7 @@ class FacilityProvider with ChangeNotifier {
   // ==================== LOAD FACILITY FROM FIRESTORE ====================
   Future<void> loadFacility(String facilityId) async {
     try {
-      final doc = await FirebaseFirestore.instance
+      final doc = await _db
           .collection(Collections.facilities)
           .doc(facilityId)
           .get()

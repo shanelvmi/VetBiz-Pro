@@ -17,6 +17,16 @@ import '../l10n/l10n.dart';
 /// already check. This is the single source of truth the whole app uses
 /// to decide what to show/hide for the current user.
 class UserRoleProvider with ChangeNotifier {
+  UserRoleProvider({FirebaseFirestore? firestore, String? Function()? currentUid})
+      : _firestore = firestore,
+        _currentUid = currentUid;
+
+  // Null: the app's own Firestore and signed-in user. Tests pass an
+  // in-memory Firestore and a fixed uid (REFRESH-1).
+  final FirebaseFirestore? _firestore;
+  final String? Function()? _currentUid;
+  FirebaseFirestore get _db => _firestore ?? FirebaseFirestore.instance;
+
   StreamSubscription<DocumentSnapshot>? _subscription;
 
   String? _role;
@@ -25,13 +35,13 @@ class UserRoleProvider with ChangeNotifier {
   bool get isAssistant => !isAdmin;
 
   void listenToCurrentUser() {
-    final user = FirebaseAuth.instance.currentUser;
-    if (user == null) return;
+    final uid = _currentUid != null ? _currentUid() : FirebaseAuth.instance.currentUser?.uid;
+    if (uid == null) return;
 
     _subscription?.cancel();
-    _subscription = FirebaseFirestore.instance
+    _subscription = _db
         .collection(Collections.users)
-        .doc(user.uid)
+        .doc(uid)
         .snapshots()
         .listen((snapshot) {
       _role = snapshot.data()?[Fields.role] as String?;
@@ -44,7 +54,7 @@ class UserRoleProvider with ChangeNotifier {
       // being set to deactivated in the first place).
       final status = (snapshot.data()?[Fields.status] as String?)?.toLowerCase();
       if (status == UserStatus.deactivated.key) {
-        _handlePossibleDeactivation(user.uid);
+        _handlePossibleDeactivation(uid);
         return;
       }
 
@@ -56,7 +66,7 @@ class UserRoleProvider with ChangeNotifier {
 
   Future<void> _handlePossibleDeactivation(String uid) async {
     try {
-      final platformAdminDoc = await FirebaseFirestore.instance
+      final platformAdminDoc = await _db
           .collection(Collections.platformAdmins)
           .doc(uid)
           .get()
