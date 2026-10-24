@@ -111,7 +111,19 @@
     },
     {
       "rule": "R5",
+      "file": "lib/screens/dashboard/sales_revenue_chart.dart",
+      "lineContains": "start.add(Duration(days: spot.x.toInt()))",
+      "reason": "computed: the chart point's day (tooltip)"
+    },
+    {
+      "rule": "R5",
       "file": "lib/screens/dashboard/dashboard_screen.dart",
+      "lineContains": "start.add(Duration(days: value.toInt()))",
+      "reason": "computed: the chart axis label's day"
+    },
+    {
+      "rule": "R5",
+      "file": "lib/screens/dashboard/sales_revenue_chart.dart",
       "lineContains": "start.add(Duration(days: value.toInt()))",
       "reason": "computed: the chart axis label's day"
     },
@@ -160,6 +172,12 @@
     {
       "rule": "R4",
       "file": "lib/screens/dashboard/dashboard_screen.dart",
+      "lineContains": "EdgeInsets.symmetric(vertical: 40)",
+      "reason": "KEEP: chart loading gap 40, 8 px above s32 (beyond the 4 px snap); docs/design/parked_values.md B5"
+    },
+    {
+      "rule": "R4",
+      "file": "lib/screens/dashboard/sales_revenue_chart.dart",
       "lineContains": "EdgeInsets.symmetric(vertical: 40)",
       "reason": "KEEP: chart loading gap 40, 8 px above s32 (beyond the 4 px snap); docs/design/parked_values.md B5"
     },
