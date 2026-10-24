@@ -176,6 +176,39 @@ Future<int> countDocs(FirebaseFirestore fs, String collection) async =>
 /// check right after a call could see a write half done.
 Future<void> settle() => Future<void>.delayed(Duration.zero);
 
+/// [settle], then a few more turns so the providers can react to what
+/// changed (BUG-1: their lists start over after a delete or a restore).
+Future<void> settleLists() async {
+  for (var i = 0; i < 5; i++) {
+    await settle();
+  }
+}
+
+/// Restores [id] as the Trash screen does: TrashService.restore with the
+/// trash document's data, and no provider of the app's.
+Future<void> restoreFromTrashScreen(FirebaseFirestore fs, String trash, String live, String id) async {
+  final data = (await facilityCollection(fs, trash).doc(id).get()).data()!;
+  await TrashService.restore(
+    facilityId: testFacilityId,
+    trashCollection: trash,
+    liveCollection: live,
+    id: id,
+    data: data,
+    firestore: fs,
+    currentUserInfo: testUserInfo,
+  );
+  await settleLists();
+}
+
+/// Waits for [delete], then starts the list over once more: the list as the
+/// screen showed it after its own delete, so a restore test checks the
+/// restore alone.
+Future<void> deleteAsOnScreen(Future<void> delete, Future<void> Function() startListOver) async {
+  await delete;
+  await settleLists();
+  await startListOver();
+}
+
 /// Everything stored, parsed (so key order doesn't count) and without the
 /// empty nodes the fake leaves where a missing document was only read.
 Object? storedData(FakeFirebaseFirestore fs) => _pruneEmpty(jsonDecode(fs.dump()));

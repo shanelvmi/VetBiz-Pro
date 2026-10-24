@@ -12,9 +12,10 @@ import '../data/fields.dart';
 import '../l10n/l10n.dart';
 
 class PaymentProvider with ChangeNotifier {
-  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  final FirebaseFirestore _firestore;
 
-  PaymentProvider() {
+  /// [firestore] is for tests; the app uses the default.
+  PaymentProvider({FirebaseFirestore? firestore}) : _firestore = firestore ?? FirebaseFirestore.instance {
     ledgerController = SnapshotLedgerController<LedgerEntry>(
       fetchLedger: _fetchLedger,
       countNewEntries: _countNewLedgerEntries,

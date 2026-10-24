@@ -89,7 +89,7 @@ class TrashService {
     );
 
     await batch.commit();
-    await _logRestore(facilityId, liveCollection, data);
+    await _logRestore(firestore, currentUserInfo ?? ActivityLogger.getCurrentUserInfo, facilityId, liveCollection, data);
     return RestoreResult.restored;
   }
 
@@ -127,9 +127,11 @@ class TrashService {
     );
   }
 
-  static Future<void> _logRestore(String facilityId, String liveCollection, Map<String, dynamic> data) async {
-    final userInfo = await ActivityLogger.getCurrentUserInfo();
+  static Future<void> _logRestore(FirebaseFirestore firestore, Future<Map<String, String>> Function() currentUserInfo,
+      String facilityId, String liveCollection, Map<String, dynamic> data) async {
+    final userInfo = await currentUserInfo();
     await ActivityLogger.logActivity(
+      firestore: firestore,
       facilityId: facilityId,
       userId: userInfo[Fields.userId]!,
       userName: userInfo['userName'],
