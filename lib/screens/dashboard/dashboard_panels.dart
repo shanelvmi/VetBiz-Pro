@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 
 import '../../config/app_date_format.dart';
 import '../../config/app_limits.dart';
+import '../../config/money.dart';
 import '../../data/collections.dart';
 import '../../data/fields.dart';
 import '../../l10n/l10n.dart';
@@ -13,6 +14,7 @@ import '../../theme/theme_context.dart';
 import '../../utils/merged_query_stream.dart';
 import '../../utils/text_sanitizer.dart';
 import '../activity/activity_log_screen.dart';
+import 'insights_screen.dart';
 
 /// The Recent Activity feed's live entries. An admin sees the latest
 /// entries; an ASSISTANT only the latest that are theirs (what they did, or
@@ -37,22 +39,25 @@ Stream<List<LogDoc>> recentActivityStream(FirebaseFirestore firestore, String fa
   ], limit: AppLimits.recentActivityCount);
 }
 
-/// What sits under the Today at a Glance strip: the sales chart and the
-/// Recent Activity feed (side by side when [wide], one above the other
+/// What sits under the summary cards: the Today at a Glance strip, the sales
+/// chart and the Recent Activity feed (side by side when [wide], one above the other
 /// otherwise), then the quick actions.
 class DashboardLowerPanels extends StatelessWidget {
+  final Widget glance;
   final bool wide;
   final Widget chart;
   final Widget feed;
   final Widget quickActions;
 
   const DashboardLowerPanels(
-      {super.key, required this.wide, required this.chart, required this.feed, required this.quickActions});
+      {super.key, required this.glance, required this.wide, required this.chart, required this.feed, required this.quickActions});
 
   @override
   Widget build(BuildContext context) {
     return Column(
       children: [
+        glance,
+        const SizedBox(height: AppSpacing.s16),
         if (wide)
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -187,6 +192,72 @@ class RecentActivityFeed extends StatelessWidget {
           Text(timeStr, style: TextStyle(fontSize: AppFontSize.f11, color: context.colors.textHint)),
         ],
       ),
+    );
+  }
+}
+
+/// The Today at a Glance strip: today's sales, services and money collected
+/// (null until loaded; [isLoading] during the first load), the debtors
+/// count, and the Insights button.
+class TodayGlanceStrip extends StatelessWidget {
+  final int? saleCount;
+  final int? serviceCount;
+  final double? collected;
+  final bool isLoading;
+  final int debtorCount;
+
+  const TodayGlanceStrip(
+      {super.key,
+      required this.saleCount,
+      required this.serviceCount,
+      required this.collected,
+      required this.isLoading,
+      required this.debtorCount});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.s18, vertical: AppSpacing.s14),
+      decoration: BoxDecoration(
+        color: context.colors.surface,
+        borderRadius: BorderRadius.circular(AppRadius.r12),
+        border: Border.all(color: context.colors.textHint.withValues(alpha: AppAlpha.a15)),
+      ),
+      child: Wrap(
+        crossAxisAlignment: WrapCrossAlignment.center,
+        spacing: 24,
+        runSpacing: 10,
+        children: [
+          Text(context.l10n.dashboard_todayAtAGlance, style: TextStyle(fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f13_5, color: context.colors.textPrimary)),
+          if (saleCount == null && isLoading)
+            const SizedBox(width: AppSpacing.s16, height: 16, child: CircularProgressIndicator(strokeWidth: 2))
+          else ...[
+            _glanceStat(context, Icons.shopping_cart_outlined, '${saleCount ?? 0}', context.l10n.dashboard_sales, context.colors.primary),
+            _glanceStat(context, Icons.build_outlined, '${serviceCount ?? 0}', context.l10n.dashboard_services, context.colors.chart1),
+            _glanceStat(context, Icons.payments_outlined, Money.format(collected ?? 0), context.l10n.sales_collected, context.colors.primary),
+          ],
+          _glanceStat(context, Icons.folder_outlined, '$debtorCount', context.l10n.dashboard_outstandingDebts(debtorCount), context.colors.accent),
+          OutlinedButton.icon(
+            onPressed: () => showInsightsScreen(context),
+            icon: Icon(Icons.insights, size: AppIconSize.i16, color: context.colors.primary),
+            label: Text(context.l10n.insights_title, style: TextStyle(color: context.colors.primary)),
+            style: OutlinedButton.styleFrom(side: BorderSide(color: context.colors.primary)),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _glanceStat(BuildContext context, IconData icon, String value, String label, Color color) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Icon(icon, size: AppIconSize.i16, color: color),
+        const SizedBox(width: AppSpacing.s6),
+        Text(value, style: TextStyle(fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f14, color: color)),
+        const SizedBox(width: AppSpacing.s4),
+        Text(label, style: TextStyle(fontSize: AppFontSize.f12_5, color: context.colors.textMuted)),
+      ],
     );
   }
 }

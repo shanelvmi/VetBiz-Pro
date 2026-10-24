@@ -47,6 +47,7 @@ Widget _dashboard(Stream<List<LogDoc>> stream) => MaterialApp(
         body: SingleChildScrollView(
           child: LayoutBuilder(
             builder: (context, constraints) => DashboardLowerPanels(
+              glance: const SizedBox(height: 60),
               wide: constraints.maxWidth >= AppBreakpoints.expanded,
               chart: const SizedBox(height: 100),
               feed: RecentActivityFeed(stream: stream),

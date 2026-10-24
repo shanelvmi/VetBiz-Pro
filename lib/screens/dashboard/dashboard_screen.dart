@@ -45,7 +45,6 @@ import '../subscription/subscription_screen.dart';
 import 'dashboard_panels.dart';
 import 'sales_revenue_chart.dart';
 import 'notifications_screen.dart';
-import 'insights_screen.dart';
 import '../../utils/subscription_guard.dart';
 import '../../utils/force_logout.dart';
 import '../../utils/notification_seen_tracker.dart';
@@ -1535,9 +1534,14 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
                               },
                             ),
                             const SizedBox(height: AppSpacing.s16),
-                            _buildTodayGlanceStrip(glanceDebtorCount),
-                            const SizedBox(height: AppSpacing.s16),
                             DashboardLowerPanels(
+                              glance: TodayGlanceStrip(
+                                saleCount: _glanceSaleCount,
+                                serviceCount: _glanceServiceCount,
+                                collected: _glanceCollected,
+                                isLoading: _isGlanceLoading,
+                                debtorCount: glanceDebtorCount,
+                              ),
                               wide: isLargeScreen,
                               chart: _buildSalesRevenueChart(),
                               feed: _buildRecentActivityFeed(),
@@ -1997,52 +2001,6 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
           ),
         ],
       ),
-    );
-  }
-
-  Widget _buildTodayGlanceStrip(int debtorCount) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.s18, vertical: AppSpacing.s14),
-      decoration: BoxDecoration(
-        color: context.colors.surface,
-        borderRadius: BorderRadius.circular(AppRadius.r12),
-        border: Border.all(color: context.colors.textHint.withValues(alpha: AppAlpha.a15)),
-      ),
-      child: Wrap(
-        crossAxisAlignment: WrapCrossAlignment.center,
-        spacing: 24,
-        runSpacing: 10,
-        children: [
-          Text(context.l10n.dashboard_todayAtAGlance, style: TextStyle(fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f13_5, color: context.colors.textPrimary)),
-          if (_glanceSaleCount == null && _isGlanceLoading)
-            const SizedBox(width: AppSpacing.s16, height: 16, child: CircularProgressIndicator(strokeWidth: 2))
-          else ...[
-            _glanceStat(Icons.shopping_cart_outlined, '${_glanceSaleCount ?? 0}', context.l10n.dashboard_sales, context.colors.primary),
-            _glanceStat(Icons.build_outlined, '${_glanceServiceCount ?? 0}', context.l10n.dashboard_services, context.colors.chart1),
-            _glanceStat(Icons.payments_outlined, Money.format(_glanceCollected ?? 0), context.l10n.sales_collected, context.colors.primary),
-          ],
-          _glanceStat(Icons.folder_outlined, '$debtorCount', context.l10n.dashboard_outstandingDebts(debtorCount), context.colors.accent),
-          OutlinedButton.icon(
-            onPressed: () => showInsightsScreen(context),
-            icon: Icon(Icons.insights, size: AppIconSize.i16, color: context.colors.primary),
-            label: Text(context.l10n.insights_title, style: TextStyle(color: context.colors.primary)),
-            style: OutlinedButton.styleFrom(side: BorderSide(color: context.colors.primary)),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _glanceStat(IconData icon, String value, String label, Color color) {
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Icon(icon, size: AppIconSize.i16, color: color),
-        const SizedBox(width: AppSpacing.s6),
-        Text(value, style: TextStyle(fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f14, color: color)),
-        const SizedBox(width: AppSpacing.s4),
-        Text(label, style: TextStyle(fontSize: AppFontSize.f12_5, color: context.colors.textMuted)),
-      ],
     );
   }
 
