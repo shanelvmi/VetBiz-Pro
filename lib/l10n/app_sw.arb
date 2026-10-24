@@ -726,6 +726,8 @@
   "@subscription_historyTitle": {"x-review":"draft"},
   "subscription_historySubtitle": "Malipo yako na hali ya ukaguzi wake",
   "@subscription_historySubtitle": {"x-review":"draft"},
+  "subscription_platformTeam": "Timu ya {appName}",
+  "@subscription_platformTeam": {"x-review":"draft"},
   "subscription_historyLoadError": "Imeshindwa kupakia historia: {error}",
   "@subscription_historyLoadError": {"x-review":"draft"},
   "subscription_noSubmissionsYet": "Bado hakuna malipo yaliyotumwa",

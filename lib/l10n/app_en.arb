@@ -726,6 +726,8 @@
   "@subscription_historyTitle": {"description":"Subscription history screen title."},
   "subscription_historySubtitle": "Your payments and their review status",
   "@subscription_historySubtitle": {"description":"Subscription history subtitle."},
+  "subscription_platformTeam": "{appName} team",
+  "@subscription_platformTeam": {"description":"Subscription history, Submitted by: a record the platform team made itself. appName is AppInfo.name.","placeholders":{"appName":{"type":"String"}}},
   "subscription_historyLoadError": "Couldn't load history: {error}",
   "@subscription_historyLoadError": {"description":"Subscription history failed to load (error already in friendly words).","placeholders":{"error":{"type":"String"}}},
   "subscription_noSubmissionsYet": "No submissions yet",
