@@ -90,4 +90,9 @@ class AppLimits {
   /// The largest upload storage.rules accepts (`request.resource.size <=
   /// 5 * 1024 * 1024`). Keep the two equal.
   static const int maxUploadBytes = 5 * 1024 * 1024;
+
+  /// The most entries each map of a person's notification state holds
+  /// (firestore.rules, isValidNotificationState: `size() <= 2000`). Keep the
+  /// two equal.
+  static const int notificationStateMapMax = 2000;
 }

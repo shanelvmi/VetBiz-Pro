@@ -26,6 +26,16 @@ class AppRanges {
   /// How long a locally built notice stays (notifications_screen.dart).
   static const Duration noticeLifetime = Duration(days: 2);
 
+  /// Notification lifetimes (NOTIF-1, approved; notification_policy.dart): a
+  /// routine notification leaves my list this long after I read it, or this
+  /// long after it was created while I haven't.
+  static const Duration notificationReadLifetime = month;
+  static const Duration notificationUnreadLifetime = Duration(days: 90);
+
+  /// Entries in a person's notification state older than this are dropped
+  /// on the next write (notification_state_service.dart).
+  static const Duration notificationStatePrune = Duration(days: 120);
+
   /// Insights trend: today and the 13 days before it (14 days in all).
   static const Duration insightsTrendBack = Duration(days: 13);
 

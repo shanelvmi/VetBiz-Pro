@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 import '../data/collections.dart';
+import '../data/subscription_notice_stage.dart';
 import '../config/app_rules.dart';
 import '../config/app_date_format.dart';
 import '../l10n/l10n.dart';
@@ -103,6 +104,11 @@ class SubscriptionProvider with ChangeNotifier {
   /// the stored document's (written in English by the function) to tell
   /// whether the notice escalated. Show [attentionNoticeShown] instead.
   ({String title, String message})? get attentionNotice => _attentionNoticeIn(lookupAppLocalizations(const Locale('en')));
+
+  /// How far [attentionNotice] has escalated, as a stored key (NOTIF-2b): what a
+  /// person's seenStage is compared with. Replaces the comparison of the
+  /// English message in the Notifications screen in NOTIF-2c.
+  SubscriptionNoticeStage get attentionStage => throw UnimplementedError('NOTIF-2b');
 
   /// [attentionNotice] in the current language, for display only.
   ({String title, String message})? get attentionNoticeShown => _attentionNoticeIn(L10n.current);
