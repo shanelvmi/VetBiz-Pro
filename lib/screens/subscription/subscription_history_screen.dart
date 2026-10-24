@@ -17,6 +17,8 @@ import '../../theme/app_dimens.dart';
 import '../../theme/app_text.dart';
 import '../../theme/theme_context.dart';
 import '../../l10n/l10n.dart';
+import '../../config/app_info.dart';
+import '../../utils/submission_people.dart';
 
 /// One payment submission, read from a payment_submissions document.
 class _Submission {
@@ -30,6 +32,9 @@ class _Submission {
   final DateTime? reviewedAt;
   final String reviewNote; // the rejection reason - empty if none was given
   final String? promotionLabel;
+  // Who made it, as shown (SUBS-1, submission_people.dart): the name, an old
+  // claim's email, or the platform team; null when nothing is stored.
+  final String? submittedBy;
 
   const _Submission({
     required this.planId,
@@ -42,9 +47,10 @@ class _Submission {
     required this.reviewedAt,
     required this.reviewNote,
     required this.promotionLabel,
+    required this.submittedBy,
   });
 
-  factory _Submission.fromMap(Map<String, dynamic> d) {
+  factory _Submission.fromMap(Map<String, dynamic> d, {required String team}) {
     DateTime? asDate(dynamic v) => v is Timestamp ? v.toDate() : null;
     final rawStatus = (d[Fields.status] as String?) ?? PaymentSubmissionStatus.pending.key;
     return _Submission(
@@ -59,6 +65,7 @@ class _Submission {
       reviewedAt: asDate(d['reviewedAt']),
       reviewNote: ((d['reviewNote'] as String?) ?? '').trim(),
       promotionLabel: d['promotionLabel'] as String?,
+      submittedBy: submitterShown(d, team: team),
     );
   }
 
@@ -191,7 +198,8 @@ class _SubscriptionHistoryScreenState extends State<SubscriptionHistoryScreen> {
           }
 
           final all = (snapshot.data?.docs ?? [])
-              .map((d) => _Submission.fromMap(d.data() as Map<String, dynamic>))
+              .map((d) => _Submission.fromMap(d.data() as Map<String, dynamic>,
+                  team: context.l10n.subscription_platformTeam(AppInfo.name)))
               .toList();
           return _buildBody(all);
         },
@@ -235,7 +243,7 @@ class _SubscriptionHistoryScreenState extends State<SubscriptionHistoryScreen> {
       if (plan != 'All' && s.planLabel != plan) return false;
       if (method != 'All' && PaymentMethod.shownKey(s.method) != method) return false;
       if (q.isNotEmpty) {
-        final hay = '${s.planLabel} ${PaymentMethod.shownKey(s.method)} ${s.reference} ${s.reviewNote} ${s.status} ${s.promotionLabel ?? ''}'
+        final hay = '${s.planLabel} ${PaymentMethod.shownKey(s.method)} ${s.reference} ${s.reviewNote} ${s.status} ${s.promotionLabel ?? ''} ${s.submittedBy ?? ''}'
             .toLowerCase();
         if (!hay.contains(q)) return false;
       }
@@ -533,6 +541,7 @@ class _SubscriptionHistoryScreenState extends State<SubscriptionHistoryScreen> {
               child: Row(
                 children: [
                   _headerCell(context.l10n.subscription_colSubmitted, flex: 3),
+                  _headerCell(context.l10n.reports_submittedByLabel, flex: 3),
                   _headerCell(context.l10n.subscription_plan, flex: 3),
                   _headerCell(context.l10n.common_amount, flex: 2),
                   _headerCell(context.l10n.common_method, flex: 3),
@@ -640,6 +649,11 @@ class _SubscriptionHistoryScreenState extends State<SubscriptionHistoryScreen> {
           ),
           Expanded(
             flex: 3,
+            child: Text(s.submittedBy ?? '-',
+                maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: AppFontSize.f13)),
+          ),
+          Expanded(
+            flex: 3,
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -732,6 +746,11 @@ class _SubscriptionHistoryScreenState extends State<SubscriptionHistoryScreen> {
               if (methodLine.isNotEmpty) ...[
                 const SizedBox(height: AppSpacing.s6),
                 Text(methodLine, style: TextStyle(fontSize: AppFontSize.f12, color: context.colors.textSoft)),
+              ],
+              if (s.submittedBy != null) ...[
+                const SizedBox(height: AppSpacing.s4),
+                Text(context.l10n.reports_submittedBy(s.submittedBy!),
+                    style: TextStyle(fontSize: AppFontSize.f12, color: context.colors.textSoft)),
               ],
               if (s.status != PaymentSubmissionStatus.pending.key) ...[
                 const SizedBox(height: AppSpacing.s8),

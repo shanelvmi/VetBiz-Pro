@@ -15,6 +15,8 @@ import '../../theme/app_text.dart';
 import '../../theme/app_dimens.dart';
 import '../../theme/theme_context.dart';
 import '../../ui/feedback/app_feedback.dart';
+import '../../utils/submission_people.dart';
+import '../../config/app_info.dart';
 
 /// Embeddable version of the subscription submissions review list -
 /// same logic as the original standalone Subscription Review screen,
@@ -39,6 +41,22 @@ class SubscriptionRequestsTab extends StatefulWidget {
 
 class _SubscriptionRequestsTabState extends State<SubscriptionRequestsTab> {
   FirebaseFirestore get _db => widget.firestore ?? FirebaseFirestore.instance;
+
+  // SUBS-1: who made a claim and who reviewed it, by name (an old claim's
+  // email; the platform team for its own record). English: the operator
+  // console stays English (spec 2.8).
+  static const String _team = '${AppInfo.name} team';
+
+  Widget _personLine(String text) => Row(
+        children: [
+          Icon(Icons.person_outline, size: AppIconSize.i16, color: context.colors.textMuted),
+          const SizedBox(width: AppSpacing.s6),
+          Expanded(
+            child: Text(text,
+                style: TextStyle(fontSize: AppFontSize.f12_5, color: context.colors.textSoft), overflow: TextOverflow.ellipsis),
+          ),
+        ],
+      );
 
   bool _showAttended = false;
   int _attendedDays = 30;
@@ -90,6 +108,7 @@ class _SubscriptionRequestsTabState extends State<SubscriptionRequestsTab> {
         DateTime(newExpiryDate.year, newExpiryDate.month, newExpiryDate.day, 23, 59, 59);
 
     final admin = FirebaseAuth.instance.currentUser;
+    final adminName = await profileFullName(admin?.uid, firestore: _db);
     final batch = _db.batch();
 
     batch.set(
@@ -106,7 +125,7 @@ class _SubscriptionRequestsTabState extends State<SubscriptionRequestsTab> {
     batch.update(submissionDoc.reference, {
       Fields.status: PaymentSubmissionStatus.approved.key,
       'reviewedAt': FieldValue.serverTimestamp(),
-      'reviewedBy': admin?.email ?? admin?.uid ?? 'Unknown',
+      ...reviewerFields(email: admin?.email, uid: admin?.uid, fullName: adminName),
     });
 
     await batch.commit();
@@ -143,6 +162,7 @@ class _SubscriptionRequestsTabState extends State<SubscriptionRequestsTab> {
     if (confirmed != true) return;
 
     final admin = FirebaseAuth.instance.currentUser;
+    final adminName = await profileFullName(admin?.uid, firestore: _db);
     final data = submissionDoc.data() as Map<String, dynamic>;
     final facilityId = data[Fields.facilityId] as String?;
     final reason = reasonController.text.trim();
@@ -150,7 +170,7 @@ class _SubscriptionRequestsTabState extends State<SubscriptionRequestsTab> {
     await submissionDoc.reference.update({
       Fields.status: PaymentSubmissionStatus.rejected.key,
       'reviewedAt': FieldValue.serverTimestamp(),
-      'reviewedBy': admin?.email ?? admin?.uid ?? 'Unknown',
+      ...reviewerFields(email: admin?.email, uid: admin?.uid, fullName: adminName),
       'reviewNote': reason,
     });
 
@@ -342,6 +362,8 @@ class _SubscriptionRequestsTabState extends State<SubscriptionRequestsTab> {
                             ),
                           ],
                         ),
+                        const SizedBox(height: AppSpacing.s4),
+                        _personLine('Submitted by ${submitterShown(data, team: _team) ?? 'Unknown'}'),
                         if (submittedAt != null) ...[
                           const SizedBox(height: AppSpacing.s2),
                           Padding(
@@ -541,13 +563,15 @@ class _SubscriptionRequestsTabState extends State<SubscriptionRequestsTab> {
                           ],
                         ),
                         const SizedBox(height: AppSpacing.s4),
+                        _personLine('Submitted by ${submitterShown(data, team: _team) ?? 'Unknown'}'),
+                        const SizedBox(height: AppSpacing.s4),
                         Row(
                           children: [
                             Icon(Icons.person_outline, size: AppIconSize.i16, color: context.colors.textMuted),
                             const SizedBox(width: AppSpacing.s6),
                             Expanded(
                               child: Text(
-                                'By ${data['reviewedBy'] ?? 'Unknown'}'
+                                'Reviewed by ${reviewerShown(data) ?? 'Unknown'}'
                                 '${reviewedAt != null ? ' · ${AppDateFormat.dateTime24.format(reviewedAt)}' : ''}',
                                 style: TextStyle(fontSize: AppFontSize.f12_5, color: context.colors.textSoft),
                                 overflow: TextOverflow.ellipsis,

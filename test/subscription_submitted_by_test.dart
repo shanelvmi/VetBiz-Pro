@@ -18,10 +18,6 @@ import 'package:vetbiz_pro/screens/subscription/subscription_screen.dart';
 import 'package:vetbiz_pro/theme/app_palette.dart';
 import 'package:vetbiz_pro/theme/app_theme.dart';
 
-// Until the fix: today's claims and reviews keep only the email, and no
-// screen shows the submitter.
-const _skipUntilFix = true;
-
 final _recent = DateTime.now().subtract(const Duration(days: 2));
 
 Map<String, dynamic> _claim(String status, Map<String, dynamic> who) => {
@@ -58,6 +54,13 @@ Widget _app(Widget home) => MaterialApp(
     );
 
 Future<void> _pumpAt(WidgetTester tester, double width, Widget home) async {
+  // The square test font overflows the pagination bar at phone width; only
+  // overflows are ignored.
+  final onError = FlutterError.onError;
+  FlutterError.onError = (details) {
+    if (!'${details.exception}'.contains('overflowed')) onError?.call(details);
+  };
+  addTearDown(() => FlutterError.onError = onError);
   tester.view.physicalSize = Size(width, 1000);
   tester.view.devicePixelRatio = 1;
   addTearDown(tester.view.reset);
@@ -69,7 +72,7 @@ void main() {
   group('the claim the subscription screen submits', () {
     test('stores the name next to the email and the uid; with no name on the profile, the email', () {
       expect(paymentClaimSubmitter(email: 'neema@example.com', uid: 'u1')['submittedByName'], 'neema@example.com');
-    }, skip: _skipUntilFix);
+    });
 
     test('the screen passes the profile\'s full name, and both reviews store the reviewer\'s', () {
       final submit = File('lib/screens/subscription/subscription_screen.dart').readAsStringSync();
@@ -77,7 +80,7 @@ void main() {
       final review = File('lib/screens/platform_admin/subscription_requests_tab.dart').readAsStringSync();
       expect('...reviewerFields('.allMatches(review).length, 2, reason: 'approve and reject');
       expect(review, isNot(contains("'reviewedBy': admin")));
-    }, skip: _skipUntilFix);
+    });
   });
 
   group('Subscription history', () {
@@ -89,7 +92,7 @@ void main() {
       expect(find.text('Neema Mushi'), findsOneWidget);
       expect(find.text('old@example.com'), findsOneWidget);
       expect(find.text('VetBiz Pro team'), findsOneWidget);
-    }, skip: _skipUntilFix);
+    });
 
     testWidgets('phone: a "Submitted by" line on each card', (tester) async {
       final fs = await _seedHistory();
@@ -98,7 +101,7 @@ void main() {
       expect(find.text('Submitted by Neema Mushi'), findsOneWidget);
       expect(find.text('Submitted by old@example.com'), findsOneWidget);
       expect(find.text('Submitted by VetBiz Pro team'), findsOneWidget);
-    }, skip: _skipUntilFix);
+    });
   });
 
   group('Operator: Subscription requests', () {
@@ -133,6 +136,6 @@ void main() {
       expect(find.textContaining('Reviewed by Asha Admin'), findsOneWidget);
       expect(find.text('Submitted by old@example.com'), findsOneWidget);
       expect(find.textContaining('Reviewed by oldpa@vetbiz.example'), findsOneWidget);
-    }, skip: _skipUntilFix);
+    });
   });
 }

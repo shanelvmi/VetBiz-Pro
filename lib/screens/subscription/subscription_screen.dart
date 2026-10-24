@@ -30,14 +30,19 @@ import '../../config/app_timeouts.dart';
 import '../../config/app_date_format.dart';
 import '../../ui/feedback/app_feedback.dart';
 import '../../l10n/l10n.dart';
+import '../../utils/submission_people.dart';
+import '../../config/app_info.dart';
 
 /// Who submitted a payment claim, as the claim stores it: submittedBy is
 /// for people to read (the email, which the review shows; the uid when
 /// the account has none), submittedById is the uid firestore.rules checks
-/// against the signed-in person (E4d-3, C11).
-Map<String, Object?> paymentClaimSubmitter({String? email, String? uid}) => {
+/// against the signed-in person (E4d-3, C11), and submittedByName is the
+/// profile's full name, or the email, which the history and the review show
+/// (SUBS-1, submission_people.dart).
+Map<String, Object?> paymentClaimSubmitter({String? email, String? uid, String? fullName}) => {
       'submittedBy': email ?? uid ?? 'Unknown',
       'submittedById': uid,
+      'submittedByName': personNameToStore(fullName: fullName, email: email, uid: uid),
     };
 
 class SubscriptionScreen extends StatefulWidget {
@@ -196,6 +201,7 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
       }
 
       final user = FirebaseAuth.instance.currentUser;
+      final fullName = await profileFullName(user?.uid);
       final effectivePrice = _effectivePrice(_selectedPlan);
       final appliedPromo = (_activePromotion != null && _activePromotion!.appliesToPlan(_selectedPlan.id))
           ? _activePromotion
@@ -218,7 +224,7 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
         'proofImageUrl': proofUrl,
         Fields.status: PaymentSubmissionStatus.pending.key,
         'submittedAt': FieldValue.serverTimestamp(),
-        ...paymentClaimSubmitter(email: user?.email, uid: user?.uid),
+        ...paymentClaimSubmitter(email: user?.email, uid: user?.uid, fullName: fullName),
       });
 
       if (!mounted) return;
@@ -572,6 +578,8 @@ Widget buildSubmissionCard(BuildContext context, Map<String, dynamic> data, AppC
   // Saved by the platform admin when rejecting - empty if they left the
   // (optional) reason blank.
   final reviewNote = ((data['reviewNote'] as String?) ?? '').trim();
+  // Who made it (SUBS-1), as the history shows it.
+  final submitter = submitterShown(data, team: context.l10n.subscription_platformTeam(AppInfo.name));
   return Card(
     margin: const EdgeInsets.only(bottom: AppSpacing.s6),
     child: Padding(
@@ -593,6 +601,9 @@ Widget buildSubmissionCard(BuildContext context, Map<String, dynamic> data, AppC
                       '${submittedAt != null ? ' - ${AppDateFormat.dateTime24.format(submittedAt)}' : ''}',
                       style: TextStyle(fontSize: AppFontSize.f12, color: colors.textMuted),
                     ),
+                    if (submitter != null)
+                      Text(context.l10n.reports_submittedBy(submitter),
+                          style: TextStyle(fontSize: AppFontSize.f12, color: colors.textMuted)),
                   ],
                 ),
               ),
