@@ -1170,6 +1170,11 @@ class AppLocalizationsEn extends AppLocalizations {
       'Your payments and their review status';
 
   @override
+  String subscription_platformTeam(String appName) {
+    return '$appName team';
+  }
+
+  @override
   String subscription_historyLoadError(String error) {
     return 'Couldn\'t load history: $error';
   }

@@ -2276,6 +2276,12 @@ abstract class AppLocalizations {
   /// **'Your payments and their review status'**
   String get subscription_historySubtitle;
 
+  /// Subscription history, Submitted by: a record the platform team made itself. appName is AppInfo.name.
+  ///
+  /// In en, this message translates to:
+  /// **'{appName} team'**
+  String subscription_platformTeam(String appName);
+
   /// Subscription history failed to load (error already in friendly words).
   ///
   /// In en, this message translates to:

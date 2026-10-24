@@ -1174,6 +1174,11 @@ class AppLocalizationsSw extends AppLocalizations {
       'Malipo yako na hali ya ukaguzi wake';
 
   @override
+  String subscription_platformTeam(String appName) {
+    return 'Timu ya $appName';
+  }
+
+  @override
   String subscription_historyLoadError(String error) {
     return 'Imeshindwa kupakia historia: $error';
   }
