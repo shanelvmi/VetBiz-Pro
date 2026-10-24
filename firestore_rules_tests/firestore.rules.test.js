@@ -1281,6 +1281,20 @@ test('C11 [E4d-2]: members submit a claim as the app does (pending); the review 
   await assertSucceeds(f1(as('pa'), `payment_submissions/${ref.id}`).update({ status: 'approved' }));
 });
 
+// SUBS-1: the claim also names its submitter (submittedByName: the profile's
+// full name, or the email), and the review its reviewer (reviewedByName).
+// Neither needs a rule change: create checks only status and submittedById.
+test('C11 [SUBS-1]: the claim as the app now submits it (with submittedByName) is accepted; the review stores reviewedByName', async () => {
+  for (const uid of ['assistant', 'owner']) {
+    const ref = await assertSucceeds(claimsOf(uid).add({ ...claim('pending', uid), submittedByName: 'Neema Mushi' }));
+    await assertSucceeds(f1(as('pa'), `payment_submissions/${ref.id}`).update({
+      status: 'approved', reviewedAt: serverTime(), reviewedBy: 'pa@example.com', reviewedByName: 'Asha Admin',
+    }));
+  }
+  // Still only in your own name, name or not.
+  await assertFails(claimsOf('owner').add({ ...claim('pending', 'assistant'), submittedByName: 'Neema Mushi' }));
+});
+
 // P1: the invite-code rate limit's counts (inviteAttempts) are written by
 // the server (Admin SDK) only. No rule matches the collection, so every
 // client read and write is refused; this pins that.

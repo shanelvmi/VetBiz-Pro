@@ -77,7 +77,10 @@ class SubscriptionHistoryScreen extends StatefulWidget {
   final String facilityId;
   final Color primaryColor;
 
-  const SubscriptionHistoryScreen({super.key, required this.facilityId, required this.primaryColor});
+  /// Null: the app's own Firestore. Tests pass an in-memory one (SUBS-1).
+  final FirebaseFirestore? firestore;
+
+  const SubscriptionHistoryScreen({super.key, required this.facilityId, required this.primaryColor, this.firestore});
 
   @override
   State<SubscriptionHistoryScreen> createState() => _SubscriptionHistoryScreenState();
@@ -109,7 +112,7 @@ class _SubscriptionHistoryScreenState extends State<SubscriptionHistoryScreen> {
   @override
   void initState() {
     super.initState();
-    _stream = FirebaseFirestore.instance
+    _stream = (widget.firestore ?? FirebaseFirestore.instance)
         .collection(Collections.facilities)
         .doc(widget.facilityId)
         .collection(Collections.paymentSubmissions)

@@ -28,13 +28,17 @@ import '../../ui/feedback/app_feedback.dart';
 /// at it, including losing sight of whatever rejection reason had
 /// been written for it.
 class SubscriptionRequestsTab extends StatefulWidget {
-  const SubscriptionRequestsTab({super.key});
+  /// Null: the app's own Firestore. Tests pass an in-memory one (SUBS-1).
+  final FirebaseFirestore? firestore;
+
+  const SubscriptionRequestsTab({super.key, this.firestore});
 
   @override
   State<SubscriptionRequestsTab> createState() => _SubscriptionRequestsTabState();
 }
 
 class _SubscriptionRequestsTabState extends State<SubscriptionRequestsTab> {
+  FirebaseFirestore get _db => widget.firestore ?? FirebaseFirestore.instance;
 
   bool _showAttended = false;
   int _attendedDays = 30;
@@ -71,7 +75,7 @@ class _SubscriptionRequestsTabState extends State<SubscriptionRequestsTab> {
 
     if (facilityId == null || plan == null) return;
 
-    final facilityRef = FirebaseFirestore.instance.collection(Collections.facilities).doc(facilityId);
+    final facilityRef = _db.collection(Collections.facilities).doc(facilityId);
     final facilitySnap = await facilityRef.get();
     final currentExpires = facilitySnap.data()?['subscriptionExpiresAt'];
     final currentExpiresDate = currentExpires is Timestamp ? currentExpires.toDate() : null;
@@ -86,7 +90,7 @@ class _SubscriptionRequestsTabState extends State<SubscriptionRequestsTab> {
         DateTime(newExpiryDate.year, newExpiryDate.month, newExpiryDate.day, 23, 59, 59);
 
     final admin = FirebaseAuth.instance.currentUser;
-    final batch = FirebaseFirestore.instance.batch();
+    final batch = _db.batch();
 
     batch.set(
       facilityRef,
@@ -151,7 +155,7 @@ class _SubscriptionRequestsTabState extends State<SubscriptionRequestsTab> {
     });
 
     if (facilityId != null) {
-      await FirebaseFirestore.instance
+      await _db
           .collection(Collections.facilities)
           .doc(facilityId)
           .collection(Collections.notifications)
@@ -220,7 +224,7 @@ class _SubscriptionRequestsTabState extends State<SubscriptionRequestsTab> {
 
   Widget _buildPendingList() {
     return StreamBuilder<QuerySnapshot>(
-      stream: FirebaseFirestore.instance
+      stream: _db
           .collectionGroup(Collections.paymentSubmissions)
           .where(Fields.status, isEqualTo: PaymentSubmissionStatus.pending.key)
           .orderBy('submittedAt', descending: false)
@@ -442,7 +446,7 @@ class _SubscriptionRequestsTabState extends State<SubscriptionRequestsTab> {
     final since = DateTime.now().subtract(Duration(days: _attendedDays));
 
     return StreamBuilder<QuerySnapshot>(
-      stream: FirebaseFirestore.instance
+      stream: _db
           .collectionGroup(Collections.paymentSubmissions)
           .where(Fields.status, whereIn: [PaymentSubmissionStatus.approved.key, PaymentSubmissionStatus.rejected.key])
           .where('reviewedAt', isGreaterThanOrEqualTo: Timestamp.fromDate(since))
