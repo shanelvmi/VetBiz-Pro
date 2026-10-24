@@ -1320,22 +1320,19 @@ const stateOf = (db, uid, facilityId = 'F1') => db.doc(`facilities/${facilityId}
 const ids = (n, prefix = 'n') => Array.from({ length: n }, (_, i) => `${prefix}${i + 1}`);
 const mapOf = (keys, value) => Object.fromEntries(keys.map((k) => [k, value]));
 const FieldValue = firebase.firestore.FieldValue;
-// Skipped until the rule exists (the next commit); run against the rules before
-// it, 7 of these 9 fail with PERMISSION_DENIED: No matching allow statements.
-const untilTheRule = { skip: 'NOTIF-2a: the notificationState rule comes in the next commit' };
 
 // A state document already there, written with the rules off.
 const seedState = (uid, data, facilityId = 'F1') =>
   env.withSecurityRulesDisabled((ctx) => ctx.firestore().doc(`facilities/${facilityId}/notificationState/${uid}`).set(data));
 
-test('NOTIF-2a: members read and write their OWN state document (admin, Co-admin, assistant)', untilTheRule, async () => {
+test('NOTIF-2a: members read and write their OWN state document (admin, Co-admin, assistant)', async () => {
   for (const uid of ['owner', 'coadmin', 'assistant']) {
     await assertSucceeds(stateOf(as(uid), uid).set({ read: { n1: serverTime() }, updatedAt: serverTime() }, { merge: true }));
     await assertSucceeds(stateOf(as(uid), uid).get());
   }
 });
 
-test('NOTIF-2a: nobody else reads or writes it - another member, a Platform Admin, a non-member, signed out', untilTheRule, async () => {
+test('NOTIF-2a: nobody else reads or writes it - another member, a Platform Admin, a non-member, signed out', async () => {
   await seedState('owner', { read: { n1: new Date() }, updatedAt: new Date() });
   await seedState('assistant', { removed: { n2: new Date() }, updatedAt: new Date() });
   const attempts = [
@@ -1351,20 +1348,20 @@ test('NOTIF-2a: nobody else reads or writes it - another member, a Platform Admi
   await assertFails(as('owner').collection('facilities/F1/notificationState').get());
 });
 
-test('NOTIF-2a: not in a facility you are not a member of, even under your own uid', untilTheRule, async () => {
+test('NOTIF-2a: not in a facility you are not a member of, even under your own uid', async () => {
   await assertFails(stateOf(as('outsider'), 'outsider', 'F1').set({ read: {}, updatedAt: serverTime() }));
   await assertFails(stateOf(as('pa'), 'pa', 'F1').set({ read: {}, updatedAt: serverTime() }));
   await assertSucceeds(stateOf(as('outsider'), 'outsider', 'F2').set({ read: {}, updatedAt: serverTime() }));
 });
 
-test('NOTIF-2a: only read, unread, removed, seenStage and updatedAt', untilTheRule, async () => {
+test('NOTIF-2a: only read, unread, removed, seenStage and updatedAt', async () => {
   const mine = stateOf(as('owner'), 'owner');
   await assertSucceeds(mine.set({ read: {}, unread: {}, removed: {}, seenStage: {}, updatedAt: serverTime() }));
   await assertFails(mine.set({ read: {}, muted: { n1: true } }, { merge: true }));
   await assertFails(mine.set({ role: 'admin' }, { merge: true }));
 });
 
-test('NOTIF-2a: each of read, unread, removed, seenStage is a map; updatedAt a timestamp', untilTheRule, async () => {
+test('NOTIF-2a: each of read, unread, removed, seenStage is a map; updatedAt a timestamp', async () => {
   const mine = stateOf(as('owner'), 'owner');
   for (const key of ['read', 'unread', 'removed', 'seenStage']) {
     for (const wrong of ['n1', 5, true, ['n1'], null]) {
@@ -1378,7 +1375,7 @@ test('NOTIF-2a: each of read, unread, removed, seenStage is a map; updatedAt a t
   await assertSucceeds(mine.set({ updatedAt: serverTime() }));
 });
 
-test('NOTIF-2a: each map holds at most 2000 entries', untilTheRule, async () => {
+test('NOTIF-2a: each map holds at most 2000 entries', async () => {
   const mine = stateOf(as('owner'), 'owner');
   for (const key of ['read', 'unread', 'removed', 'seenStage']) {
     await assertSucceeds(mine.set({ [key]: mapOf(ids(2000), true) }));
@@ -1389,12 +1386,12 @@ test('NOTIF-2a: each map holds at most 2000 entries', untilTheRule, async () => 
   await assertFails(mine.update({ 'removed.extra': serverTime() }));
 });
 
-test('NOTIF-2a: the owner of a state document can delete it', untilTheRule, async () => {
+test('NOTIF-2a: the owner of a state document can delete it', async () => {
   await seedState('assistant', { read: { n1: new Date() }, updatedAt: new Date() });
   await assertSucceeds(stateOf(as('assistant'), 'assistant').delete());
 });
 
-test('NOTIF-2a: the shapes the app will write all pass (one read, one removal, bulk 50, Undo, seenStage, mark unread)', untilTheRule, async () => {
+test('NOTIF-2a: the shapes the app will write all pass (one read, one removal, bulk 50, Undo, seenStage, mark unread)', async () => {
   const mine = stateOf(as('coadmin'), 'coadmin');
   // The first write creates it: a merge, as the app does every time.
   await assertSucceeds(mine.set({ read: { n1: serverTime() }, updatedAt: serverTime() }, { merge: true }));
@@ -1416,7 +1413,7 @@ test('NOTIF-2a: the shapes the app will write all pass (one read, one removal, b
   await assertSucceeds(mine.update({ 'seenStage.subscription_expiring': 'grace', updatedAt: serverTime() }));
 });
 
-test('NOTIF-2a: notifications themselves are unchanged - no delete from the app; any member still marks readAt (old app versions)', untilTheRule, async () => {
+test('NOTIF-2a: notifications themselves are unchanged - no delete from the app; any member still marks readAt (old app versions)', async () => {
   await env.withSecurityRulesDisabled((ctx) =>
     ctx.firestore().doc('facilities/F1/notifications/n1').set({ type: 'newClient', title: 'x', message: 'y', createdAt: new Date() }));
   for (const uid of ['owner', 'coadmin', 'assistant', 'pa']) {

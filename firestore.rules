@@ -127,6 +127,17 @@ service cloud.firestore {
       let affected = request.resource.data.diff(resource.data).affectedKeys();
       return affected.hasOnly(['readAt']);
     }
+    // NOTIF-2a: one person's notification state (docs/design/notifications.md,
+    // section 2): read, unread, removed and seenStage are maps keyed by
+    // notification id, each bounded so the document can't grow without limit.
+    function isValidNotificationState(data) {
+      return data.keys().hasOnly(['read', 'unread', 'removed', 'seenStage', 'updatedAt']) &&
+        (!('read' in data) || (data.read is map && data.read.size() <= 2000)) &&
+        (!('unread' in data) || (data.unread is map && data.unread.size() <= 2000)) &&
+        (!('removed' in data) || (data.removed is map && data.removed.size() <= 2000)) &&
+        (!('seenStage' in data) || (data.seenStage is map && data.seenStage.size() <= 2000)) &&
+        (!('updatedAt' in data) || data.updatedAt is timestamp);
+    }
     // Deactivating your own account is fine (voluntary, reduces your
     // own access) - reactivating yourself or changing your own role is
     // not (that's an admin decision, not a self-service one). Only
@@ -407,6 +418,15 @@ service cloud.firestore {
         allow create: if isAuthenticated() && isPlatformAdmin();
         allow update: if isAuthenticated() && isInFacility(facilityId) && isOnlyMarkingNotificationRead();
         allow delete: if false;
+      }
+      // NOTIF-2a: each person's own read, unread and removed notifications, so
+      // removing or reading one never hides it from the other admins. Only that
+      // person, while a member of the facility; nobody else, Platform Admin
+      // included.
+      match /notificationState/{uid} {
+        allow read, delete: if isAuthenticated() && request.auth.uid == uid && isInFacility(facilityId);
+        allow create, update: if isAuthenticated() && request.auth.uid == uid && isInFacility(facilityId) &&
+          isValidNotificationState(request.resource.data);
       }
       match /payment_submissions/{submissionId} {
         allow read: if isAuthenticated() && (isInFacility(facilityId) || isPlatformAdmin());
