@@ -18,6 +18,7 @@ const _minTap = 48.0;
 NotificationItem itemOf(NotificationFeedController c, String id) => c.items.firstWhere((i) => i.id == id);
 
 void main() {
+  swahiliTests();
   testWidgets('swipe at 390 px: left removes, right toggles read; nothing on a persistent row', (tester) async {
     final fs = FakeFirebaseFirestore();
     await seed(fs, 'n1', 'lowStock');
@@ -151,4 +152,34 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text('Remove read ones'), findsOneWidget);
   }, skip: _skip);
+}
+
+// Kiswahili texts are longer: the same screens at 360 px, Light and Dark,
+// with a menu open.
+void swahiliTests() {
+  for (final dark in [false, true]) {
+    testWidgets('Kiswahili at 360 px, ${dark ? 'Dark' : 'Light'}: no overflow, full screen and dropdown', (tester) async {
+      final fs = FakeFirebaseFirestore();
+      final subs = Subs()..facts = expiring;
+      await seed(fs, 'n1', 'lowStock', relatedType: 'product', relatedId: 'p');
+      await seed(fs, 'p1', 'assistantPending');
+      final c = newFeed(fs, 'A', Clock(), subs: subs);
+      addTearDown(c.dispose);
+      await pumpNotifications(tester, c, width: 360, height: 1400, dark: dark, locale: 'sw');
+      expect(tester.takeException(), isNull);
+      await openMenu(tester, 'p1');
+      expect(find.text('Inabaki hadi ombi likubaliwe au likataliwe'), findsOneWidget);
+      expect(tester.takeException(), isNull);
+      await tester.tapAt(const Offset(1, 1));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Chagua'));
+      await tester.pumpAndSettle();
+      expect(tester.takeException(), isNull);
+
+      final d = newFeed(fs, 'A', Clock(), subs: subs);
+      addTearDown(d.dispose);
+      await pumpNotifications(tester, d, dropdown: true, dark: dark, locale: 'sw');
+      expect(tester.takeException(), isNull);
+    });
+  }
 }
