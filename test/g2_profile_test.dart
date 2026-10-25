@@ -25,19 +25,19 @@ import 'package:vetbiz_pro/widgets/profile/profile_photo_editor.dart';
 const _untilG2 = 'G2: until the implementation';
 
 class _FakeStore implements PhotoStore {
-  final files = <String, String>{}; // path -> content type
+  final files = <String>{};
   Object? deleteError;
 
   @override
-  Future<String> upload(String path, Uint8List bytes, SettableMetadata metadata) async {
-    files[path] = metadata.contentType!;
+  Future<String> upload(String path, Uint8List bytes) async {
+    files.add(path);
     return 'https://files.example/$path?alt=media&token=t';
   }
 
   @override
   Future<void> delete(String path) async {
     if (deleteError != null) throw deleteError!;
-    if (files.remove(path) == null) {
+    if (!files.remove(path)) {
       throw FirebaseException(plugin: 'firebase_storage', code: 'object-not-found');
     }
   }
@@ -80,21 +80,21 @@ void main() {
 
     test('Change photo saves one jpeg at avatars/{uid}.jpg and points avatarUrl at it', () async {
       final url = await service.savePhoto('u1', Uint8List(8));
-      expect(store.files, {'avatars/u1.jpg': 'image/jpeg'});
+      expect(store.files, {'avatars/u1.jpg'});
       expect(url, contains('avatars/u1.jpg'));
       expect((await user())['avatarUrl'], url);
     });
 
     test('Remove photo deletes both files and clears avatarUrl', () async {
-      store.files['avatars/u1.jpg'] = 'image/jpeg';
-      store.files['user_avatars/u1.png'] = 'image/png';
+      store.files.add('avatars/u1.jpg');
+      store.files.add('user_avatars/u1.png');
       await service.removePhoto('u1');
       expect(store.files, isEmpty);
       expect((await user()).containsKey('avatarUrl'), isFalse);
     });
 
     test('a file that is not there counts as removed', () async {
-      store.files['avatars/u1.jpg'] = 'image/jpeg'; // no legacy file
+      store.files.add('avatars/u1.jpg'); // no legacy file
       await service.removePhoto('u1');
       expect((await user()).containsKey('avatarUrl'), isFalse);
       await service.removePhoto('u1'); // neither file now
@@ -105,7 +105,7 @@ void main() {
       await expectLater(service.removePhoto('u1'), throwsA(isA<FirebaseException>()));
       expect((await user())['avatarUrl'], 'old');
     });
-  }, skip: _untilG2);
+  });
 
   group('initials and the top bar button', () {
     testWidgets('no photo: initials on the primary circle', (tester) async {

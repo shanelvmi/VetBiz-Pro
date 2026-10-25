@@ -85,8 +85,9 @@ void main() {
       if (checks < picks) problems.add('${file.path}: $picks pickImage, $checks size checks');
     }
     // dashboard avatar, register avatar, two facility logos, business
-    // logo, payment proof, product image (the login poster went in G1).
-    expect(found, 7);
+    // logo, payment proof, product image (the login poster went in G1),
+    // ProfilePhotoService (G2; the dashboard and register ones go next).
+    expect(found, 8);
     expect(problems, isEmpty);
   });
 }
