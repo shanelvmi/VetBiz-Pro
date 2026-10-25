@@ -7,11 +7,9 @@ import 'package:vetbiz_pro/models/support_contact.dart';
 import 'package:vetbiz_pro/utils/social_link.dart';
 
 // G3 (the sign-in footer): the one social-link sanitiser and the support
-// contact read. Written before the code, skipped until it exists.
-const _skip = true;
-
+// contact read. Written before the code (05ff7f8).
 void main() {
-  group('SocialLink.sanitize', skip: _skip, () {
+  group('SocialLink.sanitize', () {
     test('empty is allowed and means "not set"', () {
       expect(SocialLink.sanitize(null), '');
       expect(SocialLink.sanitize(''), '');
@@ -56,7 +54,7 @@ void main() {
     });
   });
 
-  group('SocialLink.isLaunchable', skip: _skip, () {
+  group('SocialLink.isLaunchable', () {
     test('only http and https with a host', () {
       expect(SocialLink.isLaunchable(Uri.parse('https://facebook.com/x')), isTrue);
       expect(SocialLink.isLaunchable(Uri.parse('http://x.com/y')), isTrue);
@@ -66,7 +64,7 @@ void main() {
     });
   });
 
-  group('SupportContact', skip: _skip, () {
+  group('SupportContact', () {
     test('the network order is pinned (stored keys and icon order)', () {
       expect(SocialNetwork.values.map((n) => n.field).toList(),
           ['facebook', 'instagram', 'x', 'linkedin', 'youtube', 'tiktok']);
