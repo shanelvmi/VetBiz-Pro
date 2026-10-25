@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 
+import '../../theme/theme_context.dart';
+import '../initials_avatar.dart';
+
 /// A person's round picture: their photo, or their initials on a circle in
 /// the theme's primary colour when there is none (or it fails to load).
 /// The one avatar of the top bar, the profile drawer and Edit Profile.
@@ -11,5 +14,11 @@ class ProfileAvatar extends StatelessWidget {
   final double size;
 
   @override
-  Widget build(BuildContext context) => throw UnimplementedError('G2: ProfileAvatar');
+  Widget build(BuildContext context) => InitialsAvatar(
+        avatarUrl: avatarUrl,
+        name: name,
+        size: size,
+        backgroundColor: context.colors.primary,
+        foregroundColor: context.colors.onPrimary,
+      );
 }

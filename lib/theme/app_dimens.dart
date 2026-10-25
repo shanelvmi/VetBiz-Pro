@@ -120,6 +120,13 @@ class AppSizes {
   /// toggle): the circle you see, inside Material's 48 px touch target.
   static const double authHeaderButton = 36;
 
+  /// The profile (lib/widgets/profile): the avatar in the top bar, in the
+  /// drawer and in Edit Profile, and the widest the top bar's name gets.
+  static const double profileAvatarBar = 32;
+  static const double profileAvatarDrawer = 72;
+  static const double profileAvatarEditor = 68;
+  static const double profileNameMax = 160;
+
   /// A small round status indicator (online, stock status, submitted,
   /// client Active/Inactive): an 8 px dot, as a Container or an
   /// Icons.circle size.

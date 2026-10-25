@@ -139,7 +139,7 @@ void main() {
       await tester.tap(find.text('Shanel Hassan'));
       expect(taps, 1);
     });
-  }, skip: _untilG2);
+  });
 
   group('the drawer', () {
     Widget drawer({String name = 'Shanel Hassan', String email = 'shanel@example.com'}) => Align(
@@ -209,7 +209,7 @@ void main() {
         }
       }
     }
-  }, skip: _untilG2);
+  });
 
   group('the Edit Profile photo part', () {
     testWidgets('with a photo: Change photo and Remove photo', (tester) async {
@@ -239,7 +239,7 @@ void main() {
       await tester.tap(find.text('Remove photo'), warnIfMissed: false);
       expect(taps, 0);
     });
-  }, skip: _untilG2);
+  });
 
   group('one photo place', () {
     test('the dashboard has no camera and no upload of its own; one place writes the photo', () {
