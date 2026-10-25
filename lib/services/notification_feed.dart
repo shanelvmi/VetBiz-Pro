@@ -289,6 +289,13 @@ class NotificationFeedController extends ChangeNotifier {
       _items.where((i) => i.notification.category == NotificationCategory.other).toList();
   bool get hasUnread => _items.any((i) => !i.isRead);
 
+  /// The bell's red dot: something unread for me (the calm trial is the
+  /// blue dot, not this).
+  bool get hasUnreadAlert => throw UnimplementedError('NOTIF-2c');
+
+  /// The bell's accent: whether I removed the live promotion's notification.
+  bool isPromotionDismissedForMe(String promotionLabel) => throw UnimplementedError('NOTIF-2c ');
+
   /// My read items that may be removed ("Remove read ones"); never persistent.
   List<NotificationItem> get readRemovable => _items.where((i) => i.isRead && i.canRemove).toList();
 

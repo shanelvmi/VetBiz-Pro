@@ -27,6 +27,7 @@ List<String> idsOf(NotificationFeedController c) => c.items.map((i) => i.id).toL
 NotificationItem item(NotificationFeedController c, String id) => c.items.firstWhere((i) => i.id == id);
 
 void main() {
+  bellTests();
   test('per person: A removing or reading changes nothing in B\'s list', () async {
     final fs = FakeFirebaseFirestore();
     final clock = Clock();
@@ -217,3 +218,36 @@ void main() {
     expect(idsOf(b), ['promo']);
   }, skip: _skip);
 }
+
+// The bell (dashboard_screen.dart) reads the same controller: its red dot
+// follows MY read state, and a promotion I removed no longer lights its
+// accent for me.
+void bellTests() {
+  test('the bell\'s red dot follows my read state; the trial is not red', () async {
+    final fs = FakeFirebaseFirestore();
+    final subs = Subs()..facts = const SubscriptionFacts(trialInfo: (title: 'Free Trial', message: '20 days left'));
+    await seed(fs, 'n1', 'lowStock');
+    final a = await feed(fs, 'A', Clock(), subs: subs);
+    final b = await feed(fs, 'B', Clock(), subs: subs);
+    expect(a.hasUnreadAlert, isTrue);
+    await a.markRead([item(a, 'n1')]);
+    await settle();
+    expect(a.hasUnreadAlert, isFalse, reason: 'the unread trial row is the blue dot');
+    expect(b.hasUnreadAlert, isTrue);
+  }, skip: _skipBell);
+
+  test('a dismissed promotion no longer lights the accent for me', () async {
+    final fs = FakeFirebaseFirestore();
+    await seed(fs, 'promo', 'promotion', title: 'October Offer', expiresAt: t0.add(const Duration(days: 5)));
+    final a = await feed(fs, 'A', Clock());
+    final b = await feed(fs, 'B', Clock());
+    expect(a.isPromotionDismissedForMe('October Offer'), isFalse);
+    await a.remove([item(a, 'promo')]);
+    await settle();
+    expect(a.isPromotionDismissedForMe('October Offer'), isTrue);
+    expect(b.isPromotionDismissedForMe('October Offer'), isFalse);
+  }, skip: _skipBell);
+}
+
+// Until the bell's members are implemented.
+const _skipBell = true;
