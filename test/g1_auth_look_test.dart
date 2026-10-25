@@ -131,7 +131,7 @@ void main() {
       expect(File('pubspec.yaml').readAsStringSync().contains('assets/background.jpeg'), isFalse);
       expect(File('lib/screens/platform_admin/announcements_tab.dart').readAsStringSync().contains('login_poster'), isFalse);
     });
-  }, skip: _untilG1);
+  });
 
   group('(3) the theme toggle', () {
     for (final s in _Screen.values) {

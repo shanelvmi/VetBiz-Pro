@@ -7,7 +7,7 @@ import 'package:firebase_storage/firebase_storage.dart';
 class UploadContentTypes {
   UploadContentTypes._();
 
-  /// For `.jpg` paths: avatars/, payment_proofs/, product_images/, login_poster/.
+  /// For `.jpg` paths: avatars/, payment_proofs/, product_images/.
   static final SettableMetadata jpeg = SettableMetadata(contentType: 'image/jpeg');
 
   /// For `.png` paths: user_avatars/, facility_logos/.

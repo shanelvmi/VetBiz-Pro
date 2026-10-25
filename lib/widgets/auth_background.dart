@@ -1,42 +1,13 @@
 import 'package:flutter/material.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
-import '../data/collections.dart';
 import '../theme/theme_context.dart';
 
-/// The full-bleed background for the signed-out screens (Register today;
-/// Login has its own copy of the same logic).
-///
-/// An admin-uploaded poster (Platform Admin > Announcements) takes over
-/// entirely when set - the same upload the login page uses - and the bundled
-/// default shows otherwise. A subtle dark scrim sits on top so a floating
-/// card and its shadow stay readable however bright or busy the photo is.
+/// The page behind the signed-out screens' card (Login and Register): a flat
+/// colour from the chosen theme's `background` role, readable in Light and
+/// Dark. No image, no scrim and no network read (G1: the platform poster
+/// and the bundled photo were removed). One place to restyle both pages.
 class AuthBackground extends StatelessWidget {
   const AuthBackground({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    return Stack(
-      fit: StackFit.expand,
-      children: [
-        StreamBuilder<DocumentSnapshot>(
-          stream: FirebaseFirestore.instance.collection(Collections.appConfig).doc('login_poster').snapshots(),
-          builder: (context, snapshot) {
-            final posterUrl = snapshot.data?.data() != null
-                ? (snapshot.data!.data() as Map<String, dynamic>)['posterUrl'] as String?
-                : null;
-
-            if (posterUrl != null) {
-              return Image.network(
-                posterUrl,
-                fit: BoxFit.cover,
-                errorBuilder: (_, __, ___) => Image.asset('assets/background.jpeg', fit: BoxFit.cover),
-              );
-            }
-            return Image.asset('assets/background.jpeg', fit: BoxFit.cover);
-          },
-        ),
-        Container(color: context.colors.photoScrim),
-      ],
-    );
-  }
+  Widget build(BuildContext context) => ColoredBox(color: context.colors.background);
 }

@@ -87,9 +87,6 @@ class AppLimits {
   /// stays legible for the reviewer.
   static const double paymentProofImageMaxSide = 1600;
 
-  /// The login poster (announcements_tab).
-  static const double posterImageMaxSide = 1600;
-
   /// JPEG quality (0-100) for every picked image.
   static const int pickedImageQuality = 85;
 

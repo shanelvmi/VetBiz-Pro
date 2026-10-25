@@ -10,6 +10,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../services/auth_service.dart';
 import '../widgets/announcement_message.dart';
 import '../widgets/password_field_guard.dart';
+import '../widgets/auth_background.dart';
 import '../utils/navigator_key.dart';
 import 'legal/privacy_policy_screen.dart';
 import 'legal/terms_of_service_screen.dart';
@@ -1141,34 +1142,8 @@ class _LoginScreenState extends State<LoginScreen> {
     return Scaffold(
       body: Stack(
         children: [
-          // Full-bleed background - an admin-uploaded poster (Platform
-          // Admin > Announcements) takes over entirely when set, same
-          // upload mechanism as before, just repurposed as the page
-          // background rather than a separate panel. Falls back to the
-          // bundled default otherwise.
-          Positioned.fill(
-            child: StreamBuilder<DocumentSnapshot>(
-              stream: _db.collection(Collections.appConfig).doc('login_poster').snapshots(),
-              builder: (context, snapshot) {
-                final posterUrl = snapshot.data?.data() != null
-                    ? (snapshot.data!.data() as Map<String, dynamic>)['posterUrl'] as String?
-                    : null;
-
-                if (posterUrl != null) {
-                  return Image.network(
-                    posterUrl,
-                    fit: BoxFit.cover,
-                    errorBuilder: (_, __, ___) => Image.asset('assets/background.jpeg', fit: BoxFit.cover),
-                  );
-                }
-                return Image.asset('assets/background.jpeg', fit: BoxFit.cover);
-              },
-            ),
-          ),
-          // A subtle dark scrim - keeps the floating card and its
-          // shadow clearly readable against the background photo
-          // regardless of how bright or busy that photo is.
-          Positioned.fill(child: Container(color: context.colors.photoScrim)),
+          // A flat page colour from the theme (G1: no poster, no photo, no scrim).
+          const Positioned.fill(child: AuthBackground()),
 
           // The single floating card holding every piece of content -
           // header, welcome/announcements, login form, and footer all

@@ -1,18 +1,12 @@
-import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_storage/firebase_storage.dart';
-import 'package:image_picker/image_picker.dart';
 import 'package:flutter_markdown/flutter_markdown.dart';
 import '../../utils/sentence_capitalization_formatter.dart';
 import 'package:markdown/markdown.dart' as md;
 
 import '../../widgets/hover_elevate_card.dart';
 import '../../widgets/announcement_message.dart';
-import '../../config/app_limits.dart';
-import '../../utils/upload_size_check.dart';
 import '../../data/collections.dart';
-import '../../data/upload_content_types.dart';
 import '../../data/fields.dart';
 import '../../config/app_date_format.dart';
 import '../../theme/app_text.dart';
@@ -38,8 +32,6 @@ class _AnnouncementsTabState extends State<AnnouncementsTab> {
   // button does not cover the last card. A size (above the spacing
   // ladder), kept exact.
   static const double _fabClearance = 80;
-
-  bool _isUploadingPoster = false;
 
   // A curated, modern spread across the hue spectrum plus neutrals -
   // genuinely more choice than the previous 5 swatches, without the
@@ -466,148 +458,6 @@ class _AnnouncementsTabState extends State<AnnouncementsTab> {
         .update({'urgent': !currentlyUrgent});
   }
 
-  Future<void> _uploadPoster() async {
-    final picker = ImagePicker();
-    final file = await picker.pickImage(
-      source: ImageSource.gallery,
-      maxWidth: AppLimits.posterImageMaxSide,
-      maxHeight: AppLimits.posterImageMaxSide,
-      imageQuality: AppLimits.pickedImageQuality,
-    );
-    if (file == null) return;
-    final Uint8List bytes = await file.readAsBytes();
-    if (!UploadSizeCheck.allow(bytes)) return;
-
-    setState(() => _isUploadingPoster = true);
-    try {
-      final ref = FirebaseStorage.instance.ref().child('login_poster/poster.jpg');
-      await ref.putData(bytes, UploadContentTypes.jpeg);
-      final url = await ref.getDownloadURL();
-
-      await FirebaseFirestore.instance.collection(Collections.appConfig).doc('login_poster').set({
-        'posterUrl': url,
-        Fields.updatedAt: FieldValue.serverTimestamp(),
-      });
-
-      AppFeedback.success('Background image updated');
-    } catch (e, st) {
-      AppFeedback.error("Couldn't upload the background image", error: e, stackTrace: st);
-    } finally {
-      if (mounted) setState(() => _isUploadingPoster = false);
-    }
-  }
-
-  Future<void> _removePoster() async {
-    final confirm = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Remove Background Image?'),
-        content: const Text('The login screen will fall back to its default background image.'),
-        actions: [
-          TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Cancel')),
-          ElevatedButton(
-            onPressed: () => Navigator.pop(context, true),
-            style: ElevatedButton.styleFrom(backgroundColor: context.colors.danger, foregroundColor: context.colors.onPrimary),
-            child: const Text('Remove'),
-          ),
-        ],
-      ),
-    );
-    if (confirm != true) return;
-
-    await FirebaseFirestore.instance.collection(Collections.appConfig).doc('login_poster').delete();
-    AppFeedback.success('Background image removed');
-  }
-
-  Widget _buildPosterSection() {
-    return StreamBuilder<DocumentSnapshot>(
-      stream: FirebaseFirestore.instance.collection(Collections.appConfig).doc('login_poster').snapshots(),
-      builder: (context, snapshot) {
-        final posterUrl = snapshot.data?.data() != null
-            ? (snapshot.data!.data() as Map<String, dynamic>)['posterUrl'] as String?
-            : null;
-
-        return Card(
-          margin: const EdgeInsets.fromLTRB(AppSpacing.s12, AppSpacing.s12, AppSpacing.s12, AppSpacing.s4),
-          child: Padding(
-            padding: const EdgeInsets.all(AppSpacing.s14),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    const Text('Background Image', style: TextStyle(fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f15)),
-                    const SizedBox(height: AppSpacing.s4),
-                    Text(
-                      'Shown as the full background of the login screen for every facility. '
-                      'Falls back to the default background image if none is set.',
-                      style: TextStyle(fontSize: AppFontSize.f12_5, color: context.colors.textMuted),
-                    ),
-                    const SizedBox(height: AppSpacing.s12),
-                    if (posterUrl != null)
-                      ClipRRect(
-                        borderRadius: BorderRadius.circular(AppRadius.r8),
-                        child: Image.network(
-                          posterUrl,
-                          height: 140,
-                          fit: BoxFit.contain,
-                          gaplessPlayback: true,
-                          errorBuilder: (_, __, ___) => const SizedBox(
-                            height: 140,
-                            child: Center(child: Text('Could not load current background image')),
-                          ),
-                        ),
-                      )
-                    else
-                      Container(
-                        height: 100,
-                        alignment: Alignment.center,
-                        decoration: BoxDecoration(
-                          color: context.colors.surfaceMuted,
-                          borderRadius: BorderRadius.circular(AppRadius.r8),
-                        ),
-                        child: Text('No background image set - using default background', style: TextStyle(color: context.colors.textMuted)),
-                      ),
-                  ],
-                ),
-                const SizedBox(height: AppSpacing.s12),
-                Row(
-                  children: [
-                    ElevatedButton.icon(
-                      onPressed: _isUploadingPoster ? null : _uploadPoster,
-                      icon: _isUploadingPoster
-                          ? SizedBox(width: AppSpacing.s16, height: 16, child: CircularProgressIndicator(strokeWidth: 2, color: context.colors.onPrimary))
-                          : const Icon(Icons.upload),
-                      label: Text(posterUrl != null ? 'Replace Background Image' : 'Upload Background Image'),
-                      style: ButtonStyle(
-                        backgroundColor: WidgetStateProperty.resolveWith<Color>((states) {
-                          if (states.contains(WidgetState.hovered)) return context.colors.accent;
-                          return context.colors.primary;
-                        }),
-                        foregroundColor: WidgetStateProperty.all(context.colors.onPrimary),
-                      ),
-                    ),
-                    if (posterUrl != null) ...[
-                      const SizedBox(width: AppSpacing.s8),
-                      TextButton(
-                        onPressed: _removePoster,
-                        style: TextButton.styleFrom(foregroundColor: context.colors.danger),
-                        child: const Text('Remove'),
-                      ),
-                    ],
-                  ],
-                ),
-              ],
-            ),
-          ),
-        );
-      },
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -637,24 +487,9 @@ class _AnnouncementsTabState extends State<AnnouncementsTab> {
           return ListView(
             padding: const EdgeInsets.fromLTRB(0, AppSpacing.s12, 0, _fabClearance),
             children: [
-              LayoutBuilder(
-                builder: (context, constraints) {
-                  if (constraints.maxWidth < AppBreakpoints.stackSections) {
-                    return Column(
-                      children: [_buildPosterSection(), const _ContactDetailsCard()],
-                    );
-                  }
-                  return IntrinsicHeight(
-                    child: Row(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        Expanded(child: _buildPosterSection()),
-                        const Expanded(child: _ContactDetailsCard()),
-                      ],
-                    ),
-                  );
-                },
-              ),
+              // The login background image control that sat beside this was
+              // removed in G1: the login page is a flat theme colour now.
+              const _ContactDetailsCard(),
               const Padding(
                 padding: EdgeInsets.fromLTRB(AppSpacing.s12, AppSpacing.s16, AppSpacing.s12, AppSpacing.s4),
                 child: Text('Announcements', style: TextStyle(fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f15)),
