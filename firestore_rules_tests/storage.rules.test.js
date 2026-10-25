@@ -83,6 +83,48 @@ test('avatars: anyone can read one (shown before sign-in); a signed-out visitor 
   await assertFails(signedOutRef('avatars/x.jpg').put(bytes(), jpeg));
 });
 
+// G2: Remove photo deletes the person's photo under both prefixes (the
+// legacy user_avatars/{uid}.png too). A delete sends no file, so it is a
+// rule of its own, like facility logos.
+const UNTIL_G2 = 'G2: until the avatar delete rule';
+const seedAvatars = () => env.withSecurityRulesDisabled(async (ctx) => {
+  const st = ctx.storage();
+  await st.ref('user_avatars/owner.png').put(bytes(), png);
+  await st.ref('avatars/ownerX.jpg').put(bytes(), jpeg);
+  await st.ref('user_avatars/ownerX.png').put(bytes(), png);
+});
+
+test('avatars [G2]: the owner deletes their own photo under both prefixes', { skip: UNTIL_G2 }, async () => {
+  await seedAvatars();
+  await assertSucceeds(ref('owner', 'avatars/owner.jpg').delete());
+  await assertSucceeds(ref('owner', 'user_avatars/owner.png').delete());
+});
+
+test('avatars [G2]: another signed-in person and a signed-out visitor can not delete it', { skip: UNTIL_G2 }, async () => {
+  await seedAvatars();
+  for (const p of ['avatars/owner.jpg', 'user_avatars/owner.png']) {
+    await assertFails(ref('outsider', p).delete());
+    await assertFails(ref('assistant', p).delete());
+    await assertFails(signedOutRef(p).delete());
+  }
+});
+
+test('avatars [G2]: a file whose name only STARTS with the uid can not be deleted by that uid', { skip: UNTIL_G2 }, async () => {
+  await seedAvatars();
+  await assertFails(ref('owner', 'avatars/ownerX.jpg').delete());
+  await assertFails(ref('owner', 'user_avatars/ownerX.png').delete());
+});
+
+test('avatars [G2]: creating still needs an image, at most 5 MB, and the right uid', { skip: UNTIL_G2 }, async () => {
+  for (const p of ['avatars/owner.jpg', 'user_avatars/owner.png']) {
+    await assertFails(upload('owner', p, { contentType: 'text/html' }));
+    await assertFails(ref('owner', p).put(bytes()));
+    await assertFails(upload('owner', p, jpeg, 5 * MB + 1));
+    await assertFails(upload('outsider', p));
+    await assertSucceeds(upload('owner', p, jpeg, 5 * MB));
+  }
+});
+
 // ---------------------------------------------------------------------------
 // Facility logos: only a member of the facility named in the file name.
 // ---------------------------------------------------------------------------
