@@ -2676,6 +2676,30 @@ Widget _buildDrawerContent() {
   }
 
 
+  void _confirmLogout(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: context.colors.surface,
+        title: Text(context.l10n.common_logout, style: TextStyle(color: context.colors.primary)),
+        content: Text(context.l10n.dashboard_logoutConfirm),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(),
+            child: Text(context.l10n.common_cancel, style: TextStyle(color: context.colors.primary)),
+          ),
+          TextButton(
+            onPressed: () async {
+              Navigator.of(ctx).pop();
+              await forceLogoutAndShowLogin();
+            },
+            child: Text(context.l10n.common_logout, style: TextStyle(color: context.colors.danger)),
+          ),
+        ],
+      ),
+    );
+  }
+
   // --------------------- END DRAWER ---------------------
   Widget _buildEndDrawerContent() {
     final buttonStyle = ElevatedButton.styleFrom(
@@ -2869,29 +2893,7 @@ Widget _buildDrawerContent() {
                 child: InkWell(
                   borderRadius: BorderRadius.circular(AppRadius.pill),
                   hoverColor: context.colors.sidebarHover,
-                  onTap: () {
-                    showDialog(
-                      context: context,
-                      builder: (ctx) => AlertDialog(
-                        backgroundColor: context.colors.surface,
-                        title: Text(context.l10n.common_logout, style: TextStyle(color: context.colors.primary)),
-                        content: Text(context.l10n.dashboard_logoutConfirm),
-                        actions: [
-                          TextButton(
-                            onPressed: () => Navigator.of(ctx).pop(),
-                            child: Text(context.l10n.common_cancel, style: TextStyle(color: context.colors.primary)),
-                          ),
-                          TextButton(
-                            onPressed: () async {
-                              Navigator.of(ctx).pop();
-                              await forceLogoutAndShowLogin();
-                            },
-                            child: Text(context.l10n.common_logout, style: TextStyle(color: context.colors.danger)),
-                          ),
-                        ],
-                      ),
-                    );
-                  },
+                  onTap: () => _confirmLogout(context),
                   child: Ink(
                     decoration: ShapeDecoration(
                       color: context.colors.brandSurface,
