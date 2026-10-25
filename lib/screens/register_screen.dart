@@ -44,8 +44,22 @@ class RegisterScreen extends StatefulWidget {
   final bool isModal;
   // Tests pass a fake; the app leaves it null (FirebaseFirestore.instance).
   final FirebaseFirestore? firestore;
+  // Tests only (RW2a): stand-ins for creating the account and for the
+  // membership calls, as LoginScreen has. The app leaves them null.
+  @visibleForTesting
+  final AuthService? authService;
+  @visibleForTesting
+  final MembershipService? membershipService;
 
-  const RegisterScreen({super.key, this.isUpdating = false, this.userData, this.isModal = false, this.firestore});
+  const RegisterScreen({
+    super.key,
+    this.isUpdating = false,
+    this.userData,
+    this.isModal = false,
+    this.firestore,
+    this.authService,
+    this.membershipService,
+  });
 
   @override
   State<RegisterScreen> createState() => _RegisterScreenState();
@@ -58,6 +72,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
   // Checking an invite code, and everything else that decides who belongs to
   // which facility, is done by the server - see MembershipService.
   late final MembershipService _membershipService = MembershipService();
+  @visibleForTesting
+  AuthService get authServiceInUse => _authService;
+  @visibleForTesting
+  MembershipService get membershipServiceInUse => _membershipService;
 
   // Controllers
   final TextEditingController nameController = TextEditingController();
