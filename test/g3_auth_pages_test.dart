@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:fake_cloud_firestore/fake_cloud_firestore.dart';
 import 'package:flutter/material.dart';
@@ -9,6 +11,7 @@ import 'package:vetbiz_pro/data/collections.dart';
 import 'package:vetbiz_pro/l10n/l10n.dart';
 import 'package:vetbiz_pro/providers/ui_settings_provider.dart';
 import 'package:vetbiz_pro/screens/login_screen.dart';
+import 'package:vetbiz_pro/screens/register_screen.dart';
 import 'package:vetbiz_pro/services/auth_service.dart';
 import 'package:vetbiz_pro/theme/app_palette.dart';
 import 'package:vetbiz_pro/theme/app_theme.dart';
@@ -18,6 +21,8 @@ import 'package:vetbiz_pro/widgets/auth_theme_toggle.dart';
 
 // G3: the login page without the clutter, and the footer below the card on
 // the sign-in pages. Written before the change (4c40bc8).
+// The register page: written before its change, skipped until it is made.
+const _skipRegister = true;
 
 final _en = lookupAppLocalizations(const Locale('en'));
 
@@ -130,6 +135,48 @@ void main() {
         for (final locale in const [Locale('en'), Locale('sw')]) {
           testWidgets('no overflow at $width, ${mode.name}, ${locale.languageCode}', (tester) async {
             await pump(tester, login(), size: Size(width, 900), mode: mode, locale: locale);
+            expect(tester.takeException(), isNull);
+            expect(find.byType(AuthFooter), findsOneWidget);
+          });
+        }
+      }
+    }
+  });
+  Widget register([FirebaseFirestore? db]) => RegisterScreen(firestore: db ?? FakeFirebaseFirestore());
+
+  group('Register page', skip: _skipRegister, () {
+    testWidgets('the footer sits below the card, full width', (tester) async {
+      await pump(tester, register());
+      final card = tester.getRect(find.byKey(AuthCard.surfaceKey));
+      final footer = tester.getRect(find.byType(AuthFooter));
+      expect(footer.top, greaterThanOrEqualTo(card.bottom));
+      expect(footer.width, 1200);
+    });
+
+    testWidgets('reads the support contact once, whatever rebuilds', (tester) async {
+      final db = _CountingFirestore(FakeFirebaseFirestore());
+      await pump(tester, register(db));
+      tester.view.physicalSize = const Size(390, 800);
+      await tester.pump();
+      tester.view.physicalSize = const Size(1200, 900);
+      await tester.pump();
+      await tester.tap(find.byType(AuthThemeToggle));
+      await tester.pump();
+      expect(db.appConfigReads, 1);
+    });
+
+    test('the register view only: Edit Profile has no footer', () {
+      final source = File('lib/screens/register_screen.dart').readAsStringSync();
+      final edit = source.substring(source.indexOf('Widget _buildEditView('), source.indexOf('Widget _buildEditView(') + 3000);
+      expect(RegExp(r'AuthFooter\(').allMatches(source).length, 1);
+      expect(edit.contains('AuthFooter'), isFalse);
+    });
+
+    for (final width in [360.0, 390.0, 768.0, 1200.0]) {
+      for (final mode in const [ThemeMode.light, ThemeMode.dark]) {
+        for (final locale in const [Locale('en'), Locale('sw')]) {
+          testWidgets('no overflow at $width, ${mode.name}, ${locale.languageCode}', (tester) async {
+            await pump(tester, register(), size: Size(width, 900), mode: mode, locale: locale);
             expect(tester.takeException(), isNull);
             expect(find.byType(AuthFooter), findsOneWidget);
           });
