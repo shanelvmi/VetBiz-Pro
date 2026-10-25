@@ -12,7 +12,9 @@ import '../../models/notification_model.dart';
 import '../../widgets/announcement_message.dart';
 import '../../widgets/notification_row.dart';
 import '../../services/notification_feed.dart';
+import '../../widgets/notification_actions.dart';
 import '../../ui/feedback/app_feedback.dart';
+import 'notification_targets.dart';
 import '../../data/collections.dart';
 import '../../config/app_limits.dart';
 import '../../config/app_timeouts.dart';
@@ -132,7 +134,62 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
     }
   }
 
+  // Tapping a row marks it read for me.
+  void _onTap(NotificationItem item) {
+    if (!item.isRead) _run(() => _feed!.markRead([item]));
+  }
+
+  void _onAction(NotificationItem item, NotificationAction action) {
+    switch (action) {
+      case NotificationAction.markRead:
+        _run(() => _feed!.markRead([item]));
+      case NotificationAction.markUnread:
+        _run(() => _feed!.markUnread(item));
+      case NotificationAction.remove:
+        _removeItems([item]);
+      case NotificationAction.open:
+        _open(item);
+    }
+  }
+
+  void _open(NotificationItem item) {
+    final target = notificationTargetScreen(item.notification);
+    if (target == null) return;
+    if (!item.isRead) _run(() => _feed!.markRead([item]));
+    final navigator = Navigator.of(context);
+    if (widget.isDropdown) navigator.pop();
+    navigator.push(MaterialPageRoute(builder: (_) => target));
+  }
+
+  // Removal is for me only and has no dialog for one row; Undo puts back
+  // exactly what was there.
+  Future<void> _removeItems(List<NotificationItem> items) => _run(() async {
+        final removable = items.where((i) => i.canRemove).toList();
+        if (removable.isEmpty) return;
+        final entries = await _feed!.remove(removable);
+        final l = L10n.current;
+        AppFeedback.undo(
+          removable.length == 1 ? l.notifications_removedOne : l.notifications_removedCount(removable.length),
+          onUndo: () => _run(() => _feed!.restore(entries)),
+        );
+      });
+
   void _markAllAsRead() => _run(() => _feed!.markAllRead());
+
+  // The menu and, at phone width, the swipes around one row.
+  Widget _moreButton(NotificationItem item, {Color? color}) => NotificationMoreButton(
+        item: item,
+        color: color,
+        canOpen: notificationTargetScreen(item.notification) != null,
+        onSelected: (action) => _onAction(item, action),
+      );
+
+  Widget _swipe(NotificationItem item, Widget child) => NotificationSwipe(
+        item: item,
+        onToggleRead: () => _run(() => _feed!.toggleRead(item)),
+        onRemove: () => _removeItems([item]),
+        child: child,
+      );
 
   // Search + date range + status + category card, applied together - the
   // flat, filtered result the table and its pagination both work from.
@@ -752,8 +809,10 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
     final unread = !i.isRead;
     final created = n.createdAt;
 
-    return Container(
+    return InkWell(
       key: ValueKey(n.id),
+      onTap: () => _onTap(i),
+      child: Container(
       // Coloured bar down the left edge, tinted while unread.
       decoration: BoxDecoration(
         color: unread ? context.colors.primary.withValues(alpha: AppAlpha.a05) : null,
@@ -807,8 +866,10 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                   ),
           ),
           Expanded(flex: 1, child: Align(alignment: Alignment.centerLeft, child: _statusChip(i))),
+          _moreButton(i),
         ],
       ),
+    ),
     );
   }
 
@@ -818,7 +879,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
     final unread = !i.isRead;
     final created = n.createdAt;
 
-    return Container(
+    return _swipe(i, Container(
       key: ValueKey(n.id),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(AppRadius.r12),
@@ -827,12 +888,16 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
       // Clipped so the bar down the left follows the card's rounded corners.
       child: ClipRRect(
         borderRadius: BorderRadius.circular(AppRadius.r10),
-        child: Container(
+        // Ink, not a Container, so the tap ripple shows on the card.
+        child: Ink(
           decoration: BoxDecoration(
             color: unread ? Color.alphaBlend(context.colors.primary.withValues(alpha: AppAlpha.a05), context.colors.surface) : context.colors.surface,
             border: Border(left: BorderSide(color: _categoryColor(n.category), width: 4)),
           ),
-          padding: const EdgeInsets.all(AppSpacing.s12),
+          child: InkWell(
+          onTap: () => _onTap(i),
+          child: Padding(
+          padding: const EdgeInsets.fromLTRB(AppSpacing.s12, AppSpacing.s12, AppSpacing.s4, AppSpacing.s12),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -854,6 +919,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                       ],
                     ),
                   ),
+                  _moreButton(i),
                 ],
               ),
               const SizedBox(height: AppSpacing.s10),
@@ -864,17 +930,24 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                   _statusChip(i),
                   const Spacer(),
                   if (created != null)
-                    Text(
-                      AppDateFormat.dateTime12.format(created),
-                      style: TextStyle(fontSize: AppFontSize.f11_5, color: context.colors.textHint),
+                    Flexible(
+                      child: Text(
+                        AppDateFormat.dateTime12.format(created),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(fontSize: AppFontSize.f11_5, color: context.colors.textHint),
+                      ),
                     ),
+                  const SizedBox(width: AppSpacing.s8),
                 ],
               ),
             ],
           ),
+          ),
+          ),
         ),
       ),
-    );
+    ));
   }
 
   // ==================== PAGINATION ====================
@@ -966,13 +1039,20 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                 ),
               ],
               const Spacer(),
-              TextButton(
+              Flexible(
+                child: TextButton(
                 onPressed: totalUnread > 0 ? _markAllAsRead : null,
                 style: TextButton.styleFrom(
                   foregroundColor: context.colors.onBrandSurface,
                   disabledForegroundColor: context.colors.onBrandSurface.withValues(alpha: AppAlpha.a40),
                 ),
-                child: Text(context.l10n.notifications_markAllAsRead, style: const TextStyle(fontSize: AppFontSize.f12_5, fontWeight: AppFontWeight.semibold)),
+                child: Text(
+                  context.l10n.notifications_markAllAsRead,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(fontSize: AppFontSize.f12_5, fontWeight: AppFontWeight.semibold),
+                ),
+                ),
               ),
               IconButton(
                 icon: Icon(Icons.close, color: context.colors.onBrandSurface, size: AppIconSize.i20),
@@ -1057,11 +1137,16 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
     );
   }
 
-  // One row of the dropdown.
-  Widget _dropdownRow(NotificationItem i) => NotificationRow(
-        key: ValueKey(i.id),
-        notification: i.notification,
-        isRead: i.isRead,
+  // One row of the dropdown: tap to read, the more menu, the swipes.
+  Widget _dropdownRow(NotificationItem i) => _swipe(
+        i,
+        NotificationRow(
+          key: ValueKey(i.id),
+          notification: i.notification,
+          isRead: i.isRead,
+          onTap: () => _onTap(i),
+          trailing: _moreButton(i),
+        ),
       );
 
   // The same plain words as the full screen's empty state, no "all caught
