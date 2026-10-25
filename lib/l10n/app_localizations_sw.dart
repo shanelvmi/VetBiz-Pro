@@ -6823,4 +6823,35 @@ class AppLocalizationsSw extends AppLocalizations {
   @override
   String get register_consentRequired =>
       'Weka alama kwenye kisanduku ili ukubali kabla ya kufungua akaunti yako.';
+
+  @override
+  String get authFooter_tagline =>
+      'Mauzo, stoo, wateja na madeni kwa agrovet na kliniki za mifugo.';
+
+  @override
+  String get authFooter_support => 'Msaada';
+
+  @override
+  String get authFooter_legal => 'Kisheria';
+
+  @override
+  String get authFooter_helpContact => 'Msaada na mawasiliano';
+
+  @override
+  String get social_facebook => 'Facebook';
+
+  @override
+  String get social_instagram => 'Instagram';
+
+  @override
+  String get social_x => 'X';
+
+  @override
+  String get social_linkedin => 'LinkedIn';
+
+  @override
+  String get social_youtube => 'YouTube';
+
+  @override
+  String get social_tiktok => 'TikTok';
 }

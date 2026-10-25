@@ -6782,4 +6782,35 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get register_consentRequired =>
       'Tick the box to agree before you create your account.';
+
+  @override
+  String get authFooter_tagline =>
+      'Sales, stock, clients and debts for agrovets and vet clinics.';
+
+  @override
+  String get authFooter_support => 'Support';
+
+  @override
+  String get authFooter_legal => 'Legal';
+
+  @override
+  String get authFooter_helpContact => 'Help and contact';
+
+  @override
+  String get social_facebook => 'Facebook';
+
+  @override
+  String get social_instagram => 'Instagram';
+
+  @override
+  String get social_x => 'X';
+
+  @override
+  String get social_linkedin => 'LinkedIn';
+
+  @override
+  String get social_youtube => 'YouTube';
+
+  @override
+  String get social_tiktok => 'TikTok';
 }

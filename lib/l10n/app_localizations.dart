@@ -11513,6 +11513,66 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Tick the box to agree before you create your account.'**
   String get register_consentRequired;
+
+  /// Sign-in footer (Login and Register), the plain line under the app name.
+  ///
+  /// In en, this message translates to:
+  /// **'Sales, stock, clients and debts for agrovets and vet clinics.'**
+  String get authFooter_tagline;
+
+  /// Sign-in footer: heading of the Support column.
+  ///
+  /// In en, this message translates to:
+  /// **'Support'**
+  String get authFooter_support;
+
+  /// Sign-in footer: heading of the Legal column (Privacy Policy, Terms of Service).
+  ///
+  /// In en, this message translates to:
+  /// **'Legal'**
+  String get authFooter_legal;
+
+  /// Sign-in footer, Support column: opens the same Help dialog as the dashboard.
+  ///
+  /// In en, this message translates to:
+  /// **'Help and contact'**
+  String get authFooter_helpContact;
+
+  /// Sign-in footer: tooltip and screen-reader name of the Facebook icon. A brand name.
+  ///
+  /// In en, this message translates to:
+  /// **'Facebook'**
+  String get social_facebook;
+
+  /// Sign-in footer: tooltip and screen-reader name of the Instagram icon. A brand name.
+  ///
+  /// In en, this message translates to:
+  /// **'Instagram'**
+  String get social_instagram;
+
+  /// Sign-in footer: tooltip and screen-reader name of the X (formerly Twitter) icon. A brand name.
+  ///
+  /// In en, this message translates to:
+  /// **'X'**
+  String get social_x;
+
+  /// Sign-in footer: tooltip and screen-reader name of the LinkedIn icon. A brand name.
+  ///
+  /// In en, this message translates to:
+  /// **'LinkedIn'**
+  String get social_linkedin;
+
+  /// Sign-in footer: tooltip and screen-reader name of the YouTube icon. A brand name.
+  ///
+  /// In en, this message translates to:
+  /// **'YouTube'**
+  String get social_youtube;
+
+  /// Sign-in footer: tooltip and screen-reader name of the TikTok icon. A brand name.
+  ///
+  /// In en, this message translates to:
+  /// **'TikTok'**
+  String get social_tiktok;
 }
 
 class _AppLocalizationsDelegate
