@@ -22,6 +22,7 @@ import '../models/support_contact.dart';
 import '../widgets/profile/profile_photo_editor.dart';
 import '../services/profile_photo_service.dart';
 import '../widgets/auth_theme_toggle.dart';
+import '../widgets/hover_link.dart';
 import '../services/role_change_service.dart';
 import '../data/collections.dart';
 import '../data/fields.dart';
@@ -1092,14 +1093,22 @@ class _RegisterScreenState extends State<RegisterScreen> {
   // page's footer opens.
   Widget _buildTermsLine() {
     final base = TextStyle(fontSize: AppFontSize.f12_5, color: context.colors.textSoft);
+    // Teal and underlined at rest, amber on hover and focus (HoverLink).
+    Widget legalLink(String label, Widget destination) => HoverLink(
+          label: label,
+          color: context.colors.brandTeal,
+          underlineAtRest: true,
+          style: const TextStyle(fontSize: AppFontSize.f12_5, fontWeight: AppFontWeight.bold),
+          onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => destination)),
+        );
     return Wrap(
       alignment: WrapAlignment.center,
       crossAxisAlignment: WrapCrossAlignment.center,
       children: [
         Text(context.l10n.register_termsPrefix, style: base),
-        _LegalLink(label: context.l10n.common_termsOfService, destination: const TermsOfServiceScreen()),
+        legalLink(context.l10n.common_termsOfService, const TermsOfServiceScreen()),
         Text(context.l10n.register_termsAnd, style: base),
-        _LegalLink(label: context.l10n.common_privacyPolicy, destination: const PrivacyPolicyScreen()),
+        legalLink(context.l10n.common_privacyPolicy, const PrivacyPolicyScreen()),
         Text('.', style: base),
       ],
     );
@@ -2142,46 +2151,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
           fieldKey: _fieldKeys['confirm'],
         ),
       ],
-    );
-  }
-}
-
-// A name in the "By creating an account you agree to..." line: a real link,
-// teal and underlined at rest, amber on hover - opening the same screens the
-// login page's footer links to.
-class _LegalLink extends StatefulWidget {
-  final String label;
-  final Widget destination;
-
-  const _LegalLink({required this.label, required this.destination});
-
-  @override
-  State<_LegalLink> createState() => _LegalLinkState();
-}
-
-class _LegalLinkState extends State<_LegalLink> {
-  bool _hovered = false;
-
-  @override
-  Widget build(BuildContext context) {
-    final color = _hovered ? context.colors.accent : context.colors.brandTeal;
-    return MouseRegion(
-      cursor: SystemMouseCursors.click,
-      onEnter: (_) => setState(() => _hovered = true),
-      onExit: (_) => setState(() => _hovered = false),
-      child: GestureDetector(
-        onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => widget.destination)),
-        child: Text(
-          widget.label,
-          style: TextStyle(
-            fontSize: AppFontSize.f12_5,
-            fontWeight: AppFontWeight.bold,
-            color: color,
-            decoration: TextDecoration.underline,
-            decorationColor: color,
-          ),
-        ),
-      ),
     );
   }
 }

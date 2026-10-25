@@ -1,9 +1,9 @@
-import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 
 import '../../theme/app_dimens.dart';
 import '../../theme/app_text.dart';
 import '../../theme/theme_context.dart';
+import '../hover_link.dart';
 
 /// A tappable name inside [WizardConsentRow]'s sentence.
 class WizardLink {
@@ -18,7 +18,7 @@ class WizardLink {
 /// appear in [text] (one ARB sentence with the names as placeholders, so a
 /// translation can move them), and [errorText] under it when the person
 /// pressed Create without ticking. Unticked unless the parent says so.
-class WizardConsentRow extends StatefulWidget {
+class WizardConsentRow extends StatelessWidget {
   final bool value;
   final ValueChanged<bool> onChanged;
   final String text;
@@ -34,39 +34,26 @@ class WizardConsentRow extends StatefulWidget {
     this.errorText,
   });
 
-  @override
-  State<WizardConsentRow> createState() => _WizardConsentRowState();
-}
-
-class _WizardConsentRowState extends State<WizardConsentRow> {
-  final List<TapGestureRecognizer> _recognizers = [];
-
-  void _disposeRecognizers() {
-    for (final r in _recognizers) {
-      r.dispose();
-    }
-    _recognizers.clear();
-  }
-
-  @override
-  void dispose() {
-    _disposeRecognizers();
-    super.dispose();
-  }
-
   // The sentence cut around each link's label, in order. A label missing
-  // from the text (a translation that dropped it) leaves plain text.
-  List<InlineSpan> _spans(TextStyle linkStyle) {
-    _disposeRecognizers();
+  // from the text (a translation that dropped it) leaves plain text. Each
+  // name is the shared HoverLink (G4), underlined at rest as before.
+  List<InlineSpan> _spans(Color ink) {
     final spans = <InlineSpan>[];
-    var rest = widget.text;
-    for (final link in widget.links) {
+    var rest = text;
+    for (final link in links) {
       final at = rest.indexOf(link.label);
       if (at < 0) continue;
       if (at > 0) spans.add(TextSpan(text: rest.substring(0, at)));
-      final recognizer = TapGestureRecognizer()..onTap = link.onTap;
-      _recognizers.add(recognizer);
-      spans.add(TextSpan(text: link.label, style: linkStyle, recognizer: recognizer));
+      spans.add(WidgetSpan(
+        alignment: PlaceholderAlignment.middle,
+        child: HoverLink(
+          label: link.label,
+          color: ink,
+          underlineAtRest: true,
+          style: const TextStyle(fontSize: WizardFontSize.consent, fontWeight: AppFontWeight.semibold),
+          onTap: link.onTap,
+        ),
+      ));
       rest = rest.substring(at + link.label.length);
     }
     if (rest.isNotEmpty) spans.add(TextSpan(text: rest));
@@ -76,13 +63,7 @@ class _WizardConsentRowState extends State<WizardConsentRow> {
   @override
   Widget build(BuildContext context) {
     final colors = context.colors;
-    final hasError = widget.errorText != null;
-    final linkStyle = TextStyle(
-      color: colors.primary,
-      fontWeight: AppFontWeight.semibold,
-      decoration: TextDecoration.underline,
-      decorationColor: colors.primary,
-    );
+    final hasError = errorText != null;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       mainAxisSize: MainAxisSize.min,
@@ -93,9 +74,9 @@ class _WizardConsentRowState extends State<WizardConsentRow> {
               width: WizardMetrics.consentTapTarget,
               height: WizardMetrics.consentTapTarget,
               child: Checkbox(
-                value: widget.value,
-                onChanged: (v) => widget.onChanged(v ?? false),
-                semanticLabel: widget.text,
+                value: value,
+                onChanged: (v) => onChanged(v ?? false),
+                semanticLabel: text,
                 activeColor: colors.primary,
                 checkColor: colors.onPrimary,
                 side: BorderSide(color: hasError ? colors.danger : colors.textMuted),
@@ -104,7 +85,7 @@ class _WizardConsentRowState extends State<WizardConsentRow> {
             const SizedBox(width: WizardMetrics.consentGap),
             Expanded(
               child: Text.rich(
-                TextSpan(children: _spans(linkStyle)),
+                TextSpan(children: _spans(colors.primary)),
                 style: TextStyle(fontSize: WizardFontSize.consent, color: colors.textPrimary),
               ),
             ),
@@ -119,7 +100,7 @@ class _WizardConsentRowState extends State<WizardConsentRow> {
             child: Semantics(
               liveRegion: true,
               child: Text(
-                widget.errorText!,
+                errorText!,
                 style: TextStyle(fontSize: WizardFontSize.consentError, color: colors.danger),
               ),
             ),

@@ -26,6 +26,7 @@ import '../ui/feedback/friendly_error.dart';
 import '../theme/app_motion.dart';
 import '../theme/app_text.dart';
 import '../theme/theme_context.dart';
+import '../widgets/hover_link.dart';
 
 class LoginScreen extends StatefulWidget {
   final String? errorMessage;
@@ -62,8 +63,6 @@ class _LoginScreenState extends State<LoginScreen> {
   bool errorIsAboutCredentials = false;
   // Bumped on every new error to replay the form card's shake.
   int _shakeCount = 0;
-  bool isForgotHovered = false;
-  bool isRegisterHovered = false;
 
   Timer? _announcementTimer;
 
@@ -868,21 +867,12 @@ class _LoginScreenState extends State<LoginScreen> {
                                 ),
                               ],
                             ),
-                            MouseRegion(
-                              onEnter: (_) => setState(() => isForgotHovered = true),
-                              onExit: (_) => setState(() => isForgotHovered = false),
-                              cursor: SystemMouseCursors.click,
-                              child: GestureDetector(
-                                onTap: _forgotPassword,
-                                child: Text(
-                                  context.l10n.login_forgotPassword,
-                                  style: TextStyle(
-                                    color: isForgotHovered ? context.colors.accent : context.colors.brandTeal,
-                                    fontSize: AppFontSize.f13,
-                                    fontWeight: AppFontWeight.semibold,
-                                  ),
-                                ),
-                              ),
+                            HoverLink(
+                              label: context.l10n.login_forgotPassword,
+                              color: context.colors.brandTeal,
+                              button: true,
+                              style: const TextStyle(fontSize: AppFontSize.f13, fontWeight: AppFontWeight.semibold),
+                              onTap: _forgotPassword,
                             ),
                           ],
                         ),
@@ -894,32 +884,19 @@ class _LoginScreenState extends State<LoginScreen> {
                           accentColor: context.colors.brandTealOnBrand,
                         ),
                         const SizedBox(height: AppSpacing.s20),
-                        Center(
-                          child: MouseRegion(
-                            onEnter: (_) => setState(() => isRegisterHovered = true),
-                            onExit: (_) => setState(() => isRegisterHovered = false),
-                            cursor: SystemMouseCursors.click,
-                            child: GestureDetector(
-                              onTap: () {
-                                Navigator.pushNamed(context, '/register');
-                              },
-                              child: RichText(
-                                text: TextSpan(
-                                  style: TextStyle(fontSize: AppFontSize.f13, color: context.colors.textPrimary),
-                                  children: [
-                                    TextSpan(text: context.l10n.login_noAccount),
-                                    TextSpan(
-                                      text: context.l10n.login_register,
-                                      style: TextStyle(
-                                        color: isRegisterHovered ? context.colors.accent : context.colors.brandTeal,
-                                        fontWeight: AppFontWeight.bold,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
+                        // "Don't have an account? " stays plain; only Register is the link.
+                        Wrap(
+                          alignment: WrapAlignment.center,
+                          crossAxisAlignment: WrapCrossAlignment.center,
+                          children: [
+                            Text(context.l10n.login_noAccount, style: TextStyle(fontSize: AppFontSize.f13, color: context.colors.textPrimary)),
+                            HoverLink(
+                              label: context.l10n.login_register,
+                              color: context.colors.brandTeal,
+                              style: const TextStyle(fontSize: AppFontSize.f13, fontWeight: AppFontWeight.bold),
+                              onTap: () => Navigator.pushNamed(context, '/register'),
                             ),
-                          ),
+                          ],
                         ),
                       ],
                     ),

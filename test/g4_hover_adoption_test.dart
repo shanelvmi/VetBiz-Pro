@@ -19,7 +19,7 @@ import 'package:vetbiz_pro/widgets/wizard/wizard_consent_row.dart';
 // G4: every plain clickable text on Login and Register is the shared
 // HoverLink; the hand-written hover code is gone. Written before the switch:
 // run against the old screens, each test fails (no HoverLink, the old code).
-const _skip = true;
+const _skip = false;
 
 final _en = lookupAppLocalizations(const Locale('en'));
 
