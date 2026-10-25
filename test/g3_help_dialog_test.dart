@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:fake_cloud_firestore/fake_cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -42,5 +44,12 @@ void main() {
     await openFrom(tester, FakeFirebaseFirestore());
     final l10n = lookupAppLocalizations(const Locale('en'));
     expect(helpDialogTexts(tester), [l10n.dashboard_contactSupport, l10n.dashboard_supportIntro('VetBiz Pro'), l10n.common_close]);
+  });
+
+  test('the dashboard opens the shared dialog and no longer reads the document itself', () {
+    final source = File('lib/screens/dashboard/dashboard_screen.dart').readAsStringSync();
+    expect(RegExp(r'showSupportContactDialog\(context\)').allMatches(source).length, 2);
+    expect(source.contains('_showHelpDialog'), isFalse);
+    expect(source.contains("doc('support_contact')"), isFalse);
   });
 }
