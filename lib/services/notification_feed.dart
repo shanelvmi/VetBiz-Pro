@@ -1,13 +1,19 @@
+import 'dart:async';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/foundation.dart';
 
 import '../config/app_limits.dart';
 import '../config/app_ranges.dart';
+import '../data/collections.dart';
+import '../data/fields.dart';
+import '../data/payment_submission_status.dart';
 import '../data/subscription_notice_stage.dart';
 import '../models/notification_model.dart';
 import '../models/notification_policy.dart';
 import '../models/notification_state.dart';
 import '../providers/subscription_provider.dart';
+import 'notification_state_service.dart';
 
 /// The id of the live free-trial row (never stored).
 const String trialStatusRowId = 'trial_status';
@@ -174,7 +180,9 @@ bool isPromotionDismissed({
 
 /// The Notifications screen's and the dropdown's data (NOTIF-2c): my
 /// notifications and my own state, live, built into rows through
-/// [buildNotificationItems], and every action as one state write.
+/// [buildNotificationItems], and every action as one state write
+/// (NotificationStateService). Each action shows at once (applied to the
+/// state here first) and the listener then brings the stored result.
 class NotificationFeedController extends ChangeNotifier {
   final FirebaseFirestore firestore;
   final String facilityId;
@@ -185,6 +193,7 @@ class NotificationFeedController extends ChangeNotifier {
   final int window;
   final int olderPage;
   final DateTime Function() _clock;
+  final NotificationStateService _service;
 
   NotificationFeedController({
     required this.firestore,
@@ -199,37 +208,226 @@ class NotificationFeedController extends ChangeNotifier {
   })  : _isAdmin = isAdmin,
         _subscription = subscription ?? (() => SubscriptionFacts.none),
         _subscriptionChanges = subscriptionChanges,
-        _clock = clock ?? DateTime.now;
+        _clock = clock ?? DateTime.now,
+        _service = NotificationStateService(firestore: firestore, facilityId: facilityId, uid: uid, clock: clock);
 
-  void start() => throw UnimplementedError('NOTIF-2c ${_isAdmin.hashCode} ${_subscription.hashCode} '
-      '${_subscriptionChanges.hashCode} ${_clock.hashCode}');
+  final List<StreamSubscription<Object?>> _subs = [];
+  bool _started = false;
+  bool _disposed = false;
+  bool _notificationsLoaded = false;
+  bool _stateLoaded = false;
+  Object? _error;
+  List<QueryDocumentSnapshot<Map<String, dynamic>>> _live = const [];
+  final List<FacilityNotification> _older = [];
+  DocumentSnapshot<Map<String, dynamic>>? _olderCursor;
+  bool _olderDone = false;
+  bool _loadingOlder = false;
+  NotificationState _confirmed = NotificationState.empty;
+  NotificationState _state = NotificationState.empty;
+  LatestClaim? _latestClaim;
+  DateTime? _liveSince;
+  List<NotificationItem> _items = const [];
 
-  bool get isLoading => throw UnimplementedError('NOTIF-2c');
-  Object? get error => throw UnimplementedError('NOTIF-2c');
+  CollectionReference<Map<String, dynamic>> _facilityCollection(String name) =>
+      firestore.collection(Collections.facilities).doc(facilityId).collection(name);
 
-  List<NotificationItem> get items => throw UnimplementedError('NOTIF-2c');
-  List<NotificationItem> get planNotices => throw UnimplementedError('NOTIF-2c');
-  List<NotificationItem> get needsAttention => throw UnimplementedError('NOTIF-2c');
-  List<NotificationItem> get earlier => throw UnimplementedError('NOTIF-2c');
-  bool get hasUnread => throw UnimplementedError('NOTIF-2c');
+  Query<Map<String, dynamic>> get _newestFirst =>
+      _facilityCollection(Collections.notifications).orderBy(Fields.createdAt, descending: true);
+
+  /// Starts listening; calling it again does nothing.
+  void start() {
+    if (_started) return;
+    _started = true;
+    _subs.add(_newestFirst.limit(window).snapshots().listen((s) {
+      _live = s.docs;
+      _notificationsLoaded = true;
+      _rebuild();
+    }, onError: (Object e) {
+      _error = e;
+      _notificationsLoaded = true;
+      _rebuild();
+    }));
+    _subs.add(_service.watch().listen((s) {
+      _confirmed = s;
+      _state = s;
+      _stateLoaded = true;
+      _rebuild();
+    }, onError: (Object e) {
+      // Without my state the lists still work, as for someone who has done
+      // nothing yet (unread, nothing removed).
+      debugPrint('[NOTIFICATIONS] state: $e');
+      _stateLoaded = true;
+      _rebuild();
+    }));
+    _subs.add(_facilityCollection(Collections.paymentSubmissions)
+        .orderBy(Fields.submittedAt, descending: true)
+        .limit(AppLimits.single)
+        .snapshots()
+        .listen((s) {
+      final data = s.docs.firstOrNull?.data();
+      final at = data?[Fields.submittedAt];
+      _latestClaim = data == null
+          ? null
+          : LatestClaim(
+              submittedAt: at is Timestamp ? at.toDate() : null,
+              rejected: data[Fields.status] == PaymentSubmissionStatus.rejected.key,
+            );
+      _rebuild();
+    }, onError: (Object e) => debugPrint('[NOTIFICATIONS] claims: $e')));
+    _subscriptionChanges?.addListener(_rebuild);
+  }
+
+  bool get isLoading => !_notificationsLoaded || !_stateLoaded;
+  Object? get error => _error;
+
+  List<NotificationItem> get items => _items;
+  List<NotificationItem> get planNotices => _items.where((i) => i.type == NotificationType.trialStatus).toList();
+  List<NotificationItem> get needsAttention => _items
+      .where((i) => i.notification.category != NotificationCategory.other && i.type != NotificationType.trialStatus)
+      .toList();
+  List<NotificationItem> get earlier =>
+      _items.where((i) => i.notification.category == NotificationCategory.other).toList();
+  bool get hasUnread => _items.any((i) => !i.isRead);
 
   /// My read items that may be removed ("Remove read ones"); never persistent.
-  List<NotificationItem> get readRemovable => throw UnimplementedError('NOTIF-2c');
+  List<NotificationItem> get readRemovable => _items.where((i) => i.isRead && i.canRemove).toList();
 
-  bool get canLoadOlder => throw UnimplementedError('NOTIF-2c');
-  bool get isLoadingOlder => throw UnimplementedError('NOTIF-2c');
-  Future<void> loadOlder() => throw UnimplementedError('NOTIF-2c');
+  bool get canLoadOlder => !_olderDone && _live.length >= window;
+  bool get isLoadingOlder => _loadingOlder;
+
+  Future<void> loadOlder() async {
+    if (!canLoadOlder || _loadingOlder) return;
+    _loadingOlder = true;
+    _notify();
+    try {
+      final cursor = _olderCursor ?? _live.last;
+      final snap = await _newestFirst.startAfterDocument(cursor).limit(olderPage).get();
+      _older.addAll(snap.docs.map(FacilityNotification.fromFirestore));
+      if (snap.docs.isNotEmpty) _olderCursor = snap.docs.last;
+      if (snap.docs.length < olderPage) _olderDone = true;
+    } finally {
+      _loadingOlder = false;
+      _rebuild();
+    }
+  }
 
   /// Re-applies the lifetimes at the clock's time now.
-  void refresh() => throw UnimplementedError('NOTIF-2c');
+  void refresh() => _rebuild();
 
-  Future<void> markRead(Iterable<NotificationItem> items) => throw UnimplementedError('NOTIF-2c');
-  Future<void> markUnread(NotificationItem item) => throw UnimplementedError('NOTIF-2c');
-  Future<void> toggleRead(NotificationItem item) => throw UnimplementedError('NOTIF-2c');
-  Future<void> markAllRead() => throw UnimplementedError('NOTIF-2c');
+  Future<void> markRead(Iterable<NotificationItem> items) async {
+    final ids = items.map((i) => i.id).toSet();
+    if (ids.isEmpty) return;
+    final now = _clock();
+    final stage = _subscription().stage;
+    final notice = ids.contains(subscriptionNoticeId) && stage != SubscriptionNoticeStage.none;
+    _patch(
+      read: {for (final id in ids) id: now},
+      unread: {for (final id in ids) id: null},
+      seenStage: notice ? {subscriptionNoticeId: stage.key} : const {},
+    );
+    await _guard(() async {
+      await _service.markRead(ids);
+      if (notice) await _service.recordSeenStage(NotificationType.subscriptionExpiring, stage);
+    });
+  }
+
+  Future<void> markUnread(NotificationItem item) async {
+    _patch(unread: {item.id: _clock()}, read: {item.id: null});
+    await _guard(() => _service.markUnread([item.id]));
+  }
+
+  Future<void> toggleRead(NotificationItem item) => item.isRead ? markUnread(item) : markRead([item]);
+
+  Future<void> markAllRead() => markRead(_items.where((i) => !i.isRead));
 
   /// Removes [items] for me (persistent ones are skipped); the result is
   /// what [restore] puts back.
-  Future<RemovedEntries> remove(Iterable<NotificationItem> items) => throw UnimplementedError('NOTIF-2c');
-  Future<void> restore(RemovedEntries entries) => throw UnimplementedError('NOTIF-2c');
+  Future<RemovedEntries> remove(Iterable<NotificationItem> items) async {
+    final ids = items.where((i) => i.canRemove).map((i) => i.id).toSet();
+    if (ids.isEmpty) return const RemovedEntries({});
+    _patch(removed: {for (final id in ids) id: _clock()});
+    late RemovedEntries entries;
+    await _guard(() async => entries = await _service.remove(ids));
+    return entries;
+  }
+
+  Future<void> restore(RemovedEntries entries) async {
+    if (entries.previous.isEmpty) return;
+    _patch(removed: entries.previous);
+    await _guard(() => _service.restoreRemoved(entries));
+  }
+
+  /// A failed write puts the stored state back on screen, then rethrows
+  /// for the screen to say so.
+  Future<void> _guard(Future<void> Function() write) async {
+    try {
+      await write();
+    } catch (_) {
+      _state = _confirmed;
+      _rebuild();
+      rethrow;
+    }
+  }
+
+  void _patch({
+    Map<String, DateTime?> read = const {},
+    Map<String, DateTime?> unread = const {},
+    Map<String, DateTime?> removed = const {},
+    Map<String, String> seenStage = const {},
+  }) {
+    Map<String, DateTime> apply(Map<String, DateTime> base, Map<String, DateTime?> changes) {
+      final out = Map<String, DateTime>.of(base);
+      changes.forEach((id, t) {
+        if (t == null) {
+          out.remove(id);
+        } else {
+          out[id] = t;
+        }
+      });
+      return out;
+    }
+
+    _state = NotificationState(
+      read: apply(_state.read, read),
+      unread: apply(_state.unread, unread),
+      removed: apply(_state.removed, removed),
+      seenStage: {..._state.seenStage, ...seenStage},
+    );
+    _rebuild();
+  }
+
+  void _rebuild() {
+    if (_disposed) return;
+    final now = _clock();
+    _liveSince ??= now;
+    final liveIds = {for (final d in _live) d.id};
+    _items = buildNotificationItems(
+      stored: [
+        ..._live.map(FacilityNotification.fromFirestore),
+        ..._older.where((n) => !liveIds.contains(n.id)),
+      ],
+      state: _state,
+      uid: uid,
+      isAdmin: _isAdmin(),
+      subscription: _subscription(),
+      now: now,
+      latestClaim: _latestClaim,
+      liveRowsSince: _liveSince,
+    );
+    _notify();
+  }
+
+  void _notify() {
+    if (!_disposed) notifyListeners();
+  }
+
+  @override
+  void dispose() {
+    _disposed = true;
+    for (final s in _subs) {
+      s.cancel();
+    }
+    _subscriptionChanges?.removeListener(_rebuild);
+    super.dispose();
+  }
 }

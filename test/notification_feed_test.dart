@@ -12,8 +12,8 @@ import 'package:vetbiz_pro/services/notification_feed.dart';
 
 import 'helpers/notification_harness.dart';
 
-// Until the implementation: every call throws UnimplementedError('NOTIF-2c').
-const _skip = true;
+// Was true until the implementation (every call threw UnimplementedError).
+const _skip = false;
 
 Future<NotificationFeedController> feed(FirebaseFirestore fs, String uid, Clock clock,
     {Subs? subs, int window = 200, int olderPage = 100, bool admin = true}) async {
