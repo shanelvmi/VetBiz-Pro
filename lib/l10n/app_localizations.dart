@@ -11531,6 +11531,108 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'TikTok'**
   String get social_tiktok;
+
+  /// Sign-in footer: heading of the column with About and How to use it.
+  ///
+  /// In en, this message translates to:
+  /// **'Platform'**
+  String get authFooter_platform;
+
+  /// Sign-in footer link, and the title of the About page it opens.
+  ///
+  /// In en, this message translates to:
+  /// **'About {appName}'**
+  String authFooter_about(String appName);
+
+  /// Sign-in footer link, and the title of the getting-started page it opens.
+  ///
+  /// In en, this message translates to:
+  /// **'How to use it'**
+  String get authFooter_howToUse;
+
+  /// Sign-in footer link (frequently asked questions), and the title of the page it opens.
+  ///
+  /// In en, this message translates to:
+  /// **'FAQs'**
+  String get authFooter_faq;
+
+  /// About page: first paragraph.
+  ///
+  /// In en, this message translates to:
+  /// **'{appName} is an app for running an agrovet or a veterinary centre in Tanzania.'**
+  String about_intro(String appName);
+
+  /// About page: who the app is for (the facility types).
+  ///
+  /// In en, this message translates to:
+  /// **'It is for agrovets, vet clinics, vet hospitals and ambulatory vets, and for the people who work in them.'**
+  String get about_whoFor;
+
+  /// About page: heading of the list of areas.
+  ///
+  /// In en, this message translates to:
+  /// **'What it covers'**
+  String get about_coversTitle;
+
+  /// About page: one area in the list.
+  ///
+  /// In en, this message translates to:
+  /// **'Sales, with receipts.'**
+  String get about_coverSales;
+
+  /// About page: one area in the list. Stock Store is a screen name.
+  ///
+  /// In en, this message translates to:
+  /// **'Products and stock, from the Stock Store to the shelf.'**
+  String get about_coverStock;
+
+  /// About page: one area in the list.
+  ///
+  /// In en, this message translates to:
+  /// **'Services and visits.'**
+  String get about_coverServices;
+
+  /// About page: one area in the list.
+  ///
+  /// In en, this message translates to:
+  /// **'Clients and the debts they owe.'**
+  String get about_coverClients;
+
+  /// About page: one area in the list.
+  ///
+  /// In en, this message translates to:
+  /// **'Payments and other transactions.'**
+  String get about_coverPayments;
+
+  /// About page: one area in the list.
+  ///
+  /// In en, this message translates to:
+  /// **'Daily reports.'**
+  String get about_coverReports;
+
+  /// About page: one area in the list.
+  ///
+  /// In en, this message translates to:
+  /// **'Your team: assistants join with an invite code and you approve them.'**
+  String get about_coverTeam;
+
+  /// About page: who makes the app.
+  ///
+  /// In en, this message translates to:
+  /// **'{appName} is built and run by {appName}, the \"we\" of the Terms of Service and the Privacy Policy.'**
+  String about_whoBuilds(String appName);
+
+  /// About page: from section 5 of the Terms of Service.
+  ///
+  /// In en, this message translates to:
+  /// **'The records your team enters belong to your facility, as the Terms of Service say.'**
+  String get about_yourData;
+
+  /// About page: before the Help and contact link.
+  ///
+  /// In en, this message translates to:
+  /// **'Questions?'**
+  String get about_questions;
 }
 
 class _AppLocalizationsDelegate

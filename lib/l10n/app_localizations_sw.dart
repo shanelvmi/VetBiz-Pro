@@ -6831,4 +6831,65 @@ class AppLocalizationsSw extends AppLocalizations {
 
   @override
   String get social_tiktok => 'TikTok';
+
+  @override
+  String get authFooter_platform => 'Jukwaa';
+
+  @override
+  String authFooter_about(String appName) {
+    return 'Kuhusu $appName';
+  }
+
+  @override
+  String get authFooter_howToUse => 'Jinsi ya kuitumia';
+
+  @override
+  String get authFooter_faq => 'Maswali ya mara kwa mara';
+
+  @override
+  String about_intro(String appName) {
+    return '$appName ni programu ya kuendesha agrovet au kituo cha mifugo nchini Tanzania.';
+  }
+
+  @override
+  String get about_whoFor =>
+      'Ni kwa ajili ya agrovet, kliniki za mifugo, hospitali za mifugo na madaktari wa mifugo wanaotembelea wateja, na kwa watu wanaofanya kazi humo.';
+
+  @override
+  String get about_coversTitle => 'Inashughulikia nini';
+
+  @override
+  String get about_coverSales => 'Mauzo, pamoja na risiti.';
+
+  @override
+  String get about_coverStock =>
+      'Bidhaa na akiba, kutoka Stoo hadi kwenye rafu.';
+
+  @override
+  String get about_coverServices => 'Huduma na ziara.';
+
+  @override
+  String get about_coverClients => 'Wateja na madeni wanayodaiwa.';
+
+  @override
+  String get about_coverPayments => 'Malipo na miamala mingine.';
+
+  @override
+  String get about_coverReports => 'Ripoti za kila siku.';
+
+  @override
+  String get about_coverTeam =>
+      'Wafanyakazi wako: wasaidizi hujiunga kwa msimbo wa mwaliko na wewe unawaidhinisha.';
+
+  @override
+  String about_whoBuilds(String appName) {
+    return '$appName imetengenezwa na inaendeshwa na $appName, yaani \"sisi\" katika Masharti ya Huduma na Sera ya Faragha.';
+  }
+
+  @override
+  String get about_yourData =>
+      'Kumbukumbu ambazo timu yako inaingiza ni mali ya kituo chako, kama Masharti ya Huduma yanavyosema.';
+
+  @override
+  String get about_questions => 'Una maswali?';
 }

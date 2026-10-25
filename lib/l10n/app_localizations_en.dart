@@ -6790,4 +6790,65 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get social_tiktok => 'TikTok';
+
+  @override
+  String get authFooter_platform => 'Platform';
+
+  @override
+  String authFooter_about(String appName) {
+    return 'About $appName';
+  }
+
+  @override
+  String get authFooter_howToUse => 'How to use it';
+
+  @override
+  String get authFooter_faq => 'FAQs';
+
+  @override
+  String about_intro(String appName) {
+    return '$appName is an app for running an agrovet or a veterinary centre in Tanzania.';
+  }
+
+  @override
+  String get about_whoFor =>
+      'It is for agrovets, vet clinics, vet hospitals and ambulatory vets, and for the people who work in them.';
+
+  @override
+  String get about_coversTitle => 'What it covers';
+
+  @override
+  String get about_coverSales => 'Sales, with receipts.';
+
+  @override
+  String get about_coverStock =>
+      'Products and stock, from the Stock Store to the shelf.';
+
+  @override
+  String get about_coverServices => 'Services and visits.';
+
+  @override
+  String get about_coverClients => 'Clients and the debts they owe.';
+
+  @override
+  String get about_coverPayments => 'Payments and other transactions.';
+
+  @override
+  String get about_coverReports => 'Daily reports.';
+
+  @override
+  String get about_coverTeam =>
+      'Your team: assistants join with an invite code and you approve them.';
+
+  @override
+  String about_whoBuilds(String appName) {
+    return '$appName is built and run by $appName, the \"we\" of the Terms of Service and the Privacy Policy.';
+  }
+
+  @override
+  String get about_yourData =>
+      'The records your team enters belong to your facility, as the Terms of Service say.';
+
+  @override
+  String get about_questions => 'Questions?';
 }
