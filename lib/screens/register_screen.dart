@@ -17,6 +17,8 @@ import 'legal/privacy_policy_screen.dart';
 import 'legal/terms_of_service_screen.dart';
 import '../widgets/auth_background.dart';
 import '../widgets/auth_card.dart';
+import '../widgets/auth_footer.dart';
+import '../models/support_contact.dart';
 import '../widgets/profile/profile_photo_editor.dart';
 import '../services/profile_photo_service.dart';
 import '../widgets/auth_theme_toggle.dart';
@@ -73,6 +75,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
   // Checking an invite code, and everything else that decides who belongs to
   // which facility, is done by the server - see MembershipService.
   late final MembershipService _membershipService = widget.membershipService ?? MembershipService();
+  // The footer's support contact: read once, by the register view only.
+  late final Future<SupportContact> _supportContact;
   @visibleForTesting
   AuthService get authServiceInUse => _authService;
   @visibleForTesting
@@ -264,6 +268,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
     super.initState();
     _password.addListener(_onPasswordGuardChanged);
     _confirm.addListener(_onPasswordGuardChanged);
+    if (!widget.isUpdating) _supportContact = SupportContact.load(widget.firestore);
     _maxFacilitiesSubscription = streamMaxFacilitiesPerAdmin(widget.firestore).listen((limit) {
       if (mounted) setState(() => _maxFacilities = limit);
     });
@@ -837,6 +842,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
           // columns above AppBreakpoints.medium of the space the card gets.
           AuthCard(
             header: _buildRegisterHeader(),
+            // The same footer as the login page (G3); not in Edit Profile.
+            below: AuthFooter(contact: _supportContact),
             bodyBuilder: (context, layout) {
               final isWide = layout.availableWidth > AppBreakpoints.medium;
               return isWide

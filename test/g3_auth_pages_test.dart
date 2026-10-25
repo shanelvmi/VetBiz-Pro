@@ -21,8 +21,7 @@ import 'package:vetbiz_pro/widgets/auth_theme_toggle.dart';
 
 // G3: the login page without the clutter, and the footer below the card on
 // the sign-in pages. Written before the change (4c40bc8).
-// The register page: written before its change, skipped until it is made.
-const _skipRegister = true;
+// The register page: written before its change (89cca89).
 
 final _en = lookupAppLocalizations(const Locale('en'));
 
@@ -144,7 +143,7 @@ void main() {
   });
   Widget register([FirebaseFirestore? db]) => RegisterScreen(firestore: db ?? FakeFirebaseFirestore());
 
-  group('Register page', skip: _skipRegister, () {
+  group('Register page', () {
     testWidgets('the footer sits below the card, full width', (tester) async {
       await pump(tester, register());
       final card = tester.getRect(find.byKey(AuthCard.surfaceKey));
