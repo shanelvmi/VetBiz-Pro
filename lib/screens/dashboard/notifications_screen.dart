@@ -11,6 +11,7 @@ import '../../utils/notification_seen_tracker.dart';
 import '../../models/notification_model.dart';
 import '../../widgets/announcement_message.dart';
 import '../../widgets/notification_row.dart';
+import '../../services/notification_feed.dart';
 import '../../data/collections.dart';
 import '../../data/fields.dart';
 import '../../config/app_limits.dart';
@@ -31,7 +32,12 @@ import '../../l10n/l10n.dart';
 /// category" at all.
 class NotificationsScreen extends StatefulWidget {
   final bool isDropdown;
-  const NotificationsScreen({super.key, this.isDropdown = false});
+
+  /// The data behind the screen; built from the providers when null (tests
+  /// pass one on a fake Firestore). NOTIF-2c.
+  final NotificationFeedController? controller;
+
+  const NotificationsScreen({super.key, this.isDropdown = false, this.controller});
 
 
   @override

@@ -10,6 +10,9 @@ class Fields {
   static const String createdAt = 'createdAt';
   static const String updatedAt = 'updatedAt';
 
+  /// When a subscription payment claim was sent (payment_submissions).
+  static const String submittedAt = 'submittedAt';
+
   /// A boolean field NAME (promotions/{id}.active: the one live promotion),
   /// not a status value. A user's 'active' status is `UserStatus.active`.
   static const String active = 'active';

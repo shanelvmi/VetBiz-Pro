@@ -30,6 +30,12 @@ class AppLimits {
   /// Notifications read for the dashboard bell.
   static const int dashboardNotifications = 50;
 
+  /// The full Notifications screen: the newest notifications it watches,
+  /// then each "Load older" (NOTIF-2c; removed and expired items use up the
+  /// window, so older ones must stay reachable).
+  static const int notificationsWindow = 200;
+  static const int notificationsOlderPage = 100;
+
   /// A facility's subscription payment history, as the platform admin sees
   /// it (facility_detail_screen).
   static const int facilityPaymentHistory = 20;
