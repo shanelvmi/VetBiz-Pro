@@ -1080,7 +1080,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
   // Shared between the full-screen and dropdown chrome - same content
   // either way, only how much space it's given differs.
   Widget _buildAlertsList(bool nothingToShow) {
-    if (nothingToShow) return _buildAllCaughtUp();
+    if (nothingToShow) return _buildDropdownEmpty();
 
     return ListView(
       shrinkWrap: true,
@@ -1129,52 +1129,29 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
     );
   }
 
-  Widget _buildAllCaughtUp() {
-    final content = Padding(
-      padding: const EdgeInsets.all(AppSpacing.s32),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Container(
-            padding: const EdgeInsets.all(AppSpacing.s20),
-            decoration: BoxDecoration(
-              color: context.colors.success.withValues(alpha: AppAlpha.a10),
-              shape: BoxShape.circle,
-            ),
-            child: Icon(Icons.check_circle_outline, color: context.colors.success, size: AppIconSize.i48),
+  // The same plain words as the full screen's empty state, no "all caught
+  // up" cheer (docs/design/notifications.md, section 3). The dropdown sits
+  // in its own scroll view, so this just sizes itself.
+  Widget _buildDropdownEmpty() => Center(
+        child: Padding(
+          padding: const EdgeInsets.all(AppSpacing.s32),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(Icons.notifications_none, size: AppIconSize.i48, color: context.colors.textDisabled),
+              const SizedBox(height: AppSpacing.s16),
+              Text(context.l10n.notifications_empty,
+                  style: TextStyle(fontSize: AppFontSize.f17, color: context.colors.textMuted)),
+              const SizedBox(height: AppSpacing.s6),
+              Text(
+                context.l10n.notifications_emptyHint,
+                textAlign: TextAlign.center,
+                style: TextStyle(color: context.colors.textHint, fontSize: AppFontSize.f13),
+              ),
+            ],
           ),
-          const SizedBox(height: AppSpacing.s16),
-          Text(context.l10n.alerts_allCaughtUp, style: const TextStyle(fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f17)),
-          const SizedBox(height: AppSpacing.s6),
-          Text(
-            context.l10n.notifications_allCaughtUpHint,
-            textAlign: TextAlign.center,
-            style: TextStyle(color: context.colors.textMuted, fontSize: AppFontSize.f13),
-          ),
-        ],
-      ),
-    );
-
-    // The dropdown already sits inside its own SingleChildScrollView
-    // (see _buildDropdownChrome), which offers unbounded height to its
-    // child - the LayoutBuilder/minHeight-centering trick below needs
-    // a *bounded* parent to make sense, so nesting it inside that
-    // unbounded scroll view turned constraints.maxHeight into
-    // infinity, and minHeight: infinity into a genuine layout error.
-    // In dropdown mode this just needs to size itself naturally, no
-    // viewport-filling/centering required.
-    if (widget.isDropdown) return Center(child: content);
-
-    return LayoutBuilder(
-      builder: (context, constraints) => SingleChildScrollView(
-        physics: const AlwaysScrollableScrollPhysics(),
-        child: ConstrainedBox(
-          constraints: BoxConstraints(minHeight: constraints.maxHeight),
-          child: Center(child: content),
         ),
-      ),
-    );
-  }
+      );
 
   Widget _buildUrgentAnnouncements() {
     return StreamBuilder<QuerySnapshot>(
