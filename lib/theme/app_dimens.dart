@@ -190,6 +190,26 @@ class AuthFooterMetrics {
   static const int brandFlex = 2;
 }
 
+/// The shared hover link of the signed-out pages (lib/widgets/hover_link.dart,
+/// G4). Every size of it lives here, so one place restyles every link.
+class HoverLinkMetrics {
+  HoverLinkMetrics._();
+
+  /// Material's 48 px touch target: the least height of every link, and
+  /// the least width of an icon link.
+  static const double tapTarget = 48;
+
+  /// The keyboard focus ring: drawn outside the link, so it never moves it.
+  static const double focusRingWidth = 2;
+  static const double focusRingGap = AppSpacing.s4;
+  static const double focusRingRadius = AppRadius.r6;
+
+  /// Under an icon link: the line that shows on hover and focus. Its space
+  /// is always kept, so it never moves the icon.
+  static const double iconUnderlineGap = AppSpacing.s2;
+  static const double iconUnderlineThickness = 1;
+}
+
 /// The step-by-step forms (lib/widgets/wizard, register_wizard.md section
 /// 3). Every size of the wizard widgets lives here, so one place restyles
 /// them (the owner's phone-app style comes later).

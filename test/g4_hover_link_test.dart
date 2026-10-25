@@ -9,9 +9,10 @@ import 'package:vetbiz_pro/theme/app_palette.dart';
 import 'package:vetbiz_pro/theme/app_theme.dart';
 import 'package:vetbiz_pro/widgets/hover_link.dart';
 
-// G4: the one hover link of the signed-out pages. Written before the widget:
-// run against the stub (a plain tappable Text), every test but the tap fails.
-const _skip = true;
+// G4: the one hover link of the signed-out pages. Written before the widget
+// (c7eec14): run against the stub, a plain tappable Text, every test but the
+// tap failed.
+const _skip = false;
 
 void main() {
   final colors = AppColors.fromTheme(AppColorTheme.pasture);
@@ -51,7 +52,7 @@ void main() {
       expect(styleOf(tester).color, rest);
       expect(styleOf(tester).decoration, anyOf(isNull, TextDecoration.none));
       expect(tester.getSize(find.byType(HoverLink)).height, greaterThanOrEqualTo(48));
-      expect(tester.getSemantics(find.byType(HoverLink)), matchesSemantics(isLink: true, hasTapAction: true, label: 'Forgot Password?'));
+      expect(tester.getSemantics(find.text('Forgot Password?')), isSemantics(isLink: true, hasTapAction: true, label: 'Forgot Password?'));
     }, skip: _skip);
 
     testWidgets('hover: accent, underlined, the click cursor, no size change', (tester) async {
