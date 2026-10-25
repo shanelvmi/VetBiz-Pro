@@ -18,7 +18,7 @@ import '../../services/sales_summary_service.dart';
 import '../../services/notification_feed.dart';
 
 import '../../widgets/summary_card.dart';
-import '../../widgets/initials_avatar.dart';
+import '../../widgets/profile/profile_drawer.dart';
 import '../../widgets/profile/profile_menu_button.dart';
 
 import '../products/products_screen.dart';
@@ -310,9 +310,6 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
   // The subscription banner's fade-and-scale switch (was 550 ms), snapped to
   // the nearest motion step (parked_values.md C3).
   static const Duration _bannerSwitch = AppMotion.slowest;
-  // Space under the profile panel so the Logout button does not cover it: a
-  // size, kept exact (D9).
-  static const double _logoutClearance = 80;
 
   final user = FirebaseAuth.instance.currentUser;
   late final userDoc = FirebaseFirestore.instance.collection(Collections.users).doc(user?.uid);
@@ -2675,7 +2672,6 @@ Widget _buildDrawerContent() {
     );
   }
 
-
   void _confirmLogout(BuildContext context) {
     showDialog(
       context: context,
@@ -2700,212 +2696,75 @@ Widget _buildDrawerContent() {
     );
   }
 
-  // --------------------- END DRAWER ---------------------
+  // The avatar here is display only (G2): the photo is changed or removed
+  // in Edit Profile. The actions, their order and who sees them are as
+  // before; Sign out is the last row (it was a round button in the corner).
   Widget _buildEndDrawerContent() {
-    final buttonStyle = ElevatedButton.styleFrom(
-      backgroundColor: context.colors.brandSurface,
-      foregroundColor: _onBrandInk(context),
-      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.s20, vertical: AppSpacing.s14),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadius.r8)),
-    ).copyWith(
-      overlayColor: WidgetStateProperty.resolveWith<Color?>(
-        (states) {
-          if (states.contains(WidgetState.hovered)) return context.colors.sidebarHover;
-          if (states.contains(WidgetState.pressed)) return context.colors.sidebarPress;
-          return null;
-        },
-      ),
-    );
-
     return StreamBuilder<DocumentSnapshot>(
       stream: userDoc.snapshots(),
       builder: (context, snapshot) {
-        final rawData = snapshot.data?.data();
-        final Map<String, dynamic> data =
-            (rawData != null && rawData is Map) ? Map<String, dynamic>.from(rawData) : {};
+        final data = _profileData(snapshot);
+        final isAdmin = Provider.of<UserRoleProvider>(context).isAdmin;
 
-        final role = data[Fields.role] ?? 'Assistant';
-        final avatarUrl = data['avatarUrl'] as String?;
+        return ProfileDrawerContent(
+          avatarUrl: data['avatarUrl'] as String?,
+          name: (data['fullName'] ?? '').toString(),
+          roleLabel: _profileRoleLabel(data),
+          email: (data['email'] ?? '').toString(),
+          phone: (data['phone'] ?? '').toString(),
+          facility: context.watch<FacilityProvider>().selectedFacilityName ?? '',
+          onClose: () => Navigator.of(context).pop(),
+          actions: [
+            ProfileDrawerAction(
+              icon: Icons.edit_outlined,
+              label: context.l10n.common_editProfile,
+              onTap: () async {
+                final snapshot = await userDoc.get();
+                if (!snapshot.exists || !context.mounted) return;
 
-        return Stack(
-          children: [
-            ListView(
-              padding: const EdgeInsets.all(AppSpacing.s16),
-              children: [
-                // Avatar with grey border
-                // Display only: the photo is changed or removed in Edit Profile (G2).
-                Center(
-                  child: Container(
-                        padding: const EdgeInsets.all(AppSpacing.s2),
-                        decoration: BoxDecoration(
-                          color: context.colors.borderStrong,
-                          shape: BoxShape.circle,
-                        ),
-                    child: InitialsAvatar(
-                                avatarUrl: avatarUrl,
-                                name: data['fullName'] ?? '',
-                                size: 100,
-                                backgroundColor: context.colors.background,
-                                foregroundColor: context.colors.primary,
-                    ),
-                  ),
-                ),
-                const SizedBox(height: AppSpacing.s12),
-                Divider(thickness: 1.2, color: context.colors.borderStrong),
-                const SizedBox(height: AppSpacing.s12),
+                final rawUserData = snapshot.data();
+                final userData = (rawUserData != null)
+                    ? Map<String, dynamic>.from(rawUserData)
+                    : <String, dynamic>{};
 
-                // User Info
-                RichText(
-                  text: TextSpan(
-                    style: TextStyle(color: context.colors.textStrong),
-                    children: [
-                      TextSpan(text: context.l10n.dashboard_fullNameLabel, style: const TextStyle(fontWeight: AppFontWeight.bold)),
-                      TextSpan(text: data['fullName'] ?? ''),
-                    ],
-                  ),
-                ),
-                RichText(
-                  text: TextSpan(
-                    style: TextStyle(color: context.colors.textStrong),
-                    children: [
-                      TextSpan(text: context.l10n.dashboard_emailLabel, style: const TextStyle(fontWeight: AppFontWeight.bold)),
-                      TextSpan(text: data['email'] ?? ''),
-                    ],
-                  ),
-                ),
-                RichText(
-                  text: TextSpan(
-                    style: TextStyle(color: context.colors.textStrong),
-                    children: [
-                      TextSpan(text: context.l10n.dashboard_phoneLabel, style: const TextStyle(fontWeight: AppFontWeight.bold)),
-                      TextSpan(text: data['phone'] ?? ''),
-                    ],
-                  ),
-                ),
-                RichText(
-                  text: TextSpan(
-                    style: TextStyle(color: context.colors.textStrong),
-                    children: [
-                      TextSpan(text: context.l10n.dashboard_roleLabel, style: const TextStyle(fontWeight: AppFontWeight.bold)),
-                      // A promoted Assistant is a Co-admin, not just "Admin".
-                      TextSpan(
-                          text: (role == UserRole.admin.key && data['previousRole'] == UserRole.assistant.key)
-                              ? context.l10n.role_coAdmin
-                              // Capitalised first, so an unknown role still shows as before.
-                              : context.l10n.roleLabel(_capitalize(role))),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: AppSpacing.s12),
-                Divider(thickness: 1.2, color: context.colors.borderStrong),
-                const SizedBox(height: AppSpacing.s12),
-
-                // Buttons
-                ElevatedButton(
-                  style: buttonStyle,
-                  child: Text(context.l10n.common_editProfile),
-                  onPressed: () async {
-                    final snapshot = await userDoc.get();
-                    if (!snapshot.exists || !context.mounted) return;
-
-                    final rawUserData = snapshot.data();
-                    final userData = (rawUserData != null)
-                        ? Map<String, dynamic>.from(rawUserData)
-                        : <String, dynamic>{};
-
-                    // A modal over the Dashboard on wide screens (full screen
-                    // on a phone), like the other edit screens.
-                    showEditProfileScreen(context, userData: userData);
-                  },
-                ),
-                const SizedBox(height: AppSpacing.s12),
-
-                if (Provider.of<UserRoleProvider>(context).isAdmin) ...[
-                  ElevatedButton(
-                    style: buttonStyle,
-                    child: Text(context.l10n.team_title),
-                    onPressed: () {
-                      Navigator.of(context).push(
-                        MaterialPageRoute(builder: (_) => ManageAssistantsScreen()),
-                      );
-                    },
-                  ),
-                  const SizedBox(height: AppSpacing.s12),
-                  ElevatedButton(
-                    style: buttonStyle,
-                    child: Text(context.l10n.dashboard_viewFacilities),
-                    onPressed: () {
-                      Navigator.of(context).push(
-                        MaterialPageRoute(builder: (_) => FacilityScreen()),
-                      );
-                    },
-                  ),
-                  const SizedBox(height: AppSpacing.s12),
-                ],
-
-                ElevatedButton(
-                  style: buttonStyle,
-                  child: Text(context.l10n.dashboard_changePassword),
-                  onPressed: () {
-                    final email = FirebaseAuth.instance.currentUser?.email;
-                    if (email != null) _showChangePasswordDialog(email);
-                  },
-                ),
-                if (Provider.of<UserRoleProvider>(context).isAdmin) ...[
-                  const SizedBox(height: AppSpacing.s12),
-                  ElevatedButton(
-                    style: buttonStyle,
-                    child: Text(context.l10n.export_activityLog),
-                    // Full screen, like the other drawer items (Manage Assistants,
-                    // View Facilities).
-                    onPressed: () {
-                      Navigator.of(context).push(
-                        MaterialPageRoute(builder: (_) => const ActivityLogScreen()),
-                      );
-                    },
-                  ),
-                ],
-                const SizedBox(height: AppSpacing.s12),
-                Divider(thickness: 1.2, color: context.colors.borderStrong),
-                const SizedBox(height: _logoutClearance),
-              ],
+                // A modal over the Dashboard on wide screens (full screen
+                // on a phone), like the other edit screens.
+                showEditProfileScreen(context, userData: userData);
+              },
             ),
-
-            // Close X button
-            Positioned(
-              top: 16,
-              right: 16,
-              child: Tooltip(
-                message: context.l10n.common_close,
-                child: IconButton(
-                  icon: Icon(Icons.close, size: AppIconSize.i32, color: context.colors.textSecondary),
-                  onPressed: () => Navigator.of(context).pop(),
-                ),
+            if (isAdmin) ...[
+              ProfileDrawerAction(
+                icon: Icons.group_outlined,
+                label: context.l10n.team_title,
+                onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => ManageAssistantsScreen())),
               ),
+              ProfileDrawerAction(
+                icon: Icons.store_outlined,
+                label: context.l10n.dashboard_viewFacilities,
+                onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => FacilityScreen())),
+              ),
+            ],
+            ProfileDrawerAction(
+              icon: Icons.lock_outline,
+              label: context.l10n.dashboard_changePassword,
+              onTap: () {
+                final email = FirebaseAuth.instance.currentUser?.email;
+                if (email != null) _showChangePasswordDialog(email);
+              },
             ),
-
-            // Logout button
-            Positioned(
-              bottom: 16,
-              right: 16,
-              child: Tooltip(
-                message: context.l10n.common_logout,
-                child: InkWell(
-                  borderRadius: BorderRadius.circular(AppRadius.pill),
-                  hoverColor: context.colors.sidebarHover,
-                  onTap: () => _confirmLogout(context),
-                  child: Ink(
-                    decoration: ShapeDecoration(
-                      color: context.colors.brandSurface,
-                      shape: CircleBorder(),
-                    ),
-                    child: Padding(
-                      padding: EdgeInsets.all(AppSpacing.s8),
-                      child: Icon(Icons.power_settings_new, size: AppIconSize.i16, color: context.colors.onBrandSurface),
-                    ),
-                  ),
-                ),
+            if (isAdmin)
+              ProfileDrawerAction(
+                icon: Icons.history,
+                label: context.l10n.export_activityLog,
+                // Full screen, like the other drawer items (Manage Assistants,
+                // View Facilities).
+                onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const ActivityLogScreen())),
               ),
+            ProfileDrawerAction(
+              icon: Icons.power_settings_new,
+              label: context.l10n.common_logout,
+              destructive: true,
+              onTap: () => _confirmLogout(context),
             ),
           ],
         );
