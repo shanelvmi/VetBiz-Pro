@@ -11741,6 +11741,78 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Only an admin can delete sales, services and products, or open Team Members, Subscription, Trash, Export Data and Business Hours.'**
   String get howToUse_assistant6;
+
+  /// FAQs: question.
+  ///
+  /// In en, this message translates to:
+  /// **'How do I start?'**
+  String get faq_startQ;
+
+  /// FAQs: answer. No trial length or price on purpose.
+  ///
+  /// In en, this message translates to:
+  /// **'Press Register on the sign-in page and choose \"I own or manage a facility\". Your facility starts with a trial; Settings, under Subscription, shows how long it lasts.'**
+  String get faq_startA;
+
+  /// FAQs: question.
+  ///
+  /// In en, this message translates to:
+  /// **'What happens when the trial ends?'**
+  String get faq_trialQ;
+
+  /// FAQs: answer, from section 3 of the Terms of Service.
+  ///
+  /// In en, this message translates to:
+  /// **'You need a subscription to keep using every feature. If it lapses, there is a short grace period; then your records stay visible, but new sales, services and similar entries are paused until you renew.'**
+  String get faq_trialA;
+
+  /// FAQs: question.
+  ///
+  /// In en, this message translates to:
+  /// **'How do I add my team?'**
+  String get faq_teamQ;
+
+  /// FAQs: answer.
+  ///
+  /// In en, this message translates to:
+  /// **'In Team Members press Invite Assistant and give the code to the person. They register with it, and you approve them in Team Members.'**
+  String get faq_teamA;
+
+  /// FAQs: question.
+  ///
+  /// In en, this message translates to:
+  /// **'What can an assistant see and do?'**
+  String get faq_assistantQ;
+
+  /// FAQs: answer.
+  ///
+  /// In en, this message translates to:
+  /// **'An assistant uses the screens in the sidebar for their facility. Only an admin can delete sales, services and products, or open Team Members, Subscription, Trash, Export Data and Business Hours.'**
+  String get faq_assistantA;
+
+  /// FAQs: question.
+  ///
+  /// In en, this message translates to:
+  /// **'How do I record a sale?'**
+  String get faq_saleQ;
+
+  /// FAQs: answer.
+  ///
+  /// In en, this message translates to:
+  /// **'Open Sales and press Record Sale. If a client pays less than the total, the rest is saved as their debt under Debtors.'**
+  String get faq_saleA;
+
+  /// FAQs: question.
+  ///
+  /// In en, this message translates to:
+  /// **'How do I record a service?'**
+  String get faq_serviceQ;
+
+  /// FAQs: answer.
+  ///
+  /// In en, this message translates to:
+  /// **'Open Services and press Record Visit.'**
+  String get faq_serviceA;
 }
 
 class _AppLocalizationsDelegate

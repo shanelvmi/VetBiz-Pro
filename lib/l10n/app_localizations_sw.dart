@@ -6963,4 +6963,45 @@ class AppLocalizationsSw extends AppLocalizations {
   @override
   String get howToUse_assistant6 =>
       'Msimamizi pekee ndiye anaweza kufuta mauzo, huduma na bidhaa, au kufungua Wafanyakazi, Usajili, Takataka, Hamisha Data na Saa za Biashara.';
+
+  @override
+  String get faq_startQ => 'Ninaanzaje?';
+
+  @override
+  String get faq_startA =>
+      'Bonyeza Jisajili kwenye ukurasa wa kuingia na uchague \"Ninamiliki au ninasimamia kituo\". Kituo chako kinaanza na kipindi cha majaribio; Mipangilio, chini ya Usajili, inaonyesha muda wake.';
+
+  @override
+  String get faq_trialQ => 'Nini kinatokea kipindi cha majaribio kikiisha?';
+
+  @override
+  String get faq_trialA =>
+      'Unahitaji usajili ili kuendelea kutumia kila kipengele. Usajili ukiisha, kuna muda mfupi wa nyongeza; kisha kumbukumbu zako zinaendelea kuonekana, lakini mauzo mapya, huduma na maingizo kama hayo yanasimamishwa hadi utakapolipia tena.';
+
+  @override
+  String get faq_teamQ => 'Ninaongezaje wafanyakazi wangu?';
+
+  @override
+  String get faq_teamA =>
+      'Katika Wafanyakazi bonyeza Mwalike Msaidizi na mpe mtu huyo msimbo. Anajisajili kwa msimbo huo, na wewe unamwidhinisha katika Wafanyakazi.';
+
+  @override
+  String get faq_assistantQ => 'Msaidizi anaweza kuona na kufanya nini?';
+
+  @override
+  String get faq_assistantA =>
+      'Msaidizi anatumia skrini zilizo kwenye menyu ya pembeni kwa kituo chake. Msimamizi pekee ndiye anaweza kufuta mauzo, huduma na bidhaa, au kufungua Wafanyakazi, Usajili, Takataka, Hamisha Data na Saa za Biashara.';
+
+  @override
+  String get faq_saleQ => 'Ninarekodije mauzo?';
+
+  @override
+  String get faq_saleA =>
+      'Fungua Mauzo na bonyeza Rekodi Mauzo. Mteja akilipa chini ya jumla, kiasi kilichobaki kinahifadhiwa kama deni lake chini ya Wadaiwa.';
+
+  @override
+  String get faq_serviceQ => 'Ninarekodije huduma?';
+
+  @override
+  String get faq_serviceA => 'Fungua Huduma na bonyeza Rekodi Ziara.';
 }

@@ -6921,4 +6921,45 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get howToUse_assistant6 =>
       'Only an admin can delete sales, services and products, or open Team Members, Subscription, Trash, Export Data and Business Hours.';
+
+  @override
+  String get faq_startQ => 'How do I start?';
+
+  @override
+  String get faq_startA =>
+      'Press Register on the sign-in page and choose \"I own or manage a facility\". Your facility starts with a trial; Settings, under Subscription, shows how long it lasts.';
+
+  @override
+  String get faq_trialQ => 'What happens when the trial ends?';
+
+  @override
+  String get faq_trialA =>
+      'You need a subscription to keep using every feature. If it lapses, there is a short grace period; then your records stay visible, but new sales, services and similar entries are paused until you renew.';
+
+  @override
+  String get faq_teamQ => 'How do I add my team?';
+
+  @override
+  String get faq_teamA =>
+      'In Team Members press Invite Assistant and give the code to the person. They register with it, and you approve them in Team Members.';
+
+  @override
+  String get faq_assistantQ => 'What can an assistant see and do?';
+
+  @override
+  String get faq_assistantA =>
+      'An assistant uses the screens in the sidebar for their facility. Only an admin can delete sales, services and products, or open Team Members, Subscription, Trash, Export Data and Business Hours.';
+
+  @override
+  String get faq_saleQ => 'How do I record a sale?';
+
+  @override
+  String get faq_saleA =>
+      'Open Sales and press Record Sale. If a client pays less than the total, the rest is saved as their debt under Debtors.';
+
+  @override
+  String get faq_serviceQ => 'How do I record a service?';
+
+  @override
+  String get faq_serviceA => 'Open Services and press Record Visit.';
 }
