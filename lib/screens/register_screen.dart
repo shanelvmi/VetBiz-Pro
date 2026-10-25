@@ -67,11 +67,12 @@ class RegisterScreen extends StatefulWidget {
 
 class _RegisterScreenState extends State<RegisterScreen> {
   // Late, so they reach Firebase only when first used: the screen can then
-  // be built in a widget test without a Firebase app.
-  late final AuthService _authService = AuthService();
+  // be built in a widget test without a Firebase app. A test may pass its
+  // own (RW2a); the app passes none and gets the real ones.
+  late final AuthService _authService = widget.authService ?? AuthService();
   // Checking an invite code, and everything else that decides who belongs to
   // which facility, is done by the server - see MembershipService.
-  late final MembershipService _membershipService = MembershipService();
+  late final MembershipService _membershipService = widget.membershipService ?? MembershipService();
   @visibleForTesting
   AuthService get authServiceInUse => _authService;
   @visibleForTesting

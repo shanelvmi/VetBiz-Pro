@@ -15,7 +15,7 @@ import 'package:vetbiz_pro/theme/app_theme.dart';
 // wizard tests of RW2b and RW2c can drive it without Firebase. With none
 // given the real services are used, exactly as before.
 // Written before the seams, skipped until they exist.
-const _skip = true;
+const _skip = false;
 
 class _FakeAuth implements AuthService {
   @override
@@ -69,7 +69,7 @@ void main() {
 
     await typeInviteCode(tester, 'ABC123');
     expect(membership.checked, ['ABC123']);
-    expect(find.text('Joining: Mwanga Agrovet'), findsOneWidget);
+    expect(find.text('Joining: Mwanga Agrovet (Agrovet)'), findsOneWidget);
   }, skip: _skip);
 
   testWidgets('none given: the real services, unchanged', (tester) async {
