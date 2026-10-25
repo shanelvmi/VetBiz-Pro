@@ -18,7 +18,7 @@ import 'helpers/wizard_harness.dart';
 // the new files take every colour from a role and every size from a named
 // constant (so the phone-app style can restyle them in one place).
 // Written before the widgets, skipped until they exist.
-const _skip = true;
+const _skip = false;
 
 void main() {
   const consent = 'I agree to the Terms of Service and the Privacy Policy.';
