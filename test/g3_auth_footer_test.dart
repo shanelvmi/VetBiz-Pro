@@ -15,8 +15,7 @@ import 'package:vetbiz_pro/widgets/auth_footer.dart';
 import 'helpers/help_dialog_rows.dart';
 
 // G3: the calm footer under the Login and Register cards. Written before the
-// widget, skipped until it exists.
-const _skip = true;
+// widget (39ff4b5).
 
 final _en = lookupAppLocalizations(const Locale('en'));
 
@@ -56,7 +55,7 @@ void main() {
   List<String> iconNames(WidgetTester tester) =>
       tester.widgetList<Tooltip>(find.ancestor(of: find.byType(FaIcon), matching: find.byType(Tooltip))).map((t) => t.message ?? '').toList();
 
-  group('AuthFooter', skip: _skip, () {
+  group('AuthFooter', () {
     testWidgets('wide: brand line, Support, Legal, copyright and version', (tester) async {
       await pump(tester, SupportContact.empty);
       for (final text in [
