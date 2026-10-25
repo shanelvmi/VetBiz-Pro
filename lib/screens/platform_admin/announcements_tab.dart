@@ -8,6 +8,7 @@ import '../../widgets/hover_elevate_card.dart';
 import '../../widgets/announcement_message.dart';
 import '../../data/collections.dart';
 import '../../data/fields.dart';
+import '../../data/support_contact_fields.dart';
 import '../../config/app_date_format.dart';
 import '../../theme/app_text.dart';
 import '../../theme/app_dimens.dart';
@@ -489,7 +490,7 @@ class _AnnouncementsTabState extends State<AnnouncementsTab> {
             children: [
               // The login background image control that sat beside this was
               // removed in G1: the login page is a flat theme colour now.
-              const _ContactDetailsCard(),
+              const ContactDetailsCard(),
               const Padding(
                 padding: EdgeInsets.fromLTRB(AppSpacing.s12, AppSpacing.s16, AppSpacing.s12, AppSpacing.s4),
                 child: Text('Announcements', style: TextStyle(fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f15)),
@@ -623,14 +624,18 @@ class _AnnouncementsTabState extends State<AnnouncementsTab> {
 /// blanked out and reloaded visibly (the reported "full screen
 /// blinking"). Isolated like this, saving only ever rebuilds this
 /// card.
-class _ContactDetailsCard extends StatefulWidget {
-  const _ContactDetailsCard();
+class ContactDetailsCard extends StatefulWidget {
+  const ContactDetailsCard({super.key, this.firestore});
+
+  /// The default instance in the app; a fake in tests.
+  final FirebaseFirestore? firestore;
 
   @override
-  State<_ContactDetailsCard> createState() => _ContactDetailsCardState();
+  State<ContactDetailsCard> createState() => _ContactDetailsCardState();
 }
 
-class _ContactDetailsCardState extends State<_ContactDetailsCard> {
+class _ContactDetailsCardState extends State<ContactDetailsCard> {
+  FirebaseFirestore get _db => widget.firestore ?? FirebaseFirestore.instance;
 
   // Loaded once on open (not a live StreamBuilder, since that would
   // fight with whatever the admin is actively typing), edited freely,
@@ -660,7 +665,7 @@ class _ContactDetailsCardState extends State<_ContactDetailsCard> {
 
   Future<void> _loadContactDetails() async {
     try {
-      final doc = await FirebaseFirestore.instance.collection(Collections.appConfig).doc('support_contact').get();
+      final doc = await _db.collection(Collections.appConfig).doc(SupportContactFields.docId).get();
       final data = doc.data();
       if (mounted && data != null) {
         _emailController.text = (data['email'] as String?) ?? '';
@@ -679,7 +684,7 @@ class _ContactDetailsCardState extends State<_ContactDetailsCard> {
   Future<void> _saveContactDetails() async {
     setState(() => _isSaving = true);
     try {
-      await FirebaseFirestore.instance.collection(Collections.appConfig).doc('support_contact').set({
+      await _db.collection(Collections.appConfig).doc(SupportContactFields.docId).set({
         'email': _emailController.text.trim(),
         'phone': _phoneController.text.trim(),
         'whatsapp': _whatsappController.text.trim(),
