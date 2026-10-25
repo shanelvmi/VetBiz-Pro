@@ -1,10 +1,7 @@
 import 'dart:async';
-import 'dart:typed_data';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
-import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -19,7 +16,6 @@ import '../../services/session_validity_service.dart';
 import '../../services/dashboard_summary_service.dart';
 import '../../services/sales_summary_service.dart';
 import '../../services/notification_feed.dart';
-import '../../utils/upload_size_check.dart';
 
 import '../../widgets/summary_card.dart';
 import '../../widgets/initials_avatar.dart';
@@ -56,7 +52,6 @@ import '../products/add_edit_product_screen.dart';
 import '../services/add_edit_service_screen.dart';
 import '../register_screen.dart';
 import '../../data/collections.dart';
-import '../../data/upload_content_types.dart';
 import '../../data/fields.dart';
 import '../../data/user_role.dart';
 import '../../data/user_status.dart';
@@ -321,9 +316,6 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
 
   final user = FirebaseAuth.instance.currentUser;
   late final userDoc = FirebaseFirestore.instance.collection(Collections.users).doc(user?.uid);
-
-  Uint8List? _profileBytes; // Profile picture in memory
-  final ImagePicker _picker = ImagePicker();
 
   String selectedFilter = 'Today';
 
@@ -982,34 +974,6 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
   String _capitalize(String s) {
     if (s.isEmpty) return s;
     return s[0].toUpperCase() + s.substring(1).toLowerCase();
-  }
-
-  // PICK & SAVE USER PROFILE
-  Future<void> pickProfileImage() async {
-    if (user == null) return;
-
-    final pickedFile = await _picker.pickImage(
-      source: ImageSource.gallery,
-      maxWidth: AppLimits.avatarImageMaxSide,
-      maxHeight: AppLimits.avatarImageMaxSide,
-      imageQuality: AppLimits.pickedImageQuality,
-    );
-    if (pickedFile == null) return;
-
-    final bytes = await pickedFile.readAsBytes();
-    if (!UploadSizeCheck.allow(bytes)) return;
-    setState(() => _profileBytes = bytes);
-
-    try {
-      final storageRef = FirebaseStorage.instance.ref().child('user_avatars/${user!.uid}.png');
-      await storageRef.putData(bytes, UploadContentTypes.png);
-      final downloadUrl = await storageRef.getDownloadURL();
-      await userDoc.update({'avatarUrl': downloadUrl});
-
-      AppFeedback.success(L10n.current.dashboard_avatarUpdated);
-    } catch (e, st) {
-      AppFeedback.error(L10n.current.dashboard_avatarSaveFailed, error: e, stackTrace: st);
-    }
   }
 
   void showConfirmationDialog({
@@ -2745,40 +2709,21 @@ Widget _buildDrawerContent() {
               padding: const EdgeInsets.all(AppSpacing.s16),
               children: [
                 // Avatar with grey border
+                // Display only: the photo is changed or removed in Edit Profile (G2).
                 Center(
-                  child: Stack(
-                    alignment: Alignment.bottomRight,
-                    children: [
-                      Container(
+                  child: Container(
                         padding: const EdgeInsets.all(AppSpacing.s2),
                         decoration: BoxDecoration(
                           color: context.colors.borderStrong,
                           shape: BoxShape.circle,
                         ),
-                        child: _profileBytes != null
-                            ? CircleAvatar(
-                                radius: 50, backgroundColor: context.colors.background, backgroundImage: MemoryImage(_profileBytes!))
-                            : InitialsAvatar(
+                    child: InitialsAvatar(
                                 avatarUrl: avatarUrl,
                                 name: data['fullName'] ?? '',
                                 size: 100,
                                 backgroundColor: context.colors.background,
                                 foregroundColor: context.colors.primary,
-                              ),
-                      ),
-                      Positioned(
-                        bottom: 0,
-                        right: 0,
-                        child: CircleAvatar(
-                          radius: 16,
-                          backgroundColor: context.colors.accent,
-                          child: IconButton(
-                            icon: Icon(Icons.camera_alt, size: AppIconSize.i16, color: context.colors.onPrimary),
-                            onPressed: pickProfileImage,
-                          ),
-                        ),
-                      ),
-                    ],
+                    ),
                   ),
                 ),
                 const SizedBox(height: AppSpacing.s12),
