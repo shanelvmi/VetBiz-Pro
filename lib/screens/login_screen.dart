@@ -307,105 +307,58 @@ class _LoginScreenState extends State<LoginScreen> {
           end: Alignment.centerRight,
         ),
       ),
-      child: LayoutBuilder(
-        builder: (context, constraints) {
-          // Enough room for the subtitle plus everything else on one
-          // line without anything needing to shrink or shift - below
-          // this, the subtitle (the least critical piece here) is
-          // dropped instead, keeping the title, status pill, and
-          // settings icon exactly where they belong.
-          final isNarrow = constraints.maxWidth < AppBreakpoints.loginHeaderNarrow;
-
-          return SizedBox(
-            // Tall enough for the theme toggle's 48 px touch target.
-            height: kMinInteractiveDimension,
-            child: Stack(
-            children: [
-              // Left group - logo, title, subtitle. Positioned rather
-              // than Row's default left alignment, so both groups use
-              // the same explicit-coordinate mechanism.
-              Positioned(
-                left: 16,
-                top: 0,
-                bottom: 0,
-                right: 180, // leaves room for the right group so long titles don't run under it
-                child: Align(
-                  alignment: Alignment.centerLeft,
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Container(
-                        width: 44,
-                        height: 44,
-                        decoration: BoxDecoration(color: context.colors.onBrandSurface, shape: BoxShape.circle),
-                        alignment: Alignment.center,
-                        child: Text(AppInfo.logoMark, style: TextStyle(color: context.colors.brandSurface, fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f16)),
-                      ),
-                      const SizedBox(width: AppSpacing.s12),
-                      Flexible(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            // One line: the bar has a fixed height.
-                            Text(AppInfo.name,
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                                style: TextStyle(color: context.colors.onBrandSurface, fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f16)),
-                            if (!isNarrow)
-                              Text(context.l10n.login_tagline,
-                                  overflow: TextOverflow.ellipsis,
-                                  style: TextStyle(color: context.colors.onBrandSurface.withValues(alpha: AppAlpha.a70), fontSize: AppFontSize.f11_5)),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
+      child: SizedBox(
+        // Tall enough for the theme toggle's 48 px touch target.
+        height: kMinInteractiveDimension,
+        child: Stack(
+          children: [
+            // Left group - logo and title. Positioned rather than Row's
+            // default left alignment, so both groups use the same
+            // explicit-coordinate mechanism.
+            Positioned(
+              left: 16,
+              top: 0,
+              bottom: 0,
+              right: 180, // leaves room for the right group so long titles don't run under it
+              child: Align(
+                alignment: Alignment.centerLeft,
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Container(
+                      width: 44,
+                      height: 44,
+                      decoration: BoxDecoration(color: context.colors.onBrandSurface, shape: BoxShape.circle),
+                      alignment: Alignment.center,
+                      child: Text(AppInfo.logoMark, style: TextStyle(color: context.colors.brandSurface, fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f16)),
+                    ),
+                    const SizedBox(width: AppSpacing.s12),
+                    Flexible(
+                      // One line: the bar has a fixed height.
+                      child: Text(AppInfo.name,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(color: context.colors.onBrandSurface, fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f16)),
+                    ),
+                  ],
                 ),
               ),
-              // Right group - status pill and the Light/Dark toggle. Pinned directly
-              // to an explicit right coordinate (16px from the actual
-              // container edge) rather than pushed there by a Spacer
-              // inside a Row - a direct position, not a computed one.
-              Positioned(
-                right: 16,
-                top: 0,
-                bottom: 0,
-                child: Align(
-                  alignment: Alignment.centerRight,
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: AppSpacing.s12, vertical: AppSpacing.s6),
-                        decoration: BoxDecoration(
-                          color: context.colors.onBrandSurface.withValues(alpha: AppAlpha.a15),
-                          borderRadius: BorderRadius.circular(AppRadius.r20),
-                        ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Container(
-                              width: AppSizes.statusDot,
-                              height: AppSizes.statusDot,
-                              decoration: const BoxDecoration(color: Colors.greenAccent, shape: BoxShape.circle),
-                            ),
-                            const SizedBox(width: AppSpacing.s6),
-                            Text(context.l10n.login_systemOnline,
-                                style: TextStyle(color: context.colors.onBrandSurface, fontSize: AppFontSize.f12_5, fontWeight: AppFontWeight.semibold)),
-                          ],
-                        ),
-                      ),
-                      const SizedBox(width: AppSpacing.s10),
-                      const AuthThemeToggle(),
-                    ],
-                  ),
-                ),
-              ),
-            ],
             ),
-          );
-        },
+            // Right group - the Light/Dark toggle. Pinned directly
+            // to an explicit right coordinate (16px from the actual
+            // container edge) rather than pushed there by a Spacer
+            // inside a Row - a direct position, not a computed one.
+            const Positioned(
+              right: 16,
+              top: 0,
+              bottom: 0,
+              child: Align(
+                alignment: Alignment.centerRight,
+                child: AuthThemeToggle(),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

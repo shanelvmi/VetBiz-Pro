@@ -81,9 +81,6 @@ class AppBreakpoints {
   /// the overview grid drops to one column (overview_tab.dart:178).
   static const double smallPhone = 420;
 
-  /// The login header drops its subtitle (login_screen.dart:307).
-  static const double loginHeaderNarrow = 560;
-
   /// A summary card's own width (not the screen) below which it uses its
   /// smaller avatar and text (summary_card.dart:173).
   static const double summaryCardCompact = 160;
