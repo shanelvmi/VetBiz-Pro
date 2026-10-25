@@ -105,6 +105,8 @@ class AppColors extends ThemeExtension<AppColors> {
     required this.selectableCardInk,
     required this.infoChipLabel,
     required this.chart4ChipLabel,
+    required this.authFooterFill,
+    required this.authFooterMutedText,
   });
 
   // Brand: the theme's own three colours (the roles derived from them are
@@ -344,6 +346,15 @@ class AppColors extends ThemeExtension<AppColors> {
   final Color infoChipLabel;
   final Color chart4ChipLabel;
 
+  // The full-width band under the signed-out cards (auth_footer.dart, G4).
+  // Light = quickActionTintPrimary's rule (a very soft tint of the primary);
+  // dark = surface. authFooterMutedText: the footer's quiet text and icons
+  // on it. textMuted is lifted for background and measures 3.94 to 4.09 on
+  // the light band, so light uses textMuted's own rule against the band
+  // (the lightest grey from grey 600 down that reaches 4.5); dark = textMuted.
+  final Color authFooterFill;
+  final Color authFooterMutedText;
+
   /// The roles for a colour theme. In Pasture every value is the exact
   /// legacy shade. The brand-linked roles and textMuted are derived from the
   /// theme (theme_derivation.dart, docs/design/themes.md sections 4 and 7);
@@ -443,6 +454,8 @@ class AppColors extends ThemeExtension<AppColors> {
         selectableCardInk: theme.primary,
         infoChipLabel: Colors.blue,
         chart4ChipLabel: Colors.purple,
+        authFooterFill: ThemeDerivation.quickActionTintPrimary(theme.primary),
+        authFooterMutedText: ThemeDerivation.textMuted(ThemeDerivation.quickActionTintPrimary(theme.primary)),
       );
   }
 
@@ -543,6 +556,8 @@ class AppColors extends ThemeExtension<AppColors> {
       selectableCardInk: DarkDerivation.selectableCardInk(theme),
       infoChipLabel: DarkDerivation.chipLabel(mark(light.info), theme.primary),
       chart4ChipLabel: DarkDerivation.chipLabel(mark(light.chart4), theme.primary),
+      authFooterFill: surface,
+      authFooterMutedText: DarkDerivation.lift(Colors.grey.shade500, 4.5, surfaceMuted),
     );
   }
 
@@ -635,6 +650,8 @@ class AppColors extends ThemeExtension<AppColors> {
     Color? selectableCardInk,
     Color? infoChipLabel,
     Color? chart4ChipLabel,
+    Color? authFooterFill,
+    Color? authFooterMutedText,
   }) =>
       AppColors(
         primary: primary ?? this.primary,
@@ -724,6 +741,8 @@ class AppColors extends ThemeExtension<AppColors> {
         selectableCardInk: selectableCardInk ?? this.selectableCardInk,
         infoChipLabel: infoChipLabel ?? this.infoChipLabel,
         chart4ChipLabel: chart4ChipLabel ?? this.chart4ChipLabel,
+        authFooterFill: authFooterFill ?? this.authFooterFill,
+        authFooterMutedText: authFooterMutedText ?? this.authFooterMutedText,
       );
 
   @override
@@ -818,6 +837,8 @@ class AppColors extends ThemeExtension<AppColors> {
       selectableCardInk: l(selectableCardInk, other.selectableCardInk),
       infoChipLabel: l(infoChipLabel, other.infoChipLabel),
       chart4ChipLabel: l(chart4ChipLabel, other.chart4ChipLabel),
+      authFooterFill: l(authFooterFill, other.authFooterFill),
+      authFooterMutedText: l(authFooterMutedText, other.authFooterMutedText),
     );
   }
 }
