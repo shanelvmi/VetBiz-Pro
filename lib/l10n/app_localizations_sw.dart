@@ -4917,13 +4917,6 @@ class AppLocalizationsSw extends AppLocalizations {
   String get common_editProfile => 'Hariri Wasifu';
 
   @override
-  String get login_tagline =>
-      'Ufuatiliaji Mahiri wa Biashara na Huduma za Mifugo';
-
-  @override
-  String get login_systemOnline => 'Mfumo Uko Hewani';
-
-  @override
   String get auth_switchToDarkMode => 'Badilisha kwenda Hali ya Giza';
 
   @override
@@ -4933,12 +4926,6 @@ class AppLocalizationsSw extends AppLocalizations {
   String login_copyright(String appName) {
     return '© 2026 $appName. Haki zote zimehifadhiwa.';
   }
-
-  @override
-  String get login_welcomeTo => 'Karibu';
-
-  @override
-  String get login_stayUpdated => 'Pata habari na matangazo mapya kila wakati.';
 
   @override
   String get login_announcements => 'Matangazo';
@@ -4956,17 +4943,7 @@ class AppLocalizationsSw extends AppLocalizations {
   String get login_allCaughtUp => 'Umeshaona yote!';
 
   @override
-  String get login_trustTitle => 'Salama. Imara. Daima Mtandaoni.';
-
-  @override
-  String get login_trustBody =>
-      'Mshirika wako wa kuaminika katika afya ya mifugo na ukuaji wa biashara.';
-
-  @override
   String get login_welcomeBack => 'Karibu tena';
-
-  @override
-  String get login_logIntoFacility => 'Ingia kwenye kituo chako';
 
   @override
   String get login_emailHint => 'Weka barua pepe yako';

@@ -4889,12 +4889,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get common_editProfile => 'Edit Profile';
 
   @override
-  String get login_tagline => 'Smart Business & Vet Services Monitor';
-
-  @override
-  String get login_systemOnline => 'System Online';
-
-  @override
   String get auth_switchToDarkMode => 'Switch to dark mode';
 
   @override
@@ -4904,13 +4898,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String login_copyright(String appName) {
     return '© 2026 $appName. All rights reserved.';
   }
-
-  @override
-  String get login_welcomeTo => 'Welcome to';
-
-  @override
-  String get login_stayUpdated =>
-      'Stay updated with the latest news and announcements.';
 
   @override
   String get login_announcements => 'Announcements';
@@ -4928,17 +4915,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get login_allCaughtUp => 'You\'re all caught up!';
 
   @override
-  String get login_trustTitle => 'Secure. Reliable. Always Connected.';
-
-  @override
-  String get login_trustBody =>
-      'Your trusted partner in animal health and business growth.';
-
-  @override
   String get login_welcomeBack => 'Welcome back';
-
-  @override
-  String get login_logIntoFacility => 'Sign in to your facility';
 
   @override
   String get login_emailHint => 'Enter your email';

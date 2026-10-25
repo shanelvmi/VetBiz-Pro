@@ -8436,18 +8436,6 @@ abstract class AppLocalizations {
   /// **'Edit Profile'**
   String get common_editProfile;
 
-  /// Login top bar, under the app title.
-  ///
-  /// In en, this message translates to:
-  /// **'Smart Business & Vet Services Monitor'**
-  String get login_tagline;
-
-  /// Login top bar status pill.
-  ///
-  /// In en, this message translates to:
-  /// **'System Online'**
-  String get login_systemOnline;
-
   /// Tooltip of the moon button in the Login and Register top bar: it turns Dark Mode on.
   ///
   /// In en, this message translates to:
@@ -8465,18 +8453,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'© 2026 {appName}. All rights reserved.'**
   String login_copyright(String appName);
-
-  /// Login welcome card, above the app name.
-  ///
-  /// In en, this message translates to:
-  /// **'Welcome to'**
-  String get login_welcomeTo;
-
-  /// Login welcome card.
-  ///
-  /// In en, this message translates to:
-  /// **'Stay updated with the latest news and announcements.'**
-  String get login_stayUpdated;
 
   /// Login announcements card title.
   ///
@@ -8508,29 +8484,11 @@ abstract class AppLocalizations {
   /// **'You\'re all caught up!'**
   String get login_allCaughtUp;
 
-  /// Login trust footer.
-  ///
-  /// In en, this message translates to:
-  /// **'Secure. Reliable. Always Connected.'**
-  String get login_trustTitle;
-
-  /// Login trust footer.
-  ///
-  /// In en, this message translates to:
-  /// **'Your trusted partner in animal health and business growth.'**
-  String get login_trustBody;
-
   /// Login form title.
   ///
   /// In en, this message translates to:
   /// **'Welcome back'**
   String get login_welcomeBack;
-
-  /// Login form subtitle.
-  ///
-  /// In en, this message translates to:
-  /// **'Sign in to your facility'**
-  String get login_logIntoFacility;
 
   /// Login email field hint.
   ///
