@@ -4895,6 +4895,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get login_systemOnline => 'System Online';
 
   @override
+  String get auth_switchToDarkMode => 'Switch to dark mode';
+
+  @override
+  String get auth_switchToLightMode => 'Switch to light mode';
+
+  @override
   String login_copyright(String appName) {
     return '© 2026 $appName. All rights reserved.';
   }

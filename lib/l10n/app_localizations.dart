@@ -8448,6 +8448,18 @@ abstract class AppLocalizations {
   /// **'System Online'**
   String get login_systemOnline;
 
+  /// Tooltip of the moon button in the Login and Register top bar: it turns Dark Mode on.
+  ///
+  /// In en, this message translates to:
+  /// **'Switch to dark mode'**
+  String get auth_switchToDarkMode;
+
+  /// Tooltip of the sun button in the Login and Register top bar: it turns Dark Mode off (Light).
+  ///
+  /// In en, this message translates to:
+  /// **'Switch to light mode'**
+  String get auth_switchToLightMode;
+
   /// Login footer.
   ///
   /// In en, this message translates to:

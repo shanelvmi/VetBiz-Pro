@@ -4924,6 +4924,12 @@ class AppLocalizationsSw extends AppLocalizations {
   String get login_systemOnline => 'Mfumo Uko Hewani';
 
   @override
+  String get auth_switchToDarkMode => 'Badilisha kwenda Hali ya Giza';
+
+  @override
+  String get auth_switchToLightMode => 'Badilisha kwenda Hali ya Mwanga';
+
+  @override
   String login_copyright(String appName) {
     return '© 2026 $appName. Haki zote zimehifadhiwa.';
   }
