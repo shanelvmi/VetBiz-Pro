@@ -11,7 +11,7 @@ import 'helpers/wizard_harness.dart';
 
 // RW2a (docs/design/register_wizard.md section 3): the option card and the
 // Back/Continue bar. Written before the widgets, skipped until they exist.
-const _skip = true;
+const _skip = false;
 
 void main() {
   Color textColor(WidgetTester tester, String text) =>
@@ -31,8 +31,9 @@ void main() {
       await pumpWizard(tester, WizardOptionCard(title: 'Short', selected: false, onTap: () => taps++));
       final rect = tester.getRect(find.byType(WizardOptionCard));
       expect(rect.height, greaterThanOrEqualTo(56));
-      await tester.tapAt(rect.topLeft + const Offset(3, 3));
-      await tester.tapAt(rect.bottomRight - const Offset(3, 3));
+      // Near its left and right edges (the rounded corners are clipped).
+      await tester.tapAt(rect.centerLeft + const Offset(3, 0));
+      await tester.tapAt(rect.centerRight - const Offset(3, 0));
       expect(taps, 2);
     }, skip: _skip);
 
