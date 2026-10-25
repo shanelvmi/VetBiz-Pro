@@ -6729,4 +6729,57 @@ class AppLocalizationsEn extends AppLocalizations {
   String update_howTo(String appName) {
     return 'On a computer, reload this page. On a phone, install the latest version of $appName.';
   }
+
+  @override
+  String wizard_stepOf(int current, int total) {
+    return 'Step $current of $total';
+  }
+
+  @override
+  String get wizard_back => 'Back';
+
+  @override
+  String register_stepAccountType(String appName) {
+    return 'How will you use $appName?';
+  }
+
+  @override
+  String get register_stepAccountTypeHint => 'Choose the one that fits you.';
+
+  @override
+  String get register_stepAboutYou => 'About you';
+
+  @override
+  String get register_stepAboutYouHint =>
+      'Tell us who you are and how to reach you.';
+
+  @override
+  String get register_stepFacilityHint =>
+      'Add each facility you run and choose its type.';
+
+  @override
+  String get register_stepInvite => 'Your invite code';
+
+  @override
+  String get register_stepSignIn => 'Sign-in details';
+
+  @override
+  String get register_stepSignInHint =>
+      'The email and password you will use to sign in.';
+
+  @override
+  String get register_stepReview => 'Check and create';
+
+  @override
+  String get register_stepReviewHint =>
+      'Check your details, then create your account.';
+
+  @override
+  String register_consent(String terms, String privacy) {
+    return 'I agree to the $terms and the $privacy.';
+  }
+
+  @override
+  String get register_consentRequired =>
+      'Tick the box to agree before you create your account.';
 }

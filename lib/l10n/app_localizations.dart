@@ -11429,6 +11429,90 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'On a computer, reload this page. On a phone, install the latest version of {appName}.'**
   String update_howTo(String appName);
+
+  /// Step-by-step forms (lib/widgets/wizard): the header at the left, above the progress bar.
+  ///
+  /// In en, this message translates to:
+  /// **'Step {current} of {total}'**
+  String wizard_stepOf(int current, int total);
+
+  /// Step-by-step forms: goes back one step. Continue is products_continue.
+  ///
+  /// In en, this message translates to:
+  /// **'Back'**
+  String get wizard_back;
+
+  /// Register wizard step 1 title (both flows); the two option cards are the role texts.
+  ///
+  /// In en, this message translates to:
+  /// **'How will you use {appName}?'**
+  String register_stepAccountType(String appName);
+
+  /// Register wizard step 1 subtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose the one that fits you.'**
+  String get register_stepAccountTypeHint;
+
+  /// Register wizard step 2 title (photo, title, name, phone).
+  ///
+  /// In en, this message translates to:
+  /// **'About you'**
+  String get register_stepAboutYou;
+
+  /// Register wizard step 2 subtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Tell us who you are and how to reach you.'**
+  String get register_stepAboutYouHint;
+
+  /// Register wizard step 3 subtitle, owner. The title is profile_yourFacility.
+  ///
+  /// In en, this message translates to:
+  /// **'Add each facility you run and choose its type.'**
+  String get register_stepFacilityHint;
+
+  /// Register wizard step 3 title, assistant. The subtitle is register_askAdminForInvite.
+  ///
+  /// In en, this message translates to:
+  /// **'Your invite code'**
+  String get register_stepInvite;
+
+  /// Register wizard step 4 title (email, password, confirm).
+  ///
+  /// In en, this message translates to:
+  /// **'Sign-in details'**
+  String get register_stepSignIn;
+
+  /// Register wizard step 4 subtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'The email and password you will use to sign in.'**
+  String get register_stepSignInHint;
+
+  /// Register wizard step 5 title: the summary and Create account.
+  ///
+  /// In en, this message translates to:
+  /// **'Check and create'**
+  String get register_stepReview;
+
+  /// Register wizard step 5 subtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Check your details, then create your account.'**
+  String get register_stepReviewHint;
+
+  /// Register wizard step 5, the required checkbox (RW1 answer 1). terms is common_termsOfService and privacy is common_privacyPolicy; both show as links.
+  ///
+  /// In en, this message translates to:
+  /// **'I agree to the {terms} and the {privacy}.'**
+  String register_consent(String terms, String privacy);
+
+  /// Register wizard step 5: under the checkbox when Create account is pressed unticked.
+  ///
+  /// In en, this message translates to:
+  /// **'Tick the box to agree before you create your account.'**
+  String get register_consentRequired;
 }
 
 class _AppLocalizationsDelegate

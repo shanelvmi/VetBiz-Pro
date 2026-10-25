@@ -6770,4 +6770,57 @@ class AppLocalizationsSw extends AppLocalizations {
   String update_howTo(String appName) {
     return 'Kwenye kompyuta, pakia upya ukurasa huu. Kwenye simu, sakinisha toleo jipya zaidi la $appName.';
   }
+
+  @override
+  String wizard_stepOf(int current, int total) {
+    return 'Hatua $current kati ya $total';
+  }
+
+  @override
+  String get wizard_back => 'Rudi';
+
+  @override
+  String register_stepAccountType(String appName) {
+    return 'Utatumiaje $appName?';
+  }
+
+  @override
+  String get register_stepAccountTypeHint => 'Chagua kinachokufaa.';
+
+  @override
+  String get register_stepAboutYou => 'Kuhusu wewe';
+
+  @override
+  String get register_stepAboutYouHint =>
+      'Tuambie wewe ni nani na jinsi ya kukupata.';
+
+  @override
+  String get register_stepFacilityHint =>
+      'Ongeza kila kituo unachosimamia na uchague aina yake.';
+
+  @override
+  String get register_stepInvite => 'Msimbo wako wa mwaliko';
+
+  @override
+  String get register_stepSignIn => 'Taarifa za kuingia';
+
+  @override
+  String get register_stepSignInHint =>
+      'Barua pepe na nenosiri utakalotumia kuingia.';
+
+  @override
+  String get register_stepReview => 'Kagua na ufungue';
+
+  @override
+  String get register_stepReviewHint =>
+      'Kagua taarifa zako, kisha fungua akaunti yako.';
+
+  @override
+  String register_consent(String terms, String privacy) {
+    return 'Ninakubali $terms na $privacy.';
+  }
+
+  @override
+  String get register_consentRequired =>
+      'Weka alama kwenye kisanduku ili ukubali kabla ya kufungua akaunti yako.';
 }
