@@ -5969,6 +5969,68 @@ class AppLocalizationsEn extends AppLocalizations {
   String get notifications_catUpdate => 'Update';
 
   @override
+  String get notifications_markAsRead => 'Mark as read';
+
+  @override
+  String get notifications_markAsUnread => 'Mark as unread';
+
+  @override
+  String get notifications_removeReadOnes => 'Remove read ones';
+
+  @override
+  String get notifications_removeSelected => 'Remove selected';
+
+  @override
+  String get notifications_select => 'Select';
+
+  @override
+  String get notifications_removedOne => 'Notification removed';
+
+  @override
+  String notifications_removedCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count notifications removed',
+      one: '1 notification removed',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String notifications_removeReadConfirm(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Remove $count read notifications? Only you stop seeing them.',
+      one: 'Remove 1 read notification? Only you stop seeing it.',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get notifications_reasonUntilRenewed =>
+      'Stays until the subscription is renewed';
+
+  @override
+  String get notifications_reasonUntilTrialEnds =>
+      'Stays until the free trial ends';
+
+  @override
+  String get notifications_reasonUntilDecided =>
+      'Stays until the request is approved or rejected';
+
+  @override
+  String get notifications_reasonUntilNewClaim =>
+      'Stays until a new payment is submitted';
+
+  @override
+  String get notifications_loadOlder => 'Load older';
+
+  @override
+  String get notifications_updateFailed => 'Couldn\'t update the notifications';
+
+  @override
   String get selectFacility_slowLoad =>
       'This is taking longer than expected. Check your connection and try again.';
 

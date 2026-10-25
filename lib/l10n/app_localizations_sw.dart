@@ -6002,6 +6002,68 @@ class AppLocalizationsSw extends AppLocalizations {
   String get notifications_catUpdate => 'Taarifa';
 
   @override
+  String get notifications_markAsRead => 'Weka kama imesomwa';
+
+  @override
+  String get notifications_markAsUnread => 'Weka kama haijasomwa';
+
+  @override
+  String get notifications_removeReadOnes => 'Ondoa zilizosomwa';
+
+  @override
+  String get notifications_removeSelected => 'Ondoa zilizochaguliwa';
+
+  @override
+  String get notifications_select => 'Chagua';
+
+  @override
+  String get notifications_removedOne => 'Arifa imeondolewa';
+
+  @override
+  String notifications_removedCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Arifa $count zimeondolewa',
+      one: 'Arifa 1 imeondolewa',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String notifications_removeReadConfirm(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Ondoa arifa $count zilizosomwa? Ni wewe tu utaacha kuziona.',
+      one: 'Ondoa arifa 1 iliyosomwa? Ni wewe tu utaacha kuiona.',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get notifications_reasonUntilRenewed =>
+      'Inabaki hadi usajili utakaposasishwa';
+
+  @override
+  String get notifications_reasonUntilTrialEnds =>
+      'Inabaki hadi majaribio bure yaishe';
+
+  @override
+  String get notifications_reasonUntilDecided =>
+      'Inabaki hadi ombi likubaliwe au likataliwe';
+
+  @override
+  String get notifications_reasonUntilNewClaim =>
+      'Inabaki hadi malipo mapya yatumwe';
+
+  @override
+  String get notifications_loadOlder => 'Pakia za zamani zaidi';
+
+  @override
+  String get notifications_updateFailed => 'Imeshindikana kusasisha arifa';
+
+  @override
   String get selectFacility_slowLoad =>
       'Hii inachukua muda mrefu kuliko kawaida. Angalia muunganisho wako kisha ujaribu tena.';
 

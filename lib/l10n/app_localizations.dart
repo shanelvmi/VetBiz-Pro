@@ -10224,6 +10224,90 @@ abstract class AppLocalizations {
   /// **'Update'**
   String get notifications_catUpdate;
 
+  /// A notification's more menu (and swipe right): mark it read for me.
+  ///
+  /// In en, this message translates to:
+  /// **'Mark as read'**
+  String get notifications_markAsRead;
+
+  /// A notification's more menu (and swipe right): mark it unread again for me.
+  ///
+  /// In en, this message translates to:
+  /// **'Mark as unread'**
+  String get notifications_markAsUnread;
+
+  /// Notifications header: remove my read notifications that can be removed (never the ones that stay until resolved).
+  ///
+  /// In en, this message translates to:
+  /// **'Remove read ones'**
+  String get notifications_removeReadOnes;
+
+  /// Notifications selection mode: remove the ticked notifications for me.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove selected'**
+  String get notifications_removeSelected;
+
+  /// Notifications screen: start selection mode (tick boxes on the rows).
+  ///
+  /// In en, this message translates to:
+  /// **'Select'**
+  String get notifications_select;
+
+  /// Toast after removing one notification, with Undo.
+  ///
+  /// In en, this message translates to:
+  /// **'Notification removed'**
+  String get notifications_removedOne;
+
+  /// Toast after removing several notifications, with Undo.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 notification removed} other{{count} notifications removed}}'**
+  String notifications_removedCount(int count);
+
+  /// Confirmation before Remove read ones. Removal is per person: the others still see them.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{Remove 1 read notification? Only you stop seeing it.} other{Remove {count} read notifications? Only you stop seeing them.}}'**
+  String notifications_removeReadConfirm(int count);
+
+  /// More menu of the subscription notice, in place of Remove (it cannot be removed).
+  ///
+  /// In en, this message translates to:
+  /// **'Stays until the subscription is renewed'**
+  String get notifications_reasonUntilRenewed;
+
+  /// More menu of the free trial row, in place of Remove.
+  ///
+  /// In en, this message translates to:
+  /// **'Stays until the free trial ends'**
+  String get notifications_reasonUntilTrialEnds;
+
+  /// More menu of an assistant waiting for approval, in place of Remove.
+  ///
+  /// In en, this message translates to:
+  /// **'Stays until the request is approved or rejected'**
+  String get notifications_reasonUntilDecided;
+
+  /// More menu of a rejected subscription payment, in place of Remove.
+  ///
+  /// In en, this message translates to:
+  /// **'Stays until a new payment is submitted'**
+  String get notifications_reasonUntilNewClaim;
+
+  /// Notifications screen: load the next older notifications.
+  ///
+  /// In en, this message translates to:
+  /// **'Load older'**
+  String get notifications_loadOlder;
+
+  /// Error toast when marking read or unread, removing or Undo failed.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t update the notifications'**
+  String get notifications_updateFailed;
+
   /// Select Facility screen: loading the facilities timed out.
   ///
   /// In en, this message translates to:
