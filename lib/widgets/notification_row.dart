@@ -32,7 +32,16 @@ String relativeTime(DateTime? dt) {
 class NotificationRow extends StatelessWidget {
   final FacilityNotification notification;
 
-  const NotificationRow({super.key, required this.notification});
+  /// Read for the person looking (NOTIF-2c): an unread title is bold.
+  final bool isRead;
+
+  /// Tapping the row (marks it read for me).
+  final VoidCallback? onTap;
+
+  /// The more menu, after the time.
+  final Widget? trailing;
+
+  const NotificationRow({super.key, required this.notification, this.isRead = false, this.onTap, this.trailing});
 
   @override
   Widget build(BuildContext context) {
@@ -41,52 +50,75 @@ class NotificationRow extends StatelessWidget {
 
     return Container(
       margin: const EdgeInsets.only(bottom: AppSpacing.s8),
+      clipBehavior: Clip.antiAlias,
       decoration: BoxDecoration(
         color: context.colors.surface,
         borderRadius: BorderRadius.circular(AppRadius.r10),
         boxShadow: [
           BoxShadow(
-              color: context.colors.shadow.withValues(alpha: AppAlpha.a05),
-              blurRadius: 6,
-              offset: const Offset(0, 2)),
+            color: context.colors.shadow.withValues(alpha: AppAlpha.a05),
+            blurRadius: 6,
+            offset: const Offset(0, 2),
+          ),
         ],
       ),
-      child: Padding(
-        padding: const EdgeInsets.all(AppSpacing.s12),
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Container(
-              padding: const EdgeInsets.all(AppSpacing.s8),
-              decoration: BoxDecoration(color: color.withValues(alpha: AppAlpha.a10), shape: BoxShape.circle),
-              child: Icon(notification.type.icon, color: color, size: AppIconSize.i18),
+      child: Material(
+        type: MaterialType.transparency,
+        child: InkWell(
+          onTap: onTap,
+          child: Padding(
+            padding: EdgeInsets.fromLTRB(
+              AppSpacing.s12,
+              AppSpacing.s12,
+              trailing == null ? AppSpacing.s12 : AppSpacing.s4,
+              AppSpacing.s12,
             ),
-            const SizedBox(width: AppSpacing.s10),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(notification.title,
-                      style: const TextStyle(fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f13_5)),
-                  const SizedBox(height: AppSpacing.s2),
-                  Text(notification.message,
-                      style: TextStyle(color: context.colors.textSoft, fontSize: AppFontSize.f12_5)),
-                ],
-              ),
-            ),
-            const SizedBox(width: AppSpacing.s8),
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.end,
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(relativeTime(notification.createdAt),
-                    style: TextStyle(color: context.colors.textHint, fontSize: AppFontSize.f11)),
-                if (hasTarget) ...[
-                  const SizedBox(height: AppSpacing.s4),
-                  Icon(Icons.chevron_right, color: context.colors.textDisabled, size: AppIconSize.i18),
-                ],
+                Container(
+                  padding: const EdgeInsets.all(AppSpacing.s8),
+                  decoration: BoxDecoration(color: color.withValues(alpha: AppAlpha.a10), shape: BoxShape.circle),
+                  child: Icon(notification.type.icon, color: color, size: AppIconSize.i18),
+                ),
+                const SizedBox(width: AppSpacing.s10),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        notification.title,
+                        style: TextStyle(
+                          fontWeight: isRead ? AppFontWeight.semibold : AppFontWeight.bold,
+                          fontSize: AppFontSize.f13_5,
+                        ),
+                      ),
+                      const SizedBox(height: AppSpacing.s2),
+                      Text(
+                        notification.message,
+                        style: TextStyle(color: context.colors.textSoft, fontSize: AppFontSize.f12_5),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: AppSpacing.s8),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
+                    Text(
+                      relativeTime(notification.createdAt),
+                      style: TextStyle(color: context.colors.textHint, fontSize: AppFontSize.f11),
+                    ),
+                    if (hasTarget) ...[
+                      const SizedBox(height: AppSpacing.s4),
+                      Icon(Icons.chevron_right, color: context.colors.textDisabled, size: AppIconSize.i18),
+                    ],
+                  ],
+                ),
+                if (trailing != null) trailing!,
               ],
             ),
-          ],
+          ),
         ),
       ),
     );
