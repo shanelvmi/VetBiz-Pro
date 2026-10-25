@@ -2,17 +2,13 @@ import 'dart:typed_data';
 import 'dart:async';
 import 'package:flutter/material.dart';
 import '../utils/sentence_capitalization_formatter.dart';
-import 'package:image_picker/image_picker.dart';
-import 'package:firebase_storage/firebase_storage.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:cloud_functions/cloud_functions.dart';
 import '../services/auth_service.dart';
 import '../services/membership_service.dart';
 import '../utils/facility_activation.dart';
-import '../utils/upload_size_check.dart';
 import '../services/facility_codes.dart';
-import '../config/app_limits.dart';
 import '../utils/facility_code_generator.dart';
 import '../constants/facility_types.dart';
 import '../utils/facility_limit_helper.dart';
@@ -21,10 +17,11 @@ import 'legal/privacy_policy_screen.dart';
 import 'legal/terms_of_service_screen.dart';
 import '../widgets/auth_background.dart';
 import '../widgets/auth_card.dart';
+import '../widgets/profile/profile_photo_editor.dart';
+import '../services/profile_photo_service.dart';
 import '../widgets/auth_theme_toggle.dart';
 import '../services/role_change_service.dart';
 import '../data/collections.dart';
-import '../data/upload_content_types.dart';
 import '../data/fields.dart';
 import '../data/user_role.dart';
 import '../config/app_timeouts.dart';
@@ -152,6 +149,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
   // UI
   Uint8List? _imageBytes;
   String? avatarUrl;
+  // A photo save or removal is running (Edit Profile).
+  bool _photoBusy = false;
+  late final ProfilePhotoService _photos = ProfilePhotoService();
   String? error;
 
   // Facilities
@@ -288,29 +288,71 @@ class _RegisterScreenState extends State<RegisterScreen> {
     }
   }
 
+  // Change photo. pickPhoto scales it down and runs the size check, so a
+  // photo refused there is never uploaded. Signing up: the photo waits for
+  // the account and is uploaded once it exists. Edit Profile: it is saved
+  // at once, so the top bar and the drawer show it straight away.
   Future<void> pickImage() async {
-    final picker = ImagePicker();
-    final file = await picker.pickImage(
-      source: ImageSource.gallery,
-      maxWidth: AppLimits.avatarImageMaxSide,
-      maxHeight: AppLimits.avatarImageMaxSide,
-      imageQuality: AppLimits.pickedImageQuality,
-    );
-    if (file != null) {
-      final bytes = await file.readAsBytes();
-      // Both avatar uploads (uploadImage, AuthService) send _imageBytes,
-      // so a photo refused here is never uploaded.
-      if (!UploadSizeCheck.allow(bytes)) return;
+    final bytes = await _photos.pickPhoto();
+    if (bytes == null || !mounted) return;
+    if (!widget.isUpdating) {
+      setState(() => _imageBytes = bytes);
+      return;
+    }
+    final uid = _authService.getCurrentUser()?.uid;
+    if (uid == null) return;
+    setState(() {
       _imageBytes = bytes;
-      setState(() {});
+      _photoBusy = true;
+    });
+    try {
+      avatarUrl = await _photos.savePhoto(uid, bytes);
+      AppFeedback.success(L10n.current.dashboard_avatarUpdated);
+    } catch (e, st) {
+      _imageBytes = null; // show the saved photo again
+      AppFeedback.error(L10n.current.dashboard_avatarSaveFailed, error: e, stackTrace: st);
+    } finally {
+      if (mounted) setState(() => _photoBusy = false);
     }
   }
 
-  Future<String?> uploadImage(String uid) async {
-    if (_imageBytes == null) return avatarUrl;
-    final ref = FirebaseStorage.instance.ref().child('avatars/$uid.jpg');
-    await ref.putData(_imageBytes!, UploadContentTypes.jpeg);
-    return await ref.getDownloadURL();
+  // Remove photo. Signing up: just forget the picked photo. Edit Profile:
+  // after a confirmation, both stored files go and avatarUrl is cleared,
+  // so the initials show everywhere at once.
+  Future<void> _removePhoto() async {
+    if (!widget.isUpdating) {
+      setState(() => _imageBytes = null);
+      return;
+    }
+    final uid = _authService.getCurrentUser()?.uid;
+    if (uid == null) return;
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text(ctx.l10n.profile_removePhotoTitle),
+        content: Text(ctx.l10n.profile_removePhotoBody),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx, false), child: Text(ctx.l10n.common_cancel)),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            style: TextButton.styleFrom(foregroundColor: ctx.colors.dangerStrong),
+            child: Text(ctx.l10n.common_remove),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true || !mounted) return;
+    setState(() => _photoBusy = true);
+    try {
+      await _photos.removePhoto(uid);
+      _imageBytes = null;
+      avatarUrl = null;
+      AppFeedback.success(L10n.current.profile_photoRemoved);
+    } catch (e, st) {
+      AppFeedback.error(L10n.current.profile_photoRemoveFailed, error: e, stackTrace: st);
+    } finally {
+      if (mounted) setState(() => _photoBusy = false);
+    }
   }
 
   bool _isAddingFacility = false;
@@ -412,17 +454,15 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
     // ---------------- Updating User ----------------
     if (widget.isUpdating && uid != null) {
-      final imageUrl = await uploadImage(uid);
-
-      // Only what a person may change about themselves: their name, phone and
-      // photo. Role, status and which facilities they belong to are not theirs
+      // Only what a person may change about themselves: their name and
+      // phone (the photo is saved or removed by its own buttons, at once).
+      // Role, status and which facilities they belong to are not theirs
       // to write - they're set by the server (and the security rules refuse
       // them from here) - so they're not sent, which also means this screen
       // can no longer overwrite them with stale data.
       final Map<String, dynamic> updateData = {
         'fullName': fullName,
         'phone': phone,
-        'avatarUrl': imageUrl,
       };
       await FirebaseFirestore.instance.collection(Collections.users).doc(uid).update(updateData);
       if (mounted) {
@@ -456,8 +496,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
       // upload is noted but never fails the registration.
       if (_imageBytes != null && uid != null) {
         try {
-          final imageUrl = await uploadImage(uid);
-          await FirebaseFirestore.instance.collection(Collections.users).doc(uid).update({'avatarUrl': imageUrl});
+          await _photos.savePhoto(uid, _imageBytes!);
         } catch (e) {
           debugPrint('Could not save the profile photo: $e');
         }
@@ -1553,59 +1592,16 @@ class _RegisterScreenState extends State<RegisterScreen> {
     );
   }
 
+  // The shared photo part (lib/widgets/profile): Change photo, and Remove
+  // photo when there is one.
   Widget _buildAvatarPicker() {
-    final hasUploaded = avatarUrl != null && avatarUrl!.isNotEmpty;
-    final hasImage = _imageBytes != null || hasUploaded;
-
-    return MouseRegion(
-      cursor: SystemMouseCursors.click,
-      child: GestureDetector(
-        onTap: pickImage,
-        child: Row(
-          children: [
-            Stack(
-              clipBehavior: Clip.none,
-              children: [
-                CircleAvatar(
-                  radius: 34,
-                  backgroundColor: context.colors.brandTealGlow.withValues(alpha: AppAlpha.a30),
-                  backgroundImage: _imageBytes != null
-                      ? MemoryImage(_imageBytes!)
-                      : (hasUploaded ? NetworkImage(avatarUrl!) as ImageProvider : null),
-                  child: hasImage ? null : Icon(Icons.person_outline, size: AppIconSize.i32, color: context.colors.primary),
-                ),
-                Positioned(
-                  right: -2,
-                  bottom: -2,
-                  child: Container(
-                    padding: const EdgeInsets.all(AppSpacing.s6),
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      color: context.colors.primary,
-                      border: Border.all(color: context.colors.surface, width: 2),
-                    ),
-                    child: Icon(Icons.camera_alt, size: AppIconSize.i14, color: context.colors.onPrimary),
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(width: AppSpacing.s16),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(context.l10n.register_profilePhoto, style: const TextStyle(fontSize: AppFontSize.f14, fontWeight: AppFontWeight.semibold)),
-                  const SizedBox(height: AppSpacing.s2),
-                  Text(
-                    hasImage ? context.l10n.register_tapToChangePhoto : context.l10n.register_tapToAddPhoto,
-                    style: TextStyle(fontSize: AppFontSize.f12_5, color: context.colors.textMuted),
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
-      ),
+    return ProfilePhotoEditor(
+      avatarUrl: avatarUrl,
+      previewBytes: _imageBytes,
+      name: nameController.text,
+      onChange: pickImage,
+      onRemove: _removePhoto,
+      busy: _photoBusy,
     );
   }
 

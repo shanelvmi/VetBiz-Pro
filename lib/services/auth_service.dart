@@ -7,9 +7,9 @@ import 'dart:typed_data';
 import 'package:firebase_storage/firebase_storage.dart';
 
 import 'membership_service.dart';
+import 'profile_photo_service.dart';
 import '../l10n/l10n.dart';
 import '../data/collections.dart';
-import '../data/upload_content_types.dart';
 import '../data/fields.dart';
 import '../data/user_status.dart';
 
@@ -164,9 +164,10 @@ class AuthService {
       var avatarUrl = '';
       if (avatarBytes != null) {
         try {
-          final ref = FirebaseStorage.instanceFor(app: secondaryApp).ref().child('avatars/${cred.user!.uid}.jpg');
-          await ref.putData(avatarBytes, UploadContentTypes.jpeg);
-          avatarUrl = await ref.getDownloadURL();
+          // As the new account (the temporary app's Storage), at the one
+          // photo location.
+          avatarUrl = await ProfilePhotoService(store: FirebasePhotoStore(FirebaseStorage.instanceFor(app: secondaryApp)))
+              .uploadPhoto(cred.user!.uid, avatarBytes);
         } catch (_) {
           // The photo is optional - registering without it beats failing here.
         }

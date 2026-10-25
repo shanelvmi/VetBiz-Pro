@@ -84,10 +84,10 @@ void main() {
       final checks = 'UploadSizeCheck.allow('.allMatches(source).length;
       if (checks < picks) problems.add('${file.path}: $picks pickImage, $checks size checks');
     }
-    // register avatar, two facility logos, business logo, payment proof,
-    // product image, ProfilePhotoService (the login poster went in G1, the
-    // dashboard avatar in G2; the register one goes next).
-    expect(found, 7);
+    // two facility logos, business logo, payment proof, product image,
+    // ProfilePhotoService (every profile photo; the login poster went in G1,
+    // the dashboard and register avatar pickers in G2).
+    expect(found, 6);
     expect(problems, isEmpty);
   });
 }

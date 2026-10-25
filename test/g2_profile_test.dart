@@ -22,7 +22,6 @@ import 'package:vetbiz_pro/widgets/profile/profile_photo_editor.dart';
 // role wider), the drawer (no camera, compact rows, no overflow), the
 // Edit Profile photo part, and initials when there is no photo.
 
-const _untilG2 = 'G2: until the implementation';
 
 class _FakeStore implements PhotoStore {
   final files = <String>{};
@@ -253,5 +252,5 @@ void main() {
         expect(src.contains('.pickImage('), isFalse, reason: '$path picks a photo itself');
       }
     });
-  }, skip: _untilG2);
+  });
 }
