@@ -6892,4 +6892,75 @@ class AppLocalizationsSw extends AppLocalizations {
 
   @override
   String get about_questions => 'Una maswali?';
+
+  @override
+  String get howToUse_ownerTitle => 'Kama unaendesha kituo (Msimamizi)';
+
+  @override
+  String get howToUse_owner1 =>
+      'Kwenye ukurasa wa kuingia bonyeza Jisajili, chagua \"Ninamiliki au ninasimamia kituo\", ongeza jina na aina ya kituo chako, kisha bonyeza Fungua akaunti.';
+
+  @override
+  String get howToUse_owner2 =>
+      'Kituo chako kipya kinaanza na kipindi cha majaribio. Mipangilio, chini ya Usajili, inaonyesha muda wake na mipango inayofuata.';
+
+  @override
+  String get howToUse_owner3 =>
+      'Fungua Bidhaa na bonyeza Ongeza Bidhaa. Chagua Orodha ya Bidhaa za Kuuza ili uiuze sasa, au Stoo ili uihifadhi kwanza.';
+
+  @override
+  String get howToUse_owner4 =>
+      'Kuhamisha akiba kwenda rafuni, fungua Stoo na bonyeza Toa kwenye bidhaa.';
+
+  @override
+  String get howToUse_owner5 =>
+      'Fungua Mauzo na bonyeza Rekodi Mauzo. Mteja akilipa chini ya jumla, kiasi kilichobaki kinahifadhiwa kama deni lake.';
+
+  @override
+  String get howToUse_owner6 =>
+      'Fungua Huduma na bonyeza Rekodi Ziara ili kurekodi huduma.';
+
+  @override
+  String get howToUse_owner7 =>
+      'Mteja anapolipa deni, fungua Wadaiwa, tafuta deni hilo na bonyeza Rekodi Malipo.';
+
+  @override
+  String get howToUse_owner8 =>
+      'Kuongeza msaidizi, gusa jina lako kwenye upau wa juu, fungua Wafanyakazi na bonyeza Mwalike Msaidizi. Msimbo unafanya kazi kwa saa 48 au hadi utumike mara moja.';
+
+  @override
+  String get howToUse_owner9 =>
+      'Akishajisajili, fungua Wafanyakazi na bonyeza Idhinisha.';
+
+  @override
+  String get howToUse_owner10 =>
+      'Fungua Ripoti na bonyeza Tengeneza Ripoti ya Leo kupata ripoti ya siku.';
+
+  @override
+  String get howToUse_assistantTitle =>
+      'Kama unafanya kazi katika kituo (Msaidizi)';
+
+  @override
+  String get howToUse_assistant1 =>
+      'Muombe msimamizi wa kituo msimbo wa mwaliko.';
+
+  @override
+  String get howToUse_assistant2 =>
+      'Kwenye ukurasa wa kuingia bonyeza Jisajili, chagua \"Nina msimbo wa mwaliko\" na andika msimbo. Jina la kituo linaonekana msimbo ukiwa sahihi.';
+
+  @override
+  String get howToUse_assistant3 =>
+      'Jaza taarifa zako na bonyeza Fungua akaunti. Kisha akaunti yako inasubiri idhini ya msimamizi.';
+
+  @override
+  String get howToUse_assistant4 =>
+      'Hadi hapo, ukiingia utaona \"Akaunti yako bado haijawashwa.\"';
+
+  @override
+  String get howToUse_assistant5 =>
+      'Ukishaidhinishwa, unatumia skrini zilizo kwenye menyu ya pembeni kwa kituo hicho: rekodi mauzo na huduma, ongeza wateja na rekodi malipo.';
+
+  @override
+  String get howToUse_assistant6 =>
+      'Msimamizi pekee ndiye anaweza kufuta mauzo, huduma na bidhaa, au kufungua Wafanyakazi, Usajili, Takataka, Hamisha Data na Saa za Biashara.';
 }

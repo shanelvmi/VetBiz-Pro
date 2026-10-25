@@ -6851,4 +6851,74 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get about_questions => 'Questions?';
+
+  @override
+  String get howToUse_ownerTitle => 'If you run the facility (Admin)';
+
+  @override
+  String get howToUse_owner1 =>
+      'On the sign-in page press Register, choose \"I own or manage a facility\", add your facility\'s name and type, and press Create account.';
+
+  @override
+  String get howToUse_owner2 =>
+      'Your new facility starts with a trial. Settings, under Subscription, shows how long it lasts and the plans after it.';
+
+  @override
+  String get howToUse_owner3 =>
+      'Open Products and press Add Product. Choose Sellable Product Catalog to sell it now, or Stock Store to keep it in storage first.';
+
+  @override
+  String get howToUse_owner4 =>
+      'To move stock to the shelf, open Stock and press Release on the product.';
+
+  @override
+  String get howToUse_owner5 =>
+      'Open Sales and press Record Sale. If a client pays less than the total, the rest is saved as their debt.';
+
+  @override
+  String get howToUse_owner6 =>
+      'Open Services and press Record Visit to record a service.';
+
+  @override
+  String get howToUse_owner7 =>
+      'When a client pays a debt, open Debtors, find the debt and press Record Payment.';
+
+  @override
+  String get howToUse_owner8 =>
+      'To add an assistant, tap your name in the top bar, open Team Members and press Invite Assistant. The code works for 48 hours or until it is used once.';
+
+  @override
+  String get howToUse_owner9 =>
+      'When they have registered, open Team Members and press Approve.';
+
+  @override
+  String get howToUse_owner10 =>
+      'Open Reports and press Generate Today\'s Report for the day\'s report.';
+
+  @override
+  String get howToUse_assistantTitle => 'If you work in a facility (Assistant)';
+
+  @override
+  String get howToUse_assistant1 =>
+      'Ask the facility\'s admin for an invite code.';
+
+  @override
+  String get howToUse_assistant2 =>
+      'On the sign-in page press Register, choose \"I have an invite code\" and type the code. The facility\'s name appears when the code is right.';
+
+  @override
+  String get howToUse_assistant3 =>
+      'Fill in your details and press Create account. Your account then waits for the admin\'s approval.';
+
+  @override
+  String get howToUse_assistant4 =>
+      'Until then, signing in shows \"Your account is not active yet.\"';
+
+  @override
+  String get howToUse_assistant5 =>
+      'Once approved, you use the screens in the sidebar for that facility: record sales and services, add clients and record payments.';
+
+  @override
+  String get howToUse_assistant6 =>
+      'Only an admin can delete sales, services and products, or open Team Members, Subscription, Trash, Export Data and Business Hours.';
 }

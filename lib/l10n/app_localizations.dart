@@ -11633,6 +11633,114 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Questions?'**
   String get about_questions;
+
+  /// How to use it: heading of the owner's steps.
+  ///
+  /// In en, this message translates to:
+  /// **'If you run the facility (Admin)'**
+  String get howToUse_ownerTitle;
+
+  /// How to use it: owner step. Register, Create account and the quoted choice are the register page's own labels.
+  ///
+  /// In en, this message translates to:
+  /// **'On the sign-in page press Register, choose \"I own or manage a facility\", add your facility\'s name and type, and press Create account.'**
+  String get howToUse_owner1;
+
+  /// How to use it: owner step. No length or price on purpose (set by the platform).
+  ///
+  /// In en, this message translates to:
+  /// **'Your new facility starts with a trial. Settings, under Subscription, shows how long it lasts and the plans after it.'**
+  String get howToUse_owner2;
+
+  /// How to use it: owner step. Screen and button names as the app shows them.
+  ///
+  /// In en, this message translates to:
+  /// **'Open Products and press Add Product. Choose Sellable Product Catalog to sell it now, or Stock Store to keep it in storage first.'**
+  String get howToUse_owner3;
+
+  /// How to use it: owner step.
+  ///
+  /// In en, this message translates to:
+  /// **'To move stock to the shelf, open Stock and press Release on the product.'**
+  String get howToUse_owner4;
+
+  /// How to use it: owner step.
+  ///
+  /// In en, this message translates to:
+  /// **'Open Sales and press Record Sale. If a client pays less than the total, the rest is saved as their debt.'**
+  String get howToUse_owner5;
+
+  /// How to use it: owner step.
+  ///
+  /// In en, this message translates to:
+  /// **'Open Services and press Record Visit to record a service.'**
+  String get howToUse_owner6;
+
+  /// How to use it: owner step.
+  ///
+  /// In en, this message translates to:
+  /// **'When a client pays a debt, open Debtors, find the debt and press Record Payment.'**
+  String get howToUse_owner7;
+
+  /// How to use it: owner step. 48 hours is the server's invite validity.
+  ///
+  /// In en, this message translates to:
+  /// **'To add an assistant, tap your name in the top bar, open Team Members and press Invite Assistant. The code works for 48 hours or until it is used once.'**
+  String get howToUse_owner8;
+
+  /// How to use it: owner step.
+  ///
+  /// In en, this message translates to:
+  /// **'When they have registered, open Team Members and press Approve.'**
+  String get howToUse_owner9;
+
+  /// How to use it: owner step.
+  ///
+  /// In en, this message translates to:
+  /// **'Open Reports and press Generate Today\'s Report for the day\'s report.'**
+  String get howToUse_owner10;
+
+  /// How to use it: heading of the assistant's steps.
+  ///
+  /// In en, this message translates to:
+  /// **'If you work in a facility (Assistant)'**
+  String get howToUse_assistantTitle;
+
+  /// How to use it: assistant step.
+  ///
+  /// In en, this message translates to:
+  /// **'Ask the facility\'s admin for an invite code.'**
+  String get howToUse_assistant1;
+
+  /// How to use it: assistant step. The quoted choice is the register page's own label.
+  ///
+  /// In en, this message translates to:
+  /// **'On the sign-in page press Register, choose \"I have an invite code\" and type the code. The facility\'s name appears when the code is right.'**
+  String get howToUse_assistant2;
+
+  /// How to use it: assistant step.
+  ///
+  /// In en, this message translates to:
+  /// **'Fill in your details and press Create account. Your account then waits for the admin\'s approval.'**
+  String get howToUse_assistant3;
+
+  /// How to use it: assistant step. The quote is the start of the app's own sign-in message.
+  ///
+  /// In en, this message translates to:
+  /// **'Until then, signing in shows \"Your account is not active yet.\"'**
+  String get howToUse_assistant4;
+
+  /// How to use it: assistant step.
+  ///
+  /// In en, this message translates to:
+  /// **'Once approved, you use the screens in the sidebar for that facility: record sales and services, add clients and record payments.'**
+  String get howToUse_assistant5;
+
+  /// How to use it: assistant step.
+  ///
+  /// In en, this message translates to:
+  /// **'Only an admin can delete sales, services and products, or open Team Members, Subscription, Trash, Export Data and Business Hours.'**
+  String get howToUse_assistant6;
 }
 
 class _AppLocalizationsDelegate
