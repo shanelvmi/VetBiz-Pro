@@ -43,18 +43,22 @@ class RegisterScreen extends StatefulWidget {
   // True when Edit Profile is shown as a modal over the Dashboard (see
   // showEditProfileScreen) rather than as a full page.
   final bool isModal;
+  // Tests pass a fake; the app leaves it null (FirebaseFirestore.instance).
+  final FirebaseFirestore? firestore;
 
-  const RegisterScreen({super.key, this.isUpdating = false, this.userData, this.isModal = false});
+  const RegisterScreen({super.key, this.isUpdating = false, this.userData, this.isModal = false, this.firestore});
 
   @override
   State<RegisterScreen> createState() => _RegisterScreenState();
 }
 
 class _RegisterScreenState extends State<RegisterScreen> {
-  final AuthService _authService = AuthService();
+  // Late, so they reach Firebase only when first used: the screen can then
+  // be built in a widget test without a Firebase app.
+  late final AuthService _authService = AuthService();
   // Checking an invite code, and everything else that decides who belongs to
   // which facility, is done by the server - see MembershipService.
-  final MembershipService _membershipService = MembershipService();
+  late final MembershipService _membershipService = MembershipService();
 
   // Controllers
   final TextEditingController nameController = TextEditingController();
@@ -239,7 +243,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
     super.initState();
     _password.addListener(_onPasswordGuardChanged);
     _confirm.addListener(_onPasswordGuardChanged);
-    _maxFacilitiesSubscription = streamMaxFacilitiesPerAdmin().listen((limit) {
+    _maxFacilitiesSubscription = streamMaxFacilitiesPerAdmin(widget.firestore).listen((limit) {
       if (mounted) setState(() => _maxFacilities = limit);
     });
     final data = widget.userData;

@@ -29,9 +29,9 @@ Future<int> loadMaxFacilitiesPerAdmin() async {
 /// Admin lowering or raising the limit while someone already has the
 /// registration screen open should be reflected immediately, not
 /// require closing and reopening it, matching how subscription
-/// pricing already works.
-Stream<int> streamMaxFacilitiesPerAdmin() {
-  return FirebaseFirestore.instance
+/// pricing already works. [db] is for tests; the app leaves it null.
+Stream<int> streamMaxFacilitiesPerAdmin([FirebaseFirestore? db]) {
+  return (db ?? FirebaseFirestore.instance)
       .collection(Collections.platformConfig)
       .doc('settings')
       .snapshots()
