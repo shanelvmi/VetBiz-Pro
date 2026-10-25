@@ -22,15 +22,15 @@ void main() {
   test('the stored values, in order, and what they mean', () {
     expect(UiThemeMode.values.map((m) => m.key).toList(), ['system', 'light', 'dark']);
     expect(UiThemeMode.values.map((m) => m.themeMode).toList(), [ThemeMode.system, ThemeMode.light, ThemeMode.dark]);
-    expect(UiThemeMode.defaultMode, UiThemeMode.light);
+    expect(UiThemeMode.defaultMode, UiThemeMode.system);
   });
 
-  test('missing or unknown reads as the default (light)', () async {
+  test('missing or unknown reads as the default (System, G1)', () async {
     SharedPreferences.setMockInitialValues({});
-    expect((await loaded()).themeMode, UiThemeMode.light);
+    expect((await loaded()).themeMode, UiThemeMode.system);
     SharedPreferences.setMockInitialValues({'ui_theme_mode': 'midnight'});
-    expect((await loaded()).themeMode, UiThemeMode.light);
-    expect(UiThemeMode.fromKey(null), UiThemeMode.light);
+    expect((await loaded()).themeMode, UiThemeMode.system);
+    expect(UiThemeMode.fromKey(null), UiThemeMode.system);
   });
 
   for (final mode in UiThemeMode.values) {

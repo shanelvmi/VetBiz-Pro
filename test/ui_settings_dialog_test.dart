@@ -106,7 +106,8 @@ void main() {
     AppColors colors() => Theme.of(appContext).extension<AppColors>()!;
     final light = AppColors.fromTheme(AppColorTheme.pasture);
     final dark = AppColors.fromTheme(AppColorTheme.pasture, brightness: Brightness.dark);
-    expect(ui.themeMode, UiThemeMode.light);
+    // A fresh install: System (G1), on a light platform here.
+    expect(ui.themeMode, UiThemeMode.system);
     expect(colors().surface, light.surface);
 
     showUiSettingsDialog(appContext);
@@ -114,6 +115,8 @@ void main() {
     for (final label in ['System', 'Light', 'Dark']) {
       expect(find.text(label), findsOneWidget, reason: label);
     }
+    expect(tester.widget<SegmentedButton<UiThemeMode>>(find.byType(SegmentedButton<UiThemeMode>)).selected,
+        {UiThemeMode.system});
 
     await tester.tap(find.text('Dark'));
     await tester.pumpAndSettle();

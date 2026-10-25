@@ -102,7 +102,7 @@ void main() {
       expect((await loaded({'ui_theme_mode': 'light'})).themeMode, UiThemeMode.light);
       expect((await loaded({'ui_theme_mode': 'dark'})).themeMode, UiThemeMode.dark);
     });
-  }, skip: _untilG1);
+  });
 
   group('(2) flat backgrounds', () {
     for (final s in _Screen.values) {

@@ -13,9 +13,10 @@ enum UiThemeMode {
   final String key;
   final ThemeMode themeMode;
 
-  /// Light until the dark screens are finished (K5): a device whose platform
-  /// is dark would otherwise open on unfinished dark screens.
-  static const UiThemeMode defaultMode = light;
+  /// System (G1): a person who has not chosen sees the app the way their
+  /// device or browser is set. It was Light until the dark screens were
+  /// finished (K5); a saved Light or Dark is kept.
+  static const UiThemeMode defaultMode = system;
 
   /// The choice for a stored value. Unknown or missing gives [defaultMode].
   static UiThemeMode fromKey(String? key) {

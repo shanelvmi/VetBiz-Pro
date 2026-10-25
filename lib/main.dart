@@ -117,7 +117,7 @@ class VetBizProApp extends StatelessWidget {
       title: AppInfo.name,
       theme: AppTheme.build(colorTheme, Brightness.light),
       // Dark Mode (docs/design/dark_mode.md section 6): System follows the
-      // platform, live; the default is Light.
+      // platform, live; the default is System (G1).
       darkTheme: AppTheme.build(colorTheme, Brightness.dark),
       themeMode: uiSettings.themeMode.themeMode,
       debugShowCheckedModeBanner: false,
