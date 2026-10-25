@@ -9,6 +9,8 @@ import '../../providers/subscription_provider.dart';
 import '../../providers/user_role_provider.dart';
 import '../../utils/notification_seen_tracker.dart';
 import '../../models/notification_model.dart';
+import '../../models/notification_state.dart';
+import '../../data/subscription_notice_stage.dart';
 import '../../widgets/announcement_message.dart';
 import '../../widgets/notification_row.dart';
 import '../../services/notification_feed.dart';
@@ -158,8 +160,22 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
     // (Re-evaluated on every rebuild, so it follows a change of role.)
     final uid = FirebaseAuth.instance.currentUser?.uid;
     final isAdmin = Provider.of<UserRoleProvider>(context, listen: false).isAdmin;
-    final forMe = _rawAll.where((n) => n.isVisibleTo(uid: uid, isAdmin: isAdmin)).toList();
-    final all = _reconcileSubscription(forMe);
+    // The live subscription and trial rows replace the stored copy, and the
+    // policy and lifetimes apply (buildNotificationItems, NOTIF-2c): the
+    // subscription notice escalates by stage, not by comparing its English
+    // message. Read state is still the shared readAt until the screen moves
+    // onto the feed controller.
+    final all = [
+      for (final i in buildNotificationItems(
+        stored: _rawAll,
+        state: NotificationState.empty,
+        uid: uid,
+        isAdmin: isAdmin,
+        subscription: SubscriptionFacts.of(_subscriptionProvider!),
+        now: DateTime.now(),
+      ))
+        i.notification,
+    ];
     final visible = all.where((n) => n.isCurrentlyVisible).toList();
 
     // "Needs Attention" is everything with real, specific meaning -
@@ -179,117 +195,13 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
     _fullHistory = all.where((n) => !n.isExpired).toList();
   }
 
-  /// The stored subscription notice is a once-a-day snapshot written by
-  /// the checkSubscriptionExpiry Cloud Function (00:30), so on its own
-  /// it lags the Dashboard banner and Subscription screen by up to a
-  /// day - it kept saying "1 day left" after the banner had already
-  /// moved to the grace period - and lingers after a renewal until the
-  /// next run. The live provider is the source of truth instead:
-  ///   - nothing needs attention now -> any stored notice is dropped
-  ///   - something does -> the stored one keeps its id, showing the
-  ///     live wording; its read state carries over too, UNLESS the
-  ///     live wording has moved past what's actually stored (severity
-  ///     escalated since this was last written or read), in which case
-  ///     it's shown as fresh and unread again instead; if none is
-  ///     stored yet (a threshold crossed since 00:30) one is shown in
-  ///     its place.
-  List<FacilityNotification> _reconcileSubscription(List<FacilityNotification> stored) {
-    final notice = _subscriptionProvider?.attentionNotice;
-    // Shown in the current language; [notice] stays English because its
-    // message is compared with the stored (English) one below.
-    final shown = _subscriptionProvider?.attentionNoticeShown;
-    final result = <FacilityNotification>[];
-    var placed = false;
-
-    for (final n in stored) {
-      if (n.type != NotificationType.subscriptionExpiring) {
-        result.add(n);
-        continue;
-      }
-      if (notice == null || placed) continue;
-      placed = true;
-      // The stored document's own title/message - set once by the
-      // Cloud Function and otherwise only refreshed on its next daily
-      // run - is what readAt and createdAt actually correspond to.
-      // When the live wording has moved past that (the severity
-      // escalated - e.g. grace to locked - since the function or
-      // another device last touched this document), this occurrence
-      // hasn't actually been seen under its current wording yet, even
-      // if readAt is set: shown as fresh and unread again, rather than
-      // staying silently read forever once dismissed at an earlier,
-      // milder stage. This is what was reported as "still showing
-      // updated on 20 Sept" while already locked - a much more urgent
-      // state than whatever was last read.
-      final hasEscalated = n.message != notice.message;
-      result.add(FacilityNotification(
-        id: n.id,
-        type: n.type,
-        title: shown!.title,
-        message: shown.message,
-        createdAt: hasEscalated ? DateTime.now() : n.createdAt,
-        readAt: hasEscalated ? null : n.readAt,
-        // Lifetime now follows the live state rather than the stored
-        // document's 2-day safety-net expiry; rebuilt on every change,
-        // so it can't go stale.
-        expiresAt: DateTime.now().add(AppRanges.noticeLifetime),
-        relatedEntityType: n.relatedEntityType,
-        relatedEntityId: n.relatedEntityId,
-      ));
-    }
-
-    if (notice != null && !placed) {
-      final now = DateTime.now();
-      result.insert(
-        0,
-        FacilityNotification(
-          id: 'subscription_expiring',
-          type: NotificationType.subscriptionExpiring,
-          title: shown!.title,
-          message: shown.message,
-          createdAt: now,
-          // No document behind this row yet, so it can't be marked read
-          // (_markAllAsRead updates documents by id, and updating one
-          // that doesn't exist fails the whole batch). It's a standing
-          // condition the bell already shows live, not a fresh arrival,
-          // so it appears as already seen until the daily run stores it.
-          readAt: now,
-          expiresAt: now.add(AppRanges.noticeLifetime),
-        ),
-      );
-    }
-
-    // The calm trial. The bell blinks blue and the Dashboard shows its pill for
-    // the WHOLE of it, but the notice above only exists once a week or less is
-    // left - so for most of a trial both of those had a message and these
-    // lists had nothing. Same condition as the blink (SubscriptionProvider
-    // .isInCalmTrial), shown to everyone who sees it, admin or assistant.
-    final trialInfo = _subscriptionProvider?.trialInfoNotice;
-    if (trialInfo != null) {
-      final now = DateTime.now();
-      result.insert(
-        0,
-        FacilityNotification(
-          id: 'trial_status',
-          type: NotificationType.trialStatus,
-          title: trialInfo.title,
-          message: trialInfo.message,
-          createdAt: now,
-          // A standing condition with no document behind it, so it can't be
-          // marked read - shown as already seen, and given a lifetime so it
-          // isn't treated as something that disappears once read.
-          readAt: now,
-          expiresAt: now.add(AppRanges.noticeLifetime),
-        ),
-      );
-    }
-    return result;
-  }
-
   Future<void> _markAllAsRead() async {
     final facilityId = Provider.of<FacilityProvider>(context, listen: false).selectedFacilityId;
     if (facilityId == null) return;
 
-    final unread = [..._needsAttention, ..._earlier].where((n) => !n.isRead);
+    // The live rows have no document to update.
+    final unread = [..._needsAttention, ..._earlier]
+        .where((n) => !n.isRead && n.id != subscriptionNoticeId && n.id != trialStatusRowId);
     if (unread.isEmpty) return;
 
     final batch = FirebaseFirestore.instance.batch();

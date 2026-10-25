@@ -65,14 +65,14 @@ class SubscriptionProvider with ChangeNotifier {
   /// This is the ONE definition of that state. The bell's blue blink, the
   /// Dashboard's blue "View Plans" pill and the Notifications lists all use it,
   /// so they can't disagree. They used to: the bell and pill each worked it out
-  /// for themselves while the lists only knew about [attentionNotice], which is
+  /// for themselves while the lists only knew about the subscription notice, which is
   /// empty for exactly this state - so the bell blinked blue for the whole
   /// trial with nothing in the dropdown or on the Notifications screen to say
   /// why.
-  bool get isInCalmTrial => _status == SubscriptionStatus.trial && attentionNotice == null;
+  bool get isInCalmTrial => _status == SubscriptionStatus.trial && attentionStage == SubscriptionNoticeStage.none;
 
   /// What to tell someone in the calm trial - the message the blue blink is
-  /// about. Live, like [attentionNotice]: the days left are worked out now, not
+  /// about. Live, like [attentionNoticeShown]: the days left are worked out now, not
   /// read from something written once and left to go stale. Only shown, never
   /// compared, so it is in the current language.
   ({String title, String message})? get trialInfoNotice {
@@ -89,25 +89,9 @@ class SubscriptionProvider with ChangeNotifier {
     );
   }
 
-  /// The subscription notice that applies RIGHT NOW, or null when
-  /// nothing needs attention (comfortably active, an open trial with no
-  /// end date, or just renewed). Derived live from the same state the
-  /// Dashboard banner and Subscription screen read, so a screen showing
-  /// this can never disagree with them - the stored
-  /// notifications/subscription_expiring document is a once-a-day
-  /// snapshot written by the Cloud Function at 00:30, which is what let
-  /// Notifications say "1 day left" while the banner already said
-  /// "grace period". Wording matches that function exactly, so
-  /// switching the source doesn't change what anyone reads.
-  ///
-  /// Always in English: the Notifications screen compares its message with
-  /// the stored document's (written in English by the function) to tell
-  /// whether the notice escalated. Show [attentionNoticeShown] instead.
-  ({String title, String message})? get attentionNotice => _attentionNoticeIn(lookupAppLocalizations(const Locale('en')));
-
-  /// How far [attentionNotice] has escalated, as a stored key (NOTIF-2b): what a
-  /// person's seenStage is compared with. Replaces the comparison of the
-  /// English message in the Notifications screen in NOTIF-2c.
+  /// How far the subscription notice has escalated, as a stored key (NOTIF-2b):
+  /// what a person's seenStage is compared with. Since NOTIF-2c the only
+  /// escalation test: the English message is no longer compared.
   SubscriptionNoticeStage get attentionStage {
     switch (_status) {
       case SubscriptionStatus.locked:
@@ -121,7 +105,20 @@ class SubscriptionProvider with ChangeNotifier {
     }
   }
 
-  /// [attentionNotice] in the current language, for display only.
+  /// The subscription notice that applies RIGHT NOW, or null when
+  /// nothing needs attention (comfortably active, an open trial with no
+  /// end date, or just renewed). Derived live from the same state the
+  /// Dashboard banner and Subscription screen read, so a screen showing
+  /// this can never disagree with them - the stored
+  /// notifications/subscription_expiring document is a once-a-day
+  /// snapshot written by the Cloud Function at 00:30, which is what let
+  /// Notifications say "1 day left" while the banner already said
+  /// "grace period". Wording matches that function exactly, so
+  /// switching the source doesn't change what anyone reads.
+  ///
+  /// In the current language: it is only shown, never compared
+  /// ([attentionStage] says whether it escalated; NOTIF-2c retired the
+  /// English copy the Notifications screen used to compare).
   ({String title, String message})? get attentionNoticeShown => _attentionNoticeIn(L10n.current);
 
   ({String title, String message})? _attentionNoticeIn(AppLocalizations l) {
