@@ -1689,6 +1689,20 @@ notifications_allCaughtUpHint,"No urgent announcements, subscription issues, or 
 notifications_catPayment,Payment,Malipo,Notifications table: category of one notification.,draft
 notifications_catDebt,Debt,Deni,Notifications table: category of one notification.,draft
 notifications_catUpdate,Update,Taarifa,Notifications table: category of one notification.,draft
+notifications_markAsRead,Mark as read,Weka kama imesomwa,A notification's more menu (and swipe right): mark it read for me.,draft
+notifications_markAsUnread,Mark as unread,Weka kama haijasomwa,A notification's more menu (and swipe right): mark it unread again for me.,draft
+notifications_removeReadOnes,Remove read ones,Ondoa zilizosomwa,Notifications header: remove my read notifications that can be removed (never the ones that stay until resolved).,draft
+notifications_removeSelected,Remove selected,Ondoa zilizochaguliwa,Notifications selection mode: remove the ticked notifications for me.,draft
+notifications_select,Select,Chagua,Notifications screen: start selection mode (tick boxes on the rows).,draft
+notifications_removedOne,Notification removed,Arifa imeondolewa,"Toast after removing one notification, with Undo.",draft
+notifications_removedCount,"{count, plural, =1{1 notification removed} other{{count} notifications removed}}","{count, plural, =1{Arifa 1 imeondolewa} other{Arifa {count} zimeondolewa}}","Toast after removing several notifications, with Undo.",draft
+notifications_removeReadConfirm,"{count, plural, =1{Remove 1 read notification? Only you stop seeing it.} other{Remove {count} read notifications? Only you stop seeing them.}}","{count, plural, =1{Ondoa arifa 1 iliyosomwa? Ni wewe tu utaacha kuiona.} other{Ondoa arifa {count} zilizosomwa? Ni wewe tu utaacha kuziona.}}",Confirmation before Remove read ones. Removal is per person: the others still see them.,draft
+notifications_reasonUntilRenewed,Stays until the subscription is renewed,Inabaki hadi usajili utakaposasishwa,"More menu of the subscription notice, in place of Remove (it cannot be removed).",draft
+notifications_reasonUntilTrialEnds,Stays until the free trial ends,Inabaki hadi majaribio bure yaishe,"More menu of the free trial row, in place of Remove.",draft
+notifications_reasonUntilDecided,Stays until the request is approved or rejected,Inabaki hadi ombi likubaliwe au likataliwe,"More menu of an assistant waiting for approval, in place of Remove.",draft
+notifications_reasonUntilNewClaim,Stays until a new payment is submitted,Inabaki hadi malipo mapya yatumwe,"More menu of a rejected subscription payment, in place of Remove.",draft
+notifications_loadOlder,Load older,Pakia za zamani zaidi,Notifications screen: load the next older notifications.,draft
+notifications_updateFailed,Couldn't update the notifications,Imeshindikana kusasisha arifa,"Error toast when marking read or unread, removing or Undo failed.",draft
 selectFacility_slowLoad,This is taking longer than expected. Check your connection and try again.,Hii inachukua muda mrefu kuliko kawaida. Angalia muunganisho wako kisha ujaribu tena.,Select Facility screen: loading the facilities timed out.,draft
 selectFacility_loadFailed,Couldn't load your facilities. {error},Imeshindwa kupakia vituo vyako. {error},"Select Facility screen: loading failed; error is the friendly reason.",draft
 selectFacility_title,Select Facility,Chagua Kituo,Select Facility screen title.,draft
