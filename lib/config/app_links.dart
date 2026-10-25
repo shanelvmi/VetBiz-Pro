@@ -25,12 +25,3 @@ class AppLinks {
   /// An email: `mailto:<address>`.
   static Uri mailto(String address) => Uri.parse('mailto:$address');
 }
-
-/// VetBiz support. Kept as constants for now; making them editable by the
-/// platform admin is optional step 2H.
-class AppContact {
-  AppContact._();
-
-  static const String supportPhone = '+255719199916';
-  static const String supportEmail = 'shanelvmi@gmail.com';
-}

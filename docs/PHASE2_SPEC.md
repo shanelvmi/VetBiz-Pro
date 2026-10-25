@@ -318,7 +318,7 @@ Also here: the dashboard sidebar widths (expanded and collapsed) and standard av
 | `app_rules.dart` | `inviteCodeLength = 6`, `subscriptionAttentionDays = 7`, and any other business number found | `main.dart:1068`, `subscription_provider.dart` |
 | `payment_methods.dart` | `PaymentMethod` with a **stable key** (`'Cash'` …, never changed) and a label lookup (translated later) | `'Cash'` etc. typed in 8 files (30 uses); they are also **saved as map keys** |
 | `app_date_format.dart` | Named formats, **exact patterns kept** (see below) | `DateFormat('…')` with 22 patterns |
-| `app_links.dart` | `AppLinks.whatsApp(phone, {text})`, `AppContact.supportPhone = '+255719199916'` | 3 `wa.me` builders; `settings_screen.dart:656` |
+| `app_links.dart` | `AppLinks.whatsApp(phone, {text})` | 3 `wa.me` builders |
 | `restock_rules.dart` | the table `_RestockDayCounts` for 'Weekly', 'Every 2 Weeks', 'Monthly' | inside `usage_calculator_service.dart:72` |
 
 **Date formats (exact patterns, kept):**

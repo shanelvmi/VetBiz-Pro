@@ -147,7 +147,7 @@ void main() {
       );
     }
 
-    const phones = ['+255 712-345 678', '0712345678', '+255719199916', '255 (712) 345.678', ''];
+    const phones = ['+255 712-345 678', '0712345678', '+255700000000', '255 (712) 345.678', ''];
     const messages = ['Hi Asha, you owe Tsh 5,000 & more. Asante!', '', 'Karibu: 100% / ?=#'];
 
     test('WhatsApp (dashboard contact)', () {
@@ -171,14 +171,6 @@ void main() {
         expect(AppLinks.tel(p).toString(), Uri.parse('tel:$p').toString(), reason: p);
       }
       expect(AppLinks.mailto('a.b@example.com').toString(), Uri.parse('mailto:a.b@example.com').toString());
-    });
-
-    test('Settings support links', () {
-      expect(AppContact.supportPhone, '+255719199916');
-      expect(AppContact.supportEmail, 'shanelvmi@gmail.com');
-      expect(AppLinks.whatsApp(AppContact.supportPhone).toString(), 'https://wa.me/255719199916');
-      expect(AppLinks.tel(AppContact.supportPhone).toString(), Uri.parse('tel:+255719199916').toString());
-      expect(AppLinks.mailto(AppContact.supportEmail).toString(), 'mailto:shanelvmi@gmail.com');
     });
 
     test('phone variants for the duplicate check are unchanged', () {

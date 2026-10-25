@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:url_launcher/url_launcher.dart';
 import '../../providers/ui_settings_provider.dart';
 import '../../providers/user_role_provider.dart';
 import 'ui_settings_dialog.dart';
@@ -14,7 +13,7 @@ import '../subscription/subscription_screen.dart';
 import '../dashboard/notifications_screen.dart';
 import '../../config/app_defaults.dart';
 import '../../l10n/l10n.dart';
-import '../../config/app_links.dart';
+import '../../widgets/support_contact_dialog.dart';
 import '../../config/app_info.dart';
 import '../../theme/app_text.dart';
 import '../../theme/app_dimens.dart';
@@ -657,58 +656,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
   }
 
 
-  void _showHelpSupportDialog(BuildContext context) {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        backgroundColor: context.colors.raisedSurface,
-        title: Row(
-          children: [
-            Icon(Icons.help_outline, color: context.colors.primary),
-            const SizedBox(width: AppSpacing.s8),
-            Text(context.l10n.settings_helpSupport),
-          ],
-        ),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            ListTile(
-              contentPadding: EdgeInsets.zero,
-              leading: Icon(Icons.chat, color: context.colors.success),
-              title: Text(context.l10n.debtors_viaWhatsApp),
-              subtitle: const Text(AppContact.supportPhone),
-              onTap: () => _launchUrl(AppLinks.whatsApp(AppContact.supportPhone).toString()),
-            ),
-            ListTile(
-              contentPadding: EdgeInsets.zero,
-              leading: Icon(Icons.call, color: context.colors.primary),
-              title: Text(context.l10n.common_call),
-              subtitle: const Text(AppContact.supportPhone),
-              onTap: () => _launchUrl(AppLinks.tel(AppContact.supportPhone).toString()),
-            ),
-            ListTile(
-              contentPadding: EdgeInsets.zero,
-              leading: Icon(Icons.email_outlined, color: context.colors.primary),
-              title: Text(context.l10n.common_email),
-              subtitle: const Text(AppContact.supportEmail),
-              onTap: () => _launchUrl(AppLinks.mailto(AppContact.supportEmail).toString()),
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: Text(context.l10n.common_close, style: TextStyle(color: context.colors.primary)),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Future<void> _launchUrl(String url) async {
-    final uri = Uri.parse(url);
-    if (await canLaunchUrl(uri)) {
-      await launchUrl(uri, mode: LaunchMode.externalApplication);
-    }
-  }
+  // The same platform-set contact as the dashboard Help and the sign-in
+  // footer (app_config/support_contact), with this screen's own title.
+  void _showHelpSupportDialog(BuildContext context) =>
+      showSupportContactDialog(context, title: context.l10n.settings_helpSupport);
 }

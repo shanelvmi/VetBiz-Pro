@@ -16,9 +16,7 @@ import 'helpers/help_dialog_rows.dart';
 
 // G3b: Settings' Help and Support shows the platform-set contact through the
 // shared Help dialog (its own title kept), never a hard-coded number or
-// address. Written before the change; the Settings checks are skipped until
-// it is made.
-const _skipSettings = true;
+// address. Written before the change (e2be518).
 
 final _en = lookupAppLocalizations(const Locale('en'));
 
@@ -51,7 +49,7 @@ void main() {
     expect(helpDialogTexts(tester), [_en.settings_helpSupport, _en.dashboard_supportIntro(AppInfo.name), _en.common_close]);
   });
 
-  group('Settings', skip: _skipSettings, () {
+  group('Settings', () {
     final settings = File('lib/screens/settings/settings_screen.dart').readAsStringSync();
 
     test('Help and Support opens the shared dialog with its own title', () {
@@ -66,7 +64,7 @@ void main() {
 
   // Built from pieces so this file does not hold them either.
   final personal = ['7191' '99916', 'shanelvmi' '@gmail'];
-  test('no personal phone number or address in lib/ or test/', skip: _skipSettings, () {
+  test('no personal phone number or address in lib/ or test/', () {
     final hits = <String>[];
     for (final dir in ['lib', 'test']) {
       for (final file in Directory(dir).listSync(recursive: true).whereType<File>()) {
