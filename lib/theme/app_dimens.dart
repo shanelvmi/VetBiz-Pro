@@ -164,6 +164,32 @@ class AuthCardMetrics {
   static const double shadowOffsetY = 20;
 }
 
+/// The calm footer below the signed-out cards (lib/widgets/auth_footer.dart, G3).
+/// Every size of it lives here, so one place restyles it.
+class AuthFooterMetrics {
+  AuthFooterMetrics._();
+
+  /// Every link and icon: Material's 48 px touch target.
+  static const double tapTarget = 48;
+
+  /// The brand mark beside the app name, and its letters.
+  static const double markSize = 32;
+
+  /// The social network icons inside their 48 px targets.
+  static const double socialIconSize = AppIconSize.i18;
+
+  /// The line between the columns and the bottom row.
+  static const double hairline = 1;
+
+  /// Around the footer, and between its parts.
+  static const double paddingVertical = AppSpacing.s24;
+  static const double columnGap = AppSpacing.s24;
+  static const double sectionGap = AppSpacing.s16;
+
+  /// The brand column takes this share of the row; Support and Legal one each.
+  static const int brandFlex = 2;
+}
+
 /// The step-by-step forms (lib/widgets/wizard, register_wizard.md section
 /// 3). Every size of the wizard widgets lives here, so one place restyles
 /// them (the owner's phone-app style comes later).

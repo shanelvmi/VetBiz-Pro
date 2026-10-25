@@ -55,6 +55,8 @@ dependencies:
   cloud_functions: ^4.7.0
   share_plus: ^7.2.2
   url_launcher: ^6.2.5
+  # Pinned (G3): the social network icons of the sign-in footer.
+  font_awesome_flutter: 11.0.0
   flutter_markdown: ^0.7.4+3
   markdown: ^7.0.0
   print_bluetooth_thermal: ^1.1.1
