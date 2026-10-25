@@ -20,6 +20,7 @@ import 'facilities/facility_picker_screen.dart';
 import 'legal/privacy_policy_screen.dart';
 import 'legal/terms_of_service_screen.dart';
 import '../widgets/auth_background.dart';
+import '../widgets/auth_card.dart';
 import '../widgets/auth_theme_toggle.dart';
 import '../services/role_change_service.dart';
 import '../data/collections.dart';
@@ -773,61 +774,32 @@ class _RegisterScreenState extends State<RegisterScreen> {
       body: Stack(
         children: [
           const Positioned.fill(child: AuthBackground()),
-          Center(
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.all(AppSpacing.s24),
-              child: LayoutBuilder(
-                builder: (context, constraints) {
-                  // The space actually available to the card, after the 24px
-                  // padding either side - same approach as the login page.
-                  final isWide = constraints.maxWidth > AppBreakpoints.medium;
-                  final targetWidth = isWide ? 1100.0 : 560.0;
-                  final cardWidth = constraints.maxWidth < targetWidth ? constraints.maxWidth : targetWidth;
-
-                  return ConstrainedBox(
-                    constraints: BoxConstraints(minWidth: cardWidth, maxWidth: cardWidth),
-                    child: Container(
-                      clipBehavior: Clip.antiAlias,
-                      decoration: BoxDecoration(
-                        color: context.colors.surface.withValues(alpha: 0.97),
-                        borderRadius: BorderRadius.circular(AppRadius.r24),
-                        boxShadow: [
-                          BoxShadow(color: context.colors.shadow.withValues(alpha: AppAlpha.a40), blurRadius: 40, offset: const Offset(0, 20)),
-                        ],
-                      ),
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        crossAxisAlignment: CrossAxisAlignment.stretch,
-                        children: [
-                          _buildRegisterHeader(),
-                          Padding(
-                            padding: EdgeInsets.all(isWide ? AppSpacing.s28 : AppSpacing.s18),
-                            child: isWide
-                                ? Row(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
-                                    children: [
-                                      SizedBox(width: _welcomePanelWidth, child: _buildWelcomePanel()),
-                                      const SizedBox(width: AppSpacing.s24),
-                                      Expanded(child: _buildRegisterForm(twoColumns: true)),
-                                    ],
-                                  )
-                                : Column(
-                                    mainAxisSize: MainAxisSize.min,
-                                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                                    children: [
-                                      _buildWelcomeStrip(),
-                                      const SizedBox(height: AppSpacing.s16),
-                                      _buildRegisterForm(twoColumns: false),
-                                    ],
-                                  ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  );
-                },
-              ),
-            ),
+          // The same card as the login page (AuthCard: width, padding,
+          // radius). What sits inside keeps its own layout until RW2: two
+          // columns above AppBreakpoints.medium of the space the card gets.
+          AuthCard(
+            header: _buildRegisterHeader(),
+            bodyBuilder: (context, layout) {
+              final isWide = layout.availableWidth > AppBreakpoints.medium;
+              return isWide
+                  ? Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        SizedBox(width: _welcomePanelWidth, child: _buildWelcomePanel()),
+                        const SizedBox(width: AppSpacing.s24),
+                        Expanded(child: _buildRegisterForm(twoColumns: true)),
+                      ],
+                    )
+                  : Column(
+                      mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        _buildWelcomeStrip(),
+                        const SizedBox(height: AppSpacing.s16),
+                        _buildRegisterForm(twoColumns: false),
+                      ],
+                    );
+            },
           ),
           _buildErrorToastLayer(),
         ],

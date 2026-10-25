@@ -32,9 +32,6 @@ class _NoAuth implements AuthService {
 
 enum _Screen { login, register }
 
-// Each group is switched on by the commit that implements it.
-const _untilG1 = 'G1: until the implementation';
-
 void main() {
   Future<UiSettingsProvider> loaded(Map<String, Object> saved) async {
     SharedPreferences.setMockInitialValues(saved);
@@ -207,5 +204,5 @@ void main() {
         }
       }
     }
-  }, skip: _untilG1);
+  });
 }
