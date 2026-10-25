@@ -2,6 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/foundation.dart';
 
 import '../config/app_limits.dart';
+import '../config/app_ranges.dart';
 import '../data/subscription_notice_stage.dart';
 import '../models/notification_model.dart';
 import '../models/notification_policy.dart';
@@ -27,7 +28,16 @@ class SubscriptionFacts {
 
   static const SubscriptionFacts none = SubscriptionFacts();
 
-  factory SubscriptionFacts.of(SubscriptionProvider p) => throw UnimplementedError('NOTIF-2c');
+  factory SubscriptionFacts.of(SubscriptionProvider p) {
+    final stage = p.attentionStage;
+    final end = p.expiresAt;
+    return SubscriptionFacts(
+      stage: stage,
+      notice: stage == SubscriptionNoticeStage.none ? null : p.attentionNoticeShown,
+      trialInfo: p.trialInfoNotice,
+      cycleStart: end?.subtract(AppRanges.day * SubscriptionProvider.attentionThresholdDays),
+    );
+  }
 }
 
 /// The newest subscription payment claim: when it was sent, and whether
@@ -54,6 +64,22 @@ class NotificationItem {
   bool get hasTarget => notification.relatedEntityType != null && notification.relatedEntityId != null;
 }
 
+/// The subscription notice is read for me only at the stage I read it at
+/// (P3; a stage, not the English wording, so "7 days" then "6 days" stays
+/// read and a language switch changes nothing), and only in this cycle.
+bool _noticeReadByMe(NotificationState state, SubscriptionFacts s) {
+  if (state.unread.containsKey(subscriptionNoticeId)) return false;
+  final readAt = state.read[subscriptionNoticeId];
+  if (readAt == null) return false;
+  if (s.cycleStart != null && readAt.isBefore(s.cycleStart!)) return false;
+  final seen = SubscriptionNoticeStage.fromKey(state.seenStage[subscriptionNoticeId]);
+  if (seen == null) return false;
+  return !NotificationPolicy.isUnreadAgain(seenStage: seen, current: s.stage);
+}
+
+bool _newerClaimThan(LatestClaim? claim, DateTime? createdAt) =>
+    claim != null && !claim.rejected && claim.submittedAt != null && createdAt != null && claim.submittedAt!.isAfter(createdAt);
+
 /// The rows I see, newest first after the live rows (the trial, then the
 /// subscription notice): only what is for me, not removed by me, within its
 /// lifetime and not resolved (NotificationPolicy).
@@ -66,17 +92,85 @@ List<NotificationItem> buildNotificationItems({
   required DateTime now,
   LatestClaim? latestClaim,
   DateTime? liveRowsSince,
-}) =>
-    throw UnimplementedError('NOTIF-2c');
+}) {
+  final out = <NotificationItem>[];
+  final since = liveRowsSince ?? now;
+  final trial = subscription.trialInfo;
+  if (trial != null) {
+    out.add(NotificationItem(
+      FacilityNotification(
+          id: trialStatusRowId, type: NotificationType.trialStatus, title: trial.title, message: trial.message, createdAt: since),
+      isRead: state.isReadByMe(trialStatusRowId),
+    ));
+  }
+  // The stored notice (checkSubscriptionExpiry, once a day) lags the live
+  // state, so the live provider is the source of truth: one row, the live
+  // wording, the stored document's date when there is one. It no longer has
+  // to be inserted already read: my read state is keyed by id, not written
+  // on the document, so a row with no document can be read like any other.
+  final notice = subscription.notice;
+  if (subscription.stage != SubscriptionNoticeStage.none && notice != null) {
+    final storedNotice = stored.where((n) => n.type == NotificationType.subscriptionExpiring).firstOrNull;
+    out.add(NotificationItem(
+      FacilityNotification(
+        id: subscriptionNoticeId,
+        type: NotificationType.subscriptionExpiring,
+        title: notice.title,
+        message: notice.message,
+        createdAt: storedNotice?.createdAt ?? since,
+      ),
+      isRead: _noticeReadByMe(state, subscription),
+    ));
+  }
+
+  for (final n in stored) {
+    if (n.type == NotificationType.subscriptionExpiring) continue;
+    if (NotificationPolicy.isNeverShown(n.type) || !n.isVisibleTo(uid: uid, isAdmin: isAdmin)) continue;
+    final cls = NotificationPolicy.classOf(n.type);
+    if (cls == NotificationClass.persistent) {
+      final facts = PersistentFacts(
+        subscriptionStage: subscription.stage,
+        inCalmTrial: trial != null,
+        newerClaimExists: _newerClaimThan(latestClaim, n.createdAt),
+      );
+      if (NotificationPolicy.isResolved(n.type, facts)) continue;
+    } else {
+      if (state.isRemoved(n.id)) continue;
+      if (n.expiresAt != null && !now.isBefore(n.expiresAt!)) continue;
+      final hidden = NotificationPolicy.isHiddenByAge(
+        cls: cls,
+        now: now,
+        createdAt: n.createdAt,
+        myReadAt: state.read[n.id],
+        sharedReadAt: n.readAt,
+        markedUnread: state.unread.containsKey(n.id),
+        endsAt: n.expiresAt,
+      );
+      if (hidden) continue;
+    }
+    out.add(NotificationItem(n, isRead: state.isReadByMe(n.id, sharedReadAt: n.readAt)));
+  }
+  return out;
+}
 
 /// Whether I removed the newest stored notification of the live promotion
-/// called [promotionLabel], so the bell's accent stays off for me.
+/// called [promotionLabel], so the bell's accent stays off for me. Both are
+/// stored values (the notification's title is the promotion's label as
+/// written by _notifyFacilitiesOfPromotion); a NEW promotion writes a new
+/// notification, which I have not removed.
 bool isPromotionDismissed({
   required String promotionLabel,
   required List<FacilityNotification> stored,
   required NotificationState state,
-}) =>
-    throw UnimplementedError('NOTIF-2c');
+}) {
+  FacilityNotification? newest;
+  for (final n in stored) {
+    if (n.type != NotificationType.promotion || n.title != promotionLabel) continue;
+    final t = n.createdAt;
+    if (newest == null || (t != null && (newest.createdAt == null || t.isAfter(newest.createdAt!)))) newest = n;
+  }
+  return newest != null && state.isRemoved(newest.id);
+}
 
 /// The Notifications screen's and the dropdown's data (NOTIF-2c): my
 /// notifications and my own state, live, built into rows through
