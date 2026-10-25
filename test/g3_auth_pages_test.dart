@@ -17,8 +17,7 @@ import 'package:vetbiz_pro/widgets/auth_footer.dart';
 import 'package:vetbiz_pro/widgets/auth_theme_toggle.dart';
 
 // G3: the login page without the clutter, and the footer below the card on
-// the sign-in pages. Written before the change, skipped until it is made.
-const _skip = true;
+// the sign-in pages. Written before the change (4c40bc8).
 
 final _en = lookupAppLocalizations(const Locale('en'));
 
@@ -81,7 +80,7 @@ void main() {
 
   Widget login([FirebaseFirestore? db]) => LoginScreen(authService: _NoAuth(), firestore: db ?? FakeFirebaseFirestore());
 
-  group('Login page', skip: _skip, () {
+  group('Login page', () {
     testWidgets('the removed texts are gone; the heading is one line', (tester) async {
       await pump(tester, login());
       for (final gone in const [
@@ -108,7 +107,6 @@ void main() {
 
     testWidgets('the footer sits below the card, full width', (tester) async {
       await pump(tester, login());
-      await tester.scrollUntilVisible(find.byType(AuthFooter), 300);
       final card = tester.getRect(find.byKey(AuthCard.surfaceKey));
       final footer = tester.getRect(find.byType(AuthFooter));
       expect(footer.top, greaterThanOrEqualTo(card.bottom));

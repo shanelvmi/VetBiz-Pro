@@ -12,10 +12,10 @@ import '../widgets/announcement_message.dart';
 import '../widgets/password_field_guard.dart';
 import '../widgets/auth_background.dart';
 import '../widgets/auth_card.dart';
+import '../widgets/auth_footer.dart';
+import '../models/support_contact.dart';
 import '../widgets/auth_theme_toggle.dart';
 import '../utils/navigator_key.dart';
-import 'legal/privacy_policy_screen.dart';
-import 'legal/terms_of_service_screen.dart';
 import '../data/collections.dart';
 import '../config/app_timeouts.dart';
 import '../config/app_info.dart';
@@ -23,7 +23,6 @@ import '../l10n/l10n.dart';
 import '../ui/feedback/auth_error_messages.dart';
 import '../ui/feedback/app_feedback.dart';
 import '../ui/feedback/friendly_error.dart';
-import '../theme/app_breakpoints.dart';
 import '../theme/app_motion.dart';
 import '../theme/app_text.dart';
 import '../theme/theme_context.dart';
@@ -45,6 +44,7 @@ class LoginScreen extends StatefulWidget {
 class _LoginScreenState extends State<LoginScreen> {
   late final AuthService _authService = widget.authService ?? AuthService();
   FirebaseFirestore get _db => widget.firestore ?? FirebaseFirestore.instance;
+  late final Future<SupportContact> _supportContact;
   final TextEditingController emailController = TextEditingController();
   // The password's text, focus and eye, with the shared hygiene rules
   // (P1b): cleared after a rejected attempt, hidden again by itself.
@@ -85,6 +85,8 @@ class _LoginScreenState extends State<LoginScreen> {
   void initState() {
     super.initState();
     _password.addListener(_onPasswordGuardChanged);
+    // Once per page: the footer's links never read it again on a rebuild.
+    _supportContact = SupportContact.load(_db);
     _loadRememberedEmail();
     if (widget.errorMessage != null) {
       // Deferred to after the first frame - setState during initState
@@ -363,117 +365,6 @@ class _LoginScreenState extends State<LoginScreen> {
     );
   }
 
-  // ==================== BOTTOM FOOTER ====================
-  Widget _buildFooter() {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.s24, vertical: AppSpacing.s12),
-      color: context.colors.brandSurface,
-      child: LayoutBuilder(
-        builder: (context, constraints) {
-          // Enough room for everything on a single line, spanning the
-          // full width edge to edge - only falls back to a reflowing
-          // layout when there genuinely isn't room for that, on small
-          // screens specifically.
-          if (constraints.maxWidth >= AppBreakpoints.compact) {
-            return Row(
-              children: [
-                Icon(Icons.shield_outlined, color: context.colors.onBrandSurface.withValues(alpha: AppAlpha.a70), size: AppIconSize.i16),
-                const SizedBox(width: AppSpacing.s8),
-                Text(context.l10n.login_copyright(AppInfo.name),
-                    style: TextStyle(color: context.colors.onBrandSurface.withValues(alpha: AppAlpha.a70), fontSize: AppFontSize.f12)),
-                const Spacer(),
-                Text(AppInfo.versionLabel, style: TextStyle(color: context.colors.onBrandSurface.withValues(alpha: AppAlpha.a70), fontSize: AppFontSize.f12)),
-                const SizedBox(width: AppSpacing.s20),
-                _FooterLink(label: context.l10n.common_privacyPolicy, destination: const PrivacyPolicyScreen()),
-                const SizedBox(width: AppSpacing.s20),
-                _FooterLink(label: context.l10n.common_termsOfService, destination: const TermsOfServiceScreen()),
-              ],
-            );
-          }
-          return Wrap(
-            alignment: WrapAlignment.center,
-            crossAxisAlignment: WrapCrossAlignment.center,
-            spacing: 16,
-            runSpacing: 6,
-            children: [
-              Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(Icons.shield_outlined, color: context.colors.onBrandSurface.withValues(alpha: AppAlpha.a70), size: AppIconSize.i16),
-                  const SizedBox(width: AppSpacing.s8),
-                  // Wraps on a narrow phone (or a longer language) instead
-                  // of running off the card.
-                  Flexible(
-                    child: Text(context.l10n.login_copyright(AppInfo.name),
-                        style: TextStyle(color: context.colors.onBrandSurface.withValues(alpha: AppAlpha.a70), fontSize: AppFontSize.f12)),
-                  ),
-                ],
-              ),
-              Wrap(
-                alignment: WrapAlignment.center,
-                spacing: 20,
-                runSpacing: 4,
-                children: [
-                  Text(AppInfo.versionLabel, style: TextStyle(color: context.colors.onBrandSurface.withValues(alpha: AppAlpha.a70), fontSize: AppFontSize.f12)),
-                  _FooterLink(label: context.l10n.common_privacyPolicy, destination: const PrivacyPolicyScreen()),
-                  _FooterLink(label: context.l10n.common_termsOfService, destination: const TermsOfServiceScreen()),
-                ],
-              ),
-            ],
-          );
-        },
-      ),
-    );
-  }
-
-  // ==================== LEFT: WELCOME CARD ====================
-  Widget _buildWelcomeCard() {
-    return Container(
-      padding: const EdgeInsets.all(AppSpacing.s20),
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [context.colors.brandSurface, context.colors.brandTealOnBrand],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-        borderRadius: BorderRadius.circular(AppRadius.r16),
-      ),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Container(
-            width: 44,
-            height: 44,
-            decoration: BoxDecoration(
-              color: context.colors.brandTealGlow.withValues(alpha: AppAlpha.a15),
-              borderRadius: BorderRadius.circular(AppRadius.r12),
-              border: Border.all(color: context.colors.brandTealGlow.withValues(alpha: AppAlpha.a50), width: 1.2),
-              boxShadow: [
-                BoxShadow(color: context.colors.brandTealGlow.withValues(alpha: AppAlpha.a30), blurRadius: 8),
-              ],
-            ),
-            child: Icon(Icons.chat_bubble_outline, color: context.colors.onBrandSurface, size: AppIconSize.i20),
-          ),
-          const SizedBox(width: AppSpacing.s14),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(context.l10n.login_welcomeTo, style: TextStyle(color: context.colors.onBrandSurface.withValues(alpha: AppAlpha.a85), fontSize: AppFontSize.f13)),
-                Text(AppInfo.name,
-                    style: TextStyle(color: context.colors.brandTealGlow, fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f19)),
-                const SizedBox(height: AppSpacing.s8),
-                Text(context.l10n.login_stayUpdated,
-                    style: TextStyle(color: context.colors.onBrandSurface.withValues(alpha: AppAlpha.a85), fontSize: AppFontSize.f12_5)),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
   // ==================== LEFT: ANNOUNCEMENTS ====================
   Widget _buildAnnouncementsCard() {
     return Container(
@@ -671,41 +562,6 @@ class _LoginScreenState extends State<LoginScreen> {
           ],
         ),
       ),
-    );
-  }
-
-  // ==================== LEFT: TRUST FOOTER ====================
-  Widget _buildTrustFooter() {
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Container(
-          width: 36,
-          height: 36,
-          decoration: BoxDecoration(
-            color: context.colors.brandTealGlow.withValues(alpha: AppAlpha.a10),
-            shape: BoxShape.circle,
-            border: Border.all(color: context.colors.brandTealGlow.withValues(alpha: AppAlpha.a30), width: 1),
-            boxShadow: [
-              BoxShadow(color: context.colors.brandTealGlow.withValues(alpha: AppAlpha.a15), blurRadius: 5),
-            ],
-          ),
-          child: Icon(Icons.verified_user_outlined, color: context.colors.primary, size: AppIconSize.i18),
-        ),
-        const SizedBox(width: AppSpacing.s12),
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(context.l10n.login_trustTitle,
-                  style: TextStyle(fontWeight: AppFontWeight.bold, color: context.colors.textPrimary, fontSize: AppFontSize.f13)),
-              const SizedBox(height: AppSpacing.s2),
-              Text(context.l10n.login_trustBody,
-                  style: TextStyle(color: context.colors.textMuted, fontSize: AppFontSize.f12)),
-            ],
-          ),
-        ),
-      ],
     );
   }
 
@@ -934,18 +790,9 @@ class _LoginScreenState extends State<LoginScreen> {
                             ),
                             const SizedBox(width: AppSpacing.s14),
                             Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(context.l10n.login_welcomeBack,
-                                      overflow: TextOverflow.ellipsis,
-                                      style: TextStyle(fontSize: AppFontSize.f20, fontWeight: AppFontWeight.extraBold, color: context.colors.textPrimary)),
-                                  const SizedBox(height: AppSpacing.s2),
-                                  Text(context.l10n.login_logIntoFacility,
-                                      overflow: TextOverflow.ellipsis,
-                                      style: TextStyle(fontSize: AppFontSize.f13, color: context.colors.textMuted)),
-                                ],
-                              ),
+                              child: Text(context.l10n.login_welcomeBack,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: TextStyle(fontSize: AppFontSize.f20, fontWeight: AppFontWeight.extraBold, color: context.colors.textPrimary)),
                             ),
                           ],
                         ),
@@ -1115,31 +962,28 @@ class _LoginScreenState extends State<LoginScreen> {
           // A flat page colour from the theme (G1: no poster, no photo, no scrim).
           const Positioned.fill(child: AuthBackground()),
 
-          // The single floating card holding every piece of content -
-          // header, welcome/announcements, login form, and footer all
-          // live inside this one unified surface on every screen size,
-          // reflowing between two columns and a single stacked column
-          // rather than switching to a stripped-down alternate layout.
-          // Its width, padding and radius are Register's too (AuthCard).
+          // The single floating card holding the sign-in content - header,
+          // announcements and login form live inside this one surface on
+          // every screen size, reflowing between two columns and a single
+          // stacked column rather than switching to a stripped-down
+          // alternate layout. Its width, padding and radius are Register's
+          // too (AuthCard). The secondary details (brand, help, legal,
+          // version) are in the footer below it (G3).
           AuthCard(
             header: _buildHeader(),
-            footer: _buildFooter(),
+            below: AuthFooter(contact: _supportContact),
             bodyBuilder: (context, layout) => layout.isWide
                 ? IntrinsicHeight(
                     child: Row(
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
-                        // Left: Welcome + Announcements + Trust footer
+                        // Left: Announcements
                         Expanded(
                           flex: 1,
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.stretch,
                             children: [
-                              _buildWelcomeCard(),
-                              const SizedBox(height: AppSpacing.s16),
                               Expanded(child: _buildAnnouncementsCard()),
-                              const SizedBox(height: AppSpacing.s16),
-                              _buildTrustFooter(),
                             ],
                           ),
                         ),
@@ -1180,11 +1024,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     children: [
                       _buildLoginForm(),
                       const SizedBox(height: AppSpacing.s20),
-                      _buildWelcomeCard(),
-                      const SizedBox(height: AppSpacing.s16),
                       _buildAnnouncementsCard(),
-                      const SizedBox(height: AppSpacing.s16),
-                      _buildTrustFooter(),
                     ],
                   ),
           ),
@@ -1423,43 +1263,6 @@ class _NewBadgeState extends State<_NewBadge> {
               fontSize: AppFontSize.f10,
               fontWeight: AppFontWeight.bold),
         ),
-      ),
-    );
-  }
-}
-
-// ==================== FOOTER LINK (Privacy Policy / Terms) ====================
-// A dedicated widget rather than a plain method - each of the four
-// instances of this (two links, two responsive layouts) needs its own
-// independent hover state, which a method returning a Widget has no
-// way to hold across separate calls.
-class _FooterLink extends StatefulWidget {
-  final String label;
-  final Widget destination;
-  const _FooterLink({required this.label, required this.destination});
-
-  @override
-  State<_FooterLink> createState() => _FooterLinkState();
-}
-
-class _FooterLinkState extends State<_FooterLink> {
-  bool _hovered = false;
-
-  @override
-  Widget build(BuildContext context) {
-    return MouseRegion(
-      cursor: SystemMouseCursors.click,
-      onEnter: (_) => setState(() => _hovered = true),
-      onExit: (_) => setState(() => _hovered = false),
-      child: GestureDetector(
-        onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => widget.destination)),
-        child: Text(widget.label,
-            style: TextStyle(
-              color: _hovered ? context.colors.accent : context.colors.onBrandSurface.withValues(alpha: AppAlpha.a70),
-              fontSize: AppFontSize.f12,
-              decoration: TextDecoration.underline,
-              decorationColor: _hovered ? context.colors.accent : context.colors.onBrandSurface.withValues(alpha: AppAlpha.a40),
-            )),
       ),
     );
   }
