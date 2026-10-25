@@ -346,7 +346,10 @@ class _LoginScreenState extends State<LoginScreen> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           mainAxisSize: MainAxisSize.min,
                           children: [
+                            // One line: the bar has a fixed height.
                             Text(AppInfo.name,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
                                 style: TextStyle(color: context.colors.onBrandSurface, fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f16)),
                             if (!isNarrow)
                               Text(context.l10n.login_tagline,
@@ -445,8 +448,12 @@ class _LoginScreenState extends State<LoginScreen> {
                 children: [
                   Icon(Icons.shield_outlined, color: context.colors.onBrandSurface.withValues(alpha: AppAlpha.a70), size: AppIconSize.i16),
                   const SizedBox(width: AppSpacing.s8),
-                  Text(context.l10n.login_copyright(AppInfo.name),
-                      style: TextStyle(color: context.colors.onBrandSurface.withValues(alpha: AppAlpha.a70), fontSize: AppFontSize.f12)),
+                  // Wraps on a narrow phone (or a longer language) instead
+                  // of running off the card.
+                  Flexible(
+                    child: Text(context.l10n.login_copyright(AppInfo.name),
+                        style: TextStyle(color: context.colors.onBrandSurface.withValues(alpha: AppAlpha.a70), fontSize: AppFontSize.f12)),
+                  ),
                 ],
               ),
               Wrap(
@@ -1032,22 +1039,34 @@ class _LoginScreenState extends State<LoginScreen> {
                           ),
                         ),
                         const SizedBox(height: AppSpacing.s12),
-                        Row(
+                        // Both ends of one line while they fit; "Forgot
+                        // password?" moves under "Remember me" when they
+                        // don't (a narrow phone, a longer language).
+                        Wrap(
+                          alignment: WrapAlignment.spaceBetween,
+                          crossAxisAlignment: WrapCrossAlignment.center,
+                          runSpacing: AppSpacing.s8,
                           children: [
-                            SizedBox(
-                              width: 20,
-                              height: 20,
-                              child: Checkbox(
-                                value: rememberMe,
-                                onChanged: (value) => setState(() => rememberMe = value ?? false),
-                                activeColor: context.colors.primary,
-                                checkColor: context.colors.onPrimary,
-                                materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                              ),
+                            Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                SizedBox(
+                                  width: 20,
+                                  height: 20,
+                                  child: Checkbox(
+                                    value: rememberMe,
+                                    onChanged: (value) => setState(() => rememberMe = value ?? false),
+                                    activeColor: context.colors.primary,
+                                    checkColor: context.colors.onPrimary,
+                                    materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                                  ),
+                                ),
+                                const SizedBox(width: AppSpacing.s8),
+                                Flexible(
+                                  child: Text(context.l10n.login_rememberMe, style: TextStyle(color: context.colors.textPrimary, fontSize: AppFontSize.f13)),
+                                ),
+                              ],
                             ),
-                            const SizedBox(width: AppSpacing.s8),
-                            Text(context.l10n.login_rememberMe, style: TextStyle(color: context.colors.textPrimary, fontSize: AppFontSize.f13)),
-                            const Spacer(),
                             MouseRegion(
                               onEnter: (_) => setState(() => isForgotHovered = true),
                               onExit: (_) => setState(() => isForgotHovered = false),
