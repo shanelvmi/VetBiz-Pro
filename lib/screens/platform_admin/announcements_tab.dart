@@ -9,6 +9,7 @@ import '../../widgets/announcement_message.dart';
 import '../../data/collections.dart';
 import '../../data/fields.dart';
 import '../../data/support_contact_fields.dart';
+import '../../utils/social_link.dart';
 import '../../config/app_date_format.dart';
 import '../../theme/app_text.dart';
 import '../../theme/app_dimens.dart';
@@ -645,6 +646,23 @@ class _ContactDetailsCardState extends State<ContactDetailsCard> {
   final _phoneController = TextEditingController();
   final _whatsappController = TextEditingController();
   final _addressController = TextEditingController();
+
+  // The six social links (G3), in the footer's order. Each is checked by
+  // SocialLink.sanitize on Save - the same check the footer runs when it
+  // reads them - and nothing is saved while one is refused.
+  final Map<SocialNetwork, TextEditingController> _socialControllers = {
+    for (final network in SocialNetwork.values) network: TextEditingController(),
+  };
+  final Map<SocialNetwork, String> _socialErrors = {};
+  static const Map<SocialNetwork, String> _socialLabels = {
+    SocialNetwork.facebook: 'Facebook',
+    SocialNetwork.instagram: 'Instagram',
+    SocialNetwork.x: 'X',
+    SocialNetwork.linkedin: 'LinkedIn',
+    SocialNetwork.youtube: 'YouTube',
+    SocialNetwork.tiktok: 'TikTok',
+  };
+  static const _invalidLink = 'Enter a full web address, like https://facebook.com/yourpage';
   bool _isLoading = true;
   bool _isSaving = false;
 
@@ -660,6 +678,9 @@ class _ContactDetailsCardState extends State<ContactDetailsCard> {
     _phoneController.dispose();
     _whatsappController.dispose();
     _addressController.dispose();
+    for (final controller in _socialControllers.values) {
+      controller.dispose();
+    }
     super.dispose();
   }
 
@@ -672,6 +693,10 @@ class _ContactDetailsCardState extends State<ContactDetailsCard> {
         _phoneController.text = (data['phone'] as String?) ?? '';
         _whatsappController.text = (data['whatsapp'] as String?) ?? '';
         _addressController.text = (data['address'] as String?) ?? '';
+        for (final network in SocialNetwork.values) {
+          final value = data[network.field];
+          _socialControllers[network]!.text = value is String ? value : '';
+        }
       }
     } catch (_) {
       // Leaves the fields blank rather than blocking the rest of the
@@ -682,6 +707,21 @@ class _ContactDetailsCardState extends State<ContactDetailsCard> {
   }
 
   Future<void> _saveContactDetails() async {
+    final links = <SocialNetwork, String>{};
+    final errors = <SocialNetwork, String>{};
+    for (final network in SocialNetwork.values) {
+      final link = SocialLink.sanitize(_socialControllers[network]!.text);
+      if (link == null) {
+        errors[network] = _invalidLink;
+      } else {
+        links[network] = link;
+      }
+    }
+    setState(() => _socialErrors
+      ..clear()
+      ..addAll(errors));
+    if (errors.isNotEmpty) return;
+
     setState(() => _isSaving = true);
     try {
       await _db.collection(Collections.appConfig).doc(SupportContactFields.docId).set({
@@ -689,8 +729,13 @@ class _ContactDetailsCardState extends State<ContactDetailsCard> {
         'phone': _phoneController.text.trim(),
         'whatsapp': _whatsappController.text.trim(),
         'address': _addressController.text.trim(),
+        for (final network in SocialNetwork.values) network.field: links[network]!,
         Fields.updatedAt: FieldValue.serverTimestamp(),
       });
+      // The fields show what was stored (https:// added, spaces trimmed).
+      for (final network in SocialNetwork.values) {
+        _socialControllers[network]!.text = links[network]!;
+      }
       AppFeedback.success('Contact details saved');
     } catch (e, st) {
       AppFeedback.error("Couldn't save the contact details", error: e, stackTrace: st);
@@ -711,7 +756,7 @@ class _ContactDetailsCardState extends State<ContactDetailsCard> {
             const Text('Contact Details', style: TextStyle(fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f15)),
             const SizedBox(height: AppSpacing.s4),
             Text(
-              'Shown when someone taps Help on the Dashboard. All optional - '
+              'Shown when someone taps Help on the Dashboard or Help and contact on the sign-in page. All optional - '
               'at least one filled in is enough for the help dialog to have something to show.',
               style: TextStyle(fontSize: AppFontSize.f12_5, color: context.colors.textMuted),
             ),
@@ -766,6 +811,28 @@ class _ContactDetailsCardState extends State<ContactDetailsCard> {
                   isDense: true,
                 ),
               ),
+              const SizedBox(height: AppSpacing.s16),
+              const Text('Social links', style: TextStyle(fontWeight: AppFontWeight.semibold, fontSize: AppFontSize.f13_5)),
+              const SizedBox(height: AppSpacing.s4),
+              Text(
+                'All optional. Each one set shows its icon at the bottom of the sign-in and register pages.',
+                style: TextStyle(fontSize: AppFontSize.f12_5, color: context.colors.textMuted),
+              ),
+              for (final network in SocialNetwork.values) ...[
+                const SizedBox(height: AppSpacing.s12),
+                TextField(
+                  controller: _socialControllers[network],
+                  keyboardType: TextInputType.url,
+                  autocorrect: false,
+                  decoration: InputDecoration(
+                    labelText: _socialLabels[network],
+                    prefixIcon: const Icon(Icons.link),
+                    border: const OutlineInputBorder(),
+                    isDense: true,
+                    errorText: _socialErrors[network],
+                  ),
+                ),
+              ],
               const SizedBox(height: AppSpacing.s12),
               ElevatedButton.icon(
                 onPressed: _isSaving ? null : _saveContactDetails,

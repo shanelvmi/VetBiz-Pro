@@ -11,8 +11,7 @@ import 'package:vetbiz_pro/theme/app_theme.dart';
 
 // G3: the Platform Admin's Contact Details form gets the six social links,
 // checked by SocialLink.sanitize before anything is saved. Written before the
-// fields, skipped until they exist.
-const _skip = true;
+// fields (c017914).
 
 const _invalid = 'Enter a full web address, like https://facebook.com/yourpage';
 
@@ -44,7 +43,7 @@ void main() {
 
   setUp(() => db = FakeFirebaseFirestore());
 
-  group('Contact Details form', skip: _skip, () {
+  group('Contact Details form', () {
     testWidgets('has the six optional link fields, filled from the document', (tester) async {
       await db.collection(Collections.appConfig).doc(SupportContactFields.docId).set({'facebook': 'https://facebook.com/v'});
       await pump(tester);
