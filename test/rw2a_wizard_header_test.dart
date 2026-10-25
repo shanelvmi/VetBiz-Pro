@@ -11,7 +11,7 @@ import 'helpers/wizard_harness.dart';
 
 // RW2a (docs/design/register_wizard.md section 3): the wizard's header and
 // step intro. Written before the widgets, skipped until they exist.
-const _skip = true;
+const _skip = false;
 
 void main() {
   Color textColor(WidgetTester tester, String text) =>

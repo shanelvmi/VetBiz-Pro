@@ -27,6 +27,8 @@ Future<void> pumpWizard(
     locale: locale,
     theme: AppTheme.build(theme, brightness),
     themeMode: brightness == Brightness.dark ? ThemeMode.dark : ThemeMode.light,
+    // Light and Dark passes in one test: no cross-fade between them.
+    themeAnimationDuration: Duration.zero,
     darkTheme: AppTheme.build(theme, Brightness.dark),
     home: scaffoldBar
         ? Scaffold(body: const SizedBox.expand(), bottomNavigationBar: child)

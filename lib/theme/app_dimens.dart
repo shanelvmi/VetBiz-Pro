@@ -163,3 +163,58 @@ class AuthCardMetrics {
   static const double shadowBlur = 40;
   static const double shadowOffsetY = 20;
 }
+
+/// The step-by-step forms (lib/widgets/wizard, register_wizard.md section
+/// 3). Every size of the wizard widgets lives here, so one place restyles
+/// them (the owner's phone-app style comes later).
+class WizardMetrics {
+  WizardMetrics._();
+
+  /// Back, Continue and the terms checkbox: Material's 48 px touch target.
+  static const double buttonHeight = 48;
+  static const double consentTapTarget = 48;
+
+  /// The smallest an option card gets, with one short line.
+  static const double optionMinHeight = 56;
+
+  /// The progress bar under "Step n of total".
+  static const double progressHeight = 4;
+  static const double progressRadius = AppRadius.r2;
+
+  /// Header: between "Step n of total" and the title on one line, between
+  /// the lines when the title wraps, and above the bar.
+  static const double headerSpacing = AppSpacing.s12;
+  static const double headerRunSpacing = AppSpacing.s4;
+  static const double headerBarGap = AppSpacing.s8;
+
+  /// Step intro: between the title and the subtitle.
+  static const double introGap = AppSpacing.s6;
+
+  /// Option card: inside, between the radio, icon and text, the corner
+  /// and the outline (thicker when chosen, so the state is not colour only).
+  static const double optionPaddingH = AppSpacing.s16;
+  static const double optionPaddingV = AppSpacing.s12;
+  static const double optionGap = AppSpacing.s12;
+  static const double optionTextGap = AppSpacing.s2;
+  static const double optionRadius = AppRadius.r12;
+  static const double optionBorder = 1;
+  static const double optionBorderSelected = 2;
+  static const double optionIcon = AppIconSize.i24;
+
+  /// Back and Continue: between them, inside, the corner, and the spinner
+  /// that replaces Continue's text while the account is created.
+  static const double navGap = AppSpacing.s12;
+  static const double buttonPaddingH = AppSpacing.s24;
+  static const double buttonRadius = AppRadius.r12;
+  static const double spinnerSize = AppSpacing.s20;
+  static const double spinnerStroke = 2.2;
+
+  /// The bar pinned to the bottom of a phone screen: around the buttons,
+  /// and its top line.
+  static const double pinnedPaddingH = AppSpacing.s16;
+  static const double pinnedPaddingV = AppSpacing.s12;
+  static const double pinnedDivider = 1;
+
+  /// Terms checkbox: between the box and the sentence, and above the error.
+  static const double consentGap = AppSpacing.s4;
+}

@@ -32,6 +32,22 @@ class AppFontSize {
   static const double f28 = 28;
 }
 
+/// Text sizes of the step-by-step forms (lib/widgets/wizard). Their other
+/// sizes are in WizardMetrics (app_dimens.dart): one place restyles them.
+class WizardFontSize {
+  WizardFontSize._();
+
+  static const double step = AppFontSize.f13;
+  static const double stepTitle = AppFontSize.f13;
+  static const double introTitle = AppFontSize.f22;
+  static const double introSubtitle = AppFontSize.f14;
+  static const double optionTitle = AppFontSize.f15;
+  static const double optionSubtitle = AppFontSize.f13;
+  static const double button = AppFontSize.f16;
+  static const double consent = AppFontSize.f13;
+  static const double consentError = AppFontSize.f12;
+}
+
 class AppFontWeight {
   AppFontWeight._();
 
