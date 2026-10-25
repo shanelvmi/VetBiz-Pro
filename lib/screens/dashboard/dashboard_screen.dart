@@ -23,6 +23,7 @@ import '../../utils/upload_size_check.dart';
 
 import '../../widgets/summary_card.dart';
 import '../../widgets/initials_avatar.dart';
+import '../../widgets/profile/profile_menu_button.dart';
 
 import '../products/products_screen.dart';
 import '../clients/clients_screen.dart';
@@ -240,10 +241,6 @@ class _BlinkingDotState extends State<_BlinkingDot> with SingleTickerProviderSta
   }
 }
 
-/// Wraps the profile avatar with hover feedback (a ring, matching the
-/// amber-on-hover convention used throughout the app) - a background
-/// fill wouldn't read well on a circular avatar the way it does on a
-/// button, so this uses a border instead.
 class _DashboardSearchResult {
   final String title;
   final String subtitle;
@@ -256,44 +253,6 @@ class _DashboardSearchResult {
     required this.icon,
     required this.onTap,
   });
-}
-
-class _HoverableProfileIcon extends StatefulWidget {
-  final VoidCallback onTap;
-  final Widget child;
-
-  const _HoverableProfileIcon({required this.onTap, required this.child});
-
-  @override
-  State<_HoverableProfileIcon> createState() => _HoverableProfileIconState();
-}
-
-class _HoverableProfileIconState extends State<_HoverableProfileIcon> {
-  bool _hovered = false;
-
-  @override
-  Widget build(BuildContext context) {
-    return MouseRegion(
-      cursor: SystemMouseCursors.click,
-      onEnter: (_) => setState(() => _hovered = true),
-      onExit: (_) => setState(() => _hovered = false),
-      child: GestureDetector(
-        onTap: widget.onTap,
-        child: AnimatedContainer(
-          duration: AppMotion.fast,
-          padding: const EdgeInsets.all(AppSpacing.s4),
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(AppRadius.r20),
-            border: Border.all(
-              color: _hovered ? context.colors.accent : Colors.transparent,
-              width: 2,
-            ),
-          ),
-          child: widget.child,
-        ),
-      ),
-    );
-  }
 }
 
 class HoverFab extends StatefulWidget {
@@ -1225,56 +1184,7 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
                 onPressed: () => _showHelpDialog(context),
               ),
               const SizedBox(width: AppSpacing.s4),
-              Padding(
-                padding: const EdgeInsets.only(right: AppSpacing.s12),
-                child: Builder(
-                  builder: (context) => _HoverableProfileIcon(
-                    onTap: () => Scaffold.of(context).openEndDrawer(),
-                    child: StreamBuilder<DocumentSnapshot>(
-                      stream: userDoc.snapshots(),
-                      builder: (context, snapshot) {
-                        final rawData = snapshot.data?.data();
-                        final Map<String, dynamic> data =
-                            (rawData != null && rawData is Map)
-                                ? Map<String, dynamic>.from(rawData)
-                                : {};
-                        final avatarUrl = data['avatarUrl'] as String?;
-                        final fullNameForAvatar = data['fullName'] ?? '';
-
-                        final avatar = _profileBytes != null
-                            ? CircleAvatar(radius: 16, backgroundImage: MemoryImage(_profileBytes!))
-                            : InitialsAvatar(
-                                avatarUrl: avatarUrl,
-                                name: fullNameForAvatar,
-                                size: 32,
-                                backgroundColor: context.colors.primary.withValues(alpha: AppAlpha.a10),
-                                foregroundColor: context.colors.primary,
-                              );
-
-                        if (!isLargeScreen) return avatar;
-
-                        return Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            avatar,
-                            const SizedBox(width: AppSpacing.s8),
-                            ConstrainedBox(
-                              constraints: const BoxConstraints(maxWidth: 110),
-                              child: Text(
-                                fullNameForAvatar.isNotEmpty ? fullNameForAvatar : context.l10n.dashboard_account,
-                                style: TextStyle(fontSize: AppFontSize.f13, fontWeight: AppFontWeight.semibold, color: context.colors.textPrimary),
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                            ),
-                            Icon(Icons.keyboard_arrow_down, size: AppIconSize.i18, color: context.colors.textSecondary),
-                          ],
-                        );
-                      },
-                    ),
-                  ),
-                ),
-              ),
+              _buildProfileButton(),
             ],
           ),
           drawer: isLargeScreen ? null : Drawer(child: _buildDrawerContent()),
@@ -1987,54 +1897,7 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
             onPressed: () => _showHelpDialog(context),
           ),
           const SizedBox(width: AppSpacing.s4),
-          Padding(
-            padding: const EdgeInsets.only(right: AppSpacing.s12),
-            child: Builder(
-              builder: (context) => _HoverableProfileIcon(
-                onTap: () => Scaffold.of(context).openEndDrawer(),
-                child: StreamBuilder<DocumentSnapshot>(
-                  stream: userDoc.snapshots(),
-                  builder: (context, snapshot) {
-                    final rawData = snapshot.data?.data();
-                    final Map<String, dynamic> data =
-                        (rawData != null && rawData is Map)
-                            ? Map<String, dynamic>.from(rawData)
-                            : {};
-                    final avatarUrl = data['avatarUrl'] as String?;
-                    final fullNameForAvatar = data['fullName'] ?? '';
-
-                    final avatar = _profileBytes != null
-                        ? CircleAvatar(radius: 16, backgroundImage: MemoryImage(_profileBytes!))
-                        : InitialsAvatar(
-                            avatarUrl: avatarUrl,
-                            name: fullNameForAvatar,
-                            size: 32,
-                            backgroundColor: context.colors.primary.withValues(alpha: AppAlpha.a10),
-                            foregroundColor: context.colors.primary,
-                          );
-
-                    return Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        avatar,
-                        const SizedBox(width: AppSpacing.s8),
-                        ConstrainedBox(
-                          constraints: const BoxConstraints(maxWidth: 110),
-                          child: Text(
-                            fullNameForAvatar.isNotEmpty ? fullNameForAvatar : context.l10n.dashboard_account,
-                            style: TextStyle(fontSize: AppFontSize.f13, fontWeight: AppFontWeight.semibold, color: context.colors.textPrimary),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ),
-                        Icon(Icons.keyboard_arrow_down, size: AppIconSize.i18, color: context.colors.textSecondary),
-                      ],
-                    );
-                  },
-                ),
-              ),
-            ),
-          ),
+          _buildProfileButton(),
         ],
       ),
     );
@@ -2807,6 +2670,46 @@ Widget _buildDrawerContent() {
   );
 }
 
+
+
+  // --------------------- PROFILE: TOP BAR AND END DRAWER ---------------------
+
+  Map<String, dynamic> _profileData(AsyncSnapshot<DocumentSnapshot> snapshot) {
+    final raw = snapshot.data?.data();
+    return (raw != null && raw is Map) ? Map<String, dynamic>.from(raw) : {};
+  }
+
+  String _profileRoleLabel(Map<String, dynamic> data) {
+    if (data.isEmpty) return ''; // still loading
+    final role = data[Fields.role] ?? 'Assistant';
+    // A promoted Assistant is a Co-admin, not just "Admin".
+    return (role == UserRole.admin.key && data['previousRole'] == UserRole.assistant.key)
+        ? context.l10n.role_coAdmin
+        // Capitalised first, so an unknown role still shows as before.
+        : context.l10n.roleLabel(_capitalize(role));
+  }
+
+  // The person's button in both top bars (the AppBar below the large
+  // breakpoint, _buildTopBar above it); a tap opens the end drawer.
+  Widget _buildProfileButton() {
+    return Padding(
+      padding: const EdgeInsets.only(right: AppSpacing.s12),
+      child: Builder(
+        builder: (context) => StreamBuilder<DocumentSnapshot>(
+          stream: userDoc.snapshots(),
+          builder: (context, snapshot) {
+            final data = _profileData(snapshot);
+            return ProfileMenuButton(
+              avatarUrl: data['avatarUrl'] as String?,
+              name: (data['fullName'] ?? '').toString(),
+              roleLabel: _profileRoleLabel(data),
+              onTap: () => Scaffold.of(context).openEndDrawer(),
+            );
+          },
+        ),
+      ),
+    );
+  }
 
 
   // --------------------- END DRAWER ---------------------
