@@ -5202,6 +5202,24 @@ class AppLocalizationsEn extends AppLocalizations {
   String get register_profilePhoto => 'Profile photo';
 
   @override
+  String get profile_changePhoto => 'Change photo';
+
+  @override
+  String get profile_removePhoto => 'Remove photo';
+
+  @override
+  String get profile_removePhotoTitle => 'Remove your photo?';
+
+  @override
+  String get profile_removePhotoBody => 'Your initials will show in its place.';
+
+  @override
+  String get profile_photoRemoved => 'Photo removed';
+
+  @override
+  String get profile_photoRemoveFailed => 'Couldn\'t remove the photo';
+
+  @override
   String get register_tapToChangePhoto => 'Tap to change your photo';
 
   @override

@@ -8976,6 +8976,42 @@ abstract class AppLocalizations {
   /// **'Profile photo'**
   String get register_profilePhoto;
 
+  /// Edit Profile and sign-up: button that picks a new profile photo.
+  ///
+  /// In en, this message translates to:
+  /// **'Change photo'**
+  String get profile_changePhoto;
+
+  /// Edit Profile and sign-up: button that removes the profile photo (initials show instead).
+  ///
+  /// In en, this message translates to:
+  /// **'Remove photo'**
+  String get profile_removePhoto;
+
+  /// Edit Profile: title of the confirmation before the photo is deleted.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove your photo?'**
+  String get profile_removePhotoTitle;
+
+  /// Edit Profile: body of the Remove photo confirmation.
+  ///
+  /// In en, this message translates to:
+  /// **'Your initials will show in its place.'**
+  String get profile_removePhotoBody;
+
+  /// Toast after the profile photo was removed.
+  ///
+  /// In en, this message translates to:
+  /// **'Photo removed'**
+  String get profile_photoRemoved;
+
+  /// Toast when removing the profile photo failed.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t remove the photo'**
+  String get profile_photoRemoveFailed;
+
   /// Register avatar picker.
   ///
   /// In en, this message translates to:

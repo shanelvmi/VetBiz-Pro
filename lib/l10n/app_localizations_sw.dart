@@ -5228,6 +5228,25 @@ class AppLocalizationsSw extends AppLocalizations {
   String get register_profilePhoto => 'Picha ya wasifu';
 
   @override
+  String get profile_changePhoto => 'Badilisha picha';
+
+  @override
+  String get profile_removePhoto => 'Ondoa picha';
+
+  @override
+  String get profile_removePhotoTitle => 'Uondoe picha yako?';
+
+  @override
+  String get profile_removePhotoBody =>
+      'Herufi za kwanza za jina lako zitaonekana badala yake.';
+
+  @override
+  String get profile_photoRemoved => 'Picha imeondolewa';
+
+  @override
+  String get profile_photoRemoveFailed => 'Imeshindikana kuondoa picha';
+
+  @override
   String get register_tapToChangePhoto => 'Gusa ili kubadilisha picha yako';
 
   @override
