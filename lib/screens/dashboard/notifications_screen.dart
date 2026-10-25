@@ -9,13 +9,11 @@ import '../../providers/subscription_provider.dart';
 import '../../providers/user_role_provider.dart';
 import '../../utils/notification_seen_tracker.dart';
 import '../../models/notification_model.dart';
-import '../../models/notification_state.dart';
-import '../../data/subscription_notice_stage.dart';
 import '../../widgets/announcement_message.dart';
 import '../../widgets/notification_row.dart';
 import '../../services/notification_feed.dart';
+import '../../ui/feedback/app_feedback.dart';
 import '../../data/collections.dart';
-import '../../data/fields.dart';
 import '../../config/app_limits.dart';
 import '../../config/app_timeouts.dart';
 import '../../config/app_ranges.dart';
@@ -47,179 +45,103 @@ class NotificationsScreen extends StatefulWidget {
 }
 
 class _NotificationsScreenState extends State<NotificationsScreen> {
-  bool _isLoading = true;
-  String? _error;
+  // My notifications and my own state (NOTIF-2c): the controller builds the
+  // rows through NotificationPolicy; this screen only shows them and passes
+  // on what the person does. Null when no facility or nobody is signed in.
+  NotificationFeedController? _feed;
+  bool _ownsFeed = false;
+  Stream<QuerySnapshot<Map<String, dynamic>>>? _urgentStream;
 
-  // "Your Plan": calm, informational notes about the subscription - today the
-  // free trial - kept apart from "Needs Attention" because they don't.
-  List<FacilityNotification> _planNotices = [];
-  List<FacilityNotification> _needsAttention = [];
-  List<FacilityNotification> _earlier = [];
-  StreamSubscription<QuerySnapshot<Map<String, dynamic>>>? _notificationsSub;
-
-  // Exactly what's stored in Firestore, before the subscription row is
-  // reconciled against SubscriptionProvider - kept so the displayed
-  // lists can be rebuilt when the subscription state changes, not just
-  // when a new snapshot arrives.
-  List<FacilityNotification> _rawAll = [];
-  SubscriptionProvider? _subscriptionProvider;
-
-  // Full-screen only: the complete recent history (not filtered to only
-  // currently-visible ones, since this screen is for browsing what's
-  // happened, not just what's still new) plus the search/date/category
-  // filters and pagination state that drive it.
-  List<FacilityNotification> _fullHistory = [];
+  // Full screen only: the search/date/category filters and pagination.
   final TextEditingController _searchController = TextEditingController();
   String _searchQuery = '';
   DateTimeRange? _dateRange;
   NotificationCategory? _selectedCategory; // null = "All"
   String _statusFilter = 'All'; // 'All' | 'Unread' | 'Read'
 
-  // Re-checks every minute which notifications have expired, so an offer
-  // that ends while this screen is open disappears by itself instead of
-  // waiting for the next data change.
+  // Re-checks every minute which notifications have expired or outlived
+  // their lifetime, so they leave by themselves while this screen is open.
   Timer? _expiryTicker;
   int _currentPage = 1;
   int _pageSize = AppLimits.tablePageSize;
 
+  bool get _isLoading => _feed?.isLoading ?? false;
+  Object? get _error => _feed?.error;
+  List<NotificationItem> get _items => _feed?.items ?? const [];
+
   @override
   void initState() {
     super.initState();
-    _subscriptionProvider = Provider.of<SubscriptionProvider>(context, listen: false);
-    _subscriptionProvider!.addListener(_onSubscriptionChanged);
-    _watchNotifications();
-    _expiryTicker = Timer.periodic(AppTimeouts.noticeExpiryTick, (_) {
-      if (mounted) setState(_rebuildLists);
-    });
-    // NotificationSeenTracker had no callers anywhere in the app - the
-    // "last viewed" record it's meant to persist was never actually
-    // written, so Dashboard's bell-blink state (_hasNewUrgentSinceViewed
-    // etc.) only ever cleared in-memory for the rest of the current
-    // session (via _refreshNotificationsViewedState on return to
-    // Dashboard), not durably: a fresh app restart would reload the
-    // same old value - or none at all - and could show the same
-    // already-seen items as new again.
+    _feed = widget.controller ?? _feedFromProviders();
+    _ownsFeed = widget.controller == null && _feed != null;
+    final feed = _feed;
+    if (feed != null) {
+      feed.addListener(_onFeedChanged);
+      feed.start();
+      // Created once: a new stream on every build would reset the builder.
+      _urgentStream = feed.firestore
+          .collection(Collections.publicAnnouncements)
+          .where('urgent', isEqualTo: true)
+          .snapshots();
+    }
+    _expiryTicker = Timer.periodic(AppTimeouts.noticeExpiryTick, (_) => _feed?.refresh());
+    // The device's "last viewed" time, for the bell's blink on urgent
+    // announcements and pending assistants (dashboard_screen.dart).
     NotificationSeenTracker.markViewedNow();
+  }
+
+  NotificationFeedController? _feedFromProviders() {
+    final facilityId = Provider.of<FacilityProvider>(context, listen: false).selectedFacilityId;
+    final uid = FirebaseAuth.instance.currentUser?.uid;
+    if (facilityId == null || uid == null) return null;
+    final subscription = Provider.of<SubscriptionProvider>(context, listen: false);
+    final role = Provider.of<UserRoleProvider>(context, listen: false);
+    return NotificationFeedController(
+      firestore: FirebaseFirestore.instance,
+      facilityId: facilityId,
+      uid: uid,
+      // Re-read on every rebuild, so the list follows a change of role.
+      isAdmin: () => role.isAdmin,
+      subscription: () => SubscriptionFacts.of(subscription),
+      subscriptionChanges: Listenable.merge([subscription, role]),
+      window: widget.isDropdown ? AppLimits.dashboardNotifications : AppLimits.notificationsWindow,
+    );
+  }
+
+  void _onFeedChanged() {
+    if (!mounted) return;
+    setState(() {});
   }
 
   @override
   void dispose() {
-    _notificationsSub?.cancel();
+    _feed?.removeListener(_onFeedChanged);
+    if (_ownsFeed) _feed?.dispose();
     _expiryTicker?.cancel();
-    _subscriptionProvider?.removeListener(_onSubscriptionChanged);
     _searchController.dispose();
     super.dispose();
   }
 
-  // A simple, single-field ordering with no where() clause at all -
-  // never needs a composite index, unlike a filtered query would.
-  // Ephemeral-vs-persistent visibility is decided client-side instead,
-  // against a bounded recent window. Deliberately does NOT auto-mark
-  // anything as read just by loading it - the mockup's explicit "Mark
-  // all as read" action is the only thing that changes readAt, so it
-  // actually has something to do rather than acting on notifications
-  // already silently marked read the instant the panel opened.
-  void _watchNotifications() {
-    final facilityId = Provider.of<FacilityProvider>(context, listen: false).selectedFacilityId;
-    if (facilityId == null) {
-      setState(() => _isLoading = false);
-      return;
+  // ==================== ACTIONS (all per person) ====================
+
+  Future<void> _run(Future<void> Function() action) async {
+    try {
+      await action();
+    } catch (e, st) {
+      AppFeedback.error(L10n.current.notifications_updateFailed, error: e, stackTrace: st);
     }
-
-    _notificationsSub = FirebaseFirestore.instance
-        .collection(Collections.facilities)
-        .doc(facilityId)
-        .collection(Collections.notifications)
-        .orderBy(Fields.createdAt, descending: true)
-        .limit(widget.isDropdown ? 50 : 200)
-        .snapshots()
-        .listen((snapshot) {
-      _rawAll = snapshot.docs.map(FacilityNotification.fromFirestore).toList();
-      if (mounted) {
-        setState(() {
-          _rebuildLists();
-          _isLoading = false;
-        });
-      }
-    }, onError: (e) {
-      if (mounted) setState(() { _error = '$e'; _isLoading = false; });
-    });
   }
 
-  void _onSubscriptionChanged() {
-    if (!mounted) return;
-    setState(_rebuildLists);
-  }
-
-  /// Splits the stored notifications into the screen's lists, after
-  /// swapping the subscription row for what SubscriptionProvider says
-  /// right now. Call inside setState.
-  void _rebuildLists() {
-    // Only what's meant for THIS person: a role-change notice for the admins
-    // isn't shown to an assistant, and a personal one only to its recipient.
-    // (Re-evaluated on every rebuild, so it follows a change of role.)
-    final uid = FirebaseAuth.instance.currentUser?.uid;
-    final isAdmin = Provider.of<UserRoleProvider>(context, listen: false).isAdmin;
-    // The live subscription and trial rows replace the stored copy, and the
-    // policy and lifetimes apply (buildNotificationItems, NOTIF-2c): the
-    // subscription notice escalates by stage, not by comparing its English
-    // message. Read state is still the shared readAt until the screen moves
-    // onto the feed controller.
-    final all = [
-      for (final i in buildNotificationItems(
-        stored: _rawAll,
-        state: NotificationState.empty,
-        uid: uid,
-        isAdmin: isAdmin,
-        subscription: SubscriptionFacts.of(_subscriptionProvider!),
-        now: DateTime.now(),
-      ))
-        i.notification,
-    ];
-    final visible = all.where((n) => n.isCurrentlyVisible).toList();
-
-    // "Needs Attention" is everything with real, specific meaning -
-    // stock/critical/payment/debt/system - while "Earlier" catches
-    // the more routine, informational events (a service recorded, a
-    // new client added) that don't need the same urgency, matching
-    // NotificationType.category's "other" grouping.
-    _planNotices = visible.where((n) => n.type == NotificationType.trialStatus).toList();
-    _needsAttention = visible
-        .where((n) => n.category != NotificationCategory.other && n.type != NotificationType.trialStatus)
-        .toList();
-    _earlier = visible.where((n) => n.category == NotificationCategory.other).toList();
-    // The full screen is for browsing what's happened, so it keeps read
-    // items - but anything that has EXPIRED (an offer whose end date has
-    // passed, say) is no longer true and is dropped, same as the dropdown
-    // and the Dashboard bell already do.
-    _fullHistory = all.where((n) => !n.isExpired).toList();
-  }
-
-  Future<void> _markAllAsRead() async {
-    final facilityId = Provider.of<FacilityProvider>(context, listen: false).selectedFacilityId;
-    if (facilityId == null) return;
-
-    // The live rows have no document to update.
-    final unread = [..._needsAttention, ..._earlier]
-        .where((n) => !n.isRead && n.id != subscriptionNoticeId && n.id != trialStatusRowId);
-    if (unread.isEmpty) return;
-
-    final batch = FirebaseFirestore.instance.batch();
-    final notificationsRef =
-        FirebaseFirestore.instance.collection(Collections.facilities).doc(facilityId).collection(Collections.notifications);
-    for (final n in unread) {
-      batch.update(notificationsRef.doc(n.id), {'readAt': FieldValue.serverTimestamp()});
-    }
-    await batch.commit();
-  }
+  void _markAllAsRead() => _run(() => _feed!.markAllRead());
 
   // Search + date range + status + category card, applied together - the
   // flat, filtered result the table and its pagination both work from.
-  List<FacilityNotification> get _filteredHistory {
-    return _fullHistory.where((n) {
+  List<NotificationItem> get _filteredHistory {
+    return _items.where((i) {
+      final n = i.notification;
       if (_selectedCategory != null && n.category != _selectedCategory) return false;
-      if (_statusFilter == 'Unread' && n.isRead) return false;
-      if (_statusFilter == 'Read' && !n.isRead) return false;
+      if (_statusFilter == 'Unread' && i.isRead) return false;
+      if (_statusFilter == 'Read' && !i.isRead) return false;
 
       if (_dateRange != null && n.createdAt != null) {
         final day = DateTime(n.createdAt!.year, n.createdAt!.month, n.createdAt!.day);
@@ -257,11 +179,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final nothingToShow = !_isLoading &&
-        _error == null &&
-        _planNotices.isEmpty &&
-        _needsAttention.isEmpty &&
-        _earlier.isEmpty;
+    final nothingToShow = !_isLoading && _error == null && _items.isEmpty;
 
     if (widget.isDropdown) {
       return _buildDropdownChrome(nothingToShow);
@@ -286,7 +204,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
           : _error != null
-              ? Center(child: Padding(padding: const EdgeInsets.all(AppSpacing.s24), child: Text(context.l10n.notifications_loadFailed(_error!))))
+              ? Center(child: Padding(padding: const EdgeInsets.all(AppSpacing.s24), child: Text(context.l10n.notifications_loadFailed('$_error'))))
               : _buildFullScreenBody(),
     );
   }
@@ -380,13 +298,14 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
   }
 
   Widget _buildFullScreenBody() {
-    final all = _fullHistory;
+    final all = _items;
 
     final counts = <NotificationCategory, int>{for (final c in NotificationCategory.values) c: 0};
     final unreadCounts = <NotificationCategory, int>{for (final c in NotificationCategory.values) c: 0};
-    for (final n in all) {
+    for (final i in all) {
+      final n = i.notification;
       counts[n.category] = (counts[n.category] ?? 0) + 1;
-      if (!n.isRead) unreadCounts[n.category] = (unreadCounts[n.category] ?? 0) + 1;
+      if (!i.isRead) unreadCounts[n.category] = (unreadCounts[n.category] ?? 0) + 1;
     }
 
     final filtered = _filteredHistory;
@@ -545,7 +464,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
       }),
     );
 
-    final hasUnread = [..._needsAttention, ..._earlier].any((n) => !n.isRead);
+    final hasUnread = _feed?.hasUnread ?? false;
     final markAll = OutlinedButton.icon(
       onPressed: hasUnread ? _markAllAsRead : null,
       icon: const Icon(Icons.done_all, size: AppIconSize.i16),
@@ -600,6 +519,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
       },
     );
   }
+
 
   Widget _statusDropdown({bool expand = false}) {
     return Container(
@@ -742,7 +662,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
     );
   }
 
-  Widget _buildResults(List<FacilityNotification> items) {
+  Widget _buildResults(List<NotificationItem> items) {
     return LayoutBuilder(
       builder: (context, constraints) {
         if (constraints.maxWidth < AppBreakpoints.resultsTable) {
@@ -765,6 +685,8 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                   _headerCell(context.l10n.common_category, flex: 2),
                   _headerCell(context.l10n.common_date, flex: 2),
                   _headerCell(context.l10n.common_status, flex: 1),
+                  // Over the more menu.
+                  const SizedBox(width: kMinInteractiveDimension),
                 ],
               ),
             ),
@@ -812,21 +734,22 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
     );
   }
 
-  Widget _statusChip(FacilityNotification n) {
-    final color = n.isRead ? context.colors.textHint : context.colors.primary;
+  Widget _statusChip(NotificationItem i) {
+    final color = i.isRead ? context.colors.textHint : context.colors.primary;
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: AppSpacing.s8, vertical: AppSpacing.s4),
       decoration: BoxDecoration(color: color.withValues(alpha: AppAlpha.a10), borderRadius: BorderRadius.circular(AppRadius.r10)),
       child: Text(
-        n.isRead ? context.l10n.notifications_read : context.l10n.notifications_statusNew,
+        i.isRead ? context.l10n.notifications_read : context.l10n.notifications_statusNew,
         style: TextStyle(color: color, fontSize: AppFontSize.f11_5, fontWeight: AppFontWeight.semibold),
       ),
     );
   }
 
   // Wide layout: one table row.
-  Widget _buildRow(FacilityNotification n) {
-    final unread = !n.isRead;
+  Widget _buildRow(NotificationItem i) {
+    final n = i.notification;
+    final unread = !i.isRead;
     final created = n.createdAt;
 
     return Container(
@@ -883,15 +806,16 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                     ],
                   ),
           ),
-          Expanded(flex: 1, child: Align(alignment: Alignment.centerLeft, child: _statusChip(n))),
+          Expanded(flex: 1, child: Align(alignment: Alignment.centerLeft, child: _statusChip(i))),
         ],
       ),
     );
   }
 
   // Narrow layout (phones): the same information as a card per notification.
-  Widget _buildNarrowCard(FacilityNotification n) {
-    final unread = !n.isRead;
+  Widget _buildNarrowCard(NotificationItem i) {
+    final n = i.notification;
+    final unread = !i.isRead;
     final created = n.createdAt;
 
     return Container(
@@ -937,7 +861,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                 children: [
                   _categoryChip(n),
                   const SizedBox(width: AppSpacing.s6),
-                  _statusChip(n),
+                  _statusChip(i),
                   const Spacer(),
                   if (created != null)
                     Text(
@@ -1014,7 +938,8 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
   // container the caller wraps this in provides the surface and
   // shadow), just a small header row and the same content beneath it.
   Widget _buildDropdownChrome(bool nothingToShow) {
-    final totalUnread = [..._needsAttention, ..._earlier].where((n) => !n.isRead).length;
+    final feed = _feed;
+    final totalUnread = feed == null ? 0 : [...feed.needsAttention, ...feed.earlier].where((i) => !i.isRead).length;
 
     return Column(
       mainAxisSize: MainAxisSize.min,
@@ -1066,7 +991,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
               : _error != null
                   ? Padding(
                       padding: const EdgeInsets.all(AppSpacing.s24),
-                      child: Text(context.l10n.notifications_loadFailed(_error!)),
+                      child: Text(context.l10n.notifications_loadFailed('$_error')),
                     )
                   : SingleChildScrollView(
                       padding: const EdgeInsets.all(AppSpacing.s12),
@@ -1081,6 +1006,9 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
   // either way, only how much space it's given differs.
   Widget _buildAlertsList(bool nothingToShow) {
     if (nothingToShow) return _buildDropdownEmpty();
+    final plan = _feed?.planNotices ?? const <NotificationItem>[];
+    final attention = _feed?.needsAttention ?? const <NotificationItem>[];
+    final earlier = _feed?.earlier ?? const <NotificationItem>[];
 
     return ListView(
       shrinkWrap: true,
@@ -1088,22 +1016,22 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
       padding: const EdgeInsets.fromLTRB(AppSpacing.s16, AppSpacing.s16, AppSpacing.s16, AppSpacing.s32),
       children: [
         _buildUrgentAnnouncements(),
-        if (_planNotices.isNotEmpty) ...[
-          _sectionHeader(Icons.workspace_premium_outlined, context.l10n.notifications_yourPlan, _planNotices.length, context.colors.info),
+        if (plan.isNotEmpty) ...[
+          _sectionHeader(Icons.workspace_premium_outlined, context.l10n.notifications_yourPlan, plan.length, context.colors.info),
           const SizedBox(height: AppSpacing.s8),
-          ..._planNotices.map((n) => NotificationRow(notification: n)),
+          ...plan.map(_dropdownRow),
           const SizedBox(height: AppSpacing.s20),
         ],
-        if (_needsAttention.isNotEmpty) ...[
-          _sectionHeader(Icons.priority_high, context.l10n.notifications_needsAttention, _needsAttention.length, context.colors.warning),
+        if (attention.isNotEmpty) ...[
+          _sectionHeader(Icons.priority_high, context.l10n.notifications_needsAttention, attention.length, context.colors.warning),
           const SizedBox(height: AppSpacing.s8),
-          ..._needsAttention.map((n) => NotificationRow(notification: n)),
+          ...attention.map(_dropdownRow),
           const SizedBox(height: AppSpacing.s20),
         ],
-        if (_earlier.isNotEmpty) ...[
-          _sectionHeader(Icons.history, context.l10n.notifications_earlier, _earlier.length, context.colors.textHint),
+        if (earlier.isNotEmpty) ...[
+          _sectionHeader(Icons.history, context.l10n.notifications_earlier, earlier.length, context.colors.textHint),
           const SizedBox(height: AppSpacing.s8),
-          ..._earlier.map((n) => NotificationRow(notification: n)),
+          ...earlier.map(_dropdownRow),
           const SizedBox(height: AppSpacing.s12),
         ],
         if (widget.isDropdown)
@@ -1128,6 +1056,13 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
       ],
     );
   }
+
+  // One row of the dropdown.
+  Widget _dropdownRow(NotificationItem i) => NotificationRow(
+        key: ValueKey(i.id),
+        notification: i.notification,
+        isRead: i.isRead,
+      );
 
   // The same plain words as the full screen's empty state, no "all caught
   // up" cheer (docs/design/notifications.md, section 3). The dropdown sits
@@ -1154,14 +1089,11 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
       );
 
   Widget _buildUrgentAnnouncements() {
-    return StreamBuilder<QuerySnapshot>(
-      stream: FirebaseFirestore.instance
-          .collection(Collections.publicAnnouncements)
-          .where('urgent', isEqualTo: true)
-          .snapshots(),
+    return StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
+      stream: _urgentStream,
       builder: (context, snapshot) {
         final urgentDocs = (snapshot.data?.docs ?? []).where((doc) {
-          final data = doc.data() as Map<String, dynamic>;
+          final data = doc.data();
           return data['hidden'] != true;
         }).toList();
 
@@ -1175,7 +1107,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
               _sectionHeader(Icons.campaign_outlined, context.l10n.notifications_urgentAnnouncements, urgentDocs.length, context.colors.danger),
               const SizedBox(height: AppSpacing.s8),
               ...urgentDocs.map((doc) {
-                final data = doc.data() as Map<String, dynamic>;
+                final data = doc.data();
                 return _AccentCard(
                   color: context.colors.danger,
                   icon: Icons.priority_high,
