@@ -11,6 +11,7 @@ import '../services/auth_service.dart';
 import '../widgets/announcement_message.dart';
 import '../widgets/password_field_guard.dart';
 import '../widgets/auth_background.dart';
+import '../widgets/auth_theme_toggle.dart';
 import '../utils/navigator_key.dart';
 import 'legal/privacy_policy_screen.dart';
 import 'legal/terms_of_service_screen.dart';
@@ -315,7 +316,8 @@ class _LoginScreenState extends State<LoginScreen> {
           final isNarrow = constraints.maxWidth < AppBreakpoints.loginHeaderNarrow;
 
           return SizedBox(
-            height: 44,
+            // Tall enough for the theme toggle's 48 px touch target.
+            height: kMinInteractiveDimension,
             child: Stack(
             children: [
               // Left group - logo, title, subtitle. Positioned rather
@@ -357,7 +359,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   ),
                 ),
               ),
-              // Right group - status pill and sun icon. Pinned directly
+              // Right group - status pill and the Light/Dark toggle. Pinned directly
               // to an explicit right coordinate (16px from the actual
               // container edge) rather than pushed there by a Spacer
               // inside a Row - a direct position, not a computed one.
@@ -391,12 +393,7 @@ class _LoginScreenState extends State<LoginScreen> {
                         ),
                       ),
                       const SizedBox(width: AppSpacing.s10),
-                      Container(
-                        width: 36,
-                        height: 36,
-                        decoration: BoxDecoration(color: context.colors.onBrandSurface.withValues(alpha: AppAlpha.a15), shape: BoxShape.circle),
-                        child: Icon(Icons.wb_sunny_outlined, color: context.colors.onBrandSurface, size: AppIconSize.i18),
-                      ),
+                      const AuthThemeToggle(),
                     ],
                   ),
                 ),

@@ -116,6 +116,10 @@ class AppSizes {
   static const double toastIcon = 28;
   static const double minTapTarget = 40;
 
+  /// The round button in the signed-out screens' top bar (the theme
+  /// toggle): the circle you see, inside Material's 48 px touch target.
+  static const double authHeaderButton = 36;
+
   /// A small round status indicator (online, stock status, submitted,
   /// client Active/Inactive): an 8 px dot, as a Container or an
   /// Icons.circle size.

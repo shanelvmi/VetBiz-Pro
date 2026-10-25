@@ -178,7 +178,7 @@ void main() {
         await finish(tester);
       });
     }
-  }, skip: _untilG1);
+  });
 
   group('(4) one card, and no overflow', () {
     for (final width in [1200.0, 390.0]) {

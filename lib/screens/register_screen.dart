@@ -20,6 +20,7 @@ import 'facilities/facility_picker_screen.dart';
 import 'legal/privacy_policy_screen.dart';
 import 'legal/terms_of_service_screen.dart';
 import '../widgets/auth_background.dart';
+import '../widgets/auth_theme_toggle.dart';
 import '../services/role_change_service.dart';
 import '../data/collections.dart';
 import '../data/upload_content_types.dart';
@@ -862,6 +863,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
               style: TextStyle(color: context.colors.onBrandSurface, fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f16),
             ),
           ),
+          const AuthThemeToggle(),
+          const SizedBox(width: AppSpacing.s8),
           TextButton.icon(
             onPressed: _goToLogin,
             icon: Icon(Icons.login, size: AppIconSize.i18, color: context.colors.onBrandSurface),
