@@ -1387,6 +1387,8 @@
   "common_editProfile": ["Hariri Wasifu","Edit Profile screen title.","draft"],
   "login_tagline": ["Ufuatiliaji Mahiri wa Biashara na Huduma za Mifugo","Login top bar, under the app title.","draft"],
   "login_systemOnline": ["Mfumo Uko Hewani","Login top bar status pill.","draft"],
+  "auth_switchToDarkMode": ["Badilisha kwenda Hali ya Giza","Tooltip of the moon button in the Login and Register top bar: it turns Dark Mode on.","draft"],
+  "auth_switchToLightMode": ["Badilisha kwenda Hali ya Mwanga","Tooltip of the sun button in the Login and Register top bar: it turns Dark Mode off (Light).","draft"],
   "login_copyright": ["© 2026 {appName}. Haki zote zimehifadhiwa.","Login footer.","draft"],
   "login_welcomeTo": ["Karibu","Login welcome card, above the app name.","draft"],
   "login_stayUpdated": ["Pata habari na matangazo mapya kila wakati.","Login welcome card.","draft"],
