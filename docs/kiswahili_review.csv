@@ -1890,3 +1890,17 @@ membership_tooManyInviteAttempts,"Too many wrong invite codes. Wait {minutes, pl
 update_title,Update required,Unahitaji kusasisha,Heading of the Update required screen (minimum app version gate).,draft
 update_body,This version of {appName} ({current}) can no longer be used. Please update to version {minimum} or later.,Toleo hili la {appName} ({current}) haliwezi kutumika tena. Tafadhali sasisha hadi toleo {minimum} au jipya zaidi.,"Update required screen. current is the running version, minimum the lowest one allowed (platform_config/settings.minimumVersion).",draft
 update_howTo,"On a computer, reload this page. On a phone, install the latest version of {appName}.","Kwenye kompyuta, pakia upya ukurasa huu. Kwenye simu, sakinisha toleo jipya zaidi la {appName}.",Update required screen: how to update.,draft
+wizard_stepOf,Step {current} of {total},Hatua {current} kati ya {total},"Step-by-step forms (lib/widgets/wizard): the header at the left, above the progress bar.",draft
+wizard_back,Back,Rudi,Step-by-step forms: goes back one step. Continue is products_continue.,draft
+register_stepAccountType,How will you use {appName}?,Utatumiaje {appName}?,"Register wizard step 1 title (both flows); the two option cards are the role texts.",draft
+register_stepAccountTypeHint,Choose the one that fits you.,Chagua kinachokufaa.,Register wizard step 1 subtitle.,draft
+register_stepAboutYou,About you,Kuhusu wewe,"Register wizard step 2 title (photo, title, name, phone).",draft
+register_stepAboutYouHint,Tell us who you are and how to reach you.,Tuambie wewe ni nani na jinsi ya kukupata.,Register wizard step 2 subtitle.,draft
+register_stepFacilityHint,Add each facility you run and choose its type.,Ongeza kila kituo unachosimamia na uchague aina yake.,"Register wizard step 3 subtitle, owner. The title is profile_yourFacility.",draft
+register_stepInvite,Your invite code,Msimbo wako wa mwaliko,"Register wizard step 3 title, assistant. The subtitle is register_askAdminForInvite.",draft
+register_stepSignIn,Sign-in details,Taarifa za kuingia,"Register wizard step 4 title (email, password, confirm).",draft
+register_stepSignInHint,The email and password you will use to sign in.,Barua pepe na nenosiri utakalotumia kuingia.,Register wizard step 4 subtitle.,draft
+register_stepReview,Check and create,Kagua na ufungue,Register wizard step 5 title: the summary and Create account.,draft
+register_stepReviewHint,"Check your details, then create your account.","Kagua taarifa zako, kisha fungua akaunti yako.",Register wizard step 5 subtitle.,draft
+register_consent,I agree to the {terms} and the {privacy}.,Ninakubali {terms} na {privacy}.,"Register wizard step 5, the required checkbox (RW1 answer 1). terms is common_termsOfService and privacy is common_privacyPolicy; both show as links.",draft
+register_consentRequired,Tick the box to agree before you create your account.,Weka alama kwenye kisanduku ili ukubali kabla ya kufungua akaunti yako.,Register wizard step 5: under the checkbox when Create account is pressed unticked.,draft

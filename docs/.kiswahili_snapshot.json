@@ -1883,5 +1883,19 @@
   "membership_tooManyInviteAttempts": ["Misimbo mingi ya mwaliko si sahihi. Subiri {minutes, plural, =1{dakika 1} other{dakika {minutes}}} kisha ujaribu tena.","Shown when the server refuses invite codes after too many wrong ones (P1 rate limit). minutes is the server's window, AppRules.inviteAttemptWindowMinutes.","draft"],
   "update_title": ["Unahitaji kusasisha","Heading of the Update required screen (minimum app version gate).","draft"],
   "update_body": ["Toleo hili la {appName} ({current}) haliwezi kutumika tena. Tafadhali sasisha hadi toleo {minimum} au jipya zaidi.","Update required screen. current is the running version, minimum the lowest one allowed (platform_config/settings.minimumVersion).","draft"],
-  "update_howTo": ["Kwenye kompyuta, pakia upya ukurasa huu. Kwenye simu, sakinisha toleo jipya zaidi la {appName}.","Update required screen: how to update.","draft"]
+  "update_howTo": ["Kwenye kompyuta, pakia upya ukurasa huu. Kwenye simu, sakinisha toleo jipya zaidi la {appName}.","Update required screen: how to update.","draft"],
+  "wizard_stepOf": ["Hatua {current} kati ya {total}","Step-by-step forms (lib/widgets/wizard): the header at the left, above the progress bar.","draft"],
+  "wizard_back": ["Rudi","Step-by-step forms: goes back one step. Continue is products_continue.","draft"],
+  "register_stepAccountType": ["Utatumiaje {appName}?","Register wizard step 1 title (both flows); the two option cards are the role texts.","draft"],
+  "register_stepAccountTypeHint": ["Chagua kinachokufaa.","Register wizard step 1 subtitle.","draft"],
+  "register_stepAboutYou": ["Kuhusu wewe","Register wizard step 2 title (photo, title, name, phone).","draft"],
+  "register_stepAboutYouHint": ["Tuambie wewe ni nani na jinsi ya kukupata.","Register wizard step 2 subtitle.","draft"],
+  "register_stepFacilityHint": ["Ongeza kila kituo unachosimamia na uchague aina yake.","Register wizard step 3 subtitle, owner. The title is profile_yourFacility.","draft"],
+  "register_stepInvite": ["Msimbo wako wa mwaliko","Register wizard step 3 title, assistant. The subtitle is register_askAdminForInvite.","draft"],
+  "register_stepSignIn": ["Taarifa za kuingia","Register wizard step 4 title (email, password, confirm).","draft"],
+  "register_stepSignInHint": ["Barua pepe na nenosiri utakalotumia kuingia.","Register wizard step 4 subtitle.","draft"],
+  "register_stepReview": ["Kagua na ufungue","Register wizard step 5 title: the summary and Create account.","draft"],
+  "register_stepReviewHint": ["Kagua taarifa zako, kisha fungua akaunti yako.","Register wizard step 5 subtitle.","draft"],
+  "register_consent": ["Ninakubali {terms} na {privacy}.","Register wizard step 5, the required checkbox (RW1 answer 1). terms is common_termsOfService and privacy is common_privacyPolicy; both show as links.","draft"],
+  "register_consentRequired": ["Weka alama kwenye kisanduku ili ukubali kabla ya kufungua akaunti yako.","Register wizard step 5: under the checkbox when Create account is pressed unticked.","draft"]
 }
