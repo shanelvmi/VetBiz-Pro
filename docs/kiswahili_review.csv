@@ -1389,22 +1389,15 @@ common_facilityName,Facility name,Jina la kituo,Field label for a new facility's
 common_facilityNameHint,e.g. Ukuli,mf. Ukuli,Example in the facility name field.,draft
 common_passwordsDoNotMatch,Passwords do not match,Nenosiri hazilingani,Register: the two passwords differ.,draft
 common_editProfile,Edit Profile,Hariri Wasifu,Edit Profile screen title.,draft
-login_tagline,Smart Business & Vet Services Monitor,Ufuatiliaji Mahiri wa Biashara na Huduma za Mifugo,"Login top bar, under the app title.",draft
-login_systemOnline,System Online,Mfumo Uko Hewani,Login top bar status pill.,draft
 auth_switchToDarkMode,Switch to dark mode,Badilisha kwenda Hali ya Giza,Tooltip of the moon button in the Login and Register top bar: it turns Dark Mode on.,draft
 auth_switchToLightMode,Switch to light mode,Badilisha kwenda Hali ya Mwanga,Tooltip of the sun button in the Login and Register top bar: it turns Dark Mode off (Light).,draft
 login_copyright,© 2026 {appName}. All rights reserved.,© 2026 {appName}. Haki zote zimehifadhiwa.,Login footer.,draft
-login_welcomeTo,Welcome to,Karibu,"Login welcome card, above the app name.",draft
-login_stayUpdated,Stay updated with the latest news and announcements.,Pata habari na matangazo mapya kila wakati.,Login welcome card.,draft
 login_announcements,Announcements,Matangazo,Login announcements card title.,draft
 login_urgent,URGENT,DHARURA,Login announcement chip for an urgent announcement.,draft
 login_announcementFallbackTitle,Notice,Taarifa,Login announcement title when the announcement has none.,draft
 login_noAnnouncements,No announcements,Hakuna matangazo,"Login announcements card, empty.",draft
 login_allCaughtUp,You're all caught up!,Umeshaona yote!,"Login announcements card, empty.",draft
-login_trustTitle,Secure. Reliable. Always Connected.,Salama. Imara. Daima Mtandaoni.,Login trust footer.,draft
-login_trustBody,Your trusted partner in animal health and business growth.,Mshirika wako wa kuaminika katika afya ya mifugo na ukuaji wa biashara.,Login trust footer.,draft
 login_welcomeBack,Welcome back,Karibu tena,Login form title.,draft
-login_logIntoFacility,Sign in to your facility,Ingia kwenye kituo chako,Login form subtitle.,draft
 login_emailHint,Enter your email,Weka barua pepe yako,Login email field hint.,draft
 login_passwordHint,Enter your password,Weka nenosiri lako,Login password field hint.,draft
 login_rememberMe,Remember Me,Nikumbuke,Login checkbox: keep the email for next time.,draft
