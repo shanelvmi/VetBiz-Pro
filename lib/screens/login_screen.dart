@@ -11,6 +11,7 @@ import '../services/auth_service.dart';
 import '../widgets/announcement_message.dart';
 import '../widgets/password_field_guard.dart';
 import '../widgets/auth_background.dart';
+import '../widgets/auth_card.dart';
 import '../widgets/auth_theme_toggle.dart';
 import '../utils/navigator_key.dart';
 import 'legal/privacy_policy_screen.dart';
@@ -1166,119 +1167,73 @@ class _LoginScreenState extends State<LoginScreen> {
           // live inside this one unified surface on every screen size,
           // reflowing between two columns and a single stacked column
           // rather than switching to a stripped-down alternate layout.
-          Center(
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.all(AppSpacing.s24),
-              child: LayoutBuilder(
-                builder: (context, constraints) {
-                  // The actual space available to the card, after the
-                  // 24px padding on each side above - not the raw
-                  // screen width, which doesn't account for that and
-                  // was the real cause of the two-column layout
-                  // overflowing at widths just above the old cutoff.
-                  final isWide = constraints.maxWidth > AppBreakpoints.twoPane;
-                  final targetWidth = isWide ? 1100.0 : 480.0;
-                  // The card is forced to be exactly this wide (not
-                  // just "up to" it) - otherwise its own width follows
-                  // whatever its content naturally demands, which can
-                  // end up narrower than the target and is why the
-                  // header's right-aligned elements weren't reaching
-                  // the true card edge. Capped against the actual
-                  // available space so this can never demand more room
-                  // than genuinely exists.
-                  final cardWidth =
-                      constraints.maxWidth < targetWidth ? constraints.maxWidth : targetWidth;
-
-                  return ConstrainedBox(
-                    constraints: BoxConstraints(minWidth: cardWidth, maxWidth: cardWidth),
-                    child: Container(
-                      clipBehavior: Clip.antiAlias,
-                      decoration: BoxDecoration(
-                        color: context.colors.surface.withValues(alpha: 0.97),
-                        borderRadius: BorderRadius.circular(AppRadius.r24),
-                        boxShadow: [
-                          BoxShadow(color: context.colors.shadow.withValues(alpha: AppAlpha.a40), blurRadius: 40, offset: const Offset(0, 20)),
-                        ],
-                      ),
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        crossAxisAlignment: CrossAxisAlignment.stretch,
-                        children: [
-                          _buildHeader(),
-                          Padding(
-                            padding: const EdgeInsets.all(AppSpacing.s28),
-                            child: isWide
-                                ? IntrinsicHeight(
-                                    child: Row(
-                                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                                      children: [
-                                        // Left: Welcome + Announcements + Trust footer
-                                        Expanded(
-                                          flex: 1,
-                                          child: Column(
-                                            crossAxisAlignment: CrossAxisAlignment.stretch,
-                                            children: [
-                                              _buildWelcomeCard(),
-                                              const SizedBox(height: AppSpacing.s16),
-                                              Expanded(child: _buildAnnouncementsCard()),
-                                              const SizedBox(height: AppSpacing.s16),
-                                              _buildTrustFooter(),
-                                            ],
-                                          ),
-                                        ),
-                                        const SizedBox(width: AppSpacing.s28),
-                                        // Right: Login
-                                        Expanded(
-                                          flex: 1,
-                                          // A softly tinted panel behind the form
-                                          // card: the card is white with a deep
-                                          // shadow, so it lifts off this instead
-                                          // of blending into the white surface
-                                          // around it.
-                                          child: Container(
-                                            padding: const EdgeInsets.all(AppSpacing.s24),
-                                            decoration: BoxDecoration(
-                                              gradient: LinearGradient(
-                                                begin: Alignment.topLeft,
-                                                end: Alignment.bottomRight,
-                                                colors: [context.colors.divider, context.colors.surfaceMuted],
-                                              ),
-                                              borderRadius: BorderRadius.circular(AppRadius.r24),
-                                            ),
-                                            child: Center(child: _buildLoginForm()),
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  )
-                                // Narrow screens: the same content, all
-                                // of it, stacked in one column instead
-                                // of a separate, stripped-down layout -
-                                // login first since it's the action
-                                // most people came here for, everything
-                                // else available below it.
-                                : Column(
-                                    mainAxisSize: MainAxisSize.min,
-                                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                                    children: [
-                                      _buildLoginForm(),
-                                      const SizedBox(height: AppSpacing.s20),
-                                      _buildWelcomeCard(),
-                                      const SizedBox(height: AppSpacing.s16),
-                                      _buildAnnouncementsCard(),
-                                      const SizedBox(height: AppSpacing.s16),
-                                      _buildTrustFooter(),
-                                    ],
-                                  ),
+          // Its width, padding and radius are Register's too (AuthCard).
+          AuthCard(
+            header: _buildHeader(),
+            footer: _buildFooter(),
+            bodyBuilder: (context, layout) => layout.isWide
+                ? IntrinsicHeight(
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        // Left: Welcome + Announcements + Trust footer
+                        Expanded(
+                          flex: 1,
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.stretch,
+                            children: [
+                              _buildWelcomeCard(),
+                              const SizedBox(height: AppSpacing.s16),
+                              Expanded(child: _buildAnnouncementsCard()),
+                              const SizedBox(height: AppSpacing.s16),
+                              _buildTrustFooter(),
+                            ],
                           ),
-                          _buildFooter(),
-                        ],
-                      ),
+                        ),
+                        const SizedBox(width: AppSpacing.s28),
+                        // Right: Login
+                        Expanded(
+                          flex: 1,
+                          // A softly tinted panel behind the form
+                          // card: the card is white with a deep
+                          // shadow, so it lifts off this instead
+                          // of blending into the white surface
+                          // around it.
+                          child: Container(
+                            padding: const EdgeInsets.all(AppSpacing.s24),
+                            decoration: BoxDecoration(
+                              gradient: LinearGradient(
+                                begin: Alignment.topLeft,
+                                end: Alignment.bottomRight,
+                                colors: [context.colors.divider, context.colors.surfaceMuted],
+                              ),
+                              borderRadius: BorderRadius.circular(AppRadius.r24),
+                            ),
+                            child: Center(child: _buildLoginForm()),
+                          ),
+                        ),
+                      ],
                     ),
-                  );
-                },
-              ),
-            ),
+                  )
+                // Narrow screens: the same content, all
+                // of it, stacked in one column instead
+                // of a separate, stripped-down layout -
+                // login first since it's the action
+                // most people came here for, everything
+                // else available below it.
+                : Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      _buildLoginForm(),
+                      const SizedBox(height: AppSpacing.s20),
+                      _buildWelcomeCard(),
+                      const SizedBox(height: AppSpacing.s16),
+                      _buildAnnouncementsCard(),
+                      const SizedBox(height: AppSpacing.s16),
+                      _buildTrustFooter(),
+                    ],
+                  ),
           ),
         ],
       ),

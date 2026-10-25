@@ -134,3 +134,25 @@ class AppSizes {
   /// decision.
   static const double platformAdminSidebarExpanded = 240;
 }
+
+/// The one card of the signed-out screens (lib/widgets/auth_card.dart).
+/// Login and Register both read these, so one place restyles both cards.
+class AuthCardMetrics {
+  AuthCardMetrics._();
+
+  /// Between the card and the page edge (and the phone's full width).
+  static const double pageMargin = AppSpacing.s24;
+
+  /// Widest the card gets: in its wide layout (above
+  /// AppBreakpoints.twoPane) and below it.
+  static const double maxWidthWide = 1100;
+  static const double maxWidthNarrow = 560;
+
+  /// Inside the card, around its body.
+  static const double paddingWide = AppSpacing.s28;
+  static const double paddingNarrow = AppSpacing.s18;
+
+  static const double radius = AppRadius.r24;
+  static const double shadowBlur = 40;
+  static const double shadowOffsetY = 20;
+}
