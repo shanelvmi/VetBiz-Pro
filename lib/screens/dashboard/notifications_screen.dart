@@ -54,12 +54,14 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
   bool _ownsFeed = false;
   Stream<QuerySnapshot<Map<String, dynamic>>>? _urgentStream;
 
-  // Full screen only: the search/date/category filters and pagination.
+  // Full screen only: the search/date/category filters and pagination. and selection mode (never on persistent rows).
   final TextEditingController _searchController = TextEditingController();
   String _searchQuery = '';
   DateTimeRange? _dateRange;
   NotificationCategory? _selectedCategory; // null = "All"
   String _statusFilter = 'All'; // 'All' | 'Unread' | 'Read'
+  bool _selecting = false;
+  final Set<String> _selected = {};
 
   // Re-checks every minute which notifications have expired or outlived
   // their lifetime, so they leave by themselves while this screen is open.
@@ -112,7 +114,10 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
 
   void _onFeedChanged() {
     if (!mounted) return;
-    setState(() {});
+    setState(() {
+      final present = {for (final i in _items) i.id};
+      _selected.removeWhere((id) => !present.contains(id));
+    });
   }
 
   @override
@@ -134,10 +139,22 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
     }
   }
 
-  // Tapping a row marks it read for me.
+  // Tapping a row marks it read for me; in selection mode it ticks it.
   void _onTap(NotificationItem item) {
+    if (_selecting) {
+      if (item.canRemove) _toggleSelected(item.id, !_selected.contains(item.id));
+      return;
+    }
     if (!item.isRead) _run(() => _feed!.markRead([item]));
   }
+
+  void _toggleSelected(String id, bool on) => setState(() {
+        if (on) {
+          _selected.add(id);
+        } else {
+          _selected.remove(id);
+        }
+      });
 
   void _onAction(NotificationItem item, NotificationAction action) {
     switch (action) {
@@ -173,6 +190,37 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
           onUndo: () => _run(() => _feed!.restore(entries)),
         );
       });
+
+  Future<void> _removeReadOnes() async {
+    final items = _feed?.readRemovable ?? const <NotificationItem>[];
+    if (items.isEmpty) return;
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        content: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: AppSizes.dialogXs),
+          child: Text(context.l10n.notifications_removeReadConfirm(items.length)),
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(context, false), child: Text(context.l10n.common_cancel)),
+          TextButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: Text(context.l10n.common_remove, style: TextStyle(color: context.colors.danger)),
+          ),
+        ],
+      ),
+    );
+    if (confirmed == true) await _removeItems(items);
+  }
+
+  Future<void> _removeSelected() async {
+    final items = _items.where((i) => _selected.contains(i.id) && i.canRemove).toList();
+    setState(() {
+      _selecting = false;
+      _selected.clear();
+    });
+    await _removeItems(items);
+  }
 
   void _markAllAsRead() => _run(() => _feed!.markAllRead());
 
@@ -372,24 +420,43 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
     final page = _currentPage > totalPages ? totalPages : _currentPage;
     final pageItems = filtered.skip((page - 1) * _pageSize).take(_pageSize).toList();
 
+    final header = [
+      Padding(
+        padding: const EdgeInsets.fromLTRB(AppSpacing.s16, AppSpacing.s16, AppSpacing.s16, 0),
+        child: _buildCategoryCards(counts, unreadCounts),
+      ),
+      Padding(
+        padding: const EdgeInsets.fromLTRB(AppSpacing.s16, AppSpacing.s12, AppSpacing.s16, 0),
+        child: _buildFilters(),
+      ),
+    ];
+    final content = all.isEmpty
+        ? _buildEmptyState()
+        : filtered.isEmpty
+            ? _buildNoMatches()
+            : _buildResults(pageItems);
+    final showPager = all.isNotEmpty || (_feed?.canLoadOlder ?? false);
+    final pager = _buildPaginationBar(total: total, page: page, totalPages: totalPages);
+
+    // Phone width: the whole page scrolls as one. With the cards, filters
+    // and actions fixed on top, a phone had room for one row or less.
+    if (MediaQuery.sizeOf(context).width < AppBreakpoints.resultsTable) {
+      return ListView(
+        children: [
+          ...header,
+          if (all.isEmpty || filtered.isEmpty)
+            Padding(padding: const EdgeInsets.symmetric(vertical: AppSpacing.s32), child: content)
+          else
+            content,
+          if (showPager) pager,
+        ],
+      );
+    }
     return Column(
       children: [
-        Padding(
-          padding: const EdgeInsets.fromLTRB(AppSpacing.s16, AppSpacing.s16, AppSpacing.s16, 0),
-          child: _buildCategoryCards(counts, unreadCounts),
-        ),
-        Padding(
-          padding: const EdgeInsets.fromLTRB(AppSpacing.s16, AppSpacing.s12, AppSpacing.s16, 0),
-          child: _buildFilters(),
-        ),
-        Expanded(
-          child: all.isEmpty
-              ? _buildEmptyState()
-              : filtered.isEmpty
-                  ? _buildNoMatches()
-                  : _buildResults(pageItems),
-        ),
-        if (all.isNotEmpty) _buildPaginationBar(total: total, page: page, totalPages: totalPages),
+        ...header,
+        Expanded(child: content),
+        if (showPager) pager,
       ],
     );
   }
@@ -521,25 +588,15 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
       }),
     );
 
-    final hasUnread = _feed?.hasUnread ?? false;
-    final markAll = OutlinedButton.icon(
-      onPressed: hasUnread ? _markAllAsRead : null,
-      icon: const Icon(Icons.done_all, size: AppIconSize.i16),
-      label: Text(context.l10n.notifications_markAllRead),
-      style: OutlinedButton.styleFrom(
-        foregroundColor: context.colors.primary,
-        padding: const EdgeInsets.symmetric(horizontal: AppSpacing.s14, vertical: AppSpacing.s12),
-        side: BorderSide(color: context.colors.textHint.withValues(alpha: AppAlpha.a30)),
-      ),
-    );
     final reset = _hasActiveFilters ? TextButton(onPressed: _resetFilters, child: Text(context.l10n.common_reset)) : null;
 
     return LayoutBuilder(
       builder: (context, constraints) {
-        if (constraints.maxWidth < AppBreakpoints.twoPane) {
-          return Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
+        final narrow = constraints.maxWidth < AppBreakpoints.twoPane;
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            if (narrow) ...[
               search,
               const SizedBox(height: AppSpacing.s10),
               Row(
@@ -549,34 +606,65 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                   Expanded(child: _statusDropdown(expand: true)),
                 ],
               ),
-              const SizedBox(height: AppSpacing.s10),
+              if (reset != null) Align(alignment: Alignment.centerLeft, child: reset),
+            ] else
               Row(
                 children: [
-                  if (reset != null) reset,
-                  const Spacer(),
-                  markAll,
+                  Expanded(flex: 3, child: search),
+                  const SizedBox(width: AppSpacing.s10),
+                  _dateRangeButton(),
+                  const SizedBox(width: AppSpacing.s10),
+                  _statusDropdown(),
+                  if (reset != null) ...[const SizedBox(width: AppSpacing.s10), reset],
                 ],
               ),
-            ],
-          );
-        }
-
-        return Row(
-          children: [
-            Expanded(flex: 3, child: search),
-            const SizedBox(width: AppSpacing.s10),
-            _dateRangeButton(),
-            const SizedBox(width: AppSpacing.s10),
-            _statusDropdown(),
-            if (reset != null) ...[const SizedBox(width: AppSpacing.s10), reset],
-            const SizedBox(width: AppSpacing.s10),
-            markAll,
+            const SizedBox(height: AppSpacing.s10),
+            _buildHeaderActions(),
           ],
         );
       },
     );
   }
 
+  // Mark all as read, Remove read ones and Select - or, while selecting,
+  // Remove selected and Cancel. A Wrap, so they go onto a second line at
+  // phone width instead of overflowing. There is no "remove everything".
+  Widget _buildHeaderActions() {
+    final l = context.l10n;
+    final style = OutlinedButton.styleFrom(
+      foregroundColor: context.colors.primary,
+      minimumSize: const Size(0, kMinInteractiveDimension),
+      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.s14),
+      side: BorderSide(color: context.colors.textHint.withValues(alpha: AppAlpha.a30)),
+    );
+    Widget button(IconData icon, String label, VoidCallback? onPressed) => OutlinedButton.icon(
+          onPressed: onPressed,
+          icon: Icon(icon, size: AppIconSize.i16),
+          label: Text(label),
+          style: style,
+        );
+    final feed = _feed;
+    final children = _selecting
+        ? [
+            button(Icons.delete_outline, l.notifications_removeSelected, _selected.isEmpty ? null : _removeSelected),
+            TextButton(
+              onPressed: () => setState(() {
+                _selecting = false;
+                _selected.clear();
+              }),
+              style: TextButton.styleFrom(minimumSize: const Size(0, kMinInteractiveDimension)),
+              child: Text(l.common_cancel),
+            ),
+          ]
+        : [
+            button(Icons.done_all, l.notifications_markAllRead, (feed?.hasUnread ?? false) ? _markAllAsRead : null),
+            button(Icons.playlist_remove, l.notifications_removeReadOnes,
+                (feed?.readRemovable.isNotEmpty ?? false) ? _removeReadOnes : null),
+            button(Icons.checklist, l.notifications_select,
+                _items.any((i) => i.canRemove) ? () => setState(() => _selecting = true) : null),
+          ];
+    return Wrap(alignment: WrapAlignment.end, spacing: AppSpacing.s8, runSpacing: AppSpacing.s8, children: children);
+  }
 
   Widget _statusDropdown({bool expand = false}) {
     return Container(
@@ -724,6 +812,9 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
       builder: (context, constraints) {
         if (constraints.maxWidth < AppBreakpoints.resultsTable) {
           return ListView.separated(
+            // Inside the page's own scroll view (see _buildFullScreenBody).
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
             padding: const EdgeInsets.fromLTRB(AppSpacing.s16, AppSpacing.s12, AppSpacing.s16, AppSpacing.s12),
             itemCount: items.length,
             separatorBuilder: (context, index) => const SizedBox(height: AppSpacing.s10),
@@ -738,6 +829,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
               decoration: BoxDecoration(border: Border(bottom: BorderSide(color: context.colors.textHint.withValues(alpha: AppAlpha.a20)))),
               child: Row(
                 children: [
+                  if (_selecting) const SizedBox(width: kMinInteractiveDimension),
                   _headerCell(context.l10n.notifications_colNotification, flex: 6),
                   _headerCell(context.l10n.common_category, flex: 2),
                   _headerCell(context.l10n.common_date, flex: 2),
@@ -822,6 +914,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
+          if (_selecting) _selectSlot(i),
           Expanded(
             flex: 6,
             child: Row(
@@ -873,6 +966,12 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
     );
   }
 
+  // Selection mode: a tick box, or an empty slot of the same width on a
+  // persistent row (it can never be selected).
+  Widget _selectSlot(NotificationItem i) => i.canRemove
+      ? NotificationSelectBox(id: i.id, selected: _selected.contains(i.id), onChanged: (on) => _toggleSelected(i.id, on))
+      : const SizedBox(width: kMinInteractiveDimension);
+
   // Narrow layout (phones): the same information as a card per notification.
   Widget _buildNarrowCard(NotificationItem i) {
     final n = i.notification;
@@ -904,6 +1003,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
               Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
+                  if (_selecting && i.canRemove) _selectSlot(i),
                   _typeIcon(n, 36),
                   const SizedBox(width: AppSpacing.s10),
                   Expanded(
@@ -970,8 +1070,18 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                 : context.l10n.notifications_showingRange(start, end, total),
             style: TextStyle(fontSize: AppFontSize.f12_5, color: context.colors.textMuted),
           ),
-          Row(
-            mainAxisSize: MainAxisSize.min,
+          // Removed and expired items use up the window, so older ones stay
+          // reachable (cursor, AppLimits.notificationsOlderPage at a time).
+          if (_feed?.canLoadOlder ?? false)
+            TextButton.icon(
+              onPressed: _feed!.isLoadingOlder ? null : () => _run(_feed!.loadOlder),
+              icon: const Icon(Icons.history, size: AppIconSize.i16),
+              label: Text(context.l10n.notifications_loadOlder),
+            ),
+          // A Wrap, not a Row: at phone width the page controls go onto a
+          // second line instead of overflowing.
+          Wrap(
+            crossAxisAlignment: WrapCrossAlignment.center,
             children: [
               DropdownButtonHideUnderline(
                 child: DropdownButton<int>(
@@ -1053,6 +1163,20 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                   style: const TextStyle(fontSize: AppFontSize.f12_5, fontWeight: AppFontWeight.semibold),
                 ),
                 ),
+              ),
+              // Remove read ones (my read routine and dismissible items only).
+              PopupMenuButton<void>(
+                key: const ValueKey('notification-header-more'),
+                tooltip: context.l10n.common_moreActions,
+                icon: Icon(Icons.more_vert, color: context.colors.onBrandSurface, size: AppIconSize.i20),
+                onSelected: (_) => _removeReadOnes(),
+                itemBuilder: (context) => [
+                  PopupMenuItem<void>(
+                    enabled: feed?.readRemovable.isNotEmpty ?? false,
+                    value: null,
+                    child: Text(context.l10n.notifications_removeReadOnes),
+                  ),
+                ],
               ),
               IconButton(
                 icon: Icon(Icons.close, color: context.colors.onBrandSurface, size: AppIconSize.i20),

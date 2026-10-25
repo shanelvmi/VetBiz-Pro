@@ -76,8 +76,11 @@ NotificationFeedController newFeed(FirebaseFirestore fs, String uid, Clock clock
 Future<void> pumpNotifications(WidgetTester tester, NotificationFeedController c,
     {double width = 390, double height = 800, bool dark = false, bool dropdown = false}) async {
   SharedPreferences.setMockInitialValues({});
-  await tester.binding.setSurfaceSize(Size(width, height));
-  addTearDown(() => tester.binding.setSurfaceSize(null));
+  // The view itself (not only the surface), so MediaQuery says the same
+  // width as the layout: the phone layout and the swipes go by MediaQuery.
+  tester.view.devicePixelRatio = 1;
+  tester.view.physicalSize = Size(width, height);
+  addTearDown(tester.view.reset);
   final screen = NotificationsScreen(isDropdown: dropdown, controller: c);
   await tester.pumpWidget(MaterialApp(
     scaffoldMessengerKey: AppFeedback.messengerKey,

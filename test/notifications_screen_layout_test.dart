@@ -10,8 +10,8 @@ import 'package:vetbiz_pro/services/notification_feed.dart';
 
 import 'helpers/notification_harness.dart';
 
-// Until the screens are wired (NOTIF-2c).
-const _skip = true;
+// Was true until the screens were wired (NOTIF-2c).
+const _skip = false;
 
 const _minTap = 48.0;
 

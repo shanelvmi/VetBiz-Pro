@@ -10,8 +10,8 @@ import 'package:vetbiz_pro/services/notification_feed.dart';
 
 import 'helpers/notification_harness.dart';
 
-// Until the screens are wired (NOTIF-2c).
-const _skip = true;
+// Was true until the screens were wired (NOTIF-2c).
+const _skip = false;
 
 NotificationItem itemOf(NotificationFeedController c, String id) => c.items.firstWhere((i) => i.id == id);
 
@@ -49,7 +49,7 @@ void main() {
     await seed(fs, 'rej', 'subscription_rejected');
     final c = newFeed(fs, 'A', Clock(), subs: subs);
     addTearDown(c.dispose);
-    await pumpNotifications(tester, c);
+    await pumpNotifications(tester, c, height: 1400);
 
     final reasons = {
       subscriptionNoticeId: 'Stays until the subscription is renewed',
