@@ -19,11 +19,13 @@ import '../ui/feedback/app_feedback.dart';
 /// for what's actually set, and falls back to the original generic
 /// message if none of the four have been configured yet. [contact] is a
 /// read already made (the footer reads once per page); without it the
-/// document is read now ([firestore], or the default instance).
+/// document is read now ([firestore], or the default instance). [title]
+/// replaces "Contact Support" (Settings keeps its "Help and Support").
 Future<void> showSupportContactDialog(
   BuildContext context, {
   Future<SupportContact>? contact,
   FirebaseFirestore? firestore,
+  String? title,
 }) async {
   // A failed fetch gives an empty contact (SupportContact.load), so the
   // generic message still shows - it shouldn't block someone from at
@@ -100,7 +102,7 @@ Future<void> showSupportContactDialog(
     context: context,
     builder: (ctx) => AlertDialog(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadius.r16)),
-      title: Text(context.l10n.dashboard_contactSupport),
+      title: Text(title ?? context.l10n.dashboard_contactSupport),
       content: SizedBox(
         width: 320,
         child: Column(
