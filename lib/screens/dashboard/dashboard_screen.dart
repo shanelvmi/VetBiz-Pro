@@ -18,6 +18,7 @@ import '../../services/auth_service.dart';
 import '../../services/session_validity_service.dart';
 import '../../services/dashboard_summary_service.dart';
 import '../../services/sales_summary_service.dart';
+import '../../services/notification_feed.dart';
 import '../../utils/upload_size_check.dart';
 
 import '../../widgets/summary_card.dart';
@@ -37,7 +38,6 @@ import '../debtors/debtors_screen.dart';
 import '../payments/payments_screen.dart';
 import '../../providers/subscription_provider.dart';
 import '../../models/promotion.dart';
-import '../../models/notification_model.dart';
 import '../../providers/ui_settings_provider.dart';
 import '../../providers/user_role_provider.dart';
 import '../../utils/merged_query_stream.dart';
@@ -404,6 +404,33 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
   // (AppBar leading on wide screens, actions on narrow ones), so a
   // fixed/assumed position wouldn't anchor correctly in both.
   final GlobalKey _bellKey = GlobalKey();
+
+  // The bell reads the same feed as the Notifications dropdown (NOTIF-2c), so
+  // its red dot follows MY read state and a promotion I removed stops its
+  // accent. One per facility and person, created once (a new stream on every
+  // build would reset it).
+  NotificationFeedController? _bellFeed;
+  String? _bellFeedKey;
+
+  NotificationFeedController? _bellFeedFor(String facilityId) {
+    final uid = FirebaseAuth.instance.currentUser?.uid;
+    final key = (facilityId.isEmpty || uid == null) ? null : '$facilityId/$uid';
+    if (key == _bellFeedKey) return _bellFeed;
+    _bellFeed?.dispose();
+    _bellFeedKey = key;
+    if (key == null) return _bellFeed = null;
+    final subscription = Provider.of<SubscriptionProvider>(context, listen: false);
+    final role = Provider.of<UserRoleProvider>(context, listen: false);
+    return _bellFeed = NotificationFeedController(
+      firestore: FirebaseFirestore.instance,
+      facilityId: facilityId,
+      uid: uid!,
+      isAdmin: () => role.isAdmin,
+      subscription: () => SubscriptionFacts.of(subscription),
+      subscriptionChanges: Listenable.merge([subscription, role]),
+      window: AppLimits.dashboardNotifications,
+    )..start();
+  }
   static const Duration _sessionCheckInterval = AppTimeouts.sessionCheck;
 
   // Persisted per device (not synced) so the collapsed/expanded choice
@@ -576,6 +603,7 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
     _urgentWatchSub?.cancel();
     _pendingWatchSub?.cancel();
     _periodTotalsSub?.cancel();
+    _bellFeed?.dispose();
     super.dispose();
   }
 
@@ -2367,38 +2395,22 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
     // targeted promotion, so this never disagrees with what the
     // Subscription screen itself would show.
     final facilityId = Provider.of<FacilityProvider>(context, listen: false).selectedFacilityId ?? '';
+    final bellFeed = _bellFeedFor(facilityId);
 
     return StreamBuilder<Promotion?>(
       stream: streamApplicablePromotion(facilityId: facilityId, isExpiringSoon: subscriptionNeedsAttention),
       builder: (context, promoSnapshot) {
-        final hasActivePromotion = promoSnapshot.data != null;
-
-        return StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
-          stream: facilityId.isEmpty
-              ? null
-              : FirebaseFirestore.instance
-                  .collection(Collections.facilities)
-                  .doc(facilityId)
-                  .collection(Collections.notifications)
-                  .orderBy(Fields.createdAt, descending: true)
-                  .limit(AppLimits.dashboardNotifications)
-                  .snapshots(),
-          builder: (context, notifSnapshot) {
-            // Only what's meant for this person - the same rule the
-            // Notifications screen applies, or the bell would light up for
-            // something that isn't even listed there.
-            final bellUid = FirebaseAuth.instance.currentUser?.uid;
-            final bellIsAdmin = Provider.of<UserRoleProvider>(context).isAdmin;
-            final storedNotifications = (notifSnapshot.data?.docs ?? [])
-                .map(FacilityNotification.fromFirestore)
-                .where((n) => n.isVisibleTo(uid: bellUid, isAdmin: bellIsAdmin))
-                .toList();
-            // Covers every notification type, subscription alerts
-            // included - once marked read (via "Mark all as read"),
-            // it stops counting here, same as any other
-            // notification. No special-casing: read means quiet.
-            final hasUnreadFacilityNotification =
-                storedNotifications.any((n) => !n.isRead && !n.isExpired);
+        return ListenableBuilder(
+          listenable: Listenable.merge([bellFeed]),
+          builder: (context, _) {
+            // A promotion I removed from my notifications no longer lights
+            // the accent for me (a NEW one writes a new notification).
+            final promo = promoSnapshot.data;
+            final hasActivePromotion = promo != null && !(bellFeed?.isPromotionDismissedForMe(promo.label) ?? false);
+            // Only what is meant for me, within its lifetime, not removed, and
+            // unread for ME (my own read state, NOTIF-2c), subscription alerts
+            // included: read means quiet. The calm trial is the blue dot.
+            final hasUnreadFacilityNotification = bellFeed?.hasUnreadAlert ?? false;
 
             // Cycles through whichever of the three actually apply -
             // one just blinks in place, several cycle between them,

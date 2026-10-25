@@ -249,5 +249,5 @@ void bellTests() {
   }, skip: _skipBell);
 }
 
-// Until the bell's members are implemented.
-const _skipBell = true;
+// Was true until the bell's members were implemented.
+const _skipBell = false;

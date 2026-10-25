@@ -226,6 +226,7 @@ class NotificationFeedController extends ChangeNotifier {
   NotificationState _state = NotificationState.empty;
   LatestClaim? _latestClaim;
   DateTime? _liveSince;
+  List<FacilityNotification> _stored = const [];
   List<NotificationItem> _items = const [];
 
   CollectionReference<Map<String, dynamic>> _facilityCollection(String name) =>
@@ -291,10 +292,11 @@ class NotificationFeedController extends ChangeNotifier {
 
   /// The bell's red dot: something unread for me (the calm trial is the
   /// blue dot, not this).
-  bool get hasUnreadAlert => throw UnimplementedError('NOTIF-2c');
+  bool get hasUnreadAlert => _items.any((i) => !i.isRead && i.type != NotificationType.trialStatus);
 
   /// The bell's accent: whether I removed the live promotion's notification.
-  bool isPromotionDismissedForMe(String promotionLabel) => throw UnimplementedError('NOTIF-2c ');
+  bool isPromotionDismissedForMe(String promotionLabel) =>
+      isPromotionDismissed(promotionLabel: promotionLabel, stored: _stored, state: _state);
 
   /// My read items that may be removed ("Remove read ones"); never persistent.
   List<NotificationItem> get readRemovable => _items.where((i) => i.isRead && i.canRemove).toList();
@@ -408,11 +410,12 @@ class NotificationFeedController extends ChangeNotifier {
     final now = _clock();
     _liveSince ??= now;
     final liveIds = {for (final d in _live) d.id};
+    _stored = [
+      ..._live.map(FacilityNotification.fromFirestore),
+      ..._older.where((n) => !liveIds.contains(n.id)),
+    ];
     _items = buildNotificationItems(
-      stored: [
-        ..._live.map(FacilityNotification.fromFirestore),
-        ..._older.where((n) => !liveIds.contains(n.id)),
-      ],
+      stored: _stored,
       state: _state,
       uid: uid,
       isAdmin: _isAdmin(),
