@@ -5,6 +5,7 @@ import 'package:flutter/foundation.dart';
 
 import '../config/app_limits.dart';
 import '../config/app_ranges.dart';
+import '../data/announcement_fields.dart';
 import '../data/collections.dart';
 import '../data/fields.dart';
 import '../data/payment_submission_status.dart';
@@ -12,6 +13,7 @@ import '../data/subscription_notice_stage.dart';
 import '../models/notification_model.dart';
 import '../models/notification_policy.dart';
 import '../models/notification_state.dart';
+import 'announcement_service.dart';
 import '../providers/subscription_provider.dart';
 import 'notification_state_service.dart';
 
@@ -54,20 +56,75 @@ class LatestClaim {
   const LatestClaim({this.submittedAt, this.rejected = false});
 }
 
+/// What a row's menu and swipes need (NOTIF-2c), whatever the row shows: a
+/// stored notification ([NotificationItem]) or an urgent announcement
+/// ([AnnouncementItem], AN3).
+abstract interface class NotificationRowFacts {
+  String get id;
+  bool get isRead;
+  bool get canRemove;
+  PersistentReason? get persistentReason;
+}
+
 /// One row as I see it: the notification (live rows in the current
 /// language) and whether I have read it.
-class NotificationItem {
+class NotificationItem implements NotificationRowFacts {
   final FacilityNotification notification;
+  @override
   final bool isRead;
 
   const NotificationItem(this.notification, {required this.isRead});
 
+  @override
   String get id => notification.id;
   NotificationType get type => notification.type;
   NotificationClass get cls => NotificationPolicy.classOf(notification.type);
+  @override
   bool get canRemove => NotificationPolicy.canRemove(notification.type);
+  @override
   PersistentReason? get persistentReason => NotificationPolicy.persistentReason(notification.type);
   bool get hasTarget => notification.relatedEntityType != null && notification.relatedEntityId != null;
+}
+
+/// An announcement's id in my notification state (AN3): the prefix keeps it
+/// from ever meeting a notification's id.
+String announcementStateId(String docId) => 'announcement:$docId';
+
+/// An urgent announcement as I see it (AN3, owner decision D5): DISMISSIBLE,
+/// so I may read and remove it for myself, and Undo.
+class AnnouncementItem implements NotificationRowFacts {
+  final Announcement announcement;
+  @override
+  final bool isRead;
+
+  const AnnouncementItem(this.announcement, {required this.isRead});
+
+  @override
+  String get id => announcementStateId(announcement.id);
+  @override
+  bool get canRemove => NotificationPolicy.urgentAnnouncementClass != NotificationClass.persistent;
+  @override
+  PersistentReason? get persistentReason => null;
+}
+
+/// My rows for [announcements]: without the ones I removed, each read or
+/// not. A removal or a read from before the announcement's last edit
+/// ([Announcement.versionAt]) is out of date: the edited one shows again,
+/// unread (docs/design/notifications.md, DISMISSIBLE). The audience is the
+/// screen's to apply (AnnouncementVisibility), as it knows the language.
+List<AnnouncementItem> buildAnnouncementItems({
+  required Iterable<Announcement> announcements,
+  required NotificationState state,
+}) {
+  final out = <AnnouncementItem>[];
+  for (final a in announcements) {
+    final id = announcementStateId(a.id);
+    final version = a.versionAt;
+    bool current(DateTime? at) => at != null && (version == null || !at.isBefore(version));
+    if (current(state.removed[id])) continue;
+    out.add(AnnouncementItem(a, isRead: !state.unread.containsKey(id) && current(state.read[id])));
+  }
+  return out;
 }
 
 /// The subscription notice is read for me only at the stage I read it at
@@ -228,6 +285,8 @@ class NotificationFeedController extends ChangeNotifier {
   DateTime? _liveSince;
   List<FacilityNotification> _stored = const [];
   List<NotificationItem> _items = const [];
+  List<Announcement> _announcements = const [];
+  List<AnnouncementItem> _announcementItems = const [];
 
   CollectionReference<Map<String, dynamic>> _facilityCollection(String name) =>
       firestore.collection(Collections.facilities).doc(facilityId).collection(name);
@@ -275,6 +334,15 @@ class NotificationFeedController extends ChangeNotifier {
             );
       _rebuild();
     }, onError: (Object e) => debugPrint('[NOTIFICATIONS] claims: $e')));
+    // Urgent announcements (AN3): DISMISSIBLE for me, in the same state.
+    _subs.add(firestore
+        .collection(Collections.publicAnnouncements)
+        .where(AnnouncementFields.urgent, isEqualTo: true)
+        .snapshots()
+        .listen((s) {
+      _announcements = [for (final d in s.docs) Announcement.fromMap(d.id, d.data())];
+      _rebuild();
+    }, onError: (Object e) => debugPrint('[NOTIFICATIONS] announcements: $e')));
     _subscriptionChanges?.addListener(_rebuild);
   }
 
@@ -282,6 +350,10 @@ class NotificationFeedController extends ChangeNotifier {
   Object? get error => _error;
 
   List<NotificationItem> get items => _items;
+
+  /// My urgent announcement rows, newest first (all languages: the screen
+  /// applies AnnouncementVisibility).
+  List<AnnouncementItem> get announcementItems => _announcementItems;
   List<NotificationItem> get planNotices => _items.where((i) => i.type == NotificationType.trialStatus).toList();
   List<NotificationItem> get needsAttention => _items
       .where((i) => i.notification.category != NotificationCategory.other && i.type != NotificationType.trialStatus)
@@ -323,7 +395,7 @@ class NotificationFeedController extends ChangeNotifier {
   /// Re-applies the lifetimes at the clock's time now.
   void refresh() => _rebuild();
 
-  Future<void> markRead(Iterable<NotificationItem> items) async {
+  Future<void> markRead(Iterable<NotificationRowFacts> items) async {
     final ids = items.map((i) => i.id).toSet();
     if (ids.isEmpty) return;
     final now = _clock();
@@ -340,18 +412,18 @@ class NotificationFeedController extends ChangeNotifier {
     });
   }
 
-  Future<void> markUnread(NotificationItem item) async {
+  Future<void> markUnread(NotificationRowFacts item) async {
     _patch(unread: {item.id: _clock()}, read: {item.id: null});
     await _guard(() => _service.markUnread([item.id]));
   }
 
-  Future<void> toggleRead(NotificationItem item) => item.isRead ? markUnread(item) : markRead([item]);
+  Future<void> toggleRead(NotificationRowFacts item) => item.isRead ? markUnread(item) : markRead([item]);
 
   Future<void> markAllRead() => markRead(_items.where((i) => !i.isRead));
 
   /// Removes [items] for me (persistent ones are skipped); the result is
   /// what [restore] puts back.
-  Future<RemovedEntries> remove(Iterable<NotificationItem> items) async {
+  Future<RemovedEntries> remove(Iterable<NotificationRowFacts> items) async {
     final ids = items.where((i) => i.canRemove).map((i) => i.id).toSet();
     if (ids.isEmpty) return const RemovedEntries({});
     _patch(removed: {for (final id in ids) id: _clock()});
@@ -424,6 +496,8 @@ class NotificationFeedController extends ChangeNotifier {
       latestClaim: _latestClaim,
       liveRowsSince: _liveSince,
     );
+    _announcementItems = buildAnnouncementItems(announcements: _announcements, state: _state)
+      ..sort((a, b) => (b.announcement.publishedAt ?? now).compareTo(a.announcement.publishedAt ?? now));
     _notify();
   }
 
