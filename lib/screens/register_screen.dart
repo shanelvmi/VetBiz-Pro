@@ -37,7 +37,16 @@ import '../theme/app_motion.dart';
 import '../ui/feedback/app_feedback.dart';
 import '../ui/feedback/friendly_error.dart';
 import '../widgets/password_field_guard.dart';
+import '../widgets/wizard/wizard_consent_row.dart';
+import '../widgets/wizard/wizard_nav_bar.dart';
+import 'login_screen.dart';
 import '../../l10n/l10n.dart';
+
+// RW2b: the owner's sign-up as a five-step wizard (register_wizard.md).
+// The steps live in lib/screens/register/; the state, the checks and
+// _submit stay in this file, shared with Edit Profile and the assistant form.
+part 'register/wizard_flow.dart';
+part 'register/review_step.dart';
 
 class RegisterScreen extends StatefulWidget {
   final bool isUpdating;
@@ -181,6 +190,19 @@ class _RegisterScreenState extends State<RegisterScreen> {
   // Facilities
   List<Map<String, dynamic>> facilities = [];
 
+  // RW2b, the wizard: the step on screen (0 is step 1), the consent tick
+  // and its error, and the fields whose step's Continue was pressed (only
+  // their errors show). Kept in this State only: a reload starts again at
+  // step 1 with everything empty, and no password is stored anywhere.
+  int _step = 0;
+  bool _consent = false;
+  bool _consentError = false;
+  final Set<String> _checkedFields = {};
+  final FocusNode _nameFocus = FocusNode();
+  final FocusNode _phoneFocus = FocusNode();
+  final FocusNode _facilityNameFocus = FocusNode();
+  final FocusNode _emailFocus = FocusNode();
+
   // Live listener for Edit Profile mode only - a person's facility
   // list can change while this screen is open (an admin assigns them
   // to a new one, or they add one themselves via View Facilities), so
@@ -249,8 +271,15 @@ class _RegisterScreenState extends State<RegisterScreen> {
     _errorTimer?.cancel();
     _password.dispose();
     _confirm.dispose();
+    for (final node in [_nameFocus, _phoneFocus, _facilityNameFocus, _emailFocus]) {
+      node.dispose();
+    }
     super.dispose();
   }
+
+  // setState for the wizard's part files: an extension may not call a
+  // protected member itself.
+  void _update(VoidCallback change) => setState(change);
 
   // An eye opened or closed: redraw the fields.
   void _onPasswordGuardChanged() {
