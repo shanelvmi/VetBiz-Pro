@@ -23,6 +23,8 @@ import 'helpers/login_harness.dart';
 // nothing to show the login card stands centred alone; no grey panel behind
 // the login card; a softer page frame shadow.
 const _skip = true;
+// Unskipped with its commit.
+const _skipShadow = false;
 
 final _en = lookupAppLocalizations(const Locale('en'));
 
@@ -119,7 +121,7 @@ void main() {
     final shadow = (tester.widget<Container>(find.byKey(AuthCard.surfaceKey)).decoration! as BoxDecoration).boxShadow!.single;
     expect(shadow.blurRadius, lessThanOrEqualTo(20));
     expect(shadow.color.a, closeTo(c.shadow.a * 0.2, 0.01));
-  }, skip: _skip);
+  }, skip: _skipShadow);
 
   testWidgets('wide, the last-known state had Updates: the whole left card is kept from the first frame, nothing moves', (tester) async {
     UpdatesLastKnown.instance.record(true);

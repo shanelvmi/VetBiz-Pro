@@ -12,6 +12,7 @@ import '../widgets/updates_carousel.dart';
 import '../widgets/password_field_guard.dart';
 import '../widgets/auth_background.dart';
 import '../widgets/auth_card.dart';
+import '../widgets/auth_panel.dart';
 import '../widgets/auth_footer.dart';
 import '../widgets/auth_theme_toggle.dart';
 import '../utils/navigator_key.dart';
@@ -553,61 +554,39 @@ class _LoginScreenState extends State<LoginScreen> {
       },
       child: Container(
         key: LoginScreen.loginCardKey,
-        decoration: BoxDecoration(
-          color: context.colors.surface,
-          borderRadius: BorderRadius.circular(AppRadius.r20),
-          border: Border.all(color: context.colors.border),
-          // Two layers: a wide, teal-tinted one that lifts the card off the
-          // panel behind it, and a tight one for a crisp edge.
-          boxShadow: [
-            BoxShadow(color: context.colors.primary.withValues(alpha: AppAlpha.a15), blurRadius: 32, offset: const Offset(0, 14)),
-            BoxShadow(color: context.colors.shadow.withValues(alpha: AppAlpha.a05), blurRadius: 8, offset: const Offset(0, 2)),
-          ],
-        ),
+        // The look the Updates card shares (AuthPanel, AN4).
+        decoration: AuthPanel.decoration(context),
         child: ClipRRect(
-          borderRadius: BorderRadius.circular(AppRadius.r20),
+          borderRadius: BorderRadius.circular(AuthPanelMetrics.radius),
           child: Stack(
             children: [
               Column(
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  // Thin gradient accent along the top edge.
+                  // Thin gradient accent along the top edge (this card's
+                  // alone; the Updates card has none).
                   Container(
-                    height: 4,
+                    height: AuthPanelMetrics.accentHeight,
                     decoration: BoxDecoration(
                       gradient: LinearGradient(colors: [context.colors.brandSurface, context.colors.brandTealOnBrand, context.colors.brandTealGlow]),
                     ),
                   ),
                   Padding(
-                    padding: const EdgeInsets.fromLTRB(AppSpacing.s28, AppSpacing.s28, AppSpacing.s28, AppSpacing.s24),
+                    padding: const EdgeInsets.fromLTRB(
+                      AuthPanelMetrics.padding,
+                      AuthPanelMetrics.padding,
+                      AuthPanelMetrics.padding,
+                      AuthPanelMetrics.paddingBottom,
+                    ),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        Row(
+                        AuthPanelHeading(
                           key: LoginScreen.welcomeBackRowKey,
-                          children: [
-                            Container(
-                              width: 42,
-                              height: 42,
-                              decoration: BoxDecoration(
-                                color: context.colors.brandTealGlow.withValues(alpha: AppAlpha.a20),
-                                shape: BoxShape.circle,
-                                border: Border.all(color: context.colors.brandTealGlow.withValues(alpha: AppAlpha.a70), width: 1.4),
-                                boxShadow: [
-                                  BoxShadow(color: context.colors.brandTealGlow.withValues(alpha: AppAlpha.a50), blurRadius: 14),
-                                ],
-                              ),
-                              child: Icon(Icons.lock_outline, color: context.colors.primary, size: AppIconSize.i20),
-                            ),
-                            const SizedBox(width: AppSpacing.s14),
-                            Expanded(
-                              child: Text(context.l10n.login_welcomeBack,
-                                  overflow: TextOverflow.ellipsis,
-                                  style: TextStyle(fontSize: AppFontSize.f20, fontWeight: AppFontWeight.extraBold, color: context.colors.textPrimary)),
-                            ),
-                          ],
+                          icon: Icons.lock_outline,
+                          title: context.l10n.login_welcomeBack,
                         ),
                         const SizedBox(height: AppSpacing.s28),
                         Text(context.l10n.common_email, style: TextStyle(fontSize: AppFontSize.f13, fontWeight: AppFontWeight.semibold, color: context.colors.textPrimary)),

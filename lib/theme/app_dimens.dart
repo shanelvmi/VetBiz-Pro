@@ -163,8 +163,64 @@ class AuthCardMetrics {
   static const double paddingNarrow = AppSpacing.s18;
 
   static const double radius = AppRadius.r24;
-  static const double shadowBlur = 40;
-  static const double shadowOffsetY = 20;
+
+  /// AN4 (owner): about half the old frame shadow (blur 40, offset 20,
+  /// AppAlpha.a40 of the shadow role), so the cards inside it lead.
+  static const double shadowBlur = 20;
+  static const double shadowOffsetY = 10;
+  static const double shadowAlpha = AppAlpha.a20;
+}
+
+/// The cards inside the signed-out frame (AN4): the login card and, on wide
+/// windows, the Updates card beside it share every size here, so they read
+/// as one pair and one place restyles both (lib/widgets/auth_panel.dart).
+class AuthPanelMetrics {
+  AuthPanelMetrics._();
+
+  static const double radius = AppRadius.r20;
+
+  /// Inside the card: the sides and the top, and a little less at the bottom.
+  static const double padding = AppSpacing.s28;
+  static const double paddingBottom = AppSpacing.s24;
+
+  /// The login card's gradient line along its top edge. Only the login card
+  /// draws it; the Updates card adds its height to its top inset instead,
+  /// so the two heading rows sit on one line.
+  static const double accentHeight = 4;
+
+  /// The soft circle beside each heading (the lock, the paw), its outline
+  /// and glow, and the gap to the heading.
+  static const double iconCircle = 42;
+  static const double iconCircleBorder = 1.4;
+  static const double iconCircleGlow = 14;
+  static const double headingGap = AppSpacing.s14;
+
+  /// Two shadows: a wide tinted lift and a tight, crisp edge.
+  static const double liftBlur = 32;
+  static const double liftOffsetY = 14;
+  static const double edgeBlur = 8;
+  static const double edgeOffsetY = 2;
+
+  /// Between the two cards: side by side, and stacked on phones.
+  static const double gap = AppSpacing.s28;
+  static const double stackGap = AppSpacing.s20;
+}
+
+/// The login page's Updates (lib/widgets/updates_parts.dart, AN2 and AN4).
+class UpdatesMetrics {
+  UpdatesMetrics._();
+
+  /// The label row: always this tall, so nothing moves between slides;
+  /// taller on wide windows, where the label is larger.
+  static const double labelRowPhone = AppSpacing.s24;
+  static const double labelRowWide = AppSpacing.s28;
+
+  /// The dots: the selected one larger as well as another colour.
+  static const double dot = AppSpacing.s8;
+  static const double dotSelected = AppSpacing.s12;
+
+  /// Wide: between the welcome note and the Updates label.
+  static const double welcomeGap = AppSpacing.s28;
 }
 
 /// The calm footer below the signed-out cards (lib/widgets/auth_footer.dart, G3).
