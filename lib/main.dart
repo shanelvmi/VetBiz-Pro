@@ -127,7 +127,14 @@ class VetBizProApp extends StatelessWidget {
       supportedLocales: AppLocalizations.supportedLocales,
       locale: uiSettings.locale,
       routes: {
-        '/login': (context) => const LoginScreen(),
+        '/login': (context) {
+          // A registration that made the account but could not sign in
+          // opens Sign in with the email filled in and its message (RW2b).
+          final prefill = ModalRoute.of(context)?.settings.arguments;
+          return prefill is LoginPrefill
+              ? LoginScreen(initialEmail: prefill.email, errorMessage: prefill.message)
+              : const LoginScreen();
+        },
         '/register': (context) => const RegisterScreen(),
         '/dashboard': (context) => const DashboardScreen(),
       },

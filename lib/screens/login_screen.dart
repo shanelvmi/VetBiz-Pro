@@ -28,15 +28,26 @@ import '../theme/app_text.dart';
 import '../theme/theme_context.dart';
 import '../widgets/hover_link.dart';
 
+/// What Sign in is opened with after a registration that made the account
+/// but could not sign in (RW2b, AccountCreatedException): the email to fill
+/// in and the message to show. The '/login' route's arguments.
+class LoginPrefill {
+  final String email;
+  final String message;
+  const LoginPrefill({required this.email, required this.message});
+}
+
 class LoginScreen extends StatefulWidget {
   final String? errorMessage;
+  // Filled into the email field instead of the remembered one (RW2b).
+  final String? initialEmail;
   // Tests only (P1b): a stand-in for signing in and for the two public
   // documents this screen reads, so it can be built without Firebase.
   @visibleForTesting
   final AuthService? authService;
   @visibleForTesting
   final FirebaseFirestore? firestore;
-  const LoginScreen({super.key, this.errorMessage, this.authService, this.firestore});
+  const LoginScreen({super.key, this.errorMessage, this.initialEmail, this.authService, this.firestore});
 
   @override
   State<LoginScreen> createState() => _LoginScreenState();
@@ -86,7 +97,12 @@ class _LoginScreenState extends State<LoginScreen> {
     _password.addListener(_onPasswordGuardChanged);
     // Once per page: the footer's links never read it again on a rebuild.
     _supportContact = SupportContact.load(_db);
-    _loadRememberedEmail();
+    final initialEmail = widget.initialEmail;
+    if (initialEmail != null) {
+      emailController.text = initialEmail;
+    } else {
+      _loadRememberedEmail();
+    }
     if (widget.errorMessage != null) {
       // Deferred to after the first frame - setState during initState
       // itself is unsafe.
