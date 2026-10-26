@@ -489,7 +489,7 @@ class AppLocalizationsSw extends AppLocalizations {
   String get facilityType_vetHospital => 'Hospitali ya Mifugo';
 
   @override
-  String get facilityType_ambulatoryVet => 'Daktari wa Mifugo wa Kutembelea';
+  String get facilityType_ambulatoryVet => 'Huduma za kutembelea';
 
   @override
   String get facilityType_other => 'Nyingine';
@@ -7043,4 +7043,22 @@ class AppLocalizationsSw extends AppLocalizations {
   String faq_supportA(String appName) {
     return 'Bonyeza Msaada na mawasiliano chini ya ukurasa wa kuingia, au Msaada kwenye dashibodi. Inaonyesha mawasiliano ya msaada yaliyowekwa na $appName.';
   }
+
+  @override
+  String get facilityType_selectHint => 'Chagua aina ya kituo';
+
+  @override
+  String get facilityType_required => 'Chagua aina ya kituo chako';
+
+  @override
+  String get facilityType_detailLabel => 'Eleza aina ya kituo chako';
+
+  @override
+  String facilityType_detailLength(int min, int max) {
+    return 'Tumia herufi $min hadi $max';
+  }
+
+  @override
+  String get facilityType_detailCharacters =>
+      'Tumia herufi, tarakimu, nafasi na . , & \' - pekee';
 }

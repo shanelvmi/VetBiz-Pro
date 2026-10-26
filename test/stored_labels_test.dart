@@ -51,7 +51,9 @@ void main() {
   });
 
   test('facility types', () {
-    checkStoredList(StoredValueLabels.facilityType, kFacilityTypes, (l, v) => l.facilityTypeLabel(v));
+    // RW2b2 (owner): "Ambulatory Vet" stays stored, shown as Ambulatory services.
+    checkStoredList(StoredValueLabels.facilityType, kFacilityTypes, (l, v) => l.facilityTypeLabel(v),
+        english: const {'Ambulatory Vet': 'Ambulatory services'});
   });
 
   test('payment methods, and On Credit', () {

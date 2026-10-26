@@ -1016,10 +1016,10 @@ abstract class AppLocalizations {
   /// **'Vet Hospital'**
   String get facilityType_vetHospital;
 
-  /// Facility type: registration, Facilities screen, facility picker filter (stored value 'Ambulatory Vet').
+  /// Facility type: registration, Facilities screen, facility picker filter (stored value 'Ambulatory Vet', unchanged; shown as Ambulatory services since RW2b2).
   ///
   /// In en, this message translates to:
-  /// **'Ambulatory Vet'**
+  /// **'Ambulatory services'**
   String get facilityType_ambulatoryVet;
 
   /// Facility type: registration, Facilities screen, facility picker filter (stored value 'Other').
@@ -11879,6 +11879,36 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Press Help and contact at the bottom of the sign-in page, or Help on the dashboard. It shows the support contact details set by {appName}.'**
   String faq_supportA(String appName);
+
+  /// Facility type dropdown (registration step 3, Add and Edit facility, the no-facility page): the hint while nothing is chosen.
+  ///
+  /// In en, this message translates to:
+  /// **'Select facility type'**
+  String get facilityType_selectHint;
+
+  /// Facility type dropdown: the error when Continue or Add is pressed with no type chosen.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose your facility type'**
+  String get facilityType_required;
+
+  /// The field under the facility type dropdown when Other is chosen (stored as typeDetail): its label, and its error when left empty.
+  ///
+  /// In en, this message translates to:
+  /// **'Describe your facility type'**
+  String get facilityType_detailLabel;
+
+  /// The Other facility type field: the error when the text is too short or too long.
+  ///
+  /// In en, this message translates to:
+  /// **'Use {min} to {max} characters'**
+  String facilityType_detailLength(int min, int max);
+
+  /// The Other facility type field: the error for any other character. The characters . , & ' - stay as they are.
+  ///
+  /// In en, this message translates to:
+  /// **'Use letters, digits, spaces and . , & \' - only'**
+  String get facilityType_detailCharacters;
 }
 
 class _AppLocalizationsDelegate

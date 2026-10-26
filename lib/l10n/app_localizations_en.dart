@@ -487,7 +487,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get facilityType_vetHospital => 'Vet Hospital';
 
   @override
-  String get facilityType_ambulatoryVet => 'Ambulatory Vet';
+  String get facilityType_ambulatoryVet => 'Ambulatory services';
 
   @override
   String get facilityType_other => 'Other';
@@ -7001,4 +7001,22 @@ class AppLocalizationsEn extends AppLocalizations {
   String faq_supportA(String appName) {
     return 'Press Help and contact at the bottom of the sign-in page, or Help on the dashboard. It shows the support contact details set by $appName.';
   }
+
+  @override
+  String get facilityType_selectHint => 'Select facility type';
+
+  @override
+  String get facilityType_required => 'Choose your facility type';
+
+  @override
+  String get facilityType_detailLabel => 'Describe your facility type';
+
+  @override
+  String facilityType_detailLength(int min, int max) {
+    return 'Use $min to $max characters';
+  }
+
+  @override
+  String get facilityType_detailCharacters =>
+      'Use letters, digits, spaces and . , & \' - only';
 }
