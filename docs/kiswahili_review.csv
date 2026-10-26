@@ -1392,11 +1392,6 @@ common_editProfile,Edit Profile,Hariri Wasifu,Edit Profile screen title.,draft
 auth_switchToDarkMode,Switch to dark mode,Badilisha kwenda Hali ya Giza,Tooltip of the moon button in the Login and Register top bar: it turns Dark Mode on.,draft
 auth_switchToLightMode,Switch to light mode,Badilisha kwenda Hali ya Mwanga,Tooltip of the sun button in the Login and Register top bar: it turns Dark Mode off (Light).,draft
 login_copyright,© 2026 {appName}. All rights reserved.,© 2026 {appName}. Haki zote zimehifadhiwa.,Login footer.,draft
-login_announcements,Announcements,Matangazo,Login announcements card title.,draft
-login_urgent,URGENT,DHARURA,Login announcement chip for an urgent announcement.,draft
-login_announcementFallbackTitle,Notice,Taarifa,Login announcement title when the announcement has none.,draft
-login_noAnnouncements,No announcements,Hakuna matangazo,"Login announcements card, empty.",draft
-login_allCaughtUp,You're all caught up!,Umeshaona yote!,"Login announcements card, empty.",draft
 login_welcomeBack,Welcome back,Karibu tena,Login form title.,draft
 login_emailHint,Enter your email,Weka barua pepe yako,Login email field hint.,draft
 login_passwordHint,Enter your password,Weka nenosiri lako,Login password field hint.,draft
@@ -1405,7 +1400,6 @@ login_forgotPassword,Forgot Password?,Umesahau Nenosiri?,Login link that sends a
 login_noAccount,"Don't have an account? ","Huna akaunti? ","Login, before the Register link (ends with a space).",draft
 login_register,Register,Jisajili,Login link to the register screen.,draft
 login_loginButton,Sign in,Ingia,Login button.,draft
-login_newBadge,NEW,MPYA,Badge on an announcement less than two days old.,draft
 login_credentialsTooShort,Enter your email and password.,Weka barua pepe yako na nenosiri.,Login error: email or password empty.,draft
 login_slowSignIn,Signing in is taking longer than expected. Check your internet connection and try again.,Kuingia kunachukua muda mrefu kuliko kawaida. Angalia intaneti yako kisha ujaribu tena.,Login error when sign-in has not finished after a few seconds.,draft
 login_resetNeedsEmail,Enter your email to reset your password.,Weka barua pepe yako ili kubadilisha nenosiri.,Login: Forgot Password pressed with no email.,draft
@@ -1968,3 +1962,10 @@ facilityType_required,Choose your facility type,Chagua aina ya kituo chako,Facil
 facilityType_detailLabel,Describe your facility type,Eleza aina ya kituo chako,"The field under the facility type dropdown when Other is chosen (stored as typeDetail): its label, and its error when left empty.",draft
 facilityType_detailLength,Use {min} to {max} characters,Tumia herufi {min} hadi {max},The Other facility type field: the error when the text is too short or too long.,draft
 facilityType_detailCharacters,"Use letters, digits, spaces and . , & ' - only","Tumia herufi, tarakimu, nafasi na . , & ' - pekee","The Other facility type field: the error for any other character. The characters . , & ' - stay as they are.",draft
+updates_label,Updates,Taarifa,"The small label above the login page's announcement slides (AN2). Its own key, not notifications_catUpdates: a heading, not a filter category.",draft
+updates_new,New,Mpya,Chip on a login update published in the last 48 hours.,draft
+updates_important,Important,Muhimu,Chip on an urgent login update.,draft
+updates_readMore,Read more,Soma zaidi,Button on a long text update: opens the whole message in a dialog.,draft
+updates_previous,Previous update,Taarifa iliyotangulia,Arrow button and its tooltip: show the previous login update.,draft
+updates_next,Next update,Taarifa inayofuata,Arrow button and its tooltip: show the next login update.,draft
+updates_slideOf,Update {index} of {count},Taarifa {index} kati ya {count},Screen-reader label of a dot under the login updates.,draft

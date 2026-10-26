@@ -1388,11 +1388,6 @@
   "auth_switchToDarkMode": ["Badilisha kwenda Hali ya Giza","Tooltip of the moon button in the Login and Register top bar: it turns Dark Mode on.","draft"],
   "auth_switchToLightMode": ["Badilisha kwenda Hali ya Mwanga","Tooltip of the sun button in the Login and Register top bar: it turns Dark Mode off (Light).","draft"],
   "login_copyright": ["© 2026 {appName}. Haki zote zimehifadhiwa.","Login footer.","draft"],
-  "login_announcements": ["Matangazo","Login announcements card title.","draft"],
-  "login_urgent": ["DHARURA","Login announcement chip for an urgent announcement.","draft"],
-  "login_announcementFallbackTitle": ["Taarifa","Login announcement title when the announcement has none.","draft"],
-  "login_noAnnouncements": ["Hakuna matangazo","Login announcements card, empty.","draft"],
-  "login_allCaughtUp": ["Umeshaona yote!","Login announcements card, empty.","draft"],
   "login_welcomeBack": ["Karibu tena","Login form title.","draft"],
   "login_emailHint": ["Weka barua pepe yako","Login email field hint.","draft"],
   "login_passwordHint": ["Weka nenosiri lako","Login password field hint.","draft"],
@@ -1401,7 +1396,6 @@
   "login_noAccount": ["Huna akaunti?","Login, before the Register link (ends with a space).","draft"],
   "login_register": ["Jisajili","Login link to the register screen.","draft"],
   "login_loginButton": ["Ingia","Login button.","draft"],
-  "login_newBadge": ["MPYA","Badge on an announcement less than two days old.","draft"],
   "login_credentialsTooShort": ["Weka barua pepe yako na nenosiri.","Login error: email or password empty.","draft"],
   "login_slowSignIn": ["Kuingia kunachukua muda mrefu kuliko kawaida. Angalia intaneti yako kisha ujaribu tena.","Login error when sign-in has not finished after a few seconds.","draft"],
   "login_resetNeedsEmail": ["Weka barua pepe yako ili kubadilisha nenosiri.","Login: Forgot Password pressed with no email.","draft"],
@@ -1961,5 +1955,12 @@
   "facilityType_required": ["Chagua aina ya kituo chako","Facility type dropdown: the error when Continue or Add is pressed with no type chosen.","draft"],
   "facilityType_detailLabel": ["Eleza aina ya kituo chako","The field under the facility type dropdown when Other is chosen (stored as typeDetail): its label, and its error when left empty.","draft"],
   "facilityType_detailLength": ["Tumia herufi {min} hadi {max}","The Other facility type field: the error when the text is too short or too long.","draft"],
-  "facilityType_detailCharacters": ["Tumia herufi, tarakimu, nafasi na . , & ' - pekee","The Other facility type field: the error for any other character. The characters . , & ' - stay as they are.","draft"]
+  "facilityType_detailCharacters": ["Tumia herufi, tarakimu, nafasi na . , & ' - pekee","The Other facility type field: the error for any other character. The characters . , & ' - stay as they are.","draft"],
+  "updates_label": ["Taarifa","The small label above the login page's announcement slides (AN2). Its own key, not notifications_catUpdates: a heading, not a filter category.","draft"],
+  "updates_new": ["Mpya","Chip on a login update published in the last 48 hours.","draft"],
+  "updates_important": ["Muhimu","Chip on an urgent login update.","draft"],
+  "updates_readMore": ["Soma zaidi","Button on a long text update: opens the whole message in a dialog.","draft"],
+  "updates_previous": ["Taarifa iliyotangulia","Arrow button and its tooltip: show the previous login update.","draft"],
+  "updates_next": ["Taarifa inayofuata","Arrow button and its tooltip: show the next login update.","draft"],
+  "updates_slideOf": ["Taarifa {index} kati ya {count}","Screen-reader label of a dot under the login updates.","draft"]
 }
