@@ -1,3 +1,4 @@
+import 'package:cloud_functions/cloud_functions.dart';
 import 'package:fake_cloud_firestore/fake_cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
@@ -13,10 +14,13 @@ import 'package:vetbiz_pro/theme/app_theme.dart';
 /// RW2b: the register wizard driven without Firebase, through the RW2a
 /// seams. Creating an owner is recorded and then fails with [failWith]
 /// (a test that needs the success path stops at the recorded call).
+/// RW2c: an assistant's call is recorded whole, then fails with
+/// [assistantFailWith] when set (otherwise it succeeds, as today).
 class FakeRegisterAuth implements AuthService {
-  FakeRegisterAuth({this.failWith});
+  FakeRegisterAuth({this.failWith, this.assistantFailWith});
 
   Object? failWith;
+  Object? assistantFailWith;
   final ownerCalls = <Map<String, Object?>>[];
   final assistantCalls = <Map<String, Object?>>[];
 
@@ -48,7 +52,15 @@ class FakeRegisterAuth implements AuthService {
     required String inviteCode,
     dynamic avatarBytes,
   }) async {
-    assistantCalls.add({'email': email, 'inviteCode': inviteCode});
+    assistantCalls.add({
+      'email': email,
+      'password': password,
+      'fullName': fullName,
+      'phone': phone,
+      'inviteCode': inviteCode,
+      'avatarBytes': avatarBytes,
+    });
+    if (assistantFailWith != null) throw assistantFailWith!;
   }
 
   // Nobody is signed in while registering.
@@ -59,13 +71,31 @@ class FakeRegisterAuth implements AuthService {
   dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
 }
 
+/// The invite check as the server answers it. With no [codes] every code is
+/// Mwanga Agrovet's (as before RW2c); with [codes], a code not listed is a
+/// wrong one (unknown, used or expired: the server says only "not valid").
+/// [limit]: after that many wrong codes the server refuses every check with
+/// resource-exhausted (P1, 5 in 15 minutes).
 class FakeRegisterMembership implements MembershipService {
+  FakeRegisterMembership({this.codes, this.limit});
+
+  final Map<String, InviteCheck>? codes;
+  final int? limit;
   final checked = <String>[];
+  int wrong = 0;
+
+  static const mwanga = InviteCheck(facilityName: 'Mwanga Agrovet', facilityType: 'Agrovet');
 
   @override
   Future<InviteCheck?> checkInviteCode(String code) async {
     checked.add(code);
-    return const InviteCheck(facilityName: 'Mwanga Agrovet', facilityType: 'Agrovet');
+    if (limit != null && wrong >= limit!) {
+      throw FirebaseFunctionsException(code: 'resource-exhausted', message: 'Too many wrong invite codes. Wait 15 minutes and try again.');
+    }
+    if (codes == null) return mwanga;
+    final found = codes![code];
+    if (found == null) wrong++;
+    return found;
   }
 
   @override
@@ -209,4 +239,25 @@ Future<void> chooseFacilityType(WidgetTester tester, String label) async {
   await tester.pumpAndSettle();
   await tester.tap(find.text(label).last);
   await tester.pumpAndSettle();
+}
+
+/// RW2c: the assistant inputs every equality test uses, and the call the
+/// old one-page assistant form sent for them (recorded before the wizard
+/// replaced it, rw2c_old_assistant_call_test.dart at that commit).
+class AssistantInputs {
+  static const prefix = 'Ms.';
+  static const name = '  Neema Juma ';
+  static const email = ' neema@example.com ';
+  static const phone = ' 0754 111 222 ';
+  static const code = ' jk7-2p4 ';
+  static const password = ' Secret123 ';
+
+  static const Map<String, Object?> recordedCall = {
+    'email': 'neema@example.com',
+    'password': 'Secret123',
+    'fullName': 'Ms. Neema Juma',
+    'phone': '0754 111 222',
+    'inviteCode': 'jk7-2p4',
+    'avatarBytes': null,
+  };
 }
