@@ -30,7 +30,9 @@ import 'helpers/help_dialog_rows.dart';
 // the About, How to use it and FAQs pages, and the Platform Admin's hint.
 // Written before the code: run against G3's footer and the stub pages, every
 // test here fails (no Platform column, no band, no page text, no hint).
-const _skip = true;
+const _skipFooter = false;
+const _skipPages = true;
+const _skipHint = true;
 
 final _en = lookupAppLocalizations(const Locale('en'));
 final _sw = lookupAppLocalizations(const Locale('sw'));
@@ -77,7 +79,7 @@ void main() {
       }
       // The bottom row: copyright left, below a hairline.
       expect(tester.getTopLeft(find.text(_en.login_copyright(AppInfo.name))).dy, greaterThan(tester.getBottomLeft(find.text(_en.common_termsOfService)).dy));
-    }, skip: _skip);
+    }, skip: _skipFooter);
 
     testWidgets('phones: brand on top, then a two-column list', (tester) async {
       await pumpFooter(tester, size: const Size(360, 1200));
@@ -90,7 +92,7 @@ void main() {
       expect(support.dx, greaterThan(platform.dx));
       expect(legal.dy, greaterThan(platform.dy));
       expect((legal.dx - platform.dx).abs(), lessThan(1));
-    }, skip: _skip);
+    }, skip: _skipFooter);
 
     testWidgets('every link and social icon is a HoverLink', (tester) async {
       await pumpFooter(tester, contact: SupportContact.fromMap(const {'facebook': 'facebook.com/v', 'tiktok': 'tiktok.com/v'}));
@@ -101,7 +103,7 @@ void main() {
         expect(find.ancestor(of: find.byWidget(icon), matching: find.byType(HoverLink)), findsOneWidget);
       }
       expect(find.byType(FaIcon), findsNWidgets(2));
-    }, skip: _skip);
+    }, skip: _skipFooter);
 
     testWidgets('each item opens its page or dialog', (tester) async {
       await pumpFooter(tester, contact: SupportContact.fromMap(helpDialogContact));
@@ -121,7 +123,7 @@ void main() {
       await tester.tap(find.text(_en.authFooter_helpContact));
       await tester.pumpAndSettle();
       expect(helpDialogTexts(tester), helpDialogExpectedRows);
-    }, skip: _skip);
+    }, skip: _skipFooter);
 
     for (final theme in AppColorTheme.all) {
       for (final brightness in Brightness.values) {
@@ -133,7 +135,7 @@ void main() {
           final decoration = tester.widget<DecoratedBox>(band).decoration as BoxDecoration;
           expect(decoration.color, colors.authFooterFill);
           expect((decoration.border as Border).top, BorderSide(color: colors.divider, width: AuthFooterMetrics.hairline));
-        }, skip: _skip);
+        }, skip: _skipFooter);
       }
     }
   });
@@ -178,7 +180,7 @@ void main() {
       await tester.tap(find.text(_en.authFooter_helpContact));
       await tester.pumpAndSettle();
       expect(find.byType(AlertDialog), findsOneWidget);
-    }, skip: _skip);
+    }, skip: _skipPages);
 
     testWidgets('How to use it: the owner steps, then the assistant steps, in order', (tester) async {
       await pumpPage(tester, pages['howToUse']!());
@@ -195,7 +197,7 @@ void main() {
         expect(y, greaterThan(lastY), reason: text);
         lastY = y;
       }
-    }, skip: _skip);
+    }, skip: _skipPages);
 
     testWidgets('FAQs: twelve questions; an answer shows when its question is tapped', (tester) async {
       await pumpPage(tester, pages['faq']!());
@@ -205,7 +207,7 @@ void main() {
       await tester.tap(find.text(_en.faq_printQ));
       await tester.pumpAndSettle();
       expect(find.text(_en.faq_printA), findsOneWidget);
-    }, skip: _skip);
+    }, skip: _skipPages);
 
     for (final entry in pages.entries) {
       testWidgets('${entry.key}: a back arrow, a readable column, body text 14 px or more', (tester) async {
@@ -225,7 +227,7 @@ void main() {
         for (final p in paragraphs) {
           expect(p.text.style?.fontSize ?? 0, greaterThanOrEqualTo(14), reason: p.text.toPlainText());
         }
-      }, skip: _skip);
+      }, skip: _skipPages);
 
       for (final width in const [360.0, 390.0, 768.0, 1200.0]) {
         for (final brightness in Brightness.values) {
@@ -241,7 +243,7 @@ void main() {
               };
               expect(find.text(title), findsOneWidget);
               expect(find.byKey(const ValueKey<String>('info-page-column')), findsOneWidget);
-            }, skip: _skip);
+            }, skip: _skipPages);
           }
         }
       }
@@ -282,5 +284,5 @@ void main() {
     expect(find.text(hint), findsOneWidget);
     expect(tester.getTopLeft(find.text(hint)).dy, greaterThan(tester.getBottomLeft(find.widgetWithText(TextField, 'TikTok')).dy));
     expect(tester.getTopLeft(find.text(hint)).dy, lessThan(tester.getTopLeft(find.text('Save Contact Details')).dy));
-  }, skip: _skip);
+  }, skip: _skipHint);
 }

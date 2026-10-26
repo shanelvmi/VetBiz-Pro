@@ -11,6 +11,7 @@ import 'package:vetbiz_pro/screens/legal/terms_of_service_screen.dart';
 import 'package:vetbiz_pro/theme/app_palette.dart';
 import 'package:vetbiz_pro/theme/app_theme.dart';
 import 'package:vetbiz_pro/widgets/auth_footer.dart';
+import 'package:vetbiz_pro/widgets/hover_link.dart';
 
 import 'helpers/help_dialog_rows.dart';
 
@@ -139,11 +140,11 @@ void main() {
     testWidgets('every link and icon is at least 48 px high', (tester) async {
       await pump(tester, SupportContact.fromMap(const {'facebook': 'facebook.com/v', 'youtube': 'youtube.com/v'}), size: const Size(390, 900));
       for (final text in [_en.authFooter_helpContact, _en.common_privacyPolicy, _en.common_termsOfService]) {
-        final target = find.ancestor(of: find.text(text), matching: find.byType(InkWell)).first;
+        final target = find.ancestor(of: find.text(text), matching: find.byType(HoverLink)).first; // G4: HoverLink, was InkWell
         expect(tester.getSize(target).height, greaterThanOrEqualTo(48), reason: text);
       }
       for (final icon in tester.widgetList(find.byType(FaIcon))) {
-        final target = find.ancestor(of: find.byWidget(icon), matching: find.byType(IconButton));
+        final target = find.ancestor(of: find.byWidget(icon), matching: find.byType(HoverLink)); // G4: HoverLink, was IconButton
         expect(tester.getSize(target).height, greaterThanOrEqualTo(48));
         expect(tester.getSize(target).width, greaterThanOrEqualTo(48));
       }

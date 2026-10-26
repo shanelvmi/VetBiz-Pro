@@ -6,6 +6,9 @@ import '../config/app_info.dart';
 import '../data/support_contact_fields.dart';
 import '../l10n/l10n.dart';
 import '../models/support_contact.dart';
+import '../screens/info/about_screen.dart';
+import '../screens/info/faq_screen.dart';
+import '../screens/info/how_to_use_screen.dart';
 import '../screens/legal/privacy_policy_screen.dart';
 import '../screens/legal/terms_of_service_screen.dart';
 import '../theme/app_breakpoints.dart';
@@ -14,15 +17,19 @@ import '../theme/app_text.dart';
 import '../theme/theme_context.dart';
 import '../ui/feedback/app_feedback.dart';
 import '../utils/social_link.dart';
+import 'hover_link.dart';
 import 'support_contact_dialog.dart';
 
 /// Opens an outside link; [launchUrl] in the app, a fake in tests.
 typedef AuthFooterLauncher = Future<bool> Function(Uri url, {LaunchMode mode});
 
-/// The calm footer under the Login and Register cards (G3): brand and a
-/// plain line, Support, Legal, then copyright, version and social icons.
-/// Three columns above AppBreakpoints.medium of its own width; on phones
-/// the columns stack and the bottom row wraps. Roles and named sizes only.
+/// The calm footer under the Login and Register cards (G3, v2 in G4): on a
+/// full-width soft band (authFooterFill) with a hairline on top, the brand
+/// and a plain line, then Platform, Support and Legal, then copyright,
+/// version and the social icons the Platform Admin saved. Four columns
+/// above AppBreakpoints.medium of its own width; on phones the brand, then
+/// the columns two by two, and the bottom row wraps. Every link and icon is
+/// the shared HoverLink. Roles and named sizes only.
 class AuthFooter extends StatelessWidget {
   const AuthFooter({super.key, required this.contact, this.launcher = launchUrl});
 
@@ -60,58 +67,82 @@ class AuthFooter extends StatelessWidget {
     if (!opened) AppFeedback.info(L10n.current.common_linkFailed);
   }
 
+
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(
-        horizontal: AuthCardMetrics.pageMargin,
-        vertical: AuthFooterMetrics.paddingVertical,
-      ),
-      child: Center(
-        child: ConstrainedBox(
-          // Lines up with the card above it.
-          constraints: const BoxConstraints(maxWidth: AuthCardMetrics.maxWidthWide),
-          child: LayoutBuilder(
-            builder: (context, constraints) {
-              final isWide = constraints.maxWidth > AppBreakpoints.medium;
-              const gap = SizedBox(width: AuthFooterMetrics.columnGap, height: AuthFooterMetrics.sectionGap);
-              return Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  if (isWide)
-                    Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Expanded(flex: AuthFooterMetrics.brandFlex, child: _brand(context)),
+    // The band: edge to edge, whatever the page puts around the footer.
+    return SizedBox(
+      width: double.infinity,
+      child: DecoratedBox(
+        key: bandKey,
+        decoration: BoxDecoration(
+          color: context.colors.authFooterFill,
+          border: Border(top: BorderSide(color: context.colors.divider, width: AuthFooterMetrics.hairline)),
+        ),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(
+            horizontal: AuthCardMetrics.pageMargin,
+            vertical: AuthFooterMetrics.paddingVertical,
+          ),
+          child: Center(
+            child: ConstrainedBox(
+              // Lines up with the card above it.
+              constraints: const BoxConstraints(maxWidth: AuthCardMetrics.maxWidthWide),
+              child: LayoutBuilder(
+                builder: (context, constraints) {
+                  final isWide = constraints.maxWidth > AppBreakpoints.medium;
+                  const gap = SizedBox(width: AuthFooterMetrics.columnGap, height: AuthFooterMetrics.sectionGap);
+                  return Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      if (isWide)
+                        Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Expanded(flex: AuthFooterMetrics.brandFlex, child: _brand(context)),
+                            gap,
+                            Expanded(child: _platformColumn(context)),
+                            gap,
+                            Expanded(child: _supportColumn(context)),
+                            gap,
+                            Expanded(child: _legalColumn(context)),
+                          ],
+                        )
+                      else ...[
+                        // Phones: the brand, then the columns two by two.
+                        _brand(context),
                         gap,
-                        Expanded(child: _supportColumn(context)),
+                        _pair(_platformColumn(context), _supportColumn(context)),
                         gap,
-                        Expanded(child: _legalColumn(context)),
+                        _pair(_legalColumn(context), const SizedBox.shrink()),
                       ],
-                    )
-                  else ...[
-                    _brand(context),
-                    gap,
-                    _supportColumn(context),
-                    gap,
-                    _legalColumn(context),
-                  ],
-                  gap,
-                  Divider(
-                    height: AuthFooterMetrics.hairline,
-                    thickness: AuthFooterMetrics.hairline,
-                    color: context.colors.divider,
-                  ),
-                  _bottomRow(context),
-                ],
-              );
-            },
+                      gap,
+                      Divider(
+                        height: AuthFooterMetrics.hairline,
+                        thickness: AuthFooterMetrics.hairline,
+                        color: context.colors.divider,
+                      ),
+                      _bottomRow(context),
+                    ],
+                  );
+                },
+              ),
+            ),
           ),
         ),
       ),
     );
   }
+
+  Widget _pair(Widget left, Widget right) => Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Expanded(child: left),
+          const SizedBox(width: AuthFooterMetrics.columnGap),
+          Expanded(child: right),
+        ],
+      );
 
   Widget _brand(BuildContext context) {
     return Column(
@@ -135,7 +166,7 @@ class AuthFooter extends StatelessWidget {
           ],
         ),
         const SizedBox(height: AppSpacing.s8),
-        Text(context.l10n.authFooter_tagline, style: TextStyle(color: context.colors.textMuted, fontSize: AppFontSize.f13)),
+        Text(context.l10n.authFooter_tagline, style: TextStyle(color: context.colors.authFooterMutedText, fontSize: AppFontSize.f13)),
       ],
     );
   }
@@ -143,34 +174,35 @@ class AuthFooter extends StatelessWidget {
   Widget _heading(BuildContext context, String text) => Text(text,
       style: TextStyle(color: context.colors.textPrimary, fontWeight: AppFontWeight.semibold, fontSize: AppFontSize.f13));
 
-  Widget _supportColumn(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        _heading(context, context.l10n.authFooter_support),
+  void _push(BuildContext context, Widget screen) => Navigator.push(context, MaterialPageRoute(builder: (_) => screen));
+
+  Widget _column(BuildContext context, String heading, List<Widget> links) => Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [_heading(context, heading), ...links],
+      );
+
+  Widget _platformColumn(BuildContext context) => _column(context, context.l10n.authFooter_platform, [
+        _FooterLink(label: context.l10n.authFooter_about(AppInfo.name), onTap: () => _push(context, AboutScreen(contact: contact))),
+        _FooterLink(label: context.l10n.authFooter_howToUse, onTap: () => _push(context, const HowToUseScreen())),
+      ]);
+
+  Widget _supportColumn(BuildContext context) => _column(context, context.l10n.authFooter_support, [
         _FooterLink(
           label: context.l10n.authFooter_helpContact,
+          button: true,
           // The dashboard's Help dialog, given this page's single read.
           onTap: () => showSupportContactDialog(context, contact: contact),
         ),
-      ],
-    );
-  }
+        _FooterLink(label: context.l10n.authFooter_faq, onTap: () => _push(context, const FaqScreen())),
+      ]);
 
-  Widget _legalColumn(BuildContext context) {
-    void open(Widget screen) => Navigator.push(context, MaterialPageRoute(builder: (_) => screen));
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        _heading(context, context.l10n.authFooter_legal),
-        _FooterLink(label: context.l10n.common_privacyPolicy, onTap: () => open(const PrivacyPolicyScreen())),
-        _FooterLink(label: context.l10n.common_termsOfService, onTap: () => open(const TermsOfServiceScreen())),
-      ],
-    );
-  }
+  Widget _legalColumn(BuildContext context) => _column(context, context.l10n.authFooter_legal, [
+        _FooterLink(label: context.l10n.common_privacyPolicy, onTap: () => _push(context, const PrivacyPolicyScreen())),
+        _FooterLink(label: context.l10n.common_termsOfService, onTap: () => _push(context, const TermsOfServiceScreen())),
+      ]);
 
   Widget _bottomRow(BuildContext context) {
-    final muted = TextStyle(color: context.colors.textMuted, fontSize: AppFontSize.f12);
+    final muted = TextStyle(color: context.colors.authFooterMutedText, fontSize: AppFontSize.f12);
     return Wrap(
       // Copyright and version at the left, the icons at the right while
       // they fit on one line; on a phone the icons wrap under them.
@@ -207,42 +239,31 @@ class AuthFooter extends StatelessWidget {
 
   Widget _socialButton(BuildContext context, SocialNetwork network, Uri uri) {
     final name = _networkName(context.l10n, network);
-    return IconButton(
+    return HoverLink.icon(
       tooltip: name,
-      constraints: const BoxConstraints(
-        minWidth: AuthFooterMetrics.tapTarget,
-        minHeight: AuthFooterMetrics.tapTarget,
-      ),
-      onPressed: () => _open(uri),
-      icon: FaIcon(_icons[network], size: AuthFooterMetrics.socialIconSize, color: context.colors.textMuted, semanticLabel: name),
+      color: context.colors.authFooterMutedText,
+      onTap: () => _open(uri),
+      icon: (color) => FaIcon(_icons[network], size: AuthFooterMetrics.socialIconSize, color: color, semanticLabel: name),
     );
   }
 }
 
-/// A text link in the footer: the whole 48 px row is the target.
+/// A text link in the footer: the shared HoverLink (G4) in the footer's
+/// size, primary at rest.
 class _FooterLink extends StatelessWidget {
-  const _FooterLink({required this.label, required this.onTap});
+  const _FooterLink({required this.label, required this.onTap, this.button = false});
 
   final String label;
   final VoidCallback onTap;
+  final bool button;
 
   @override
   Widget build(BuildContext context) {
-    return Semantics(
-      link: true,
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(AppRadius.r8),
-        child: ConstrainedBox(
-          constraints: const BoxConstraints(minHeight: AuthFooterMetrics.tapTarget),
-          child: Align(
-            alignment: Alignment.centerLeft,
-            widthFactor: 1,
-            child: Text(label,
-                style: TextStyle(color: context.colors.primary, fontWeight: AppFontWeight.semibold, fontSize: AppFontSize.f13)),
-          ),
-        ),
-      ),
+    return HoverLink(
+      label: label,
+      onTap: onTap,
+      button: button,
+      style: const TextStyle(fontWeight: AppFontWeight.semibold, fontSize: AppFontSize.f13),
     );
   }
 }
