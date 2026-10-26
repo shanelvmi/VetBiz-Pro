@@ -81,7 +81,9 @@ class FacilityTypeField extends StatelessWidget {
         // type reset by the caller (after Add) kept SHOWING the old one; a
         // key that follows the type rebuilds the field with it.
         key: ValueKey<String?>('facility-type-$type'),
-        initialValue: type,
+        // A type saved before the list had it (or edited elsewhere) would
+        // crash the dropdown: it starts empty and asks for one instead.
+        initialValue: kFacilityTypes.contains(type) ? type : null,
         isExpanded: true,
         hint: Text(l10n.facilityType_selectHint, overflow: TextOverflow.ellipsis),
         decoration: typeDecoration.copyWith(errorText: typeError),

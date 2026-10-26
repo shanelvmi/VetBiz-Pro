@@ -16,6 +16,7 @@ import 'utils/activity_signal.dart';
 import 'utils/presence_heartbeat.dart';
 import 'widgets/maintenance_gate.dart';
 import 'widgets/password_field_guard.dart';
+import 'widgets/facility_type_field.dart';
 import 'l10n/l10n.dart';
 
 import 'services/auth_service.dart';
@@ -797,6 +798,10 @@ class _NoFacilityScreenState extends State<_NoFacilityScreen> {
   // ---- an admin with no facility: add one, or delete the account ----
   final TextEditingController _facilityNameController = TextEditingController();
   String? _facilityType;
+  // RW2b2: an Other facility's own words, and the two fields' errors.
+  final TextEditingController _facilityTypeDetailController = TextEditingController();
+  String? _typeError;
+  String? _detailError;
   bool _adding = false;
   String? _addError;
 
@@ -805,6 +810,7 @@ class _NoFacilityScreenState extends State<_NoFacilityScreen> {
     _debounce?.cancel();
     _codeController.dispose();
     _facilityNameController.dispose();
+    _facilityTypeDetailController.dispose();
     super.dispose();
   }
 
@@ -812,8 +818,14 @@ class _NoFacilityScreenState extends State<_NoFacilityScreen> {
     if (_adding) return;
     final name = _facilityNameController.text.trim();
     final type = _facilityType;
-    if (name.isEmpty || type == null) {
-      setState(() => _addError = name.isEmpty ? L10n.current.noFacility_enterName : L10n.current.noFacility_chooseType);
+    final detailError = FacilityTypeField.detailErrorFor(type, _facilityTypeDetailController.text, L10n.current);
+    if (name.isEmpty || type == null || detailError != null) {
+      // The type's problems show under the type (RW2b2), the name's here.
+      setState(() {
+        _addError = name.isEmpty ? L10n.current.noFacility_enterName : null;
+        _typeError = FacilityTypeField.typeErrorFor(type, L10n.current);
+        _detailError = detailError;
+      });
       return;
     }
     setState(() {
@@ -822,7 +834,7 @@ class _NoFacilityScreenState extends State<_NoFacilityScreen> {
     });
     try {
       // The server checks the limit, starts the trial and tells the admin.
-      await _membership.addFacility(name: name, type: type);
+      await _membership.addFacility(name: name, type: type, typeDetail: _facilityTypeDetailController.text);
       // The profile lists it now: decide afresh, which lands on the dashboard.
       reDecideAccount?.call();
     } catch (e) {
@@ -987,20 +999,26 @@ class _NoFacilityScreenState extends State<_NoFacilityScreen> {
           ),
         ),
         const SizedBox(height: AppSpacing.s12),
-        DropdownButtonFormField<String>(
-          initialValue: _facilityType,
-          isExpanded: true,
-          decoration: InputDecoration(
+        FacilityTypeField(
+          type: _facilityType,
+          enabled: !_adding,
+          onTypeChanged: (value) => setState(() {
+            _facilityType = value;
+            _addError = null;
+            _typeError = null;
+            _detailError = null;
+            if (value != kFacilityTypeOther) _facilityTypeDetailController.clear();
+          }),
+          detailController: _facilityTypeDetailController,
+          typeDecoration: InputDecoration(
             labelText: context.l10n.common_type,
             border: OutlineInputBorder(borderRadius: BorderRadius.circular(AppRadius.r14)),
           ),
-          items: kFacilityTypes.map((t) => DropdownMenuItem(value: t, child: Text(context.l10n.facilityTypeLabel(t)))).toList(),
-          onChanged: _adding
-              ? null
-              : (value) => setState(() {
-                    _facilityType = value;
-                    _addError = null;
-                  }),
+          detailDecoration: InputDecoration(
+            border: OutlineInputBorder(borderRadius: BorderRadius.circular(AppRadius.r14)),
+          ),
+          typeError: _typeError,
+          detailError: _detailError,
         ),
         if (_addError != null) ...[
           const SizedBox(height: AppSpacing.s10),

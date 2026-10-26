@@ -17,6 +17,7 @@ import '../../utils/facility_activation.dart';
 import '../../utils/upload_size_check.dart';
 import '../../services/facility_codes.dart';
 import '../../constants/facility_types.dart';
+import '../../widgets/facility_type_field.dart';
 import '../../services/sales_summary_service.dart';
 import '../../utils/force_logout.dart';
 import '../../utils/facility_limit_helper.dart';
@@ -400,6 +401,10 @@ class _FacilityScreenState extends State<FacilityScreen> {
 
     final nameController = TextEditingController();
     String? selectedType;
+    // RW2b2: an Other facility's own words, and the two fields' errors.
+    final typeDetailController = TextEditingController();
+    String? typeError;
+    String? detailError;
     String? dialogError;
     Uint8List? pendingLogoBytes;
 
@@ -465,11 +470,19 @@ class _FacilityScreenState extends State<FacilityScreen> {
                   decoration: InputDecoration(labelText: context.l10n.facilities_nameLabel),
                 ),
                 const SizedBox(height: AppSpacing.s12),
-                DropdownButtonFormField<String>(
-                  initialValue: selectedType,
-                  decoration: InputDecoration(labelText: context.l10n.common_type),
-                  items: kFacilityTypes.map((t) => DropdownMenuItem(value: t, child: Text(context.l10n.facilityTypeLabel(t)))).toList(),
-                  onChanged: (val) => setDialogState(() => selectedType = val),
+                FacilityTypeField(
+                  type: selectedType,
+                  enabled: !_isAddingFacility,
+                  onTypeChanged: (val) => setDialogState(() {
+                    selectedType = val;
+                    typeError = null;
+                    detailError = null;
+                    if (val != kFacilityTypeOther) typeDetailController.clear();
+                  }),
+                  detailController: typeDetailController,
+                  typeDecoration: InputDecoration(labelText: context.l10n.common_type),
+                  typeError: typeError,
+                  detailError: detailError,
                 ),
                 if (dialogError != null) ...[
                   const SizedBox(height: AppSpacing.s8),
@@ -495,16 +508,22 @@ class _FacilityScreenState extends State<FacilityScreen> {
                   ? null
                   : () async {
                       final name = nameController.text.trim();
-                      if (name.isEmpty || selectedType == null) {
-                        setDialogState(() => dialogError = context.l10n.facilities_nameAndTypeRequired);
+                      final type = selectedType;
+                      final detailIssue = FacilityTypeField.detailErrorFor(type, typeDetailController.text, context.l10n);
+                      if (name.isEmpty || type == null || detailIssue != null) {
+                        setDialogState(() {
+                          dialogError = name.isEmpty ? context.l10n.facilities_nameAndTypeRequired : null;
+                          typeError = FacilityTypeField.typeErrorFor(type, context.l10n);
+                          detailError = detailIssue;
+                        });
                         return;
                       }
                       setDialogState(() => dialogError = null);
                       setState(() => _isAddingFacility = true);
 
                       try {
-                        final newFacility =
-                            await _addFacility(name: name, type: selectedType!, logoBytes: pendingLogoBytes);
+                        final newFacility = await _addFacility(
+                            name: name, type: type, typeDetail: typeDetailController.text, logoBytes: pendingLogoBytes);
                         if (dialogContext.mounted) Navigator.pop(dialogContext);
                         // Only after the dialog above has actually closed -
                         // switching first and closing the dialog after was
@@ -546,12 +565,17 @@ class _FacilityScreenState extends State<FacilityScreen> {
     );
   }
 
-  Future<Map<String, dynamic>> _addFacility({required String name, required String type, Uint8List? logoBytes}) async {
+  Future<Map<String, dynamic>> _addFacility({
+    required String name,
+    required String type,
+    String? typeDetail,
+    Uint8List? logoBytes,
+  }) async {
     // The server creates the facility, works out its trial, checks the facility
     // limit, and adds it to this person's lists. None of that can be written
     // from the app any more - it's what stopped people writing themselves
-    // into facilities that weren't theirs.
-    final newFacilityEntry = await MembershipService().addFacility(name: name, type: type);
+    // into facilities that weren't theirs. (typeDetail is sent only for Other.)
+    final newFacilityEntry = await MembershipService().addFacility(name: name, type: type, typeDetail: typeDetail);
     final newFacilityId = newFacilityEntry[Fields.facilityId] as String;
 
     // Logo upload needs a facilityId to key the Storage path on, so it can
@@ -603,6 +627,9 @@ class _FacilityScreenState extends State<FacilityScreen> {
     String selectedRestockFrequency = existingDetails?['restockFrequency'] as String? ??
         UsageCalculatorService.defaultRestockFrequency;
     String? selectedType = facility['type'] as String?;
+    final typeDetailController = TextEditingController(text: facility['typeDetail'] as String? ?? '');
+    String? typeError;
+    String? detailError;
     String? dialogError;
     bool isSaving = false;
     Uint8List? pendingLogoBytes;
@@ -721,11 +748,19 @@ class _FacilityScreenState extends State<FacilityScreen> {
                   decoration: InputDecoration(labelText: context.l10n.facilities_nameLabel),
                 ),
                 const SizedBox(height: AppSpacing.s12),
-                DropdownButtonFormField<String>(
-                  initialValue: selectedType,
-                  decoration: InputDecoration(labelText: context.l10n.common_type),
-                  items: kFacilityTypes.map((t) => DropdownMenuItem(value: t, child: Text(context.l10n.facilityTypeLabel(t)))).toList(),
-                  onChanged: (val) => setDialogState(() => selectedType = val),
+                FacilityTypeField(
+                  type: selectedType,
+                  enabled: !isSaving,
+                  onTypeChanged: (val) => setDialogState(() {
+                    selectedType = val;
+                    typeError = null;
+                    detailError = null;
+                    if (val != kFacilityTypeOther) typeDetailController.clear();
+                  }),
+                  detailController: typeDetailController,
+                  typeDecoration: InputDecoration(labelText: context.l10n.common_type),
+                  typeError: typeError,
+                  detailError: detailError,
                 ),
                 const SizedBox(height: AppSpacing.s12),
                 TextField(
@@ -850,8 +885,14 @@ class _FacilityScreenState extends State<FacilityScreen> {
                   ? null
                   : () async {
                       final name = nameController.text.trim();
-                      if (name.isEmpty || selectedType == null) {
-                        setDialogState(() => dialogError = context.l10n.facilities_nameAndTypeRequired);
+                      final type = kFacilityTypes.contains(selectedType) ? selectedType : null;
+                      final detailIssue = FacilityTypeField.detailErrorFor(type, typeDetailController.text, context.l10n);
+                      if (name.isEmpty || type == null || detailIssue != null) {
+                        setDialogState(() {
+                          dialogError = name.isEmpty ? context.l10n.facilities_nameAndTypeRequired : null;
+                          typeError = FacilityTypeField.typeErrorFor(type, context.l10n);
+                          detailError = detailIssue;
+                        });
                         return;
                       }
                       setDialogState(() {
@@ -863,7 +904,8 @@ class _FacilityScreenState extends State<FacilityScreen> {
                         await _editFacility(
                           facilityId: facility[Fields.facilityId] as String,
                           name: name,
-                          type: selectedType!,
+                          type: type,
+                          typeDetail: typeDetailController.text.trim(),
                           logoBytes: pendingLogoBytes,
                           removeLogo: logoMarkedForRemoval,
                           email: emailController.text.trim().isEmpty ? null : emailController.text.trim(),
@@ -921,6 +963,7 @@ class _FacilityScreenState extends State<FacilityScreen> {
     required String facilityId,
     required String name,
     required String type,
+    String? typeDetail,
     Uint8List? logoBytes,
     bool removeLogo = false,
     String? email,
@@ -969,6 +1012,8 @@ class _FacilityScreenState extends State<FacilityScreen> {
     await firestore.collection(Collections.facilities).doc(facilityId).update({
       'name': name,
       'type': type,
+      // RW2b2: an Other facility's own words; gone when the type changes.
+      'typeDetail': type == kFacilityTypeOther && (typeDetail ?? '').isNotEmpty ? typeDetail : FieldValue.delete(),
       'email': email,
       'phone': phone,
       'address': address,
