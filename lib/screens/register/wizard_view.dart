@@ -56,7 +56,7 @@ extension _WizardView on _RegisterScreenState {
   String _stepTitle() => switch (_step) {
         0 => context.l10n.register_yourRole,
         1 => context.l10n.register_stepAboutYou,
-        2 => context.l10n.register_yourFacilities,
+        2 => _isAssistant ? context.l10n.register_stepInvite : context.l10n.register_yourFacilities,
         3 => context.l10n.register_stepSignIn,
         _ => context.l10n.register_stepReview,
       };
@@ -66,7 +66,7 @@ extension _WizardView on _RegisterScreenState {
   String _stepHint() => switch (_step) {
         0 => context.l10n.register_stepAccountTypeHint,
         1 => context.l10n.register_stepAboutYouHint,
-        2 => context.l10n.register_stepFacilityHint,
+        2 => _isAssistant ? context.l10n.register_askAdminForInvite : context.l10n.register_stepFacilityHint,
         3 => context.l10n.register_stepSignInHint,
         _ => context.l10n.register_stepReviewHint,
       };
@@ -74,7 +74,7 @@ extension _WizardView on _RegisterScreenState {
   List<Widget> _stepContent() => switch (_step) {
         0 => _accountTypeStep(),
         1 => _aboutYouStep(),
-        2 => _facilityStep(),
+        2 => _isAssistant ? _inviteStep() : _facilityStep(),
         3 => _signInStep(),
         _ => _reviewStep(),
       };

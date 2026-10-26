@@ -54,8 +54,12 @@ void main() {
   Future<void> typeInviteCode(WidgetTester tester, String code) async {
     await tester.tap(find.text('I have an invite code'));
     await tester.pump();
-    // RW2b: the choice is step 1 of the wizard; Continue opens today's
-    // assistant form.
+    // RW2c: the choice is step 1 of the wizard; the code is step 3, after
+    // the name and phone of step 2.
+    await tester.tap(find.text('Continue'));
+    await tester.pump();
+    await tester.enterText(find.byKey(const ValueKey<String>('register-name')), 'Neema Juma');
+    await tester.enterText(find.byKey(const ValueKey<String>('register-phone')), '0754 111 222');
     await tester.tap(find.text('Continue'));
     await tester.pump();
     await tester.enterText(find.widgetWithText(TextField, 'Enter your invite code'), code);

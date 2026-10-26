@@ -54,6 +54,7 @@ part 'register/wizard_flow.dart';
 part 'register/wizard_view.dart';
 part 'register/owner_steps.dart';
 part 'register/review_step.dart';
+part 'register/assistant_steps.dart';
 
 class RegisterScreen extends StatefulWidget {
   final bool isUpdating;
@@ -136,13 +137,20 @@ class _RegisterScreenState extends State<RegisterScreen> {
       return;
     }
 
-    setState(() => _isLookingUpFacility = true);
+    // RW2c: a changed code (after Back, say) drops the old result at once;
+    // it is checked again.
+    setState(() {
+      _isLookingUpFacility = true;
+      _foundFacility = null;
+      _facilityLookupError = null;
+    });
 
     _facilityLookupDebounce = Timer(AppTimeouts.facilityLookupDebounce, () async {
       try {
         final check = await _membershipService.checkInviteCode(code);
 
-        if (!mounted) return;
+        // The answer for a code that has since been changed is not this one's.
+        if (!mounted || assistantFacilityCodeController.text.trim() != code) return;
 
         if (check == null) {
           setState(() {
@@ -166,7 +174,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
           _facilityLookupError = null;
         });
       } catch (e) {
-        if (!mounted) return;
+        if (!mounted || assistantFacilityCodeController.text.trim() != code) return;
         setState(() {
           _isLookingUpFacility = false;
           _foundFacility = null;
@@ -213,6 +221,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
   final FocusNode _phoneFocus = FocusNode();
   final FocusNode _facilityNameFocus = FocusNode();
   final FocusNode _emailFocus = FocusNode();
+  final FocusNode _inviteFocus = FocusNode();
 
   // Live listener for Edit Profile mode only - a person's facility
   // list can change while this screen is open (an admin assigns them
@@ -287,7 +296,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
     _confirm.clearAndHide();
     _password.dispose();
     _confirm.dispose();
-    for (final node in [_nameFocus, _phoneFocus, _facilityNameFocus, _facilityTypeDetailFocus, _emailFocus]) {
+    for (final node in [_nameFocus, _phoneFocus, _facilityNameFocus, _facilityTypeDetailFocus, _emailFocus, _inviteFocus]) {
       node.dispose();
     }
     super.dispose();
@@ -899,10 +908,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
   // ---------------- REGISTRATION ----------------
 
   Widget _buildRegisterView() {
-    final assistantForm = _showsAssistantForm;
     // Phones: Back and Continue pinned to the bottom of the screen, above
     // the keyboard (owner answer 10); wider, they are the card's bottom row.
-    final pinBar = !assistantForm && MediaQuery.sizeOf(context).width < AppBreakpoints.compact;
+    final pinBar = MediaQuery.sizeOf(context).width < AppBreakpoints.compact;
     // The phone's back gesture and the browser's Back go one step back;
     // on step 1 they leave the page as before (_goBack's cases).
     return PopScope(
@@ -921,41 +929,13 @@ class _RegisterScreenState extends State<RegisterScreen> {
               header: _buildRegisterHeader(),
               // The same footer as the login page (G3); not in Edit Profile.
               below: AuthFooter(contact: _supportContact),
-              bodyBuilder: (context, layout) => assistantForm
-                  ? _buildAssistantFormBody(layout)
-                  : _buildWizardBody(layout, inlineBar: !pinBar),
+              bodyBuilder: (context, layout) => _buildWizardBody(layout, inlineBar: !pinBar),
             ),
             _buildErrorToastLayer(),
           ],
         ),
       ),
     );
-  }
-
-  // "I have an invite code" keeps today's one-page form until RW2c: the
-  // same sections and checks as before, the role cards included (choosing
-  // the owner there goes back to the wizard).
-  Widget _buildAssistantFormBody(AuthCardLayout layout) {
-    // Two columns above AppBreakpoints.medium of the space the card gets.
-    final isWide = layout.availableWidth > AppBreakpoints.medium;
-    return isWide
-        ? Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              SizedBox(width: _welcomePanelWidth, child: _buildWelcomePanel()),
-              const SizedBox(width: AppSpacing.s24),
-              Expanded(child: _buildRegisterForm(twoColumns: true)),
-            ],
-          )
-        : Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              _buildWelcomeStrip(),
-              const SizedBox(height: AppSpacing.s16),
-              _buildRegisterForm(twoColumns: false),
-            ],
-          );
   }
 
   Widget _buildRegisterHeader() {
@@ -1110,83 +1090,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
           ),
         ],
       ),
-    );
-  }
-
-  Widget _buildRegisterForm({required bool twoColumns}) {
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        if (twoColumns)
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Expanded(
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    _buildPersonalSection(),
-                    const SizedBox(height: AppSpacing.s16),
-                    _buildSecuritySection(),
-                  ],
-                ),
-              ),
-              const SizedBox(width: AppSpacing.s16),
-              Expanded(
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    _buildRoleSection(),
-                    const SizedBox(height: AppSpacing.s16),
-                    _buildFacilitySection(),
-                  ],
-                ),
-              ),
-            ],
-          )
-        else ...[
-          _buildPersonalSection(),
-          const SizedBox(height: AppSpacing.s16),
-          _buildRoleSection(),
-          const SizedBox(height: AppSpacing.s16),
-          _buildFacilitySection(),
-          const SizedBox(height: AppSpacing.s16),
-          _buildSecuritySection(),
-        ],
-        const SizedBox(height: AppSpacing.s20),
-        _buildTermsLine(),
-        const SizedBox(height: AppSpacing.s14),
-        _buildSubmitButton(context.l10n.register_createAccount),
-      ],
-    );
-  }
-
-  // "By creating an account you agree to our Terms of Service and Privacy
-  // Policy." - the two names are real links to the same screens the login
-  // page's footer opens.
-  Widget _buildTermsLine() {
-    final base = TextStyle(fontSize: AppFontSize.f12_5, color: context.colors.textSoft);
-    // Teal and underlined at rest, amber on hover and focus (HoverLink).
-    Widget legalLink(String label, Widget destination) => HoverLink(
-          label: label,
-          color: context.colors.brandTeal,
-          underlineAtRest: true,
-          style: const TextStyle(fontSize: AppFontSize.f12_5, fontWeight: AppFontWeight.bold),
-          onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => destination)),
-        );
-    return Wrap(
-      alignment: WrapAlignment.center,
-      crossAxisAlignment: WrapCrossAlignment.center,
-      children: [
-        Text(context.l10n.register_termsPrefix, style: base),
-        legalLink(context.l10n.common_termsOfService, const TermsOfServiceScreen()),
-        Text(context.l10n.register_termsAnd, style: base),
-        legalLink(context.l10n.common_privacyPolicy, const PrivacyPolicyScreen()),
-        Text('.', style: base),
-      ],
     );
   }
 
@@ -1738,6 +1641,11 @@ class _RegisterScreenState extends State<RegisterScreen> {
       if (selectedRole == 'Assistant') {
         assistantFacilityNameController.clear();
         assistantFacilityCodeController.clear();
+        // And whatever an earlier code found (RW2c).
+        _facilityLookupDebounce?.cancel();
+        _foundFacility = null;
+        _facilityLookupError = null;
+        _isLookingUpFacility = false;
       }
       // The other role's problems no longer apply (and this role's now do).
       if (_submitAttempted) _fieldErrors = _shownErrors(_validateAll());
@@ -1864,14 +1772,13 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
   // ---------------- facility ----------------
 
+  // Edit Profile only (registration is the wizard since RW2c).
   Widget _buildFacilitySection() {
-    final isAssistantUpdating = widget.isUpdating && selectedRole == 'Assistant';
-
     if (selectedRole == 'Assistant') {
       return _section(
         icon: Icons.storefront_outlined,
         title: context.l10n.profile_yourFacility,
-        children: isAssistantUpdating ? _assistantReadOnlyFacility() : _assistantInviteFields(),
+        children: _assistantReadOnlyFacility(),
       );
     }
     return _section(
@@ -1909,70 +1816,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
           ],
         ),
       ),
-    ];
-  }
-
-  List<Widget> _assistantInviteFields() {
-    // Once a valid code has been found any earlier complaint is moot.
-    final inviteError = _foundFacility != null ? null : _fieldErrors['invite'];
-
-    return [
-      Text(
-        context.l10n.register_askAdminForInvite,
-        style: TextStyle(fontSize: AppFontSize.f12_5, color: context.colors.primary, fontStyle: FontStyle.italic),
-      ),
-      const SizedBox(height: AppSpacing.s12),
-      _labeled(
-        context.l10n.common_inviteCode,
-        TextField(
-          controller: assistantFacilityCodeController,
-          onChanged: (value) {
-            _onFacilityCodeChanged(value);
-            _onFieldChanged();
-          },
-          decoration: _decoration(
-            hint: context.l10n.register_enterInviteCode,
-            icon: Icons.vpn_key_outlined,
-            errorText: inviteError,
-            suffix: _isLookingUpFacility
-                ? const Padding(
-                    padding: EdgeInsets.all(AppSpacing.s12),
-                    child: SizedBox(width: AppSpacing.s16, height: 16, child: CircularProgressIndicator(strokeWidth: 2)),
-                  )
-                : (_foundFacility != null ? Icon(Icons.check_circle, color: context.colors.success) : null),
-          ),
-        ),
-        required: true,
-        fieldKey: _fieldKeys['invite'],
-      ),
-      const SizedBox(height: AppSpacing.s10),
-      if (_foundFacility != null)
-        Container(
-          width: double.infinity,
-          padding: const EdgeInsets.all(AppSpacing.s12),
-          decoration: BoxDecoration(
-            color: context.colors.success.withValues(alpha: AppAlpha.a10),
-            borderRadius: BorderRadius.circular(AppRadius.r12),
-            border: Border.all(color: context.colors.success.withValues(alpha: AppAlpha.a30)),
-          ),
-          child: Row(
-            children: [
-              Icon(Icons.storefront_outlined, color: context.colors.success, size: AppIconSize.i18),
-              const SizedBox(width: AppSpacing.s8),
-              Expanded(
-                child: Text(
-                  context.l10n.register_joining(
-                      '${_foundFacility!['name']} (${context.l10n.facilityTypeDisplay('${_foundFacility!['type']}', _foundFacility!['typeDetail'])})'),
-                  style: TextStyle(color: context.colors.success, fontWeight: AppFontWeight.semibold, fontSize: AppFontSize.f13),
-                ),
-              ),
-            ],
-          ),
-        )
-      // Not shown twice: once Register has been pressed the same message is
-      // already on the field itself.
-      else if (_facilityLookupError != null && inviteError == null)
-        Text(_facilityLookupError!, style: TextStyle(color: context.colors.dangerAccent, fontSize: AppFontSize.f12_5)),
     ];
   }
 
@@ -2059,102 +1902,22 @@ class _RegisterScreenState extends State<RegisterScreen> {
     );
   }
 
+  // Edit Profile: the admin's facilities, read only (added and changed on
+  // the Facilities screen).
   List<Widget> _adminFacilityFields() {
-    final atLimit = facilities.length >= _maxFacilities;
-    // The first facility is required; further ones are optional.
-    final needsFirst = facilities.isEmpty && !widget.isUpdating;
-    final facilityError = needsFirst ? _fieldErrors['facility'] : null;
-
     return [
       // A plain Column, not a shrink-wrapped ListView: the facility list is
       // short, and this keeps the surrounding layout free to size itself.
-      if (facilities.isNotEmpty)
-        for (var i = 0; i < facilities.length; i++) _facilityTile(i)
-      else if (!widget.isUpdating && facilityError == null)
-        Padding(
-          padding: const EdgeInsets.only(bottom: AppSpacing.s12),
-          child: Text(
-            context.l10n.register_addOneToContinue,
-            style: TextStyle(fontSize: AppFontSize.f12_5, color: context.colors.textMuted),
-          ),
-        ),
-      if (facilityError != null) _facilityErrorBox(facilityError),
-      if (widget.isUpdating)
-        Text(
-          context.l10n.register_useViewFacilities,
-          style: TextStyle(fontSize: AppFontSize.f12, color: context.colors.textMuted),
-        )
-      else ...[
-        Padding(
-          padding: const EdgeInsets.only(bottom: AppSpacing.s10),
-          child: Text(
-            context.l10n.register_facilitiesAdded(facilities.length, _maxFacilities),
-            style: TextStyle(fontSize: AppFontSize.f12, color: context.colors.textMuted),
-          ),
-        ),
-        _labeled(
-          context.l10n.common_facilityName,
-          TextField(
-            controller: facilityNameController,
-            textCapitalization: TextCapitalization.sentences,
-            inputFormatters: [SentenceCapitalizationFormatter()],
-            onChanged: (_) => _onFieldChanged(),
-            decoration: _decoration(hint: context.l10n.common_facilityNameHint, icon: Icons.storefront_outlined),
-          ),
-          required: needsFirst,
-        ),
-        const SizedBox(height: AppSpacing.s12),
-        Row(
-          crossAxisAlignment: CrossAxisAlignment.end,
-          children: [
-            // The shared type field (RW2b2), which rebuilds itself when the
-            // type is reset after an add.
-            Expanded(child: _facilityTypeField(gap: AppSpacing.s12)),
-            const SizedBox(width: AppSpacing.s10),
-            Tooltip(
-              message: atLimit ? context.l10n.register_maxFacilitiesReached(_maxFacilities) : '',
-              child: SizedBox(
-                height: 47,
-                child: ElevatedButton.icon(
-                  onPressed: (_isAddingFacility || atLimit) ? null : addFacility,
-                  icon: _isAddingFacility
-                      ? const SizedBox(width: AppSpacing.s16, height: 16, child: CircularProgressIndicator(strokeWidth: 2))
-                      : const Icon(Icons.add, size: AppIconSize.i18),
-                  label: Text(context.l10n.common_add),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: context.colors.accent,
-                    foregroundColor: context.colors.onAccent,
-                    disabledBackgroundColor: context.colors.divider,
-                    elevation: AppElevation.e0,
-                    padding: const EdgeInsets.symmetric(horizontal: AppSpacing.s16),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadius.r12)),
-                  ),
-                ),
-              ),
-            ),
-          ],
-        ),
-      ],
+      for (var i = 0; i < facilities.length; i++) _facilityTile(i),
+      Text(
+        context.l10n.register_useViewFacilities,
+        style: TextStyle(fontSize: AppFontSize.f12, color: context.colors.textMuted),
+      ),
     ];
   }
 
-  // ---------------- security (registration only) ----------------
-
-  Widget _buildSecuritySection() {
-    return _section(
-      icon: Icons.lock_outline,
-      title: context.l10n.register_accountSecurity,
-      children: [
-        _labeled(context.l10n.common_password, _passwordInput(), required: true, fieldKey: _fieldKeys['password']),
-        const SizedBox(height: AppSpacing.s14),
-        _labeled(context.l10n.register_fieldConfirmPassword, _confirmInput(), required: true, fieldKey: _fieldKeys['confirm']),
-      ],
-    );
-  }
-
-  // The two password fields with their P1b guards, shared by the form above
-  // and the wizard's sign-in step (which adds a key and the keyboard's
-  // next/done actions).
+  // The two password fields with their P1b guards, for the wizard's sign-in
+  // step (which gives them a key and the keyboard's next/done actions).
   Widget _passwordInput({Key? key, TextInputAction? action}) {
     final password = passwordController.text;
     return TextField(

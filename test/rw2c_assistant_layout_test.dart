@@ -11,7 +11,7 @@ import 'helpers/register_harness.dart';
 
 // RW2c (register_wizard.md section 3, owner answers 2 and 10): the
 // assistant's steps at phone and desktop widths. Skipped until they exist.
-const _skip = true;
+const _skip = false;
 
 const _longName = 'Mwanaisha Wanjiru Kilimanjaro-Mwakyembe Nyamwezi';
 const _longFacility = InviteCheck(

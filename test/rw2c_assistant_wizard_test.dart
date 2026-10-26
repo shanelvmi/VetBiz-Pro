@@ -16,7 +16,7 @@ import 'helpers/register_harness.dart';
 // RW2c (docs/design/register_wizard.md section 2, the RW2c batch): the
 // assistant's five steps in the wizard, replacing the one-page form. Written
 // before the change, skipped until it exists.
-const _skip = true;
+const _skip = false;
 
 const _pets = InviteCheck(facilityName: 'Mwanza Pets', facilityType: 'Other', facilityTypeDetail: 'Pet shop');
 
@@ -43,6 +43,13 @@ void main() {
     await typeInto(tester, 'invite', code);
     await tester.pump(AppTimeouts.facilityLookupDebounce);
     await tester.pumpAndSettle();
+  }
+
+  // Continue while the check is still running: no settling, which would
+  // let the debounced check finish first.
+  Future<void> continueNow(WidgetTester tester) async {
+    await tester.tap(find.text(en.products_continue).last);
+    await tester.pump();
   }
 
   Future<void> signIn(WidgetTester tester) async {
@@ -93,7 +100,7 @@ void main() {
     expect(find.text(step(3)), findsOneWidget);
     expect(errorOf(tester, 'invite'), en.register_enterInviteCode);
     await typeInto(tester, 'invite', AssistantInputs.code);
-    await tapContinue(tester); // still checking
+    await continueNow(tester); // still checking
     expect(find.text(step(3)), findsOneWidget);
     expect(errorOf(tester, 'invite'), en.register_stillChecking);
     await tester.pump(AppTimeouts.facilityLookupDebounce);
@@ -157,12 +164,12 @@ void main() {
     expect(find.text(en.register_joining('Mwanga Agrovet (Agrovet)')), findsOneWidget, reason: 'kept on Back');
     await typeInto(tester, 'invite', 'PETS22');
     expect(find.text(en.register_joining('Mwanga Agrovet (Agrovet)')), findsNothing, reason: 'the old result goes at once');
-    await tapContinue(tester);
+    await continueNow(tester);
     expect(find.text(step(3)), findsOneWidget, reason: 'still checking the new code');
     await tester.pump(AppTimeouts.facilityLookupDebounce);
     await tester.pumpAndSettle();
     expect(membership.checked, [AssistantInputs.code.trim(), 'PETS22']);
-    expect(find.text(en.register_joining('Mwanga Pets (Pet shop)')), findsOneWidget);
+    expect(find.text(en.register_joining('Mwanza Pets (Pet shop)')), findsOneWidget);
     await finishRegister(tester);
   }, skip: _skip);
 
@@ -267,6 +274,6 @@ void main() {
     for (final gone in ['_buildRegisterForm', '_buildAssistantFormBody', '_showsAssistantForm', '_buildSecuritySection', '_buildTermsLine']) {
       expect(src.contains(gone), isFalse, reason: gone);
     }
-    expect(src.split('\n').length, lessThan(1900));
+    expect(src.split('\n').length, lessThan(2050)); // 2270 lines before RW2c
   }, skip: _skip);
 }

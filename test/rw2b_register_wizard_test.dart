@@ -286,18 +286,17 @@ void main() {
     await finishRegister(tester);
   }, skip: _skip);
 
-  testWidgets('"I have an invite code" still opens today\'s assistant form', (tester) async {
+  // RW2c: the one-page assistant form is gone; the choice opens the
+  // wizard's step 2 (rw2c_assistant_wizard_test.dart covers the flow).
+  testWidgets('"I have an invite code" opens the wizard\'s step 2', (tester) async {
     final membership = FakeRegisterMembership();
     await pumpRegister(tester, membership: membership);
     await tapText(tester, en.register_roleAssistantSubtitle);
     await tapContinue(tester);
-    expect(find.byType(WizardStepHeader), findsNothing);
-    expect(find.text(en.register_enterInviteCode), findsOneWidget);
-    expect(find.text(en.register_createAccount), findsOneWidget);
-    await tester.enterText(find.widgetWithText(TextField, en.register_enterInviteCode), 'ABC123');
-    await tester.pump(const Duration(seconds: 1));
-    await tester.pump();
-    expect(membership.checked, ['ABC123']);
+    expect(find.byType(WizardStepHeader), findsOneWidget);
+    expect(find.text(step(2)), findsOneWidget);
+    expect(find.text(en.register_enterInviteCode), findsNothing);
+    expect(membership.checked, isEmpty);
     await finishRegister(tester);
   }, skip: _skip);
 

@@ -1,29 +1,31 @@
 part of '../register_screen.dart';
 
-// RW2b: moving through the owner's five steps (register_wizard.md section 2,
-// owner answers 3, 7 and 9). Continue checks only its step's fields;
-// nothing reaches the server before Create, which runs the unchanged
+// RW2b and RW2c: moving through the five steps of either flow
+// (register_wizard.md section 2, owner answers 3, 7 and 9). Continue checks
+// only its step's fields; nothing reaches the server before Create (but
+// the invite check, as the code is typed), which runs the unchanged
 // _submitGuarded / _submit once.
 extension _WizardFlow on _RegisterScreenState {
   static const int stepCount = 5;
-
-  // The _validateAll keys each step owns (steps 1 and 5 own none).
-  static const Map<int, List<String>> stepFields = {
-    1: ['name', 'phone'],
-    2: ['facility', 'facilityType', 'typeDetail'],
-    3: ['email', 'password', 'confirm'],
-  };
   static const int signInStep = 3;
 
-  /// "I have an invite code" past step 1: today's one-page assistant form,
-  /// unchanged, until RW2c.
-  bool get _showsAssistantForm => !widget.isUpdating && selectedRole == 'Assistant' && _step > 0;
+  /// Step 3 (index 2): the owner's facilities, or the assistant's invite.
+  static const int thirdStep = 2;
+
+  bool get _isAssistant => selectedRole == 'Assistant';
+
+  // The _validateAll keys each step owns (steps 1 and 5 own none).
+  Map<int, List<String>> get _stepFields => {
+        1: const ['name', 'phone'],
+        thirdStep: _isAssistant ? const ['invite'] : const ['facility', 'facilityType', 'typeDetail'],
+        signInStep: const ['email', 'password', 'confirm'],
+      };
 
   /// The errors to show: in the wizard only those of steps whose Continue
   /// was pressed (nobody is told off for a step not reached yet); Edit
-  /// Profile and the assistant form show them all, as before.
+  /// Profile shows them all, as before.
   Map<String, String> _shownErrors(Map<String, String> all) {
-    if (widget.isUpdating || _showsAssistantForm) return all;
+    if (widget.isUpdating) return all;
     return {for (final e in all.entries) if (_checkedFields.contains(e.key)) e.key: e.value};
   }
 
@@ -33,7 +35,7 @@ extension _WizardFlow on _RegisterScreenState {
       _createFromReview();
       return;
     }
-    final fields = stepFields[_step] ?? const <String>[];
+    final fields = _stepFields[_step] ?? const <String>[];
     _checkedFields.addAll(fields);
     final all = _validateAll();
     final problem = fields.where(all.containsKey).firstOrNull;
@@ -43,12 +45,6 @@ extension _WizardFlow on _RegisterScreenState {
         _fieldErrors = _shownErrors(all);
       }
       if (problem == null) _step++;
-      // The assistant form starts as it did on its own page: nothing
-      // flagged until its Create account.
-      if (_showsAssistantForm) {
-        _submitAttempted = false;
-        _fieldErrors = {};
-      }
     });
     if (problem == null) _hidePasswords();
     problem == null ? _focusStep() : _focusField(problem);
@@ -84,6 +80,7 @@ extension _WizardFlow on _RegisterScreenState {
     // removed after Back) is caught here: open the first step with a problem.
     final all = _validateAll();
     if (all.isNotEmpty) {
+      final stepFields = _stepFields;
       stepFields.values.forEach(_checkedFields.addAll);
       final step = stepFields.entries.firstWhere((s) => s.value.any(all.containsKey)).key;
       final field = stepFields[step]!.firstWhere(all.containsKey);
@@ -108,9 +105,17 @@ extension _WizardFlow on _RegisterScreenState {
       Navigator.pushReplacementNamed(context, '/login', arguments: LoginPrefill(email: email, message: message));
       return;
     }
+    // RW2c: the invite was refused at Create (expired or used meanwhile):
+    // its step, with the server's message under the code.
+    if (_isAssistant && _fieldErrors.containsKey('invite')) {
+      _checkedFields.add('invite');
+      _update(() => _step = thirdStep);
+      _focusField('invite');
+      return;
+    }
     // Any other failure emptied both passwords (P1b), so the sign-in step is
     // where to go on; an email problem shows under the email there.
-    _checkedFields.addAll(stepFields[signInStep]!);
+    _checkedFields.addAll(_stepFields[signInStep]!);
     _update(() => _step = signInStep);
     _focusField(_fieldErrors.containsKey('email') ? 'email' : 'password');
   }
@@ -126,6 +131,7 @@ extension _WizardFlow on _RegisterScreenState {
         'name' => _nameFocus,
         'phone' => _phoneFocus,
         'facility' => _facilityNameFocus,
+        'invite' => _inviteFocus,
         'typeDetail' => _facilityTypeDetailFocus,
         'email' => _emailFocus,
         'password' => _password.focusNode,
@@ -138,7 +144,8 @@ extension _WizardFlow on _RegisterScreenState {
   void _focusStep() {
     final fields = <String, TextEditingController>{
       if (_step == 1) ...{'name': nameController, 'phone': phoneController},
-      if (_step == 2 && facilities.isEmpty) 'facility': facilityNameController,
+      if (_step == thirdStep && !_isAssistant && facilities.isEmpty) 'facility': facilityNameController,
+      if (_step == thirdStep && _isAssistant) 'invite': assistantFacilityCodeController,
       if (_step == signInStep) ...{
         'email': emailController,
         'password': passwordController,
