@@ -81,13 +81,17 @@ void main() {
         }
       }
       final picks = call.allMatches(source).length;
-      final checks = 'UploadSizeCheck.allow('.allMatches(source).length;
+      // The announcement poster (AN1) is checked by PosterImageCheck.inspect
+      // instead: stricter (1 MB, JPEG, PNG or WebP, 16:9), its own sentences.
+      final checks = 'UploadSizeCheck.allow('.allMatches(source).length +
+          'PosterImageCheck.inspect('.allMatches(source).length;
       if (checks < picks) problems.add('${file.path}: $picks pickImage, $checks size checks');
     }
     // two facility logos, business logo, payment proof, product image,
     // ProfilePhotoService (every profile photo; the login poster went in G1,
-    // the dashboard and register avatar pickers in G2).
-    expect(found, 6);
+    // the dashboard and register avatar pickers in G2), the announcement
+    // poster (AN1).
+    expect(found, 7);
     expect(problems, isEmpty);
   });
 }

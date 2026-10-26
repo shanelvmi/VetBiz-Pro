@@ -108,9 +108,9 @@ class AppLimits {
   // Announcements v2 (AN1, docs/design/announcements_v2.md). The Platform
   // Admin form checks these; the login page (AN2) reads the poster ratio.
 
-  /// A poster is picked scaled to this width (image_picker maxWidth), the
-  /// 1600 x 900 the form's hint asks for.
-  static const double posterWidth = 1600;
+  /// A poster is picked scaled to this side (image_picker maxWidth and
+  /// maxHeight): the 1600 x 900 the form's hint asks for.
+  static const double posterImageMaxSide = 1600;
 
   /// Narrower than this and the poster blurs on a wide login page.
   static const int posterMinWidth = 1280;
@@ -118,6 +118,11 @@ class AppLimits {
   /// Posters are 16:9; a picked image may be off by this fraction (3 percent).
   static const double posterAspectRatio = 16 / 9;
   static const double posterRatioTolerance = 0.03;
+
+  /// The poster's safe zone: the central part that stays visible however
+  /// the login page crops it (the form's overlay shows it).
+  static const double posterSafeWidth = 0.9;
+  static const double posterSafeHeight = 0.85;
 
   /// The largest poster storage.rules accepts (isPosterUpload: `size <=
   /// 1024 * 1024`). Keep the two equal.

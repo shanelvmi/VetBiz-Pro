@@ -40,7 +40,7 @@ void main() {
   });
 
   test('the limits the owner set', () {
-    expect(AppLimits.posterWidth, 1600);
+    expect(AppLimits.posterImageMaxSide, 1600);
     expect(AppLimits.posterMinWidth, 1280);
     expect(AppLimits.posterAspectRatio, 16 / 9);
     expect(AppLimits.posterRatioTolerance, 0.03);

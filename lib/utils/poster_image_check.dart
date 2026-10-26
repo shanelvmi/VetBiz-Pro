@@ -46,11 +46,11 @@ class PosterImageCheck {
 
   static String tooNarrow(int width) =>
       'This image is $width px wide. A poster must be at least ${AppLimits.posterMinWidth} px wide '
-      '(${AppLimits.posterWidth.round()} x ${_heightFor(AppLimits.posterWidth.round())} px is best).';
+      '(${AppLimits.posterImageMaxSide.round()} x ${_heightFor(AppLimits.posterImageMaxSide.round())} px is best).';
 
   static String wrongRatio(int width, int height) =>
       'This image is $width x $height px, not 16:9. Crop it to 16:9, for example '
-      '${AppLimits.posterWidth.round()} x ${_heightFor(AppLimits.posterWidth.round())} px.';
+      '${AppLimits.posterImageMaxSide.round()} x ${_heightFor(AppLimits.posterImageMaxSide.round())} px.';
 
   static int _heightFor(int width) => (width / AppLimits.posterAspectRatio).round();
 
