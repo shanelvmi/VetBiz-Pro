@@ -3748,6 +3748,8 @@
   "@register_stepAccountType": {"x-review":"draft"},
   "register_stepAccountTypeHint": "Chagua kinachokufaa.",
   "@register_stepAccountTypeHint": {"x-review":"draft"},
+  "register_chooseAccountType": "Chagua jinsi utakavyotumia {appName}",
+  "@register_chooseAccountType": {"x-review":"draft"},
   "register_stepAboutYou": "Kuhusu wewe",
   "@register_stepAboutYou": {"x-review":"draft"},
   "register_stepAboutYouHint": "Tuambie wewe ni nani na jinsi ya kukupata.",

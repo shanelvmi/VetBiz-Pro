@@ -3748,6 +3748,8 @@
   "@register_stepAccountType": {"description":"Register wizard step 1 title (both flows); the two option cards are the role texts.","placeholders":{"appName":{"type":"String"}}},
   "register_stepAccountTypeHint": "Choose the one that fits you.",
   "@register_stepAccountTypeHint": {"description":"Register wizard step 1 subtitle."},
+  "register_chooseAccountType": "Choose how you will use {appName}",
+  "@register_chooseAccountType": {"description":"Register wizard step 1: the error under the two option cards when Continue is pressed with neither chosen (G6: nothing is pre-selected).","placeholders":{"appName":{"type":"String"}}},
   "register_stepAboutYou": "About you",
   "@register_stepAboutYou": {"description":"Register wizard step 2 title (photo, title, name, phone)."},
   "register_stepAboutYouHint": "Tell us who you are and how to reach you.",
