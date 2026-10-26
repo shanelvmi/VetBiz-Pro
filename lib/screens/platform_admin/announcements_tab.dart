@@ -833,6 +833,12 @@ class _ContactDetailsCardState extends State<ContactDetailsCard> {
                   ),
                 ),
               ],
+              const SizedBox(height: AppSpacing.s8),
+              // English: the operator console is English (spec 2.8).
+              Text(
+                'Icons appear on the sign-in page once a link is saved.',
+                style: TextStyle(fontSize: AppFontSize.f12_5, color: context.colors.textMuted),
+              ),
               const SizedBox(height: AppSpacing.s12),
               ElevatedButton.icon(
                 onPressed: _isSaving ? null : _saveContactDetails,

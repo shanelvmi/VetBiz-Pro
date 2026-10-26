@@ -32,7 +32,7 @@ import 'helpers/help_dialog_rows.dart';
 // test here fails (no Platform column, no band, no page text, no hint).
 const _skipFooter = false;
 const _skipPages = false;
-const _skipHint = true;
+const _skipHint = false;
 
 final _en = lookupAppLocalizations(const Locale('en'));
 final _sw = lookupAppLocalizations(const Locale('sw'));
