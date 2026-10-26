@@ -11364,6 +11364,12 @@ abstract class AppLocalizations {
   /// **'Choose the one that fits you.'**
   String get register_stepAccountTypeHint;
 
+  /// Register wizard step 1: the error under the two option cards when Continue is pressed with neither chosen (G6: nothing is pre-selected).
+  ///
+  /// In en, this message translates to:
+  /// **'Choose how you will use {appName}'**
+  String register_chooseAccountType(String appName);
+
   /// Register wizard step 2 title (photo, title, name, phone).
   ///
   /// In en, this message translates to:

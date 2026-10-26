@@ -6736,6 +6736,11 @@ class AppLocalizationsSw extends AppLocalizations {
   String get register_stepAccountTypeHint => 'Chagua kinachokufaa.';
 
   @override
+  String register_chooseAccountType(String appName) {
+    return 'Chagua jinsi utakavyotumia $appName';
+  }
+
+  @override
   String get register_stepAboutYou => 'Kuhusu wewe';
 
   @override

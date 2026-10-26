@@ -6694,6 +6694,11 @@ class AppLocalizationsEn extends AppLocalizations {
   String get register_stepAccountTypeHint => 'Choose the one that fits you.';
 
   @override
+  String register_chooseAccountType(String appName) {
+    return 'Choose how you will use $appName';
+  }
+
+  @override
   String get register_stepAboutYou => 'About you';
 
   @override
