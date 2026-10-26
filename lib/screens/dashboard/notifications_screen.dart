@@ -11,12 +11,15 @@ import '../../utils/notification_seen_tracker.dart';
 import '../../models/notification_model.dart';
 import '../../widgets/announcement_message.dart';
 import '../../widgets/announcement_poster.dart';
+import '../../widgets/updates_parts.dart';
+import '../../data/announcement_fields.dart';
+import '../../utils/announcement_visibility.dart';
+import '../../utils/updates_selection.dart';
 import '../../widgets/notification_row.dart';
 import '../../services/notification_feed.dart';
 import '../../widgets/notification_actions.dart';
 import '../../ui/feedback/app_feedback.dart';
 import 'notification_targets.dart';
-import '../../data/collections.dart';
 import '../../config/app_limits.dart';
 import '../../config/app_timeouts.dart';
 import '../../config/app_ranges.dart';
@@ -57,7 +60,6 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
   // on what the person does. Null when no facility or nobody is signed in.
   NotificationFeedController? _feed;
   bool _ownsFeed = false;
-  Stream<QuerySnapshot<Map<String, dynamic>>>? _urgentStream;
 
   // Full screen only: the search/date/category filters and pagination. and selection mode (never on persistent rows).
   final TextEditingController _searchController = TextEditingController();
@@ -87,11 +89,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
     if (feed != null) {
       feed.addListener(_onFeedChanged);
       feed.start();
-      // Created once: a new stream on every build would reset the builder.
-      _urgentStream = feed.firestore
-          .collection(Collections.publicAnnouncements)
-          .where('urgent', isEqualTo: true)
-          .snapshots();
+      // The urgent announcements come with the feed (AN3), read once there.
     }
     _expiryTicker = Timer.periodic(AppTimeouts.noticeExpiryTick, (_) => _feed?.refresh());
     // The device's "last viewed" time, for the bell's blink on urgent
@@ -185,7 +183,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
 
   // Removal is for me only and has no dialog for one row; Undo puts back
   // exactly what was there.
-  Future<void> _removeItems(List<NotificationItem> items) => _run(() async {
+  Future<void> _removeItems(List<NotificationRowFacts> items) => _run(() async {
         final removable = items.where((i) => i.canRemove).toList();
         if (removable.isEmpty) return;
         final entries = await _feed!.remove(removable);
@@ -237,7 +235,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
         onSelected: (action) => _onAction(item, action),
       );
 
-  Widget _swipe(NotificationItem item, Widget child) => NotificationSwipe(
+  Widget _swipe(NotificationRowFacts item, Widget child) => NotificationSwipe(
         item: item,
         onToggleRead: () => _run(() => _feed!.toggleRead(item)),
         onRemove: () => _removeItems([item]),
@@ -289,7 +287,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final nothingToShow = !_isLoading && _error == null && _items.isEmpty;
+    final nothingToShow = !_isLoading && _error == null && _items.isEmpty && _announcementRows.isEmpty;
 
     if (widget.isDropdown) {
       return _buildDropdownChrome(nothingToShow);
@@ -1255,7 +1253,14 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Text(context.l10n.notifications_viewAll, style: const TextStyle(fontSize: AppFontSize.f13, fontWeight: AppFontWeight.semibold)),
+                  // Flexible: it may now show with no notifications at all
+                  // (an urgent announcement alone, AN3), while the
+                  // dropdown is still opening narrow.
+                  Flexible(
+                    child: Text(context.l10n.notifications_viewAll,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(fontSize: AppFontSize.f13, fontWeight: AppFontWeight.semibold)),
+                  ),
                   const SizedBox(width: AppSpacing.s4),
                   const Icon(Icons.arrow_forward, size: AppIconSize.i16),
                 ],
@@ -1302,38 +1307,88 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
         ),
       );
 
+  // ==================== URGENT ANNOUNCEMENTS (AN3) ====================
+
+  /// My urgent announcement rows in the language the app is shown in (the
+  /// same rule as the login page), without the ones I removed.
+  List<AnnouncementItem> get _announcementRows {
+    final language = Localizations.localeOf(context).languageCode;
+    return [
+      for (final i in _feed?.announcementItems ?? const <AnnouncementItem>[])
+        if (AnnouncementVisibility.isShown(i.announcement, languageCode: language)) i,
+    ];
+  }
+
+  // Tap: read for me; a poster also opens full size.
+  void _onAnnouncementTap(AnnouncementItem item) {
+    if (!item.isRead) _run(() => _feed!.markRead([item]));
+    if (item.announcement.kind == AnnouncementKind.poster) {
+      showAnnouncementPoster(context, item.announcement, imageFor: widget.imageFor);
+    }
+  }
+
+  void _onAnnouncementAction(AnnouncementItem item, NotificationAction action) {
+    switch (action) {
+      case NotificationAction.markRead:
+        _run(() => _feed!.markRead([item]));
+      case NotificationAction.markUnread:
+        _run(() => _feed!.markUnread(item));
+      case NotificationAction.remove:
+        _removeItems([item]);
+      case NotificationAction.open:
+        _onAnnouncementTap(item);
+    }
+  }
+
   Widget _buildUrgentAnnouncements() {
-    return StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
-      stream: _urgentStream,
-      builder: (context, snapshot) {
-        final urgentDocs = (snapshot.data?.docs ?? []).where((doc) {
-          final data = doc.data();
-          return data['hidden'] != true;
-        }).toList();
+    final rows = _announcementRows;
+    if (rows.isEmpty) return const SizedBox.shrink();
+    return Padding(
+      padding: const EdgeInsets.only(bottom: AppSpacing.s20),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _sectionHeader(Icons.campaign_outlined, context.l10n.notifications_urgentAnnouncements, rows.length, context.colors.danger),
+          const SizedBox(height: AppSpacing.s8),
+          ...rows.map(_announcementRow),
+        ],
+      ),
+    );
+  }
 
-        if (urgentDocs.isEmpty) return const SizedBox.shrink();
-
-        return Padding(
-          padding: const EdgeInsets.only(bottom: AppSpacing.s20),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              _sectionHeader(Icons.campaign_outlined, context.l10n.notifications_urgentAnnouncements, urgentDocs.length, context.colors.danger),
-              const SizedBox(height: AppSpacing.s8),
-              ...urgentDocs.map((doc) {
-                final data = doc.data();
-                return _AccentCard(
-                  color: context.colors.danger,
-                  icon: Icons.priority_high,
-                  title: data['title'] ?? '',
-                  margin: const EdgeInsets.only(bottom: AppSpacing.s8),
-                  child: AnnouncementMessage(data: data, fontSize: AppFontSize.f13),
-                );
-              }),
-            ],
-          ),
-        );
-      },
+  // A text announcement keeps its card; a poster is a row with its 16:9
+  // thumbnail, title and chips. Both: tap, the menu, the swipes (DISMISSIBLE).
+  Widget _announcementRow(AnnouncementItem item) {
+    final a = item.announcement;
+    final isPoster = a.kind == AnnouncementKind.poster;
+    final isNew = UpdatesSelection.isNew(a, DateTime.now());
+    return _swipe(
+      item,
+      _AccentCard(
+        key: ValueKey(item.id),
+        color: context.colors.danger,
+        icon: Icons.priority_high,
+        leading: isPoster ? AnnouncementThumbnail(announcement: a, imageFor: widget.imageFor) : null,
+        title: a.title,
+        isRead: item.isRead,
+        onTap: () => _onAnnouncementTap(item),
+        trailing: NotificationMoreButton(
+          item: item,
+          canOpen: isPoster,
+          onSelected: (action) => _onAnnouncementAction(item, action),
+        ),
+        margin: const EdgeInsets.only(bottom: AppSpacing.s8),
+        child: isPoster
+            ? Wrap(
+                spacing: AppSpacing.s6,
+                runSpacing: AppSpacing.s4,
+                children: [
+                  if (a.urgent) const UpdateChip.important(),
+                  if (isNew) const UpdateChip.fresh(),
+                ],
+              )
+            : AnnouncementMessage(data: {AnnouncementFields.message: a.message}, fontSize: AppFontSize.f13),
+      ),
     );
   }
 
@@ -1367,12 +1422,27 @@ class _AccentCard extends StatelessWidget {
   final Widget child;
   final EdgeInsets margin;
 
+  /// In place of the icon (a poster's thumbnail, AN3).
+  final Widget? leading;
+
+  /// At the end of the title line (the more menu, AN3).
+  final Widget? trailing;
+  final VoidCallback? onTap;
+
+  /// Read for me: the title is no longer bold.
+  final bool isRead;
+
   const _AccentCard({
+    super.key,
     required this.color,
     required this.icon,
     required this.title,
     required this.child,
     this.margin = EdgeInsets.zero,
+    this.leading,
+    this.trailing,
+    this.onTap,
+    this.isRead = false,
   });
 
   @override
@@ -1387,23 +1457,32 @@ class _AccentCard extends StatelessWidget {
           BoxShadow(color: context.colors.shadow.withValues(alpha: AppAlpha.a05), blurRadius: 6, offset: const Offset(0, 2)),
         ],
       ),
-      padding: const EdgeInsets.all(AppSpacing.s14),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Icon(icon, color: color, size: AppIconSize.i20),
-          const SizedBox(width: AppSpacing.s10),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(title, style: const TextStyle(fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f14)),
-                const SizedBox(height: AppSpacing.s4),
-                child,
-              ],
-            ),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(AppRadius.r10),
+        child: Padding(
+          padding: EdgeInsets.fromLTRB(AppSpacing.s14, AppSpacing.s14, trailing == null ? AppSpacing.s14 : AppSpacing.s4, AppSpacing.s14),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              leading ?? Icon(icon, color: color, size: AppIconSize.i20),
+              const SizedBox(width: AppSpacing.s10),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(title,
+                        style: TextStyle(
+                            fontWeight: isRead ? AppFontWeight.semibold : AppFontWeight.bold, fontSize: AppFontSize.f14)),
+                    const SizedBox(height: AppSpacing.s4),
+                    child,
+                  ],
+                ),
+              ),
+              if (trailing != null) trailing!,
+            ],
           ),
-        ],
+        ),
       ),
     );
   }

@@ -23,7 +23,7 @@ String persistentReasonLabel(AppLocalizations l, PersistentReason reason) => swi
 /// applies), Open when the row links to a record, and Remove - or, on a
 /// persistent row, an inactive line saying why it stays.
 class NotificationMoreButton extends StatelessWidget {
-  final NotificationItem item;
+  final NotificationRowFacts item;
   final ValueChanged<NotificationAction> onSelected;
 
   /// Whether Open has somewhere to go (notificationTargetScreen).
@@ -86,7 +86,7 @@ class NotificationSelectBox extends StatelessWidget {
 /// persistent row does not swipe at all. The menu stays on every row, as
 /// swipes are not discoverable.
 class NotificationSwipe extends StatelessWidget {
-  final NotificationItem item;
+  final NotificationRowFacts item;
   final Widget child;
   final VoidCallback onToggleRead;
   final VoidCallback onRemove;
