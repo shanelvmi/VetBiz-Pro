@@ -24,7 +24,9 @@ import 'helpers/updates_harness.dart';
 // controls that read at 3:1 or more on the card in every theme, Light and
 // Dark, with larger dots (the selected one larger and another colour); the
 // footer's brand column without the description sentence.
-const _skip = true;
+// Unskipped with their commits.
+const _skipWideLabel = true;
+const _skipFooter = true;
 
 final _en = lookupAppLocalizations(const Locale('en'));
 
@@ -48,7 +50,7 @@ void main() {
         final r = tester.getRect(find.ancestor(of: find.text(chip), matching: find.byType(UpdateChip)));
         expect(r.top >= row.top - 0.5 && r.bottom <= row.bottom + 0.5, isTrue, reason: '$chip inside the row');
       }
-    }, skip: _skip);
+    }, skip: width > 1000 ? _skipWideLabel : false);
   }
 
   Future<void> pumpCard(WidgetTester tester, List<Announcement> slides, AppColorTheme theme, Brightness brightness) async {
@@ -88,7 +90,7 @@ void main() {
           final color = (dot.decoration! as BoxDecoration).color!;
           expect(ColorMath.contrast(ColorMath.composite(color, card), card), greaterThanOrEqualTo(3));
         }
-      }, skip: _skip);
+      }, skip: false);
     }
   }
 
@@ -115,13 +117,13 @@ void main() {
     expect(find.bySemanticsLabel(_en.updates_slideOf(2, 3)), findsOneWidget);
     expect(find.byTooltip(_en.updates_previous), findsOneWidget);
     expect(find.byTooltip(_en.updates_next), findsOneWidget);
-  }, skip: _skip);
+  }, skip: false);
 
   testWidgets('one update: no dots and no arrows', (tester) async {
     await pumpCard(tester, [textUpdate('1')], AppColorTheme.pasture, Brightness.light);
     expect(find.byType(UpdatesDots), findsNothing);
     expect(find.byIcon(Icons.arrow_back), findsNothing);
-  }, skip: _skip);
+  }, skip: false);
 
   Future<double> pumpFooter(WidgetTester tester, double width) async {
     tester.view.physicalSize = Size(width, 1600);
@@ -152,6 +154,6 @@ void main() {
       } else {
         expect(height, lessThan(before));
       }
-    }, skip: _skip);
+    }, skip: _skipFooter);
   }
 }
