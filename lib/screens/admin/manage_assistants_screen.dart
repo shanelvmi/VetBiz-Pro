@@ -132,7 +132,9 @@ class _ManageAssistantsScreenState extends State<ManageAssistantsScreen> {
   // invite pickers.
   String _nameWithType(Map<String, dynamic> facility) {
     final name = ((facility['name'] as String?) ?? '').trim();
-    final type = ((facility['type'] as String?) ?? '').trim();
+    // Shown through its label (Ambulatory services; an Other facility's own
+    // words, RW2b2).
+    final type = L10n.current.facilityTypeDisplay(facility['type'] as String?, facility['typeDetail'] as String?).trim();
     if (name.isEmpty) return L10n.current.common_unknown;
     if (type.isEmpty || name.toLowerCase().contains(type.toLowerCase())) return name;
     return '$name $type';

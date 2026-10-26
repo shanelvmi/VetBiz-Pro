@@ -168,6 +168,7 @@ List<Map<String, dynamic>> _parseFacilities(Map<String, dynamic>? data) {
             Fields.facilityId: f[Fields.facilityId],
             'facilityName': f['name'] ?? '',
             'facilityType': f['type'] ?? '',
+            'facilityTypeDetail': f['typeDetail'],
           })
       .where((f) => f[Fields.facilityId] != null)
       .toList();
@@ -1202,7 +1203,7 @@ class _NoFacilityScreenState extends State<_NoFacilityScreen> {
                       found.facilityType.isEmpty
                           ? context.l10n.noFacility_askingToJoin(found.facilityName)
                           : context.l10n.noFacility_askingToJoinWithType(
-                              found.facilityName, context.l10n.facilityTypeLabel(found.facilityType)),
+                              found.facilityName, context.l10n.facilityTypeDisplay(found.facilityType, found.facilityTypeDetail)),
                       textAlign: TextAlign.center,
                       style: TextStyle(color: context.colors.success, fontWeight: AppFontWeight.semibold, fontSize: AppFontSize.f13),
                     )

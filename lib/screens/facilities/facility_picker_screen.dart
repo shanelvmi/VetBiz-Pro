@@ -144,7 +144,9 @@ class _FacilityPickerScreenState extends State<FacilityPickerScreen> {
   List<Map<String, dynamic>> get _filteredFacilities {
     return widget.facilities.where((f) {
       final name = (f['facilityName'] as String? ?? '').toLowerCase();
-      final type = (f['facilityType'] as String? ?? '').toLowerCase();
+      // The type as shown (an Other facility's own words, RW2b2) is what a
+      // search matches.
+      final type = context.l10n.facilityTypeDisplay(f['facilityType'] as String?, f['facilityTypeDetail'] as String?).toLowerCase();
       final details = _detailsByFacility[f[Fields.facilityId]];
       final address = (details?['address'] as String? ?? '').toLowerCase();
 
@@ -449,7 +451,12 @@ class _FacilityPickerScreenState extends State<FacilityPickerScreen> {
                               color: type.isNotEmpty ? typeColor.withValues(alpha: AppAlpha.a10) : context.colors.textHint.withValues(alpha: AppAlpha.a10),
                               borderRadius: BorderRadius.circular(AppRadius.r8),
                             ),
-                            child: Text(type.isNotEmpty ? context.l10n.facilityTypeLabel(type) : context.l10n.facilityPicker_typeNotSet,
+                            child: Text(
+                                type.isNotEmpty
+                                    ? context.l10n.facilityTypeDisplay(type, facility['facilityTypeDetail'] as String?)
+                                    : context.l10n.facilityPicker_typeNotSet,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
                                 style: TextStyle(color: type.isNotEmpty ? _typeLabelColor(type) : context.colors.textMuted, fontSize: AppFontSize.f11, fontWeight: AppFontWeight.semibold)),
                           ),
                         ],

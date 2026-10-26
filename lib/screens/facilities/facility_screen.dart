@@ -372,6 +372,7 @@ class _FacilityScreenState extends State<FacilityScreen> {
         Fields.facilityId: facility[Fields.facilityId],
         'facilityName': facility['name'],
         'facilityType': facility['type'],
+        'facilityTypeDetail': facility['typeDetail'],
       },
       role: UserRole.admin.key,
     );
@@ -1501,7 +1502,9 @@ class _FacilityScreenState extends State<FacilityScreen> {
   String _nameWithType(Map<String, dynamic> facility) {
     final name = (facility['name'] as String?) ?? context.l10n.common_facility;
     final type = facility['type'] as String?;
-    return (type != null && type.isNotEmpty) ? context.l10n.facilities_nameWithType(name, context.l10n.facilityTypeLabel(type)) : name;
+    return (type != null && type.isNotEmpty)
+        ? context.l10n.facilities_nameWithType(name, context.l10n.facilityTypeDisplay(type, facility['typeDetail'] as String?))
+        : name;
   }
 
   Widget _buildFacilityListRow(Map<String, dynamic> facility) {
@@ -2824,7 +2827,8 @@ class _FacilityScreenState extends State<FacilityScreen> {
             Text(description, style: const TextStyle(fontSize: AppFontSize.f13_5, height: 1.5)),
             const SizedBox(height: AppSpacing.s14),
           ],
-          _aboutField(context.l10n.facilities_facilityType, context.l10n.facilityTypeLabel(facility['type'] as String? ?? '-')),
+          _aboutField(context.l10n.facilities_facilityType,
+              context.l10n.facilityTypeDisplay(facility['type'] as String? ?? '-', facility['typeDetail'] as String?)),
           _aboutField(
             context.l10n.facilities_ownership,
             (details?['ownership'] as String?) != null

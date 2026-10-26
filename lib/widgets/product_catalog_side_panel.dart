@@ -78,7 +78,8 @@ class _ProductCatalogSidePanelState extends State<ProductCatalogSidePanel> {
     final selectedFacility = facilityProvider.selectedFacility;
     final l10n = context.l10n;
     final facilityName = selectedFacility?['name'] ?? l10n.common_facility;
-    final facilityType = selectedFacility != null ? (selectedFacility['type'] ?? '') : '';
+    // Shown through its label (RW2b2; it showed the stored value before).
+    final facilityType = l10n.facilityTypeDisplay(selectedFacility?['type'], selectedFacility?['typeDetail']);
     final logoUrl = selectedFacility != null ? selectedFacility['logoUrl'] : null;
 
     return Container(

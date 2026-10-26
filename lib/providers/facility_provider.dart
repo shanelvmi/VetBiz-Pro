@@ -10,6 +10,9 @@ class FacilityProvider with ChangeNotifier {
   String? _facilityId;
   String? _facilityName;
   String? _facilityType;
+  // An Other facility's own words (RW2b2). Read from the facility itself;
+  // not kept on the device, so it shows once the facility has loaded.
+  String? _facilityTypeDetail;
   String? _logoUrl;
   String? _facilityEmail;
   String? _facilityPhone;
@@ -60,6 +63,7 @@ class FacilityProvider with ChangeNotifier {
       _facilityId = doc.id;
       _facilityName = data['name'] ?? _facilityName;
       _facilityType = data['type'] ?? _facilityType;
+      _facilityTypeDetail = data['typeDetail'] as String?;
       _logoUrl = data['logoUrl'];
       _facilityEmail = data['email'];
       _facilityPhone = data['phone'];
@@ -106,11 +110,13 @@ class FacilityProvider with ChangeNotifier {
     required String id,
     required String name,
     required String type,
+    String? typeDetail,
     String? logoUrl,
   }) async {
     _facilityId = id;
     _facilityName = name;
     _facilityType = type;
+    _facilityTypeDetail = typeDetail;
     _logoUrl = logoUrl;
     notifyListeners();
 
@@ -141,6 +147,7 @@ class FacilityProvider with ChangeNotifier {
     _facilityId = null;
     _facilityName = null;
     _facilityType = null;
+    _facilityTypeDetail = null;
     _logoUrl = null;
     _facilityEmail = null;
     _facilityPhone = null;
@@ -165,6 +172,7 @@ class FacilityProvider with ChangeNotifier {
   String? get selectedFacilityId => _facilityId;
   String? get selectedFacilityName => _facilityName;
   String? get selectedFacilityType => _facilityType;
+  String? get selectedFacilityTypeDetail => _facilityTypeDetail;
   String? get facilityEmail => _facilityEmail;
   String? get facilityPhone => _facilityPhone;
   String? get logoUrl => _logoUrl;
@@ -273,6 +281,7 @@ class FacilityProvider with ChangeNotifier {
       'id': _facilityId,
       'name': _facilityName,
       'type': _facilityType,
+      'typeDetail': _facilityTypeDetail,
       'logoUrl': _logoUrl,
       'email': _facilityEmail,
       'phone': _facilityPhone,
@@ -296,6 +305,7 @@ class FacilityProvider with ChangeNotifier {
         _facilityId = doc.id;
         _facilityName = data['name'] ?? '';
         _facilityType = data['type'] ?? '';
+        _facilityTypeDetail = data['typeDetail'] as String?;
         _logoUrl = data['logoUrl'];
         _facilityEmail = data['email'];
         _facilityPhone = data['phone'];

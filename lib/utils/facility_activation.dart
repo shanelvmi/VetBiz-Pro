@@ -63,6 +63,7 @@ Future<void> activateFacilityAndGoToDashboard({
     id: facility[Fields.facilityId],
     name: facility['facilityName'],
     type: facility['facilityType'],
+    typeDetail: facility['facilityTypeDetail'],
   );
   facilityProvider.listenToFacility(facility[Fields.facilityId]);
 

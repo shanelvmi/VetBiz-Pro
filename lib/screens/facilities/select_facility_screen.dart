@@ -77,6 +77,7 @@ class _SelectFacilityScreenState extends State<SelectFacilityScreen> {
                         Fields.facilityId: f[Fields.facilityId],
                         'facilityName': f['name'],
                         'facilityType': f['type'],
+                        'facilityTypeDetail': f['typeDetail'],
                       })
                   .toList() ??
               [];
@@ -118,6 +119,7 @@ class _SelectFacilityScreenState extends State<SelectFacilityScreen> {
       id: facility[Fields.facilityId],
       name: facility['facilityName'],
       type: facility['facilityType'],
+      typeDetail: facility['facilityTypeDetail'],
     );
 
     // Listen to real-time updates
@@ -140,6 +142,7 @@ class _SelectFacilityScreenState extends State<SelectFacilityScreen> {
           Fields.facilityId: facility[Fields.facilityId],
           'facilityName': facility['facilityName'],
           'facilityType': facility['facilityType'],
+          'facilityTypeDetail': facility['facilityTypeDetail'],
         },
       );
     });
@@ -305,7 +308,9 @@ class _HoverCardState extends State<_HoverCard> {
                     ),
                     const SizedBox(height: AppSpacing.s4),
                     Text(
-                      context.l10n.facilityTypeLabel(type),
+                      context.l10n.facilityTypeDisplay(type, widget.facility['facilityTypeDetail'] as String?),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                       style: TextStyle(
                         fontSize: AppFontSize.f14,
                         color: context.colors.selectableCardInk.withValues(alpha: AppAlpha.a85),

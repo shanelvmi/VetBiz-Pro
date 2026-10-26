@@ -68,6 +68,7 @@ import '../../ui/feedback/app_feedback.dart';
 import '../../theme/app_text.dart';
 import '../../theme/app_motion.dart';
 import '../../l10n/l10n.dart';
+import '../../constants/facility_types.dart';
 
 // The light ink on the brand areas (sidebar items and labels, the logo
 // plate, the profile drawer buttons). In light it stays `background`, value
@@ -2416,11 +2417,14 @@ Widget _buildDrawerContent() {
   final String facilityDisplayType = selectedFacility?['type'] ?? '';
   final String? facilityIdForTagline = selectedFacility?['id'];
   // 'Other' is the stored type, compared as stored; the type is shown through
-  // its lookup.
-  final String combinedNameAndType =
-      (facilityDisplayType.isNotEmpty && facilityDisplayType != 'Other')
-          ? context.l10n.dashboard_facilityNameType(facilityDisplayName, context.l10n.facilityTypeLabel(facilityDisplayType))
-          : facilityDisplayName;
+  // its lookup. A bare Other adds nothing; with its own words (RW2b2) they
+  // are shown.
+  final String shownType = facilityDisplayType == kFacilityTypeOther
+      ? (selectedFacility?['typeDetail'] ?? '').trim()
+      : context.l10n.facilityTypeDisplay(facilityDisplayType);
+  final String combinedNameAndType = shownType.isNotEmpty
+      ? context.l10n.dashboard_facilityNameType(facilityDisplayName, shownType)
+      : facilityDisplayName;
   Widget facilityNameSection = effectivelyCollapsed || facilityDisplayName.isEmpty
       ? const SizedBox.shrink()
       : Padding(

@@ -8,6 +8,7 @@ import '../data/fields.dart';
 import '../data/user_role.dart';
 import '../data/user_status.dart';
 import '../data/activity_type.dart';
+import '../l10n/l10n.dart';
 
 /// Changing someone's role - done ONLY by a Platform Admin (Platform Admin >
 /// Users > the person > Change role). Nobody else can: not the person
@@ -134,7 +135,9 @@ class RoleChangeService {
   // "Ukuli Agrovet" rather than "Ukuli" - unless the name already says it.
   static String _facilityLabel(Map<dynamic, dynamic> f) {
     final name = ((f['name'] as String?) ?? 'Facility').trim();
-    final type = ((f['type'] as String?) ?? '').trim();
+    // Shown through its label (Ambulatory services; an Other facility's own
+    // words, RW2b2).
+    final type = L10n.current.facilityTypeDisplay(f['type'] as String?, f['typeDetail'] as String?).trim();
     if (type.isEmpty || name.toLowerCase().contains(type.toLowerCase())) return name;
     return '$name $type';
   }

@@ -62,7 +62,12 @@ Future<void> refreshAppData() async {
   if (current == null || !current.mounted) return;
   await activateFacilityAndGoToDashboard(
     context: current,
-    facility: {Fields.facilityId: facilityId, 'facilityName': facilityName, 'facilityType': facilityType},
+    facility: {
+      Fields.facilityId: facilityId,
+      'facilityName': facilityName,
+      'facilityType': facilityType,
+      'facilityTypeDetail': facility.selectedFacilityTypeDetail,
+    },
     role: role,
   );
   AppFeedback.success(L10n.current.uiSettings_refreshDone);
