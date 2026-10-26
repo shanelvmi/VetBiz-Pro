@@ -178,7 +178,8 @@ class _ServiceReceiptPreviewScreenState extends State<ServiceReceiptPreviewScree
       await ReceiptPdfService.printOrDownloadService(
         widget.service,
         facilityName: facility?['name'] ?? 'Facility',
-        facilityType: facility?['type'],
+        // Printed in English: the label, or an Other facility's own words (RW2b2).
+        facilityType: ReceiptTexts.facilityType(facility?['type'], facility?['typeDetail']),
         facilityPhone: facility?['phone'],
         facilityEmail: facility?['email'],
         facilityAddress: facility?['address'],
@@ -204,7 +205,7 @@ class _ServiceReceiptPreviewScreenState extends State<ServiceReceiptPreviewScree
     final facilityProvider = Provider.of<FacilityProvider>(context, listen: false);
     final facility = facilityProvider.selectedFacility;
     final facilityName = facility?['name'] ?? 'Facility';
-    final facilityType = facility?['type'];
+    final facilityType = ReceiptTexts.facilityType(facility?['type'], facility?['typeDetail']);
     final logoUrl = facility?['logoUrl'];
     final facilityPhone = facility?['phone'];
     final facilityEmail = facility?['email'];
