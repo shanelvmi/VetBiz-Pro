@@ -9,6 +9,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../services/auth_service.dart';
 import '../services/support_contact_store.dart';
 import '../widgets/updates_carousel.dart';
+import '../widgets/updates_card.dart';
 import '../widgets/password_field_guard.dart';
 import '../widgets/auth_background.dart';
 import '../widgets/auth_card.dart';
@@ -736,6 +737,44 @@ class _LoginScreenState extends State<LoginScreen> {
   final GlobalKey _loginFormKey = GlobalKey();
   Widget _loginForm() => KeyedSubtree(key: _loginFormKey, child: _buildLoginForm());
 
+  // AN4 (owner): two cards, no grey panel behind the login card (it used
+  // to lift the card off a tinted panel; the card's own shadow does that
+  // on the frame now).
+  Widget _buildBody(AuthCardLayout layout, Widget? updates) {
+    final card = updates == null ? null : UpdatesCard(wide: layout.isWide, child: updates);
+    if (layout.isWide) {
+      if (card == null) {
+        return Row(children: [const Spacer(), Expanded(flex: 2, child: _loginForm()), const Spacer()]);
+      }
+      // Side by side at the taller card's natural height, both stretched to
+      // it: the Updates card's controls go to its bottom, the slide frame
+      // keeps its 16:9 shape. Nothing below measures itself with a
+      // LayoutBuilder outside the frame's AspectRatio (which answers from
+      // its width), so the intrinsic pass is safe.
+      return IntrinsicHeight(
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Expanded(child: card),
+            const SizedBox(width: AuthPanelMetrics.gap),
+            Expanded(child: _loginForm()),
+          ],
+        ),
+      );
+    }
+    // Narrow screens: the same content stacked - login first since it's
+    // the action most people came here for, the Updates (no welcome note)
+    // below it.
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        _loginForm(),
+        if (card != null) ...[const SizedBox(height: AuthPanelMetrics.stackGap), card],
+      ],
+    );
+  }
+
   // ==================== BUILD ====================
   @override
   Widget build(BuildContext context) {
@@ -745,72 +784,22 @@ class _LoginScreenState extends State<LoginScreen> {
           // A flat page colour from the theme (G1: no poster, no photo, no scrim).
           const Positioned.fill(child: AuthBackground()),
 
-          // The single floating card holding the sign-in content - header,
-          // Updates and login form live inside this one surface on
-          // every screen size, reflowing between two columns and a single
-          // stacked column rather than switching to a stripped-down
-          // alternate layout. Its width, padding and radius are Register's
-          // too (AuthCard). The secondary details (brand, help, legal,
-          // version) are in the footer below it (G3).
-          // The Updates (AN2) decide whether there is a left column: with
-          // nothing to show there is no Updates area at all and the form
-          // stands alone in the middle of the card.
+          // The page frame holding the sign-in content - header, and inside
+          // it the login card and the Updates card - on every screen size,
+          // reflowing between two columns and a single stacked column rather
+          // than switching to a stripped-down alternate layout. Its width,
+          // padding and radius are Register's too (AuthCard). The secondary
+          // details (brand, help, legal, version) are in the footer below it
+          // (G3).
+          // The Updates (AN2) decide whether there is a left card: with
+          // nothing to show there is no Updates card at all and the login
+          // card stands alone in the middle of the frame.
           UpdatesCarousel(
             firestore: _db,
             builder: (context, updates) => AuthCard(
               header: _buildHeader(),
               below: const AuthFooter(),
-              bodyBuilder: (context, layout) => layout.isWide
-                  ? Row(
-                      children: [
-                        if (updates == null)
-                          const Spacer()
-                        else ...[
-                          // Left: Updates
-                          Expanded(child: updates),
-                          const SizedBox(width: AppSpacing.s28),
-                        ],
-                        // Right (or centre): Login
-                        Expanded(
-                          flex: updates == null ? 2 : 1,
-                          // A softly tinted panel behind the form
-                          // card: the card is white with a deep
-                          // shadow, so it lifts off this instead
-                          // of blending into the white surface
-                          // around it.
-                          child: Container(
-                            padding: const EdgeInsets.all(AppSpacing.s24),
-                            decoration: BoxDecoration(
-                              gradient: LinearGradient(
-                                begin: Alignment.topLeft,
-                                end: Alignment.bottomRight,
-                                colors: [context.colors.divider, context.colors.surfaceMuted],
-                              ),
-                              borderRadius: BorderRadius.circular(AppRadius.r24),
-                            ),
-                            child: Center(child: _loginForm()),
-                          ),
-                        ),
-                        if (updates == null) const Spacer(),
-                      ],
-                    )
-                  // Narrow screens: the same content, all
-                  // of it, stacked in one column instead
-                  // of a separate, stripped-down layout -
-                  // login first since it's the action
-                  // most people came here for, everything
-                  // else available below it.
-                  : Column(
-                      mainAxisSize: MainAxisSize.min,
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        _loginForm(),
-                        if (updates != null) ...[
-                          const SizedBox(height: AppSpacing.s20),
-                          updates,
-                        ],
-                      ],
-                    ),
+              bodyBuilder: (context, layout) => _buildBody(layout, updates),
             ),
           ),
         ],

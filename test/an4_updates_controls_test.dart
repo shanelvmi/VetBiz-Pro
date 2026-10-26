@@ -25,7 +25,7 @@ import 'helpers/updates_harness.dart';
 // Dark, with larger dots (the selected one larger and another colour); the
 // footer's brand column without the description sentence.
 // Unskipped with their commits.
-const _skipWideLabel = true;
+const _skipWideLabel = false;
 const _skipFooter = true;
 
 final _en = lookupAppLocalizations(const Locale('en'));

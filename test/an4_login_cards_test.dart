@@ -22,7 +22,7 @@ import 'helpers/login_harness.dart';
 // one line; on phones the welcome note is not shown and the cards stack; with
 // nothing to show the login card stands centred alone; no grey panel behind
 // the login card; a softer page frame shadow.
-const _skip = true;
+const _skip = false;
 // Unskipped with its commit.
 const _skipShadow = false;
 
@@ -40,7 +40,7 @@ void main() {
       expect(left.height, closeTo(login.height, 1));
       expect(left.top, closeTo(login.top, 1));
       expect(find.text(_en.updates_welcomeTitle(AppInfo.name)), findsOneWidget);
-      expect(find.text(_en.updates_welcomeLine), findsOneWidget);
+      expect(find.descendant(of: find.byKey(UpdatesCard.surfaceKey), matching: find.text(_en.updates_welcomeLine)), findsOneWidget);
       expect(find.byIcon(Icons.pets_outlined), findsOneWidget);
       expect(
         _rect(tester, UpdatesCard.welcomeHeadingKey).top,
@@ -73,7 +73,7 @@ void main() {
     testWidgets('$width: no welcome note, the Updates card below the login card', (tester) async {
       await pumpLogin(tester, await dbWithUpdates(3), width: width, height: 2400);
       expect(find.byKey(UpdatesCard.welcomeKey), findsNothing);
-      expect(find.text(_en.updates_welcomeLine), findsNothing);
+      expect(find.descendant(of: find.byKey(UpdatesCard.surfaceKey), matching: find.text(_en.updates_welcomeLine)), findsNothing);
       expect(_rect(tester, UpdatesCard.surfaceKey).top, greaterThan(_rect(tester, LoginScreen.loginCardKey).bottom));
       expect(find.text(_en.updates_label), findsOneWidget);
       expect(find.byType(UpdatesDots), findsOneWidget);
