@@ -25,8 +25,10 @@ import 'package:vetbiz_pro/utils/facility_display.dart';
 
 // FN1 (docs/design/facility_name_display.md, owner's Option A): the facility
 // name is shown exactly as typed on every receipt, PDF, report, header and
-// dropdown, never joined with the type. Skipped until it is done.
-const _skip = true;
+// dropdown, never joined with the type. The source check is skipped until
+// the screens and the language files are done.
+const _skip = false;
+const _skipSource = true;
 
 const _name = 'Ukuli Animal Care';
 
@@ -200,5 +202,5 @@ void main() {
       }
     }
     expect(found, isEmpty);
-  }, skip: _skip);
+  }, skip: _skipSource);
 }

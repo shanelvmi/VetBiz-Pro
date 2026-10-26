@@ -3,12 +3,12 @@ import 'package:firebase_auth/firebase_auth.dart';
 
 import '../utils/activity_logger.dart';
 import '../utils/facility_limit_helper.dart';
+import '../utils/facility_display.dart';
 import '../data/collections.dart';
 import '../data/fields.dart';
 import '../data/user_role.dart';
 import '../data/user_status.dart';
 import '../data/activity_type.dart';
-import '../l10n/l10n.dart';
 
 /// Changing someone's role - done ONLY by a Platform Admin (Platform Admin >
 /// Users > the person > Change role). Nobody else can: not the person
@@ -132,15 +132,8 @@ class RoleChangeService {
   static bool isCoAdmin(Map<String, dynamic> userData) =>
       userData[Fields.role] == UserRole.admin.key && userData['previousRole'] == UserRole.assistant.key;
 
-  // "Ukuli Agrovet" rather than "Ukuli" - unless the name already says it.
-  static String _facilityLabel(Map<dynamic, dynamic> f) {
-    final name = ((f['name'] as String?) ?? 'Facility').trim();
-    // Shown through its label (Ambulatory services; an Other facility's own
-    // words, RW2b2).
-    final type = L10n.current.facilityTypeDisplay(f['type'] as String?, f['typeDetail'] as String?).trim();
-    if (type.isEmpty || name.toLowerCase().contains(type.toLowerCase())) return name;
-    return '$name $type';
-  }
+  // The facility's name as typed, never joined with its type (FN1).
+  static String _facilityLabel(Map<dynamic, dynamic> f) => FacilityDisplay.name(f['name'] as String?, fallback: 'Facility');
 
   /// PURE: decides from the facts alone, with no database access.
   static RoleChangePlan evaluate({required String userName, required RoleChangeFacts facts}) {

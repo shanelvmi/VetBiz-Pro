@@ -6,7 +6,6 @@ import 'package:vetbiz_pro/constants/facility_types.dart';
 import 'package:vetbiz_pro/constants/person_titles.dart';
 import 'package:vetbiz_pro/l10n/l10n.dart';
 import 'package:vetbiz_pro/services/membership_service.dart';
-import 'package:vetbiz_pro/utils/receipt_texts.dart';
 
 // RW2b2 (docs/design/register_wizard.md, the owner's change to answer 6):
 // the titles, the facility type's label and the Other facility's own words
@@ -64,15 +63,6 @@ void main() {
       expect(en.facilityTypeDisplay(''), '');
       expect(en.facilityTypeDisplay(null), '');
     });
-
-    test('receipts, PDFs and printed reports: English, the detail, nothing for a bare Other', () {
-      expect(ReceiptTexts.facilityType('Agrovet'), 'Agrovet');
-      expect(ReceiptTexts.facilityType('Ambulatory Vet'), 'Ambulatory services');
-      expect(ReceiptTexts.facilityType('Other', 'Pet shop'), 'Pet shop');
-      expect(ReceiptTexts.facilityType('Other'), '');
-      expect(ReceiptTexts.facilityType('Vet Clinic', 'Pet shop'), 'Vet Clinic');
-      expect(ReceiptTexts.facilityType(null), '');
-    }, skip: _skip);
   });
 
   group('typeDetail: the server\'s rule (cleanTypeDetail)', () {

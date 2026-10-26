@@ -13,7 +13,7 @@ import '../config/app_date_format.dart';
 import '../config/app_info.dart';
 import '../theme/app_text.dart';
 import '../theme/app_dimens.dart';
-import '../utils/receipt_texts.dart';
+import '../utils/facility_display.dart';
 
 /// Builds a genuine A4 PDF receipt for a Sale or a Service - a real,
 /// correctly-sized printable document, not a screenshot of the on-screen
@@ -42,7 +42,6 @@ class ReceiptPdfService {
   static Future<void> printOrDownloadSale(
     Sale sale, {
     required String facilityName,
-    String? facilityType,
     String? facilityPhone,
     String? facilityEmail,
     String? facilityAddress,
@@ -52,7 +51,6 @@ class ReceiptPdfService {
     final doc = await _buildSaleDocument(
       sale,
       facilityName: facilityName,
-      facilityType: facilityType,
       facilityPhone: facilityPhone,
       facilityEmail: facilityEmail,
       facilityAddress: facilityAddress,
@@ -69,7 +67,6 @@ class ReceiptPdfService {
   static Future<void> printOrDownloadService(
     Service service, {
     required String facilityName,
-    String? facilityType,
     String? facilityPhone,
     String? facilityEmail,
     String? facilityAddress,
@@ -79,7 +76,6 @@ class ReceiptPdfService {
     final doc = await _buildServiceDocument(
       service,
       facilityName: facilityName,
-      facilityType: facilityType,
       facilityPhone: facilityPhone,
       facilityEmail: facilityEmail,
       facilityAddress: facilityAddress,
@@ -99,7 +95,6 @@ class ReceiptPdfService {
   static Future<Uint8List> buildSaleBytes(
     Sale sale, {
     required String facilityName,
-    String? facilityType,
     String? facilityPhone,
     String? facilityEmail,
     String? facilityAddress,
@@ -109,7 +104,6 @@ class ReceiptPdfService {
     final doc = await _buildSaleDocument(
       sale,
       facilityName: facilityName,
-      facilityType: facilityType,
       facilityPhone: facilityPhone,
       facilityEmail: facilityEmail,
       facilityAddress: facilityAddress,
@@ -123,7 +117,6 @@ class ReceiptPdfService {
   static Future<Uint8List> buildServiceBytes(
     Service service, {
     required String facilityName,
-    String? facilityType,
     String? facilityPhone,
     String? facilityEmail,
     String? facilityAddress,
@@ -133,7 +126,6 @@ class ReceiptPdfService {
     final doc = await _buildServiceDocument(
       service,
       facilityName: facilityName,
-      facilityType: facilityType,
       facilityPhone: facilityPhone,
       facilityEmail: facilityEmail,
       facilityAddress: facilityAddress,
@@ -148,9 +140,7 @@ class ReceiptPdfService {
   /// header (FN1 tests).
   static Future<Uint8List> saleBytesFor(Sale sale, Map<String, dynamic>? facility) => buildSaleBytes(
         sale,
-        facilityName: facility?['name'] ?? 'Facility',
-        // Printed in English: the label, or an Other facility's own words (RW2b2).
-        facilityType: ReceiptTexts.facilityType(facility?['type'], facility?['typeDetail']),
+        facilityName: FacilityDisplay.name(facility?['name'], fallback: 'Facility'),
         facilityPhone: facility?['phone'],
         facilityEmail: facility?['email'],
         facilityAddress: facility?['address'],
@@ -161,8 +151,7 @@ class ReceiptPdfService {
   /// Same as saleBytesFor, for a Service receipt.
   static Future<Uint8List> serviceBytesFor(Service service, Map<String, dynamic>? facility) => buildServiceBytes(
         service,
-        facilityName: facility?['name'] ?? 'Facility',
-        facilityType: ReceiptTexts.facilityType(facility?['type'], facility?['typeDetail']),
+        facilityName: FacilityDisplay.name(facility?['name'], fallback: 'Facility'),
         facilityPhone: facility?['phone'],
         facilityEmail: facility?['email'],
         facilityAddress: facility?['address'],
@@ -175,7 +164,6 @@ class ReceiptPdfService {
   static Future<pw.Document> _buildSaleDocument(
     Sale sale, {
     required String facilityName,
-    String? facilityType,
     String? facilityPhone,
     String? facilityEmail,
     String? facilityAddress,
@@ -198,7 +186,6 @@ class ReceiptPdfService {
         build: (context) => [
           _facilityHeaderBlock(
             facilityName: facilityName,
-            facilityType: facilityType,
             facilityPhone: facilityPhone,
             facilityEmail: facilityEmail,
             facilityAddress: facilityAddress,
@@ -247,7 +234,6 @@ class ReceiptPdfService {
   static Future<pw.Document> _buildServiceDocument(
     Service service, {
     required String facilityName,
-    String? facilityType,
     String? facilityPhone,
     String? facilityEmail,
     String? facilityAddress,
@@ -274,7 +260,6 @@ class ReceiptPdfService {
         build: (context) => [
           _facilityHeaderBlock(
             facilityName: facilityName,
-            facilityType: facilityType,
             facilityPhone: facilityPhone,
             facilityEmail: facilityEmail,
             facilityAddress: facilityAddress,
@@ -346,17 +331,12 @@ class ReceiptPdfService {
 
   static pw.Widget _facilityHeaderBlock({
     required String facilityName,
-    String? facilityType,
     String? facilityPhone,
     String? facilityEmail,
     String? facilityAddress,
     String? facilityTagline,
     String? facilityTin,
   }) {
-    final displayName = facilityType != null && facilityType.isNotEmpty && facilityType != 'Other'
-        ? '$facilityName $facilityType'
-        : facilityName;
-
     final contactLines = <String>[
       if (facilityPhone != null && facilityPhone.isNotEmpty) facilityPhone,
       if (facilityEmail != null && facilityEmail.isNotEmpty) facilityEmail,
@@ -376,7 +356,7 @@ class ReceiptPdfService {
             ),
           ),
           pw.SizedBox(height: AppSpacing.s8),
-          pw.Text(displayName, style: pw.TextStyle(fontSize: AppFontSize.f20, fontWeight: pw.FontWeight.bold, color: _deepGreen)),
+          pw.Text(facilityName, style: pw.TextStyle(fontSize: AppFontSize.f20, fontWeight: pw.FontWeight.bold, color: _deepGreen)),
           if (facilityTagline != null && facilityTagline.isNotEmpty) ...[
             pw.SizedBox(height: AppSpacing.s2),
             pw.Text(facilityTagline, style: pw.TextStyle(fontSize: AppFontSize.f10, color: _grey)),

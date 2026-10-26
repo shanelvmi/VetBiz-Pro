@@ -9,7 +9,7 @@ import '../config/app_date_format.dart';
 import '../config/app_info.dart';
 import '../theme/app_text.dart';
 import '../theme/app_dimens.dart';
-import '../utils/receipt_texts.dart';
+import '../utils/facility_display.dart';
 
 class DailyReportPdfService {
   static final _fullDate = AppDateFormat.dateLongFull;
@@ -21,14 +21,11 @@ class DailyReportPdfService {
   static const shareText = 'Daily Closing Report';
 
   /// The facility name printed on the report, from the facility as
-  /// FacilityProvider.selectedFacility holds it (FN1 tests). The PDF stays
-  /// English (spec 2.8), so its fallback name does too.
-  static String facilityNameOf(Map<String, dynamic>? facility) {
-    final String rawName = facility?['name'] ?? '${AppInfo.name} Facility';
-    // English, like the PDF: the label, or an Other facility's own words (RW2b2).
-    final facilityType = ReceiptTexts.facilityType(facility?['type'], facility?['typeDetail']);
-    return facilityType.isNotEmpty ? '$rawName $facilityType' : rawName;
-  }
+  /// FacilityProvider.selectedFacility holds it, never joined with the type
+  /// (FN1). The PDF stays English (spec 2.8), so its fallback
+  /// name does too.
+  static String facilityNameOf(Map<String, dynamic>? facility) =>
+      FacilityDisplay.name(facility?['name'], fallback: '${AppInfo.name} Facility');
 
   /// Builds the PDF and opens the OS's native print/share preview -
   /// the one shared entry point both the report detail screen and the

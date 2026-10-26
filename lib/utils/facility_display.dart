@@ -10,6 +10,7 @@ class FacilityDisplay {
   /// The facility's name as typed, trimmed, or [fallback] when there is none.
   /// Never adds the type.
   static String name(String? rawName, {String fallback = ''}) {
-    throw UnimplementedError('FN1');
+    final name = rawName?.trim() ?? '';
+    return name.isEmpty ? fallback : name;
   }
 }

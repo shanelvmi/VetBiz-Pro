@@ -28,6 +28,7 @@ import '../../theme/theme_context.dart';
 import '../../theme/app_breakpoints.dart';
 import '../../ui/feedback/app_feedback.dart';
 import '../../utils/receipt_texts.dart';
+import '../../utils/facility_display.dart';
 import '../../l10n/l10n.dart';
 import '../../widgets/printable_theme.dart';
 
@@ -187,9 +188,7 @@ class _ReceiptPreviewScreenState extends State<ReceiptPreviewScreen> {
       final facility = Provider.of<FacilityProvider>(context, listen: false).selectedFacility;
       await ReceiptPdfService.printOrDownloadSale(
         widget.sale,
-        facilityName: facility?['name'] ?? 'Facility',
-        // Printed in English: the label, or an Other facility's own words (RW2b2).
-        facilityType: ReceiptTexts.facilityType(facility?['type'], facility?['typeDetail']),
+        facilityName: FacilityDisplay.name(facility?['name'], fallback: 'Facility'),
         facilityPhone: facility?['phone'],
         facilityEmail: facility?['email'],
         facilityAddress: facility?['address'],
@@ -223,8 +222,7 @@ class _ReceiptPreviewScreenState extends State<ReceiptPreviewScreen> {
     final balance = sale.totalAmount - sale.totalPaid;
     final facilityProvider = Provider.of<FacilityProvider>(context, listen: false);
     final facility = facilityProvider.selectedFacility;
-    final facilityName = facility?['name'] ?? 'Facility';
-    final facilityType = ReceiptTexts.facilityType(facility?['type'], facility?['typeDetail']);
+    final facilityName = FacilityDisplay.name(facility?['name'], fallback: 'Facility');
     final logoUrl = facility?['logoUrl'];
     final facilityPhone = facility?['phone'];
     final facilityEmail = facility?['email'];
@@ -258,7 +256,6 @@ class _ReceiptPreviewScreenState extends State<ReceiptPreviewScreen> {
                     sale: sale,
                     balance: balance,
                     facilityName: facilityName,
-                    facilityType: facilityType,
                     logoUrl: logoUrl,
                     facilityPhone: facilityPhone,
                     facilityEmail: facilityEmail,
@@ -323,7 +320,6 @@ class _ReceiptPreviewScreenState extends State<ReceiptPreviewScreen> {
                 sale: sale,
                 balance: balance,
                 facilityName: facilityName,
-                facilityType: facilityType,
                 statusText: statusText,
                 statusColor: statusColor,
               ),
@@ -428,7 +424,6 @@ class _ReceiptPreviewScreenState extends State<ReceiptPreviewScreen> {
     required Sale sale,
     required double balance,
     required String facilityName,
-    required String? facilityType,
     required String? logoUrl,
     required String? facilityPhone,
     required String? facilityEmail,
@@ -577,9 +572,7 @@ class _ReceiptPreviewScreenState extends State<ReceiptPreviewScreen> {
                   ),
                   const SizedBox(height: AppSpacing.s8),
                   Text(
-                    facilityType != null && facilityType.isNotEmpty && facilityType != 'Other'
-                        ? '$facilityName $facilityType'
-                        : facilityName,
+                    facilityName,
                     style: const TextStyle(fontSize: AppFontSize.f19, fontWeight: AppFontWeight.bold, color: AppPalette.primary),
                     textAlign: TextAlign.center,
                   ),
@@ -718,7 +711,6 @@ class _ReceiptPreviewScreenState extends State<ReceiptPreviewScreen> {
     required Sale sale,
     required double balance,
     required String facilityName,
-    required String? facilityType,
     required String statusText,
     required Color statusColor,
   }) {
@@ -787,9 +779,7 @@ class _ReceiptPreviewScreenState extends State<ReceiptPreviewScreen> {
             field(
               Icons.storefront_outlined,
               context.l10n.common_facility,
-              facilityType != null && facilityType.isNotEmpty && facilityType != 'Other'
-                  ? '$facilityName $facilityType'
-                  : facilityName,
+              facilityName,
             ),
             field(Icons.person_outline, context.l10n.receipt_customer, sale.clientName ?? context.l10n.common_walkIn),
             field(Icons.calendar_today_outlined, context.l10n.payments_colDateTime, AppDateFormat.dateTime24.format(sale.timestamp)),

@@ -68,7 +68,7 @@ import '../../ui/feedback/app_feedback.dart';
 import '../../theme/app_text.dart';
 import '../../theme/app_motion.dart';
 import '../../l10n/l10n.dart';
-import '../../constants/facility_types.dart';
+import '../../utils/facility_display.dart';
 
 // The light ink on the brand areas (sidebar items and labels, the logo
 // plate, the profile drawer buttons). In light it stays `background`, value
@@ -302,19 +302,10 @@ class _HoverFabState extends State<HoverFab> {
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
 
-  /// The facility name under the sidebar logo (FN1 tests).
+  /// The facility name under the sidebar logo: the name as typed, never
+  /// joined with the type and with no type tag (FN1).
   @visibleForTesting
-  static String headerFacilityName(Map<String, dynamic>? facility) {
-    final String name = facility?['name'] ?? '';
-    final String type = facility?['type'] ?? '';
-    // 'Other' is the stored type, compared as stored; the type is shown through
-    // its lookup. A bare Other adds nothing; with its own words (RW2b2) they
-    // are shown.
-    final String shownType = type == kFacilityTypeOther
-        ? (facility?['typeDetail'] ?? '').trim()
-        : L10n.current.facilityTypeDisplay(type);
-    return shownType.isNotEmpty ? L10n.current.dashboard_facilityNameType(name, shownType) : name;
-  }
+  static String headerFacilityName(Map<String, dynamic>? facility) => FacilityDisplay.name(facility?['name']);
 
   @override
   State<DashboardScreen> createState() => _DashboardScreenState();
@@ -1065,7 +1056,7 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
 
 
     // Facility is loaded, we can safely access its fields
-    final facilityName = selectedFacility['name'] ?? context.l10n.common_facility;
+    final facilityName = FacilityDisplay.name(selectedFacility['name'], fallback: context.l10n.common_facility);
     final currentFacilityId = selectedFacility['id'];
 
     // Kick off a period-totals fetch whenever the facility or the
@@ -2423,21 +2414,19 @@ Widget _buildDrawerContent() {
   );
 
   // ---------- FACILITY NAME ----------
-  // Text label for the facility, shown below the logo - this is what
-  // the old AppBar title used to show ("{name} {type} Dashboard")
-  // before that was restyled; preserved here instead since the
-  // sidebar's own logo area is the more natural place for it now.
-  final String facilityDisplayName = selectedFacility?['name'] ?? '';
+  // Text label for the facility, shown below the logo - the old AppBar
+  // title moved here when it was restyled. The name as typed, never with
+  // its type (FN1).
   final String? facilityIdForTagline = selectedFacility?['id'];
-  final String combinedNameAndType = DashboardScreen.headerFacilityName(selectedFacility);
-  Widget facilityNameSection = effectivelyCollapsed || facilityDisplayName.isEmpty
+  final String headerName = DashboardScreen.headerFacilityName(selectedFacility);
+  Widget facilityNameSection = effectivelyCollapsed || headerName.isEmpty
       ? const SizedBox.shrink()
       : Padding(
           padding: const EdgeInsets.only(bottom: AppSpacing.s12),
           child: Column(
             children: [
               Text(
-                combinedNameAndType,
+                headerName,
                 textAlign: TextAlign.center,
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
