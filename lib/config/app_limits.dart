@@ -104,4 +104,35 @@ class AppLimits {
   /// TYPE_DETAIL_MAX in functions/membership.js). Keep them equal.
   static const int typeDetailMin = 2;
   static const int typeDetailMax = 40;
+
+  // Announcements v2 (AN1, docs/design/announcements_v2.md). The Platform
+  // Admin form checks these; the login page (AN2) reads the poster ratio.
+
+  /// A poster is picked scaled to this width (image_picker maxWidth), the
+  /// 1600 x 900 the form's hint asks for.
+  static const double posterWidth = 1600;
+
+  /// Narrower than this and the poster blurs on a wide login page.
+  static const int posterMinWidth = 1280;
+
+  /// Posters are 16:9; a picked image may be off by this fraction (3 percent).
+  static const double posterAspectRatio = 16 / 9;
+  static const double posterRatioTolerance = 0.03;
+
+  /// The largest poster storage.rules accepts (isPosterUpload: `size <=
+  /// 1024 * 1024`). Keep the two equal.
+  static const int posterMaxBytes = 1024 * 1024;
+
+  /// Title, message and link button label lengths, trimmed. A poster's
+  /// message is an optional caption, so it has no minimum.
+  static const int announcementTitleMin = 2;
+  static const int announcementTitleMax = 80;
+  static const int announcementMessageMin = 2;
+  static const int announcementMessageMax = 400;
+  static const int posterMessageMax = 200;
+  static const int announcementLinkLabelMin = 2;
+  static const int announcementLinkLabelMax = 24;
+
+  /// The most announcements the login page's Updates list holds (AN2).
+  static const int updatesMaxSlides = 5;
 }

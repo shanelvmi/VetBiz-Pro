@@ -13,3 +13,24 @@ class UploadContentTypes {
   /// For `.png` paths: user_avatars/, facility_logos/.
   static final SettableMetadata png = SettableMetadata(contentType: 'image/png');
 }
+
+/// The three types an announcement poster may be (AN1). storage.rules
+/// (isPosterUpload) accepts exactly these content types, so no SVG (it can
+/// carry script) and no GIF. [extension] names the file.
+enum PosterImageType {
+  jpeg('image/jpeg', 'jpg'),
+  png('image/png', 'png'),
+  webp('image/webp', 'webp');
+
+  const PosterImageType(this.contentType, this.extension);
+
+  final String contentType;
+  final String extension;
+
+  /// Browsers and the CDN keep a poster for a day; every upload has a new
+  /// file name, so a changed poster is never served stale.
+  static const String cacheControl = 'public, max-age=86400';
+
+  /// The real content type and the cache rule, sent with the upload.
+  SettableMetadata get metadata => SettableMetadata(contentType: contentType, cacheControl: cacheControl);
+}
