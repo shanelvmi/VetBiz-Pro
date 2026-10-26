@@ -31,7 +31,7 @@ import 'helpers/help_dialog_rows.dart';
 // Written before the code: run against G3's footer and the stub pages, every
 // test here fails (no Platform column, no band, no page text, no hint).
 const _skipFooter = false;
-const _skipPages = true;
+const _skipPages = false;
 const _skipHint = true;
 
 final _en = lookupAppLocalizations(const Locale('en'));

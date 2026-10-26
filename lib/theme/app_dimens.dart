@@ -225,6 +225,9 @@ class InfoPageMetrics {
 
   /// The number circle in front of a step.
   static const double stepBadge = 28;
+
+  /// Line height of the body text, for reading.
+  static const double lineHeight = 1.5;
 }
 
 /// The step-by-step forms (lib/widgets/wizard, register_wizard.md section
