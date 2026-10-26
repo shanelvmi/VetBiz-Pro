@@ -21,7 +21,10 @@ class InfoPage extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: context.colors.background,
-      appBar: AppBar(title: Text(title)),
+      // G5: the title centred on every platform, here once so the three
+      // pages agree. The toolbar keeps it clear of the back arrow; a long
+      // one ends in an ellipsis.
+      appBar: AppBar(centerTitle: true, title: Text(title)),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(InfoPageMetrics.padding),
         child: Center(

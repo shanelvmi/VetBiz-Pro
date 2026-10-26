@@ -15,7 +15,7 @@ import 'package:vetbiz_pro/theme/app_theme.dart';
 // once in the shared InfoPage, so the three agree; the back arrow stays at
 // the left and a long title never runs over it. Written before the change,
 // skipped until it exists.
-const _skip = true;
+const _skip = false;
 
 final _en = lookupAppLocalizations(const Locale('en'));
 
