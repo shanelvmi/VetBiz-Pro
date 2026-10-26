@@ -65,7 +65,7 @@ service cloud.firestore {
     // server own those.
     function isEditingFacilitySettingsOnly() {
       return request.resource.data.diff(resource.data).affectedKeys().hasOnly([
-        'name', 'type', 'address', 'phone', 'email', 'description', 'licenseNo',
+        'name', 'type', 'typeDetail', 'address', 'phone', 'email', 'description', 'licenseNo',
         'ownership', 'tagline', 'tin', 'restockFrequency', 'status', 'updatedAt',
         'logoUrl', 'activityLogRetentionDays', 'debtOverdueDays',
         'allowAnytime', 'businessHours',

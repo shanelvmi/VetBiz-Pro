@@ -432,7 +432,7 @@ test('facilities update: an admin of the facility CAN change its ordinary settin
 
 // RW2b2: Edit facility saves an Other facility's own words (typeDetail) next
 // to its type, and removes them when the type changes away from Other.
-test('facilities update: an admin of the facility CAN set and remove typeDetail (RW2b2)', { skip: 'RW2b2: the rule does not list typeDetail yet' }, async () => {
+test('facilities update: an admin of the facility CAN set and remove typeDetail (RW2b2)', async () => {
   await assertSucceeds(facilities('owner').doc('F1').update({ name: 'Ukuli', type: 'Other', typeDetail: 'Pet shop', updatedAt: new Date() }));
   await assertSucceeds(facilities('coadmin').doc('F1').update({ typeDetail: 'Pet clinic' }));
   await assertSucceeds(facilities('owner').doc('F1').update({
