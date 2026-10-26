@@ -855,42 +855,50 @@ class _LoginScreenState extends State<LoginScreen> {
                           ),
                         ),
                         const SizedBox(height: AppSpacing.s12),
-                        // Both ends of one line while they fit; "Forgot
-                        // password?" moves under "Remember me" when they
-                        // don't (a narrow phone, a longer language).
-                        Wrap(
-                          alignment: WrapAlignment.spaceBetween,
-                          crossAxisAlignment: WrapCrossAlignment.center,
-                          runSpacing: AppSpacing.s8,
-                          children: [
-                            Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                SizedBox(
-                                  width: 20,
-                                  height: 20,
-                                  child: Checkbox(
-                                    value: rememberMe,
-                                    onChanged: (value) => setState(() => rememberMe = value ?? false),
-                                    activeColor: context.colors.primary,
-                                    checkColor: context.colors.onPrimary,
-                                    materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                        // Both ends of one line while they fit, at least
+                        // s16 apart; "Forgot password?" moves under
+                        // "Remember me" when they don't (a narrow phone, a
+                        // longer language). G5: the full width, because in
+                        // this start-aligned column a Wrap shrinks to its
+                        // content, leaving spaceBetween nothing to spread,
+                        // so the two sat together.
+                        SizedBox(
+                          width: double.infinity,
+                          child: Wrap(
+                            alignment: WrapAlignment.spaceBetween,
+                            crossAxisAlignment: WrapCrossAlignment.center,
+                            spacing: AppSpacing.s16,
+                            runSpacing: AppSpacing.s8,
+                            children: [
+                              Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  SizedBox(
+                                    width: 20,
+                                    height: 20,
+                                    child: Checkbox(
+                                      value: rememberMe,
+                                      onChanged: (value) => setState(() => rememberMe = value ?? false),
+                                      activeColor: context.colors.primary,
+                                      checkColor: context.colors.onPrimary,
+                                      materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                                    ),
                                   ),
-                                ),
-                                const SizedBox(width: AppSpacing.s8),
-                                Flexible(
-                                  child: Text(context.l10n.login_rememberMe, style: TextStyle(color: context.colors.textPrimary, fontSize: AppFontSize.f13)),
-                                ),
-                              ],
-                            ),
-                            HoverLink(
-                              label: context.l10n.login_forgotPassword,
-                              color: context.colors.brandTeal,
-                              button: true,
-                              style: const TextStyle(fontSize: AppFontSize.f13, fontWeight: AppFontWeight.semibold),
-                              onTap: _forgotPassword,
-                            ),
-                          ],
+                                  const SizedBox(width: AppSpacing.s8),
+                                  Flexible(
+                                    child: Text(context.l10n.login_rememberMe, style: TextStyle(color: context.colors.textPrimary, fontSize: AppFontSize.f13)),
+                                  ),
+                                ],
+                              ),
+                              HoverLink(
+                                label: context.l10n.login_forgotPassword,
+                                color: context.colors.brandTeal,
+                                button: true,
+                                style: const TextStyle(fontSize: AppFontSize.f13, fontWeight: AppFontWeight.semibold),
+                                onTap: _forgotPassword,
+                              ),
+                            ],
+                          ),
                         ),
                         const SizedBox(height: AppSpacing.s20),
                         _AnimatedLoginButton(
@@ -1156,8 +1164,9 @@ class _AnimatedLoginButtonState extends State<_AnimatedLoginButton> with SingleT
                                               fontSize: AppFontSize.f15)),
                                     ),
                                     // Slides from the left edge toward
-                                    // center as t goes 0->1 - the uncircled
-                                    // arrow at the right stays fixed.
+                                    // center as t goes 0->1 (G5: the only
+                                    // arrow; the fixed one at the right
+                                    // edge is gone).
                                     Align(
                                       alignment: Alignment(-1 + t * 1.3, 0),
                                       child: Container(
@@ -1172,13 +1181,6 @@ class _AnimatedLoginButtonState extends State<_AnimatedLoginButton> with SingleT
                                           ],
                                         ),
                                         child: Icon(Icons.arrow_forward, color: Color.lerp(context.colors.onBrandSurface, context.colors.accent, t), size: AppIconSize.i16),
-                                      ),
-                                    ),
-                                    Align(
-                                      alignment: Alignment.centerRight,
-                                      child: Padding(
-                                        padding: EdgeInsets.only(right: AppSpacing.s4),
-                                        child: Icon(Icons.arrow_forward, color: context.colors.onBrandSurface, size: AppIconSize.i18),
                                       ),
                                     ),
                                   ],

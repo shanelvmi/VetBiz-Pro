@@ -17,7 +17,7 @@ import 'package:vetbiz_pro/widgets/hover_link.dart';
 // password?" at the far right of the Remember me line, and the Sign in
 // button without the fixed arrow at its right edge. Written before the
 // fixes, skipped until they exist.
-const _skip = true;
+const _skip = false;
 
 class _NoAuth implements AuthService {
   @override
