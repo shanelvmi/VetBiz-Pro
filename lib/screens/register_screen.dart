@@ -14,6 +14,7 @@ import '../utils/facility_code_generator.dart';
 import '../constants/facility_types.dart';
 import '../constants/person_titles.dart';
 import '../widgets/facility_type_field.dart';
+import '../widgets/field_message_slot.dart';
 import '../utils/facility_limit_helper.dart';
 import 'facilities/facility_picker_screen.dart';
 import 'legal/privacy_policy_screen.dart';
@@ -32,6 +33,7 @@ import '../data/fields.dart';
 import '../data/user_role.dart';
 import '../config/app_timeouts.dart';
 import '../config/app_info.dart';
+import '../config/app_limits.dart';
 import '../theme/app_text.dart';
 import '../theme/app_dimens.dart';
 import '../theme/theme_context.dart';
@@ -56,6 +58,7 @@ part 'register/wizard_view.dart';
 part 'register/owner_steps.dart';
 part 'register/review_step.dart';
 part 'register/assistant_steps.dart';
+part 'register/wizard_messages.dart';
 
 class RegisterScreen extends StatefulWidget {
   final bool isUpdating;
@@ -1412,25 +1415,37 @@ class _RegisterScreenState extends State<RegisterScreen> {
     Color? helperColor,
     String? errorText,
     bool locked = false,
+    List<String>? reserve,
+    int maxLines = 2,
   }) {
     OutlineInputBorder border(Color color, [double width = 1]) => OutlineInputBorder(
           borderRadius: BorderRadius.circular(AppRadius.r14),
           borderSide: BorderSide(color: color, width: width),
         );
     final rest = context.colors.border;
+    final helperStyle = TextStyle(color: helperColor ?? context.colors.textMuted, fontSize: AppFontSize.f12);
+    final errorStyle = TextStyle(color: context.colors.dangerDeep, fontSize: AppFontSize.f12);
+    // G5, the wizard's fields ([reserve] given: _messagesOf): the line under
+    // the field is always there, as tall as the longest message it can show,
+    // and the helper and the error share it, so an error moves nothing.
+    // Edit Profile keeps the plain texts.
+    final kept = reserve == null ? null : [...reserve, if (helper != null) helper, if (errorText != null) errorText];
+    Widget slot(String? message, TextStyle style) => FieldMessageSlot(message: message, reserve: kept!, style: style, maxLines: maxLines);
     return InputDecoration(
       hintText: hint,
       hintStyle: TextStyle(color: context.colors.textDisabled, fontSize: AppFontSize.f14),
       prefixIcon: icon == null ? null : Icon(icon, size: AppIconSize.i20, color: context.colors.textHint),
       suffixIcon: locked ? Icon(Icons.lock_outline, size: AppIconSize.i16, color: context.colors.textDisabled) : suffix,
-      helperText: helper,
-      helperStyle: TextStyle(color: helperColor ?? context.colors.textMuted, fontSize: AppFontSize.f12),
-      helperMaxLines: 2,
+      helperText: kept == null ? helper : null,
+      helper: kept == null ? null : slot(helper, helperStyle),
+      helperStyle: helperStyle,
+      helperMaxLines: maxLines,
       // Replaces the helper line while there's a problem, and turns the
       // outline red.
-      errorText: errorText,
-      errorMaxLines: 2,
-      errorStyle: TextStyle(color: context.colors.dangerDeep, fontSize: AppFontSize.f12),
+      errorText: kept == null ? errorText : null,
+      error: kept == null || errorText == null ? null : slot(errorText, errorStyle),
+      errorMaxLines: maxLines,
+      errorStyle: errorStyle,
       filled: true,
       fillColor: locked ? context.colors.divider : context.colors.surfaceMuted,
       isDense: true,
@@ -1876,34 +1891,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
     );
   }
 
-  // "Add at least one facility" and its variants, in a box: the facility
-  // has no single field to hang it under. Also the wizard's step 3.
-  Widget _facilityErrorBox(String message) {
-    return Container(
-      key: _fieldKeys['facility'],
-      margin: const EdgeInsets.only(bottom: AppSpacing.s12),
-      padding: const EdgeInsets.all(AppSpacing.s12),
-      decoration: BoxDecoration(
-        color: context.colors.dangerAccent.withValues(alpha: AppAlpha.a05),
-        borderRadius: BorderRadius.circular(AppRadius.r12),
-        border: Border.all(color: context.colors.dangerAccent.withValues(alpha: AppAlpha.a40)),
-      ),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Icon(Icons.error_outline, color: context.colors.dangerAccent, size: AppIconSize.i18),
-          const SizedBox(width: AppSpacing.s8),
-          Expanded(
-            child: Text(
-              message,
-              style: TextStyle(color: context.colors.dangerDeep, fontSize: AppFontSize.f12_5, height: 1.35),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
   // Edit Profile: the admin's facilities, read only (added and changed on
   // the Facilities screen).
   List<Widget> _adminFacilityFields() {
@@ -1943,6 +1930,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
             ? context.colors.textMuted
             : (_passwordIssue(password) == null ? context.colors.success : context.colors.dangerAccent),
         errorText: _fieldErrors['password'],
+        reserve: _messagesOf('password'),
       ),
     );
   }
@@ -1974,6 +1962,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
         helper: confirm.isEmpty ? null : (matches ? context.l10n.register_passwordsMatch : context.l10n.common_passwordsDoNotMatch),
         helperColor: matches ? context.colors.success : context.colors.dangerAccent,
         errorText: _fieldErrors['confirm'],
+        reserve: _messagesOf('confirm'),
       ),
     );
   }

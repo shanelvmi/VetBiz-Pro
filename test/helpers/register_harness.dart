@@ -10,6 +10,7 @@ import 'package:vetbiz_pro/services/auth_service.dart';
 import 'package:vetbiz_pro/services/membership_service.dart';
 import 'package:vetbiz_pro/theme/app_palette.dart';
 import 'package:vetbiz_pro/theme/app_theme.dart';
+import 'package:vetbiz_pro/widgets/field_message_slot.dart';
 
 /// RW2b: the register wizard driven without Firebase, through the RW2a
 /// seams. Creating an owner is recorded and then fails with [failWith]
@@ -187,8 +188,12 @@ Future<void> typeInto(WidgetTester tester, String field, String text) async {
   await tester.pump();
 }
 
-String? errorOf(WidgetTester tester, String field) =>
-    tester.widget<TextField>(registerField(field)).decoration?.errorText;
+/// The error a field shows: G5 puts the wizard's in the field's kept line
+/// (InputDecoration.error, a FieldMessageSlot) instead of errorText.
+String? decorationError(InputDecoration? decoration) =>
+    decoration?.errorText ?? (decoration?.error as FieldMessageSlot?)?.message;
+
+String? errorOf(WidgetTester tester, String field) => decorationError(tester.widget<TextField>(registerField(field)).decoration);
 
 String textOf(WidgetTester tester, String field) => tester.widget<TextField>(registerField(field)).controller!.text;
 

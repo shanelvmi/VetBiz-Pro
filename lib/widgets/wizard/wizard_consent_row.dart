@@ -4,6 +4,7 @@ import '../../theme/app_dimens.dart';
 import '../../theme/app_text.dart';
 import '../../theme/theme_context.dart';
 import '../hover_link.dart';
+import '../field_message_slot.dart';
 
 /// A tappable name inside [WizardConsentRow]'s sentence.
 class WizardLink {
@@ -25,6 +26,10 @@ class WizardConsentRow extends StatelessWidget {
   final List<WizardLink> links;
   final String? errorText;
 
+  /// G5: the error the row can show; when given, its line is always kept
+  /// (empty until then), so the error appears without moving anything.
+  final String? reservedErrorText;
+
   const WizardConsentRow({
     super.key,
     this.value = false,
@@ -32,6 +37,7 @@ class WizardConsentRow extends StatelessWidget {
     required this.text,
     required this.links,
     this.errorText,
+    this.reservedErrorText,
   });
 
   // The sentence cut around each link's label, in order. A label missing
@@ -91,17 +97,20 @@ class WizardConsentRow extends StatelessWidget {
             ),
           ],
         ),
-        if (hasError)
+        if (hasError || reservedErrorText != null)
           Padding(
             padding: const EdgeInsetsDirectional.only(
               start: WizardMetrics.consentTapTarget + WizardMetrics.consentGap,
               top: WizardMetrics.consentGap,
             ),
             child: Semantics(
-              liveRegion: true,
-              child: Text(
-                errorText!,
+              liveRegion: hasError,
+              child: FieldMessageSlot(
+                message: errorText,
+                reserve: [if (reservedErrorText != null) reservedErrorText!],
                 style: TextStyle(fontSize: WizardFontSize.consentError, color: colors.danger),
+                // As before: as many lines as the sentence needs.
+                maxLines: null,
               ),
             ),
           ),

@@ -42,6 +42,7 @@ extension _OwnerSteps on _RegisterScreenState {
               hint: context.l10n.register_enterFullName,
               icon: Icons.person_outline,
               errorText: _fieldErrors['name'],
+              reserve: _messagesOf('name'),
             ),
           ),
           fieldKey: _fieldKeys['name'],
@@ -61,6 +62,7 @@ extension _OwnerSteps on _RegisterScreenState {
               hint: context.l10n.register_phoneHint,
               icon: Icons.phone_outlined,
               errorText: _fieldErrors['phone'],
+              reserve: _messagesOf('phone'),
             ),
           ),
           fieldKey: _fieldKeys['phone'],
@@ -75,7 +77,6 @@ extension _OwnerSteps on _RegisterScreenState {
     final facilityError = facilities.isEmpty ? _fieldErrors['facility'] : null;
     return [
       for (var i = 0; i < facilities.length; i++) _facilityTile(i),
-      if (facilityError != null) _facilityErrorBox(facilityError),
       Text(
         context.l10n.register_facilitiesAdded(facilities.length, _maxFacilities),
         style: TextStyle(fontSize: AppFontSize.f12, color: context.colors.textMuted),
@@ -92,9 +93,18 @@ extension _OwnerSteps on _RegisterScreenState {
           textInputAction: TextInputAction.done,
           onSubmitted: (_) => _wizardContinue(),
           onChanged: (_) => _onFieldChanged(),
-          // FN1: printed exactly as typed, never with its type.
-          decoration: _decoration(hint: context.l10n.common_facilityNameHint, icon: Icons.storefront_outlined, helper: context.l10n.facilities_nameHelper),
+          // FN1: printed exactly as typed, never with its type. G5: "add at
+          // least one facility" shows in this field's kept line, in place of
+          // the helper (it was a box above that made the card taller).
+          decoration: _decoration(
+            hint: context.l10n.common_facilityNameHint,
+            icon: Icons.storefront_outlined,
+            helper: context.l10n.facilities_nameHelper,
+            errorText: facilityError,
+            reserve: _messagesOf('facility'),
+          ),
         ),
+        fieldKey: _fieldKeys['facility'],
       ),
       _gap(WizardMetrics.fieldGap),
       KeyedSubtree(key: _fieldKeys['facilityType'], child: _facilityTypeField(gap: WizardMetrics.fieldGap)),
@@ -135,10 +145,22 @@ extension _OwnerSteps on _RegisterScreenState {
         },
         detailController: facilityTypeDetailController,
         detailFocusNode: _facilityTypeDetailFocus,
-        typeDecoration: _decoration(hint: '', icon: Icons.category_outlined),
-        detailDecoration: _decoration(hint: context.l10n.facilityType_detailLabel, icon: Icons.edit_outlined),
-        typeError: _fieldErrors['facilityType'],
-        detailError: _fieldErrors['typeDetail'],
+        // G5: the errors go in the decorations' kept lines (not typeError
+        // and detailError, which would add a line of their own).
+        typeDecoration: _decoration(
+          hint: '',
+          icon: Icons.category_outlined,
+          errorText: _fieldErrors['facilityType'],
+          reserve: _messagesOf('facilityType'),
+        ),
+        detailDecoration: _decoration(
+          hint: context.l10n.facilityType_detailLabel,
+          icon: Icons.edit_outlined,
+          errorText: _fieldErrors['typeDetail'],
+          reserve: _messagesOf('typeDetail'),
+          // Long Kiswahili errors wrap instead of running off a phone.
+          maxLines: 3,
+        ),
         labeled: (label, field) => _labeled(label, field),
         gap: gap,
         detailAction: TextInputAction.done,
@@ -161,6 +183,7 @@ extension _OwnerSteps on _RegisterScreenState {
               hint: context.l10n.register_emailHint,
               icon: Icons.mail_outline,
               errorText: _fieldErrors['email'],
+              reserve: _messagesOf('email'),
             ),
           ),
           fieldKey: _fieldKeys['email'],

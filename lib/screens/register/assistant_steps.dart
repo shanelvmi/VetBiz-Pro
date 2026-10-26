@@ -27,6 +27,7 @@ extension _AssistantSteps on _RegisterScreenState {
             hint: context.l10n.register_enterInviteCode,
             icon: Icons.vpn_key_outlined,
             errorText: inviteError,
+            reserve: _messagesOf('invite'),
             suffix: _isLookingUpFacility
                 ? const Padding(
                     padding: EdgeInsets.all(AppSpacing.s12),

@@ -45,7 +45,7 @@ void main() {
   }
 
   String? dropdownError(WidgetTester tester) =>
-      tester.widget<InputDecorator>(find.descendant(of: registerField('facility-type'), matching: find.byType(InputDecorator))).decoration.errorText;
+      decorationError(tester.widget<InputDecorator>(find.descendant(of: registerField('facility-type'), matching: find.byType(InputDecorator))).decoration);
 
   group('header and sign-in link', () {
     for (final width in [360.0, 1200.0]) {

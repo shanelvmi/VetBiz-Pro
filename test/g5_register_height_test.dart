@@ -12,7 +12,7 @@ import 'helpers/register_harness.dart';
 // field is kept, so an error replaces it. Measured on each step, wide and
 // 390 px, English and Kiswahili; the Back and Continue bar stays put too.
 // Written before the change, skipped until it exists.
-const _skip = true;
+const _skip = false;
 
 void main() {
   // Steps 2 to 5 of the owner, step 3 of the assistant: walks there with

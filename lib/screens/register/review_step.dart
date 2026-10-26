@@ -44,6 +44,7 @@ extension _ReviewStep on _RegisterScreenState {
           WizardLink(label: privacy, onTap: () => _openLegal(const PrivacyPolicyScreen())),
         ],
         errorText: _consentError ? l10n.register_consentRequired : null,
+        reservedErrorText: l10n.register_consentRequired,
       ),
     ];
   }
