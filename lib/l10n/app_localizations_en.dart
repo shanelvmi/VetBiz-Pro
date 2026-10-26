@@ -5413,11 +5413,6 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String noFacility_askingToJoinWithType(String facility, String type) {
-    return 'You\'ll be asking to join: $facility ($type)';
-  }
-
-  @override
   String get noFacility_sending => 'Sending your request...';
 
   @override
@@ -5721,11 +5716,6 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String dashboard_supportIntro(String appName) {
     return 'For help or support please reach out to $appName platform admin.';
-  }
-
-  @override
-  String dashboard_facilityNameType(String name, String type) {
-    return '$name $type';
   }
 
   @override
@@ -6132,9 +6122,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get facilities_logoOptional => 'Logo (optional)';
 
   @override
-  String get facilities_nameLabel => 'Facility Name';
-
-  @override
   String get facilities_nameAndTypeRequired => 'Enter a name and select a type';
 
   @override
@@ -6259,11 +6246,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get facilities_noMatchFilter => 'No facilities match this filter.';
-
-  @override
-  String facilities_nameWithType(String name, String type) {
-    return '$name $type';
-  }
 
   @override
   String get facilities_moreActionsTooltip => 'More actions';

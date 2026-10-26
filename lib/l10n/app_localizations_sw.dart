@@ -5441,11 +5441,6 @@ class AppLocalizationsSw extends AppLocalizations {
   }
 
   @override
-  String noFacility_askingToJoinWithType(String facility, String type) {
-    return 'Utaomba kujiunga na: $facility ($type)';
-  }
-
-  @override
   String get noFacility_sending => 'Inatuma ombi lako...';
 
   @override
@@ -5753,11 +5748,6 @@ class AppLocalizationsSw extends AppLocalizations {
   @override
   String dashboard_supportIntro(String appName) {
     return 'Kwa msaada tafadhali wasiliana na msimamizi wa jukwaa la $appName.';
-  }
-
-  @override
-  String dashboard_facilityNameType(String name, String type) {
-    return '$name $type';
   }
 
   @override
@@ -6166,9 +6156,6 @@ class AppLocalizationsSw extends AppLocalizations {
   String get facilities_logoOptional => 'Nembo (si lazima)';
 
   @override
-  String get facilities_nameLabel => 'Jina la Kituo';
-
-  @override
   String get facilities_nameAndTypeRequired => 'Weka jina na uchague aina';
 
   @override
@@ -6295,11 +6282,6 @@ class AppLocalizationsSw extends AppLocalizations {
   @override
   String get facilities_noMatchFilter =>
       'Hakuna kituo kinacholingana na kichujio hiki.';
-
-  @override
-  String facilities_nameWithType(String name, String type) {
-    return '$name $type';
-  }
 
   @override
   String get facilities_moreActionsTooltip => 'Vitendo zaidi';

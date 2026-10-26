@@ -9324,12 +9324,6 @@ abstract class AppLocalizations {
   /// **'You\'ll be asking to join: {facility}'**
   String noFacility_askingToJoin(String facility);
 
-  /// No-facility screen: the facility the code leads to, with its type.
-  ///
-  /// In en, this message translates to:
-  /// **'You\'ll be asking to join: {facility} ({type})'**
-  String noFacility_askingToJoinWithType(String facility, String type);
-
   /// No-facility screen button while sending.
   ///
   /// In en, this message translates to:
@@ -9791,12 +9785,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'For help or support please reach out to {appName} platform admin.'**
   String dashboard_supportIntro(String appName);
-
-  /// Sidebar: the facility name followed by its type.
-  ///
-  /// In en, this message translates to:
-  /// **'{name} {type}'**
-  String dashboard_facilityNameType(String name, String type);
 
   /// Profile panel label before the name.
   ///
@@ -10494,12 +10482,6 @@ abstract class AppLocalizations {
   /// **'Logo (optional)'**
   String get facilities_logoOptional;
 
-  /// Add and Edit Facility dialogs: name field.
-  ///
-  /// In en, this message translates to:
-  /// **'Facility Name'**
-  String get facilities_nameLabel;
-
   /// Add and Edit Facility dialogs: name or type missing.
   ///
   /// In en, this message translates to:
@@ -10703,12 +10685,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'No facilities match this filter.'**
   String get facilities_noMatchFilter;
-
-  /// Facilities list and header: the name with its type, e.g. Ukuli Agrovet.
-  ///
-  /// In en, this message translates to:
-  /// **'{name} {type}'**
-  String facilities_nameWithType(String name, String type);
 
   /// Facility detail: tooltip of the More Actions menu.
   ///
