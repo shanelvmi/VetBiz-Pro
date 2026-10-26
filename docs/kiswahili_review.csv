@@ -152,7 +152,7 @@ serviceCategory_other,Other,Nyingine,"Service category: service form, Services f
 facilityType_agrovet,Agrovet,Agrovet,"Facility type: registration, Facilities screen, facility picker filter (stored value 'Agrovet'). Reviewer note: Kept as 'Agrovet', the word used in Tanzania.",draft
 facilityType_vetClinic,Vet Clinic,Kliniki ya Mifugo,"Facility type: registration, Facilities screen, facility picker filter (stored value 'Vet Clinic').",draft
 facilityType_vetHospital,Vet Hospital,Hospitali ya Mifugo,"Facility type: registration, Facilities screen, facility picker filter (stored value 'Vet Hospital').",draft
-facilityType_ambulatoryVet,Ambulatory Vet,Daktari wa Mifugo wa Kutembelea,"Facility type: registration, Facilities screen, facility picker filter (stored value 'Ambulatory Vet').",draft
+facilityType_ambulatoryVet,Ambulatory services,Huduma za kutembelea,"Facility type: registration, Facilities screen, facility picker filter (stored value 'Ambulatory Vet', unchanged; shown as Ambulatory services since RW2b2).",draft
 facilityType_other,Other,Nyingine,"Facility type: registration, Facilities screen, facility picker filter (stored value 'Other').",draft
 paymentMethod_cash,Cash,Taslimu,"Payment method: payment chips and menus, payment filters (stored value 'Cash').",draft
 paymentMethod_mPesa,M-Pesa,M-Pesa,"Payment method: payment chips and menus, payment filters (stored value 'M-Pesa').",draft
@@ -1965,3 +1965,8 @@ faq_themeQ,How do I change the colours or use Dark Mode?,Ninabadilishaje rangi a
 faq_themeA,"Open Settings, then UI Settings. Choose a colour theme (Pasture, Clinic, Harvest or Ledger) and Dark Mode (System, Light or Dark). The choice is saved on this device.","Fungua Mipangilio, kisha Mipangilio ya Mwonekano. Chagua mandhari ya rangi (Malisho, Kliniki, Mavuno au Daftari) na Hali ya Giza (Kama Kifaa, Mwanga au Giza). Chaguo linahifadhiwa kwenye kifaa hiki.",FAQs: answer. Theme and mode names as UI Settings shows them.,draft
 faq_supportQ,How do I contact support?,Ninawasilianaje na msaada?,FAQs: question.,draft
 faq_supportA,"Press Help and contact at the bottom of the sign-in page, or Help on the dashboard. It shows the support contact details set by {appName}.","Bonyeza Msaada na mawasiliano chini ya ukurasa wa kuingia, au Msaada kwenye dashibodi. Inaonyesha mawasiliano ya msaada yaliyowekwa na {appName}.",FAQs: answer.,draft
+facilityType_selectHint,Select facility type,Chagua aina ya kituo,"Facility type dropdown (registration step 3, Add and Edit facility, the no-facility page): the hint while nothing is chosen.",draft
+facilityType_required,Choose your facility type,Chagua aina ya kituo chako,Facility type dropdown: the error when Continue or Add is pressed with no type chosen.,draft
+facilityType_detailLabel,Describe your facility type,Eleza aina ya kituo chako,"The field under the facility type dropdown when Other is chosen (stored as typeDetail): its label, and its error when left empty.",draft
+facilityType_detailLength,Use {min} to {max} characters,Tumia herufi {min} hadi {max},The Other facility type field: the error when the text is too short or too long.,draft
+facilityType_detailCharacters,"Use letters, digits, spaces and . , & ' - only","Tumia herufi, tarakimu, nafasi na . , & ' - pekee","The Other facility type field: the error for any other character. The characters . , & ' - stay as they are.",draft

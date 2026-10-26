@@ -183,6 +183,10 @@ Incomplete: **sales** and **services**. After restoring either one, stock is too
 
 - **team_signInSwitchFailed** ("The assistant was deactivated, but their sign-in could not be switched off. Reactivate and deactivate again.") is shown, as decided, for every signIn "failed" answer of setAssistantStatus and removeAssistantFromFacility. It fits a failed deactivation. After a failed reactivation (sign-in could not be switched back ON) or a failed removal (sessions could not be revoked; the account is never disabled) the sentence is not accurate. Owner decides whether those two get their own sentences.
 
+### Raised in RW2b2 (wording; not changed)
+
+- **about_whoFor** ("It is for agrovets, vet clinics, vet hospitals and ambulatory vets, ...") still says "ambulatory vets" while the facility type "Ambulatory Vet" is now shown as "Ambulatory services" (the owner's change; stored value unchanged). The sentence is about who the app is for, so it is not wrong; the owner may want the two to match.
+
 ## Decided
 
 ### Money, payment methods, app name (decided D1 to D6 in docs/RUNBOOK2.md; done in batch R3)
