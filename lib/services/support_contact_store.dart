@@ -39,6 +39,12 @@ class SupportContactStore extends ChangeNotifier {
   final Future<SharedPreferences> Function() _prefs;
   final DateTime Function() _now;
 
+  /// Tests: a store that already knows [contact], fresh, as after a read.
+  @visibleForTesting
+  factory SupportContactStore.seeded(SupportContact contact) => SupportContactStore(fetch: (_) async => contact.toMap())
+    .._current = contact
+    .._readAt = DateTime.now();
+
   static SupportContactStore? _instance;
 
   /// The app's store.

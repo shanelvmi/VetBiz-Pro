@@ -11,6 +11,7 @@ import 'package:url_launcher/url_launcher.dart';
 import 'package:vetbiz_pro/config/app_info.dart';
 import 'package:vetbiz_pro/l10n/l10n.dart';
 import 'package:vetbiz_pro/models/support_contact.dart';
+import 'package:vetbiz_pro/services/support_contact_store.dart';
 import 'package:vetbiz_pro/screens/info/about_screen.dart';
 import 'package:vetbiz_pro/screens/info/faq_screen.dart';
 import 'package:vetbiz_pro/screens/info/how_to_use_screen.dart';
@@ -56,7 +57,7 @@ void main() {
       locale: const Locale('en'),
       theme: AppTheme.build(theme, brightness),
       home: Scaffold(
-        body: SingleChildScrollView(child: AuthFooter(contact: Future.value(contact), launcher: fakeLaunch)),
+        body: SingleChildScrollView(child: AuthFooter(store: SupportContactStore.seeded(contact), launcher: fakeLaunch)),
       ),
     ));
     await tester.pumpAndSettle();
@@ -161,7 +162,7 @@ void main() {
     }
 
     final pages = <String, Widget Function()>{
-      'about': () => AboutScreen(contact: Future.value(SupportContact.empty)),
+      'about': () => AboutScreen(store: SupportContactStore.seeded(SupportContact.empty)),
       'howToUse': () => const HowToUseScreen(),
       'faq': () => const FaqScreen(),
     };

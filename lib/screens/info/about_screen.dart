@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../config/app_info.dart';
 import '../../l10n/l10n.dart';
-import '../../models/support_contact.dart';
+import '../../services/support_contact_store.dart';
 import '../../theme/app_dimens.dart';
 import '../../theme/theme_context.dart';
 import '../../widgets/hover_link.dart';
@@ -13,11 +13,11 @@ import 'info_page.dart';
 /// proved in docs/design/footer_pages_content.md; the owner edits the
 /// English in the ARB.
 class AboutScreen extends StatelessWidget {
-  const AboutScreen({super.key, required this.contact});
+  const AboutScreen({super.key, this.store});
 
-  /// The footer's single read of app_config/support_contact, for the
-  /// Help and contact link.
-  final Future<SupportContact> contact;
+  /// The app's one copy of the support contact (G6), for the Help and
+  /// contact link; the app's own when null.
+  final SupportContactStore? store;
 
   @override
   Widget build(BuildContext context) {
@@ -49,7 +49,7 @@ class AboutScreen extends StatelessWidget {
               label: l10n.authFooter_helpContact,
               button: true,
               style: InfoPageText.body(context),
-              onTap: () => showSupportContactDialog(context, contact: contact),
+              onTap: () => showSupportContactDialog(context, store: store),
             ),
           ],
         ),

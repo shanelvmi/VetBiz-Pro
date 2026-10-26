@@ -175,6 +175,10 @@ class AuthFooterMetrics {
   /// Every link and icon: Material's 48 px touch target.
   static const double tapTarget = 48;
 
+  /// G6: the bottom row's icon line, the same with or without icons (wide
+  /// and phone), so the footer never moves when they arrive.
+  static const double bottomRowHeight = tapTarget;
+
   /// The brand mark beside the app name, and its letters.
   static const double markSize = 32;
 

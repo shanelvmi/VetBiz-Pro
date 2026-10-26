@@ -4,6 +4,7 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 
 import 'package:vetbiz_pro/l10n/l10n.dart';
 import 'package:vetbiz_pro/models/support_contact.dart';
+import 'package:vetbiz_pro/services/support_contact_store.dart';
 import 'package:vetbiz_pro/theme/app_dimens.dart';
 import 'package:vetbiz_pro/theme/app_palette.dart';
 import 'package:vetbiz_pro/theme/app_theme.dart';
@@ -22,6 +23,7 @@ final _en = lookupAppLocalizations(const Locale('en'));
 
 const _beforeWide = 228.0;
 const _beforePhone = 479.0;
+const _beforePhoneWithIcon = _beforePhone + 48;
 
 void main() {
   Future<void> pump(WidgetTester tester, double width, {SupportContact contact = SupportContact.empty}) async {
@@ -33,7 +35,7 @@ void main() {
         localizationsDelegates: AppLocalizations.localizationsDelegates,
         supportedLocales: AppLocalizations.supportedLocales,
         theme: AppTheme.build(AppColorTheme.pasture, Brightness.light),
-        home: Scaffold(body: SingleChildScrollView(child: AuthFooter(contact: Future.value(contact)))),
+        home: Scaffold(body: SingleChildScrollView(child: AuthFooter(store: SupportContactStore.seeded(contact)))),
       ),
     );
     await tester.pumpAndSettle();
@@ -69,15 +71,19 @@ void main() {
     final plain = bandHeight(tester);
     await pump(tester, 1200, contact: SupportContact.fromMap(const {'facebook': 'facebook.com/v'}));
     final withIcon = bandHeight(tester);
-    // 154 with the test font (a label on two lines); 148 when every
-    // label fits on one line.
-    expect(plain, lessThanOrEqualTo(_beforeWide * 0.7));
+    // G6: the bottom row keeps the icons' 48 px line with or without them,
+    // so both are 170 with the test font (plain was 154 when that line
+    // shrank to 32 px without icons, and the footer jumped when they came).
+    expect(plain, withIcon);
+    expect(plain, lessThanOrEqualTo(_beforeWide * 0.75));
     expect(withIcon, lessThanOrEqualTo(_beforeWide * 0.75));
   }, skip: _skip);
 
-  testWidgets('390: shorter than before G5', (tester) async {
+  testWidgets('390: shorter than before G5 (with its icon line, now always kept)', (tester) async {
     await pump(tester, 390);
-    expect(bandHeight(tester), lessThan(_beforePhone));
+    // G6: the icons' own 48 px line is kept even with none, so the
+    // comparison is with the old footer that had one (527); 499 now.
+    expect(bandHeight(tester), lessThan(_beforePhoneWithIcon));
   }, skip: _skip);
 
   for (final width in [390.0, 1200.0]) {

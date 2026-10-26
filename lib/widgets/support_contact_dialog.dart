@@ -5,7 +5,7 @@ import 'package:url_launcher/url_launcher.dart';
 import '../config/app_info.dart';
 import '../config/app_links.dart';
 import '../l10n/l10n.dart';
-import '../models/support_contact.dart';
+import '../services/support_contact_store.dart';
 import '../theme/app_dimens.dart';
 import '../theme/app_text.dart';
 import '../theme/theme_context.dart';
@@ -17,20 +17,21 @@ import '../ui/feedback/app_feedback.dart';
 /// Reads whatever Platform Admin has filled in under Branding >
 /// Contact Details - each field is optional, so this only shows rows
 /// for what's actually set, and falls back to the original generic
-/// message if none of the four have been configured yet. [contact] is a
-/// read already made (the footer reads once per page); without it the
-/// document is read now ([firestore], or the default instance). [title]
+/// message if none of the four have been configured yet. The details come
+/// from the app's one copy (G6, [store], or the app's own): known at once
+/// when fresh, else after the one read in flight ([firestore], or the
+/// default instance). [title]
 /// replaces "Contact Support" (Settings keeps its "Help and Support").
 Future<void> showSupportContactDialog(
   BuildContext context, {
-  Future<SupportContact>? contact,
+  SupportContactStore? store,
   FirebaseFirestore? firestore,
   String? title,
 }) async {
-  // A failed fetch gives an empty contact (SupportContact.load), so the
+  // A failed fetch gives the last-known or an empty contact, so the
   // generic message still shows - it shouldn't block someone from at
   // least seeing that dialog.
-  final details = await (contact ?? SupportContact.load(firestore));
+  final details = await (store ?? SupportContactStore.instance).contact(firestore);
   final email = details.email;
   final phone = details.phone;
   final whatsapp = details.whatsapp;

@@ -5,14 +5,15 @@ import 'package:url_launcher/url_launcher.dart';
 import '../config/app_info.dart';
 import '../data/support_contact_fields.dart';
 import '../l10n/l10n.dart';
-import '../models/support_contact.dart';
 import '../screens/info/about_screen.dart';
 import '../screens/info/faq_screen.dart';
 import '../screens/info/how_to_use_screen.dart';
 import '../screens/legal/privacy_policy_screen.dart';
 import '../screens/legal/terms_of_service_screen.dart';
+import '../services/support_contact_store.dart';
 import '../theme/app_breakpoints.dart';
 import '../theme/app_dimens.dart';
+import '../theme/app_motion.dart';
 import '../theme/app_text.dart';
 import '../theme/theme_context.dart';
 import '../ui/feedback/app_feedback.dart';
@@ -33,11 +34,14 @@ typedef AuthFooterLauncher = Future<bool> Function(Uri url, {LaunchMode mode});
 /// and less padding, about a third shorter; touch widths keep 48 px
 /// targets. Roles and named sizes only.
 class AuthFooter extends StatelessWidget {
-  const AuthFooter({super.key, required this.contact, this.launcher = launchUrl});
+  const AuthFooter({super.key, this.store, this.launcher = launchUrl});
 
-  /// app_config/support_contact, read ONCE by the page (in initState) and
-  /// handed in, so a rebuild never reads it again.
-  final Future<SupportContact> contact;
+  /// Where the support contact comes from: the app's one copy (G6), which
+  /// the page asks to revalidate. Each page used to read it itself and the
+  /// footer showed no icons until that read answered.
+  final SupportContactStore? store;
+
+  SupportContactStore get _store => store ?? SupportContactStore.instance;
 
   final AuthFooterLauncher launcher;
 
@@ -133,7 +137,7 @@ class AuthFooter extends StatelessWidget {
                           thickness: AuthFooterMetrics.hairline,
                           color: context.colors.divider,
                         ),
-                        _bottomRow(context, isWide),
+                        _bottomRow(context),
                       ],
                     ),
                   );
@@ -193,7 +197,7 @@ class AuthFooter extends StatelessWidget {
       );
 
   Widget _platformColumn(BuildContext context, bool isWide) => _column(context, context.l10n.authFooter_platform, [
-        _FooterLink(compact: isWide, label: context.l10n.authFooter_about(AppInfo.name), onTap: () => _push(context, AboutScreen(contact: contact))),
+        _FooterLink(compact: isWide, label: context.l10n.authFooter_about(AppInfo.name), onTap: () => _push(context, AboutScreen(store: _store))),
         _FooterLink(compact: isWide, label: context.l10n.authFooter_howToUse, onTap: () => _push(context, const HowToUseScreen())),
       ]);
 
@@ -202,8 +206,8 @@ class AuthFooter extends StatelessWidget {
           compact: isWide,
           label: context.l10n.authFooter_helpContact,
           button: true,
-          // The dashboard's Help dialog, given this page's single read.
-          onTap: () => showSupportContactDialog(context, contact: contact),
+          // The dashboard's Help dialog, from the same copy as the icons.
+          onTap: () => showSupportContactDialog(context, store: _store),
         ),
         _FooterLink(compact: isWide, label: context.l10n.authFooter_faq, onTap: () => _push(context, const FaqScreen())),
       ]);
@@ -213,40 +217,74 @@ class AuthFooter extends StatelessWidget {
         _FooterLink(compact: isWide, label: context.l10n.common_termsOfService, onTap: () => _push(context, const TermsOfServiceScreen())),
       ]);
 
-  Widget _bottomRow(BuildContext context, bool isWide) {
+  /// Copyright and version, and the social icons. G6: its height never
+  /// depends on the icons (the owner saw the footer jump when they arrived):
+  /// the icons' line is always kept at the icon target, and they fade in
+  /// with opacity only. Wide enough: one line, the icons in a slot at the
+  /// right as wide as every network; narrower: their own line under the text.
+  Widget _bottomRow(BuildContext context) {
     final muted = TextStyle(color: context.colors.authFooterMutedText, fontSize: AppFontSize.f12);
-    return Wrap(
-      key: bottomRowKey,
-      // Copyright and version at the left, the icons at the right while
-      // they fit on one line; on a phone the icons wrap under them.
-      alignment: WrapAlignment.spaceBetween,
+    final text = Wrap(
       crossAxisAlignment: WrapCrossAlignment.center,
+      spacing: AppSpacing.s12,
+      runSpacing: AppSpacing.s4,
       children: [
-        ConstrainedBox(
-          constraints: BoxConstraints(minHeight: isWide ? AuthFooterMetrics.linkRowHeightWide : AuthFooterMetrics.tapTarget),
-          child: Wrap(
-            crossAxisAlignment: WrapCrossAlignment.center,
-            spacing: AppSpacing.s12,
-            runSpacing: AppSpacing.s4,
-            children: [
-              Text(context.l10n.login_copyright(AppInfo.name), style: muted),
-              Text(AppInfo.versionLabel, style: muted),
-            ],
-          ),
-        ),
-        FutureBuilder<SupportContact>(
-          future: contact,
-          builder: (context, snapshot) {
-            final links = snapshot.data?.socialLinks ?? const [];
-            if (links.isEmpty) return const SizedBox.shrink();
-            return Wrap(
-              children: [
-                for (final link in links) _socialButton(context, link.key, link.value),
-              ],
-            );
-          },
-        ),
+        Text(context.l10n.login_copyright(AppInfo.name), style: muted),
+        Text(AppInfo.versionLabel, style: muted),
       ],
+    );
+    final icons = ListenableBuilder(
+      listenable: _store,
+      builder: (context, _) {
+        final links = _store.current?.socialLinks ?? const [];
+        return AnimatedOpacity(
+          opacity: links.isEmpty ? 0 : 1,
+          duration: AppMotion.normal,
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [for (final link in links) _socialButton(context, link.key, link.value)],
+          ),
+        );
+      },
+    );
+    return LayoutBuilder(
+      key: bottomRowKey,
+      builder: (context, constraints) {
+        if (constraints.maxWidth >= AppBreakpoints.compact) {
+          return ConstrainedBox(
+            constraints: const BoxConstraints(minHeight: AuthFooterMetrics.bottomRowHeight),
+            child: Row(
+              children: [
+                Expanded(child: text),
+                // Always as wide as every network, so the text beside it
+                // never reflows when the icons arrive.
+                SizedBox(
+                  width: AuthFooterMetrics.tapTarget * SocialNetwork.values.length,
+                  child: Align(alignment: AlignmentDirectional.centerEnd, child: icons),
+                ),
+              ],
+            ),
+          );
+        }
+        return Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            ConstrainedBox(
+              constraints: const BoxConstraints(minHeight: AuthFooterMetrics.tapTarget),
+              child: Align(alignment: AlignmentDirectional.centerStart, child: text),
+            ),
+            SizedBox(
+              height: AuthFooterMetrics.bottomRowHeight,
+              child: Align(
+                alignment: AlignmentDirectional.centerStart,
+                // Six targets fit from 288 px; a narrower line scales them down.
+                child: FittedBox(fit: BoxFit.scaleDown, child: icons),
+              ),
+            ),
+          ],
+        );
+      },
     );
   }
 

@@ -22,12 +22,12 @@ import 'legal/terms_of_service_screen.dart';
 import '../widgets/auth_background.dart';
 import '../widgets/auth_card.dart';
 import '../widgets/auth_footer.dart';
-import '../models/support_contact.dart';
 import '../widgets/profile/profile_photo_editor.dart';
 import '../services/profile_photo_service.dart';
 import '../widgets/auth_theme_toggle.dart';
 import '../widgets/hover_link.dart';
 import '../services/role_change_service.dart';
+import '../services/support_contact_store.dart';
 import '../data/collections.dart';
 import '../data/fields.dart';
 import '../data/user_role.dart';
@@ -98,7 +98,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
   // which facility, is done by the server - see MembershipService.
   late final MembershipService _membershipService = widget.membershipService ?? MembershipService();
   // The footer's support contact: read once, by the register view only.
-  late final Future<SupportContact> _supportContact;
   @visibleForTesting
   AuthService get authServiceInUse => _authService;
   @visibleForTesting
@@ -327,7 +326,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
     super.initState();
     _password.addListener(_onPasswordGuardChanged);
     _confirm.addListener(_onPasswordGuardChanged);
-    if (!widget.isUpdating) _supportContact = SupportContact.load(widget.firestore);
+    // G6: the footer reads the app's one copy; this only revalidates it.
+    if (!widget.isUpdating) SupportContactStore.instance.revalidate(widget.firestore);
     _maxFacilitiesSubscription = streamMaxFacilitiesPerAdmin(widget.firestore).listen((limit) {
       if (mounted) setState(() => _maxFacilities = limit);
     });
@@ -932,7 +932,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
             AuthCard(
               header: _buildRegisterHeader(),
               // The same footer as the login page (G3); not in Edit Profile.
-              below: AuthFooter(contact: _supportContact),
+              below: const AuthFooter(),
               bodyBuilder: (context, layout) => _buildWizardBody(layout, inlineBar: !pinBar),
             ),
             _buildErrorToastLayer(),

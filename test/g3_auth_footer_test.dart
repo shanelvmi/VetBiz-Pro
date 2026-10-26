@@ -6,6 +6,7 @@ import 'package:url_launcher/url_launcher.dart';
 import 'package:vetbiz_pro/config/app_info.dart';
 import 'package:vetbiz_pro/l10n/l10n.dart';
 import 'package:vetbiz_pro/models/support_contact.dart';
+import 'package:vetbiz_pro/services/support_contact_store.dart';
 import 'package:vetbiz_pro/screens/legal/privacy_policy_screen.dart';
 import 'package:vetbiz_pro/screens/legal/terms_of_service_screen.dart';
 import 'package:vetbiz_pro/theme/app_palette.dart';
@@ -46,7 +47,7 @@ void main() {
       theme: AppTheme.build(AppColorTheme.pasture, brightness),
       home: Scaffold(
         body: SingleChildScrollView(
-          child: AuthFooter(contact: Future.value(contact), launcher: fakeLaunch),
+          child: AuthFooter(store: SupportContactStore.seeded(contact), launcher: fakeLaunch),
         ),
       ),
     ));

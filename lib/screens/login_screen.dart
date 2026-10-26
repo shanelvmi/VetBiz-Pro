@@ -7,12 +7,12 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../services/auth_service.dart';
+import '../services/support_contact_store.dart';
 import '../widgets/updates_carousel.dart';
 import '../widgets/password_field_guard.dart';
 import '../widgets/auth_background.dart';
 import '../widgets/auth_card.dart';
 import '../widgets/auth_footer.dart';
-import '../models/support_contact.dart';
 import '../widgets/auth_theme_toggle.dart';
 import '../utils/navigator_key.dart';
 import '../config/app_timeouts.dart';
@@ -54,7 +54,6 @@ class LoginScreen extends StatefulWidget {
 class _LoginScreenState extends State<LoginScreen> {
   late final AuthService _authService = widget.authService ?? AuthService();
   FirebaseFirestore get _db => widget.firestore ?? FirebaseFirestore.instance;
-  late final Future<SupportContact> _supportContact;
   final TextEditingController emailController = TextEditingController();
   // The password's text, focus and eye, with the shared hygiene rules
   // (P1b): cleared after a rejected attempt, hidden again by itself.
@@ -88,8 +87,9 @@ class _LoginScreenState extends State<LoginScreen> {
   void initState() {
     super.initState();
     _password.addListener(_onPasswordGuardChanged);
-    // Once per page: the footer's links never read it again on a rebuild.
-    _supportContact = SupportContact.load(_db);
+    // G6: the footer reads the app's one copy, known at once after the
+    // first page; this only revalidates it in the background.
+    SupportContactStore.instance.revalidate(_db);
     final initialEmail = widget.initialEmail;
     if (initialEmail != null) {
       emailController.text = initialEmail;
@@ -774,7 +774,7 @@ class _LoginScreenState extends State<LoginScreen> {
             firestore: _db,
             builder: (context, updates) => AuthCard(
               header: _buildHeader(),
-              below: AuthFooter(contact: _supportContact),
+              below: const AuthFooter(),
               bodyBuilder: (context, layout) => layout.isWide
                   ? Row(
                       children: [

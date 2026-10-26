@@ -22,6 +22,8 @@ import 'l10n/l10n.dart';
 
 import 'services/auth_service.dart';
 import 'services/membership_service.dart';
+import 'services/support_contact_store.dart';
+import 'services/updates_last_known.dart';
 import 'constants/facility_types.dart';
 
 import 'providers/product_provider.dart';
@@ -60,6 +62,11 @@ void main() async {
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
+  // G6: the device's last-known support contact and Updates state, so the
+  // sign-in footer and the Updates area are right on the first frame
+  // (neither throws; a missing copy is simply not used).
+  await SupportContactStore.instance.restore();
+  await UpdatesLastKnown.instance.restore();
 
   runApp(
     MultiProvider(

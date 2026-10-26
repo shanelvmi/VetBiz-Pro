@@ -32,7 +32,10 @@ import 'helpers/register_harness.dart';
 // exists). The pages read a Firestore that holds the six links (what the old
 // code reads) and the app's store reads them through a fake that answers when
 // the test says (what the new code reads).
-const _skip = true;
+const _skip = false;
+
+// The Updates frame (part 4) lands in its own commit.
+const _skipUpdates = true;
 
 class _NoAuth implements AuthService {
   @override
@@ -180,7 +183,7 @@ void main() {
         expect(find.byKey(UpdatesCarousel.skeletonKey), findsNothing);
         expect(find.byType(UpdatesSlides), findsOneWidget);
         expect(footerTop(tester), before, reason: 'the Updates arrived without moving the footer');
-      }, skip: _skip);
+      }, skip: _skipUpdates);
     }
 
     for (final had in [false, null]) {
@@ -190,7 +193,7 @@ void main() {
         expect(find.byKey(UpdatesCarousel.skeletonKey), findsNothing);
         await answer(tester);
         expect(find.byType(UpdatesSlides), findsNothing);
-      }, skip: _skip);
+      }, skip: _skipUpdates);
     }
 
     testWidgets('the answer is remembered for the next visit', (tester) async {
@@ -200,6 +203,6 @@ void main() {
       await pumpPage(tester, _Page.login, await dbWith(null), width: 390);
       await answer(tester);
       expect(UpdatesLastKnown.instance.hadUpdates, isFalse);
-    }, skip: _skip);
+    }, skip: _skipUpdates);
   });
 }

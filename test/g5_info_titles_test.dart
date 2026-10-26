@@ -4,6 +4,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:vetbiz_pro/config/app_info.dart';
 import 'package:vetbiz_pro/l10n/l10n.dart';
 import 'package:vetbiz_pro/models/support_contact.dart';
+import 'package:vetbiz_pro/services/support_contact_store.dart';
 import 'package:vetbiz_pro/screens/info/about_screen.dart';
 import 'package:vetbiz_pro/screens/info/faq_screen.dart';
 import 'package:vetbiz_pro/screens/info/how_to_use_screen.dart';
@@ -41,7 +42,7 @@ void main() {
   }
 
   final pages = <String, (Widget, String)>{
-    'About': (AboutScreen(contact: Future.value(SupportContact.empty)), _en.authFooter_about(AppInfo.name)),
+    'About': (AboutScreen(store: SupportContactStore.seeded(SupportContact.empty)), _en.authFooter_about(AppInfo.name)),
     'How to use it': (const HowToUseScreen(), _en.authFooter_howToUse),
     'FAQs': (const FaqScreen(), _en.authFooter_faq),
   };
