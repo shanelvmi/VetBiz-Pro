@@ -1873,6 +1873,7 @@
   "wizard_back": ["Rudi","Step-by-step forms: goes back one step. Continue is products_continue.","draft"],
   "register_stepAccountType": ["Utatumiaje {appName}?","Register wizard step 1 title (both flows); the two option cards are the role texts.","draft"],
   "register_stepAccountTypeHint": ["Chagua kinachokufaa.","Register wizard step 1 subtitle.","draft"],
+  "register_chooseAccountType": ["Chagua jinsi utakavyotumia {appName}","Register wizard step 1: the error under the two option cards when Continue is pressed with neither chosen (G6: nothing is pre-selected).","draft"],
   "register_stepAboutYou": ["Kuhusu wewe","Register wizard step 2 title (photo, title, name, phone).","draft"],
   "register_stepAboutYouHint": ["Tuambie wewe ni nani na jinsi ya kukupata.","Register wizard step 2 subtitle.","draft"],
   "register_stepFacilityHint": ["Ongeza kila kituo unachosimamia na uchague aina yake.","Register wizard step 3 subtitle, owner. The title is profile_yourFacility.","draft"],

@@ -1879,6 +1879,7 @@ wizard_stepOf,Step {current} of {total},Hatua {current} kati ya {total},"Step-by
 wizard_back,Back,Rudi,Step-by-step forms: goes back one step. Continue is products_continue.,draft
 register_stepAccountType,How will you use {appName}?,Utatumiaje {appName}?,"Register wizard step 1 title (both flows); the two option cards are the role texts.",draft
 register_stepAccountTypeHint,Choose the one that fits you.,Chagua kinachokufaa.,Register wizard step 1 subtitle.,draft
+register_chooseAccountType,Choose how you will use {appName},Chagua jinsi utakavyotumia {appName},Register wizard step 1: the error under the two option cards when Continue is pressed with neither chosen (G6: nothing is pre-selected).,draft
 register_stepAboutYou,About you,Kuhusu wewe,"Register wizard step 2 title (photo, title, name, phone).",draft
 register_stepAboutYouHint,Tell us who you are and how to reach you.,Tuambie wewe ni nani na jinsi ya kukupata.,Register wizard step 2 subtitle.,draft
 register_stepFacilityHint,Add each facility you run and choose its type.,Ongeza kila kituo unachosimamia na uchague aina yake.,"Register wizard step 3 subtitle, owner. The title is profile_yourFacility.",draft
