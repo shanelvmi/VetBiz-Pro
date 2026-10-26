@@ -39,6 +39,7 @@ import '../ui/feedback/friendly_error.dart';
 import '../widgets/password_field_guard.dart';
 import '../widgets/wizard/wizard_consent_row.dart';
 import '../widgets/wizard/wizard_nav_bar.dart';
+import '../widgets/wizard/wizard_option_card.dart';
 import 'login_screen.dart';
 import '../../l10n/l10n.dart';
 
@@ -46,6 +47,7 @@ import '../../l10n/l10n.dart';
 // The steps live in lib/screens/register/; the state, the checks and
 // _submit stay in this file, shared with Edit Profile and the assistant form.
 part 'register/wizard_flow.dart';
+part 'register/owner_steps.dart';
 part 'register/review_step.dart';
 
 class RegisterScreen extends StatefulWidget {
