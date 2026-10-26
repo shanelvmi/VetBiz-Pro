@@ -14,7 +14,7 @@ import 'package:vetbiz_pro/services/updates_last_known.dart';
 // the session, a persisted last-known copy (public fields only, sanitised
 // again when read back), a revalidation that tells listeners only when the
 // data changed, and a failed read that keeps the last-known.
-const _skip = true;
+const _skip = false;
 
 const sixLinks = {
   'email': 'help@vetbiz.example',

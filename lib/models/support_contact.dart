@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter/foundation.dart';
 
 import '../data/collections.dart';
 import '../data/support_contact_fields.dart';
@@ -60,6 +61,29 @@ class SupportContact {
       return empty;
     }
   }
+
+  /// The public fields as the document stores them (G6: the device's
+  /// last-known copy). Read back through [SupportContact.fromMap], so every
+  /// link is sanitised again.
+  Map<String, String> toMap() => {
+        SupportContactFields.email: email,
+        SupportContactFields.phone: phone,
+        SupportContactFields.whatsapp: whatsapp,
+        SupportContactFields.address: address,
+        for (final network in SocialNetwork.values) network.field: social[network]?.toString() ?? '',
+      };
+
+  @override
+  bool operator ==(Object other) =>
+      other is SupportContact &&
+      other.email == email &&
+      other.phone == phone &&
+      other.whatsapp == whatsapp &&
+      other.address == address &&
+      mapEquals(other.social, social);
+
+  @override
+  int get hashCode => Object.hash(email, phone, whatsapp, address, Object.hashAllUnordered(social.entries.map((e) => Object.hash(e.key, e.value))));
 
   bool get hasContactRows => email.isNotEmpty || phone.isNotEmpty || whatsapp.isNotEmpty || address.isNotEmpty;
 

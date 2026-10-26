@@ -100,6 +100,10 @@ class AppTimeouts {
   static const Duration updatesAdvance = Duration(seconds: 7);
   static const Duration updatesNewFor = Duration(hours: 48);
 
+  /// G6: the support contact (the footer's icons, the Help dialog) is read
+  /// again after this long; until then the copy in memory is used as it is.
+  static const Duration supportContactFresh = Duration(minutes: 15);
+
   // Sessions.
 
   /// A platform admin is signed out after this long without activity, with
