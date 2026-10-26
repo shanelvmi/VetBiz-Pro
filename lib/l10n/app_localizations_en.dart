@@ -4880,7 +4880,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get common_facilityName => 'Facility name';
 
   @override
-  String get common_facilityNameHint => 'e.g. Ukuli';
+  String get common_facilityNameHint => 'e.g. Ukuli Animal Care';
 
   @override
   String get common_passwordsDoNotMatch => 'Passwords do not match';
@@ -6488,6 +6488,12 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get facilities_facilityType => 'Facility Type';
+
+  @override
+  String get facilities_typeOfFacility => 'Type of facility';
+
+  @override
+  String get facilities_nameHelper => 'As it should appear on your receipts';
 
   @override
   String get facilities_ownership => 'Ownership';

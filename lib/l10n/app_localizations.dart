@@ -8421,7 +8421,7 @@ abstract class AppLocalizations {
   /// Example in the facility name field.
   ///
   /// In en, this message translates to:
-  /// **'e.g. Ukuli'**
+  /// **'e.g. Ukuli Animal Care'**
   String get common_facilityNameHint;
 
   /// Register: the two passwords differ.
@@ -9024,7 +9024,7 @@ abstract class AppLocalizations {
   /// **'Ask your facility admin for an invite code to join their team.'**
   String get register_askAdminForInvite;
 
-  /// Register, the facility an invite code leads to (facility is "name (type)").
+  /// Register, the facility an invite code leads to (the facility's name, never with its type).
   ///
   /// In en, this message translates to:
   /// **'Joining: {facility}'**
@@ -11063,6 +11063,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Facility Type'**
   String get facilities_facilityType;
+
+  /// The facility type dropdown label in registration and the facility forms, and the read-only row in the business profile (FN1).
+  ///
+  /// In en, this message translates to:
+  /// **'Type of facility'**
+  String get facilities_typeOfFacility;
+
+  /// Helper line under the facility name field: the name is printed exactly as typed, never with its type (FN1).
+  ///
+  /// In en, this message translates to:
+  /// **'As it should appear on your receipts'**
+  String get facilities_nameHelper;
 
   /// Facility detail, About card row.
   ///

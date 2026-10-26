@@ -4908,7 +4908,7 @@ class AppLocalizationsSw extends AppLocalizations {
   String get common_facilityName => 'Jina la kituo';
 
   @override
-  String get common_facilityNameHint => 'mf. Ukuli';
+  String get common_facilityNameHint => 'mf. Ukuli Animal Care';
 
   @override
   String get common_passwordsDoNotMatch => 'Nenosiri hazilingani';
@@ -6526,6 +6526,13 @@ class AppLocalizationsSw extends AppLocalizations {
 
   @override
   String get facilities_facilityType => 'Aina ya Kituo';
+
+  @override
+  String get facilities_typeOfFacility => 'Aina ya kituo';
+
+  @override
+  String get facilities_nameHelper =>
+      'Kama litakavyoonekana kwenye risiti zako';
 
   @override
   String get facilities_ownership => 'Umiliki';
