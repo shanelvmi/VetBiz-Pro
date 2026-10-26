@@ -122,6 +122,10 @@ Future<void> pumpRegister(
   Locale locale = const Locale('en'),
   double keyboard = 0,
   bool overHome = false,
+  // G6: step 1 starts with nothing chosen. The tests written when the owner
+  // was pre-selected get the owner chosen here, as a person would tap it
+  // (on the old code, a tap on the selected card did nothing).
+  bool chooseOwner = true,
 }) async {
   tester.view.physicalSize = size;
   tester.view.devicePixelRatio = 1;
@@ -161,6 +165,7 @@ Future<void> pumpRegister(
     navigator.push(MaterialPageRoute<void>(builder: (_) => screen));
     await tester.pumpAndSettle();
   }
+  if (chooseOwner) await tapText(tester, lookupAppLocalizations(locale).register_roleAdminSubtitle);
 }
 
 /// Ends with every timer the screen started run out.
@@ -212,7 +217,7 @@ class OwnerInputs {
 /// Steps 1 to 4 of the owner flow with [OwnerInputs], ending on step 5.
 Future<void> fillOwnerSteps(WidgetTester tester, {AppLocalizations? l10n, String name = OwnerInputs.name, String facilityName = OwnerInputs.facilityName}) async {
   final t = l10n ?? registerEn;
-  await tapContinue(tester, t); // step 1: the owner is preselected
+  await tapContinue(tester, t); // step 1: pumpRegister chose the owner
   await tapText(tester, OwnerInputs.prefix);
   await typeInto(tester, 'name', name);
   await typeInto(tester, 'phone', OwnerInputs.phone);
