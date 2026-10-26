@@ -199,7 +199,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
   // Dropdowns
   final List<String> prefixes = kPersonTitles;
   String selectedPrefix = kDefaultPersonTitle;
-  String selectedRole = 'Admin';
+  // 'Admin' or 'Assistant'. G6: null until the person chooses on step 1
+  // (nothing is pre-selected); Edit Profile loads the saved role.
+  String? selectedRole;
 
   // UI
   Uint8List? _imageBytes;
@@ -535,6 +537,13 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
     if (!widget.isUpdating && password != confirmPassword) {
       setState(() => error = L10n.current.common_passwordsDoNotMatch);
+      return;
+    }
+
+    // G6: step 1 refuses to go on without a choice, so this is only a guard:
+    // with no role, neither registration below may run.
+    if (!widget.isUpdating && selectedRole == null) {
+      setState(() => error = L10n.current.register_chooseAccountType(AppInfo.name));
       return;
     }
 
@@ -1228,9 +1237,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
   // Top-to-bottom reading order: the toast lists them in this order and the
   // screen scrolls to the first one.
   static const List<String> _fieldOrder = [
-    'name', 'email', 'phone', 'invite', 'facility', 'facilityType', 'typeDetail', 'password', 'confirm',
+    'role', 'name', 'email', 'phone', 'invite', 'facility', 'facilityType', 'typeDetail', 'password', 'confirm',
   ];
   static String _fieldName(String field) => switch (field) {
+        'role' => L10n.current.register_yourRole,
         'name' => L10n.current.register_fieldFullName,
         'email' => L10n.current.common_email,
         'phone' => L10n.current.register_fieldPhone,
@@ -1281,6 +1291,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
     }
 
     if (!widget.isUpdating) {
+      // G6: step 1's own problem; with no role, neither flow's checks apply.
+      if (selectedRole == null) errors['role'] = L10n.current.register_chooseAccountType(AppInfo.name);
       if (selectedRole == 'Admin') {
         if (facilities.isEmpty) {
           // The most common slip: filling in the name and type but never
@@ -1300,7 +1312,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
           final detailError = FacilityTypeField.detailErrorFor(_selectedFacilityType, facilityTypeDetailController.text, L10n.current);
           if (detailError != null) errors['typeDetail'] = detailError;
         }
-      } else {
+      } else if (selectedRole == 'Assistant') {
         final code = assistantFacilityCodeController.text.trim();
         if (code.isEmpty) {
           errors['invite'] = L10n.current.register_enterInviteCode;
@@ -1648,11 +1660,12 @@ class _RegisterScreenState extends State<RegisterScreen> {
   // ---------------- role ----------------
 
   // Same behaviour the old Role dropdown had: clears the assistant fields
-  // when switching to Assistant, and clears any stale error.
+  // when switching to Assistant, and clears any stale error. G6: the cards
+  // are toggles - tapping the chosen one again leaves nothing chosen.
   void _selectRole(String role) {
-    if (widget.isUpdating || role == selectedRole) return;
+    if (widget.isUpdating) return;
     setState(() {
-      selectedRole = role;
+      selectedRole = role == selectedRole ? null : role;
       error = null;
       if (selectedRole == 'Assistant') {
         assistantFacilityNameController.clear();

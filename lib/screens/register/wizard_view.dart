@@ -93,7 +93,10 @@ extension _WizardView on _RegisterScreenState {
       );
 
   // Step 1: the role cards' texts as the two answers. _selectRole is the
-  // same as before (choosing the assistant clears its invite fields).
+  // same as before (choosing the assistant clears its invite fields); G6:
+  // nothing is chosen at first, each card is a toggle, and Continue with
+  // none chosen puts the step's error in a line that is always kept (G5),
+  // so nothing moves.
   List<Widget> _accountTypeStep() => [
         WizardOptionCard(
           icon: Icons.storefront_outlined,
@@ -109,6 +112,12 @@ extension _WizardView on _RegisterScreenState {
           subtitle: context.l10n.roleLabel(UserRole.assistant.key),
           selected: selectedRole == 'Assistant',
           onTap: () => _selectRole('Assistant'),
+        ),
+        const SizedBox(height: AppSpacing.s4),
+        FieldMessageSlot(
+          message: _fieldErrors.containsKey('role') ? context.l10n.register_chooseAccountType(AppInfo.name) : null,
+          reserve: [context.l10n.register_chooseAccountType(AppInfo.name)],
+          style: TextStyle(color: context.colors.dangerDeep, fontSize: AppFontSize.f12),
         ),
       ];
 }

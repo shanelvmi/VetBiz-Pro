@@ -14,7 +14,7 @@ import 'helpers/register_harness.dart';
 // nothing chosen stays on step 1 with the step's error in the line kept for
 // it (nothing changes height). Written before the change (skipped until it
 // exists).
-const _skip = true;
+const _skip = false;
 
 void main() {
   final en = registerEn;
@@ -58,6 +58,9 @@ void main() {
   for (final width in [1200.0, 390.0]) {
     testWidgets('$width: Continue with nothing chosen stays, shows the error, and nothing changes height', (tester) async {
       await pumpRegister(tester, chooseOwner: false, size: Size(width, 900));
+      // Measured where tapping Continue leaves the page scrolled.
+      await tester.ensureVisible(find.text(en.products_continue).last);
+      await tester.pumpAndSettle();
       final cards = [tester.getRect(owner(en)), tester.getRect(assistant(en))];
       final card = tester.getSize(find.byKey(AuthCard.surfaceKey)).height;
       final continueTop = tester.getRect(find.text(en.products_continue).last).top;

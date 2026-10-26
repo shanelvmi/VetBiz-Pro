@@ -14,8 +14,10 @@ extension _WizardFlow on _RegisterScreenState {
 
   bool get _isAssistant => selectedRole == 'Assistant';
 
-  // The _validateAll keys each step owns (steps 1 and 5 own none).
+  // The _validateAll keys each step owns (step 5 owns none). G6: step 1
+  // owns the account type, which nothing pre-selects.
   Map<int, List<String>> get _stepFields => {
+        0: const ['role'],
         1: const ['name', 'phone'],
         thirdStep: _isAssistant ? const ['invite'] : const ['facility', 'facilityType', 'typeDetail'],
         signInStep: const ['email', 'password', 'confirm'],
