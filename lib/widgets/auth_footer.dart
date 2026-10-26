@@ -44,6 +44,9 @@ class AuthFooter extends StatelessWidget {
   /// For tests: the full-width band the footer sits on.
   static const bandKey = ValueKey<String>('auth-footer-band');
 
+  /// For tests: the bottom row (copyright, version, social icons).
+  static const bottomRowKey = ValueKey<String>('auth-footer-bottom-row');
+
   static const Map<SocialNetwork, FaIconData> _icons = {
     SocialNetwork.facebook: FontAwesomeIcons.facebook,
     SocialNetwork.instagram: FontAwesomeIcons.instagram,
@@ -213,6 +216,7 @@ class AuthFooter extends StatelessWidget {
   Widget _bottomRow(BuildContext context, bool isWide) {
     final muted = TextStyle(color: context.colors.authFooterMutedText, fontSize: AppFontSize.f12);
     return Wrap(
+      key: bottomRowKey,
       // Copyright and version at the left, the icons at the right while
       // they fit on one line; on a phone the icons wrap under them.
       alignment: WrapAlignment.spaceBetween,

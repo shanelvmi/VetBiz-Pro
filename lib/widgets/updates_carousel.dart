@@ -39,6 +39,9 @@ class UpdatesCarousel extends StatefulWidget {
   /// A poster's image from its URL: NetworkImage in the app, a fake in tests.
   final ImageProvider Function(String url)? imageFor;
 
+  /// For tests: the frame kept while the first answer is pending (G6).
+  static const skeletonKey = Key('updatesSkeleton');
+
   @override
   State<UpdatesCarousel> createState() => _UpdatesCarouselState();
 }
