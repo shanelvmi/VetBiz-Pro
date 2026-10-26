@@ -7007,4 +7007,27 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get facilityType_detailCharacters =>
       'Use letters, digits, spaces and . , & \' - only';
+
+  @override
+  String get updates_label => 'Updates';
+
+  @override
+  String get updates_new => 'New';
+
+  @override
+  String get updates_important => 'Important';
+
+  @override
+  String get updates_readMore => 'Read more';
+
+  @override
+  String get updates_previous => 'Previous update';
+
+  @override
+  String get updates_next => 'Next update';
+
+  @override
+  String updates_slideOf(int index, int count) {
+    return 'Update $index of $count';
+  }
 }

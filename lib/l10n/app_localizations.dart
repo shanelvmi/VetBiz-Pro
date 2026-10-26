@@ -11897,6 +11897,48 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Use letters, digits, spaces and . , & \' - only'**
   String get facilityType_detailCharacters;
+
+  /// The small label above the login page's announcement slides (AN2). Its own key, not notifications_catUpdates: a heading, not a filter category.
+  ///
+  /// In en, this message translates to:
+  /// **'Updates'**
+  String get updates_label;
+
+  /// Chip on a login update published in the last 48 hours.
+  ///
+  /// In en, this message translates to:
+  /// **'New'**
+  String get updates_new;
+
+  /// Chip on an urgent login update.
+  ///
+  /// In en, this message translates to:
+  /// **'Important'**
+  String get updates_important;
+
+  /// Button on a long text update: opens the whole message in a dialog.
+  ///
+  /// In en, this message translates to:
+  /// **'Read more'**
+  String get updates_readMore;
+
+  /// Arrow button and its tooltip: show the previous login update.
+  ///
+  /// In en, this message translates to:
+  /// **'Previous update'**
+  String get updates_previous;
+
+  /// Arrow button and its tooltip: show the next login update.
+  ///
+  /// In en, this message translates to:
+  /// **'Next update'**
+  String get updates_next;
+
+  /// Screen-reader label of a dot under the login updates.
+  ///
+  /// In en, this message translates to:
+  /// **'Update {index} of {count}'**
+  String updates_slideOf(int index, int count);
 }
 
 class _AppLocalizationsDelegate

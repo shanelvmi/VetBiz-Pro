@@ -7050,4 +7050,27 @@ class AppLocalizationsSw extends AppLocalizations {
   @override
   String get facilityType_detailCharacters =>
       'Tumia herufi, tarakimu, nafasi na . , & \' - pekee';
+
+  @override
+  String get updates_label => 'Taarifa';
+
+  @override
+  String get updates_new => 'Mpya';
+
+  @override
+  String get updates_important => 'Muhimu';
+
+  @override
+  String get updates_readMore => 'Soma zaidi';
+
+  @override
+  String get updates_previous => 'Taarifa iliyotangulia';
+
+  @override
+  String get updates_next => 'Taarifa inayofuata';
+
+  @override
+  String updates_slideOf(int index, int count) {
+    return 'Taarifa $index kati ya $count';
+  }
 }
