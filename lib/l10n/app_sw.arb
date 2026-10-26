@@ -3770,8 +3770,6 @@
   "@register_consent": {"x-review":"draft"},
   "register_consentRequired": "Weka alama kwenye kisanduku ili ukubali kabla ya kufungua akaunti yako.",
   "@register_consentRequired": {"x-review":"draft"},
-  "authFooter_tagline": "Mauzo, stoo, wateja na madeni kwa agrovet na kliniki za mifugo.",
-  "@authFooter_tagline": {"x-review":"draft"},
   "authFooter_support": "Msaada",
   "@authFooter_support": {"x-review":"draft"},
   "authFooter_legal": "Kisheria",

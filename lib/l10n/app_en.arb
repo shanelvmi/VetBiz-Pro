@@ -3770,8 +3770,6 @@
   "@register_consent": {"description":"Register wizard step 5, the required checkbox (RW1 answer 1). terms is common_termsOfService and privacy is common_privacyPolicy; both show as links.","placeholders":{"terms":{"type":"String"},"privacy":{"type":"String"}}},
   "register_consentRequired": "Tick the box to agree before you create your account.",
   "@register_consentRequired": {"description":"Register wizard step 5: under the checkbox when Create account is pressed unticked."},
-  "authFooter_tagline": "Sales, stock, clients and debts for agrovets and vet clinics.",
-  "@authFooter_tagline": {"description":"Sign-in footer (Login and Register), the plain line under the app name."},
   "authFooter_support": "Support",
   "@authFooter_support": {"description":"Sign-in footer: heading of the Support column."},
   "authFooter_legal": "Legal",
