@@ -50,11 +50,12 @@ extension _WizardFlow on _RegisterScreenState {
         _fieldErrors = {};
       }
     });
+    if (problem == null) _hidePasswords();
     problem == null ? _focusStep() : _focusField(problem);
   }
 
-  /// Back, the back gesture and the browser's Back. Every answer is kept
-  /// except the two passwords (owner's rule), which are typed again.
+  /// Back, the back gesture and the browser's Back. Every answer is kept,
+  /// the passwords too (in memory only, hidden again: design section 5).
   void _wizardBack() {
     if (_isSubmitting) return;
     if (_step == 0) {
@@ -66,8 +67,7 @@ extension _WizardFlow on _RegisterScreenState {
 
   /// Opens an earlier step (Back, or the review step's Change).
   void _openStep(int step) {
-    _password.clearAndHide();
-    _confirm.clearAndHide();
+    _hidePasswords();
     _update(() {
       _step = step;
       _consentError = false;
@@ -113,6 +113,13 @@ extension _WizardFlow on _RegisterScreenState {
     _checkedFields.addAll(stepFields[signInStep]!);
     _update(() => _step = signInStep);
     _focusField(_fieldErrors.containsKey('email') ? 'email' : 'password');
+  }
+
+  // A step shown again shows the passwords hidden; their values stay in
+  // this State only (emptied after a failed Create, P1b, and on leaving).
+  void _hidePasswords() {
+    _password.hide();
+    _confirm.hide();
   }
 
   FocusNode? _focusOf(String field) => switch (field) {

@@ -18,7 +18,7 @@ import 'helpers/register_harness.dart';
 const _skip = false;
 // RW2b-fix: the passwords are kept in memory on Back and Continue (design
 // section 5, test 3), hidden again; skipped until the fix.
-const _skipFix = true;
+const _skipFix = false;
 
 // The call the OLD one-page form made for OwnerInputs, recorded by typing
 // them into it (title Dr., the facility added, Create account) before the

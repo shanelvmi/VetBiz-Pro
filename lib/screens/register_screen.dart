@@ -274,6 +274,11 @@ class _RegisterScreenState extends State<RegisterScreen> {
     _facilitiesSub?.cancel();
     _maxFacilitiesSubscription?.cancel();
     _errorTimer?.cancel();
+    // Leaving the wizard: the kept passwords go with it (RW2b-fix).
+    _password.removeListener(_onPasswordGuardChanged);
+    _confirm.removeListener(_onPasswordGuardChanged);
+    _password.clearAndHide();
+    _confirm.clearAndHide();
     _password.dispose();
     _confirm.dispose();
     for (final node in [_nameFocus, _phoneFocus, _facilityNameFocus, _emailFocus]) {
