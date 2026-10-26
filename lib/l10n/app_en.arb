@@ -3925,5 +3925,19 @@
   "facilityType_detailLength": "Use {min} to {max} characters",
   "@facilityType_detailLength": {"description":"The Other facility type field: the error when the text is too short or too long.","placeholders":{"min":{"type":"int"},"max":{"type":"int"}}},
   "facilityType_detailCharacters": "Use letters, digits, spaces and . , & ' - only",
-  "@facilityType_detailCharacters": {"description":"The Other facility type field: the error for any other character. The characters . , & ' - stay as they are."}
+  "@facilityType_detailCharacters": {"description":"The Other facility type field: the error for any other character. The characters . , & ' - stay as they are."},
+  "updates_label": "Updates",
+  "@updates_label": {"description":"The small label above the login page's announcement slides (AN2). Its own key, not notifications_catUpdates: a heading, not a filter category."},
+  "updates_new": "New",
+  "@updates_new": {"description":"Chip on a login update published in the last 48 hours."},
+  "updates_important": "Important",
+  "@updates_important": {"description":"Chip on an urgent login update."},
+  "updates_readMore": "Read more",
+  "@updates_readMore": {"description":"Button on a long text update: opens the whole message in a dialog."},
+  "updates_previous": "Previous update",
+  "@updates_previous": {"description":"Arrow button and its tooltip: show the previous login update."},
+  "updates_next": "Next update",
+  "@updates_next": {"description":"Arrow button and its tooltip: show the next login update."},
+  "updates_slideOf": "Update {index} of {count}",
+  "@updates_slideOf": {"description":"Screen-reader label of a dot under the login updates.","placeholders":{"index":{"type":"int"},"count":{"type":"int"}}}
 }

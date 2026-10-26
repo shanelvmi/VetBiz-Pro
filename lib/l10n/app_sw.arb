@@ -3925,5 +3925,19 @@
   "facilityType_detailLength": "Tumia herufi {min} hadi {max}",
   "@facilityType_detailLength": {"x-review":"draft"},
   "facilityType_detailCharacters": "Tumia herufi, tarakimu, nafasi na . , & ' - pekee",
-  "@facilityType_detailCharacters": {"x-review":"draft"}
+  "@facilityType_detailCharacters": {"x-review":"draft"},
+  "updates_label": "Taarifa",
+  "@updates_label": {"x-review":"draft"},
+  "updates_new": "Mpya",
+  "@updates_new": {"x-review":"draft"},
+  "updates_important": "Muhimu",
+  "@updates_important": {"x-review":"draft"},
+  "updates_readMore": "Soma zaidi",
+  "@updates_readMore": {"x-review":"draft"},
+  "updates_previous": "Taarifa iliyotangulia",
+  "@updates_previous": {"x-review":"draft"},
+  "updates_next": "Taarifa inayofuata",
+  "@updates_next": {"x-review":"draft"},
+  "updates_slideOf": "Taarifa {index} kati ya {count}",
+  "@updates_slideOf": {"x-review":"draft"}
 }
