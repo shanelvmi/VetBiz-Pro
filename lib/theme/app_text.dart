@@ -48,6 +48,15 @@ class WizardFontSize {
   static const double consentError = AppFontSize.f12;
 }
 
+/// The About, How to use it and FAQs pages (G4): body text at least 14 px.
+class InfoPageFontSize {
+  InfoPageFontSize._();
+
+  static const double body = AppFontSize.f15;
+  static const double heading = AppFontSize.f18;
+  static const double step = AppFontSize.f14;
+}
+
 class AppFontWeight {
   AppFontWeight._();
 

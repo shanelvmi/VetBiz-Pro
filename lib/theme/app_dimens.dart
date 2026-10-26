@@ -210,6 +210,23 @@ class HoverLinkMetrics {
   static const double iconUnderlineThickness = 1;
 }
 
+/// The About, How to use it and FAQs pages (lib/screens/info, G4). Every
+/// size of them lives here, so one place restyles the three.
+class InfoPageMetrics {
+  InfoPageMetrics._();
+
+  /// The readable column: never wider than this, centred on wide screens.
+  static const double maxWidth = 720;
+
+  /// Around the column, and between its parts.
+  static const double padding = AppSpacing.s20;
+  static const double sectionGap = AppSpacing.s24;
+  static const double itemGap = AppSpacing.s12;
+
+  /// The number circle in front of a step.
+  static const double stepBadge = 28;
+}
+
 /// The step-by-step forms (lib/widgets/wizard, register_wizard.md section
 /// 3). Every size of the wizard widgets lives here, so one place restyles
 /// them (the owner's phone-app style comes later).

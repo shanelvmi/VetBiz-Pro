@@ -32,6 +32,9 @@ class AuthFooter extends StatelessWidget {
 
   final AuthFooterLauncher launcher;
 
+  /// For tests: the full-width band the footer sits on.
+  static const bandKey = ValueKey<String>('auth-footer-band');
+
   static const Map<SocialNetwork, FaIconData> _icons = {
     SocialNetwork.facebook: FontAwesomeIcons.facebook,
     SocialNetwork.instagram: FontAwesomeIcons.instagram,
