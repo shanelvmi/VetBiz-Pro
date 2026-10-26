@@ -1595,3 +1595,127 @@ describe("P1: invite-code rate limiting", () => {
     assert.deepEqual(ids, [`ip_${membership.helpers.hashIp("41.59.0.9")}`]);
   });
 });
+
+// ======================================================================
+// RW2b2: "Other" carries the owner's own words for the facility type
+// (typeDetail), stored next to type. Every other type ignores it.
+const RW2B2 = { skip: "RW2b2: typeDetail not implemented yet" };
+
+describe("RW2b2: cleanTypeDetail", RW2B2, () => {
+  const clean = (type, value) => membership.helpers.cleanTypeDetail(type, value, (m) => new HttpsError("invalid-argument", m));
+  const refused = (type, value) =>
+    assert.throws(() => clean(type, value), (e) => e.code === "invalid-argument", `${JSON.stringify(value)} should be refused`);
+
+  test("a valid detail is kept, trimmed", () => {
+    assert.equal(clean("Other", "Pet shop & feeds"), "Pet shop & feeds");
+    assert.equal(clean("Other", "  Dairy co-op, St. Mary's 2  "), "Dairy co-op, St. Mary's 2");
+    assert.equal(clean("Other", "Duka la mifugo"), "Duka la mifugo");
+    assert.equal(clean("Other", "ab"), "ab");
+    assert.equal(clean("Other", "a".repeat(40)), "a".repeat(40));
+  });
+
+  test("too short, too long and bad characters are refused", () => {
+    for (const v of ["", "   ", "a", " a ", "a".repeat(41), "Pet/shop", "<b>x</b>", "Shop!", "x\ny", 7, true, {}]) refused("Other", v);
+  });
+
+  test("absent with Other stores nothing (older apps send no detail)", () => {
+    assert.equal(clean("Other", undefined), null);
+    assert.equal(clean("Other", null), null);
+  });
+
+  test("present but the type is not Other: ignored, even when it would be invalid", () => {
+    for (const type of ["Agrovet", "Vet Clinic", "Vet Hospital", "Ambulatory Vet"]) {
+      assert.equal(clean(type, "Pet shop"), null, type);
+      assert.equal(clean(type, "!"), null, type);
+    }
+  });
+});
+
+describe("RW2b2: typeDetail is stored and returned", RW2B2, () => {
+  const other = (typeDetail) => ({ name: "Mwanza Pets", type: "Other", typeDetail });
+
+  test("registerOwner stores it on the facility and on the profile's copy", async () => {
+    const { db, fns } = setup();
+    const r = await fns.registerOwner(validOwner({ facilities: [other("  Pet shop "), { name: "Ukuli", type: "Agrovet", typeDetail: "Ignored" }] }), as("o1"));
+    const [pets, agro] = r.facilities;
+    assert.deepEqual(Object.keys(pets).sort(), ["facilityId", "name", "type", "typeDetail"]);
+    assert.equal(pets.typeDetail, "Pet shop");
+    assert.equal(db.read("facilities", pets.facilityId).typeDetail, "Pet shop");
+    assert.deepEqual(Object.keys(agro).sort(), ["facilityId", "name", "type"]);
+    assert.equal("typeDetail" in db.read("facilities", agro.facilityId), false);
+    assert.deepEqual(db.read("users", "o1").facilities, r.facilities);
+  });
+
+  test("registerOwner refuses a bad detail and creates nothing", async () => {
+    const { db, fns } = setup();
+    await rejects(fns.registerOwner(validOwner({ facilities: [other("x")] }), as("o1")), "invalid-argument");
+    await rejects(fns.registerOwner(validOwner({ facilities: [other("Pets <3")] }), as("o1")), "invalid-argument");
+    assert.equal(db.read("users", "o1"), undefined);
+    assert.equal(db.all("facilities").length, 0);
+  });
+
+  test("addFacility stores it; another type ignores it", async () => {
+    const { db, fns } = setup();
+    seedWorld(db);
+    const e = await fns.addFacility(other("Mobile clinic"), as("owner"));
+    assert.equal(e.typeDetail, "Mobile clinic");
+    assert.equal(db.read("facilities", e.facilityId).typeDetail, "Mobile clinic");
+    assert.deepEqual(db.read("users", "owner").facilities[1], e);
+    const v = await fns.addFacility({ name: "Vet", type: "Vet Clinic", typeDetail: "Nope" }, as("owner"));
+    assert.equal("typeDetail" in v, false);
+    assert.equal("typeDetail" in db.read("facilities", v.facilityId), false);
+    await rejects(fns.addFacility(other("a".repeat(41)), as("owner")), "invalid-argument");
+  });
+
+  test("an unknown type is still refused, with or without a detail", async () => {
+    const { db, fns } = setup();
+    seedWorld(db);
+    await rejects(fns.addFacility({ name: "X", type: "Pharmacy", typeDetail: "Pharmacy" }, as("owner")), "invalid-argument");
+    await rejects(fns.registerOwner(validOwner({ facilities: [{ name: "X", type: "Ambulatory services" }] }), as("o1")), "invalid-argument");
+  });
+
+  test("the invite carries it: checkInviteCode and both redeem results return it", async () => {
+    const { db, fns } = setup();
+    seedWorld(db);
+    db.seed("facilities", "F1", { name: "Ukuli", type: "Other", typeDetail: "Pet shop", code: "AAAA1111", createdBy: "owner" });
+    const { code } = await fns.createInviteCode({ facilityId: "F1" }, as("owner"));
+    assert.equal(db.read("inviteCodes", code).facilityTypeDetail, "Pet shop");
+    assert.deepEqual(await fns.checkInviteCode({ code }), {
+      valid: true, facilityName: "Ukuli", facilityType: "Other", facilityTypeDetail: "Pet shop",
+    });
+    const joined = await fns.joinWithInvite({ code, fullName: "Ms. Neema", phone: "0712 345 678" }, as("newbie"));
+    assert.deepEqual(joined, { facilityName: "Ukuli", facilityType: "Other", facilityTypeDetail: "Pet shop" });
+    assert.equal(db.read("users", "newbie").facilities[0].typeDetail, "Pet shop");
+
+    seedInvite(db, "RJ22P4", { facilityType: "Other", facilityTypeDetail: "Pet shop" });
+    db.seed("users", "loner", { role: "assistant", status: "deactivated", facilityIds: [], facilities: [] });
+    const rejoined = await fns.joinFacilityWithInvite({ code: "RJ22P4" }, as("loner"));
+    assert.deepEqual(rejoined, { facilityName: "Ukuli", facilityType: "Other", facilityTypeDetail: "Pet shop" });
+  });
+
+  test("facilities without typeDetail still work exactly as before", async () => {
+    const { db, fns } = setup();
+    seedWorld(db);
+    db.seed("facilities", "F1", { name: "Ukuli", type: "Ambulatory Vet", code: "AAAA1111", createdBy: "owner" });
+    const { code } = await fns.createInviteCode({ facilityId: "F1" }, as("owner"));
+    assert.equal("facilityTypeDetail" in db.read("inviteCodes", code), false);
+    assert.deepEqual(await fns.checkInviteCode({ code }), { valid: true, facilityName: "Ukuli", facilityType: "Ambulatory Vet" });
+    const r = await fns.syncFacilityDetails({ facilityId: "F1" }, as("owner"));
+    assert.equal(r.updated, 3);
+    assert.deepEqual(db.read("users", "owner").facilities[0], entry("F1", "Ukuli", "Ambulatory Vet"));
+  });
+
+  test("an edit's detail reaches every member's copy; changing away from Other removes it", async () => {
+    const { db, fns } = setup();
+    seedWorld(db);
+    db.seed("facilities", "F1", { name: "Ukuli", type: "Other", typeDetail: "Pet shop", code: "AAAA1111", createdBy: "owner" });
+    assert.equal((await fns.syncFacilityDetails({ facilityId: "F1" }, as("owner"))).updated, 3);
+    for (const uid of ["owner", "coadmin", "assistant"]) assert.equal(db.read("users", uid).facilities[0].typeDetail, "Pet shop", uid);
+    db.seed("facilities", "F1", { name: "Ukuli", type: "Other", typeDetail: "Pet clinic", code: "AAAA1111", createdBy: "owner" });
+    assert.equal((await fns.syncFacilityDetails({ facilityId: "F1" }, as("owner"))).updated, 3);
+    assert.equal(db.read("users", "owner").facilities[0].typeDetail, "Pet clinic");
+    db.seed("facilities", "F1", { name: "Ukuli", type: "Agrovet", code: "AAAA1111", createdBy: "owner" });
+    assert.equal((await fns.syncFacilityDetails({ facilityId: "F1" }, as("owner"))).updated, 3);
+    assert.deepEqual(db.read("users", "owner").facilities[0], F1);
+  });
+});
