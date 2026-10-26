@@ -6736,10 +6736,6 @@ class AppLocalizationsEn extends AppLocalizations {
       'Tick the box to agree before you create your account.';
 
   @override
-  String get authFooter_tagline =>
-      'Sales, stock, clients and debts for agrovets and vet clinics.';
-
-  @override
   String get authFooter_support => 'Support';
 
   @override

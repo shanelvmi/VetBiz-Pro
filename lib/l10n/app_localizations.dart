@@ -11430,12 +11430,6 @@ abstract class AppLocalizations {
   /// **'Tick the box to agree before you create your account.'**
   String get register_consentRequired;
 
-  /// Sign-in footer (Login and Register), the plain line under the app name.
-  ///
-  /// In en, this message translates to:
-  /// **'Sales, stock, clients and debts for agrovets and vet clinics.'**
-  String get authFooter_tagline;
-
   /// Sign-in footer: heading of the Support column.
   ///
   /// In en, this message translates to:

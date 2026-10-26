@@ -6778,10 +6778,6 @@ class AppLocalizationsSw extends AppLocalizations {
       'Weka alama kwenye kisanduku ili ukubali kabla ya kufungua akaunti yako.';
 
   @override
-  String get authFooter_tagline =>
-      'Mauzo, stoo, wateja na madeni kwa agrovet na kliniki za mifugo.';
-
-  @override
   String get authFooter_support => 'Msaada';
 
   @override
