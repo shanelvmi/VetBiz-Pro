@@ -46,6 +46,23 @@ class ManageAssistantsScreen extends StatefulWidget {
   final String? initialSearchQuery;
   const ManageAssistantsScreen({super.key, this.initialSearchQuery});
 
+  // "Ukuli Agrovet" rather than just "Ukuli": the facility's type follows
+  // its name - unless the name already says it, so a facility saved as
+  // "Ukuli Agrovet" doesn't turn into "Ukuli Agrovet Agrovet". Everything
+  // on this screen that shows a facility reads from facilityNames, so this
+  // one place covers the table, cards, filter, search, and the reassign and
+  // invite pickers.
+  @visibleForTesting
+  static String facilityLabel(Map<String, dynamic> facility) {
+    final name = ((facility['name'] as String?) ?? '').trim();
+    // Shown through its label (Ambulatory services; an Other facility's own
+    // words, RW2b2).
+    final type = L10n.current.facilityTypeDisplay(facility['type'] as String?, facility['typeDetail'] as String?).trim();
+    if (name.isEmpty) return L10n.current.common_unknown;
+    if (type.isEmpty || name.toLowerCase().contains(type.toLowerCase())) return name;
+    return '$name $type';
+  }
+
   @override
   State<ManageAssistantsScreen> createState() => _ManageAssistantsScreenState();
 }
@@ -124,22 +141,6 @@ class _ManageAssistantsScreenState extends State<ManageAssistantsScreen> {
     super.dispose();
   }
 
-  // "Ukuli Agrovet" rather than just "Ukuli": the facility's type follows
-  // its name - unless the name already says it, so a facility saved as
-  // "Ukuli Agrovet" doesn't turn into "Ukuli Agrovet Agrovet". Everything
-  // on this screen that shows a facility reads from facilityNames, so this
-  // one place covers the table, cards, filter, search, and the reassign and
-  // invite pickers.
-  String _nameWithType(Map<String, dynamic> facility) {
-    final name = ((facility['name'] as String?) ?? '').trim();
-    // Shown through its label (Ambulatory services; an Other facility's own
-    // words, RW2b2).
-    final type = L10n.current.facilityTypeDisplay(facility['type'] as String?, facility['typeDetail'] as String?).trim();
-    if (name.isEmpty) return L10n.current.common_unknown;
-    if (type.isEmpty || name.toLowerCase().contains(type.toLowerCase())) return name;
-    return '$name $type';
-  }
-
   Future<void> _fetchAdminFacilities() async {
     try {
       final facilitiesCollection = FirebaseFirestore.instance.collection(Collections.facilities);
@@ -169,7 +170,7 @@ class _ManageAssistantsScreenState extends State<ManageAssistantsScreen> {
       setState(() {
         adminFacilityIds = docs.map((doc) => doc.id).toList();
         facilityNames = {
-          for (final doc in docs) doc.id: _nameWithType(doc.data() ?? <String, dynamic>{})
+          for (final doc in docs) doc.id: ManageAssistantsScreen.facilityLabel(doc.data() ?? <String, dynamic>{})
         };
         facilityOwners = {
           for (final doc in docs) doc.id: (doc.data()?['createdBy'] ?? '').toString()

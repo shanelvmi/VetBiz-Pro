@@ -302,6 +302,20 @@ class _HoverFabState extends State<HoverFab> {
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
 
+  /// The facility name under the sidebar logo (FN1 tests).
+  @visibleForTesting
+  static String headerFacilityName(Map<String, dynamic>? facility) {
+    final String name = facility?['name'] ?? '';
+    final String type = facility?['type'] ?? '';
+    // 'Other' is the stored type, compared as stored; the type is shown through
+    // its lookup. A bare Other adds nothing; with its own words (RW2b2) they
+    // are shown.
+    final String shownType = type == kFacilityTypeOther
+        ? (facility?['typeDetail'] ?? '').trim()
+        : L10n.current.facilityTypeDisplay(type);
+    return shownType.isNotEmpty ? L10n.current.dashboard_facilityNameType(name, shownType) : name;
+  }
+
   @override
   State<DashboardScreen> createState() => _DashboardScreenState();
 }
@@ -2414,17 +2428,8 @@ Widget _buildDrawerContent() {
   // before that was restyled; preserved here instead since the
   // sidebar's own logo area is the more natural place for it now.
   final String facilityDisplayName = selectedFacility?['name'] ?? '';
-  final String facilityDisplayType = selectedFacility?['type'] ?? '';
   final String? facilityIdForTagline = selectedFacility?['id'];
-  // 'Other' is the stored type, compared as stored; the type is shown through
-  // its lookup. A bare Other adds nothing; with its own words (RW2b2) they
-  // are shown.
-  final String shownType = facilityDisplayType == kFacilityTypeOther
-      ? (selectedFacility?['typeDetail'] ?? '').trim()
-      : context.l10n.facilityTypeDisplay(facilityDisplayType);
-  final String combinedNameAndType = shownType.isNotEmpty
-      ? context.l10n.dashboard_facilityNameType(facilityDisplayName, shownType)
-      : facilityDisplayName;
+  final String combinedNameAndType = DashboardScreen.headerFacilityName(selectedFacility);
   Widget facilityNameSection = effectivelyCollapsed || facilityDisplayName.isEmpty
       ? const SizedBox.shrink()
       : Padding(

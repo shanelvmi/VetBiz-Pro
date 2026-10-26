@@ -13,6 +13,7 @@ import '../config/app_date_format.dart';
 import '../config/app_info.dart';
 import '../theme/app_text.dart';
 import '../theme/app_dimens.dart';
+import '../utils/receipt_texts.dart';
 
 /// Builds a genuine A4 PDF receipt for a Sale or a Service - a real,
 /// correctly-sized printable document, not a screenshot of the on-screen
@@ -141,6 +142,33 @@ class ReceiptPdfService {
     );
     return doc.save();
   }
+
+  /// The A4 sale receipt for a facility as FacilityProvider.selectedFacility
+  /// holds it: the one place a preview turns the facility into the receipt's
+  /// header (FN1 tests).
+  static Future<Uint8List> saleBytesFor(Sale sale, Map<String, dynamic>? facility) => buildSaleBytes(
+        sale,
+        facilityName: facility?['name'] ?? 'Facility',
+        // Printed in English: the label, or an Other facility's own words (RW2b2).
+        facilityType: ReceiptTexts.facilityType(facility?['type'], facility?['typeDetail']),
+        facilityPhone: facility?['phone'],
+        facilityEmail: facility?['email'],
+        facilityAddress: facility?['address'],
+        facilityTagline: facility?['tagline'],
+        facilityTin: facility?['tin'],
+      );
+
+  /// Same as saleBytesFor, for a Service receipt.
+  static Future<Uint8List> serviceBytesFor(Service service, Map<String, dynamic>? facility) => buildServiceBytes(
+        service,
+        facilityName: facility?['name'] ?? 'Facility',
+        facilityType: ReceiptTexts.facilityType(facility?['type'], facility?['typeDetail']),
+        facilityPhone: facility?['phone'],
+        facilityEmail: facility?['email'],
+        facilityAddress: facility?['address'],
+        facilityTagline: facility?['tagline'],
+        facilityTin: facility?['tin'],
+      );
 
   // ---------- Sale document ----------
 

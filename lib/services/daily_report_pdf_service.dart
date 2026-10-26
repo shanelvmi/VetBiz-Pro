@@ -9,6 +9,7 @@ import '../config/app_date_format.dart';
 import '../config/app_info.dart';
 import '../theme/app_text.dart';
 import '../theme/app_dimens.dart';
+import '../utils/receipt_texts.dart';
 
 class DailyReportPdfService {
   static final _fullDate = AppDateFormat.dateLongFull;
@@ -18,6 +19,16 @@ class DailyReportPdfService {
   /// The text sent with the shared PDF. English, like the PDF itself
   /// (docs/PHASE2_LOCALISATION_SPEC.md 2.8).
   static const shareText = 'Daily Closing Report';
+
+  /// The facility name printed on the report, from the facility as
+  /// FacilityProvider.selectedFacility holds it (FN1 tests). The PDF stays
+  /// English (spec 2.8), so its fallback name does too.
+  static String facilityNameOf(Map<String, dynamic>? facility) {
+    final String rawName = facility?['name'] ?? '${AppInfo.name} Facility';
+    // English, like the PDF: the label, or an Other facility's own words (RW2b2).
+    final facilityType = ReceiptTexts.facilityType(facility?['type'], facility?['typeDetail']);
+    return facilityType.isNotEmpty ? '$rawName $facilityType' : rawName;
+  }
 
   /// Builds the PDF and opens the OS's native print/share preview -
   /// the one shared entry point both the report detail screen and the

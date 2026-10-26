@@ -283,16 +283,7 @@ class _ReceiptPreviewScreenState extends State<ReceiptPreviewScreen> {
                   padding: const EdgeInsets.all(AppSpacing.s24),
                   child: PrintableTheme(
                     builder: (_) => PdfPreview(
-                      build: (format) => ReceiptPdfService.buildSaleBytes(
-                        sale,
-                        facilityName: facilityName,
-                        facilityType: facilityType,
-                        facilityPhone: facilityPhone,
-                        facilityEmail: facilityEmail,
-                        facilityAddress: facilityAddress,
-                        facilityTagline: facilityTagline,
-                        facilityTin: facilityTin,
-                      ),
+                      build: (format) => ReceiptPdfService.saleBytesFor(sale, facility),
                       allowPrinting: false,
                       allowSharing: false,
                       canChangePageFormat: false,

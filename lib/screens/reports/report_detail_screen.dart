@@ -6,12 +6,10 @@ import '../../providers/facility_provider.dart';
 import '../../services/daily_report_pdf_service.dart';
 import 'report_tabbed_content.dart';
 import '../../config/app_date_format.dart';
-import '../../config/app_info.dart';
 import '../../l10n/l10n.dart';
 import '../../theme/app_text.dart';
 import '../../theme/app_dimens.dart';
 import '../../theme/theme_context.dart';
-import '../../utils/receipt_texts.dart';
 
 /// Read-only view of a past, already-generated report - the AppBar
 /// (date, submission status, PDF action) plus the shared tabbed
@@ -26,11 +24,7 @@ class ReportDetailScreen extends StatelessWidget {
 
   Future<void> _printOrDownloadPdf(BuildContext context) async {
     final facilityProvider = Provider.of<FacilityProvider>(context, listen: false);
-    // The PDF stays English (spec 2.8), so its fallback name does too.
-    final rawName = facilityProvider.selectedFacilityName ?? '${AppInfo.name} Facility';
-    // English, like the PDF: the label, or an Other facility's own words (RW2b2).
-    final facilityType = ReceiptTexts.facilityType(facilityProvider.selectedFacilityType, facilityProvider.selectedFacilityTypeDetail);
-    final facilityName = facilityType.isNotEmpty ? '$rawName $facilityType' : rawName;
+    final facilityName = DailyReportPdfService.facilityNameOf(facilityProvider.selectedFacility);
     await DailyReportPdfService.printOrDownload(report, facilityName: facilityName);
   }
 

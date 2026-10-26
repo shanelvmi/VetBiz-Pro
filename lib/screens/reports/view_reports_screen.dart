@@ -23,13 +23,11 @@ import '../../data/collections.dart';
 import '../../data/fields.dart';
 import '../../data/activity_type.dart';
 import '../../config/app_date_format.dart';
-import '../../config/app_info.dart';
 import '../../l10n/l10n.dart';
 import '../../theme/app_text.dart';
 import '../../theme/theme_context.dart';
 import '../../theme/app_breakpoints.dart';
 import '../../ui/feedback/app_feedback.dart';
-import '../../utils/receipt_texts.dart';
 
 /// The main View Reports screen - shows today's own report directly,
 /// matching the Daily Closing Report mockup, rather than a separate
@@ -197,10 +195,7 @@ class _ViewReportsScreenState extends State<ViewReportsScreen> {
   Future<void> _printOrDownloadPdf() async {
     if (_todaysReport == null) return;
     final facilityProvider = Provider.of<FacilityProvider>(context, listen: false);
-    final rawName = facilityProvider.selectedFacilityName ?? '${AppInfo.name} Facility';
-    // English, like the PDF: the label, or an Other facility's own words (RW2b2).
-    final facilityType = ReceiptTexts.facilityType(facilityProvider.selectedFacilityType, facilityProvider.selectedFacilityTypeDetail);
-    final facilityName = facilityType.isNotEmpty ? '$rawName $facilityType' : rawName;
+    final facilityName = DailyReportPdfService.facilityNameOf(facilityProvider.selectedFacility);
     await DailyReportPdfService.printOrDownload(_todaysReport!, facilityName: facilityName);
   }
 
@@ -209,9 +204,7 @@ class _ViewReportsScreenState extends State<ViewReportsScreen> {
     Uint8List? bytes;
     try {
       final facilityProvider = Provider.of<FacilityProvider>(context, listen: false);
-      final rawName = facilityProvider.selectedFacilityName ?? '${AppInfo.name} Facility';
-      final facilityType = ReceiptTexts.facilityType(facilityProvider.selectedFacilityType, facilityProvider.selectedFacilityTypeDetail);
-      final facilityName = facilityType.isNotEmpty ? '$rawName $facilityType' : rawName;
+      final facilityName = DailyReportPdfService.facilityNameOf(facilityProvider.selectedFacility);
 
       final doc = await DailyReportPdfService.build(_todaysReport!, facilityName: facilityName);
       bytes = await doc.save();
