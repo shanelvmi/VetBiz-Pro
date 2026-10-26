@@ -7004,4 +7004,47 @@ class AppLocalizationsSw extends AppLocalizations {
 
   @override
   String get faq_serviceA => 'Fungua Huduma na bonyeza Rekodi Ziara.';
+
+  @override
+  String get faq_printQ => 'Ninachapishaje risiti?';
+
+  @override
+  String get faq_printA =>
+      'Kwenye programu ya simu, Chapisha Risiti inaituma kwa printa ya joto ya Bluetooth, iliyowekwa katika Mipangilio chini ya Mipangilio ya Printa na Risiti. Kwenye kivinjari printa ya joto haifanyi kazi: chagua Muundo wa A4 ili kuchapisha risiti au kuihifadhi kama PDF.';
+
+  @override
+  String get faq_deletedQ => 'Nimefuta kitu kwa makosa. Nifanye nini?';
+
+  @override
+  String get faq_deletedA =>
+      'Baada ya kufuta bidhaa, mteja au muamala, bonyeza Tendua kwenye ujumbe unaoonekana kwa sekunde chache. Bidhaa, wateja, huduma, mauzo na miamala iliyofutwa huenda kwenye Takataka (Mipangilio, kwa wasimamizi pekee), ambapo msimamizi anaweza kuirejesha ndani ya siku 30; baada ya hapo inafutwa kabisa.';
+
+  @override
+  String get faq_passwordQ => 'Nimesahau nenosiri langu.';
+
+  @override
+  String get faq_passwordA =>
+      'Kwenye ukurasa wa kuingia andika barua pepe yako na ubonyeze Umesahau Nenosiri?. Kama kuna akaunti ya barua pepe hiyo, kiungo cha kubadilisha nenosiri kinatumwa; angalia pia folda ya spam.';
+
+  @override
+  String get faq_languageQ => 'Ninabadilishaje lugha?';
+
+  @override
+  String get faq_languageA =>
+      'Fungua Mipangilio na uchague Language / Lugha: Kiingereza au Kiswahili.';
+
+  @override
+  String get faq_themeQ => 'Ninabadilishaje rangi au kutumia Hali ya Giza?';
+
+  @override
+  String get faq_themeA =>
+      'Fungua Mipangilio, kisha Mipangilio ya Mwonekano. Chagua mandhari ya rangi (Malisho, Kliniki, Mavuno au Daftari) na Hali ya Giza (Kama Kifaa, Mwanga au Giza). Chaguo linahifadhiwa kwenye kifaa hiki.';
+
+  @override
+  String get faq_supportQ => 'Ninawasilianaje na msaada?';
+
+  @override
+  String faq_supportA(String appName) {
+    return 'Bonyeza Msaada na mawasiliano chini ya ukurasa wa kuingia, au Msaada kwenye dashibodi. Inaonyesha mawasiliano ya msaada yaliyowekwa na $appName.';
+  }
 }

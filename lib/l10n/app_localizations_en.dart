@@ -6962,4 +6962,47 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get faq_serviceA => 'Open Services and press Record Visit.';
+
+  @override
+  String get faq_printQ => 'How do I print a receipt?';
+
+  @override
+  String get faq_printA =>
+      'In the phone app, Print Receipt sends it to a Bluetooth thermal printer, set up in Settings under Printer & Receipt Settings. In a browser the thermal printer does not work: choose A4 Format to print the receipt or save it as a PDF.';
+
+  @override
+  String get faq_deletedQ => 'I deleted something by mistake. What now?';
+
+  @override
+  String get faq_deletedA =>
+      'After deleting a product, a client or a transaction, press Undo in the message that shows for a few seconds. Deleted products, clients, services, sales and transactions go to Trash (Settings, admins only), where an admin can restore them for 30 days; after that they are deleted for good.';
+
+  @override
+  String get faq_passwordQ => 'I forgot my password.';
+
+  @override
+  String get faq_passwordA =>
+      'On the sign-in page type your email and press Forgot Password?. If an account exists for that email, a reset link is sent; check your spam folder too.';
+
+  @override
+  String get faq_languageQ => 'How do I change the language?';
+
+  @override
+  String get faq_languageA =>
+      'Open Settings and choose Language / Lugha: English or Kiswahili.';
+
+  @override
+  String get faq_themeQ => 'How do I change the colours or use Dark Mode?';
+
+  @override
+  String get faq_themeA =>
+      'Open Settings, then UI Settings. Choose a colour theme (Pasture, Clinic, Harvest or Ledger) and Dark Mode (System, Light or Dark). The choice is saved on this device.';
+
+  @override
+  String get faq_supportQ => 'How do I contact support?';
+
+  @override
+  String faq_supportA(String appName) {
+    return 'Press Help and contact at the bottom of the sign-in page, or Help on the dashboard. It shows the support contact details set by $appName.';
+  }
 }

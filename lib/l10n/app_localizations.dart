@@ -11813,6 +11813,78 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Open Services and press Record Visit.'**
   String get faq_serviceA;
+
+  /// FAQs: question.
+  ///
+  /// In en, this message translates to:
+  /// **'How do I print a receipt?'**
+  String get faq_printQ;
+
+  /// FAQs: answer. Thermal printing needs the phone app (Bluetooth); the browser prints the A4 receipt.
+  ///
+  /// In en, this message translates to:
+  /// **'In the phone app, Print Receipt sends it to a Bluetooth thermal printer, set up in Settings under Printer & Receipt Settings. In a browser the thermal printer does not work: choose A4 Format to print the receipt or save it as a PDF.'**
+  String get faq_printA;
+
+  /// FAQs: question.
+  ///
+  /// In en, this message translates to:
+  /// **'I deleted something by mistake. What now?'**
+  String get faq_deletedQ;
+
+  /// FAQs: answer. 30 days is the Trash retention (AppRules.trashRetentionDays).
+  ///
+  /// In en, this message translates to:
+  /// **'After deleting a product, a client or a transaction, press Undo in the message that shows for a few seconds. Deleted products, clients, services, sales and transactions go to Trash (Settings, admins only), where an admin can restore them for 30 days; after that they are deleted for good.'**
+  String get faq_deletedA;
+
+  /// FAQs: question.
+  ///
+  /// In en, this message translates to:
+  /// **'I forgot my password.'**
+  String get faq_passwordQ;
+
+  /// FAQs: answer. Forgot Password? is the login link's own label.
+  ///
+  /// In en, this message translates to:
+  /// **'On the sign-in page type your email and press Forgot Password?. If an account exists for that email, a reset link is sent; check your spam folder too.'**
+  String get faq_passwordA;
+
+  /// FAQs: question.
+  ///
+  /// In en, this message translates to:
+  /// **'How do I change the language?'**
+  String get faq_languageQ;
+
+  /// FAQs: answer. Language / Lugha is the Settings item's own label.
+  ///
+  /// In en, this message translates to:
+  /// **'Open Settings and choose Language / Lugha: English or Kiswahili.'**
+  String get faq_languageA;
+
+  /// FAQs: question.
+  ///
+  /// In en, this message translates to:
+  /// **'How do I change the colours or use Dark Mode?'**
+  String get faq_themeQ;
+
+  /// FAQs: answer. Theme and mode names as UI Settings shows them.
+  ///
+  /// In en, this message translates to:
+  /// **'Open Settings, then UI Settings. Choose a colour theme (Pasture, Clinic, Harvest or Ledger) and Dark Mode (System, Light or Dark). The choice is saved on this device.'**
+  String get faq_themeA;
+
+  /// FAQs: question.
+  ///
+  /// In en, this message translates to:
+  /// **'How do I contact support?'**
+  String get faq_supportQ;
+
+  /// FAQs: answer.
+  ///
+  /// In en, this message translates to:
+  /// **'Press Help and contact at the bottom of the sign-in page, or Help on the dashboard. It shows the support contact details set by {appName}.'**
+  String faq_supportA(String appName);
 }
 
 class _AppLocalizationsDelegate
