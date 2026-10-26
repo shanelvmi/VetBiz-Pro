@@ -171,7 +171,7 @@ void main() {
       for (final text in [
         _en.about_intro(AppInfo.name), _en.about_whoFor, _en.about_coversTitle, _en.about_coverSales, _en.about_coverStock,
         _en.about_coverServices, _en.about_coverClients, _en.about_coverPayments, _en.about_coverReports, _en.about_coverTeam,
-        _en.about_whoBuilds(AppInfo.name), _en.about_yourData, _en.about_questions,
+        _en.about_yourData, _en.about_questions,
       ]) {
         expect(find.text(text), findsOneWidget, reason: text);
       }
@@ -188,7 +188,7 @@ void main() {
         _en.howToUse_ownerTitle, _en.howToUse_owner1, _en.howToUse_owner2, _en.howToUse_owner3, _en.howToUse_owner4, _en.howToUse_owner5,
         _en.howToUse_owner6, _en.howToUse_owner7, _en.howToUse_owner8, _en.howToUse_owner9, _en.howToUse_owner10,
         _en.howToUse_assistantTitle, _en.howToUse_assistant1, _en.howToUse_assistant2, _en.howToUse_assistant3,
-        _en.howToUse_assistant4, _en.howToUse_assistant5, _en.howToUse_assistant6,
+        _en.howToUse_assistant4(_en.entry_notActiveYet), _en.howToUse_assistant5, _en.howToUse_assistant6,
       ];
       var lastY = -1.0;
       for (final text in texts) {
@@ -256,7 +256,7 @@ void main() {
         .where((e) => !e.key.startsWith('@') && RegExp(r'^(about_|howToUse_|faq_|authFooter_(platform|about|howToUse|faq)$)').hasMatch(e.key))
         .map((e) => '${e.key}: ${e.value}')
         .toList();
-    expect(texts.length, 4 + 13 + 18 + 24);
+    expect(texts.length, 4 + 12 + 18 + 24); // G4b: about_whoBuilds removed
     final banned = RegExp(
         r'\b(seamless\w*|powerful|unlock\w*|empower\w*|streamlin\w*|robust|smart\w*|intelligen\w*|all-in-one|insights?|journey|effortless\w*|'
         r'cutting-edge|revolution\w*|game-chang\w*|best-in-class|world-class|leverag\w*|synerg\w*|secur\w*|safe\w*|protect\w*|guarantee\w*|'

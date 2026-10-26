@@ -32,7 +32,7 @@ class HowToUseScreen extends StatelessWidget {
       l10n.howToUse_assistant1,
       l10n.howToUse_assistant2,
       l10n.howToUse_assistant3,
-      l10n.howToUse_assistant4,
+      l10n.howToUse_assistant4(l10n.entry_notActiveYet),
       l10n.howToUse_assistant5,
       l10n.howToUse_assistant6,
     ];

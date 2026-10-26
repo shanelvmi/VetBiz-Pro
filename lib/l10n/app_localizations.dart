@@ -11616,12 +11616,6 @@ abstract class AppLocalizations {
   /// **'Your team: assistants join with an invite code and you approve them.'**
   String get about_coverTeam;
 
-  /// About page: who makes the app.
-  ///
-  /// In en, this message translates to:
-  /// **'{appName} is built and run by {appName}, the \"we\" of the Terms of Service and the Privacy Policy.'**
-  String about_whoBuilds(String appName);
-
   /// About page: from section 5 of the Terms of Service.
   ///
   /// In en, this message translates to:
@@ -11724,11 +11718,11 @@ abstract class AppLocalizations {
   /// **'Fill in your details and press Create account. Your account then waits for the admin\'s approval.'**
   String get howToUse_assistant3;
 
-  /// How to use it: assistant step. The quote is the start of the app's own sign-in message.
+  /// How to use it: assistant step. The quote is the app's own sign-in message (entry_notActiveYet), passed in.
   ///
   /// In en, this message translates to:
-  /// **'Until then, signing in shows \"Your account is not active yet.\"'**
-  String get howToUse_assistant4;
+  /// **'Until then, signing in shows \"{message}\"'**
+  String howToUse_assistant4(String message);
 
   /// How to use it: assistant step.
   ///
@@ -11739,7 +11733,7 @@ abstract class AppLocalizations {
   /// How to use it: assistant step.
   ///
   /// In en, this message translates to:
-  /// **'Only an admin can delete sales, services and products, or open Team Members, Subscription, Trash, Export Data and Business Hours.'**
+  /// **'Only an admin can add or delete products, delete sales, services and transactions, edit a recorded service or transaction, or open Team Members, Subscription, Trash, Export Data and Business Hours.'**
   String get howToUse_assistant6;
 
   /// FAQs: question.
@@ -11787,7 +11781,7 @@ abstract class AppLocalizations {
   /// FAQs: answer.
   ///
   /// In en, this message translates to:
-  /// **'An assistant uses the screens in the sidebar for their facility. Only an admin can delete sales, services and products, or open Team Members, Subscription, Trash, Export Data and Business Hours.'**
+  /// **'An assistant uses the screens in the sidebar for their facility. Only an admin can add or delete products, delete sales, services and transactions, edit a recorded service or transaction, or open Team Members, Subscription, Trash, Export Data and Business Hours.'**
   String get faq_assistantA;
 
   /// FAQs: question.
@@ -11835,7 +11829,7 @@ abstract class AppLocalizations {
   /// FAQs: answer. 30 days is the Trash retention (AppRules.trashRetentionDays).
   ///
   /// In en, this message translates to:
-  /// **'After deleting a product, a client or a transaction, press Undo in the message that shows for a few seconds. Deleted products, clients, services, sales and transactions go to Trash (Settings, admins only), where an admin can restore them for 30 days; after that they are deleted for good.'**
+  /// **'After deleting a sale, a service, a product, a client or a transaction, press Undo in the message that shows for a few seconds. Deleted items also go to Trash (Settings, admins only), where an admin can restore them for 30 days; after that they are deleted for good.'**
   String get faq_deletedA;
 
   /// FAQs: question.

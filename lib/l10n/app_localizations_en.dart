@@ -6841,11 +6841,6 @@ class AppLocalizationsEn extends AppLocalizations {
       'Your team: assistants join with an invite code and you approve them.';
 
   @override
-  String about_whoBuilds(String appName) {
-    return '$appName is built and run by $appName, the \"we\" of the Terms of Service and the Privacy Policy.';
-  }
-
-  @override
   String get about_yourData =>
       'The records your team enters belong to your facility, as the Terms of Service say.';
 
@@ -6911,8 +6906,9 @@ class AppLocalizationsEn extends AppLocalizations {
       'Fill in your details and press Create account. Your account then waits for the admin\'s approval.';
 
   @override
-  String get howToUse_assistant4 =>
-      'Until then, signing in shows \"Your account is not active yet.\"';
+  String howToUse_assistant4(String message) {
+    return 'Until then, signing in shows \"$message\"';
+  }
 
   @override
   String get howToUse_assistant5 =>
@@ -6920,7 +6916,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get howToUse_assistant6 =>
-      'Only an admin can delete sales, services and products, or open Team Members, Subscription, Trash, Export Data and Business Hours.';
+      'Only an admin can add or delete products, delete sales, services and transactions, edit a recorded service or transaction, or open Team Members, Subscription, Trash, Export Data and Business Hours.';
 
   @override
   String get faq_startQ => 'How do I start?';
@@ -6948,7 +6944,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get faq_assistantA =>
-      'An assistant uses the screens in the sidebar for their facility. Only an admin can delete sales, services and products, or open Team Members, Subscription, Trash, Export Data and Business Hours.';
+      'An assistant uses the screens in the sidebar for their facility. Only an admin can add or delete products, delete sales, services and transactions, edit a recorded service or transaction, or open Team Members, Subscription, Trash, Export Data and Business Hours.';
 
   @override
   String get faq_saleQ => 'How do I record a sale?';
@@ -6975,7 +6971,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get faq_deletedA =>
-      'After deleting a product, a client or a transaction, press Undo in the message that shows for a few seconds. Deleted products, clients, services, sales and transactions go to Trash (Settings, admins only), where an admin can restore them for 30 days; after that they are deleted for good.';
+      'After deleting a sale, a service, a product, a client or a transaction, press Undo in the message that shows for a few seconds. Deleted items also go to Trash (Settings, admins only), where an admin can restore them for 30 days; after that they are deleted for good.';
 
   @override
   String get faq_passwordQ => 'I forgot my password.';

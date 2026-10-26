@@ -6882,11 +6882,6 @@ class AppLocalizationsSw extends AppLocalizations {
       'Wafanyakazi wako: wasaidizi hujiunga kwa msimbo wa mwaliko na wewe unawaidhinisha.';
 
   @override
-  String about_whoBuilds(String appName) {
-    return '$appName imetengenezwa na inaendeshwa na $appName, yaani \"sisi\" katika Masharti ya Huduma na Sera ya Faragha.';
-  }
-
-  @override
   String get about_yourData =>
       'Kumbukumbu ambazo timu yako inaingiza ni mali ya kituo chako, kama Masharti ya Huduma yanavyosema.';
 
@@ -6953,8 +6948,9 @@ class AppLocalizationsSw extends AppLocalizations {
       'Jaza taarifa zako na bonyeza Fungua akaunti. Kisha akaunti yako inasubiri idhini ya msimamizi.';
 
   @override
-  String get howToUse_assistant4 =>
-      'Hadi hapo, ukiingia utaona \"Akaunti yako bado haijawashwa.\"';
+  String howToUse_assistant4(String message) {
+    return 'Hadi hapo, ukiingia utaona \"$message\"';
+  }
 
   @override
   String get howToUse_assistant5 =>
@@ -6962,7 +6958,7 @@ class AppLocalizationsSw extends AppLocalizations {
 
   @override
   String get howToUse_assistant6 =>
-      'Msimamizi pekee ndiye anaweza kufuta mauzo, huduma na bidhaa, au kufungua Wafanyakazi, Usajili, Takataka, Hamisha Data na Saa za Biashara.';
+      'Msimamizi pekee ndiye anaweza kuongeza au kufuta bidhaa, kufuta mauzo, huduma na miamala, kuhariri huduma au muamala uliorekodiwa, au kufungua Wafanyakazi, Usajili, Takataka, Hamisha Data na Saa za Biashara.';
 
   @override
   String get faq_startQ => 'Ninaanzaje?';
@@ -6990,7 +6986,7 @@ class AppLocalizationsSw extends AppLocalizations {
 
   @override
   String get faq_assistantA =>
-      'Msaidizi anatumia skrini zilizo kwenye menyu ya pembeni kwa kituo chake. Msimamizi pekee ndiye anaweza kufuta mauzo, huduma na bidhaa, au kufungua Wafanyakazi, Usajili, Takataka, Hamisha Data na Saa za Biashara.';
+      'Msaidizi anatumia skrini zilizo kwenye menyu ya pembeni kwa kituo chake. Msimamizi pekee ndiye anaweza kuongeza au kufuta bidhaa, kufuta mauzo, huduma na miamala, kuhariri huduma au muamala uliorekodiwa, au kufungua Wafanyakazi, Usajili, Takataka, Hamisha Data na Saa za Biashara.';
 
   @override
   String get faq_saleQ => 'Ninarekodije mauzo?';
@@ -7017,7 +7013,7 @@ class AppLocalizationsSw extends AppLocalizations {
 
   @override
   String get faq_deletedA =>
-      'Baada ya kufuta bidhaa, mteja au muamala, bonyeza Tendua kwenye ujumbe unaoonekana kwa sekunde chache. Bidhaa, wateja, huduma, mauzo na miamala iliyofutwa huenda kwenye Takataka (Mipangilio, kwa wasimamizi pekee), ambapo msimamizi anaweza kuirejesha ndani ya siku 30; baada ya hapo inafutwa kabisa.';
+      'Baada ya kufuta mauzo, huduma, bidhaa, mteja au muamala, bonyeza Tendua kwenye ujumbe unaoonekana kwa sekunde chache. Vitu vilivyofutwa pia huenda kwenye Takataka (Mipangilio, kwa wasimamizi pekee), ambapo msimamizi anaweza kuvirejesha ndani ya siku 30; baada ya hapo vinafutwa kabisa.';
 
   @override
   String get faq_passwordQ => 'Nimesahau nenosiri langu.';

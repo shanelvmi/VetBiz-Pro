@@ -39,7 +39,6 @@ class AboutScreen extends StatelessWidget {
         ])
           _Bullet(area),
         const SizedBox(height: InfoPageMetrics.sectionGap),
-        InfoParagraph(l10n.about_whoBuilds(AppInfo.name)),
         InfoParagraph(l10n.about_yourData),
         Wrap(
           crossAxisAlignment: WrapCrossAlignment.center,
