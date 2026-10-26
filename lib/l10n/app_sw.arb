@@ -3929,5 +3929,9 @@
   "updates_next": "Taarifa inayofuata",
   "@updates_next": {"x-review":"draft"},
   "updates_slideOf": "Taarifa {index} kati ya {count}",
-  "@updates_slideOf": {"x-review":"draft"}
+  "@updates_slideOf": {"x-review":"draft"},
+  "updates_welcomeTitle": "Karibu {appName}",
+  "@updates_welcomeTitle": {"x-review":"draft"},
+  "updates_welcomeLine": "Mauzo, bidhaa, wateja na madeni kwa agrovet na kliniki za mifugo.",
+  "@updates_welcomeLine": {"x-review":"draft"}
 }
