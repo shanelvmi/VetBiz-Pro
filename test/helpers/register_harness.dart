@@ -198,3 +198,15 @@ Future<void> tickConsent(WidgetTester tester) async {
   await tester.tap(find.byType(Checkbox));
   await tester.pumpAndSettle();
 }
+
+/// RW2b2: step 3's facility type is a dropdown (key register-facility-type):
+/// open it and pick the option shown as [label].
+Future<void> chooseFacilityType(WidgetTester tester, String label) async {
+  final field = registerField('facility-type');
+  await tester.ensureVisible(field);
+  await tester.pumpAndSettle();
+  await tester.tap(field);
+  await tester.pumpAndSettle();
+  await tester.tap(find.text(label).last);
+  await tester.pumpAndSettle();
+}
