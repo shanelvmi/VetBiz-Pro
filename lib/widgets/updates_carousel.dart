@@ -9,16 +9,14 @@ import '../config/app_timeouts.dart';
 import '../config/app_limits.dart';
 import '../data/announcement_fields.dart';
 import '../data/collections.dart';
-import '../l10n/l10n.dart';
 import '../services/announcement_service.dart';
 import '../theme/app_breakpoints.dart';
 import '../theme/app_dimens.dart';
 import '../theme/app_motion.dart';
-import '../ui/feedback/app_feedback.dart';
 import '../utils/merged_query_stream.dart';
-import '../utils/social_link.dart';
 import '../utils/updates_selection.dart';
 import 'auth_footer.dart';
+import 'announcement_poster.dart';
 import 'update_slide.dart';
 import 'updates_parts.dart';
 
@@ -189,29 +187,15 @@ class _UpdatesSlidesState extends State<UpdatesSlides> {
     _syncTimer();
   }
 
-  Future<void> _open(String address) async {
-    final uri = Uri.parse(address);
-    // Checked again here: only http and https ever leave the app.
-    if (!SocialLink.isLaunchable(uri)) return;
-    final opened = await widget.launcher(uri, mode: LaunchMode.externalApplication);
-    if (!opened) AppFeedback.info(L10n.current.common_linkFailed);
-  }
-
-  /// The address to open, or null when the slide has none that is safe.
-  static String? _linkOf(Announcement a) {
-    final address = SocialLink.sanitize(a.linkUrl);
-    return address == null || address.isEmpty || a.linkLabel.trim().isEmpty ? null : address;
-  }
-
   @override
   Widget build(BuildContext context) {
     final current = _current;
     final isNew = UpdatesSelection.isNew(current, (widget.now ?? DateTime.now)());
     final isPoster = current.kind == AnnouncementKind.poster;
-    final link = _linkOf(current);
+    final link = AnnouncementLinkButton.addressOf(current);
     // The link's line is kept for every slide once any has a link, so the
     // area does not jump as they change.
-    final anyLink = _slides.any((a) => _linkOf(a) != null);
+    final anyLink = _slides.any((a) => AnnouncementLinkButton.addressOf(a) != null);
     final several = _slides.length > 1;
     final wide = MediaQuery.sizeOf(context).width > AppBreakpoints.twoPane;
 
@@ -274,11 +258,10 @@ class _UpdatesSlidesState extends State<UpdatesSlides> {
                             ? null
                             : Align(
                               alignment: AlignmentDirectional.centerStart,
-                              child: TextButton.icon(
+                              child: AnnouncementLinkButton(
                                 key: UpdatesSlides.linkKey,
-                                onPressed: () => _open(link),
-                                icon: const Icon(Icons.open_in_new, size: AppIconSize.i16),
-                                label: Text(current.linkLabel.trim(), maxLines: 1, overflow: TextOverflow.ellipsis),
+                                announcement: current,
+                                launcher: widget.launcher,
                               ),
                             ),
                   ),

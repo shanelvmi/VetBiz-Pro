@@ -132,6 +132,9 @@ class AppSizes {
   /// Icons.circle size.
   static const double statusDot = 8;
 
+  /// A poster announcement's 16:9 thumbnail in a notification row (AN3).
+  static const double posterThumbnail = 64;
+
   /// The dashboard sidebar (dashboard_screen.dart, the sidebar `width:`).
   static const double sidebarExpanded = 250;
   static const double sidebarCollapsed = 72;
