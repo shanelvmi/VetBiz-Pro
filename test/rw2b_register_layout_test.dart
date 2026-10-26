@@ -84,7 +84,7 @@ void main() {
       }
       if (step == 3) {
         await typeInto(tester, 'facility-name', 'Mwanga');
-        await tapText(tester, en.facilityTypeLabel('Agrovet'));
+        await chooseFacilityType(tester, en.facilityTypeLabel('Agrovet'));
         await tapText(tester, en.common_add);
         await tapContinue(tester);
       }
@@ -146,7 +146,7 @@ Future<void> fillOwnerStepsFrom2(WidgetTester tester) async {
   await typeInto(tester, 'phone', '0712 345 678');
   await tapContinue(tester);
   await typeInto(tester, 'facility-name', 'Mwanga');
-  await tapText(tester, en.facilityTypeLabel('Agrovet'));
+  await chooseFacilityType(tester, en.facilityTypeLabel('Agrovet'));
   await tapText(tester, en.common_add);
   await tapContinue(tester);
   await typeInto(tester, 'email', 'a@example.com');

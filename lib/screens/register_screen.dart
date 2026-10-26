@@ -11,6 +11,8 @@ import '../utils/facility_activation.dart';
 import '../services/facility_codes.dart';
 import '../utils/facility_code_generator.dart';
 import '../constants/facility_types.dart';
+import '../constants/person_titles.dart';
+import '../widgets/facility_type_field.dart';
 import '../utils/facility_limit_helper.dart';
 import 'facilities/facility_picker_screen.dart';
 import 'legal/privacy_policy_screen.dart';
@@ -158,6 +160,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
           _foundFacility = {
             'name': check.facilityName,
             'type': check.facilityType,
+            'typeDetail': check.facilityTypeDetail,
             'code': code,
           };
           _facilityLookupError = null;
@@ -178,10 +181,13 @@ class _RegisterScreenState extends State<RegisterScreen> {
   }
   final TextEditingController facilityNameController = TextEditingController();
   String? _selectedFacilityType;
+  // RW2b2: an Other facility's own words (typeDetail), typed under the type.
+  final TextEditingController facilityTypeDetailController = TextEditingController();
+  final FocusNode _facilityTypeDetailFocus = FocusNode();
 
   // Dropdowns
-  final List<String> prefixes = ['Mr.', 'Mrs.', 'Ms.', 'Dr.'];
-  String selectedPrefix = 'Mr.';
+  final List<String> prefixes = kPersonTitles;
+  String selectedPrefix = kDefaultPersonTitle;
   String selectedRole = 'Admin';
 
   // UI
@@ -281,7 +287,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
     _confirm.clearAndHide();
     _password.dispose();
     _confirm.dispose();
-    for (final node in [_nameFocus, _phoneFocus, _facilityNameFocus, _emailFocus]) {
+    for (final node in [_nameFocus, _phoneFocus, _facilityNameFocus, _facilityTypeDetailFocus, _emailFocus]) {
       node.dispose();
     }
     super.dispose();
@@ -315,15 +321,11 @@ class _RegisterScreenState extends State<RegisterScreen> {
     final data = widget.userData;
 
     if (widget.isUpdating && data != null) {
-      // Name & Prefix
-      final fullName = data['fullName'] ?? '';
-      for (var p in prefixes) {
-        if (fullName.startsWith(p)) {
-          selectedPrefix = p;
-          nameController.text = fullName.substring(p.length).trim();
-          break;
-        }
-      }
+      // Name & Prefix (a name saved without a title keeps the default
+      // title and shows the whole name, rather than an empty field)
+      final split = splitPersonTitle('${data['fullName'] ?? ''}');
+      selectedPrefix = split.title ?? selectedPrefix;
+      nameController.text = split.name;
 
       // Email & Phone
       emailController.text = data['email'] ?? '';
@@ -427,12 +429,27 @@ class _RegisterScreenState extends State<RegisterScreen> {
     final name = facilityNameController.text.trim();
     final type = _selectedFacilityType;
     if (_isAddingFacility) return;
-    // Say what's missing rather than doing nothing - pressing Add with the
-    // name or type left empty used to be a silent no-op.
-    if (name.isEmpty || type == null) {
-      AppFeedback.warning(name.isEmpty ? L10n.current.register_enterFacilityNameFirst : L10n.current.register_chooseFacilityTypeFirst);
-      return;
+    // RW2b2: the type and an Other facility's words say what is wrong under
+    // their own fields (as Continue does).
+    final typeError = FacilityTypeField.typeErrorFor(type, L10n.current);
+    final detailError = FacilityTypeField.detailErrorFor(type, facilityTypeDetailController.text, L10n.current);
+    if (typeError != null || detailError != null) {
+      setState(() {
+        // From now on a change re-checks them, so a fixed one clears.
+        _submitAttempted = true;
+        _checkedFields.addAll(const ['facilityType', 'typeDetail']);
+        _fieldErrors = {
+          ..._fieldErrors,
+          if (typeError != null) 'facilityType': typeError,
+          if (detailError != null) 'typeDetail': detailError,
+        };
+      });
+      if (detailError != null) _facilityTypeDetailFocus.requestFocus();
     }
+    // Say what's missing rather than doing nothing - pressing Add with the
+    // name left empty used to be a silent no-op.
+    if (name.isEmpty) AppFeedback.warning(L10n.current.register_enterFacilityNameFirst);
+    if (name.isEmpty || typeError != null || detailError != null) return;
 
     if (facilities.length >= _maxFacilities) {
       AppFeedback.warning(L10n.current.register_facilityLimit(_maxFacilities));
@@ -444,8 +461,15 @@ class _RegisterScreenState extends State<RegisterScreen> {
       final code = await generateUniqueFacilityCode();
       if (!mounted) return;
       setState(() {
-        facilities.add({'name': name, 'type': type, 'code': code, Fields.facilityId: ''});
+        facilities.add({
+          'name': name,
+          'type': type,
+          if (type == kFacilityTypeOther) 'typeDetail': facilityTypeDetailController.text.trim(),
+          'code': code,
+          Fields.facilityId: '',
+        });
         facilityNameController.clear();
+        facilityTypeDetailController.clear();
         _selectedFacilityType = null;
       });
     } catch (e, st) {
@@ -580,6 +604,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
               Fields.facilityId: selected[Fields.facilityId],
               'facilityName': selected['name'],
               'facilityType': selected['type'],
+              'facilityTypeDetail': selected['typeDetail'],
             },
             role: UserRole.admin.key,
           );
@@ -588,7 +613,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
             return {
               Fields.facilityId: f[Fields.facilityId],
               'facilityName': f['name'],
-              'facilityType': f['type']
+              'facilityType': f['type'],
+              'facilityTypeDetail': f['typeDetail'],
             };
           }).toList();
           Navigator.pushReplacement(
@@ -960,18 +986,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
               style: TextStyle(color: context.colors.onBrandSurface, fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f16),
             ),
           ),
+          // RW2b2 (owner): no Sign in here. The welcome panel has it on a
+          // wide window, and step 1 has it when the panel is hidden.
           const AuthThemeToggle(),
-          const SizedBox(width: AppSpacing.s8),
-          TextButton.icon(
-            onPressed: _goToLogin,
-            icon: Icon(Icons.login, size: AppIconSize.i18, color: context.colors.onBrandSurface),
-            label: Text(context.l10n.common_logIn, style: TextStyle(color: context.colors.onBrandSurface, fontWeight: AppFontWeight.semibold)),
-            style: TextButton.styleFrom(
-              backgroundColor: context.colors.onBrandSurface.withValues(alpha: AppAlpha.a15),
-              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.s14, vertical: AppSpacing.s10),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadius.r20)),
-            ),
-          ),
         ],
       ),
     );
@@ -1293,7 +1310,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
   // as a backstop, but it can only report one problem at a time, in the toast.
 
   final Map<String, GlobalKey> _fieldKeys = {
-    for (final k in ['name', 'email', 'phone', 'invite', 'facility', 'password', 'confirm']) k: GlobalKey(),
+    for (final k in ['name', 'email', 'phone', 'invite', 'facility', 'facilityType', 'typeDetail', 'password', 'confirm']) k: GlobalKey(),
   };
   Map<String, String> _fieldErrors = {};
   bool _submitAttempted = false;
@@ -1303,13 +1320,17 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
   // Top-to-bottom reading order: the toast lists them in this order and the
   // screen scrolls to the first one.
-  static const List<String> _fieldOrder = ['name', 'email', 'phone', 'invite', 'facility', 'password', 'confirm'];
+  static const List<String> _fieldOrder = [
+    'name', 'email', 'phone', 'invite', 'facility', 'facilityType', 'typeDetail', 'password', 'confirm',
+  ];
   static String _fieldName(String field) => switch (field) {
         'name' => L10n.current.register_fieldFullName,
         'email' => L10n.current.common_email,
         'phone' => L10n.current.register_fieldPhone,
         'invite' => L10n.current.common_inviteCode,
         'facility' => L10n.current.common_facility,
+        'facilityType' => L10n.current.common_type,
+        'typeDetail' => L10n.current.facilityType_detailLabel,
         'password' => L10n.current.common_password,
         'confirm' => L10n.current.register_fieldConfirmPassword,
         _ => field,
@@ -1365,6 +1386,12 @@ class _RegisterScreenState extends State<RegisterScreen> {
           } else {
             errors['facility'] = L10n.current.register_addOneFacilityHow;
           }
+          // RW2b2: and the type itself, under its dropdown, until one is
+          // chosen; with Other, its words.
+          final typeError = FacilityTypeField.typeErrorFor(_selectedFacilityType, L10n.current);
+          if (typeError != null) errors['facilityType'] = typeError;
+          final detailError = FacilityTypeField.detailErrorFor(_selectedFacilityType, facilityTypeDetailController.text, L10n.current);
+          if (detailError != null) errors['typeDetail'] = detailError;
         }
       } else {
         final code = assistantFacilityCodeController.text.trim();
@@ -1874,7 +1901,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
             Expanded(
               child: Text(
                 facilities.isNotEmpty
-                    ? '${facilities.first['name'] ?? ''} (${context.l10n.facilityTypeLabel(facilities.first['type'] ?? '')})'
+                    ? '${facilities.first['name'] ?? ''} (${context.l10n.facilityTypeDisplay(facilities.first['type'], facilities.first['typeDetail'])})'
                     : context.l10n.team_unknownFacility,
                 style: TextStyle(color: context.colors.textSoft, fontWeight: AppFontWeight.semibold, fontSize: AppFontSize.f13_5),
               ),
@@ -1935,7 +1962,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
               Expanded(
                 child: Text(
                   context.l10n.register_joining(
-                      '${_foundFacility!['name']} (${context.l10n.facilityTypeLabel('${_foundFacility!['type']}')})'),
+                      '${_foundFacility!['name']} (${context.l10n.facilityTypeDisplay('${_foundFacility!['type']}', _foundFacility!['typeDetail'])})'),
                   style: TextStyle(color: context.colors.success, fontWeight: AppFontWeight.semibold, fontSize: AppFontSize.f13),
                 ),
               ),
@@ -1985,7 +2012,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 ),
                 const SizedBox(height: AppSpacing.s3),
                 Text(
-                  context.l10n.register_facilityTypeAndCode(context.l10n.facilityTypeLabel(f['type'] ?? ''), _codeOf(f)),
+                  context.l10n.register_facilityTypeAndCode(context.l10n.facilityTypeDisplay(f['type'], f['typeDetail']), _codeOf(f)),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: TextStyle(fontSize: AppFontSize.f12, color: context.colors.textMuted),
@@ -2080,29 +2107,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
         Row(
           crossAxisAlignment: CrossAxisAlignment.end,
           children: [
-            Expanded(
-              child: _labeled(
-                context.l10n.common_type,
-                DropdownButtonFormField<String>(
-                  // initialValue only applies when the field is first built,
-                  // so after adding a facility (which resets
-                  // _selectedFacilityType) this kept SHOWING the old type
-                  // while the code thought nothing was chosen, and the next
-                  // Add silently did nothing. A key that changes with the
-                  // list rebuilds it fresh after every add or remove.
-                  key: ValueKey('facility-type-${facilities.length}'),
-                  initialValue: _selectedFacilityType,
-                  isExpanded: true,
-                  decoration: _decoration(hint: context.l10n.register_selectType),
-                  items: kFacilityTypes.map((t) => DropdownMenuItem(value: t, child: Text(context.l10n.facilityTypeLabel(t)))).toList(),
-                  onChanged: (value) {
-                    setState(() => _selectedFacilityType = value);
-                    _onFieldChanged();
-                  },
-                ),
-                required: needsFirst,
-              ),
-            ),
+            // The shared type field (RW2b2), which rebuilds itself when the
+            // type is reset after an add.
+            Expanded(child: _facilityTypeField(gap: AppSpacing.s12)),
             const SizedBox(width: AppSpacing.s10),
             Tooltip(
               message: atLimit ? context.l10n.register_maxFacilitiesReached(_maxFacilities) : '',
@@ -2159,17 +2166,11 @@ class _RegisterScreenState extends State<RegisterScreen> {
       enableSuggestions: false,
       textInputAction: action,
       onChanged: (_) => _onFieldChanged(),
+      // RW2b2 (owner): no eye on the register passwords; both stay hidden
+      // (the line under this one says the minimum). Sign in keeps its eye.
       decoration: _decoration(
         hint: context.l10n.register_createPassword,
         icon: Icons.lock_outline,
-        suffix: IconButton(
-          icon: Icon(
-            _password.obscured ? Icons.visibility_outlined : Icons.visibility_off_outlined,
-            size: AppIconSize.i20,
-            color: context.colors.textHint,
-          ),
-          onPressed: _password.toggle,
-        ),
         helper: password.isEmpty
             ? context.l10n.register_passwordRule
             : (_passwordIssue(password) ?? context.l10n.register_looksGood),
@@ -2197,25 +2198,14 @@ class _RegisterScreenState extends State<RegisterScreen> {
       decoration: _decoration(
         hint: context.l10n.register_reenterPassword,
         icon: Icons.lock_outline,
-        suffix: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            if (confirm.isNotEmpty)
-              Icon(
+        // The match tick only: no eye (RW2b2).
+        suffix: confirm.isEmpty
+            ? null
+            : Icon(
                 matches ? Icons.check_circle : Icons.error_outline,
                 size: AppIconSize.i20,
                 color: matches ? context.colors.success : context.colors.dangerAccent,
               ),
-            IconButton(
-              icon: Icon(
-                _confirm.obscured ? Icons.visibility_outlined : Icons.visibility_off_outlined,
-                size: AppIconSize.i20,
-                color: context.colors.textHint,
-              ),
-              onPressed: _confirm.toggle,
-            ),
-          ],
-        ),
         helper: confirm.isEmpty ? null : (matches ? context.l10n.register_passwordsMatch : context.l10n.common_passwordsDoNotMatch),
         helperColor: matches ? context.colors.success : context.colors.dangerAccent,
         errorText: _fieldErrors['confirm'],

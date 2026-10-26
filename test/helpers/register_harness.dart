@@ -183,7 +183,7 @@ Future<void> fillOwnerSteps(WidgetTester tester, {AppLocalizations? l10n, String
   await typeInto(tester, 'phone', OwnerInputs.phone);
   await tapContinue(tester, t);
   await typeInto(tester, 'facility-name', facilityName);
-  await tapText(tester, t.facilityTypeLabel(OwnerInputs.facilityType));
+  await chooseFacilityType(tester, t.facilityTypeLabel(OwnerInputs.facilityType));
   await tapText(tester, t.common_add);
   await tapContinue(tester, t);
   await typeInto(tester, 'email', OwnerInputs.email);

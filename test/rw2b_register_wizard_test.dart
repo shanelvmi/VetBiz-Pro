@@ -75,7 +75,7 @@ void main() {
     expect(find.text(en.register_addOneFacilityHow), findsOneWidget);
 
     await typeInto(tester, 'facility-name', 'Mwanga');
-    await tapText(tester, en.facilityTypeLabel('Agrovet'));
+    await chooseFacilityType(tester, en.facilityTypeLabel('Agrovet'));
     await tapText(tester, en.common_add);
     await tapContinue(tester);
     // Step 4 opens clean: nothing was flagged for fields not reached yet.
@@ -112,14 +112,10 @@ void main() {
     expect(textOf(tester, 'email'), OwnerInputs.email);
     expect(textOf(tester, 'password'), OwnerInputs.password);
     expect(textOf(tester, 'confirm'), OwnerInputs.password);
-    // Open both eyes on step 4, then go to step 2 and come back.
-    for (final field in ['password', 'confirm']) {
-      final eye = find.descendant(of: registerField(field), matching: find.byIcon(Icons.visibility_outlined));
-      await tester.ensureVisible(eye);
-      await tester.tap(eye);
-      await tester.pump();
-      expect(obscured(tester, field), isFalse);
-    }
+    // RW2b2: no eye to open any more; both stay hidden. Go to step 2 and
+    // come back.
+    expect(obscured(tester, 'password'), isTrue);
+    expect(obscured(tester, 'confirm'), isTrue);
     await tapBack(tester);
     expect(find.text(OwnerInputs.facilityName), findsOneWidget);
     await tapBack(tester);
@@ -165,15 +161,16 @@ void main() {
     expect(confirm.text, isEmpty);
   }, skip: _skipFix);
 
-  testWidgets('step 2 has the title as chips; step 3 the types as option cards', (tester) async {
+  // RW2b2 (owner): six titles, and the type as a dropdown again.
+  testWidgets('step 2 has the title as chips; step 3 the type as a dropdown', (tester) async {
     await pumpRegister(tester);
     await tapContinue(tester);
-    expect(find.byType(ChoiceChip), findsNWidgets(4));
+    expect(find.byType(ChoiceChip), findsNWidgets(6));
     await typeInto(tester, 'name', 'Amina');
     await typeInto(tester, 'phone', '0712 345 678');
     await tapContinue(tester);
-    expect(find.byType(WizardOptionCard), findsNWidgets(5));
-    expect(find.byType(DropdownButtonFormField<String>), findsNothing);
+    expect(find.byType(WizardOptionCard), findsNothing);
+    expect(find.byType(DropdownButtonFormField<String>), findsOneWidget);
     await finishRegister(tester);
   }, skip: _skip);
 

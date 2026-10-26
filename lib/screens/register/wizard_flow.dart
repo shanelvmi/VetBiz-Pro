@@ -10,7 +10,7 @@ extension _WizardFlow on _RegisterScreenState {
   // The _validateAll keys each step owns (steps 1 and 5 own none).
   static const Map<int, List<String>> stepFields = {
     1: ['name', 'phone'],
-    2: ['facility'],
+    2: ['facility', 'facilityType', 'typeDetail'],
     3: ['email', 'password', 'confirm'],
   };
   static const int signInStep = 3;
@@ -126,6 +126,7 @@ extension _WizardFlow on _RegisterScreenState {
         'name' => _nameFocus,
         'phone' => _phoneFocus,
         'facility' => _facilityNameFocus,
+        'typeDetail' => _facilityTypeDetailFocus,
         'email' => _emailFocus,
         'password' => _password.focusNode,
         'confirm' => _confirm.focusNode,

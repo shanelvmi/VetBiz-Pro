@@ -12,7 +12,7 @@ import 'helpers/register_harness.dart';
 // type as an empty required dropdown with Other and its own words, no eye
 // on the register passwords. Written before the change, skipped until it
 // exists.
-const _skip = true;
+const _skip = false;
 
 const _detail = 'Duka la mifugo na chakula cha kuku bora'; // 39 characters
 const _longFacility = 'Kituo cha Mifugo na Kilimo cha Wilaya ya Kilimanjaro Magharibi';

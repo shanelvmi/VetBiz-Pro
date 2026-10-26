@@ -18,6 +18,9 @@ extension _WizardView on _RegisterScreenState {
         WizardStepIntro(title: _stepQuestion(), subtitle: _stepHint()),
         const SizedBox(height: WizardMetrics.sectionGap),
         ..._stepContent(),
+        // RW2b2: the header has no Sign in any more, so when the welcome
+        // panel (with its Sign in) is hidden, step 1 offers it.
+        if (_step == 0 && !layout.isWide) _signInLink(),
         if (inlineBar) ...[
           const SizedBox(height: WizardMetrics.navTopGap),
           _buildWizardNavBar(pinned: false),
@@ -75,6 +78,19 @@ extension _WizardView on _RegisterScreenState {
         3 => _signInStep(),
         _ => _reviewStep(),
       };
+
+  Widget _signInLink() => Padding(
+        padding: const EdgeInsets.only(top: WizardMetrics.optionListGap),
+        child: Wrap(
+          alignment: WrapAlignment.center,
+          crossAxisAlignment: WrapCrossAlignment.center,
+          spacing: AppSpacing.s4,
+          children: [
+            Text(context.l10n.register_alreadyHaveAccount, style: TextStyle(color: context.colors.textMuted, fontSize: AppFontSize.f13)),
+            HoverLink(label: context.l10n.common_logIn, onTap: _goToLogin),
+          ],
+        ),
+      );
 
   // Step 1: the role cards' texts as the two answers. _selectRole is the
   // same as before (choosing the assistant clears its invite fields).

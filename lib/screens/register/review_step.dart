@@ -15,7 +15,7 @@ extension _ReviewStep on _RegisterScreenState {
       _reviewBox(l10n.register_stepAboutYou, ['$selectedPrefix ${nameController.text.trim()}', phoneController.text.trim()], step: 1),
       _reviewBox(
         l10n.register_yourFacilities,
-        [for (final f in facilities) '${f['name'] ?? ''} (${l10n.facilityTypeLabel(f['type'] ?? '')})'],
+        [for (final f in facilities) '${f['name'] ?? ''} (${l10n.facilityTypeDisplay(f['type'], f['typeDetail'])})'],
         step: 2,
       ),
       _reviewBox(l10n.register_stepSignIn, [emailController.text.trim()], step: _WizardFlow.signInStep),

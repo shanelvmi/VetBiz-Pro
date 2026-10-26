@@ -68,7 +68,8 @@ extension _OwnerSteps on _RegisterScreenState {
       ];
 
   // Step 3: the facilities added so far (with remove), the limit, then a
-  // name, its type as option cards, and Add (addFacility, as before).
+  // name, its type (the shared dropdown, empty until chosen, with Other's
+  // own words: RW2b2), and Add (addFacility, as before).
   List<Widget> _facilityStep() {
     final atLimit = facilities.length >= _maxFacilities;
     final facilityError = facilities.isEmpty ? _fieldErrors['facility'] : null;
@@ -95,20 +96,8 @@ extension _OwnerSteps on _RegisterScreenState {
         ),
       ),
       _gap(WizardMetrics.fieldGap),
-      _fieldLabel(context.l10n.common_type),
-      _gap(AppSpacing.s6),
-      for (final type in kFacilityTypes) ...[
-        WizardOptionCard(
-          title: context.l10n.facilityTypeLabel(type),
-          selected: _selectedFacilityType == type,
-          onTap: () {
-            _update(() => _selectedFacilityType = type);
-            _onFieldChanged();
-          },
-        ),
-        _gap(WizardMetrics.optionListGap),
-      ],
-      _gap(AppSpacing.s6),
+      KeyedSubtree(key: _fieldKeys['facilityType'], child: _facilityTypeField(gap: WizardMetrics.fieldGap)),
+      _gap(WizardMetrics.fieldGap),
       Tooltip(
         message: atLimit ? context.l10n.register_maxFacilitiesReached(_maxFacilities) : '',
         child: ElevatedButton.icon(
@@ -129,6 +118,32 @@ extension _OwnerSteps on _RegisterScreenState {
       ),
     ];
   }
+
+  /// The type and an Other facility's words, shared by step 3 and the old
+  /// one-page form. Another type drops words typed for Other.
+  Widget _facilityTypeField({required double gap}) => FacilityTypeField(
+        dropdownKey: const ValueKey<String>('register-facility-type'),
+        detailKey: const ValueKey<String>('register-facility-type-detail'),
+        type: _selectedFacilityType,
+        onTypeChanged: (value) {
+          _update(() {
+            _selectedFacilityType = value;
+            if (value != kFacilityTypeOther) facilityTypeDetailController.clear();
+          });
+          _onFieldChanged();
+        },
+        detailController: facilityTypeDetailController,
+        detailFocusNode: _facilityTypeDetailFocus,
+        typeDecoration: _decoration(hint: '', icon: Icons.category_outlined),
+        detailDecoration: _decoration(hint: context.l10n.facilityType_detailLabel, icon: Icons.edit_outlined),
+        typeError: _fieldErrors['facilityType'],
+        detailError: _fieldErrors['typeDetail'],
+        labeled: (label, field) => _labeled(label, field),
+        gap: gap,
+        detailAction: TextInputAction.done,
+        onDetailChanged: (_) => _onFieldChanged(),
+        onDetailSubmitted: (_) => _wizardContinue(),
+      );
 
   // Step 4: email, password, confirm (the P1b guards come with them).
   List<Widget> _signInStep() => [
