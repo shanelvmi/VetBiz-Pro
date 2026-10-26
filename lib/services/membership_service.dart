@@ -1,5 +1,6 @@
 import 'package:cloud_functions/cloud_functions.dart';
 import '../config/app_rules.dart';
+import '../constants/facility_types.dart';
 import '../ui/feedback/friendly_error.dart';
 import '../l10n/l10n.dart';
 
@@ -27,6 +28,9 @@ class InviteCheck {
   factory InviteCheck.fromResult(Map<String, dynamic> data) => InviteCheck(
         facilityName: (data['facilityName'] ?? '').toString(),
         facilityType: (data['facilityType'] ?? '').toString(),
+        facilityTypeDetail: data['facilityTypeDetail'] is String && (data['facilityTypeDetail'] as String).isNotEmpty
+            ? data['facilityTypeDetail'] as String
+            : null,
       );
 }
 
@@ -62,10 +66,14 @@ class MembershipService {
 
   /// One facility as registerOwner and addFacility receive it: the name and
   /// the stored type, and typeDetail only for Other (RW2b2).
-  static Map<String, dynamic> facilityPayload(Map<String, dynamic> facility) => {
-        'name': facility['name'],
-        'type': facility['type'],
-      };
+  static Map<String, dynamic> facilityPayload(Map<String, dynamic> facility) {
+    final detail = (facility['typeDetail'] as String?)?.trim() ?? '';
+    return {
+      'name': facility['name'],
+      'type': facility['type'],
+      if (facility['type'] == kFacilityTypeOther && detail.isNotEmpty) 'typeDetail': detail,
+    };
+  }
 
   List<Map<String, dynamic>> _facilityList(dynamic raw) {
     if (raw is! List) return [];
@@ -77,10 +85,7 @@ class MembershipService {
   Future<InviteCheck?> checkInviteCode(String code) async {
     final data = await _call('checkInviteCode', {'code': code});
     if (data['valid'] != true) return null;
-    return InviteCheck(
-      facilityName: (data['facilityName'] ?? '').toString(),
-      facilityType: (data['facilityType'] ?? '').toString(),
-    );
+    return InviteCheck.fromResult(data);
   }
 
   /// Creates an owner's profile and their facilities in one go. Returns the
@@ -94,7 +99,7 @@ class MembershipService {
     final data = await _call('registerOwner', {
       'fullName': fullName,
       'phone': phone,
-      'facilities': facilities.map((f) => {'name': f['name'], 'type': f['type']}).toList(),
+      'facilities': facilities.map(facilityPayload).toList(),
       'avatarUrl': avatarUrl,
     });
     return _facilityList(data['facilities']);
@@ -114,10 +119,7 @@ class MembershipService {
       'phone': phone,
       'avatarUrl': avatarUrl,
     });
-    return InviteCheck(
-      facilityName: (data['facilityName'] ?? '').toString(),
-      facilityType: (data['facilityType'] ?? '').toString(),
-    );
+    return InviteCheck.fromResult(data);
   }
 
   /// For someone already registered who is in no facility any more (they were
@@ -126,17 +128,14 @@ class MembershipService {
   /// new facility's admin decides.
   Future<InviteCheck> joinFacilityWithInvite({required String code}) async {
     final data = await _call('joinFacilityWithInvite', {'code': code});
-    return InviteCheck(
-      facilityName: (data['facilityName'] ?? '').toString(),
-      facilityType: (data['facilityType'] ?? '').toString(),
-    );
+    return InviteCheck.fromResult(data);
   }
 
   /// Adds a facility for the signed-in admin. The server enforces the facility
-  /// limit and sets the trial. Returns {facilityId, name, type}: the code stays
-  /// on the facility document (E4b, b3).
-  Future<Map<String, dynamic>> addFacility({required String name, required String type}) {
-    return _call('addFacility', {'name': name, 'type': type});
+  /// limit and sets the trial. Returns {facilityId, name, type} (and an Other
+  /// facility's typeDetail): the code stays on the facility document (E4b, b3).
+  Future<Map<String, dynamic>> addFacility({required String name, required String type, String? typeDetail}) {
+    return _call('addFacility', facilityPayload({'name': name, 'type': type, 'typeDetail': typeDetail}));
   }
 
   Future<CreatedInvite> createInviteCode(String facilityId) async {

@@ -1,3 +1,5 @@
+import '../constants/facility_types.dart';
+
 // The text printed on a receipt as the preview screens draw it (the
 // receipt body: header, labels, totals, footer).
 //
@@ -19,7 +21,14 @@ class ReceiptTexts {
   /// The facility's type after its name on receipts, PDFs and printed
   /// reports (RW2b2): an Other facility's own words when it has them, the
   /// English label of any other type, and nothing for a bare Other.
-  static String facilityType(String? type, [String? typeDetail]) => type == null || type == 'Other' ? '' : type;
+  static String facilityType(String? type, [String? typeDetail]) {
+    if (type == null) return '';
+    if (type == kFacilityTypeOther) return typeDetail?.trim() ?? '';
+    return _facilityTypeLabels[type] ?? type;
+  }
+
+  // Printed type labels that differ from the stored value (RW2b2).
+  static const Map<String, String> _facilityTypeLabels = {'Ambulatory Vet': 'Ambulatory services'};
   static const String receiptNo = 'Receipt #';
   static const String date = 'Date';
   static const String customer = 'Customer';

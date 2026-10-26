@@ -1,3 +1,5 @@
+import '../config/app_limits.dart';
+
 // Shared between registration (add a facility while signing up) and
 // the Facilities screen (add a facility to an existing account) - kept
 // in one place so the two forms can never quietly drift into offering
@@ -21,4 +23,12 @@ enum TypeDetailIssue { required, length, characters }
 /// functions/membership.js): trimmed, AppLimits.typeDetailMin to
 /// AppLimits.typeDetailMax characters, letters of any language, digits,
 /// spaces and . , & ' - only. Null when it is fine.
-TypeDetailIssue? typeDetailIssue(String typed) => null;
+TypeDetailIssue? typeDetailIssue(String typed) {
+  final text = typed.trim();
+  if (text.isEmpty) return TypeDetailIssue.required;
+  if (text.length < AppLimits.typeDetailMin || text.length > AppLimits.typeDetailMax) return TypeDetailIssue.length;
+  if (!_typeDetailPattern.hasMatch(text)) return TypeDetailIssue.characters;
+  return null;
+}
+
+final RegExp _typeDetailPattern = RegExp(r"^[\p{L}\p{N} .,&'\-]+$", unicode: true);

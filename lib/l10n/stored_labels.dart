@@ -2,6 +2,7 @@ import '../config/payment_methods.dart';
 import '../config/restock_rules.dart';
 import '../constants/batch_move_reasons.dart';
 import '../constants/client_options.dart';
+import '../constants/facility_types.dart';
 import '../data/activity_type.dart';
 import '../data/facility_ownership.dart';
 import '../data/facility_status.dart';
@@ -292,7 +293,10 @@ extension StoredLabels on AppLocalizations {
 
   /// A facility's type as shown everywhere (RW2b2): an Other facility's own
   /// words (typeDetail) when it has them, otherwise the type's label.
-  String facilityTypeDisplay(String? stored, [String? typeDetail]) => facilityTypeLabel(stored ?? '');
+  String facilityTypeDisplay(String? stored, [String? typeDetail]) {
+    final detail = typeDetail?.trim() ?? '';
+    return stored == kFacilityTypeOther && detail.isNotEmpty ? detail : facilityTypeLabel(stored ?? '');
+  }
   String paymentMethodLabel(String stored) => StoredValueLabels.paymentMethod.labelOf(this, stored);
   String activityTypeLabel(String stored) => StoredValueLabels.activityType.labelOf(this, stored);
   String restockFrequencyLabel(String stored) => StoredValueLabels.restockFrequency.labelOf(this, stored);

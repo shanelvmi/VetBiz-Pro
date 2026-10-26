@@ -11,7 +11,7 @@ import 'package:vetbiz_pro/utils/receipt_texts.dart';
 // RW2b2 (docs/design/register_wizard.md, the owner's change to answer 6):
 // the titles, the facility type's label and the Other facility's own words
 // (typeDetail). Written before the change, skipped until it exists.
-const _skip = true;
+const _skip = false;
 
 void main() {
   final en = lookupAppLocalizations(const Locale('en'));
