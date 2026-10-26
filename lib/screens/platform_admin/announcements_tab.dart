@@ -6,10 +6,14 @@ import 'package:markdown/markdown.dart' as md;
 
 import '../../widgets/hover_elevate_card.dart';
 import '../../widgets/announcement_message.dart';
+import '../../config/app_limits.dart';
+import '../../data/announcement_fields.dart';
 import '../../data/collections.dart';
 import '../../data/fields.dart';
 import '../../data/support_contact_fields.dart';
 import '../../utils/social_link.dart';
+import '../../services/announcement_service.dart';
+import 'poster_picker_field.dart';
 import '../../config/app_date_format.dart';
 import '../../theme/app_text.dart';
 import '../../theme/app_dimens.dart';
@@ -231,22 +235,41 @@ class _AnnouncementsTabState extends State<AnnouncementsTab> {
     }
   }
 
-  // Handles both creating a new announcement and editing an existing
-  // one - existingDoc null means create, provided means edit (title/
-  // message/urgent pre-filled from it, saving updates that document
-  // instead of adding a new one).
-  Future<void> _showAnnouncementDialog(BuildContext context, {DocumentSnapshot? existingDoc}) async {
-    final isEditing = existingDoc != null;
-    final existingData = existingDoc?.data() as Map<String, dynamic>?;
+  // Labels for the stored kind and audience values (AN1).
+  static const Map<AnnouncementKind, String> _kindLabels = {
+    AnnouncementKind.text: 'Text',
+    AnnouncementKind.poster: 'Poster',
+  };
+  static const Map<AnnouncementAudience, String> _audienceLabels = {
+    AnnouncementAudience.all: 'Everyone',
+    AnnouncementAudience.en: 'English',
+    AnnouncementAudience.sw: 'Kiswahili',
+  };
 
-    final titleController = TextEditingController(text: existingData?['title'] as String? ?? '');
-    final messageController = TextEditingController(text: existingData?['message'] as String? ?? '');
-    bool urgent = existingData?['urgent'] == true;
-    // Shown inline in the dialog rather than closing it silently -
-    // previously, publishing with an empty title or message just
-    // closed the dialog with no feedback at all, leaving no way to
-    // tell why nothing happened.
-    String? validationError;
+  // Uploads, writes and cleans up in the safe order (AN1, design section 5).
+  final _service = AnnouncementService();
+
+  // Handles both creating a new announcement and editing an existing
+  // one - existingDoc null means create, provided means edit (every
+  // field pre-filled from it, saving updates that document instead of
+  // adding a new one). An old document without a kind opens as text.
+  Future<void> _showAnnouncementDialog(BuildContext context, {DocumentSnapshot? existingDoc}) async {
+    final existing =
+        existingDoc == null ? null : Announcement.fromMap(existingDoc.id, existingDoc.data() as Map<String, dynamic>);
+    final isEditing = existing != null;
+    final draft = existing == null
+        ? AnnouncementDraft(kind: AnnouncementKind.text, title: '', message: '')
+        : AnnouncementDraft.from(existing);
+
+    final titleController = TextEditingController(text: draft.title);
+    final messageController = TextEditingController(text: draft.message);
+    final linkController = TextEditingController(text: draft.linkUrl);
+    final linkLabelController = TextEditingController(text: draft.linkLabel);
+    // Each field shows its own problem under it; a failed save shows at
+    // the top - never closing the dialog silently with nothing saved.
+    var errors = const AnnouncementErrors();
+    String? saveError;
+    var saving = false;
 
     final screenWidth = MediaQuery.of(context).size.width;
     // Comfortably wide on desktop, but never wider than the actual
@@ -254,7 +277,7 @@ class _AnnouncementsTabState extends State<AnnouncementsTab> {
     // narrow, cramped width regardless of how much room is available.
     final dialogWidth = screenWidth > AppBreakpoints.dialogFixedWidth ? AppSizes.dialogLg : screenWidth * 0.9;
 
-    final confirmed = await showDialog<bool>(
+    final saved = await showDialog<bool>(
       context: context,
       builder: (context) => StatefulBuilder(builder: (context, setDialogState) {
         return AlertDialog(
@@ -266,7 +289,7 @@ class _AnnouncementsTabState extends State<AnnouncementsTab> {
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                if (validationError != null) ...[
+                if (saveError != null) ...[
                   Container(
                     width: double.infinity,
                     padding: const EdgeInsets.all(AppSpacing.s10),
@@ -280,14 +303,42 @@ class _AnnouncementsTabState extends State<AnnouncementsTab> {
                         Icon(Icons.error_outline, color: context.colors.danger, size: AppIconSize.i18),
                         const SizedBox(width: AppSpacing.s8),
                         Expanded(
-                          child: Text(validationError!, style: TextStyle(color: context.colors.danger, fontSize: AppFontSize.f13)),
+                          child: Text(saveError!, style:TextStyle(color: context.colors.danger, fontSize: AppFontSize.f13)),
                         ),
                       ],
                     ),
                   ),
                   const SizedBox(height: AppSpacing.s12),
                 ],
-                TextField(controller: titleController, textCapitalization: TextCapitalization.sentences, inputFormatters: [SentenceCapitalizationFormatter()], decoration: const InputDecoration(labelText: 'Title')),
+                // Text, or a poster image whose words are in the image.
+                SegmentedButton<AnnouncementKind>(
+                  segments: [
+                    for (final kind in AnnouncementKind.values)
+                      ButtonSegment(
+                        value: kind,
+                        label: Text(_kindLabels[kind]!),
+                        icon: Icon(kind == AnnouncementKind.poster ? Icons.image_outlined : Icons.notes),
+                      ),
+                  ],
+                  selected: {draft.kind},
+                  onSelectionChanged: (s) => setDialogState(() => draft.kind = s.single),
+                ),
+                const SizedBox(height: AppSpacing.s8),
+                TextField(
+                  controller: titleController,
+                  textCapitalization: TextCapitalization.sentences,
+                  inputFormatters: [SentenceCapitalizationFormatter()],
+                  decoration: InputDecoration(labelText: 'Title', errorText: errors.title),
+                ),
+                if (draft.kind == AnnouncementKind.poster) ...[
+                  const SizedBox(height: AppSpacing.s12),
+                  PosterPickerField(
+                    picked: draft.image,
+                    savedUrl: existing?.kind == AnnouncementKind.poster ? existing?.imageUrl : null,
+                    error: errors.image,
+                    onPicked: (image) => setDialogState(() => draft.image = image),
+                  ),
+                ],
                 const SizedBox(height: AppSpacing.s8),
                 // Formatting toolbar - select text in the message field
                 // below, then tap one of these to wrap the selection in
@@ -321,25 +372,61 @@ class _AnnouncementsTabState extends State<AnnouncementsTab> {
                   controller: messageController,
                   textCapitalization: TextCapitalization.sentences,
                   inputFormatters: [SentenceCapitalizationFormatter()],
-                  decoration: const InputDecoration(
-                    labelText: 'Message',
-                    border: OutlineInputBorder(),
+                  decoration: InputDecoration(
+                    labelText: draft.kind == AnnouncementKind.poster ? 'Message (optional)' : 'Message',
+                    border: const OutlineInputBorder(),
                     alignLabelWithHint: true,
+                    errorText: errors.message,
                   ),
                   maxLines: 6,
                   onChanged: (_) => setDialogState(() {}),
                 ),
                 const SizedBox(height: AppSpacing.s12),
+                const Text('Show to', style: TextStyle(fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f13)),
+                const SizedBox(height: AppSpacing.s6),
+                SegmentedButton<AnnouncementAudience>(
+                  segments: [
+                    for (final audience in AnnouncementAudience.values)
+                      ButtonSegment(value: audience, label: Text(_audienceLabels[audience]!)),
+                  ],
+                  selected: {draft.audience},
+                  onSelectionChanged: (s) => setDialogState(() => draft.audience = s.single),
+                ),
+                const SizedBox(height: AppSpacing.s12),
+                // An optional button under the announcement. The address goes
+                // through SocialLink on Save: only http and https with a host.
+                TextField(
+                  controller: linkController,
+                  keyboardType: TextInputType.url,
+                  autocorrect: false,
+                  decoration: InputDecoration(
+                    labelText: 'Link (optional)',
+                    hintText: 'https://...',
+                    prefixIcon: const Icon(Icons.link),
+                    errorText: errors.link,
+                  ),
+                ),
+                const SizedBox(height: AppSpacing.s8),
+                TextField(
+                  controller: linkLabelController,
+                  decoration: InputDecoration(
+                    labelText: 'Button label',
+                    helperText: 'Required with a link, '
+                        '${AppLimits.announcementLinkLabelMin} to ${AppLimits.announcementLinkLabelMax} characters',
+                    errorText: errors.linkLabel,
+                  ),
+                ),
+                const SizedBox(height: AppSpacing.s12),
                 Container(
                   padding: const EdgeInsets.all(AppSpacing.s10),
                   decoration: BoxDecoration(
-                    color: urgent ? context.colors.danger.withValues(alpha: AppAlpha.a10) : context.colors.surfaceMuted,
+                    color: draft.urgent ? context.colors.danger.withValues(alpha: AppAlpha.a10) : context.colors.surfaceMuted,
                     borderRadius: BorderRadius.circular(AppRadius.r8),
-                    border: Border.all(color: urgent ? context.colors.danger.withValues(alpha: AppAlpha.a40) : Colors.transparent),
+                    border: Border.all(color: draft.urgent ? context.colors.danger.withValues(alpha: AppAlpha.a40) : Colors.transparent),
                   ),
                   child: Row(
                     children: [
-                      Icon(Icons.priority_high, color: urgent ? context.colors.danger : context.colors.textHint, size: AppIconSize.i20),
+                      Icon(Icons.priority_high, color: draft.urgent ? context.colors.danger : context.colors.textHint, size: AppIconSize.i20),
                       const SizedBox(width: AppSpacing.s8),
                       Expanded(
                         child: Column(
@@ -354,9 +441,9 @@ class _AnnouncementsTabState extends State<AnnouncementsTab> {
                         ),
                       ),
                       Switch(
-                        value: urgent,
+                        value: draft.urgent,
                         activeThumbColor: context.colors.danger,
-                        onChanged: (v) => setDialogState(() => urgent = v),
+                        onChanged: (v) => setDialogState(() => draft.urgent = v),
                       ),
                     ],
                   ),
@@ -389,13 +476,34 @@ class _AnnouncementsTabState extends State<AnnouncementsTab> {
           actions: [
             TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Cancel')),
             ElevatedButton(
-              onPressed: () {
-                if (titleController.text.trim().isEmpty || messageController.text.trim().isEmpty) {
-                  setDialogState(() => validationError = 'Both a title and a message are required.');
-                  return;
-                }
-                Navigator.pop(context, true);
-              },
+              onPressed: saving
+                  ? null
+                  : () async {
+                      draft
+                        ..title = titleController.text
+                        ..message = messageController.text
+                        ..linkUrl = linkController.text
+                        ..linkLabel = linkLabelController.text;
+                      final found = AnnouncementService.validate(draft, previous: existing);
+                      setDialogState(() {
+                        errors = found;
+                        saveError = null;
+                        saving = found.isEmpty;
+                      });
+                      if (!found.isEmpty) return;
+                      try {
+                        final cleaned = await _service.save(draft, existing: existing);
+                        if (!cleaned) AppFeedback.warning('Saved. The old poster file could not be removed from Storage.');
+                        if (context.mounted) Navigator.pop(context, true);
+                      } catch (e) {
+                        // Nothing half-saved: a failed upload wrote nothing, and
+                        // a failed write removed its new file (AN1).
+                        setDialogState(() {
+                          saving = false;
+                          saveError = "Couldn't save the announcement: ${FriendlyError.messageFor(e)}";
+                        });
+                      }
+                    },
               style: ButtonStyle(
                 backgroundColor: WidgetStateProperty.resolveWith<Color>((states) {
                   if (states.contains(WidgetState.hovered)) return context.colors.accent;
@@ -410,40 +518,18 @@ class _AnnouncementsTabState extends State<AnnouncementsTab> {
       }),
     );
 
-    if (confirmed != true) return;
-
-    if (isEditing) {
-      await existingDoc.reference.update({
-        'title': titleController.text.trim(),
-        'message': messageController.text.trim(),
-        'urgent': urgent,
-        // hidden status untouched - editing content is a separate
-        // action from showing/hiding it, shouldn't silently change
-        // together.
-      });
-    } else {
-      await FirebaseFirestore.instance.collection(Collections.publicAnnouncements).add({
-        'title': titleController.text.trim(),
-        'message': messageController.text.trim(),
-        // Was previously written as 'createdAt', but the login screen
-        // queries and sorts by 'timestamp' - a genuine field-name mismatch
-        // that meant an announcement published here likely never actually
-        // appeared there at all (Firestore's orderBy excludes documents
-        // missing the field it's sorting by).
-        'timestamp': FieldValue.serverTimestamp(),
-        // All formatting - bold, italic, links, and color - is inline
-        // within the message itself via markdown syntax, applied
-        // through the toolbar above. No separate whole-message flags.
-        'urgent': urgent,
-        'hidden': false,
-      });
-    }
-
+    if (saved != true) return;
     AppFeedback.success(isEditing ? 'Announcement updated' : 'Announcement published');
   }
 
-  Future<void> _delete(String docId) async {
-    await FirebaseFirestore.instance.collection(Collections.publicAnnouncements).doc(docId).delete();
+  // The document, then its poster file (AN1): a missing file is fine.
+  Future<void> _delete(DocumentSnapshot doc) async {
+    try {
+      final cleaned = await _service.delete(Announcement.fromMap(doc.id, doc.data() as Map<String, dynamic>));
+      if (!cleaned) AppFeedback.warning('Deleted. Its poster file could not be removed from Storage.');
+    } catch (e, st) {
+      AppFeedback.error("Couldn't delete the announcement", error: e, stackTrace: st);
+    }
   }
 
   Future<void> _toggleHidden(String docId, bool currentlyHidden) async {
@@ -510,6 +596,11 @@ class _AnnouncementsTabState extends State<AnnouncementsTab> {
                       final ts = data['timestamp'] is Timestamp ? (data['timestamp'] as Timestamp).toDate() : null;
                       final isHidden = data['hidden'] == true;
                       final isUrgent = data['urgent'] == true;
+                      final announcement = Announcement.fromMap(doc.id, data);
+                      final isPoster = announcement.kind == AnnouncementKind.poster;
+                      final audience = announcement.audience == AnnouncementAudience.all
+                          ? null
+                          : '${_audienceLabels[announcement.audience]} only';
 
                       final statusColor = isUrgent ? context.colors.danger : (isHidden ? context.colors.textHint : context.colors.primary);
 
@@ -533,7 +624,7 @@ class _AnnouncementsTabState extends State<AnnouncementsTab> {
                                     child: Column(
                                       crossAxisAlignment: CrossAxisAlignment.start,
                                       children: [
-                                        if (isUrgent || isHidden)
+                                        if (isUrgent || isHidden || isPoster || audience != null)
                                           Padding(
                                             padding: const EdgeInsets.only(bottom: AppSpacing.s4),
                                             child: Wrap(
@@ -553,10 +644,29 @@ class _AnnouncementsTabState extends State<AnnouncementsTab> {
                                                     visualDensity: VisualDensity.compact,
                                                     padding: EdgeInsets.zero,
                                                   ),
+                                                for (final label in [if (isPoster) 'Poster', if (audience != null) audience])
+                                                  Chip(
+                                                    label: Text(label, style: const TextStyle(fontSize: AppFontSize.f10)),
+                                                    visualDensity: VisualDensity.compact,
+                                                    padding: EdgeInsets.zero,
+                                                  ),
                                               ],
                                             ),
                                           ),
                                         Text(data['title'] ?? '', style: const TextStyle(fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f15)),
+                                        if (isPoster && announcement.imageUrl != null) ...[
+                                          const SizedBox(height: AppSpacing.s6),
+                                          ConstrainedBox(
+                                            constraints: const BoxConstraints(maxWidth: AppSizes.dialogXs),
+                                            child: AspectRatio(
+                                              aspectRatio: AppLimits.posterAspectRatio,
+                                              child: ClipRRect(
+                                                borderRadius: BorderRadius.circular(AppRadius.r8),
+                                                child: Image.network(announcement.imageUrl!, fit: BoxFit.cover),
+                                              ),
+                                            ),
+                                          ),
+                                        ],
                                         const SizedBox(height: AppSpacing.s4),
                                         AnnouncementMessage(data: data, fontSize: AppFontSize.f14),
                                         if (ts != null) ...[
@@ -598,7 +708,7 @@ class _AnnouncementsTabState extends State<AnnouncementsTab> {
                                   IconButton(
                                     icon: Icon(Icons.delete_outline, color: context.colors.dangerAccent, size: AppIconSize.i20),
                                     tooltip: 'Delete',
-                                    onPressed: () => _delete(doc.id),
+                                    onPressed: () => _delete(doc),
                                   ),
                                 ],
                               ),

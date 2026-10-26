@@ -229,6 +229,8 @@ class AnnouncementService {
       },
       if (existing == null) ...{
         AnnouncementFields.hidden: false,
+        // The readers sort by timestamp, and orderBy leaves out a document
+        // without it (an early version wrote createdAt and never showed).
         AnnouncementFields.timestamp: FieldValue.serverTimestamp(),
       },
     };
