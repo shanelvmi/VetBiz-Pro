@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../config/app_limits.dart';
 import '../l10n/l10n.dart';
 import '../theme/app_dimens.dart';
 import '../theme/app_motion.dart';
@@ -131,6 +132,35 @@ class UpdatesLabel extends StatelessWidget {
           ),
           if (showChips && urgent) ...[const SizedBox(width: AppSpacing.s8), const UpdateChip.important()],
           if (showChips && isNew) ...[const SizedBox(width: AppSpacing.s6), const UpdateChip.fresh()],
+        ],
+      ),
+    );
+  }
+}
+
+/// G6: the Updates area while their first answer is pending, when the last
+/// read on this device had some (UpdatesLastKnown): the label row and the
+/// empty 16:9 frame, as tall as one slide, so the page does not jump when
+/// they arrive. Nothing to read in it.
+class UpdatesSkeleton extends StatelessWidget {
+  const UpdatesSkeleton({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return ExcludeSemantics(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          const UpdatesLabel(showChips: false, urgent: false, isNew: false),
+          const SizedBox(height: AppSpacing.s6),
+          AspectRatio(
+            aspectRatio: AppLimits.posterAspectRatio,
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(AppRadius.r16),
+              child: ColoredBox(color: context.colors.surfaceMuted),
+            ),
+          ),
         ],
       ),
     );

@@ -10,6 +10,7 @@ import '../config/app_limits.dart';
 import '../data/announcement_fields.dart';
 import '../data/collections.dart';
 import '../services/announcement_service.dart';
+import '../services/updates_last_known.dart';
 import '../theme/app_breakpoints.dart';
 import '../theme/app_dimens.dart';
 import '../theme/app_motion.dart';
@@ -72,11 +73,23 @@ class _UpdatesCarouselState extends State<UpdatesCarousel> {
     return StreamBuilder<List<Announcement>>(
       stream: _announcements,
       builder: (context, snapshot) {
+        final lastKnown = UpdatesLastKnown.instance;
+        if (snapshot.connectionState == ConnectionState.waiting && !snapshot.hasData && !snapshot.hasError) {
+          // G6: still waiting for the first answer. If the last read on
+          // this device had Updates, keep their frame from the first frame
+          // so the page does not jump when they come; otherwise nothing.
+          return widget.builder(
+            context,
+            lastKnown.hadUpdates == true ? const UpdatesSkeleton(key: UpdatesCarousel.skeletonKey) : null,
+          );
+        }
         final all = snapshot.hasError ? null : snapshot.data;
         final slides =
             all == null
                 ? const <Announcement>[]
                 : UpdatesSelection.pick(all, languageCode: Localizations.localeOf(context).languageCode);
+        // Remembered for the next visit and launch; an error keeps the last.
+        if (all != null) lastKnown.record(slides.isNotEmpty);
         return widget.builder(
           context,
           slides.isEmpty ? null : UpdatesSlides(slides: slides, launcher: widget.launcher, imageFor: widget.imageFor),

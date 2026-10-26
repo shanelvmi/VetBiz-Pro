@@ -34,9 +34,6 @@ import 'helpers/register_harness.dart';
 // the test says (what the new code reads).
 const _skip = false;
 
-// The Updates frame (part 4) lands in its own commit.
-const _skipUpdates = true;
-
 class _NoAuth implements AuthService {
   @override
   dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
@@ -183,7 +180,7 @@ void main() {
         expect(find.byKey(UpdatesCarousel.skeletonKey), findsNothing);
         expect(find.byType(UpdatesSlides), findsOneWidget);
         expect(footerTop(tester), before, reason: 'the Updates arrived without moving the footer');
-      }, skip: _skipUpdates);
+      }, skip: _skip);
     }
 
     for (final had in [false, null]) {
@@ -193,7 +190,7 @@ void main() {
         expect(find.byKey(UpdatesCarousel.skeletonKey), findsNothing);
         await answer(tester);
         expect(find.byType(UpdatesSlides), findsNothing);
-      }, skip: _skipUpdates);
+      }, skip: _skip);
     }
 
     testWidgets('the answer is remembered for the next visit', (tester) async {
@@ -203,6 +200,6 @@ void main() {
       await pumpPage(tester, _Page.login, await dbWith(null), width: 390);
       await answer(tester);
       expect(UpdatesLastKnown.instance.hadUpdates, isFalse);
-    }, skip: _skipUpdates);
+    }, skip: _skip);
   });
 }
