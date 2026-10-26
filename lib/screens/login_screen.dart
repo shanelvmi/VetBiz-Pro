@@ -45,6 +45,10 @@ class LoginScreen extends StatefulWidget {
   final AuthService? authService;
   @visibleForTesting
   final FirebaseFirestore? firestore;
+  /// For tests: the sign-in card and its "Welcome back" row (AN4).
+  static const loginCardKey = ValueKey<String>('login-card');
+  static const welcomeBackRowKey = ValueKey<String>('login-welcome-back-row');
+
   const LoginScreen({super.key, this.errorMessage, this.initialEmail, this.authService, this.firestore});
 
   @override
@@ -548,6 +552,7 @@ class _LoginScreenState extends State<LoginScreen> {
         return Transform.translate(offset: Offset(dx, 0), child: child);
       },
       child: Container(
+        key: LoginScreen.loginCardKey,
         decoration: BoxDecoration(
           color: context.colors.surface,
           borderRadius: BorderRadius.circular(AppRadius.r20),
@@ -581,6 +586,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         Row(
+                          key: LoginScreen.welcomeBackRowKey,
                           children: [
                             Container(
                               width: 42,

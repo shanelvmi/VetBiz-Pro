@@ -51,6 +51,9 @@ class AuthFooter extends StatelessWidget {
   /// For tests: the bottom row (copyright, version, social icons).
   static const bottomRowKey = ValueKey<String>('auth-footer-bottom-row');
 
+  /// For tests: the brand column (the mark and the app name).
+  static const brandKey = ValueKey<String>('auth-footer-brand');
+
   static const Map<SocialNetwork, FaIconData> _icons = {
     SocialNetwork.facebook: FontAwesomeIcons.facebook,
     SocialNetwork.instagram: FontAwesomeIcons.instagram,
@@ -161,6 +164,7 @@ class AuthFooter extends StatelessWidget {
 
   Widget _brand(BuildContext context) {
     return Column(
+      key: brandKey,
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Row(
