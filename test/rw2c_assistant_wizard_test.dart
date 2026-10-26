@@ -106,18 +106,19 @@ void main() {
     await tester.pump(AppTimeouts.facilityLookupDebounce);
     await tester.pumpAndSettle();
     expect(membership.checked, [AssistantInputs.code.trim()]);
-    expect(find.text(en.register_joining('Mwanga Agrovet (Agrovet)')), findsOneWidget);
+    expect(find.text(en.register_joining('Mwanga Agrovet')), findsOneWidget);
     await tapContinue(tester);
     expect(find.text(step(4)), findsOneWidget);
     await finishRegister(tester);
   }, skip: _skip);
 
-  testWidgets('an Other facility shows its own words', (tester) async {
+  testWidgets('an Other facility shows its name only, not its own words (FN1)', (tester) async {
     await pumpRegister(tester, membership: FakeRegisterMembership(codes: validOnly));
     await toStep2(tester);
     await aboutYou(tester);
     await typeCode(tester, 'PETS22');
-    expect(find.text(en.register_joining('Mwanza Pets (Pet shop)')), findsOneWidget);
+    expect(find.text(en.register_joining('Mwanza Pets')), findsOneWidget);
+    expect(find.textContaining('Pet shop'), findsNothing);
     await finishRegister(tester);
   }, skip: _skip);
 
@@ -161,15 +162,15 @@ void main() {
     await typeCode(tester, AssistantInputs.code);
     await tapContinue(tester);
     await tapBack(tester);
-    expect(find.text(en.register_joining('Mwanga Agrovet (Agrovet)')), findsOneWidget, reason: 'kept on Back');
+    expect(find.text(en.register_joining('Mwanga Agrovet')), findsOneWidget, reason: 'kept on Back');
     await typeInto(tester, 'invite', 'PETS22');
-    expect(find.text(en.register_joining('Mwanga Agrovet (Agrovet)')), findsNothing, reason: 'the old result goes at once');
+    expect(find.text(en.register_joining('Mwanga Agrovet')), findsNothing, reason: 'the old result goes at once');
     await continueNow(tester);
     expect(find.text(step(3)), findsOneWidget, reason: 'still checking the new code');
     await tester.pump(AppTimeouts.facilityLookupDebounce);
     await tester.pumpAndSettle();
     expect(membership.checked, [AssistantInputs.code.trim(), 'PETS22']);
-    expect(find.text(en.register_joining('Mwanza Pets (Pet shop)')), findsOneWidget);
+    expect(find.text(en.register_joining('Mwanza Pets')), findsOneWidget);
     await finishRegister(tester);
   }, skip: _skip);
 
@@ -196,7 +197,7 @@ void main() {
     await fillAssistantSteps(tester);
     expect(find.text(step(5)), findsOneWidget);
     expect(find.text('Ms. Neema Juma'), findsOneWidget);
-    expect(find.text('Mwanga Agrovet (Agrovet)'), findsOneWidget);
+    expect(find.text('Mwanga Agrovet'), findsOneWidget, reason: 'FN1: the name only');
     expect(find.text('neema@example.com'), findsOneWidget);
     await tapText(tester, en.register_createAccount);
     expect(find.text(en.register_consentRequired), findsOneWidget);
@@ -217,7 +218,7 @@ void main() {
     await create(tester);
     expect(find.text(step(3)), findsOneWidget);
     expect(errorOf(tester, 'invite'), 'Invalid, expired, or already-used invite code');
-    expect(find.text(en.register_joining('Mwanga Agrovet (Agrovet)')), findsNothing);
+    expect(find.text(en.register_joining('Mwanga Agrovet')), findsNothing);
     await finishRegister(tester);
   }, skip: _skip);
 

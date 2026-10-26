@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 
 import '../l10n/l10n.dart';
 import '../providers/facility_provider.dart';
+import '../utils/facility_display.dart';
 import '../constants/product_categories.dart';
 import '../theme/app_dimens.dart';
 import '../theme/app_motion.dart';
@@ -77,9 +78,9 @@ class _ProductCatalogSidePanelState extends State<ProductCatalogSidePanel> {
     final facilityProvider = Provider.of<FacilityProvider>(context);
     final selectedFacility = facilityProvider.selectedFacility;
     final l10n = context.l10n;
-    final facilityName = selectedFacility?['name'] ?? l10n.common_facility;
-    // Shown through its label (RW2b2; it showed the stored value before).
-    final facilityType = l10n.facilityTypeDisplay(selectedFacility?['type'], selectedFacility?['typeDetail']);
+    // FN1: the name as typed; the type is shown only in the facility picker,
+    // the Facilities cards and the business profile.
+    final facilityName = FacilityDisplay.name(selectedFacility?['name'], fallback: l10n.common_facility);
     final logoUrl = selectedFacility != null ? selectedFacility['logoUrl'] : null;
 
     return Container(
@@ -128,13 +129,6 @@ class _ProductCatalogSidePanelState extends State<ProductCatalogSidePanel> {
                         overflow: TextOverflow.ellipsis,
                         style: const TextStyle(fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f15),
                       ),
-                      if (facilityType.isNotEmpty)
-                        Text(
-                          facilityType,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: TextStyle(fontSize: AppFontSize.f12, color: context.colors.textMuted),
-                        ),
                     ],
                   ),
                 ),

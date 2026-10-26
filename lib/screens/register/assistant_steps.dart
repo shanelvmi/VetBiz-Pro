@@ -53,9 +53,8 @@ extension _AssistantSteps on _RegisterScreenState {
               const SizedBox(width: AppSpacing.s8),
               Expanded(
                 child: Text(
-                  // The type through the shared label (Other's own words).
-                  context.l10n.register_joining(
-                      '${_foundFacility!['name']} (${context.l10n.facilityTypeDisplay('${_foundFacility!['type']}', _foundFacility!['typeDetail'])})'),
+                  // FN1: the name exactly as typed, never with its type.
+                  context.l10n.register_joining(FacilityDisplay.name(_foundFacility!['name'] as String?)),
                   style: TextStyle(color: context.colors.success, fontWeight: AppFontWeight.semibold, fontSize: AppFontSize.f13),
                 ),
               ),

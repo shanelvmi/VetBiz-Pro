@@ -8,6 +8,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../providers/facility_provider.dart';
 import '../../config/app_limits.dart';
 import '../../utils/upload_size_check.dart';
+import '../../utils/facility_display.dart';
 import '../../data/collections.dart';
 import '../../data/upload_content_types.dart';
 import '../../theme/app_text.dart';
@@ -93,7 +94,8 @@ class _BusinessProfileScreenState extends State<BusinessProfileScreen> {
   Widget build(BuildContext context) {
     final facilityProvider = Provider.of<FacilityProvider>(context);
     final selectedFacility = facilityProvider.selectedFacility;
-    final facilityName = selectedFacility?['name'] ?? context.l10n.profile_yourFacility;
+    final facilityName = FacilityDisplay.name(selectedFacility?['name'], fallback: context.l10n.profile_yourFacility);
+    final type = selectedFacility?['type'] ?? '';
     final logoUrl = selectedFacility?['logoUrl'];
 
     return Scaffold(
@@ -112,6 +114,20 @@ class _BusinessProfileScreenState extends State<BusinessProfileScreen> {
             child: Column(
               children: [
                 Text(facilityName, style: const TextStyle(fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f18)),
+                // FN1: the type is a classification, shown read-only beside its
+                // label, never joined to the name.
+                const SizedBox(height: AppSpacing.s6),
+                Wrap(
+                  alignment: WrapAlignment.center,
+                  spacing: AppSpacing.s6,
+                  children: [
+                    Text(context.l10n.facilities_typeOfFacility, style: TextStyle(color: context.colors.textMuted, fontSize: AppFontSize.f13)),
+                    Text(
+                      type.isNotEmpty ? context.l10n.facilityTypeDisplay(type, selectedFacility?['typeDetail']) : context.l10n.facilityPicker_typeNotSet,
+                      style: const TextStyle(fontWeight: AppFontWeight.semibold, fontSize: AppFontSize.f13),
+                    ),
+                  ],
+                ),
                 const SizedBox(height: AppSpacing.s24),
                 Stack(
                   alignment: Alignment.bottomRight,

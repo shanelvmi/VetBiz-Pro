@@ -94,7 +94,7 @@ class FacilityTypeField extends StatelessWidget {
         onChanged: enabled ? onTypeChanged : null,
       ),
     );
-    if (type != kFacilityTypeOther) return labeled?.call(l10n.common_type, dropdown) ?? dropdown;
+    if (type != kFacilityTypeOther) return labeled?.call(l10n.facilities_typeOfFacility, dropdown) ?? dropdown;
 
     final detail = TextField(
       key: detailKey,
@@ -117,7 +117,7 @@ class FacilityTypeField extends StatelessWidget {
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        labeled?.call(l10n.common_type, dropdown) ?? dropdown,
+        labeled?.call(l10n.facilities_typeOfFacility, dropdown) ?? dropdown,
         SizedBox(height: gap),
         labeled?.call(l10n.facilityType_detailLabel, detail) ?? detail,
       ],

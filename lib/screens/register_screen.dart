@@ -8,6 +8,7 @@ import 'package:cloud_functions/cloud_functions.dart';
 import '../services/auth_service.dart';
 import '../services/membership_service.dart';
 import '../utils/facility_activation.dart';
+import '../utils/facility_display.dart';
 import '../services/facility_codes.dart';
 import '../utils/facility_code_generator.dart';
 import '../constants/facility_types.dart';
@@ -1232,7 +1233,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
         'phone' => L10n.current.register_fieldPhone,
         'invite' => L10n.current.common_inviteCode,
         'facility' => L10n.current.common_facility,
-        'facilityType' => L10n.current.common_type,
+        'facilityType' => L10n.current.facilities_typeOfFacility,
         'typeDetail' => L10n.current.facilityType_detailLabel,
         'password' => L10n.current.common_password,
         'confirm' => L10n.current.register_fieldConfirmPassword,
@@ -1808,7 +1809,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
             Expanded(
               child: Text(
                 facilities.isNotEmpty
-                    ? '${facilities.first['name'] ?? ''} (${context.l10n.facilityTypeDisplay(facilities.first['type'], facilities.first['typeDetail'])})'
+                    // FN1: the name only, never with its type.
+                    ? FacilityDisplay.name(facilities.first['name'] as String?)
                     : context.l10n.team_unknownFacility,
                 style: TextStyle(color: context.colors.textSoft, fontWeight: AppFontWeight.semibold, fontSize: AppFontSize.f13_5),
               ),

@@ -14,19 +14,20 @@ extension _ReviewStep on _RegisterScreenState {
       // The full name exactly as _submit builds it.
       _reviewBox(l10n.register_stepAboutYou, ['$selectedPrefix ${nameController.text.trim()}', phoneController.text.trim()], step: 1),
       if (_isAssistant)
-        // RW2c: the facility the checked code leads to.
+        // RW2c: the facility the checked code leads to; FN1: its name only.
         _reviewBox(
           l10n.register_stepInvite,
           [
             if (_foundFacility != null)
-              '${_foundFacility!['name']} (${l10n.facilityTypeDisplay('${_foundFacility!['type']}', _foundFacility!['typeDetail'])})',
+              FacilityDisplay.name(_foundFacility!['name'] as String?),
           ],
           step: _WizardFlow.thirdStep,
         )
       else
         _reviewBox(
           l10n.register_yourFacilities,
-          [for (final f in facilities) '${f['name'] ?? ''} (${l10n.facilityTypeDisplay(f['type'], f['typeDetail'])})'],
+          // FN1: each name only; Change opens step 3, which shows the type.
+          [for (final f in facilities) FacilityDisplay.name(f['name'] as String?)],
           step: _WizardFlow.thirdStep,
         ),
       _reviewBox(l10n.register_stepSignIn, [emailController.text.trim()], step: _WizardFlow.signInStep),

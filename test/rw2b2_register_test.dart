@@ -152,7 +152,8 @@ void main() {
     expect(registerField('facility-type-detail'), findsNothing, reason: 'the type starts empty again');
     await tapContinue(tester);
     await fromStep4ToReview(tester);
-    expect(find.text('Mwanza Pets (Pet shop)'), findsOneWidget);
+    // FN1: the review shows the name only, never with its type.
+    expect(find.text('Mwanza Pets'), findsOneWidget);
     await finishRegister(tester);
   }, skip: _skip);
 

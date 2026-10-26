@@ -6,6 +6,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import '../../utils/facility_activation.dart';
 import '../../utils/force_logout.dart';
 import '../../constants/facility_types.dart';
+import '../../widgets/facility_type_tag.dart';
 import '../../widgets/initials_avatar.dart';
 import '../../widgets/vetbiz_loading_indicator.dart';
 import '../../data/collections.dart';
@@ -116,29 +117,6 @@ class _FacilityPickerScreenState extends State<FacilityPickerScreen> {
     if (uid == null) return;
     await FirebaseFirestore.instance.collection(Collections.users).doc(uid).update({'defaultFacilityId': facilityId});
     if (mounted) setState(() => _defaultFacilityId = facilityId);
-  }
-
-  Color _typeColor(String type) {
-    switch (type.toLowerCase()) {
-      case 'agrovet':
-        return context.colors.success;
-      case 'vet clinic':
-      case 'vet hospital':
-      case 'ambulatory vet':
-        return context.colors.info;
-      default:
-        return context.colors.chart4;
-    }
-  }
-
-  // The type chip label: the fill keeps the type colour; the label is the
-  // same colour in light, and in dark the chip label roles, lifted to 4.5
-  // on that fill (K6).
-  Color _typeLabelColor(String type) {
-    final fill = _typeColor(type);
-    if (fill == context.colors.info) return context.colors.infoChipLabel;
-    if (fill == context.colors.chart4) return context.colors.chart4ChipLabel;
-    return fill;
   }
 
   List<Map<String, dynamic>> get _filteredFacilities {
@@ -405,7 +383,6 @@ class _FacilityPickerScreenState extends State<FacilityPickerScreen> {
     final status = details?[Fields.status] as String? ?? FacilityStatus.active.key;
     final staffCount = _staffCountByFacility[facilityId] ?? 0;
     final isDefault = facilityId == _defaultFacilityId;
-    final typeColor = _typeColor(type);
 
     return Container(
       decoration: BoxDecoration(
@@ -445,20 +422,7 @@ class _FacilityPickerScreenState extends State<FacilityPickerScreen> {
                         children: [
                           Text(name, style: const TextStyle(fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f15), maxLines: 1, overflow: TextOverflow.ellipsis),
                           const SizedBox(height: AppSpacing.s4),
-                          Container(
-                            padding: const EdgeInsets.symmetric(horizontal: AppSpacing.s8, vertical: AppSpacing.s2),
-                            decoration: BoxDecoration(
-                              color: type.isNotEmpty ? typeColor.withValues(alpha: AppAlpha.a10) : context.colors.textHint.withValues(alpha: AppAlpha.a10),
-                              borderRadius: BorderRadius.circular(AppRadius.r8),
-                            ),
-                            child: Text(
-                                type.isNotEmpty
-                                    ? context.l10n.facilityTypeDisplay(type, facility['facilityTypeDetail'] as String?)
-                                    : context.l10n.facilityPicker_typeNotSet,
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                                style: TextStyle(color: type.isNotEmpty ? _typeLabelColor(type) : context.colors.textMuted, fontSize: AppFontSize.f11, fontWeight: AppFontWeight.semibold)),
-                          ),
+                          FacilityTypeTag(type: type, typeDetail: facility['facilityTypeDetail'] as String?),
                         ],
                       ),
                     ),

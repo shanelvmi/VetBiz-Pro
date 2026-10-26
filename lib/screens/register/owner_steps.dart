@@ -92,7 +92,8 @@ extension _OwnerSteps on _RegisterScreenState {
           textInputAction: TextInputAction.done,
           onSubmitted: (_) => _wizardContinue(),
           onChanged: (_) => _onFieldChanged(),
-          decoration: _decoration(hint: context.l10n.common_facilityNameHint, icon: Icons.storefront_outlined),
+          // FN1: printed exactly as typed, never with its type.
+          decoration: _decoration(hint: context.l10n.common_facilityNameHint, icon: Icons.storefront_outlined, helper: context.l10n.facilities_nameHelper),
         ),
       ),
       _gap(WizardMetrics.fieldGap),

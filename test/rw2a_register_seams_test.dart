@@ -77,7 +77,7 @@ void main() {
 
     await typeInviteCode(tester, 'ABC123');
     expect(membership.checked, ['ABC123']);
-    expect(find.text('Joining: Mwanga Agrovet (Agrovet)'), findsOneWidget);
+    expect(find.text('Joining: Mwanga Agrovet'), findsOneWidget);
   }, skip: _skip);
 
   testWidgets('none given: the real services, unchanged', (tester) async {

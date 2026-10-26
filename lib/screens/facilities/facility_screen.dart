@@ -18,6 +18,8 @@ import '../../utils/upload_size_check.dart';
 import '../../services/facility_codes.dart';
 import '../../constants/facility_types.dart';
 import '../../widgets/facility_type_field.dart';
+import '../../widgets/facility_type_tag.dart';
+import '../../utils/facility_display.dart';
 import '../../services/sales_summary_service.dart';
 import '../../utils/force_logout.dart';
 import '../../utils/facility_limit_helper.dart';
@@ -468,7 +470,13 @@ class _FacilityScreenState extends State<FacilityScreen> {
                   controller: nameController,
                   textCapitalization: TextCapitalization.sentences,
                   inputFormatters: [SentenceCapitalizationFormatter()],
-                  decoration: InputDecoration(labelText: context.l10n.facilities_nameLabel),
+                  decoration: InputDecoration(
+                    labelText: context.l10n.common_facilityName,
+                    hintText: context.l10n.common_facilityNameHint,
+                    // FN1: printed exactly as typed, never with its type.
+                    helperText: context.l10n.facilities_nameHelper,
+                    helperMaxLines: 2,
+                  ),
                 ),
                 const SizedBox(height: AppSpacing.s12),
                 FacilityTypeField(
@@ -481,7 +489,7 @@ class _FacilityScreenState extends State<FacilityScreen> {
                     if (val != kFacilityTypeOther) typeDetailController.clear();
                   }),
                   detailController: typeDetailController,
-                  typeDecoration: InputDecoration(labelText: context.l10n.common_type),
+                  typeDecoration: InputDecoration(labelText: context.l10n.facilities_typeOfFacility),
                   typeError: typeError,
                   detailError: detailError,
                 ),
@@ -746,7 +754,13 @@ class _FacilityScreenState extends State<FacilityScreen> {
                   controller: nameController,
                   textCapitalization: TextCapitalization.sentences,
                   inputFormatters: [SentenceCapitalizationFormatter()],
-                  decoration: InputDecoration(labelText: context.l10n.facilities_nameLabel),
+                  decoration: InputDecoration(
+                    labelText: context.l10n.common_facilityName,
+                    hintText: context.l10n.common_facilityNameHint,
+                    // FN1: printed exactly as typed, never with its type.
+                    helperText: context.l10n.facilities_nameHelper,
+                    helperMaxLines: 2,
+                  ),
                 ),
                 const SizedBox(height: AppSpacing.s12),
                 FacilityTypeField(
@@ -759,7 +773,7 @@ class _FacilityScreenState extends State<FacilityScreen> {
                     if (val != kFacilityTypeOther) typeDetailController.clear();
                   }),
                   detailController: typeDetailController,
-                  typeDecoration: InputDecoration(labelText: context.l10n.common_type),
+                  typeDecoration: InputDecoration(labelText: context.l10n.facilities_typeOfFacility),
                   typeError: typeError,
                   detailError: detailError,
                 ),
@@ -1496,16 +1510,15 @@ class _FacilityScreenState extends State<FacilityScreen> {
     );
   }
 
-  /// A facility's name with its type folded in - "Ukuli Agrovet"
-  /// rather than just "Ukuli" - falling back to the name alone if
-  /// type isn't set.
-  String _nameWithType(Map<String, dynamic> facility) {
-    final name = (facility['name'] as String?) ?? context.l10n.common_facility;
-    final type = facility['type'] as String?;
-    return (type != null && type.isNotEmpty)
-        ? context.l10n.facilities_nameWithType(name, context.l10n.facilityTypeDisplay(type, facility['typeDetail'] as String?))
-        : name;
-  }
+  // FN1: the name exactly as typed, never joined with the type; the type is
+  // the small tag under it (the facility picker's chip).
+  String _nameOf(Map<String, dynamic> facility) =>
+      FacilityDisplay.name(facility['name'] as String?, fallback: context.l10n.common_facility);
+
+  Widget _typeTag(Map<String, dynamic> facility) => Padding(
+        padding: const EdgeInsets.only(top: AppSpacing.s4),
+        child: FacilityTypeTag(type: facility['type'] as String? ?? '', typeDetail: facility['typeDetail'] as String?),
+      );
 
   Widget _buildFacilityListRow(Map<String, dynamic> facility) {
     final facilityId = facility[Fields.facilityId] as String?;
@@ -1553,11 +1566,12 @@ class _FacilityScreenState extends State<FacilityScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    _nameWithType(facility),
+                    _nameOf(facility),
                     style: const TextStyle(fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f14),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                   ),
+                  _typeTag(facility),
                   if (address != null && address.isNotEmpty)
                     Text(
                       address,
@@ -1702,7 +1716,7 @@ class _FacilityScreenState extends State<FacilityScreen> {
                   children: [
                     Flexible(
                       child: Text(
-                        _nameWithType(facility),
+                        _nameOf(facility),
                         style: const TextStyle(fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f22),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
@@ -1711,6 +1725,7 @@ class _FacilityScreenState extends State<FacilityScreen> {
                     buildStatusChip(status),
                   ],
                 ),
+                _typeTag(facility),
                 const SizedBox(height: AppSpacing.s10),
                 if (details?['address'] != null && (details!['address'] as String).isNotEmpty)
                   _infoRow(Icons.location_on_outlined, details['address'] as String),

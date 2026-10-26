@@ -12,6 +12,7 @@ import 'screens/dashboard/dashboard_screen.dart';
 import 'screens/facilities/facility_picker_screen.dart';
 import 'screens/platform_admin/platform_admin_home_screen.dart';
 import 'utils/facility_activation.dart';
+import 'utils/facility_display.dart';
 import 'utils/activity_signal.dart';
 import 'utils/presence_heartbeat.dart';
 import 'widgets/maintenance_gate.dart';
@@ -995,6 +996,9 @@ class _NoFacilityScreenState extends State<_NoFacilityScreen> {
           decoration: InputDecoration(
             labelText: context.l10n.common_facilityName,
             hintText: context.l10n.common_facilityNameHint,
+            // FN1: printed exactly as typed, never with its type.
+            helperText: context.l10n.facilities_nameHelper,
+            helperMaxLines: 2,
             prefixIcon: const Icon(Icons.storefront_outlined),
             border: OutlineInputBorder(borderRadius: BorderRadius.circular(AppRadius.r14)),
           ),
@@ -1012,7 +1016,7 @@ class _NoFacilityScreenState extends State<_NoFacilityScreen> {
           }),
           detailController: _facilityTypeDetailController,
           typeDecoration: InputDecoration(
-            labelText: context.l10n.common_type,
+            labelText: context.l10n.facilities_typeOfFacility,
             border: OutlineInputBorder(borderRadius: BorderRadius.circular(AppRadius.r14)),
           ),
           detailDecoration: InputDecoration(
@@ -1200,10 +1204,8 @@ class _NoFacilityScreenState extends State<_NoFacilityScreen> {
                   const SizedBox(height: AppSpacing.s10),
                   if (found != null)
                     Text(
-                      found.facilityType.isEmpty
-                          ? context.l10n.noFacility_askingToJoin(found.facilityName)
-                          : context.l10n.noFacility_askingToJoinWithType(
-                              found.facilityName, context.l10n.facilityTypeDisplay(found.facilityType, found.facilityTypeDetail)),
+                      // FN1: the name exactly as typed, never with its type.
+                      context.l10n.noFacility_askingToJoin(FacilityDisplay.name(found.facilityName)),
                       textAlign: TextAlign.center,
                       style: TextStyle(color: context.colors.success, fontWeight: AppFontWeight.semibold, fontSize: AppFontSize.f13),
                     )
