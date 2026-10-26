@@ -289,6 +289,10 @@ extension StoredLabels on AppLocalizations {
   String productUnitLabel(String stored) => StoredValueLabels.productUnit.labelOf(this, stored);
   String serviceCategoryLabel(String stored) => StoredValueLabels.serviceCategory.labelOf(this, stored);
   String facilityTypeLabel(String stored) => StoredValueLabels.facilityType.labelOf(this, stored);
+
+  /// A facility's type as shown everywhere (RW2b2): an Other facility's own
+  /// words (typeDetail) when it has them, otherwise the type's label.
+  String facilityTypeDisplay(String? stored, [String? typeDetail]) => facilityTypeLabel(stored ?? '');
   String paymentMethodLabel(String stored) => StoredValueLabels.paymentMethod.labelOf(this, stored);
   String activityTypeLabel(String stored) => StoredValueLabels.activityType.labelOf(this, stored);
   String restockFrequencyLabel(String stored) => StoredValueLabels.restockFrequency.labelOf(this, stored);

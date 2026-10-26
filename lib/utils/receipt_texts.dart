@@ -15,6 +15,11 @@ class ReceiptTexts {
   static const String brandSecond = 'Pro';
 
   static String tin(String tin) => 'TIN: $tin';
+
+  /// The facility's type after its name on receipts, PDFs and printed
+  /// reports (RW2b2): an Other facility's own words when it has them, the
+  /// English label of any other type, and nothing for a bare Other.
+  static String facilityType(String? type, [String? typeDetail]) => type == null || type == 'Other' ? '' : type;
   static const String receiptNo = 'Receipt #';
   static const String date = 'Date';
   static const String customer = 'Customer';

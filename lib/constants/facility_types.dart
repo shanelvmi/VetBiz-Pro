@@ -9,3 +9,16 @@ const List<String> kFacilityTypes = [
   'Ambulatory Vet',
   'Other',
 ];
+
+/// The stored type whose facility carries the owner's own words
+/// (typeDetail, RW2b2), shown instead of "Other".
+const String kFacilityTypeOther = 'Other';
+
+/// What is wrong with a typed typeDetail.
+enum TypeDetailIssue { required, length, characters }
+
+/// The server's rule for typeDetail (cleanTypeDetail in
+/// functions/membership.js): trimmed, AppLimits.typeDetailMin to
+/// AppLimits.typeDetailMax characters, letters of any language, digits,
+/// spaces and . , & ' - only. Null when it is fine.
+TypeDetailIssue? typeDetailIssue(String typed) => null;

@@ -17,7 +17,17 @@ const String kMembershipFunctionsRegion = 'africa-south1';
 class InviteCheck {
   final String facilityName;
   final String facilityType;
-  const InviteCheck({required this.facilityName, required this.facilityType});
+
+  /// An Other facility's own words for its type (RW2b2), when it has them.
+  final String? facilityTypeDetail;
+  const InviteCheck({required this.facilityName, required this.facilityType, this.facilityTypeDetail});
+
+  /// The server's answer (checkInviteCode, joinWithInvite,
+  /// joinFacilityWithInvite).
+  factory InviteCheck.fromResult(Map<String, dynamic> data) => InviteCheck(
+        facilityName: (data['facilityName'] ?? '').toString(),
+        facilityType: (data['facilityType'] ?? '').toString(),
+      );
 }
 
 class CreatedInvite {
@@ -49,6 +59,13 @@ class MembershipService {
     final raw = result.data;
     return raw is Map ? Map<String, dynamic>.from(raw) : <String, dynamic>{};
   }
+
+  /// One facility as registerOwner and addFacility receive it: the name and
+  /// the stored type, and typeDetail only for Other (RW2b2).
+  static Map<String, dynamic> facilityPayload(Map<String, dynamic> facility) => {
+        'name': facility['name'],
+        'type': facility['type'],
+      };
 
   List<Map<String, dynamic>> _facilityList(dynamic raw) {
     if (raw is! List) return [];

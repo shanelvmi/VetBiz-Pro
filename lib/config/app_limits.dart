@@ -98,4 +98,10 @@ class AppLimits {
   /// (firestore.rules, isValidNotificationState: `size() <= 2000`). Keep the
   /// two equal.
   static const int notificationStateMapMax = 2000;
+
+  /// The words an owner types for a facility of type Other (typeDetail,
+  /// RW2b2), trimmed. The server checks the same (TYPE_DETAIL_MIN and
+  /// TYPE_DETAIL_MAX in functions/membership.js). Keep them equal.
+  static const int typeDetailMin = 2;
+  static const int typeDetailMax = 40;
 }
