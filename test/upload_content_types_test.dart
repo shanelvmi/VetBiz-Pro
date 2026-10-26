@@ -10,6 +10,8 @@ void main() {
   test('the two upload content types are images', () {
     expect(UploadContentTypes.jpeg.contentType, 'image/jpeg');
     expect(UploadContentTypes.png.contentType, 'image/png');
+    expect(UploadContentTypes.poster(PosterImageType.webp).contentType, 'image/webp');
+    expect(UploadContentTypes.poster(PosterImageType.jpeg).cacheControl, 'public, max-age=86400');
   });
 
   test('every putData in lib/ sends an UploadContentTypes value', () {

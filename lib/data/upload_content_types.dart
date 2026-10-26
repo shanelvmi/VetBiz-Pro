@@ -12,6 +12,9 @@ class UploadContentTypes {
 
   /// For `.png` paths: user_avatars/, facility_logos/.
   static final SettableMetadata png = SettableMetadata(contentType: 'image/png');
+
+  /// For announcement_posters/ (AN1): the poster's real type and a day's cache.
+  static SettableMetadata poster(PosterImageType type) => type.metadata;
 }
 
 /// The three types an announcement poster may be (AN1). storage.rules
