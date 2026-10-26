@@ -1945,6 +1945,34 @@ class _RegisterScreenState extends State<RegisterScreen> {
     );
   }
 
+  // "Add at least one facility" and its variants, in a box: the facility
+  // has no single field to hang it under. Also the wizard's step 3.
+  Widget _facilityErrorBox(String message) {
+    return Container(
+      key: _fieldKeys['facility'],
+      margin: const EdgeInsets.only(bottom: AppSpacing.s12),
+      padding: const EdgeInsets.all(AppSpacing.s12),
+      decoration: BoxDecoration(
+        color: context.colors.dangerAccent.withValues(alpha: AppAlpha.a05),
+        borderRadius: BorderRadius.circular(AppRadius.r12),
+        border: Border.all(color: context.colors.dangerAccent.withValues(alpha: AppAlpha.a40)),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(Icons.error_outline, color: context.colors.dangerAccent, size: AppIconSize.i18),
+          const SizedBox(width: AppSpacing.s8),
+          Expanded(
+            child: Text(
+              message,
+              style: TextStyle(color: context.colors.dangerDeep, fontSize: AppFontSize.f12_5, height: 1.35),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   List<Widget> _adminFacilityFields() {
     final atLimit = facilities.length >= _maxFacilities;
     // The first facility is required; further ones are optional.
@@ -1964,30 +1992,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
             style: TextStyle(fontSize: AppFontSize.f12_5, color: context.colors.textMuted),
           ),
         ),
-      if (facilityError != null)
-        Container(
-          key: _fieldKeys['facility'],
-          margin: const EdgeInsets.only(bottom: AppSpacing.s12),
-          padding: const EdgeInsets.all(AppSpacing.s12),
-          decoration: BoxDecoration(
-            color: context.colors.dangerAccent.withValues(alpha: AppAlpha.a05),
-            borderRadius: BorderRadius.circular(AppRadius.r12),
-            border: Border.all(color: context.colors.dangerAccent.withValues(alpha: AppAlpha.a40)),
-          ),
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Icon(Icons.error_outline, color: context.colors.dangerAccent, size: AppIconSize.i18),
-              const SizedBox(width: AppSpacing.s8),
-              Expanded(
-                child: Text(
-                  facilityError,
-                  style: TextStyle(color: context.colors.dangerDeep, fontSize: AppFontSize.f12_5, height: 1.35),
-                ),
-              ),
-            ],
-          ),
-        ),
+      if (facilityError != null) _facilityErrorBox(facilityError),
       if (widget.isUpdating)
         Text(
           context.l10n.register_useViewFacilities,
@@ -2070,87 +2075,92 @@ class _RegisterScreenState extends State<RegisterScreen> {
   // ---------------- security (registration only) ----------------
 
   Widget _buildSecuritySection() {
-    final password = passwordController.text;
-    final confirm = confirmPasswordController.text;
-    final matches = password == confirm;
-
     return _section(
       icon: Icons.lock_outline,
       title: context.l10n.register_accountSecurity,
       children: [
-        _labeled(
-          context.l10n.common_password,
-          TextField(
-            controller: passwordController,
-            focusNode: _password.focusNode,
-            obscureText: _password.obscured,
-            autocorrect: false,
-            enableSuggestions: false,
-            onChanged: (_) => _onFieldChanged(),
-            decoration: _decoration(
-              hint: context.l10n.register_createPassword,
-              icon: Icons.lock_outline,
-              suffix: IconButton(
-                icon: Icon(
-                  _password.obscured ? Icons.visibility_outlined : Icons.visibility_off_outlined,
-                  size: AppIconSize.i20,
-                  color: context.colors.textHint,
-                ),
-                onPressed: _password.toggle,
-              ),
-              helper: password.isEmpty
-                  ? context.l10n.register_passwordRule
-                  : (_passwordIssue(password) ?? context.l10n.register_looksGood),
-              helperColor: password.isEmpty
-                  ? context.colors.textMuted
-                  : (_passwordIssue(password) == null ? context.colors.success : context.colors.dangerAccent),
-              errorText: _fieldErrors['password'],
-            ),
-          ),
-          required: true,
-          fieldKey: _fieldKeys['password'],
-        ),
+        _labeled(context.l10n.common_password, _passwordInput(), required: true, fieldKey: _fieldKeys['password']),
         const SizedBox(height: AppSpacing.s14),
-        _labeled(
-          context.l10n.register_fieldConfirmPassword,
-          TextField(
-            controller: confirmPasswordController,
-            focusNode: _confirm.focusNode,
-            obscureText: _confirm.obscured,
-            autocorrect: false,
-            enableSuggestions: false,
-            onChanged: (_) => _onFieldChanged(),
-            decoration: _decoration(
-              hint: context.l10n.register_reenterPassword,
-              icon: Icons.lock_outline,
-              suffix: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  if (confirm.isNotEmpty)
-                    Icon(
-                      matches ? Icons.check_circle : Icons.error_outline,
-                      size: AppIconSize.i20,
-                      color: matches ? context.colors.success : context.colors.dangerAccent,
-                    ),
-                  IconButton(
-                    icon: Icon(
-                      _confirm.obscured ? Icons.visibility_outlined : Icons.visibility_off_outlined,
-                      size: AppIconSize.i20,
-                      color: context.colors.textHint,
-                    ),
-                    onPressed: _confirm.toggle,
-                  ),
-                ],
-              ),
-              helper: confirm.isEmpty ? null : (matches ? context.l10n.register_passwordsMatch : context.l10n.common_passwordsDoNotMatch),
-              helperColor: matches ? context.colors.success : context.colors.dangerAccent,
-              errorText: _fieldErrors['confirm'],
-            ),
-          ),
-          required: true,
-          fieldKey: _fieldKeys['confirm'],
-        ),
+        _labeled(context.l10n.register_fieldConfirmPassword, _confirmInput(), required: true, fieldKey: _fieldKeys['confirm']),
       ],
+    );
+  }
+
+  // The two password fields with their P1b guards, shared by the form above
+  // and the wizard's sign-in step (which adds a key and the keyboard's
+  // next/done actions).
+  Widget _passwordInput({Key? key, TextInputAction? action}) {
+    final password = passwordController.text;
+    return TextField(
+      key: key,
+      controller: passwordController,
+      focusNode: _password.focusNode,
+      obscureText: _password.obscured,
+      autocorrect: false,
+      enableSuggestions: false,
+      textInputAction: action,
+      onChanged: (_) => _onFieldChanged(),
+      decoration: _decoration(
+        hint: context.l10n.register_createPassword,
+        icon: Icons.lock_outline,
+        suffix: IconButton(
+          icon: Icon(
+            _password.obscured ? Icons.visibility_outlined : Icons.visibility_off_outlined,
+            size: AppIconSize.i20,
+            color: context.colors.textHint,
+          ),
+          onPressed: _password.toggle,
+        ),
+        helper: password.isEmpty
+            ? context.l10n.register_passwordRule
+            : (_passwordIssue(password) ?? context.l10n.register_looksGood),
+        helperColor: password.isEmpty
+            ? context.colors.textMuted
+            : (_passwordIssue(password) == null ? context.colors.success : context.colors.dangerAccent),
+        errorText: _fieldErrors['password'],
+      ),
+    );
+  }
+
+  Widget _confirmInput({Key? key, TextInputAction? action, ValueChanged<String>? onSubmitted}) {
+    final confirm = confirmPasswordController.text;
+    final matches = passwordController.text == confirm;
+    return TextField(
+      key: key,
+      controller: confirmPasswordController,
+      focusNode: _confirm.focusNode,
+      obscureText: _confirm.obscured,
+      autocorrect: false,
+      enableSuggestions: false,
+      textInputAction: action,
+      onSubmitted: onSubmitted,
+      onChanged: (_) => _onFieldChanged(),
+      decoration: _decoration(
+        hint: context.l10n.register_reenterPassword,
+        icon: Icons.lock_outline,
+        suffix: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            if (confirm.isNotEmpty)
+              Icon(
+                matches ? Icons.check_circle : Icons.error_outline,
+                size: AppIconSize.i20,
+                color: matches ? context.colors.success : context.colors.dangerAccent,
+              ),
+            IconButton(
+              icon: Icon(
+                _confirm.obscured ? Icons.visibility_outlined : Icons.visibility_off_outlined,
+                size: AppIconSize.i20,
+                color: context.colors.textHint,
+              ),
+              onPressed: _confirm.toggle,
+            ),
+          ],
+        ),
+        helper: confirm.isEmpty ? null : (matches ? context.l10n.register_passwordsMatch : context.l10n.common_passwordsDoNotMatch),
+        helperColor: matches ? context.colors.success : context.colors.dangerAccent,
+        errorText: _fieldErrors['confirm'],
+      ),
     );
   }
 }

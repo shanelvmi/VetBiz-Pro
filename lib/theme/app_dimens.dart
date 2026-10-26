@@ -281,6 +281,21 @@ class WizardMetrics {
   static const double pinnedPaddingV = AppSpacing.s12;
   static const double pinnedDivider = 1;
 
+  /// A wizard screen (the register wizard, RW2b): between the header, the
+  /// intro and the step's content, between fields, between option cards,
+  /// and above Back and Continue when they are the card's bottom row.
+  static const double sectionGap = AppSpacing.s20;
+  static const double fieldGap = AppSpacing.s14;
+  static const double optionListGap = AppSpacing.s8;
+  static const double navTopGap = AppSpacing.s24;
+
+  /// The review step's summary boxes: inside, the corner, between boxes,
+  /// and between a box's lines.
+  static const double reviewPadding = AppSpacing.s14;
+  static const double reviewRadius = AppRadius.r14;
+  static const double reviewGap = AppSpacing.s10;
+  static const double reviewLineGap = AppSpacing.s4;
+
   /// Terms checkbox: between the box and the sentence, and above the error.
   static const double consentGap = AppSpacing.s4;
 }

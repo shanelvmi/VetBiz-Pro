@@ -46,6 +46,9 @@ class WizardFontSize {
   static const double button = AppFontSize.f16;
   static const double consent = AppFontSize.f13;
   static const double consentError = AppFontSize.f12;
+  // The review step: a box's heading and its lines.
+  static const double reviewLabel = AppFontSize.f13;
+  static const double reviewValue = AppFontSize.f14;
 }
 
 /// The About, How to use it and FAQs pages (G4): body text at least 14 px.
