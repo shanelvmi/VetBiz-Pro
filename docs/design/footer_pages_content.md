@@ -1,7 +1,7 @@
 # G4: the text of the About, How to use it and FAQs pages
 
 Batch G4 (RUNBOOK2 ledger). Every sentence the three pages show, with the file and line that proves it. Code read at `66331ac`; the G4b rows re-read at `a44d561`. The pages are written from this table; the owner edits the English in `lib/l10n/app_en.arb` (or asks for changes). Rules: only what the repository proves; no marketing words, no claims about security, uptime or savings, no prices, no "AI". `{appName}` is `AppInfo.name`. Screen names are the sidebar's (`dashboard_screen.dart:2234-2343`: Stock, Products, Sales, Services, Clients, Payments, Debtors, Transactions, Reports, Settings).
-**RW2b/RW2c must re-check** the register sentences (H1, H8, F1) when the wizard replaces the register form.
+**RW2b/RW2c must re-check** the register sentences (H1, H8, F1) when the wizard replaces the register form. RW2b re-checked H1 (howToUse_owner1) and F1 (faq_startA) against the owner wizard at `c0fd28a` and rewrote them (rows below); the assistant sentences are left for RW2c.
 
 ## Footer labels
 
@@ -36,7 +36,7 @@ Batch G4 (RUNBOOK2 ledger). Every sentence the three pages show, with the file a
 | Key | English | Proof |
 |---|---|---|
 | howToUse_ownerTitle | If you run the facility (Admin) | role_admin `app_en.arb:355` |
-| howToUse_owner1 | On the sign-in page press Register, choose "I own or manage a facility", add your facility's name and type, and press Create account. | `register_screen.dart:1673` (`register_roleAdminSubtitle`), `register_screen.dart:362` (addFacility), `register_createAccount` (2883) |
+| howToUse_owner1 | On the sign-in page press Register, choose "I own or manage a facility" and press Continue. Fill in each step: about you, your facility's name and type (press Add), then your email and password. On the last step check your details, tick the box to agree to the Terms of Service and the Privacy Policy, and press Create account. | RW2b re-proof: Register `login_screen.dart:910` (`login_register`); step 1 card `register/wizard_view.dart:84-87` (`register_roleAdminSubtitle`, `_selectRole('Admin')`); Continue `wizard_nav_bar.dart:76` (`products_continue`); steps About you, Your facilities, Sign-in details `register/wizard_view.dart` `_stepContent`, five steps `register/wizard_flow.dart:8`; name, type cards, Add `register/owner_steps.dart:84, 102, 115-119` (addFacility); email and password `register/owner_steps.dart:136, 154`; last step: summary and the box `register/review_step.dart:13-29` (`register_consent` with the two page names), Create blocked unticked `register/wizard_flow.dart:80`; Create account `register/wizard_flow.dart:163` |
 | howToUse_owner2 | Your new facility starts with a trial. Settings, under Subscription, shows how long it lasts and the plans after it. | `register_benefitTrial` (2879); Terms 3 `terms_of_service_screen.dart:63-66`; `settings_screen.dart:81-82` |
 | howToUse_owner3 | Open Products and press Add Product. Choose Sellable Product Catalog to sell it now, or Stock Store to keep it in storage first. | `products_screen.dart:839`; `add_edit_product_screen.dart:750-765` |
 | howToUse_owner4 | To move stock to the shelf, open Stock and press Release on the product. | `stockstore_screen.dart:666` (products_release); `release_to_shop_flow.dart:129` |
@@ -59,7 +59,7 @@ Batch G4 (RUNBOOK2 ledger). Every sentence the three pages show, with the file a
 | Key | English | Proof |
 |---|---|---|
 | faq_startQ | How do I start? | |
-| faq_startA | Press Register on the sign-in page and choose "I own or manage a facility". Your facility starts with a trial; Settings, under Subscription, shows how long it lasts. | as howToUse_owner1, owner2 |
+| faq_startA | Press Register on the sign-in page, choose "I own or manage a facility" and follow the five steps. Your facility starts with a trial; Settings, under Subscription, shows how long it lasts. | as howToUse_owner1 (RW2b re-proof; five steps `register/wizard_flow.dart:8`, "Step n of 5" header), owner2 |
 | faq_trialQ | What happens when the trial ends? | |
 | faq_trialA | You need a subscription to keep using every feature. If it lapses, there is a short grace period; then your records stay visible, but new sales, services and similar entries are paused until you renew. | Terms 3, `terms_of_service_screen.dart:63-71` |
 | faq_teamQ | How do I add my team? | |
