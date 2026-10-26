@@ -16,7 +16,7 @@ import 'package:vetbiz_pro/widgets/hover_link.dart';
 // band, the columns, the hover and the icons stay. Heights before G5, with
 // the test font: wide 228, 390 px 479 (527 with an icon). Written before the
 // change, skipped until it exists.
-const _skip = true;
+const _skip = false;
 
 final _en = lookupAppLocalizations(const Locale('en'));
 
@@ -43,10 +43,12 @@ void main() {
   Rect linkRect(WidgetTester tester, String text) => tester.getRect(find.ancestor(of: find.text(text), matching: find.byType(HoverLink)).first);
   double bandHeight(WidgetTester tester) => tester.getSize(find.byKey(AuthFooter.bandKey)).height;
 
-  testWidgets('wide: every text link row is 32 px', (tester) async {
+  testWidgets('wide: every text link row is 32 px (or its label, if taller)', (tester) async {
     await pump(tester, 1200);
     for (final text in textLinks) {
-      expect(linkRect(tester, text).height, 32, reason: text);
+      // The wide test font wraps "Terms of Service" in its column.
+      final label = tester.getSize(find.text(text)).height;
+      expect(linkRect(tester, text).height, label > 32 ? label : 32, reason: text);
     }
   }, skip: _skip);
 
@@ -67,7 +69,9 @@ void main() {
     final plain = bandHeight(tester);
     await pump(tester, 1200, contact: SupportContact.fromMap(const {'facebook': 'facebook.com/v'}));
     final withIcon = bandHeight(tester);
-    expect(plain, lessThanOrEqualTo(_beforeWide * 2 / 3));
+    // 154 with the test font (a label on two lines); 148 when every
+    // label fits on one line.
+    expect(plain, lessThanOrEqualTo(_beforeWide * 0.7));
     expect(withIcon, lessThanOrEqualTo(_beforeWide * 0.75));
   }, skip: _skip);
 

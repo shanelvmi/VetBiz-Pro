@@ -181,10 +181,22 @@ class AuthFooterMetrics {
   /// The line between the columns and the bottom row.
   static const double hairline = 1;
 
-  /// Around the footer, and between its parts.
+  /// Around the footer, and between its parts (phones and narrow windows).
   static const double paddingVertical = AppSpacing.s24;
   static const double columnGap = AppSpacing.s24;
   static const double sectionGap = AppSpacing.s16;
+
+  /// G5, wide windows (a mouse): about a third shorter. Link rows of 32 px
+  /// instead of the 48 px touch target, less padding, a small gap above
+  /// the line.
+  static const double linkRowHeightWide = AppSpacing.s32;
+  static const double paddingVerticalWide = AppSpacing.s12;
+  static const double lineGapWide = AppSpacing.s8;
+
+  /// G5, phones and narrow windows: the links' 48 px targets already leave
+  /// space under them, so a small gap after a row of links and none above
+  /// the line.
+  static const double linksGapNarrow = AppSpacing.s4;
 
   /// The brand column takes this share of the row; Support and Legal one each.
   static const int brandFlex = 2;

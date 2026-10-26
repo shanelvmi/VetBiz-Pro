@@ -16,7 +16,8 @@ typedef HoverLinkIconBuilder = Widget Function(Color color);
 /// also draws a ring round it. The underline (TextDecoration, or the line
 /// kept under an icon) and the ring (painted outside the box) never change
 /// its size, so nothing moves. Pointer cursor, Semantics link, Enter or
-/// Space opens it, and at least [HoverLinkMetrics.tapTarget] high.
+/// Space opens it, and at least [HoverLinkMetrics.tapTarget] high (a text
+/// link may ask for less with [minHeight] where a mouse is used: G5).
 class HoverLink extends StatefulWidget {
   const HoverLink({
     super.key,
@@ -26,6 +27,7 @@ class HoverLink extends StatefulWidget {
     this.style,
     this.underlineAtRest = false,
     this.button = false,
+    this.minHeight = HoverLinkMetrics.tapTarget,
   }) : icon = null,
        tooltip = null;
 
@@ -39,7 +41,8 @@ class HoverLink extends StatefulWidget {
     this.button = false,
   }) : label = null,
        style = null,
-       underlineAtRest = false;
+       underlineAtRest = false,
+       minHeight = HoverLinkMetrics.tapTarget;
 
   /// For tests: the ring's painter, and the line under an icon.
   static const focusRingKey = ValueKey<String>('hover-link-focus-ring');
@@ -62,6 +65,10 @@ class HoverLink extends StatefulWidget {
   final bool button;
 
   final String? tooltip;
+
+  /// The least height: the touch target by default. G5: the footer's text
+  /// links on wide windows (a mouse) use 32 px rows.
+  final double minHeight;
 
   @override
   State<HoverLink> createState() => _HoverLinkState();
@@ -115,7 +122,7 @@ class _HoverLinkState extends State<HoverLink> {
     }
 
     Widget link = ConstrainedBox(
-      constraints: BoxConstraints(minHeight: HoverLinkMetrics.tapTarget, minWidth: widget.icon != null ? HoverLinkMetrics.tapTarget : 0),
+      constraints: BoxConstraints(minHeight: widget.minHeight, minWidth: widget.icon != null ? HoverLinkMetrics.tapTarget : 0),
       child: Align(
         alignment: widget.icon != null ? Alignment.center : AlignmentDirectional.centerStart,
         widthFactor: 1,
