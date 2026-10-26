@@ -4,11 +4,10 @@ import 'package:flutter/material.dart';
 import '../theme/app_dimens.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:smooth_page_indicator/smooth_page_indicator.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../services/auth_service.dart';
-import '../widgets/announcement_message.dart';
+import '../widgets/updates_carousel.dart';
 import '../widgets/password_field_guard.dart';
 import '../widgets/auth_background.dart';
 import '../widgets/auth_card.dart';
@@ -16,7 +15,6 @@ import '../widgets/auth_footer.dart';
 import '../models/support_contact.dart';
 import '../widgets/auth_theme_toggle.dart';
 import '../utils/navigator_key.dart';
-import '../data/collections.dart';
 import '../config/app_timeouts.dart';
 import '../config/app_info.dart';
 import '../l10n/l10n.dart';
@@ -75,11 +73,6 @@ class _LoginScreenState extends State<LoginScreen> {
   // Bumped on every new error to replay the form card's shake.
   int _shakeCount = 0;
 
-  Timer? _announcementTimer;
-
-  // The announcement carousel's page slide (was 600 ms), snapped to the
-  // nearest motion step (parked_values.md C4).
-  static const Duration _announcementSlide = AppMotion.slowest;
   // Alert timings, snapped to the nearest token (parked_values.md C5-C7):
   // the countdown restart after the pointer leaves the alert (3 s, same
   // value), the form card's shake (was 420 ms), and the alert's
@@ -134,7 +127,6 @@ class _LoginScreenState extends State<LoginScreen> {
   void dispose() {
     emailController.dispose();
     _password.dispose();
-    _announcementTimer?.cancel();
     _errorTimer?.cancel();
     super.dispose();
   }
@@ -374,206 +366,6 @@ class _LoginScreenState extends State<LoginScreen> {
                 child: AuthThemeToggle(),
               ),
             ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  // ==================== LEFT: ANNOUNCEMENTS ====================
-  Widget _buildAnnouncementsCard() {
-    return Container(
-      padding: const EdgeInsets.all(AppSpacing.s16),
-      decoration: BoxDecoration(
-        color: context.colors.surface,
-        borderRadius: BorderRadius.circular(AppRadius.r16),
-        boxShadow: [BoxShadow(color: context.colors.shadow.withValues(alpha: AppAlpha.a10), blurRadius: 8, offset: const Offset(0, 4))],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          SizedBox(
-            height: 22,
-            child: Stack(
-              children: [
-                Positioned(
-                  left: 0,
-                  top: 0,
-                  bottom: 0,
-                  right: 30,
-                  child: Align(
-                    alignment: Alignment.centerLeft,
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Icon(Icons.campaign_outlined, color: context.colors.textPrimary, size: AppIconSize.i18),
-                        const SizedBox(width: AppSpacing.s8),
-                        Flexible(
-                          child: Text(context.l10n.login_announcements,
-                              overflow: TextOverflow.ellipsis,
-                              style: TextStyle(fontWeight: AppFontWeight.bold, color: context.colors.textPrimary, fontSize: AppFontSize.f15)),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-                Positioned(
-                  right: 0,
-                  top: 0,
-                  bottom: 0,
-                  child: Align(
-                    alignment: Alignment.centerRight,
-                    child: Icon(Icons.chevron_right, color: context.colors.textDisabled, size: AppIconSize.i18),
-                  ),
-                ),
-              ],
-            ),
-          ),
-          const Divider(height: 20),
-          _buildAnnouncementsScrollable(),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildAnnouncementsScrollable() {
-    return StreamBuilder<QuerySnapshot>(
-      stream: _db
-          .collection(Collections.publicAnnouncements)
-          .orderBy('timestamp', descending: true)
-          .snapshots(),
-      builder: (context, snapshot) {
-        if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
-          return _buildAnnouncementsEmptyState();
-        }
-
-        final allDocs = snapshot.data!.docs.where((doc) {
-          final data = doc.data() as Map<String, dynamic>;
-          return data['hidden'] != true;
-        }).toList();
-
-        final urgentDocs = allDocs.where((doc) {
-          final data = doc.data() as Map<String, dynamic>;
-          return data['urgent'] == true;
-        }).toList();
-
-        // While at least one urgent announcement is active, it takes
-        // over completely - every other announcement is automatically
-        // paused rather than needing to be hidden one by one.
-        final docs = urgentDocs.isNotEmpty ? urgentDocs : allDocs;
-
-        if (docs.isEmpty) {
-          return _buildAnnouncementsEmptyState();
-        }
-        final PageController controller = PageController();
-        int currentIndex = 0;
-
-        // Auto-scroll timer
-        _announcementTimer?.cancel();
-        _announcementTimer = Timer.periodic(AppTimeouts.loginAnnouncementRotate, (_) {
-          if (!controller.hasClients || docs.isEmpty) return;
-          currentIndex = (currentIndex + 1) % docs.length;
-          controller.animateToPage(currentIndex,
-              duration: _announcementSlide,
-              curve: Curves.easeInOut);
-        });
-
-        return SizedBox(
-          height: 210,
-          child: Column(
-            children: [
-              // Announcements
-              Expanded(
-                child: PageView.builder(
-                  controller: controller,
-                  itemCount: docs.length,
-                  itemBuilder: (context, index) {
-                    final data = docs[index].data() as Map<String, dynamic>;
-                    final title = data['title'] ?? context.l10n.login_announcementFallbackTitle;
-                    final ts = data['timestamp'] as Timestamp?;
-                    final bool isNew = ts != null &&
-                        DateTime.now().difference(ts.toDate()).inHours < 48;
-                    final bool isUrgent = data['urgent'] == true;
-
-                    return Container(
-                      margin: const EdgeInsets.symmetric(
-                          horizontal: AppSpacing.s8, vertical: AppSpacing.s4),
-                      padding: const EdgeInsets.all(AppSpacing.s16),
-                      decoration: BoxDecoration(
-                        color: context.colors.background,
-                        borderRadius: BorderRadius.circular(AppRadius.r16),
-                        border: Border.all(color: isUrgent ? context.colors.danger.withValues(alpha: AppAlpha.a40) : context.colors.border),
-                      ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          if (isUrgent)
-                            Padding(
-                              padding: const EdgeInsets.only(bottom: AppSpacing.s6),
-                              child: Chip(
-                                label: Text(context.l10n.login_urgent, style: TextStyle(fontSize: AppFontSize.f10, color: context.colors.onPrimary)),
-                                backgroundColor: context.colors.danger,
-                                visualDensity: VisualDensity.compact,
-                                padding: EdgeInsets.zero,
-                              ),
-                            ),
-                          // Title + NEW badge
-                          Row(
-                            children: [
-                              Expanded(
-                                child: Text(title,
-                                    style: TextStyle(
-                                        fontSize: AppFontSize.f18,
-                                        fontWeight: AppFontWeight.bold,
-                                        color: context.colors.primary)),
-                              ),
-                              if (isNew) const _NewBadge(),
-                            ],
-                          ),
-                          const SizedBox(height: AppSpacing.s8),
-                          // Scrollable message
-                          Expanded(
-                            child: SingleChildScrollView(
-                              child: AnnouncementMessage(data: data),
-                            ),
-                          ),
-                        ],
-                      ),
-                    );
-                  },
-                ),
-              ),
-              const SizedBox(height: AppSpacing.s8),
-              // Dot indicators
-              SmoothPageIndicator(
-                controller: controller,
-                count: docs.length,
-                effect: ExpandingDotsEffect(
-                  dotHeight: 6,
-                  dotWidth: 6,
-                  activeDotColor: context.colors.primary,
-                  dotColor: context.colors.textDisabled,
-                ),
-              ),
-            ],
-          ),
-        );
-      },
-    );
-  }
-
-  Widget _buildAnnouncementsEmptyState() {
-    return SizedBox(
-      height: 210,
-      child: Center(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(Icons.inbox_outlined, size: AppIconSize.i48, color: context.colors.border),
-            const SizedBox(height: AppSpacing.s10),
-            Text(context.l10n.login_noAnnouncements, style: TextStyle(fontWeight: AppFontWeight.bold, color: context.colors.textPrimary, fontSize: AppFontSize.f14)),
-            const SizedBox(height: AppSpacing.s4),
-            Text(context.l10n.login_allCaughtUp, style: TextStyle(color: context.colors.textHint, fontSize: AppFontSize.f12_5)),
           ],
         ),
       ),
@@ -954,6 +746,11 @@ class _LoginScreenState extends State<LoginScreen> {
     );
   }
 
+  // The form keeps its state (focus, typing, the button's animation) when
+  // the Updates arrive and the layout around it changes.
+  final GlobalKey _loginFormKey = GlobalKey();
+  Widget _loginForm() => KeyedSubtree(key: _loginFormKey, child: _buildLoginForm());
+
   // ==================== BUILD ====================
   @override
   Widget build(BuildContext context) {
@@ -964,34 +761,33 @@ class _LoginScreenState extends State<LoginScreen> {
           const Positioned.fill(child: AuthBackground()),
 
           // The single floating card holding the sign-in content - header,
-          // announcements and login form live inside this one surface on
+          // Updates and login form live inside this one surface on
           // every screen size, reflowing between two columns and a single
           // stacked column rather than switching to a stripped-down
           // alternate layout. Its width, padding and radius are Register's
           // too (AuthCard). The secondary details (brand, help, legal,
           // version) are in the footer below it (G3).
-          AuthCard(
-            header: _buildHeader(),
-            below: AuthFooter(contact: _supportContact),
-            bodyBuilder: (context, layout) => layout.isWide
-                ? IntrinsicHeight(
-                    child: Row(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
+          // The Updates (AN2) decide whether there is a left column: with
+          // nothing to show there is no Updates area at all and the form
+          // stands alone in the middle of the card.
+          UpdatesCarousel(
+            firestore: _db,
+            builder: (context, updates) => AuthCard(
+              header: _buildHeader(),
+              below: AuthFooter(contact: _supportContact),
+              bodyBuilder: (context, layout) => layout.isWide
+                  ? Row(
                       children: [
-                        // Left: Announcements
+                        if (updates == null)
+                          const Spacer()
+                        else ...[
+                          // Left: Updates
+                          Expanded(child: updates),
+                          const SizedBox(width: AppSpacing.s28),
+                        ],
+                        // Right (or centre): Login
                         Expanded(
-                          flex: 1,
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.stretch,
-                            children: [
-                              Expanded(child: _buildAnnouncementsCard()),
-                            ],
-                          ),
-                        ),
-                        const SizedBox(width: AppSpacing.s28),
-                        // Right: Login
-                        Expanded(
-                          flex: 1,
+                          flex: updates == null ? 2 : 1,
                           // A softly tinted panel behind the form
                           // card: the card is white with a deep
                           // shadow, so it lifts off this instead
@@ -1007,27 +803,30 @@ class _LoginScreenState extends State<LoginScreen> {
                               ),
                               borderRadius: BorderRadius.circular(AppRadius.r24),
                             ),
-                            child: Center(child: _buildLoginForm()),
+                            child: Center(child: _loginForm()),
                           ),
                         ),
+                        if (updates == null) const Spacer(),
+                      ],
+                    )
+                  // Narrow screens: the same content, all
+                  // of it, stacked in one column instead
+                  // of a separate, stripped-down layout -
+                  // login first since it's the action
+                  // most people came here for, everything
+                  // else available below it.
+                  : Column(
+                      mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        _loginForm(),
+                        if (updates != null) ...[
+                          const SizedBox(height: AppSpacing.s20),
+                          updates,
+                        ],
                       ],
                     ),
-                  )
-                // Narrow screens: the same content, all
-                // of it, stacked in one column instead
-                // of a separate, stripped-down layout -
-                // login first since it's the action
-                // most people came here for, everything
-                // else available below it.
-                : Column(
-                    mainAxisSize: MainAxisSize.min,
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      _buildLoginForm(),
-                      const SizedBox(height: AppSpacing.s20),
-                      _buildAnnouncementsCard(),
-                    ],
-                  ),
+            ),
           ),
         ],
       ),
@@ -1193,70 +992,6 @@ class _AnimatedLoginButtonState extends State<_AnimatedLoginButton> with SingleT
               },
             ),
           ),
-        ),
-      ),
-    );
-  }
-}
-
-// ==================== NEW BADGE ====================
-class _NewBadge extends StatefulWidget {
-  const _NewBadge();
-
-  @override
-  State<_NewBadge> createState() => _NewBadgeState();
-}
-
-class _NewBadgeState extends State<_NewBadge> {
-  bool visible = true;
-  int blinkCount = 0;
-  Timer? _blinkTimer;
-  // Blink step (was 600 ms) and how long the badge stays before fading (3 s,
-  // same value), snapped to the nearest token (parked_values.md C9, C10).
-  static const Duration _blinkStep = AppMotion.slowest;
-  static const Duration _blinkHold = AppMotion.toastLong;
-
-  @override
-  void initState() {
-    super.initState();
-    // Blink twice like car indicator, then fade out
-    _blinkTimer =
-        Timer.periodic(_blinkStep, (timer) {
-      setState(() => visible = !visible);
-      blinkCount++;
-      if (blinkCount >= 4) {
-        timer.cancel();
-        setState(() => visible = true);
-        Future.delayed(_blinkHold, () {
-          if (mounted) setState(() => visible = false);
-        });
-      }
-    });
-  }
-
-  @override
-  void dispose() {
-    _blinkTimer?.cancel();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return AnimatedOpacity(
-      opacity: visible ? 1 : 0,
-      duration: AppMotion.slower,
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: AppSpacing.s6, vertical: AppSpacing.s2),
-        decoration: BoxDecoration(
-          color: context.colors.danger,
-          borderRadius: BorderRadius.circular(AppRadius.r4),
-        ),
-        child: Text(
-          context.l10n.login_newBadge,
-          style: TextStyle(
-              color: context.colors.onPrimary,
-              fontSize: AppFontSize.f10,
-              fontWeight: AppFontWeight.bold),
         ),
       ),
     );

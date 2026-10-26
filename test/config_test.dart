@@ -67,7 +67,7 @@ void main() {
       (AppTimeouts.newRecordsPoll, 45000), (AppTimeouts.sessionCheck, 600000),
       (AppTimeouts.clockTick, 1000), (AppTimeouts.noticeExpiryTick, 60000),
       (AppTimeouts.presenceHeartbeat, 120000), (AppTimeouts.presenceOnlineWindow, 300000),
-      (AppTimeouts.loginAnnouncementRotate, 6000), (AppTimeouts.platformAdminInactivity, 900000),
+      (AppTimeouts.updatesAdvance, 7000), (AppTimeouts.platformAdminInactivity, 900000),
       (AppTimeouts.platformAdminInactivityWarning, 60000), (AppTimeouts.subscriptionNoticeSnooze, 7200000),
       (AppTimeouts.salesSummaryRefresh, 2000), (AppTimeouts.servicesSummaryRefresh, 500),
       (AppTimeouts.searchDebounce, 400), (AppTimeouts.clientPickerDebounce, 300),
