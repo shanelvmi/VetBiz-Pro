@@ -1884,7 +1884,6 @@
   "register_stepReviewHint": ["Kagua taarifa zako, kisha fungua akaunti yako.","Register wizard step 5 subtitle.","draft"],
   "register_consent": ["Ninakubali {terms} na {privacy}.","Register wizard step 5, the required checkbox (RW1 answer 1). terms is common_termsOfService and privacy is common_privacyPolicy; both show as links.","draft"],
   "register_consentRequired": ["Weka alama kwenye kisanduku ili ukubali kabla ya kufungua akaunti yako.","Register wizard step 5: under the checkbox when Create account is pressed unticked.","draft"],
-  "authFooter_tagline": ["Mauzo, stoo, wateja na madeni kwa agrovet na kliniki za mifugo.","Sign-in footer (Login and Register), the plain line under the app name.","draft"],
   "authFooter_support": ["Msaada","Sign-in footer: heading of the Support column.","draft"],
   "authFooter_legal": ["Kisheria","Sign-in footer: heading of the Legal column (Privacy Policy, Terms of Service).","draft"],
   "authFooter_helpContact": ["Msaada na mawasiliano","Sign-in footer, Support column: opens the same Help dialog as the dashboard.","draft"],

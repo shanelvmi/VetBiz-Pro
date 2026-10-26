@@ -1890,7 +1890,6 @@ register_stepReview,Check and create,Kagua na ufungue,Register wizard step 5 tit
 register_stepReviewHint,"Check your details, then create your account.","Kagua taarifa zako, kisha fungua akaunti yako.",Register wizard step 5 subtitle.,draft
 register_consent,I agree to the {terms} and the {privacy}.,Ninakubali {terms} na {privacy}.,"Register wizard step 5, the required checkbox (RW1 answer 1). terms is common_termsOfService and privacy is common_privacyPolicy; both show as links.",draft
 register_consentRequired,Tick the box to agree before you create your account.,Weka alama kwenye kisanduku ili ukubali kabla ya kufungua akaunti yako.,Register wizard step 5: under the checkbox when Create account is pressed unticked.,draft
-authFooter_tagline,"Sales, stock, clients and debts for agrovets and vet clinics.","Mauzo, stoo, wateja na madeni kwa agrovet na kliniki za mifugo.","Sign-in footer (Login and Register), the plain line under the app name.",draft
 authFooter_support,Support,Msaada,Sign-in footer: heading of the Support column.,draft
 authFooter_legal,Legal,Kisheria,"Sign-in footer: heading of the Legal column (Privacy Policy, Terms of Service).",draft
 authFooter_helpContact,Help and contact,Msaada na mawasiliano,"Sign-in footer, Support column: opens the same Help dialog as the dashboard.",draft
