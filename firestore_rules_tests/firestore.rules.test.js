@@ -1447,3 +1447,53 @@ test('NOTIF-2b: the service\'s own write - set with merge, entries nested in the
   assert.deepStrictEqual(Object.keys((await mine.get()).data().removed), ['n1']);
   await assertSucceeds(mine.set({ seenStage: { subscription_expiring: 'grace' }, updatedAt: serverTime() }, { merge: true }));
 });
+
+// ======================================================================
+// AN1: public announcements v2. The rule has no key restriction, so the new
+// poster fields need no change; these pin that with the app's real shape.
+// ======================================================================
+
+const posterAnnouncement = () => ({
+  kind: 'poster',
+  title: 'New feature',
+  message: 'Short caption',
+  imageUrl: 'https://firebasestorage.googleapis.com/v0/b/x/o/announcement_posters%2FA1-1.jpg?alt=media',
+  imagePath: 'announcement_posters/A1-1.jpg',
+  imageWidth: 1600,
+  imageHeight: 900,
+  audience: 'sw',
+  linkUrl: 'https://vetbiz.example/learn',
+  linkLabel: 'Learn more',
+  urgent: false,
+  hidden: false,
+  timestamp: serverTime(),
+});
+
+test('AN1 announcements: a Platform Admin creates and updates a poster announcement', async () => {
+  const doc = as('pa').collection('public_announcements').doc('A1');
+  await assertSucceeds(doc.set(posterAnnouncement()));
+  await assertSucceeds(doc.update({
+    kind: 'text', message: 'Now a text one', audience: 'all',
+    imageUrl: FieldValue.delete(), imagePath: FieldValue.delete(),
+    imageWidth: FieldValue.delete(), imageHeight: FieldValue.delete(),
+  }));
+  await assertSucceeds(as('pa').collection('public_announcements').doc('A1').delete());
+});
+
+test('AN1 announcements: a non-admin and a signed-out visitor can NOT create, update or delete one', async () => {
+  await env.withSecurityRulesDisabled((ctx) =>
+    ctx.firestore().collection('public_announcements').doc('A1').set({ ...posterAnnouncement(), timestamp: new Date() }));
+  for (const db of [as('owner'), as('assistant'), as('outsider'), signedOut()]) {
+    await assertFails(db.collection('public_announcements').doc('A2').set(posterAnnouncement()));
+    await assertFails(db.collection('public_announcements').doc('A1').update({ hidden: true }));
+    await assertFails(db.collection('public_announcements').doc('A1').delete());
+  }
+});
+
+test('AN1 announcements: anyone reads them, signed out too (the login page)', async () => {
+  await env.withSecurityRulesDisabled((ctx) =>
+    ctx.firestore().collection('public_announcements').doc('A1').set({ ...posterAnnouncement(), timestamp: new Date() }));
+  await assertSucceeds(signedOut().collection('public_announcements').doc('A1').get());
+  await assertSucceeds(signedOut().collection('public_announcements').orderBy('timestamp', 'desc').get());
+  await assertSucceeds(as('assistant').collection('public_announcements').where('urgent', '==', true).get());
+});
