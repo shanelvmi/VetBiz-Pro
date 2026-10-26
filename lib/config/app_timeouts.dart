@@ -98,6 +98,11 @@ class AppTimeouts {
   /// The login screen's rotating announcements.
   static const Duration loginAnnouncementRotate = Duration(seconds: 6);
 
+  /// The login page's Updates (AN2): how long each slide stays before the
+  /// next fades in, and how long a new one carries the New chip.
+  static const Duration updatesAdvance = Duration(seconds: 7);
+  static const Duration updatesNewFor = Duration(hours: 48);
+
   // Sessions.
 
   /// A platform admin is signed out after this long without activity, with

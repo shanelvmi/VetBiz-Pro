@@ -50,7 +50,8 @@ class Announcement {
         linkUrl = _string(data[AnnouncementFields.linkUrl]),
         linkLabel = _string(data[AnnouncementFields.linkLabel]),
         urgent = data[AnnouncementFields.urgent] == true,
-        hidden = data[AnnouncementFields.hidden] == true;
+        hidden = data[AnnouncementFields.hidden] == true,
+        publishedAt = (data[AnnouncementFields.timestamp] as Timestamp?)?.toDate();
 
   static String _string(Object? value) => value is String ? value : '';
 
@@ -67,6 +68,9 @@ class Announcement {
   final String linkLabel;
   final bool urgent;
   final bool hidden;
+
+  /// The server time it was published; null while that write is pending.
+  final DateTime? publishedAt;
 }
 
 /// What the Platform Admin's form holds. [image] is a newly picked poster;

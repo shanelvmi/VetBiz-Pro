@@ -49,16 +49,26 @@ class AnnouncementMessage extends StatelessWidget {
 
   const AnnouncementMessage({super.key, required this.data, this.fontSize = 14});
 
+  static md.ExtensionSet get _extensions => md.ExtensionSet(
+        md.ExtensionSet.gitHubFlavored.blockSyntaxes,
+        [...md.ExtensionSet.gitHubFlavored.inlineSyntaxes, ColorSyntax()],
+      );
+
+  /// The message's words without its formatting: marks and colour tags
+  /// gone, a link's text kept, one line per paragraph. For a short preview
+  /// that must end in an ellipsis (the login page's Updates, AN2).
+  static String plainText(String message) {
+    final nodes = md.Document(extensionSet: _extensions).parseLines(message.split('\n'));
+    return nodes.map((n) => n.textContent.trim()).where((t) => t.isNotEmpty).join('\n');
+  }
+
   @override
   Widget build(BuildContext context) {
     final message = (data['message'] ?? '').toString();
 
     return MarkdownBody(
       data: message,
-      extensionSet: md.ExtensionSet(
-        md.ExtensionSet.gitHubFlavored.blockSyntaxes,
-        [...md.ExtensionSet.gitHubFlavored.inlineSyntaxes, ColorSyntax()],
-      ),
+      extensionSet: _extensions,
       builders: {'coloredspan': ColorBuilder()},
       onTapLink: (text, href, title) async {
         if (href == null) return;
