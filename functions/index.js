@@ -1520,7 +1520,8 @@ exports.platformSetUserStatus = membershipCallable("platformSetUserStatus");
 // shows straight away.
 exports.syncFacilityDetails = membershipCallable("syncFacilityDetails");
 
-// The safety net behind it: whatever edits a facility's name or type -
+// The safety net behind it: whatever edits a facility's name or type (or an
+// Other facility's typeDetail, RW2b2) -
 // this screen, a Platform Admin, anything - every member's copy follows.
 exports.syncFacilityDetailsOnWrite = onDocumentUpdated(
   "facilities/{facilityId}",
@@ -1528,7 +1529,7 @@ exports.syncFacilityDetailsOnWrite = onDocumentUpdated(
     const before = event.data?.before?.data();
     const after = event.data?.after?.data();
     if (!before || !after) return;
-    if (before.name === after.name && before.type === after.type) return;
+    if (before.name === after.name && before.type === after.type && before.typeDetail === after.typeDetail) return;
     await membership.propagateFacilityDetails(event.params.facilityId);
   }
 );

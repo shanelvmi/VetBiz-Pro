@@ -1599,7 +1599,7 @@ describe("P1: invite-code rate limiting", () => {
 // ======================================================================
 // RW2b2: "Other" carries the owner's own words for the facility type
 // (typeDetail), stored next to type. Every other type ignores it.
-const RW2B2 = { skip: "RW2b2: typeDetail not implemented yet" };
+const RW2B2 = {};
 
 describe("RW2b2: cleanTypeDetail", RW2B2, () => {
   const clean = (type, value) => membership.helpers.cleanTypeDetail(type, value, (m) => new HttpsError("invalid-argument", m));

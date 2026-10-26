@@ -24,6 +24,33 @@ const { createHash } = require("crypto");
 
 const FACILITY_TYPES = ["Agrovet", "Vet Clinic", "Vet Hospital", "Ambulatory Vet", "Other"];
 
+// RW2b2: with "Other" the owner says in their own words what the facility
+// is (typeDetail, shown instead of "Other"). The app applies the same rule
+// (lib/constants/facility_types.dart). Letters of any language, digits,
+// spaces and . , & ' - only: it is shown on screens and receipts.
+const TYPE_DETAIL_MIN = 2;
+const TYPE_DETAIL_MAX = 40;
+const TYPE_DETAIL_PATTERN = /^[\p{L}\p{N} .,&'-]+$/u;
+
+// The detail for a facility of this type, trimmed, or null when there is
+// none to keep: any type but Other ignores it, and an absent one is allowed
+// (apps from before RW2b2 send none). A detail that is sent is checked.
+function cleanTypeDetail(type, value, invalid) {
+  if (type !== "Other" || value === undefined || value === null) return null;
+  const text = typeof value === "string" ? value.trim() : "";
+  if (text.length < TYPE_DETAIL_MIN) throw invalid("Describe your facility type.");
+  if (text.length > TYPE_DETAIL_MAX) throw invalid(`Describe your facility type in ${TYPE_DETAIL_MAX} characters or fewer.`);
+  if (!TYPE_DETAIL_PATTERN.test(text)) {
+    throw invalid("Describe your facility type with letters, digits, spaces and . , & ' - only.");
+  }
+  return text;
+}
+
+// Only an Other facility's detail is kept (copied from its data).
+function typeDetailOf(data) {
+  return data && data.type === "Other" && typeof data.typeDetail === "string" && data.typeDetail ? data.typeDetail : null;
+}
+
 // Invite codes are read aloud over the phone and typed on small keyboards, so
 // they leave out look-alike characters (0/O, 1/I/L). Facility codes are just
 // identifiers, so they don't need to.
@@ -85,16 +112,25 @@ function inviteProblem(invite, now) {
   return null;
 }
 
-// A member's copy of one facility, on their profile: id, name and type only.
-// The facility's code is NOT copied (E4b, b3): profiles are read by other
-// admins, and the code lives on the facility document, which only its
-// members can read.
+// A member's copy of one facility, on their profile: id, name and type only
+// (and an Other facility's typeDetail, RW2b2). The facility's code is NOT
+// copied (E4b, b3): profiles are read by other admins, and the code lives on
+// the facility document, which only its members can read.
 function facilityEntry(facilityId, data) {
-  return {
+  const entry = {
     facilityId,
     name: (data && data.name) || "",
     type: (data && data.type) || "",
   };
+  const typeDetail = typeDetailOf(data);
+  if (typeDetail) entry.typeDetail = typeDetail;
+  return entry;
+}
+
+// What the app is told about a facility's type: the type, and the detail
+// only when there is one (so older results keep their exact shape).
+function typeResult(type, typeDetail) {
+  return typeDetail ? { facilityType: type || "", facilityTypeDetail: typeDetail } : { facilityType: type || "" };
 }
 
 function isActiveAdmin(user) {
@@ -390,7 +426,11 @@ function create({ db, auth, FieldValue, Timestamp, HttpsError, randomInt, now = 
       return { valid: false };
     }
     await clearInviteFailures(key);
-    return { valid: true, facilityName: invite.facilityName || "", facilityType: invite.facilityType || "" };
+    return {
+      valid: true,
+      facilityName: invite.facilityName || "",
+      ...typeResult(invite.facilityType, typeDetailOf({ type: invite.facilityType, typeDetail: invite.facilityTypeDetail })),
+    };
   }
 
   // ======================================================================
@@ -414,10 +454,14 @@ function create({ db, auth, FieldValue, Timestamp, HttpsError, randomInt, now = 
     if (incoming.length > config.maxFacilities) {
       throw new HttpsError("failed-precondition", `You can register up to ${config.maxFacilities} facilities.`);
     }
-    const parsed = incoming.map((f, i) => ({
-      name: cleanText(f && f.name, `Facility ${i + 1} name`, 1, 120),
-      type: cleanFacilityType(f && f.type),
-    }));
+    const parsed = incoming.map((f, i) => {
+      const type = cleanFacilityType(f && f.type);
+      return {
+        name: cleanText(f && f.name, `Facility ${i + 1} name`, 1, 120),
+        type,
+        typeDetail: cleanTypeDetail(type, f && f.typeDetail, invalid),
+      };
+    });
     const trialEnds = Timestamp.fromDate(trialExpiry(now(), config.trialDays));
 
     return db.runTransaction(async (tx) => {
@@ -434,6 +478,7 @@ function create({ db, auth, FieldValue, Timestamp, HttpsError, randomInt, now = 
         tx.set(ref, {
           name: f.name,
           type: f.type,
+          ...(f.typeDetail ? { typeDetail: f.typeDetail } : {}),
           code,
           createdBy: uid,
           createdAt: FieldValue.serverTimestamp(),
@@ -509,7 +554,7 @@ function create({ db, auth, FieldValue, Timestamp, HttpsError, randomInt, now = 
         usedByUid: uid,
       });
       facilityId = entry.facilityId;
-      return { facilityName: entry.name, facilityType: entry.type };
+      return { facilityName: entry.name, ...typeResult(entry.type, entry.typeDetail) };
     });
 
     // The facility's admins are told, so the new assistant doesn't sit unseen
@@ -579,7 +624,7 @@ function create({ db, auth, FieldValue, Timestamp, HttpsError, randomInt, now = 
       });
       facilityId = entry.facilityId;
       assistantName = user.fullName || email;
-      return { facilityName: entry.name, facilityType: entry.type };
+      return { facilityName: entry.name, ...typeResult(entry.type, entry.typeDetail) };
     });
 
     await notify(facilityId, pendingAssistantNotification(uid, assistantName, result.facilityName, true));
@@ -597,6 +642,7 @@ function create({ db, auth, FieldValue, Timestamp, HttpsError, randomInt, now = 
     const uid = requireAuth(context);
     const name = cleanText(data && data.name, "Facility name", 1, 120);
     const type = cleanFacilityType(data && data.type);
+    const typeDetail = cleanTypeDetail(type, data && data.typeDetail, invalid);
     const config = await loadConfig();
     const trialEnds = Timestamp.fromDate(trialExpiry(now(), config.trialDays));
 
@@ -617,12 +663,13 @@ function create({ db, auth, FieldValue, Timestamp, HttpsError, randomInt, now = 
       tx.set(ref, {
         name,
         type,
+        ...(typeDetail ? { typeDetail } : {}),
         code,
         createdBy: uid,
         createdAt: FieldValue.serverTimestamp(),
         trialExpiresAt: trialEnds,
       });
-      const entry = facilityEntry(ref.id, { name, type });
+      const entry = facilityEntry(ref.id, { name, type, typeDetail });
       // Both lists, together: "facilities" is what the screens show,
       // "facilityIds" is what every access rule checks.
       tx.update(userRef, {
@@ -659,6 +706,7 @@ function create({ db, auth, FieldValue, Timestamp, HttpsError, randomInt, now = 
           facilityId,
           facilityName: facility.name || "",
           facilityType: facility.type || "",
+          ...(typeDetailOf(facility) ? { facilityTypeDetail: typeDetailOf(facility) } : {}),
           createdByUserId: uid,
           createdAt: FieldValue.serverTimestamp(),
           expiresAt: Timestamp.fromDate(expiresAt),
@@ -982,10 +1030,19 @@ function create({ db, auth, FieldValue, Timestamp, HttpsError, randomInt, now = 
     for (const doc of members.docs) {
       const list = Array.isArray(doc.data().facilities) ? doc.data().facilities : [];
       let changed = false;
+      const fresh = facilityEntry(facilityId, facility);
       const next = list.map((entry) => {
-        if (entry && entry.facilityId === facilityId && (entry.name !== facility.name || entry.type !== facility.type)) {
+        if (
+          entry &&
+          entry.facilityId === facilityId &&
+          (entry.name !== facility.name || entry.type !== facility.type || (entry.typeDetail || null) !== (fresh.typeDetail || null))
+        ) {
           changed = true;
-          return { ...entry, name: facility.name || "", type: facility.type || "" };
+          // RW2b2: the copy's typeDetail follows the facility's (removed
+          // when it is no longer Other); anything else on the entry is kept.
+          const rest = { ...entry };
+          delete rest.typeDetail;
+          return { ...rest, name: fresh.name, type: fresh.type, ...(fresh.typeDetail ? { typeDetail: fresh.typeDetail } : {}) };
         }
         return entry;
       });
@@ -1030,5 +1087,15 @@ function create({ db, auth, FieldValue, Timestamp, HttpsError, randomInt, now = 
 module.exports = {
   create,
   // Exposed for tests.
-  helpers: { normalizeInviteCode, hashIp, trialExpiry, inviteProblem, isActiveAdmin, FACILITY_TYPES, INVITE_ALPHABET, INVITE_CODE_LENGTH },
+  helpers: {
+    normalizeInviteCode,
+    hashIp,
+    trialExpiry,
+    inviteProblem,
+    isActiveAdmin,
+    cleanTypeDetail,
+    FACILITY_TYPES,
+    INVITE_ALPHABET,
+    INVITE_CODE_LENGTH,
+  },
 };
