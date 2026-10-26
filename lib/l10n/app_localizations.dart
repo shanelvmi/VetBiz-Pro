@@ -11709,13 +11709,13 @@ abstract class AppLocalizations {
   /// How to use it: assistant step. The quoted choice is the register page's own label.
   ///
   /// In en, this message translates to:
-  /// **'On the sign-in page press Register, choose \"I have an invite code\" and type the code. The facility\'s name appears when the code is right.'**
+  /// **'On the sign-in page press Register, choose \"I have an invite code\" and press Continue. Fill in each step: about you, then the invite code (the facility\'s name appears when the code is right), then your email and password.'**
   String get howToUse_assistant2;
 
   /// How to use it: assistant step.
   ///
   /// In en, this message translates to:
-  /// **'Fill in your details and press Create account. Your account then waits for the admin\'s approval.'**
+  /// **'On the last step check your details, tick the box to agree to the Terms of Service and the Privacy Policy, and press Create account. Your account then waits for the admin\'s approval.'**
   String get howToUse_assistant3;
 
   /// How to use it: assistant step. The quote is the app's own sign-in message (entry_notActiveYet), passed in.

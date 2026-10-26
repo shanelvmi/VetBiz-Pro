@@ -6941,11 +6941,11 @@ class AppLocalizationsSw extends AppLocalizations {
 
   @override
   String get howToUse_assistant2 =>
-      'Kwenye ukurasa wa kuingia bonyeza Jisajili, chagua \"Nina msimbo wa mwaliko\" na andika msimbo. Jina la kituo linaonekana msimbo ukiwa sahihi.';
+      'Kwenye ukurasa wa kuingia bonyeza Jisajili, chagua \"Nina msimbo wa mwaliko\" kisha bonyeza Endelea. Jaza kila hatua: kuhusu wewe, kisha msimbo wa mwaliko (jina la kituo linaonekana msimbo ukiwa sahihi), kisha barua pepe na nenosiri lako.';
 
   @override
   String get howToUse_assistant3 =>
-      'Jaza taarifa zako na bonyeza Fungua akaunti. Kisha akaunti yako inasubiri idhini ya msimamizi.';
+      'Kwenye hatua ya mwisho kagua taarifa zako, weka alama kwenye kisanduku ili ukubali Masharti ya Huduma na Sera ya Faragha, kisha bonyeza Fungua akaunti. Kisha akaunti yako inasubiri idhini ya msimamizi.';
 
   @override
   String howToUse_assistant4(String message) {

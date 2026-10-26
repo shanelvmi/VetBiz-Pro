@@ -6899,11 +6899,11 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get howToUse_assistant2 =>
-      'On the sign-in page press Register, choose \"I have an invite code\" and type the code. The facility\'s name appears when the code is right.';
+      'On the sign-in page press Register, choose \"I have an invite code\" and press Continue. Fill in each step: about you, then the invite code (the facility\'s name appears when the code is right), then your email and password.';
 
   @override
   String get howToUse_assistant3 =>
-      'Fill in your details and press Create account. Your account then waits for the admin\'s approval.';
+      'On the last step check your details, tick the box to agree to the Terms of Service and the Privacy Policy, and press Create account. Your account then waits for the admin\'s approval.';
 
   @override
   String howToUse_assistant4(String message) {
