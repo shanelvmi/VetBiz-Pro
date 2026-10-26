@@ -41,7 +41,7 @@ On edit, a field that no longer applies is removed with `FieldValue.delete()` (a
 
 ## 3. The poster image
 
-- Limits (named in `lib/config/app_limits.dart`): width 1600 (the picker's `maxWidth`), minimum width 1280, ratio 16:9 with a tolerance of 3 percent, at most 1 MB, JPEG, PNG or WebP only. The picker's `imageQuality` is the shared `AppLimits.pickedImageQuality`. Also the five-slide maximum for AN2.
+- Limits (named in `lib/config/app_limits.dart`): width 1600 (the picker's `maxWidth` and `maxHeight`, `posterImageMaxSide`), minimum width 1280, ratio 16:9 with a tolerance of 3 percent, at most 1 MB, JPEG, PNG or WebP only. The picker's `imageQuality` is the shared `AppLimits.pickedImageQuality`. Also the five-slide maximum for AN2.
 - The validator (`lib/utils/poster_image_check.dart`) is pure: it finds the type from the file's first bytes (not its name: an SVG or GIF renamed `.jpg` is still refused), then decodes the bytes with `decodeImageFromList` for the width and height, and refuses, in this order: a type that is not JPEG, PNG or WebP (SVG and GIF named), more than 1 MB, a width under 1280, a ratio more than 3 percent away from 16:9. Each refusal is one clear English sentence (the console is English, spec 2.8).
 - The form shows the picked image in a 16:9 box with an optional safe-zone overlay (the central 90 percent of the width and 85 percent of the height) and the hint "16:9, 1600 x 900 px, JPG or WebP, under 1 MB".
 
