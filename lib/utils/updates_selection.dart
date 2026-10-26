@@ -1,7 +1,7 @@
 import '../config/app_limits.dart';
 import '../config/app_timeouts.dart';
-import '../data/announcement_fields.dart';
 import '../services/announcement_service.dart';
+import 'announcement_visibility.dart';
 
 /// Which announcements the login page's Updates shows (AN2), in the order
 /// given (the query's, newest first).
@@ -13,9 +13,7 @@ class UpdatesSelection {
   /// urgent ones (they take over without hiding the rest one by one); at
   /// most [AppLimits.updatesMaxSlides].
   static List<Announcement> pick(Iterable<Announcement> all, {required String languageCode}) {
-    final shown = all
-        .where((a) => !a.hidden && (a.audience == AnnouncementAudience.all || a.audience.key == languageCode))
-        .toList();
+    final shown = all.where((a) => AnnouncementVisibility.isShown(a, languageCode: languageCode)).toList();
     final urgent = shown.where((a) => a.urgent).toList();
     return (urgent.isNotEmpty ? urgent : shown).take(AppLimits.updatesMaxSlides).toList();
   }

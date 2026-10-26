@@ -51,7 +51,8 @@ class Announcement {
         linkLabel = _string(data[AnnouncementFields.linkLabel]),
         urgent = data[AnnouncementFields.urgent] == true,
         hidden = data[AnnouncementFields.hidden] == true,
-        publishedAt = (data[AnnouncementFields.timestamp] as Timestamp?)?.toDate();
+        publishedAt = (data[AnnouncementFields.timestamp] as Timestamp?)?.toDate(),
+        updatedAt = (data[AnnouncementFields.updatedAt] as Timestamp?)?.toDate();
 
   static String _string(Object? value) => value is String ? value : '';
 
@@ -71,6 +72,12 @@ class Announcement {
 
   /// The server time it was published; null while that write is pending.
   final DateTime? publishedAt;
+
+  /// When it was last edited; null if never.
+  final DateTime? updatedAt;
+
+  /// This version's time: a removal or a read before it is out of date.
+  DateTime? get versionAt => updatedAt ?? publishedAt;
 }
 
 /// What the Platform Admin's form holds. [image] is a newly picked poster;
@@ -231,6 +238,9 @@ class AnnouncementService {
         AnnouncementFields.imageWidth: remove,
         AnnouncementFields.imageHeight: remove,
       },
+      // An edit is dated: whoever removed or read the old version sees it
+      // again (AN3). Showing, hiding and Urgent from the list are not edits.
+      if (existing != null) AnnouncementFields.updatedAt: FieldValue.serverTimestamp(),
       if (existing == null) ...{
         AnnouncementFields.hidden: false,
         // The readers sort by timestamp, and orderBy leaves out a document

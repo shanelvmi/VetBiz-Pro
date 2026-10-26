@@ -15,6 +15,7 @@ import '../../services/session_validity_service.dart';
 import '../../services/dashboard_summary_service.dart';
 import '../../services/sales_summary_service.dart';
 import '../../services/notification_feed.dart';
+import '../../services/announcement_service.dart';
 
 import '../../widgets/summary_card.dart';
 import '../../widgets/support_contact_dialog.dart';
@@ -45,6 +46,7 @@ import 'notifications_screen.dart';
 import '../../utils/subscription_guard.dart';
 import '../../utils/force_logout.dart';
 import '../../utils/notification_seen_tracker.dart';
+import '../../utils/announcement_visibility.dart';
 import '../store/stockstore_screen.dart';
 import '../admin/manage_assistants_screen.dart';
 import '../sales/add_sale_screen.dart';
@@ -52,6 +54,7 @@ import '../products/add_edit_product_screen.dart';
 import '../services/add_edit_service_screen.dart';
 import '../register_screen.dart';
 import '../../data/collections.dart';
+import '../../data/announcement_fields.dart';
 import '../../data/fields.dart';
 import '../../data/user_role.dart';
 import '../../data/user_status.dart';
@@ -459,17 +462,18 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
 
     _urgentWatchSub = FirebaseFirestore.instance
         .collection(Collections.publicAnnouncements)
-        .where('urgent', isEqualTo: true)
+        .where(AnnouncementFields.urgent, isEqualTo: true)
         .snapshots()
         .listen((snapshot) {
-      final isNew = _lastNotificationsViewedAt != null &&
-          snapshot.docs.any((doc) {
-            final data = doc.data();
-            if (data['hidden'] == true) return false;
-            final ts = data['timestamp'];
-            return ts is Timestamp && ts.toDate().isAfter(_lastNotificationsViewedAt!);
-          });
-      if (mounted) setState(() => _hasNewUrgentSinceViewed = isNew);
+      if (!mounted) return;
+      // The same audience rule as the login page and Notifications (AN3):
+      // a Kiswahili-only announcement does not blink for an English user.
+      final isNew = AnnouncementVisibility.hasNewUrgentSince(
+        [for (final d in snapshot.docs) Announcement.fromMap(d.id, d.data())],
+        _lastNotificationsViewedAt,
+        languageCode: Localizations.localeOf(context).languageCode,
+      );
+      setState(() => _hasNewUrgentSinceViewed = isNew);
     });
 
     final isAdmin = Provider.of<UserRoleProvider>(context, listen: false).isAdmin;

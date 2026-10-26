@@ -23,6 +23,10 @@ class AnnouncementFields {
   static const String hidden = 'hidden';
   static const String timestamp = 'timestamp';
 
+  /// When the Platform Admin last edited it (AN3): a person who removed it
+  /// before then sees it again (docs/design/notifications.md, DISMISSIBLE).
+  static const String updatedAt = 'updatedAt';
+
   /// The Storage folder for posters (storage.rules: announcement_posters/).
   static const String posterFolder = 'announcement_posters';
 }
