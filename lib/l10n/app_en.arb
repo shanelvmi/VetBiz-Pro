@@ -306,8 +306,8 @@
   "@facilityType_vetClinic": {"description":"Facility type: registration, Facilities screen, facility picker filter (stored value 'Vet Clinic')."},
   "facilityType_vetHospital": "Vet Hospital",
   "@facilityType_vetHospital": {"description":"Facility type: registration, Facilities screen, facility picker filter (stored value 'Vet Hospital')."},
-  "facilityType_ambulatoryVet": "Ambulatory Vet",
-  "@facilityType_ambulatoryVet": {"description":"Facility type: registration, Facilities screen, facility picker filter (stored value 'Ambulatory Vet')."},
+  "facilityType_ambulatoryVet": "Ambulatory services",
+  "@facilityType_ambulatoryVet": {"description":"Facility type: registration, Facilities screen, facility picker filter (stored value 'Ambulatory Vet', unchanged; shown as Ambulatory services since RW2b2)."},
   "facilityType_other": "Other",
   "@facilityType_other": {"description":"Facility type: registration, Facilities screen, facility picker filter (stored value 'Other')."},
   "paymentMethod_cash": "Cash",
@@ -3919,5 +3919,15 @@
   "faq_supportQ": "How do I contact support?",
   "@faq_supportQ": {"description":"FAQs: question."},
   "faq_supportA": "Press Help and contact at the bottom of the sign-in page, or Help on the dashboard. It shows the support contact details set by {appName}.",
-  "@faq_supportA": {"description":"FAQs: answer.","placeholders":{"appName":{"type":"String"}}}
+  "@faq_supportA": {"description":"FAQs: answer.","placeholders":{"appName":{"type":"String"}}},
+  "facilityType_selectHint": "Select facility type",
+  "@facilityType_selectHint": {"description":"Facility type dropdown (registration step 3, Add and Edit facility, the no-facility page): the hint while nothing is chosen."},
+  "facilityType_required": "Choose your facility type",
+  "@facilityType_required": {"description":"Facility type dropdown: the error when Continue or Add is pressed with no type chosen."},
+  "facilityType_detailLabel": "Describe your facility type",
+  "@facilityType_detailLabel": {"description":"The field under the facility type dropdown when Other is chosen (stored as typeDetail): its label, and its error when left empty."},
+  "facilityType_detailLength": "Use {min} to {max} characters",
+  "@facilityType_detailLength": {"description":"The Other facility type field: the error when the text is too short or too long.","placeholders":{"min":{"type":"int"},"max":{"type":"int"}}},
+  "facilityType_detailCharacters": "Use letters, digits, spaces and . , & ' - only",
+  "@facilityType_detailCharacters": {"description":"The Other facility type field: the error for any other character. The characters . , & ' - stay as they are."}
 }

@@ -306,7 +306,7 @@
   "@facilityType_vetClinic": {"x-review":"draft"},
   "facilityType_vetHospital": "Hospitali ya Mifugo",
   "@facilityType_vetHospital": {"x-review":"draft"},
-  "facilityType_ambulatoryVet": "Daktari wa Mifugo wa Kutembelea",
+  "facilityType_ambulatoryVet": "Huduma za kutembelea",
   "@facilityType_ambulatoryVet": {"x-review":"draft"},
   "facilityType_other": "Nyingine",
   "@facilityType_other": {"x-review":"draft"},
@@ -3919,5 +3919,15 @@
   "faq_supportQ": "Ninawasilianaje na msaada?",
   "@faq_supportQ": {"x-review":"draft"},
   "faq_supportA": "Bonyeza Msaada na mawasiliano chini ya ukurasa wa kuingia, au Msaada kwenye dashibodi. Inaonyesha mawasiliano ya msaada yaliyowekwa na {appName}.",
-  "@faq_supportA": {"x-review":"draft"}
+  "@faq_supportA": {"x-review":"draft"},
+  "facilityType_selectHint": "Chagua aina ya kituo",
+  "@facilityType_selectHint": {"x-review":"draft"},
+  "facilityType_required": "Chagua aina ya kituo chako",
+  "@facilityType_required": {"x-review":"draft"},
+  "facilityType_detailLabel": "Eleza aina ya kituo chako",
+  "@facilityType_detailLabel": {"x-review":"draft"},
+  "facilityType_detailLength": "Tumia herufi {min} hadi {max}",
+  "@facilityType_detailLength": {"x-review":"draft"},
+  "facilityType_detailCharacters": "Tumia herufi, tarakimu, nafasi na . , & ' - pekee",
+  "@facilityType_detailCharacters": {"x-review":"draft"}
 }
