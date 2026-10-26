@@ -4900,21 +4900,6 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get login_announcements => 'Announcements';
-
-  @override
-  String get login_urgent => 'URGENT';
-
-  @override
-  String get login_announcementFallbackTitle => 'Notice';
-
-  @override
-  String get login_noAnnouncements => 'No announcements';
-
-  @override
-  String get login_allCaughtUp => 'You\'re all caught up!';
-
-  @override
   String get login_welcomeBack => 'Welcome back';
 
   @override
@@ -4937,9 +4922,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get login_loginButton => 'Sign in';
-
-  @override
-  String get login_newBadge => 'NEW';
 
   @override
   String get login_credentialsTooShort => 'Enter your email and password.';

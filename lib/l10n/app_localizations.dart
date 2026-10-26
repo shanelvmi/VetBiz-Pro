@@ -8454,36 +8454,6 @@ abstract class AppLocalizations {
   /// **'© 2026 {appName}. All rights reserved.'**
   String login_copyright(String appName);
 
-  /// Login announcements card title.
-  ///
-  /// In en, this message translates to:
-  /// **'Announcements'**
-  String get login_announcements;
-
-  /// Login announcement chip for an urgent announcement.
-  ///
-  /// In en, this message translates to:
-  /// **'URGENT'**
-  String get login_urgent;
-
-  /// Login announcement title when the announcement has none.
-  ///
-  /// In en, this message translates to:
-  /// **'Notice'**
-  String get login_announcementFallbackTitle;
-
-  /// Login announcements card, empty.
-  ///
-  /// In en, this message translates to:
-  /// **'No announcements'**
-  String get login_noAnnouncements;
-
-  /// Login announcements card, empty.
-  ///
-  /// In en, this message translates to:
-  /// **'You\'re all caught up!'**
-  String get login_allCaughtUp;
-
   /// Login form title.
   ///
   /// In en, this message translates to:
@@ -8531,12 +8501,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Sign in'**
   String get login_loginButton;
-
-  /// Badge on an announcement less than two days old.
-  ///
-  /// In en, this message translates to:
-  /// **'NEW'**
-  String get login_newBadge;
 
   /// Login error: email or password empty.
   ///

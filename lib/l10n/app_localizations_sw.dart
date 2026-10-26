@@ -4928,21 +4928,6 @@ class AppLocalizationsSw extends AppLocalizations {
   }
 
   @override
-  String get login_announcements => 'Matangazo';
-
-  @override
-  String get login_urgent => 'DHARURA';
-
-  @override
-  String get login_announcementFallbackTitle => 'Taarifa';
-
-  @override
-  String get login_noAnnouncements => 'Hakuna matangazo';
-
-  @override
-  String get login_allCaughtUp => 'Umeshaona yote!';
-
-  @override
   String get login_welcomeBack => 'Karibu tena';
 
   @override
@@ -4965,9 +4950,6 @@ class AppLocalizationsSw extends AppLocalizations {
 
   @override
   String get login_loginButton => 'Ingia';
-
-  @override
-  String get login_newBadge => 'MPYA';
 
   @override
   String get login_credentialsTooShort => 'Weka barua pepe yako na nenosiri.';
