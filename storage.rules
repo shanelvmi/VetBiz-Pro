@@ -9,6 +9,11 @@ service firebase.storage {
       return request.resource.contentType.matches('image/.*') &&
         request.resource.size <= 5 * 1024 * 1024;
     }
+    // An announcement poster (AN1): one of three exact types, at most 1 MB.
+    function isPosterUpload() {
+      return request.resource.contentType in ['image/jpeg', 'image/png', 'image/webp'] &&
+        request.resource.size <= 1024 * 1024;
+    }
     function isMemberOf(facilityId) {
       return request.auth != null &&
         facilityId in
@@ -54,18 +59,16 @@ service firebase.storage {
       allow delete: if isMemberOf(baseName(fileName));
     }
 
-    // Login screen branding - readable by anyone, including before
-    // authentication (it's shown on the login screen itself), writable
-    // only by a Platform Admin, matching the Announcements tab's own
-    // UI restriction.
-    match /login_poster/{fileName} {
+    // Announcement posters (AN1) - readable by anyone, including before
+    // sign-in (the login page shows them), written only by a Platform
+    // Admin from the Announcements tab. Stricter than isImageUpload():
+    // exactly JPEG, PNG or WebP (no SVG, which can carry script, and no
+    // GIF) and at most 1 MB (AppLimits.posterMaxBytes; keep the two
+    // equal). The app names the file {docId}-{millis}.{ext}. The old
+    // login_poster/ and login_logo/ rules went with it: unused since G1.
+    match /announcement_posters/{fileName} {
       allow read: if true;
-      allow create, update: if isPlatformAdmin() && isImageUpload();
-      allow delete: if isPlatformAdmin();
-    }
-    match /login_logo/{fileName} {
-      allow read: if true;
-      allow create, update: if isPlatformAdmin() && isImageUpload();
+      allow create, update: if isPlatformAdmin() && isPosterUpload();
       allow delete: if isPlatformAdmin();
     }
 

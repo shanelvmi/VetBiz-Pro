@@ -8,7 +8,8 @@
 // audit): avatars/{uid}.jpg (registration), user_avatars/{uid}.png (the
 // dashboard's avatar editor), facility_logos/{facilityId}.png,
 // payment_proofs/{facilityId}/{millis}.jpg, product_images/{facilityId}/{uuid}.jpg,
-// login_poster/poster.jpg. login_logo/ has a rule but no uploader today.
+// announcement_posters/{docId}-{millis}.{ext} (AN1). login_poster/ and
+// login_logo/ lost their rules in AN1 (unused since G1).
 
 const { test, before, after, beforeEach } = require('node:test');
 const fs = require('node:fs');
@@ -163,7 +164,7 @@ test('payment proofs: a member uploads one for their facility; an outsider can n
 });
 
 // ---------------------------------------------------------------------------
-// Product images and the login branding: write rules unchanged, plus the
+// Product images: write rules unchanged, plus the
 // content checks below.
 // ---------------------------------------------------------------------------
 
@@ -171,14 +172,6 @@ test('product images: a member uploads one; an outsider can not; anyone can read
   await assertSucceeds(upload('assistant', 'product_images/F1/p2.jpg'));
   await assertFails(upload('outsider', 'product_images/F1/p2.jpg'));
   await assertSucceeds(signedOutRef('product_images/F1/p1.jpg').getDownloadURL());
-});
-
-test('login poster and logo: only a Platform Admin uploads; anyone can read', async () => {
-  await assertSucceeds(upload('pa', 'login_poster/poster.jpg'));
-  await assertSucceeds(upload('pa', 'login_logo/logo.png', png));
-  await assertFails(upload('owner', 'login_poster/poster.jpg'));
-  await assertFails(upload('owner', 'login_logo/logo.png', png));
-  await assertSucceeds(signedOutRef('login_poster/poster.jpg').getDownloadURL());
 });
 
 // ---------------------------------------------------------------------------
@@ -192,8 +185,6 @@ const uploads = [
   ['owner', 'facility_logos/F1.png'],
   ['owner', 'payment_proofs/F1/1700000000002.jpg'],
   ['owner', 'product_images/F1/p3.jpg'],
-  ['pa', 'login_poster/poster.jpg'],
-  ['pa', 'login_logo/logo.png'],
 ];
 
 test('every upload path [E4a]: a file that is not an image is refused', async () => {
@@ -208,5 +199,60 @@ test('every upload path [E4a]: more than 5 MB is refused; exactly 5 MB is allowe
   for (const [uid, p] of uploads) {
     await assertFails(upload(uid, p, jpeg, 5 * MB + 1));
     await assertSucceeds(upload(uid, p, jpeg, 5 * MB));
+  }
+});
+
+// ---------------------------------------------------------------------------
+// AN1: announcement posters. Public read; only a Platform Admin uploads
+// (exactly image/jpeg, image/png or image/webp, at most 1 MB) or deletes.
+// The app names the file {docId}-{millis}.{ext}.
+// ---------------------------------------------------------------------------
+
+const poster = 'announcement_posters/A1-1700000000000.jpg';
+const seedPoster = () => env.withSecurityRulesDisabled((ctx) => ctx.storage().ref(poster).put(bytes(), jpeg));
+
+test('announcement posters [AN1]: a Platform Admin uploads a small JPEG, a PNG and a WebP', async () => {
+  await assertSucceeds(upload('pa', 'announcement_posters/A1-1.jpg'));
+  await assertSucceeds(upload('pa', 'announcement_posters/A1-2.png', png));
+  await assertSucceeds(upload('pa', 'announcement_posters/A1-3.webp', { contentType: 'image/webp' }));
+  await assertSucceeds(upload('pa', 'announcement_posters/A1-4.jpg', jpeg, MB)); // exactly 1 MB
+});
+
+test('announcement posters [AN1]: an SVG, a GIF, other types, no type and more than 1 MB are refused, even for a Platform Admin', async () => {
+  await assertFails(upload('pa', 'announcement_posters/A1-1.svg', { contentType: 'image/svg+xml' }));
+  await assertFails(upload('pa', 'announcement_posters/A1-1.gif', { contentType: 'image/gif' }));
+  await assertFails(upload('pa', 'announcement_posters/A1-1.jpg', { contentType: 'image/jpeg; x=1' }));
+  await assertFails(upload('pa', 'announcement_posters/A1-1.html', { contentType: 'text/html' }));
+  await assertFails(ref('pa', 'announcement_posters/A1-1.jpg').put(bytes()));
+  await assertFails(upload('pa', 'announcement_posters/A1-1.jpg', jpeg, MB + 1));
+});
+
+test('announcement posters [AN1]: a signed-in non-admin and a signed-out visitor can not upload', async () => {
+  for (const uid of ['owner', 'assistant', 'outsider']) {
+    await assertFails(upload(uid, 'announcement_posters/A1-1.jpg'));
+  }
+  await assertFails(signedOutRef('announcement_posters/A1-1.jpg').put(bytes(), jpeg));
+});
+
+test('announcement posters [AN1]: anyone can read one, signed out too', async () => {
+  await seedPoster();
+  await assertSucceeds(signedOutRef(poster).getDownloadURL());
+  await assertSucceeds(ref('assistant', poster).getDownloadURL());
+});
+
+test('announcement posters [AN1]: only a Platform Admin deletes one', async () => {
+  await seedPoster();
+  for (const uid of ['owner', 'assistant', 'outsider']) {
+    await assertFails(ref(uid, poster).delete());
+  }
+  await assertFails(signedOutRef(poster).delete());
+  await assertSucceeds(ref('pa', poster).delete());
+});
+
+test('login poster and logo [AN1]: the unused paths are gone - nobody uploads, reads or deletes there', async () => {
+  for (const p of ['login_poster/poster.jpg', 'login_logo/logo.png']) {
+    await assertFails(upload('pa', p));
+    await assertFails(signedOutRef(p).getDownloadURL());
+    await assertFails(ref('pa', p).delete());
   }
 });
