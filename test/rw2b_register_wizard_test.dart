@@ -15,7 +15,7 @@ import 'helpers/register_harness.dart';
 // owner's answers): the owner flow as five steps. Written before the
 // wizard, skipped until it exists; unskipped on the old one-page form they
 // fail (no "Step 1 of 5", every field on one page).
-const _skip = true;
+const _skip = false;
 
 // The call the OLD one-page form made for OwnerInputs, recorded by typing
 // them into it (title Dr., the facility added, Create account) before the

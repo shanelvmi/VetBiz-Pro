@@ -11,7 +11,7 @@ import 'helpers/register_harness.dart';
 // RW2b (docs/design/register_wizard.md section 3, owner answers 2 and 10):
 // the wizard's layout at phone and desktop widths. Written before the
 // wizard, skipped until it exists.
-const _skip = true;
+const _skip = false;
 
 const _longName = 'Mwanaisha Wanjiru Kilimanjaro-Mwakyembe Nyamwezi';
 const _longFacility = 'Kituo cha Mifugo na Kilimo cha Wilaya ya Kilimanjaro Magharibi';

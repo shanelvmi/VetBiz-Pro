@@ -54,6 +54,10 @@ void main() {
   Future<void> typeInviteCode(WidgetTester tester, String code) async {
     await tester.tap(find.text('I have an invite code'));
     await tester.pump();
+    // RW2b: the choice is step 1 of the wizard; Continue opens today's
+    // assistant form.
+    await tester.tap(find.text('Continue'));
+    await tester.pump();
     await tester.enterText(find.widgetWithText(TextField, 'Enter your invite code'), code);
     await tester.pump(AppTimeouts.facilityLookupDebounce);
     await tester.pump();

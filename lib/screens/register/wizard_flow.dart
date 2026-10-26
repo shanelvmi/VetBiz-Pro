@@ -154,8 +154,6 @@ extension _WizardFlow on _RegisterScreenState {
     });
   }
 
-  // Temporary until the wizard view uses it (RW2b, later commit).
-  // ignore: unused_element
   Widget _buildWizardNavBar({required bool pinned}) {
     return WizardNavBar(
       isFirst: _step == 0,

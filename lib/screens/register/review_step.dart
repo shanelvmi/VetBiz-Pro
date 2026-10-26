@@ -5,8 +5,6 @@ part of '../register_screen.dart';
 // required "I agree" box. Create account (the nav bar's last label) runs
 // the unchanged submit.
 extension _ReviewStep on _RegisterScreenState {
-  // Temporary until the wizard view uses it (RW2b, later commit).
-  // ignore: unused_element
   List<Widget> _reviewStep() {
     final l10n = context.l10n;
     final terms = l10n.common_termsOfService;

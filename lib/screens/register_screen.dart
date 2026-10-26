@@ -40,6 +40,8 @@ import '../widgets/password_field_guard.dart';
 import '../widgets/wizard/wizard_consent_row.dart';
 import '../widgets/wizard/wizard_nav_bar.dart';
 import '../widgets/wizard/wizard_option_card.dart';
+import '../widgets/wizard/wizard_step_header.dart';
+import '../widgets/wizard/wizard_step_intro.dart';
 import 'login_screen.dart';
 import '../../l10n/l10n.dart';
 
@@ -47,6 +49,7 @@ import '../../l10n/l10n.dart';
 // The steps live in lib/screens/register/; the state, the checks and
 // _submit stay in this file, shared with Edit Profile and the assistant form.
 part 'register/wizard_flow.dart';
+part 'register/wizard_view.dart';
 part 'register/owner_steps.dart';
 part 'register/review_step.dart';
 
@@ -865,43 +868,63 @@ class _RegisterScreenState extends State<RegisterScreen> {
   // ---------------- REGISTRATION ----------------
 
   Widget _buildRegisterView() {
-    return Scaffold(
-      body: Stack(
-        children: [
-          const Positioned.fill(child: AuthBackground()),
-          // The same card as the login page (AuthCard: width, padding,
-          // radius). What sits inside keeps its own layout until RW2: two
-          // columns above AppBreakpoints.medium of the space the card gets.
-          AuthCard(
-            header: _buildRegisterHeader(),
-            // The same footer as the login page (G3); not in Edit Profile.
-            below: AuthFooter(contact: _supportContact),
-            bodyBuilder: (context, layout) {
-              final isWide = layout.availableWidth > AppBreakpoints.medium;
-              return isWide
-                  ? Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        SizedBox(width: _welcomePanelWidth, child: _buildWelcomePanel()),
-                        const SizedBox(width: AppSpacing.s24),
-                        Expanded(child: _buildRegisterForm(twoColumns: true)),
-                      ],
-                    )
-                  : Column(
-                      mainAxisSize: MainAxisSize.min,
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        _buildWelcomeStrip(),
-                        const SizedBox(height: AppSpacing.s16),
-                        _buildRegisterForm(twoColumns: false),
-                      ],
-                    );
-            },
-          ),
-          _buildErrorToastLayer(),
-        ],
+    final assistantForm = _showsAssistantForm;
+    // Phones: Back and Continue pinned to the bottom of the screen, above
+    // the keyboard (owner answer 10); wider, they are the card's bottom row.
+    final pinBar = !assistantForm && MediaQuery.sizeOf(context).width < AppBreakpoints.compact;
+    // The phone's back gesture and the browser's Back go one step back;
+    // on step 1 they leave the page as before (_goBack's cases).
+    return PopScope(
+      canPop: _step == 0,
+      onPopInvokedWithResult: (didPop, _) {
+        if (!didPop) _wizardBack();
+      },
+      child: Scaffold(
+        bottomNavigationBar: pinBar ? _buildWizardNavBar(pinned: true) : null,
+        body: Stack(
+          children: [
+            const Positioned.fill(child: AuthBackground()),
+            // The same card as the login page (AuthCard: width, padding,
+            // radius).
+            AuthCard(
+              header: _buildRegisterHeader(),
+              // The same footer as the login page (G3); not in Edit Profile.
+              below: AuthFooter(contact: _supportContact),
+              bodyBuilder: (context, layout) => assistantForm
+                  ? _buildAssistantFormBody(layout)
+                  : _buildWizardBody(layout, inlineBar: !pinBar),
+            ),
+            _buildErrorToastLayer(),
+          ],
+        ),
       ),
     );
+  }
+
+  // "I have an invite code" keeps today's one-page form until RW2c: the
+  // same sections and checks as before, the role cards included (choosing
+  // the owner there goes back to the wizard).
+  Widget _buildAssistantFormBody(AuthCardLayout layout) {
+    // Two columns above AppBreakpoints.medium of the space the card gets.
+    final isWide = layout.availableWidth > AppBreakpoints.medium;
+    return isWide
+        ? Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              SizedBox(width: _welcomePanelWidth, child: _buildWelcomePanel()),
+              const SizedBox(width: AppSpacing.s24),
+              Expanded(child: _buildRegisterForm(twoColumns: true)),
+            ],
+          )
+        : Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              _buildWelcomeStrip(),
+              const SizedBox(height: AppSpacing.s16),
+              _buildRegisterForm(twoColumns: false),
+            ],
+          );
   }
 
   Widget _buildRegisterHeader() {
@@ -1385,7 +1408,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
   // flagged - nobody gets told off for a field they haven't reached yet.
   void _onFieldChanged() {
     setState(() {
-      if (_submitAttempted) _fieldErrors = _validateAll();
+      if (_submitAttempted) _fieldErrors = _shownErrors(_validateAll());
     });
   }
 
@@ -1685,7 +1708,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
         assistantFacilityCodeController.clear();
       }
       // The other role's problems no longer apply (and this role's now do).
-      if (_submitAttempted) _fieldErrors = _validateAll();
+      if (_submitAttempted) _fieldErrors = _shownErrors(_validateAll());
     });
   }
 

@@ -8,8 +8,6 @@ extension _OwnerSteps on _RegisterScreenState {
 
   // Step 2: photo (optional), the title as chips (stored as typed, so
   // they show the stored value), full name, phone.
-  // Temporary until the wizard view uses it (RW2b, next commit).
-  // ignore: unused_element
   List<Widget> _aboutYouStep() => [
         _buildAvatarPicker(),
         _gap(WizardMetrics.fieldGap),
@@ -71,8 +69,6 @@ extension _OwnerSteps on _RegisterScreenState {
 
   // Step 3: the facilities added so far (with remove), the limit, then a
   // name, its type as option cards, and Add (addFacility, as before).
-  // Temporary until the wizard view uses it (RW2b, next commit).
-  // ignore: unused_element
   List<Widget> _facilityStep() {
     final atLimit = facilities.length >= _maxFacilities;
     final facilityError = facilities.isEmpty ? _fieldErrors['facility'] : null;
@@ -135,8 +131,6 @@ extension _OwnerSteps on _RegisterScreenState {
   }
 
   // Step 4: email, password, confirm (the P1b guards come with them).
-  // Temporary until the wizard view uses it (RW2b, next commit).
-  // ignore: unused_element
   List<Widget> _signInStep() => [
         _labeled(
           context.l10n.common_email,
