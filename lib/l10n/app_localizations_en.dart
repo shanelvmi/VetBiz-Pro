@@ -6852,7 +6852,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get howToUse_owner1 =>
-      'On the sign-in page press Register, choose \"I own or manage a facility\", add your facility\'s name and type, and press Create account.';
+      'On the sign-in page press Register, choose \"I own or manage a facility\" and press Continue. Fill in each step: about you, your facility\'s name and type (press Add), then your email and password. On the last step check your details, tick the box to agree to the Terms of Service and the Privacy Policy, and press Create account.';
 
   @override
   String get howToUse_owner2 =>
@@ -6923,7 +6923,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get faq_startA =>
-      'Press Register on the sign-in page and choose \"I own or manage a facility\". Your facility starts with a trial; Settings, under Subscription, shows how long it lasts.';
+      'Press Register on the sign-in page, choose \"I own or manage a facility\" and follow the five steps. Your facility starts with a trial; Settings, under Subscription, shows how long it lasts.';
 
   @override
   String get faq_trialQ => 'What happens when the trial ends?';

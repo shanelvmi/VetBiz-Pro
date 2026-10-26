@@ -6893,7 +6893,7 @@ class AppLocalizationsSw extends AppLocalizations {
 
   @override
   String get howToUse_owner1 =>
-      'Kwenye ukurasa wa kuingia bonyeza Jisajili, chagua \"Ninamiliki au ninasimamia kituo\", ongeza jina na aina ya kituo chako, kisha bonyeza Fungua akaunti.';
+      'Kwenye ukurasa wa kuingia bonyeza Jisajili, chagua \"Ninamiliki au ninasimamia kituo\" kisha bonyeza Endelea. Jaza kila hatua: kuhusu wewe, jina na aina ya kituo chako (bonyeza Ongeza), kisha barua pepe na nenosiri lako. Kwenye hatua ya mwisho kagua taarifa zako, weka alama kwenye kisanduku ili ukubali Masharti ya Huduma na Sera ya Faragha, kisha bonyeza Fungua akaunti.';
 
   @override
   String get howToUse_owner2 =>
@@ -6965,7 +6965,7 @@ class AppLocalizationsSw extends AppLocalizations {
 
   @override
   String get faq_startA =>
-      'Bonyeza Jisajili kwenye ukurasa wa kuingia na uchague \"Ninamiliki au ninasimamia kituo\". Kituo chako kinaanza na kipindi cha majaribio; Mipangilio, chini ya Usajili, inaonyesha muda wake.';
+      'Bonyeza Jisajili kwenye ukurasa wa kuingia, chagua \"Ninamiliki au ninasimamia kituo\" na ufuate hatua tano. Kituo chako kinaanza na kipindi cha majaribio; Mipangilio, chini ya Usajili, inaonyesha muda wake.';
 
   @override
   String get faq_trialQ => 'Nini kinatokea kipindi cha majaribio kikiisha?';

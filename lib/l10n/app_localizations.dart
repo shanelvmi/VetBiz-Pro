@@ -11634,10 +11634,10 @@ abstract class AppLocalizations {
   /// **'If you run the facility (Admin)'**
   String get howToUse_ownerTitle;
 
-  /// How to use it: owner step. Register, Create account and the quoted choice are the register page's own labels.
+  /// How to use it: owner step. Register, Continue, Add, Create account, the quoted choice and the two legal page names are the register wizard's own labels (RW2b).
   ///
   /// In en, this message translates to:
-  /// **'On the sign-in page press Register, choose \"I own or manage a facility\", add your facility\'s name and type, and press Create account.'**
+  /// **'On the sign-in page press Register, choose \"I own or manage a facility\" and press Continue. Fill in each step: about you, your facility\'s name and type (press Add), then your email and password. On the last step check your details, tick the box to agree to the Terms of Service and the Privacy Policy, and press Create account.'**
   String get howToUse_owner1;
 
   /// How to use it: owner step. No length or price on purpose (set by the platform).
@@ -11745,7 +11745,7 @@ abstract class AppLocalizations {
   /// FAQs: answer. No trial length or price on purpose.
   ///
   /// In en, this message translates to:
-  /// **'Press Register on the sign-in page and choose \"I own or manage a facility\". Your facility starts with a trial; Settings, under Subscription, shows how long it lasts.'**
+  /// **'Press Register on the sign-in page, choose \"I own or manage a facility\" and follow the five steps. Your facility starts with a trial; Settings, under Subscription, shows how long it lasts.'**
   String get faq_startA;
 
   /// FAQs: question.
