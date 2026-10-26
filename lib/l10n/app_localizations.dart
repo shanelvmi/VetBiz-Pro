@@ -11909,6 +11909,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Update {index} of {count}'**
   String updates_slideOf(int index, int count);
+
+  /// Login page, wide windows: the heading of the welcome note at the top of the Updates card, beside the sign-in card's Welcome back (AN4).
+  ///
+  /// In en, this message translates to:
+  /// **'Welcome to {appName}'**
+  String updates_welcomeTitle(String appName);
+
+  /// Login page, wide windows: the plain line under the welcome heading in the Updates card (AN4; it was the sign-in footer's line under the app name).
+  ///
+  /// In en, this message translates to:
+  /// **'Sales, stock, clients and debts for agrovets and vet clinics.'**
+  String get updates_welcomeLine;
 }
 
 class _AppLocalizationsDelegate

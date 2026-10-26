@@ -7060,4 +7060,13 @@ class AppLocalizationsSw extends AppLocalizations {
   String updates_slideOf(int index, int count) {
     return 'Taarifa $index kati ya $count';
   }
+
+  @override
+  String updates_welcomeTitle(String appName) {
+    return 'Karibu $appName';
+  }
+
+  @override
+  String get updates_welcomeLine =>
+      'Mauzo, bidhaa, wateja na madeni kwa agrovet na kliniki za mifugo.';
 }

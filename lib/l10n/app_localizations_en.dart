@@ -7017,4 +7017,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String updates_slideOf(int index, int count) {
     return 'Update $index of $count';
   }
+
+  @override
+  String updates_welcomeTitle(String appName) {
+    return 'Welcome to $appName';
+  }
+
+  @override
+  String get updates_welcomeLine =>
+      'Sales, stock, clients and debts for agrovets and vet clinics.';
 }
