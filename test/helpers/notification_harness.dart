@@ -74,14 +74,14 @@ NotificationFeedController newFeed(FirebaseFirestore fs, String uid, Clock clock
 
 /// Pumps the full screen (or the dropdown in its 400 px panel) on [c].
 Future<void> pumpNotifications(WidgetTester tester, NotificationFeedController c,
-    {double width = 390, double height = 800, bool dark = false, bool dropdown = false, String locale = 'en'}) async {
+    {double width = 390, double height = 800, bool dark = false, bool dropdown = false, String locale = 'en', ImageProvider Function(String url)? imageFor}) async {
   SharedPreferences.setMockInitialValues({});
   // The view itself (not only the surface), so MediaQuery says the same
   // width as the layout: the phone layout and the swipes go by MediaQuery.
   tester.view.devicePixelRatio = 1;
   tester.view.physicalSize = Size(width, height);
   addTearDown(tester.view.reset);
-  final screen = NotificationsScreen(isDropdown: dropdown, controller: c);
+  final screen = NotificationsScreen(isDropdown: dropdown, controller: c, imageFor: imageFor);
   await tester.pumpWidget(MaterialApp(
     scaffoldMessengerKey: AppFeedback.messengerKey,
     localizationsDelegates: AppLocalizations.localizationsDelegates,

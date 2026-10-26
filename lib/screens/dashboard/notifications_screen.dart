@@ -10,6 +10,7 @@ import '../../providers/user_role_provider.dart';
 import '../../utils/notification_seen_tracker.dart';
 import '../../models/notification_model.dart';
 import '../../widgets/announcement_message.dart';
+import '../../widgets/announcement_poster.dart';
 import '../../widgets/notification_row.dart';
 import '../../services/notification_feed.dart';
 import '../../widgets/notification_actions.dart';
@@ -39,7 +40,11 @@ class NotificationsScreen extends StatefulWidget {
   /// pass one on a fake Firestore). NOTIF-2c.
   final NotificationFeedController? controller;
 
-  const NotificationsScreen({super.key, this.isDropdown = false, this.controller});
+  /// A poster's image from its URL (AN3): NetworkImage in the app, a fake
+  /// in tests.
+  final PosterImageFor? imageFor;
+
+  const NotificationsScreen({super.key, this.isDropdown = false, this.controller, this.imageFor});
 
 
   @override
