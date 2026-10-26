@@ -1,6 +1,3 @@
-@Skip('AN2: written before the widget; unskipped with it')
-library;
-
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:fake_cloud_firestore/fake_cloud_firestore.dart';
 import 'package:flutter/gestures.dart';

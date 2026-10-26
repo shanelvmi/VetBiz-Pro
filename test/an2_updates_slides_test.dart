@@ -1,6 +1,3 @@
-@Skip('AN2: written before the widget; unskipped with it')
-library;
-
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:url_launcher/url_launcher.dart';
