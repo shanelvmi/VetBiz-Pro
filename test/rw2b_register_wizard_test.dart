@@ -16,6 +16,9 @@ import 'helpers/register_harness.dart';
 // wizard, skipped until it exists; unskipped on the old one-page form they
 // fail (no "Step 1 of 5", every field on one page).
 const _skip = false;
+// RW2b-fix: the passwords are kept in memory on Back and Continue (design
+// section 5, test 3), hidden again; skipped until the fix.
+const _skipFix = true;
 
 // The call the OLD one-page form made for OwnerInputs, recorded by typing
 // them into it (title Dr., the facility added, Create account) before the
@@ -37,6 +40,8 @@ void main() {
       .widget
       .focusNode
       .hasFocus;
+  bool obscured(WidgetTester tester, String field) =>
+      tester.widget<EditableText>(find.descendant(of: registerField(field), matching: find.byType(EditableText))).obscureText;
 
   testWidgets('opens on step 1: the two choices and Continue only', (tester) async {
     await pumpRegister(tester);
@@ -99,14 +104,22 @@ void main() {
     await finishRegister(tester);
   }, skip: _skip);
 
-  testWidgets('Back keeps every typed value except the passwords', (tester) async {
+  testWidgets('Back and forward keep every typed value, the passwords hidden', (tester) async {
     await pumpRegister(tester);
     await fillOwnerSteps(tester);
     expect(find.text(step(5)), findsOneWidget);
     await tapBack(tester);
     expect(textOf(tester, 'email'), OwnerInputs.email);
-    expect(textOf(tester, 'password'), isEmpty);
-    expect(textOf(tester, 'confirm'), isEmpty);
+    expect(textOf(tester, 'password'), OwnerInputs.password);
+    expect(textOf(tester, 'confirm'), OwnerInputs.password);
+    // Open both eyes on step 4, then go to step 2 and come back.
+    for (final field in ['password', 'confirm']) {
+      final eye = find.descendant(of: registerField(field), matching: find.byIcon(Icons.visibility_outlined));
+      await tester.ensureVisible(eye);
+      await tester.tap(eye);
+      await tester.pump();
+      expect(obscured(tester, field), isFalse);
+    }
     await tapBack(tester);
     expect(find.text(OwnerInputs.facilityName), findsOneWidget);
     await tapBack(tester);
@@ -115,10 +128,42 @@ void main() {
     expect(tester.widget<ChoiceChip>(find.widgetWithText(ChoiceChip, OwnerInputs.prefix)).selected, isTrue);
     await tapContinue(tester);
     await tapContinue(tester);
+    expect(find.text(step(4)), findsOneWidget);
     expect(textOf(tester, 'email'), OwnerInputs.email);
-    expect(textOf(tester, 'password'), isEmpty);
+    expect(textOf(tester, 'password'), OwnerInputs.password);
+    expect(textOf(tester, 'confirm'), OwnerInputs.password);
+    expect(obscured(tester, 'password'), isTrue);
+    expect(obscured(tester, 'confirm'), isTrue);
     await finishRegister(tester);
-  }, skip: _skip);
+  }, skip: _skipFix);
+
+  testWidgets('kept passwords: a failed Create still empties and hides both', (tester) async {
+    final auth = FakeRegisterAuth(failWith: FirebaseAuthException(code: 'network-request-failed'));
+    await pumpRegister(tester, auth: auth);
+    await fillOwnerSteps(tester);
+    await tapBack(tester);
+    await tapContinue(tester);
+    await tickConsent(tester);
+    await tapText(tester, en.register_createAccount);
+    expect(auth.ownerCalls.single['password'], OwnerInputs.password.trim());
+    expect(find.text(step(4)), findsOneWidget);
+    expect(textOf(tester, 'password'), isEmpty);
+    expect(textOf(tester, 'confirm'), isEmpty);
+    expect(obscured(tester, 'password'), isTrue);
+    await finishRegister(tester);
+  }, skip: _skipFix);
+
+  testWidgets('kept passwords: leaving the screen empties both', (tester) async {
+    await pumpRegister(tester);
+    await fillOwnerSteps(tester);
+    await tapBack(tester);
+    final password = tester.widget<TextField>(registerField('password')).controller!;
+    final confirm = tester.widget<TextField>(registerField('confirm')).controller!;
+    expect(password.text, OwnerInputs.password);
+    await finishRegister(tester);
+    expect(password.text, isEmpty);
+    expect(confirm.text, isEmpty);
+  }, skip: _skipFix);
 
   testWidgets('step 2 has the title as chips; step 3 the types as option cards', (tester) async {
     await pumpRegister(tester);
