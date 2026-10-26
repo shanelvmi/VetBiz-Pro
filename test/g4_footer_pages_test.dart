@@ -70,7 +70,7 @@ void main() {
     testWidgets('wide: brand, Platform, Support, Legal side by side, each with its links', (tester) async {
       await pumpFooter(tester);
       final headings = [_en.authFooter_platform, _en.authFooter_support, _en.authFooter_legal].map((t) => tester.getTopLeft(find.text(t))).toList();
-      final brand = tester.getTopLeft(find.text(_en.authFooter_tagline));
+      final brand = tester.getTopLeft(find.text(AppInfo.name));
       expect(brand.dx < headings[0].dx && headings[0].dx < headings[1].dx && headings[1].dx < headings[2].dx, isTrue);
       for (final h in headings) {
         expect((h.dy - headings[0].dy).abs(), lessThan(1));
@@ -84,7 +84,7 @@ void main() {
 
     testWidgets('phones: brand on top, then a two-column list', (tester) async {
       await pumpFooter(tester, size: const Size(360, 1200));
-      final brand = tester.getTopLeft(find.text(_en.authFooter_tagline));
+      final brand = tester.getTopLeft(find.text(AppInfo.name));
       final platform = tester.getTopLeft(find.text(_en.authFooter_platform));
       final support = tester.getTopLeft(find.text(_en.authFooter_support));
       final legal = tester.getTopLeft(find.text(_en.authFooter_legal));

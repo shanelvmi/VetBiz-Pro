@@ -26,7 +26,7 @@ import 'helpers/updates_harness.dart';
 // footer's brand column without the description sentence.
 // Unskipped with their commits.
 const _skipWideLabel = false;
-const _skipFooter = true;
+const _skipFooter = false;
 
 final _en = lookupAppLocalizations(const Locale('en'));
 

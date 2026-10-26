@@ -26,7 +26,7 @@ typedef AuthFooterLauncher = Future<bool> Function(Uri url, {LaunchMode mode});
 
 /// The calm footer under the Login and Register cards (G3, v2 in G4): on a
 /// full-width soft band (authFooterFill) with a hairline on top, the brand
-/// and a plain line, then Platform, Support and Legal, then copyright,
+/// (the mark and the name; AN4: no plain line), then Platform, Support and Legal, then copyright,
 /// version and the social icons the Platform Admin saved. Four columns
 /// above AppBreakpoints.medium of its own width; on phones the brand, then
 /// the columns two by two, and the bottom row wraps. Every link and icon is
@@ -184,8 +184,8 @@ class AuthFooter extends StatelessWidget {
             ),
           ],
         ),
-        const SizedBox(height: AppSpacing.s8),
-        Text(context.l10n.authFooter_tagline, style: TextStyle(color: context.colors.authFooterMutedText, fontSize: AppFontSize.f13)),
+        // AN4: no description sentence here any more; it is the welcome
+        // note's line on the login page (once, not twice).
       ],
     );
   }

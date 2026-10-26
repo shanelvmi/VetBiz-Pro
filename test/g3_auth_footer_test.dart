@@ -62,7 +62,6 @@ void main() {
       await pump(tester, SupportContact.empty);
       for (final text in [
         AppInfo.name,
-        _en.authFooter_tagline,
         _en.authFooter_support,
         _en.authFooter_helpContact,
         _en.authFooter_legal,
@@ -74,7 +73,7 @@ void main() {
         expect(find.text(text), findsOneWidget, reason: text);
       }
       // Three columns side by side above AppBreakpoints.medium.
-      final brand = tester.getTopLeft(find.text(_en.authFooter_tagline));
+      final brand = tester.getTopLeft(find.text(AppInfo.name));
       final support = tester.getTopLeft(find.text(_en.authFooter_support));
       final legal = tester.getTopLeft(find.text(_en.authFooter_legal));
       expect(brand.dx < support.dx && support.dx < legal.dx, isTrue);
