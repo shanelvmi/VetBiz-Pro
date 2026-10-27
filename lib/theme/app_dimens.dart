@@ -188,7 +188,7 @@ class AuthPanelMetrics {
   /// so the two heading rows sit on one line.
   static const double accentHeight = 4;
 
-  /// The soft circle beside each heading (the lock, the paw), its outline
+  /// The soft circle beside each heading (the lock, the vaccine), its outline
   /// and glow, and the gap to the heading.
   static const double iconCircle = 42;
   static const double iconCircleBorder = 1.4;
@@ -249,10 +249,10 @@ class AuthFooterMetrics {
   static const double markSize = 32;
 
   /// AN5: the description line under the mark and the name wraps to at
-  /// most this many lines in the brand column; two on a wide window, so the
-  /// link columns still set the footer's height there.
+  /// most this many lines in the brand column; three on a wide window, so the
+  /// Kiswahili is never cut there (the English takes two, under the links).
   static const int descriptionMaxLines = 4;
-  static const int descriptionMaxLinesWide = 2;
+  static const int descriptionMaxLinesWide = 3;
 
   /// The social network icons inside their 48 px targets.
   static const double socialIconSize = AppIconSize.i18;

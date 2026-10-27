@@ -41,7 +41,7 @@ void main() {
       expect(left.top, closeTo(login.top, 1));
       expect(find.text(_en.updates_welcomeTitle(AppInfo.name)), findsOneWidget);
       expect(find.descendant(of: find.byKey(UpdatesCard.surfaceKey), matching: find.text(_en.updates_welcomeLine)), findsOneWidget);
-      expect(find.byIcon(Icons.pets_outlined), findsOneWidget);
+      expect(find.byIcon(Icons.vaccines_outlined), findsOneWidget); // AN5: was the paw
       expect(
         _rect(tester, UpdatesCard.welcomeHeadingKey).top,
         closeTo(_rect(tester, LoginScreen.welcomeBackRowKey).top, 1),

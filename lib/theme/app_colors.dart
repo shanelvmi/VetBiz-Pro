@@ -357,7 +357,7 @@ class AppColors extends ThemeExtension<AppColors> {
   final Color authFooterMutedText;
 
   // The icon in the soft circle beside each signed-out card heading (the
-  // lock, the paw; AuthPanelHeading). Light = primary, so light does not
+  // lock, the vaccine; AuthPanelHeading). Light = primary, so light does not
   // change; dark = textStrong, as the dark primary on the circle (the glow
   // at 20% over the card) measured 3.09 to 3.39 and looked blurred. White
   // reads 9.6 to 11.1 there; brandTealGlow, 5.4 to 6.6, but it is the ring

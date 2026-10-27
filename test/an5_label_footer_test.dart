@@ -80,13 +80,19 @@ void main() {
         expect(text.style!.color, c.authFooterMutedText);
         expect(ColorMath.contrast(c.authFooterMutedText, c.authFooterFill), greaterThanOrEqualTo(4.5));
         expect([AppFontSize.f13, AppFontSize.f14], contains(text.style!.fontSize));
-        final lines = width > AppBreakpoints.medium ? 2 : 4;
+        final lines = width > AppBreakpoints.medium ? 3 : 4; // third correction: 3 wide (was 2)
         expect(text.maxLines, lines);
         expect(tester.getRect(line).height, lessThanOrEqualTo(lines * text.style!.fontSize! * 1.6), reason: '$lines lines at most');
         expect(tester.getRect(line).top, greaterThan(tester.getRect(find.text(AppInfo.name).first).bottom));
-        // Wide: two lines at most, above the links' bottom, so the footer is
-        // no taller than before the line (AN4: 170).
-        if (width >= 1200) expect(height, lessThanOrEqualTo(170));
+        // Wide: the rest of the footer unchanged (AN4: 170); only what the brand
+        // column reaches below the last link adds to it. The square test font
+        // wraps the English to three lines here; in Roboto it takes two, under
+        // the links (an5_third_correction_test measures that).
+        if (width >= 1200) {
+          final lastLink = tester.getRect(find.text(_en.common_termsOfService)).bottom;
+          final over = tester.getRect(find.byKey(AuthFooter.brandKey)).bottom - lastLink;
+          expect(height - (over > 0 ? over : 0), lessThanOrEqualTo(170));
+        }
         expect(tester.getSize(find.byKey(AuthFooter.bottomRowKey)).height, greaterThanOrEqualTo(AuthFooterMetrics.bottomRowHeight));
         expect(tester.takeException(), isNull);
       }, skip: _skipFooter);

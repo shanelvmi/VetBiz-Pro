@@ -186,8 +186,9 @@ class AuthFooter extends StatelessWidget {
         ),
         // AN4: the welcome note's sentence is not repeated here (once, not
         // twice). AN5: the owner's sentence about the app in its place; static
-        // text, at most four lines (two in the wide brand column, so the link
-        // columns still set the footer's height), so nothing shifts.
+        // text, at most four lines (three in the wide brand column: the English
+        // takes two there, under the links, and the Kiswahili is never cut), so
+        // nothing shifts.
         const SizedBox(height: AppSpacing.s8),
         Text(
           context.l10n.authFooter_description,

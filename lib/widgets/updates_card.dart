@@ -56,8 +56,10 @@ class UpdatesCard extends StatelessWidget {
   }
 }
 
-/// The paw in its soft circle, "Welcome to {appName}", and one plain line
-/// about what the app does (it used to be the footer's).
+/// The vaccine in its soft circle (AN5; it was a paw, which suggests pets,
+/// and the customers are agrovets), "Welcome to {appName}", and one plain
+/// line about the Updates below it (AN5; in AN4 it was the footer's old line
+/// about what the app does).
 class _WelcomeNote extends StatelessWidget {
   const _WelcomeNote({super.key});
 
@@ -67,7 +69,7 @@ class _WelcomeNote extends StatelessWidget {
     // subtext is, so the two sit on one line.
     return AuthPanelHeading(
       key: UpdatesCard.welcomeHeadingKey,
-      icon: Icons.pets_outlined,
+      icon: Icons.vaccines_outlined,
       title: context.l10n.updates_welcomeTitle(AppInfo.name),
       subtitle: context.l10n.updates_welcomeLine,
     );

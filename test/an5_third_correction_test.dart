@@ -21,7 +21,7 @@ import 'helpers/real_font.dart';
 // not a paw (the right card keeps its lock); the footer's brand line may take
 // three lines on wide windows (four on phones) so the Kiswahili is never cut,
 // measured in a real font (Roboto), while the English stays at two there.
-const _skip = true;
+const _skip = false;
 
 const _welcome = 'Track our latest news and notices.';
 const _welcomeSw = 'Fuatilia habari na taarifa zetu za hivi punde.';
