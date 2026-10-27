@@ -1962,9 +1962,8 @@
   "updates_new": ["Mpya","Chip on a login update published in the last 48 hours.","draft"],
   "updates_important": ["Muhimu","Chip on an urgent login update.","draft"],
   "updates_readMore": ["Soma zaidi","Button on a long text update: opens the whole message in a dialog.","draft"],
-  "updates_previous": ["Taarifa iliyotangulia","Arrow button and its tooltip: show the previous login update.","draft"],
-  "updates_next": ["Taarifa inayofuata","Arrow button and its tooltip: show the next login update.","draft"],
-  "updates_slideOf": ["Taarifa {index} kati ya {count}","Screen-reader label of a dot under the login updates.","draft"],
+  "updates_slideOf": ["Slaidi {index} kati ya {count}","Screen-reader label of a dot under the login updates (AN6: the owner's wording, was Update {index} of {count}).","draft"],
   "updates_welcomeTitle": ["Karibu {appName}","Login page, wide windows: the heading of the welcome note at the top of the Updates card, beside the sign-in card's Welcome back (AN4).","draft"],
-  "updates_welcomeLine": ["Fuatilia habari na taarifa zetu za hivi punde.","Login page, wide windows: the plain line under the welcome heading in the Updates card (AN4; AN5: the owner's line about the Updates).","draft"]
+  "updates_welcomeLine": ["Fuatilia habari na taarifa zetu za hivi punde.","Login page, wide windows: the plain line under the welcome heading in the Updates card (AN4; AN5: the owner's line about the Updates).","draft"],
+  "updates_empty": ["Hakuna jipya kwa sasa. Rudi baadaye.","Login page: the calm panel in the Updates slide frame when there are no updates for this language (AN6).","draft"]
 }

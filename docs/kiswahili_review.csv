@@ -1968,8 +1968,7 @@ updates_label,Updates,Taarifa,"The small label above the login page's announceme
 updates_new,New,Mpya,Chip on a login update published in the last 48 hours.,draft
 updates_important,Important,Muhimu,Chip on an urgent login update.,draft
 updates_readMore,Read more,Soma zaidi,Button on a long text update: opens the whole message in a dialog.,draft
-updates_previous,Previous update,Taarifa iliyotangulia,Arrow button and its tooltip: show the previous login update.,draft
-updates_next,Next update,Taarifa inayofuata,Arrow button and its tooltip: show the next login update.,draft
-updates_slideOf,Update {index} of {count},Taarifa {index} kati ya {count},Screen-reader label of a dot under the login updates.,draft
+updates_slideOf,Slide {index} of {count},Slaidi {index} kati ya {count},"Screen-reader label of a dot under the login updates (AN6: the owner's wording, was Update {index} of {count}).",draft
 updates_welcomeTitle,Welcome to {appName},Karibu {appName},"Login page, wide windows: the heading of the welcome note at the top of the Updates card, beside the sign-in card's Welcome back (AN4).",draft
 updates_welcomeLine,Track our latest news and notices.,Fuatilia habari na taarifa zetu za hivi punde.,"Login page, wide windows: the plain line under the welcome heading in the Updates card (AN4; AN5: the owner's line about the Updates).",draft
+updates_empty,Nothing new right now. Check back soon.,Hakuna jipya kwa sasa. Rudi baadaye.,Login page: the calm panel in the Updates slide frame when there are no updates for this language (AN6).,draft
