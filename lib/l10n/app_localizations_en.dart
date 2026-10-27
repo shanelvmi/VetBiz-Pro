@@ -4903,6 +4903,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get login_welcomeBack => 'Welcome back';
 
   @override
+  String get login_signInTitle => 'Sign in to your account';
+
+  @override
+  String get login_signInSubtitle => 'Use your email and password.';
+
+  @override
   String get login_emailHint => 'Enter your email';
 
   @override
@@ -6740,6 +6746,10 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get authFooter_legal => 'Legal';
+
+  @override
+  String get authFooter_audience =>
+      'For agrovets, vet clinics, vet hospitals and ambulatory services in Tanzania.';
 
   @override
   String get authFooter_helpContact => 'Help and contact';

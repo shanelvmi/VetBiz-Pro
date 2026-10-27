@@ -8460,6 +8460,18 @@ abstract class AppLocalizations {
   /// **'Welcome back'**
   String get login_welcomeBack;
 
+  /// Sign-in card: its heading, beside the Updates card's welcome heading on wide windows (AN5; was Welcome back).
+  ///
+  /// In en, this message translates to:
+  /// **'Sign in to your account'**
+  String get login_signInTitle;
+
+  /// Sign-in card: the line under its heading, on the line of the Updates card's welcome sentence (AN5).
+  ///
+  /// In en, this message translates to:
+  /// **'Use your email and password.'**
+  String get login_signInSubtitle;
+
   /// Login email field hint.
   ///
   /// In en, this message translates to:
@@ -11441,6 +11453,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Legal'**
   String get authFooter_legal;
+
+  /// Sign-in and register footer: the line under the mark and the app name in the brand column (AN5). Not the welcome note's sentence.
+  ///
+  /// In en, this message translates to:
+  /// **'For agrovets, vet clinics, vet hospitals and ambulatory services in Tanzania.'**
+  String get authFooter_audience;
 
   /// Sign-in footer, Support column: opens the same Help dialog as the dashboard.
   ///

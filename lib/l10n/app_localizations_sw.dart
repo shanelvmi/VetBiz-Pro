@@ -4931,6 +4931,12 @@ class AppLocalizationsSw extends AppLocalizations {
   String get login_welcomeBack => 'Karibu tena';
 
   @override
+  String get login_signInTitle => 'Ingia kwenye akaunti yako';
+
+  @override
+  String get login_signInSubtitle => 'Tumia barua pepe na nenosiri lako.';
+
+  @override
   String get login_emailHint => 'Weka barua pepe yako';
 
   @override
@@ -6782,6 +6788,10 @@ class AppLocalizationsSw extends AppLocalizations {
 
   @override
   String get authFooter_legal => 'Kisheria';
+
+  @override
+  String get authFooter_audience =>
+      'Kwa agrovet, kliniki za mifugo, hospitali za mifugo na huduma za kutembelea nchini Tanzania.';
 
   @override
   String get authFooter_helpContact => 'Msaada na mawasiliano';
