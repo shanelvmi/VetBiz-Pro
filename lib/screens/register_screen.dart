@@ -49,6 +49,7 @@ import '../widgets/wizard/wizard_step_header.dart';
 import '../widgets/wizard/wizard_step_intro.dart';
 import 'login_screen.dart';
 import '../../l10n/l10n.dart';
+import '../widgets/app_sheet.dart';
 
 // RW2b: the owner's sign-up as a five-step wizard (register_wizard.md).
 // The steps live in lib/screens/register/; the state, the checks and
@@ -1989,49 +1990,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
 /// streams, so closing the modal after a save is all it takes for the name
 /// and photo to update - there is nothing to reload.
 Future<bool?> showEditProfileScreen(BuildContext context, {required Map<String, dynamic> userData}) {
-  final isWideScreen = MediaQuery.of(context).size.width >= AppBreakpoints.medium;
-
-  if (!isWideScreen) {
-    return Navigator.of(context).push<bool>(
-      MaterialPageRoute(builder: (_) => RegisterScreen(userData: userData, isUpdating: true)),
-    );
-  }
-
-  return showGeneralDialog<bool>(
-    context: context,
-    barrierDismissible: true,
+  return showAdaptiveForm<bool>(
+    context,
     barrierLabel: context.l10n.common_editProfile,
-    barrierColor: context.colors.scrim.withValues(alpha: AppAlpha.a50),
-    transitionDuration: AppMotion.normal,
-    pageBuilder: (context, animation, secondaryAnimation) {
-      final screenSize = MediaQuery.of(context).size;
-      final modalWidth = (screenSize.width * 0.60).clamp(0, 940).toDouble();
-      final modalHeight = (screenSize.height * 0.88) < 480 ? 480.0 : screenSize.height * 0.88;
-      return Center(
-        child: SizedBox(
-          width: modalWidth,
-          height: modalHeight,
-          child: ClipRRect(
-            borderRadius: BorderRadius.circular(AppRadius.r16),
-            child: Material(
-              child: RegisterScreen(userData: userData, isUpdating: true, isModal: true),
-            ),
-          ),
-        ),
-      );
-    },
-    transitionBuilder: (context, animation, secondaryAnimation, child) {
-      final curved = CurvedAnimation(parent: animation, curve: Curves.easeOutCubic);
-      return FadeTransition(
-        opacity: curved,
-        child: SlideTransition(
-          position: Tween<Offset>(begin: const Offset(0, 0.03), end: Offset.zero).animate(curved),
-          child: ScaleTransition(
-            scale: Tween<double>(begin: 0.96, end: 1.0).animate(curved),
-            child: child,
-          ),
-        ),
-      );
-    },
+    builder: (isModal) => RegisterScreen(userData: userData, isUpdating: true, isModal: isModal),
   );
 }

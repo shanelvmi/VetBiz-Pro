@@ -14,7 +14,6 @@ import '../../theme/theme_context.dart';
 import '../../theme/app_dimens.dart';
 import '../../theme/app_text.dart';
 import '../../theme/app_motion.dart';
-import '../../theme/app_breakpoints.dart';
 import '../../ui/feedback/app_feedback.dart';
 import '../../data/activity_type.dart';
 import '../../data/collections.dart';
@@ -23,6 +22,7 @@ import '../../config/app_limits.dart';
 import '../../config/app_rules.dart';
 import '../../config/app_date_format.dart';
 import '../../l10n/l10n.dart';
+import '../../widgets/app_sheet.dart';
 
 class ActivityLogScreen extends StatefulWidget {
   final bool isModal;
@@ -801,54 +801,10 @@ class _ActivityLogScreenState extends State<ActivityLogScreen> {
 /// rather than "navigated away from"). Same threshold already used
 /// elsewhere in this app for "is this desktop-width".
 Future<void> showActivityLog(BuildContext context) async {
-  final isWideScreen = MediaQuery.of(context).size.width >= AppBreakpoints.medium;
-
-  if (!isWideScreen) {
-    await Navigator.of(context).push(
-      MaterialPageRoute(builder: (_) => const ActivityLogScreen()),
-    );
-    return;
-  }
-
-  await showGeneralDialog(
-    context: context,
-    barrierDismissible: true,
+  await showAdaptiveForm(
+    context,
     barrierLabel: context.l10n.export_activityLog,
-    barrierColor: context.colors.scrim.withValues(alpha: AppAlpha.a50),
-    transitionDuration: AppMotion.normal,
-    pageBuilder: (context, animation, secondaryAnimation) {
-      final screenSize = MediaQuery.of(context).size;
-      return Center(
-        child: ConstrainedBox(
-          constraints: BoxConstraints(
-            maxWidth: AppSizes.contentLg,
-            maxHeight: screenSize.height * 0.85,
-          ),
-          child: SizedBox(
-            width: screenSize.width * 0.85,
-            height: screenSize.height * 0.85,
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(AppRadius.r16),
-              child: const Material(
-                child: ActivityLogScreen(isModal: true),
-              ),
-            ),
-          ),
-        ),
-      );
-    },
-    transitionBuilder: (context, animation, secondaryAnimation, child) {
-      final curved = CurvedAnimation(parent: animation, curve: Curves.easeOutCubic);
-      return FadeTransition(
-        opacity: curved,
-        child: SlideTransition(
-          position: Tween<Offset>(begin: const Offset(0, 0.03), end: Offset.zero).animate(curved),
-          child: ScaleTransition(
-            scale: Tween<double>(begin: 0.96, end: 1.0).animate(curved),
-            child: child,
-          ),
-        ),
-      );
-    },
+    size: AdaptiveFormSize.activityLog,
+    builder: (isModal) => ActivityLogScreen(isModal: isModal),
   );
 }

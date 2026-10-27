@@ -12,10 +12,8 @@ import '../../providers/subscription_provider.dart';
 import '../../constants/subscription_plans.dart';
 import '../../models/promotion.dart';
 import 'subscription_history_screen.dart';
-import '../../theme/app_breakpoints.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_dimens.dart';
-import '../../theme/app_motion.dart';
 import '../../theme/app_text.dart';
 import '../../theme/theme_context.dart';
 import '../../config/app_limits.dart';
@@ -32,6 +30,7 @@ import '../../ui/feedback/app_feedback.dart';
 import '../../l10n/l10n.dart';
 import '../../utils/submission_people.dart';
 import '../../config/app_info.dart';
+import '../../widgets/app_sheet.dart';
 
 /// Who submitted a payment claim, as the claim stores it: submittedBy is
 /// for people to read (the email, which the review shows; the uid when
@@ -691,53 +690,9 @@ class _SubmissionHistory extends StatelessWidget {
 /// with the rest of the "modern desktop" screens rather than the
 /// last one still doing an abrupt full-screen navigation.
 Future<void> showSubscriptionScreen(BuildContext context) async {
-  final isWideScreen = context.screenWidth >= AppBreakpoints.medium;
-
-  if (!isWideScreen) {
-    await Navigator.of(context).push(
-      MaterialPageRoute(builder: (_) => const SubscriptionScreen()),
-    );
-    return;
-  }
-
-  await showGeneralDialog(
-    context: context,
-    barrierDismissible: true,
+  await showAdaptiveForm(
+    context,
     barrierLabel: context.l10n.subscription_title,
-    barrierColor: context.colors.scrim.withValues(alpha: AppAlpha.a50),
-    transitionDuration: AppMotion.normal,
-    pageBuilder: (context, animation, secondaryAnimation) {
-      final screenSize = MediaQuery.of(context).size;
-      final modalWidth = (screenSize.width * 0.60).clamp(0, 940).toDouble();
-      // Never shorter than 480px, fixed - 88% of screen height
-      // comfortably exceeds that on most windows, but this guarantees
-      // it even on a smaller one.
-      final modalHeight = (screenSize.height * 0.88) < 480 ? 480.0 : screenSize.height * 0.88;
-      return Center(
-        child: SizedBox(
-          width: modalWidth,
-          height: modalHeight,
-          child: ClipRRect(
-            borderRadius: BorderRadius.circular(AppRadius.r16),
-            child: const Material(
-              child: SubscriptionScreen(isModal: true),
-            ),
-          ),
-        ),
-      );
-    },
-    transitionBuilder: (context, animation, secondaryAnimation, child) {
-      final curved = CurvedAnimation(parent: animation, curve: Curves.easeOutCubic);
-      return FadeTransition(
-        opacity: curved,
-        child: SlideTransition(
-          position: Tween<Offset>(begin: const Offset(0, 0.03), end: Offset.zero).animate(curved),
-          child: ScaleTransition(
-            scale: Tween<double>(begin: 0.96, end: 1.0).animate(curved),
-            child: child,
-          ),
-        ),
-      );
-    },
+    builder: (isModal) => SubscriptionScreen(isModal: isModal),
   );
 }

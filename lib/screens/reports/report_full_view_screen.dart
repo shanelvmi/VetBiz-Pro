@@ -10,9 +10,8 @@ import '../../l10n/l10n.dart';
 import '../../theme/app_text.dart';
 import '../../theme/app_dimens.dart';
 import '../../theme/theme_context.dart';
-import '../../theme/app_breakpoints.dart';
-import '../../theme/app_motion.dart';
 import 'report_activity_log_loader.dart';
+import '../../widgets/app_sheet.dart';
 
 /// Opens the full report as a single continuous scroll, mirroring the
 /// PDF's own section order - this is the "what would the PDF look
@@ -20,51 +19,11 @@ import 'report_activity_log_loader.dart';
 /// rather than an actual generated PDF document. Follows the same
 /// modal convention already established by showAddSaleScreen().
 Future<void> showReportFullViewScreen(BuildContext context, DailyReport report) async {
-  final isWideScreen = context.screenWidth >= AppBreakpoints.medium;
-
-  if (!isWideScreen) {
-    await Navigator.of(context).push(
-      MaterialPageRoute(builder: (_) => ReportFullViewScreen(report: report, isModal: false)),
-    );
-    return;
-  }
-
-  await showGeneralDialog(
-    context: context,
-    barrierDismissible: true,
+  await showAdaptiveForm(
+    context,
     barrierLabel: context.l10n.reports_fullReport,
-    barrierColor: context.colors.scrim.withValues(alpha: AppAlpha.a50),
-    transitionDuration: AppMotion.normal,
-    pageBuilder: (context, animation, secondaryAnimation) {
-      final screenSize = MediaQuery.of(context).size;
-      final modalWidth = (screenSize.width * 0.72).clamp(0, 1100).toDouble();
-      final modalHeight = (screenSize.height * 0.9) < 480 ? 480.0 : screenSize.height * 0.9;
-      return Center(
-        child: SizedBox(
-          width: modalWidth,
-          height: modalHeight,
-          child: ClipRRect(
-            borderRadius: BorderRadius.circular(AppRadius.r16),
-            child: Material(
-              child: ReportFullViewScreen(report: report, isModal: true),
-            ),
-          ),
-        ),
-      );
-    },
-    transitionBuilder: (context, animation, secondaryAnimation, child) {
-      final curved = CurvedAnimation(parent: animation, curve: Curves.easeOutCubic);
-      return FadeTransition(
-        opacity: curved,
-        child: SlideTransition(
-          position: Tween<Offset>(begin: const Offset(0, 0.03), end: Offset.zero).animate(curved),
-          child: ScaleTransition(
-            scale: Tween<double>(begin: 0.96, end: 1.0).animate(curved),
-            child: child,
-          ),
-        ),
-      );
-    },
+    size: AdaptiveFormSize.reportFull,
+    builder: (isModal) => ReportFullViewScreen(report: report, isModal: isModal),
   );
 }
 
