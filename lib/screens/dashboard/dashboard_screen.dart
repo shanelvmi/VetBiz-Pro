@@ -1268,9 +1268,9 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
                                 // SummaryCard's content needs a
                                 // consistent minimum height to avoid
                                 // overflowing.
-                                final crossAxisCount = gridWidth > 1200
+                                final crossAxisCount = gridWidth > AppBreakpoints.dashboardGridFour
                                     ? 4
-                                    : gridWidth > 700
+                                    : gridWidth > AppBreakpoints.dashboardGridThree
                                         ? 3
                                         : 2;
                                 final cards = [
@@ -2164,8 +2164,8 @@ Widget _buildDrawerContent() {
   final bool collapsed = _isDrawerCollapsed && !layoutFixed;
 
   final bool isSmallScreen =
-      MediaQuery.of(context).size.height < 600 ||
-      MediaQuery.of(context).size.width < 1024;
+      MediaQuery.of(context).size.height < AppBreakpoints.sidebarMinHeight ||
+      MediaQuery.of(context).size.width < AppBreakpoints.expanded;
   // Never collapse on a small screen - the drawer there is already a
   // slide-in overlay, not a permanent column, so there's no space to
   // reclaim by shrinking it.

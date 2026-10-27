@@ -16,7 +16,12 @@ enum AppLayout {
 
   /// Pure, so tests can check any size without a widget.
   static AppLayout fromSize(Size size) {
-    throw UnimplementedError();
+    final w = size.width;
+    if (w < AppBreakpoints.compact) return AppLayout.phone;
+    if (w < AppBreakpoints.expanded) {
+      return size.height < AppBreakpoints.phoneLandscapeHeight ? AppLayout.phone : AppLayout.tablet;
+    }
+    return AppLayout.desktop;
   }
 
   static AppLayout of(BuildContext context) => fromSize(MediaQuery.sizeOf(context));

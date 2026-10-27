@@ -5,7 +5,7 @@ import 'package:vetbiz_pro/theme/app_layout.dart';
 
 // PH2a S1: one layout signal (docs/design/phone_foundations.md S1, and
 // phone_shell.md section 3).
-const _skip = true;
+const _skip = false;
 
 void main() {
   test('phones, portrait and landscape', () {
