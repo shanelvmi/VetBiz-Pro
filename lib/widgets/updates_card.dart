@@ -3,15 +3,13 @@ import 'package:flutter/material.dart';
 import '../config/app_info.dart';
 import '../l10n/l10n.dart';
 import '../theme/app_dimens.dart';
-import '../theme/app_text.dart';
-import '../theme/theme_context.dart';
 import 'auth_panel.dart';
 import 'updates_parts.dart';
 
 /// AN4 (the owner's design): the login page's Updates as a card of their own,
 /// with the login card's surface, radius, border and shadow ([AuthPanel]) but
 /// not its accent line. On wide windows it sits beside the login card at the
-/// same height: the welcome note (its heading on the line of "Welcome back"),
+/// same height: the welcome note (its heading on the line of "Sign in to your account"),
 /// then the Updates, whose controls are pinned to the card's bottom. On phones
 /// only the Updates, at their natural height, below the login card.
 class UpdatesCard extends StatelessWidget {
@@ -37,7 +35,7 @@ class UpdatesCard extends StatelessWidget {
       padding: EdgeInsets.fromLTRB(
         AuthPanelMetrics.padding,
         // No accent line here: its height is added instead, so the welcome
-        // heading sits on the line of the login card's "Welcome back".
+        // heading sits on the line of the login card's "Sign in to your account".
         AuthPanelMetrics.padding + (wide ? AuthPanelMetrics.accentHeight : 0),
         AuthPanelMetrics.padding,
         AuthPanelMetrics.paddingBottom,
@@ -65,20 +63,13 @@ class _WelcomeNote extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        AuthPanelHeading(
-          key: UpdatesCard.welcomeHeadingKey,
-          icon: Icons.pets_outlined,
-          title: context.l10n.updates_welcomeTitle(AppInfo.name),
-        ),
-        const SizedBox(height: AppSpacing.s12),
-        Text(
-          context.l10n.updates_welcomeLine,
-          style: TextStyle(fontSize: AppFontSize.f14, color: context.colors.textSecondary),
-        ),
-      ],
+    // AN5: the sentence is the heading's subtitle, as the sign-in card's
+    // subtext is, so the two sit on one line.
+    return AuthPanelHeading(
+      key: UpdatesCard.welcomeHeadingKey,
+      icon: Icons.pets_outlined,
+      title: context.l10n.updates_welcomeTitle(AppInfo.name),
+      subtitle: context.l10n.updates_welcomeLine,
     );
   }
 }

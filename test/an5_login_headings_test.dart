@@ -17,7 +17,9 @@ import 'helpers/login_harness.dart';
 // both cards' sentences drawn by AuthPanelHeading on one horizontal line;
 // the circle icons crisp in Dark (at least 4.5:1 on the circle's effective
 // fill, the glow weaker than Light's), Light exactly as before.
-const _skip = true;
+const _skip = false;
+// Unskipped with the icon commit.
+const _skipIcons = true;
 
 final _en = lookupAppLocalizations(const Locale('en'));
 final _sw = lookupAppLocalizations(const Locale('sw'));
@@ -90,7 +92,7 @@ void main() {
           // Light does not change by one value.
           if (brightness == Brightness.light) expect(_icon(tester, key), c.primary);
         }
-      }, skip: _skip);
+      }, skip: _skipIcons);
     }
   }
 
@@ -106,6 +108,6 @@ void main() {
         expect(dark.single.blurRadius, lessThan(light.single.blurRadius));
         expect(dark.single.color.a, lessThan(light.single.color.a));
       }
-    }, skip: _skip);
+    }, skip: _skipIcons);
   }
 }

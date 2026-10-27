@@ -195,6 +195,10 @@ class AuthPanelMetrics {
   static const double iconCircleGlow = 14;
   static const double headingGap = AppSpacing.s14;
 
+  /// Between a heading and its subtitle (the welcome sentence, the sign-in
+  /// subtext), the same in both cards so the two lines share a line (AN5).
+  static const double subtitleGap = AppSpacing.s12;
+
   /// Two shadows: a wide tinted lift and a tight, crisp edge.
   static const double liftBlur = 32;
   static const double liftOffsetY = 14;

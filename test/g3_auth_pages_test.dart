@@ -98,7 +98,7 @@ void main() {
       ]) {
         expect(find.text(gone), findsNothing, reason: gone);
       }
-      expect(find.text(_en.login_welcomeBack), findsOneWidget);
+      expect(find.text(_en.login_signInTitle), findsOneWidget);
     });
 
     // AN2: the Announcements card became the Updates, drawn only when there

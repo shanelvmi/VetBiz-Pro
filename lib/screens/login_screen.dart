@@ -47,7 +47,7 @@ class LoginScreen extends StatefulWidget {
   final AuthService? authService;
   @visibleForTesting
   final FirebaseFirestore? firestore;
-  /// For tests: the sign-in card and its "Welcome back" row (AN4).
+  /// For tests: the sign-in card and its heading row (AN4; "Sign in to your account" since AN5, the key kept).
   static const loginCardKey = ValueKey<String>('login-card');
   static const welcomeBackRowKey = ValueKey<String>('login-welcome-back-row');
 
@@ -387,7 +387,7 @@ class _LoginScreenState extends State<LoginScreen> {
   // - 4 seconds plus one more per ~20 characters, between 5 and 12 - so a
   // short "Incorrect email or password." doesn't linger, while a long
   // message isn't gone before it can be read. It floats over the card's
-  // "Welcome back" heading, so it shouldn't stay longer than it's needed.
+  // heading ("Sign in to your account"), so it shouldn't stay longer than it's needed.
   Duration _errorDisplayDuration(String message) {
     final seconds = (4 + message.length ~/ 20).clamp(5, 12).toInt();
     return Duration(seconds: seconds);
@@ -587,7 +587,8 @@ class _LoginScreenState extends State<LoginScreen> {
                         AuthPanelHeading(
                           key: LoginScreen.welcomeBackRowKey,
                           icon: Icons.lock_outline,
-                          title: context.l10n.login_welcomeBack,
+                          title: context.l10n.login_signInTitle,
+                          subtitle: context.l10n.login_signInSubtitle,
                         ),
                         const SizedBox(height: AppSpacing.s28),
                         Text(context.l10n.common_email, style: TextStyle(fontSize: AppFontSize.f13, fontWeight: AppFontWeight.semibold, color: context.colors.textPrimary)),

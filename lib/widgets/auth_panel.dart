@@ -32,18 +32,21 @@ class AuthPanel {
 }
 
 /// A card's heading row: the soft circle with [icon], then [title] on one
-/// line. The login card's "Welcome back" and the Updates card's welcome note
-/// use it, so the two rows are the same height and line up.
+/// line, and an optional [subtitle] under it. The login card's "Sign in to
+/// your account" and the Updates card's welcome note use it, so the two rows
+/// are the same height and line up, and (AN5) the welcome sentence and the
+/// sign-in subtext are one widget, on one horizontal line.
 class AuthPanelHeading extends StatelessWidget {
-  const AuthPanelHeading({super.key, required this.icon, required this.title});
+  const AuthPanelHeading({super.key, required this.icon, required this.title, this.subtitle});
 
   final IconData icon;
   final String title;
+  final String? subtitle;
 
   @override
   Widget build(BuildContext context) {
     final glow = context.colors.brandTealGlow;
-    return Row(
+    final row = Row(
       children: [
         Container(
           width: AuthPanelMetrics.iconCircle,
@@ -65,6 +68,17 @@ class AuthPanelHeading extends StatelessWidget {
             style: TextStyle(fontSize: AppFontSize.f20, fontWeight: AppFontWeight.extraBold, color: context.colors.textPrimary),
           ),
         ),
+      ],
+    );
+    final sub = subtitle;
+    if (sub == null) return row;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        row,
+        const SizedBox(height: AuthPanelMetrics.subtitleGap),
+        Text(sub, style: TextStyle(fontSize: AppFontSize.f14, color: context.colors.textSecondary)),
       ],
     );
   }
