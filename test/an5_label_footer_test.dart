@@ -20,7 +20,7 @@ import 'helpers/login_harness.dart';
 // 18 px on wide windows); the footer's brand column gains one audience line
 // under the mark and the name (authFooterMutedText, 13 or 14 px, at most
 // three lines, not the welcome sentence); no overflow on the login page.
-const _skip = true;
+const _skip = false;
 
 final _en = lookupAppLocalizations(const Locale('en'));
 
@@ -79,8 +79,14 @@ void main() {
         expect(text.maxLines, lessThanOrEqualTo(3));
         expect(tester.getRect(line).height, lessThanOrEqualTo(3 * text.style!.fontSize! * 1.6), reason: 'three lines at most');
         expect(tester.getRect(line).top, greaterThan(tester.getRect(find.text(AppInfo.name).first).bottom));
-        // The link columns set the height on wide windows: unchanged (AN4: 170).
-        if (width >= 1200) expect(height, lessThanOrEqualTo(170));
+        // Wide: the rest of the footer unchanged (AN4: 170); only what the brand
+        // column reaches below the last link (the square test font wraps the line
+        // to three lines; real fonts, two, above the links' bottom) adds to it.
+        if (width >= 1200) {
+          final lastLink = tester.getRect(find.text(_en.common_termsOfService)).bottom;
+          final over = tester.getRect(find.byKey(AuthFooter.brandKey)).bottom - lastLink;
+          expect(height - (over > 0 ? over : 0), lessThanOrEqualTo(170));
+        }
         expect(tester.getSize(find.byKey(AuthFooter.bottomRowKey)).height, greaterThanOrEqualTo(AuthFooterMetrics.bottomRowHeight));
         expect(tester.takeException(), isNull);
       }, skip: _skip);

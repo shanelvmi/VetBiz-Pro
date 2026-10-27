@@ -125,6 +125,7 @@ class UpdatesDots extends StatelessWidget {
 /// on the image). Always the same height, so nothing moves between slides;
 /// a long label shortens with an ellipsis and the chips keep their place.
 /// AN4: 16 px on phones, 18 px on wide windows, semibold. No icon, no chevron.
+/// AN5: bold, in textPrimary (textMuted read faded in Light).
 class UpdatesLabel extends StatelessWidget {
   const UpdatesLabel({super.key, required this.showChips, required this.urgent, required this.isNew});
 
@@ -149,8 +150,8 @@ class UpdatesLabel extends StatelessWidget {
               overflow: TextOverflow.ellipsis,
               style: TextStyle(
                 fontSize: wide ? AppFontSize.f18 : AppFontSize.f16,
-                fontWeight: AppFontWeight.semibold,
-                color: context.colors.textMuted,
+                fontWeight: AppFontWeight.bold,
+                color: context.colors.textPrimary,
               ),
             ),
           ),

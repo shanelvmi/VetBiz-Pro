@@ -26,7 +26,7 @@ typedef AuthFooterLauncher = Future<bool> Function(Uri url, {LaunchMode mode});
 
 /// The calm footer under the Login and Register cards (G3, v2 in G4): on a
 /// full-width soft band (authFooterFill) with a hairline on top, the brand
-/// (the mark and the name; AN4: no plain line), then Platform, Support and Legal, then copyright,
+/// (the mark and the name; AN4: no plain line; AN5: the audience line), then Platform, Support and Legal, then copyright,
 /// version and the social icons the Platform Admin saved. Four columns
 /// above AppBreakpoints.medium of its own width; on phones the brand, then
 /// the columns two by two, and the bottom row wraps. Every link and icon is
@@ -51,7 +51,7 @@ class AuthFooter extends StatelessWidget {
   /// For tests: the bottom row (copyright, version, social icons).
   static const bottomRowKey = ValueKey<String>('auth-footer-bottom-row');
 
-  /// For tests: the brand column (the mark and the app name).
+  /// For tests: the brand column (the mark, the app name and, AN5, the audience line).
   static const brandKey = ValueKey<String>('auth-footer-brand');
 
   static const Map<SocialNetwork, FaIconData> _icons = {
@@ -184,8 +184,16 @@ class AuthFooter extends StatelessWidget {
             ),
           ],
         ),
-        // AN4: no description sentence here any more; it is the welcome
-        // note's line on the login page (once, not twice).
+        // AN4: the welcome note's sentence is not repeated here (once, not
+        // twice). AN5: who the app is for, in its place; static text, at most
+        // three lines, so the column never shifts.
+        const SizedBox(height: AppSpacing.s8),
+        Text(
+          context.l10n.authFooter_audience,
+          maxLines: AuthFooterMetrics.audienceMaxLines,
+          overflow: TextOverflow.ellipsis,
+          style: TextStyle(color: context.colors.authFooterMutedText, fontSize: AppFontSize.f13),
+        ),
       ],
     );
   }

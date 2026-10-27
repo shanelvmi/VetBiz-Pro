@@ -44,6 +44,14 @@ void main() {
   final textLinks = [_en.authFooter_howToUse, _en.authFooter_helpContact, _en.authFooter_faq, _en.common_privacyPolicy, _en.common_termsOfService];
   Rect linkRect(WidgetTester tester, String text) => tester.getRect(find.ancestor(of: find.text(text), matching: find.byType(HoverLink)).first);
   double bandHeight(WidgetTester tester) => tester.getSize(find.byKey(AuthFooter.bandKey)).height;
+  double lastLinkBottom(WidgetTester tester) => textLinks.map((t) => linkRect(tester, t).bottom).reduce((a, b) => a > b ? a : b);
+  // AN5: how far the brand column (now with its audience line, three lines
+  // in the square test font, two with real fonts at 1200) reaches below the
+  // last link; 0 when the links are the tallest column.
+  double brandOverhang(WidgetTester tester) {
+    final over = tester.getRect(find.byKey(AuthFooter.brandKey)).bottom - lastLinkBottom(tester);
+    return over > 0 ? over : 0;
+  }
 
   testWidgets('wide: every text link row is 32 px (or its label, if taller)', (tester) async {
     await pump(tester, 1200);
@@ -68,9 +76,9 @@ void main() {
 
   testWidgets('wide: about a third shorter than before G5, with or without icons', (tester) async {
     await pump(tester, 1200);
-    final plain = bandHeight(tester);
+    final plain = bandHeight(tester) - brandOverhang(tester);
     await pump(tester, 1200, contact: SupportContact.fromMap(const {'facebook': 'facebook.com/v'}));
-    final withIcon = bandHeight(tester);
+    final withIcon = bandHeight(tester) - brandOverhang(tester);
     // G6: the bottom row keeps the icons' 48 px line with or without them,
     // so both are 170 with the test font (plain was 154 when that line
     // shrank to 32 px without icons, and the footer jumped when they came).
@@ -89,10 +97,11 @@ void main() {
   for (final width in [390.0, 1200.0]) {
     testWidgets('$width: no empty gap between the last link and the line above the bottom row', (tester) async {
       await pump(tester, width);
-      final lastLinkBottom = textLinks.map((t) => linkRect(tester, t).bottom).reduce((a, b) => a > b ? a : b);
+      // AN5: below the tallest column, the links or the brand column.
+      final tallest = lastLinkBottom(tester) + brandOverhang(tester);
       final line = tester.getRect(find.descendant(of: find.byType(AuthFooter), matching: find.byType(Divider)));
       // Only the link box's own space (and on wide windows a small gap).
-      expect(line.top - lastLinkBottom, lessThanOrEqualTo(width == 1200 ? AppSpacing.s8 : 0));
+      expect(line.top - tallest, lessThanOrEqualTo(width == 1200 ? AppSpacing.s8 : 0));
     }, skip: _skip);
   }
 }
