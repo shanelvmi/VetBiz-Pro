@@ -20,10 +20,9 @@ import '../../config/app_limits.dart';
 import '../../theme/app_text.dart';
 import '../../theme/app_dimens.dart';
 import '../../theme/theme_context.dart';
-import '../../theme/app_breakpoints.dart';
-import '../../theme/app_motion.dart';
 import '../../ui/feedback/app_feedback.dart';
 import '../../l10n/l10n.dart';
+import '../../widgets/app_sheet.dart';
 
 class AddPaymentScreen extends StatefulWidget {
   final Client? preselectedClient;
@@ -602,68 +601,18 @@ Future<bool?> showAddPaymentScreen(
   Map<String, double>? debtorBalances,
   double? totalOwed,
 }) async {
-  final isWideScreen = context.screenWidth >= AppBreakpoints.medium;
-
-  if (!isWideScreen) {
-    return Navigator.of(context).push<bool>(
-      MaterialPageRoute(
-        builder: (_) => AddPaymentScreen(
-          preselectedClient: preselectedClient,
-          debtDocId: debtDocId,
-          amountOwed: amountOwed,
-          facilityId: facilityId,
-          debtorClients: debtorClients,
-          debtorBalances: debtorBalances,
-          totalOwed: totalOwed,
-        ),
-      ),
-    );
-  }
-
-  return showGeneralDialog<bool>(
-    context: context,
-    barrierDismissible: true,
+  return showAdaptiveForm<bool>(
+    context,
     barrierLabel: context.l10n.debtors_recordPayment,
-    barrierColor: context.colors.scrim.withValues(alpha: AppAlpha.a50),
-    transitionDuration: AppMotion.normal,
-    pageBuilder: (context, animation, secondaryAnimation) {
-      final screenSize = MediaQuery.of(context).size;
-      final modalWidth = (screenSize.width * 0.60).clamp(0, 940).toDouble();
-      final modalHeight = (screenSize.height * 0.88) < 480 ? 480.0 : screenSize.height * 0.88;
-      return Center(
-        child: SizedBox(
-          width: modalWidth,
-          height: modalHeight,
-          child: ClipRRect(
-            borderRadius: BorderRadius.circular(AppRadius.r16),
-            child: Material(
-              child: AddPaymentScreen(
-                preselectedClient: preselectedClient,
-                debtDocId: debtDocId,
-                amountOwed: amountOwed,
-                facilityId: facilityId,
-                debtorClients: debtorClients,
-                debtorBalances: debtorBalances,
-                totalOwed: totalOwed,
-                isModal: true,
-              ),
-            ),
-          ),
-        ),
-      );
-    },
-    transitionBuilder: (context, animation, secondaryAnimation, child) {
-      final curved = CurvedAnimation(parent: animation, curve: Curves.easeOutCubic);
-      return FadeTransition(
-        opacity: curved,
-        child: SlideTransition(
-          position: Tween<Offset>(begin: const Offset(0, 0.03), end: Offset.zero).animate(curved),
-          child: ScaleTransition(
-            scale: Tween<double>(begin: 0.96, end: 1.0).animate(curved),
-            child: child,
-          ),
-        ),
-      );
-    },
+    builder: (isModal) => AddPaymentScreen(
+      preselectedClient: preselectedClient,
+      debtDocId: debtDocId,
+      amountOwed: amountOwed,
+      facilityId: facilityId,
+      debtorClients: debtorClients,
+      debtorBalances: debtorBalances,
+      totalOwed: totalOwed,
+      isModal: isModal,
+    ),
   );
 }

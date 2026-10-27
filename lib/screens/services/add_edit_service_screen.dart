@@ -25,9 +25,9 @@ import '../../theme/app_text.dart';
 import '../../theme/app_dimens.dart';
 import '../../theme/theme_context.dart';
 import '../../theme/app_breakpoints.dart';
-import '../../theme/app_motion.dart';
 import '../../ui/feedback/app_feedback.dart';
 import '../../l10n/l10n.dart';
+import '../../widgets/app_sheet.dart';
 
 /// The client an Edit Service form starts with: the service's own, so an
 /// unchanged edit keeps it and saves without picking the client again; the
@@ -1134,50 +1134,10 @@ class _AddEditServiceScreenState extends State<AddEditServiceScreen> {
 /// a quick, frequent action shouldn't need a full page navigation away
 /// from wherever it was triggered.
 Future<void> showAddEditServiceScreen(BuildContext context, {Service? service}) async {
-  final isWideScreen = context.screenWidth >= AppBreakpoints.medium;
-
-  if (!isWideScreen) {
-    await Navigator.of(context).push(
-      MaterialPageRoute(builder: (_) => AddEditServiceScreen(service: service)),
-    );
-    return;
-  }
-
-  await showGeneralDialog(
-    context: context,
-    barrierDismissible: true,
+  await showAdaptiveForm(
+    context,
     barrierLabel: service != null ? context.l10n.services_editVisit : context.l10n.services_recordVisit,
-    barrierColor: context.colors.scrim.withValues(alpha: AppAlpha.a50),
-    transitionDuration: AppMotion.normal,
-    pageBuilder: (context, animation, secondaryAnimation) {
-      final screenSize = MediaQuery.of(context).size;
-      final modalWidth = (screenSize.width * 0.60).clamp(0, 940).toDouble();
-      final modalHeight = (screenSize.height * 0.88).clamp(0, 820).toDouble();
-      return Center(
-        child: SizedBox(
-          width: modalWidth,
-          height: modalHeight,
-          child: ClipRRect(
-            borderRadius: BorderRadius.circular(AppRadius.r16),
-            child: Material(
-              child: AddEditServiceScreen(service: service, isModal: true),
-            ),
-          ),
-        ),
-      );
-    },
-    transitionBuilder: (context, animation, secondaryAnimation, child) {
-      final curved = CurvedAnimation(parent: animation, curve: Curves.easeOutCubic);
-      return FadeTransition(
-        opacity: curved,
-        child: SlideTransition(
-          position: Tween<Offset>(begin: const Offset(0, 0.03), end: Offset.zero).animate(curved),
-          child: ScaleTransition(
-            scale: Tween<double>(begin: 0.96, end: 1.0).animate(curved),
-            child: child,
-          ),
-        ),
-      );
-    },
+    size: AdaptiveFormSize.formCapped,
+    builder: (isModal) => AddEditServiceScreen(service: service, isModal: isModal),
   );
 }

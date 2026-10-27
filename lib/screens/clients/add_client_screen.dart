@@ -9,11 +9,11 @@ import '../../theme/app_text.dart';
 import '../../theme/app_dimens.dart';
 import '../../theme/theme_context.dart';
 import '../../theme/app_breakpoints.dart';
-import '../../theme/app_motion.dart';
 import '../../ui/feedback/app_feedback.dart';
 import '../../constants/client_options.dart';
 import '../../l10n/l10n.dart';
 import '../../constants/crops.dart';
+import '../../widgets/app_sheet.dart';
 
 class AddClientScreen extends StatefulWidget {
   final Client? client; // null = add, not null = edit
@@ -981,49 +981,10 @@ class _AddClientScreenState extends State<AddClientScreen> {
 /// Navigator.push directly - existing callers that check that value
 /// (e.g. add_edit_service_screen.dart) keep working unchanged.
 Future<bool?> showAddClientScreen(BuildContext context, {Client? client}) async {
-  final isWideScreen = context.screenWidth >= AppBreakpoints.medium;
-
-  if (!isWideScreen) {
-    return Navigator.of(context).push<bool>(
-      MaterialPageRoute(builder: (_) => AddClientScreen(client: client)),
-    );
-  }
-
-  return showGeneralDialog<bool>(
-    context: context,
-    barrierDismissible: true,
+  return showAdaptiveForm<bool>(
+    context,
     barrierLabel: client == null ? context.l10n.clients_add : context.l10n.clients_edit,
-    barrierColor: context.colors.scrim.withValues(alpha: AppAlpha.a50),
-    transitionDuration: AppMotion.normal,
-    pageBuilder: (context, animation, secondaryAnimation) {
-      final screenSize = MediaQuery.of(context).size;
-      final modalWidth = (screenSize.width * 0.60).clamp(0, 940).toDouble();
-      final modalHeight = (screenSize.height * 0.88).clamp(0, 820).toDouble();
-      return Center(
-        child: SizedBox(
-          width: modalWidth,
-          height: modalHeight,
-          child: ClipRRect(
-            borderRadius: BorderRadius.circular(AppRadius.r16),
-            child: Material(
-              child: AddClientScreen(client: client, isModal: true),
-            ),
-          ),
-        ),
-      );
-    },
-    transitionBuilder: (context, animation, secondaryAnimation, child) {
-      final curved = CurvedAnimation(parent: animation, curve: Curves.easeOutCubic);
-      return FadeTransition(
-        opacity: curved,
-        child: SlideTransition(
-          position: Tween<Offset>(begin: const Offset(0, 0.03), end: Offset.zero).animate(curved),
-          child: ScaleTransition(
-            scale: Tween<double>(begin: 0.96, end: 1.0).animate(curved),
-            child: child,
-          ),
-        ),
-      );
-    },
+    size: AdaptiveFormSize.formCapped,
+    builder: (isModal) => AddClientScreen(client: client, isModal: isModal),
   );
 }
